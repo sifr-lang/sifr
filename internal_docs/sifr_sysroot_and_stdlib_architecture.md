@@ -151,14 +151,14 @@ generated-program implementation lives in `crates/sifr_stdlib` and
 only. Remaining compiler-native stdlib glue is explicitly allowlisted in
 `internal_docs/stdlib_retained_compiler_intrinsics.toml`.
 
-Rust interop ecosystem certification is not fully complete. The active matrix
+Rust interop Track A certification is complete. The active matrix
 `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
-currently has 20 supported rows, 12 bridge-supported rows, 1
-unsupported-by-design row, and 3 rows owned by separate certification work.
-The separately owned rows are `ecosystem_backend_certification`,
-`ecosystem_cli_certification`, and `cargo_locked_offline`. Resource migrations
-must not claim stable support for any row that remains separately owned by
-certification work.
+currently has 21 supported rows, 14 bridge-supported rows, 1
+unsupported-by-design row, and 2 future-owned rows. Those future rows are
+`structural_bridge_calls` and `bridge_version_field_removal`, owned by the
+structural Rust bridge contract in `rust_interop_architecture.md`.
+Resource migrations must not claim stable support for a future-owned row until
+its positive and negative evidence pass and its stable-claim gate accepts it.
 
 ## Stdlib Rust Interop Adapter Policy
 

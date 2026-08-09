@@ -51,7 +51,8 @@ def decorated_function_name(stripped: str) -> str | None:
         stripped = stripped.removeprefix("async ")
     if not stripped.startswith("def "):
         return None
-    return stripped.removeprefix("def ").split("(", maxsplit=1)[0].strip()
+    declaration_head = stripped.removeprefix("def ").split("(", maxsplit=1)[0].strip()
+    return declaration_head.split("[", maxsplit=1)[0].strip()
 
 
 def decorated_function_return_type(stripped: str) -> str:

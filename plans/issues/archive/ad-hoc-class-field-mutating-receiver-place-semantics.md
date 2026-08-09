@@ -2,8 +2,8 @@
 
 ## Status
 
-Implementation and compatibility migrations are complete; final correctness
-remediation and closure review remain in progress. Item 1, canonical receiver
+The semantic implementation and terminal closure review are complete under
+[#3088](https://github.com/sifr-lang/sifr/pull/3088). Item 1, canonical receiver
 metadata and inference, merged in
 [#3065](https://github.com/sifr-lang/sifr/pull/3065), with tracking follow-up
 [#3066](https://github.com/sifr-lang/sifr/pull/3066). Item 2, checked place
@@ -28,21 +28,33 @@ a terminal zero-finding Opus review before merge.
 Whole-phase review pass 5 then found missing structured arguments for
 `SIFR-PROTO-0005`, `SIFR-PROTO-0006`, and the phase-adopted
 `SIFR-OWN-0005` helper, plus the absence of a live receiver/place
-registry-to-emitter guardrail. The focused diagnostic-contract remediation is
-in review in [#3096](https://github.com/sifr-lang/sifr/pull/3096). Its
+registry-to-emitter guardrail. The focused diagnostic-contract remediation
+merged in [#3096](https://github.com/sifr-lang/sifr/pull/3096) after terminal
+implementation and exact-record reviews both returned `SATISFIED`. Its
 diagnostics-baseline prerequisite merged in
 [#3095](https://github.com/sifr-lang/sifr/pull/3095) after five review rounds
 closed every finding and the terminal Opus verdict returned `SATISFIED` with
-zero actionable findings. Closure PR
-[#3088](https://github.com/sifr-lang/sifr/pull/3088)
-remains draft until this remediation merges, the authoritative integrated
-merge gate exits 0 on an uncontended host, and a terminal whole-phase review
-returns `SATISFIED` with zero findings.
+zero actionable findings. All phase-owned implementation and diagnostic
+remediation is therefore merged on `main`. Closure PR
+[#3088](https://github.com/sifr-lang/sifr/pull/3088) contains only the archived
+phase record and review evidence. Terminal whole-phase published-head review
+pass 8 returned `SATISFIED` with zero actionable findings and approved #3088
+to leave draft and merge.
+
+The final integrated default profile reached and passed every functional lane,
+then failed only in the repository-wide performance area: two checked-in trend
+deferrals expired on 2026-07-31, and the unchanged representative budget showed
+small same-host variance. Those failures are independent of receiver-place
+semantics and are owned by
+[`adhoc_performance_budget_host_variance.md`](../active/adhoc_performance_budget_host_variance.md).
+This closure neither changes nor waives any performance threshold, baseline,
+sample count, trend rule, or deferral. The independent performance task remains
+active and does not expand this phase's scope.
 
 The defect predates M10 and was not introduced by the buffer implementation,
 but it violates Sifr's core guarantee: a program can compile and silently lose
-a source-visible mutation. This issue is not implementation-ready until the
-review ledger below ends in an independent `SATISFIED` verdict.
+a source-visible mutation. The closure requirement was an independent
+whole-phase `SATISFIED` verdict; terminal published-head pass 8 satisfies it.
 
 ## Origin and current behavior
 
@@ -66,8 +78,9 @@ class Owner:
         self.helper.bump()
 ```
 
-The current compiler can emit `self.helper.clone().bump()`. The call mutates a
-temporary clone, not `self.helper`, and the program observes no mutation.
+Before this phase, the compiler could emit `self.helper.clone().bump()`. The
+call mutated a temporary clone, not `self.helper`, and the program observed no
+mutation.
 
 The first independent review also reproduced these adjacent failures:
 
@@ -79,7 +92,7 @@ The first independent review also reproduced these adjacent failures:
 - `self.helper.absorb(self.stock)` preserves the mutable argument mutation but
   loses the receiver mutation.
 
-Current code already contains a partial, ambient workaround:
+The pre-phase code contained a partial, ambient workaround:
 
 - `RustEmitter::method_call_needs_field_clone_suppression` recognizes many of
   the affected receivers;
@@ -538,9 +551,15 @@ counter deletion is claimed by Item 1.
 Status: **Merged** in
 [#3082](https://github.com/sifr-lang/sifr/pull/3082), with whole-phase
 correctness remediations merged in
-[#3087](https://github.com/sifr-lang/sifr/pull/3087) and under review in
-[#3090](https://github.com/sifr-lang/sifr/pull/3090). Closure remains pending
-the integrated merge gate and terminal whole-phase `SATISFIED` review.
+[#3087](https://github.com/sifr-lang/sifr/pull/3087) and
+[#3090](https://github.com/sifr-lang/sifr/pull/3090), with callable-field
+invocation precision merged in
+[#3092](https://github.com/sifr-lang/sifr/pull/3092), nested index/slice
+footprint traversal merged in
+[#3094](https://github.com/sifr-lang/sifr/pull/3094), and final structured
+diagnostic/guardrail closure merged in
+[#3096](https://github.com/sifr-lang/sifr/pull/3096). Every focused remediation
+reached a terminal zero-finding Opus review before merge.
 
 1. Add the canonical `Place`/projection extractor, argument footprint
    collector, prefix-overlap check, and receiver/argument validation.
@@ -841,50 +860,128 @@ scripts/run_all_tests.sh
 ```
 
 CI is confirmatory; do not wait on CI instead of running the local gates.
+The final integrated invocation is retained below: all phase-relevant
+functional lanes passed, while the independent repository-wide performance
+policy failed. That failure is not converted into a phase waiver, baseline
+change, threshold change, or renewed deferral.
 
-Current Item 2 validation evidence:
+Closure validation evidence:
 
-- focused lowering, codegen, scope, optimizer, pass-fixture, and fail-fixture
-  checks pass;
-- full lowering tests pass (`941 passed`, `1 ignored`), full codegen tests pass
-  (`954 passed`), and the E2E fail test passes with the complete annotated fail
-  corpus;
-- formatting, workspace clippy with warnings denied, HIR maintainability,
-  file-size, diagnostic-doc links, and diff checks pass;
-- the post-review remediation create-PR profile passed its full Python interop
-  lane (`19/19`) and every other blocking lane except one contended LSP
-  `workspace/executeCommand` timeout; the exact `lsp-smoke` suite then passed
-  all `6/6` variants in isolation, including the same protocol smoke;
-- the representative performance suite has an official isolated green run
-  (`8/8`) with `CARGO_BUILD_JOBS=1`;
-- merge-profile pass 13 on exact head
-  `31af48ac8935b869cce4369f5c0c939c5c5b076f` passes every pre-performance
-  functional lane, including core/diagnostic guardrails, CPython differential,
-  all 25 Python interop variants, Rust interop, frontend guardrails, and all 32
-  developer-tooling variants;
-- whole-profile performance attempts were scheduler-contended by independently
-  running local compiler, E2E, release, and benchmark jobs. The three affected
-  exact-head cases were therefore remeasured in short uncontended windows and
-  checked with the repository's official `check_budgets.py --allow-subset`
-  gate: project check `1339.235ms < 1357.524ms` (`5` samples), arithmetic
-  check `1328.513ms < 1334.139ms` (`5` samples), and JSON diagnostics
-  `1317.663ms < 1335.954ms` (`5` samples). The official subset checker passes.
-  No budget, baseline, sample count, threshold, or waiver was changed.
-- the final default merge-gate attempt on exact published head `581b363aa`
-  passed every functional lane, including Python interop `25/25`, Rust
-  interop, frontend guardrails, and developer tooling `32/32`; its unchanged
-  performance budgets missed only under high-variance concurrent host load;
-- pass-9 remediation runs the complete `leetcode-full` corpus. Clean published
-  head `581b363aa` plus the migrated corpus passes `406/411`: the four
-  long-standing base failures plus the newly exposed same-named nested-helper
-  verifier collision. The current Item 2 candidate fixes that collision and
-  passes `407/411`; its four remaining failures reproduce identically on the
-  untouched Item 2 base compiler. Both `0189_rotate_array` and
-  `0297_serialize_and_deserialize_binary_tree` pass;
-- focused same-named nested-helper lowering, method-call verifier, formatting,
-  and lowering Clippy checks pass after the verifier correction. The rotated
-  array corpus fixture passes check, native build, and run, and its exact
-  reviewed head merged as corpus commit `e75af095`.
+- Item 2 exact reviewed head `774a00389c0340a981388a987d7049ffbd88edf4`
+  passed full lowering (`936 passed`, `1 ignored`), codegen (`953 passed`),
+  focused pass/fail fixtures, formatting, Clippy with warnings denied, and all
+  repository guardrails.
+- The Item 2 create-PR gate exited 0 with `131/131` E2E fixtures and report
+  signature `7c39b8c1dd4fec7c`. Its default-gate functional lanes passed; only
+  three representative timing thresholds missed during concurrent host load.
+- Item 2 merged as `fbbb69328ae6fe1e733ce25cb6e710aab75990dc`
+  after Claude Opus exact-head review pass 12 returned `SATISFIED` with zero
+  actionable findings.
+- The complete corpus candidate passed `407/411`; the four remaining failures
+  reproduced identically on the untouched Item 2 base compiler. The LRU and
+  Rotate Array compatibility snapshots pass check, native build, and run.
+- Remediation exact head `a26daa7a10a5efce4cc5e5881d395e224b492769`
+  passed lowering (`937 passed`, `1 ignored`), codegen (`954 passed`),
+  formatting, Clippy, HIR/docs/file-size guardrails, and focused diagnostic and
+  inherited-field end-to-end probes.
+- The remediation create-PR gate exited 0: Python interop `19/19`, Rust
+  interop `10/10`, generated-code quality `5/5`, runtime-platform `28`
+  variants with one declared capability skip, crate tests green, and E2E
+  `131/131` with report signature `7c39b8c1dd4fec7c`. Every blocking step and
+  timing budget passed.
+- Remediation PR #3087 merged as
+  `a7a5df414b985cc95a9ad23c5b006caa84101f0d` after exact-head Claude Opus
+  review returned `SATISFIED` with zero actionable findings.
+- Overlap-remediation exact implementation head
+  `92b38be705138643b23c37a425892df767beee5d` passed the create-PR gate,
+  including Python interop `19/19`, E2E `137/137` with signature
+  `eeeeb711211648b0`, full lowering (`941 passed`, `1 ignored`), full codegen
+  (`954 passed`), full annotated fail corpus (`564 passed`), formatting,
+  Clippy, and every documentation, HIR, and file-size guardrail.
+- The post-review manifest lane passed `138/138`, signature
+  `4ede7c71d86f381c`, after adding the seventh native phase pass fixture.
+- Remediation PR #3090 merged as
+  `44ab8ad38544fa5225d8d4f09ad3b5026d485c25` after five Opus review rounds;
+  exact-head pass 5 returned `SATISFIED` with no blocking or non-blocking
+  findings.
+- Callable-invocation remediation implementation/test head
+  `fb37126923131b51070548b0c6de05ea2e36271c` passed the full lowering suite
+  (`945 passed`, `1 ignored` before the subsequent #3091 merge), the full
+  annotated fail suite (`565 passed`), workspace Clippy with warnings denied,
+  formatting, HIR maintainability, and file-size guardrails. Four focused
+  tests cover true overlap, disjoint siblings, actual-method shadowing, and
+  dynamic-base fallback; the latter two were mutation-verified as uniquely
+  failing if their corresponding guard is removed.
+- Its merged-main integration head
+  `36c1be77fa2a7a74c4b8441178eaf9902ba259c7` passed the authoritative
+  create-PR gate with every blocking step and budget green: full lowering
+  `948 passed`, `1 ignored`, Python interop `19/19`, Rust interop `10/10`,
+  developer tooling `18/18`, generated-code quality `5/5`, runtime-platform
+  `28` variants with one declared capability skip, and E2E `139/139` with
+  signature `3313b4a3ff3d952c`.
+- Remediation PR #3092 merged as
+  `9c99ef43b1aad12fcafe6b6d3742ce9afd24e475` after four Opus review rounds;
+  exact integration-head pass 4 returned `SATISFIED` with no blocking or
+  non-blocking findings.
+- Index/slice-footprint remediation implementation/test head
+  `a813b9971c8d2c20a5eb352e37f89b62adf33c37` passed six focused ownership
+  tests, full lowering (`954 passed`, `1 ignored`), the annotated fail suite
+  (`566/566`), its native pass fixture, Clippy with warnings denied,
+  formatting, HIR maintainability, and file-size guardrails.
+- Its authoritative create-PR retry at code-identical head
+  `01bf3aff14b925fe73e5cb08692021e1cc7e0af0` exited 0 with every blocking
+  step and budget green: Python interop `19/19`, Rust interop `10/10`,
+  developer tooling `18/18`, generated-code quality `5/5`, runtime-platform
+  `28` variants with one declared capability skip, and E2E `140/140` with
+  report signature `ac6d879686517f2c`. The first full-profile attempt's sole
+  failure was a transient LSP exit timeout; the focused official retry passed
+  `6/6`, and the same case passed inside the authoritative full retry.
+- Remediation PR #3094 merged as
+  `b1b2bb23f47c854e74836bcb98bbb7f33ce3f4cc` after seven Opus rounds;
+  terminal published-head pass 7 returned `SATISFIED` with no blocking or
+  non-blocking findings.
+- The first fully integrated default merge-profile attempt at closure head
+  `738402910a22932eb98c267be27fd919ab408821` passed coverage/core guardrails,
+  diagnostics, CPython differential `2/2`, Python interop `25/25`, Rust
+  interop `10/10`, frontend/syntax `4/4`, and developer tooling `32/32`.
+  Its representative benchmarks executed successfully, but budget checking
+  rejected project graph (`1394.933ms > 1357.524ms`), arithmetic
+  (`1378.214ms > 1334.139ms`), and JSON diagnostics
+  (`1344.143ms > 1335.954ms`). A separate nightly profile started after this
+  gate began and overlapped its compilation and measurement window, then its
+  own unchanged three-case retries also failed the same host budgets. This
+  attempt was retained as integrated functional evidence rather than a green
+  merge gate. The later closure decision assigns the unresolved performance
+  measurement to the independent active performance issue.
+- The default merge-profile attempt on post-#3092 closure head
+  `bda18f90ea277909d463a796a012836c03251961` passed coverage/core guardrails,
+  diagnostics, CPython differential, Python interop `25/25`, Rust interop
+  `10/10`, frontend/syntax guardrails, and developer tooling `32/32`. It then
+  stopped at the representative performance budget: project graph measured
+  `1501.33ms > 1357.524ms`, arithmetic `1390.325ms > 1334.139ms`, and JSON
+  diagnostics `1397.746ms > 1335.954ms`. The same contended run spent
+  `161854ms` in the read-only Python doctor and `686956ms` in Python interop,
+  so it is retained as functional evidence but is not a green merge gate or a
+  final performance measurement.
+- Before #3092, two authoritative default merge-profile attempts on closure
+  head `260a0d22b2330c2b947fc7a095e150078cee7b27` passed every functional lane:
+  coverage and core guardrails, diagnostics, CPython differential, Python
+  interop `25/25`, Rust interop `10/10`, frontend/syntax guardrails, and
+  developer tooling `32/32`. Both reached the final representative performance
+  step; the first ran beside an unrelated four-worker native corpus audit and
+  missed three medians, while the second missed arithmetic by `11.368ms` and
+  JSON diagnostics by `292.035ms`.
+- At that pre-#3092 head, the repository's unchanged official subset gate
+  passed arithmetic at
+  `1275.878ms < 1334.139ms` and JSON diagnostics at
+  `1282.951ms < 1335.954ms`, each with the required five samples and
+  `check_budgets.py --allow-subset`. No baseline, threshold, sample count,
+  budget, or waiver changed.
+- A subsequent pre-#3092 complete representative retry passed seven of eight
+  enforced variants and missed only JSON diagnostics by `3.961ms`; the accepted
+  five-sample JSON subset above remains historical evidence only. The final
+  uncontended performance measurement remained pending and is now owned by
+  `adhoc_performance_budget_host_variance.md`, not by #3088 readiness.
 
 ## Acceptance criteria
 
@@ -930,8 +1027,10 @@ Current Item 2 validation evidence:
   canonical receiver-convention query, and the untyped Rust IR mutability pass
   preserves roots recorded by checked place emission.
 - Focused tests, E2E pass/fail fixtures, diagnostic docs checks, HIR/file-size
-  guardrails, formatting, clippy, the create-PR gate, and the authoritative
-  merge gate pass.
+  guardrails, formatting, clippy, and the create-PR gate pass. The integrated
+  default profile passes every phase-relevant functional lane; its independent
+  repository-wide performance-policy failure remains owned by the active
+  performance follow-up and is neither hidden nor waived here.
 - Final independent review finds no silent clone, unchecked receiver path,
   root-only over-rejection, or unresolved implementation choice.
 
@@ -997,7 +1096,9 @@ Current Item 2 validation evidence:
   fresh slice temporaries while explicitly rejecting walrus bindings, deletes
   the final dead codegen receiver helper, documents guarded indexed-storage
   behavior, restores production optimizer execution and compiler-generated
-  fallback coverage, and requires an uncontended green authoritative gate.
+  fallback coverage, and at that review stage required an uncontended green
+  authoritative gate. The final closure boundary supersedes only that
+  performance precondition, not the review's semantic findings.
 - The fail-suite CFG panic-hook observation from review pass 2 is pre-existing:
   the exact detached base `b3495318dc59a79c678fe874619f993fed5deb4b`
   emits the same two `cfg.rs:300` incomplete-branch panics while its 537-fixture
@@ -1098,25 +1199,37 @@ Current Item 2 validation evidence:
   `defaultdict` in-place bucket methods now carry the checked backing-storage
   target, and only the explicitly materialized `extend`/set-update family may
   evaluate same-map arguments before taking the bucket borrow.
-- Item 2 terminal exact-head review pass 12 returned `SATISFIED` with zero
-  actionable findings after independently reproducing the complete
-  checked-place/diagnostic matrix, upstream reconciliation, corpus ancestry,
-  and exact create-PR evidence. Item 2 merged in
+- Item 2 terminal exact-head review pass 12:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-12.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-12.md)
+  returned `SATISFIED` with zero actionable findings. It independently
+  reproduced the lowering/codegen counts, exact create-PR gate, complete
+  checked-place and diagnostic matrix, corpus ancestry, upstream
+  reconciliation, and default-gate functional result. Item 2 merged in
   [#3082](https://github.com/sifr-lang/sifr/pull/3082) as
   `fbbb69328ae6fe1e733ce25cb6e710aab75990dc`.
-- Final whole-phase review pass 1 returned `NOT SATISFIED` after finding
-  missing structured `binding` arguments on four `SIFR-OWN-0002` paths,
-  duplicated inherited-field storage rerooting, and stale tracking. Whole-phase
-  remediation review pass 1 then returned `SATISFIED` with zero actionable
-  findings, and the exact reviewed implementation merged in
+- Final whole-phase review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-1.md)
+  returned `NOT SATISFIED`. The implementation semantics were correct, but
+  `SIFR-OWN-0002` omitted its required structured `binding` argument,
+  inherited-field rerooting was duplicated, and the phase tracker was stale.
+- Whole-phase remediation review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-remediation-claude-opus-pr-review-pass-1.md)
+  returned `SATISFIED` with zero actionable findings. It independently
+  verified all four same-call diagnostic paths, canonical nested-place
+  metadata, shared inherited-field storage rerooting, value-read clone
+  preservation, uncloned mutating receivers, focused tests, Clippy, and
+  file-size compliance. The remediation merged in
   [#3087](https://github.com/sifr-lang/sifr/pull/3087) as
   `a7a5df414b985cc95a9ad23c5b006caa84101f0d`.
-- Whole-phase review pass 2 returned `NOT SATISFIED` after finding that
+- Final whole-phase review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-2.md)
+  returned `NOT SATISFIED` after finding that
   unsupported callable/recursive field values could bypass footprint
   collection and leak raw Rust borrow/move errors, that the fifth
   `SIFR-OWN-0002` path lacked its structured `binding`, and that native
-  phase-fixture/evidence tracking remained incomplete. Remediation is under
-  [#3090](https://github.com/sifr-lang/sifr/pull/3090).
+  phase-fixture/evidence tracking remained incomplete. Remediation merged in
+  [#3090](https://github.com/sifr-lang/sifr/pull/3090) as
+  `44ab8ad38544fa5225d8d4f09ad3b5026d485c25`.
 - Overlap-remediation PR review pass 1:
   [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-1.md)
   returned `NOT SATISFIED`: the first conservative fallback closed the missed
@@ -1164,6 +1277,91 @@ Current Item 2 validation evidence:
   that the stale `680/680` figure is absent, the pass-4 artifact and ledger
   entry match the review that occurred, and the exact reviewed documentation
   head `94acb685ccc53a40755683a74cda0c6baec91e8f` is internally consistent.
+- Final whole-phase review pass 3:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-3.md)
+  returned `NOT SATISFIED`. It found that callable-field invocation inside a
+  same-call argument retained only the parent object footprint, causing a
+  root-only rejection of legal disjoint sibling fields. The focused correction
+  merged in [#3092](https://github.com/sifr-lang/sifr/pull/3092). Its
+  non-blocking record finding is closed by restoring the pass-2 artifact above.
+- Callable-invocation remediation PR review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-1.md)
+  returned `SATISFIED` with no blocking findings after independently running
+  15 probes across synchronous/async, inherited, generic, nested, dynamic,
+  actual-method-shadowing, and mutable-argument shapes. Its two low
+  test-coverage observations were addressed with focused lowering regressions.
+- Callable-invocation remediation PR review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-2.md)
+  mutation-verified that each added regression uniquely fails when its
+  corresponding implementation guard is removed and reran the lowering,
+  fail, Clippy, formatting, HIR, and file-size checks. The round ended without
+  the requested verdict after mistaking an unrelated corpus process for this
+  PR's gate, so it is retained as evidence but not treated as approval.
+- Callable-invocation remediation PR review pass 3:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-3.md)
+  returned `SATISFIED` with no blocking or non-blocking findings on exact
+  implementation/test head
+  `fb37126923131b51070548b0c6de05ea2e36271c`.
+- Callable-invocation remediation integration-head review pass 4:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-4.md)
+  returned `SATISFIED` with no blocking or non-blocking findings. It verified
+  the #3091 main merge was a disjoint clean union, the implementation remained
+  byte-identical to the pass-3-approved head, every recorded count/hash was
+  exact, and the authoritative create-PR gate passed at
+  `36c1be77fa2a7a74c4b8441178eaf9902ba259c7`.
+- Final whole-phase review pass 4:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-4.md)
+  returned `NOT SATISFIED`. It found that `Index` and `Slice` footprint
+  collection did not traverse an unresolvable object base, so a nested call,
+  read, or move could disappear and leak a Rust borrow/move error instead of
+  `SIFR-OWN-0002`. The focused remediation above addresses that blocker and
+  adds reject/accept controls for unresolved bases and nested subscripts. The
+  review also required current-head merge-gate evidence to be distinguished
+  from the pre-#3092 performance record, which is corrected in the validation
+  ledger above.
+- Index/slice-footprint remediation PR review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-1.md)
+  returned `NOT SATISFIED`; the follow-up added accept-side controls for
+  disjoint unresolved index and slice bases plus a native E2E fixture.
+- Index/slice-footprint remediation PR review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-2.md)
+  returned `NOT SATISFIED`; the follow-up pinned nested-index object traversal
+  in both reject and accept directions.
+- Index/slice-footprint remediation PR review pass 3:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-3.md)
+  returned `NOT SATISFIED`; the follow-up made the slice accept control live
+  under a mutable receiver and added an independent nested-slice rejection.
+- Index/slice-footprint remediation PR review pass 4:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-4.md)
+  returned `SATISFIED` with zero actionable findings on exact implementation
+  head `a813b9971c8d2c20a5eb352e37f89b62adf33c37`.
+- Index/slice-footprint remediation evidence review pass 5:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-5.md)
+  returned `NOT SATISFIED` on two record-only findings: the PR body still
+  called the gate/review pending, and the pass-4 lowering count was stale.
+- Index/slice-footprint remediation record review pass 6:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-6.md)
+  verified both pass-5 findings closed and returned `NOT SATISFIED` only for
+  two stale file-line counts in that review record; both were corrected.
+- Index/slice-footprint remediation terminal review pass 7:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-7.md)
+  returned `SATISFIED` with no blocking or non-blocking findings, verified all
+  prior findings closed, and confirmed PR #3094's implementation and gate
+  evidence remained exact through its published record-only head.
+- Final whole-phase review pass 5:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-5.md)
+  returned `NOT SATISFIED`. In addition to carrying the non-green integrated
+  merge gate, it found that `SIFR-PROTO-0005`, `SIFR-PROTO-0006`, and
+  `SIFR-OWN-0005` omitted their declared structured arguments, that no
+  emission-level guardrail prevented registry/emitter drift, and that PR
+  #3088 omitted the exact integrated functional evidence. The PR record is
+  refreshed, and a focused diagnostic-contract remediation owns the remaining
+  code/test/guardrail findings.
+- Pass 4 also recorded a separate pre-existing match-lowering debt: a `match`
+  arm containing calls can still leak a native build failure. It is outside
+  this receiver-place phase, reproduces independently of its changes, and is
+  retained here alongside the other pre-existing value-codegen/CFG debts
+  rather than treated as a closure exception.
 - Diagnostic-contract remediation review pass 1:
   [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-1.md)
   independently verified that the pass-5 structured-argument findings and the
@@ -1216,6 +1414,15 @@ Current Item 2 validation evidence:
   signature `ac6d879686517f2c`). Its sole advisory is the non-blocking warm
   wall-time target after cold cache population; no budget, threshold, waiver,
   or validation rule changed.
+- After #3096 merged, closure head `dcaf6bd22f20edec92a37e0aa488794e083c6f98`
+  integrated exact `main` merge `0cf948ed1095fb3efe60975e1968143350c2e9b2`.
+  Its default profile passed coverage/core guardrails, diagnostics, CPython
+  differential, Python interop (`25/25`), Rust interop (`10/10`),
+  frontend/syntax, developer tooling (`32/32`), and benchmark execution. The
+  profile exited nonzero only in the independent performance area because the
+  two trend deferrals expired and two unchanged representative medians missed
+  by `0.55%` and `0.26%`. No receiver-place source or test failed, and no
+  performance policy was changed for closure.
 - Diagnostic-contract remediation published-head review pass 4:
   [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-4.md)
   independently verified the implementation, exact published head, tests,
@@ -1232,6 +1439,36 @@ Current Item 2 validation evidence:
   reran the full lowering suite (`957` passed, `1` ignored), all `39` E2E
   entrypoint tests, all `178` diagnostics baseline variants, registry/docs
   checks, formatting, workspace clippy, and both maintainability guardrails.
+- Diagnostic-contract remediation exact-record review pass 6:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-6.md)
+  returned `SATISFIED` with zero actionable findings on exact PR head
+  `5451d2434`; PR [#3096](https://github.com/sifr-lang/sifr/pull/3096) then
+  merged as `0cf948ed1095fb3efe60975e1968143350c2e9b2`.
+- Final whole-phase review pass 6:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-6.md)
+  found zero implementation defects after independently rerunning `62`
+  lowering receiver/place/footprint tests, `42` codegen receiver/place tests,
+  both receiver E2E entrypoints, guardrails, formatting, and live semantic
+  probes. It returned `NOT SATISFIED` only because #3088 still published the
+  pre-#3096 head and stale performance-dependent body. The next record-only
+  revision publishes the reconciled closure head and the explicit independent
+  performance-task boundary before exact-head review.
+- Final whole-phase published-head review pass 7:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-7.md)
+  verified both pass-6 findings closed on published head `b42ed2aba`: #3096 is
+  integrated, #3088 is cleanly mergeable, and its body matches the independent
+  performance-task boundary. It returned `NOT SATISFIED` only because two
+  earlier validation-ledger sentences still expressed the historical
+  performance run as a live #3088 prerequisite; this record-only revision
+  converts them to historical evidence and names the active performance owner.
+- Final whole-phase terminal published-head review pass 8:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-8.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-8.md)
+  returned `SATISFIED` with zero actionable findings on exact published head
+  `0663e5488`. It verified every pass-7 finding closed, #3096 ancestry, clean
+  mergeability, PR body/archive consistency, link and whitespace integrity,
+  exclusion of the untracked performance artifact, and the absence of any live
+  performance precondition on #3088. It explicitly approved the closure PR to
+  leave draft and merge.
 
 Focused diagnostic-contract validation includes:
 

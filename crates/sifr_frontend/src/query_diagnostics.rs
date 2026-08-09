@@ -10,14 +10,11 @@ use crate::export_type_localization::{
     exported_parent_chain, imported_class_ancestry, reexport_class_aliases,
 };
 use crate::module_signatures::ModuleSignature;
-use crate::{
-    diagnostic_with_code, diagnostic_with_source_range, diagnostic_with_source_range_args_help,
-};
+use crate::{diagnostic_with_code, diagnostic_with_source_range_args_help};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
     canonicalize_user_export_type, localize_user_import_function_type, localize_user_import_type,
-    ExternalDefs, HirDiagnostic, HirModule, LoweringResult, LoweringWarningDiagnostic,
-    RevealTypeDiagnostic,
+    ExternalDefs, HirDiagnostic, HirModule, LoweringResult,
 };
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -167,108 +164,6 @@ pub(super) fn hir_diagnostic_to_rendered(
     rendered
 }
 
-pub fn reveal_type_diagnostics(
-    source_context: Option<FrontendSourceContext<'_>>,
-    reveal_types: &[RevealTypeDiagnostic],
-) -> Vec<RenderedDiagnostic> {
-    reveal_types
-        .iter()
-        .map(|diagnostic| reveal_type_diagnostic(source_context, diagnostic))
-        .collect()
-}
-
-pub fn warning_diagnostics(
-    source_context: Option<FrontendSourceContext<'_>>,
-    warnings: &[LoweringWarningDiagnostic],
-) -> Vec<RenderedDiagnostic> {
-    warnings
-        .iter()
-        .map(|diagnostic| warning_diagnostic(source_context, diagnostic))
-        .collect()
-}
-
-pub(super) fn warning_diagnostic(
-    source_context: Option<FrontendSourceContext<'_>>,
-    diagnostic: &LoweringWarningDiagnostic,
-) -> RenderedDiagnostic {
-    let (code, message, message_template, args, primary_range) = match diagnostic {
-        LoweringWarningDiagnostic::ArithmeticOverflowRisk {
-            operation,
-            primary_range,
-        } => (
-            DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK,
-            format!("integer {operation} may overflow at runtime"),
-            "integer {operation} may overflow at runtime",
-            vec![("operation", DiagnosticArg::String(operation.clone()))],
-            *primary_range,
-        ),
-        LoweringWarningDiagnostic::UnreachableStatement { primary_range } => (
-            DiagnosticCode::FLOW_UNREACHABLE_STATEMENT,
-            "unreachable statement ignored".to_string(),
-            "unreachable statement ignored",
-            Vec::new(),
-            *primary_range,
-        ),
-        LoweringWarningDiagnostic::BigIntTransitionAlias { primary_range } => (
-            DiagnosticCode::INT_BIGINT_TRANSITION_ALIAS,
-            "bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values".to_string(),
-            "bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values",
-            Vec::new(),
-            *primary_range,
-        ),
-    };
-    if let (Some(context), Some(range)) = (source_context, primary_range) {
-        return diagnostic_with_source_range(code, context, range, message_template, &args);
-    }
-    rendered_spanless_diagnostic(code, message, message_template, &args)
-}
-
-pub(super) fn reveal_type_diagnostic(
-    source_context: Option<FrontendSourceContext<'_>>,
-    diagnostic: &RevealTypeDiagnostic,
-) -> RenderedDiagnostic {
-    let code = DiagnosticCode::TYPE_REVEAL_TYPE;
-    let message = format!("revealed type is {}", diagnostic.revealed_type);
-    let args = [(
-        "revealed_type",
-        DiagnosticArg::String(diagnostic.revealed_type.clone()),
-    )];
-    if let (Some(context), Some(range)) = (source_context, diagnostic.primary_range) {
-        return diagnostic_with_source_range(
-            code,
-            context,
-            range,
-            "revealed type is {revealed_type}",
-            &args,
-        );
-    }
-    rendered_spanless_diagnostic(code, message, "revealed type is {revealed_type}", &args)
-}
-
-pub(super) fn rendered_spanless_diagnostic(
-    code: DiagnosticCode,
-    message: String,
-    message_template: &'static str,
-    args: &[(&'static str, DiagnosticArg)],
-) -> RenderedDiagnostic {
-    let mut rendered_args = BTreeMap::new();
-    for (name, value) in args {
-        rendered_args.insert((*name).to_string(), value.clone());
-    }
-    RenderedDiagnostic {
-        code: code.code().to_string(),
-        severity: code.declared_severity(),
-        message,
-        message_template: message_template.to_string(),
-        args: rendered_args,
-        url: code.docs_url(),
-        spans: Vec::new(),
-        children: Vec::new(),
-        help: None,
-        suggestions: Vec::new(),
-    }
-}
-
 pub fn collect_module_exports(
     module_name: &str,
     lowering_result: &LoweringResult,
@@ -276,9 +171,11 @@ pub fn collect_module_exports(
 ) {
     let module = &lowering_result.module;
     let mut fn_exports = HashMap::new();
+    let mut const_fn_exports = HashMap::new();
     let mut class_exports = HashMap::new();
     let mut class_method_exports = ClassMethodExports::default();
     let mut class_type_param_exports = HashMap::new();
+    let mut class_field_default_exports = HashMap::new();
     let mut const_exports = HashMap::new();
     let mut const_integer_value_exports = HashMap::new();
     let mut default_exports = HashMap::new();
@@ -292,6 +189,13 @@ pub fn collect_module_exports(
 
     for func in &module.functions {
         if should_export_callable(module_name, &func.name) {
+            if func
+                .decorators
+                .iter()
+                .any(|decorator| decorator == "const_eval")
+            {
+                const_fn_exports.insert(func.name.clone(), func.clone());
+            }
             fn_exports.insert(
                 func.name.clone(),
                 exported_function_type(func, &local_classes),
@@ -374,6 +278,9 @@ pub fn collect_module_exports(
                 &local_classes,
             );
             class_exports.insert(class.name.clone(), class_ty);
+            if let Some(defaults) = lowering_result.class_field_defaults.get(&class.name) {
+                class_field_default_exports.insert(class.name.clone(), defaults.clone());
+            }
             if !class.type_params.is_empty() {
                 class_type_param_exports.insert(class.name.clone(), class.type_params.clone());
             }
@@ -503,9 +410,43 @@ pub fn collect_module_exports(
     external_defs
         .functions
         .insert(module_name.to_string(), fn_exports);
+    if !const_fn_exports.is_empty() {
+        external_defs
+            .const_functions
+            .insert(module_name.to_string(), const_fn_exports);
+    }
     external_defs
         .classes
         .insert(module_name.to_string(), class_exports);
+    if !class_field_default_exports.is_empty() {
+        external_defs
+            .class_field_defaults
+            .insert(module_name.to_string(), class_field_default_exports);
+    }
+    if !lowering_result.declaration_metadata.is_empty() {
+        external_defs.declaration_metadata.insert(
+            module_name.to_string(),
+            lowering_result.declaration_metadata.clone(),
+        );
+    }
+    if !lowering_result.specialization_requests.is_empty() {
+        external_defs.specialization_requests.insert(
+            module_name.to_string(),
+            lowering_result.specialization_requests.clone(),
+        );
+    }
+    if !lowering_result.specialization_outputs.is_empty() {
+        external_defs.specialization_outputs.insert(
+            module_name.to_string(),
+            lowering_result.specialization_outputs.clone(),
+        );
+    }
+    if !lowering_result.json_integer_boundary_requests.is_empty() {
+        external_defs.json_integer_boundary_requests.insert(
+            module_name.to_string(),
+            lowering_result.json_integer_boundary_requests.clone(),
+        );
+    }
     class_method_exports.store(external_defs, module_name);
     if !class_type_param_exports.is_empty() {
         external_defs

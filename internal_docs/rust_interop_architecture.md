@@ -348,6 +348,348 @@ Bridge version 1 covers:
 - `bridge` and `Self` namespace reservation,
 - managed projection file ownership.
 
+### Structural Rust bridge calls
+
+This section is the accepted structural bridge contract. It is specified before
+implementation and is not yet a supported compiler surface. The current
+compiler continues to reject `@rust.structural`. The future-owned
+`structural_bridge_calls` compatibility row remains non-passing until its
+positive and negative evidence pass atomically. The companion future-owned
+`bridge_version_field_removal` row governs removal of the versioned manifest
+schema at the same boundary.
+
+Once that row passes, the structural contract replaces the current versioned
+bridge schema. That change atomically removes `[rust]
+bridge-version` from the manifest schema, every in-repository package and
+fixture, managed projections, archive expectations, cache records, diagnostics,
+and generated-build assertions. That inventory explicitly includes the
+top-level `bridge_version` marker in
+`verification/areas/rust_interop/data/rust_interop_fixture_matrix.json`, its
+`check_fixture_matrix.py` assertion, `_scenario_checks.py`'s manifest-field
+assertion, `_scenario_registry.py`'s literal token, `_matrix_inventory.py`'s
+required-fixture entry, and `runner/bridge_check.py`'s version
+parameter/default. Compiler-side removal explicitly includes the
+`rust_interop_plan.rs` module/cache fields, the package-graph digest field, and
+the sysroot's synthesized `Some(1)`. It deletes the entire
+`bridge_version_mismatch` fixture/scenario and its matrix, tier, and
+stable-claim entries rather than preserving legacy acceptance evidence.
+
+The same cutover deletes this document's `bridge-version = 1` subsection above
+and rewrites every remaining version-keyed statement throughout
+`internal_docs/**`, `docs/**`, and active planning records. Named public
+surfaces include `docs/packages/manifest.mdx`,
+`docs/rust-interop.mdx`, and the Blake3 and Reqwest interop guides; the other
+architecture surface includes
+`internal_docs/sifr_sysroot_and_stdlib_architecture.md`. Dated review records,
+issue archives, and frozen release-candidate evidence remain immutable history,
+not an active contract or fallback.
+
+A package that still declares `bridge-version` is rejected through an
+explicitly added removed-field diagnostic; merely deleting the manifest reader,
+which would silently accept an unknown key, is insufficient. Sifr does not
+rewrite the field, select versioned glue, or provide a compatibility mode or
+fallback. The compiler release and managed-projection/source digests identify
+the one current bridge contract instead.
+
+The structural contract retains the closed ordinary direct-value table as
+current language semantics and adds one general structural-call lane for
+monomorphized synchronous functions. It does not add tuple, set, arbitrary
+mapping, union payload, specialized scalar, or generic type-variable entries to
+the ordinary direct-value table.
+
+The Sifr marker is `sifr.meta.Structural`. A structural Rust declaration has
+exactly one concrete type variable bounded by that marker and is explicitly
+marked with `@rust.structural` in addition to its normal `@rust(...)` target:
+
+```sifr
+from sifr.meta import Structural
+from typing import Callable
+
+@rust.structural
+@rust(native_codec.decode)
+def decode[T: Structural](data: bytes) -> Result[T, DecodeError | RustPanicError]: ...
+
+@rust.structural
+@rust(native_codec.encode)
+def encode[T: Structural](value: T) -> Result[bytes, EncodeError | RustPanicError]: ...
+
+@rust.structural
+@rust(native_codec.transform)
+def transform[T: Structural](
+    value: T,
+    callback: Callable[[T], Result[T, CallbackError]],
+) -> Result[T, TransformError | RustPanicError]: ...
+```
+
+`@rust.structural` is the one deliberate bare-marker form in the Rust interop
+decorator grammar. It takes no arguments and must accompany exactly one normal
+`@rust(...)` target on the same function; `@rust.structural(...)`, a marker
+without a target, and duplicate markers are rejected as configuration errors.
+
+`Structural` is a compiler-owned capability marker, not a user-implementable
+protocol and not a runtime reflection base class. A concrete type satisfies it
+only when the compiler can generate the complete construction and projection
+contract described here. `Any`, `Unknown`, an unspecialized type variable,
+functions, affine resources, and values containing unsupported borrowed or
+opaque members do not satisfy it. The compiler reports the unsupported member
+path at the declaration or specialization site.
+
+The marker makes the type variable legal only in these positions:
+
+- an owned return, which requires `StructuralConstruct`;
+- an immutable borrowed parameter, which requires `StructuralProject`; and
+- the input of a top-level call-scoped callback, which requires
+  `StructuralConstruct`, or its output, which requires `StructuralProject`.
+
+An owned direct `T` parameter, a mutable `T` borrow, nested callback container,
+async declaration, method receiver, retained/thread-safe callback, opaque-class
+field, or ordinary unmarked `@rust(...)` generic is outside the structural Rust
+bridge contract. A structural return must be inside `Result` with an ordinary
+error and `RustPanicError`; a structural call cannot use a no-panic trust waiver
+or a `panic = "abort"` generated-build profile.
+
+The Rust API is owned by `sifr_runtime::interop::structural` and is the only
+stable interface a backend may use:
+
+```rust
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct ShapeIdentity([u8; 32]);
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct NodeId(u32);
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub struct ConstructToken { /* private */ }
+pub struct StructuralNodeRef<'source> { /* private */ }
+pub struct StructuralEnter<'value> { /* private */ }
+pub struct StructuralEdge<'value> { /* private */ }
+pub enum StructuralScalar { /* closed owned scalar variants */ }
+pub enum StructuralScalarRef<'value> { /* closed borrowed scalar variants */ }
+pub enum StructuralContractError { /* closed redacted contract failures */ }
+pub enum VisitControl { Continue, SkipChildren }
+
+pub enum StructuralKind {
+    None,
+    Bool,
+    SignedInteger,
+    UnsignedInteger,
+    ExactInteger,
+    Float,
+    String,
+    Bytes,
+    Sequence,
+    Tuple,
+    Mapping,
+    Set,
+    FrozenSet,
+    Record,
+    Enum,
+    Optional,
+    Union,
+    Refined,
+}
+
+pub trait StructuralSource {
+    fn shape_identity(&self) -> ShapeIdentity;
+    fn root(&self) -> NodeId;
+    fn node(&self, id: NodeId) -> Result<StructuralNodeRef<'_>, StructuralContractError>;
+    fn take_scalar(
+        &mut self,
+        id: NodeId,
+    ) -> Result<StructuralScalar, StructuralContractError>;
+}
+
+pub fn structural_construct<T: StructuralConstruct, S: StructuralSource>(
+    source: S,
+) -> Result<T, StructuralContractError>;
+
+pub trait StructuralType {
+    fn shape_identity() -> ShapeIdentity;
+}
+
+pub trait StructuralConstruct: StructuralType + Sized {
+    #[doc(hidden)]
+    fn structural_construct_at<S: StructuralSource>(
+        source: &mut S,
+        node: NodeId,
+        token: ConstructToken,
+    ) -> Result<Self, StructuralContractError>;
+}
+
+pub trait StructuralVisitor<'value> {
+    type Error;
+
+    fn enter(
+        &mut self,
+        event: StructuralEnter<'value>,
+    ) -> Result<VisitControl, Self::Error>;
+    fn edge(&mut self, edge: StructuralEdge<'value>) -> Result<(), Self::Error>;
+    fn scalar(&mut self, value: StructuralScalarRef<'value>) -> Result<(), Self::Error>;
+    fn exit(&mut self, kind: StructuralKind) -> Result<(), Self::Error>;
+}
+
+pub trait StructuralProject: StructuralType {
+    fn structural_project<'value, V: StructuralVisitor<'value>>(
+        &'value self,
+        visitor: &mut V,
+    ) -> Result<(), V::Error>;
+}
+```
+
+`structural_construct` is the sole public construction entry. It compares
+`source.shape_identity()` with `<T as StructuralType>::shape_identity()` before
+reading or moving the root, then creates the private-constructor
+`ConstructToken` and delegates to
+`T::structural_construct_at(&mut source, root, token)`, where `root` was read
+before the mutable borrow. Recursive implementations pass that token while
+selecting child `NodeId` values.
+`structural_construct_at` does not repeat a whole-shape identity comparison for
+a child; it checks that child's kind, arity, field/member identity, and ownership
+state. Backend code cannot create the token and therefore cannot bypass the root
+check or call the node-scoped entry directly.
+
+`ShapeIdentity`, `NodeId`, `ConstructToken`, node/event structs, scalar enums,
+visit control, and contract errors are stable runtime types with private
+representation and public checked constructors/accessors where appropriate.
+Public enums are Rust `#[non_exhaustive]` so downstream matches require a
+wildcard, while the compiler-owned accepted variant set is closed for this
+contract revision; adding a variant requires a contract and cache-identity
+update. Their serialized spelling is not an ABI. `StructuralEnter`
+identifies the aggregate kind, nominal/member identity, and child count.
+`StructuralEdge` identifies the next record field, sequence/tuple index,
+mapping key/value position, or active optional/union/refined member.
+`VisitControl` has exactly `Continue` and `SkipChildren` in the structural
+contract.
+`StructuralNodeRef` is a borrowed closed description of one node. Aggregate
+descriptions expose child `NodeId` values, declaration-order record fields,
+the active enum/union member, and recursive back-references; they never expose
+the source's memory layout. `StructuralScalar` owns moved strings, bytes, and
+exact integers, while `StructuralScalarRef` borrows them for projection. The
+fixed-width integer variant records signedness and width, so no narrowing is
+implicit.
+
+`StructuralSource` is implementable by a native backend, but its values remain
+sealed behind an opaque resource declared by that package. Sifr code cannot
+name a node, forge a source, call `take_scalar`, or construct a structural value
+from field parts. A source reports one root and one compiler-provided shape
+identity. `structural_construct` compares that identity with
+`<T as StructuralType>::shape_identity()` before reading or moving the root
+node. A mismatch, invalid node
+reference, wrong node kind, duplicate move, missing/extra field, or invalid
+active variant is a `StructuralContractError`, not a user validation error.
+Backend packages map that internal error to their declared stable outer error
+without including input data.
+
+The leaf crate `sifr_structural_identity` is the single owner of identity
+encoding and hashing. It provides versioned primitive, unary-container,
+binary-container, tuple, union, and nominal-record composition functions;
+`sifr_runtime::interop::structural` re-exports its `ShapeIdentity` and checked
+combinators. The compiler and runtime call that same leaf implementation rather
+than mirroring the algorithm. Runtime-owned generic implementations such as
+`list[T]` compute their identity by composing
+`<T as StructuralType>::shape_identity()` with the runtime-owned list tag.
+Generated nominal implementations return the
+compiler-precomputed result produced by the same crate.
+
+The canonical input includes exact nominal and package identity, concrete type
+arguments, declaration-order field names and types, required/defaulted state,
+enum/union members, refined bases, and numbered recursive back-references. It
+does not include Rust layout, process addresses, or build paths. A
+field/type/metadata change that changes the construction contract changes the
+identity. The leaf-crate version is the structural identity algorithm version
+and part of the interop cache key.
+
+Construction owns the source and performs a depth-first checked traversal.
+Owned scalar payloads move out once; fixed-width and copy scalars copy. Each
+aggregate is published only after every child succeeds. On failure, Rust drops
+already constructed locals and the source drops all untaken payloads, so no
+partially initialized Sifr value is observable and no moved value is leaked or
+double-dropped. Recursive values are followed through numbered node references
+by repeated `structural_construct_at` calls; the normal Sifr finite-layout and
+ownership checks still apply. A non-copy node has one owning incoming edge and
+may be moved exactly once. A backend that represents a logical DAG must
+materialize distinct owned nodes for shared non-copy values; only copy scalars
+may be read through multiple edges.
+
+Projection is a borrowed, depth-first event stream. A scalar leaf emits exactly
+one `scalar` event and no `enter`, `edge`, or `exit`. An aggregate emits
+`enter`; `Continue` then emits one `edge` immediately before each child stream
+and finally one matching `exit`. `SkipChildren` emits no edges or child events
+and immediately emits the matching `exit`. If `enter`, `edge`, `scalar`, or a
+child returns an error, traversal stops and emits no synthetic exits after the
+error. Thus every successful or skipped aggregate stream is balanced, and the
+consumer can reconstruct its stack without node identities in `exit`.
+The `None` type is a scalar leaf with a `None` scalar variant. An absent
+`Optional[T]` is an `Optional` aggregate with zero children (`enter`, then
+`exit`); a present value has one active-member edge followed by the child
+stream. This distinction preserves the declared optional shape without
+inventing a child for absence.
+
+Generated implementations emit declaration-order record fields and stable
+member indices, borrow scalar payloads, and stream collection entries without
+first allocating a generic tree. The visitor and all `Structural*Ref` values
+are tied to `'value`, are neither storable nor returnable through the Sifr
+bridge, and cannot outlive the single structural call. Projection never moves
+from or mutates the Sifr value. Structural mappings accept their statically
+declared hashable key shape; iteration follows the Sifr value's runtime order
+and is not a canonical-order promise. A serializer that requires canonical
+ordering owns that policy explicitly.
+
+Generated implementations live in the concrete consumer crate under the
+reserved `crate::__sifr_bridge::structural` namespace. Runtime-owned primitive
+and collection implementations compose recursively; generated nominal types
+receive local implementations. Backend crates depend only on
+`sifr_runtime::interop::structural` and their own opaque source/resource types.
+They must not import consumer `crate::__sifr_bridge` modules or assume a
+generated type's fields or Rust representation.
+
+For each concrete call, generated glue invokes the generic Rust target at the
+concrete Sifr type. Rust therefore monomorphizes the backend call in the final
+package build. The probe is a typed, non-executed generic call site using the
+same concrete type and ownership modes; a function-pointer coercion is not used
+for a generic item. Probe failures retain the source decorator span and use the
+existing `SIFR-RUST-RESOLVE-*` / `SIFR-RUST-TYPE-*` families. No dynamic type
+registry, `Any`, layout descriptor, symbol lookup, or runtime reflection is
+permitted.
+
+Typed callbacks reuse `CallScopedCallbackBridge`; the structural contract does not add
+an erased callback. For the example above, the Rust target receives exactly
+`CallScopedCallbackBridge<'call, (T,), Result<T, CallbackErrorBridge>>`. The
+backend constructs the callback argument with
+`structural_construct::<T, _>(source)`, calls the bridge with `(value,)`, and,
+on an `Ok(T)`, projects the returned value through `StructuralProject`.
+Generated glue specializes the borrowed closure at concrete `T` and maps only
+the declared callback error bridge; it does not create a backend source or
+return a projection stream.
+
+The corresponding non-executed probe is a generic call site bounded by
+`T: StructuralConstruct + StructuralProject` and supplies that exact
+`CallScopedCallbackBridge<'_, (T,), Result<T, CallbackErrorBridge>>` type.
+Structural callbacks whose Sifr signature uses only input `T` or only output
+`T` receive only the needed trait bound; bridge-compatible non-`T` arguments
+and results keep their ordinary bridge types. A captured caller context remains
+an ordinary typed borrow in the generated closure, so the backend cannot
+inspect, create, store, or erase it. Callback order is declaration order.
+Ordinary callback `Result` errors remain ordinary errors; a callback panic is
+caught by the mandatory outer silent boundary and becomes only the redacted
+`RustPanicError`, as certified by `callbacks_call_scoped` and
+`panic_boundary_wrapper_emission`.
+
+The outer silent panic boundary covers the backend target, every source method,
+generated construction/projection, visitor calls, and callback invocation.
+`StructuralContractError` handles checked contract failures; unwinding handles
+backend defects without exposing payloads. Generated structural code contains
+no data-dependent `unwrap`, `expect`, or assertion.
+
+The interop build plan and cache identity include the compiler release,
+structural identity algorithm version, every concrete `ShapeIdentity`, required construct
+/ project / callback modes, generated implementation digest, backend target and
+source digests, callback identities, panic strategy, target triple, features,
+and lock state. Source and installed packages materialize identical managed
+structural projections and are checked through the same probe. Package archives
+with missing/stale projections or a mismatched structural digest are rejected;
+repair never overwrites user-authored bridge files.
+
+### Backend dependency declarations
+
 Same-workspace backend crates are ordinary dependencies:
 
 ```toml
@@ -1517,6 +1859,7 @@ Compatibility categories are:
 - `unsupported-by-design`: passing diagnostics for a rejected surface with no
   fallback path.
 - `future-owned-by-separate-phase`: documented separately because at least one
-  evidence direction is not passing. Future-owned rows must reference a concrete
-  active issue or phase; the current active issue is
-  [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md).
+  evidence direction is not passing. Future-owned rows must reference their
+  durable technical owner. The current future-owned rows
+  `structural_bridge_calls` and `bridge_version_field_removal` are owned by the
+  structural Rust bridge section above.

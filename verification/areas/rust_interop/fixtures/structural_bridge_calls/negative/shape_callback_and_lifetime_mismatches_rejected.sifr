@@ -1,0 +1,26 @@
+# fixture: structural_bridge_calls
+# evidence: negative/shape_callback_and_lifetime_mismatches_rejected
+# evidence-status: planned
+# execution-kind: runtime-observed
+# expected-result: future-owned-diagnostic
+# expected-diagnostic: SIFR-RUST-TYPE-0001
+# Deliberate compiler and Cargo-probe rejection evidence remains reserved until
+# the structural bridge is implemented.
+
+from sifr.meta import Structural
+
+class PlannedMismatchValue:
+    value: uint32
+
+
+class PlannedStructuralError(Error):
+    message: str
+
+
+@rust.structural
+@rust(bridge.structural.reject_mismatch)
+def planned_structural_mismatch[T: Structural](value: T) -> Result[T, PlannedStructuralError | RustPanicError]: ...
+
+def verify_shape_callback_and_lifetime_mismatches_rejected() -> Result[PlannedMismatchValue, PlannedStructuralError | RustPanicError]:
+    result: Result[PlannedMismatchValue, PlannedStructuralError | RustPanicError] = planned_structural_mismatch(PlannedMismatchValue(0))
+    return result

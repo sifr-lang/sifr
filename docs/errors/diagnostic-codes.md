@@ -14,6 +14,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `NAME` | `SIFR-NAME-0000` | Name binding and resolution diagnostics. |
 | `IMPORT` | `SIFR-IMPORT-0000` | Module import and path resolution diagnostics. |
 | `TYPE` | `SIFR-TYPE-0000` | Static type compatibility and inference diagnostics. |
+| `META` | `SIFR-META-0000` | Deterministic package metaprogramming and const-specialization diagnostics. |
 | `ASYNC` | `SIFR-ASYNC-0000` | Async effect, awaitability, and blocking-offload diagnostics. |
 | `PYENV` | `SIFR-PYENV-0000` | Embedded CPython environment selection, probing, and ABI diagnostics. |
 | `PYIMP` | `SIFR-PYIMP-0000` | Embedded Python import and module-loading diagnostics. |
@@ -116,7 +117,11 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-INT-0005`](SIFR-INT-0005.mdx) | Error | Integer division, modulo, or exponentiation requires handling a typed failure. |
 | [`SIFR-INT-0006`](SIFR-INT-0006.mdx) | Error | Exact integer to float conversion requires handling precision loss. |
 | [`SIFR-INT-0007`](SIFR-INT-0007.mdx) | Error | Bool and integer comparison requires explicit conversion. |
+| [`SIFR-INT-0009`](SIFR-INT-0009.mdx) | Error | JSON or web-safe integer serialization boundary is missing or unsafe. |
 | [`SIFR-INT-0011`](SIFR-INT-0011.mdx) | Warning | Temporary bigint transition alias used. |
+| [`SIFR-META-0001`](SIFR-META-0001.mdx) | Error | Package const specialization reported a fatal issue. |
+| [`SIFR-META-0002`](SIFR-META-0002.mdx) | Warning | Package const specialization reported a hard warning. |
+| [`SIFR-META-0003`](SIFR-META-0003.mdx) | Error | Package const-specialization issue declaration is malformed. |
 | [`SIFR-CALL-0001`](SIFR-CALL-0001.mdx) | Error | Wrong positional argument count. |
 | [`SIFR-CALL-0002`](SIFR-CALL-0002.mdx) | Error | Unexpected keyword argument. |
 | [`SIFR-CALL-0003`](SIFR-CALL-0003.mdx) | Error | Duplicate argument from positional and keyword overlap. |
@@ -275,6 +280,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-NAME-0000`](diagnostic-codes.md) | `NAME` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-IMPORT-0000`](diagnostic-codes.md) | `IMPORT` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-TYPE-0000`](diagnostic-codes.md) | `TYPE` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-META-0000`](diagnostic-codes.md) | `META` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-ASYNC-0000`](diagnostic-codes.md) | `ASYNC` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-PYENV-0000`](diagnostic-codes.md) | `PYENV` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-PYIMP-0000`](diagnostic-codes.md) | `PYIMP` | Reserved family base; not emitted as a diagnostic. |
@@ -305,7 +311,6 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PYASYNC-0001`](diagnostic-codes.md) | `PYASYNC` | Reserved for an invalid Python awaitable, cancellation, or loop-ownership declaration. |
 | [`SIFR-INT-0002`](diagnostic-codes.md) | `INT` | Reserved for implicit narrowing from exact or fixed-width integer sources to narrower fixed-width targets. |
 | [`SIFR-INT-0008`](diagnostic-codes.md) | `INT` | Reserved for fixed-width array, tensor, or dataframe arithmetic without an explicit overflow policy. |
-| [`SIFR-INT-0009`](diagnostic-codes.md) | `INT` | Reserved for JSON or web-safe integer serialization policy failures. |
 | [`SIFR-INT-0010`](diagnostic-codes.md) | `INT` | Reserved for bytes or bytearray construction and mutation values that do not fit uint8. |
 | [`SIFR-TYPE-0903`](diagnostic-codes.md) | `TYPE` | Retired: direct annotated workload calls from async code are now ASYNC-family errors. |
 | [`SIFR-CALL-0000`](diagnostic-codes.md) | `CALL` | Reserved family base; not emitted as a diagnostic. |

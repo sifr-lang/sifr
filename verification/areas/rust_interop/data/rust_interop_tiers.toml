@@ -5,6 +5,7 @@ fixtures = [
   "dotted_path_resolution",
   "direct_crate_negative_type",
   "bridge_version_mismatch",
+  "bridge_version_field_removal",
   "blocking_diagnostics",
 ]
 
@@ -28,6 +29,7 @@ fixtures = [
   "opaque_resource_core",
   "opaque_resource_matrix",
   "close_after_use",
+  "structural_bridge_calls",
   "panic_boundary",
   "panic_boundary_wrapper_emission",
   "panic_abort_profile",

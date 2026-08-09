@@ -72,6 +72,14 @@ Tier 1 and tier 3 require `cargo-probe`; tier 0 requires
 contract-only, cargo-probed, or runtime-observed. A contract-only row never
 satisfies a runtime claim.
 
+`structural_bridge_calls` is a planned, future-owned runtime deferral. Structural
+calls are not supported until both evidence directions pass for construction,
+projection, callbacks, and deliberate rejections. Enabling that support removes
+the `bridge-version` manifest field and all version-specific paths rather than
+retaining a compatibility mode or fallback. The separate planned
+`bridge_version_field_removal` diagnostic row
+tracks acceptance of unversioned manifests and rejection of the removed field.
+
 ### Stable Support Claims
 
 The following table is validated against

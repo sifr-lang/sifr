@@ -27,6 +27,7 @@ VALID_CATEGORIES = {
 CLAIMED_SUPPORT_CATEGORIES = {"supported", "supported-through-bridge", "unsupported-by-design"}
 OPTIONAL_EMPTY_CATEGORIES = {"future-owned-by-separate-phase"}
 FUTURE_OWNER_PREFIXES = ("plans/issues/active/", "plans/phases/")
+FUTURE_OWNER_PATHS = {"internal_docs/rust_interop_architecture.md"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -174,11 +175,15 @@ def _validate_row(
         future_owner = row.get("future_owner")
         if not isinstance(future_owner, str) or not future_owner:
             failures.append(f"{row_id}: future-owned row must name future_owner")
-        elif not future_owner.startswith(FUTURE_OWNER_PREFIXES):
+        elif (
+            not future_owner.startswith(FUTURE_OWNER_PREFIXES)
+            and future_owner not in FUTURE_OWNER_PATHS
+        ):
             failures.append(
-                f"{row_id}: future_owner must reference plans/issues/active/ or plans/phases/"
+                f"{row_id}: future_owner must reference an active plan or "
+                "the durable Rust interop architecture"
             )
-        elif not (REPO_ROOT / future_owner).is_file():
+        elif not (repo_root / future_owner).is_file():
             failures.append(f"{row_id}: future_owner does not exist: {future_owner}")
     notes = row.get("notes")
     if not isinstance(notes, str) or not notes.strip():
@@ -418,7 +423,54 @@ def _run_self_test() -> int:
                 file=sys.stderr,
             )
             return 1
-    print(f"rust interop compatibility matrix self-test ok: cases={len(cases) + 4}")
+
+        future_fixture = {
+            **fixture,
+            "positive_evidence": {"id": "positive", "status": "planned"},
+            "negative_evidence": {"id": "negative", "status": "planned"},
+        }
+        future_row = {
+            **future_fixture,
+            "fixture": "diagnostic_fixture",
+            "category": "future-owned-by-separate-phase",
+            "notes": "future-owned diagnostic behavior",
+        }
+        future_owner_cases = (
+            (
+                "off-allowlist future owner",
+                "internal_docs/not-a-rust-interop-owner.md",
+                "future_owner must reference an active plan or the durable Rust interop architecture",
+            ),
+            (
+                "missing allowlisted future owner",
+                "internal_docs/rust_interop_architecture.md",
+                "future_owner does not exist: internal_docs/rust_interop_architecture.md",
+            ),
+        )
+        for name, future_owner, expected in future_owner_cases:
+            failures = []
+            _validate_row(
+                failures,
+                {**future_row, "future_owner": future_owner},
+                {"diagnostic_fixture": future_fixture},
+                {},
+                profiles,
+                repo_root,
+                {},
+                set(),
+                set(),
+                set(),
+            )
+            if not any(expected in failure for failure in failures):
+                print(
+                    f"rust interop compatibility matrix self-test error: {name} passed",
+                    file=sys.stderr,
+                )
+                return 1
+    print(
+        "rust interop compatibility matrix self-test ok: "
+        f"cases={len(cases) + len(future_owner_cases) + 4}"
+    )
     return 0
 
 

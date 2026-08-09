@@ -563,14 +563,22 @@ where
             value,
             object_ty,
             ..
+        } => {
+            transform_type(object_ty, transform);
+            transform_expr(index, transform, visit);
+            transform_expr(value, transform, visit);
         }
-        | HirStmt::SubscriptAugAssign {
+        HirStmt::SubscriptAugAssign {
             index,
             value,
             object_ty,
+            missing_key_error,
             ..
         } => {
             transform_type(object_ty, transform);
+            if let Some(error_ty) = missing_key_error {
+                transform_type(error_ty, transform);
+            }
             transform_expr(index, transform, visit);
             transform_expr(value, transform, visit);
         }

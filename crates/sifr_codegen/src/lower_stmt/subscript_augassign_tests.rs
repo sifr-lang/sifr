@@ -11,6 +11,7 @@ fn lowers_simple_list_subscript_augassign_floor_div_equal_stmt() {
             ty: Type::Int,
         },
         object_ty: Type::List(Box::new(Type::Int)),
+        missing_key_error: None,
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("list subscript floor-div augassign lowered");
@@ -50,6 +51,7 @@ fn lowers_simple_list_subscript_augassign_power_equal_stmt() {
             ty: Type::Int,
         },
         object_ty: Type::List(Box::new(Type::Int)),
+        missing_key_error: None,
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("list subscript power augassign lowered");
@@ -91,6 +93,7 @@ fn lowers_simple_alias_list_subscript_augassign_stmt() {
         op: "+=".to_string(),
         value: HirExpr::IntLiteral(1),
         object_ty: Type::alias("IntList", Type::List(Box::new(Type::Int))),
+        missing_key_error: None,
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("alias-list subscript augassign lowered");
@@ -110,6 +113,7 @@ fn does_not_lower_subscript_augassign_with_non_leaf_value() {
             ty: Type::Int,
         },
         object_ty: Type::List(Box::new(Type::Int)),
+        missing_key_error: None,
     };
 
     assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());

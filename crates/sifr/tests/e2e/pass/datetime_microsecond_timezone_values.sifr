@@ -1,0 +1,16 @@
+from sifr.datetime import datetime, time, timedelta
+
+
+def main():
+    delta: timedelta = timedelta(1, 2, 345678)
+    assert delta.total_microseconds() == 86402345678
+    assert delta.microseconds() == 345678
+
+    stamp: datetime = datetime(2026, 8, 8, 12, 34, 56, 123456, 10800)
+    assert stamp.isoformat() == "2026-08-08T12:34:56.123456+03:00"
+    assert stamp.timestamp_microseconds() == stamp.timestamp() * 1000000 + 123456
+
+    clock: time = time(12, 34, 56, 654321, 10800)
+    assert clock.isoformat() == "12:34:56.654321+03:00"
+    assert clock.is_aware()
+    assert clock.utc_offset_seconds() == 10800
