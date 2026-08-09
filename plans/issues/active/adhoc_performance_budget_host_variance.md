@@ -103,6 +103,11 @@ emitted an empty instruction array that failed result validation. Profiles now
 select work mode only on Darwin and retain latency mode elsewhere. Producers
 omit instruction evidence when the host does not provide it.
 
+The first post-review area-adapter verdict found that the performance runner's
+new sibling import worked only when the runner was executed as a script. The
+runner now adds its area directory before importing host control. Both direct
+and `sifr_verify areas run` rules invocations pass.
+
 ### M2 reproduced evidence
 
 On exact M1 candidate `28bca35551321b109e272c61ae52fe6201eb810d`,
