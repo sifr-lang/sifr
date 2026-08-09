@@ -68,13 +68,14 @@ different process boundary. Separate governed thresholds prevent those RSS
 meanings from being compared as if they were equal.
 
 The approved full-manifest work capture passed all 65 cases on implementation
-commit `00ae57a0f569ed578f665e01a017cec0e3c19369`. It produced work-budget
+commit `c5d4c68f317d01f86bb15f45862a52d6f54af86e`. It produced work-budget
 artifact digest
-`40f3cd6df531294fb72c9fe36a327dcbc32f30fc317164405b310dc6340e1d35`
+`d2e48c6f96d7cd160b01b1fa1c2e6641b203d107ec201f91f00fbc927de9c51d`
 and raw-evidence digest
-`99013460c5692fddef52b4ff10bc95a4a82a5bc03ddbc10d7fb092c76dc3b1a5`.
-The largest instruction coefficient of variation was `0.010884`. All cases
-passed on their first controlled attempt.
+`4e7991fe787b2f9db55513acc312fe90cf262b1e4b870bd53e520e3b49dba2b6`.
+The largest accepted instruction coefficient of variation was `0.013556`.
+The formatter corpus rejected an unstable `0.030451` attempt and accepted its
+`0.013556` retry. All other cases passed on their first controlled attempt.
 
 The first representative verdict found that independent query processes had
 reduced aggregate cache counts. The producer now uses one aggregate invocation
@@ -82,6 +83,12 @@ for latency, cache, and diagnostics. It uses independent invocations only for
 process-work samples. A deterministic self-test protects this boundary. The
 two affected cases report 2,300 cache hits and 2,300 misses in the replacement
 capture.
+
+The full evidence comparison also found that generic RSS baselines used a
+different process boundary from Darwin rusage. Work mode now uses the approved
+Darwin process-tree RSS values from the same local artifact. Latency mode keeps
+the existing generic RSS thresholds. Seeded tests reject both instruction and
+local-RSS work regressions without using elapsed-time thresholds.
 
 ### M2 reproduced evidence
 

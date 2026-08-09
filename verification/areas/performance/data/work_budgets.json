@@ -1,403 +1,535 @@
 {
   "budgets": [
     {
-      "baseline_median_instructions": 117192357214,
+      "baseline_median_instructions": 117229829132,
+      "baseline_peak_rss_bytes": 208404480,
       "benchmark_id": "build-project-001-additional-modules",
       "budget_id": "perf.build.project.additional_modules",
-      "threshold_median_instructions": 119536204359
+      "threshold_median_instructions": 119574425715,
+      "threshold_peak_rss_bytes": 241958912
     },
     {
-      "baseline_median_instructions": 111178721364,
+      "baseline_median_instructions": 111171964863,
+      "baseline_peak_rss_bytes": 146292736,
       "benchmark_id": "build-project-002-branch-paths",
       "budget_id": "perf.build.project.branch_paths",
-      "threshold_median_instructions": 113402295792
+      "threshold_median_instructions": 113395404161,
+      "threshold_peak_rss_bytes": 179847168
     },
     {
-      "baseline_median_instructions": 111187546626,
+      "baseline_median_instructions": 111162641563,
+      "baseline_peak_rss_bytes": 146604032,
       "benchmark_id": "build-project-003-cargo-manifest",
       "budget_id": "perf.build.project.cargo_manifest",
-      "threshold_median_instructions": 113411297559
+      "threshold_median_instructions": 113385894395,
+      "threshold_peak_rss_bytes": 180158464
     },
     {
-      "baseline_median_instructions": 115832468655,
+      "baseline_median_instructions": 115836158169,
+      "baseline_peak_rss_bytes": 156041216,
       "benchmark_id": "build-project-004-dependency-manifest",
       "budget_id": "perf.build.project.dependency_manifest",
-      "threshold_median_instructions": 118149118029
+      "threshold_median_instructions": 118152881333,
+      "threshold_peak_rss_bytes": 189595648
     },
     {
-      "baseline_median_instructions": 111269782458,
+      "baseline_median_instructions": 111289986816,
+      "baseline_peak_rss_bytes": 146964480,
       "benchmark_id": "build-project-005-project-graph",
       "budget_id": "perf.build.project.project_graph",
-      "threshold_median_instructions": 113495178108
+      "threshold_median_instructions": 113515786553,
+      "threshold_peak_rss_bytes": 180518912
     },
     {
-      "baseline_median_instructions": 111102094757,
+      "baseline_median_instructions": 111123816056,
+      "baseline_peak_rss_bytes": 147816448,
       "benchmark_id": "build-single-file-001-break-continue",
       "budget_id": "perf.build.single.break_continue",
-      "threshold_median_instructions": 113324136653
+      "threshold_median_instructions": 113346292378,
+      "threshold_peak_rss_bytes": 181370880
     },
     {
-      "baseline_median_instructions": 111139266143,
+      "baseline_median_instructions": 111101271401,
+      "baseline_peak_rss_bytes": 147013632,
       "benchmark_id": "build-single-file-002-builtin-any-all",
       "budget_id": "perf.build.single.builtin_any_all",
-      "threshold_median_instructions": 113362051466
+      "threshold_median_instructions": 113323296830,
+      "threshold_peak_rss_bytes": 180568064
     },
     {
-      "baseline_median_instructions": 111105474077,
+      "baseline_median_instructions": 111096951479,
+      "baseline_peak_rss_bytes": 146243584,
       "benchmark_id": "build-single-file-003-builtin-enumerate-zip",
       "budget_id": "perf.build.single.builtin_enumerate_zip",
-      "threshold_median_instructions": 113327583559
+      "threshold_median_instructions": 113318890509,
+      "threshold_peak_rss_bytes": 179798016
     },
     {
-      "baseline_median_instructions": 111120164382,
+      "baseline_median_instructions": 111136188484,
+      "baseline_peak_rss_bytes": 147636224,
       "benchmark_id": "build-single-file-004-bytes-constructors",
       "budget_id": "perf.build.single.bytes_constructors",
-      "threshold_median_instructions": 113342567670
+      "threshold_median_instructions": 113358912254,
+      "threshold_peak_rss_bytes": 181190656
     },
     {
-      "baseline_median_instructions": 111118904464,
+      "baseline_median_instructions": 111101446409,
+      "baseline_peak_rss_bytes": 148127744,
       "benchmark_id": "build-single-file-005-class-methods",
       "budget_id": "perf.build.single.class_methods",
-      "threshold_median_instructions": 113341282554
+      "threshold_median_instructions": 113323475338,
+      "threshold_peak_rss_bytes": 181682176
     },
     {
-      "baseline_median_instructions": 111111800423,
+      "baseline_median_instructions": 111105563929,
+      "baseline_peak_rss_bytes": 146128896,
       "benchmark_id": "build-single-file-006-collection-len",
       "budget_id": "perf.build.single.collection_len",
-      "threshold_median_instructions": 113334036432
+      "threshold_median_instructions": 113327675208,
+      "threshold_peak_rss_bytes": 179683328
     },
     {
-      "baseline_median_instructions": 111108018825,
+      "baseline_median_instructions": 111083940172,
+      "baseline_peak_rss_bytes": 146866176,
       "benchmark_id": "build-single-file-007-comp-set",
       "budget_id": "perf.build.single.comp_set",
-      "threshold_median_instructions": 113330179202
+      "threshold_median_instructions": 113305618976,
+      "threshold_peak_rss_bytes": 180420608
     },
     {
-      "baseline_median_instructions": 115073894479,
+      "baseline_median_instructions": 115067842334,
+      "baseline_peak_rss_bytes": 166395904,
       "benchmark_id": "build-single-file-008-decimal-conversions",
       "budget_id": "perf.build.single.decimal_conversions",
-      "threshold_median_instructions": 117375372369
+      "threshold_median_instructions": 117369199181,
+      "threshold_peak_rss_bytes": 199950336
     },
     {
-      "baseline_median_instructions": 111098033311,
+      "baseline_median_instructions": 111193384994,
+      "baseline_peak_rss_bytes": 148258816,
       "benchmark_id": "build-single-file-009-dict-get-option",
       "budget_id": "perf.build.single.dict_get_option",
-      "threshold_median_instructions": 113319993978
+      "threshold_median_instructions": 113417252694,
+      "threshold_peak_rss_bytes": 181813248
     },
     {
-      "baseline_median_instructions": 111093460489,
+      "baseline_median_instructions": 111103526898,
+      "baseline_peak_rss_bytes": 146849792,
       "benchmark_id": "build-single-file-010-generic-identity",
       "budget_id": "perf.build.single.generic_identity",
-      "threshold_median_instructions": 113315329699
+      "threshold_median_instructions": 113325597436,
+      "threshold_peak_rss_bytes": 180404224
     },
     {
-      "baseline_median_instructions": 13632354971,
+      "baseline_median_instructions": 13626633971,
+      "baseline_peak_rss_bytes": 146374656,
       "benchmark_id": "check-project-001-imports",
       "budget_id": "perf.check.project.imports",
-      "threshold_median_instructions": 13905002071
+      "threshold_median_instructions": 13899166651,
+      "threshold_peak_rss_bytes": 179929088
     },
     {
-      "baseline_median_instructions": 13624898891,
+      "baseline_median_instructions": 13618941815,
+      "baseline_peak_rss_bytes": 147095552,
       "benchmark_id": "check-project-002-mode-consistency",
       "budget_id": "perf.check.project.mode_consistency",
-      "threshold_median_instructions": 13897396869
+      "threshold_median_instructions": 13891320652,
+      "threshold_peak_rss_bytes": 180649984
     },
     {
-      "baseline_median_instructions": 13653137179,
+      "baseline_median_instructions": 13650698745,
+      "baseline_peak_rss_bytes": 147226624,
       "benchmark_id": "check-project-003-project-build",
       "budget_id": "perf.check.project.project_build",
-      "threshold_median_instructions": 13926199923
+      "threshold_median_instructions": 13923712720,
+      "threshold_peak_rss_bytes": 180781056
     },
     {
-      "baseline_median_instructions": 13656554038,
+      "baseline_median_instructions": 13659934948,
+      "baseline_peak_rss_bytes": 146178048,
       "benchmark_id": "check-project-004-project-graph",
       "budget_id": "perf.check.project.project_graph",
-      "threshold_median_instructions": 13929685119
+      "threshold_median_instructions": 13933133647,
+      "threshold_peak_rss_bytes": 179732480
     },
     {
-      "baseline_median_instructions": 13660569954,
+      "baseline_median_instructions": 13667001929,
+      "baseline_peak_rss_bytes": 147521536,
       "benchmark_id": "check-project-005-rooted-entrypoint",
       "budget_id": "perf.check.project.rooted_entrypoint",
-      "threshold_median_instructions": 13933781354
+      "threshold_median_instructions": 13940341968,
+      "threshold_peak_rss_bytes": 181075968
     },
     {
-      "baseline_median_instructions": 13597160515,
+      "baseline_median_instructions": 13587060706,
+      "baseline_peak_rss_bytes": 145850368,
       "benchmark_id": "check-single-file-001-arithmetic",
       "budget_id": "perf.check.single.arithmetic",
-      "threshold_median_instructions": 13869103726
+      "threshold_median_instructions": 13858801921,
+      "threshold_peak_rss_bytes": 179404800
     },
     {
-      "baseline_median_instructions": 13597251401,
+      "baseline_median_instructions": 13592077276,
+      "baseline_peak_rss_bytes": 148537344,
       "benchmark_id": "check-single-file-002-break-continue",
       "budget_id": "perf.check.single.break_continue",
-      "threshold_median_instructions": 13869196430
+      "threshold_median_instructions": 13863918822,
+      "threshold_peak_rss_bytes": 182091776
     },
     {
-      "baseline_median_instructions": 13602123402,
+      "baseline_median_instructions": 13588586573,
+      "baseline_peak_rss_bytes": 146243584,
       "benchmark_id": "check-single-file-003-builtin-any-all",
       "budget_id": "perf.check.single.builtin_any_all",
-      "threshold_median_instructions": 13874165871
+      "threshold_median_instructions": 13860358305,
+      "threshold_peak_rss_bytes": 179798016
     },
     {
-      "baseline_median_instructions": 13587041244,
+      "baseline_median_instructions": 13591562875,
+      "baseline_peak_rss_bytes": 146620416,
       "benchmark_id": "check-single-file-004-builtin-enumerate-zip",
       "budget_id": "perf.check.single.builtin_enumerate_zip",
-      "threshold_median_instructions": 13858782069
+      "threshold_median_instructions": 13863394133,
+      "threshold_peak_rss_bytes": 180174848
     },
     {
-      "baseline_median_instructions": 13600527541,
+      "baseline_median_instructions": 13601382667,
+      "baseline_peak_rss_bytes": 146440192,
       "benchmark_id": "check-single-file-005-bytes-constructors",
       "budget_id": "perf.check.single.bytes_constructors",
-      "threshold_median_instructions": 13872538092
+      "threshold_median_instructions": 13873410321,
+      "threshold_peak_rss_bytes": 179994624
     },
     {
-      "baseline_median_instructions": 13597418983,
+      "baseline_median_instructions": 13600588054,
+      "baseline_peak_rss_bytes": 146391040,
       "benchmark_id": "check-single-file-006-class-methods",
       "budget_id": "perf.check.single.class_methods",
-      "threshold_median_instructions": 13869367363
+      "threshold_median_instructions": 13872599816,
+      "threshold_peak_rss_bytes": 179945472
     },
     {
-      "baseline_median_instructions": 13594890943,
+      "baseline_median_instructions": 13594050338,
+      "baseline_peak_rss_bytes": 146112512,
       "benchmark_id": "check-single-file-007-collection-len",
       "budget_id": "perf.check.single.collection_len",
-      "threshold_median_instructions": 13866788762
+      "threshold_median_instructions": 13865931345,
+      "threshold_peak_rss_bytes": 179666944
     },
     {
-      "baseline_median_instructions": 13601114510,
+      "baseline_median_instructions": 13590551054,
+      "baseline_peak_rss_bytes": 145670144,
       "benchmark_id": "check-single-file-008-comp-set",
       "budget_id": "perf.check.single.comp_set",
-      "threshold_median_instructions": 13873136801
+      "threshold_median_instructions": 13862362076,
+      "threshold_peak_rss_bytes": 179224576
     },
     {
-      "baseline_median_instructions": 13602099240,
+      "baseline_median_instructions": 13595202543,
+      "baseline_peak_rss_bytes": 146128896,
       "benchmark_id": "check-single-file-009-decimal-conversions",
       "budget_id": "perf.check.single.decimal_conversions",
-      "threshold_median_instructions": 13874141225
+      "threshold_median_instructions": 13867106594,
+      "threshold_peak_rss_bytes": 179683328
     },
     {
-      "baseline_median_instructions": 13603639445,
+      "baseline_median_instructions": 13586828891,
+      "baseline_peak_rss_bytes": 146833408,
       "benchmark_id": "check-single-file-010-dict-get-option",
       "budget_id": "perf.check.single.dict_get_option",
-      "threshold_median_instructions": 13875712234
+      "threshold_median_instructions": 13858565469,
+      "threshold_peak_rss_bytes": 180387840
     },
     {
-      "baseline_median_instructions": 13596011880,
+      "baseline_median_instructions": 13589840135,
+      "baseline_peak_rss_bytes": 147357696,
       "benchmark_id": "diagnostic-non-regression-001-human-success-exit",
       "budget_id": "perf.diagnostic.human_success_exit",
-      "threshold_median_instructions": 13867932118
+      "threshold_median_instructions": 13861636938,
+      "threshold_peak_rss_bytes": 180912128
     },
     {
-      "baseline_median_instructions": 13599762979,
+      "baseline_median_instructions": 13590374665,
+      "baseline_peak_rss_bytes": 146472960,
       "benchmark_id": "diagnostic-non-regression-002-json-diagnostic-schema",
       "budget_id": "perf.diagnostic.json_diagnostic_schema",
-      "threshold_median_instructions": 13871758239
+      "threshold_median_instructions": 13862182159,
+      "threshold_peak_rss_bytes": 180027392
     },
     {
-      "baseline_median_instructions": 13609997694,
+      "baseline_median_instructions": 13599656590,
+      "baseline_peak_rss_bytes": 148029440,
       "benchmark_id": "diagnostic-non-regression-003-compact-diagnostic-schema",
       "budget_id": "perf.diagnostic.compact_diagnostic_schema",
-      "threshold_median_instructions": 13882197648
+      "threshold_median_instructions": 13871649722,
+      "threshold_peak_rss_bytes": 181583872
     },
     {
-      "baseline_median_instructions": 13588631309,
+      "baseline_median_instructions": 13592424286,
+      "baseline_peak_rss_bytes": 147800064,
       "benchmark_id": "diagnostic-non-regression-004-recovery-limit",
       "budget_id": "perf.diagnostic.recovery_limit",
-      "threshold_median_instructions": 13860403936
+      "threshold_median_instructions": 13864272772,
+      "threshold_peak_rss_bytes": 181354496
     },
     {
-      "baseline_median_instructions": 13518276765,
+      "baseline_median_instructions": 13518234635,
+      "baseline_peak_rss_bytes": 146702336,
       "benchmark_id": "diagnostic-non-regression-005-project-error-exit",
       "budget_id": "perf.diagnostic.project_error_exit",
-      "threshold_median_instructions": 13788642301
+      "threshold_median_instructions": 13788599328,
+      "threshold_peak_rss_bytes": 180256768
     },
     {
-      "baseline_median_instructions": 35720680,
+      "baseline_median_instructions": 35759387,
+      "baseline_peak_rss_bytes": 11239424,
       "benchmark_id": "formatter-corpus-001-project-check",
       "budget_id": "perf.formatter.corpus.project_check",
-      "threshold_median_instructions": 36720680
+      "threshold_median_instructions": 36759387,
+      "threshold_peak_rss_bytes": 44793856
     },
     {
-      "baseline_median_instructions": 56932702,
+      "baseline_median_instructions": 57335766,
+      "baseline_peak_rss_bytes": 11468800,
       "benchmark_id": "formatter-large-file-001-check",
       "budget_id": "perf.formatter.large_file.check",
-      "threshold_median_instructions": 58071357
+      "threshold_median_instructions": 58482482,
+      "threshold_peak_rss_bytes": 45023232
     },
     {
-      "baseline_median_instructions": 898390406,
+      "baseline_median_instructions": 898070648,
+      "baseline_peak_rss_bytes": 5029888,
       "benchmark_id": "incremental-local-loop-001-unchanged-file-update",
       "budget_id": "perf.incremental.unchanged_file_update",
-      "threshold_median_instructions": 916358215
+      "threshold_median_instructions": 916032061,
+      "threshold_peak_rss_bytes": 38584320
     },
     {
-      "baseline_median_instructions": 675527694,
+      "baseline_median_instructions": 674959890,
+      "baseline_peak_rss_bytes": 5029888,
       "benchmark_id": "incremental-local-loop-002-leaf-module-change",
       "budget_id": "perf.incremental.leaf_module_change",
-      "threshold_median_instructions": 689038248
+      "threshold_median_instructions": 688459088,
+      "threshold_peak_rss_bytes": 38584320
     },
     {
-      "baseline_median_instructions": 3813412453,
+      "baseline_median_instructions": 3811347061,
+      "baseline_peak_rss_bytes": 7995392,
       "benchmark_id": "incremental-local-loop-003-imported-module-change",
       "budget_id": "perf.incremental.imported_module_change",
-      "threshold_median_instructions": 3889680703
+      "threshold_median_instructions": 3887574003,
+      "threshold_peak_rss_bytes": 41549824
     },
     {
-      "baseline_median_instructions": 4456618705,
+      "baseline_median_instructions": 4454966824,
+      "baseline_peak_rss_bytes": 8159232,
       "benchmark_id": "incremental-local-loop-004-public-api-change",
       "budget_id": "perf.incremental.public_api_change",
-      "threshold_median_instructions": 4545751080
+      "threshold_median_instructions": 4544066161,
+      "threshold_peak_rss_bytes": 41713664
     },
     {
-      "baseline_median_instructions": 4154665248,
+      "baseline_median_instructions": 4158051331,
+      "baseline_peak_rss_bytes": 8159232,
       "benchmark_id": "incremental-local-loop-005-failure-recovery",
       "budget_id": "perf.incremental.failure_recovery",
-      "threshold_median_instructions": 4237758553
+      "threshold_median_instructions": 4241212358,
+      "threshold_peak_rss_bytes": 41713664
     },
     {
-      "baseline_median_instructions": 373196094,
+      "baseline_median_instructions": 373173937,
+      "baseline_peak_rss_bytes": 4751360,
       "benchmark_id": "interactive-tooling-foundation-001-cold-context-load",
       "budget_id": "perf.interactive.cold_context_load",
-      "threshold_median_instructions": 380660016
+      "threshold_median_instructions": 380637416,
+      "threshold_peak_rss_bytes": 38305792
     },
     {
-      "baseline_median_instructions": 1446757916,
+      "baseline_median_instructions": 1446357930,
+      "baseline_peak_rss_bytes": 7946240,
       "benchmark_id": "interactive-tooling-foundation-002-warm-diagnostics-query",
       "budget_id": "perf.interactive.warm_diagnostics_query",
-      "threshold_median_instructions": 1475693075
+      "threshold_median_instructions": 1475285089,
+      "threshold_peak_rss_bytes": 41500672
     },
     {
-      "baseline_median_instructions": 584290916,
+      "baseline_median_instructions": 584595066,
+      "baseline_peak_rss_bytes": 4767744,
       "benchmark_id": "interactive-tooling-foundation-003-unchanged-file-update",
       "budget_id": "perf.interactive.unchanged_file_update",
-      "threshold_median_instructions": 595976735
+      "threshold_median_instructions": 596286968,
+      "threshold_peak_rss_bytes": 38322176
     },
     {
-      "baseline_median_instructions": 2343099786,
+      "baseline_median_instructions": 2341062730,
+      "baseline_peak_rss_bytes": 8142848,
       "benchmark_id": "interactive-tooling-foundation-004-changed-file-invalidation",
       "budget_id": "perf.interactive.changed_file_invalidation",
-      "threshold_median_instructions": 2389961782
+      "threshold_median_instructions": 2387883985,
+      "threshold_peak_rss_bytes": 41697280
     },
     {
-      "baseline_median_instructions": 216852466,
+      "baseline_median_instructions": 216326563,
+      "baseline_peak_rss_bytes": 4653056,
       "benchmark_id": "interactive-tooling-foundation-005-source-map-lookup",
       "budget_id": "perf.interactive.source_map_lookup",
-      "threshold_median_instructions": 221189516
+      "threshold_median_instructions": 220653095,
+      "threshold_peak_rss_bytes": 38207488
     },
     {
-      "baseline_median_instructions": 380309831,
+      "baseline_median_instructions": 378036689,
+      "baseline_peak_rss_bytes": 117899264,
       "benchmark_id": "lsp-query-001-request-families",
       "budget_id": "perf.lsp.request_families",
-      "threshold_median_instructions": 387916028
+      "threshold_median_instructions": 385597423,
+      "threshold_peak_rss_bytes": 151453696
     },
     {
-      "baseline_median_instructions": 323379510,
+      "baseline_median_instructions": 322496634,
+      "baseline_peak_rss_bytes": 21495808,
       "benchmark_id": "lsp-query-002-cold-start",
       "budget_id": "perf.lsp.cold_start.workspace",
-      "threshold_median_instructions": 329847101
+      "threshold_median_instructions": 328946567,
+      "threshold_peak_rss_bytes": 55050240
     },
     {
-      "baseline_median_instructions": 380518900,
+      "baseline_median_instructions": 380033096,
+      "baseline_peak_rss_bytes": 74760192,
       "benchmark_id": "lsp-query-003-diagnostics",
       "budget_id": "perf.lsp.diagnostics.document",
-      "threshold_median_instructions": 388129278
+      "threshold_median_instructions": 387633758,
+      "threshold_peak_rss_bytes": 108314624
     },
     {
-      "baseline_median_instructions": 342811786,
+      "baseline_median_instructions": 342285214,
+      "baseline_peak_rss_bytes": 159301632,
       "benchmark_id": "lsp-query-004-workspace-diagnostics",
       "budget_id": "perf.lsp.diagnostics.workspace",
-      "threshold_median_instructions": 349668022
+      "threshold_median_instructions": 349130919,
+      "threshold_peak_rss_bytes": 192856064
     },
     {
-      "baseline_median_instructions": 1320788464,
+      "baseline_median_instructions": 1318680329,
+      "baseline_peak_rss_bytes": 76578816,
       "benchmark_id": "lsp-query-005-completion",
       "budget_id": "perf.lsp.completion.local_scope",
-      "threshold_median_instructions": 1347204234
+      "threshold_median_instructions": 1345053936,
+      "threshold_peak_rss_bytes": 110133248
     },
     {
-      "baseline_median_instructions": 360911118,
+      "baseline_median_instructions": 359609484,
+      "baseline_peak_rss_bytes": 74022912,
       "benchmark_id": "lsp-query-006-hover",
       "budget_id": "perf.lsp.hover.symbol",
-      "threshold_median_instructions": 368129341
+      "threshold_median_instructions": 366801674,
+      "threshold_peak_rss_bytes": 107577344
     },
     {
-      "baseline_median_instructions": 360487038,
+      "baseline_median_instructions": 360658640,
+      "baseline_peak_rss_bytes": 75317248,
       "benchmark_id": "lsp-query-007-signature-help",
       "budget_id": "perf.lsp.signature_help.call",
-      "threshold_median_instructions": 367696779
+      "threshold_median_instructions": 367871813,
+      "threshold_peak_rss_bytes": 108871680
     },
     {
-      "baseline_median_instructions": 491463696,
+      "baseline_median_instructions": 491458380,
+      "baseline_peak_rss_bytes": 75005952,
       "benchmark_id": "lsp-query-008-navigation",
       "budget_id": "perf.lsp.navigation.symbol",
-      "threshold_median_instructions": 501292970
+      "threshold_median_instructions": 501287548,
+      "threshold_peak_rss_bytes": 108560384
     },
     {
-      "baseline_median_instructions": 342870666,
+      "baseline_median_instructions": 344011946,
+      "baseline_peak_rss_bytes": 158171136,
       "benchmark_id": "lsp-query-009-references",
       "budget_id": "perf.lsp.references.workspace_symbol",
-      "threshold_median_instructions": 349728080
+      "threshold_median_instructions": 350892185,
+      "threshold_peak_rss_bytes": 191725568
     },
     {
-      "baseline_median_instructions": 362041233,
+      "baseline_median_instructions": 361840562,
+      "baseline_peak_rss_bytes": 158236672,
       "benchmark_id": "lsp-query-010-rename",
       "budget_id": "perf.lsp.rename.workspace_edit",
-      "threshold_median_instructions": 369282058
+      "threshold_median_instructions": 369077374,
+      "threshold_peak_rss_bytes": 191791104
     },
     {
-      "baseline_median_instructions": 395659428,
+      "baseline_median_instructions": 394944744,
+      "baseline_peak_rss_bytes": 74563584,
       "benchmark_id": "lsp-query-011-semantic-tokens",
       "budget_id": "perf.lsp.semantic_tokens.full",
-      "threshold_median_instructions": 403572617
+      "threshold_median_instructions": 402843639,
+      "threshold_peak_rss_bytes": 108118016
     },
     {
-      "baseline_median_instructions": 361340398,
+      "baseline_median_instructions": 361263160,
+      "baseline_peak_rss_bytes": 74563584,
       "benchmark_id": "lsp-query-012-inlay-hints",
       "budget_id": "perf.lsp.inlay_hints.module",
-      "threshold_median_instructions": 368567206
+      "threshold_median_instructions": 368488424,
+      "threshold_peak_rss_bytes": 108118016
     },
     {
-      "baseline_median_instructions": 362778236,
+      "baseline_median_instructions": 362533008,
+      "baseline_peak_rss_bytes": 74219520,
       "benchmark_id": "lsp-query-013-selection-range",
       "budget_id": "perf.lsp.selection_ranges.nested",
-      "threshold_median_instructions": 370033801
+      "threshold_median_instructions": 369783669,
+      "threshold_peak_rss_bytes": 107773952
     },
     {
-      "baseline_median_instructions": 358831784,
+      "baseline_median_instructions": 358694618,
+      "baseline_peak_rss_bytes": 74055680,
       "benchmark_id": "lsp-query-014-type-hierarchy",
       "budget_id": "perf.lsp.type_hierarchy.symbol",
-      "threshold_median_instructions": 366008420
+      "threshold_median_instructions": 365868511,
+      "threshold_peak_rss_bytes": 107610112
     },
     {
-      "baseline_median_instructions": 360126993,
+      "baseline_median_instructions": 359339289,
+      "baseline_peak_rss_bytes": 73580544,
       "benchmark_id": "lsp-query-015-code-actions",
       "budget_id": "perf.lsp.code_action.diagnostic",
-      "threshold_median_instructions": 367329533
+      "threshold_median_instructions": 366526075,
+      "threshold_peak_rss_bytes": 107134976
     },
     {
-      "baseline_median_instructions": 383007442,
+      "baseline_median_instructions": 382561712,
+      "baseline_peak_rss_bytes": 75841536,
       "benchmark_id": "lsp-query-016-formatting",
       "budget_id": "perf.lsp.formatting.document",
-      "threshold_median_instructions": 390667591
+      "threshold_median_instructions": 390212947,
+      "threshold_peak_rss_bytes": 109395968
     },
     {
-      "baseline_median_instructions": 360914375,
+      "baseline_median_instructions": 361199696,
+      "baseline_peak_rss_bytes": 114540544,
       "benchmark_id": "lsp-query-017-generated-rust-preview",
       "budget_id": "perf.lsp.generated_rust_preview.document",
-      "threshold_median_instructions": 368132663
+      "threshold_median_instructions": 368423690,
+      "threshold_peak_rss_bytes": 148094976
     },
     {
-      "baseline_median_instructions": 406391682,
+      "baseline_median_instructions": 409463304,
+      "baseline_peak_rss_bytes": 2538471424,
       "benchmark_id": "lsp-query-018-did-open-diagnostics",
       "budget_id": "perf.lsp.document_sync.did_open",
-      "threshold_median_instructions": 414519516
+      "threshold_median_instructions": 417652571,
+      "threshold_peak_rss_bytes": 2792318567
     }
   ],
   "host": {
     "architecture": "arm64",
     "host_os": "macOS-26.6-arm64-arm-64bit-Mach-O",
+    "rss_counter_source": "darwin-rusage-process-tree",
     "work_counter_source": "darwin-rusage-instructions"
   },
+  "instruction_threshold_rule": "max(baseline_median_instructions * 1.02, baseline_median_instructions + 1000000)",
+  "rss_threshold_rule": "max(baseline_peak_rss_bytes * 1.10, baseline_peak_rss_bytes + 33554432)",
   "runner_version": 1,
-  "source_commit": "00ae57a0f569ed578f665e01a017cec0e3c19369",
-  "threshold_rule": "max(baseline_median_instructions * 1.02, baseline_median_instructions + 1000000)",
+  "source_commit": "c5d4c68f317d01f86bb15f45862a52d6f54af86e",
   "version": 1
 }
