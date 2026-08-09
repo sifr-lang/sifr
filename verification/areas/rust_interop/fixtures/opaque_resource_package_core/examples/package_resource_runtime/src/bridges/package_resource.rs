@@ -1,5 +1,5 @@
-use std::fmt;
 use std::cell::RefCell;
+use std::fmt;
 use std::rc::Rc;
 
 use sifr_runtime::interop::structural::{
@@ -57,7 +57,6 @@ pub struct PackageResource {
 
 #[derive(Debug)]
 struct ResourceState {
-    seal: u32,
     closed: bool,
 }
 
@@ -141,7 +140,6 @@ fn record_nodes() -> Vec<ResourceNode> {
 pub fn open() -> Result<Handle<PackageResource>, PackageResourceError> {
     Ok(Handle::new(PackageResource {
         state: Rc::new(RefCell::new(ResourceState {
-            seal: 41,
             closed: false,
         })),
     }))
@@ -167,9 +165,6 @@ fn ensure_open(resource: &PackageResource) -> Result<(), PackageResourceError> {
     let state = resource.state.borrow();
     if state.closed {
         return Err(PackageResourceError::new("resource is closed"));
-    }
-    if state.seal != 41 {
-        return Err(PackageResourceError::new("package resource seal mismatch"));
     }
     Ok(())
 }
@@ -277,7 +272,10 @@ pub fn negative_lifecycle() -> Result<String, PackageResourceError> {
             "package resource did not report its first close",
         ));
     }
-    let alias_rejection = alias.inner_ref().map_err(PackageResourceError::from).and_then(ensure_open);
+    let alias_rejection = alias
+        .inner_ref()
+        .map_err(PackageResourceError::from)
+        .and_then(ensure_open);
     if !matches!(alias_rejection, Err(error) if error.to_string() == "resource is closed") {
         return Err(PackageResourceError::new(
             "bridge-local alias remained usable after close",

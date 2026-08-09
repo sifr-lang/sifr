@@ -40,6 +40,17 @@ def verify_package_resource_alias_use_after_close_rejected() -> Result[str, Pack
         raise error
 
 
+def package_resource_compile_control() -> Result[None, PackageResourceError | RustPanicError]:
+    try:
+        resource: PackageResource = open_package_resource()
+        _closed: None = resource.close()
+    except PackageResourceError as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+    return None
+
+
 # The mandatory test removes this prefix to activate the compiler-rejection
 # half of the same registered negative direction.
 # compiler-rejection: def reject_double_close() -> Result[None, PackageResourceError | RustPanicError]:

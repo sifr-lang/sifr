@@ -161,9 +161,9 @@ mod rust_interop_structural;
 #[cfg(test)]
 mod rust_interop_structural_tests;
 #[cfg(test)]
-mod rust_opaque_constructor_tests;
-#[cfg(test)]
 mod rust_interop_tests;
+#[cfg(test)]
+mod rust_opaque_constructor_tests;
 mod scope_helpers;
 mod sequence_guard_detection;
 mod sequence_guard_updates;
