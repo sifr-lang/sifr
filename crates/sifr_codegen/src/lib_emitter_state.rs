@@ -41,6 +41,9 @@ pub struct RustEmitter {
     pub(crate) current_class_name: Option<String>,
     /// The source module currently being emitted, when known.
     pub(crate) current_module_name: Option<String>,
+    /// Emit structural bridge implementations only when the project declares
+    /// a structural Rust interop boundary.
+    pub(crate) structural_interop_enabled: bool,
     /// Set of stdlib/intrinsic modules used (for Cargo dependency injection)
     pub used_stdlib_modules: HashSet<String>,
     /// Set of intrinsic function names (for codegen dispatch)
@@ -215,6 +218,7 @@ impl RustEmitter {
             parent_fields: HashMap::new(),
             current_class_name: None,
             current_module_name: None,
+            structural_interop_enabled: false,
             used_stdlib_modules: HashSet::new(),
             intrinsic_functions: HashSet::new(),
             intrinsic_registry_features: HashSet::new(),

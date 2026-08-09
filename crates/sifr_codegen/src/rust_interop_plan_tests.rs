@@ -765,7 +765,7 @@ fn function_with_declaration(
     }
 }
 
-fn class(name: &str, kind: HirClassKind, fields: Vec<(String, Type)>) -> HirClass {
+pub(super) fn class(name: &str, kind: HirClassKind, fields: Vec<(String, Type)>) -> HirClass {
     HirClass {
         name: name.to_string(),
         identity: None,
@@ -790,7 +790,11 @@ fn class(name: &str, kind: HirClassKind, fields: Vec<(String, Type)>) -> HirClas
 #[test]
 fn interop_cache_fragment_includes_structural_algorithm_and_concrete_identity() {
     let module = HirModule {
-        functions: Vec::new(),
+        functions: vec![function_with_declaration(
+            "construct",
+            RustInteropDecoratorKind::Structural,
+            "bridge.payload.construct",
+        )],
         classes: vec![class(
             "Payload",
             HirClassKind::Regular,
