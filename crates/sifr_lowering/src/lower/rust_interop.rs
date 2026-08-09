@@ -28,7 +28,7 @@ pub(in crate::lower) fn collect_rust_opaque_close_methods(stmts: &[Stmt], ctx: &
         let Stmt::ClassDef(class_def) = stmt else {
             continue;
         };
-        let close_method = class_def.decorator_list.iter().find_map(|decorator| {
+        let opaque = class_def.decorator_list.iter().find_map(|decorator| {
             let Expr::Call(call) = &decorator.expression else {
                 return None;
             };
@@ -41,20 +41,25 @@ pub(in crate::lower) fn collect_rust_opaque_close_methods(stmts: &[Stmt], ctx: &
             if root.id.as_str() != "rust" || attribute.attr.as_str() != "opaque" {
                 return None;
             }
-            call.arguments.keywords.iter().find_map(|keyword| {
-                if keyword
-                    .arg
-                    .as_ref()
-                    .is_none_or(|name| name.as_str() != "close")
-                {
-                    return None;
-                }
-                match &keyword.value {
-                    Expr::Name(policy) if policy.id.as_str() == "close" => Some("close"),
-                    Expr::Name(policy) if policy.id.as_str() == "async_close" => Some("aclose"),
-                    _ => None,
-                }
-            })
+            Some(call)
+        });
+        let Some(opaque) = opaque else {
+            continue;
+        };
+        ctx.rust_opaque_classes.insert(class_def.name.to_string());
+        let close_method = opaque.arguments.keywords.iter().find_map(|keyword| {
+            if keyword
+                .arg
+                .as_ref()
+                .is_none_or(|name| name.as_str() != "close")
+            {
+                return None;
+            }
+            match &keyword.value {
+                Expr::Name(policy) if policy.id.as_str() == "close" => Some("close"),
+                Expr::Name(policy) if policy.id.as_str() == "async_close" => Some("aclose"),
+                _ => None,
+            }
         });
         if let Some(close_method) = close_method {
             ctx.rust_consuming_methods
@@ -161,10 +166,25 @@ pub(in crate::lower) fn collect_rust_interop_declarations(
             );
             continue;
         }
-        if let Some(declaration) = parse_declaration(kind, call, owner, is_async_decl, ctx) {
+        let declaration = if kind == RustInteropDecoratorKind::Structural {
+            Some(RustInteropDeclaration {
+                kind,
+                target: None,
+                arguments: Vec::new(),
+                span: decorator.expression.range(),
+                effect: RustInteropEffect::Sync,
+                abi_requirements: RustInteropAbiRequirements::default(),
+                consumes_receiver: false,
+            })
+        } else {
+            call.and_then(|call| parse_declaration(kind, call, owner, is_async_decl, ctx))
+        };
+        if let Some(declaration) = declaration {
             declarations.push(declaration);
         }
     }
+
+    validate_structural_marker_pair(&declarations, decorators, ctx);
 
     if is_async_decl && !declarations.is_empty() && (blocking_io || cpu_heavy) {
         ctx.error_with_code_at(
@@ -186,9 +206,16 @@ pub(in crate::lower) fn collect_rust_interop_declarations(
 fn classify_rust_decorator<'a>(
     expr: &'a Expr,
     ctx: &mut LowerCtx,
-) -> Option<(RustInteropDecoratorKind, &'a ExprCall)> {
+) -> Option<(RustInteropDecoratorKind, Option<&'a ExprCall>)> {
     if let Expr::Call(call) = expr {
-        return classify_rust_call(call, ctx);
+        return classify_rust_call(call, ctx).map(|kind| (kind, Some(call)));
+    }
+    if let Expr::Attribute(attribute) = expr {
+        if matches!(attribute.value.as_ref(), Expr::Name(root) if root.id.as_str() == "rust")
+            && attribute.attr.as_str() == "structural"
+        {
+            return Some((RustInteropDecoratorKind::Structural, None));
+        }
     }
     if starts_with_rust_namespace(expr) {
         malformed(
@@ -203,11 +230,9 @@ fn classify_rust_decorator<'a>(
 fn classify_rust_call<'a>(
     call: &'a ExprCall,
     ctx: &mut LowerCtx,
-) -> Option<(RustInteropDecoratorKind, &'a ExprCall)> {
+) -> Option<RustInteropDecoratorKind> {
     match call.func.as_ref() {
-        Expr::Name(name) if name.id.as_str() == "rust" => {
-            Some((RustInteropDecoratorKind::Function, call))
-        }
+        Expr::Name(name) if name.id.as_str() == "rust" => Some(RustInteropDecoratorKind::Function),
         Expr::Attribute(attr) => {
             let Expr::Name(root) = attr.value.as_ref() else {
                 return None;
@@ -219,6 +244,14 @@ fn classify_rust_call<'a>(
                 "opaque" => RustInteropDecoratorKind::Opaque,
                 "async" => RustInteropDecoratorKind::Async,
                 "callback" => RustInteropDecoratorKind::Callback,
+                "structural" => {
+                    malformed(
+                        ctx,
+                        "`@rust.structural` is a bare marker and takes no arguments",
+                        call.range,
+                    );
+                    return None;
+                }
                 "zero_copy" => RustInteropDecoratorKind::ZeroCopy,
                 "view" => RustInteropDecoratorKind::View,
                 other => {
@@ -230,7 +263,7 @@ fn classify_rust_call<'a>(
                     return None;
                 }
             };
-            Some((kind, call))
+            Some(kind)
         }
         _ => None,
     }
@@ -288,6 +321,7 @@ fn parse_positional_target(
         RustInteropDecoratorKind::Opaque
         | RustInteropDecoratorKind::Async
         | RustInteropDecoratorKind::Callback
+        | RustInteropDecoratorKind::Structural
         | RustInteropDecoratorKind::ZeroCopy
         | RustInteropDecoratorKind::View => {
             if !call.arguments.args.is_empty() {
@@ -586,6 +620,8 @@ fn kind_allowed_on_owner(kind: RustInteropDecoratorKind, owner: RustInteropOwner
         RustInteropOwner::Class => kind == RustInteropDecoratorKind::Opaque,
         RustInteropOwner::Function | RustInteropOwner::Method => {
             !matches!(kind, RustInteropDecoratorKind::Opaque)
+                && (kind != RustInteropDecoratorKind::Structural
+                    || owner == RustInteropOwner::Function)
         }
     }
 }
@@ -629,8 +665,40 @@ fn decorator_name(kind: RustInteropDecoratorKind) -> &'static str {
         RustInteropDecoratorKind::Opaque => "@rust.opaque",
         RustInteropDecoratorKind::Async => "@rust.async",
         RustInteropDecoratorKind::Callback => "@rust.callback",
+        RustInteropDecoratorKind::Structural => "@rust.structural",
         RustInteropDecoratorKind::ZeroCopy => "@rust.zero_copy",
         RustInteropDecoratorKind::View => "@rust.view",
+    }
+}
+
+fn validate_structural_marker_pair(
+    declarations: &[RustInteropDeclaration],
+    decorators: &[Decorator],
+    ctx: &mut LowerCtx,
+) {
+    let markers = declarations
+        .iter()
+        .filter(|declaration| declaration.kind == RustInteropDecoratorKind::Structural)
+        .collect::<Vec<_>>();
+    if markers.is_empty() {
+        return;
+    }
+    let span = markers[0].span;
+    if markers.len() != 1 {
+        malformed(ctx, "duplicate `@rust.structural` markers", span);
+    }
+    let targets = declarations
+        .iter()
+        .filter(|declaration| {
+            declaration.kind == RustInteropDecoratorKind::Function && declaration.target.is_some()
+        })
+        .count();
+    if targets != 1 {
+        malformed(
+            ctx,
+            "`@rust.structural` must accompany exactly one `@rust(...)` target",
+            decorators.first().map_or(span, Ranged::range),
+        );
     }
 }
 

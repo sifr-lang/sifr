@@ -25,7 +25,7 @@ fn resolve_named_bound_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
 }
 
 fn is_builtin_bound(name: &str) -> bool {
-    matches!(name, "Comparable" | "Addable" | "Hashable")
+    matches!(name, "Comparable" | "Addable" | "Hashable" | "Structural")
 }
 
 fn is_known_bound_name(name: &str, ctx: &LowerCtx) -> bool {
@@ -100,6 +100,78 @@ fn type_satisfies_comparable_bound(ty: &Type, ctx: &LowerCtx) -> bool {
         Type::Tuple(elements) => elements
             .iter()
             .all(|element| type_satisfies_bound(element, "Comparable", ctx)),
+        _ => false,
+    }
+}
+
+fn supports_structural_bridge_type(ty: &Type, ctx: &LowerCtx) -> bool {
+    supports_structural_bridge_type_inner(ty, ctx, &mut std::collections::HashSet::new())
+}
+
+fn supports_structural_bridge_type_inner(
+    ty: &Type,
+    ctx: &LowerCtx,
+    visiting: &mut std::collections::HashSet<(String, Vec<Type>)>,
+) -> bool {
+    match ty.resolve_alias() {
+        Type::Int | Type::FixedInt(_) | Type::Float | Type::Bool | Type::Str | Type::None => true,
+        Type::TypeVar(name) => typevar_satisfies_spec(name, "Structural", ctx),
+        Type::List(value) => supports_structural_bridge_type_inner(value, ctx, visiting),
+        Type::Set(value) => {
+            supports_hash_key_in_context(value, ctx)
+                && supports_structural_bridge_type_inner(value, ctx, visiting)
+        }
+        Type::Dict(key, value) => {
+            supports_hash_key_in_context(key, ctx)
+                && supports_structural_bridge_type_inner(key, ctx, visiting)
+                && supports_structural_bridge_type_inner(value, ctx, visiting)
+        }
+        Type::Tuple(values) => {
+            values.len() <= 4
+                && values
+                    .iter()
+                    .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting))
+        }
+        Type::Union(values)
+            if values.len() == 2
+                && values
+                    .iter()
+                    .any(|value| matches!(value.resolve_alias(), Type::None)) =>
+        {
+            values
+                .iter()
+                .filter(|value| !matches!(value.resolve_alias(), Type::None))
+                .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting))
+        }
+        Type::Class {
+            identity,
+            type_args,
+            name,
+            fields,
+            parent_class,
+            ..
+        } => {
+            if parent_class.is_some()
+                || ctx.error_types.contains(name)
+                || ctx.python_opaque_classes.contains_key(name)
+                || ctx.rust_opaque_classes.contains(name)
+            {
+                return false;
+            }
+            let key = (
+                identity.clone().unwrap_or_else(|| name.clone()),
+                type_args.clone(),
+            );
+            if !visiting.insert(key.clone()) {
+                return true;
+            }
+            let supported = type_args
+                .iter()
+                .chain(fields.iter().map(|(_, field)| field))
+                .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting));
+            visiting.remove(&key);
+            supported
+        }
         _ => false,
     }
 }
@@ -341,6 +413,7 @@ pub(in crate::lower) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &Lower
         "Comparable" => type_satisfies_comparable_bound(ty, ctx),
         "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str | Type::BigInt),
         "Hashable" => supports_hash_key_in_context(ty, ctx),
+        "Structural" => supports_structural_bridge_type(ty, ctx),
         _ => resolve_named_bound_type(bound, ctx)
             .is_some_and(|bound_ty| ty.is_assignable_to(&bound_ty)),
     }

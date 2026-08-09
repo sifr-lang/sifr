@@ -90,6 +90,22 @@ fn merge_interop_plan(target: &mut InteropBuildPlan, stdlib: &InteropBuildPlan) 
         .bridge_contracts
         .generated_types
         .extend(stdlib.rust.bridge_contracts.generated_types.clone());
+    if let Some(version) = stdlib.rust.structural_identity_algorithm_version {
+        debug_assert!(
+            target
+                .rust
+                .structural_identity_algorithm_version
+                .is_none_or(|target_version| target_version == version),
+            "compiler-owned structural identity algorithms must agree"
+        );
+        target.rust.structural_identity_algorithm_version = Some(version);
+    }
+    target
+        .rust
+        .structural_shape_identities
+        .extend(stdlib.rust.structural_shape_identities.clone());
+    target.rust.structural_shape_identities.sort();
+    target.rust.structural_shape_identities.dedup();
 }
 
 fn merge_contexts(
@@ -216,7 +232,6 @@ fn sysroot_package(
             trust: TrustPolicy::default(),
             python: sifr_package::PythonConfig::default(),
             rust: RustInteropConfig {
-                bridge_version: Some(1),
                 bridges: Vec::new(),
                 direct_crate_bindings: true,
             },

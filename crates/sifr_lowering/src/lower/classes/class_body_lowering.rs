@@ -1,3 +1,4 @@
+use super::class_shape_metadata::{declaration_metadata, field_defaults};
 use super::is_hashable_type;
 use super::parameter_conventions::{
     class_method_param_convention, class_method_param_default, declared_method_receiver_convention,
@@ -73,9 +74,11 @@ pub(in crate::lower) fn lower_class(
             .collect();
 
         return Some(HirClass {
-            name: class_name,
+            name: class_name.clone(),
             identity: None,
             fields: vec![],
+            field_defaults: Vec::new(),
+            declaration_metadata: Vec::new(),
             methods: hir_methods,
             is_hashable: false,
             is_error_type: false,
@@ -206,9 +209,11 @@ pub(in crate::lower) fn lower_class(
         }
         ctx.current_class = None;
         return Some(HirClass {
-            name: class_name,
+            name: class_name.clone(),
             identity: None,
             fields: vec![],
+            field_defaults: Vec::new(),
+            declaration_metadata: declaration_metadata(ctx, &class_name),
             methods: hir_methods,
             is_hashable: true,
             is_error_type: false,
@@ -346,9 +351,11 @@ pub(in crate::lower) fn lower_class(
         }
 
         return Some(HirClass {
-            name: class_name,
+            name: class_name.clone(),
             identity: None,
             fields: vec![("0".to_string(), inner.clone())], // Single wrapped field
+            field_defaults: Vec::new(),
+            declaration_metadata: declaration_metadata(ctx, &class_name),
             methods: hir_methods,
             is_hashable: is_hashable_type(inner),
             is_error_type: false,
@@ -870,9 +877,11 @@ pub(in crate::lower) fn lower_class(
     let kind = python_opaque.map_or(HirClassKind::Regular, HirClassKind::PythonOpaque);
 
     Some(HirClass {
-        name: class_name,
+        name: class_name.clone(),
         identity: None,
         fields: own_fields,
+        field_defaults: field_defaults(ctx, &class_name),
+        declaration_metadata: declaration_metadata(ctx, &class_name),
         methods: hir_methods,
         is_hashable,
         is_error_type: is_error,

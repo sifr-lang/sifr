@@ -10,7 +10,6 @@ sifr-version = ">=0.3,<0.4"
 root = "src"
 
 [rust]
-bridge-version = 1
 direct-crate-bindings = true
 
 [trust]

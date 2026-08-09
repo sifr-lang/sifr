@@ -37,4 +37,6 @@ use function_exit_validation::{
 };
 mod annotations_and_function_lowering;
 pub(in crate::lower) use annotations_and_function_lowering::*;
+mod annotation_resolution;
+pub(in crate::lower) use annotation_resolution::resolve_annotation_expr;
 mod annotation_union_validation;

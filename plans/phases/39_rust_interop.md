@@ -107,7 +107,7 @@ Status: implemented in [PR #2703](https://github.com/sifr-lang/sifr/pull/2703); 
   - Add trust gates for `rust-build-scripts`, `rust-proc-macros`, `native-links`, `unsafe-rust-bridges`, `build-env`, `rust-no-panic`, and `rust-panic-abort`.
   - Resolve `rust-no-panic` and `rust-panic-abort` entries through canonical Sifr dotted target paths, not lowered Rust `::` paths.
   - Split trust validation into pre-execution evidence that rejects known build scripts/proc macros before Cargo execution and post-execution evidence for trusted build-script link output before final artifact acceptance.
-  - Include Rust interop requirements, bridge source digests, Cargo metadata, selected Cargo profile, resolved panic strategy, codegen-affecting profile settings, trust policy, target triple, target features, rustc/Cargo versions, bridge-version schema, and declared build environment values in cache keys.
+  - Include Rust interop requirements, bridge source digests, Cargo metadata, selected Cargo profile, resolved panic strategy, codegen-affecting profile settings, trust policy, target triple, target features, rustc/Cargo versions, generated bridge-contract digest, and declared build environment values in cache keys.
   - Generate `RustBridgeProbePlan` metadata and isolated probe modules that run rustc item-existence probes for direct Cargo dependency targets; record async, receiver-mode, opaque, Send, and Sync obligations in the plan for milestone_39_5 signature assertions.
 - Definition of done:
   - Cargo metadata failures become Sifr diagnostics with spans and remediation.
@@ -123,11 +123,11 @@ Status: implemented in [PR #2704](https://github.com/sifr-lang/sifr/pull/2704); 
 
 - Scope:
   - Generate and maintain Sifr-owned projection entries for `src/bridges/mod.rs`, Sifr-managed `src/lib.rs`, and generated `crate::__sifr_bridge`.
-  - Use bridge-versioned deterministic Rust module-name mangling for generated `crate::__sifr_bridge::<sifr_module_path>` paths.
+  - Use deterministic Rust module-name mangling for generated `crate::__sifr_bridge::<sifr_module_path>` paths and include it in the bridge-contract cache identity.
   - Discover user-authored `src/bridges/*.rs` files without overwriting them silently.
   - Support shared bridge crates as normal Cargo dependencies while enforcing that shared bridge crates cannot import package-specific generated bridge types.
   - Validate bridge module target paths, exported functions, managed projection conflicts, and package archive contents.
-  - Add fixtures for local bridge, shared bridge crate, generated projection ownership, bridge-version mismatch, plain cargo-check limitations, package archive validation, and bridge module conflict behavior.
+  - Add fixtures for local bridge, shared bridge crate, generated projection ownership, unversioned manifest acceptance and removed-field rejection, plain cargo-check limitations, package archive validation, and bridge module conflict behavior.
 - Definition of done:
   - User bridge files remain owned by users.
   - Generated glue can call package-local bridge functions deterministically.
@@ -409,7 +409,7 @@ Out of scope for required Phase 39 verification:
 - `milestone_39_0`: architecture, verification area, fixture matrix, tiers, diagnostic family inventory, and stale interop-design removal.
 - `milestone_39_1`: decorator parsing/lowering, decorator value grammar, structured target metadata, HIR representation, build-plan output, and invalid syntax diagnostics.
 - `milestone_39_2`: Cargo metadata, trust gates, canonical Sifr dotted trust target paths, pre-execution and post-execution trust evidence, signature probe infrastructure, lock/offline/frozen behavior, profile and panic-strategy inputs, cache invalidation, build-script/proc-macro/native-link evidence with crates such as `serde_derive`, `prost-build`, `cc`, `bindgen`, `cxx`, and `zstd`.
-- `milestone_39_3`: package-local bridge generation, shared bridge crates, projection ownership, `src/lib.rs`/`src/bridges/mod.rs` management, `crate::__sifr_bridge` reservation, deterministic bridge module path mangling, bridge-version mismatch rejection, package archive validation, projection conflicts, and same-workspace dependency behavior.
+- `milestone_39_3`: package-local bridge generation, shared bridge crates, projection ownership, `src/lib.rs`/`src/bridges/mod.rs` management, `crate::__sifr_bridge` reservation, deterministic bridge module path mangling, unversioned manifest validation, package archive validation, projection conflicts, and same-workspace dependency behavior.
 - `milestone_39_4`: supported bridge type roundtrips, generated bridge type naming, order-preserving dicts, exact-integer bridges, opaque `Handle<T>` representation, closed enum representation, unsupported containers, and unsupported bridge type diagnostics.
 - `milestone_39_5`: direct binding success with `crc32fast`, `blake3`, `sha2`, `uuid`, and `regex`; direct binding rejection for unsupported Rust signatures; probe diagnostic mapping; reserved-root conflict behavior; and no-panic trust behavior.
 - `milestone_39_6`: opaque handles, close/aclose, clone policy, Send/Sync policy, state transitions, use-after-close, double-close, poisoned-handle behavior, leak diagnostics, and resource-shaped crates such as `reqwest`, `rusqlite`, `tokio-postgres`, and `redis`.

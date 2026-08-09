@@ -10,7 +10,6 @@ REQUIRED_FIXTURES = {
     "blocking_diagnostics",
     "bridge_type_matrix",
     "bridge_version_field_removal",
-    "bridge_version_mismatch",
     "callback_subscription_core",
     "callback_subscription_ecosystem",
     "callbacks_call_scoped",

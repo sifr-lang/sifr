@@ -122,6 +122,14 @@
       ]
     },
     {
+      "name": "sifr_structural_identity",
+      "classification": "first_party_runtime",
+      "targets": [
+        {"name": "sifr_structural_identity", "kind": "lib", "classification": "first_party_runtime", "profile_assignment": "merge"}
+      ],
+      "features": []
+    },
+    {
       "name": "sifr_rust_interop_catalog",
       "classification": "test_fixture",
       "targets": [

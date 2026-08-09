@@ -2,7 +2,6 @@
   "schema_version": 1,
   "phase": "39_rust_interop",
   "architecture": "internal_docs/rust_interop_architecture.md",
-  "bridge_version": 1,
   "diagnostic_families": {
     "SIFR-RUST-ASYNC-0001": "invalid Rust async/thread-affinity contract",
     "SIFR-RUST-CARGO-0001": "Cargo metadata or lock/profile mismatch",
@@ -136,22 +135,13 @@
       "negative_evidence": {"id": "double_close_and_poisoned_access", "status": "passing"}
     },
     {
-      "id": "bridge_version_mismatch",
-      "tier": 0,
-      "capability": "bridge-version validation",
-      "required_crates": [],
-      "execution_kind": "compiler-diagnostic",
-      "positive_evidence": {"id": "bridge_version_1_accepted", "status": "passing"},
-      "negative_evidence": {"id": "unsupported_bridge_version_rejected", "status": "passing"}
-    },
-    {
       "id": "bridge_version_field_removal",
       "tier": 0,
       "capability": "unversioned Rust bridge manifest contract",
       "required_crates": [],
       "execution_kind": "compiler-diagnostic",
-      "positive_evidence": {"id": "unversioned_bridge_manifest_accepted", "status": "planned"},
-      "negative_evidence": {"id": "bridge_version_field_rejected", "status": "planned"}
+      "positive_evidence": {"id": "unversioned_bridge_manifest_accepted", "status": "passing"},
+      "negative_evidence": {"id": "bridge_version_field_rejected", "status": "passing"}
     },
     {
       "id": "structural_bridge_calls",
@@ -159,8 +149,8 @@
       "capability": "monomorphized structural Rust bridge calls",
       "required_crates": [],
       "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "nested_recursive_structural_roundtrip", "status": "planned"},
-      "negative_evidence": {"id": "shape_callback_and_lifetime_mismatches_rejected", "status": "planned"}
+      "positive_evidence": {"id": "nested_recursive_structural_roundtrip", "status": "passing"},
+      "negative_evidence": {"id": "shape_callback_and_lifetime_mismatches_rejected", "status": "passing"}
     },
     {
       "id": "panic_boundary",
