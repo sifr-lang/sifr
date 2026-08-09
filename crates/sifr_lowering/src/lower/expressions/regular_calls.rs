@@ -663,6 +663,15 @@ pub(super) fn lower_regular_call(
         })
     // If this is a class constructor call, emit ConstructorCall
     } else if ctx.class_types.contains_key(&func_name) {
+        if ctx.rust_opaque_classes.contains(&func_name) {
+            ctx.error_with_code_at(
+                DiagnosticCode::RUST_TYPE_PROBE_FAILURE,
+                format!(
+                    "sealed Rust opaque resource `{func_name}` cannot be constructed in Sifr; use its declared package factory"
+                ),
+                call.range(),
+            );
+        }
         let class_name = match call_type.resolve_alias() {
             Type::Class { name, .. } => name.clone(),
             _ => func_name,

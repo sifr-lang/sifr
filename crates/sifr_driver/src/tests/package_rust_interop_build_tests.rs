@@ -15,6 +15,8 @@ mod cli_ecosystem_support;
 mod native_build_support;
 #[path = "package_rust_interop_proc_macro_support.rs"]
 mod proc_macro_support;
+#[path = "package_rust_interop_package_resource_support.rs"]
+mod package_resource_support;
 #[path = "package_rust_interop_zero_copy_support.rs"]
 mod zero_copy_support;
 

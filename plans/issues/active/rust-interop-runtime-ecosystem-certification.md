@@ -6,11 +6,12 @@ Track A is complete through merged
 [PR #3083](https://github.com/sifr-lang/sifr/pull/3083). All 36 compatibility
 rows in the 2026-07-30 Track A closeout had passing positive and negative
 evidence, and `certification_14` recorded that inventory, stable-claim,
-validation, published-head review, and immutable merge identities. The matrix
-now also carries the future-owned Native Pydantic-Sifr rows
-`structural_bridge_calls` and `bridge_version_field_removal`, whose four
-directions remain planned. Track B remains dormant until the external
-structural Rust bridge package-resource substrate exists.
+validation, published-head review, and immutable merge identities. Native
+Pydantic-Sifr `milestone_ps_2` has now merged the structural bridge and
+unversioned-manifest contracts in
+[PR #3114](https://github.com/sifr-lang/sifr/pull/3114). Track B is active for
+the sequential `certification_pkg_resource_core` item; Native Pydantic-Sifr
+`milestone_ps_3` remains blocked until it passes and merges.
 
 The verification-hardening dependency is complete through
 [`hardening_4`](../archive/rust-interop-verification-matrix-hardening.md#hardening_4-replace-lexical-rejection-context):
@@ -165,7 +166,7 @@ normative and must not be broadened.
 | `certification_12` | merged | [PR #3076](https://github.com/sifr-lang/sifr/pull/3076); exact-pinned CLI/tooling execution and bridge-safe `anyhow` boundary certification |
 | `certification_13` | merged | [PR #3078](https://github.com/sifr-lang/sifr/pull/3078); exact-pinned backend loopback execution and fail-closed SQLx offline metadata certification |
 | `certification_14` | merged | [PR #3083](https://github.com/sifr-lang/sifr/pull/3083); Track A inventory, stable gate, durable handoff, repeated published-head review, and final closeout |
-| `certification_pkg_resource_core` | dormant | starts only after Native Pydantic-Sifr `milestone_ps_2` releases the structural Rust bridge contract |
+| `certification_pkg_resource_core` | active | Native Pydantic-Sifr `milestone_ps_2` merged in PR #3114; the synthetic external-package certification is in implementation and review |
 
 ## Ordered Track A Items
 
@@ -2048,6 +2049,25 @@ Rust-interop checks and their self-tests pass, the full area runner passes, and
 `scripts/run_all_tests.sh --profile create-pr` plus
 `scripts/run_all_tests.sh` pass locally. Only then may Native Pydantic-Sifr
 `milestone_ps_3` begin.
+
+Implementation checklist:
+
+- [x] Add the tier-2 runtime-observed fixture, compatibility, tier, required
+  fixture, stable-claim, public-doc, and durable-architecture records.
+- [x] Add the synthetic external package and mandatory generated-build tests
+  for construct/use/close, alias and use-after-close rejection, stable
+  double-close state, redacted poisoning, and direct construction rejection.
+- [x] Recompute the implementation-candidate inventory: 38 fixture rows, 38
+  compatibility rows, 38 schema-v2 manifests, 76 passing evidence directions,
+  38 stable claims, 21 `supported`, 16 `supported-through-bridge`, 1
+  `unsupported-by-design`, 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 11 `runtime-observed` rows.
+- [ ] Pass both focused provenance tests, all Rust-interop checks and self-tests,
+  the full area runner, formatting, Clippy, maintainability, file-size, and diff
+  hygiene.
+- [ ] Pass the create-PR gate, the one final merge gate, and Opus review rounds
+  to `SATISFIED`; merge and record the immutable identities before unblocking
+  Native Pydantic-Sifr `milestone_ps_3`.
 
 ## Validation Required for Every Item
 

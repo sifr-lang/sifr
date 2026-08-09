@@ -135,6 +135,18 @@
       "notes": "Stdlib-owned resource migrations may use the shared handle substrate for close poisoning, double-close stability, and panic-boundary poisoning; ecosystem resources are certified separately by opaque_resource_matrix."
     },
     {
+      "id": "opaque_resource_package_core",
+      "fixture": "opaque_resource_package_core",
+      "category": "supported-through-bridge",
+      "tier": 2,
+      "capability": "external package structural opaque resource lifecycle",
+      "execution_kind": "runtime-observed",
+      "required_crates": [],
+      "positive_evidence": {"id": "package_resource_construct_use_close", "status": "passing"},
+      "negative_evidence": {"id": "package_resource_alias_use_after_close_rejected", "status": "passing"},
+      "notes": "A synthetic external package uses the released structural bridge and opaque handle substrate to construct and project a typed record, close the sealed resource, reject bridge-local alias access after close, preserve stable double-close state, redact panic poisoning, and reject Sifr-side resource construction or reuse."
+    },
+    {
       "id": "opaque_resource_matrix",
       "fixture": "opaque_resource_matrix",
       "category": "supported-through-bridge",

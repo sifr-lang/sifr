@@ -66,6 +66,12 @@
       "capability": "stdlib-owned opaque resource lifecycle core"
     },
     {
+      "id": "opaque_resource_package_core",
+      "category": "supported-through-bridge",
+      "execution_kind": "runtime-observed",
+      "capability": "external package structural opaque resource lifecycle"
+    },
+    {
       "id": "opaque_resource_matrix",
       "category": "supported-through-bridge",
       "execution_kind": "runtime-observed",

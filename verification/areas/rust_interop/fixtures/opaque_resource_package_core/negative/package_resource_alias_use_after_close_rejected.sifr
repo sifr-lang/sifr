@@ -1,0 +1,56 @@
+# fixture: opaque_resource_package_core
+# evidence: negative/package_resource_alias_use_after_close_rejected
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: runtime-error-state
+# expected-runtime-state: closed
+
+
+class PackageResourceError(Error):
+    message: str
+
+
+@rust.opaque(
+    type=bridge.package_resource.PackageResource,
+    send=False,
+    sync=False,
+    clone=none,
+    close=close,
+)
+class PackageResource:
+    @rust(bridge.package_resource.close)
+    def close(own self) -> Result[None, PackageResourceError | RustPanicError]: ...
+
+
+@rust(bridge.package_resource.open)
+def open_package_resource() -> Result[PackageResource, PackageResourceError | RustPanicError]: ...
+
+
+@rust(bridge.package_resource.negative_lifecycle)
+def package_resource_negative_lifecycle() -> Result[str, PackageResourceError | RustPanicError]: ...
+
+
+def verify_package_resource_alias_use_after_close_rejected() -> Result[str, PackageResourceError | RustPanicError]:
+    try:
+        result: str = package_resource_negative_lifecycle()
+        return result
+    except PackageResourceError as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+
+
+# The mandatory test removes this prefix to activate the compiler-rejection
+# half of the same registered negative direction.
+# compiler-rejection: def reject_double_close() -> Result[None, PackageResourceError | RustPanicError]:
+# compiler-rejection:     try:
+# compiler-rejection:         resource: PackageResource = open_package_resource()
+# compiler-rejection:         _first: None = resource.close()
+# compiler-rejection:         _second: None = resource.close()
+# compiler-rejection:     except PackageResourceError as error:
+# compiler-rejection:         raise error
+# compiler-rejection:     except RustPanicError as error:
+# compiler-rejection:         raise error
+# compiler-rejection:     return None
+# compiler-rejection: def reject_cross_package_construction() -> PackageResource:
+# compiler-rejection:     return PackageResource()

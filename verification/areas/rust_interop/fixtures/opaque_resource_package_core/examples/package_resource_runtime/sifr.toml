@@ -1,0 +1,14 @@
+# fixture: opaque_resource_package_core
+# scenario-example: package_resource_runtime
+
+[package]
+name = "package-resource-runtime"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridges = ["src/bridges"]
+direct-crate-bindings = true
