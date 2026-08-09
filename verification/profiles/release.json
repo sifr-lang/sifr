@@ -181,11 +181,12 @@
     {
       "area": "algorithmic_compatibility",
       "suites": [
-        "representative-subset",
+        "leetcode-full",
         "taxonomy-smoke"
       ],
       "resource_classes": [
-        "default-local"
+        "external-corpus",
+        "long-running"
       ]
     },
     {

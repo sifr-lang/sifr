@@ -166,6 +166,60 @@ def inspect(own tree: Tree) -> int:
 }
 
 #[test]
+fn test_empty_recursive_container_field_uses_box_default() {
+    let rust_code = generate_rust_from_source(
+        r#"class Tree:
+    children: list[Tree]
+
+    def __init__(self):
+        self.children = []
+"#,
+    );
+
+    assert!(
+        rust_code.contains("let __sifr_field_init_0: Box<Vec<Tree>> = Box::default();"),
+        "empty recursive container fields should use the lint-clean default constructor:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("Box::new(vec![])"),
+        "empty recursive container fields must not trigger clippy::box_default:\n{rust_code}"
+    );
+}
+
+#[test]
+fn test_empty_recursive_constructor_argument_uses_box_default() {
+    let rust_code = generate_rust_from_source(
+        r#"class Tree:
+    children: list[Tree]
+    left: Tree | None
+
+    def __init__(self, children: list[Tree], left: Tree | None):
+        self.children = children
+        self.left = left
+
+def empty_tree() -> Tree:
+    return Tree([], None)
+
+def tree_with_child(child: Tree) -> Tree:
+    return Tree([child], None)
+"#,
+    );
+
+    assert!(
+        rust_code.contains("Tree::new(Box::default(), None)"),
+        "empty recursive constructor arguments should use the lint-clean default constructor:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("Tree::new(Box::new(vec!["),
+        "non-empty recursive constructor arguments should retain ordinary boxing:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("Box::new(vec![])"),
+        "recursive constructor arguments must not trigger clippy::box_default:\n{rust_code}"
+    );
+}
+
+#[test]
 fn test_nested_recursive_constructor_maps_named_optional_arguments_to_boxes() {
     let rust_code = generate_rust_from_source(
         r#"class TreeNode:
