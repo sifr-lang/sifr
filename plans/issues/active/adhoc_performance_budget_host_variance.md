@@ -124,7 +124,10 @@ with `median - min(3 * instruction MAD, 0.5% * median)`. Thus, ordinary sample
 noise cannot cause a boundary failure, but uncertainty cannot hide more than
 0.5% of measured work. A zero-MAD regression still fails at one instruction
 above the threshold. Deterministic tests also prove that boundary noise passes
-and that the 0.5% cap still rejects a sustained regression.
+and that the 0.5% cap still rejects a sustained regression. Each accepted
+over-threshold result emits a note with its measured median, threshold, MAD,
+and applied uncertainty. The checker also verifies the median and MAD against
+the raw instruction samples before it uses them.
 
 The work budgets were recaptured from the final measurement producer. The
 first recapture stopped safely without changing governed data when the Mac

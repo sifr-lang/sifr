@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import statistics
 import sys
 from datetime import date
 from pathlib import Path
@@ -470,6 +471,20 @@ def validate_results_shape(
             raise BudgetError(
                 f"work-controlled benchmark result {result_id} is missing retired-instruction evidence"
             )
+        if control_mode == "work":
+            sample_median, sample_mad = instruction_sample_median_mad(
+                instruction_samples
+            )
+            if round(sample_median) != round(float(metrics["median_instructions"])):
+                raise BudgetError(
+                    f"work-controlled benchmark result {result_id} median_instructions "
+                    "does not match samples_instructions"
+                )
+            if round(sample_mad) != round(float(metrics["instructions_mad"])):
+                raise BudgetError(
+                    f"work-controlled benchmark result {result_id} instructions_mad "
+                    "does not match samples_instructions"
+                )
         cache = raw.get("cache")
         if (
             not isinstance(cache, dict)
@@ -592,12 +607,21 @@ def compare_result(
         exceeds_threshold = float(measured) > float(threshold)
         if metric == "median_instructions":
             exceeds_threshold, lower_bound, uncertainty = instruction_regression(
-                metrics, float(threshold)
+                metrics,
+                result["samples_instructions"],
+                float(threshold),
             )
             comparison_value = (
                 f"{measured} lower_bound={lower_bound:.3f} "
                 f"uncertainty={uncertainty:.3f}"
             )
+            if float(measured) > float(threshold) and not exceeds_threshold:
+                print(
+                    "performance budget note: instruction uncertainty absorbed "
+                    f"case={case_id} measured={measured} threshold={threshold} "
+                    f"mad={metrics['instructions_mad']} uncertainty={uncertainty:.3f}",
+                    file=sys.stderr,
+                )
         if exceeds_threshold and not has_waiver(case_id, budget_id, metric, waivers):
             failures.append(
                 format_failure(
@@ -649,16 +673,22 @@ def should_enforce_p95(result: dict[str, Any]) -> bool:
 
 
 def instruction_regression(
-    metrics: dict[str, Any], threshold: float
+    metrics: dict[str, Any], instruction_samples: list[int], threshold: float
 ) -> tuple[bool, float, float]:
     measured = float(metrics["median_instructions"])
-    mad = float(metrics["instructions_mad"])
+    _, mad = instruction_sample_median_mad(instruction_samples)
     uncertainty = min(
         WORK_INSTRUCTION_MAD_MULTIPLIER * mad,
         WORK_INSTRUCTION_UNCERTAINTY_CAP_RATIO * measured,
     )
     lower_bound = measured - uncertainty
     return lower_bound > threshold, lower_bound, uncertainty
+
+
+def instruction_sample_median_mad(samples: list[int]) -> tuple[float, float]:
+    median = float(statistics.median(samples))
+    mad = float(statistics.median(abs(sample - median) for sample in samples))
+    return median, mad
 
 
 def report_p95_skips(

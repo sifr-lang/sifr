@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import copy
+import io
+import statistics
+from contextlib import redirect_stderr
 from typing import Any
 
 import check_budgets as checker
@@ -85,12 +88,20 @@ def run_self_test() -> None:
         make_instruction_seed(baselines, budgets, regress=True),
         "median_instructions regression",
     )
-    checker.check_budgets(
-        manifest,
-        budgets,
-        checker.EMPTY_WAIVERS,
-        make_instruction_boundary_noise_seed(baselines, budgets),
-    )
+    note_stream = io.StringIO()
+    with redirect_stderr(note_stream):
+        checker.check_budgets(
+            manifest,
+            budgets,
+            checker.EMPTY_WAIVERS,
+            make_instruction_boundary_noise_seed(baselines, budgets),
+        )
+    note = note_stream.getvalue()
+    for field in ["case=", "measured=", "threshold=", "mad=", "uncertainty="]:
+        if field not in note:
+            raise checker.BudgetError(
+                f"instruction boundary-noise self-test note is missing {field}"
+            )
     assert_result_fails(
         make_instruction_capped_noise_seed(baselines, budgets),
         "median_instructions regression",
@@ -224,10 +235,16 @@ def make_instruction_boundary_noise_seed(
     for entry in result["results"]:
         if entry["id"] == budget["benchmark_id"]:
             measured = threshold + 100_000
-            entry["samples_instructions"] = [measured] * int(entry["sample_count"])
-            entry["metrics"]["median_instructions"] = measured
-            entry["metrics"]["p95_instructions"] = measured
-            entry["metrics"]["instructions_mad"] = 50_000
+            set_instruction_samples(
+                entry,
+                [
+                    measured - 100_000,
+                    measured - 50_000,
+                    measured,
+                    measured + 50_000,
+                    measured + 100_000,
+                ],
+            )
             return result
     raise checker.BudgetError("instruction boundary-noise self-test lost its benchmark")
 
@@ -241,12 +258,35 @@ def make_instruction_capped_noise_seed(
     for entry in result["results"]:
         if entry["id"] == budget["benchmark_id"]:
             measured = threshold + max(1_000_000, threshold // 100)
-            entry["samples_instructions"] = [measured] * int(entry["sample_count"])
-            entry["metrics"]["median_instructions"] = measured
-            entry["metrics"]["p95_instructions"] = measured
-            entry["metrics"]["instructions_mad"] = measured
+            spread = max(1, measured // 100)
+            set_instruction_samples(
+                entry,
+                [
+                    measured - 2 * spread,
+                    measured - spread,
+                    measured,
+                    measured + spread,
+                    measured + 2 * spread,
+                ],
+            )
             return result
     raise checker.BudgetError("instruction capped-noise self-test lost its benchmark")
+
+
+def set_instruction_samples(entry: dict[str, Any], samples: list[int]) -> None:
+    if int(entry["sample_count"]) != len(samples):
+        raise checker.BudgetError(
+            "instruction uncertainty self-test requires five-sample baseline data"
+        )
+    median = statistics.median(samples)
+    mad = statistics.median(abs(sample - median) for sample in samples)
+    mean = statistics.mean(samples)
+    cv = statistics.pstdev(samples) / mean
+    entry["samples_instructions"] = samples
+    entry["metrics"]["median_instructions"] = round(median)
+    entry["metrics"]["p95_instructions"] = max(samples)
+    entry["metrics"]["instructions_mad"] = round(mad)
+    entry["metrics"]["instructions_coefficient_variation"] = round(cv, 6)
 
 
 def spike_five_sample_median(result: dict[str, Any]) -> None:

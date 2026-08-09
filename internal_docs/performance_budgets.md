@@ -156,6 +156,17 @@ Work-controlled results use the local instruction and Darwin process-tree RSS
 thresholds. Latency-controlled results use the generic elapsed-time and RSS
 thresholds. Timeout, cache, and correctness requirements block in both modes.
 
+For work-mode median instructions, the checker subtracts bounded sampling
+uncertainty before it compares the result with the threshold:
+`median - min(3 * instruction MAD, 0.5% * median)`. This rule does not apply to
+RSS or to latency-mode metrics. The cap means that sampling uncertainty can
+absorb at most 0.5% of measured work. For a ratio-based instruction budget, the
+worst-case blocking sensitivity is approximately 2.51% above the baseline,
+instead of the nominal 2% threshold. When uncertainty absorbs an over-threshold
+median, the checker emits a note with the case, median, threshold, MAD, and
+applied uncertainty. A zero-MAD result fails at one instruction above the
+threshold.
+
 Darwin rusage includes the spawned query server and its descendants. The
 generic baseline can use a different operating-system RSS boundary. The local
 artifact prevents these two RSS meanings from sharing one threshold.
