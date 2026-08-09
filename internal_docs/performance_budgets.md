@@ -101,8 +101,9 @@ python3 verification/areas/performance/run_benchmarks.py --capture-baseline
 python3 verification/areas/performance/check_budgets.py
 ```
 
-The retired-instruction baseline is a separate governed artifact. This command
-does not change the elapsed-time baseline or its thresholds:
+The local work baseline is a separate governed artifact. It records Darwin
+retired instructions and Darwin process-tree RSS. This command does not change
+the generic elapsed-time baseline or its thresholds:
 
 ```bash
 python3 verification/areas/performance/run_benchmarks.py \
@@ -113,8 +114,9 @@ python3 verification/areas/performance/run_benchmarks.py \
 python3 verification/areas/performance/check_budgets.py
 ```
 
-The capture writes `data/work_budgets.json` after all cases pass. Each work
-threshold is `max(baseline * 1.02, baseline + 1,000,000 instructions)`.
+The capture writes `data/work_budgets.json` after all cases pass. The instruction
+threshold is `max(baseline * 1.02, baseline + 1,000,000 instructions)`. The
+local RSS threshold is `max(baseline * 1.10, baseline + 32MiB)`.
 
 Updating `data/trend/current.json` does not change blocking budgets. It requires
 an owner-approved reference run from a clean exact commit, the complete
@@ -149,9 +151,13 @@ Command benchmarks use:
 - p95 latency: `max(baseline_p95 * 1.15, baseline_p95 + 50ms)`
 - peak RSS: `max(baseline_peak_rss * 1.10, baseline_peak_rss + 32MiB)`
 
-Work-controlled results use the retired-instruction threshold as the blocking
-performance metric. Latency-controlled results use the elapsed-time thresholds.
-Timeout, RSS, cache, and correctness requirements block in both modes.
+Work-controlled results use the local instruction and Darwin process-tree RSS
+thresholds. Latency-controlled results use the generic elapsed-time and RSS
+thresholds. Timeout, cache, and correctness requirements block in both modes.
+
+Darwin rusage includes the spawned query server and its descendants. The
+generic baseline can use a different operating-system RSS boundary. The local
+artifact prevents these two RSS meanings from sharing one threshold.
 
 Command benchmark RSS is measured per command invocation with `/usr/bin/time` when available (`-l` on macOS, `-v` on Linux). Python `RUSAGE_CHILDREN` is used only as a fallback because it is process-cumulative on some platforms and can otherwise contaminate later samples with earlier validation work.
 

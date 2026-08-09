@@ -1541,9 +1541,10 @@ The readiness coverage matrix is the executable registry for shipped guarantees,
 `profile_runner.py` emits a per-profile runtime report under `target/validation_lane_reports/` (`<profile>.latest.json`, `<profile>.latest.log`, `<profile>.latest.time`). The report summarizes wall/CPU time, e2e compile-build-run timing, cache hits and rebuilt groups, group-skew tail behavior, cache footprints, default worker settings, and advisory resource signals such as swap activity or default-profile RSS regressions.
 
 Blocking representative and full performance measurements use a controlled-host
-boundary. Work-controlled measurements use retired instructions from the local
-macOS process tree. Latency-controlled measurements use elapsed time and require
-a quiet host. Both modes reject competing build work, thermal pressure, and
+boundary. Work-controlled measurements use retired instructions and
+process-tree RSS from the local macOS host. Latency-controlled measurements use
+elapsed time and generic RSS after a quiet-host admission. Both modes reject
+competing build work, thermal pressure, and
 unstable samples. The accepted report includes an invocation identity. Producer
 failure cannot use stale `*.budget.latest.json` evidence. This design separates
 host delay from additional compiler work without changing elapsed-time budgets.

@@ -174,6 +174,18 @@ def validate_budgets(
             require_number(
                 thresholds, "median_instructions", f"budget {budget_id} thresholds"
             )
+        work_thresholds = raw.get("work_thresholds")
+        if work_thresholds is not None:
+            if not isinstance(work_thresholds, dict):
+                raise BudgetError(
+                    f"budget {budget_id} work_thresholds must be an object"
+                )
+            for field in ["median_instructions", "peak_rss_bytes"]:
+                require_number(
+                    work_thresholds,
+                    field,
+                    f"budget {budget_id} work_thresholds",
+                )
         cache = raw.get("cache", {})
         if not isinstance(cache, dict):
             raise BudgetError(f"budget {budget_id} cache policy must be an object")
@@ -206,6 +218,8 @@ def apply_work_budgets(
         "darwin-rusage-instructions"
     ):
         raise BudgetError("work budgets must bind the retired-instruction source")
+    if host.get("rss_counter_source") != "darwin-rusage-process-tree":
+        raise BudgetError("work budgets must bind the Darwin process-tree RSS source")
     work_entries = work_budgets.get("budgets")
     if not isinstance(work_entries, list):
         raise BudgetError("work budgets must contain a budgets list")
@@ -244,9 +258,25 @@ def apply_work_budgets(
             raise BudgetError(
                 f"work budget {budget_id} has invalid threshold_median_instructions"
             )
-        entry.setdefault("baseline", {})["median_instructions"] = baseline
-        entry.setdefault("thresholds", {})["median_instructions"] = threshold
-        entry["work_policy"] = "retired-instructions-default"
+        rss_baseline = work_entry.get("baseline_peak_rss_bytes")
+        rss_threshold = work_entry.get("threshold_peak_rss_bytes")
+        if not isinstance(rss_baseline, int) or rss_baseline <= 0:
+            raise BudgetError(
+                f"work budget {budget_id} has invalid baseline_peak_rss_bytes"
+            )
+        if not isinstance(rss_threshold, int) or rss_threshold < rss_baseline:
+            raise BudgetError(
+                f"work budget {budget_id} has invalid threshold_peak_rss_bytes"
+            )
+        entry["work_baseline"] = {
+            "median_instructions": baseline,
+            "peak_rss_bytes": rss_baseline,
+        }
+        entry["work_thresholds"] = {
+            "median_instructions": threshold,
+            "peak_rss_bytes": rss_threshold,
+        }
+        entry["work_policy"] = "darwin-process-tree-default"
     missing = sorted(set(by_case) - seen)
     if missing:
         raise BudgetError(f"work budgets are missing benchmark ids: {missing}")
@@ -456,7 +486,8 @@ def compare_result(
         )
     checks: list[tuple[str, Any, Any]] = []
     if control_mode == "work":
-        if thresholds.get("median_instructions") is None:
+        work_thresholds = budget.get("work_thresholds")
+        if not isinstance(work_thresholds, dict):
             failures.append(
                 format_failure(
                     case_id,
@@ -473,26 +504,32 @@ def compare_result(
                 (
                     "median_instructions",
                     metrics["median_instructions"],
-                    thresholds["median_instructions"],
+                    work_thresholds["median_instructions"],
                 )
             )
+            if metrics.get("peak_rss_bytes") is not None:
+                checks.append(
+                    (
+                        "peak_rss_bytes",
+                        metrics["peak_rss_bytes"],
+                        work_thresholds["peak_rss_bytes"],
+                    )
+                )
     else:
         checks.append(("median_ms", metrics["median_ms"], thresholds["median_ms"]))
         if should_enforce_p95(result):
             checks.append(("p95_ms", metrics["p95_ms"], thresholds["p95_ms"]))
         if (
-            thresholds.get("median_instructions") is not None
-            and metrics.get("median_instructions") is not None
+            thresholds.get("peak_rss_bytes") is not None
+            and metrics.get("peak_rss_bytes") is not None
         ):
             checks.append(
                 (
-                    "median_instructions",
-                    metrics["median_instructions"],
-                    thresholds["median_instructions"],
+                    "peak_rss_bytes",
+                    metrics["peak_rss_bytes"],
+                    thresholds["peak_rss_bytes"],
                 )
             )
-    if thresholds.get("peak_rss_bytes") is not None and metrics.get("peak_rss_bytes") is not None:
-        checks.append(("peak_rss_bytes", metrics["peak_rss_bytes"], thresholds["peak_rss_bytes"]))
     for metric, measured, threshold in checks:
         if float(measured) > float(threshold) and not has_waiver(case_id, budget_id, metric, waivers):
             failures.append(format_failure(case_id, budget_id, metric, measured, threshold, waivers))
@@ -622,6 +659,10 @@ def run_self_test() -> None:
         make_instruction_seed(baselines, budgets, regress=True),
         "median_instructions regression",
     )
+    assert_result_fails(
+        make_work_rss_seed(baselines, budgets),
+        "peak_rss_bytes regression",
+    )
     check_budgets(
         manifest,
         budgets,
@@ -686,8 +727,8 @@ def make_instruction_seed(
     result = copy.deepcopy(baselines)
     budget = budgets["budgets"][0]
     case_id = budget["benchmark_id"]
-    threshold = int(budget["thresholds"]["median_instructions"])
-    baseline = int(budget["baseline"]["median_instructions"])
+    threshold = int(budget["work_thresholds"]["median_instructions"])
+    baseline = int(budget["work_baseline"]["median_instructions"])
     for entry in result["results"]:
         if entry["id"] != case_id:
             continue
@@ -702,6 +743,7 @@ def make_instruction_seed(
                 "instructions_mad": 0,
                 "instructions_coefficient_variation": 0.0,
                 "median_cycles_per_instruction": 0.5,
+                "peak_rss_bytes": budget["work_baseline"]["peak_rss_bytes"],
             }
         )
         if not regress:
@@ -713,6 +755,21 @@ def make_instruction_seed(
             ) + 1.0
         return result
     raise BudgetError(f"instruction self-test could not find benchmark {case_id}")
+
+
+def make_work_rss_seed(
+    baselines: dict[str, Any], budgets: dict[str, Any]
+) -> dict[str, Any]:
+    result = make_instruction_seed(baselines, budgets, regress=False)
+    budget = budgets["budgets"][0]
+    case_id = budget["benchmark_id"]
+    for entry in result["results"]:
+        if entry["id"] == case_id:
+            entry["metrics"]["peak_rss_bytes"] = (
+                int(budget["work_thresholds"]["peak_rss_bytes"]) + 1
+            )
+            return result
+    raise BudgetError(f"work RSS self-test could not find benchmark {case_id}")
 
 
 def load_json(path: Path) -> dict[str, Any]:

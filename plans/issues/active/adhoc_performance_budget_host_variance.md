@@ -62,17 +62,26 @@ blocking performance metric. Latency mode keeps the existing load and
 unrelated-CPU limits for elapsed-time evidence. No existing elapsed-time
 threshold, waiver, or baseline is increased.
 
+Work mode also uses a fresh Darwin process-tree RSS baseline. Darwin includes
+the spawned LSP server and descendants. The generic baseline can measure a
+different process boundary. Separate governed thresholds prevent those RSS
+meanings from being compared as if they were equal.
+
 The approved full-manifest work capture passed all 65 cases on implementation
-commit `64881055453937d596bff6d7d569a97beba7bd8a`. It produced work-budget
+commit `00ae57a0f569ed578f665e01a017cec0e3c19369`. It produced work-budget
 artifact digest
-`c536e08e1b982d7a2d14d4961adbbcbbde1e3f114d88082deadee97e527f4ef6`
+`40f3cd6df531294fb72c9fe36a327dcbc32f30fc317164405b310dc6340e1d35`
 and raw-evidence digest
-`c9cea6eef1d925c4436b8cfeebb6b783b5ac9503b04e04f5dabc514e3393840a`.
-The largest accepted instruction coefficient of variation was `0.017947`.
-One case rejected an unstable `0.021404` attempt and accepted its `0.006001`
-retry. The accepted retry observed unrelated CPU use between `193.2%` and
-`399.7%`. This result demonstrates that work mode does not require an idle
-desktop.
+`99013460c5692fddef52b4ff10bc95a4a82a5bc03ddbc10d7fb092c76dc3b1a5`.
+The largest instruction coefficient of variation was `0.010884`. All cases
+passed on their first controlled attempt.
+
+The first representative verdict found that independent query processes had
+reduced aggregate cache counts. The producer now uses one aggregate invocation
+for latency, cache, and diagnostics. It uses independent invocations only for
+process-work samples. A deterministic self-test protects this boundary. The
+two affected cases report 2,300 cache hits and 2,300 misses in the replacement
+capture.
 
 ### M2 reproduced evidence
 

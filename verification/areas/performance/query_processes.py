@@ -34,9 +34,6 @@ def run_query_processes(
     samples = aggregate_samples[warmups:]
     instruction_samples: list[int] = []
     cycle_samples: list[int] = []
-    peak_rss_values: list[int] = []
-    if aggregate_result["peak_rss_bytes"] is not None:
-        peak_rss_values.append(aggregate_result["peak_rss_bytes"])
     for _ in range(measured):
         result, _payload, _process_samples = run_query_invocation(
             case,
@@ -49,8 +46,6 @@ def run_query_processes(
             instruction_samples.append(result["retired_instructions"])
         if result["cycles_elapsed"] is not None:
             cycle_samples.append(result["cycles_elapsed"])
-        if result["peak_rss_bytes"] is not None:
-            peak_rss_values.append(result["peak_rss_bytes"])
     return {
         "id": case.id,
         "group": case.group,
@@ -62,7 +57,7 @@ def run_query_processes(
         "samples_instructions": instruction_samples,
         "metrics": latency_metrics(samples)
         | work_metrics(instruction_samples, cycle_samples)
-        | {"peak_rss_bytes": max(peak_rss_values) if peak_rss_values else None}
+        | {"peak_rss_bytes": aggregate_result["peak_rss_bytes"]}
         | SIZE_METRIC_DEFAULTS,
         "cache": {
             "hits": int(aggregate_payload.get("cache_hits", 0)),
@@ -173,4 +168,8 @@ def run_self_test() -> None:
     if result["diagnostics_count"] != 7:
         raise BenchmarkError(
             "query process self-test did not preserve aggregate diagnostics"
+        )
+    if result["metrics"]["peak_rss_bytes"] != 1001:
+        raise BenchmarkError(
+            "query process self-test did not preserve aggregate peak RSS"
         )

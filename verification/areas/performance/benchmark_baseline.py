@@ -11,6 +11,8 @@ from benchmark_manifest import RUNNER_VERSION, BenchmarkCase, BenchmarkError
 
 WORK_HEADROOM_RATIO = 1.02
 WORK_HEADROOM_FLOOR = 1_000_000
+RSS_HEADROOM_RATIO = 1.10
+RSS_HEADROOM_FLOOR = 32 * 1024 * 1024
 
 
 def validate_baseline_capture(
@@ -122,16 +124,26 @@ def work_budgets_from_run(
             raise BenchmarkError(
                 f"work baseline result {case_id!r} is missing median_instructions"
             )
+        if not isinstance(metrics.get("peak_rss_bytes"), int):
+            raise BenchmarkError(
+                f"work baseline result {case_id!r} is missing peak_rss_bytes"
+            )
         median = int(metrics["median_instructions"])
-        threshold = max(
+        instruction_threshold = max(
             math.ceil(median * WORK_HEADROOM_RATIO), median + WORK_HEADROOM_FLOOR
+        )
+        peak_rss = int(metrics["peak_rss_bytes"])
+        rss_threshold = max(
+            math.ceil(peak_rss * RSS_HEADROOM_RATIO), peak_rss + RSS_HEADROOM_FLOOR
         )
         work_entries.append(
             {
                 "benchmark_id": case_id,
                 "budget_id": entry.get("budget_id"),
                 "baseline_median_instructions": median,
-                "threshold_median_instructions": threshold,
+                "threshold_median_instructions": instruction_threshold,
+                "baseline_peak_rss_bytes": peak_rss,
+                "threshold_peak_rss_bytes": rss_threshold,
             }
         )
     return {
@@ -144,10 +156,15 @@ def work_budgets_from_run(
             "host_os": run_report.get("metadata", {}).get("host_os"),
             "architecture": run_report.get("metadata", {}).get("architecture"),
             "work_counter_source": "darwin-rusage-instructions",
+            "rss_counter_source": "darwin-rusage-process-tree",
         },
-        "threshold_rule": (
+        "instruction_threshold_rule": (
             "max(baseline_median_instructions * 1.02, "
             "baseline_median_instructions + 1000000)"
+        ),
+        "rss_threshold_rule": (
+            "max(baseline_peak_rss_bytes * 1.10, "
+            "baseline_peak_rss_bytes + 33554432)"
         ),
         "budgets": work_entries,
     }
