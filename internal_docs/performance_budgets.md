@@ -115,7 +115,7 @@ python3 verification/areas/performance/check_budgets.py
 ```
 
 The capture writes `data/work_budgets.json` after all cases pass. The instruction
-threshold is `max(baseline * 1.02, baseline + 1,000,000 instructions)`. The
+threshold is `max(baseline * 1.02, baseline + 2,000,000 instructions)`. The
 local RSS threshold is `max(baseline * 1.10, baseline + 32MiB)`.
 
 Updating `data/trend/current.json` does not change blocking budgets. It requires

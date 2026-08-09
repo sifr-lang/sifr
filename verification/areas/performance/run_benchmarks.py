@@ -21,6 +21,7 @@ from benchmark_baseline import (
     validate_baseline_capture,
     work_budgets_from_run,
 )
+from benchmark_baseline import run_self_test as run_benchmark_baseline_self_test
 from benchmark_manifest import (
     RUNNER_VERSION,
     BenchmarkCase,
@@ -698,6 +699,7 @@ def invalidate_output(path: Path) -> None:
 
 
 def run_self_test() -> None:
+    run_benchmark_baseline_self_test()
     run_process_metrics_self_test()
     run_query_processes_self_test()
     run_work_baseline_self_test()

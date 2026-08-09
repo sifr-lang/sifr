@@ -10,7 +10,7 @@ from typing import Any
 from benchmark_manifest import RUNNER_VERSION, BenchmarkCase, BenchmarkError
 
 WORK_HEADROOM_RATIO = 1.02
-WORK_HEADROOM_FLOOR = 1_000_000
+WORK_HEADROOM_FLOOR = 2_000_000
 RSS_HEADROOM_RATIO = 1.10
 RSS_HEADROOM_FLOOR = 32 * 1024 * 1024
 
@@ -160,7 +160,7 @@ def work_budgets_from_run(
         },
         "instruction_threshold_rule": (
             "max(baseline_median_instructions * 1.02, "
-            "baseline_median_instructions + 1000000)"
+            "baseline_median_instructions + 2000000)"
         ),
         "rss_threshold_rule": (
             "max(baseline_peak_rss_bytes * 1.10, "
@@ -176,3 +176,38 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             hasher.update(chunk)
     return hasher.hexdigest()
+
+
+def run_self_test() -> None:
+    budgets = {
+        "budgets": [
+            {
+                "benchmark_id": "small-work-self-test",
+                "budget_id": "perf.self-test.small-work",
+            }
+        ]
+    }
+    report = {
+        "metadata": {
+            "work_baseline_source_commit": "a" * 40,
+            "host_os": "macOS-self-test",
+            "architecture": "arm64",
+        },
+        "results": [
+            {
+                "id": "small-work-self-test",
+                "metrics": {
+                    "median_instructions": 10_000_000,
+                    "peak_rss_bytes": 64 * 1024 * 1024,
+                },
+            }
+        ],
+    }
+    captured = work_budgets_from_run(budgets, report)
+    entry = captured["budgets"][0]
+    if entry["threshold_median_instructions"] != 12_000_000:
+        raise BenchmarkError(
+            "work baseline self-test did not apply the small-process floor"
+        )
+    if entry["threshold_peak_rss_bytes"] != 96 * 1024 * 1024:
+        raise BenchmarkError("work baseline self-test did not apply the RSS floor")

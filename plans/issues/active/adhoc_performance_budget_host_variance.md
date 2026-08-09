@@ -90,6 +90,13 @@ Darwin process-tree RSS values from the same local artifact. Latency mode keeps
 the existing generic RSS thresholds. Seeded tests reject both instruction and
 local-RSS work regressions without using elapsed-time thresholds.
 
+The first exact-candidate representative verdict rejected the formatter corpus
+at 36.916 million instructions against a 36.759 million threshold. Four runs
+placed its medians between 35.721 million and 36.916 million instructions. The
+largest individual sample was 37.298 million. M3 therefore uses a general
+2-million-instruction floor for small processes. Larger workloads keep the 2%
+rule. No case-specific threshold or waiver was added.
+
 ### M2 reproduced evidence
 
 On exact M1 candidate `28bca35551321b109e272c61ae52fe6201eb810d`,
