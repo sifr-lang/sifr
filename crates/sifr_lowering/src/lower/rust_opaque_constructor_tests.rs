@@ -19,7 +19,10 @@ def invalid() -> Resource:
 ",
     )
     .expect("source should parse");
-    let errors = lower_module(parsed.suite()).expect_err("direct construction must fail");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("direct construction must fail"),
+        Err(errors) => errors,
+    };
 
     assert_eq!(errors.len(), 1, "rejection must have one stable owner");
     assert_eq!(
@@ -51,7 +54,10 @@ def invalid() -> Resource:
 ",
     )
     .expect("source should parse");
-    let errors = lower_module(parsed.suite()).expect_err("alias construction must fail");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("alias construction must fail"),
+        Err(errors) => errors,
+    };
 
     assert_eq!(errors.len(), 1, "rejection must have one stable owner");
     assert_eq!(

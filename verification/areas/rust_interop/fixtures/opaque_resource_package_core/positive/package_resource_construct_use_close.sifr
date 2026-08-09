@@ -56,7 +56,8 @@ def verify_package_resource_construct_use_close() -> Result[str, PackageResource
         resource: PackageResource = open_package_resource()
         value: PackageRecord = package_resource_construct(resource)
         summary: str = package_resource_use(resource, value)
-        assert value.number == 7
+        expected_number: uint32 = 7
+        assert value.number == expected_number
         assert value.label == "sealed"
         assert summary == "number=7;label=sealed;state=open"
         _closed: None = resource.close()

@@ -53,7 +53,10 @@ fn test_package_resource_alias_use_after_close_rejected() {
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "package-resource-runtime");
     let output = built_package_output(&entrypoint);
-    assert_eq!(observed_resource_state(&output), ObservedRuntimeState::Closed);
+    assert_eq!(
+        observed_resource_state(&output),
+        ObservedRuntimeState::Closed
+    );
     assert!(
         output.stderr.is_empty(),
         "negative package resource evidence must redact the panic hook: {}",
@@ -76,7 +79,11 @@ fn test_package_resource_alias_use_after_close_rejected() {
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "package-resource-runtime");
     let errors = check_package_project(&entrypoint);
-    assert_eq!(errors.len(), 2, "negative diagnostics must have exact owners");
+    assert_eq!(
+        errors.len(),
+        2,
+        "negative diagnostics must have exact owners"
+    );
     assert_eq!(
         errors
             .iter()
@@ -91,7 +98,7 @@ fn test_package_resource_alias_use_after_close_rejected() {
             .filter(|error| {
                 error.code == DiagnosticCode::RUST_TYPE_PROBE_FAILURE.code()
                     && error.message
-                        == "sealed Rust opaque resource `PackageResource` cannot be constructed in Sifr; use its declared package factory"
+                        == "[main] sealed Rust opaque resource `PackageResource` cannot be constructed in Sifr; use its declared package factory"
             })
             .count(),
         1,

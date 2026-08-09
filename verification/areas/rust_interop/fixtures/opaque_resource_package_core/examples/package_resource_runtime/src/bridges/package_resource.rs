@@ -4,14 +4,11 @@ use std::rc::Rc;
 
 use sifr_runtime::interop::structural::{
     primitive, structural_construct, NodeId, ShapeIdentity, StructuralConstruct,
-    StructuralContractError,
-    StructuralEdge, StructuralEdgeKind, StructuralEnter, StructuralKind, StructuralNodeEdge,
-    StructuralNodeRef, StructuralProject, StructuralScalar, StructuralScalarRef, StructuralSource,
-    StructuralVisitor, VisitControl,
+    StructuralContractError, StructuralEdge, StructuralEdgeKind, StructuralEnter, StructuralKind,
+    StructuralNodeEdge, StructuralNodeRef, StructuralProject, StructuralScalar,
+    StructuralScalarRef, StructuralSource, StructuralVisitor, VisitControl,
 };
-use sifr_runtime::interop::{
-    Handle, HandleStateError, PoisonOnPanic, SilentPanicBoundary,
-};
+use sifr_runtime::interop::{Handle, HandleStateError, PoisonOnPanic, SilentPanicBoundary};
 
 const RECORD_IDENTITY: &str = "PackageRecord";
 
@@ -139,9 +136,7 @@ fn record_nodes() -> Vec<ResourceNode> {
 
 pub fn open() -> Result<Handle<PackageResource>, PackageResourceError> {
     Ok(Handle::new(PackageResource {
-        state: Rc::new(RefCell::new(ResourceState {
-            closed: false,
-        })),
+        state: Rc::new(RefCell::new(ResourceState { closed: false })),
     }))
 }
 
