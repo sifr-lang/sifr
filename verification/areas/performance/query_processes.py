@@ -7,7 +7,7 @@ from collections.abc import Callable
 from typing import Any
 
 from benchmark_manifest import BenchmarkCase, BenchmarkError
-from process_metrics import latency_metrics, work_metrics
+from process_metrics import latency_metrics, work_metrics, work_sample_evidence
 
 SIZE_METRIC_DEFAULTS = {
     "generated_binary_bytes": None,
@@ -54,7 +54,7 @@ def run_query_processes(
         "evidence_category": case.raw["evidence_category"],
         "sample_count": len(samples),
         "samples_ms": samples,
-        "samples_instructions": instruction_samples,
+        **work_sample_evidence(instruction_samples),
         "metrics": latency_metrics(samples)
         | work_metrics(instruction_samples, cycle_samples)
         | {"peak_rss_bytes": aggregate_result["peak_rss_bytes"]}

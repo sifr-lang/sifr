@@ -126,6 +126,12 @@ def work_metrics(
     }
 
 
+def work_sample_evidence(instruction_samples: list[int]) -> dict[str, list[int]]:
+    if not instruction_samples:
+        return {}
+    return {"samples_instructions": instruction_samples}
+
+
 def run_self_test() -> None:
     darwin = parse_process_metrics(
         "        1.25 real         0.80 user         0.20 sys\n"
@@ -152,6 +158,10 @@ def run_self_test() -> None:
     metrics = work_metrics([100, 101, 99], [50, 51, 49])
     if metrics["median_instructions"] != 100:
         raise ValueError(f"work metric median mismatch: {metrics!r}")
+    if work_sample_evidence([]) != {}:
+        raise ValueError("empty work samples must not emit evidence")
+    if work_sample_evidence([100]) != {"samples_instructions": [100]}:
+        raise ValueError("available work samples must emit evidence")
 
 
 def leading_integer(value: str) -> int | None:

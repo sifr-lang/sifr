@@ -47,7 +47,8 @@ incremental cache behavior, interactive diagnostics, and diagnostic architecture
 diagnostic/exit-code non-regression.
 
 Representative and full budget producers use work-controlled admission on
-macOS. Admission requires three accepted snapshots, AC power, and nominal
+macOS. They retain latency-controlled admission on other operating systems.
+macOS admission requires three accepted snapshots, AC power, and nominal
 thermal state. The host must provide retired-instruction counters. Competing
 Cargo, rustc, benchmark, or Git indexing processes reject admission.
 

@@ -98,6 +98,12 @@ largest individual sample was 37.298 million. M3 therefore uses a general
 2-million-instruction floor for small processes. Larger workloads keep the 2%
 rule. No case-specific threshold or waiver was added.
 
+The M3 exact-SHA review found two non-Darwin regressions before merge. The
+profile adapter had selected Darwin work mode on Linux. Latency producers also
+emitted an empty instruction array that failed result validation. Profiles now
+select work mode only on Darwin and retain latency mode elsewhere. Producers
+omit instruction evidence when the host does not provide it.
+
 ### M2 reproduced evidence
 
 On exact M1 candidate `28bca35551321b109e272c61ae52fe6201eb810d`,

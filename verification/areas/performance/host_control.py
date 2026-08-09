@@ -28,6 +28,11 @@ class HostControlError(Exception):
     """Raised when the host cannot provide a controlled measurement window."""
 
 
+def profile_control_mode(host_system: str | None = None) -> str:
+    system = platform.system() if host_system is None else host_system
+    return "work" if system == "Darwin" else "latency"
+
+
 def capture_host_snapshot(*, include_calibration: bool = True) -> dict[str, Any]:
     logical_cpus = os.cpu_count() or 1
     try:
@@ -515,6 +520,10 @@ def executable_name(name: str) -> str:
 
 
 def run_self_test() -> None:
+    if profile_control_mode("Darwin") != "work":
+        raise HostControlError("Darwin profile mode self-test did not select work")
+    if profile_control_mode("Linux") != "latency":
+        raise HostControlError("Linux profile mode self-test did not select latency")
     nominal = {
         "load_average": {"one_minute_per_logical_cpu": 0.1},
         "thermal": {"status": "nominal"},

@@ -1543,7 +1543,8 @@ The readiness coverage matrix is the executable registry for shipped guarantees,
 Blocking representative and full performance measurements use a controlled-host
 boundary. Work-controlled measurements use retired instructions and
 process-tree RSS from the local macOS host. Latency-controlled measurements use
-elapsed time and generic RSS after a quiet-host admission. Both modes reject
+elapsed time and generic RSS after a quiet-host admission. Non-macOS profiles
+retain latency mode because they do not expose the Darwin counter. Both modes reject
 competing build work, thermal pressure, and
 unstable samples. The accepted report includes an invocation identity. Producer
 failure cannot use stale `*.budget.latest.json` evidence. This design separates

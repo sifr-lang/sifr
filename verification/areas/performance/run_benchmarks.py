@@ -52,6 +52,7 @@ from process_metrics import (
     parse_process_metrics,
     timed_command,
     work_metrics,
+    work_sample_evidence,
 )
 from process_metrics import (
     run_self_test as run_process_metrics_self_test,
@@ -456,7 +457,7 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
         "evidence_category": case.raw["evidence_category"],
         "sample_count": len(samples),
         "samples_ms": samples,
-        "samples_instructions": instruction_samples,
+        **work_sample_evidence(instruction_samples),
         "metrics": stats
         | work_metrics(instruction_samples, cycle_samples)
         | {"peak_rss_bytes": max(peak_rss_values) if peak_rss_values else None}

@@ -10,6 +10,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from host_control import profile_control_mode
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
 DATA_ROOT = AREA_ROOT / "data"
@@ -207,7 +209,7 @@ def run_profile_variants(suite_name: str) -> list[dict[str, Any]]:
         invocation_id,
         "--require-controlled-host",
         "--controlled-host-mode",
-        "work",
+        profile_control_mode(),
     ]
     for case_id in REPRESENTATIVE_CASES:
         run_argv.extend(["--case", case_id])
