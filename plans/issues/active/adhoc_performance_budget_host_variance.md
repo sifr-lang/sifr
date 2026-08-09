@@ -140,6 +140,36 @@ evidence digest is
 The work-budget artifact digest is
 `127d520b28bf280f830226a4e73d728c2eff03edab1c31972735694a6dc03d96`.
 
+The integrated owner candidate `b59fb265cf58327e0018778b39e5cd5001bd6edd`
+includes the external Rust 1.94 code-generation fix that the repository-wide
+merge gate required. Its first merge gate passed CPython differential and all
+25 Python-interop variants in 1,050.516 seconds. Rust interop passed in 6.347
+seconds. All 32 LSP variants, the performance policies, and representative
+benchmark execution also passed. The budget checker then rejected only
+`incremental-local-loop-001-unchanged-file-update`: its measured median was
+937,013,372 instructions, its uncertainty-adjusted lower bound was
+932,328,305.140 instructions, and its pre-integration threshold was
+931,509,560 instructions. The 20 samples had an instruction coefficient of
+variation of `0.003367`. This sustained result showed that the governed work
+artifact no longer represented the integrated producer.
+
+The first approved integrated recapture stopped before writing governed data
+when another worktree started a Cargo build. The replacement recapture used a
+local 2+6 CPU partition on this 10-thread Mac: qlty received two CPUs, Sifr
+received six workers, and no competing Cargo process ran. All 65 cases passed
+on producer `b59fb265cf58327e0018778b39e5cd5001bd6edd`. Only
+`lsp-query-001-request-families` needed its single allowed retry. The maximum
+accepted instruction coefficient of variation was `0.017457`, below the
+`0.02` limit. The raw-evidence digest is
+`f8c09d47e29ecbdfe2c8d9efb451db40481cc519a0d8c96a2cda247c80051713`.
+The generated work-budget artifact digest is
+`56f91e711d78b4efb7e759e20868a3edec67c95f5b70368f08ddb5e70f98cc26`.
+For the rejected incremental case, the replacement baseline is 918,442,841
+instructions. The governed 2% threshold is 936,811,698 instructions. No
+waiver, case-specific allowance, or manual threshold edit was added. The
+budget policy and all six performance rules passed against the replacement
+artifact. The benchmark and budget self-tests also passed.
+
 ### M2 reproduced evidence
 
 On exact M1 candidate `28bca35551321b109e272c61ae52fe6201eb810d`,
