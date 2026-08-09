@@ -46,18 +46,30 @@ covers single-file check, project check, single-file build, project build,
 incremental cache behavior, interactive diagnostics, and diagnostic architecture
 diagnostic/exit-code non-regression.
 
-Representative and full budget producers require a controlled host window
-before measuring. Admission requires three consecutive quiet snapshots on AC
-power on macOS, no thermal or CPU-power warning, no competing Cargo, rustc,
-benchmark, or Git indexing process, normalized one-minute load at or below
-`0.85`, and a stable fixed-work CPU-throughput calibration. The report records
-load, power, thermal state, direct CPU frequencies when the host exposes them,
-the unprivileged throughput proxy otherwise, memory-pressure counters, and the
-compiler/generated-artifact cache state. Per-case monitoring records pressure
-that appears after admission. On hosts without direct frequency telemetry, the
-throughput calibration runs only during admission because running it inside a
-measured case would contaminate the samples; the case coefficient of variation
-rejects frequency-driven in-window instability.
+Representative and full budget producers use work-controlled admission on
+macOS. They retain latency-controlled admission on other operating systems.
+macOS admission requires three accepted snapshots, AC power, and nominal
+thermal state. The host must provide retired-instruction counters. Competing
+Cargo, rustc, benchmark, or Git indexing processes reject admission.
+
+Work-controlled admission records load and unrelated CPU use. It does not
+reject a sample only because unrelated CPU use is high. Retired instructions
+measure work in the benchmark process tree. Unrelated processes do not add to
+that count. Each case rejects an instruction coefficient of variation above
+`0.02`.
+
+Latency-controlled admission remains available for elapsed-time evidence. It
+also requires normalized one-minute load at or below `0.85`. Unrelated
+processes can use no more than `50%` of one logical CPU. A stable CPU-throughput
+calibration is also required. The approved trend capture uses this mode.
+
+Both modes record load, power, thermal state, CPU behavior, external CPU use,
+memory pressure, and cache state. Per-case monitoring rejects new competing
+build work or thermal pressure. The monitor excludes the benchmark runner and
+its process tree.
+
+On macOS, `ps` supplies recent decayed CPU use. On Linux, `ps` supplies the
+process-lifetime average. Linux evidence records this limitation.
 Competing-work classification uses the actual executable or Python module/script
 identity, not arbitrary shell argument text that merely mentions Cargo or a
 benchmark. A top-level `git fetch` is not rejected by itself; its CPU/disk-heavy
@@ -66,14 +78,12 @@ subcommand appears. If all three attempts are rejected, their snapshots and
 reasons are persisted under the run's `control-failures/` directory before the
 producer exits.
 
-Each case must produce samples whose coefficient of variation is within its
-manifest `stability_limit` (default `0.10`). An unstable or host-contaminated
-case is discarded and retried up to two times. Before each retry, the producer
-must reacquire the same complete controlled-host admission window; it does not
-spend another attempt inside known continuing contention. Exhausting the three
-controlled attempts fails the producer as host instability. Stable samples are
-compared to the unchanged governed budgets, so a uniform seeded slowdown still
-fails. The budget checker treats sample instability as non-waiverable.
+Latency-controlled cases use the manifest `stability_limit` (default `0.10`).
+Work-controlled cases use `work_stability_limit` (default `0.02`). An unstable
+or contaminated case is discarded. The producer retries the case two times.
+It obtains a new admission window before each retry. Three rejected attempts
+stop the producer. The budget checker does not permit a waiver for sample
+instability.
 
 The profile adapter invalidates the fixed `*.budget.latest.json` path before
 production and binds producer and checker with a unique invocation id. If the
@@ -92,6 +102,23 @@ python3 verification/areas/performance/run_benchmarks.py --capture-baseline
 python3 verification/areas/performance/check_budgets.py
 ```
 
+The local work baseline is a separate governed artifact. It records Darwin
+retired instructions and Darwin process-tree RSS. This command does not change
+the generic elapsed-time baseline or its thresholds:
+
+```bash
+python3 verification/areas/performance/run_benchmarks.py \
+  --capture-work-baseline \
+  --require-controlled-host \
+  --controlled-host-mode work \
+  --reference-approval compiler/performance
+python3 verification/areas/performance/check_budgets.py
+```
+
+The capture writes `data/work_budgets.json` after all cases pass. The instruction
+threshold is `max(baseline * 1.02, baseline + 2,000,000 instructions)`. The
+local RSS threshold is `max(baseline * 1.10, baseline + 32MiB)`.
+
 Updating `data/trend/current.json` does not change blocking budgets. It requires
 an owner-approved reference run from a clean exact commit, the complete
 manifest with manifest sample counts, and controlled-host admission and
@@ -103,6 +130,7 @@ SIFR_THERMAL_POLICY=controlled-host \
 python3 verification/areas/performance/run_benchmarks.py \
   --capture-trend-baseline \
   --require-controlled-host \
+  --controlled-host-mode latency \
   --reference-approval compiler/performance
 python3 verification/areas/performance/check_trend_policy.py
 ```
@@ -123,6 +151,14 @@ Command benchmarks use:
 - median latency: `max(baseline_median * 1.10, baseline_median + 25ms)`
 - p95 latency: `max(baseline_p95 * 1.15, baseline_p95 + 50ms)`
 - peak RSS: `max(baseline_peak_rss * 1.10, baseline_peak_rss + 32MiB)`
+
+Work-controlled results use the local instruction and Darwin process-tree RSS
+thresholds. Latency-controlled results use the generic elapsed-time and RSS
+thresholds. Timeout, cache, and correctness requirements block in both modes.
+
+Darwin rusage includes the spawned query server and its descendants. The
+generic baseline can use a different operating-system RSS boundary. The local
+artifact prevents these two RSS meanings from sharing one threshold.
 
 Command benchmark RSS is measured per command invocation with `/usr/bin/time` when available (`-l` on macOS, `-v` on Linux). Python `RUSAGE_CHILDREN` is used only as a fallback because it is process-cumulative on some platforms and can otherwise contaminate later samples with earlier validation work.
 
@@ -197,6 +233,9 @@ Waivers are allowed only for temporary performance threshold regressions. They m
 - `rationale`
 - `removal_criteria`
 
-Waivers may override `median_ms`, `p95_ms`, `peak_rss_bytes`, or `cache_hits`. They may not suppress timeouts, missing or malformed results, unknown ids, stale-cache/correctness failures, diagnostic drift, split-brain semantics, or panic-safety failures.
+Waivers can override `median_ms`, `p95_ms`, `median_instructions`,
+`peak_rss_bytes`, or `cache_hits`. They cannot suppress timeouts, malformed
+results, cache errors, diagnostic drift, split-brain semantics, or panic-safety
+errors.
 
 Expired waivers, ownerless waivers, issue-less waivers, unknown benchmark/budget references, and non-performance overrides fail `check_budgets.py`.

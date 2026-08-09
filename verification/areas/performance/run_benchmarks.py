@@ -6,11 +6,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import math
 import os
 import platform
 import resource
-import statistics
 import subprocess
 import sys
 import time
@@ -18,6 +16,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
+from benchmark_baseline import (
+    baseline_from_run,
+    validate_baseline_capture,
+    work_budgets_from_run,
+)
+from benchmark_baseline import run_self_test as run_benchmark_baseline_self_test
 from benchmark_manifest import (
     RUNNER_VERSION,
     BenchmarkCase,
@@ -26,9 +30,10 @@ from benchmark_manifest import (
     select_cases,
     validate_manifest,
 )
-from benchmark_baseline import baseline_from_run, validate_baseline_capture
 from controlled_sampling import (
     run_controlled_case,
+)
+from controlled_sampling import (
     run_self_test as run_controlled_sampling_self_test,
 )
 from host_control import (
@@ -37,27 +42,57 @@ from host_control import (
     capture_host_snapshot,
     controlled_policy,
     evaluate_snapshot,
-    run_self_test as run_host_control_self_test,
     wait_for_controlled_host,
+)
+from host_control import (
+    run_self_test as run_host_control_self_test,
+)
+from process_metrics import (
+    latency_metrics,
+    parse_process_metrics,
+    timed_command,
+    work_metrics,
+    work_sample_evidence,
+)
+from process_metrics import (
+    run_self_test as run_process_metrics_self_test,
+)
+from query_processes import run_query_processes
+from query_processes import run_self_test as run_query_processes_self_test
+from trend_baseline import (
+    TrendBaselineError,
+    baseline_from_reference_run,
+    validate_capture_request,
+)
+from trend_baseline import (
+    run_self_test as run_trend_baseline_self_test,
 )
 from trend_reports import (
     TrendReportError,
     build_trend_report,
+)
+from trend_reports import (
     run_self_test as run_trend_report_self_test,
 )
-from trend_baseline import (
-    TrendBaselineError,
-    baseline_from_reference_run,
-    run_self_test as run_trend_baseline_self_test,
-    validate_capture_request,
+from work_baseline import (
+    WorkBaselineError,
 )
-
+from work_baseline import (
+    run_self_test as run_work_baseline_self_test,
+)
+from work_baseline import (
+    validate_capture_request as validate_work_capture_request,
+)
+from work_baseline import (
+    validate_source_unchanged as validate_work_source_unchanged,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PERF_ROOT = REPO_ROOT / "verification" / "areas" / "performance"
 PERF_DATA = PERF_ROOT / "data"
 DEFAULT_MANIFEST = PERF_DATA / "benchmark_manifest.json"
 DEFAULT_TREND_BASELINES = PERF_DATA / "trend" / "current.json"
+DEFAULT_BUDGETS = PERF_DATA / "budgets.json"
 DEFAULT_OUTPUT_ROOT = REPO_ROOT / "target" / "performance"
 NEGATIVE_ROOT = PERF_ROOT / "negative_seeds"
 SIZE_METRIC_DEFAULTS = {
@@ -104,7 +139,9 @@ def main() -> int:
     )
     parser.add_argument("--validate-only", action="store_true")
     parser.add_argument("--capture-baseline", action="store_true")
+    parser.add_argument("--capture-work-baseline", action="store_true")
     parser.add_argument("--baseline-output", default="")
+    parser.add_argument("--work-budget-output", default="")
     parser.add_argument("--capture-trend-baseline", action="store_true")
     parser.add_argument("--trend-baseline-output", default="")
     parser.add_argument("--reference-approval", default="")
@@ -113,6 +150,11 @@ def main() -> int:
     parser.add_argument("--json-out", default="")
     parser.add_argument("--invocation-id", default="")
     parser.add_argument("--require-controlled-host", action="store_true")
+    parser.add_argument(
+        "--controlled-host-mode",
+        choices=["latency", "work"],
+        default="latency",
+    )
     parser.add_argument("--controlled-host-timeout-seconds", type=float, default=180.0)
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
@@ -154,6 +196,21 @@ def main() -> int:
             approval_owner=args.reference_approval,
             profile=os.environ.get("SIFR_VALIDATION_PROFILE", "standalone"),
             thermal_policy=os.environ.get("SIFR_THERMAL_POLICY", "unspecified"),
+            control_mode=args.controlled_host_mode,
+            repo_root=REPO_ROOT,
+        )
+        work_source_commit = validate_work_capture_request(
+            capture_requested=args.capture_work_baseline,
+            capture_budget_baseline=args.capture_baseline,
+            require_controlled_host=args.require_controlled_host,
+            control_mode=args.controlled_host_mode,
+            sample_scale=args.sample_scale,
+            selected_count=len(selected),
+            manifest_count=len(cases),
+            groups=parse_csv(args.groups),
+            case_ids=set(args.case),
+            case_limit=args.case_limit,
+            approval_owner=args.reference_approval,
             repo_root=REPO_ROOT,
         )
 
@@ -166,8 +223,14 @@ def main() -> int:
             args.sample_scale,
             invocation_id=invocation_id,
             require_controlled_host=args.require_controlled_host,
+            control_mode=args.controlled_host_mode,
             controlled_host_timeout_seconds=args.controlled_host_timeout_seconds,
         )
+        if work_source_commit is not None:
+            validate_work_source_unchanged(work_source_commit, REPO_ROOT)
+            run_report["metadata"]["work_baseline_source_commit"] = (
+                work_source_commit
+            )
         evidence_path = write_run_report(run_report, Path(args.output_root))
         trend_report = build_trend_report(
             run_report, load_json(Path(args.trend_baselines)), RUNNER_VERSION
@@ -179,6 +242,21 @@ def main() -> int:
             trend_path = write_trend_report(trend_report, Path(args.output_root))
         if json_out is not None:
             write_json(json_out, run_report)
+        if args.capture_work_baseline:
+            validate_baseline_capture(run_report, {case.id: case for case in cases})
+            work_budgets = work_budgets_from_run(
+                load_json(DEFAULT_BUDGETS), run_report
+            )
+            work_budget_output = (
+                (REPO_ROOT / args.work_budget_output).resolve()
+                if args.work_budget_output
+                else PERF_DATA / "work_budgets.json"
+            )
+            write_json(work_budget_output, work_budgets)
+            print(
+                "performance work budgets captured: "
+                f"{work_budget_output.relative_to(REPO_ROOT)}"
+            )
         if args.capture_baseline:
             validate_baseline_capture(run_report, {case.id: case for case in cases})
             baseline = baseline_from_run(run_report, manifest, Path(args.manifest))
@@ -222,6 +300,7 @@ def main() -> int:
         HostControlError,
         TrendBaselineError,
         TrendReportError,
+        WorkBaselineError,
     ) as error:
         print(f"performance benchmark error: {error}", file=sys.stderr)
         return 1
@@ -246,6 +325,7 @@ def run_cases(
     *,
     invocation_id: str,
     require_controlled_host: bool,
+    control_mode: str,
     controlled_host_timeout_seconds: float,
 ) -> dict[str, Any]:
     run_id = f"bench-{int(time.time())}-{os.getpid()}"
@@ -253,17 +333,25 @@ def run_cases(
     run_root.mkdir(parents=True, exist_ok=True)
     cache_before = current_cache_state()
     if require_controlled_host:
-        admission = wait_for_controlled_host(controlled_host_timeout_seconds)
+        admission = wait_for_controlled_host(
+            controlled_host_timeout_seconds, control_mode=control_mode
+        )
     else:
         snapshot = capture_host_snapshot(include_calibration=True)
         admission = {
             "status": "record-only",
-            "policy": controlled_policy(),
+            "mode": control_mode,
+            "policy": controlled_policy(control_mode),
             "accepted_snapshots": [snapshot],
             "observation_count": 1,
             "rejected_observation_count": 0,
             "recent_rejected_observations": [],
-            "advisory_reasons": evaluate_snapshot(snapshot, enforce_load=True),
+            "advisory_reasons": evaluate_snapshot(
+                snapshot,
+                enforce_load=True,
+                control_mode=control_mode,
+                require_work_counter=control_mode == "work",
+            ),
         }
     results = []
     for case in cases:
@@ -275,9 +363,15 @@ def run_cases(
                 run_root,
                 sample_scale,
                 require_controlled_host=require_controlled_host,
+                control_mode=control_mode,
                 run_case_fn=run_case,
                 retry_admission_fn=(
-                    (lambda: wait_for_controlled_host(controlled_host_timeout_seconds))
+                    (
+                        lambda: wait_for_controlled_host(
+                            controlled_host_timeout_seconds,
+                            control_mode=control_mode,
+                        )
+                    )
                     if require_controlled_host
                     else None
                 ),
@@ -317,8 +411,10 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
         return run_lsp_query_case(case, measured)
 
     ensure_sifr_binary()
-    samples = []
-    peak_rss_values = []
+    samples: list[float] = []
+    peak_rss_values: list[int] = []
+    instruction_samples: list[int] = []
+    cycle_samples: list[int] = []
     shared_build_dir = run_root / "artifacts" / case.id / "shared-build"
     for sample_index in range(warmups + measured):
         output_dir = (
@@ -333,6 +429,10 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
         samples.append(result["duration_ms"])
         if result["peak_rss_bytes"] is not None:
             peak_rss_values.append(result["peak_rss_bytes"])
+        if result["retired_instructions"] is not None:
+            instruction_samples.append(result["retired_instructions"])
+        if result["cycles_elapsed"] is not None:
+            cycle_samples.append(result["cycles_elapsed"])
         if result["timed_out"]:
             raise BenchmarkError(
                 f"benchmark {case.id} timed out after {case.timeout_ms}ms"
@@ -343,7 +443,7 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
                 f"benchmark {case.id} exited {result['exit_code']}, expected {sorted(expected_exit_codes)}"
             )
 
-    stats = sample_stats(samples)
+    stats = latency_metrics(samples)
     size_metrics = (
         collect_build_size_metrics(shared_build_dir)
         if case.raw.get("mode") == "build"
@@ -357,7 +457,9 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
         "evidence_category": case.raw["evidence_category"],
         "sample_count": len(samples),
         "samples_ms": samples,
+        **work_sample_evidence(instruction_samples),
         "metrics": stats
+        | work_metrics(instruction_samples, cycle_samples)
         | {"peak_rss_bytes": max(peak_rss_values) if peak_rss_values else None}
         | size_metrics,
         "cache": {"hits": 0, "misses": 0},
@@ -367,112 +469,37 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
 
 def run_frontend_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any]:
     ensure_frontend_query_bench()
-    warmups = case.warmups if measured == case.measured else 1
-    iterations = warmups + measured
-    command = [
-        str(frontend_bench_binary()),
-        str(case.raw["scenario"]),
-        str(REPO_ROOT / case.raw["source_path"]),
-        str(iterations),
-        str(case.raw.get("inner_repetitions", 100)),
-    ]
-    result = run_subprocess(command, case.timeout_ms)
-    if result["timed_out"]:
-        raise BenchmarkError(
-            f"frontend query benchmark {case.id} timed out after {case.timeout_ms}ms"
-        )
-    if result["exit_code"] != 0:
-        raise BenchmarkError(
-            f"frontend query benchmark {case.id} failed: {result['stderr_tail']}"
-        )
-    try:
-        payload = json.loads(result["stdout"])
-    except json.JSONDecodeError as error:
-        raise BenchmarkError(
-            f"frontend query benchmark {case.id} emitted invalid JSON: {error}"
-        ) from error
-    samples = payload.get("samples_ms")
-    if not isinstance(samples, list) or not all(
-        isinstance(sample, int | float) for sample in samples
-    ):
-        raise BenchmarkError(
-            f"frontend query benchmark {case.id} did not emit numeric samples_ms"
-        )
-    samples = samples[warmups:]
-    stats = sample_stats([float(sample) for sample in samples])
-    return {
-        "id": case.id,
-        "group": case.group,
-        "kind": case.kind,
-        "budget_id": case.raw["budget_id"],
-        "evidence_category": case.raw["evidence_category"],
-        "sample_count": len(samples),
-        "samples_ms": [float(sample) for sample in samples],
-        "metrics": stats
-        | {"peak_rss_bytes": result["peak_rss_bytes"]}
-        | SIZE_METRIC_DEFAULTS,
-        "cache": {
-            "hits": int(payload.get("cache_hits", 0)),
-            "misses": int(payload.get("cache_misses", 0)),
-        },
-        "diagnostics_count": int(payload.get("diagnostics_count", 0)),
-        "timed_out": bool(payload.get("timed_out", False)),
-    }
+    return run_query_processes(
+        case,
+        measured,
+        "frontend query",
+        lambda iterations: [
+            str(frontend_bench_binary()),
+            str(case.raw["scenario"]),
+            str(REPO_ROOT / case.raw["source_path"]),
+            str(iterations),
+            str(case.raw.get("inner_repetitions", 100)),
+        ],
+        run_subprocess,
+    )
 
 
 def run_lsp_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any]:
-    warmups = case.warmups if measured == case.measured else 1
-    command = [
-        "python3",
-        str(PERF_ROOT / "lsp_query_bench.py"),
-        str(case.raw["scenario"]),
-        str(REPO_ROOT / case.raw["source_path"]),
-        str(warmups + measured),
-        str(case.raw.get("inner_repetitions", 1)),
-        str(case.raw["workspace_mode"]),
-    ]
-    result = run_subprocess(command, case.timeout_ms)
-    if result["timed_out"]:
-        raise BenchmarkError(
-            f"LSP query benchmark {case.id} timed out after {case.timeout_ms}ms"
-        )
-    if result["exit_code"] != 0:
-        raise BenchmarkError(
-            f"LSP query benchmark {case.id} failed: {result['stderr_tail']}"
-        )
-    try:
-        payload = json.loads(result["stdout"])
-    except json.JSONDecodeError as error:
-        raise BenchmarkError(
-            f"LSP query benchmark {case.id} emitted invalid JSON: {error}"
-        ) from error
-    samples = payload.get("samples_ms")
-    if not isinstance(samples, list) or not all(
-        isinstance(sample, int | float) for sample in samples
-    ):
-        raise BenchmarkError(
-            f"LSP query benchmark {case.id} did not emit numeric samples_ms"
-        )
-    samples = [float(sample) for sample in samples[warmups:]]
-    stats = sample_stats(samples)
-    return {
-        "id": case.id,
-        "group": case.group,
-        "kind": case.kind,
-        "budget_id": case.raw["budget_id"],
-        "evidence_category": case.raw["evidence_category"],
-        "sample_count": len(samples),
-        "samples_ms": samples,
-        "metrics": stats
-        | {"peak_rss_bytes": result["peak_rss_bytes"]}
-        | SIZE_METRIC_DEFAULTS,
-        "cache": {
-            "hits": int(payload.get("cache_hits", 0)),
-            "misses": int(payload.get("cache_misses", 0)),
-        },
-        "diagnostics_count": int(payload.get("diagnostics_count", 0)),
-        "timed_out": bool(payload.get("timed_out", False)),
-    }
+    return run_query_processes(
+        case,
+        measured,
+        "LSP query",
+        lambda iterations: [
+            "python3",
+            str(PERF_ROOT / "lsp_query_bench.py"),
+            str(case.raw["scenario"]),
+            str(REPO_ROOT / case.raw["source_path"]),
+            str(iterations),
+            str(case.raw.get("inner_repetitions", 1)),
+            str(case.raw["workspace_mode"]),
+        ],
+        run_subprocess,
+    )
 
 
 def ensure_frontend_query_bench() -> None:
@@ -567,29 +594,6 @@ def collect_build_size_metrics(output_dir: Path) -> dict[str, int | None]:
     return metrics
 
 
-def timed_command(command: list[str]) -> list[str]:
-    if platform.system() == "Darwin" and Path("/usr/bin/time").exists():
-        return ["/usr/bin/time", "-l", *command]
-    if platform.system() == "Linux" and Path("/usr/bin/time").exists():
-        return ["/usr/bin/time", "-v", *command]
-    return command
-
-
-def parse_peak_rss(stderr: str) -> int | None:
-    for line in stderr.splitlines():
-        stripped = line.strip()
-        if stripped.endswith("maximum resident set size"):
-            value = stripped.split(maxsplit=1)[0]
-            if value.isdigit():
-                return int(value)
-        if "Maximum resident set size (kbytes):" in stripped:
-            _, value = stripped.rsplit(":", maxsplit=1)
-            value = value.strip()
-            if value.isdigit():
-                return int(value) * 1024
-    return None
-
-
 def run_subprocess(command: list[str], timeout_ms: int) -> dict[str, Any]:
     started = time.perf_counter()
     rss_before = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
@@ -606,50 +610,32 @@ def run_subprocess(command: list[str], timeout_ms: int) -> dict[str, Any]:
         return {
             "duration_ms": (time.perf_counter() - started) * 1000.0,
             "peak_rss_bytes": None,
+            "retired_instructions": None,
+            "cycles_elapsed": None,
+            "cpu_time_ms": None,
+            "work_counter_source": "unavailable",
             "exit_code": None,
             "timed_out": True,
             "stdout": error.stdout or "",
             "stderr_tail": tail(error.stderr or ""),
         }
     rss_after = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-    peak_rss_bytes = parse_peak_rss(completed.stderr)
+    process_data = parse_process_metrics(completed.stderr)
+    peak_rss_bytes = process_data["peak_rss_bytes"]
     if peak_rss_bytes is None:
-        peak_rss_bytes = normalize_rss(
-            rss_after if rss_after >= rss_before else rss_before
-        )
+        peak_rss_bytes = normalize_rss(max(rss_after, rss_before))
     return {
         "duration_ms": (time.perf_counter() - started) * 1000.0,
         "peak_rss_bytes": peak_rss_bytes,
+        "retired_instructions": process_data["retired_instructions"],
+        "cycles_elapsed": process_data["cycles_elapsed"],
+        "cpu_time_ms": process_data["cpu_time_ms"],
+        "work_counter_source": process_data["work_counter_source"],
         "exit_code": completed.returncode,
         "timed_out": False,
         "stdout": completed.stdout,
         "stderr_tail": tail(completed.stderr),
     }
-
-
-def sample_stats(samples: list[float]) -> dict[str, float]:
-    if not samples:
-        raise BenchmarkError("cannot compute metrics for an empty sample list")
-    median = statistics.median(samples)
-    p95 = percentile(samples, 95)
-    mad = statistics.median([abs(sample - median) for sample in samples])
-    mean = statistics.mean(samples)
-    stdev = statistics.pstdev(samples) if len(samples) > 1 else 0.0
-    cv = 0.0 if mean == 0 else stdev / mean
-    return {
-        "median_ms": round(median, 3),
-        "p95_ms": round(p95, 3),
-        "mad_ms": round(mad, 3),
-        "coefficient_variation": round(cv, 6),
-    }
-
-
-def percentile(samples: list[float], percentile_value: int) -> float:
-    ordered = sorted(samples)
-    if len(ordered) == 1:
-        return ordered[0]
-    rank = math.ceil((percentile_value / 100.0) * len(ordered)) - 1
-    return ordered[max(0, min(rank, len(ordered) - 1))]
 
 
 def host_metadata() -> dict[str, Any]:
@@ -714,6 +700,10 @@ def invalidate_output(path: Path) -> None:
 
 
 def run_self_test() -> None:
+    run_benchmark_baseline_self_test()
+    run_process_metrics_self_test()
+    run_query_processes_self_test()
+    run_work_baseline_self_test()
     run_trend_report_self_test()
     run_host_control_self_test()
     run_trend_baseline_self_test()

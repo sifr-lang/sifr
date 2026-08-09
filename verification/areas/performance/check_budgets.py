@@ -11,17 +11,23 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PERF_ROOT = REPO_ROOT / "verification" / "areas" / "performance"
 PERF_DATA = PERF_ROOT / "data"
 DEFAULT_MANIFEST = PERF_DATA / "benchmark_manifest.json"
 DEFAULT_BASELINES = PERF_DATA / "baselines.json"
 DEFAULT_BUDGETS = PERF_DATA / "budgets.json"
+DEFAULT_WORK_BUDGETS = PERF_DATA / "work_budgets.json"
 DEFAULT_WAIVERS = PERF_DATA / "waivers.json"
 NEGATIVE_ROOT = PERF_ROOT / "negative_seeds"
 RUNNER_VERSION = 1
-ALLOWED_WAIVER_OVERRIDE_KEYS = {"median_ms", "p95_ms", "peak_rss_bytes", "cache_hits"}
+ALLOWED_WAIVER_OVERRIDE_KEYS = {
+    "median_ms",
+    "p95_ms",
+    "median_instructions",
+    "peak_rss_bytes",
+    "cache_hits",
+}
 # The nearest-rank p95 used by the benchmark runner collapses to the maximum
 # sample below 20 samples, making quick representative runs scheduler-bound.
 MIN_P95_SAMPLE_COUNT = 20
@@ -40,6 +46,7 @@ def main() -> int:
     parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST))
     parser.add_argument("--results", default=str(DEFAULT_BASELINES))
     parser.add_argument("--budgets", default=str(DEFAULT_BUDGETS))
+    parser.add_argument("--work-budgets", default=str(DEFAULT_WORK_BUDGETS))
     parser.add_argument("--waivers", default=str(DEFAULT_WAIVERS))
     parser.add_argument("--allow-subset", action="store_true")
     parser.add_argument("--expected-invocation-id", default="")
@@ -53,7 +60,9 @@ def main() -> int:
             return 0
 
         manifest = load_json(Path(args.manifest))
-        budgets = load_json(Path(args.budgets))
+        budgets = apply_work_budgets(
+            load_json(Path(args.budgets)), load_json(Path(args.work_budgets))
+        )
         waivers = load_json(Path(args.waivers))
         results = load_json(Path(args.results))
         check_budgets(
@@ -161,6 +170,22 @@ def validate_budgets(
             require_number(thresholds, field, f"budget {budget_id} thresholds")
         if "peak_rss_bytes" in thresholds and thresholds["peak_rss_bytes"] is not None:
             require_number(thresholds, "peak_rss_bytes", f"budget {budget_id} thresholds")
+        if "median_instructions" in thresholds:
+            require_number(
+                thresholds, "median_instructions", f"budget {budget_id} thresholds"
+            )
+        work_thresholds = raw.get("work_thresholds")
+        if work_thresholds is not None:
+            if not isinstance(work_thresholds, dict):
+                raise BudgetError(
+                    f"budget {budget_id} work_thresholds must be an object"
+                )
+            for field in ["median_instructions", "peak_rss_bytes"]:
+                require_number(
+                    work_thresholds,
+                    field,
+                    f"budget {budget_id} work_thresholds",
+                )
         cache = raw.get("cache", {})
         if not isinstance(cache, dict):
             raise BudgetError(f"budget {budget_id} cache policy must be an object")
@@ -174,6 +199,88 @@ def validate_budgets(
     if missing:
         raise BudgetError(f"budgets are missing benchmark ids: {missing}")
     return by_case
+
+
+def apply_work_budgets(
+    budgets: dict[str, Any], work_budgets: dict[str, Any]
+) -> dict[str, Any]:
+    if work_budgets.get("version") != 1:
+        raise BudgetError("work budgets version must be 1")
+    if work_budgets.get("runner_version") != RUNNER_VERSION:
+        raise BudgetError(
+            f"work budgets runner_version must be {RUNNER_VERSION}"
+        )
+    source_commit = work_budgets.get("source_commit")
+    if not isinstance(source_commit, str) or len(source_commit) != 40:
+        raise BudgetError("work budgets must bind a full source commit")
+    host = work_budgets.get("host")
+    if not isinstance(host, dict) or host.get("work_counter_source") != (
+        "darwin-rusage-instructions"
+    ):
+        raise BudgetError("work budgets must bind the retired-instruction source")
+    if host.get("rss_counter_source") != "darwin-rusage-process-tree":
+        raise BudgetError("work budgets must bind the Darwin process-tree RSS source")
+    work_entries = work_budgets.get("budgets")
+    if not isinstance(work_entries, list):
+        raise BudgetError("work budgets must contain a budgets list")
+    updated = copy.deepcopy(budgets)
+    entries = updated.get("budgets")
+    if not isinstance(entries, list):
+        raise BudgetError("budgets must contain a budgets list")
+    by_case = {
+        entry.get("benchmark_id"): entry
+        for entry in entries
+        if isinstance(entry, dict)
+    }
+    seen: set[str] = set()
+    for work_entry in work_entries:
+        if not isinstance(work_entry, dict):
+            raise BudgetError("work budget entries must be objects")
+        case_id = require_string(work_entry, "benchmark_id", "work budget entry")
+        budget_id = require_string(
+            work_entry, "budget_id", f"work budget entry {case_id}"
+        )
+        if case_id in seen:
+            raise BudgetError(f"duplicate work budget for benchmark id {case_id}")
+        seen.add(case_id)
+        entry = by_case.get(case_id)
+        if not isinstance(entry, dict) or entry.get("budget_id") != budget_id:
+            raise BudgetError(
+                f"work budget {budget_id} does not match governed benchmark {case_id}"
+            )
+        baseline = work_entry.get("baseline_median_instructions")
+        threshold = work_entry.get("threshold_median_instructions")
+        if not isinstance(baseline, int) or baseline <= 0:
+            raise BudgetError(
+                f"work budget {budget_id} has invalid baseline_median_instructions"
+            )
+        if not isinstance(threshold, int) or threshold < baseline:
+            raise BudgetError(
+                f"work budget {budget_id} has invalid threshold_median_instructions"
+            )
+        rss_baseline = work_entry.get("baseline_peak_rss_bytes")
+        rss_threshold = work_entry.get("threshold_peak_rss_bytes")
+        if not isinstance(rss_baseline, int) or rss_baseline <= 0:
+            raise BudgetError(
+                f"work budget {budget_id} has invalid baseline_peak_rss_bytes"
+            )
+        if not isinstance(rss_threshold, int) or rss_threshold < rss_baseline:
+            raise BudgetError(
+                f"work budget {budget_id} has invalid threshold_peak_rss_bytes"
+            )
+        entry["work_baseline"] = {
+            "median_instructions": baseline,
+            "peak_rss_bytes": rss_baseline,
+        }
+        entry["work_thresholds"] = {
+            "median_instructions": threshold,
+            "peak_rss_bytes": rss_threshold,
+        }
+        entry["work_policy"] = "darwin-process-tree-default"
+    missing = sorted(set(by_case) - seen)
+    if missing:
+        raise BudgetError(f"work budgets are missing benchmark ids: {missing}")
+    return updated
 
 
 def validate_waivers(
@@ -265,6 +372,19 @@ def validate_results_shape(
             raise BudgetError(f"benchmark result {result_id} samples_ms length must match sample_count")
         if not all(isinstance(sample, int | float) and not isinstance(sample, bool) for sample in samples):
             raise BudgetError(f"benchmark result {result_id} samples_ms entries must be numeric")
+        instruction_samples = raw.get("samples_instructions")
+        if instruction_samples is not None:
+            if not isinstance(instruction_samples, list) or len(instruction_samples) != sample_count:
+                raise BudgetError(
+                    f"benchmark result {result_id} samples_instructions length must match sample_count"
+                )
+            if not all(
+                isinstance(sample, int) and not isinstance(sample, bool) and sample > 0
+                for sample in instruction_samples
+            ):
+                raise BudgetError(
+                    f"benchmark result {result_id} samples_instructions entries must be positive integers"
+                )
         metrics = raw.get("metrics")
         if not isinstance(metrics, dict):
             raise BudgetError(f"benchmark result {result_id} is missing metrics")
@@ -283,6 +403,22 @@ def validate_results_shape(
         require_number(metrics, "coefficient_variation", f"benchmark result {result_id} metrics")
         if metrics["peak_rss_bytes"] is not None:
             require_number(metrics, "peak_rss_bytes", f"benchmark result {result_id} metrics")
+        for field in [
+            "median_instructions",
+            "p95_instructions",
+            "instructions_mad",
+            "instructions_coefficient_variation",
+            "median_cycles_per_instruction",
+        ]:
+            if field in metrics and metrics[field] is not None:
+                require_number(metrics, field, f"benchmark result {result_id} metrics")
+        control_mode = raw.get("control", {}).get("mode")
+        if control_mode == "work" and (
+            instruction_samples is None or metrics.get("median_instructions") is None
+        ):
+            raise BudgetError(
+                f"work-controlled benchmark result {result_id} is missing retired-instruction evidence"
+            )
         cache = raw.get("cache")
         if not isinstance(cache, dict) or not isinstance(cache.get("hits"), int) or not isinstance(cache.get("misses"), int):
             raise BudgetError(f"benchmark result {result_id} is missing cache hit/miss metrics")
@@ -316,26 +452,84 @@ def compare_result(
         return failures
     metrics = result["metrics"]
     thresholds = budget["thresholds"]
-    stability_limit = float(case.get("stability_limit", 0.10))
-    if float(metrics["coefficient_variation"]) > stability_limit:
+    control_mode = result.get("control", {}).get("mode", "latency")
+    if control_mode == "work":
+        stability_metric = "instructions_coefficient_variation"
+        stability_limit = float(case.get("work_stability_limit", 0.02))
+    else:
+        stability_metric = "coefficient_variation"
+        stability_limit = float(case.get("stability_limit", 0.10))
+    stability_value = metrics.get(stability_metric)
+    if stability_value is None:
         failures.append(
             format_failure(
                 case_id,
                 budget_id,
-                "coefficient_variation",
-                metrics["coefficient_variation"],
+                stability_metric,
+                "unavailable",
                 stability_limit,
                 waivers,
                 waiverable=False,
             )
         )
-    checks = [
-        ("median_ms", metrics["median_ms"], thresholds["median_ms"]),
-    ]
-    if should_enforce_p95(result):
-        checks.append(("p95_ms", metrics["p95_ms"], thresholds["p95_ms"]))
-    if thresholds.get("peak_rss_bytes") is not None and metrics.get("peak_rss_bytes") is not None:
-        checks.append(("peak_rss_bytes", metrics["peak_rss_bytes"], thresholds["peak_rss_bytes"]))
+    elif float(stability_value) > stability_limit:
+        failures.append(
+            format_failure(
+                case_id,
+                budget_id,
+                stability_metric,
+                stability_value,
+                stability_limit,
+                waivers,
+                waiverable=False,
+            )
+        )
+    checks: list[tuple[str, Any, Any]] = []
+    if control_mode == "work":
+        work_thresholds = budget.get("work_thresholds")
+        if not isinstance(work_thresholds, dict):
+            failures.append(
+                format_failure(
+                    case_id,
+                    budget_id,
+                    "median_instructions",
+                    metrics.get("median_instructions", "unavailable"),
+                    "governed threshold",
+                    waivers,
+                    waiverable=False,
+                )
+            )
+        else:
+            checks.append(
+                (
+                    "median_instructions",
+                    metrics["median_instructions"],
+                    work_thresholds["median_instructions"],
+                )
+            )
+            if metrics.get("peak_rss_bytes") is not None:
+                checks.append(
+                    (
+                        "peak_rss_bytes",
+                        metrics["peak_rss_bytes"],
+                        work_thresholds["peak_rss_bytes"],
+                    )
+                )
+    else:
+        checks.append(("median_ms", metrics["median_ms"], thresholds["median_ms"]))
+        if should_enforce_p95(result):
+            checks.append(("p95_ms", metrics["p95_ms"], thresholds["p95_ms"]))
+        if (
+            thresholds.get("peak_rss_bytes") is not None
+            and metrics.get("peak_rss_bytes") is not None
+        ):
+            checks.append(
+                (
+                    "peak_rss_bytes",
+                    metrics["peak_rss_bytes"],
+                    thresholds["peak_rss_bytes"],
+                )
+            )
     for metric, measured, threshold in checks:
         if float(measured) > float(threshold) and not has_waiver(case_id, budget_id, metric, waivers):
             failures.append(format_failure(case_id, budget_id, metric, measured, threshold, waivers))
@@ -413,7 +607,7 @@ def format_failure(
 
 def run_self_test() -> None:
     manifest = load_json(DEFAULT_MANIFEST)
-    budgets = load_json(DEFAULT_BUDGETS)
+    budgets = governed_budgets()
     waivers = load_json(DEFAULT_WAIVERS)
     baselines = load_json(DEFAULT_BASELINES)
     check_budgets(manifest, budgets, waivers, baselines)
@@ -461,6 +655,20 @@ def run_self_test() -> None:
         "invocation_id does not match",
         expected_invocation_id="current-invocation",
     )
+    assert_result_fails(
+        make_instruction_seed(baselines, budgets, regress=True),
+        "median_instructions regression",
+    )
+    assert_result_fails(
+        make_work_rss_seed(baselines, budgets),
+        "peak_rss_bytes regression",
+    )
+    check_budgets(
+        manifest,
+        budgets,
+        EMPTY_WAIVERS,
+        make_instruction_seed(baselines, budgets, regress=False),
+    )
 
 
 def assert_budget_fails(seed: str, expected: str, *, allow_subset: bool = False) -> None:
@@ -479,7 +687,7 @@ def assert_result_fails(
     try:
         check_budgets(
             load_json(DEFAULT_MANIFEST),
-            load_json(DEFAULT_BUDGETS),
+            governed_budgets(),
             EMPTY_WAIVERS,
             result,
             allow_subset=allow_subset,
@@ -496,7 +704,7 @@ def assert_waiver_fails(seed: str, expected: str) -> None:
     try:
         check_budgets(
             load_json(DEFAULT_MANIFEST),
-            load_json(DEFAULT_BUDGETS),
+            governed_budgets(),
             load_json(NEGATIVE_ROOT / seed),
             load_json(DEFAULT_BASELINES),
         )
@@ -505,6 +713,63 @@ def assert_waiver_fails(seed: str, expected: str) -> None:
             raise BudgetError(f"negative waiver seed {seed} failed with wrong diagnostic: {error}") from error
         return
     raise BudgetError(f"negative waiver seed {seed} did not fail")
+
+
+def governed_budgets() -> dict[str, Any]:
+    return apply_work_budgets(
+        load_json(DEFAULT_BUDGETS), load_json(DEFAULT_WORK_BUDGETS)
+    )
+
+
+def make_instruction_seed(
+    baselines: dict[str, Any], budgets: dict[str, Any], *, regress: bool
+) -> dict[str, Any]:
+    result = copy.deepcopy(baselines)
+    budget = budgets["budgets"][0]
+    case_id = budget["benchmark_id"]
+    threshold = int(budget["work_thresholds"]["median_instructions"])
+    baseline = int(budget["work_baseline"]["median_instructions"])
+    for entry in result["results"]:
+        if entry["id"] != case_id:
+            continue
+        measured = threshold + 1 if regress else baseline
+        sample_count = int(entry["sample_count"])
+        entry["samples_instructions"] = [measured] * sample_count
+        entry["control"] = {"mode": "work"}
+        entry["metrics"].update(
+            {
+                "median_instructions": measured,
+                "p95_instructions": measured,
+                "instructions_mad": 0,
+                "instructions_coefficient_variation": 0.0,
+                "median_cycles_per_instruction": 0.5,
+                "peak_rss_bytes": budget["work_baseline"]["peak_rss_bytes"],
+            }
+        )
+        if not regress:
+            entry["metrics"]["median_ms"] = float(
+                budget["thresholds"]["median_ms"]
+            ) + 1.0
+            entry["metrics"]["p95_ms"] = float(
+                budget["thresholds"]["p95_ms"]
+            ) + 1.0
+        return result
+    raise BudgetError(f"instruction self-test could not find benchmark {case_id}")
+
+
+def make_work_rss_seed(
+    baselines: dict[str, Any], budgets: dict[str, Any]
+) -> dict[str, Any]:
+    result = make_instruction_seed(baselines, budgets, regress=False)
+    budget = budgets["budgets"][0]
+    case_id = budget["benchmark_id"]
+    for entry in result["results"]:
+        if entry["id"] == case_id:
+            entry["metrics"]["peak_rss_bytes"] = (
+                int(budget["work_thresholds"]["peak_rss_bytes"]) + 1
+            )
+            return result
+    raise BudgetError(f"work RSS self-test could not find benchmark {case_id}")
 
 
 def load_json(path: Path) -> dict[str, Any]:

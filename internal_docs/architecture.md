@@ -1540,14 +1540,15 @@ The readiness coverage matrix is the executable registry for shipped guarantees,
 
 `profile_runner.py` emits a per-profile runtime report under `target/validation_lane_reports/` (`<profile>.latest.json`, `<profile>.latest.log`, `<profile>.latest.time`). The report summarizes wall/CPU time, e2e compile-build-run timing, cache hits and rebuilt groups, group-skew tail behavior, cache footprints, default worker settings, and advisory resource signals such as swap activity or default-profile RSS regressions.
 
-Blocking representative and full performance measurements additionally use a
-controlled-host admission boundary. The performance producer records load,
-thermal/power state, effective CPU-frequency behavior, competing build
-processes, and cache state; rejects contaminated or statistically unstable
-sample batches; and binds the accepted report to the budget checker with a
-per-invocation identity. Producer failure cannot fall through to stale
-`*.budget.latest.json` evidence. This classifies host instability separately
-from a stable product regression without changing the governed baselines.
+Blocking representative and full performance measurements use a controlled-host
+boundary. Work-controlled measurements use retired instructions and
+process-tree RSS from the local macOS host. Latency-controlled measurements use
+elapsed time and generic RSS after a quiet-host admission. Non-macOS profiles
+retain latency mode because they do not expose the Darwin counter. Both modes reject
+competing build work, thermal pressure, and
+unstable samples. The accepted report includes an invocation identity. Producer
+failure cannot use stale `*.budget.latest.json` evidence. This design separates
+host delay from additional compiler work without changing elapsed-time budgets.
 
 Approved trend-baseline refreshes use the same controlled producer but are a
 separate governance path from threshold-budget updates. A refresh is accepted

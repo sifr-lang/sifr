@@ -12,6 +12,11 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
+if str(AREA_ROOT) not in sys.path:
+    sys.path.insert(0, str(AREA_ROOT))
+
+from host_control import profile_control_mode  # noqa: E402
+
 DATA_ROOT = AREA_ROOT / "data"
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 BENCHMARK_MANIFEST = DATA_ROOT / "benchmark_manifest.json"
@@ -206,6 +211,8 @@ def run_profile_variants(suite_name: str) -> list[dict[str, Any]]:
         "--invocation-id",
         invocation_id,
         "--require-controlled-host",
+        "--controlled-host-mode",
+        profile_control_mode(),
     ]
     for case_id in REPRESENTATIVE_CASES:
         run_argv.extend(["--case", case_id])

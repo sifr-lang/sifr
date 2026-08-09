@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from benchmark_manifest import RUNNER_VERSION, BenchmarkCase, BenchmarkError
 from host_control import HostActivityMonitor
@@ -17,9 +18,10 @@ def run_controlled_case(
     sample_scale: str,
     *,
     require_controlled_host: bool,
+    control_mode: str = "latency",
     run_case_fn: Callable[[BenchmarkCase, Path, str], dict[str, Any]],
     retry_admission_fn: Callable[[], dict[str, Any]] | None,
-    monitor_factory: Callable[[], Any] = HostActivityMonitor,
+    monitor_factory: Callable[..., Any] = HostActivityMonitor,
     repo_root: Path | None = None,
 ) -> dict[str, Any]:
     attempts: list[dict[str, Any]] = []
@@ -32,19 +34,35 @@ def run_controlled_case(
                 )
             retry_admission = retry_admission_fn()
         attempt_root = run_root / "attempts" / str(attempt_index)
-        with monitor_factory() as monitor:
+        with monitor_factory(control_mode=control_mode) as monitor:
             result = run_case_fn(case, attempt_root, sample_scale)
         rejection_reasons = (
             monitor.rejection_reasons() if require_controlled_host else []
         )
-        coefficient_variation = float(result["metrics"]["coefficient_variation"])
-        if coefficient_variation > case.stability_limit:
+        if control_mode == "work":
+            raw_variation = result["metrics"].get(
+                "instructions_coefficient_variation"
+            )
+            stability_metric = "instructions_coefficient_variation"
+            stability_limit = case.work_stability_limit
+        else:
+            raw_variation = result["metrics"].get("coefficient_variation")
+            stability_metric = "coefficient_variation"
+            stability_limit = case.stability_limit
+        if raw_variation is None:
+            rejection_reasons.append(f"{stability_metric}-unavailable")
+            coefficient_variation = None
+        else:
+            coefficient_variation = float(raw_variation)
+        if coefficient_variation is not None and coefficient_variation > stability_limit:
             rejection_reasons.append("unstable-samples")
         rejection_reasons = sorted(set(rejection_reasons))
         attempt_evidence = {
             "attempt": attempt_index,
+            "control_mode": control_mode,
+            "stability_metric": stability_metric,
             "coefficient_variation": coefficient_variation,
-            "stability_limit": case.stability_limit,
+            "stability_limit": stability_limit,
             "host_snapshots": monitor.snapshots,
             "rejection_reasons": rejection_reasons,
         }
@@ -54,6 +72,7 @@ def run_controlled_case(
         if not rejection_reasons:
             result["control"] = {
                 "status": "controlled" if require_controlled_host else "record-only",
+                "mode": control_mode,
                 "accepted_attempt": attempt_index,
                 "attempts": attempts,
             }
@@ -88,7 +107,8 @@ def run_self_test(output_root: Path) -> None:
         return {"metrics": {"coefficient_variation": next(coefficients)}}
 
     class FakeMonitor:
-        snapshots = [{"self_test": True}]
+        def __init__(self, **_kwargs: object) -> None:
+            self.snapshots = [{"self_test": True}]
 
         def __enter__(self) -> Any:
             return self
@@ -126,6 +146,33 @@ def run_self_test(output_root: Path) -> None:
     if accepted["control"]["attempts"][1].get("retry_admission") != retry_admissions[0]:
         raise BenchmarkError(
             "controlled retry self-test did not record retry admission evidence"
+        )
+
+    def stable_work_run(
+        _case: BenchmarkCase, _root: Path, _scale: str
+    ) -> dict[str, Any]:
+        return {
+            "metrics": {
+                "coefficient_variation": 0.50,
+                "instructions_coefficient_variation": 0.001,
+            }
+        }
+
+    work_accepted = run_controlled_case(
+        case,
+        output_root,
+        "manifest",
+        require_controlled_host=True,
+        control_mode="work",
+        run_case_fn=stable_work_run,
+        retry_admission_fn=fake_retry_admission,
+        monitor_factory=FakeMonitor,
+    )
+    if work_accepted["control"]["attempts"][0]["stability_metric"] != (
+        "instructions_coefficient_variation"
+    ):
+        raise BenchmarkError(
+            "controlled sampling self-test did not select work stability"
         )
 
     def unstable_run(_case: BenchmarkCase, _root: Path, _scale: str) -> dict[str, Any]:

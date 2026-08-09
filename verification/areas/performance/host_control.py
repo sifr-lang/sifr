@@ -9,19 +9,28 @@ import subprocess
 import tempfile
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
+from process_metrics import parse_process_metrics
 
 MAX_NORMALIZED_LOAD = 0.85
 MAX_CALIBRATION_CV = 0.12
+MAX_EXTERNAL_CPU_PERCENT = 50.0
 DEFAULT_QUIET_SNAPSHOTS = 3
 DEFAULT_QUIET_INTERVAL_SECONDS = 1.0
 MONITOR_INTERVAL_SECONDS = 5.0
+CONTROL_MODES = {"latency", "work"}
 
 
 class HostControlError(Exception):
     """Raised when the host cannot provide a controlled measurement window."""
+
+
+def profile_control_mode(host_system: str | None = None) -> str:
+    system = platform.system() if host_system is None else host_system
+    return "work" if system == "Darwin" else "latency"
 
 
 def capture_host_snapshot(*, include_calibration: bool = True) -> dict[str, Any]:
@@ -33,6 +42,7 @@ def capture_host_snapshot(*, include_calibration: bool = True) -> dict[str, Any]
     thermal = thermal_state()
     power = power_state()
     frequency = cpu_frequency_state(include_calibration=include_calibration)
+    competitors, cpu_pressure = process_activity()
     return {
         "captured_at_unix": round(time.time(), 3),
         "logical_cpus": logical_cpus,
@@ -45,12 +55,25 @@ def capture_host_snapshot(*, include_calibration: bool = True) -> dict[str, Any]
         "thermal": thermal,
         "power": power,
         "cpu_frequency_behavior": frequency,
-        "competing_processes": competing_processes(),
+        "work_counter": (
+            work_counter_state()
+            if include_calibration
+            else {"source": "not-sampled"}
+        ),
+        "competing_processes": competitors,
+        "external_cpu_pressure": cpu_pressure,
         "memory_pressure": memory_pressure_state(),
     }
 
 
-def evaluate_snapshot(snapshot: dict[str, Any], *, enforce_load: bool) -> list[str]:
+def evaluate_snapshot(
+    snapshot: dict[str, Any],
+    *,
+    enforce_load: bool,
+    control_mode: str = "latency",
+    require_work_counter: bool = False,
+) -> list[str]:
+    validate_control_mode(control_mode)
     reasons: list[str] = []
     competitors = snapshot.get("competing_processes", [])
     if competitors:
@@ -63,9 +86,26 @@ def evaluate_snapshot(snapshot: dict[str, Any], *, enforce_load: bool) -> list[s
         reasons.append("not-on-ac-power")
     frequency = snapshot.get("cpu_frequency_behavior", {})
     calibration_cv = frequency.get("calibration_cv")
-    if isinstance(calibration_cv, int | float) and calibration_cv > MAX_CALIBRATION_CV:
+    if (
+        control_mode == "latency"
+        and isinstance(calibration_cv, int | float)
+        and calibration_cv > MAX_CALIBRATION_CV
+    ):
         reasons.append("unstable-frequency-proxy")
-    if enforce_load:
+    if require_work_counter and snapshot.get("work_counter", {}).get("source") != (
+        "darwin-rusage-instructions"
+    ):
+        reasons.append("retired-instructions-unavailable")
+    cpu_pressure = snapshot.get("external_cpu_pressure", {})
+    external_cpu_percent = cpu_pressure.get("external_cpu_percent")
+    if cpu_pressure.get("source") != "ps":
+        reasons.append("external-cpu-pressure-unavailable")
+    elif control_mode == "latency" and (
+        isinstance(external_cpu_percent, int | float)
+        and external_cpu_percent > MAX_EXTERNAL_CPU_PERCENT
+    ):
+        reasons.append("external-cpu-pressure")
+    if enforce_load and control_mode == "latency":
         normalized_load = snapshot.get("load_average", {}).get(
             "one_minute_per_logical_cpu"
         )
@@ -80,17 +120,24 @@ def evaluate_snapshot(snapshot: dict[str, Any], *, enforce_load: bool) -> list[s
 def wait_for_controlled_host(
     timeout_seconds: float,
     *,
+    control_mode: str = "latency",
     snapshot_fn: Callable[..., dict[str, Any]] = capture_host_snapshot,
     sleep_fn: Callable[[float], None] = time.sleep,
     quiet_snapshots: int = DEFAULT_QUIET_SNAPSHOTS,
     interval_seconds: float = DEFAULT_QUIET_INTERVAL_SECONDS,
 ) -> dict[str, Any]:
+    validate_control_mode(control_mode)
     deadline = time.monotonic() + timeout_seconds
     consecutive: list[dict[str, Any]] = []
     observations: list[dict[str, Any]] = []
     while True:
         snapshot = snapshot_fn(include_calibration=True)
-        reasons = evaluate_snapshot(snapshot, enforce_load=True)
+        reasons = evaluate_snapshot(
+            snapshot,
+            enforce_load=True,
+            control_mode=control_mode,
+            require_work_counter=control_mode == "work",
+        )
         observation = {"snapshot": snapshot, "rejection_reasons": reasons}
         observations.append(observation)
         if reasons:
@@ -100,7 +147,8 @@ def wait_for_controlled_host(
             if len(consecutive) >= quiet_snapshots:
                 return {
                     "status": "controlled",
-                    "policy": controlled_policy(),
+                    "mode": control_mode,
+                    "policy": controlled_policy(control_mode),
                     "accepted_snapshots": consecutive,
                     "observation_count": len(observations),
                     "rejected_observation_count": sum(
@@ -119,23 +167,36 @@ def wait_for_controlled_host(
         sleep_fn(interval_seconds)
 
 
-def controlled_policy() -> dict[str, Any]:
+def controlled_policy(control_mode: str = "latency") -> dict[str, Any]:
+    validate_control_mode(control_mode)
     return {
+        "mode": control_mode,
         "quiet_snapshots": DEFAULT_QUIET_SNAPSHOTS,
         "quiet_interval_seconds": DEFAULT_QUIET_INTERVAL_SECONDS,
         "max_one_minute_load_per_logical_cpu": MAX_NORMALIZED_LOAD,
         "max_frequency_proxy_cv": MAX_CALIBRATION_CV,
+        "max_external_cpu_percent": MAX_EXTERNAL_CPU_PERCENT,
+        "external_cpu_limit_applied": control_mode == "latency",
+        "load_limit_applied": control_mode == "latency",
         "requires_ac_power_on_macos": True,
         "rejects_competing_build_processes": True,
         "rejects_thermal_pressure": True,
+        "wall_latency_qualified": control_mode == "latency",
+        "requires_retired_instructions": control_mode == "work",
     }
 
 
 class HostActivityMonitor:
     """Record host pressure that appears while one benchmark case is running."""
 
-    def __init__(self, interval_seconds: float = MONITOR_INTERVAL_SECONDS) -> None:
+    def __init__(
+        self,
+        interval_seconds: float = MONITOR_INTERVAL_SECONDS,
+        control_mode: str = "latency",
+    ) -> None:
+        validate_control_mode(control_mode)
         self._interval_seconds = interval_seconds
+        self._control_mode = control_mode
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
         self.snapshots: list[dict[str, Any]] = []
@@ -161,7 +222,13 @@ class HostActivityMonitor:
     def rejection_reasons(self) -> list[str]:
         reasons: set[str] = set()
         for snapshot in self.snapshots:
-            reasons.update(evaluate_snapshot(snapshot, enforce_load=False))
+            reasons.update(
+                evaluate_snapshot(
+                    snapshot,
+                    enforce_load=False,
+                    control_mode=self._control_mode,
+                )
+            )
         return sorted(reasons)
 
 
@@ -188,6 +255,23 @@ def cache_state(
         "generated_artifact_entries": artifact_entries,
         "cargo_lock_present": repo_root.joinpath("Cargo.lock").is_file(),
     }
+
+
+def work_counter_state() -> dict[str, Any]:
+    if platform.system() != "Darwin" or not Path("/usr/bin/time").is_file():
+        return {"source": "unavailable", "retired_instructions": None}
+    parsed = parse_process_metrics(
+        command_output(["/usr/bin/time", "-l", "/usr/bin/true"])
+    )
+    return {
+        "source": parsed["work_counter_source"],
+        "retired_instructions": parsed["retired_instructions"],
+    }
+
+
+def validate_control_mode(control_mode: str) -> None:
+    if control_mode not in CONTROL_MODES:
+        raise HostControlError(f"unsupported host control mode {control_mode!r}")
 
 
 def cpu_frequency_state(*, include_calibration: bool) -> dict[str, Any]:
@@ -300,23 +384,75 @@ def memory_pressure_state() -> dict[str, Any]:
     return {"source": "unavailable"}
 
 
-def competing_processes() -> list[dict[str, Any]]:
-    output = command_output(["ps", "-axo", "pid=,ppid=,comm=,args="])
-    rows: list[tuple[int, int, str, str]] = []
+def process_activity(
+    output: str | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    if output is None:
+        output = command_output(["ps", "-axo", "pid=,ppid=,pcpu=,comm=,args="])
+    rows = parse_process_rows(output)
+    if not rows:
+        return [], {
+            "source": "unavailable",
+            "external_cpu_percent": None,
+            "max_external_cpu_percent": MAX_EXTERNAL_CPU_PERCENT,
+            "top_processes": [],
+        }
+    return summarize_process_activity(rows, os.getpid())
+
+
+def parse_process_rows(output: str) -> list[tuple[int, int, float, str, str]]:
+    rows: list[tuple[int, int, float, str, str]] = []
     for line in output.splitlines():
-        parts = line.strip().split(maxsplit=3)
-        if len(parts) < 4 or not parts[0].isdigit() or not parts[1].isdigit():
+        parts = line.strip().split(maxsplit=4)
+        if len(parts) < 5 or not parts[0].isdigit() or not parts[1].isdigit():
             continue
-        rows.append((int(parts[0]), int(parts[1]), parts[2], parts[3]))
-    excluded = related_process_ids(rows, os.getpid())
-    competitors = []
-    for pid, _parent, command, args in rows:
+        try:
+            cpu_percent = float(parts[2])
+        except ValueError:
+            continue
+        rows.append((int(parts[0]), int(parts[1]), cpu_percent, parts[3], parts[4]))
+    return rows
+
+
+def summarize_process_activity(
+    rows: list[tuple[int, int, float, str, str]], current_pid: int
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    excluded = related_process_ids(rows, current_pid)
+    competitors: list[dict[str, Any]] = []
+    external_rows: list[tuple[int, float, str]] = []
+    for pid, _parent, cpu_percent, command, args in rows:
         if pid in excluded:
             continue
+        executable = executable_from_process(command, args)
+        external_rows.append((pid, cpu_percent, executable))
         category = process_category(command, args)
         if category is not None:
             competitors.append({"pid": pid, "category": category})
-    return competitors
+    external_cpu_percent = sum(cpu_percent for _pid, cpu_percent, _name in external_rows)
+    top_processes = [
+        {
+            "pid": pid,
+            "cpu_percent": round(cpu_percent, 1),
+            "executable": executable,
+        }
+        for pid, cpu_percent, executable in sorted(
+            external_rows, key=lambda row: row[1], reverse=True
+        )[:5]
+        if cpu_percent > 0.0
+    ]
+    return competitors, {
+        "source": "ps",
+        "external_cpu_percent": round(external_cpu_percent, 1),
+        "max_external_cpu_percent": MAX_EXTERNAL_CPU_PERCENT,
+        "top_processes": top_processes,
+    }
+
+
+def executable_from_process(command: str, args: str) -> str:
+    argument_tokens = args.split()
+    if argument_tokens:
+        return Path(argument_tokens[0]).name
+    return Path(command).name
 
 
 def process_category(command: str, args: str) -> str | None:
@@ -348,11 +484,11 @@ def process_category(command: str, args: str) -> str | None:
 
 
 def related_process_ids(
-    rows: list[tuple[int, int, str, str]], current_pid: int
+    rows: list[tuple[int, int, float, str, str]], current_pid: int
 ) -> set[int]:
-    parents = {pid: parent for pid, parent, _command, _args in rows}
+    parents = {pid: parent for pid, parent, _cpu, _command, _args in rows}
     children: dict[int, list[int]] = {}
-    for pid, parent, _command, _args in rows:
+    for pid, parent, _cpu, _command, _args in rows:
         children.setdefault(parent, []).append(pid)
     related = {current_pid}
     cursor = current_pid
@@ -384,12 +520,24 @@ def executable_name(name: str) -> str:
 
 
 def run_self_test() -> None:
+    if profile_control_mode("Darwin") != "work":
+        raise HostControlError("Darwin profile mode self-test did not select work")
+    if profile_control_mode("Linux") != "latency":
+        raise HostControlError("Linux profile mode self-test did not select latency")
     nominal = {
         "load_average": {"one_minute_per_logical_cpu": 0.1},
         "thermal": {"status": "nominal"},
         "power": {"source": "ac", "required": True},
         "cpu_frequency_behavior": {"calibration_cv": 0.01},
+        "work_counter": {
+            "source": "darwin-rusage-instructions",
+            "retired_instructions": 100,
+        },
         "competing_processes": [],
+        "external_cpu_pressure": {
+            "source": "ps",
+            "external_cpu_percent": 1.0,
+        },
     }
     if evaluate_snapshot(nominal, enforce_load=True):
         raise HostControlError("host control self-test rejected a nominal snapshot")
@@ -397,6 +545,45 @@ def run_self_test() -> None:
     pressured["competing_processes"] = [{"pid": 42}]
     if evaluate_snapshot(pressured, enforce_load=True) != ["competing-build-process"]:
         raise HostControlError("host control self-test did not reject competing work")
+    cpu_pressured = dict(nominal)
+    cpu_pressured["external_cpu_pressure"] = {
+        "source": "ps",
+        "external_cpu_percent": MAX_EXTERNAL_CPU_PERCENT + 0.1,
+    }
+    if evaluate_snapshot(cpu_pressured, enforce_load=True) != [
+        "external-cpu-pressure"
+    ]:
+        raise HostControlError(
+            "host control self-test did not reject external CPU pressure"
+        )
+    if evaluate_snapshot(
+        cpu_pressured,
+        enforce_load=True,
+        control_mode="work",
+        require_work_counter=True,
+    ):
+        raise HostControlError(
+            "work control self-test rejected measurable external CPU pressure"
+        )
+    missing_counter = dict(nominal)
+    missing_counter["work_counter"] = {"source": "unavailable"}
+    if evaluate_snapshot(
+        missing_counter,
+        enforce_load=True,
+        control_mode="work",
+        require_work_counter=True,
+    ) != ["retired-instructions-unavailable"]:
+        raise HostControlError(
+            "work control self-test did not require retired instructions"
+        )
+    cpu_unavailable = dict(nominal)
+    cpu_unavailable["external_cpu_pressure"] = {"source": "unavailable"}
+    if evaluate_snapshot(cpu_unavailable, enforce_load=True) != [
+        "external-cpu-pressure-unavailable"
+    ]:
+        raise HostControlError(
+            "host control self-test did not fail closed without external CPU telemetry"
+        )
     sequence = iter([pressured, nominal, nominal, nominal])
     admission = wait_for_controlled_host(
         1.0,
@@ -424,6 +611,42 @@ def run_self_test() -> None:
         )
     if process_category("/usr/bin/git", "git index-pack --stdin") != "git":
         raise HostControlError("host control self-test missed Git indexing work")
+    competitors, cpu_pressure = summarize_process_activity(
+        [
+            (1, 0, 0.1, "/sbin/launchd", "/sbin/launchd"),
+            (10, 1, 10.0, "/usr/bin/python3", "python3 run_benchmarks.py"),
+            (11, 10, 90.0, "/usr/bin/rustc", "rustc --crate-name measured"),
+            (20, 1, 30.0, "/usr/bin/cargo", "cargo build"),
+            (21, 1, 25.1, "/opt/agent", "/opt/agent --scan"),
+        ],
+        10,
+    )
+    if competitors != [{"pid": 20, "category": "cargo"}]:
+        raise HostControlError(
+            "host control self-test did not isolate external build work"
+        )
+    if cpu_pressure["external_cpu_percent"] != 55.1:
+        raise HostControlError(
+            "host control self-test included related benchmark CPU activity"
+        )
+    parsed_rows = parse_process_rows(
+        "bad row\n"
+        "42 1 not-a-number /usr/bin/noop noop\n"
+        "43 1 12.5 /usr/bin/tool /usr/bin/tool --work\n"
+    )
+    if parsed_rows != [
+        (43, 1, 12.5, "/usr/bin/tool", "/usr/bin/tool --work")
+    ]:
+        raise HostControlError("host control self-test did not parse ps rows safely")
+    unavailable_competitors, unavailable_cpu = process_activity("")
+    if unavailable_competitors or unavailable_cpu["source"] != "unavailable":
+        raise HostControlError(
+            "host control self-test did not fail closed on empty ps output"
+        )
+    if executable_from_process("/truncated", "/usr/bin/tool --work") != "tool":
+        raise HostControlError(
+            "host control self-test did not prefer the argv executable"
+        )
     if (
         process_category(
             "/Users/example",

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Callable
-
+from typing import Any
 
 APPROVED_PROFILE = "approved-reference"
 APPROVED_THERMAL_POLICY = "controlled-host"
@@ -32,6 +32,7 @@ def validate_capture_request(
     approval_owner: str,
     profile: str,
     thermal_policy: str,
+    control_mode: str,
     repo_root: Path,
     git_output: Callable[[list[str], Path], str] | None = None,
 ) -> str | None:
@@ -65,6 +66,10 @@ def validate_capture_request(
     if thermal_policy != APPROVED_THERMAL_POLICY:
         raise TrendBaselineError(
             f"approved trend baseline capture requires SIFR_THERMAL_POLICY={APPROVED_THERMAL_POLICY}"
+        )
+    if control_mode != "latency":
+        raise TrendBaselineError(
+            "approved trend baseline capture requires --controlled-host-mode latency"
         )
     status = git_output(["git", "status", "--porcelain"], repo_root)
     if status != "":
@@ -173,6 +178,7 @@ def run_self_test() -> None:
         "approval_owner": APPROVAL_OWNER,
         "profile": APPROVED_PROFILE,
         "thermal_policy": APPROVED_THERMAL_POLICY,
+        "control_mode": "latency",
     }
 
     def clean_git(command: list[str], _cwd: Path) -> str:

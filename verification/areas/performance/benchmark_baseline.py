@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 import hashlib
+import math
 from pathlib import Path
 from typing import Any
 
 from benchmark_manifest import RUNNER_VERSION, BenchmarkCase, BenchmarkError
+
+WORK_HEADROOM_RATIO = 1.02
+WORK_HEADROOM_FLOOR = 2_000_000
+RSS_HEADROOM_RATIO = 1.10
+RSS_HEADROOM_FLOOR = 32 * 1024 * 1024
 
 
 def validate_baseline_capture(
@@ -51,11 +57,26 @@ def validate_baseline_capture(
                 f"baseline result {case_id} is missing cache hit/miss metrics"
             )
         case = cases_by_id[str(case_id)]
-        cv = float(metrics["coefficient_variation"])
-        if cv > case.stability_limit:
+        control_mode = result.get("control", {}).get("mode", "latency")
+        if control_mode == "work":
+            instruction_samples = result.get("samples_instructions")
+            if (
+                not isinstance(instruction_samples, list)
+                or len(instruction_samples) != len(samples)
+                or metrics.get("median_instructions") is None
+            ):
+                raise BenchmarkError(
+                    f"work-controlled baseline result {case_id} is missing retired-instruction evidence"
+                )
+            cv = float(metrics["instructions_coefficient_variation"])
+            stability_limit = case.work_stability_limit
+        else:
+            cv = float(metrics["coefficient_variation"])
+            stability_limit = case.stability_limit
+        if cv > stability_limit:
             raise BenchmarkError(
                 f"baseline result {case_id} is unstable: coefficient_variation={cv:.6f} "
-                f"limit={case.stability_limit:.6f}"
+                f"limit={stability_limit:.6f}"
             )
 
 
@@ -72,9 +93,121 @@ def baseline_from_run(
     }
 
 
+def work_budgets_from_run(
+    budgets: dict[str, Any], run_report: dict[str, Any]
+) -> dict[str, Any]:
+    entries = budgets.get("budgets")
+    if not isinstance(entries, list):
+        raise BenchmarkError("performance budgets are missing the budgets list")
+    results = run_report.get("results")
+    if not isinstance(results, list):
+        raise BenchmarkError("performance baseline is missing results")
+    results_by_id = {
+        result.get("id"): result
+        for result in results
+        if isinstance(result, dict) and isinstance(result.get("id"), str)
+    }
+    work_entries: list[dict[str, Any]] = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise BenchmarkError("performance budget entries must be objects")
+        case_id = entry.get("benchmark_id")
+        result = results_by_id.get(case_id)
+        if not isinstance(result, dict):
+            raise BenchmarkError(
+                f"work baseline is missing benchmark result {case_id!r}"
+            )
+        metrics = result.get("metrics")
+        if not isinstance(metrics, dict) or not isinstance(
+            metrics.get("median_instructions"), int
+        ):
+            raise BenchmarkError(
+                f"work baseline result {case_id!r} is missing median_instructions"
+            )
+        if not isinstance(metrics.get("peak_rss_bytes"), int):
+            raise BenchmarkError(
+                f"work baseline result {case_id!r} is missing peak_rss_bytes"
+            )
+        median = int(metrics["median_instructions"])
+        instruction_threshold = max(
+            math.ceil(median * WORK_HEADROOM_RATIO), median + WORK_HEADROOM_FLOOR
+        )
+        peak_rss = int(metrics["peak_rss_bytes"])
+        rss_threshold = max(
+            math.ceil(peak_rss * RSS_HEADROOM_RATIO), peak_rss + RSS_HEADROOM_FLOOR
+        )
+        work_entries.append(
+            {
+                "benchmark_id": case_id,
+                "budget_id": entry.get("budget_id"),
+                "baseline_median_instructions": median,
+                "threshold_median_instructions": instruction_threshold,
+                "baseline_peak_rss_bytes": peak_rss,
+                "threshold_peak_rss_bytes": rss_threshold,
+            }
+        )
+    return {
+        "version": 1,
+        "runner_version": RUNNER_VERSION,
+        "source_commit": run_report.get("metadata", {}).get(
+            "work_baseline_source_commit"
+        ),
+        "host": {
+            "host_os": run_report.get("metadata", {}).get("host_os"),
+            "architecture": run_report.get("metadata", {}).get("architecture"),
+            "work_counter_source": "darwin-rusage-instructions",
+            "rss_counter_source": "darwin-rusage-process-tree",
+        },
+        "instruction_threshold_rule": (
+            "max(baseline_median_instructions * 1.02, "
+            "baseline_median_instructions + 2000000)"
+        ),
+        "rss_threshold_rule": (
+            "max(baseline_peak_rss_bytes * 1.10, "
+            "baseline_peak_rss_bytes + 33554432)"
+        ),
+        "budgets": work_entries,
+    }
+
+
 def sha256(path: Path) -> str:
     hasher = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             hasher.update(chunk)
     return hasher.hexdigest()
+
+
+def run_self_test() -> None:
+    budgets = {
+        "budgets": [
+            {
+                "benchmark_id": "small-work-self-test",
+                "budget_id": "perf.self-test.small-work",
+            }
+        ]
+    }
+    report = {
+        "metadata": {
+            "work_baseline_source_commit": "a" * 40,
+            "host_os": "macOS-self-test",
+            "architecture": "arm64",
+        },
+        "results": [
+            {
+                "id": "small-work-self-test",
+                "metrics": {
+                    "median_instructions": 10_000_000,
+                    "peak_rss_bytes": 64 * 1024 * 1024,
+                },
+            }
+        ],
+    }
+    captured = work_budgets_from_run(budgets, report)
+    entry = captured["budgets"][0]
+    if entry["threshold_median_instructions"] != 12_000_000:
+        raise BenchmarkError(
+            "work baseline self-test did not apply the small-process floor"
+        )
+    if entry["threshold_peak_rss_bytes"] != 96 * 1024 * 1024:
+        raise BenchmarkError("work baseline self-test did not apply the RSS floor")

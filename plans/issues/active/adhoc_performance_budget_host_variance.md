@@ -7,8 +7,8 @@ Status: in progress.
 | Milestone | Scope | Status |
 | --- | --- | --- |
 | M1: controlled measurement and provenance | Host/cache telemetry, controlled admission, stable-sample retries, stale-result producer/checker binding, and governed trend-reference refresh | complete on draft PR #3101 |
-| M2: Python interop cold-cache budget | Classify cold versus warm aggregate execution and enforce a cache-aware create-PR step budget with deterministic policy tests | in progress |
-| M3: qualification and closure | Five consecutive controlled representative verdicts, seeded-regression proof, final merge gate, full-phase review, and closure records | pending |
+| M2: Python interop cold-cache budget | Classify cold versus warm aggregate execution and enforce a cache-aware create-PR step budget with deterministic policy tests | complete on stacked PR #3115 |
+| M3: qualification and closure | Local retired-instruction budgets, five consecutive controlled verdicts, seeded-regression proof, final merge gate, review, and closure records | in progress on draft PR #3116 |
 
 Each implementation milestone uses one draft PR, exact-SHA validation, and
 repeated Claude Opus review under the phase-closure loop. Review and validation
@@ -24,10 +24,11 @@ evidence. Extending either expiry remains prohibited.
 
 ### Current handoff
 
-- State: M1 is externally reviewed and satisfied on the draft PR; M2 is in
-  implementation as a stacked milestone because the repository's create-PR
-  gate cannot merge M1 until this phase-owned Python-interop blocker closes.
-- Branch: `codex/adhoc-performance-budget-host-variance`.
+- State: M1 and M2 are complete on the stacked owner branch. M3 replaces the
+  desktop-idle blocker with local retired-instruction evidence. It preserves
+  the separate elapsed-time policy for quiet-host qualification.
+- Owner branch: `codex/adhoc-performance-budget-host-variance`.
+- M3 branch: `codex/adhoc-performance-budget-host-variance-m3`.
 - Reviewed M1 implementation candidate:
   `28bca35551321b109e272c61ae52fe6201eb810d`.
 - Draft PR: [#3101](https://github.com/sifr-lang/sifr/pull/3101).
@@ -44,6 +45,70 @@ evidence. Extending either expiry remains prohibited.
 - Base update: merged current `origin/main` at
   `01c43b9cd67df6174b44fbbf7d2328ac5a831cb7`; the final owner-fix candidate
   requires a fresh exact-SHA review and validation round.
+
+### M3 local-host decision
+
+The phase uses this Mac as the permanent performance host. macOS does not
+provide a user-space CPU reservation. Its `/usr/bin/time -l` command provides
+retired instructions and cycles for the benchmark process tree.
+
+An exploratory arithmetic control ran while unrelated CPU use reached
+`419.5%`. Its five elapsed samples were `1503.105` to `1527.412` milliseconds.
+The retired-instruction coefficient of variation was `0.000240`. An LSP
+diagnostics control also produced process-tree instruction evidence.
+
+M3 adds two controlled modes. Work mode uses retired instructions as the
+blocking performance metric. Latency mode keeps the existing load and
+unrelated-CPU limits for elapsed-time evidence. No existing elapsed-time
+threshold, waiver, or baseline is increased.
+
+Work mode also uses a fresh Darwin process-tree RSS baseline. Darwin includes
+the spawned LSP server and descendants. The generic baseline can measure a
+different process boundary. Separate governed thresholds prevent those RSS
+meanings from being compared as if they were equal.
+
+The approved full-manifest work capture passed all 65 cases on implementation
+commit `7e5d6648b6885863e60bab2a55d76cca8b59cdfb`. It produced work-budget
+artifact digest
+`aa57ee57b95177832845a4b1a8b2bce603f39fa1da25e9f14c73e28bd26253cc`
+and raw-evidence digest
+`0b3ca547e4b13afeb2afa909d87927f942f4f4e0ff16bcb184c806db79cabeac`.
+Every case produced at least five retired-instruction samples. The largest
+accepted instruction coefficient of variation was `0.012365`, below the
+`0.02` limit. The formatter corpus rejected an unstable `0.031108` first
+attempt and accepted its second attempt at `0.001955`. All other cases passed
+on their first controlled attempt.
+
+The first representative verdict found that independent query processes had
+reduced aggregate cache counts. The producer now uses one aggregate invocation
+for latency, cache, and diagnostics. It uses independent invocations only for
+process-work samples. A deterministic self-test protects this boundary. The
+two affected cases report 2,300 cache hits and 2,300 misses in the replacement
+capture.
+
+The full evidence comparison also found that generic RSS baselines used a
+different process boundary from Darwin rusage. Work mode now uses the approved
+Darwin process-tree RSS values from the same local artifact. Latency mode keeps
+the existing generic RSS thresholds. Seeded tests reject both instruction and
+local-RSS work regressions without using elapsed-time thresholds.
+
+The first exact-candidate representative verdict rejected the formatter corpus
+at 36.916 million instructions against a 36.759 million threshold. Four runs
+placed its medians between 35.721 million and 36.916 million instructions. The
+largest individual sample was 37.298 million. M3 therefore uses a general
+2-million-instruction floor for small processes. Larger workloads keep the 2%
+rule. No case-specific threshold or waiver was added.
+
+The M3 exact-SHA review found two non-Darwin regressions before merge. The
+profile adapter had selected Darwin work mode on Linux. Latency producers also
+emitted an empty instruction array that failed result validation. Profiles now
+select work mode only on Darwin and retain latency mode elsewhere. Producers
+omit instruction evidence when the host does not provide it.
+
+The first post-review area-adapter verdict found that the performance runner's
+new sibling import worked only when the runner was executed as a script. The
+runner now adds its area directory before importing host control. Both direct
+and `sifr_verify areas run` rules invocations pass.
 
 ### M2 reproduced evidence
 
