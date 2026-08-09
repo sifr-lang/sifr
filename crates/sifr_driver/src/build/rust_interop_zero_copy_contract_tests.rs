@@ -37,8 +37,7 @@ class BytesView:
 @rust.zero_copy(owner=input, view=bridge.bytes.BytesView)
 @rust.view(owner=input, lifetime=owner, mutability=immutable, send=False, sync=False)
 @rust(bridge.bytes.view, panic=map_error(bridge.bytes.map_panic))
-def hash(input: bytes) -> Result[BytesView, RustError | RustPanicError]:
-    return BytesView(ptr=0)
+def hash(input: bytes) -> Result[BytesView, RustError | RustPanicError]: ...
 "#;
 
 #[test]
@@ -108,11 +107,7 @@ fn package_rust_interop_accepts_async_static_lifetime_view() {
     let source = VALID_ZERO_COPY_SOURCE
         .replace("lifetime=owner", "lifetime=static")
         .replace(", panic=map_error(bridge.bytes.map_panic)", "")
-        .replace("def hash", "async def hash")
-        .replace(
-            "return BytesView(ptr=0)",
-            "await task.sleep(0.0)\n    return BytesView(ptr=0)",
-        );
+        .replace("def hash", "async def hash");
     let mut generated = generated_from_source(&source);
     let mut context = context_with_source(&source);
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
@@ -317,12 +312,7 @@ fn package_rust_interop_rejects_zero_copy_copy_fallback() {
 
 #[test]
 fn package_rust_interop_rejects_async_owner_lifetime_view() {
-    let source = VALID_ZERO_COPY_SOURCE
-        .replace("def hash", "async def hash")
-        .replace(
-            "return BytesView(ptr=0)",
-            "await task.sleep(0.0)\n    return BytesView(ptr=0)",
-        );
+    let source = VALID_ZERO_COPY_SOURCE.replace("def hash", "async def hash");
     let generated = generated_from_source(&source);
     let mut context = context_with_source(&source);
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
