@@ -9,9 +9,10 @@ evidence, and `certification_14` recorded that inventory, stable-claim,
 validation, published-head review, and immutable merge identities. Native
 Pydantic-Sifr `milestone_ps_2` has now merged the structural bridge and
 unversioned-manifest contracts in
-[PR #3114](https://github.com/sifr-lang/sifr/pull/3114). Track B is active for
-the sequential `certification_pkg_resource_core` item; Native Pydantic-Sifr
-`milestone_ps_3` remains blocked until it passes and merges.
+[PR #3114](https://github.com/sifr-lang/sifr/pull/3114). Track B is active in
+draft [PR #3123](https://github.com/sifr-lang/sifr/pull/3123) for the sequential
+`certification_pkg_resource_core` item. Native Pydantic-Sifr `milestone_ps_3`
+remains blocked until this item passes and merges.
 
 The verification-hardening dependency is complete through
 [`hardening_4`](../archive/rust-interop-verification-matrix-hardening.md#hardening_4-replace-lexical-rejection-context):
@@ -166,7 +167,7 @@ normative and must not be broadened.
 | `certification_12` | merged | [PR #3076](https://github.com/sifr-lang/sifr/pull/3076); exact-pinned CLI/tooling execution and bridge-safe `anyhow` boundary certification |
 | `certification_13` | merged | [PR #3078](https://github.com/sifr-lang/sifr/pull/3078); exact-pinned backend loopback execution and fail-closed SQLx offline metadata certification |
 | `certification_14` | merged | [PR #3083](https://github.com/sifr-lang/sifr/pull/3083); Track A inventory, stable gate, durable handoff, repeated published-head review, and final closeout |
-| `certification_pkg_resource_core` | active | Native Pydantic-Sifr `milestone_ps_2` merged in PR #3114; the synthetic external-package certification is in implementation and review |
+| `certification_pkg_resource_core` | active | Native Pydantic-Sifr `milestone_ps_2` merged in PR #3114. Draft PR #3123 contains the synthetic external-package certification. |
 
 ## Ordered Track A Items
 
