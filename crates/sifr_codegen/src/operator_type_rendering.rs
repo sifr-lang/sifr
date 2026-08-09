@@ -52,6 +52,8 @@ mod tests {
             name: name.to_string(),
             identity: None,
             fields: Vec::new(),
+            field_defaults: Vec::new(),
+            declaration_metadata: Vec::new(),
             methods: Vec::new(),
             is_hashable: false,
             is_error_type: false,

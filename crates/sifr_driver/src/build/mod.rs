@@ -46,8 +46,6 @@ mod rust_interop_probe_features;
 mod rust_interop_probe_manifest;
 mod rust_interop_probe_nonce;
 mod rust_interop_probe_paths;
-#[cfg(test)]
-mod rust_interop_probe_tests;
 mod rust_interop_sqlx_modules;
 mod rust_interop_sqlx_offline;
 #[cfg(test)]

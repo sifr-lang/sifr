@@ -157,6 +157,9 @@ mod rust_callback_callsite_tests;
 #[cfg(test)]
 mod rust_callback_expression_capture_tests;
 mod rust_interop;
+mod rust_interop_structural;
+#[cfg(test)]
+mod rust_interop_structural_tests;
 #[cfg(test)]
 mod rust_interop_tests;
 mod scope_helpers;

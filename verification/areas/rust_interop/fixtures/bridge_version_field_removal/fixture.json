@@ -4,16 +4,30 @@
   "evidence": {
     "negative": {
       "expected_diagnostic": "SIFR-RUST-CARGO-0001",
-      "expected_result": "future-owned-diagnostic",
+      "expected_result": "diagnostic",
       "id": "bridge_version_field_rejected",
       "path": "negative/bridge_version_field_rejected.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_tests.rs",
+        "test_name": "package_rust_interop_rejects_removed_bridge_version_field"
+      }
     },
     "positive": {
-      "expected_result": "future-owned",
+      "expected_result": "pass",
       "id": "unversioned_bridge_manifest_accepted",
       "path": "positive/unversioned_bridge_manifest_accepted.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_tests.rs",
+        "test_name": "package_rust_interop_resolves_bridge_root"
+      }
     }
   },
   "execution_kind": "compiler-diagnostic",

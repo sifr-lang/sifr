@@ -19,6 +19,8 @@ fn interop_build_plan_collects_function_class_and_method_declarations() {
             name: "Consumer".to_string(),
             identity: None,
             fields: Vec::new(),
+            field_defaults: Vec::new(),
+            declaration_metadata: Vec::new(),
             methods: vec![function_with_declaration(
                 "poll",
                 RustInteropDecoratorKind::Function,
@@ -768,6 +770,8 @@ fn class(name: &str, kind: HirClassKind, fields: Vec<(String, Type)>) -> HirClas
         name: name.to_string(),
         identity: None,
         fields,
+        field_defaults: Vec::new(),
+        declaration_metadata: Vec::new(),
         methods: Vec::new(),
         is_hashable: false,
         is_error_type: false,
@@ -781,6 +785,29 @@ fn class(name: &str, kind: HirClassKind, fields: Vec<(String, Type)>) -> HirClas
         enum_variants: Vec::new(),
         rust_interop: Vec::new(),
     }
+}
+
+#[test]
+fn interop_cache_fragment_includes_structural_algorithm_and_concrete_identity() {
+    let module = HirModule {
+        functions: Vec::new(),
+        classes: vec![class(
+            "Payload",
+            HirClassKind::Regular,
+            vec![("value".to_string(), Type::Int)],
+        )],
+        imports: Vec::new(),
+        constants: Vec::new(),
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let fragment =
+        interop_build_plan_for_named_modules([(Some("main"), &module)]).cache_key_fragment();
+
+    assert!(fragment.contains("rust.structural_identity_algorithm_version=1"));
+    assert!(fragment.contains("rust.structural_shape_identities=1"));
+    assert!(fragment.contains("main:Payload="));
 }
 
 fn python_error_fields() -> Vec<(String, Type)> {

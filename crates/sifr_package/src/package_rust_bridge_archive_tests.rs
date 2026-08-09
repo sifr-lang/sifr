@@ -150,7 +150,6 @@ fn manifest() -> SifrManifest {
         trust: TrustPolicy::default(),
         python: crate::manifest::sifr::PythonConfig::default(),
         rust: RustInteropConfig {
-            bridge_version: Some(1),
             bridges: vec![PathBuf::from("src/bridges")],
             direct_crate_bindings: false,
         },

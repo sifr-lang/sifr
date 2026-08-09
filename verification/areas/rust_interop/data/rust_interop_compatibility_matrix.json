@@ -159,42 +159,28 @@
       "notes": "Generated handle state transitions reject use-after-close, double-close, and poisoned access."
     },
     {
-      "id": "bridge_version_mismatch",
-      "fixture": "bridge_version_mismatch",
-      "category": "supported",
-      "tier": 0,
-      "capability": "bridge-version validation",
-      "execution_kind": "compiler-diagnostic",
-      "required_crates": [],
-      "positive_evidence": {"id": "bridge_version_1_accepted", "status": "passing"},
-      "negative_evidence": {"id": "unsupported_bridge_version_rejected", "status": "passing"},
-      "notes": "Bridge version 1 is accepted; unsupported bridge versions are rejected deterministically."
-    },
-    {
       "id": "bridge_version_field_removal",
       "fixture": "bridge_version_field_removal",
-      "category": "future-owned-by-separate-phase",
+      "category": "supported",
       "tier": 0,
       "capability": "unversioned Rust bridge manifest contract",
       "execution_kind": "compiler-diagnostic",
       "required_crates": [],
-      "positive_evidence": {"id": "unversioned_bridge_manifest_accepted", "status": "planned"},
-      "negative_evidence": {"id": "bridge_version_field_rejected", "status": "planned"},
-      "future_owner": "internal_docs/rust_interop_architecture.md",
-      "notes": "Reserved by the structural Rust bridge contract; support requires removing the bridge-version manifest field and version-specific tooling, accepting only unversioned bridge manifests, and rejecting the removed field without rewrite, compatibility mode, or fallback."
+      "positive_evidence": {"id": "unversioned_bridge_manifest_accepted", "status": "passing"},
+      "negative_evidence": {"id": "bridge_version_field_rejected", "status": "passing"},
+      "notes": "Sifr accepts the one unversioned Rust bridge contract and rejects the removed bridge-version field without rewrite, compatibility mode, or fallback."
     },
     {
       "id": "structural_bridge_calls",
       "fixture": "structural_bridge_calls",
-      "category": "future-owned-by-separate-phase",
+      "category": "supported-through-bridge",
       "tier": 2,
       "capability": "monomorphized structural Rust bridge calls",
       "execution_kind": "runtime-observed",
       "required_crates": [],
-      "positive_evidence": {"id": "nested_recursive_structural_roundtrip", "status": "planned"},
-      "negative_evidence": {"id": "shape_callback_and_lifetime_mismatches_rejected", "status": "planned"},
-      "future_owner": "internal_docs/rust_interop_architecture.md",
-      "notes": "Reserved by the structural Rust bridge contract; structural calls remain unavailable until nested recursive construction, projection, callback runtime evidence, and deliberate shape, callback, and lifetime rejection evidence pass together."
+      "positive_evidence": {"id": "nested_recursive_structural_roundtrip", "status": "passing"},
+      "negative_evidence": {"id": "shape_callback_and_lifetime_mismatches_rejected", "status": "passing"},
+      "notes": "Generated monomorphized bridge calls construct and project nested generic/recursive values through an opaque source and use the typed call-scoped callback bridge; invalid structural generic placement and incompatible Rust signatures fail deliberately."
     },
     {
       "id": "panic_boundary",

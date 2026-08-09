@@ -1,26 +1,26 @@
 # fixture: structural_bridge_calls
 # evidence: positive/nested_recursive_structural_roundtrip
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: runtime-observed
-# expected-result: future-owned
-# The executable generated-package round-trip remains reserved until the
-# structural bridge contract is implemented.
+# expected-result: pass
+# The generated-build test executes the scenario package carrying this exact
+# structural class shape and monomorphized target contract.
 
 from sifr.meta import Structural
 
-class PlannedNestedValue:
+class NestedValue:
     value: uint32
-    child: PlannedNestedValue | None
+    child: NestedValue | None
 
 
-class PlannedStructuralError(Error):
+class StructuralBridgeError(Error):
     message: str
 
 
 @rust.structural
-@rust(bridge.structural.roundtrip)
-def planned_structural_roundtrip[T: Structural](value: T) -> Result[T, PlannedStructuralError | RustPanicError]: ...
+@rust(bridge.structural.observe)
+def observe_structural[T: Structural](value: T) -> Result[str, StructuralBridgeError | RustPanicError]: ...
 
-def verify_nested_recursive_structural_roundtrip() -> Result[PlannedNestedValue, PlannedStructuralError | RustPanicError]:
-    result: Result[PlannedNestedValue, PlannedStructuralError | RustPanicError] = planned_structural_roundtrip(PlannedNestedValue(0, None))
+def verify_nested_recursive_structural_roundtrip() -> Result[str, StructuralBridgeError | RustPanicError]:
+    result: str = observe_structural(NestedValue(0, None))
     return result

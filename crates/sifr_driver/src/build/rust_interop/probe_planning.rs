@@ -30,7 +30,7 @@ pub(super) fn probe_kind(
             RustInteropOwner::Function { .. } | RustInteropOwner::Method { .. }
         )
         .then_some(RustBridgeProbeKind::AsyncFunction),
-        RustInteropDecoratorKind::Callback => None,
+        RustInteropDecoratorKind::Callback | RustInteropDecoratorKind::Structural => None,
         RustInteropDecoratorKind::ZeroCopy => matches!(
             owner,
             RustInteropOwner::Function { .. } | RustInteropOwner::Method { .. }
