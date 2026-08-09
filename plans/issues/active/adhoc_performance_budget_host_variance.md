@@ -68,14 +68,15 @@ different process boundary. Separate governed thresholds prevent those RSS
 meanings from being compared as if they were equal.
 
 The approved full-manifest work capture passed all 65 cases on implementation
-commit `c5d4c68f317d01f86bb15f45862a52d6f54af86e`. It produced work-budget
+commit `8899996656ca2258ac84ef30136cc013ea0e3dd8`. It produced work-budget
 artifact digest
-`d2e48c6f96d7cd160b01b1fa1c2e6641b203d107ec201f91f00fbc927de9c51d`
+`2586824b46ab5a70f6fd43ecfc55e77d67d84bf7dbd9eece13b02c2000663294`
 and raw-evidence digest
-`4e7991fe787b2f9db55513acc312fe90cf262b1e4b870bd53e520e3b49dba2b6`.
-The largest accepted instruction coefficient of variation was `0.013556`.
-The formatter corpus rejected an unstable `0.030451` attempt and accepted its
-`0.013556` retry. All other cases passed on their first controlled attempt.
+`d512c11c65c0a8bc21f185d496a93774adf85078abb3fe5b654ddc69dcec1e10`.
+The largest accepted instruction coefficient of variation was `0.010295`.
+The formatter corpus rejected unstable `0.031762` and `0.031574` attempts. It
+accepted the third attempt at `0.004752`. All other cases passed on their first
+controlled attempt.
 
 The first representative verdict found that independent query processes had
 reduced aggregate cache counts. The producer now uses one aggregate invocation
