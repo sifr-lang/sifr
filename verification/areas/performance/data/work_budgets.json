@@ -1,524 +1,524 @@
 {
   "budgets": [
     {
-      "baseline_median_instructions": 117366879367,
-      "baseline_peak_rss_bytes": 208338944,
+      "baseline_median_instructions": 117592216283,
+      "baseline_peak_rss_bytes": 207962112,
       "benchmark_id": "build-project-001-additional-modules",
       "budget_id": "perf.build.project.additional_modules",
-      "threshold_median_instructions": 119714216955,
-      "threshold_peak_rss_bytes": 241893376
+      "threshold_median_instructions": 119944060609,
+      "threshold_peak_rss_bytes": 241516544
     },
     {
-      "baseline_median_instructions": 111363544304,
-      "baseline_peak_rss_bytes": 147849216,
+      "baseline_median_instructions": 111586029052,
+      "baseline_peak_rss_bytes": 148209664,
       "benchmark_id": "build-project-002-branch-paths",
       "budget_id": "perf.build.project.branch_paths",
-      "threshold_median_instructions": 113590815191,
-      "threshold_peak_rss_bytes": 181403648
-    },
-    {
-      "baseline_median_instructions": 111358067829,
-      "baseline_peak_rss_bytes": 147062784,
-      "benchmark_id": "build-project-003-cargo-manifest",
-      "budget_id": "perf.build.project.cargo_manifest",
-      "threshold_median_instructions": 113585229186,
-      "threshold_peak_rss_bytes": 180617216
-    },
-    {
-      "baseline_median_instructions": 116021392507,
-      "baseline_peak_rss_bytes": 155910144,
-      "benchmark_id": "build-project-004-dependency-manifest",
-      "budget_id": "perf.build.project.dependency_manifest",
-      "threshold_median_instructions": 118341820358,
-      "threshold_peak_rss_bytes": 189464576
-    },
-    {
-      "baseline_median_instructions": 111449344172,
-      "baseline_peak_rss_bytes": 146276352,
-      "benchmark_id": "build-project-005-project-graph",
-      "budget_id": "perf.build.project.project_graph",
-      "threshold_median_instructions": 113678331056,
-      "threshold_peak_rss_bytes": 179830784
-    },
-    {
-      "baseline_median_instructions": 111273671600,
-      "baseline_peak_rss_bytes": 148045824,
-      "benchmark_id": "build-single-file-001-break-continue",
-      "budget_id": "perf.build.single.break_continue",
-      "threshold_median_instructions": 113499145032,
-      "threshold_peak_rss_bytes": 181600256
-    },
-    {
-      "baseline_median_instructions": 111263137801,
-      "baseline_peak_rss_bytes": 147947520,
-      "benchmark_id": "build-single-file-002-builtin-any-all",
-      "budget_id": "perf.build.single.builtin_any_all",
-      "threshold_median_instructions": 113488400558,
-      "threshold_peak_rss_bytes": 181501952
-    },
-    {
-      "baseline_median_instructions": 111254004968,
-      "baseline_peak_rss_bytes": 146915328,
-      "benchmark_id": "build-single-file-003-builtin-enumerate-zip",
-      "budget_id": "perf.build.single.builtin_enumerate_zip",
-      "threshold_median_instructions": 113479085068,
-      "threshold_peak_rss_bytes": 180469760
-    },
-    {
-      "baseline_median_instructions": 111295921732,
-      "baseline_peak_rss_bytes": 148013056,
-      "benchmark_id": "build-single-file-004-bytes-constructors",
-      "budget_id": "perf.build.single.bytes_constructors",
-      "threshold_median_instructions": 113521840167,
-      "threshold_peak_rss_bytes": 181567488
-    },
-    {
-      "baseline_median_instructions": 111287235483,
-      "baseline_peak_rss_bytes": 147652608,
-      "benchmark_id": "build-single-file-005-class-methods",
-      "budget_id": "perf.build.single.class_methods",
-      "threshold_median_instructions": 113512980193,
-      "threshold_peak_rss_bytes": 181207040
-    },
-    {
-      "baseline_median_instructions": 111259140667,
-      "baseline_peak_rss_bytes": 146882560,
-      "benchmark_id": "build-single-file-006-collection-len",
-      "budget_id": "perf.build.single.collection_len",
-      "threshold_median_instructions": 113484323481,
-      "threshold_peak_rss_bytes": 180436992
-    },
-    {
-      "baseline_median_instructions": 111263407113,
-      "baseline_peak_rss_bytes": 147898368,
-      "benchmark_id": "build-single-file-007-comp-set",
-      "budget_id": "perf.build.single.comp_set",
-      "threshold_median_instructions": 113488675256,
-      "threshold_peak_rss_bytes": 181452800
-    },
-    {
-      "baseline_median_instructions": 115242632287,
-      "baseline_peak_rss_bytes": 166100992,
-      "benchmark_id": "build-single-file-008-decimal-conversions",
-      "budget_id": "perf.build.single.decimal_conversions",
-      "threshold_median_instructions": 117547484933,
-      "threshold_peak_rss_bytes": 199655424
-    },
-    {
-      "baseline_median_instructions": 111279967570,
-      "baseline_peak_rss_bytes": 146669568,
-      "benchmark_id": "build-single-file-009-dict-get-option",
-      "budget_id": "perf.build.single.dict_get_option",
-      "threshold_median_instructions": 113505566922,
-      "threshold_peak_rss_bytes": 180224000
-    },
-    {
-      "baseline_median_instructions": 111283440813,
-      "baseline_peak_rss_bytes": 148209664,
-      "benchmark_id": "build-single-file-010-generic-identity",
-      "budget_id": "perf.build.single.generic_identity",
-      "threshold_median_instructions": 113509109630,
+      "threshold_median_instructions": 113817749634,
       "threshold_peak_rss_bytes": 181764096
     },
     {
-      "baseline_median_instructions": 13628063634,
-      "baseline_peak_rss_bytes": 146341888,
-      "benchmark_id": "check-project-001-imports",
-      "budget_id": "perf.check.project.imports",
-      "threshold_median_instructions": 13900624907,
-      "threshold_peak_rss_bytes": 179896320
+      "baseline_median_instructions": 111572041387,
+      "baseline_peak_rss_bytes": 146767872,
+      "benchmark_id": "build-project-003-cargo-manifest",
+      "budget_id": "perf.build.project.cargo_manifest",
+      "threshold_median_instructions": 113803482215,
+      "threshold_peak_rss_bytes": 180322304
     },
     {
-      "baseline_median_instructions": 13621193633,
-      "baseline_peak_rss_bytes": 147210240,
-      "benchmark_id": "check-project-002-mode-consistency",
-      "budget_id": "perf.check.project.mode_consistency",
-      "threshold_median_instructions": 13893617506,
-      "threshold_peak_rss_bytes": 180764672
+      "baseline_median_instructions": 116263574837,
+      "baseline_peak_rss_bytes": 160284672,
+      "benchmark_id": "build-project-004-dependency-manifest",
+      "budget_id": "perf.build.project.dependency_manifest",
+      "threshold_median_instructions": 118588846334,
+      "threshold_peak_rss_bytes": 193839104
     },
     {
-      "baseline_median_instructions": 13658729713,
-      "baseline_peak_rss_bytes": 147374080,
-      "benchmark_id": "check-project-003-project-build",
-      "budget_id": "perf.check.project.project_build",
-      "threshold_median_instructions": 13931904308,
-      "threshold_peak_rss_bytes": 180928512
+      "baseline_median_instructions": 111662403506,
+      "baseline_peak_rss_bytes": 146309120,
+      "benchmark_id": "build-project-005-project-graph",
+      "budget_id": "perf.build.project.project_graph",
+      "threshold_median_instructions": 113895651577,
+      "threshold_peak_rss_bytes": 179863552
     },
     {
-      "baseline_median_instructions": 13654684063,
-      "baseline_peak_rss_bytes": 146669568,
-      "benchmark_id": "check-project-004-project-graph",
-      "budget_id": "perf.check.project.project_graph",
-      "threshold_median_instructions": 13927777745,
-      "threshold_peak_rss_bytes": 180224000
+      "baseline_median_instructions": 111324465178,
+      "baseline_peak_rss_bytes": 147341312,
+      "benchmark_id": "build-single-file-001-break-continue",
+      "budget_id": "perf.build.single.break_continue",
+      "threshold_median_instructions": 113550954482,
+      "threshold_peak_rss_bytes": 180895744
     },
     {
-      "baseline_median_instructions": 13653828260,
-      "baseline_peak_rss_bytes": 146325504,
-      "benchmark_id": "check-project-005-rooted-entrypoint",
-      "budget_id": "perf.check.project.rooted_entrypoint",
-      "threshold_median_instructions": 13926904826,
-      "threshold_peak_rss_bytes": 179879936
+      "baseline_median_instructions": 111292620128,
+      "baseline_peak_rss_bytes": 147652608,
+      "benchmark_id": "build-single-file-002-builtin-any-all",
+      "budget_id": "perf.build.single.builtin_any_all",
+      "threshold_median_instructions": 113518472531,
+      "threshold_peak_rss_bytes": 181207040
     },
     {
-      "baseline_median_instructions": 13598720598,
-      "baseline_peak_rss_bytes": 146096128,
-      "benchmark_id": "check-single-file-001-arithmetic",
-      "budget_id": "perf.check.single.arithmetic",
-      "threshold_median_instructions": 13870695010,
-      "threshold_peak_rss_bytes": 179650560
+      "baseline_median_instructions": 111290771183,
+      "baseline_peak_rss_bytes": 145899520,
+      "benchmark_id": "build-single-file-003-builtin-enumerate-zip",
+      "budget_id": "perf.build.single.builtin_enumerate_zip",
+      "threshold_median_instructions": 113516586607,
+      "threshold_peak_rss_bytes": 179453952
     },
     {
-      "baseline_median_instructions": 13593945257,
+      "baseline_median_instructions": 111319642729,
+      "baseline_peak_rss_bytes": 148144128,
+      "benchmark_id": "build-single-file-004-bytes-constructors",
+      "budget_id": "perf.build.single.bytes_constructors",
+      "threshold_median_instructions": 113546035584,
+      "threshold_peak_rss_bytes": 181698560
+    },
+    {
+      "baseline_median_instructions": 111288950331,
+      "baseline_peak_rss_bytes": 147505152,
+      "benchmark_id": "build-single-file-005-class-methods",
+      "budget_id": "perf.build.single.class_methods",
+      "threshold_median_instructions": 113514729338,
+      "threshold_peak_rss_bytes": 181059584
+    },
+    {
+      "baseline_median_instructions": 111294332990,
+      "baseline_peak_rss_bytes": 146423808,
+      "benchmark_id": "build-single-file-006-collection-len",
+      "budget_id": "perf.build.single.collection_len",
+      "threshold_median_instructions": 113520219650,
+      "threshold_peak_rss_bytes": 179978240
+    },
+    {
+      "baseline_median_instructions": 111478001145,
+      "baseline_peak_rss_bytes": 146309120,
+      "benchmark_id": "build-single-file-007-comp-set",
+      "budget_id": "perf.build.single.comp_set",
+      "threshold_median_instructions": 113707561168,
+      "threshold_peak_rss_bytes": 179863552
+    },
+    {
+      "baseline_median_instructions": 115299343384,
+      "baseline_peak_rss_bytes": 166199296,
+      "benchmark_id": "build-single-file-008-decimal-conversions",
+      "budget_id": "perf.build.single.decimal_conversions",
+      "threshold_median_instructions": 117605330252,
+      "threshold_peak_rss_bytes": 199753728
+    },
+    {
+      "baseline_median_instructions": 111294829774,
       "baseline_peak_rss_bytes": 147619840,
-      "benchmark_id": "check-single-file-002-break-continue",
-      "budget_id": "perf.check.single.break_continue",
-      "threshold_median_instructions": 13865824163,
+      "benchmark_id": "build-single-file-009-dict-get-option",
+      "budget_id": "perf.build.single.dict_get_option",
+      "threshold_median_instructions": 113520726370,
       "threshold_peak_rss_bytes": 181174272
     },
     {
-      "baseline_median_instructions": 13587989293,
-      "baseline_peak_rss_bytes": 146735104,
+      "baseline_median_instructions": 111292650987,
+      "baseline_peak_rss_bytes": 147767296,
+      "benchmark_id": "build-single-file-010-generic-identity",
+      "budget_id": "perf.build.single.generic_identity",
+      "threshold_median_instructions": 113518504007,
+      "threshold_peak_rss_bytes": 181321728
+    },
+    {
+      "baseline_median_instructions": 13627506795,
+      "baseline_peak_rss_bytes": 147587072,
+      "benchmark_id": "check-project-001-imports",
+      "budget_id": "perf.check.project.imports",
+      "threshold_median_instructions": 13900056931,
+      "threshold_peak_rss_bytes": 181141504
+    },
+    {
+      "baseline_median_instructions": 13626885646,
+      "baseline_peak_rss_bytes": 146571264,
+      "benchmark_id": "check-project-002-mode-consistency",
+      "budget_id": "perf.check.project.mode_consistency",
+      "threshold_median_instructions": 13899423359,
+      "threshold_peak_rss_bytes": 180125696
+    },
+    {
+      "baseline_median_instructions": 13657694433,
+      "baseline_peak_rss_bytes": 146145280,
+      "benchmark_id": "check-project-003-project-build",
+      "budget_id": "perf.check.project.project_build",
+      "threshold_median_instructions": 13930848322,
+      "threshold_peak_rss_bytes": 179699712
+    },
+    {
+      "baseline_median_instructions": 13652017015,
+      "baseline_peak_rss_bytes": 146079744,
+      "benchmark_id": "check-project-004-project-graph",
+      "budget_id": "perf.check.project.project_graph",
+      "threshold_median_instructions": 13925057356,
+      "threshold_peak_rss_bytes": 179634176
+    },
+    {
+      "baseline_median_instructions": 13656339376,
+      "baseline_peak_rss_bytes": 146702336,
+      "benchmark_id": "check-project-005-rooted-entrypoint",
+      "budget_id": "perf.check.project.rooted_entrypoint",
+      "threshold_median_instructions": 13929466164,
+      "threshold_peak_rss_bytes": 180256768
+    },
+    {
+      "baseline_median_instructions": 13592529058,
+      "baseline_peak_rss_bytes": 147144704,
+      "benchmark_id": "check-single-file-001-arithmetic",
+      "budget_id": "perf.check.single.arithmetic",
+      "threshold_median_instructions": 13864379640,
+      "threshold_peak_rss_bytes": 180699136
+    },
+    {
+      "baseline_median_instructions": 13590734124,
+      "baseline_peak_rss_bytes": 147570688,
+      "benchmark_id": "check-single-file-002-break-continue",
+      "budget_id": "perf.check.single.break_continue",
+      "threshold_median_instructions": 13862548807,
+      "threshold_peak_rss_bytes": 181125120
+    },
+    {
+      "baseline_median_instructions": 13591614500,
+      "baseline_peak_rss_bytes": 146145280,
       "benchmark_id": "check-single-file-003-builtin-any-all",
       "budget_id": "perf.check.single.builtin_any_all",
-      "threshold_median_instructions": 13859749079,
+      "threshold_median_instructions": 13863446790,
+      "threshold_peak_rss_bytes": 179699712
+    },
+    {
+      "baseline_median_instructions": 13590020945,
+      "baseline_peak_rss_bytes": 147865600,
+      "benchmark_id": "check-single-file-004-builtin-enumerate-zip",
+      "budget_id": "perf.check.single.builtin_enumerate_zip",
+      "threshold_median_instructions": 13861821364,
+      "threshold_peak_rss_bytes": 181420032
+    },
+    {
+      "baseline_median_instructions": 13595383742,
+      "baseline_peak_rss_bytes": 146571264,
+      "benchmark_id": "check-single-file-005-bytes-constructors",
+      "budget_id": "perf.check.single.bytes_constructors",
+      "threshold_median_instructions": 13867291417,
+      "threshold_peak_rss_bytes": 180125696
+    },
+    {
+      "baseline_median_instructions": 13593384743,
+      "baseline_peak_rss_bytes": 147062784,
+      "benchmark_id": "check-single-file-006-class-methods",
+      "budget_id": "perf.check.single.class_methods",
+      "threshold_median_instructions": 13865252438,
+      "threshold_peak_rss_bytes": 180617216
+    },
+    {
+      "baseline_median_instructions": 13591329019,
+      "baseline_peak_rss_bytes": 147603456,
+      "benchmark_id": "check-single-file-007-collection-len",
+      "budget_id": "perf.check.single.collection_len",
+      "threshold_median_instructions": 13863155600,
+      "threshold_peak_rss_bytes": 181157888
+    },
+    {
+      "baseline_median_instructions": 13593449321,
+      "baseline_peak_rss_bytes": 146735104,
+      "benchmark_id": "check-single-file-008-comp-set",
+      "budget_id": "perf.check.single.comp_set",
+      "threshold_median_instructions": 13865318308,
       "threshold_peak_rss_bytes": 180289536
     },
     {
-      "baseline_median_instructions": 13592734841,
-      "baseline_peak_rss_bytes": 146489344,
-      "benchmark_id": "check-single-file-004-builtin-enumerate-zip",
-      "budget_id": "perf.check.single.builtin_enumerate_zip",
-      "threshold_median_instructions": 13864589538,
-      "threshold_peak_rss_bytes": 180043776
-    },
-    {
-      "baseline_median_instructions": 13602484283,
-      "baseline_peak_rss_bytes": 147243008,
-      "benchmark_id": "check-single-file-005-bytes-constructors",
-      "budget_id": "perf.check.single.bytes_constructors",
-      "threshold_median_instructions": 13874533969,
-      "threshold_peak_rss_bytes": 180797440
-    },
-    {
-      "baseline_median_instructions": 13591422176,
-      "baseline_peak_rss_bytes": 147193856,
-      "benchmark_id": "check-single-file-006-class-methods",
-      "budget_id": "perf.check.single.class_methods",
-      "threshold_median_instructions": 13863250620,
-      "threshold_peak_rss_bytes": 180748288
-    },
-    {
-      "baseline_median_instructions": 13588889227,
-      "baseline_peak_rss_bytes": 145932288,
-      "benchmark_id": "check-single-file-007-collection-len",
-      "budget_id": "perf.check.single.collection_len",
-      "threshold_median_instructions": 13860667012,
-      "threshold_peak_rss_bytes": 179486720
-    },
-    {
-      "baseline_median_instructions": 13594338945,
-      "baseline_peak_rss_bytes": 147292160,
-      "benchmark_id": "check-single-file-008-comp-set",
-      "budget_id": "perf.check.single.comp_set",
-      "threshold_median_instructions": 13866225724,
-      "threshold_peak_rss_bytes": 180846592
-    },
-    {
-      "baseline_median_instructions": 13599886025,
-      "baseline_peak_rss_bytes": 146882560,
+      "baseline_median_instructions": 13599013606,
+      "baseline_peak_rss_bytes": 146685952,
       "benchmark_id": "check-single-file-009-decimal-conversions",
       "budget_id": "perf.check.single.decimal_conversions",
-      "threshold_median_instructions": 13871883746,
-      "threshold_peak_rss_bytes": 180436992
+      "threshold_median_instructions": 13870993879,
+      "threshold_peak_rss_bytes": 180240384
     },
     {
-      "baseline_median_instructions": 13596932317,
-      "baseline_peak_rss_bytes": 146751488,
+      "baseline_median_instructions": 13592678961,
+      "baseline_peak_rss_bytes": 146964480,
       "benchmark_id": "check-single-file-010-dict-get-option",
       "budget_id": "perf.check.single.dict_get_option",
-      "threshold_median_instructions": 13868870964,
-      "threshold_peak_rss_bytes": 180305920
+      "threshold_median_instructions": 13864532541,
+      "threshold_peak_rss_bytes": 180518912
     },
     {
-      "baseline_median_instructions": 13588915720,
-      "baseline_peak_rss_bytes": 147324928,
+      "baseline_median_instructions": 13593583144,
+      "baseline_peak_rss_bytes": 148160512,
       "benchmark_id": "diagnostic-non-regression-001-human-success-exit",
       "budget_id": "perf.diagnostic.human_success_exit",
-      "threshold_median_instructions": 13860694035,
-      "threshold_peak_rss_bytes": 180879360
+      "threshold_median_instructions": 13865454807,
+      "threshold_peak_rss_bytes": 181714944
     },
     {
-      "baseline_median_instructions": 13593930029,
-      "baseline_peak_rss_bytes": 146374656,
+      "baseline_median_instructions": 13587104173,
+      "baseline_peak_rss_bytes": 147226624,
       "benchmark_id": "diagnostic-non-regression-002-json-diagnostic-schema",
       "budget_id": "perf.diagnostic.json_diagnostic_schema",
-      "threshold_median_instructions": 13865808630,
-      "threshold_peak_rss_bytes": 179929088
+      "threshold_median_instructions": 13858846257,
+      "threshold_peak_rss_bytes": 180781056
     },
     {
-      "baseline_median_instructions": 13590487638,
-      "baseline_peak_rss_bytes": 146194432,
+      "baseline_median_instructions": 13589376915,
+      "baseline_peak_rss_bytes": 146669568,
       "benchmark_id": "diagnostic-non-regression-003-compact-diagnostic-schema",
       "budget_id": "perf.diagnostic.compact_diagnostic_schema",
-      "threshold_median_instructions": 13862297391,
-      "threshold_peak_rss_bytes": 179748864
+      "threshold_median_instructions": 13861164454,
+      "threshold_peak_rss_bytes": 180224000
     },
     {
-      "baseline_median_instructions": 13597589857,
-      "baseline_peak_rss_bytes": 148062208,
+      "baseline_median_instructions": 13594624919,
+      "baseline_peak_rss_bytes": 147668992,
       "benchmark_id": "diagnostic-non-regression-004-recovery-limit",
       "budget_id": "perf.diagnostic.recovery_limit",
-      "threshold_median_instructions": 13869541655,
-      "threshold_peak_rss_bytes": 181616640
+      "threshold_median_instructions": 13866517418,
+      "threshold_peak_rss_bytes": 181223424
     },
     {
-      "baseline_median_instructions": 13512422104,
-      "baseline_peak_rss_bytes": 146096128,
+      "baseline_median_instructions": 13519247808,
+      "baseline_peak_rss_bytes": 146227200,
       "benchmark_id": "diagnostic-non-regression-005-project-error-exit",
       "budget_id": "perf.diagnostic.project_error_exit",
-      "threshold_median_instructions": 13782670547,
-      "threshold_peak_rss_bytes": 179650560
+      "threshold_median_instructions": 13789632765,
+      "threshold_peak_rss_bytes": 179781632
     },
     {
-      "baseline_median_instructions": 35740514,
-      "baseline_peak_rss_bytes": 11223040,
+      "baseline_median_instructions": 35798286,
+      "baseline_peak_rss_bytes": 11272192,
       "benchmark_id": "formatter-corpus-001-project-check",
       "budget_id": "perf.formatter.corpus.project_check",
-      "threshold_median_instructions": 37740514,
-      "threshold_peak_rss_bytes": 44777472
+      "threshold_median_instructions": 37798286,
+      "threshold_peak_rss_bytes": 44826624
     },
     {
-      "baseline_median_instructions": 56993708,
+      "baseline_median_instructions": 59535749,
       "baseline_peak_rss_bytes": 11517952,
       "benchmark_id": "formatter-large-file-001-check",
       "budget_id": "perf.formatter.large_file.check",
-      "threshold_median_instructions": 58993708,
+      "threshold_median_instructions": 61535749,
       "threshold_peak_rss_bytes": 45072384
     },
     {
-      "baseline_median_instructions": 912264683,
-      "baseline_peak_rss_bytes": 5128192,
+      "baseline_median_instructions": 913244666,
+      "baseline_peak_rss_bytes": 5079040,
       "benchmark_id": "incremental-local-loop-001-unchanged-file-update",
       "budget_id": "perf.incremental.unchanged_file_update",
-      "threshold_median_instructions": 930509977,
-      "threshold_peak_rss_bytes": 38682624
+      "threshold_median_instructions": 931509560,
+      "threshold_peak_rss_bytes": 38633472
     },
     {
-      "baseline_median_instructions": 686173679,
+      "baseline_median_instructions": 686862416,
       "baseline_peak_rss_bytes": 5029888,
       "benchmark_id": "incremental-local-loop-002-leaf-module-change",
       "budget_id": "perf.incremental.leaf_module_change",
-      "threshold_median_instructions": 699897153,
+      "threshold_median_instructions": 700599665,
       "threshold_peak_rss_bytes": 38584320
     },
     {
-      "baseline_median_instructions": 3823339120,
-      "baseline_peak_rss_bytes": 8159232,
+      "baseline_median_instructions": 3820816977,
+      "baseline_peak_rss_bytes": 8126464,
       "benchmark_id": "incremental-local-loop-003-imported-module-change",
       "budget_id": "perf.incremental.imported_module_change",
-      "threshold_median_instructions": 3899805903,
-      "threshold_peak_rss_bytes": 41713664
+      "threshold_median_instructions": 3897233317,
+      "threshold_peak_rss_bytes": 41680896
     },
     {
-      "baseline_median_instructions": 4467146083,
-      "baseline_peak_rss_bytes": 7979008,
+      "baseline_median_instructions": 4465961743,
+      "baseline_peak_rss_bytes": 8110080,
       "benchmark_id": "incremental-local-loop-004-public-api-change",
       "budget_id": "perf.incremental.public_api_change",
-      "threshold_median_instructions": 4556489005,
-      "threshold_peak_rss_bytes": 41533440
+      "threshold_median_instructions": 4555280978,
+      "threshold_peak_rss_bytes": 41664512
     },
     {
-      "baseline_median_instructions": 4169104580,
-      "baseline_peak_rss_bytes": 8192000,
+      "baseline_median_instructions": 4169831184,
+      "baseline_peak_rss_bytes": 8241152,
       "benchmark_id": "incremental-local-loop-005-failure-recovery",
       "budget_id": "perf.incremental.failure_recovery",
-      "threshold_median_instructions": 4252486672,
-      "threshold_peak_rss_bytes": 41746432
+      "threshold_median_instructions": 4253227808,
+      "threshold_peak_rss_bytes": 41795584
     },
     {
-      "baseline_median_instructions": 376122368,
-      "baseline_peak_rss_bytes": 4734976,
+      "baseline_median_instructions": 376661617,
+      "baseline_peak_rss_bytes": 4849664,
       "benchmark_id": "interactive-tooling-foundation-001-cold-context-load",
       "budget_id": "perf.interactive.cold_context_load",
-      "threshold_median_instructions": 383644816,
-      "threshold_peak_rss_bytes": 38289408
+      "threshold_median_instructions": 384194850,
+      "threshold_peak_rss_bytes": 38404096
     },
     {
-      "baseline_median_instructions": 1450757474,
-      "baseline_peak_rss_bytes": 7798784,
+      "baseline_median_instructions": 1450394396,
+      "baseline_peak_rss_bytes": 7946240,
       "benchmark_id": "interactive-tooling-foundation-002-warm-diagnostics-query",
       "budget_id": "perf.interactive.warm_diagnostics_query",
-      "threshold_median_instructions": 1479772624,
-      "threshold_peak_rss_bytes": 41353216
+      "threshold_median_instructions": 1479402284,
+      "threshold_peak_rss_bytes": 41500672
     },
     {
-      "baseline_median_instructions": 590843118,
-      "baseline_peak_rss_bytes": 4767744,
+      "baseline_median_instructions": 590808598,
+      "baseline_peak_rss_bytes": 4800512,
       "benchmark_id": "interactive-tooling-foundation-003-unchanged-file-update",
       "budget_id": "perf.interactive.unchanged_file_update",
-      "threshold_median_instructions": 602659981,
-      "threshold_peak_rss_bytes": 38322176
+      "threshold_median_instructions": 602624770,
+      "threshold_peak_rss_bytes": 38354944
     },
     {
-      "baseline_median_instructions": 2344895148,
-      "baseline_peak_rss_bytes": 8175616,
+      "baseline_median_instructions": 2345458804,
+      "baseline_peak_rss_bytes": 8257536,
       "benchmark_id": "interactive-tooling-foundation-004-changed-file-invalidation",
       "budget_id": "perf.interactive.changed_file_invalidation",
-      "threshold_median_instructions": 2391793051,
-      "threshold_peak_rss_bytes": 41730048
+      "threshold_median_instructions": 2392367981,
+      "threshold_peak_rss_bytes": 41811968
     },
     {
-      "baseline_median_instructions": 219137306,
-      "baseline_peak_rss_bytes": 4685824,
+      "baseline_median_instructions": 219614324,
+      "baseline_peak_rss_bytes": 4702208,
       "benchmark_id": "interactive-tooling-foundation-005-source-map-lookup",
       "budget_id": "perf.interactive.source_map_lookup",
-      "threshold_median_instructions": 223520053,
-      "threshold_peak_rss_bytes": 38240256
+      "threshold_median_instructions": 224006611,
+      "threshold_peak_rss_bytes": 38256640
     },
     {
-      "baseline_median_instructions": 379865318,
-      "baseline_peak_rss_bytes": 117260288,
+      "baseline_median_instructions": 378973084,
+      "baseline_peak_rss_bytes": 115261440,
       "benchmark_id": "lsp-query-001-request-families",
       "budget_id": "perf.lsp.request_families",
-      "threshold_median_instructions": 387462625,
-      "threshold_peak_rss_bytes": 150814720
+      "threshold_median_instructions": 386552546,
+      "threshold_peak_rss_bytes": 148815872
     },
     {
-      "baseline_median_instructions": 324056118,
+      "baseline_median_instructions": 323489561,
       "baseline_peak_rss_bytes": 21528576,
       "benchmark_id": "lsp-query-002-cold-start",
       "budget_id": "perf.lsp.cold_start.workspace",
-      "threshold_median_instructions": 330537241,
+      "threshold_median_instructions": 329959353,
       "threshold_peak_rss_bytes": 55083008
     },
     {
-      "baseline_median_instructions": 380808384,
-      "baseline_peak_rss_bytes": 73531392,
+      "baseline_median_instructions": 380222839,
+      "baseline_peak_rss_bytes": 74383360,
       "benchmark_id": "lsp-query-003-diagnostics",
       "budget_id": "perf.lsp.diagnostics.document",
-      "threshold_median_instructions": 388424552,
-      "threshold_peak_rss_bytes": 107085824
+      "threshold_median_instructions": 387827296,
+      "threshold_peak_rss_bytes": 107937792
     },
     {
-      "baseline_median_instructions": 344220086,
-      "baseline_peak_rss_bytes": 157417472,
+      "baseline_median_instructions": 343914110,
+      "baseline_peak_rss_bytes": 158285824,
       "benchmark_id": "lsp-query-004-workspace-diagnostics",
       "budget_id": "perf.lsp.diagnostics.workspace",
-      "threshold_median_instructions": 351104488,
-      "threshold_peak_rss_bytes": 190971904
+      "threshold_median_instructions": 350792393,
+      "threshold_peak_rss_bytes": 191840256
     },
     {
-      "baseline_median_instructions": 1318881876,
-      "baseline_peak_rss_bytes": 77119488,
+      "baseline_median_instructions": 1322829596,
+      "baseline_peak_rss_bytes": 76644352,
       "benchmark_id": "lsp-query-005-completion",
       "budget_id": "perf.lsp.completion.local_scope",
-      "threshold_median_instructions": 1345259514,
-      "threshold_peak_rss_bytes": 110673920
+      "threshold_median_instructions": 1349286188,
+      "threshold_peak_rss_bytes": 110198784
     },
     {
-      "baseline_median_instructions": 359901907,
-      "baseline_peak_rss_bytes": 74891264,
+      "baseline_median_instructions": 361168296,
+      "baseline_peak_rss_bytes": 74743808,
       "benchmark_id": "lsp-query-006-hover",
       "budget_id": "perf.lsp.hover.symbol",
-      "threshold_median_instructions": 367099946,
-      "threshold_peak_rss_bytes": 108445696
-    },
-    {
-      "baseline_median_instructions": 360106184,
-      "baseline_peak_rss_bytes": 74743808,
-      "benchmark_id": "lsp-query-007-signature-help",
-      "budget_id": "perf.lsp.signature_help.call",
-      "threshold_median_instructions": 367308308,
+      "threshold_median_instructions": 368391662,
       "threshold_peak_rss_bytes": 108298240
     },
     {
-      "baseline_median_instructions": 491335950,
-      "baseline_peak_rss_bytes": 74956800,
+      "baseline_median_instructions": 361568372,
+      "baseline_peak_rss_bytes": 74317824,
+      "benchmark_id": "lsp-query-007-signature-help",
+      "budget_id": "perf.lsp.signature_help.call",
+      "threshold_median_instructions": 368799740,
+      "threshold_peak_rss_bytes": 107872256
+    },
+    {
+      "baseline_median_instructions": 492580586,
+      "baseline_peak_rss_bytes": 74072064,
       "benchmark_id": "lsp-query-008-navigation",
       "budget_id": "perf.lsp.navigation.symbol",
-      "threshold_median_instructions": 501162669,
-      "threshold_peak_rss_bytes": 108511232
+      "threshold_median_instructions": 502432198,
+      "threshold_peak_rss_bytes": 107626496
     },
     {
-      "baseline_median_instructions": 344051513,
-      "baseline_peak_rss_bytes": 158547968,
+      "baseline_median_instructions": 342607394,
+      "baseline_peak_rss_bytes": 157122560,
       "benchmark_id": "lsp-query-009-references",
       "budget_id": "perf.lsp.references.workspace_symbol",
-      "threshold_median_instructions": 350932544,
-      "threshold_peak_rss_bytes": 192102400
+      "threshold_median_instructions": 349459542,
+      "threshold_peak_rss_bytes": 190676992
     },
     {
-      "baseline_median_instructions": 362697306,
-      "baseline_peak_rss_bytes": 159023104,
+      "baseline_median_instructions": 362016380,
+      "baseline_peak_rss_bytes": 158056448,
       "benchmark_id": "lsp-query-010-rename",
       "budget_id": "perf.lsp.rename.workspace_edit",
-      "threshold_median_instructions": 369951253,
-      "threshold_peak_rss_bytes": 192577536
+      "threshold_median_instructions": 369256708,
+      "threshold_peak_rss_bytes": 191610880
     },
     {
-      "baseline_median_instructions": 396257226,
-      "baseline_peak_rss_bytes": 74629120,
+      "baseline_median_instructions": 396304793,
+      "baseline_peak_rss_bytes": 73875456,
       "benchmark_id": "lsp-query-011-semantic-tokens",
       "budget_id": "perf.lsp.semantic_tokens.full",
-      "threshold_median_instructions": 404182371,
-      "threshold_peak_rss_bytes": 108183552
+      "threshold_median_instructions": 404230889,
+      "threshold_peak_rss_bytes": 107429888
     },
     {
-      "baseline_median_instructions": 361564288,
-      "baseline_peak_rss_bytes": 75448320,
+      "baseline_median_instructions": 361287422,
+      "baseline_peak_rss_bytes": 74334208,
       "benchmark_id": "lsp-query-012-inlay-hints",
       "budget_id": "perf.lsp.inlay_hints.module",
-      "threshold_median_instructions": 368795574,
-      "threshold_peak_rss_bytes": 109002752
+      "threshold_median_instructions": 368513171,
+      "threshold_peak_rss_bytes": 107888640
     },
     {
-      "baseline_median_instructions": 364159396,
-      "baseline_peak_rss_bytes": 73498624,
+      "baseline_median_instructions": 364046975,
+      "baseline_peak_rss_bytes": 74022912,
       "benchmark_id": "lsp-query-013-selection-range",
       "budget_id": "perf.lsp.selection_ranges.nested",
-      "threshold_median_instructions": 371442584,
-      "threshold_peak_rss_bytes": 107053056
+      "threshold_median_instructions": 371327915,
+      "threshold_peak_rss_bytes": 107577344
     },
     {
-      "baseline_median_instructions": 359354772,
-      "baseline_peak_rss_bytes": 73465856,
+      "baseline_median_instructions": 359731278,
+      "baseline_peak_rss_bytes": 74563584,
       "benchmark_id": "lsp-query-014-type-hierarchy",
       "budget_id": "perf.lsp.type_hierarchy.symbol",
-      "threshold_median_instructions": 366541868,
-      "threshold_peak_rss_bytes": 107020288
+      "threshold_median_instructions": 366925904,
+      "threshold_peak_rss_bytes": 108118016
     },
     {
-      "baseline_median_instructions": 360830528,
-      "baseline_peak_rss_bytes": 73629696,
+      "baseline_median_instructions": 360690476,
+      "baseline_peak_rss_bytes": 73875456,
       "benchmark_id": "lsp-query-015-code-actions",
       "budget_id": "perf.lsp.code_action.diagnostic",
-      "threshold_median_instructions": 368047139,
-      "threshold_peak_rss_bytes": 107184128
+      "threshold_median_instructions": 367904286,
+      "threshold_peak_rss_bytes": 107429888
     },
     {
-      "baseline_median_instructions": 383946752,
-      "baseline_peak_rss_bytes": 74268672,
+      "baseline_median_instructions": 383842116,
+      "baseline_peak_rss_bytes": 74530816,
       "benchmark_id": "lsp-query-016-formatting",
       "budget_id": "perf.lsp.formatting.document",
-      "threshold_median_instructions": 391625688,
-      "threshold_peak_rss_bytes": 107823104
+      "threshold_median_instructions": 391518959,
+      "threshold_peak_rss_bytes": 108085248
     },
     {
-      "baseline_median_instructions": 362272364,
-      "baseline_peak_rss_bytes": 110313472,
+      "baseline_median_instructions": 361942682,
+      "baseline_peak_rss_bytes": 111673344,
       "benchmark_id": "lsp-query-017-generated-rust-preview",
       "budget_id": "perf.lsp.generated_rust_preview.document",
-      "threshold_median_instructions": 369517812,
-      "threshold_peak_rss_bytes": 143867904
+      "threshold_median_instructions": 369181536,
+      "threshold_peak_rss_bytes": 145227776
     },
     {
-      "baseline_median_instructions": 409337134,
-      "baseline_peak_rss_bytes": 2455863296,
+      "baseline_median_instructions": 409706114,
+      "baseline_peak_rss_bytes": 2615836672,
       "benchmark_id": "lsp-query-018-did-open-diagnostics",
       "budget_id": "perf.lsp.document_sync.did_open",
-      "threshold_median_instructions": 417523877,
-      "threshold_peak_rss_bytes": 2701449626
+      "threshold_median_instructions": 417900237,
+      "threshold_peak_rss_bytes": 2877420340
     }
   ],
   "host": {
@@ -530,6 +530,6 @@
   "instruction_threshold_rule": "max(baseline_median_instructions * 1.02, baseline_median_instructions + 2000000)",
   "rss_threshold_rule": "max(baseline_peak_rss_bytes * 1.10, baseline_peak_rss_bytes + 33554432)",
   "runner_version": 1,
-  "source_commit": "7e5d6648b6885863e60bab2a55d76cca8b59cdfb",
+  "source_commit": "df8c48b9aac119aac0d5dff58407ceb5bad71f94",
   "version": 1
 }
