@@ -36,7 +36,7 @@ evidence. Extending either expiry remains prohibited.
   producer `b59fb265cf58327e0018778b39e5cd5001bd6edd`. The work-budget artifact
   digest is
   `56f91e711d78b4efb7e759e20868a3edec67c95f5b70368f08ddb5e70f98cc26`.
-- The current integrated qualification candidate is
+- The five-run integrated evidence producer is
   `2c811ff29149f1f72c9dfaae6c32dfdf9c1b697f`. It includes current main at
   `00ea8867569884943413f7809414839c8992db97` and the two exact reviewed
   structural-demand repair commits `a301991aa42f435c02abd1ba618eca457c402177`
@@ -211,7 +211,7 @@ variation `0.00019889`. Both are below their unchanged governed thresholds.
 The raw time-file digest is
 `6d36529358b8ea4ab3bc4c6ab9e7d24bd5a1ee4c5a85bf65d259caac4fe164df`.
 
-The exact final integration commit is
+The exact five-run evidence producer is
 `2c811ff29149f1f72c9dfaae6c32dfdf9c1b697f`. A compiler warm-up completed
 before the sequence. Each of five consecutive representative runs passed all
 10 benchmark commands, budget policy, trend policy, both policy self-tests,
