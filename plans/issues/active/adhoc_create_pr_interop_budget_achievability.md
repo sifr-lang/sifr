@@ -61,9 +61,12 @@ still proves that a fixed 10-second bound conflates cold and warm states.
 The Python compiled-example runner was re-entering Cargo for every Sifr
 command even though the profile had already resolved and exported the exact
 Sifr binary. The repair launches that profile-owned binary directly. The Rust
-step adopts the same successful-input receipt classifier as Python: the
-10-second warm bound remains unchanged and the explicit cold bound is 20
-seconds.
+area does not produce or consume a durable step-owned warm cache: it validates
+repository evidence and performs one locked offline Cargo fetch. Its fixed
+10-second aggregate wall bound therefore conflated a hot control with the
+required first-run work. The repair uses one explicit 20-second blocking bound
+for all Rust interop runs, covering the observed 14.067-second first run
+without inventing a cache state the step does not own.
 
 ## Scope
 

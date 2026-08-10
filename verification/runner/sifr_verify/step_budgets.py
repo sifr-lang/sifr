@@ -61,7 +61,7 @@ def prepare_step_budget(
         sifr_binary=binary,
     )
     receipt_path = repo_root / "target" / "verification" / "cache-receipts" / profile_name / f"{name}.json"
-    required_paths = required_cache_paths(repo_root, name, binary, env)
+    required_paths = required_cache_paths(repo_root, name, binary)
     if not eligible:
         state, reason = "cold", ineligible_reason
     else:
@@ -188,10 +188,7 @@ def input_fingerprint(
 
 
 def selected_suites(profile: dict[str, Any], step_name: str) -> list[str]:
-    area = {
-        "python_interop": "python_interop",
-        "rust_interop_checks": "rust_interop",
-    }.get(step_name, step_name)
+    area = "python_interop" if step_name == "python_interop" else step_name
     return [
         str(suite)
         for selection in profile.get("selected_areas", [])
@@ -200,22 +197,9 @@ def selected_suites(profile: dict[str, Any], step_name: str) -> list[str]:
     ]
 
 
-def required_cache_paths(
-    repo_root: Path,
-    step_name: str,
-    binary: Path,
-    env: dict[str, str],
-) -> tuple[Path, ...]:
+def required_cache_paths(repo_root: Path, step_name: str, binary: Path) -> tuple[Path, ...]:
     if step_name == "python_interop":
         return (binary, repo_root / "target" / "cpython311" / "debug")
-    if step_name == "rust_interop_checks":
-        probe_cache = Path(
-            env.get(
-                "SIFR_RUST_BRIDGE_PROBE_CACHE_DIR",
-                repo_root / "target" / "sifr_rust_bridge_probe_cache" / "create-pr",
-            )
-        )
-        return (binary, probe_cache)
     return (binary,)
 
 
@@ -330,19 +314,3 @@ def run_self_test() -> None:
         }
         if parsed["lane_step_cache"].get("python_interop") != expected_cache:
             raise AssertionError("lane report lost the cache classification")
-        rust_profile = {
-            "selected_areas": [
-                {"area": "rust_interop", "suites": ["matrix", "tiers"]},
-            ]
-        }
-        if selected_suites(rust_profile, "rust_interop_checks") != ["matrix", "tiers"]:
-            raise AssertionError("Rust interop cache fingerprint omitted selected suites")
-        rust_cache = root / "rust-probes"
-        rust_paths = required_cache_paths(
-            root,
-            "rust_interop_checks",
-            root / "sifr",
-            {"SIFR_RUST_BRIDGE_PROBE_CACHE_DIR": str(rust_cache)},
-        )
-        if rust_paths != (root / "sifr", rust_cache):
-            raise AssertionError("Rust interop cache classifier ignored its probe cache")

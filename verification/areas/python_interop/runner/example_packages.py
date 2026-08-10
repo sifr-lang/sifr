@@ -10,6 +10,7 @@ import tokenize
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
+from inspect import getsource
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -38,6 +39,22 @@ def _sifr_argv(repo_root: Path, *arguments: str) -> list[str]:
     return [str(_resolved_sifr_binary(repo_root)), *arguments]
 
 
+def _run_sifr_process(
+    paths: RunnerPaths,
+    package_root: Path,
+    *arguments: str,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        _sifr_argv(paths.repo_root, *arguments),
+        cwd=package_root,
+        env=cargo_env_for_repo_manifest(paths.repo_root),
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=EXAMPLE_TIMEOUT_SECONDS,
+    )
+
+
 def run_sifr_launcher_self_test(repo_root: Path) -> None:
     previous = os.environ.get("SIFR_GCQ_BIN")
     with TemporaryDirectory(prefix="sifr-python-interop-launcher-") as directory:
@@ -57,6 +74,12 @@ def run_sifr_launcher_self_test(repo_root: Path) -> None:
         raise SystemExit(f"Python interop launcher ignored profile binary: {argv}")
     if "cargo" in argv or "--manifest-path" in argv:
         raise SystemExit(f"Python interop launcher re-entered Cargo: {argv}")
+    for case_runner in (_run_case, _run_sifr_command):
+        source = getsource(case_runner)
+        if "_run_sifr_process(" not in source or "subprocess.run(" in source:
+            raise SystemExit(
+                f"Python interop case runner bypassed direct launcher: {case_runner.__name__}"
+            )
 
 
 @dataclass(frozen=True)
@@ -606,15 +629,7 @@ def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) 
                 "certification_commands": certification_results,
             }
     try:
-        proc = subprocess.run(
-            _sifr_argv(paths.repo_root, "run"),
-            cwd=package_root,
-            env=cargo_env_for_repo_manifest(paths.repo_root),
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=EXAMPLE_TIMEOUT_SECONDS,
-        )
+        proc = _run_sifr_process(paths, package_root, "run")
     except subprocess.TimeoutExpired as error:
         elapsed_ms = round((time.perf_counter() - started) * 1000.0)
         return {
@@ -670,15 +685,7 @@ def _run_sifr_command(
     package_root: Path,
     arguments: list[str],
 ) -> dict[str, Any]:
-    proc = subprocess.run(
-        _sifr_argv(paths.repo_root, *arguments),
-        cwd=package_root,
-        env=cargo_env_for_repo_manifest(paths.repo_root),
-        text=True,
-        capture_output=True,
-        check=False,
-        timeout=EXAMPLE_TIMEOUT_SECONDS,
-    )
+    proc = _run_sifr_process(paths, package_root, *arguments)
     return {
         "arguments": arguments,
         "exit_code": proc.returncode,
