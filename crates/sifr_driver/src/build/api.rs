@@ -1,4 +1,5 @@
 use super::report::{BuildReport, PythonInteropCheckReport};
+use super::rust_interop_probe_policy::DirectProbePolicy;
 use crate::build::{
     build_cached_package_project_binary, build_cached_project_binary,
     build_cached_single_file_binary, build_rooted_entrypoint_binary_with_report,
@@ -55,7 +56,8 @@ pub fn check_package_python_interop(
     if !diagnostics.is_empty() {
         return Err(diagnostics);
     }
-    let generated = project_plan.into_generated_binary_project_with_probe_policy(true)?;
+    let generated = project_plan
+        .into_generated_binary_project_with_probe_policy(true, DirectProbePolicy::ExecuteAll)?;
     Ok(super::python_check::python_interop_check_report(&generated))
 }
 

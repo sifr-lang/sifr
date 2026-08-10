@@ -65,13 +65,6 @@ Use `sifr check` as your primary feedback loop during development and reserve `s
 
 `sifr emit` runs the compiler up through code generation and prints the generated Rust source to stdout. No binary is written. This is useful when you want to understand how Sifr translates a particular construct, diagnose unexpected output, or satisfy your curiosity.
 
-<Warning>
-  Generated-Rust output is not part of the packaged `0.1.0` GA-qualified
-  surface. Its cold first-run qualification exceeded the deterministic bound
-  through both `sifr emit` and the VS Code preview action. The follow-up must
-  pass before stable release notes advertise this packaged capability.
-</Warning>
-
 ```bash
 sifr emit main.sifr
 ```

@@ -42,6 +42,7 @@ pub(super) struct PendingRustBridgeProbe {
     pub(super) signature: Option<RustBridgeSignatureContract>,
     pub(super) async_thread_affinity: AsyncThreadAffinity,
     pub(super) zero_copy_obligations: (bool, bool),
+    pub(super) trusted_sysroot: bool,
     pub(super) sysroot_runtime_crate: PathBuf,
     pub(super) sysroot_vendor_dir: Option<PathBuf>,
     pub(super) cargo_resolution: CargoResolutionPolicy,
