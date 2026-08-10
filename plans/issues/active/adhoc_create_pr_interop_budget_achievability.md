@@ -68,10 +68,26 @@ required first-run work. The repair uses one explicit 20-second blocking bound
 for all Rust interop runs, covering the observed 14.067-second first run
 without inventing a cache state the step does not own.
 
+The dependent packaged-candidate merge gate then exposed a policy cycle after
+all Python, Rust, and developer-tooling lanes passed. Work-controlled
+representative sampling admitted external CPU observations from 380% to 734%
+on the 10-thread Mac because its external CPU limit was disabled. Three
+formatter attempts exceeded the `0.02` instruction-variation limit and stopped
+the gate. M2 therefore also owns the narrow work-mode admission correction:
+reserve 60% of logical CPU capacity for the measured process tree at admission,
+retain continuous external-CPU telemetry, and keep the lagging one-minute load
+limit disabled in work mode. A qualification run proved that rejecting any
+single in-attempt pressure spike was too strict: two retries had instruction
+CVs of `0.000433` and `0.000389`, yet transient external activity above 40%
+rejected both. Stable work samples now retain pressure as advisory evidence;
+pressure remains blocking when the instruction samples are unstable.
+
 ## Scope
 
 - Create-PR Python and Rust interop step execution and cache classification.
 - Profile-owned resource allocation used by those steps.
+- Work-controlled representative-performance CPU-capacity admission and
+  per-attempt contamination monitoring.
 - Deterministic policy, receipt, and runner self-tests.
 - Documentation and phase records for the final mechanism.
 
