@@ -925,11 +925,11 @@ install/update guidance, Rust interop claims, and the VS Code extension.
 
 **Positive validation:**
 
-- Packaged and installed VSIX completes editor activation, diagnostics, and
-  formatting smoke against the stable candidate. Generated-Rust preview in the
-  packaged candidate is a non-prerequisite tooling follow-up recorded in
-  [`adhoc_packaged_candidate_generated_rust.md`](../issues/active/adhoc_packaged_candidate_generated_rust.md); GA docs explicitly record the
-  affected action as outside the packaged `0.1.0` qualified surface.
+- Packaged and installed VSIX completes editor activation, diagnostics,
+  formatting, and generated-Rust preview against the stable candidate. The
+  completed four-target cold/warm follow-up, including cancellation and
+  bounded shutdown, is archived in
+  [`adhoc_packaged_candidate_generated_rust.md`](../issues/archive/adhoc_packaged_candidate_generated_rust.md).
 - The exact-source release profile remains blocking. The follow-up's 20
   preserved failures are remediated, while closeout validation and review for
   [`ALG-CORPUS`](../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md)
