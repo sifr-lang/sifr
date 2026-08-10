@@ -81,7 +81,9 @@ This phase is one bounded implementation item:
 - Rewriting archived phase and review records.
 - Expanding this item to separately owned package-session compatibility paths.
   Record any such path in its own issue if it remains reachable after this
-  resolver cleanup.
+  resolver cleanup. The pre-existing cwd package-session interception remains
+  reachable for explicit-file `check`, `run`, and `build` commands and is
+  recorded in [#3128](https://github.com/sifr-lang/sifr/issues/3128).
 
 ## Acceptance Criteria
 

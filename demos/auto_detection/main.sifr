@@ -1,7 +1,8 @@
 # Reference: auto_detection
-# no local imports: should stay in single-file mode
+# the repository-root sifr.toml selects project mode structurally; neither this
+# stdlib-only import nor the unreachable invalid scratch.sifr sibling selects it
 from sifr.math import floor
 
 def main():
-    print("auto_detection auto-detection demo:")
+    print("auto_detection structural workspace demo:")
     print(floor(3.9))

@@ -5,6 +5,6 @@ mod helper {
 }
 
 fn main() {
-    println!("resolver_triggers resolver trigger matrix demo:");
+    println!("resolver_triggers explicit workspace import demo:");
     println!("{}", helper::value());
 }

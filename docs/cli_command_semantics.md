@@ -4,42 +4,39 @@ This document defines stable command-mode behavior for `sifr` CLI commands.
 
 ## Command Inputs
 
-- `single-file input`: any `.sifr` file compiled in isolation.
-- `project entry input`: `main.sifr` with at least one resolvable local import of the form `from <module> import ...` where `<module>.sifr` exists in the same directory.
+- `manifest-less explicit file`: a `.sifr` file with no `sifr.toml` in its
+  directory or any ancestor directory. It is compiled in isolation.
+- `workspace entry`: a `.sifr` file with a valid `sifr.toml` in its directory
+  or an ancestor directory. It is compiled with that workspace's reachable
+  modules.
 
 ## Mode Resolution Rules
 
-Rules are evaluated in order:
+Rules are structural and evaluated in order:
 
-1. If input file stem is not `main`, use single-file mode.
-2. If `main.sifr` has no resolvable local imports, use single-file mode.
-3. If `main.sifr` has at least one resolvable local import, use project mode.
+1. Discover the nearest ancestor `sifr.toml` for the input path.
+2. If a valid workspace is discovered, use project mode.
+3. If no workspace is discovered, use single-file mode.
 
 Notes:
 
-- Stdlib imports (for example `from sifr.math import floor`) do not enable project mode.
-- `from typing import ...` and `from enum import ...` do not enable project mode.
-- Invalid `main.sifr` source does not enable project mode.
-- Missing local-module files do not enable project mode.
-- Package-style imports via `pkg/__init__.sifr` are not part of project-mode auto-detect.
-- Relative imports such as `from .helper import value` enable project mode when `helper.sifr` exists in the same directory.
-- Multi-level relative imports (for example `from ..helper import value`) do not enable project mode.
-- Bare relative imports (for example `from . import value`) do not enable project mode.
-- Regular import statements (for example `import helper`) do not enable project mode.
-- Local files named `typing.sifr` or `enum.sifr` do not enable project mode; these names are treated as stdlib-like imports by auto-detect.
-
-## Resolver Trigger Matrix
-
-| Import form in `main.sifr` | Project-mode activation | Resolver mode | Expected compile result |
-|---|---|---|---|
-| `from helper import value` with `helper.sifr` sibling | yes | project | success (module resolved) |
-| `from .helper import value` with `helper.sifr` sibling | yes | project | success (module resolved) |
-| `from .helper import value` without `helper.sifr` sibling | no | single-file | error (`unknown module 'helper'`) |
-| `from ..helper import value` | no | single-file | error (`unsupported relative import level 2`) |
-| `from . import helper` | no | single-file | error (`unsupported bare relative import`) |
-| `import helper` | no | single-file | error (`unsupported import statement`) |
-| `from typing import List` | no | single-file | success (type-level import handling) |
-| `from enum import Enum` | no | single-file | success (type-level import handling) |
+- A discovered malformed workspace manifest is a hard diagnostic. Commands do
+  not fall back to single-file mode.
+- Workspace `[source].roots` configure user-module lookup after project mode is
+  selected. They do not participate in command-mode selection. Package-session
+  source-root validation is a separate preflight subject to the known issue
+  below.
+- Mode selection never depends on the entrypoint filename, source contents,
+  import forms, or neighboring module files.
+- A manifest-less local import receives the ordinary single-file import
+  diagnostic. Add `sifr.toml` when multiple local modules must compile
+  together.
+- Known issue [#3128](https://github.com/sifr-lang/sifr/issues/3128) affects the
+  package-session preflight. If the current directory contains a source-only
+  manifest without package metadata, this preflight can fail before these
+  rules run. Until the issue is fixed, invoke explicit-file `check`, `run`, and
+  `build` from outside that directory. Alternatively, use a complete package
+  manifest. `emit` and `trace` do not use this preflight.
 
 ## Command Behavior Matrix
 
@@ -49,6 +46,7 @@ Notes:
 | `sifr build <file> -o <dir>` | `build(source, output_dir)` | `build_project(main.sifr, output_dir)` |
 | `sifr check <file>` | frontend/type-check only | frontend/type-check only (file input) |
 | `sifr emit <file>` | emit generated Rust for file | emit generated Rust for file |
+| `sifr trace <file>` | trace the isolated frontend session | trace the workspace frontend session |
 | `sifr test <dir>` | discover tests and resolve imports against stdlib + local modules in `<dir>` | same |
 
 Package-management commands use Cargo-backed package coordination as documented in [`package_management.md`](./package_management.md). Cargo owns external dependency resolution, lockfiles, registry/Git/path sources, publishing, and vendoring; Sifr validates package metadata, source roots, exports, trust policy, archive contents, and diagnostics before delegating Cargo-owned behavior.
@@ -140,7 +138,11 @@ Fix-all is policy-only and safe-by-default.
 
 ## Edge Cases
 
-- A neighboring invalid `scratch.sifr` file must not break `run/build` when `main.sifr` has no local imports.
-- Local import parse/type errors in actual project mode must fail both `run` and `build` consistently.
-- `run` and `build` must use the same mode resolver for identical input paths.
-- If `main.sifr` cannot be read or parsed during mode resolution, resolver falls back to single-file mode.
+- A neighboring invalid `scratch.sifr` file does not affect a manifest-less
+  explicit-file command.
+- Local import parse/type errors inside a workspace fail `run`, `build`,
+  `check`, `emit`, and `trace` consistently.
+- All explicit-file compiler commands use the same mode resolver for identical
+  input paths.
+- Mode selection does not read or parse the entrypoint. Source I/O and parse
+  diagnostics occur only after the structural mode has been selected.

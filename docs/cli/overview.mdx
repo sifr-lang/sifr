@@ -53,34 +53,28 @@ These flags apply across all subcommands.
 
 ## Single-file mode vs project mode
 
-Sifr automatically selects a compilation strategy based on your input file. Understanding the two modes helps you predict how imports are resolved and what gets compiled.
+Sifr selects a compilation strategy from the nearest ancestor `sifr.toml`.
+This structural boundary determines how imports are resolved and what gets
+compiled.
 
-**Single-file mode** compiles one `.sifr` file in isolation. It is always used when:
+**Single-file mode** compiles one `.sifr` file in isolation. It is used for
+every explicit file outside a workspace, regardless of its filename, source
+contents, imports, or neighboring files.
 
-- The input file stem is anything other than `main` (e.g. `hello.sifr`, `scratch.sifr`).
-- The file is named `main.sifr` but has no resolvable local imports.
-
-**Project mode** compiles `main.sifr` together with its local module siblings. It activates when `main.sifr` contains at least one `from <module> import ...` statement where `<module>.sifr` exists in the same directory.
+**Project mode** compiles an entrypoint with reachable workspace modules. It is
+used for every valid entrypoint inside the nearest valid ancestor `sifr.toml`
+workspace, regardless of its filename or imports.
 
 <Note>
-Standard library imports such as `from sifr.math import floor` and typing imports such as `from typing import List` never activate project mode — they are handled at the type level.
+Mode selection never parses the entrypoint or probes sibling modules. A
+manifest-less local import receives the normal single-file import diagnostic;
+add `sifr.toml` to compile multiple local modules together. A malformed
+discovered manifest is always a hard diagnostic.
 </Note>
 
-The table below summarises which import forms trigger project mode.
-
-| Import form in `main.sifr` | `helper.sifr` exists? | Mode activated |
-|---|---|---|
-| `from helper import value` | yes | Project |
-| `from .helper import value` | yes | Project |
-| `from .helper import value` | no | Single-file |
-| `from ..helper import value` | — | Single-file |
-| `from . import helper` | — | Single-file |
-| `import helper` | — | Single-file |
-| `from typing import List` | — | Single-file |
-| `from enum import Enum` | — | Single-file |
-
 <Tip>
-`sifr run` and `sifr build` always use the same mode resolver for identical input paths, so the mode you observe interactively is the same mode a CI script sees.
+`sifr run`, `build`, `check`, `emit`, and `trace` use the same workspace
+boundary for identical input paths.
 </Tip>
 
 ## Stable self-update

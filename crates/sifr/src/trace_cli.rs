@@ -88,6 +88,51 @@ mod tests {
         let _ = fs::remove_dir_all(Path::new(&dir));
     }
 
+    #[test]
+    fn trace_entrypoint_keeps_manifestless_local_import_in_single_file_mode() {
+        let dir = temp_dir("trace_cli_manifestless_import");
+        let main = dir.join("main.sifr");
+        fs::write(
+            &main,
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("write main source");
+        fs::write(
+            dir.join("helper.sifr"),
+            "def value() -> int:\n    return 1\n",
+        )
+        .expect("write helper source");
+
+        let output = trace_entrypoint(&main).expect("manifestless trace should render");
+
+        assert!(output.contains("target=single_file"));
+        assert!(output.contains("dependencies=0"));
+        let _ = fs::remove_dir_all(Path::new(&dir));
+    }
+
+    #[test]
+    fn trace_entrypoint_uses_project_mode_inside_workspace() {
+        let dir = temp_dir("trace_cli_workspace");
+        let main = dir.join("main.sifr");
+        fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+            .expect("write workspace manifest");
+        fs::write(
+            &main,
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        )
+        .expect("write main source");
+        fs::write(
+            dir.join("helper.sifr"),
+            "def value() -> int:\n    return 1\n",
+        )
+        .expect("write helper source");
+
+        let output = trace_entrypoint(&main).expect("workspace trace should render");
+
+        assert!(output.contains("target=project"));
+        let _ = fs::remove_dir_all(Path::new(&dir));
+    }
+
     fn temp_dir(name: &str) -> std::path::PathBuf {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
