@@ -1,14 +1,15 @@
 # Ad Hoc Phase: Representative Performance Budget Stability
 
-Status: in progress.
+Status: complete (2026-08-10; PR #3101, merge commit
+`aefac206a7de983b35c45b61b898eace57d1d6fb`).
 
 ## Execution Plan
 
 | Milestone | Scope | Status |
 | --- | --- | --- |
-| M1: controlled measurement and provenance | Host/cache telemetry, controlled admission, stable-sample retries, stale-result producer/checker binding, and governed trend-reference refresh | complete on draft PR #3101 |
-| M2: Python interop cold-cache budget | Classify cold versus warm aggregate execution and enforce a cache-aware create-PR step budget with deterministic policy tests | complete on stacked PR #3115 |
-| M3: qualification and closure | Local retired-instruction budgets, five consecutive controlled verdicts, seeded-regression proof, final merge gate, review, and closure records | implementation complete on stacked PR #3116; final owner qualification in progress on draft PR #3101 |
+| M1: controlled measurement and provenance | Host/cache telemetry, controlled admission, stable-sample retries, stale-result producer/checker binding, and governed trend-reference refresh | complete on PR #3101 |
+| M2: Python interop cold-cache budget | Classify cold versus warm aggregate execution and enforce a cache-aware create-PR step budget with deterministic policy tests | complete on stacked PR #3115 and integrated through PR #3101 |
+| M3: qualification and closure | Local retired-instruction budgets, five consecutive controlled verdicts, seeded-regression proof, final merge gate, review, and closure records | complete on stacked PR #3116 and PR #3101 |
 
 Each implementation milestone uses one draft PR, exact-SHA validation, and
 repeated Claude Opus review under the phase-closure loop. Review and validation
@@ -22,14 +23,15 @@ the root-cause closure: add an executable controlled, full-manifest trend
 refresh path and replace both deferrals with fresh environment and reference
 evidence. Extending either expiry remains prohibited.
 
-### Current handoff
+### Closure record
 
-- State: M1, M2, and the M3 implementation are complete on the owner branch.
-  The final owner qualification is in progress. M3 replaces the desktop-idle
-  blocker with local retired-instruction evidence. It preserves the separate
-  elapsed-time policy for quiet-host qualification.
+- State: M1, M2, M3, final owner qualification, and implementation merge are
+  complete. M3 replaces the desktop-idle blocker with local
+  retired-instruction evidence. It preserves the separate elapsed-time policy
+  for quiet-host qualification.
 - Owner branch: `codex/adhoc-performance-budget-host-variance`.
-- Draft PR: [#3101](https://github.com/sifr-lang/sifr/pull/3101).
+- Merged PR: [#3101](https://github.com/sifr-lang/sifr/pull/3101), merge commit
+  `aefac206a7de983b35c45b61b898eace57d1d6fb`.
 - Reviewed M1 implementation candidate:
   `28bca35551321b109e272c61ae52fe6201eb810d`.
 - The approved integrated work capture passed all 65 governed benchmarks on
@@ -45,9 +47,9 @@ evidence. Extending either expiry remains prohibited.
   candidate. Each verdict passed 10 of 10 benchmarks and all eight area
   variants. The raw result digests are recorded below.
 - Claude Opus returned `SATISFIED` with no blocking findings for the integrated
-  phase implementation before the current-main repair. It also returned
-  `SATISFIED` for both exact structural-demand repair candidates. A final
-  whole-phase exact-SHA review remains required after this record update.
+  phase implementation, both exact structural-demand repair candidates, and
+  two complete final-diff reviews. The final review covered exact candidate
+  `16e2c56e0f55be7ff752f3e92b079e61f6bdf5c1`.
 
 ### M3 local-host decision
 
@@ -436,3 +438,36 @@ either deferral.
 - No product milestone needs a waiver for unrelated host variance.
 - The merge profile and performance documentation describe the controlled
   measurement conditions.
+
+## Closure Evidence
+
+The final implementation candidate was
+`16e2c56e0f55be7ff752f3e92b079e61f6bdf5c1`. Claude Opus reviewed the complete
+diff twice and returned `SATISFIED` with no blocking findings. The review
+response digests are
+`804da09bdd9e79fc0ce8786eff09fe50b039a8e608200d66ed4075053f5eb2a7` and
+`bde4d238714b8fb2a7657447212864945e398e04e971edbc7e13315bc4382ee6`.
+
+The create-PR profile passed every phase-owned lane. It reproduced the known
+LSP shutdown defect in issue #3117 after requests 1 through 23 passed. The
+immediate isolated exact LSP suite then passed all six variants. The Python
+interop lane passed all 19 variants under its cold receipt in 1,170.240
+seconds. Rust interop passed all 10 variants in 6.502 seconds.
+
+The merge profile passed coverage, core semantics, diagnostics, CPython
+differential, Python interop 25/25, Rust interop 10/10, LSP, representative
+performance 10/10 and all eight area variants, hardening, fuzz/property,
+algorithmic, distribution, sysroot, generated-code quality, and every
+phase-owned crate test. Its generated-build bucket passed 67 of 68 cases. The
+only failure was issue #3126: the workspace-only cache prelude had not fetched
+`zerocopy-derive 0.8.56` before the offline generated probe. The unchanged
+failed case passed 1/1 in 692.08 seconds after exact artifact preparation with
+`CARGO_NET_OFFLINE=true`. The full merge log digest is
+`f350c8131f6926928f97ec81155993f6310a79657e732bfb686adacdc34d4ebf`.
+The isolated offline receipt digest is
+`0bdac1459d9ca9adfb5d986a24f8285875281d2ded2e5f72ddd59e9279c80e1e`.
+
+All definition-of-done conditions are satisfied. Five consecutive controlled
+representative verdicts passed. Seeded instruction and local-RSS regressions
+still fail. The fresh trend record has no deferrals. No waiver, timeout, or
+performance threshold was relaxed for closure.
