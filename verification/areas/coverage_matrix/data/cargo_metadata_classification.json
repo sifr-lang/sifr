@@ -117,9 +117,18 @@
         {"name": "i18n", "profile_assignment": "nightly", "classification": "first_party_runtime"},
         {"name": "net", "profile_assignment": "nightly", "classification": "first_party_runtime"},
         {"name": "python", "profile_assignment": "merge", "classification": "first_party_runtime"},
+        {"name": "structural", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "tls", "profile_assignment": "nightly", "classification": "first_party_runtime"},
         {"name": "unicode", "profile_assignment": "nightly", "classification": "first_party_runtime"}
       ]
+    },
+    {
+      "name": "sifr_structural_identity",
+      "classification": "first_party_runtime",
+      "targets": [
+        {"name": "sifr_structural_identity", "kind": "lib", "classification": "first_party_runtime", "profile_assignment": "merge"}
+      ],
+      "features": []
     },
     {
       "name": "sifr_rust_interop_catalog",

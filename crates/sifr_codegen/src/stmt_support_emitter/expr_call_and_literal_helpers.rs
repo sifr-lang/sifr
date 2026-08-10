@@ -264,16 +264,9 @@ macro_rules! stmt_expr_constructor {
                             if crate::helpers::is_option_type(resolved_param) {
                                 continue;
                             }
-                            if (is_recursive_ctor_field || is_recursive_container_param)
-                                && !Self::is_box_new_call_expr_for_ir(lowered_arg)
-                            {
-                                *lowered_arg = crate::RustExpr::FnCall {
-                                    func: Box::new(crate::RustExpr::Path(vec![
-                                        "Box".to_string(),
-                                        "new".to_string(),
-                                    ])),
-                                    args: vec![lowered_arg.clone()],
-                                };
+                            if is_recursive_ctor_field || is_recursive_container_param {
+                                *lowered_arg =
+                                    Self::box_recursive_value_for_ir(lowered_arg.clone());
                             }
                         }
                     }
@@ -355,16 +348,8 @@ macro_rules! stmt_expr_constructor {
                     continue;
                 }
                 let resolved_arg_ty = crate::resolve_alias_type_for_plain_call(args[idx].ty());
-                if !crate::helpers::is_option_type(resolved_arg_ty)
-                    && !Self::is_box_new_call_expr_for_ir(lowered_arg)
-                {
-                    *lowered_arg = crate::RustExpr::FnCall {
-                        func: Box::new(crate::RustExpr::Path(vec![
-                            "Box".to_string(),
-                            "new".to_string(),
-                        ])),
-                        args: vec![lowered_arg.clone()],
-                    };
+                if !crate::helpers::is_option_type(resolved_arg_ty) {
+                    *lowered_arg = Self::box_recursive_value_for_ir(lowered_arg.clone());
                 }
             }
             return Ok(Some(crate::RustExpr::FnCall {

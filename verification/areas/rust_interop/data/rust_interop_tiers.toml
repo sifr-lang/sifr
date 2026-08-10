@@ -4,7 +4,6 @@ description = "Compiler-diagnostic evidence for parser, lowering, metadata, and 
 fixtures = [
   "dotted_path_resolution",
   "direct_crate_negative_type",
-  "bridge_version_mismatch",
   "bridge_version_field_removal",
   "blocking_diagnostics",
 ]

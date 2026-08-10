@@ -474,7 +474,7 @@ Focused implementation evidence:
   reproduced as a passing focused check and passed inside the warmed full
   rerun.
 
-`certification_3` may use bridge-version 1 call-scoped callbacks. Any callback
+`certification_3` may use ordinary unversioned call-scoped callbacks. Any callback
 behavior that truly requires the structural Rust bridge call contract
 must be split into the later package-resource item rather than silently
 expanding this row.

@@ -32,6 +32,8 @@ pub struct ExternalDefs {
         String,
         std::collections::HashMap<String, std::collections::HashSet<String>>,
     >,
+    /// Map of `module_name` -> Rust-backed opaque class names.
+    pub rust_opaque_classes: std::collections::HashMap<String, std::collections::HashSet<String>>,
     /// Map of `module_name` -> (`class_name` -> `type_param_names`)
     pub class_type_params:
         std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,

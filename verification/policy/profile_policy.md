@@ -136,20 +136,17 @@ and advisories.
 
 ## Algorithmic Corpus Policy
 
-The full pinned LeetCode corpus is a blocking nightly compatibility signal.
-Release qualification runs the blocking representative subset plus the
-taxonomy self-test. The representative subset pins the complete corpus size and
-preserves coverage across every declared algorithm category; the taxonomy
-self-test keeps taxonomy generation executable without making known
-corpus-remediation work a stable-channel publication prerequisite.
+The full pinned LeetCode corpus and its taxonomy self-test are blocking
+compatibility signals in both nightly and release qualification. Merge retains
+the representative subset as its bounded local signal; that subset pins the
+complete corpus size and preserves coverage across every declared algorithm
+category.
 
-The complete failure inventory, remediation ownership, and the condition for
-restoring the full corpus to release qualification are tracked from the phase
-index. No fixture is removed from the corpus, re-baselined, or hidden from
-nightly. For this guarantee, the shipped-guarantee registry's combined
-`nightly_release_surface` remains the nightly-authoritative full-corpus
-surface; the surface matrix's `release_suite`, record, and expiry fields are the
-release-specific authority.
+The failure inventory and remediation evidence are tracked from the phase
+index. No fixture was removed from the corpus, re-baselined, hidden, or
+reclassified to restore the full release surface. The shipped-guarantee
+registry's combined `nightly_release_surface` is authoritative for both broad
+profiles.
 
 When a profile-assignment row gives nightly and release different area suites,
 its identifier must exactly match the compiler-surface row that owns the

@@ -437,8 +437,6 @@ def _validate_scenario_manifests(
     sifr_version = package.get("sifr-version") if isinstance(package, dict) else None
     if not isinstance(sifr_version, str) or ("0.3" not in sifr_version and sifr_version != "*"):
         failures.append(f"{fixture_id}: {raw_path}/sifr.toml must declare package.sifr-version for 0.3")
-    if not isinstance(rust, dict) or rust.get("bridge-version") != 1:
-        failures.append(f"{fixture_id}: {raw_path}/sifr.toml must declare [rust] bridge-version = 1")
     if not isinstance(rust, dict) or rust.get("direct-crate-bindings") is not True:
         failures.append(f"{fixture_id}: {raw_path}/sifr.toml must enable [rust] direct-crate-bindings")
     if cargo.get("package", {}).get("metadata", {}).get("sifr", {}).get("manifest") != "sifr.toml":
@@ -571,9 +569,6 @@ def _validate_scenario_manifests(
             trust,
             example_dir,
         )
-    elif fixture_id == "bridge_version_mismatch":
-        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "version_bridge", "rust/version_bridge")
-        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-no-panic", ["version_bridge.accepted", "version_bridge.schema"])
     elif fixture_id == "panic_abort_profile":
         _require_path_dependency(failures, fixture_id, raw_path, dependencies, "legacy_backend", "rust/legacy_backend")
         if cargo.get("profile", {}).get("release", {}).get("panic") != "abort":

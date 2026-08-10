@@ -248,7 +248,7 @@ fn write_rust_bridge_package(package: &std::path::Path) {
     .expect("write Cargo.toml");
     fs::write(
         package.join("sifr.toml"),
-        "[package]\nname = \"demo_json\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n\n[rust]\nbridge-version = 1\nbridges = [\"src/bridges\"]\n",
+        "[package]\nname = \"demo_json\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n\n[rust]\nbridges = [\"src/bridges\"]\n",
     )
     .expect("write sifr.toml");
     fs::write(package.join("src/__init__.sifr"), "").expect("write Sifr source");

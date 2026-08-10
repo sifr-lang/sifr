@@ -1,5 +1,5 @@
 # Adapted CPython re subset for sifr.re (canonical vector format)
-from sifr.re import re_match, re_find, re_replace, re_findall, re_split, search_flags, fullmatch, compile, IGNORECASE
+from sifr.re import re_match, re_find, re_replace, re_findall, re_split, search_flags, fullmatch, compile, IGNORECASE, Pattern
 from sifr.test import assert_bool_vector_eq
 
 def collect_match_actual() -> list[bool]:
@@ -83,14 +83,14 @@ def collect_fullmatch_actual() -> list[bool]:
 
 def collect_pattern_actual() -> list[bool]:
     actual: list[bool] = []
-    pat = compile("h.llo")
-    actual.append(pat.pattern() == "h.llo")
-
     pattern_match_ok: bool = False
     try:
+        pat: Pattern = compile("h.llo")
+        actual.append(pat.pattern() == "h.llo")
         pm: bool = pat.is_match("hello")
         pattern_match_ok = pm
     except RegexError as e:
+        actual.append(False)
         _ = str(e.message)
     actual.append(pattern_match_ok)
     return actual

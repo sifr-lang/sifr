@@ -172,7 +172,6 @@ sifr-version = ">=0.3,<0.4"
 roots = ["sifr"]
 
 [rust]
-bridge-version = 1
 bridges = ["src/bridges", "rust/interop"]
 direct-crate-bindings = true
 
@@ -188,7 +187,6 @@ rust-panic-abort = ["app.exit"]
     )
     .expect("manifest should parse");
 
-    assert_eq!(manifest.rust.bridge_version, Some(1));
     assert_eq!(manifest.rust.bridges.len(), 2);
     assert!(manifest.rust.direct_crate_bindings);
     assert_eq!(manifest.trust.rust_build_scripts, ["openssl_sys"]);

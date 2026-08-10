@@ -114,14 +114,7 @@ impl RustEmitter {
             return Self::ensure_some_box_inner(lowered_value);
         }
 
-        if Self::is_box_new_call_expr(&lowered_value) {
-            return lowered_value;
-        }
-
-        RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
-            args: vec![lowered_value],
-        }
+        Self::box_recursive_value_for_ir(lowered_value)
     }
 
     pub(crate) fn lower_class_stmt_strict(

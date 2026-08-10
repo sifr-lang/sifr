@@ -1,0 +1,127 @@
+# fixture: structural_bridge_calls
+# scenario-example: structural_bridge_runtime
+# execution-kind: runtime-observed
+# expected-result: structural-roundtrip-clean
+
+from sifr.meta import Structural
+from typing import Callable
+
+
+class StructuralBridgeError(Error):
+    message: str
+
+
+class CallbackError(Error):
+    message: str
+
+
+class Leaf:
+    value: str
+
+
+class Boxed[T]:
+    value: T
+
+
+class NestedValue:
+    label: str
+    leaves: list[Leaf]
+    payload: Boxed[str]
+    child: NestedValue | None
+
+
+@rust.opaque(
+    type=bridge.structural.StructuralArena,
+    send=False,
+    sync=False,
+    clone=none,
+    close=close,
+)
+class StructuralArena:
+    @rust(bridge.structural.close)
+    def close(own self) -> Result[None, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust(bridge.structural.open)
+def open_structural_arena() -> Result[StructuralArena, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust.structural
+@rust(bridge.structural.roundtrip)
+def structural_roundtrip[T: Structural](
+    own source: StructuralArena,
+    value: T,
+) -> Result[T, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust.structural
+@rust(bridge.structural.observe)
+def observe_structural[T: Structural](value: T) -> Result[str, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust.structural
+@rust(bridge.structural.transform)
+def transform_structural[T: Structural](
+    own source: StructuralArena,
+    value: T,
+    callback: Callable[[T], Result[T, CallbackError]],
+) -> Result[T, StructuralBridgeError | RustPanicError]: ...
+
+
+def identity_nested(own value: NestedValue) -> Result[NestedValue, CallbackError]:
+    return value
+
+
+def verify_structural_bridge_runtime() -> Result[str, StructuralBridgeError | RustPanicError]:
+    original: NestedValue = NestedValue(
+        "input",
+        [Leaf("x")],
+        Boxed("input-box"),
+        None,
+    )
+    try:
+        projection: str = observe_structural(original)
+        assert projection == "records=3;sequences=1;optionals=1;strings=input,x,input-box"
+
+        roundtrip_source: StructuralArena = open_structural_arena()
+        decoded: NestedValue = structural_roundtrip(roundtrip_source, original)
+        assert decoded.label == "root"
+        assert len(decoded.leaves) == 2
+        leaf_values: str = ""
+        for leaf in decoded.leaves:
+            leaf_values += leaf.value
+        assert leaf_values == "ab"
+        assert decoded.payload.value == "boxed"
+        child: NestedValue | None = decoded.child
+        assert child is not None
+        if child is not None:
+            assert child.label == "tail"
+            assert child.payload.value == "tail-box"
+            assert child.child is None
+
+        callback_source: StructuralArena = open_structural_arena()
+        transformed: NestedValue = transform_structural(
+            callback_source,
+            original,
+            identity_nested,
+        )
+        assert transformed.label == "root"
+        assert transformed.child is not None
+        cleanup_source: StructuralArena = open_structural_arena()
+        closed: None = cleanup_source.close()
+        return projection + ";construction=root/a,b/boxed/tail;callback=typed"
+    except StructuralBridgeError as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+
+
+def main() -> Result[None, StructuralBridgeError | RustPanicError]:
+    try:
+        result: str = verify_structural_bridge_runtime()
+        print(result)
+    except StructuralBridgeError as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+    return None

@@ -11,7 +11,6 @@ class BridgeProjectionCheck:
     fixture_id: str
     managed_files: tuple[Path, ...]
     user_owned_files: tuple[Path, ...]
-    bridge_version: int
 
 
 def load_projection_check(fixture_root: Path) -> BridgeProjectionCheck:
@@ -20,5 +19,4 @@ def load_projection_check(fixture_root: Path) -> BridgeProjectionCheck:
         fixture_id=fixture_root.name,
         managed_files=(),
         user_owned_files=(),
-        bridge_version=1,
     )

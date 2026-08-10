@@ -3,9 +3,7 @@
   "role": "compatibility-derived-release-plan-input",
   "source_compatibility_matrix": "verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json",
   "public_document": "docs/rust-interop.mdx",
-  "runtime_deferrals": [
-    "structural_bridge_calls"
-  ],
+  "runtime_deferrals": [],
   "claims": [
     {
       "id": "direct_crate_crc32",
@@ -80,10 +78,16 @@
       "capability": "closed and poisoned handle state transitions"
     },
     {
-      "id": "bridge_version_mismatch",
+      "id": "bridge_version_field_removal",
       "category": "supported",
       "execution_kind": "compiler-diagnostic",
-      "capability": "bridge-version validation"
+      "capability": "unversioned Rust bridge manifest contract"
+    },
+    {
+      "id": "structural_bridge_calls",
+      "category": "supported-through-bridge",
+      "execution_kind": "runtime-observed",
+      "capability": "monomorphized structural Rust bridge calls"
     },
     {
       "id": "panic_boundary",

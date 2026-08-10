@@ -43,6 +43,13 @@ fn push_signature(out: &mut String, signature: &RustBridgeSignatureContract) {
     }
     out.push_str("|return=");
     push_type_contract(out, &signature.return_type);
+    out.push_str("|structural=");
+    out.push_str(
+        signature
+            .structural_type_param
+            .as_deref()
+            .unwrap_or("<none>"),
+    );
     out.push_str("|panic-error=");
     out.push_str(match signature.panic_error {
         crate::rust_interop_bridge_contract::RustBridgePanicErrorContract::None => "none",
@@ -78,6 +85,7 @@ fn push_type_contract(out: &mut String, ty: &RustBridgeTypeContract) {
         RustBridgeTypeKind::OpaqueHandle => "handle",
         RustBridgeTypeKind::Callback => "callback",
         RustBridgeTypeKind::CallScopedCallback => "call-scoped-callback",
+        RustBridgeTypeKind::StructuralTypeParam => "structural-type-param",
         RustBridgeTypeKind::None => "none",
         RustBridgeTypeKind::Unsupported => "unsupported",
     });

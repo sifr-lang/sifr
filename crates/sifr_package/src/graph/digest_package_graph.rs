@@ -30,7 +30,6 @@ struct CanonicalGraphPackage<'a> {
 
 #[derive(Serialize)]
 struct CanonicalRustInteropConfig {
-    bridge_version: Option<u32>,
     bridges: Vec<String>,
     direct_crate_bindings: bool,
 }
@@ -99,7 +98,6 @@ impl<'a> From<&'a SifrPackageGraph> for CanonicalGraph<'a> {
                         .map(|root| root.0.as_str())
                         .collect(),
                     rust: CanonicalRustInteropConfig {
-                        bridge_version: package.manifest.rust.bridge_version,
                         bridges: package
                             .manifest
                             .rust

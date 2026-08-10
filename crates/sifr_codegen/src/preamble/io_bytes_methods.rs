@@ -593,7 +593,9 @@ mod tests {
                         RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } => {
                             count_raw_in_type(ty)
                         }
-                        RustParam::SelfParam { .. } | RustParam::SelfValue => 0,
+                        RustParam::SelfParam { .. }
+                        | RustParam::SelfParamWithLifetime { .. }
+                        | RustParam::SelfValue => 0,
                     })
                     .sum::<usize>()
                     + ret.as_ref().map(count_raw_in_type).unwrap_or(0)
@@ -628,7 +630,9 @@ mod tests {
                 params
                     .iter()
                     .map(|p| match p {
-                        RustParam::SelfParam { .. } | RustParam::SelfValue => 0,
+                        RustParam::SelfParam { .. }
+                        | RustParam::SelfParamWithLifetime { .. }
+                        | RustParam::SelfValue => 0,
                         RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } => {
                             count_raw_in_type(ty)
                         }
@@ -641,7 +645,9 @@ mod tests {
                 params
                     .iter()
                     .map(|p| match p {
-                        RustParam::SelfParam { .. } | RustParam::SelfValue => 0,
+                        RustParam::SelfParam { .. }
+                        | RustParam::SelfParamWithLifetime { .. }
+                        | RustParam::SelfValue => 0,
                         RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } => {
                             count_raw_in_type(ty)
                         }

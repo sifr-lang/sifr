@@ -9,8 +9,9 @@ and closure pass 3 returned `SATISFIED` for the pre-manifest design. Passes 4
 through 16 returned `NEEDS REVISION` for the added conformance inventory.
 Pass 17 returned `SATISFIED` and re-approved `milestone_ps_0`. The complete
 architecture, conformance inventory, external-repository boundary, and demo
-ownership are approved. `milestone_ps_1` is implemented and merged; `milestone_ps_2`
-is the next compiler milestone.
+ownership are approved. `milestone_ps_1` and `milestone_ps_2` are implemented
+and merged. The sequential `certification_pkg_resource_core` item is next;
+`milestone_ps_3` remains blocked until that certification passes.
 
 Review artifacts:
 
@@ -31,6 +32,9 @@ Review artifacts:
 - [`native-pydantic-sifr-architecture-opus5-review-pass-15.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-15.md)
 - [`native-pydantic-sifr-architecture-opus5-review-pass-16.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-16.md)
 - [`native-pydantic-sifr-architecture-opus5-review-pass-17.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-17.md)
+- [`native-pydantic-sifr-ps2-claude-opus-review-pass-1.md`](../../reviews/active/native-pydantic-sifr-ps2-claude-opus-review-pass-1.md)
+- [`native-pydantic-sifr-ps2-claude-opus-review-pass-2.md`](../../reviews/active/native-pydantic-sifr-ps2-claude-opus-review-pass-2.md)
+- [`native-pydantic-sifr-ps2-claude-opus-review-pass-3.md`](../../reviews/active/native-pydantic-sifr-ps2-claude-opus-review-pass-3.md)
 
 Milestone delivery records:
 
@@ -71,6 +75,46 @@ Milestone delivery records:
   round confirmed all prior construction, identity, callback, projection,
   cutover-inventory, ownership, and current-state findings closed and returned
   `SATISFIED` with no blocking findings.
+- The contract record accidentally leaked phase-delivery taxonomy into active
+  Rust-interop fixtures, compatibility rows, and durable architecture surfaces,
+  blocking the repository taxonomy guard on current `main`. The narrow repair
+  merged in [PR #3112](https://github.com/sifr-lang/sifr/pull/3112) at merge
+  commit `2452dca175d7b6b01068c40b3853c1d7b6d251f6`; its reviewed candidate was
+  `087a399fd0d89f3066af04a26d4185c03497283f`.
+- That repair moved the two future-owned compatibility rows to the exact durable
+  Rust-interop architecture owner without weakening concrete-path or existence
+  validation. Taxonomy and compatibility checks/self-tests, all 10 registered
+  Rust-interop cases, stable claims, stale drafts, tiers, and file-size/HIR
+  guardrails passed. Opus review round 3 returned `SATISFIED` with no actionable
+  findings. The create-PR profile then reached the externally owned Python
+  readonly/doctor timeout tracked by PR #3110; #3110 was blocked on this taxonomy
+  repair, so the fix merged to close the dependency cycle without absorbing its
+  code.
+- `milestone_ps_2` merged in [PR #3114](https://github.com/sifr-lang/sifr/pull/3114)
+  at merge commit `fc2e7b29244e08399f6b59b60a927ea740af5c5b`; the reviewed candidate was
+  `7c0aaebdb3c0c752a513c8d21735e67dd453678a`.
+- The milestone completed the unversioned structural Rust bridge cutover,
+  `sifr.meta.Structural` marker validation, safe structural construction and
+  projection, typed callback generation, package-resource support, and the
+  native-backed `re.Pattern` contract. It retained class generic bounds and
+  excluded nominal newtypes from implicit structural eligibility. No legacy
+  bridge mode, compatibility path, fallback, or versioned active name remains.
+- Focused validation passed 972 codegen tests; 971 lowering tests with one
+  ignored test; generated-runtime, abort-profile, generic-bound, newtype,
+  collection, regex, formatting, HIR, file-size, taxonomy, coverage, readiness,
+  profile, stable-claim, and all registered Rust-interop checks. The final merge
+  lane passed every PS2-owned check and 23 of 25 Python-interop variants. The two
+  failures were the externally owned PR #3110 readonly/doctor 120-second timeout
+  and the host-sensitive binding-authoring 180-second timeout; the same binding
+  path passed in 36.431 seconds with the controlled six-worker allocation.
+- Opus remediation passes closed recursive identity/cache and panic-contract
+  gaps, restored generic class bounds, and removed duplicate stable-support
+  claims. The final exact-candidate review returned `SATISFIED` with no blocking
+  findings; per the reviewer skill, that final response remains outside the Git
+  tree.
+- The next sequential work is `certification_pkg_resource_core` in the runtime
+  ecosystem certification issue. It must create and pass
+  `opaque_resource_package_core` before `milestone_ps_3` begins.
 - Deferred follow-up work: define an explicit typed package-side structural-shape
   contract before `ps_4`; align registry representative-fixture paths with diagnostic
   baselines; audit pre-epoch fractional timestamp reconstruction; disambiguate imported

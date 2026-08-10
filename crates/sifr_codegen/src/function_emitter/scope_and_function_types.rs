@@ -714,7 +714,12 @@ impl RustEmitter {
             .iter()
             .map(|tp| {
                 let extra = Self::extra_bounds_for_type_param(tp, &func.body);
-                let base = if Self::is_nullcontext_value_forwarder(func) {
+                let structural = func.rust_interop.iter().any(|declaration| {
+                    declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
+                });
+                let base = if structural {
+                    "sifr_runtime::interop::structural::StructuralConstruct + sifr_runtime::interop::structural::StructuralProject"
+                } else if Self::is_nullcontext_value_forwarder(func) {
                     "Clone + 'static"
                 } else if needs_hash_eq {
                     "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq + 'static"

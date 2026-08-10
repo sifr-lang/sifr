@@ -1,0 +1,78 @@
+# Algorithmic collection inference and recursive-model ownership now compose
+# across the same native program.
+
+from sifr.collections import defaultdict
+
+
+class ListNode:
+    val: int
+    next: ListNode | None
+
+    def __init__(self, val: int, next: ListNode | None):
+        self.val = val
+        self.next = next
+
+
+def take_next(own node: ListNode | None) -> ListNode | None:
+    if node is None:
+        return None
+    return node.next
+
+
+def wrap(node: ListNode | None) -> ListNode:
+    return ListNode(10, node)
+
+
+def child_value(node: ListNode) -> int:
+    child: ListNode | None = node.next
+    if child is not None:
+        return child.val
+    return -1
+
+
+def find_pair(values: list[int], target: int) -> list[int]:
+    seen = {}
+    for index, value in enumerate(values):
+        complement = target - value
+        if complement in seen:
+            return [seen[complement], index]
+        seen[value] = index
+    return []
+
+
+def main():
+    # Recursive list elements use generated lexicographic total ordering.
+    intervals: list[list[int]] = [[3, 4], [1, 2], [1, 1]]
+    intervals.sort()
+    assert intervals == [[1, 1], [1, 2], [3, 4]]
+
+    # Empty collection literals specialize from their concrete use sites.
+    nested: list[list[int]] = [[1], []]
+    assert nested == [[1], []]
+    assert find_pair([2, 7, 11, 15], 9) == [0, 1]
+
+    # Default dictionaries infer key and bucket types independently of source
+    # order while preserving missing-key insertion semantics.
+    counts = defaultdict(int)
+    for word in ["red", "blue", "red"]:
+        counts[word] += 1
+    assert counts["red"] == 2
+
+    groups = defaultdict(set)
+    if "cell" in groups[1]:
+        assert False
+    groups[1].add("cell")
+    assert "cell" in groups[1]
+
+    # Owned recursive options can be destructured, and named options can be
+    # forwarded through recursive constructors without moving a borrow or
+    # introducing an extra box layer.
+    tail: ListNode = ListNode(2, None)
+    head: ListNode = ListNode(1, tail)
+    next_node: ListNode | None = take_next(head)
+    if next_node is not None:
+        assert next_node.val == 2
+
+    child: ListNode = ListNode(3, None)
+    parent: ListNode = wrap(child)
+    assert child_value(parent) == 3

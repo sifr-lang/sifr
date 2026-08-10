@@ -320,6 +320,7 @@ pub enum RustType {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RustParam {
     SelfParam { mutable: bool },
+    SelfParamWithLifetime { mutable: bool, lifetime: String },
     SelfValue,
     Named { name: String, ty: RustType },
     NamedMut { name: String, ty: RustType },
