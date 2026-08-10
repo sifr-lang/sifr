@@ -48,6 +48,8 @@ pub(super) fn test_compile_entrypoint_error_consistency_for_project_mode() {
     let dir = mktemp_dir("entrypoint_consistency");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+        .expect("workspace manifest should be written");
     std::fs::write(
         &main,
         "from helper import value\n\ndef main():\n    print(value())\n",
@@ -151,6 +153,8 @@ pub(super) fn test_check_entrypoint_project_mode_resolves_local_imports() {
     let dir = mktemp_dir("check_entrypoint_project_imports");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+        .expect("workspace manifest should be written");
     std::fs::write(
         &main,
         "from helper import value\n\ndef main():\n    print(value())\n",
@@ -165,6 +169,51 @@ pub(super) fn test_check_entrypoint_project_mode_resolves_local_imports() {
         "project-aware check should succeed for valid local imports: {errors:?}"
     );
 
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+pub(super) fn test_compile_entrypoint_manifestless_local_import_uses_single_file_diagnostic() {
+    let dir = mktemp_dir("manifestless_local_import_diagnostic");
+    let main = dir.join("main.sifr");
+    std::fs::write(
+        &main,
+        "from helper import value\n\ndef main():\n    print(value())\n",
+    )
+    .expect("main file should be written");
+    std::fs::write(
+        dir.join("helper.sifr"),
+        "def value() -> int:\n    return 42\n",
+    )
+    .expect("helper file should be written");
+
+    let check_errors = check_entrypoint(&main);
+    let run_out = mktemp_dir("manifestless_run_out");
+    let build_out = mktemp_dir("manifestless_build_out");
+    let run_errors = compile_entrypoint(&main, &run_out)
+        .expect_err("run path should reject the manifestless local import");
+    let build_errors = compile_entrypoint(&main, &build_out)
+        .expect_err("build path should reject the manifestless local import");
+    let emit_errors = match emit_entrypoint(&main) {
+        CompileResult::Errors { errors } => errors,
+        CompileResult::Success { .. } => panic!("emit should reject the manifestless local import"),
+    };
+    let messages = |errors: &[RenderedDiagnostic]| {
+        errors
+            .iter()
+            .map(legacy_diagnostic_display)
+            .collect::<Vec<_>>()
+    };
+    let expected = messages(&check_errors);
+    assert_eq!(messages(&run_errors), expected);
+    assert_eq!(messages(&build_errors), expected);
+    assert_eq!(messages(&emit_errors), expected);
+    assert!(check_errors
+        .iter()
+        .any(|error| { error.code == DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE.code() }));
+
+    let _ = std::fs::remove_dir_all(run_out);
+    let _ = std::fs::remove_dir_all(build_out);
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -352,6 +401,8 @@ pub(super) fn test_check_entrypoint_project_mode_error_parity_with_compile_entry
     let dir = mktemp_dir("check_entrypoint_error_parity");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+        .expect("workspace manifest should be written");
     std::fs::write(
         &main,
         "from helper import value\n\ndef main():\n    print(value())\n",
@@ -407,7 +458,7 @@ pub(super) fn test_compile_entrypoint_non_main_input_stays_single_file() {
         dir.join("main.sifr"),
         "from helper import value\n\ndef main():\n    print(value())\n",
     )
-    .expect("project-like main should be written");
+    .expect("neighboring main should be written");
     std::fs::write(dir.join("helper.sifr"), "def value(:\n").expect("helper should be written");
 
     let binary = compile_entrypoint(&app, &output).expect("non-main entry should stay single-file");
@@ -419,10 +470,12 @@ pub(super) fn test_compile_entrypoint_non_main_input_stays_single_file() {
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
-pub(super) fn test_emit_entrypoint_uses_project_mode_for_project_like_main() {
+pub(super) fn test_emit_entrypoint_uses_project_mode_inside_workspace() {
     let dir = mktemp_dir("emit_project_boundary");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+        .expect("workspace manifest should be written");
     std::fs::write(
         &main,
         "from helper import value\n\ndef main():\n    print(value())\n",
@@ -455,6 +508,8 @@ pub(super) fn test_frontend_error_messages_match_across_check_build_and_run_path
     let dir = mktemp_dir("frontend_error_mode_parity");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+        .expect("workspace manifest should be written");
     std::fs::write(
         &main,
         "from helper import value\n\ndef main():\n    print(value())\n",

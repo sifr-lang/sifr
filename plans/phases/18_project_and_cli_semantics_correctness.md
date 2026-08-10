@@ -6,6 +6,12 @@ Make CLI behavior predictable for single-file and multi-file workflows.
 Status: completed (2026-03-04)
 Follow-up planning extension: added milestone_18_4 (2026-03-05)
 
+Superseded behavior note: the manifest-less import-sniffing rules recorded in
+milestones 18.2 through 18.4 were removed by the ad hoc
+`remove-manifestless-project-auto-detection` phase. The current resolver uses
+the nearest valid ancestor `sifr.toml` as its only project-mode boundary;
+without one, every explicit file uses single-file mode.
+
 ## Depends on
 - Phase 17
 

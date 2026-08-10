@@ -363,7 +363,12 @@ large-file check and a representative project check.
 
 - `RootedEntrypointPlan` is the canonical driver abstraction for build planning.
 - `RootedEntrypointShape::SingleFile` models the one-module case.
-- `RootedEntrypointShape::Project` models the reachable user import closure. Outside a workspace, legacy activation remains `main.sifr` plus local sibling imports. Inside the nearest ancestor `sifr.toml` workspace, any entry filename can activate project mode.
+- `RootedEntrypointShape::Project` models the reachable user import closure.
+  The nearest ancestor `sifr.toml` selects this shape for every valid entry
+  filename below the manifest directory. Outside a workspace, every explicit
+  file uses `RootedEntrypointShape::SingleFile`; mode selection never parses
+  imports or probes sibling modules. Workspace `[source].roots` configure
+  user-module lookup after this selection; they do not select the shape.
 - Native `sifr.toml` workspace discovery lives in `sifr_driver::workspace`. `[source].roots` define workspace user-module search roots, defaulting to `["."]`; malformed workspace config is a hard build diagnostic rather than a single-file fallback.
 - User module resolution keeps embedded `sifr.*` / `_sifr.*` stdlib registry precedence separate from filesystem lookup, then searches the entry parent first and configured workspace source roots second. Dotted module IDs such as `helpers.nodes` map to `helpers/nodes.sifr`.
 - Generated Rust preserves canonical dotted module IDs through HIR/codegen and materializes them as nested Rust files, for example `helpers.nodes` -> `src/helpers/nodes.rs` plus `src/helpers/mod.rs`.
@@ -757,7 +762,14 @@ except DbError as e:
 
 ### 4. Package Resolver and Reproducibility (import semantics work/CLI semantics work/package-management work)
 
-This rules is split across three workstreams: import semantics work (multi-file compilation and import semantics), CLI semantics work (CLI project-mode activation semantics), and package-management work (package management with dependency resolution). Import semantics work maps to import semantics architecture (Import and Externals Correctness), CLI semantics work maps to CLI semantics architecture (Project and CLI Semantics Correctness), and package-management work lands in driver/package architecture (Package Management).
+These rules are split across three workstreams: import semantics work
+(multi-file compilation and import semantics), CLI semantics work (structural
+workspace-boundary selection), and package-management work (package management
+with dependency resolution). Import semantics work maps to import semantics
+architecture (Import and Externals Correctness), CLI semantics work maps to CLI
+semantics architecture (Project and CLI Semantics Correctness), and
+package-management work lands in driver/package architecture (Package
+Management).
 
 **Rules (import semantics work -- imports and modules):**
 
@@ -767,10 +779,17 @@ This rules is split across three workstreams: import semantics work (multi-file 
 - **Import caching:** each module is compiled exactly once per compilation. The driver maintains a module cache keyed by canonical path.
 - **Multi-file diagnostics:** error messages show correct source file and line numbers across module boundaries.
 
-**Rules (CLI semantics work -- CLI project-mode activation):**
+**Rules (CLI semantics work -- workspace boundary):**
 
-- **Resolver trigger matrix:** project-mode activation rules are explicit for `from` imports, relative import levels, bare relative imports, and regular `import` statements.
-- **Run/build equivalence:** `run` and `build` use the same resolver and produce equivalent mode selection and error-class outcomes for identical inputs.
+- **Structural mode selection:** the nearest valid ancestor `sifr.toml` selects
+  project mode; without one, every explicit file uses single-file mode.
+  Entrypoint filenames, source imports, and sibling modules are not inspected
+  during mode selection.
+- **Malformed manifest authority:** a discovered malformed `sifr.toml` is a hard
+  diagnostic and never falls back to single-file mode.
+- **Command equivalence:** `run`, `build`, `check`, `emit`, and `trace` use the
+  same resolver and produce equivalent mode selection and error-class outcomes
+  for identical inputs.
 - **Rules synchronization:** resolver behavior, regression tests, and CLI semantics documentation must remain aligned.
 
 **Rules (package-management work -- package management, package-management architecture):**

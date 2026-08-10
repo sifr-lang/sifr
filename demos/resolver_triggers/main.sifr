@@ -2,5 +2,5 @@
 from .helper import value
 
 def main():
-    print("resolver_triggers resolver trigger matrix demo:")
+    print("resolver_triggers explicit workspace import demo:")
     print(value())

@@ -182,8 +182,9 @@ pub(super) fn test_invocation_workspace_create_returns_unique_paths() {
 }
 
 #[test]
-pub(super) fn test_resolve_compilation_mode_project_for_main_with_siblings() {
-    let project = TestProject::new("project");
+pub(super) fn test_resolve_compilation_mode_single_file_for_manifestless_main_with_sibling_import()
+{
+    let project = TestProject::new("manifestless_main_with_sibling");
     let main = project.write(
         "main.sifr",
         "from helper import value\n\ndef main():\n    print(value())\n",
@@ -195,7 +196,7 @@ pub(super) fn test_resolve_compilation_mode_project_for_main_with_siblings() {
         "helper file should be written",
     );
 
-    assert_eq!(resolved_mode(&main), CompilationMode::Project);
+    assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
 }
 
 #[test]
@@ -226,7 +227,7 @@ pub(super) fn test_manifest_less_run_explicit_non_main_file_stays_single_file() 
     project.write(
         "main.sifr",
         "from helper import value\n\ndef main():\n    print(value())\n",
-        "project-like sibling should be written",
+        "neighboring main should be written",
     );
 
     assert_eq!(resolved_mode(&app), CompilationMode::SingleFile);
@@ -252,6 +253,32 @@ pub(super) fn test_resolve_compilation_mode_project_for_non_main_entry_in_worksp
     );
 
     assert_eq!(resolved_mode(&app), CompilationMode::Project);
+}
+
+#[test]
+pub(super) fn test_resolve_compilation_mode_project_for_import_free_main_in_workspace() {
+    let project = TestProject::new("workspace_import_free_main");
+    project.write(
+        "sifr.toml",
+        "[source]\nroots = [\"src\"]\n",
+        "manifest should be written",
+    );
+    let main = project.write(
+        "src/main.sifr",
+        "def main():\n    pass\n",
+        "main file should be written",
+    );
+
+    assert_eq!(resolved_mode(&main), CompilationMode::Project);
+}
+
+#[test]
+pub(super) fn test_resolve_compilation_mode_does_not_read_manifestless_entrypoint() {
+    let project = TestProject::new("manifestless_missing_entrypoint");
+    let missing = project.dir.join("main.sifr");
+
+    assert!(!missing.exists());
+    assert_eq!(resolved_mode(&missing), CompilationMode::SingleFile);
 }
 
 #[test]
@@ -707,191 +734,45 @@ pub(super) fn test_package_cli_explain_retired_credential_code() {
 }
 
 #[test]
-pub(super) fn test_resolve_compilation_mode_single_file_for_main_without_local_imports() {
-    let project = TestProject::new("main_no_imports");
-    let main = project.write(
-        "main.sifr",
-        "def main():\n    print(\"ok\")\n",
-        "main file should be written",
-    );
-    project.write(
-        "scratch.sifr",
-        "def nope(:\n",
-        "scratch file should be written",
-    );
+pub(super) fn test_resolve_compilation_mode_manifestless_matrix_is_always_single_file() {
+    let cases = [
+        ("no_import/main.sifr", "def main():\n    pass\n"),
+        (
+            "absolute_import/main.sifr",
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        ),
+        (
+            "relative_import/main.sifr",
+            "from .helper import value\n\ndef main():\n    print(value())\n",
+        ),
+        (
+            "regular_import/main.sifr",
+            "import helper\n\ndef main():\n    pass\n",
+        ),
+        (
+            "missing_import/main.sifr",
+            "from missing import value\n\ndef main():\n    print(value())\n",
+        ),
+        ("invalid_source/main.sifr", "def main(:\n"),
+        (
+            "app.sifr",
+            "from helper import value\n\ndef main():\n    print(value())\n",
+        ),
+    ];
+    let project = TestProject::new("manifestless_matrix");
 
-    assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
-}
-
-#[test]
-pub(super) fn test_resolve_compilation_mode_single_file_for_stdlib_only_imports() {
-    let project = TestProject::new("main_stdlib_only");
-    let main = project.write(
-        "main.sifr",
-        "from sifr.math import floor\n\ndef main():\n    print(floor(3.9))\n",
-        "main file should be written",
-    );
-    project.write(
-        "helper.sifr",
-        "def helper() -> int:\n    return 1\n",
-        "helper file should be written",
-    );
-
-    assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
-}
-
-#[test]
-pub(super) fn test_resolve_compilation_mode_single_file_for_missing_local_module() {
-    let project = TestProject::new("missing_local");
-    let main = project.write(
-        "main.sifr",
-        "from helper import value\n\ndef main():\n    print(value())\n",
-        "main file should be written",
-    );
-
-    assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
-}
-
-#[test]
-pub(super) fn test_resolve_compilation_mode_single_file_for_regular_import_with_local_module() {
-    let project = TestProject::new("regular_import_local_module");
-    let main = project.write(
-        "main.sifr",
-        "import helper\n\ndef main():\n    print(\"ok\")\n",
-        "main file should be written",
-    );
-    project.write(
-        "helper.sifr",
-        "def value() -> int:\n    return 1\n",
-        "helper file should be written",
-    );
-
-    assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
-}
-
-#[test]
-pub(super) fn test_resolve_compilation_mode_single_file_for_invalid_main_source() {
-    let project = TestProject::new("invalid_main");
-    let main = project.write("main.sifr", "def main(:\n", "main file should be written");
-    project.write(
-        "helper.sifr",
-        "def helper() -> int:\n    return 1\n",
-        "helper file should be written",
-    );
-
-    assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
-}
-
-#[test]
-pub(super) fn test_resolve_compilation_mode_single_file_for_typing_import() {
-    let project = TestProject::new("typing_import");
-    let main = project.write(
-        "main.sifr",
-        "from typing import List\n\ndef main():\n    values: List[int] = [1]\n    print(values)\n",
-        "main file should be written",
-    );
-    project.write(
-        "helper.sifr",
-        "def helper() -> int:\n    return 1\n",
-        "helper file should be written",
-    );
-
-    assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
-}
-
-#[test]
-pub(super) fn test_resolve_compilation_mode_single_file_for_typing_import_with_local_typing_file() {
-    let project = TestProject::new("typing_import_local_file");
-    let main = project.write(
-        "main.sifr",
-        "from typing import List\n\ndef main():\n    values: List[int] = [1]\n    print(values)\n",
-        "main file should be written",
-    );
-    project.write(
-        "typing.sifr",
-        "def local() -> int:\n    return 1\n",
-        "typing file should be written",
-    );
-
-    assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
-}
-
-#[test]
-pub(super) fn test_resolve_compilation_mode_single_file_for_enum_import() {
-    let project = TestProject::new("enum_import");
-    let main = project.write(
-        "main.sifr",
-        "from enum import Enum\n\ndef main():\n    print(\"ok\")\n",
-        "main file should be written",
-    );
-    project.write(
-        "helper.sifr",
-        "def helper() -> int:\n    return 1\n",
-        "helper file should be written",
-    );
-
-    assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
-}
-
-#[test]
-pub(super) fn test_resolve_compilation_mode_single_file_for_enum_import_with_local_enum_file() {
-    let project = TestProject::new("enum_import_local_file");
-    let main = project.write(
-        "main.sifr",
-        "from enum import Enum\n\ndef main():\n    print(\"ok\")\n",
-        "main file should be written",
-    );
-    project.write(
-        "enum.sifr",
-        "def local() -> int:\n    return 1\n",
-        "enum file should be written",
-    );
-
-    assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
-}
-
-#[test]
-pub(super) fn test_resolve_compilation_mode_single_file_for_package_init_import() {
-    let project = TestProject::new("pkg_import");
-    let main = project.write(
-        "main.sifr",
-        "from pkg import value\n\ndef main():\n    print(value())\n",
-        "main file should be written",
-    );
-    project.write(
-        "pkg/__init__.sifr",
-        "def value() -> int:\n    return 1\n",
-        "pkg init should be written",
-    );
-
-    assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
-}
-
-#[test]
-pub(super) fn test_resolve_compilation_mode_project_for_relative_import_with_sibling() {
-    let project = TestProject::new("relative_import");
-    let main = project.write(
-        "main.sifr",
-        "from .helper import value\n\ndef main():\n    print(value())\n",
-        "main file should be written",
-    );
-    project.write(
-        "helper.sifr",
-        "def value() -> int:\n    return 1\n",
-        "helper file should be written",
-    );
-
-    assert_eq!(resolved_mode(&main), CompilationMode::Project);
-}
-
-#[test]
-pub(super) fn test_resolve_compilation_mode_single_file_for_relative_import_without_sibling() {
-    let project = TestProject::new("relative_import_missing_sibling");
-    let main = project.write(
-        "main.sifr",
-        "from .helper import value\n\ndef main():\n    print(value())\n",
-        "main file should be written",
-    );
-
-    assert_eq!(resolved_mode(&main), CompilationMode::SingleFile);
+    for (filename, source) in cases {
+        let file = project.write(filename, source, "entrypoint should be written");
+        let helper = file
+            .parent()
+            .expect("entrypoint should have a parent")
+            .join("helper.sifr");
+        std::fs::write(helper, "def value() -> int:\n    return 1\n")
+            .expect("helper file should be written");
+        assert_eq!(
+            resolved_mode(&file),
+            CompilationMode::SingleFile,
+            "manifestless {filename} should stay single-file"
+        );
+    }
 }
