@@ -2,7 +2,9 @@ use super::cargo_invocation_trace::record_cargo_invocation;
 use super::cargo_resolution::{prepare_cargo_resolution, CargoResolutionPolicy};
 use super::rust_interop_digest::fnv1a64_hex;
 use super::rust_interop_panic_probe::panic_mapper_probe;
-use super::rust_interop_probe_cache::{mark_probe_cache_hit, probe_cache_file, probe_cache_key};
+use super::rust_interop_probe_cache::{
+    mark_probe_cache_hit, probe_cache_file, probe_cache_key, ProbeCacheKeyCache,
+};
 use super::rust_interop_probe_diagnostics::{
     classify_probe_failure, probe_cargo_resolution_failure, probe_resolution_diagnostics,
 };
@@ -40,6 +42,7 @@ pub(super) struct PendingRustBridgeProbe {
     pub(super) signature: Option<RustBridgeSignatureContract>,
     pub(super) async_thread_affinity: AsyncThreadAffinity,
     pub(super) zero_copy_obligations: (bool, bool),
+    pub(super) trusted_sysroot: bool,
     pub(super) sysroot_runtime_crate: PathBuf,
     pub(super) sysroot_vendor_dir: Option<PathBuf>,
     pub(super) cargo_resolution: CargoResolutionPolicy,
@@ -54,6 +57,7 @@ pub(super) struct ProbeExecutionFailure {
 
 pub(super) fn execute_direct_cargo_probe(
     probe: &PendingRustBridgeProbe,
+    cache: &mut ProbeCacheKeyCache,
 ) -> Result<(), ProbeExecutionFailure> {
     if !probe.backend.cargo_manifest_path.is_file() {
         if probe.cargo_resolution.lock_mode != sifr_package::CargoLockMode::Normal {
@@ -80,7 +84,7 @@ pub(super) fn execute_direct_cargo_probe(
     let probe_source = probe_source(probe);
     let invocation_cwd = env::current_dir()
         .map_err(|error| probe_io_failure(format!("failed to resolve Rust probe cwd: {error}")))?;
-    let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source);
+    let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source, cache);
     let cache_file = probe_cache_file(&cache_key, &invocation_cwd);
     if cache_file.is_file() {
         return Ok(());

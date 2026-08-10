@@ -2,8 +2,8 @@ use super::cargo_resolution::CargoResolutionPolicy;
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop_bridge_audit::unsafe_bridge_files;
 use super::rust_interop_cargo_inputs::{
-    bridge_source_digests, cargo_inputs, combined_cargo_inputs, first_generated_bridge_import,
-    generated_bridge_module_path,
+    bridge_source_digests, cargo_inputs, combined_cargo_inputs, generated_bridge_module_path,
+    GeneratedBridgeImportCache,
 };
 use super::rust_interop_contracts::bridge_contract_diagnostics;
 use super::rust_interop_diagnostics::{render_template, source_diagnostic};
@@ -11,6 +11,10 @@ use super::rust_interop_digest::normalized_path_string;
 use super::rust_interop_probe::{
     execute_direct_cargo_probe, AsyncThreadAffinity, PendingRustBridgeProbe,
 };
+use super::rust_interop_probe_cache::ProbeCacheKeyCache;
+use super::rust_interop_probe_policy::DirectProbePolicy;
+#[cfg(test)]
+pub(super) use super::rust_interop_resolution::apply_package_rust_interop_metadata;
 use super::rust_interop_sqlx_offline::combined_sqlx_offline_metadata_digest;
 use super::rust_interop_trust::{
     build_env_trust_entries, effective_panic_policy, EffectivePanicPolicy,
@@ -91,21 +95,11 @@ impl RustInteropModuleSource {
     }
 }
 
-pub(super) fn apply_package_rust_interop_metadata(
-    generated: GeneratedBinaryProject,
-    context: Option<PackageRustInteropContext>,
-) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
-    apply_package_rust_interop_metadata_with_resolution(
-        generated,
-        context,
-        &CargoResolutionPolicy::normal(),
-    )
-}
-
 pub(super) fn apply_package_rust_interop_metadata_with_resolution(
     mut generated: GeneratedBinaryProject,
     context: Option<PackageRustInteropContext>,
     cargo_resolution: &CargoResolutionPolicy,
+    direct_probe_policy: DirectProbePolicy,
 ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
     if generated.interop.rust.declarations.is_empty() {
         return Ok(generated);
@@ -118,7 +112,7 @@ pub(super) fn apply_package_rust_interop_metadata_with_resolution(
         )]);
     };
 
-    let mut resolver = RustInteropResolver::new(&context, cargo_resolution);
+    let mut resolver = RustInteropResolver::new(&context, cargo_resolution, direct_probe_policy);
     resolver.resolve_plan(&mut generated)?;
     Ok(generated)
 }
@@ -126,6 +120,7 @@ pub(super) fn apply_package_rust_interop_metadata_with_resolution(
 struct RustInteropResolver<'a> {
     context: &'a PackageRustInteropContext,
     cargo_resolution: &'a CargoResolutionPolicy,
+    direct_probe_policy: DirectProbePolicy,
     diagnostics: Vec<RenderedDiagnostic>,
     resolved_targets: Vec<RustInteropResolvedTarget>,
     generated_bridge_modules: BTreeSet<RustGeneratedBridgeModule>,
@@ -139,16 +134,20 @@ struct RustInteropResolver<'a> {
     async_contracts: HashMap<String, AsyncThreadAffinity>,
     async_runtime_policy_violations:
         HashMap<SifrPackageId, Vec<super::rust_interop_bridge_audit::AsyncRuntimeBridgeViolation>>,
+    generated_bridge_import_cache: GeneratedBridgeImportCache,
+    probe_cache_key_cache: ProbeCacheKeyCache,
 }
 
 impl<'a> RustInteropResolver<'a> {
     fn new(
         context: &'a PackageRustInteropContext,
         cargo_resolution: &'a CargoResolutionPolicy,
+        direct_probe_policy: DirectProbePolicy,
     ) -> Self {
         Self {
             context,
             cargo_resolution,
+            direct_probe_policy,
             diagnostics: Vec::new(),
             resolved_targets: Vec::new(),
             generated_bridge_modules: BTreeSet::new(),
@@ -161,6 +160,8 @@ impl<'a> RustInteropResolver<'a> {
             zero_copy_probe_obligations: HashMap::new(),
             async_contracts: HashMap::new(),
             async_runtime_policy_violations: HashMap::new(),
+            generated_bridge_import_cache: GeneratedBridgeImportCache::default(),
+            probe_cache_key_cache: ProbeCacheKeyCache::default(),
         }
     }
 
@@ -471,6 +472,7 @@ impl<'a> RustInteropResolver<'a> {
                         .get(&canonical_target_path)
                         .copied()
                         .unwrap_or((false, false)),
+                    trusted_sysroot: sysroot_trust.is_some(),
                     sysroot_runtime_crate,
                     sysroot_vendor_dir: sysroot_trust
                         .as_ref()
@@ -582,7 +584,7 @@ impl<'a> RustInteropResolver<'a> {
             return;
         };
         let source_root = manifest_dir.join("src");
-        let Some(path) = first_generated_bridge_import(&source_root) else {
+        let Some(path) = self.generated_bridge_import_cache.inspect(&source_root) else {
             return;
         };
         self.push_diagnostic(
@@ -706,7 +708,15 @@ impl<'a> RustInteropResolver<'a> {
     }
     fn execute_pending_direct_probes(&mut self) {
         for probe in self.pending_direct_probes.clone() {
-            if let Err(failure) = execute_direct_cargo_probe(&probe) {
+            if !self
+                .direct_probe_policy
+                .should_execute(probe.trusted_sysroot)
+            {
+                continue;
+            }
+            if let Err(failure) =
+                execute_direct_cargo_probe(&probe, &mut self.probe_cache_key_cache)
+            {
                 self.push_diagnostic(
                     &probe.declaration,
                     probe.declaration.declaration.span,

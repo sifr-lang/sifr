@@ -68,3 +68,38 @@ fn generated_rust_preview(session: &mut Session, arguments: &[Value]) -> LspResu
             .map(|result| conversion::generated_rust_preview(result.into_value()))
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{CommandRegistry, SHOW_GENERATED_RUST_COMMAND};
+    use crate::request_queue::CancellationTarget;
+    use crate::scheduler::Scheduler;
+    use crate::session::Session;
+    use lsp_server::{ErrorCode, RequestId};
+    use serde_json::json;
+
+    #[test]
+    fn generated_rust_preview_honors_cancellation_before_compiler_work() {
+        let mut session = Session::new();
+        let id = RequestId::from(17);
+        let method = "workspace/executeCommand";
+        session
+            .enqueue_request(&id, method, Scheduler::lane_for_method(method))
+            .expect("generated Rust request should enqueue");
+        let scheduled = session.start_next_request().expect("request should start");
+        session
+            .begin_request_execution(scheduled.id())
+            .expect("request should begin before cancellation");
+        assert_eq!(session.cancel_request(&id), CancellationTarget::InFlight);
+
+        let error = CommandRegistry::execute(
+            &mut session,
+            SHOW_GENERATED_RUST_COMMAND,
+            &[json!("file:///cancelled.sifr")],
+        )
+        .expect_err("cancelled preview must stop before document analysis");
+
+        assert_eq!(error.code(), ErrorCode::RequestCanceled as i32);
+        session.finish_request(&id);
+    }
+}

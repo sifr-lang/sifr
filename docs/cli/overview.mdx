@@ -33,7 +33,7 @@ These flags apply across all subcommands.
 | `sifr run [TARGET]` | Compile and immediately execute a `.sifr` file or package target. |
 | `sifr build <FILE>` | Compile a `.sifr` file to a native binary on disk. |
 | `sifr check [PATH]` | Type-check without producing a binary — fast feedback loop. |
-| `sifr emit <FILE>` | Print generated Rust; not in the packaged `0.1.0` GA-qualified surface because cold first-run qualification exceeded its bound. |
+| `sifr emit <FILE>` | Print the compiler's generated Rust without writing a binary. |
 | `sifr fmt [FILES]...` | Format `.sifr` source files. |
 | `sifr lint [FILES]...` | Run suppressible policy-rule diagnostics. |
 | `sifr test [DIR]` | Discover and run test functions. |

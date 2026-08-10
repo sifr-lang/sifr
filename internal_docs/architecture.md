@@ -1563,8 +1563,12 @@ boundary. Work-controlled measurements use retired instructions and
 process-tree RSS from the local macOS host. Latency-controlled measurements use
 elapsed time and generic RSS after a quiet-host admission. Non-macOS profiles
 retain latency mode because they do not expose the Darwin counter. Both modes reject
-competing build work, thermal pressure, and
-unstable samples. The accepted report includes an invocation identity. Producer
+competing build work, thermal pressure, and unstable samples. Darwin work mode
+reserves 60% of logical CPU capacity at admission. During the attempt, external
+CPU pressure is blocking when retired-instruction samples are unstable and is
+advisory when those work samples remain stable. This avoids requiring an idle
+desktop without weakening the work budget. The accepted report includes an
+invocation identity. Producer
 failure cannot use stale `*.budget.latest.json` evidence. This design separates
 host delay from additional compiler work without changing elapsed-time budgets.
 

@@ -52,11 +52,21 @@ macOS admission requires three accepted snapshots, AC power, and nominal
 thermal state. The host must provide retired-instruction counters. Competing
 Cargo, rustc, benchmark, or Git indexing processes reject admission.
 
-Work-controlled admission records load and unrelated CPU use. It does not
-reject a sample only because unrelated CPU use is high. Retired instructions
-measure work in the benchmark process tree. Unrelated processes do not add to
-that count. Each case rejects an instruction coefficient of variation above
-`0.02`.
+Work-controlled admission records load and unrelated CPU use. It reserves 60%
+of the host's logical CPU capacity for the measured process tree. External
+activity can use at most the remaining 40%; on a 10-thread host, the limit is
+`400%` as reported by `ps`. This permits ordinary bounded desktop and container
+activity without waiting for an idle machine. Retired instructions measure work
+in the benchmark process tree. Unrelated processes do not add to that count.
+Each case rejects an instruction coefficient of variation above `0.02`.
+
+Work mode does not apply the normalized one-minute load limit. That metric
+includes the measured process and lags a rejected attempt, so it cannot prove
+current external capacity. The external-process CPU limit is enforced during
+admission and sampled throughout each attempt. A transient in-attempt CPU spike
+is advisory when the retired-instruction samples remain within their stability
+limit. The spike remains blocking when the work samples are unstable, so the
+failure evidence distinguishes host contamination from additional compiler work.
 
 Latency-controlled admission remains available for elapsed-time evidence. It
 also requires normalized one-minute load at or below `0.85`. Unrelated
@@ -65,8 +75,10 @@ calibration is also required. The approved trend capture uses this mode.
 
 Both modes record load, power, thermal state, CPU behavior, external CPU use,
 memory pressure, and cache state. Per-case monitoring rejects new competing
-build work or thermal pressure. The monitor excludes the benchmark runner and
-its process tree.
+build work and thermal pressure. Latency mode also rejects external CPU use
+above its limit. Work mode applies that in-attempt limit when retired-instruction
+samples are unstable and records transient pressure as advisory when they are
+stable. The monitor excludes the benchmark runner and its process tree.
 
 On macOS, `ps` supplies recent decayed CPU use. On Linux, `ps` supplies the
 process-lifetime average. Linux evidence records this limitation.
