@@ -148,17 +148,23 @@ Inspect the same profile's plan without executing it:
 scripts/run_all_tests.sh --profile create-pr --emit-plan
 ```
 
-The create-PR profile's `rust_interop_checks` step has a blocking 10,000 ms
-budget. The final `certification_0` create-PR gate measured 4,732 ms on
-2026-07-27, leaving 5,268 ms of enforced headroom; its reported locked Cargo
-cache-setup prelude measured 578 ms against the 300,000 ms advisory budget.
-The same merge profile measured 4,394 ms with a single 658 ms cache-setup
-prelude. Exact-state nightly and release runs measured 4,161 ms and 3,880 ms
-respectively before both profiles later stopped on the same unrelated
-pre-existing algorithmic full-corpus failures. These are complete-area
-lane-step measurements; per-case elapsed-time sums are not substituted for any
-value. Changes to the selected suites require a complete-area measurement and
-a same-change budget adjustment when the current headroom is insufficient.
+The create-PR profile's `rust_interop_checks` step has a blocking 20,000 ms
+budget. Issue #3130 measured required first-run work at 14,067 ms, leaving
+5,933 ms of enforced headroom; lighter controls measured 6,543 ms and 7,245
+ms. The step validates repository evidence and performs a locked offline Cargo
+fetch, but it owns no durable warm cache. One bound therefore covers required
+first-run work instead of assigning a cache state that the step cannot prove.
+
+The final `certification_0` create-PR gate had previously measured 4,732 ms on
+2026-07-27; its reported locked Cargo cache-setup prelude measured 578 ms
+against the 300,000 ms advisory budget. The same merge profile measured 4,394
+ms with a single 658 ms cache-setup prelude. Exact-state nightly and release
+runs measured 4,161 ms and 3,880 ms respectively before both profiles later
+stopped on the same unrelated pre-existing algorithmic full-corpus failures.
+These are complete-area lane-step measurements; per-case elapsed-time sums are
+not substituted for any value. Changes to the selected suites require a
+complete-area measurement and a same-change budget adjustment when the current
+headroom is insufficient.
 
 ## Compatibility Categories
 
