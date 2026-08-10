@@ -365,9 +365,10 @@ large-file check and a representative project check.
 - `RootedEntrypointShape::SingleFile` models the one-module case.
 - `RootedEntrypointShape::Project` models the reachable user import closure.
   The nearest ancestor `sifr.toml` selects this shape for every valid entry
-  filename inside its source roots. Outside a workspace, every explicit file
-  uses `RootedEntrypointShape::SingleFile`; mode selection never parses imports
-  or probes sibling modules.
+  filename below the manifest directory. Outside a workspace, every explicit
+  file uses `RootedEntrypointShape::SingleFile`; mode selection never parses
+  imports or probes sibling modules. Workspace `[source].roots` configure
+  user-module lookup after this selection; they do not select the shape.
 - Native `sifr.toml` workspace discovery lives in `sifr_driver::workspace`. `[source].roots` define workspace user-module search roots, defaulting to `["."]`; malformed workspace config is a hard build diagnostic rather than a single-file fallback.
 - User module resolution keeps embedded `sifr.*` / `_sifr.*` stdlib registry precedence separate from filesystem lookup, then searches the entry parent first and configured workspace source roots second. Dotted module IDs such as `helpers.nodes` map to `helpers/nodes.sifr`.
 - Generated Rust preserves canonical dotted module IDs through HIR/codegen and materializes them as nested Rust files, for example `helpers.nodes` -> `src/helpers/nodes.rs` plus `src/helpers/mod.rs`.

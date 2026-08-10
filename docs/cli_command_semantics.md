@@ -6,23 +6,26 @@ This document defines stable command-mode behavior for `sifr` CLI commands.
 
 - `manifest-less explicit file`: a `.sifr` file with no `sifr.toml` in its
   directory or any ancestor directory. It is compiled in isolation.
-- `workspace entry`: a `.sifr` file inside the source roots selected by the
-  nearest valid ancestor `sifr.toml`. It is compiled with that workspace's
-  reachable modules.
+- `workspace entry`: a `.sifr` file with a valid `sifr.toml` in its directory
+  or an ancestor directory. It is compiled with that workspace's reachable
+  modules.
 
 ## Mode Resolution Rules
 
 Rules are structural and evaluated in order:
 
 1. Discover the nearest ancestor `sifr.toml` for the input path.
-2. If a valid workspace is discovered and the input is inside its selected
-   source roots, use project mode.
+2. If a valid workspace is discovered, use project mode.
 3. If no workspace is discovered, use single-file mode.
 
 Notes:
 
 - A discovered malformed workspace manifest is a hard diagnostic. Commands do
   not fall back to single-file mode.
+- Workspace `[source].roots` configure user-module lookup after project mode is
+  selected. They do not participate in command-mode selection. Package-session
+  source-root validation is a separate preflight subject to the known issue
+  below.
 - Mode selection never depends on the entrypoint filename, source contents,
   import forms, or neighboring module files.
 - A manifest-less local import receives the ordinary single-file import
