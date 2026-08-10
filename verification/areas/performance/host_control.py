@@ -18,6 +18,7 @@ from process_metrics import parse_process_metrics
 MAX_NORMALIZED_LOAD = 0.85
 MAX_CALIBRATION_CV = 0.12
 MAX_EXTERNAL_CPU_PERCENT = 50.0
+WORK_RESERVED_LOGICAL_CPU_FRACTION = 0.60
 DEFAULT_QUIET_SNAPSHOTS = 3
 DEFAULT_QUIET_INTERVAL_SECONDS = 1.0
 MONITOR_INTERVAL_SECONDS = 5.0
@@ -100,11 +101,15 @@ def evaluate_snapshot(
     external_cpu_percent = cpu_pressure.get("external_cpu_percent")
     if cpu_pressure.get("source") != "ps":
         reasons.append("external-cpu-pressure-unavailable")
-    elif control_mode == "latency" and (
-        isinstance(external_cpu_percent, int | float)
-        and external_cpu_percent > MAX_EXTERNAL_CPU_PERCENT
-    ):
-        reasons.append("external-cpu-pressure")
+    else:
+        external_cpu_limit = max_external_cpu_percent(snapshot, control_mode)
+        if external_cpu_limit is None:
+            reasons.append("logical-cpu-count-unavailable")
+        elif (
+            isinstance(external_cpu_percent, int | float)
+            and external_cpu_percent > external_cpu_limit
+        ):
+            reasons.append("external-cpu-pressure")
     if enforce_load and control_mode == "latency":
         normalized_load = snapshot.get("load_average", {}).get(
             "one_minute_per_logical_cpu"
@@ -167,23 +172,53 @@ def wait_for_controlled_host(
         sleep_fn(interval_seconds)
 
 
-def controlled_policy(control_mode: str = "latency") -> dict[str, Any]:
+def controlled_policy(
+    control_mode: str = "latency",
+    *,
+    logical_cpus: int | None = None,
+) -> dict[str, Any]:
     validate_control_mode(control_mode)
+    cpu_count = logical_cpus if logical_cpus is not None else os.cpu_count() or 1
+    external_cpu_limit = max_external_cpu_percent(
+        {"logical_cpus": cpu_count}, control_mode
+    )
     return {
         "mode": control_mode,
         "quiet_snapshots": DEFAULT_QUIET_SNAPSHOTS,
         "quiet_interval_seconds": DEFAULT_QUIET_INTERVAL_SECONDS,
         "max_one_minute_load_per_logical_cpu": MAX_NORMALIZED_LOAD,
         "max_frequency_proxy_cv": MAX_CALIBRATION_CV,
-        "max_external_cpu_percent": MAX_EXTERNAL_CPU_PERCENT,
-        "external_cpu_limit_applied": control_mode == "latency",
+        "max_external_cpu_percent": external_cpu_limit,
+        "external_cpu_limit_applied": True,
         "load_limit_applied": control_mode == "latency",
+        "work_reserved_logical_cpu_fraction": (
+            WORK_RESERVED_LOGICAL_CPU_FRACTION
+            if control_mode == "work"
+            else None
+        ),
         "requires_ac_power_on_macos": True,
         "rejects_competing_build_processes": True,
         "rejects_thermal_pressure": True,
         "wall_latency_qualified": control_mode == "latency",
         "requires_retired_instructions": control_mode == "work",
     }
+
+
+def max_external_cpu_percent(
+    snapshot: dict[str, Any], control_mode: str
+) -> float | None:
+    validate_control_mode(control_mode)
+    if control_mode == "latency":
+        return MAX_EXTERNAL_CPU_PERCENT
+    logical_cpus = snapshot.get("logical_cpus")
+    if (
+        not isinstance(logical_cpus, int)
+        or isinstance(logical_cpus, bool)
+        or logical_cpus <= 0
+    ):
+        return None
+    external_fraction = 1.0 - WORK_RESERVED_LOGICAL_CPU_FRACTION
+    return round(logical_cpus * 100.0 * external_fraction, 1)
 
 
 class HostActivityMonitor:
@@ -525,6 +560,7 @@ def run_self_test() -> None:
     if profile_control_mode("Linux") != "latency":
         raise HostControlError("Linux profile mode self-test did not select latency")
     nominal = {
+        "logical_cpus": 10,
         "load_average": {"one_minute_per_logical_cpu": 0.1},
         "thermal": {"status": "nominal"},
         "power": {"source": "ac", "required": True},
@@ -564,6 +600,36 @@ def run_self_test() -> None:
     ):
         raise HostControlError(
             "work control self-test rejected measurable external CPU pressure"
+        )
+    work_cpu_pressured = dict(nominal)
+    work_cpu_pressured["external_cpu_pressure"] = {
+        "source": "ps",
+        "external_cpu_percent": 400.1,
+    }
+    if evaluate_snapshot(
+        work_cpu_pressured,
+        enforce_load=True,
+        control_mode="work",
+        require_work_counter=True,
+    ) != ["external-cpu-pressure"]:
+        raise HostControlError(
+            "work control self-test did not preserve measured CPU capacity"
+        )
+    work_policy = controlled_policy("work", logical_cpus=10)
+    if (
+        work_policy["max_external_cpu_percent"] != 400.0
+        or work_policy["external_cpu_limit_applied"] is not True
+        or work_policy["load_limit_applied"] is not False
+        or work_policy["work_reserved_logical_cpu_fraction"] != 0.60
+    ):
+        raise HostControlError(
+            "work control policy self-test did not expose its capacity reservation"
+        )
+    monitor = HostActivityMonitor(control_mode="work")
+    monitor.snapshots = [work_cpu_pressured]
+    if monitor.rejection_reasons() != ["external-cpu-pressure"]:
+        raise HostControlError(
+            "work activity monitor did not reject external CPU pressure"
         )
     missing_counter = dict(nominal)
     missing_counter["work_counter"] = {"source": "unavailable"}

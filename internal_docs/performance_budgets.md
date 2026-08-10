@@ -52,11 +52,19 @@ macOS admission requires three accepted snapshots, AC power, and nominal
 thermal state. The host must provide retired-instruction counters. Competing
 Cargo, rustc, benchmark, or Git indexing processes reject admission.
 
-Work-controlled admission records load and unrelated CPU use. It does not
-reject a sample only because unrelated CPU use is high. Retired instructions
-measure work in the benchmark process tree. Unrelated processes do not add to
-that count. Each case rejects an instruction coefficient of variation above
-`0.02`.
+Work-controlled admission records load and unrelated CPU use. It reserves 60%
+of the host's logical CPU capacity for the measured process tree. External
+activity can use at most the remaining 40%; on a 10-thread host, the limit is
+`400%` as reported by `ps`. This permits ordinary bounded desktop and container
+activity without waiting for an idle machine, but rejects attempts that cannot
+retain the measured CPU share. Retired instructions measure work in the
+benchmark process tree. Unrelated processes do not add to that count. Each
+case rejects an instruction coefficient of variation above `0.02`.
+
+Work mode does not apply the normalized one-minute load limit. That metric
+includes the measured process and lags a rejected attempt, so it cannot prove
+current external capacity. The external-process CPU limit is sampled directly
+during admission and throughout each attempt.
 
 Latency-controlled admission remains available for elapsed-time evidence. It
 also requires normalized one-minute load at or below `0.85`. Unrelated
@@ -65,8 +73,8 @@ calibration is also required. The approved trend capture uses this mode.
 
 Both modes record load, power, thermal state, CPU behavior, external CPU use,
 memory pressure, and cache state. Per-case monitoring rejects new competing
-build work or thermal pressure. The monitor excludes the benchmark runner and
-its process tree.
+build work, thermal pressure, or external CPU use above the selected mode's
+limit. The monitor excludes the benchmark runner and its process tree.
 
 On macOS, `ps` supplies recent decayed CPU use. On Linux, `ps` supplies the
 process-lifetime average. Linux evidence records this limitation.
