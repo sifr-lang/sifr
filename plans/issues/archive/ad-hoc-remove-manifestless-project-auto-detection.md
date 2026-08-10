@@ -1,6 +1,7 @@
 # Ad Hoc Phase: Remove Manifest-Less Project Auto-Detection
 
-Status: active bounded compatibility cleanup.
+Status: complete. PR [#3106](https://github.com/sifr-lang/sifr/pull/3106)
+merged on August 10, 2026.
 
 ## Problem
 
@@ -87,28 +88,28 @@ This phase is one bounded implementation item:
 
 ## Acceptance Criteria
 
-- [ ] Outside every `sifr.toml` workspace, `main.sifr`, non-main filenames, and
+- [x] Outside every `sifr.toml` workspace, `main.sifr`, non-main filenames, and
       files with or without local imports all resolve to single-file mode.
-- [ ] A resolvable sibling module never activates project mode without
+- [x] A resolvable sibling module never activates project mode without
       `sifr.toml`.
-- [ ] Inside a valid `sifr.toml` workspace, every valid entrypoint filename
+- [x] Inside a valid `sifr.toml` workspace, every valid entrypoint filename
       resolves to project mode independently of its imports.
-- [ ] A malformed discovered `sifr.toml` produces the existing hard workspace
+- [x] A malformed discovered `sifr.toml` produces the existing hard workspace
       diagnostic and never falls back to single-file mode.
-- [ ] Mode resolution does not read or parse entrypoint source and
+- [x] Mode resolution does not read or parse entrypoint source and
       `has_local_project_imports` no longer exists.
-- [ ] Manifest-less local imports receive the normal single-file import
+- [x] Manifest-less local imports receive the normal single-file import
       diagnostic rather than triggering project compilation.
-- [ ] `run`, `build`, `check`, `emit`, and `trace` agree on the same boundary.
-- [ ] Multi-file tests and fixtures that require project behavior declare an
+- [x] `run`, `build`, `check`, `emit`, and `trace` agree on the same boundary.
+- [x] Multi-file tests and fixtures that require project behavior declare an
       explicit workspace.
-- [ ] Current user documentation contains no legacy project-entry trigger
+- [x] Current user documentation contains no legacy project-entry trigger
       matrix or import-based mode-selection rule.
-- [ ] No compatibility flag, warning period, automatic manifest, or fallback
+- [x] No compatibility flag, warning period, automatic manifest, or fallback
       path is introduced.
-- [ ] Targeted CLI and driver tests, the create-PR gate, the file-size
+- [x] Targeted CLI and driver tests, the create-PR gate, the file-size
       guardrail, and the final merge gate pass.
-- [ ] The implementation receives the phase-closure review and is merged.
+- [x] The implementation receives the phase-closure review and is merged.
 
 ## Validation
 
@@ -124,3 +125,39 @@ scripts/run_all_tests.sh --profile create-pr
 
 Run `scripts/run_all_tests.sh` once on the final reviewed implementation
 candidate before merge.
+
+## Closure Evidence
+
+- Implementation PR: [#3106](https://github.com/sifr-lang/sifr/pull/3106).
+- Final candidate: `6a759ee4f96260793bbf41bd0d8c7c5199f20fde`.
+- Merge commit: `4b6c7bca66cbe30436f3ec155e4a9fa1e4485de8`.
+- The final Claude Opus review returned `SATISFIED`.
+- The review response digest is
+  `cb7e8c98ec225026a031a8880a537d7a569c7bd87610f6d72018cf42d7e482a2`.
+- Resolver tests passed 9 of 9 cases.
+- Compile entrypoint tests passed 6 of 6 cases, with two declared integration
+  tests ignored.
+- Check entrypoint tests passed 6 of 6 cases. Trace tests passed 3 of 3 cases.
+- Build-output behavior passed 12 of 12 cases.
+- The curated ecosystem area passed 20 variants.
+- The file-size guardrail, HIR guardrail, format check, and diff check passed.
+- The first cold create-PR run passed its functional checks.
+- Its generated-code step took 188455ms against a 120000ms budget.
+- Two generated artifacts had the `not_materialized` cache-miss reason.
+- Issue [#3134](https://github.com/sifr-lang/sifr/issues/3134) owns this cold-cache
+  performance work.
+- The unchanged warm create-PR run passed without a budget override.
+- Python interop passed 19 of 19 variants in 205628ms.
+- Rust interop passed 10 of 10 variants in 6265ms.
+- Generated-code checks passed 5 of 5 variants in 9978ms.
+- The warm create-PR report digest is
+  `25a96aa18d56a9630536abfa09e2c2bc68be7db825b2a06e09b6ddb0b3abe3dd`.
+- The single canonical merge gate passed on the final candidate.
+- Python interop passed 25 of 25 variants. Rust interop passed 10 of 10 variants.
+- The project and workspace validation area passed all variants.
+- The E2E suite passed 694 of 694 cases.
+- Hardening passed 268 variants with zero failures.
+- The merge report digest is
+  `99500df69166b989ef99f0172c1ff372f001d07d7df069a57edd2c28adc172a7`.
+- Issue [#3128](https://github.com/sifr-lang/sifr/issues/3128) owns the pre-existing
+  package-session interception path.
