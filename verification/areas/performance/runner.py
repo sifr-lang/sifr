@@ -12,6 +12,11 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
+if str(AREA_ROOT) not in sys.path:
+    sys.path.insert(0, str(AREA_ROOT))
+
+from host_control import profile_control_mode  # noqa: E402
+
 DATA_ROOT = AREA_ROOT / "data"
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 BENCHMARK_MANIFEST = DATA_ROOT / "benchmark_manifest.json"
@@ -102,8 +107,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     prefix = "verification ok" if args.hardening_summary else "performance verification ok"
     print(
-        f"{prefix}: variants={total_variants}, failures={total_failures}, "
-        "blocking_failures=0, non_blocking_failures=0",
+        f"{prefix}: variants={total_variants}, failures={total_failures}, " "blocking_failures=0, non_blocking_failures=0",
         flush=True,
     )
     return 0
@@ -193,14 +197,50 @@ def run_profile_variants(suite_name: str) -> list[dict[str, Any]]:
         return [run_command_variant(suite_name, "benchmark-smoke", argv)]
 
     results = f"target/performance/{suite_name}.budget.latest.json"
-    run_argv = [sys.executable, str(RUN_BENCHMARKS), "--json-out", results]
+    invocation_id = f"performance-{suite_name}-{time.time_ns()}"
+    result_path = REPO_ROOT / results
+    try:
+        result_path.unlink(missing_ok=True)
+    except OSError as error:
+        raise SystemExit(f"failed to invalidate prior performance result {result_path}: {error}") from error
+    run_argv = [
+        sys.executable,
+        str(RUN_BENCHMARKS),
+        "--json-out",
+        results,
+        "--invocation-id",
+        invocation_id,
+        "--require-controlled-host",
+        "--controlled-host-mode",
+        profile_control_mode(),
+    ]
     for case_id in REPRESENTATIVE_CASES:
         run_argv.extend(["--case", case_id])
-    check_argv = [sys.executable, str(CHECK_BUDGETS), "--results", results, "--allow-subset"]
-    return [
-        run_command_variant(suite_name, "benchmark-subset", run_argv),
-        run_command_variant(suite_name, "budget-subset", check_argv),
+    check_argv = [
+        sys.executable,
+        str(CHECK_BUDGETS),
+        "--results",
+        results,
+        "--allow-subset",
+        "--expected-invocation-id",
+        invocation_id,
     ]
+    producer = run_command_variant(suite_name, "benchmark-subset", run_argv)
+    if producer["status"] != "pass":
+        return [producer, blocked_variant("budget-subset", "benchmark-subset")]
+    return [producer, run_command_variant(suite_name, "budget-subset", check_argv)]
+
+
+def blocked_variant(label: str, dependency: str) -> dict[str, Any]:
+    return {
+        "label": label,
+        "argv": [],
+        "status": "fail",
+        "mismatches": [f"blocked-by-{dependency}"],
+        "expected_exit_code": 0,
+        "actual_exit_code": None,
+        "duration_ms": 0.0,
+    }
 
 
 def run_manifest_case(suite_name: str, case: dict[str, Any]) -> dict[str, Any]:
@@ -211,13 +251,25 @@ def run_manifest_case(suite_name: str, case: dict[str, Any]) -> dict[str, Any]:
     if command == "python-script-self-test":
         return run_command_variant(suite_name, str(case["id"]), [sys.executable, str(entry), "--self-test"])
     if command == "benchmark-validate":
-        return run_command_variant(suite_name, str(case["id"]), [sys.executable, str(RUN_BENCHMARKS), "--validate-only"])
+        return run_command_variant(
+            suite_name,
+            str(case["id"]),
+            [sys.executable, str(RUN_BENCHMARKS), "--validate-only"],
+        )
     if command == "benchmark-self-test":
-        return run_command_variant(suite_name, str(case["id"]), [sys.executable, str(RUN_BENCHMARKS), "--self-test"])
+        return run_command_variant(
+            suite_name,
+            str(case["id"]),
+            [sys.executable, str(RUN_BENCHMARKS), "--self-test"],
+        )
     if command == "budget-check":
         return run_command_variant(suite_name, str(case["id"]), [sys.executable, str(CHECK_BUDGETS)])
     if command == "budget-self-test":
-        return run_command_variant(suite_name, str(case["id"]), [sys.executable, str(CHECK_BUDGETS), "--self-test"])
+        return run_command_variant(
+            suite_name,
+            str(case["id"]),
+            [sys.executable, str(CHECK_BUDGETS), "--self-test"],
+        )
     raise SystemExit(f"unsupported performance case command: {command}")
 
 

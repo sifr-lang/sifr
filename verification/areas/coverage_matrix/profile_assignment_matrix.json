@@ -62,7 +62,7 @@
         "create-pr": ["algorithmic_compatibility:profile-manifest"],
         "merge": ["algorithmic_compatibility:representative-subset"],
         "nightly": ["algorithmic_compatibility:leetcode-full", "algorithmic_compatibility:taxonomy-smoke"],
-        "release": ["algorithmic_compatibility:representative-subset", "algorithmic_compatibility:taxonomy-smoke"]
+        "release": ["algorithmic_compatibility:leetcode-full", "algorithmic_compatibility:taxonomy-smoke"]
       }
     },
     {

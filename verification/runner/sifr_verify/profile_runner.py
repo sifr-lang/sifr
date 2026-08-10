@@ -2,33 +2,40 @@
 
 from __future__ import annotations
 
-import argparse
-import contextlib
 import os
-import resource
-import shutil
-import subprocess
 import sys
-import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, TextIO
+from typing import Any, Callable
 
-from . import reports
 from .cargo_setup import (
     enable_offline_cargo as enable_profile_offline_cargo,
     prepare_cargo_cache as prepare_profile_cargo_cache,
 )
 from .errors import VerificationError
 from .paths import REPO_ROOT
+from .profile_commands import (
+    CommandFailed,
+    cargo_command,
+    run_command,
+    run_python,
+    uv_area_command,
+)
 from .profile_area_steps import AreaResultError, run_selected_area, validate_area_result
+from .profile_reporting import run_profile_with_report
 from .profiles import (
     crate_test_suites_for_mode,
     legacy_facade,
     load_profile,
     resolve_fixture_manifest,
     selected_suites_for_area,
+)
+from .step_budgets import (
+    StepBudgetContext,
+    enforce_step_budget as enforce_prepared_step_budget,
+    prepare_step_budget,
+    record_step_success,
 )
 
 sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
@@ -40,35 +47,10 @@ class ProfileRunnerError(VerificationError):
     """Profile execution failed before a validation command could run."""
 
 
-class CommandFailed(Exception):
-    """A subprocess returned a non-zero exit code."""
-
-    def __init__(self, returncode: int) -> None:
-        super().__init__(f"command failed with exit code {returncode}")
-        self.returncode = returncode
-
-
 @dataclass(frozen=True)
 class StepResult:
     status: int
     elapsed_ms: int
-
-
-class Tee:
-    """Write text to more than one stream."""
-
-    def __init__(self, *streams: TextIO) -> None:
-        self._streams = streams
-
-    def write(self, data: str) -> int:
-        for stream in self._streams:
-            stream.write(data)
-            stream.flush()
-        return len(data)
-
-    def flush(self) -> None:
-        for stream in self._streams:
-            stream.flush()
 
 
 LEGACY_FACADE_STEPS_BEFORE_GENERATED = (
@@ -126,52 +108,6 @@ def validate_rust_interop_result(result_path: Path, expected_suites: list[str]) 
         raise ProfileRunnerError(str(exc)) from exc
 
 
-def run_command(command: list[str], *, env: dict[str, str] | None = None) -> None:
-    proc = subprocess.Popen(
-        command,
-        cwd=REPO_ROOT,
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        bufsize=1,
-    )
-    assert proc.stdout is not None
-    for line in proc.stdout:
-        sys.stdout.write(line)
-    returncode = proc.wait()
-    if returncode != 0:
-        raise CommandFailed(returncode)
-
-
-def uv_area_command(*args: str) -> list[str]:
-    return [
-        "uv",
-        "run",
-        "--project",
-        "verification",
-        "--locked",
-        "python",
-        "-m",
-        "sifr_verify",
-        "areas",
-        "run",
-        *args,
-    ]
-
-
-def cargo_command(*args: str) -> list[str]:
-    command = ["cargo", *args]
-    if "--" in command:
-        separator = command.index("--")
-        return [*command[:separator], "--locked", *command[separator:]]
-    return [*command, "--locked"]
-
-
-def run_python(script: str, *args: str) -> None:
-    run_command(["python3", script, *args])
-
-
 def now_ms() -> int:
     return time.monotonic_ns() // 1_000_000
 
@@ -203,9 +139,13 @@ class ProfileRunner:
         self.forward_args = forward_args
         self.env = os.environ.copy()
         configured_sifr_binary = self.env.get("SIFR_GCQ_BIN") or self.env.get("SIFR_RUNTIME_PLATFORM_BIN")
-        sifr_binary = Path(configured_sifr_binary) if configured_sifr_binary else resolve_sifr_binary(
-            REPO_ROOT,
-            default_binary=REPO_ROOT / "target" / "debug" / "sifr",
+        sifr_binary = (
+            Path(configured_sifr_binary)
+            if configured_sifr_binary
+            else resolve_sifr_binary(
+                REPO_ROOT,
+                default_binary=REPO_ROOT / "target" / "debug" / "sifr",
+            )
         )
         self.env.setdefault("SIFR_GCQ_BIN", str(sifr_binary))
         self.env.setdefault("SIFR_RUNTIME_PLATFORM_BIN", str(sifr_binary))
@@ -217,15 +157,18 @@ class ProfileRunner:
 
     def run(self) -> int:
         self.print_header()
+        setup_budget = self.prepare_step_budget("cargo_cache_setup")
         setup_result = self.run_timed_step("cargo_cache_setup", self.prepare_cargo_cache)
         if setup_result.status != 0:
             return setup_result.status
         setup_budget_status = self.enforce_step_budget(
             "cargo_cache_setup",
             setup_result.elapsed_ms,
+            setup_budget,
         )
         if setup_budget_status != 0:
             return setup_budget_status
+        record_step_success(setup_budget)
         if self.profile.get("cargo_policy", {}).get("offline") is True:
             self.enable_offline_cargo()
         if self.execution_mode == "selected-areas-only":
@@ -234,12 +177,14 @@ class ProfileRunner:
         steps = self.legacy_facade_steps()
 
         for name, callback in steps:
+            budget = self.prepare_step_budget(name)
             result = self.run_timed_step(name, callback)
             if result.status != 0:
                 return result.status
-            budget_status = self.enforce_step_budget(name, result.elapsed_ms)
+            budget_status = self.enforce_step_budget(name, result.elapsed_ms, budget)
             if budget_status != 0:
                 return budget_status
+            record_step_success(budget)
         return 0
 
     def prepare_cargo_cache(self) -> None:
@@ -256,10 +201,7 @@ class ProfileRunner:
         enable_profile_offline_cargo(self.env)
 
     def legacy_facade_steps(self) -> list[tuple[str, Callable[[], None]]]:
-        return [
-            (name, getattr(self, method_name))
-            for name, method_name in legacy_facade_step_methods(self.profile)
-        ]
+        return [(name, getattr(self, method_name)) for name, method_name in legacy_facade_step_methods(self.profile)]
 
     @property
     def execution_mode(self) -> str:
@@ -268,11 +210,6 @@ class ProfileRunner:
     @property
     def budgets(self) -> dict[str, Any]:
         return self.profile["budgets"]
-
-    @property
-    def step_budgets(self) -> dict[str, Any]:
-        budgets = self.profile.get("step_budgets", {})
-        return budgets if isinstance(budgets, dict) else {}
 
     @property
     def matrix_suites(self) -> list[str]:
@@ -319,15 +256,9 @@ class ProfileRunner:
         print(f"  profile={self.profile_name}")
         print(f"  lane={self.profile_name}")
         print(
-            "  budget="
-            f"warm<={self.budgets['warm_wall_time_minutes']}m "
-            f"cold<={self.budgets['cold_wall_time_minutes']}m"
+            f"  budget=warm<={self.budgets['warm_wall_time_minutes']}m cold<={self.budgets['cold_wall_time_minutes']}m"
         )
-        print(
-            "  policy="
-            f"thermal:{self.legacy['thermal_policy']} "
-            f"memory:{self.legacy['memory_policy']}"
-        )
+        print(f"  policy=thermal:{self.legacy['thermal_policy']} memory:{self.legacy['memory_policy']}")
 
     def selected_suites_for_area(self, area_name: str) -> list[str]:
         suites: list[str] = []
@@ -339,47 +270,39 @@ class ProfileRunner:
                 suites.extend(str(suite) for suite in raw_suites)
         return suites
 
-    def enforce_step_budget(self, name: str, elapsed_ms: int) -> int:
-        raw_budget = self.step_budgets.get(name)
-        if not isinstance(raw_budget, dict):
-            return 0
-        budget_ms = int(raw_budget.get("budget_ms", 0) or 0)
-        enforcement = str(raw_budget.get("enforcement", "advisory"))
-        exceeded = budget_ms > 0 and elapsed_ms > budget_ms
-        budget_status = "fail" if exceeded else "pass"
-        print(
-            "[sifr-lane-step-budget] "
-            f"name={name} elapsed_ms={elapsed_ms} budget_ms={budget_ms} "
-            f"enforcement={enforcement} status={budget_status}"
+    def prepare_step_budget(self, name: str) -> StepBudgetContext | None:
+        return prepare_step_budget(
+            repo_root=REPO_ROOT,
+            profile=self.profile,
+            profile_name=str(self.profile.get("name", "unknown")),
+            name=name,
+            env=getattr(self, "env", os.environ),
         )
-        disabled = os.environ.get("SIFR_VERIFY_DISABLE_STEP_BUDGETS", "").lower() in {
-            "1",
-            "true",
-            "yes",
-        }
-        if exceeded and enforcement == "blocking" and not disabled:
-            print(
-                f"sifr_verify: step budget exceeded for {name}: "
-                f"{elapsed_ms}ms > {budget_ms}ms",
-                file=sys.stderr,
-            )
-            return 124
-        return 0
+
+    def enforce_step_budget(
+        self,
+        _name: str,
+        elapsed_ms: int,
+        context: StepBudgetContext | None = None,
+    ) -> int:
+        return enforce_prepared_step_budget(context, elapsed_ms)
 
     def run_selected_areas_only(self) -> int:
-        selections = [
-            selection
-            for selection in self.profile.get("selected_areas", [])
-            if isinstance(selection, dict)
-        ]
+        selections = [selection for selection in self.profile.get("selected_areas", []) if isinstance(selection, dict)]
         if not selections:
-            print(f"sifr_verify: profile {self.profile_name} selects no areas", file=sys.stderr)
+            print(
+                f"sifr_verify: profile {self.profile_name} selects no areas",
+                file=sys.stderr,
+            )
             return 2
         for selection in selections:
             area = str(selection["area"])
             suites = [str(suite) for suite in selection.get("suites", [])]
             step_name = f"{area}_selected_suites"
-            result = timed_step(step_name, lambda area=area, suites=suites: self.run_area_suites(area, suites))
+            result = timed_step(
+                step_name,
+                lambda area=area, suites=suites: self.run_area_suites(area, suites),
+            )
             if result.status != 0:
                 return result.status
         return 0
@@ -388,7 +311,7 @@ class ProfileRunner:
         args = ["--area", area]
         for suite in suites:
             args.extend(["--suite", suite])
-        run_command(uv_area_command(*args))
+        run_command(uv_area_command(*args), env=self.env)
 
     def run_coverage_matrix_checks(self) -> None:
         suites = self.selected_suites_for_area("coverage_matrix")
@@ -499,14 +422,12 @@ class ProfileRunner:
         args = ["--area", "python_interop"]
         for suite in suites:
             args.extend(["--suite", suite])
-        run_command(uv_area_command(*args))
+        run_command(uv_area_command(*args), env=self.env)
 
     def run_rust_interop_checks(self) -> None:
         suites = self.selected_suites_for_area("rust_interop")
         if not suites:
-            raise ProfileRunnerError(
-                f"profile {self.profile_name} has no Rust interop suites to execute"
-            )
+            raise ProfileRunnerError(f"profile {self.profile_name} has no Rust interop suites to execute")
         print("Running Rust interop checks")
         try:
             run_selected_area(
@@ -573,17 +494,23 @@ class ProfileRunner:
     def run_verification_runner_foundation_checks(self) -> None:
         print("Running verification runner foundation checks")
         run_command(["uv", "lock", "--project", "verification", "--check"])
-        run_command(["uv", "run", "--project", "verification", "--locked", "python", "-m", "sifr_verify", "--self-test"])
+        run_command(
+            [
+                "uv",
+                "run",
+                "--project",
+                "verification",
+                "--locked",
+                "python",
+                "-m",
+                "sifr_verify",
+                "--self-test",
+            ]
+        )
 
     def run_fuzz_property_suites(self) -> None:
-        legacy_fuzz_suites = {
-            suite for suite in self.hardening_suites if suite in {"property", "fuzz-smoke"}
-        }
-        suites = [
-            suite
-            for suite in self.selected_suites_for_area("fuzz_property")
-            if suite not in legacy_fuzz_suites
-        ]
+        legacy_fuzz_suites = {suite for suite in self.hardening_suites if suite in {"property", "fuzz-smoke"}}
+        suites = [suite for suite in self.selected_suites_for_area("fuzz_property") if suite not in legacy_fuzz_suites]
         if not suites:
             print(f"Skipping fuzz/property checks for lane {self.profile_name}")
             return
@@ -615,8 +542,7 @@ class ProfileRunner:
         suites = self.selected_suites_for_area("distribution_release")
         if self.distribution_mode not in suites:
             raise ProfileRunnerError(
-                f"profile {self.profile_name} does not select distribution mode "
-                f"{self.distribution_mode}"
+                f"profile {self.profile_name} does not select distribution mode {self.distribution_mode}"
             )
         try:
             run_selected_area(
@@ -644,10 +570,13 @@ class ProfileRunner:
     def run_generated_code_quality_checks(self) -> None:
         print("Running Generated Code Quality Checks")
         print(f"  mode={self.generated_code_quality_mode}")
-        if self.generated_code_quality_mode not in {"smoke", "representative", "full", "release-full"}:
-            raise ProfileRunnerError(
-                f"unsupported generated-code quality mode: {self.generated_code_quality_mode}"
-            )
+        if self.generated_code_quality_mode not in {
+            "smoke",
+            "representative",
+            "full",
+            "release-full",
+        }:
+            raise ProfileRunnerError(f"unsupported generated-code quality mode: {self.generated_code_quality_mode}")
         shared_root = REPO_ROOT / "target" / "sifr_generated_code_quality" / f"{self.profile_name}.shared"
         env = self.env | {"SIFR_GCQ_SHARED_ROOT": str(shared_root.relative_to(REPO_ROOT))}
         run_command(
@@ -687,11 +616,7 @@ class ProfileRunner:
                 status = exc.returncode
             elapsed_ms = now_ms() - start_ms
             case_status = "pass" if status == 0 else "fail"
-            print(
-                "[sifr-case-timing] "
-                f"bucket=crate_tests case={suite_id} "
-                f"elapsed_ms={elapsed_ms} status={case_status}"
-            )
+            print(f"[sifr-case-timing] bucket=crate_tests case={suite_id} elapsed_ms={elapsed_ms} status={case_status}")
             if status != 0:
                 raise CommandFailed(status)
 
@@ -753,7 +678,14 @@ class ProfileRunner:
             e2e_args.extend(["--fixture-manifest", str(fixture_manifest)])
         if bool(self.e2e["disable_cache"]):
             e2e_args.append("--no-cache")
-        run_command(["bash", "verification/runner/e2e/run_e2e_pass.sh", *e2e_args, *self.forward_args])
+        run_command(
+            [
+                "bash",
+                "verification/runner/e2e/run_e2e_pass.sh",
+                *e2e_args,
+                *self.forward_args,
+            ]
+        )
 
     def run_hardening_suites(self) -> None:
         if not self.hardening_suites:
@@ -779,22 +711,59 @@ class ProfileRunner:
             else:
                 legacy_args.extend(["--suite", suite])
         if diagnostics:
-            run_command(uv_area_command("--area", "diagnostics", "--suite", "baselines", "--hardening-summary"))
+            run_command(
+                uv_area_command(
+                    "--area",
+                    "diagnostics",
+                    "--suite",
+                    "baselines",
+                    "--hardening-summary",
+                )
+            )
         if project_workspace:
-            run_command(uv_area_command("--area", "project_workspace", "--suite", "baselines", "--hardening-summary"))
+            run_command(
+                uv_area_command(
+                    "--area",
+                    "project_workspace",
+                    "--suite",
+                    "baselines",
+                    "--hardening-summary",
+                )
+            )
         if regression_args:
             run_command(uv_area_command("--area", "regression", *regression_args, "--hardening-summary"))
         if fuzz_property_args:
-            run_command(uv_area_command("--area", "fuzz_property", *fuzz_property_args, "--hardening-summary"))
+            run_command(
+                uv_area_command(
+                    "--area",
+                    "fuzz_property",
+                    *fuzz_property_args,
+                    "--hardening-summary",
+                )
+            )
         if ecosystem_args:
-            run_command(uv_area_command("--area", "ecosystem_compatibility", *ecosystem_args, "--hardening-summary"))
+            run_command(
+                uv_area_command(
+                    "--area",
+                    "ecosystem_compatibility",
+                    *ecosystem_args,
+                    "--hardening-summary",
+                )
+            )
         if len(legacy_args) > 2:
             run_command([sys.executable, "-m", "sifr_verify.hardening", *legacy_args])
 
     def run_extra_e2e_checks(self) -> None:
         if "e2e_report_determinism" in self.extra_checks:
             print("Running e2e report determinism check")
-            run_command(["bash", "verification/runner/e2e/check_report_determinism.sh", "--profile", self.profile_name])
+            run_command(
+                [
+                    "bash",
+                    "verification/runner/e2e/check_report_determinism.sh",
+                    "--profile",
+                    self.profile_name,
+                ]
+            )
         if "e2e_sequential_parallel_equivalence" in self.extra_checks:
             print("Running e2e sequential-vs-parallel equivalence check")
             run_command(
@@ -807,92 +776,15 @@ class ProfileRunner:
             )
 
 
-def write_time_file(path: Path, *, start: float, usage_start: resource.struct_rusage) -> None:
-    usage = resource.getrusage(resource.RUSAGE_CHILDREN)
-    real_seconds = time.monotonic() - start
-    user_seconds = max(0.0, usage.ru_utime - usage_start.ru_utime)
-    sys_seconds = max(0.0, usage.ru_stime - usage_start.ru_stime)
-    max_rss = int(usage.ru_maxrss)
-    swaps = max(0, int(usage.ru_nswap - usage_start.ru_nswap))
-    path.write_text(
-        f"{real_seconds:.2f} real\n"
-        f"{user_seconds:.2f} user\n"
-        f"{sys_seconds:.2f} sys\n"
-        f"{max_rss} maximum resident set size\n"
-        f"{swaps} swaps\n",
-        encoding="utf-8",
-    )
-
-
-def temporary_report_path(report_dir: Path, prefix: str) -> Path:
-    with tempfile.NamedTemporaryFile(prefix=prefix, dir=report_dir, delete=False) as temp_file:
-        return Path(temp_file.name)
-
-
 def run_profile(
     profile_name: str,
     forward_args: list[str],
     *,
     release_report_out: str | None = None,
 ) -> int:
-    release_output = None
-    if release_report_out is not None:
-        from .release_evidence import prepare_release_report_output
-
-        try:
-            release_output = prepare_release_report_output(
-                release_report_out,
-                profile_name=profile_name,
-            )
-        except ValueError as exc:
-            print(f"sifr_verify: {exc}", file=sys.stderr)
-            return 2
-    report_dir = REPO_ROOT / "target" / "validation_lane_reports"
-    report_dir.mkdir(parents=True, exist_ok=True)
-    temp_log = temporary_report_path(report_dir, f"lane.{profile_name}.log.")
-    temp_time = temporary_report_path(report_dir, f"lane.{profile_name}.time.")
-    latest_log = report_dir / f"{profile_name}.latest.log"
-    latest_time = report_dir / f"{profile_name}.latest.time"
-    json_file = report_dir / f"{profile_name}.latest.json"
-    start = time.monotonic()
-    usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)
-    status = 0
-
-    with temp_log.open("w", encoding="utf-8") as log_file:
-        tee = Tee(sys.stdout, log_file)
-        with contextlib.redirect_stdout(tee), contextlib.redirect_stderr(tee):
-            try:
-                status = ProfileRunner(profile_name, forward_args).run()
-            except ProfileRunnerError as exc:
-                print(f"sifr_verify: {exc}", file=sys.stderr)
-                status = 2
-
-    write_time_file(temp_time, start=start, usage_start=usage_start)
-    shutil.copyfile(temp_log, latest_log)
-    shutil.copyfile(temp_time, latest_time)
-    try:
-        reports.summarize(
-            argparse.Namespace(
-                profile=profile_name,
-                log=str(latest_log),
-                time_file=str(latest_time),
-                json_out=str(json_file),
-            )
-        )
-    except Exception as exc:  # Preserve validation status while surfacing report regressions.
-        print(f"warning: lane report summarization failed: {exc}", file=sys.stderr)
-    if release_output is not None and status == 0:
-        from .release_evidence import write_release_profile_report
-
-        try:
-            write_release_profile_report(
-                release_output,
-                log_path=latest_log,
-                status=status,
-            )
-        except ValueError as exc:
-            print(f"sifr_verify: {exc}", file=sys.stderr)
-            status = 2
-    temp_log.unlink(missing_ok=True)
-    temp_time.unlink(missing_ok=True)
-    return status
+    return run_profile_with_report(
+        profile_name,
+        lambda: ProfileRunner(profile_name, forward_args).run(),
+        handled_error=ProfileRunnerError,
+        release_report_out=release_report_out,
+    )

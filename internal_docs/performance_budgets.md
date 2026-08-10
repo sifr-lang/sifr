@@ -45,7 +45,55 @@ run `check_budgets.py --allow-subset` against that result file. The subset
 covers single-file check, project check, single-file build, project build,
 incremental cache behavior, interactive diagnostics, and diagnostic architecture
 diagnostic/exit-code non-regression.
-Full-corpus benchmark execution and baseline refresh remain explicit:
+
+Representative and full budget producers use work-controlled admission on
+macOS. They retain latency-controlled admission on other operating systems.
+macOS admission requires three accepted snapshots, AC power, and nominal
+thermal state. The host must provide retired-instruction counters. Competing
+Cargo, rustc, benchmark, or Git indexing processes reject admission.
+
+Work-controlled admission records load and unrelated CPU use. It does not
+reject a sample only because unrelated CPU use is high. Retired instructions
+measure work in the benchmark process tree. Unrelated processes do not add to
+that count. Each case rejects an instruction coefficient of variation above
+`0.02`.
+
+Latency-controlled admission remains available for elapsed-time evidence. It
+also requires normalized one-minute load at or below `0.85`. Unrelated
+processes can use no more than `50%` of one logical CPU. A stable CPU-throughput
+calibration is also required. The approved trend capture uses this mode.
+
+Both modes record load, power, thermal state, CPU behavior, external CPU use,
+memory pressure, and cache state. Per-case monitoring rejects new competing
+build work or thermal pressure. The monitor excludes the benchmark runner and
+its process tree.
+
+On macOS, `ps` supplies recent decayed CPU use. On Linux, `ps` supplies the
+process-lifetime average. Linux evidence records this limitation.
+Competing-work classification uses the actual executable or Python module/script
+identity, not arbitrary shell argument text that merely mentions Cargo or a
+benchmark. A top-level `git fetch` is not rejected by itself; its CPU/disk-heavy
+`index-pack`, clone, or submodule work is rejected when that executable or
+subcommand appears. If all three attempts are rejected, their snapshots and
+reasons are persisted under the run's `control-failures/` directory before the
+producer exits.
+
+Latency-controlled cases use the manifest `stability_limit` (default `0.10`).
+Work-controlled cases use `work_stability_limit` (default `0.02`). An unstable
+or contaminated case is discarded. The producer retries the case two times.
+It obtains a new admission window before each retry. Three rejected attempts
+stop the producer. The budget checker does not permit a waiver for sample
+instability.
+
+The profile adapter invalidates the fixed `*.budget.latest.json` path before
+production and binds producer and checker with a unique invocation id. If the
+producer fails, the checker is not run. A failed benchmark invocation therefore
+cannot feed a prior run to the budget diagnostic.
+
+Full-corpus benchmark execution and baseline refresh remain explicit. Budget
+baselines and trend baselines are separate governed artifacts. Updating
+`data/baselines.json` changes blocking thresholds and uses the reviewed budget
+workflow:
 
 Refresh baselines intentionally after review:
 
@@ -54,6 +102,48 @@ python3 verification/areas/performance/run_benchmarks.py --capture-baseline
 python3 verification/areas/performance/check_budgets.py
 ```
 
+The local work baseline is a separate governed artifact. It records Darwin
+retired instructions and Darwin process-tree RSS. This command does not change
+the generic elapsed-time baseline or its thresholds:
+
+```bash
+python3 verification/areas/performance/run_benchmarks.py \
+  --capture-work-baseline \
+  --require-controlled-host \
+  --controlled-host-mode work \
+  --reference-approval compiler/performance
+python3 verification/areas/performance/check_budgets.py
+```
+
+The capture writes `data/work_budgets.json` after all cases pass. The instruction
+threshold is `max(baseline * 1.02, baseline + 2,000,000 instructions)`. The
+local RSS threshold is `max(baseline * 1.10, baseline + 32MiB)`.
+
+Updating `data/trend/current.json` does not change blocking budgets. It requires
+an owner-approved reference run from a clean exact commit, the complete
+manifest with manifest sample counts, and controlled-host admission and
+per-case monitoring:
+
+```bash
+SIFR_VALIDATION_PROFILE=approved-reference \
+SIFR_THERMAL_POLICY=controlled-host \
+python3 verification/areas/performance/run_benchmarks.py \
+  --capture-trend-baseline \
+  --require-controlled-host \
+  --controlled-host-mode latency \
+  --reference-approval compiler/performance
+python3 verification/areas/performance/check_trend_policy.py
+```
+
+The trend snapshot is written only after the full run succeeds and passes the
+same stability validation used for budget capture. Its `reference_capture`
+receipt binds the clean source commit, invocation and run ids, controlled-host
+policy, observation counts, and the SHA-256 of the raw evidence under
+`target/performance/evidence/`. Per-case transient host snapshots remain in the
+raw evidence rather than bloating the checked-in trend snapshot. Expired
+metadata or freshness deferrals are removed only by this successful fresh
+capture; extending their dates is not a refresh.
+
 ## Threshold Rules
 
 Command benchmarks use:
@@ -61,6 +151,25 @@ Command benchmarks use:
 - median latency: `max(baseline_median * 1.10, baseline_median + 25ms)`
 - p95 latency: `max(baseline_p95 * 1.15, baseline_p95 + 50ms)`
 - peak RSS: `max(baseline_peak_rss * 1.10, baseline_peak_rss + 32MiB)`
+
+Work-controlled results use the local instruction and Darwin process-tree RSS
+thresholds. Latency-controlled results use the generic elapsed-time and RSS
+thresholds. Timeout, cache, and correctness requirements block in both modes.
+
+For work-mode median instructions, the checker subtracts bounded sampling
+uncertainty before it compares the result with the threshold:
+`median - min(3 * instruction MAD, 0.5% * median)`. This rule does not apply to
+RSS or to latency-mode metrics. The cap means that sampling uncertainty can
+absorb at most 0.5% of measured work. For a ratio-based instruction budget, the
+worst-case blocking sensitivity is approximately 2.51% above the baseline,
+instead of the nominal 2% threshold. When uncertainty absorbs an over-threshold
+median, the checker emits a note with the case, median, threshold, MAD, and
+applied uncertainty. A zero-MAD result fails at one instruction above the
+threshold.
+
+Darwin rusage includes the spawned query server and its descendants. The
+generic baseline can use a different operating-system RSS boundary. The local
+artifact prevents these two RSS meanings from sharing one threshold.
 
 Command benchmark RSS is measured per command invocation with `/usr/bin/time` when available (`-l` on macOS, `-v` on Linux). Python `RUSAGE_CHILDREN` is used only as a fallback because it is process-cumulative on some platforms and can otherwise contaminate later samples with earlier validation work.
 
@@ -135,6 +244,9 @@ Waivers are allowed only for temporary performance threshold regressions. They m
 - `rationale`
 - `removal_criteria`
 
-Waivers may override `median_ms`, `p95_ms`, `peak_rss_bytes`, or `cache_hits`. They may not suppress timeouts, missing or malformed results, unknown ids, stale-cache/correctness failures, diagnostic drift, split-brain semantics, or panic-safety failures.
+Waivers can override `median_ms`, `p95_ms`, `median_instructions`,
+`peak_rss_bytes`, or `cache_hits`. They cannot suppress timeouts, malformed
+results, cache errors, diagnostic drift, split-brain semantics, or panic-safety
+errors.
 
 Expired waivers, ownerless waivers, issue-less waivers, unknown benchmark/budget references, and non-performance overrides fail `check_budgets.py`.

@@ -48,7 +48,7 @@ successor and is summarized here.
 | 38 | Phase 38: Docs and Documentation | unspecified | [38_docs_and_documentation.md](./38_docs_and_documentation.md) |
 | 39 | Phase 39: Rust Interop | completed, audited (2026-06-22, PRs #2702-#2729) | [39_rust_interop.md](./39_rust_interop.md) |
 | 40 | Phase 40: Stable Channel GA Promotion and Release Governance | in progress | [40_stable_channel_ga_promotion_and_release_governance.md](./40_stable_channel_ga_promotion_and_release_governance.md) |
-| ALG-CORPUS | Ad Hoc Algorithmic Full-Corpus Pre-Existing Failures | active non-blocking follow-up | [../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md](../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md) |
+| ALG-CORPUS | Ad Hoc Algorithmic Full-Corpus Pre-Existing Failures | closeout in progress | [../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md](../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md) |
 | DICT-AUG | Ad Hoc Dict Missing-Key Augassign Semantics | completed and audited (2026-08-08, PR #3108) | [../issues/archive/ad-hoc-dict-missing-key-augassign-semantics.md](../issues/archive/ad-hoc-dict-missing-key-augassign-semantics.md) |
 | MAP-MUT | Ad Hoc Remaining Mapping Missing-Key Mutation Semantics | active non-blocking correctness follow-up | [../issues/active/ad-hoc-mapping-missing-key-mutation-followups.md](../issues/active/ad-hoc-mapping-missing-key-mutation-followups.md) |
 | GENC-NAN | Ad Hoc Generated NaN Constant Clippy Quality | active non-blocking follow-up; release divergence expires 2026-10-31 | [adhoc_generated_nan_constant_clippy_quality.md](../issues/active/adhoc_generated_nan_constant_clippy_quality.md) |

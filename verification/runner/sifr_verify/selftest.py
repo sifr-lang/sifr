@@ -38,7 +38,13 @@ from .release_evidence_selftest import (
     release_report_production_self_test,
 )
 from .results import build_result
-from .schemas import load_schema, validate_all_committed_schemas, validate_data, validate_schema_requirement
+from .schemas import (
+    load_schema,
+    validate_all_committed_schemas,
+    validate_data,
+    validate_schema_requirement,
+)
+from .step_budgets import run_self_test as step_budget_self_test
 from verification.json_schema_202012 import lint_schema
 
 
@@ -46,10 +52,14 @@ def run_all() -> list[str]:
     checks = [
         ("schema self-tests", _schema_self_test),
         ("profile schema self-test", _profile_schema_self_test),
+        ("cache-aware step budget self-test", step_budget_self_test),
         ("crate membership self-test", _crate_membership_self_test),
         ("Rust interop profile execution self-test", _rust_interop_profile_self_test),
         ("documentation profile execution self-test", _documentation_profile_self_test),
-        ("release report precondition self-test", release_report_precondition_self_test),
+        (
+            "release report precondition self-test",
+            release_report_precondition_self_test,
+        ),
         ("release report production self-test", release_report_production_self_test),
         ("e2e profile self-test", _e2e_profile_self_test),
         ("runner discovery self-test", _discovery_self_test),
@@ -77,11 +87,7 @@ def _schema_self_test() -> None:
     if missing:
         raise AssertionError(f"missing schema self-test coverage: {sorted(missing)}")
     governance_schemas = (
-        Path(__file__).resolve().parents[3]
-        / "verification"
-        / "areas"
-        / "distribution_release"
-        / "schemas"
+        Path(__file__).resolve().parents[3] / "verification" / "areas" / "distribution_release" / "schemas"
     )
     governed = [lint_schema(path) for path in sorted(governance_schemas.glob("*.schema.json"))]
     if len(governed) != 19:
@@ -127,18 +133,21 @@ def _profile_schema_self_test() -> None:
     ]:
         raise AssertionError("python-interop-live has a noncanonical Cargo setup command")
     for profile_name in sorted(expected):
-        setup_budget = profiles[profile_name].get("step_budgets", {}).get(
-            "cargo_cache_setup"
-        )
+        setup_budget = profiles[profile_name].get("step_budgets", {}).get("cargo_cache_setup")
         if setup_budget != {
             "budget_ms": 300_000,
             "enforcement": "advisory",
         }:
-            raise AssertionError(
-                f"{profile_name} has a noncanonical Cargo setup budget: "
-                f"{setup_budget}"
-            )
+            raise AssertionError(f"{profile_name} has a noncanonical Cargo setup budget: {setup_budget}")
     create_pr_step_budgets = profiles["create-pr"].get("step_budgets", {})
+    python_interop_budget = create_pr_step_budgets.get("python_interop")
+    if python_interop_budget != {
+        "warm_budget_ms": 600_000,
+        "cold_budget_ms": 1_200_000,
+        "cache_classifier": "successful-input-receipt",
+        "enforcement": "blocking",
+    }:
+        raise AssertionError(f"create-pr Python interop cache budget drifted: {python_interop_budget}")
     required_blocking_steps = {
         "generated_code_quality_checks",
         "rust_interop_checks",
@@ -202,15 +211,13 @@ def _crate_membership_self_test() -> None:
             suite = profile_by_id[suite_id]
             if suite.get("status") != "blocking" or suite.get("executed_in_merge") is not True:
                 raise AssertionError(
-                    f"generated-build crate suite is not blocking/executed in {profile_name}: "
-                    f"{suite}",
+                    f"generated-build crate suite is not blocking/executed in {profile_name}: {suite}",
                 )
         smoke_ids = {str(suite.get("id")) for suite in profile_smoke_suites}
         misplaced_generated = sorted(generated_build_suites.intersection(smoke_ids))
         if misplaced_generated:
             raise AssertionError(
-                f"generated-build crate suites must not run in smoke for {profile_name}: "
-                f"{misplaced_generated}",
+                f"generated-build crate suites must not run in smoke for {profile_name}: {misplaced_generated}",
             )
 
     duplicate_profile = {
@@ -383,19 +390,13 @@ def _rust_interop_profile_self_test() -> None:
     ]
     if recording_runner.events != expected_events:
         raise AssertionError(
-            "profile runner did not execute cache setup before offline steps: "
-            f"{recording_runner.events}"
+            f"profile runner did not execute cache setup before offline steps: {recording_runner.events}"
         )
     timing_output = io.StringIO()
     with redirect_stdout(timing_output):
         timing_result = timed_step("cargo_cache_setup", lambda: None)
-    if timing_result.status != 0 or (
-        "[sifr-lane-step] name=cargo_cache_setup" not in timing_output.getvalue()
-    ):
-        raise AssertionError(
-            "cache setup timing seam did not emit its lane-step report: "
-            f"{timing_output.getvalue()!r}"
-        )
+    if timing_result.status != 0 or ("[sifr-lane-step] name=cargo_cache_setup" not in timing_output.getvalue()):
+        raise AssertionError(f"cache setup timing seam did not emit its lane-step report: {timing_output.getvalue()!r}")
 
     invalid_setup_profile = {
         "cargo_policy": {
@@ -426,10 +427,7 @@ def _rust_interop_profile_self_test() -> None:
     except ProfileError as exc:
         selected = {"matrix", "tiers", "compatibility-matrix"}
         expected_missing = ", ".join(sorted(required_suites - selected))
-        expected_message = (
-            "omits required Rust interop verification suites: "
-            f"{expected_missing}"
-        )
+        expected_message = f"omits required Rust interop verification suites: {expected_missing}"
         if expected_message not in str(exc):
             raise
     else:
@@ -486,7 +484,10 @@ def _rust_interop_profile_self_test() -> None:
             {**valid_payload, "suites": "not-a-list"},
             {
                 **valid_payload,
-                "summary": {"blocking_failures": 1, "total_variants": len(required_suites)},
+                "summary": {
+                    "blocking_failures": 1,
+                    "total_variants": len(required_suites),
+                },
             },
             {
                 **valid_payload,
@@ -532,9 +533,7 @@ def _rust_interop_profile_self_test() -> None:
             except ProfileRunnerError:
                 pass
             else:
-                raise AssertionError(
-                    f"invalid Rust interop result JSON mutation {index} was accepted"
-                )
+                raise AssertionError(f"invalid Rust interop result JSON mutation {index} was accepted")
         result_path.write_text("{not-json", encoding="utf-8")
         try:
             validate_rust_interop_result(result_path, sorted(required_suites))
@@ -547,16 +546,10 @@ def _rust_interop_profile_self_test() -> None:
 def _documentation_profile_self_test() -> None:
     profiles = load_all_profiles()
     release = profiles["release"]
-    selected = [
-        selection
-        for selection in release["selected_areas"]
-        if selection.get("area") == "documentation"
-    ]
+    selected = [selection for selection in release["selected_areas"] if selection.get("area") == "documentation"]
     expected_suites = ["structure", "ga-release"]
     if len(selected) != 1 or selected[0].get("suites") != expected_suites:
-        raise AssertionError(
-            "release profile must select documentation:structure and ga-release exactly once"
-        )
+        raise AssertionError("release profile must select documentation:structure and ga-release exactly once")
     if "documentation_suites" in legacy_facade(release):
         raise AssertionError("documentation suites must have selected_areas as their sole authority")
     if "documentation_checks" not in legacy_facade_step_names(release):
@@ -648,8 +641,7 @@ def _e2e_profile_self_test() -> None:
         fixture_manifest = legacy_facade(profiles[profile_name])["e2e"].get("fixture_manifest")
         if fixture_manifest:
             raise AssertionError(
-                f"{profile_name} e2e must use the full pass corpus, got fixture manifest: "
-                f"{fixture_manifest}",
+                f"{profile_name} e2e must use the full pass corpus, got fixture manifest: {fixture_manifest}",
             )
 
     merge_full_suites = crate_test_suites_for_mode(profiles["merge"], "full")
@@ -694,8 +686,7 @@ def _discovery_self_test() -> None:
   "timeout_seconds": 60,
   "suites": []
 }
-""".strip()
-            + "\n",
+""".strip() + "\n",
             encoding="utf-8",
         )
         areas = discover_areas(areas_dir)
@@ -708,7 +699,10 @@ def _resource_class_self_test() -> None:
         "resource_policy": {"classes": ["default-local", "network", "container-runtime"]},
         "selected_areas": [
             {"area": "core_language", "resource_classes": ["default-local"]},
-            {"area": "ecosystem_compatibility", "resource_classes": ["external-corpus"]},
+            {
+                "area": "ecosystem_compatibility",
+                "resource_classes": ["external-corpus"],
+            },
         ],
     }
     expected = {"default-local", "network", "external-corpus", "container-runtime"}
