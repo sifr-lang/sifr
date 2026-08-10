@@ -1,5 +1,5 @@
 # Reference: stdlib_parity_ext_3_regex_filesystem_iterators
-from sifr.re import finditer, compile, Match
+from sifr.re import finditer, compile, Match, Pattern
 from sifr.glob import iglob
 from sifr.pathlib import Path
 from sifr.io import write_text
@@ -24,7 +24,7 @@ def collect_regex_actual() -> list[bool]:
         actual.append(second_ok)
         actual.append(third is None)
 
-        p = compile("\\w+")
+        p: Pattern = compile("\\w+")
         word_it: Iterator[Match] = p.finditer("hi all")
         words: list[str] = []
         for m in word_it:

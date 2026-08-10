@@ -215,7 +215,9 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
                     RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } => {
                         collect_type(ty, needs);
                     }
-                    RustParam::SelfParam { .. } | RustParam::SelfValue => {}
+                    RustParam::SelfParam { .. }
+                    | RustParam::SelfParamWithLifetime { .. }
+                    | RustParam::SelfValue => {}
                 }
             }
             if let Some(ret) = ret {

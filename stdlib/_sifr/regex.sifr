@@ -1,5 +1,49 @@
 # Private _sifr.regex native declaration module.
 
+@rust.opaque(
+    type=sifr_stdlib.regex.CompiledPattern,
+    send=False,
+    sync=False,
+    clone=none,
+    close=drop,
+)
+class CompiledPattern(NonSend):
+    @rust(sifr_stdlib.regex.compiled_pattern_search)
+    def search(self, text: str) -> Result[str | None, RegexError]:
+        ...
+
+    @rust(sifr_stdlib.regex.compiled_pattern_is_match)
+    def is_match(self, text: str) -> Result[bool, RegexError]:
+        ...
+
+    @rust(sifr_stdlib.regex.compiled_pattern_replace)
+    def sub(self, replacement: str, text: str) -> Result[str, RegexError]:
+        ...
+
+    @rust(sifr_stdlib.regex.compiled_pattern_findall)
+    def findall(self, text: str) -> Result[list[str], RegexError]:
+        ...
+
+    @rust(sifr_stdlib.regex.compiled_pattern_split)
+    def split(self, text: str) -> Result[list[str], RegexError]:
+        ...
+
+    @rust(sifr_stdlib.regex.compiled_pattern_source)
+    def pattern(self) -> Result[str, RegexError]:
+        ...
+
+    @rust(sifr_stdlib.regex.compiled_pattern_flags)
+    def flags(self) -> Result[int, RegexError]:
+        ...
+
+@rust(sifr_stdlib.regex.compile_pattern)
+def compile_pattern(pattern: str) -> Result[CompiledPattern, RegexError]:
+    ...
+
+@rust(sifr_stdlib.regex.compile_pattern_flags)
+def compile_pattern_flags(pattern: str, flags: int) -> Result[CompiledPattern, RegexError]:
+    ...
+
 @rust(sifr_stdlib.regex.re_match)
 def re_match(pattern: str, text: str) -> Result[bool, RegexError]:
     ...

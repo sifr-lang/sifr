@@ -25,7 +25,7 @@ pub(crate) fn rust_interop_function_body(func: &HirFunction) -> Option<Vec<RustS
         return None;
     }
     let call = RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(rust_function_path(target))),
+        func: Box::new(RustExpr::Path(rust_function_path(target, func))),
         args: func
             .params
             .iter()
@@ -98,7 +98,7 @@ pub(crate) fn rust_interop_method_body(
         (
             Vec::new(),
             RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(rust_function_path(target))),
+                func: Box::new(RustExpr::Path(rust_function_path(target, func))),
                 args,
             },
         )
@@ -349,14 +349,25 @@ fn is_function_declaration(declaration: &RustInteropDeclaration) -> bool {
     ) && declaration.target.is_some()
 }
 
-fn rust_function_path(target: &RustTargetPath) -> Vec<String> {
-    let Some(root) = target.segments.first() else {
-        return Vec::new();
-    };
-    if root == BRIDGE_ROOT {
-        return target.segments.clone();
+fn rust_function_path(target: &RustTargetPath, func: &HirFunction) -> Vec<String> {
+    structural_target_path(target, func)
+}
+
+fn structural_target_path(target: &RustTargetPath, func: &HirFunction) -> Vec<String> {
+    let mut path = target.segments.clone();
+    if func
+        .rust_interop
+        .iter()
+        .any(|declaration| declaration.kind == RustInteropDecoratorKind::Structural)
+        && !func.type_params.is_empty()
+    {
+        if let Some(last) = path.last_mut() {
+            last.push_str("::<");
+            last.push_str(&func.type_params.join(", "));
+            last.push('>');
+        }
     }
-    target.segments.clone()
+    path
 }
 
 fn direct_rust_function_is_async(func: &HirFunction, declaration: &RustInteropDeclaration) -> bool {

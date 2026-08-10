@@ -3,11 +3,14 @@
 ## Status
 
 Track A is complete through merged
-[PR #3083](https://github.com/sifr-lang/sifr/pull/3083). All 36 current
-compatibility rows have passing positive and negative evidence, and
-`certification_14` recorded the final inventory, stable-claim, validation,
-published-head review, and immutable merge identities. Track B remains dormant
-until the external bridge-version 2 package-resource substrate exists.
+[PR #3083](https://github.com/sifr-lang/sifr/pull/3083). All 36 compatibility
+rows in the 2026-07-30 Track A closeout had passing positive and negative
+evidence, and `certification_14` recorded that inventory, stable-claim,
+validation, published-head review, and immutable merge identities. The matrix
+now also carries the future-owned Native Pydantic-Sifr rows
+`structural_bridge_calls` and `bridge_version_field_removal`, whose four
+directions remain planned. Track B remains dormant until the external
+structural Rust bridge package-resource substrate exists.
 
 The verification-hardening dependency is complete through
 [`hardening_4`](../archive/rust-interop-verification-matrix-hardening.md#hardening_4-replace-lexical-rejection-context):
@@ -162,7 +165,7 @@ normative and must not be broadened.
 | `certification_12` | merged | [PR #3076](https://github.com/sifr-lang/sifr/pull/3076); exact-pinned CLI/tooling execution and bridge-safe `anyhow` boundary certification |
 | `certification_13` | merged | [PR #3078](https://github.com/sifr-lang/sifr/pull/3078); exact-pinned backend loopback execution and fail-closed SQLx offline metadata certification |
 | `certification_14` | merged | [PR #3083](https://github.com/sifr-lang/sifr/pull/3083); Track A inventory, stable gate, durable handoff, repeated published-head review, and final closeout |
-| `certification_pkg_resource_core` | dormant | starts only after Native Pydantic-Sifr `milestone_ps_2` releases bridge version 2 |
+| `certification_pkg_resource_core` | dormant | starts only after Native Pydantic-Sifr `milestone_ps_2` releases the structural Rust bridge contract |
 
 ## Ordered Track A Items
 
@@ -471,8 +474,8 @@ Focused implementation evidence:
   reproduced as a passing focused check and passed inside the warmed full
   rerun.
 
-`certification_3` may use bridge-version 1 call-scoped callbacks. Any callback
-behavior that truly requires the bridge-version 2 structural call contract
+`certification_3` may use ordinary unversioned call-scoped callbacks. Any callback
+behavior that truly requires the structural Rust bridge call contract
 must be split into the later package-resource item rather than silently
 expanding this row.
 
@@ -1744,7 +1747,7 @@ Track A is complete only when its inventory, all validator self-tests, the
 entire Rust-interop area, create-PR lane, merge lane, and stable-candidate gate
 pass locally.
 
-Closeout inventory:
+Closeout inventory as of the Track A closeout on 2026-07-30:
 
 - 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
   manifests;
@@ -2010,14 +2013,14 @@ Native Pydantic-Sifr consumes three certification-owned rows:
 The latter two land through `certification_2` and `certification_3`.
 `opaque_resource_package_core` is intentionally not pre-created as a
 README-only future row because its general substrate does not exist until
-Native Pydantic-Sifr `milestone_ps_2` releases bridge version 2.
+Native Pydantic-Sifr `milestone_ps_2` releases the structural Rust bridge contract.
 
 ### certification_pkg_resource_core
 
 Dependency order:
 
 1. Native Pydantic-Sifr `milestone_ps_2` merges and releases the general
-   bridge-version 2 package-resource substrate.
+   structural Rust bridge package-resource substrate.
 2. This sequential certification item creates and certifies the general
    synthetic-package row.
 3. Native Pydantic-Sifr `milestone_ps_3` may start only after this item,
@@ -2037,7 +2040,7 @@ This one PR:
 - updates the matrices, tiers, `REQUIRED_FIXTURES`, fixture files,
   architecture/public docs, stable-claims data if the surface is advertised,
   and current counts; and
-- runs the real compiler/runtime with the released bridge-version 2 substrate,
+- runs the real compiler/runtime with the released structural bridge substrate,
   not a Pydantic-specific adapter or private bypass.
 
 Exit gate: the synthetic package executes, both evidence directions pass, all
@@ -2078,5 +2081,5 @@ docs, installer metadata, release checklist, or package authoring guide may
 promote them.
 
 Track A is the work that makes the currently deferred ecosystem eligible for
-stable claims. Track B is independently gated by the later bridge-version 2
+stable claims. Track B is independently gated by the later structural Rust bridge
 release and does not delay Phase 40 while absent and unadvertised.

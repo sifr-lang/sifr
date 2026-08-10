@@ -11,6 +11,9 @@ from _sifr.regex import re_find_flags as _re_find_flags_impl
 from _sifr.regex import re_replace_flags as _re_replace_flags_impl
 from _sifr.regex import re_findall_flags as _re_findall_flags_impl
 from _sifr.regex import re_split_flags as _re_split_flags_impl
+from _sifr.regex import CompiledPattern
+from _sifr.regex import compile_pattern
+from _sifr.regex import compile_pattern_flags
 
 # Flag constants (CPython-compatible values)
 IGNORECASE: int = 2
@@ -147,23 +150,27 @@ def _findall_for_finditer(pattern: str, text: str, flags: int) -> Result[list[st
     return re_findall(pattern, text)
 
 
+def _finditer_from_items(found_items: list[str], text: str) -> list[Match]:
+    matches: list[Match] = []
+    cursor: int = 0
+    for found in found_items:
+        start: int = _find_index_from(text, found, cursor)
+        if start < 0:
+            start = cursor
+        found_len: int = len(found)
+        end: int = start + found_len
+        matches.append(Match(found, start, end))
+        if found_len == 0:
+            cursor = end + 1
+        else:
+            cursor = end
+    return matches
+
+
 def _finditer_materialize(pattern: str, text: str, flags: int) -> Result[list[Match], RegexError]:
     try:
         found_items: list[str] = _findall_for_finditer(pattern, text, flags)
-        matches: list[Match] = []
-        cursor: int = 0
-        for found in found_items:
-            start: int = _find_index_from(text, found, cursor)
-            if start < 0:
-                start = cursor
-            found_len: int = len(found)
-            end: int = start + found_len
-            matches.append(Match(found, start, end))
-            if found_len == 0:
-                cursor = end + 1
-            else:
-                cursor = end
-        return matches
+        return _finditer_from_items(found_items, text)
     except RegexError as e:
         raise RegexError(e.message)
 
@@ -178,55 +185,59 @@ def finditer(pattern: str, text: str) -> Result[Iterator[Match], RegexError]:
 
 class Pattern:
     # A compiled regular expression pattern.
+    _compiled: CompiledPattern
     _pattern: str
     _flags: int
 
-    def __init__(self, pattern: str, flags: int) -> None:
+    def __init__(self, own compiled: CompiledPattern, pattern: str, flags: int) -> None:
+        self._compiled = compiled
         self._pattern = pattern
         self._flags = flags
 
     def search(self, text: str) -> Result[str | None, RegexError]:
-        if self._flags != 0:
-            return re_find_flags(self._pattern, text, self._flags)
-        return re_find(self._pattern, text)
+        return self._compiled.search(text)
 
     def is_match(self, text: str) -> Result[bool, RegexError]:
         # CPython: Pattern.match — renamed is_match due to Rust keyword conflict
-        if self._flags != 0:
-            return re_match_flags(self._pattern, text, self._flags)
-        return re_match(self._pattern, text)
+        return self._compiled.is_match(text)
 
     def sub(self, replacement: str, text: str) -> Result[str, RegexError]:
-        if self._flags != 0:
-            return re_replace_flags(self._pattern, replacement, text, self._flags)
-        return re_replace(self._pattern, replacement, text)
+        return self._compiled.sub(replacement, text)
 
     def findall(self, text: str) -> Result[list[str], RegexError]:
-        if self._flags != 0:
-            return re_findall_flags(self._pattern, text, self._flags)
-        return re_findall(self._pattern, text)
+        return self._compiled.findall(text)
 
     def finditer(self, text: str) -> Result[Iterator[Match], RegexError]:
         try:
-            matches: list[Match] = _finditer_materialize(self._pattern, text, self._flags)
+            found_items: list[str] = self._compiled.findall(text)
+            matches: list[Match] = _finditer_from_items(found_items, text)
             return _iter_matches(matches)
         except RegexError as e:
             raise RegexError(e.message)
 
     def split(self, text: str) -> Result[list[str], RegexError]:
-        if self._flags != 0:
-            return re_split_flags(self._pattern, text, self._flags)
-        return re_split(self._pattern, text)
+        return self._compiled.split(text)
 
     def pattern(self) -> str:
         return self._pattern + ""
 
+    def flags(self) -> int:
+        return self._flags
 
-def compile(pattern: str) -> Pattern:
-    return Pattern(pattern, 0)
 
-def compile_flags(pattern: str, flags: int) -> Pattern:
-    return Pattern(pattern, flags)
+def compile(pattern: str) -> Result[Pattern, RegexError]:
+    try:
+        compiled: CompiledPattern = compile_pattern(pattern)
+        return Pattern(compiled, pattern, 0)
+    except RegexError as error:
+        raise RegexError(error.message)
+
+def compile_flags(pattern: str, flags: int) -> Result[Pattern, RegexError]:
+    try:
+        compiled: CompiledPattern = compile_pattern_flags(pattern, flags)
+        return Pattern(compiled, pattern, flags)
+    except RegexError as error:
+        raise RegexError(error.message)
 
 
 def fullmatch(pattern: str, text: str) -> Result[bool, RegexError]:

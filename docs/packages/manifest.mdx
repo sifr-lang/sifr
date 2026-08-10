@@ -155,7 +155,6 @@ Rust-backed packages declare Sifr-owned bridge projection metadata in `[rust]` a
 
 ```toml
 [rust]
-bridge-version = 1
 bridges = ["src/bridges"]
 
 [trust]
@@ -167,7 +166,11 @@ rust-no-panic = ["crc32fast.hash"]
 rust-panic-abort = []
 ```
 
-`bridge-version` pins the generated bridge module contract. `bridges` lists package-local Rust bridge roots that Sifr may reference through the `bridge` decorator root. Files such as `src/bridges/tokenizer.rs` are user-owned; Sifr-managed projection files are checked with `sifr repair --check` and regenerated with `sifr repair`.
+`bridges` lists package-local Rust bridge roots that Sifr may reference through
+the `bridge` decorator root. The bridge contract is selected by the compiler;
+there is no manifest version selector. Files such as
+`src/bridges/tokenizer.rs` are user-owned; Sifr-managed projection files are
+checked with `sifr repair --check` and regenerated with `sifr repair`.
 
 See [Rust Interop](/rust-interop) for direct bindings, local bridges, shared bridge crates, opaque handles, async, zero-copy, callbacks, and the `sifr bridge check` workflow.
 

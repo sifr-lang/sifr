@@ -2764,6 +2764,66 @@
       "renderer": "compact",
       "source_hash": "sha256:500c943054dc47b07da86720788c2353bb54445e1408f4074285cea78003ada8",
       "suite": "baselines"
+    },
+    {
+      "bless_reason": "Compact baseline coverage for static specialization and integer-boundary diagnostics.",
+      "bless_reference": "const-specialization-diagnostic-baselines",
+      "fixture_id": "int_json_boundary_policy",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:f5f6e1c245d2f16ae506e795ab044db4d72dcc89037dbe8279d65942c8fc2cd7",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Compact baseline coverage for static specialization and integer-boundary diagnostics.",
+      "bless_reference": "const-specialization-diagnostic-baselines",
+      "fixture_id": "meta_malformed_declaration",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:935644b85e23dfd3e1e63c0304e4ae640b59dad166ec7b66e4c228888ef55c2e",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Compact baseline coverage for static specialization and integer-boundary diagnostics.",
+      "bless_reference": "const-specialization-diagnostic-baselines",
+      "fixture_id": "meta_specialization_fatal",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:34685ca8b047346ce70546a24462c8aec292bf43913275c95c6f3fce978bc1ce",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Compact baseline coverage for static specialization and integer-boundary diagnostics.",
+      "bless_reference": "const-specialization-diagnostic-baselines",
+      "fixture_id": "meta_specialization_warning",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/frontend",
+      "renderer": "compact",
+      "source_hash": "sha256:c7f75cb2eba2e3af4bb1cc274f19cc6cc6105e4d2a97280f5eedd19c46b99b46",
+      "suite": "baselines"
     }
   ],
   "schema_version": 1

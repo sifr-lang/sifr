@@ -159,6 +159,14 @@ impl RustEmitter {
         value: &HirExpr,
         lowered: RustExpr,
     ) -> RustExpr {
+        self.coerce_error_type_for_ir(value.ty(), lowered)
+    }
+
+    pub(crate) fn coerce_error_type_for_ir(
+        &self,
+        source_type: &Type,
+        lowered: RustExpr,
+    ) -> RustExpr {
         let target = self
             .try_closure_error_type_info
             .last()
@@ -173,11 +181,11 @@ impl RustEmitter {
         let Some(target) = target else {
             return lowered;
         };
-        let converted = self.consuming_value_upcast_for_ir(target, value.ty(), lowered.clone());
+        let converted = self.consuming_value_upcast_for_ir(target, source_type, lowered.clone());
         if converted != lowered {
             return converted;
         }
-        let source_name = crate::render_type(&crate::sifr_type_to_rust_type(value.ty()));
+        let source_name = crate::render_type(&crate::sifr_type_to_rust_type(source_type));
         let target_name = crate::render_type(&crate::sifr_type_to_rust_type(target));
         if source_name == target_name {
             lowered

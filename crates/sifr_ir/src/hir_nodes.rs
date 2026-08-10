@@ -1,6 +1,6 @@
 //! HIR node definitions -- typed versions of AST nodes.
 
-use crate::{PythonInteropDeclaration, RustInteropDeclaration};
+use crate::{PythonInteropDeclaration, RustInteropDeclaration, TypedDeclarationMetadata};
 use ruff_text_size::TextRange;
 use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
 
@@ -46,6 +46,10 @@ pub struct HirClass {
     /// Stable declaration identity. `None` denotes the current user module.
     pub identity: Option<String>,
     pub fields: Vec<(String, Type)>,
+    /// Declaration-order defaults keyed by field index.
+    pub field_defaults: Vec<(usize, HirExpr)>,
+    /// Typed declaration metadata owned by this class and its fields/variants.
+    pub declaration_metadata: Vec<TypedDeclarationMetadata>,
     pub methods: Vec<HirFunction>,
     /// Whether all fields support Eq + Hash (enables derive(Eq, Hash))
     pub is_hashable: bool,
@@ -480,6 +484,7 @@ pub enum HirStmt {
         op: String,
         value: HirExpr,
         object_ty: Type,
+        missing_key_error: Option<Type>,
     },
     /// Augmented assignment on attribute: self.field += val
     AttributeAugAssign {

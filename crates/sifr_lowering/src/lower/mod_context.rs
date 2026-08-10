@@ -32,6 +32,14 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) function_workload_annotations: HashMap<String, WorkloadKind>,
     /// Default parameter values for functions (name -> vec of (`param_index`, `default_expr`))
     pub(in crate::lower) function_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
+    /// Class declaration defaults, independent of constructor signatures.
+    pub(in crate::lower) class_field_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
+    pub(in crate::lower) declaration_metadata: Vec<sifr_ir::TypedDeclarationMetadata>,
+    pub(in crate::lower) specialization_requests: Vec<sifr_ir::ConstSpecializationRequest>,
+    pub(in crate::lower) json_integer_boundary_requests: Vec<sifr_ir::JsonIntegerBoundaryRequest>,
+    /// Whether the exact compiler-owned `sifr.meta.Structural` spelling was imported.
+    pub(in crate::lower) canonical_structural_marker_imported: bool,
+    pub(in crate::lower) local_structural_marker_declared: bool,
     /// Class type definitions (name -> `Type::Class`)
     pub(in crate::lower) class_types: HashMap<String, Type>,
     /// Instance methods, keyed as `Class.method`, including imported metadata.
@@ -51,6 +59,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) python_consuming_methods: HashSet<String>,
     /// Qualified Rust opaque close members selected by their class declaration.
     pub(in crate::lower) rust_consuming_methods: HashSet<String>,
+    /// Local and imported class names backed by sealed Rust opaque resources.
+    pub(in crate::lower) rust_opaque_classes: HashSet<String>,
     /// Qualified context exits callable only from dedicated Python-with lowering.
     pub(in crate::lower) python_context_exit_methods: HashSet<String>,
     /// Current scope for name resolution
@@ -190,6 +200,12 @@ impl LowerCtx {
             async_suspension_summaries: HashMap::new(),
             function_workload_annotations: HashMap::new(),
             function_defaults: HashMap::new(),
+            class_field_defaults: HashMap::new(),
+            declaration_metadata: Vec::new(),
+            specialization_requests: Vec::new(),
+            json_integer_boundary_requests: Vec::new(),
+            canonical_structural_marker_imported: false,
+            local_structural_marker_declared: false,
             class_types: HashMap::new(),
             class_instance_methods: HashSet::new(),
             class_method_origins: HashMap::new(),
@@ -199,6 +215,7 @@ impl LowerCtx {
             live_must_use_bindings: HashMap::new(),
             python_consuming_methods: HashSet::new(),
             rust_consuming_methods: HashSet::new(),
+            rust_opaque_classes: HashSet::new(),
             python_context_exit_methods: HashSet::new(),
             scope: Scope::new(),
             task_group_error_types: HashMap::new(),

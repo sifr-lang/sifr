@@ -23,6 +23,7 @@ pub enum RustInteropDecoratorKind {
     Opaque,
     Async,
     Callback,
+    Structural,
     ZeroCopy,
     View,
 }

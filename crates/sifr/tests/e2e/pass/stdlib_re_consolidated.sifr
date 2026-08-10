@@ -51,10 +51,9 @@ def collect_match_class_actual() -> list[bool]:
 
 def collect_pattern_actual() -> list[bool]:
     actual: list[bool] = []
-    p: Pattern = compile("\\d+")
-    actual.append(p.pattern() == "\\d+")
-
     try:
+        p: Pattern = compile("\\d+")
+        actual.append(p.pattern() == "\\d+")
         pattern_match: bool = p.is_match("123abc")
         actual.append(pattern_match)
         search_result: str | None = p.search("hello 42 world")
@@ -64,6 +63,7 @@ def collect_pattern_actual() -> list[bool]:
         fullmatch_ok: bool = fullmatch("\\d+", "12345")
         actual.append(fullmatch_ok)
     except RegexError as e:
+        actual.append(False)
         actual.append(False)
         actual.append(False)
         actual.append(False)
@@ -79,7 +79,7 @@ def collect_flags_actual() -> list[bool]:
         sensitive: str | None = search_flags("hello", "HELLO WORLD", 0)
         actual.append(sensitive is None)
 
-        pat = compile_flags("hello", IGNORECASE)
+        pat: Pattern = compile_flags("hello", IGNORECASE)
         from_compiled: str | None = pat.search("HELLO WORLD")
         actual.append(from_compiled is not None)
     except RegexError as e:

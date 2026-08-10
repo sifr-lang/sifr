@@ -287,7 +287,15 @@ pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
             op,
             value,
             object_ty,
-        } => try_lower_simple_subscript_augassign_stmt(object, index, op, value, object_ty),
+            missing_key_error,
+        } => try_lower_simple_subscript_augassign_stmt(
+            object,
+            index,
+            op,
+            value,
+            object_ty,
+            missing_key_error.as_ref(),
+        ),
         HirStmt::Delete { object, index } => try_lower_simple_delete_stmt(object, index),
         HirStmt::Yield { value } => try_lower_simple_yield_stmt(value, ctx),
         HirStmt::With { items, body } => {

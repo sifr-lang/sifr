@@ -128,10 +128,6 @@ fn package_rust_interop_resolves_bridge_root() {
         generated.interop.rust.generated_bridge_modules[0].rust_module_path,
         ["__sifr_bridge".to_string(), "app".to_string()]
     );
-    assert_eq!(
-        generated.interop.rust.generated_bridge_modules[0].bridge_version,
-        1
-    );
     assert!(generated
         .interop
         .cache_key_fragment()
@@ -187,25 +183,20 @@ fn package_rust_interop_injects_one_bridge_alias_per_module() {
 }
 
 #[test]
-fn package_rust_interop_rejects_unsupported_bridge_version() {
-    let generated = base_project(vec![declaration_entry(
-        "bridge.hash",
-        RustInteropDecoratorKind::Function,
-    )]);
-    let mut context = package_context(TrustPolicy::default(), Vec::new());
-    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
-    set_bridge_version(&mut context, Some(2));
+fn package_rust_interop_rejects_removed_bridge_version_field() {
+    let source = "[package]\nname = \"app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n\n[rust]\nbridge-version = 1\nbridges = [\"src/bridges\"]\n";
+    let diagnostic = SifrManifest::parse(
+        &CargoPackageId("path+file:///ws/app#app@0.1.0".to_string()),
+        &PathBuf::from("sifr.toml"),
+        source,
+    )
+    .expect_err("the removed bridge-version field must fail");
 
-    let diagnostics = interop_errors(
-        generated,
-        Some(context),
-        "unsupported bridge version must fail",
+    assert_eq!(
+        diagnostic.code,
+        sifr_diagnostics::DiagnosticCode::RUST_CARGO_METADATA
     );
-
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-CARGO-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("unsupported Rust bridge version"));
+    assert!(diagnostic.message.contains("bridge-version` was removed"));
 }
 
 #[test]
@@ -701,7 +692,6 @@ fn package_context_with_root(
             trust,
             python: sifr_package::PythonConfig::default(),
             rust: RustInteropConfig {
-                bridge_version: Some(1),
                 bridges: Vec::new(),
                 direct_crate_bindings: true,
             },
@@ -789,15 +779,6 @@ fn set_bridge_roots(context: &mut PackageRustInteropContext, bridges: Vec<PathBu
         .get_mut(&context.package_id)
         .expect("package exists");
     package.manifest.rust.bridges = bridges;
-}
-
-fn set_bridge_version(context: &mut PackageRustInteropContext, bridge_version: Option<u32>) {
-    let package = context
-        .graph
-        .packages
-        .get_mut(&context.package_id)
-        .expect("package exists");
-    package.manifest.rust.bridge_version = bridge_version;
 }
 
 fn temp_package_root(name: &str) -> PathBuf {

@@ -102,7 +102,8 @@ impl RustInteropResolver<'_> {
                 RustInteropDecoratorKind::Function
                 | RustInteropDecoratorKind::Opaque
                 | RustInteropDecoratorKind::Async
-                | RustInteropDecoratorKind::Callback => {}
+                | RustInteropDecoratorKind::Callback
+                | RustInteropDecoratorKind::Structural => {}
             }
         }
 

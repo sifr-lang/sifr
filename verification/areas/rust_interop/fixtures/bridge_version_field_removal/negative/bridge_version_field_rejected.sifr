@@ -1,0 +1,14 @@
+# fixture: bridge_version_field_removal
+# evidence: negative/bridge_version_field_rejected
+# evidence-status: passing
+# execution-kind: compiler-diagnostic
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-CARGO-0001
+# fixture-cargo: rust.bridge-version = 1
+
+@rust(bridge.version.removed, panic=trusted_no_panic)
+def removed_version_field() -> uint32: ...
+
+def verify_bridge_version_field_rejected() -> uint32:
+    result: uint32 = removed_version_field()
+    return result

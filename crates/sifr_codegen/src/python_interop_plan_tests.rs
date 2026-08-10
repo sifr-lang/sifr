@@ -248,6 +248,8 @@ fn method_only_async_python_declaration_requires_owned_loop() {
         name: "Client".to_string(),
         identity: None,
         fields: Vec::new(),
+        field_defaults: Vec::new(),
+        declaration_metadata: Vec::new(),
         methods: vec![method],
         is_hashable: false,
         is_error_type: false,

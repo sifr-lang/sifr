@@ -1,0 +1,34 @@
+# sifr.meta — package-neutral deterministic specialization contracts
+
+
+class Structural:
+    pass
+
+
+class ConstIssueTemplate:
+    package: str
+    reason_code: str
+    argument_names: list[str]
+
+
+class ConstPackageIssue[A]:
+    package: str
+    reason_code: str
+    severity: str
+    arguments: A
+    notes: list[str]
+
+
+class ConstSpecializationOutcome[T, A]:
+    status: str
+    value: T | None
+    issues: list[ConstPackageIssue[A]]
+
+
+class JsonIntegerBoundaryDescriptor:
+    path: str
+    profile: str | None
+    representation: str
+    integer_kind: str
+    static_minimum: int | None
+    static_maximum: int | None

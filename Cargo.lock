@@ -6991,6 +6991,7 @@ dependencies = [
  "sifr_ir",
  "sifr_lowering",
  "sifr_stdlib_manifest",
+ "sifr_structural_identity",
  "sifr_type_system",
  "static_assertions",
  "syn 2.0.117",
@@ -7170,6 +7171,7 @@ dependencies = [
  "rustls",
  "rustls-pemfile",
  "rustls-platform-verifier",
+ "sifr_structural_identity",
  "tokio",
  "tokio-rustls",
  "tower-service",
@@ -7292,6 +7294,13 @@ version = "0.0.0"
 dependencies = [
  "serde_json",
  "sifr_sysroot",
+]
+
+[[package]]
+name = "sifr_structural_identity"
+version = "0.0.0"
+dependencies = [
+ "sha2 0.10.9",
 ]
 
 [[package]]

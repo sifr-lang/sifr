@@ -33,16 +33,9 @@ impl RustEmitter {
     pub(crate) fn build_dict_lookup_key_arg_for_ir(
         lowered_index: crate::RustExpr,
     ) -> crate::RustExpr {
-        if matches!(
-            lowered_index,
-            crate::RustExpr::Literal(crate::RustLiteral::Str(_))
-        ) {
-            lowered_index
-        } else {
-            crate::RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(lowered_index),
-            }
+        crate::RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(lowered_index),
         }
     }
 

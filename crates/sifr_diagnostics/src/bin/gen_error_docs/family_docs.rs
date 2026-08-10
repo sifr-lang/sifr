@@ -24,6 +24,10 @@ pub(crate) fn family_docs(family: &str) -> FamilyDocs {
             display_name: "Static typing",
             why_it_happens: "Static types do not line up. Align annotations, inferred expressions, branches, containers, operators, or generic constraints, and convert explicitly where needed.",
         },
+        "META" => FamilyDocs {
+            display_name: "Package metaprogramming",
+            why_it_happens: "Deterministic package specialization either reported a bounded issue or declared issue data that does not match its compiler-checked template. Fix the static schema input or the package issue declaration named by the diagnostic.",
+        },
         "ASYNC" => FamilyDocs {
             display_name: "Async effect and awaitability",
             why_it_happens: "Sifr tracks suspension and blocking effects statically. This diagnostic fires when async code either does not really suspend, awaits work that cannot suspend, or calls blocking/CPU-heavy work without an explicit offload boundary.",

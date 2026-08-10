@@ -152,13 +152,13 @@ pub(super) fn parse_rust_interop_config(
     manifest_path: &Path,
     table: &toml::Table,
 ) -> Result<RustInteropConfig, PackageDiagnostic> {
-    Ok(RustInteropConfig {
-        bridge_version: optional_bridge_version(
+    if table.contains_key("bridge-version") {
+        return Err(PackageDiagnostic::removed_rust_bridge_version(
             cargo_package_id,
-            manifest_path,
-            table,
-            "rust.bridge-version",
-        )?,
+            manifest_path.to_path_buf(),
+        ));
+    }
+    Ok(RustInteropConfig {
         bridges: optional_relative_path_list(
             cargo_package_id,
             manifest_path,
@@ -288,35 +288,6 @@ fn optional_bool(
             "expected a boolean",
         )
     })
-}
-
-fn optional_bridge_version(
-    cargo_package_id: &CargoPackageId,
-    manifest_path: &Path,
-    table: &toml::Table,
-    dotted_key: &'static str,
-) -> Result<Option<u32>, PackageDiagnostic> {
-    let local_key = dotted_key.rsplit('.').next().unwrap_or(dotted_key);
-    let Some(value) = table.get(local_key) else {
-        return Ok(None);
-    };
-    let Some(version) = value.as_integer().and_then(|raw| u32::try_from(raw).ok()) else {
-        return Err(PackageDiagnostic::invalid_sifr_manifest(
-            cargo_package_id,
-            manifest_path.to_path_buf(),
-            dotted_key,
-            "expected a positive integer bridge schema version",
-        ));
-    };
-    if version != 1 {
-        return Err(PackageDiagnostic::invalid_sifr_manifest(
-            cargo_package_id,
-            manifest_path.to_path_buf(),
-            dotted_key,
-            format!("unsupported Rust bridge schema version `{version}`"),
-        ));
-    }
-    Ok(Some(version))
 }
 
 fn optional_relative_path(

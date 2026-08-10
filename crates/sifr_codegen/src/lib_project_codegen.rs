@@ -1,7 +1,7 @@
 use super::{
-    generate_rust, generate_rust_with_stdlib, module_class_fields,
-    publicize_generated_module_source, HashMap, HashSet, HirModule, MultiModuleCodegenResult,
-    Renderer, RustFile, RustItem, StdlibCode,
+    generate_rust, generate_rust_with_stdlib_for_module_with_structural_policy,
+    module_class_fields, publicize_generated_module_source, HashMap, HashSet, HirModule,
+    MultiModuleCodegenResult, Renderer, RustFile, RustItem, StdlibCode,
 };
 use crate::lib_project_signatures::project_func_signatures;
 use sifr_stdlib_manifest::{try_generated_cargo_dependencies, StdlibFeature};
@@ -187,6 +187,9 @@ pub fn generate_rust_multi_with_metadata(
     let mut required_features = HashSet::new();
     let mut project_codegen_code = stdlib_code.clone();
     let project_modules = modules.iter().copied().collect::<HashMap<_, _>>();
+    let structural_interop_enabled = modules
+        .iter()
+        .any(|(_, module)| crate::rust_interop_plan::module_uses_structural_interop(module));
 
     project_codegen_code
         .func_signatures
@@ -201,7 +204,12 @@ pub fn generate_rust_multi_with_metadata(
         let module_public = *module_name != "main";
         let mut module_codegen_code = project_codegen_code.clone();
         register_imported_generic_classes(&mut module_codegen_code, module, &project_modules);
-        let codegen_result = generate_rust_with_stdlib(module, &module_codegen_code);
+        let codegen_result = generate_rust_with_stdlib_for_module_with_structural_policy(
+            module,
+            &module_codegen_code,
+            None,
+            structural_interop_enabled,
+        );
         let local_imports = render_local_module_imports(module, &project_modules);
         let mut rust_source = codegen_result.rust_source;
         if !local_imports.trim().is_empty() {
@@ -314,6 +322,8 @@ mod tests {
                 name: "Resource".to_string(),
                 identity: None,
                 fields: Vec::new(),
+                field_defaults: Vec::new(),
+                declaration_metadata: Vec::new(),
                 methods: vec![HirFunction {
                     name: "close".to_string(),
                     params: Vec::new(),

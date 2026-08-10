@@ -1,0 +1,17 @@
+from fixture.meta import describe
+
+
+@const_specialize("fixture.meta", "describe")
+@metadata("fixture.model", "record")
+@metadata("field", "count", "fixture.description", "bounded counter")
+@json_integer_boundary("count", "web", "number", -2147483648, 2147483647)
+class Counter:
+    count: int32
+    label: str = "counter"
+
+
+def main():
+    seven: int32 = 7
+    value: Counter = Counter(seven)
+    assert value.count == seven
+    assert value.label == "counter"

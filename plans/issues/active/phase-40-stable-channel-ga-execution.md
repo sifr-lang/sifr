@@ -88,9 +88,10 @@ Artifacts mapped to the Phase 40 exit gate:
 
 ### milestone_40_1: Canonical Release Plan and Qualification
 
-- Frozen qualification scope treats the pinned algorithmic full corpus as the
-  separately owned, expiry-bound follow-up linked under `milestone_40_4`;
-  release retains its blocking representative subset and taxonomy self-test.
+- The separately owned pinned algorithmic full-corpus follow-up linked under
+  `milestone_40_4` has remediated its 20 preserved failures; its closeout
+  validation and review remain in progress. Release qualification now blocks
+  on the full corpus and taxonomy self-test, matching nightly.
 - [x] Implement the non-mutating stable planner and canonical digest binding.
 - [x] Consume and register the separately delivered Rust-interop
   stable-candidate suite and claims artifact before qualification.
@@ -117,15 +118,14 @@ Artifacts mapped to the Phase 40 exit gate:
 
 ### milestone_40_4: Stable Documentation and VS Code Release
 
-- The pinned algorithmic full corpus is intentionally not a Phase 40
-  prerequisite. Exact-source release validation reproduced the same 20
-  pre-existing failures already preserved in
+- The pinned algorithmic full corpus was not a Phase 40 prerequisite.
+  Exact-source release validation reproduced the same 20 pre-existing failures
+  preserved in
   [`ad-hoc-algorithmic-full-corpus-preexisting-failures.md`](./ad-hoc-algorithmic-full-corpus-preexisting-failures.md)
   after every preceding gate—including `performance_budget_checks` in `full`
-  mode—passed.
-  Nightly keeps the full corpus blocking; release qualification keeps the
-  representative subset and taxonomy self-test blocking until the ad hoc
-  issue restores the full corpus.
+  mode—passed. The follow-up has remediated those 20 failures and now keeps the
+  full corpus and taxonomy self-test blocking in both nightly and release
+  qualification; its closeout validation and review remain in progress.
 - Packaged-candidate generated-Rust preview is intentionally not a Phase 40
   prerequisite. The real `0.1.0` candidate serves initialization, diagnostics,
   and formatting, but the cold first-run generated-Rust qualification exceeded
@@ -225,14 +225,13 @@ Review and upstream coordination ledger:
   It independently reproduced the live API semantics and 509 MB artifact
   replay, mutation-tested both retention bounds and the workflow-path binding,
   found no remaining actionable issue, and approved the repair.
-- The clean exact-source release profile on
+- The historical clean exact-source release profile on
   `c17f3c7d1ea1ed97ca125eb7a43344b30cf9413b` passed every lane through
   `performance_budget_checks` in `full` mode before reproducing exactly the 20
   previously preserved failures among 412 pinned algorithm variants. The
-  governed correction keeps `leetcode-full` blocking in nightly and selects
-  the already blocking representative subset plus taxonomy self-test for
-  release qualification. Its indexed divergence record expires on 2026-10-31
-  and fails readiness closed if not restored or separately renewed.
+  follow-up remediated those failures without a baseline or exclusion and
+  removed the temporary release divergence by restoring `leetcode-full` plus
+  taxonomy smoke to release qualification.
 - Claude Opus algorithm-scope review passes 1 through 3 are archived at
   `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-{1,2,3}.md`.
   Their findings are closed by exact release-suite/profile agreement,

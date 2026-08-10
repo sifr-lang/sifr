@@ -42,6 +42,19 @@
     "cargo_lock_sha256",
     "compiler_fingerprint"
   ],
+  "required_reference_capture_fields": [
+    "approval_owner",
+    "controlled_host",
+    "evidence_sha256",
+    "invocation_id",
+    "run_id",
+    "source_commit",
+    "profile",
+    "thermal_policy",
+    "host_control_policy",
+    "observation_count",
+    "rejected_observations"
+  ],
   "blocking_policy": {
     "create_pr": "validate benchmark schema, trend policy, stale-baseline policy, and smoke budgets",
     "merge": "enforce stable representative threshold budgets and trend policy; trend deltas remain reference-hardware reviewed",

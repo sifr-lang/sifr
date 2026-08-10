@@ -70,11 +70,12 @@ Phase 40 consumes these completed or canonical upstream contracts:
   [PR #3023](https://github.com/sifr-lang/sifr/pull/3023);
   certification prerequisites and the stable claims contract are merged through
   [PR #3026](https://github.com/sifr-lang/sifr/pull/3026);
-  the remaining Track A certifications subsequently resolved every current
-  deferred row with passing evidence and completed the final stable-gate
-  closeout. Track B remains dormant until an
-  external bridge-version 2 package-resource substrate exists and is not a
-  Phase 40 blocker while absent and unadvertised.
+  the remaining Track A certifications subsequently resolved every row that
+  was deferred before the 2026-07-30 Track A closeout with passing evidence and
+  completed that final stable-gate closeout. Later future-owned Native
+  Pydantic-Sifr structural rows are separately gated. Track B remains dormant
+  until an external structural Rust bridge package-resource substrate exists
+  and is not a Phase 40 blocker while absent and unadvertised.
 
 Phase 40 does not infer Rust ecosystem support from prose. It may advertise
 only the exact Rust interop surfaces accepted by the current compatibility
@@ -929,17 +930,17 @@ install/update guidance, Rust interop claims, and the VS Code extension.
   packaged candidate is a non-prerequisite tooling follow-up recorded in
   [`adhoc_packaged_candidate_generated_rust.md`](../issues/active/adhoc_packaged_candidate_generated_rust.md); GA docs explicitly record the
   affected action as outside the packaged `0.1.0` qualified surface.
-- The exact-source release profile remains blocking while consuming the
-  indexed, expiry-bound
+- The exact-source release profile remains blocking. The follow-up's 20
+  preserved failures are remediated, while closeout validation and review for
   [`ALG-CORPUS`](../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md)
-  and
+  remain in progress. Release qualification now includes the complete pinned
+  algorithm corpus plus taxonomy self-test, matching nightly. The indexed,
+  expiry-bound
   [`GENC-NAN`](../issues/active/adhoc_generated_nan_constant_clippy_quality.md)
-  non-prerequisite records.
-  Release keeps the representative algorithm subset plus taxonomy self-test,
-  and runs every full generated-code gate and corpus entry while requiring the
-  three `GENC-NAN` entries to reproduce only their recorded Clippy lint.
-  Nightly retains both unmodified full suites; neither record permits a test
-  skip, broad allow, threshold change, or source fallback.
+  non-prerequisite record remains: release runs every generated-code corpus
+  entry while requiring its three entries to reproduce only the recorded
+  Clippy lint. Neither profile permits a test skip, broad allow, threshold
+  change, or source fallback.
 
 **Negative validation:**
 

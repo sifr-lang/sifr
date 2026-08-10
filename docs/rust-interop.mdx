@@ -23,7 +23,6 @@ reqwest = { version = "0.12", default-features = false }
 
 ```toml sifr.toml
 [rust]
-bridge-version = 1
 bridges = ["src/bridges"]
 
 [trust]
@@ -71,6 +70,12 @@ Tier 1 and tier 3 require `cargo-probe`; tier 0 requires
 `compiler-diagnostic`; tier 2 and tier 4 explicitly name whether each row is
 contract-only, cargo-probed, or runtime-observed. A contract-only row never
 satisfies a runtime claim.
+
+The explicit structural bridge has runtime evidence for checked construction,
+allocation-free projection, typed call-scoped callbacks, nested generic or
+recursive records, and deliberate contract rejection. Manifest diagnostics
+accept unversioned Rust bridge configuration and reject the removed field. Sifr
+has no version-selection compatibility mode or fallback.
 
 ### Stable Support Claims
 
@@ -275,7 +280,8 @@ connectivity, or product-level web framework support.
 | `opaque_resource_core` | `supported` | `runtime-observed` |
 | `opaque_resource_matrix` | `supported-through-bridge` | `runtime-observed` |
 | `close_after_use` | `supported` | `runtime-observed` |
-| `bridge_version_mismatch` | `supported` | `compiler-diagnostic` |
+| `bridge_version_field_removal` | `supported` | `compiler-diagnostic` |
+| `structural_bridge_calls` | `supported-through-bridge` | `runtime-observed` |
 | `panic_boundary` | `supported` | `contract-only` |
 | `panic_boundary_wrapper_emission` | `supported` | `runtime-observed` |
 | `panic_abort_profile` | `supported` | `contract-only` |

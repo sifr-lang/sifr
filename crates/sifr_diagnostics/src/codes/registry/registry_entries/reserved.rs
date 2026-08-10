@@ -8,6 +8,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-NAME-0000", "NAME"),
     reserved_family_base("SIFR-IMPORT-0000", "IMPORT"),
     reserved_family_base("SIFR-TYPE-0000", "TYPE"),
+    reserved_family_base("SIFR-META-0000", "META"),
     reserved_family_base("SIFR-ASYNC-0000", "ASYNC"),
     reserved_family_base("SIFR-PYENV-0000", "PYENV"),
     reserved_family_base("SIFR-PYIMP-0000", "PYIMP"),
@@ -57,11 +58,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "SIFR-INT-0008",
             "INT",
             "Reserved for fixed-width array, tensor, or dataframe arithmetic without an explicit overflow policy.",
-        ),
-    reserved_code(
-            "SIFR-INT-0009",
-            "INT",
-            "Reserved for JSON or web-safe integer serialization policy failures.",
         ),
     reserved_code(
             "SIFR-INT-0010",

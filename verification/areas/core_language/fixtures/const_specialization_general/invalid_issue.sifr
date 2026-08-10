@@ -1,0 +1,6 @@
+from fixture.meta import describe
+
+
+@const_specialize("fixture.meta", "missing_specializer")
+class InvalidSpecialization:
+    value: int

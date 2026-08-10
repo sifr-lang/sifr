@@ -166,6 +166,26 @@ impl PackageDiagnostic {
     }
 
     #[must_use]
+    pub fn removed_rust_bridge_version(
+        cargo_package_id: &CargoPackageId,
+        manifest_path: PathBuf,
+    ) -> Self {
+        Self {
+            code: DiagnosticCode::RUST_CARGO_METADATA,
+            message: format!(
+                "invalid sifr.toml key 'rust.bridge-version' at '{}': `[rust].bridge-version` was removed; delete the field because Sifr now has one unversioned Rust bridge contract",
+                manifest_path.display()
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::SifrManifest {
+                cargo_package_id: cargo_package_id.clone(),
+                path: manifest_path,
+                key: Some("rust.bridge-version".to_string()),
+            }),
+            help: None,
+        }
+    }
+
+    #[must_use]
     pub fn misplaced_sifr_metadata(
         cargo_package_id: &CargoPackageId,
         cargo_package_name: &str,

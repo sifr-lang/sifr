@@ -68,6 +68,25 @@ impl InteropBuildPlan {
             push_bridge_source(&mut out, bridge_source);
             out.push('\n');
         }
+        if let Some(version) = self.rust.structural_identity_algorithm_version {
+            out.push_str("rust.structural_identity_algorithm_version=");
+            out.push_str(&version.to_string());
+            out.push('\n');
+        }
+        out.push_str("rust.structural_shape_identities=");
+        out.push_str(&self.rust.structural_shape_identities.len().to_string());
+        out.push('\n');
+        for shape in &self.rust.structural_shape_identities {
+            out.push_str(shape.module_name.as_deref().unwrap_or("<single>"));
+            out.push(':');
+            out.push_str(&shape.type_name);
+            out.push('=');
+            for byte in shape.identity {
+                use std::fmt::Write as _;
+                let _ = write!(out, "{byte:02x}");
+            }
+            out.push('\n');
+        }
         if let Some(cargo) = &self.rust.cargo_inputs {
             push_cargo_inputs(&mut out, cargo);
         }
@@ -84,6 +103,15 @@ pub struct RustInteropPlan {
     pub probe_plan: RustBridgeProbePlan,
     pub bridge_sources: Vec<RustBridgeSourceDigest>,
     pub cargo_inputs: Option<RustInteropCargoInputs>,
+    pub structural_identity_algorithm_version: Option<u32>,
+    pub structural_shape_identities: Vec<RustStructuralShapeIdentity>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct RustStructuralShapeIdentity {
+    pub module_name: Option<String>,
+    pub type_name: String,
+    pub identity: [u8; 32],
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RustInteropPlanDeclaration {
@@ -134,7 +162,6 @@ pub struct RustInteropResolvedTarget {
 pub struct RustGeneratedBridgeModule {
     pub module_name: Option<String>,
     pub rust_module_path: Vec<String>,
-    pub bridge_version: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -236,7 +263,6 @@ pub struct RustInteropCargoInputs {
     pub profile_codegen_settings: Vec<(String, String)>,
     pub cargo_version: Option<String>,
     pub rustc_version: Option<String>,
-    pub bridge_version: Option<u32>,
     pub trust_policy_digest: String,
     pub declared_build_env: Vec<String>,
 }
@@ -254,9 +280,57 @@ pub fn interop_build_plan_for_named_modules<'a>(
     for (module_name, module) in &module_entries {
         collect_module_declarations(*module_name, module, &mut rust.declarations);
     }
+    if rust.declarations.iter().any(|declaration| {
+        declaration.declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
+    }) {
+        for (module_name, module) in &module_entries {
+            collect_structural_shape_identities(*module_name, module, &mut rust);
+        }
+    }
     rust.bridge_contracts =
         bridge_contract_plan_for_named_modules(module_entries, &rust.declarations);
     InteropBuildPlan { rust, python }
+}
+
+pub(crate) fn module_uses_structural_interop(module: &HirModule) -> bool {
+    module
+        .functions
+        .iter()
+        .chain(module.classes.iter().flat_map(|class| {
+            class
+                .methods
+                .iter()
+                .chain(class.operator_impls.iter().map(|(_, method)| method))
+        }))
+        .flat_map(|function| &function.rust_interop)
+        .chain(module.classes.iter().flat_map(|class| &class.rust_interop))
+        .any(|declaration| declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural)
+}
+
+fn collect_structural_shape_identities(
+    module_name: Option<&str>,
+    module: &HirModule,
+    plan: &mut RustInteropPlan,
+) {
+    for class in &module.classes {
+        if !crate::structural_impl_codegen::structural_record_supported(class, module) {
+            continue;
+        }
+        plan.structural_identity_algorithm_version =
+            Some(crate::structural_identity_codegen::algorithm_version());
+        let Some(identity) =
+            crate::structural_identity_codegen::static_class_identity(class, module, module_name)
+        else {
+            continue;
+        };
+        plan.structural_shape_identities
+            .push(RustStructuralShapeIdentity {
+                module_name: module_name.map(str::to_string),
+                type_name: class.name.clone(),
+                identity: *identity.as_bytes(),
+            });
+    }
+    plan.structural_shape_identities.sort();
 }
 
 fn collect_module_declarations(
@@ -366,6 +440,7 @@ fn push_declaration(out: &mut String, declaration: &RustInteropDeclaration) {
         sifr_ir::RustInteropDecoratorKind::Opaque => "opaque",
         sifr_ir::RustInteropDecoratorKind::Async => "async",
         sifr_ir::RustInteropDecoratorKind::Callback => "callback",
+        sifr_ir::RustInteropDecoratorKind::Structural => "structural",
         sifr_ir::RustInteropDecoratorKind::ZeroCopy => "zero_copy",
         sifr_ir::RustInteropDecoratorKind::View => "view",
     });
@@ -516,8 +591,6 @@ fn push_generated_bridge_module(out: &mut String, module: &RustGeneratedBridgeMo
         }
         None => out.push_str("binary-entry"),
     }
-    out.push_str(";version=");
-    out.push_str(&module.bridge_version.to_string());
     out.push_str(";path=");
     out.push_str(&module.rust_module_path.join("::"));
 }
@@ -634,13 +707,6 @@ fn push_cargo_inputs(out: &mut String, cargo: &RustInteropCargoInputs) {
     out.push_str("rust.cargo.rustc_version=");
     out.push_str(cargo.rustc_version.as_deref().unwrap_or("<unknown>"));
     out.push('\n');
-    out.push_str("rust.cargo.bridge_version=");
-    out.push_str(
-        &cargo
-            .bridge_version
-            .map_or_else(|| "<none>".to_string(), |version| version.to_string()),
-    );
-    out.push('\n');
     out.push_str("rust.cargo.trust_policy=");
     out.push_str(&cargo.trust_policy_digest);
     out.push('\n');
@@ -702,6 +768,9 @@ fn push_span(out: &mut String, span: ruff_text_size::TextRange) {
     out.push_str(&span.end().to_u32().to_string());
 }
 
+#[cfg(test)]
+#[path = "rust_interop_plan_demand_tests.rs"]
+mod rust_interop_plan_demand_tests;
 #[cfg(test)]
 #[path = "rust_interop_plan_tests.rs"]
 mod rust_interop_plan_tests;

@@ -1,0 +1,43 @@
+{
+  "capability": "monomorphized structural Rust bridge calls",
+  "diagnostic_family": "SIFR-RUST-TYPE-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-TYPE-0001",
+      "expected_result": "diagnostic",
+      "id": "shape_callback_and_lifetime_mismatches_rejected",
+      "path": "negative/shape_callback_and_lifetime_mismatches_rejected.sifr",
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_check_structural_bridge_mismatches_rejected"
+      }
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "nested_recursive_structural_roundtrip",
+      "path": "positive/nested_recursive_structural_roundtrip.sifr",
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_build_structural_bridge_runtime"
+      }
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {},
+  "id": "structural_bridge_calls",
+  "package_examples": {},
+  "required_crates": [],
+  "scenario_examples": {
+    "structural_bridge_runtime": "examples/structural_bridge_runtime"
+  },
+  "schema_version": 2,
+  "tier": 2
+}

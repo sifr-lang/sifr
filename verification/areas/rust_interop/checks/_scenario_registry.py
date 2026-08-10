@@ -36,11 +36,6 @@ REQUIRED_SCENARIO_EXAMPLES = {
             ),
         },
     },
-    "bridge_version_mismatch": {
-        "bridge_version_package": {
-            "tokens": ("bridge-version = 1", "version_bridge"),
-        },
-    },
     "callbacks_call_scoped": {
         "call_scoped_callback_runtime": {
             "tokens": (
@@ -134,6 +129,17 @@ REQUIRED_SCENARIO_EXAMPLES = {
                 "sifr_shared_hash_bridge",
                 "digest_hex",
                 "crate::__sifr_bridge",
+            ),
+        },
+    },
+    "structural_bridge_calls": {
+        "structural_bridge_runtime": {
+            "tokens": (
+                "StructuralConstruct",
+                "StructuralProject",
+                "structural_construct",
+                "CallScopedCallbackBridge",
+                "@rust.structural",
             ),
         },
     },

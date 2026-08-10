@@ -4,6 +4,7 @@ members = [
     "crates/sifr_sysroot",
     "crates/sifr_diagnostics",
     "crates/sifr_runtime",
+    "crates/sifr_structural_identity",
     "crates/sifr_stdlib",
     "crates/sifr_type_system",
     "crates/sifr_ipc",
@@ -55,6 +56,7 @@ sifr_diagnostics = { path = "crates/sifr_diagnostics" }
 sifr_source = { path = "crates/sifr_source" }
 sifr_sysroot = { path = "crates/sifr_sysroot" }
 sifr_runtime = { path = "crates/sifr_runtime" }
+sifr_structural_identity = { path = "crates/sifr_structural_identity" }
 sifr_stdlib = { path = "crates/sifr_stdlib" }
 sifr_type_system = { path = "crates/sifr_type_system" }
 sifr_ipc = { path = "crates/sifr_ipc" }

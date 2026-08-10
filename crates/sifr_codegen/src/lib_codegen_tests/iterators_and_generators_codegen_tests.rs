@@ -600,6 +600,8 @@ fn test_checked_field_mutation_is_explicit_and_non_sticky() {
                 ("table".to_string(), table_ty.clone()),
                 ("label".to_string(), label_ty.clone()),
             ],
+            field_defaults: Vec::new(),
+            declaration_metadata: Vec::new(),
             methods: vec![
                 HirFunction {
                     name: "append_item".to_string(),

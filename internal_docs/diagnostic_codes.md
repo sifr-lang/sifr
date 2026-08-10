@@ -21,6 +21,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `NAME` | `SIFR-NAME-0000` | Name binding and resolution diagnostics. |
 | `IMPORT` | `SIFR-IMPORT-0000` | Module import and path resolution diagnostics. |
 | `TYPE` | `SIFR-TYPE-0000` | Static type compatibility and inference diagnostics. |
+| `META` | `SIFR-META-0000` | Deterministic package metaprogramming and const-specialization diagnostics. |
 | `ASYNC` | `SIFR-ASYNC-0000` | Async effect, awaitability, and blocking-offload diagnostics. |
 | `PYENV` | `SIFR-PYENV-0000` | Embedded CPython environment selection, probing, and ABI diagnostics. |
 | `PYIMP` | `SIFR-PYIMP-0000` | Embedded Python import and module-loading diagnostics. |
@@ -70,6 +71,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-NAME-0000` | `NAME` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-IMPORT-0000` | `IMPORT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-TYPE-0000` | `TYPE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-META-0000` | `META` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-ASYNC-0000` | `ASYNC` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-PYENV-0000` | `PYENV` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-PYIMP-0000` | `PYIMP` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
@@ -100,7 +102,6 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-PYASYNC-0001` | `PYASYNC` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-INT-0002` | `INT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-INT-0008` | `INT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
-| `SIFR-INT-0009` | `INT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-INT-0010` | `INT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-TYPE-0903` | `TYPE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-CALL-0000` | `CALL` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
@@ -181,7 +182,11 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-INT-0005` | `INT` | Active | Error | `docs/errors/SIFR-INT-0005.mdx` | `crates/sifr/tests/e2e/fail/exact_int_division_requires_handling.sifr` | `sifr_lowering::lower::integer_failure_diagnostics` | `integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe` | n/a | n/a | n/a | false |
 | `SIFR-INT-0006` | `INT` | Active | Error | `docs/errors/SIFR-INT-0006.mdx` | `crates/sifr/tests/e2e/fail/exact_int_true_division_requires_handling.sifr` | `sifr_type_system` | `exact integer to float conversion requires handling possible overflow or precision loss` | n/a | n/a | n/a | false |
 | `SIFR-INT-0007` | `INT` | Active | Error | `docs/errors/SIFR-INT-0007.mdx` | `crates/sifr/tests/e2e/fail/bool_integer_comparison.sifr` | `sifr_type_system` | `cannot compare bool and integer values without explicit conversion` | n/a | n/a | n/a | false |
+| `SIFR-INT-0009` | `INT` | Active | Error | `docs/errors/SIFR-INT-0009.mdx` | `crates/sifr_frontend/src/const_specialization.rs` | `sifr_frontend::const_specialization` | `integer JSON boundary policy is unsafe at {path}: {boundary}` | `path (message+json)`, `boundary (message+json)`, `profile (json-only)`, `static_range (json-only)`, `suggested_policy (json-only)` | `path`, `boundary`, `profile`, `static_range` | n/a | false |
 | `SIFR-INT-0011` | `INT` | Active | Warning | `docs/errors/SIFR-INT-0011.mdx` | `crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_bigint_transition_warning` | `sifr_lowering::lower::typing_and_functions` | `bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values` | n/a | n/a | n/a | false |
+| `SIFR-META-0001` | `META` | Active | Error | `docs/errors/SIFR-META-0001.mdx` | `crates/sifr_frontend/src/const_specialization.rs` | `sifr_frontend::const_specialization` | `package {package} specialization failed: {reason_code}` | `package (message+json)`, `reason_code (message+json)` | `package`, `reason_code` | n/a | false |
+| `SIFR-META-0002` | `META` | Active | Warning | `docs/errors/SIFR-META-0002.mdx` | `crates/sifr_frontend/src/const_specialization.rs` | `sifr_frontend::const_specialization` | `package {package} specialization warning: {reason_code}` | `package (message+json)`, `reason_code (message+json)` | `package`, `reason_code` | n/a | false |
+| `SIFR-META-0003` | `META` | Active | Error | `docs/errors/SIFR-META-0003.mdx` | `crates/sifr_frontend/src/const_specialization.rs` | `sifr_frontend::const_specialization` | `package {package} declared malformed specialization issue {reason_code}: {declaration_problem}` | `package (message+json)`, `reason_code (message+json)`, `declaration_problem (message+json)` | `package`, `reason_code`, `declaration_problem` | n/a | false |
 | `SIFR-CALL-0001` | `CALL` | Active | Error | `docs/errors/SIFR-CALL-0001.mdx` | `crates/sifr/tests/e2e/fail/stdlib_wrong_arg_count.sifr` | `sifr_lowering::lower` | `{callable} takes {quantifier} {expected_count} argument(s), got {actual_count}` | `callable (message+json)`, `quantifier (message+json)`, `expected_count (message+json)`, `actual_count (message+json)` | `callable`, `quantifier`, `expected_count`, `actual_count` | n/a | false |
 | `SIFR-CALL-0002` | `CALL` | Active | Error | `docs/errors/SIFR-CALL-0002.mdx` | `crates/sifr/tests/e2e/fail/sorted_unexpected_keyword.sifr` | `sifr_lowering::lower` | `{callable} got an unexpected keyword argument '{keyword}'` | `callable (message+json)`, `keyword (message+json)` | `callable`, `keyword` | n/a | false |
 | `SIFR-CALL-0003` | `CALL` | Active | Error | `docs/errors/SIFR-CALL-0003.mdx` | `crates/sifr/tests/e2e/fail/keyword_after_positional_error.sifr` | `sifr_lowering::lower` | `{callable} got multiple values for argument '{argument}'` | `callable (message+json)`, `argument (message+json)` | `callable`, `argument` | n/a | false |

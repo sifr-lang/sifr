@@ -151,14 +151,12 @@ generated-program implementation lives in `crates/sifr_stdlib` and
 only. Remaining compiler-native stdlib glue is explicitly allowlisted in
 `internal_docs/stdlib_retained_compiler_intrinsics.toml`.
 
-Rust interop ecosystem certification is not fully complete. The active matrix
+Rust interop Track A certification is complete. The active matrix
 `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
-currently has 20 supported rows, 12 bridge-supported rows, 1
-unsupported-by-design row, and 3 rows owned by separate certification work.
-The separately owned rows are `ecosystem_backend_certification`,
-`ecosystem_cli_certification`, and `cargo_locked_offline`. Resource migrations
-must not claim stable support for any row that remains separately owned by
-certification work.
+currently has 21 supported rows, 15 bridge-supported rows, and 1
+unsupported-by-design row. The `structural_bridge_calls` and
+`bridge_version_field_removal` rows have passing positive and negative evidence
+and are included in the stable-claim inventory.
 
 ## Stdlib Rust Interop Adapter Policy
 
@@ -174,8 +172,8 @@ The compiler should not add per-declaration converter pipelines for the stdlib
 rewrite. Generated glue validates the single `@rust(...)` target signature,
 records the sysroot interop dependency and trust metadata, and lets
 `sifr_stdlib` own implementation adaptation. Sysroot stdlib interop uses
-`bridge-version = 1`; any future callee-injection form requires a new
-bridge-versioned design and must not add fallback conversion behavior to
+the one unversioned bridge contract; any future callee-injection form requires
+an explicit contract update and must not add fallback conversion behavior to
 sysroot interop declarations.
 
 Private stdlib declarations rely on the compiler-owned sysroot trust policy and
