@@ -31,8 +31,8 @@ reopen or weaken the governed representative performance budgets.
 | Milestone | Scope | Status |
 | --- | --- | --- |
 | M1: current-main diagnosis | Measure cold and successful-input states, inspect cache receipts and shared-cache completeness, and identify avoidable serialized or repeated work | complete |
-| M2: controlled policy/work repair | Make the required work achievable through governed resource use, cache-state policy, or removal of redundant work; add deterministic regression tests | in progress |
-| M3: qualification and closure | Reproduce cold and warm passing verdicts, run create-PR and merge gates, obtain Claude Opus satisfaction, merge, and archive this record | pending |
+| M2: controlled policy/work repair | Make the required work achievable through governed resource use, cache-state policy, or removal of redundant work; add deterministic regression tests | complete |
+| M3: qualification and closure | Reproduce cold and warm passing verdicts, run create-PR and merge gates, obtain Claude Opus satisfaction, merge, and archive this record | in progress |
 
 ## Initial Evidence
 
@@ -81,6 +81,46 @@ single in-attempt pressure spike was too strict: two retries had instruction
 CVs of `0.000433` and `0.000389`, yet transient external activity above 40%
 rejected both. Stable work samples now retain pressure as advisory evidence;
 pressure remains blocking when the instruction samples are unstable.
+
+## Qualification Evidence
+
+The work-mode admission repair passed its review and qualification in PR
+[#3132](https://github.com/sifr-lang/sifr/pull/3132). Its reviewed head was
+`34022b32820f212919aba409621fd78424df84af`. Main contains merge commit
+`8d1c71150e8e2a5718f0e85bb3d4166de3dc0521`.
+
+The dependent packaged-candidate gate then passed on reviewed head
+`eb0599f4f8ed06c1fae5e0055116849e3f4616e3`. The gate passed all ten
+representative benchmarks in 166.865 seconds. It also passed 694 E2E fixtures
+and 268 hardening variants. PR
+[#3102](https://github.com/sifr-lang/sifr/pull/3102) merged as
+`3426c7c53025c867c565cb6981cad3d1695b045b`.
+
+The interop qualification used exact candidate
+`912947f895837da272381d2758c275f8a08ca9d1`. The local partition assigned one
+CPU to qlty and six workers to Sifr. The Mac used AC power.
+
+- The cold receipt used reason `input-changed` and fingerprint
+  `c128e13e246c5729`.
+- Cold Python interop passed 19/19 in 254.255 seconds under 1,200 seconds.
+- Cold Rust interop passed 10/10 in 6.656 seconds under 20 seconds.
+- The unchanged warm receipt used reason `successful-input-receipt` with the
+  same fingerprint.
+- Warm Python interop passed 19/19 in 226.054 seconds under 600 seconds.
+- Warm Rust interop passed 10/10 in 6.881 seconds under 20 seconds.
+- The warm create-PR profile passed all blocking lanes, including E2E 140/140.
+- The warm lane report digest is
+  `4efeecdc2227e59d2d09ed16eddc38848c13cd2f93bd864e55376d3fb6392a17`.
+
+The cold profile later stopped in an unrelated generated-code cache miss. Its
+lane took 137.870 seconds against 120 seconds. The unchanged warm lane passed
+in 9.457 seconds. Issue
+[#3134](https://github.com/sifr-lang/sifr/issues/3134) owns this external
+create-PR cold-artifact problem.
+
+The records-only rebase produced candidate
+`cc82faf3fad25d6c0f4aa9b4f990174d72f89f3d`. These changes did not change any
+interop qualification input.
 
 ## Scope
 
