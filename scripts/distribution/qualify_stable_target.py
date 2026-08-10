@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import platform
+import shlex
 import subprocess
 import sys
 import tarfile
@@ -128,11 +129,55 @@ def qualify_target(
                 f"{binary}: version mismatch (expected sifr {version}, got {version_output})"
             )
         smoke_source = Path(directory) / "qualification_smoke.sifr"
-        smoke_source.write_text('print("stable qualification")\n', encoding="utf-8")
+        smoke_source.write_text(
+            'def main() -> None:\n    print("stable qualification")\n',
+            encoding="utf-8",
+        )
+        generated_rust_env = {
+            "SIFR_SYSROOT": str(install_root),
+            "SIFR_RUST_BRIDGE_PROBE_CACHE_DIR": str(
+                Path(directory) / "generated-rust-probe-cache"
+            ),
+            "CARGO_TARGET_DIR": str(Path(directory) / "generated-rust-cargo-target"),
+        }
         run_checked(
             [str(binary), "check", str(smoke_source)],
             env={"SIFR_SYSROOT": str(install_root)},
             cwd=smoke_source.parent,
+        )
+        for temperature in ("cold", "warm"):
+            emitted = run_checked(
+                [str(binary), "emit", str(smoke_source)],
+                env=generated_rust_env,
+                cwd=smoke_source.parent,
+                timeout_seconds=90,
+            )
+            if "fn main" not in emitted:
+                raise GovernanceError(
+                    f"installed {temperature} generated Rust smoke returned no main function"
+                )
+        lsp_env = {
+            "SIFR_SYSROOT": str(install_root),
+            "SIFR_LSP_COMMAND": shlex.join([str(binary), "lsp", "--stdio"]),
+            "SIFR_RUST_BRIDGE_PROBE_CACHE_DIR": str(
+                Path(directory) / "lsp-generated-rust-probe-cache"
+            ),
+            "CARGO_TARGET_DIR": str(Path(directory) / "lsp-generated-rust-cargo-target"),
+        }
+        run_checked(
+            [
+                sys.executable,
+                str(
+                    REPO_ROOT
+                    / "verification"
+                    / "areas"
+                    / "developer_tooling"
+                    / "lsp_protocol_smoke.py"
+                ),
+                "--candidate-smoke",
+            ],
+            env=lsp_env,
+            timeout_seconds=120,
         )
         receipt_dir = Path(directory) / "receipt"
         receipt_dir.mkdir()
@@ -205,18 +250,25 @@ def run_checked(
     *,
     env: dict[str, str],
     cwd: Path = REPO_ROOT,
+    timeout_seconds: float = 90,
 ) -> str:
     merged_env = os.environ.copy()
     merged_env.update(env)
-    result = subprocess.run(
-        command,
-        check=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=merged_env,
-        cwd=cwd,
-    )
+    try:
+        result = subprocess.run(
+            command,
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=merged_env,
+            cwd=cwd,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise GovernanceError(
+            f"{' '.join(command)} exceeded the governed {timeout_seconds:g}s timeout"
+        ) from exc
     if result.returncode != 0:
         raise GovernanceError(
             f"{' '.join(command)} failed with exit {result.returncode}: {result.stderr.strip()}"

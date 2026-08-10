@@ -52,7 +52,8 @@ The governed release index uses `schema_version: 2`. Unknown, withdrawn, and
 
 The qualified VS Code extension is `sifr.sifr-vscode` 0.2.0 with compiler
 compatibility `>=0.1.0,<0.2.0`. Protected publication reuses the exact
-qualified VSIX without rebuilding it.
+qualified VSIX without rebuilding it. Its compiler-backed actions include a
+generated-Rust preview served by the native LSP.
 
 ## Recovery model
 
@@ -65,10 +66,7 @@ reserved for an intentional reinstall, channel switch, or approved downgrade.
 ## Current scope
 
 Windows packages, package-manager distribution, binary signing, and
-notarization are not part of this release. Generated-Rust output through
-`sifr emit` and the VS Code generated-Rust preview action are outside the
-packaged 0.1.0 GA-qualified surface because cold first-run qualification
-exceeded its deterministic bound.
+notarization are not part of this release.
 
 Stable Rust interop support is limited to the categories and evidence scopes
 in the [stable claims table](https://sifr.sh/rust-interop#stable-support-claims).

@@ -148,6 +148,12 @@ def _profile_schema_self_test() -> None:
         "enforcement": "blocking",
     }:
         raise AssertionError(f"create-pr Python interop cache budget drifted: {python_interop_budget}")
+    rust_interop_budget = create_pr_step_budgets.get("rust_interop_checks")
+    if rust_interop_budget != {
+        "budget_ms": 20_000,
+        "enforcement": "blocking",
+    }:
+        raise AssertionError(f"create-pr Rust interop budget drifted: {rust_interop_budget}")
     required_blocking_steps = {
         "generated_code_quality_checks",
         "rust_interop_checks",

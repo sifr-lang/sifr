@@ -1,5 +1,6 @@
 use super::project_codegen::{generated_single_file_binary_project, GeneratedBinaryProject};
-use super::rust_interop::{apply_package_rust_interop_metadata, PackageRustInteropContext};
+use super::rust_interop::PackageRustInteropContext;
+use super::rust_interop_resolution::resolve_package_rust_interop_metadata;
 use super::sysroot_interop::attach_stdlib_rust_interop;
 use crate::diagnostics::RenderedDiagnostic;
 use crate::stdlib::StdlibRustInterop;
@@ -76,7 +77,7 @@ fn resolve_interop(
     let generated = generated_single_file_binary_project(codegen_result);
     let (generated, rust_interop_context) =
         attach_stdlib_rust_interop(generated, rust_interop_context, stdlib_interop);
-    apply_package_rust_interop_metadata(generated, rust_interop_context)
+    resolve_package_rust_interop_metadata(generated, rust_interop_context)
         .map(|generated: GeneratedBinaryProject| generated.interop)
 }
 

@@ -477,6 +477,15 @@ def run_candidate_smoke() -> None:
                 raise LspProtocolError(
                     f"candidate smoke received diagnostics for valid source: {diagnostics}"
                 )
+            preview = client.request(
+                "workspace/executeCommand",
+                {"command": "sifr.server.showGeneratedRust", "arguments": [file_uri(source)]},
+            )
+            rust = preview.get("rust") if isinstance(preview, dict) else None
+            if not isinstance(rust, str) or "fn main" not in rust:
+                raise LspProtocolError(
+                    f"candidate generated Rust command returned an invalid payload: {preview}"
+                )
             run_formatting_checks(client, formatting_source)
             client.request("shutdown", {})
             client.notify("exit", {})

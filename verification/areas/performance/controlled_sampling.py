@@ -39,6 +39,7 @@ def run_controlled_case(
         rejection_reasons = (
             monitor.rejection_reasons() if require_controlled_host else []
         )
+        advisory_reasons: list[str] = []
         if control_mode == "work":
             raw_variation = result["metrics"].get(
                 "instructions_coefficient_variation"
@@ -56,6 +57,18 @@ def run_controlled_case(
             coefficient_variation = float(raw_variation)
         if coefficient_variation is not None and coefficient_variation > stability_limit:
             rejection_reasons.append("unstable-samples")
+        if (
+            control_mode == "work"
+            and coefficient_variation is not None
+            and coefficient_variation <= stability_limit
+            and "external-cpu-pressure" in rejection_reasons
+        ):
+            # Retired instructions measure completed work rather than elapsed time.
+            # Admission reserves capacity before the attempt; transient pressure
+            # during a demonstrably stable work sample is useful telemetry, but it
+            # must not make a local desktop require perfect idleness.
+            rejection_reasons.remove("external-cpu-pressure")
+            advisory_reasons.append("external-cpu-pressure")
         rejection_reasons = sorted(set(rejection_reasons))
         attempt_evidence = {
             "attempt": attempt_index,
@@ -66,6 +79,8 @@ def run_controlled_case(
             "host_snapshots": monitor.snapshots,
             "rejection_reasons": rejection_reasons,
         }
+        if advisory_reasons:
+            attempt_evidence["advisory_reasons"] = sorted(set(advisory_reasons))
         if retry_admission is not None:
             attempt_evidence["retry_admission"] = retry_admission
         attempts.append(attempt_evidence)
@@ -173,6 +188,30 @@ def run_self_test(output_root: Path) -> None:
     ):
         raise BenchmarkError(
             "controlled sampling self-test did not select work stability"
+        )
+
+    class PressuredMonitor(FakeMonitor):
+        def rejection_reasons(self) -> list[str]:
+            return ["external-cpu-pressure"]
+
+    pressured_work_accepted = run_controlled_case(
+        case,
+        output_root,
+        "manifest",
+        require_controlled_host=True,
+        control_mode="work",
+        run_case_fn=stable_work_run,
+        retry_admission_fn=fake_retry_admission,
+        monitor_factory=PressuredMonitor,
+    )
+    pressured_attempt = pressured_work_accepted["control"]["attempts"][0]
+    if pressured_attempt["rejection_reasons"]:
+        raise BenchmarkError(
+            "stable work sampling self-test rejected transient CPU pressure"
+        )
+    if pressured_attempt.get("advisory_reasons") != ["external-cpu-pressure"]:
+        raise BenchmarkError(
+            "stable work sampling self-test did not preserve pressure telemetry"
         )
 
     def unstable_run(_case: BenchmarkCase, _root: Path, _scale: str) -> dict[str, Any]:

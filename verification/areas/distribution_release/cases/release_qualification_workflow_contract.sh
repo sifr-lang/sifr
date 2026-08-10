@@ -64,12 +64,15 @@ abort "qualification jobs must not bind a mutation environment" if jobs.values.a
 }
 RUBY
 
-python3 - "${workflow}" "${REPO_ROOT}/scripts/distribution/build_release_artifacts.sh" <<'PY'
+python3 - "${workflow}" \
+  "${REPO_ROOT}/scripts/distribution/build_release_artifacts.sh" \
+  "${REPO_ROOT}/scripts/distribution/qualify_stable_target.py" <<'PY'
 from pathlib import Path
 import sys
 
 text = Path(sys.argv[1]).read_text(encoding="utf-8")
 builder = Path(sys.argv[2]).read_text(encoding="utf-8")
+target_qualifier = Path(sys.argv[3]).read_text(encoding="utf-8")
 required = (
     "[[ \"${SOURCE_COMMIT}\" =~ ^[0-9a-f]{40}$ ]]",
     "[[ \"${VERSION}\" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+$ ]]",
@@ -120,6 +123,18 @@ if text.count("overwrite: false") != 4 or text.count("retention-days: 30") != 4:
     raise SystemExit("every qualification upload must be immutable with 30-day retention")
 if "cargo build --locked --release -p sifr" not in builder:
     raise SystemExit("governed release artifact builder must use Cargo.lock")
+for fragment in (
+    '"emit", str(smoke_source)',
+    'for temperature in ("cold", "warm")',
+    '"--candidate-smoke"',
+    'timeout_seconds=90',
+    'timeout_seconds=120',
+    'SIFR_RUST_BRIDGE_PROBE_CACHE_DIR',
+):
+    if fragment not in target_qualifier:
+        raise SystemExit(
+            f"stable target qualifier omitted generated Rust governance: {fragment}"
+        )
 download_counts = {
     "aarch64-apple-darwin": 1,
     "x86_64-apple-darwin": 1,
