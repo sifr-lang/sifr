@@ -84,6 +84,33 @@ fn runtime_and_tokio_features_render_retained_glue_dependency_specs() {
 }
 
 #[test]
+fn structural_runtime_feature_is_demand_gated_in_generated_dependencies() {
+    let ordinary = generated_cargo_dependencies(
+        &HashSet::new(),
+        &HashSet::from([StdlibFeature::SifrRuntime]),
+    );
+    assert!(ordinary.iter().any(|dependency| {
+        dependency.starts_with("sifr_runtime = ")
+            && dependency.contains("default-features = false")
+            && !dependency.contains("features = [")
+    }));
+
+    let structural = generated_cargo_dependencies(
+        &HashSet::new(),
+        &HashSet::from([StdlibFeature::StructuralRuntime]),
+    );
+    assert!(structural.iter().any(|dependency| {
+        dependency.starts_with("sifr_runtime = ")
+            && dependency.contains("default-features = false")
+            && dependency.contains("features = [\"structural\"]")
+    }));
+    assert_eq!(
+        feature_for_codegen_requirement("structural-runtime"),
+        Some(StdlibFeature::StructuralRuntime)
+    );
+}
+
+#[test]
 fn ipc_feature_renders_sysroot_specs_without_json() {
     let deps = generated_cargo_dependencies(
         &HashSet::from(["sifr.ipc".to_string(), "_sifr.ipc".to_string()]),

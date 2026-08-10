@@ -7,6 +7,7 @@ pub(super) struct RuntimeFeatures {
     pub(super) i18n: bool,
     pub(super) net: bool,
     pub(super) python: bool,
+    pub(super) structural: bool,
     pub(super) tls: bool,
     pub(super) unicode: bool,
 }
@@ -21,13 +22,20 @@ impl RuntimeFeatures {
             i18n: needs_sifr_runtime_i18n(required_features),
             net: needs_sifr_runtime_net(stdlib_modules),
             python: needs_sifr_runtime_python(stdlib_modules, required_features),
+            structural: required_features.contains(&StdlibFeature::StructuralRuntime),
             tls: needs_sifr_runtime_tls(stdlib_modules, required_features),
             unicode: needs_sifr_runtime_unicode(stdlib_modules, required_features),
         }
     }
 
     pub(super) const fn requires_runtime_crate(self) -> bool {
-        self.http || self.i18n || self.net || self.python || self.tls || self.unicode
+        self.http
+            || self.i18n
+            || self.net
+            || self.python
+            || self.structural
+            || self.tls
+            || self.unicode
     }
 
     pub(super) fn feature_names(self) -> std::collections::BTreeSet<String> {
@@ -40,6 +48,9 @@ impl RuntimeFeatures {
         }
         if self.python {
             features.insert("python".to_string());
+        }
+        if self.structural {
+            features.insert("structural".to_string());
         }
         if self.tls || self.http {
             features.insert("tls".to_string());
