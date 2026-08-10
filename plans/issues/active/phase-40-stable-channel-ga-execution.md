@@ -126,15 +126,13 @@ Artifacts mapped to the Phase 40 exit gate:
   mode—passed. The follow-up has remediated those 20 failures and now keeps the
   full corpus and taxonomy self-test blocking in both nightly and release
   qualification; its closeout validation and review remain in progress.
-- Packaged-candidate generated-Rust preview is intentionally not a Phase 40
-  prerequisite. The real `0.1.0` candidate serves initialization, diagnostics,
-  and formatting, but the cold first-run generated-Rust qualification exceeded
-  its deterministic bound through both `sifr emit` and
-  `sifr.server.showGeneratedRust`. That independently repairable compiler
-  startup/performance defect is recorded in
-  [`adhoc_packaged_candidate_generated_rust.md`](./adhoc_packaged_candidate_generated_rust.md);
-  stable public docs explicitly record the affected capability as outside the
-  packaged `0.1.0` GA-qualified surface.
+- The independently scoped packaged-candidate generated-Rust follow-up is
+  complete. [PR #3102](https://github.com/sifr-lang/sifr/pull/3102) qualified
+  cold and warm installed `sifr emit` and `sifr.server.showGeneratedRust` on
+  all four supported targets, including cancellation and bounded shutdown.
+  Stable public docs now include the qualified editor action. The completed
+  record is archived in
+  [`adhoc_packaged_candidate_generated_rust.md`](../archive/adhoc_packaged_candidate_generated_rust.md).
 - The editor report records a Marketplace publication plan with status
   `planned`, not a synthetic dry-run pass. The credentialed dry run and exact
   no-rebuild workflow binding are realized in `milestone_40_5`.
