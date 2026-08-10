@@ -386,6 +386,7 @@ fn initialize_cpython_with_config(config: &PythonRuntimeConfig) -> Result<(), Py
     raw_config.parse_argv = 0;
     raw_config.use_environment = 0;
     raw_config.user_site_directory = 0;
+    raw_config.write_bytecode = 0;
     raw_config.module_search_paths_set = 1;
 
     let configure_result = configure_raw_python_config(&mut raw_config, config);

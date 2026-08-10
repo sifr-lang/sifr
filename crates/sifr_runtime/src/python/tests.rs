@@ -53,6 +53,23 @@ fn attach_and_detach_run_under_initialized_runtime() {
 }
 
 #[test]
+fn embedded_runtime_disables_bytecode_writes() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("no-bytecode")).expect("init should succeed");
+
+    let disabled = attach(|py| {
+        py.import("sys")
+            .and_then(|sys| sys.getattr("dont_write_bytecode"))
+            .and_then(|value| value.extract::<bool>())
+    })
+    .expect("attach should succeed")
+    .expect("sys.dont_write_bytecode should be a bool");
+
+    assert!(disabled);
+}
+
+#[test]
 fn owned_object_tracking_is_released_on_next_attach() {
     let _guard = test_guard();
     reset_runtime_state_for_tests();
