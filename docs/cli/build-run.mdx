@@ -184,6 +184,15 @@ malformed discovered manifest is a hard diagnostic.
 </Tabs>
 
 <Tip>
-`sifr run`, `build`, `check`, `emit`, and `trace` use the same workspace
-boundary for an explicit input path.
+The compilation-mode resolver for `sifr run`, `build`, `check`, `emit`, and
+`trace` uses the same workspace boundary for an explicit input path.
 </Tip>
+
+<Warning>
+Known issue [#3128](https://github.com/sifr-lang/sifr/issues/3128) affects the
+package-session preflight. If the current directory contains a source-only
+`sifr.toml` without package metadata, this preflight can fail before mode
+resolution. Until the issue is fixed, invoke explicit-file `run`, `build`, and
+`check` from outside that directory. Alternatively, use a complete package
+manifest. `emit` and `trace` do not use this preflight.
+</Warning>
