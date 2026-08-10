@@ -218,6 +218,9 @@ fn regex_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code
         .rust
         .contains("trait __SifrOpaque__SifrStdlib___sifr_x2eregex_x2eCompiledPatternMethods"));
+    assert!(!private_code
+        .rust
+        .contains("pub trait __SifrOpaque__SifrStdlib___sifr_x2eregex_x2eCompiledPatternMethods"));
 
     for name in [
         "re_match",
