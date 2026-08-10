@@ -34,7 +34,12 @@ def profile_control_mode(host_system: str | None = None) -> str:
     return "work" if system == "Darwin" else "latency"
 
 
-def capture_host_snapshot(*, include_calibration: bool = True) -> dict[str, Any]:
+def capture_host_snapshot(
+    *,
+    include_calibration: bool = True,
+    control_mode: str = "latency",
+) -> dict[str, Any]:
+    validate_control_mode(control_mode)
     logical_cpus = os.cpu_count() or 1
     try:
         load_1m, load_5m, load_15m = os.getloadavg()
@@ -43,7 +48,10 @@ def capture_host_snapshot(*, include_calibration: bool = True) -> dict[str, Any]
     thermal = thermal_state()
     power = power_state()
     frequency = cpu_frequency_state(include_calibration=include_calibration)
-    competitors, cpu_pressure = process_activity()
+    competitors, cpu_pressure = process_activity(
+        control_mode=control_mode,
+        logical_cpus=logical_cpus,
+    )
     return {
         "captured_at_unix": round(time.time(), 3),
         "logical_cpus": logical_cpus,
@@ -102,7 +110,7 @@ def evaluate_snapshot(
     if cpu_pressure.get("source") != "ps":
         reasons.append("external-cpu-pressure-unavailable")
     else:
-        external_cpu_limit = max_external_cpu_percent(snapshot, control_mode)
+        external_cpu_limit = external_cpu_limit_for_mode(snapshot, control_mode)
         if external_cpu_limit is None:
             reasons.append("logical-cpu-count-unavailable")
         elif (
@@ -136,7 +144,10 @@ def wait_for_controlled_host(
     consecutive: list[dict[str, Any]] = []
     observations: list[dict[str, Any]] = []
     while True:
-        snapshot = snapshot_fn(include_calibration=True)
+        snapshot = snapshot_fn(
+            include_calibration=True,
+            control_mode=control_mode,
+        )
         reasons = evaluate_snapshot(
             snapshot,
             enforce_load=True,
@@ -179,7 +190,7 @@ def controlled_policy(
 ) -> dict[str, Any]:
     validate_control_mode(control_mode)
     cpu_count = logical_cpus if logical_cpus is not None else os.cpu_count() or 1
-    external_cpu_limit = max_external_cpu_percent(
+    external_cpu_limit = external_cpu_limit_for_mode(
         {"logical_cpus": cpu_count}, control_mode
     )
     return {
@@ -190,6 +201,11 @@ def controlled_policy(
         "max_frequency_proxy_cv": MAX_CALIBRATION_CV,
         "max_external_cpu_percent": external_cpu_limit,
         "external_cpu_limit_applied": True,
+        "in_attempt_external_cpu_policy": (
+            "advisory-when-work-stable"
+            if control_mode == "work"
+            else "blocking"
+        ),
         "load_limit_applied": control_mode == "latency",
         "work_reserved_logical_cpu_fraction": (
             WORK_RESERVED_LOGICAL_CPU_FRACTION
@@ -204,7 +220,7 @@ def controlled_policy(
     }
 
 
-def max_external_cpu_percent(
+def external_cpu_limit_for_mode(
     snapshot: dict[str, Any], control_mode: str
 ) -> float | None:
     validate_control_mode(control_mode)
@@ -237,7 +253,12 @@ class HostActivityMonitor:
         self.snapshots: list[dict[str, Any]] = []
 
     def __enter__(self) -> HostActivityMonitor:
-        self.snapshots.append(capture_host_snapshot(include_calibration=False))
+        self.snapshots.append(
+            capture_host_snapshot(
+                include_calibration=False,
+                control_mode=self._control_mode,
+            )
+        )
         self._thread = threading.Thread(
             target=self._run, name="sifr-performance-host-monitor", daemon=True
         )
@@ -248,11 +269,21 @@ class HostActivityMonitor:
         self._stop.set()
         if self._thread is not None:
             self._thread.join(timeout=max(1.0, self._interval_seconds * 2.0))
-        self.snapshots.append(capture_host_snapshot(include_calibration=False))
+        self.snapshots.append(
+            capture_host_snapshot(
+                include_calibration=False,
+                control_mode=self._control_mode,
+            )
+        )
 
     def _run(self) -> None:
         while not self._stop.wait(self._interval_seconds):
-            self.snapshots.append(capture_host_snapshot(include_calibration=False))
+            self.snapshots.append(
+                capture_host_snapshot(
+                    include_calibration=False,
+                    control_mode=self._control_mode,
+                )
+            )
 
     def rejection_reasons(self) -> list[str]:
         reasons: set[str] = set()
@@ -421,7 +452,15 @@ def memory_pressure_state() -> dict[str, Any]:
 
 def process_activity(
     output: str | None = None,
+    *,
+    control_mode: str = "latency",
+    logical_cpus: int | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    validate_control_mode(control_mode)
+    cpu_count = logical_cpus if logical_cpus is not None else os.cpu_count() or 1
+    external_cpu_limit = external_cpu_limit_for_mode(
+        {"logical_cpus": cpu_count}, control_mode
+    )
     if output is None:
         output = command_output(["ps", "-axo", "pid=,ppid=,pcpu=,comm=,args="])
     rows = parse_process_rows(output)
@@ -429,10 +468,15 @@ def process_activity(
         return [], {
             "source": "unavailable",
             "external_cpu_percent": None,
-            "max_external_cpu_percent": MAX_EXTERNAL_CPU_PERCENT,
+            "max_external_cpu_percent": external_cpu_limit,
             "top_processes": [],
         }
-    return summarize_process_activity(rows, os.getpid())
+    return summarize_process_activity(
+        rows,
+        os.getpid(),
+        control_mode=control_mode,
+        logical_cpus=cpu_count,
+    )
 
 
 def parse_process_rows(output: str) -> list[tuple[int, int, float, str, str]]:
@@ -450,8 +494,17 @@ def parse_process_rows(output: str) -> list[tuple[int, int, float, str, str]]:
 
 
 def summarize_process_activity(
-    rows: list[tuple[int, int, float, str, str]], current_pid: int
+    rows: list[tuple[int, int, float, str, str]],
+    current_pid: int,
+    *,
+    control_mode: str = "latency",
+    logical_cpus: int | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    validate_control_mode(control_mode)
+    cpu_count = logical_cpus if logical_cpus is not None else os.cpu_count() or 1
+    external_cpu_limit = external_cpu_limit_for_mode(
+        {"logical_cpus": cpu_count}, control_mode
+    )
     excluded = related_process_ids(rows, current_pid)
     competitors: list[dict[str, Any]] = []
     external_rows: list[tuple[int, float, str]] = []
@@ -478,7 +531,7 @@ def summarize_process_activity(
     return competitors, {
         "source": "ps",
         "external_cpu_percent": round(external_cpu_percent, 1),
-        "max_external_cpu_percent": MAX_EXTERNAL_CPU_PERCENT,
+        "max_external_cpu_percent": external_cpu_limit,
         "top_processes": top_processes,
     }
 
@@ -619,6 +672,8 @@ def run_self_test() -> None:
     if (
         work_policy["max_external_cpu_percent"] != 400.0
         or work_policy["external_cpu_limit_applied"] is not True
+        or work_policy["in_attempt_external_cpu_policy"]
+        != "advisory-when-work-stable"
         or work_policy["load_limit_applied"] is not False
         or work_policy["work_reserved_logical_cpu_fraction"] != 0.60
     ):
@@ -695,6 +750,26 @@ def run_self_test() -> None:
         raise HostControlError(
             "host control self-test included related benchmark CPU activity"
         )
+    if cpu_pressure["max_external_cpu_percent"] != 50.0:
+        raise HostControlError(
+            "latency process telemetry recorded the wrong external CPU limit"
+        )
+    _work_competitors, work_cpu_pressure = summarize_process_activity(
+        [
+            (1, 0, 0.1, "/sbin/launchd", "/sbin/launchd"),
+            (10, 1, 10.0, "/usr/bin/python3", "python3 run_benchmarks.py"),
+            (11, 10, 90.0, "/usr/bin/rustc", "rustc --crate-name measured"),
+            (20, 1, 30.0, "/usr/bin/cargo", "cargo build"),
+            (21, 1, 25.1, "/opt/agent", "/opt/agent --scan"),
+        ],
+        10,
+        control_mode="work",
+        logical_cpus=10,
+    )
+    if work_cpu_pressure["max_external_cpu_percent"] != 400.0:
+        raise HostControlError(
+            "work process telemetry recorded the wrong external CPU limit"
+        )
     parsed_rows = parse_process_rows(
         "bad row\n"
         "42 1 not-a-number /usr/bin/noop noop\n"
@@ -708,6 +783,15 @@ def run_self_test() -> None:
     if unavailable_competitors or unavailable_cpu["source"] != "unavailable":
         raise HostControlError(
             "host control self-test did not fail closed on empty ps output"
+        )
+    _work_unavailable_competitors, work_unavailable_cpu = process_activity(
+        "",
+        control_mode="work",
+        logical_cpus=10,
+    )
+    if work_unavailable_cpu["max_external_cpu_percent"] != 400.0:
+        raise HostControlError(
+            "unavailable work telemetry recorded the wrong external CPU limit"
         )
     if executable_from_process("/truncated", "/usr/bin/tool --work") != "tool":
         raise HostControlError(

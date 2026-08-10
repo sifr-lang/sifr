@@ -337,7 +337,10 @@ def run_cases(
             controlled_host_timeout_seconds, control_mode=control_mode
         )
     else:
-        snapshot = capture_host_snapshot(include_calibration=True)
+        snapshot = capture_host_snapshot(
+            include_calibration=True,
+            control_mode=control_mode,
+        )
         admission = {
             "status": "record-only",
             "mode": control_mode,
