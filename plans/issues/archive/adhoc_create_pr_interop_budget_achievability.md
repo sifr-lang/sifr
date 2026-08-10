@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Create-PR Interop Budget Achievability
 
-Status: in progress.
+Status: complete.
 
 GitHub issue: [#3130](https://github.com/sifr-lang/sifr/issues/3130).
 
@@ -32,7 +32,7 @@ reopen or weaken the governed representative performance budgets.
 | --- | --- | --- |
 | M1: current-main diagnosis | Measure cold and successful-input states, inspect cache receipts and shared-cache completeness, and identify avoidable serialized or repeated work | complete |
 | M2: controlled policy/work repair | Make the required work achievable through governed resource use, cache-state policy, or removal of redundant work; add deterministic regression tests | complete |
-| M3: qualification and closure | Reproduce cold and warm passing verdicts, run create-PR and merge gates, obtain Claude Opus satisfaction, merge, and archive this record | in progress |
+| M3: qualification and closure | Reproduce cold and warm passing verdicts, run create-PR and merge gates, obtain Claude Opus satisfaction, merge, and archive this record | complete |
 
 ## Initial Evidence
 
@@ -118,9 +118,38 @@ in 9.457 seconds. Issue
 [#3134](https://github.com/sifr-lang/sifr/issues/3134) owns this external
 create-PR cold-artifact problem.
 
-The records-only rebase produced candidate
-`cc82faf3fad25d6c0f4aa9b4f990174d72f89f3d`. These changes did not change any
-interop qualification input.
+The final reviewed candidate was
+`7b026aca8857d4a60844eecdaca2c768cb03ac38`. Its records-only changes did not
+change any interop qualification input.
+
+## Final Review and Merge Evidence
+
+Claude Opus reviewed base
+`c3d347d7f732fef320a3e971ab91f7c18bc908ae` and final candidate
+`7b026aca8857d4a60844eecdaca2c768cb03ac38`. The reviewer returned
+`SATISFIED` with no blocking findings. The review response digest is
+`32ed1edfbeb774b6a1ba14859601c650bc689f4f3571a7997302ad0b4969a4b2`.
+
+The one authoritative merge gate ran on the same final candidate. It passed
+with exit code zero. Key results were:
+
+- Python interoperability: 25/25.
+- Rust interoperability: 10/10.
+- Representative performance: 10/10.
+- Full E2E: 694/694.
+- Hardening: 268 variants with zero failures.
+
+The merge report digest is
+`932da65248e56bbb7a6534ed866ce2bf2f741a116ce68cc8cad04a48ac9e6eeb`.
+The representative-performance evidence digest is
+`dae0c13a139dce7484ce5b6a559042ac9afb3f0451a15bd46e431ba48aaec970`.
+
+Implementation PR [#3131](https://github.com/sifr-lang/sifr/pull/3131)
+merged the reviewed candidate. Main contains merge commit
+`c026b14ba60b5dd09f1ab46e427572b8435ec571`.
+
+Issue [#3134](https://github.com/sifr-lang/sifr/issues/3134) owns the separate
+generated-code cold-artifact budget. It is not an interop phase blocker.
 
 ## Scope
 

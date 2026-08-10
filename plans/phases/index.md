@@ -54,7 +54,7 @@ successor and is summarized here.
 | GENC-NAN | Ad Hoc Generated NaN Constant Clippy Quality | active non-blocking follow-up; release divergence expires 2026-10-31 | [adhoc_generated_nan_constant_clippy_quality.md](../issues/active/adhoc_generated_nan_constant_clippy_quality.md) |
 | PKG-RUST | Ad Hoc Packaged Candidate Generated Rust | completed and audited (2026-08-10, PR #3102) | [adhoc_packaged_candidate_generated_rust.md](../issues/archive/adhoc_packaged_candidate_generated_rust.md) |
 | PERF-HOST | Ad Hoc Performance Budget Host Variance | completed and audited (2026-08-10, PR #3101) | [adhoc_performance_budget_host_variance.md](../issues/archive/adhoc_performance_budget_host_variance.md) |
-| INTEROP-BUDGET | Ad Hoc Create-PR Interop Budget Achievability | in progress; issue #3130 | [adhoc_create_pr_interop_budget_achievability.md](../issues/active/adhoc_create_pr_interop_budget_achievability.md) |
+| INTEROP-BUDGET | Ad Hoc Create-PR Interop Budget Achievability | completed and audited (2026-08-10, PR #3131) | [adhoc_create_pr_interop_budget_achievability.md](../issues/archive/adhoc_create_pr_interop_budget_achievability.md) |
 | REVIEWER-RESTORE | Ad Hoc Distinct Release Reviewer Restoration | active non-blocking follow-up; single-maintainer waiver expires 2026-08-27 | [../issues/active/ad-hoc-distinct-release-reviewer-restoration.md](../issues/active/ad-hoc-distinct-release-reviewer-restoration.md) |
 | 41 | Phase 41: Native Pydantic-Sifr | superseded by canonical ad hoc design | [41_typed_data_model_and_validation.md](./41_typed_data_model_and_validation.md) |
 | 42 | Phase 42: Web Framework and Platform Expansion | unspecified | [42_web_framework_and_platform_expansion.md](./42_web_framework_and_platform_expansion.md) |
