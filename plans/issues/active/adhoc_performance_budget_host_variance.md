@@ -8,7 +8,7 @@ Status: in progress.
 | --- | --- | --- |
 | M1: controlled measurement and provenance | Host/cache telemetry, controlled admission, stable-sample retries, stale-result producer/checker binding, and governed trend-reference refresh | complete on draft PR #3101 |
 | M2: Python interop cold-cache budget | Classify cold versus warm aggregate execution and enforce a cache-aware create-PR step budget with deterministic policy tests | complete on stacked PR #3115 |
-| M3: qualification and closure | Local retired-instruction budgets, five consecutive controlled verdicts, seeded-regression proof, final merge gate, review, and closure records | in progress on draft PR #3116 |
+| M3: qualification and closure | Local retired-instruction budgets, five consecutive controlled verdicts, seeded-regression proof, final merge gate, review, and closure records | implementation complete on stacked PR #3116; final owner qualification in progress on draft PR #3101 |
 
 Each implementation milestone uses one draft PR, exact-SHA validation, and
 repeated Claude Opus review under the phase-closure loop. Review and validation
@@ -24,27 +24,30 @@ evidence. Extending either expiry remains prohibited.
 
 ### Current handoff
 
-- State: M1 and M2 are complete on the stacked owner branch. M3 replaces the
-  desktop-idle blocker with local retired-instruction evidence. It preserves
-  the separate elapsed-time policy for quiet-host qualification.
+- State: M1, M2, and the M3 implementation are complete on the owner branch.
+  The final owner qualification is in progress. M3 replaces the desktop-idle
+  blocker with local retired-instruction evidence. It preserves the separate
+  elapsed-time policy for quiet-host qualification.
 - Owner branch: `codex/adhoc-performance-budget-host-variance`.
-- M3 branch: `codex/adhoc-performance-budget-host-variance-m3`.
+- Draft PR: [#3101](https://github.com/sifr-lang/sifr/pull/3101).
 - Reviewed M1 implementation candidate:
   `28bca35551321b109e272c61ae52fe6201eb810d`.
-- Draft PR: [#3101](https://github.com/sifr-lang/sifr/pull/3101).
-- Validation on the reviewed candidate: all 65 governed benchmarks passed in
-  one approved controlled-host capture; the trend record contains no
-  deferrals and binds raw-evidence digest
-  `878fceea8e1eef6472b74b3e83e43c796d90f5215dba7c4c9bf03ca07b083d4d`.
-  Performance rules 6/6, manifest, runner self-tests, budget/trend policy,
-  Python compile/lint, maintainability, diff, and file-size checks passed.
-- Review: Claude Opus returned `SATISFIED` with no blocking findings for base
-  `01c43b9cd67df6174b44fbbf7d2328ac5a831cb7` against candidate
-  `28bca35551321b109e272c61ae52fe6201eb810d`. External evidence SHA-256:
-  `2d23bfbc49ca58cd39aea7945614edfbc9ad8f8bc7ec74ef9e44822b03f7eef1`.
-- Base update: merged current `origin/main` at
-  `01c43b9cd67df6174b44fbbf7d2328ac5a831cb7`; the final owner-fix candidate
-  requires a fresh exact-SHA review and validation round.
+- The approved integrated work capture passed all 65 governed benchmarks on
+  producer `b59fb265cf58327e0018778b39e5cd5001bd6edd`. The work-budget artifact
+  digest is
+  `56f91e711d78b4efb7e759e20868a3edec67c95f5b70368f08ddb5e70f98cc26`.
+- The current integrated qualification candidate is
+  `2c811ff29149f1f72c9dfaae6c32dfdf9c1b697f`. It includes current main at
+  `00ea8867569884943413f7809414839c8992db97` and the two exact reviewed
+  structural-demand repair commits `a301991aa42f435c02abd1ba618eca457c402177`
+  and `bb5445b16da928f3c5d1cca531ee4572c3a7f7ed`.
+- Five consecutive controlled representative verdicts passed on the integrated
+  candidate. Each verdict passed 10 of 10 benchmarks and all eight area
+  variants. The raw result digests are recorded below.
+- Claude Opus returned `SATISFIED` with no blocking findings for the integrated
+  phase implementation before the current-main repair. It also returned
+  `SATISFIED` for both exact structural-demand repair candidates. A final
+  whole-phase exact-SHA review remains required after this record update.
 
 ### M3 local-host decision
 
@@ -169,6 +172,73 @@ instructions. The governed 2% threshold is 936,811,698 instructions. No
 waiver, case-specific allowance, or manual threshold edit was added. The
 budget policy and all six performance rules passed against the replacement
 artifact. The benchmark and budget self-tests also passed.
+
+### Final integrated qualification
+
+The update to current main introduced an independent structural-interop work
+regression. The first controlled representative run on integration commit
+`f26537ba4745` completed all commands, but it rejected five instruction
+budgets. The two build medians were 125,860,810,314 and 117,070,662,274
+instructions. The three check and diagnostic medians were between
+16,487,041,630 and 16,552,669,644 instructions. The raw-result digest is
+`082851df49023da54930d5968bf55213311550844d82525079f65befb0d8a90e`.
+Issue [#3124](https://github.com/sifr-lang/sifr/issues/3124) owns this regression.
+
+The first repair, `a301991aa42f435c02abd1ba618eca457c402177`, added
+project-wide structural demand gates. It restored the check and diagnostic
+budgets. An authoritative run on integrated commit `8b62019e4c68` still found
+two build regressions. The project-build median was 120,336,407,105 against a
+119,984,530,852 threshold. The single-file build median was 114,248,753,461
+against a 113,587,510,625 threshold. The raw-result digest is
+`ac237022b952234a3e1ef9e922300d124e32add40fd59ba4e8517bcd4503e8d9`.
+The phase did not rerun the unchanged failing candidate.
+
+The residual cause was an unconditional runtime dependency and module. Repair
+`bb5445b16da928f3c5d1cca531ee4572c3a7f7ed` makes
+`sifr_structural_identity` optional behind the `sifr_runtime/structural`
+feature. Code generation requests that feature only for project-wide
+structural demand. Ordinary generated manifests do not enable the feature.
+The positive structural bridge enables it explicitly. Default and structural
+runtime tests, 66 runtime tests, 29 manifest tests, 975 code-generation tests,
+the native structural bridge, Rust interop 10/10, and the repository guards
+passed. Claude Opus returned `SATISFIED` with no blocking findings on this
+exact repair.
+
+Direct warm controls for the final repair measured project-build at
+117,828,333,610 median instructions with coefficient of variation
+`0.00024089`. Single-file build measured 111,958,572,272 with coefficient of
+variation `0.00019889`. Both are below their unchanged governed thresholds.
+The raw time-file digest is
+`6d36529358b8ea4ab3bc4c6ab9e7d24bd5a1ee4c5a85bf65d259caac4fe164df`.
+
+The exact final integration commit is
+`2c811ff29149f1f72c9dfaae6c32dfdf9c1b697f`. A compiler warm-up completed
+before the sequence. Each of five consecutive representative runs passed all
+10 benchmark commands, budget policy, trend policy, both policy self-tests,
+and the final subset budget check. The five raw-result SHA-256 digests are:
+
+1. `103b4c97f63a48faa5dbcdcf88a14649bf75595cd88d099df615fc0955545c5d`
+2. `d05dcd9c4dfcdde05312f03ee6e5f031718cf7068b2b7635304612618437a653`
+3. `1d1dc57161f242c3891a61770e6533ed2176ea53dd751ff7c10ab0b7c2040e90`
+4. `1011646c74292fa8b8df4b836857bb829a3f255960eec205632bd9d293e231de`
+5. `59c750f9d7cf664fdcfa6f80701cad9ac33eb8f15255a3559d663cd8ea17c31e`
+
+Across the five runs, project-build medians were 118,321,078,060 to
+118,356,455,758 instructions. Single-file build medians were 112,449,250,887
+to 112,475,789,417 instructions. The three check and diagnostic medians stayed
+between 12,796,580,486 and 12,868,195,306 instructions. The unchanged-file
+incremental medians stayed between 912,181,474 and 914,125,614 instructions.
+All instruction coefficients of variation were below the `0.02` stability
+limit. One build attempt and three formatter attempts used the single allowed
+stability retry. All other cases passed on their first attempt.
+
+The sequence used a reversible local CPU partition on the 10-thread Mac.
+`qlty-dev` received two CPUs. Sifr received six worker slots. Two threads
+remained for macOS. The wrapper restored qlty to 10 CPUs at exit. The work-mode
+policy ignored unrelated elapsed-time pressure, but it still rejected
+competing build processes, thermal pressure, missing AC power, and unstable
+retired-instruction samples. No threshold, baseline, waiver, or timeout changed
+during final requalification.
 
 ### M2 reproduced evidence
 
