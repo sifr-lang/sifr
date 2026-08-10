@@ -798,6 +798,9 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
             if needs_sifr_runtime {
                 features.insert(StdlibFeature::SifrRuntime);
             }
+            if structural_interop_enabled {
+                features.insert(StdlibFeature::StructuralRuntime);
+            }
             if has_async_main_entrypoint
                 || uses_task_sleep
                 || module_uses_task_scope(module)

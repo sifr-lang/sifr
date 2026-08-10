@@ -13,6 +13,7 @@ pub use crate::interop_callbacks::{
     ThreadsafeCallbackBridge, ThreadsafeCallbackPolicy,
 };
 
+#[cfg(any(test, feature = "structural"))]
 pub mod structural;
 
 type PanicHook = Box<dyn Fn(&std::panic::PanicHookInfo<'_>) + Send + Sync + 'static>;

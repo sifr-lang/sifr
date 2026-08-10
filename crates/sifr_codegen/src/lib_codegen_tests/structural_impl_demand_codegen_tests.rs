@@ -14,6 +14,11 @@ fn ordinary_class_codegen_skips_structural_impls() {
     assert!(!generated.contains("StructuralType"));
     assert!(!generated.contains("StructuralConstruct"));
     assert!(!generated.contains("StructuralProject"));
+
+    let metadata = crate::generate_rust_with_metadata(&module);
+    assert!(!metadata
+        .required_features
+        .contains(&sifr_stdlib_manifest::StdlibFeature::StructuralRuntime));
 }
 
 #[test]
@@ -27,6 +32,14 @@ fn project_structural_demand_enables_implicit_classes_across_modules() {
     assert!(models_rust.contains("StructuralType"));
     assert!(models_rust.contains("StructuralConstruct"));
     assert!(models_rust.contains("StructuralProject"));
+
+    let metadata = crate::generate_rust_multi_with_metadata(
+        &[("models", &models), ("api", &api)],
+        &crate::StdlibCode::default(),
+    );
+    assert!(metadata
+        .required_features
+        .contains(&sifr_stdlib_manifest::StdlibFeature::StructuralRuntime));
 }
 
 fn module(functions: Vec<HirFunction>, classes: Vec<HirClass>) -> HirModule {

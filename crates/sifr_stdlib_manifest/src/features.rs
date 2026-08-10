@@ -49,6 +49,7 @@ pub enum StdlibFeature {
     Sha1,
     Sha2,
     SifrRuntime,
+    StructuralRuntime,
     Sys,
     Tokio,
     TokioRustls,
@@ -106,6 +107,7 @@ impl StdlibFeature {
             Self::Sha1 => "sha1",
             Self::Sha2 => "sha2",
             Self::SifrRuntime => "sifr_runtime",
+            Self::StructuralRuntime => "sifr_runtime/structural",
             Self::Sys => "sys",
             Self::Tokio => "tokio",
             Self::TokioRustls => "tokio-rustls",
@@ -168,6 +170,9 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
         "sha1" => Some(StdlibFeature::Sha1),
         "sha2" => Some(StdlibFeature::Sha2),
         "sifr_runtime" | "sifr-runtime" => Some(StdlibFeature::SifrRuntime),
+        "sifr_runtime/structural" | "sifr-runtime/structural" | "structural-runtime" => {
+            Some(StdlibFeature::StructuralRuntime)
+        }
         "sys" => Some(StdlibFeature::Sys),
         "tokio" => Some(StdlibFeature::Tokio),
         "tokio-rustls" | "tokio_rustls" => Some(StdlibFeature::TokioRustls),
