@@ -26,4 +26,3 @@ longer add a Sifr body that constructs the sealed Rust-opaque type.
 
 The complete `cargo test -p sifr_driver --lib` suite passes after this change:
 451 passed, 70 ignored, and zero failed.
-
