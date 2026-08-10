@@ -13,7 +13,7 @@
     "diagnostic_rules": {"budget_ms": 90000, "enforcement": "blocking"},
     "cpython_differential": {"budget_ms": 30000, "enforcement": "blocking"},
     "python_interop": {"warm_budget_ms": 600000, "cold_budget_ms": 1200000, "cache_classifier": "successful-input-receipt", "enforcement": "blocking"},
-    "rust_interop_checks": {"budget_ms": 10000, "enforcement": "blocking"},
+    "rust_interop_checks": {"warm_budget_ms": 10000, "cold_budget_ms": 20000, "cache_classifier": "successful-input-receipt", "enforcement": "blocking"},
     "frontend_syntax_guardrails": {"budget_ms": 60000, "enforcement": "blocking"},
     "developer_tooling_checks": {"budget_ms": 180000, "enforcement": "blocking"},
     "performance_budget_checks": {"budget_ms": 120000, "enforcement": "blocking"},

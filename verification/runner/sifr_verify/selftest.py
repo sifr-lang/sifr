@@ -148,6 +148,14 @@ def _profile_schema_self_test() -> None:
         "enforcement": "blocking",
     }:
         raise AssertionError(f"create-pr Python interop cache budget drifted: {python_interop_budget}")
+    rust_interop_budget = create_pr_step_budgets.get("rust_interop_checks")
+    if rust_interop_budget != {
+        "warm_budget_ms": 10_000,
+        "cold_budget_ms": 20_000,
+        "cache_classifier": "successful-input-receipt",
+        "enforcement": "blocking",
+    }:
+        raise AssertionError(f"create-pr Rust interop cache budget drifted: {rust_interop_budget}")
     required_blocking_steps = {
         "generated_code_quality_checks",
         "rust_interop_checks",
@@ -160,7 +168,13 @@ def _profile_schema_self_test() -> None:
         raise AssertionError(f"create-pr step budgets missing: {missing_step_budgets}")
     for step in sorted(required_blocking_steps):
         budget = create_pr_step_budgets[step]
-        if budget.get("enforcement") != "blocking" or int(budget.get("budget_ms", 0)) <= 0:
+        fixed_budget = int(budget.get("budget_ms", 0))
+        cache_budgets = (
+            int(budget.get("warm_budget_ms", 0)),
+            int(budget.get("cold_budget_ms", 0)),
+        )
+        has_positive_budget = fixed_budget > 0 or all(value > 0 for value in cache_budgets)
+        if budget.get("enforcement") != "blocking" or not has_positive_budget:
             raise AssertionError(f"create-pr step budget is not blocking/positive: {step}={budget}")
 
 
