@@ -161,7 +161,10 @@ pub(crate) fn emit_project_entrypoint(main_file: &Path) -> CompileResult {
         Err(errors) => return CompileResult::Errors { errors },
     };
     plan.emit_frontend_diagnostics();
-    match plan.into_generated_binary_project_for_emit() {
+    match plan.into_generated_binary_project_with_probe_policy(
+        false,
+        DirectProbePolicy::DeferTrustedSysroot,
+    ) {
         Ok(generated_project) => CompileResult::Success {
             rust_source: generated_project.emit_source_listing(),
         },
@@ -586,15 +589,6 @@ impl RootedEntrypointPlan {
         self,
     ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
         self.into_generated_binary_project_with_probe_policy(false, DirectProbePolicy::ExecuteAll)
-    }
-
-    fn into_generated_binary_project_for_emit(
-        self,
-    ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
-        self.into_generated_binary_project_with_probe_policy(
-            false,
-            DirectProbePolicy::DeferTrustedSysroot,
-        )
     }
 
     pub(super) fn into_generated_binary_project_with_probe_policy(
