@@ -1,4 +1,8 @@
-use super::*;
+use super::{
+    absolute_runtime_target, bridge_type_contract, opaque_type_definition, unsupported_type,
+    BTreeMap, BridgeTypePosition, GeneratedTypeCollector, ModuleCatalog, RustBridgeTypeContract,
+    RustBridgeTypeKind, Type,
+};
 
 pub(super) fn simple_type(
     sifr_name: &str,
@@ -50,8 +54,7 @@ pub(super) fn bridge_list_type(
 }
 
 pub(super) fn bridge_dict_type(
-    key: &Type,
-    value: &Type,
+    entries: (&Type, &Type),
     module_name: Option<&String>,
     module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
     catalog: Option<&ModuleCatalog>,
@@ -59,6 +62,7 @@ pub(super) fn bridge_dict_type(
     position: BridgeTypePosition,
     structural_type_param: Option<&str>,
 ) -> RustBridgeTypeContract {
+    let (key, value) = entries;
     if !matches!(key.resolve_alias(), Type::Str) {
         return unsupported_type(
             &Type::Dict(Box::new(key.clone()), Box::new(value.clone())),

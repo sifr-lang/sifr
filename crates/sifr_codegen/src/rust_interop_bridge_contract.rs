@@ -1,7 +1,10 @@
 pub(crate) mod generated_types;
 mod type_shapes;
 
-use type_shapes::*;
+use type_shapes::{
+    bridge_dict_type, bridge_list_type, bridge_tuple_type, bridge_union_type, combine_generic_type,
+    simple_type,
+};
 
 use crate::rust_interop_bridge_callback_contract::{
     bridge_call_scoped_callback_type, bridge_threadsafe_callback_type, CallbackSignature,
@@ -426,8 +429,7 @@ pub(crate) fn bridge_type_contract(
             structural_type_param,
         ),
         Type::Dict(key, value) => bridge_dict_type(
-            key,
-            value,
+            (key, value),
             module_name,
             module_catalogs,
             catalog,
