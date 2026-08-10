@@ -2,7 +2,7 @@
 
 status: completed, audited
 
-> Phase 39 closed on 2026-06-22 through PRs #2702-#2728 and closeout [PR #2729](https://github.com/sifr-lang/sifr/pull/2729). Verification-matrix hardening completed through [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), [#3019](https://github.com/sifr-lang/sifr/pull/3019), [#3020](https://github.com/sifr-lang/sifr/pull/3020), [#3022](https://github.com/sifr-lang/sifr/pull/3022), and [#3023](https://github.com/sifr-lang/sifr/pull/3023), with its final review and validation recorded in the [archived closeout](../issues/archive/rust-interop-verification-matrix-hardening.md). The subsequent runtime/ecosystem Track A certified every formerly deferred row and completed its final inventory, stable-gate, validation, and repeated published-head review in [PR #3083](https://github.com/sifr-lang/sifr/pull/3083), as recorded by [`rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md). Dormant Track B remains separately gated on the external bridge-version 2 package-resource substrate and is not a Phase 40 blocker.
+> Phase 39 closed on 2026-06-22 through PRs #2702-#2728 and closeout [PR #2729](https://github.com/sifr-lang/sifr/pull/2729). Verification-matrix hardening completed through [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), [#3019](https://github.com/sifr-lang/sifr/pull/3019), [#3020](https://github.com/sifr-lang/sifr/pull/3020), [#3022](https://github.com/sifr-lang/sifr/pull/3022), and [#3023](https://github.com/sifr-lang/sifr/pull/3023), with its final review and validation recorded in the [archived closeout](../issues/archive/rust-interop-verification-matrix-hardening.md). The subsequent runtime/ecosystem Track A certified every formerly deferred row and completed its final inventory, stable-gate, validation, and repeated published-head review in [PR #3083](https://github.com/sifr-lang/sifr/pull/3083), as recorded by [`rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md). Dormant Track B remains separately gated on the external structural Rust bridge package-resource substrate and is not a Phase 40 blocker.
 
 ## Objective
 Deliver production-grade Rust interop as declaration-level Cargo integration.
@@ -107,7 +107,7 @@ Status: implemented in [PR #2703](https://github.com/sifr-lang/sifr/pull/2703); 
   - Add trust gates for `rust-build-scripts`, `rust-proc-macros`, `native-links`, `unsafe-rust-bridges`, `build-env`, `rust-no-panic`, and `rust-panic-abort`.
   - Resolve `rust-no-panic` and `rust-panic-abort` entries through canonical Sifr dotted target paths, not lowered Rust `::` paths.
   - Split trust validation into pre-execution evidence that rejects known build scripts/proc macros before Cargo execution and post-execution evidence for trusted build-script link output before final artifact acceptance.
-  - Include Rust interop requirements, bridge source digests, Cargo metadata, selected Cargo profile, resolved panic strategy, codegen-affecting profile settings, trust policy, target triple, target features, rustc/Cargo versions, bridge-version schema, and declared build environment values in cache keys.
+  - Include Rust interop requirements, bridge source digests, Cargo metadata, selected Cargo profile, resolved panic strategy, codegen-affecting profile settings, trust policy, target triple, target features, rustc/Cargo versions, generated bridge-contract digest, and declared build environment values in cache keys.
   - Generate `RustBridgeProbePlan` metadata and isolated probe modules that run rustc item-existence probes for direct Cargo dependency targets; record async, receiver-mode, opaque, Send, and Sync obligations in the plan for milestone_39_5 signature assertions.
 - Definition of done:
   - Cargo metadata failures become Sifr diagnostics with spans and remediation.
@@ -123,11 +123,11 @@ Status: implemented in [PR #2704](https://github.com/sifr-lang/sifr/pull/2704); 
 
 - Scope:
   - Generate and maintain Sifr-owned projection entries for `src/bridges/mod.rs`, Sifr-managed `src/lib.rs`, and generated `crate::__sifr_bridge`.
-  - Use bridge-versioned deterministic Rust module-name mangling for generated `crate::__sifr_bridge::<sifr_module_path>` paths.
+  - Use deterministic Rust module-name mangling for generated `crate::__sifr_bridge::<sifr_module_path>` paths and include it in the bridge-contract cache identity.
   - Discover user-authored `src/bridges/*.rs` files without overwriting them silently.
   - Support shared bridge crates as normal Cargo dependencies while enforcing that shared bridge crates cannot import package-specific generated bridge types.
   - Validate bridge module target paths, exported functions, managed projection conflicts, and package archive contents.
-  - Add fixtures for local bridge, shared bridge crate, generated projection ownership, bridge-version mismatch, plain cargo-check limitations, package archive validation, and bridge module conflict behavior.
+  - Add fixtures for local bridge, shared bridge crate, generated projection ownership, unversioned manifest acceptance and removed-field rejection, plain cargo-check limitations, package archive validation, and bridge module conflict behavior.
 - Definition of done:
   - User bridge files remain owned by users.
   - Generated glue can call package-local bridge functions deterministically.
@@ -281,7 +281,7 @@ Status: merged in [PR #2726](https://github.com/sifr-lang/sifr/pull/2726); focus
 
 ### milestone_39_13: Ecosystem Certification and Closeout
 
-Status: merged in [PR #2728](https://github.com/sifr-lang/sifr/pull/2728); local `create-pr` validation passed with only the warm wall-time advisory, focused post-review validation passed for taxonomy, Rust interop matrix checks, and completion-quality helpers, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-13-review-round5.md`. The verification-matrix hardening follow-up completed through [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), [#3019](https://github.com/sifr-lang/sifr/pull/3019), [#3020](https://github.com/sifr-lang/sifr/pull/3020), [#3022](https://github.com/sifr-lang/sifr/pull/3022), and [#3023](https://github.com/sifr-lang/sifr/pull/3023); its final review and validation are recorded in the [archived closeout](../issues/archive/rust-interop-verification-matrix-hardening.md). The runtime/ecosystem follow-up subsequently resolved every Track A future-owned row through `certification_13`, leaving 72 passing and zero planned evidence directions for the 36 current rows.
+Status: merged in [PR #2728](https://github.com/sifr-lang/sifr/pull/2728); local `create-pr` validation passed with only the warm wall-time advisory, focused post-review validation passed for taxonomy, Rust interop matrix checks, and completion-quality helpers, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-13-review-round5.md`. The verification-matrix hardening follow-up completed through [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), [#3019](https://github.com/sifr-lang/sifr/pull/3019), [#3020](https://github.com/sifr-lang/sifr/pull/3020), [#3022](https://github.com/sifr-lang/sifr/pull/3022), and [#3023](https://github.com/sifr-lang/sifr/pull/3023); its final review and validation are recorded in the [archived closeout](../issues/archive/rust-interop-verification-matrix-hardening.md). The runtime/ecosystem follow-up subsequently resolved every Track A future-owned row through `certification_13`; at the 2026-07-30 Track A closeout, the 36-row inventory had 72 passing and zero planned evidence directions. The matrix later added two future-owned Native Pydantic-Sifr rows whose four directions remain planned.
 
 - Scope:
   - Certify representative packages across direct binding, local bridge, shared bridge, opaque handle, zero-copy, async, callbacks, build script, proc macro, native link, and locked/offline Cargo behavior.
@@ -409,7 +409,7 @@ Out of scope for required Phase 39 verification:
 - `milestone_39_0`: architecture, verification area, fixture matrix, tiers, diagnostic family inventory, and stale interop-design removal.
 - `milestone_39_1`: decorator parsing/lowering, decorator value grammar, structured target metadata, HIR representation, build-plan output, and invalid syntax diagnostics.
 - `milestone_39_2`: Cargo metadata, trust gates, canonical Sifr dotted trust target paths, pre-execution and post-execution trust evidence, signature probe infrastructure, lock/offline/frozen behavior, profile and panic-strategy inputs, cache invalidation, build-script/proc-macro/native-link evidence with crates such as `serde_derive`, `prost-build`, `cc`, `bindgen`, `cxx`, and `zstd`.
-- `milestone_39_3`: package-local bridge generation, shared bridge crates, projection ownership, `src/lib.rs`/`src/bridges/mod.rs` management, `crate::__sifr_bridge` reservation, deterministic bridge module path mangling, bridge-version mismatch rejection, package archive validation, projection conflicts, and same-workspace dependency behavior.
+- `milestone_39_3`: package-local bridge generation, shared bridge crates, projection ownership, `src/lib.rs`/`src/bridges/mod.rs` management, `crate::__sifr_bridge` reservation, deterministic bridge module path mangling, unversioned manifest validation, package archive validation, projection conflicts, and same-workspace dependency behavior.
 - `milestone_39_4`: supported bridge type roundtrips, generated bridge type naming, order-preserving dicts, exact-integer bridges, opaque `Handle<T>` representation, closed enum representation, unsupported containers, and unsupported bridge type diagnostics.
 - `milestone_39_5`: direct binding success with `crc32fast`, `blake3`, `sha2`, `uuid`, and `regex`; direct binding rejection for unsupported Rust signatures; probe diagnostic mapping; reserved-root conflict behavior; and no-panic trust behavior.
 - `milestone_39_6`: opaque handles, close/aclose, clone policy, Send/Sync policy, state transitions, use-after-close, double-close, poisoned-handle behavior, leak diagnostics, and resource-shaped crates such as `reqwest`, `rusqlite`, `tokio-postgres`, and `redis`.
@@ -437,19 +437,22 @@ Advanced gate:
   zero-copy contracts that the compatibility matrix marks as `supported` or
   `supported-through-bridge`.
 - No current Track A runtime/ecosystem row remains
-  `future-owned-by-separate-phase`; all 36 rows have passing positive and
+  `future-owned-by-separate-phase`; all 36 Track A rows have passing positive and
   negative evidence. Stable-release advertising remains bounded by
   `stable_support_claims.json` and its stable-candidate validator.
 - Verification tiers 3-4 and the compatibility matrix are backed by local
-  validation evidence for all current rows. The future-owned category remains
-  defined for later honest deferrals but is currently unused.
+  validation evidence for all Track A rows. The future-owned category now
+  contains the two Native Pydantic-Sifr rows owned by
+  `plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md`; their
+  evidence remains planned and they do not reopen the Track A closeout.
 
 Full Phase 39 exit:
 
 - Every Rust interop path lowers through structured metadata into generated Rust and Cargo build plans.
 - Every unsafe, build-time, native, blocking, CPU-heavy, callback, panic, and zero-copy hazard has a stable trust/diagnostic/verification surface.
 - The verification area contains positive and negative fixtures for every supported capability.
-- The compatibility matrix is backed by local validation evidence for every
-  current row; any later row must independently satisfy the same evidence and
-  ownership rules before it can become a stable claim.
+- At the Track A closeout, the compatibility matrix was backed by local
+  validation evidence for every Track A row. Any later row remains outside
+  stable claims until it independently satisfies the same evidence and
+  ownership rules.
 - Phase 27 non-regression remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic in user runtime paths, and stable diagnostics/renderer/exit-code behavior.

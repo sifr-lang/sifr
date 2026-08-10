@@ -14,7 +14,7 @@
 from sifr.io import read_text, write_text
 from sifr.datetime import time, timezone, now
 from sifr.pathlib import Path
-from sifr.re import compile_flags, search_flags, IGNORECASE, MULTILINE
+from sifr.re import compile_flags, search_flags, IGNORECASE, MULTILINE, Pattern
 from sifr.os import getcwd
 from sifr.random import choice
 from sifr.logging import basicConfig, getLogger, FileHandler, WARNING, DEBUG, Logger
@@ -80,7 +80,7 @@ def main():
     try:
         found: str | None = search_flags("hello", "HELLO WORLD", IGNORECASE)
         print("re ignorecase = " + str(found is not None))
-        pat = compile_flags("^line", MULTILINE)
+        pat: Pattern = compile_flags("^line", MULTILINE)
         found2: str | None = pat.search("line1\nline2")
         print("re multiline = " + str(found2 is not None))
     except RegexError as e:

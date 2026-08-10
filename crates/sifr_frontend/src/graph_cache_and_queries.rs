@@ -306,7 +306,19 @@ pub fn compile_module_hir_with_source_and_options(
         external_defs,
         lowering_options,
     ) {
-        Ok(result) => Ok(result),
+        Ok(mut result) => match crate::specialization_runner::run_specializations(
+            module_name,
+            &mut result,
+            external_defs,
+        ) {
+            Ok(()) => Ok(result),
+            Err(errors) => Err(errors
+                .into_iter()
+                .map(|error| {
+                    hir_diagnostic_to_rendered(module_name, diagnostic_style, source_context, error)
+                })
+                .collect()),
+        },
         Err(errors) => Err(errors
             .into_iter()
             .map(|error| {

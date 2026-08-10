@@ -13,6 +13,8 @@ sys.path.insert(0, str(COMMON_ROOT))
 
 from sifr_binary import resolve_sifr_binary  # noqa: E402
 
+COMMAND_HANG_TIMEOUT_SECONDS = 300
+
 
 def main() -> int:
     binary = resolve_sifr_binary(REPO_ROOT)
@@ -29,10 +31,16 @@ def main() -> int:
     require(check["application"] is False, "library report must be deferred")
     require(check["environment"]["status"] == "deferred", "library environment must defer")
     require(check["trust"] == "deferred-to-final-application", "library trust must defer")
-    require(check["targets"] == [{"target": "math.sqrt", "status": "deferred"}], "library target must defer")
+    require(
+        check["targets"] == [{"target": "math.sqrt", "status": "deferred"}],
+        "library target must defer",
+    )
     first_doctor = run(binary, library, "python", "doctor", "--json")
     second_doctor = run(binary, library, "python", "doctor", "--json")
-    require(first_doctor.stdout == second_doctor.stdout, "doctor output must be deterministic")
+    require(
+        first_doctor.stdout == second_doctor.stdout,
+        "doctor output must be deterministic",
+    )
     doctor = json.loads(first_doctor.stdout)
     require(
         doctor["suggestions"][0]["patch"]
@@ -47,7 +55,10 @@ def main() -> int:
     normal = run(binary, application, "check", "src/main.sifr", "--frozen")
     require(normal.returncode == 0, f"normal check failed: {normal.stderr}")
     require(app_check["application"] is True, "application report must resolve")
-    require(app_check["environment"]["status"] == "resolved", "application environment must resolve")
+    require(
+        app_check["environment"]["status"] == "resolved",
+        "application environment must resolve",
+    )
     require(app_check["trust"] == "verified", "application trust must verify")
     require(
         app_check["targets"]
@@ -57,26 +68,36 @@ def main() -> int:
         ],
         "every application target must verify",
     )
-    require(snapshot(application) == application_before, "application inspection mutated its package")
+    require(
+        snapshot(application) == application_before,
+        "application inspection mutated its package",
+    )
 
     source = application / "src" / "main.sifr"
     source.write_text(source.read_text(encoding="utf-8") + "\n# snapshot change\n", encoding="utf-8")
     changed_before = snapshot(application)
     changed = run_json(binary, application, "python", "check", "--json")
-    require(changed["source_digest"] != app_check["source_digest"], "source digest ignored source bytes")
+    require(
+        changed["source_digest"] != app_check["source_digest"],
+        "source digest ignored source bytes",
+    )
     require(snapshot(application) == changed_before, "snapshot check mutated its package")
 
     source.write_text(application_source("math.not_a_real_target"), encoding="utf-8")
     invalid_before = snapshot(application)
     python_failure = run(binary, application, "python", "check", expected=1)
     normal_failure = run(binary, application, "check", "src/main.sifr", "--frozen", expected=1)
-    require("SIFR-PYIMP-0001" in python_failure.stderr, "python check target diagnostic drifted")
-    require("SIFR-PYIMP-0001" in normal_failure.stderr, "normal check target diagnostic drifted")
+    require(
+        "SIFR-PYIMP-0001" in python_failure.stderr,
+        "python check target diagnostic drifted",
+    )
+    require(
+        "SIFR-PYIMP-0001" in normal_failure.stderr,
+        "normal check target diagnostic drifted",
+    )
     require(snapshot(application) == invalid_before, "failure checks mutated their package")
 
-    selected_library = create_package(
-        root / "selected-library", "readonly-selected-library", application=True
-    )
+    selected_library = create_package(root / "selected-library", "readonly-selected-library", application=True)
     (selected_library / "src" / "main.sifr").unlink()
     shutil.rmtree(selected_library / "src" / "bin")
     selected_source = selected_library / "src" / "__init__.sifr"
@@ -89,8 +110,14 @@ def main() -> int:
         "session-root library selection must resolve",
     )
     require(selected["trust"] == "verified", "selected library trust must verify")
-    require(selected["targets"][0]["status"] == "verified", "selected library target must verify")
-    require(snapshot(selected_library) == selected_before, "selected library check mutated files")
+    require(
+        selected["targets"][0]["status"] == "verified",
+        "selected library target must verify",
+    )
+    require(
+        snapshot(selected_library) == selected_before,
+        "selected library check mutated files",
+    )
 
     selected_source.write_text(application_source("math.not_a_real_target"), encoding="utf-8")
     selected_invalid_before = snapshot(selected_library)
@@ -116,9 +143,7 @@ def main() -> int:
         "selected-library failure checks mutated files",
     )
 
-    discovered_library = create_package(
-        root / "discovered-library", "readonly-discovered-library", application=True
-    )
+    discovered_library = create_package(root / "discovered-library", "readonly-discovered-library", application=True)
     (discovered_library / "src" / "main.sifr").unlink()
     shutil.rmtree(discovered_library / "src" / "bin")
     discovered_source = discovered_library / "src" / "__init__.sifr"
@@ -140,16 +165,17 @@ def main() -> int:
         "discovered library environment must resolve",
     )
     require(discovered["trust"] == "verified", "discovered library trust must verify")
-    require(discovered["targets"][0]["status"] == "verified", "discovered target must verify")
+    require(
+        discovered["targets"][0]["status"] == "verified",
+        "discovered target must verify",
+    )
     require(
         snapshot(discovered_library) == discovered_before,
         "discovered-library checks mutated files",
     )
     discovered_source.write_text(application_source("math.not_a_real_target"), encoding="utf-8")
     discovered_invalid_before = snapshot(discovered_library)
-    discovered_python_failure = run(
-        binary, discovered_library, "python", "check", expected=1
-    )
+    discovered_python_failure = run(binary, discovered_library, "python", "check", expected=1)
     discovered_normal_failure = run(
         binary,
         discovered_library,
@@ -171,10 +197,7 @@ def main() -> int:
         "discovered-library failure checks mutated files",
     )
 
-    print(
-        "python interop read-only check/doctor ok: "
-        "deferred=1 resolved=3 parity=5 mutations=0"
-    )
+    print("python interop read-only check/doctor ok: deferred=1 resolved=3 parity=5 mutations=0")
     return 0
 
 
@@ -219,9 +242,7 @@ def write_manifest(root: Path, name: str, *, python: bool) -> None:
         'sifr-version = ">=0.3,<0.4"\n\n[source]\nroot = "src"\n'
     )
     if python:
-        manifest += (
-            '\n[python]\nvenv = ".venv"\npyproject = "pyproject.toml"\nlock = "uv.lock"\n'
-        )
+        manifest += '\n[python]\nvenv = ".venv"\npyproject = "pyproject.toml"\nlock = "uv.lock"\n'
     if python or (root / "pyproject.toml").exists():
         manifest += '\n[trust]\npython = ["math"]\n'
     (root / "sifr.toml").write_text(manifest, encoding="utf-8")
@@ -252,7 +273,7 @@ def run(
         text=True,
         capture_output=True,
         check=False,
-        timeout=120,
+        timeout=COMMAND_HANG_TIMEOUT_SECONDS,
     )
     require(
         result.returncode == expected,

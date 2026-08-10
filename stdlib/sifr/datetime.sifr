@@ -32,6 +32,13 @@ def _substring(value: str, start: int, end: int) -> str:
     return result
 
 
+def _six_digits(value: int) -> str:
+    rendered: str = str(value)
+    while len(rendered) < 6:
+        rendered = "0" + rendered
+    return rendered
+
+
 def _parse_datetime_iso(value: str) -> Result[tuple[int, int, int, int, int, int], ValueError]:
     if len(value) < 19:
         raise ValueError("invalid datetime string")
@@ -75,10 +82,12 @@ def _timezone_offset_from_text(text: str) -> Result[int, ValueError]:
 class timedelta:
     _days: int
     _seconds: int
+    _microseconds: int
 
-    def __init__(self, days: int, seconds: int):
+    def __init__(self, days: int, seconds: int, microseconds: int = 0):
         self._days = days
         self._seconds = seconds
+        self._microseconds = microseconds
 
     def total_seconds(self) -> int:
         return self._days * 86400 + self._seconds
@@ -89,20 +98,33 @@ class timedelta:
     def seconds(self) -> int:
         return self._seconds
 
+    def microseconds(self) -> int:
+        return self._microseconds
+
+    def total_microseconds(self) -> int:
+        return (self._days * 86400 + self._seconds) * 1000000 + self._microseconds
+
+    def total_seconds_float(self) -> float:
+        return float(self.total_microseconds()) / 1000000.0
+
     def __add__(self, other: timedelta) -> timedelta:
-        total: int = self.total_seconds() + other.total_seconds()
-        d: int = total // 86400
-        s: int = total % 86400
-        return timedelta(d, s)
+        total: int = self.total_microseconds() + other.total_microseconds()
+        d: int = total // 86400000000
+        remaining: int = total % 86400000000
+        s: int = remaining // 1000000
+        us: int = remaining % 1000000
+        return timedelta(d, s, us)
 
     def __sub__(self, other: timedelta) -> timedelta:
-        total: int = self.total_seconds() - other.total_seconds()
-        d: int = total // 86400
-        s: int = total % 86400
-        return timedelta(d, s)
+        total: int = self.total_microseconds() - other.total_microseconds()
+        d: int = total // 86400000000
+        remaining: int = total % 86400000000
+        s: int = remaining // 1000000
+        us: int = remaining % 1000000
+        return timedelta(d, s, us)
 
     def __eq__(self, other: timedelta) -> bool:
-        return self.total_seconds() == other.total_seconds()
+        return self.total_microseconds() == other.total_microseconds()
 
 
 class timezone:
@@ -156,6 +178,7 @@ class datetime:
     hour: int
     minute: int
     second: int
+    microsecond: int
     _tz_offset: int | None
 
     def __init__(
@@ -166,6 +189,7 @@ class datetime:
         hour: int,
         minute: int,
         second: int,
+        microsecond: int = 0,
         tz_offset: int | None = None,
     ) -> None:
         self.year = year
@@ -174,6 +198,7 @@ class datetime:
         self.hour = hour
         self.minute = minute
         self.second = second
+        self.microsecond = microsecond
         self._tz_offset = tz_offset
 
     def isoformat(self) -> str:
@@ -195,6 +220,8 @@ class datetime:
         if len(s) < 2:
             s = "0" + s
         base: str = y + "-" + mo + "-" + d + "T" + h + ":" + mi + ":" + s
+        if self.microsecond != 0:
+            base = base + "." + _six_digits(self.microsecond)
         tz_offset_opt: int | None = self._tz_offset
         if tz_offset_opt is not None:
             offset: int = tz_offset_opt
@@ -243,6 +270,9 @@ class datetime:
             return naive_timestamp - offset
         return naive_timestamp
 
+    def timestamp_microseconds(self) -> int:
+        return self.timestamp() * 1000000 + self.microsecond
+
     def astimezone(self, tz: timezone | None = None) -> Result[datetime, ValueError]:
         target: timezone = timezone(0)
         if tz is not None:
@@ -252,11 +282,11 @@ class datetime:
                 target = timezone(target_offset)
             except ValueError as e:
                 raise ValueError(e.message)
-        return from_timestamp(float(self.timestamp()), target)
+        return _from_timestamp_microseconds_with_tz(self.timestamp_microseconds(), target)
 
     def __eq__(self, other: datetime) -> bool:
         same_tz: bool = self._tz_offset == other._tz_offset
-        return self.year == other.year and self.month == other.month and self.day == other.day and self.hour == other.hour and self.minute == other.minute and self.second == other.second and same_tz
+        return self.year == other.year and self.month == other.month and self.day == other.day and self.hour == other.hour and self.minute == other.minute and self.second == other.second and self.microsecond == other.microsecond and same_tz
 
     def __str__(self) -> str:
         return self.isoformat()
@@ -288,6 +318,8 @@ class time:
     hour: int
     minute: int
     second: int
+    microsecond: int = 0
+    _tz_offset: int | None = None
 
     def isoformat(self) -> str:
         h: str = str(self.hour)
@@ -299,10 +331,22 @@ class time:
         s: str = str(self.second)
         if len(s) < 2:
             s = "0" + s
-        return h + ":" + mi + ":" + s
+        rendered: str = h + ":" + mi + ":" + s
+        if self.microsecond != 0:
+            rendered = rendered + "." + _six_digits(self.microsecond)
+        tz_offset_opt: int | None = self._tz_offset
+        if tz_offset_opt is not None:
+            return rendered + timezone(tz_offset_opt).iso_suffix()
+        return rendered
+
+    def is_aware(self) -> bool:
+        return self._tz_offset is not None
+
+    def utc_offset_seconds(self) -> int | None:
+        return self._tz_offset
 
     def __eq__(self, other: time) -> bool:
-        return self.hour == other.hour and self.minute == other.minute and self.second == other.second
+        return self.hour == other.hour and self.minute == other.minute and self.second == other.second and self.microsecond == other.microsecond and self._tz_offset == other._tz_offset
 
     def __str__(self) -> str:
         return self.isoformat()
@@ -311,6 +355,10 @@ class time:
 def _from_timestamp_with_tz(ts: float, tz: timezone | None) -> Result[datetime, ValueError]:
     try:
         whole_seconds: int = int(ts)
+        fractional: float = ts - float(whole_seconds)
+        microsecond: int = int(fractional * 1000000.0)
+        if microsecond < 0:
+            microsecond = -microsecond
         adjusted_seconds: int = whole_seconds
         tz_offset_value: int = 0
         tz_has_offset: bool = False
@@ -348,8 +396,18 @@ def _from_timestamp_with_tz(ts: float, tz: timezone | None) -> Result[datetime, 
         if second_part is not None:
             second = second_part
         if tz_has_offset:
-            return datetime(year, month, day, hour, minute, second, tz_offset_value)
-        return datetime(year, month, day, hour, minute, second, None)
+            return datetime(year, month, day, hour, minute, second, microsecond, tz_offset_value)
+        return datetime(year, month, day, hour, minute, second, microsecond, None)
+    except ValueError as e:
+        raise ValueError(e.message)
+
+
+def _from_timestamp_microseconds_with_tz(value: int, tz: timezone | None) -> Result[datetime, ValueError]:
+    whole_seconds: int = value // 1000000
+    microsecond: int = value % 1000000
+    try:
+        result: datetime = _from_timestamp_with_tz(float(whole_seconds), tz)
+        return datetime(result.year, result.month, result.day, result.hour, result.minute, result.second, microsecond, result._tz_offset)
     except ValueError as e:
         raise ValueError(e.message)
 
@@ -383,10 +441,10 @@ def now(tz: timezone | None = None) -> datetime:
         if tz is not None:
             try:
                 parsed_offset: int = _timezone_offset_from_text(str(tz))
-                return datetime(yr, mo, dy, hr, mn, sc, parsed_offset)
+                return datetime(yr, mo, dy, hr, mn, sc, 0, parsed_offset)
             except ValueError:
-                return datetime(yr, mo, dy, hr, mn, sc, None)
-        return datetime(yr, mo, dy, hr, mn, sc, None)
+                return datetime(yr, mo, dy, hr, mn, sc, 0, None)
+        return datetime(yr, mo, dy, hr, mn, sc, 0, None)
 
 
 def today() -> date:

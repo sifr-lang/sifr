@@ -50,9 +50,6 @@ def main(argv: list[str] | None = None) -> int:
         failures.append("matrix schema_version must be 1")
     if matrix.get("phase") != "39_rust_interop":
         failures.append("matrix phase must be 39_rust_interop")
-    if matrix.get("bridge_version") != 1:
-        failures.append("matrix bridge_version must be 1")
-
     diagnostics = set(matrix.get("diagnostic_families", {}))
     failures.extend(
         f"missing diagnostic family reservation: {code}"

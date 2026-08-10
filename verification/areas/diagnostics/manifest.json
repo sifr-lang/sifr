@@ -1361,6 +1361,42 @@
           ]
         },
         {
+          "id": "int_json_boundary_policy",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/int_json_boundary_policy/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "meta_malformed_declaration",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/meta_malformed_declaration/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "meta_specialization_fatal",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_fatal/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "meta_specialization_warning",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_warning/main.sifr",
+          "command": "check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "semantic_bigint_transition_alias",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/semantic_bigint_transition_alias/main.sifr",
           "command": "check",

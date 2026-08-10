@@ -24,6 +24,7 @@ indexmap = { workspace = true }
 libc = { workspace = true, optional = true }
 num-bigint = { workspace = true }
 num-traits = { workspace = true }
+sifr_structural_identity = { workspace = true, optional = true }
 pyo3 = { workspace = true, optional = true }
 rustls = { workspace = true, optional = true }
 rustls-pemfile = { workspace = true, optional = true }
@@ -38,6 +39,7 @@ unicode_names2 = { workspace = true, optional = true }
 [dev-dependencies]
 pyo3 = { workspace = true, features = ["macros"] }
 rcgen = { workspace = true }
+sifr_structural_identity = { workspace = true }
 tokio = { workspace = true }
 
 [features]
@@ -51,6 +53,7 @@ i18n = [
 ]
 unicode = ["dep:unicode-normalization", "dep:unicode-segmentation", "dep:unicode_names2"]
 python = ["dep:libc", "dep:pyo3", "dep:tokio"]
+structural = ["dep:sifr_structural_identity"]
 net = ["dep:tokio"]
 tls = [
     "net",

@@ -1,0 +1,26 @@
+# fixture: structural_bridge_calls
+# evidence: negative/shape_callback_and_lifetime_mismatches_rejected
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-TYPE-0001
+# The generated-build test also mutates the scenario target to prove a concrete
+# structural/callback Rust signature mismatch is rejected by the Cargo probe.
+
+from sifr.meta import Structural
+
+class MismatchValue:
+    value: uint32
+
+
+class StructuralBridgeError(Error):
+    message: str
+
+
+@rust.structural
+@rust(bridge.structural.reject_owned_parameter)
+def invalid_owned_parameter[T: Structural](own value: T) -> Result[str, StructuralBridgeError | RustPanicError]: ...
+
+def verify_shape_callback_and_lifetime_mismatches_rejected() -> Result[str, StructuralBridgeError | RustPanicError]:
+    result: str = invalid_owned_parameter(MismatchValue(0))
+    return result

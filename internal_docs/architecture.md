@@ -783,6 +783,14 @@ This rules is split across three workstreams: import semantics work (multi-file 
 - **No Sifr-native lockfile in package-management architecture:** there is no committed `sifr.lock`; reproducibility is derived from `Cargo.toml`, `Cargo.lock`, `sifr.toml`, selected Sifr source, compiler/toolchain inputs, and package feature/selector inputs.
 - **Interop package surfaces:** Python interop consumes externally managed `pyproject.toml`, `uv.lock`, and `.venv` metadata without forking package resolution. Rust interop consumes Cargo dependencies and bridge metadata through declaration-level Cargo integration. Both lanes must lower into the same package graph/import semantics instead of creating alternate resolvers.
 
+### 4.1 Deterministic Const Specialization and Structural Metadata
+
+Package-owned static derivation uses the package-neutral compiler contract documented in
+[`const_specialization.md`](const_specialization.md). Structural shapes, typed declaration
+metadata, bounded pure HIR evaluation, package issues, and integer JSON boundary verification are
+frontend authorities shared by CLI, build, tests, and editor analysis. This is compile-time data;
+Sifr does not expose runtime reflection or package-name-specific compiler branches.
+
 ### 5. CI Quality Gates
 
 **Rules for every PR:**
@@ -1531,6 +1539,25 @@ evidence, as specified in
 The readiness coverage matrix is the executable registry for shipped guarantees, compiler surfaces, owners, profile assignments, and Cargo package/target/feature classification. `coverage_matrix:readiness` is selected by create-pr, merge, nightly, and release. It runs strict mode, rejects temporary statuses such as `expected-missing`, `tests:none`, and `red-blocker`, validates local-first profile policy, checks profile assignments against `profile_assignment_matrix.json`, and runs negative self-tests for the readiness enforcement claims. CI may run broader profiles, but local-vs-CI plan equivalence is checked by comparing emitted profile plans with `sifr_verify profiles compare-plans`.
 
 `profile_runner.py` emits a per-profile runtime report under `target/validation_lane_reports/` (`<profile>.latest.json`, `<profile>.latest.log`, `<profile>.latest.time`). The report summarizes wall/CPU time, e2e compile-build-run timing, cache hits and rebuilt groups, group-skew tail behavior, cache footprints, default worker settings, and advisory resource signals such as swap activity or default-profile RSS regressions.
+
+Blocking representative and full performance measurements use a controlled-host
+boundary. Work-controlled measurements use retired instructions and
+process-tree RSS from the local macOS host. Latency-controlled measurements use
+elapsed time and generic RSS after a quiet-host admission. Non-macOS profiles
+retain latency mode because they do not expose the Darwin counter. Both modes reject
+competing build work, thermal pressure, and
+unstable samples. The accepted report includes an invocation identity. Producer
+failure cannot use stale `*.budget.latest.json` evidence. This design separates
+host delay from additional compiler work without changing elapsed-time budgets.
+
+Approved trend-baseline refreshes use the same controlled producer but are a
+separate governance path from threshold-budget updates. A refresh is accepted
+only for a clean exact commit, the complete benchmark manifest, manifest sample
+counts, and the `compiler/performance` approval profile. The checked-in trend
+snapshot records environment metadata and an exact reference-capture receipt;
+raw host observations stay in content-addressed target evidence. This replaces
+expired freshness or metadata deferrals with measured evidence without
+weakening the blocking budget baseline.
 
 ### Adding Tests for New Features (Agent Workflow)
 

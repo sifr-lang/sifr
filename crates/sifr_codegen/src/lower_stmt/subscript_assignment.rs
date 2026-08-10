@@ -561,7 +561,11 @@ pub(super) fn try_lower_simple_subscript_augassign_stmt(
     op: &str,
     value: &HirExpr,
     object_ty: &Type,
+    missing_key_error: Option<&Type>,
 ) -> Option<Vec<RustStmt>> {
+    if missing_key_error.is_some() {
+        return None;
+    }
     if !is_supported_subscript_augassign_op(op) {
         return None;
     }
@@ -648,13 +652,9 @@ pub(super) fn try_lower_simple_subscript_augassign_stmt(
 }
 
 pub(super) fn build_dict_get_mut_key_arg(lowered_index: RustExpr) -> RustExpr {
-    if matches!(&lowered_index, RustExpr::Literal(RustLiteral::Str(_))) {
-        lowered_index
-    } else {
-        RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(lowered_index),
-        }
+    RustExpr::Ref {
+        mutable: false,
+        expr: Box::new(lowered_index),
     }
 }
 

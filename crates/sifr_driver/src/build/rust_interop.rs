@@ -2,8 +2,8 @@ use super::cargo_resolution::CargoResolutionPolicy;
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop_bridge_audit::unsafe_bridge_files;
 use super::rust_interop_cargo_inputs::{
-    bridge_source_digests, cargo_inputs, combined_cargo_inputs, first_generated_bridge_import,
-    generated_bridge_module_path,
+    bridge_source_digests, cargo_inputs, combined_cargo_inputs, generated_bridge_module_path,
+    GeneratedBridgeImportCache,
 };
 use super::rust_interop_contracts::bridge_contract_diagnostics;
 use super::rust_interop_diagnostics::{render_template, source_diagnostic};
@@ -11,6 +11,7 @@ use super::rust_interop_digest::normalized_path_string;
 use super::rust_interop_probe::{
     execute_direct_cargo_probe, AsyncThreadAffinity, PendingRustBridgeProbe,
 };
+use super::rust_interop_probe_cache::ProbeCacheKeyCache;
 use super::rust_interop_probe_policy::DirectProbePolicy;
 #[cfg(test)]
 pub(super) use super::rust_interop_resolution::apply_package_rust_interop_metadata;
@@ -53,6 +54,8 @@ mod opaque_validation;
 mod panic_validation;
 #[path = "rust_interop/probe_planning.rs"]
 mod probe_planning;
+#[path = "rust_interop/structural_validation.rs"]
+mod structural_validation;
 #[path = "rust_interop/target_resolution.rs"]
 mod target_resolution;
 #[path = "rust_interop/trust_validation.rs"]
@@ -131,6 +134,8 @@ struct RustInteropResolver<'a> {
     async_contracts: HashMap<String, AsyncThreadAffinity>,
     async_runtime_policy_violations:
         HashMap<SifrPackageId, Vec<super::rust_interop_bridge_audit::AsyncRuntimeBridgeViolation>>,
+    generated_bridge_import_cache: GeneratedBridgeImportCache,
+    probe_cache_key_cache: ProbeCacheKeyCache,
 }
 
 impl<'a> RustInteropResolver<'a> {
@@ -155,6 +160,8 @@ impl<'a> RustInteropResolver<'a> {
             zero_copy_probe_obligations: HashMap::new(),
             async_contracts: HashMap::new(),
             async_runtime_policy_violations: HashMap::new(),
+            generated_bridge_import_cache: GeneratedBridgeImportCache::default(),
+            probe_cache_key_cache: ProbeCacheKeyCache::default(),
         }
     }
 
@@ -172,6 +179,7 @@ impl<'a> RustInteropResolver<'a> {
             .map(|signature| (signature.canonical_target_path.clone(), signature))
             .collect();
         self.collect_async_contracts(&generated.interop.rust.declarations);
+        self.validate_structural_contracts(&generated.interop.rust.declarations);
         self.validate_callback_contracts(&generated.interop.rust.declarations);
         if !self.diagnostics.is_empty() {
             return Err(std::mem::take(&mut self.diagnostics));
@@ -274,10 +282,7 @@ impl<'a> RustInteropResolver<'a> {
             return;
         };
         if uses_bridge_root(&declaration.declaration) {
-            if !self.validate_bridge_version(declaration, package) {
-                return;
-            }
-            self.push_generated_bridge_module(declaration, package);
+            self.push_generated_bridge_module(declaration);
         }
         if declaration.declaration.kind == RustInteropDecoratorKind::Opaque
             && !self.validate_opaque_declaration(declaration)
@@ -559,44 +564,14 @@ impl<'a> RustInteropResolver<'a> {
         }
     }
 
-    fn validate_bridge_version(
-        &mut self,
-        declaration: &sifr_codegen::RustInteropPlanDeclaration,
-        package: &sifr_package::SifrPackageMetadata,
-    ) -> bool {
-        if package.manifest.rust.bridge_version == Some(1) {
-            return true;
-        }
-        self.push_diagnostic(
-            declaration,
-            declaration.declaration.span,
-            DiagnosticCode::RUST_CARGO_METADATA,
-            "unsupported Rust bridge version",
-            vec![(
-                "bridge_version",
-                package
-                    .manifest
-                    .rust
-                    .bridge_version
-                    .map_or_else(|| "<missing>".to_string(), |version| version.to_string()),
-            )],
-            vec!["declare `[rust] bridge-version = 1` in sifr.toml".to_string()],
-            Some("Rust interop generated bridge modules are bridge-versioned compatibility surfaces.".to_string()),
-        );
-        false
-    }
-
     fn push_generated_bridge_module(
         &mut self,
         declaration: &sifr_codegen::RustInteropPlanDeclaration,
-        package: &sifr_package::SifrPackageMetadata,
     ) {
-        let bridge_version = package.manifest.rust.bridge_version.unwrap_or(1);
         self.generated_bridge_modules
             .insert(RustGeneratedBridgeModule {
                 module_name: declaration.module_name.clone(),
                 rust_module_path: generated_bridge_module_path(declaration.module_name.as_deref()),
-                bridge_version,
             });
     }
 
@@ -609,7 +584,7 @@ impl<'a> RustInteropResolver<'a> {
             return;
         };
         let source_root = manifest_dir.join("src");
-        let Some(path) = first_generated_bridge_import(&source_root) else {
+        let Some(path) = self.generated_bridge_import_cache.inspect(&source_root) else {
             return;
         };
         self.push_diagnostic(
@@ -683,6 +658,12 @@ impl<'a> RustInteropResolver<'a> {
     }
 
     fn push_probe(&mut self, declaration: &sifr_codegen::RustInteropPlanDeclaration) {
+        if matches!(
+            declaration.declaration.kind,
+            RustInteropDecoratorKind::Callback | RustInteropDecoratorKind::Structural
+        ) {
+            return;
+        }
         let Some(kind) = probe_planning::probe_kind(&declaration.declaration, &declaration.owner)
         else {
             self.push_diagnostic(
@@ -733,7 +714,9 @@ impl<'a> RustInteropResolver<'a> {
             {
                 continue;
             }
-            if let Err(failure) = execute_direct_cargo_probe(&probe) {
+            if let Err(failure) =
+                execute_direct_cargo_probe(&probe, &mut self.probe_cache_key_cache)
+            {
                 self.push_diagnostic(
                     &probe.declaration,
                     probe.declaration.declaration.span,

@@ -266,7 +266,6 @@ fn user_context() -> PackageRustInteropContext {
             },
             python: sifr_package::PythonConfig::default(),
             rust: RustInteropConfig {
-                bridge_version: Some(1),
                 bridges: Vec::new(),
                 direct_crate_bindings: true,
             },

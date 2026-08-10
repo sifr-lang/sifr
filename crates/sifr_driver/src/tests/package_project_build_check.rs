@@ -510,7 +510,7 @@ fn test_build_cached_package_project_links_direct_rust_interop_dependency() {
     .expect("backend source should be written");
     std::fs::write(
         app.root.join("sifr.toml"),
-        "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n\n[rust]\nbridge-version = 1\ndirect-crate-bindings = true\n\n[trust]\nrust-no-panic = [\"crc32fast.hash\"]\n",
+        "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n\n[rust]\ndirect-crate-bindings = true\n\n[trust]\nrust-no-panic = [\"crc32fast.hash\"]\n",
     )
     .expect("app manifest should enable direct rust interop");
     write_package_source(

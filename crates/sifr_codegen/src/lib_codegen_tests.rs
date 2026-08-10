@@ -81,6 +81,8 @@ mod recursive_node_codegen_tests;
 #[cfg(test)]
 mod string_concat_codegen_tests;
 #[cfg(test)]
+mod structural_impl_demand_codegen_tests;
+#[cfg(test)]
 mod structured_condition_codegen_tests;
 #[cfg(test)]
 mod structured_intrinsic_codegen_tests;

@@ -20,6 +20,7 @@ use sifr_type_system::{FunctionType, ParamConvention, Type};
 mod class_type_collection;
 pub(in crate::lower) use class_type_collection::*;
 mod class_semantics;
+mod class_shape_metadata;
 mod class_type_helpers;
 pub(in crate::lower) use class_semantics::*;
 mod class_body_lowering;

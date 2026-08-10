@@ -5,7 +5,7 @@ use super::rust_interop_digest::{
 use super::sysroot_interop::SysrootRustInteropTrust;
 use sifr_codegen::{RustBridgeSourceDigest, RustInteropCargoInputs};
 use sifr_package::{digest_package_graph, digest_package_source_map, TrustPolicy};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -61,7 +61,6 @@ pub(super) fn cargo_inputs(
         profile_codegen_settings: profile_codegen_settings(&package.package_root, "release"),
         cargo_version: tool_version("cargo"),
         rustc_version: tool_version("rustc"),
-        bridge_version: package.manifest.rust.bridge_version,
         trust_policy_digest,
         declared_build_env,
     }
@@ -120,7 +119,6 @@ fn sysroot_cargo_inputs(
         profile_codegen_settings: profile_codegen_settings(&trust.sysroot_root, "release"),
         cargo_version: tool_version("cargo"),
         rustc_version: tool_version("rustc"),
-        bridge_version: Some(1),
         trust_policy_digest,
         declared_build_env,
     }
@@ -159,6 +157,28 @@ pub(super) fn first_generated_bridge_import(source_root: &Path) -> Option<PathBu
         }
     }
     None
+}
+
+#[derive(Default)]
+pub(super) struct GeneratedBridgeImportCache {
+    imports_by_source_root: HashMap<PathBuf, Option<PathBuf>>,
+}
+
+impl GeneratedBridgeImportCache {
+    pub(super) fn inspect(&mut self, source_root: &Path) -> Option<PathBuf> {
+        self.inspect_with(source_root, first_generated_bridge_import)
+    }
+
+    fn inspect_with(
+        &mut self,
+        source_root: &Path,
+        inspect: impl FnOnce(&Path) -> Option<PathBuf>,
+    ) -> Option<PathBuf> {
+        self.imports_by_source_root
+            .entry(source_root.to_path_buf())
+            .or_insert_with(|| inspect(source_root))
+            .clone()
+    }
 }
 
 fn imports_generated_bridge_namespace(source: &str) -> bool {
@@ -445,6 +465,7 @@ fn tool_version(tool: &str) -> Option<String> {
 mod tests {
     use super::{
         combined_cargo_inputs, generated_bridge_module_path, imports_generated_bridge_namespace,
+        GeneratedBridgeImportCache,
     };
     use sifr_codegen::RustInteropCargoInputs;
 
@@ -474,6 +495,47 @@ mod tests {
         assert!(imports_generated_bridge_namespace(
             "use __sifr_bridge :: app :: TokenBridge;\n"
         ));
+    }
+
+    #[test]
+    fn generated_bridge_import_scanner_caches_each_backend_source_root() {
+        let mut cache = GeneratedBridgeImportCache::default();
+        let clean_root = std::path::Path::new("/backend/clean/src");
+        let importing_root = std::path::Path::new("/backend/importing/src");
+        let imported_path = importing_root.join("lib.rs");
+        let mut clean_inspections = 0;
+        let mut importing_inspections = 0;
+
+        assert_eq!(
+            cache.inspect_with(clean_root, |_| {
+                clean_inspections += 1;
+                None
+            }),
+            None
+        );
+        assert_eq!(
+            cache.inspect_with(clean_root, |_| {
+                clean_inspections += 1;
+                Some(clean_root.join("changed.rs"))
+            }),
+            None
+        );
+        assert_eq!(
+            cache.inspect_with(importing_root, |_| {
+                importing_inspections += 1;
+                Some(imported_path.clone())
+            }),
+            Some(imported_path.clone())
+        );
+        assert_eq!(
+            cache.inspect_with(importing_root, |_| {
+                importing_inspections += 1;
+                None
+            }),
+            Some(imported_path)
+        );
+        assert_eq!(clean_inspections, 1);
+        assert_eq!(importing_inspections, 1);
     }
 
     #[test]
@@ -524,7 +586,6 @@ mod tests {
             profile_codegen_settings: Vec::new(),
             cargo_version: Some("cargo 1.0.0".to_string()),
             rustc_version: Some("rustc 1.0.0".to_string()),
-            bridge_version: Some(1),
             trust_policy_digest: format!("{package_id}-trust"),
             declared_build_env: Vec::new(),
         }

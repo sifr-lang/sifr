@@ -29,6 +29,28 @@ fn invalid_subscript_target_shape(ctx: &mut LowerCtx, range: TextRange) {
     invalid_target_shape(ctx, AUGMENTED_SUBSCRIPT_TARGET_SIMPLE_NAME, range);
 }
 
+fn plain_dict_missing_key_error(
+    object_ty: &Type,
+    key_is_proven_present: bool,
+    ctx: &mut LowerCtx,
+) -> Option<Type> {
+    if key_is_proven_present
+        || !matches!(object_ty.resolve_alias(), Type::Dict(_, _))
+        || matches!(
+            object_ty,
+            Type::Alias { name, .. } if name.starts_with("__sifr_defaultdict_")
+        )
+    {
+        return None;
+    }
+    Some(
+        ctx.class_types
+            .get("KeyError")
+            .cloned()
+            .unwrap_or_else(|| super::fallback_error_type("KeyError")),
+    )
+}
+
 fn op_to_augassign_string(
     op: Operator,
     ctx: &mut LowerCtx,
@@ -277,6 +299,8 @@ pub(in crate::lower) fn lower_aug_assign(
             );
             return None;
         }
+        let key_is_proven_present = ctx.has_dict_key_guard(&obj_name, sub.slice.as_ref())
+            || ctx.has_subscript_guard(&obj_name, sub.slice.as_ref());
         let index = lower_expr(&sub.slice, ctx)?;
         let value = lower_python_context_owned_expr(&aug.value, ctx)?;
         let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
@@ -293,12 +317,25 @@ pub(in crate::lower) fn lower_aug_assign(
                 rhs_range: aug.value.range(),
             },
         );
+        let missing_key_error =
+            plain_dict_missing_key_error(&object_ty, key_is_proven_present, ctx);
+        if let Some(error_ty) = &missing_key_error {
+            if ctx.in_try_block {
+                super::statements::record_try_error_types(ctx, error_ty);
+            } else {
+                super::result_diagnostics::unhandled_dict_augassign_key_error(
+                    ctx,
+                    aug.target.range(),
+                );
+            }
+        }
         return Some(HirStmt::SubscriptAugAssign {
             object: obj_name,
             index,
             op: op_str.to_string(),
             value,
             object_ty,
+            missing_key_error,
         });
     }
     let (name, name_range): (String, TextRange) = if let Expr::Name(n) = aug.target.as_ref() {

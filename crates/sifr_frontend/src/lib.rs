@@ -7,7 +7,14 @@
 
 mod cache_keys;
 mod callable_exports;
+mod const_specialization;
+pub use const_specialization::*;
+mod const_evaluator;
+pub use const_evaluator::*;
+mod structural_shape;
+pub use structural_shape::*;
 mod class_method_exports;
+mod specialization_runner;
 pub use cache_keys::*;
 mod analysis_views;
 pub use analysis_views::*;
@@ -24,6 +31,8 @@ mod query_diagnostic_rendering;
 pub(crate) use query_diagnostic_rendering::{
     diagnostic_with_code, diagnostic_with_source_range, diagnostic_with_source_range_args_help,
 };
+mod warning_diagnostics;
+pub use warning_diagnostics::{reveal_type_diagnostics, warning_diagnostics};
 mod query_diagnostics;
 pub use query_diagnostics::*;
 #[cfg(test)]

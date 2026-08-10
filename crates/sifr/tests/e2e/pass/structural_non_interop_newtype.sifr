@@ -1,0 +1,14 @@
+# Structural glue must not make ordinary non-interop newtype programs fail to build.
+
+class UserId(int):
+    pass
+
+
+class Item:
+    id: UserId
+
+
+def main() -> None:
+    item: Item = Item(UserId(7))
+    expected: UserId = UserId(7)
+    assert item.id == expected

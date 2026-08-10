@@ -385,6 +385,28 @@ impl RustEmitter {
         )
     }
 
+    pub(crate) fn box_recursive_value_for_ir(expr: crate::RustExpr) -> crate::RustExpr {
+        if Self::is_box_new_call_expr_for_ir(&expr) {
+            return expr;
+        }
+        if matches!(&expr, crate::RustExpr::Vec(items) if items.is_empty()) {
+            return crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "Box".to_string(),
+                    "default".to_string(),
+                ])),
+                args: Vec::new(),
+            };
+        }
+        crate::RustExpr::FnCall {
+            func: Box::new(crate::RustExpr::Path(vec![
+                "Box".to_string(),
+                "new".to_string(),
+            ])),
+            args: vec![expr],
+        }
+    }
+
     pub(crate) fn ensure_some_box_inner_for_ir(expr: crate::RustExpr) -> crate::RustExpr {
         match expr {
             crate::RustExpr::FnCall { func, args }

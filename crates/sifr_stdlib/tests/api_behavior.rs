@@ -5,6 +5,34 @@ fn crate_identity_is_generated_program_stdlib() {
     assert!(sifr_stdlib::feature_contract::leaf_features().contains(&"http"));
 }
 
+#[cfg(feature = "regex")]
+#[test]
+fn compiled_regex_resource_validates_once_and_retains_metadata() {
+    use sifr_runtime::interop::SifrIntBridge;
+
+    let flags = SifrIntBridge::from(2_i64);
+    let compiled = sifr_stdlib::regex::compile_pattern_flags("hello", flags.clone())
+        .expect("valid compiled regex");
+    assert_eq!(
+        sifr_stdlib::regex::compiled_pattern_source(&compiled).expect("live compiled regex"),
+        "hello"
+    );
+    assert_eq!(
+        sifr_stdlib::regex::compiled_pattern_flags(&compiled).expect("live compiled regex"),
+        flags
+    );
+    assert!(
+        sifr_stdlib::regex::compiled_pattern_is_match(&compiled, "HELLO")
+            .expect("live compiled regex")
+    );
+    assert_eq!(
+        sifr_stdlib::regex::compiled_pattern_findall(&compiled, "hello HELLO")
+            .expect("live compiled regex"),
+        vec!["hello".to_string(), "HELLO".to_string()]
+    );
+    assert!(sifr_stdlib::regex::compile_pattern("[").is_err());
+}
+
 #[cfg(feature = "unicode")]
 #[test]
 fn unicode_wrapper_normalizes_text() {

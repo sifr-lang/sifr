@@ -3311,6 +3311,70 @@
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-INT-0009",
+      "constant": "INT_JSON_BOUNDARY_POLICY",
+      "docs_link": "docs/errors/SIFR-INT-0009.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/int_json_boundary_policy/main.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-META-0001",
+      "constant": "META_SPECIALIZATION_FATAL",
+      "docs_link": "docs/errors/SIFR-META-0001.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_fatal/main.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-META-0002",
+      "constant": "META_SPECIALIZATION_WARNING",
+      "docs_link": "docs/errors/SIFR-META-0002.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_warning/main.sifr",
+      "severity": "Warning",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-META-0003",
+      "constant": "META_MALFORMED_DECLARATION",
+      "docs_link": "docs/errors/SIFR-META-0003.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/meta_malformed_declaration/main.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
     }
   ],
   "generated_from": "crates/sifr_diagnostics/src/codes/registry.rs",

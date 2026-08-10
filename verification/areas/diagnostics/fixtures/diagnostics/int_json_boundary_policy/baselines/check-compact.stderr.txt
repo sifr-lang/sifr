@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-INT-0009 verification/areas/diagnostics/fixtures/diagnostics/int_json_boundary_policy/main.sifr:1:2 integer JSON boundary policy is unsafe at main.UnsafeIntegerBoundary.value: missing profile

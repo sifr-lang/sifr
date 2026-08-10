@@ -32,6 +32,7 @@ mod contextual_list_literal_specialization;
 mod control_flow_conditions;
 mod decimal_methods;
 mod declaration_hint_safety;
+mod declaration_metadata;
 mod default_args;
 mod defaultdict_refinement;
 #[cfg(test)]
@@ -156,6 +157,9 @@ mod rust_callback_callsite_tests;
 #[cfg(test)]
 mod rust_callback_expression_capture_tests;
 mod rust_interop;
+mod rust_interop_structural;
+#[cfg(test)]
+mod rust_interop_structural_tests;
 #[cfg(test)]
 mod rust_interop_tests;
 mod scope_helpers;

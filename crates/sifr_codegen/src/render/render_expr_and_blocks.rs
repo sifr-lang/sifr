@@ -54,6 +54,13 @@ impl Renderer {
                     "&self".to_string()
                 }
             }
+            RustParam::SelfParamWithLifetime { mutable, lifetime } => {
+                if *mutable {
+                    format!("&{lifetime} mut self")
+                } else {
+                    format!("&{lifetime} self")
+                }
+            }
             RustParam::SelfValue => "self".to_string(),
             RustParam::Named { name, ty } => {
                 format!(
@@ -542,7 +549,9 @@ impl Renderer {
 
     pub(crate) fn render_closure_param_string(param: &RustParam) -> String {
         match param {
-            RustParam::SelfParam { .. } | RustParam::SelfValue => "self".to_string(),
+            RustParam::SelfParam { .. }
+            | RustParam::SelfParamWithLifetime { .. }
+            | RustParam::SelfValue => "self".to_string(),
             RustParam::Named { name, ty } | RustParam::NamedMut { name, ty } => {
                 let rendered_name = Self::render_identifier(name);
                 if matches!(ty, RustType::Named(name) if name == "_") {
@@ -556,7 +565,9 @@ impl Renderer {
 
     pub(crate) fn render_untyped_closure_param_string(param: &RustParam) -> String {
         match param {
-            RustParam::SelfParam { .. } | RustParam::SelfValue => "self".to_string(),
+            RustParam::SelfParam { .. }
+            | RustParam::SelfParamWithLifetime { .. }
+            | RustParam::SelfValue => "self".to_string(),
             RustParam::Named { name, .. } | RustParam::NamedMut { name, .. } => {
                 Self::render_identifier(name)
             }

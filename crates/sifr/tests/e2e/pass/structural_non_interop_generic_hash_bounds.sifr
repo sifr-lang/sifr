@@ -1,0 +1,11 @@
+# Structural glue must retain ordinary generic class bounds in non-interop programs.
+
+class KeyCounts[T: Hashable]:
+    counts: dict[T, int]
+
+
+def main() -> None:
+    counts: dict[str, int] = {"alpha": 2, "beta": 3}
+    values: KeyCounts[str] = KeyCounts(counts)
+    alpha: int | None = values.counts["alpha"]
+    assert alpha == 2
