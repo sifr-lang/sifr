@@ -1039,9 +1039,10 @@ Review and upstream coordination ledger:
   18 of 19 Python interop variants. Its sole failure was a repeated
   120-second timeout in the pre-existing `readonly-check-doctor` capability;
   the exact isolated suite reproduced the same timeout. This unrelated
-  follow-up is preserved in
-  [`python-interop-readonly-inspection-timeout.md`](./python-interop-readonly-inspection-timeout.md)
-  without a timeout change, waiver, suppression, or Phase 40 code change.
+  follow-up is closed in
+  [`python-interop-readonly-inspection-timeout.md`](../archive/python-interop-readonly-inspection-timeout.md)
+  through [PR #3110](https://github.com/sifr-lang/sifr/pull/3110), without a
+  timeout change, waiver, suppression, or Phase 40 code change.
 - The incident production-wiring wave extends that same protected job and
   read-only prepare boundary to `rollback` and `incident-roll-forward`. It
   binds exact incident request, withdrawal evidence, affected and
