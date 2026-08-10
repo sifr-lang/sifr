@@ -12,6 +12,28 @@ use std::{env, fs};
 
 const RUST_BRIDGE_PROBE_CACHE_DIR: &str = "rust_bridge_probes";
 
+#[derive(Default)]
+pub(super) struct ProbeCacheKeyCache {
+    sqlx_metadata_by_backend_root: BTreeMap<PathBuf, Option<String>>,
+}
+
+impl ProbeCacheKeyCache {
+    fn sqlx_metadata_digest(&mut self, backend_root: &Path) -> Option<String> {
+        self.sqlx_metadata_digest_with(backend_root, sqlx_offline_metadata_digest)
+    }
+
+    fn sqlx_metadata_digest_with(
+        &mut self,
+        backend_root: &Path,
+        inspect: impl FnOnce(&Path) -> Option<String>,
+    ) -> Option<String> {
+        self.sqlx_metadata_by_backend_root
+            .entry(backend_root.to_path_buf())
+            .or_insert_with(|| inspect(backend_root))
+            .clone()
+    }
+}
+
 pub(super) fn probe_cache_file(cache_key: &str, invocation_cwd: &Path) -> PathBuf {
     probe_cache_file_with_env(
         cache_key,
@@ -41,6 +63,7 @@ pub(super) fn probe_cache_key(
     backend_root: &Path,
     probe_manifest: &str,
     probe_source: &str,
+    cache: &mut ProbeCacheKeyCache,
 ) -> String {
     let mut input = Vec::new();
     for value in [
@@ -73,7 +96,7 @@ pub(super) fn probe_cache_key(
     ] {
         push_cache_bytes(&mut input, value);
     }
-    if let Some(metadata_digest) = sqlx_offline_metadata_digest(backend_root) {
+    if let Some(metadata_digest) = cache.sqlx_metadata_digest(backend_root) {
         push_cache_bytes(&mut input, "sqlx-offline-metadata");
         push_cache_bytes(&mut input, &metadata_digest);
     }
@@ -163,11 +186,51 @@ fn nearest_ancestor_file(start: &Path, file_name: &str) -> Option<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::{
-        artifact_cache_root, probe_cache_file_with_env, probe_cache_root,
+        artifact_cache_root, probe_cache_file_with_env, probe_cache_root, ProbeCacheKeyCache,
         RUST_BRIDGE_PROBE_CACHE_DIR,
     };
     use std::ffi::OsString;
     use std::path::{Path, PathBuf};
+
+    #[test]
+    fn probe_cache_key_cache_inspects_each_backend_sqlx_identity_once() {
+        let mut cache = ProbeCacheKeyCache::default();
+        let clean_root = Path::new("/backend/clean");
+        let sqlx_root = Path::new("/backend/sqlx");
+        let mut clean_inspections = 0;
+        let mut sqlx_inspections = 0;
+
+        assert_eq!(
+            cache.sqlx_metadata_digest_with(clean_root, |_| {
+                clean_inspections += 1;
+                None
+            }),
+            None
+        );
+        assert_eq!(
+            cache.sqlx_metadata_digest_with(clean_root, |_| {
+                clean_inspections += 1;
+                Some("changed".to_string())
+            }),
+            None
+        );
+        assert_eq!(
+            cache.sqlx_metadata_digest_with(sqlx_root, |_| {
+                sqlx_inspections += 1;
+                Some("sqlx-digest".to_string())
+            }),
+            Some("sqlx-digest".to_string())
+        );
+        assert_eq!(
+            cache.sqlx_metadata_digest_with(sqlx_root, |_| {
+                sqlx_inspections += 1;
+                None
+            }),
+            Some("sqlx-digest".to_string())
+        );
+        assert_eq!(clean_inspections, 1);
+        assert_eq!(sqlx_inspections, 1);
+    }
 
     #[test]
     fn probe_cache_defaults_to_stable_artifact_cache_subdir() {
