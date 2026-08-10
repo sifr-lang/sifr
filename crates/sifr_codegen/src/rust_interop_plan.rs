@@ -279,11 +279,32 @@ pub fn interop_build_plan_for_named_modules<'a>(
     let mut rust = RustInteropPlan::default();
     for (module_name, module) in &module_entries {
         collect_module_declarations(*module_name, module, &mut rust.declarations);
-        collect_structural_shape_identities(*module_name, module, &mut rust);
+    }
+    if rust.declarations.iter().any(|declaration| {
+        declaration.declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
+    }) {
+        for (module_name, module) in &module_entries {
+            collect_structural_shape_identities(*module_name, module, &mut rust);
+        }
     }
     rust.bridge_contracts =
         bridge_contract_plan_for_named_modules(module_entries, &rust.declarations);
     InteropBuildPlan { rust, python }
+}
+
+pub(crate) fn module_uses_structural_interop(module: &HirModule) -> bool {
+    module
+        .functions
+        .iter()
+        .chain(module.classes.iter().flat_map(|class| {
+            class
+                .methods
+                .iter()
+                .chain(class.operator_impls.iter().map(|(_, method)| method))
+        }))
+        .flat_map(|function| &function.rust_interop)
+        .chain(module.classes.iter().flat_map(|class| &class.rust_interop))
+        .any(|declaration| declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural)
 }
 
 fn collect_structural_shape_identities(
@@ -747,6 +768,9 @@ fn push_span(out: &mut String, span: ruff_text_size::TextRange) {
     out.push_str(&span.end().to_u32().to_string());
 }
 
+#[cfg(test)]
+#[path = "rust_interop_plan_demand_tests.rs"]
+mod rust_interop_plan_demand_tests;
 #[cfg(test)]
 #[path = "rust_interop_plan_tests.rs"]
 mod rust_interop_plan_tests;

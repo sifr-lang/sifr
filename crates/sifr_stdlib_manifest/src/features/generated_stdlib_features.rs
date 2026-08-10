@@ -109,6 +109,7 @@ fn features_for_requirement(feature: StdlibFeature) -> &'static [&'static str] {
         | StdlibFeature::Cookie
         | StdlibFeature::Ipc
         | StdlibFeature::SifrRuntime
+        | StdlibFeature::StructuralRuntime
         | StdlibFeature::Tokio => &[],
     }
 }

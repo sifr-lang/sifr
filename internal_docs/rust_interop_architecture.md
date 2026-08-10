@@ -355,6 +355,13 @@ This section is the supported structural bridge contract.
 callback, and deliberate-rejection evidence. The companion
 `bridge_version_field_removal` row passes at the same boundary.
 
+Generated projects enable the `sifr_runtime/structural` Cargo feature when the
+project declares a structural Rust boundary. Without that demand, the compiler
+does not collect structural identities, emit structural implementations, or
+compile `sifr_structural_identity`. A backend crate that imports structural
+runtime traits must enable the `sifr_runtime` `structural` feature in its own
+Cargo manifest.
+
 The structural contract replaced the versioned bridge schema. That cutover
 atomically removed `[rust]
 bridge-version` from the manifest schema, every in-repository package and

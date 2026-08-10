@@ -7,7 +7,7 @@ const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
 
 impl RustEmitter {
     pub(crate) fn emit_structural_record_impls(&mut self, class: &HirClass, module: &HirModule) {
-        if !structural_record_supported(class, module) {
+        if !self.structural_interop_enabled || !structural_record_supported(class, module) {
             return;
         }
         let target = Self::class_impl_target(class);
