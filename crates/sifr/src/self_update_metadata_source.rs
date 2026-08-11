@@ -58,10 +58,11 @@ fn fetch_public(public_url: &str) -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::{read_fixture, resolve_test_fixture};
+    use std::collections::HashSet;
     use std::ffi::OsString;
     use std::fs;
-    use std::path::PathBuf;
-    use std::time::{SystemTime, UNIX_EPOCH};
+    use std::sync::{Arc, Barrier};
+    use std::thread;
 
     #[test]
     fn test_fixture_must_be_absolute() {
@@ -84,20 +85,18 @@ mod tests {
     #[test]
     fn reads_utf8_test_fixture_and_rejects_invalid_inputs() {
         let root = unique_test_root();
-        fs::create_dir(&root).expect("create test root");
-        let path = root.join("channels.json");
-        let non_utf8 = root.join("non-utf8.json");
+        let path = root.path().join("channels.json");
+        let non_utf8 = root.path().join("non-utf8.json");
         fs::write(&path, "{\"schema_version\":2}\n").expect("write fixture");
         fs::write(&non_utf8, [0xff]).expect("write non-UTF-8 fixture");
         let result = read_fixture(&path).expect("read fixture");
         assert_eq!(result, "{\"schema_version\":2}\n");
-        assert!(read_fixture(&root)
+        assert!(read_fixture(root.path())
             .expect_err("directory must fail")
             .contains("regular file"));
         assert!(read_fixture(&non_utf8)
             .expect_err("non-UTF-8 must fail")
             .contains("could not read"));
-        fs::remove_dir_all(root).expect("remove test root");
     }
 
     #[cfg(unix)]
@@ -106,25 +105,45 @@ mod tests {
         use std::os::unix::fs::symlink;
 
         let root = unique_test_root();
-        fs::create_dir(&root).expect("create test root");
-        let target = root.join("target.json");
-        let link = root.join("channels.json");
+        let target = root.path().join("target.json");
+        let link = root.path().join("channels.json");
         fs::write(&target, "{}\n").expect("write target");
         symlink(&target, &link).expect("create symlink");
         assert!(read_fixture(&link)
             .expect_err("symlink must fail")
             .contains("regular file"));
-        fs::remove_dir_all(root).expect("remove test root");
     }
 
-    fn unique_test_root() -> PathBuf {
-        let unique = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("clock follows epoch")
-            .as_nanos();
-        std::env::temp_dir().join(format!(
-            "sifr-self-update-metadata-{}-{unique}",
-            std::process::id()
-        ))
+    #[test]
+    fn allocates_distinct_test_roots_concurrently() {
+        const ROOT_COUNT: usize = 32;
+
+        let barrier = Arc::new(Barrier::new(ROOT_COUNT));
+        let handles = (0..ROOT_COUNT)
+            .map(|_| {
+                let barrier = Arc::clone(&barrier);
+                thread::spawn(move || {
+                    barrier.wait();
+                    unique_test_root()
+                })
+            })
+            .collect::<Vec<_>>();
+        let roots = handles
+            .into_iter()
+            .map(|handle| handle.join().expect("test-root allocation thread"))
+            .collect::<Vec<_>>();
+        let paths = roots
+            .iter()
+            .map(|root| root.path().to_path_buf())
+            .collect::<HashSet<_>>();
+
+        assert_eq!(paths.len(), ROOT_COUNT);
+    }
+
+    fn unique_test_root() -> tempfile::TempDir {
+        tempfile::Builder::new()
+            .prefix("sifr-self-update-metadata-")
+            .tempdir()
+            .expect("create unique test root")
     }
 }
