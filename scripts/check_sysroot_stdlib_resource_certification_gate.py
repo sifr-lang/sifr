@@ -19,7 +19,7 @@ MATRIX_PATH = (
     / "rust_interop_compatibility_matrix.json"
 )
 MANIFEST_PATH = REPO_ROOT / "internal_docs" / "stdlib_retained_compiler_intrinsics.toml"
-CERTIFICATION_ISSUE = "plans/issues/active/rust-interop-runtime-ecosystem-certification.md"
+CERTIFICATION_ISSUE = "plans/issues/archive/rust-interop-runtime-ecosystem-certification.md"
 FUTURE_OWNED = "future-owned-by-separate-phase"
 SUPPORTED = "supported"
 SUPPORTED_STDLIB_CORE_ROWS = frozenset(

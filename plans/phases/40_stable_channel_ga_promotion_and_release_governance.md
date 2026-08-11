@@ -53,7 +53,7 @@ Phase 40 consumes these completed or canonical upstream contracts:
 - The release-facing prerequisites in
   `plans/issues/archive/rust-interop-verification-matrix-hardening.md`
   (`hardening_1` through `hardening_4`) and
-  `plans/issues/active/rust-interop-runtime-ecosystem-certification.md`
+  `plans/issues/archive/rust-interop-runtime-ecosystem-certification.md`
   (merged Track A certifications 0 through 14, completed by
   [PR #3083](https://github.com/sifr-lang/sifr/pull/3083)). The hardening items are consumed
   by `milestone_40_0`. Before stable qualification in `milestone_40_1`,

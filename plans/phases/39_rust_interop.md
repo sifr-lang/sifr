@@ -2,7 +2,7 @@
 
 status: completed, audited
 
-> Phase 39 closed on 2026-06-22 through PRs #2702-#2728 and closeout [PR #2729](https://github.com/sifr-lang/sifr/pull/2729). Verification-matrix hardening completed through [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), [#3019](https://github.com/sifr-lang/sifr/pull/3019), [#3020](https://github.com/sifr-lang/sifr/pull/3020), [#3022](https://github.com/sifr-lang/sifr/pull/3022), and [#3023](https://github.com/sifr-lang/sifr/pull/3023), with its final review and validation recorded in the [archived closeout](../issues/archive/rust-interop-verification-matrix-hardening.md). The subsequent runtime/ecosystem Track A certified every formerly deferred row and completed its final inventory, stable-gate, validation, and repeated published-head review in [PR #3083](https://github.com/sifr-lang/sifr/pull/3083), as recorded by [`rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md). Dormant Track B remains separately gated on the external structural Rust bridge package-resource substrate and is not a Phase 40 blocker.
+> Phase 39 closed on 2026-06-22 through PRs #2702-#2728 and closeout [PR #2729](https://github.com/sifr-lang/sifr/pull/2729). Verification-matrix hardening completed through PRs #3018-#3023. [Runtime and ecosystem certification](../issues/archive/rust-interop-runtime-ecosystem-certification.md) completed Track A in PR #3083 and Track B in PR #3123.
 
 ## Objective
 Deliver production-grade Rust interop as declaration-level Cargo integration.
@@ -62,7 +62,7 @@ for the supported core contract. Core Rust interop must land before any stable
 release can claim Rust-backed package support. The advanced runtime/ecosystem
 surfaces that were future-owned at the original phase closeout were
 subsequently certified by Track A in
-[`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md)
+[`plans/issues/archive/rust-interop-runtime-ecosystem-certification.md`](../issues/archive/rust-interop-runtime-ecosystem-certification.md)
 with passing two-sided evidence. Phase 40 continues to derive advertising from
 the structured stable claims rather than this historical phase prose.
 
@@ -200,7 +200,7 @@ Status: implemented in [PR #2711](https://github.com/sifr-lang/sifr/pull/2711); 
 
 ### milestone_39_8: Panic Boundary and Rust Error Surface
 
-Status: merged in [PR #2717](https://github.com/sifr-lang/sifr/pull/2717); focused validation covers built-in `RustPanicError` signatures, explicit `RustPanicError`/`panic=map_error(...)` Result panic surfaces, rejection of missing or invalid panic policies, rejection of `panic=map_error(...)` on non-Result APIs, abort policy trust gates, abort-profile strategy validation, and redacted `RustPanicErrorBridge` panic payload conversion. The follow-on [`certification_2` work](../issues/active/rust-interop-runtime-ecosystem-certification.md#certification_2-panic-boundary-wrapper-emission) completes synchronous generated wrapper execution for package-local calls: target and mapper panics are contained and redacted, ordinary Rust `Err` values remain distinct, mapper signatures are Cargo-probed, mapper-panic fallback is runtime-observed, and async mapper policies remain rejected pending their own wrapper certification.
+Status: merged in [PR #2717](https://github.com/sifr-lang/sifr/pull/2717); focused validation covers built-in `RustPanicError` signatures, explicit `RustPanicError`/`panic=map_error(...)` Result panic surfaces, rejection of missing or invalid panic policies, rejection of `panic=map_error(...)` on non-Result APIs, abort policy trust gates, abort-profile strategy validation, and redacted `RustPanicErrorBridge` panic payload conversion. The follow-on [`certification_2` work](../issues/archive/rust-interop-runtime-ecosystem-certification.md#certification_2-panic-boundary-wrapper-emission) completes synchronous generated wrapper execution for package-local calls: target and mapper panics are contained and redacted, ordinary Rust `Err` values remain distinct, mapper signatures are Cargo-probed, mapper-panic fallback is runtime-observed, and async mapper policies remain rejected pending their own wrapper certification.
 
 - Scope:
   - Wrap Rust bridge calls in unwind boundaries where recoverable.
@@ -421,7 +421,7 @@ Out of scope for required Phase 39 verification:
 - `milestone_39_12`: LSP completions, diagnostic documentation, package-author docs, `sifr bridge check`, `sifr repair --check`, `sifr repair`, user examples, and rejected-design docs.
 - `milestone_39_13`: ecosystem compatibility matrix, fixture evidence, review closure, and phase closeout.
   Future-owned runtime/ecosystem certification rows are tracked by
-  [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md)
+  [`plans/issues/archive/rust-interop-runtime-ecosystem-certification.md`](../issues/archive/rust-interop-runtime-ecosystem-certification.md)
   and are not Phase 39 supported surfaces until both evidence directions pass.
 
 ## Exit Gate

@@ -2,20 +2,15 @@
 
 ## Status
 
-Track A is complete through merged
-[PR #3083](https://github.com/sifr-lang/sifr/pull/3083). All 36 compatibility
-rows in the 2026-07-30 Track A closeout had passing positive and negative
-evidence, and `certification_14` recorded that inventory, stable-claim,
-validation, published-head review, and immutable merge identities. Native
-Pydantic-Sifr `milestone_ps_2` has now merged the structural bridge and
-unversioned-manifest contracts in
-[PR #3114](https://github.com/sifr-lang/sifr/pull/3114). Track B is active in
-draft [PR #3123](https://github.com/sifr-lang/sifr/pull/3123) for the sequential
-`certification_pkg_resource_core` item. Native Pydantic-Sifr `milestone_ps_3`
-remains blocked until this item passes and merges.
+Track A and Track B are complete. Track A completed through merged
+[PR #3083](https://github.com/sifr-lang/sifr/pull/3083). All 36 Track A rows
+have passing positive and negative evidence. Track B completed through merged
+[PR #3123](https://github.com/sifr-lang/sifr/pull/3123). The PR certifies the
+general external package-resource substrate for Native Pydantic-Sifr
+`milestone_ps_3`.
 
 The verification-hardening dependency is complete through
-[`hardening_4`](../archive/rust-interop-verification-matrix-hardening.md#hardening_4-replace-lexical-rejection-context):
+[`hardening_4`](rust-interop-verification-matrix-hardening.md#hardening_4-replace-lexical-rejection-context):
 [PRs #3018](https://github.com/sifr-lang/sifr/pull/3018),
 [#3019](https://github.com/sifr-lang/sifr/pull/3019),
 [#3020](https://github.com/sifr-lang/sifr/pull/3020),
@@ -27,10 +22,8 @@ This issue has two tracks:
 
 - Track A certifies every currently deferred runtime/ecosystem surface needed
   for honest stable-channel claims.
-- Track B is a dormant downstream certification item for the general external
-  package-resource substrate that Native Pydantic-Sifr `milestone_ps_2` will
-  release. Track B is not a Phase 40 blocker while that surface does not exist
-  and is not advertised.
+- Track B certifies the general external package-resource substrate that
+  Native Pydantic-Sifr `milestone_ps_2` released.
 
 Each item below is one PR. An item starts only after its listed dependencies
 have merged. Every PR follows the repository workflow: define its checklist,
@@ -58,7 +51,7 @@ fallback.
 ## Entry Criteria
 
 Track A implementation starts only after
-[`rust-interop-verification-matrix-hardening.md`](../archive/rust-interop-verification-matrix-hardening.md)
+[`rust-interop-verification-matrix-hardening.md`](rust-interop-verification-matrix-hardening.md)
 items `hardening_1` through `hardening_4` have merged. Those items make the
 Rust-interop area authoritative, define tier/execution-kind rules, bind
 support claims to executable local-lane evidence, and replace ambiguous
@@ -167,7 +160,7 @@ normative and must not be broadened.
 | `certification_12` | merged | [PR #3076](https://github.com/sifr-lang/sifr/pull/3076); exact-pinned CLI/tooling execution and bridge-safe `anyhow` boundary certification |
 | `certification_13` | merged | [PR #3078](https://github.com/sifr-lang/sifr/pull/3078); exact-pinned backend loopback execution and fail-closed SQLx offline metadata certification |
 | `certification_14` | merged | [PR #3083](https://github.com/sifr-lang/sifr/pull/3083); Track A inventory, stable gate, durable handoff, repeated published-head review, and final closeout |
-| `certification_pkg_resource_core` | active | Native Pydantic-Sifr `milestone_ps_2` merged in PR #3114. Draft PR #3123 contains the synthetic external-package certification. |
+| `certification_pkg_resource_core` | merged | [PR #3123](https://github.com/sifr-lang/sifr/pull/3123); synthetic external-package construction, lifecycle, panic, and rejection certification |
 
 ## Ordered Track A Items
 
@@ -2063,12 +2056,33 @@ Implementation checklist:
   38 stable claims, 21 `supported`, 16 `supported-through-bridge`, 1
   `unsupported-by-design`, 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
   `contract-only`, and 11 `runtime-observed` rows.
-- [ ] Pass both focused provenance tests, all Rust-interop checks and self-tests,
+- [x] Pass both focused provenance tests, all Rust-interop checks and self-tests,
   the full area runner, formatting, Clippy, maintainability, file-size, and diff
   hygiene.
-- [ ] Pass the create-PR gate, the one final merge gate, and Opus review rounds
+- [x] Pass the create-PR gate, the one final merge gate, and Opus review rounds
   to `SATISFIED`; merge and record the immutable identities before unblocking
   Native Pydantic-Sifr `milestone_ps_3`.
+
+Closure evidence:
+
+- [PR #3123](https://github.com/sifr-lang/sifr/pull/3123) merged as
+  `c6f5748870471ba6baa7dcddbbadc1b627576140`.
+- The exact reviewed and gated candidate was
+  `ad9e73fc6c589c9d25a8177b734b6d820ef63d9a`.
+- Claude Opus 5 returned `SATISFIED` with no blocking findings for that
+  candidate. The response remains outside the reviewed Git tree.
+- Focused validation passed lowering 974/974, codegen 977/977, the two native
+  package-resource tests, workspace Clippy, formatting, and all Rust-interop
+  checks.
+- The unchanged warm create-PR gate passed. Its receipt SHA-256 is
+  `ad28c2e9013cdf2810f80bc145a0ce56afb75184fae56e1fe65e0a183cd993b2`.
+- The one merge gate passed Python 25/25, Rust interop 10/10, generated builds
+  70/70, E2E 694/694, and 268 hardening variants with zero failures.
+- The merge receipt SHA-256 is
+  `bfaf1d14d2022521ba375942691149fd3fa88a52d73ce72b2e792c7f8699e464`.
+- Nonblocking review suggestions remain separate from this certification.
+  They include extra public-module and imported-construction tests, plus minor
+  test cleanup and diagnostic text improvements.
 
 ## Validation Required for Every Item
 
