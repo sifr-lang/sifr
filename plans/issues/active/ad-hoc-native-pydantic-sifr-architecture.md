@@ -2,16 +2,14 @@
 
 ## Status
 
-Architecture proper approved on draft PR
-[#3014](https://github.com/sifr-lang/sifr/pull/3014); implementation has not
-started. Opus 5 pass 1 returned `NEEDS REVISION`, pass 2 returned `SATISFIED`,
-and closure pass 3 returned `SATISFIED` for the pre-manifest design. Passes 4
-through 16 returned `NEEDS REVISION` for the added conformance inventory.
-Pass 17 returned `SATISFIED` and re-approved `milestone_ps_0`. The complete
-architecture, conformance inventory, external-repository boundary, and demo
-ownership are approved. `milestone_ps_1` and `milestone_ps_2` are implemented
-and merged. The sequential `certification_pkg_resource_core` item is next;
-`milestone_ps_3` remains blocked until that certification passes.
+Architecture proper was approved on draft PR
+[#3014](https://github.com/sifr-lang/sifr/pull/3014). Opus 5 pass 17 returned
+`SATISFIED` and approved `milestone_ps_0`. The architecture, conformance
+inventory, repository boundary, and demo ownership are approved.
+`milestone_ps_1` and `milestone_ps_2` are implemented and merged. The required
+`certification_pkg_resource_core` item is complete through merged
+[PR #3123](https://github.com/sifr-lang/sifr/pull/3123). `milestone_ps_3` is the
+next sequential work and is no longer blocked by bridge certification.
 
 Review artifacts:
 
@@ -112,9 +110,17 @@ Milestone delivery records:
   claims. The final exact-candidate review returned `SATISFIED` with no blocking
   findings; per the reviewer skill, that final response remains outside the Git
   tree.
-- The next sequential work is `certification_pkg_resource_core` in the runtime
-  ecosystem certification issue. It must create and pass
-  `opaque_resource_package_core` before `milestone_ps_3` begins.
+- `certification_pkg_resource_core` merged in
+  [PR #3123](https://github.com/sifr-lang/sifr/pull/3123) at merge commit
+  `c6f5748870471ba6baa7dcddbbadc1b627576140`. The reviewed candidate was
+  `ad9e73fc6c589c9d25a8177b734b6d820ef63d9a`.
+- The item certifies `opaque_resource_package_core` through a synthetic
+  external package. It covers construction, lifecycle, panic redaction,
+  direct-construction rejection, alias invalidation, and use after close.
+- The exact-SHA Opus review returned `SATISFIED` with no blocking findings.
+  The one merge gate passed Python 25/25, Rust interop 10/10, generated builds
+  70/70, E2E 694/694, and 268 hardening variants with zero failures.
+- `milestone_ps_3` is the next sequential work.
 - Deferred follow-up work: define an explicit typed package-side structural-shape
   contract before `ps_4`; align registry representative-fixture paths with diagnostic
   baselines; audit pre-epoch fractional timestamp reconstruction; disambiguate imported
@@ -220,7 +226,7 @@ Existing Sifr contracts: [`rust_interop_architecture.md`](../../../internal_docs
 [`architecture.md`](../../../internal_docs/architecture.md).
 
 The compiler substrate also depends on the core rows tracked by
-[`rust-interop-runtime-ecosystem-certification.md`](rust-interop-runtime-ecosystem-certification.md).
+[`rust-interop-runtime-ecosystem-certification.md`](../archive/rust-interop-runtime-ecosystem-certification.md).
 
 ### Cross-document authority
 
@@ -2056,7 +2062,7 @@ companion repository depends on them:
 | `ps_4` and later | released Sifr compiler/sysroot containing the certified `ps_1` through `ps_3` contracts |
 
 The certification work is tracked by
-[`rust-interop-runtime-ecosystem-certification.md`](rust-interop-runtime-ecosystem-certification.md).
+[`rust-interop-runtime-ecosystem-certification.md`](../archive/rust-interop-runtime-ecosystem-certification.md).
 Callback invocation, cleanup, and panic mapping are blocking prerequisites, not
 assumed capabilities. No Pydantic-Sifr milestone privately implements or
 bypasses an uncertified bridge row.
