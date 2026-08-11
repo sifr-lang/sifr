@@ -302,14 +302,18 @@ Review and upstream coordination ledger:
   `const NAN: f64 = (0.0_f64) / (0.0_f64);` is rejected by Rust 1.94
   `clippy::zero_divided_by_zero`; later ordered corpus entries were not
   Clippy-checked by that run. This generated stdlib constant defect is recorded
-  in indexed, non-prerequisite follow-up `GENC-NAN`. The release profile now
-  selects the expiry-bound `generated_code_quality:release-full` suite: every
-  full gate and Clippy entry remains blocking, while the three exact corpus
-  entries that materialize this constant must reproduce only
+  in indexed, non-prerequisite follow-up `GENC-NAN`. Before remediation, the
+  release profile selected the expiry-bound
+  `generated_code_quality:release-full` suite. Every full gate and Clippy entry
+  stayed blocking. The three affected entries had to reproduce only
   `clippy::zero_divided_by_zero` as expected-failure evidence. The complete
-  91-entry corpus was materialized before freezing that set. Nightly keeps
-  unmodified `generated_code_quality:full`; no Clippy allow, threshold,
+  91-entry corpus was materialized before that set was frozen. Nightly kept
+  unmodified `generated_code_quality:full`. No Clippy allow, threshold,
   generated source, or stable-governance contract changed.
+- PR [#3103](https://github.com/sifr-lang/sifr/pull/3103) completed
+  `GENC-NAN` on 2026-08-11. The compiler now emits canonical Rust constants for
+  NaN and both infinity signs. Release and nightly now select blocking
+  `generated_code_quality:full`, and the temporary divergence no longer exists.
 - Generated-code release-divergence review pass 1 is archived at
   `plans/reviews/archive/phase-40-generated-code-release-divergence-review-pass-1-not-satisfied.md`.
   Its seven findings are closed by whole-plan structural pinning, mandatory

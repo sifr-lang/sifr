@@ -80,7 +80,7 @@
         "create-pr": ["generated_code_quality:smoke"],
         "merge": ["generated_code_quality:representative"],
         "nightly": ["generated_code_quality:full"],
-        "release": ["generated_code_quality:release-full"]
+        "release": ["generated_code_quality:full"]
       }
     },
     {
@@ -89,7 +89,7 @@
         "create-pr": ["generated_code_quality:smoke"],
         "merge": ["generated_code_quality:representative"],
         "nightly": ["generated_code_quality:full"],
-        "release": ["generated_code_quality:release-full"]
+        "release": ["generated_code_quality:full"]
       }
     },
     {
@@ -98,7 +98,7 @@
         "create-pr": ["generated_code_quality:smoke"],
         "merge": ["generated_code_quality:representative"],
         "nightly": ["generated_code_quality:full"],
-        "release": ["generated_code_quality:release-full"]
+        "release": ["generated_code_quality:full"]
       }
     },
     {

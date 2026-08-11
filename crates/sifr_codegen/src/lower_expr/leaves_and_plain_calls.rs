@@ -142,10 +142,11 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             expr: Box::new(RustExpr::Literal(RustLiteral::Int(*v))),
             ty: RustType::I64,
         }),
-        HirExpr::FloatLiteral(v) => Some(RustExpr::Cast {
+        HirExpr::FloatLiteral(v) if v.is_finite() => Some(RustExpr::Cast {
             expr: Box::new(RustExpr::Literal(RustLiteral::Float(*v))),
             ty: RustType::F64,
         }),
+        HirExpr::FloatLiteral(v) => Some(RustExpr::Literal(RustLiteral::Float(*v))),
         HirExpr::StringLiteral(s) => Some(RustExpr::Literal(RustLiteral::Str(s.clone()))),
         HirExpr::BoolLiteral(v) => Some(RustExpr::Literal(RustLiteral::Bool(*v))),
         HirExpr::NoneLiteral => Some(RustExpr::Literal(RustLiteral::None)),

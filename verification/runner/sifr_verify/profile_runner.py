@@ -574,9 +574,10 @@ class ProfileRunner:
             "smoke",
             "representative",
             "full",
-            "release-full",
         }:
-            raise ProfileRunnerError(f"unsupported generated-code quality mode: {self.generated_code_quality_mode}")
+            raise ProfileRunnerError(
+                f"unsupported generated-code quality mode: {self.generated_code_quality_mode}"
+            )
         shared_root = REPO_ROOT / "target" / "sifr_generated_code_quality" / f"{self.profile_name}.shared"
         env = self.env | {"SIFR_GCQ_SHARED_ROOT": str(shared_root.relative_to(REPO_ROOT))}
         run_command(

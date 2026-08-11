@@ -15,9 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 CORPUS_MANIFEST = AREA_ROOT / "data" / "corpus_manifest.json"
-RELEASE_DIVERGENCES = AREA_ROOT / "data" / "release_divergences.json"
 GATE_SCRIPT = AREA_ROOT / "generated_code_quality.py"
-RELEASE_CLIPPY_SCRIPT = AREA_ROOT / "release_clippy.py"
 RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "generated-code-quality-results.json"
 
 SMOKE_ENTRY_IDS = (
@@ -50,15 +48,6 @@ PROFILE_SUITES = {
         ("intrinsic-panic-lint", None, None),
         ("rustfmt", None, None),
         ("clippy", None, None),
-        ("determinism", None, None),
-        ("demos", None, None),
-    ],
-    "release-full": [
-        ("corpus", None, None),
-        ("panic-scan", None, None),
-        ("intrinsic-panic-lint", None, None),
-        ("rustfmt", None, None),
-        ("clippy-release", None, None),
         ("determinism", None, None),
         ("demos", None, None),
     ],
@@ -108,15 +97,6 @@ def main(argv: list[str] | None = None) -> int:
     total_variants = sum(int(result["total_variants"]) for result in suite_results)
     total_failures = sum(int(result["total_failures"]) for result in suite_results)
     blocking_failures = total_failures
-    release_divergences = [
-        record
-        for result in suite_results
-        for record in result.get("release_divergences", [])
-        if isinstance(record, dict)
-    ]
-    expected_failures = sum(
-        len(record.get("entry_ids", [])) for record in release_divergences
-    )
     result_payload = {
         "schema_version": 1,
         "area": "generated_code_quality",
@@ -129,9 +109,7 @@ def main(argv: list[str] | None = None) -> int:
             "total_failures": total_failures,
             "blocking_failures": blocking_failures,
             "non_blocking_failures": 0,
-            "expected_failures": expected_failures,
         },
-        "release_divergences": release_divergences,
     }
     result_path = REPO_ROOT / args.result_json
     result_path.parent.mkdir(parents=True, exist_ok=True)
@@ -147,16 +125,6 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    if release_divergences:
-        identities = ", ".join(
-            f"{record['record_id']}@{record['expires_on']}"
-            for record in release_divergences
-        )
-        print(
-            f"generated-code release divergences: expected_failures={expected_failures} "
-            f"records={identities}",
-            flush=True,
-        )
     prefix = "verification ok" if args.hardening_summary else "generated-code quality verification ok"
     print(
         f"{prefix}: variants={total_variants}, failures={total_failures}, "
@@ -214,17 +182,7 @@ def run_suite(area_suite: dict[str, Any]) -> dict[str, Any]:
         "total_variants": len(variants),
         "total_failures": failed_variants,
     }
-    if suite_name == "release-full":
-        result["release_divergences"] = release_divergence_records()
     return result
-
-
-def release_divergence_records() -> list[dict[str, Any]]:
-    payload = json.loads(RELEASE_DIVERGENCES.read_text(encoding="utf-8"))
-    records = payload.get("records")
-    if not isinstance(records, list):
-        raise SystemExit("generated-code release divergence document has no records")
-    return records
 
 
 def run_gate(
@@ -242,10 +200,7 @@ def run_gate(
         env.pop("SIFR_GCQ_ENTRY_IDS", None)
     else:
         env["SIFR_GCQ_ENTRY_IDS"] = ",".join(entry_ids)
-    if gate == "clippy-release":
-        argv = [sys.executable, str(RELEASE_CLIPPY_SCRIPT), "--manifest", str(CORPUS_MANIFEST)]
-    else:
-        argv = [sys.executable, str(GATE_SCRIPT), gate, "--manifest", str(CORPUS_MANIFEST)]
+    argv = [sys.executable, str(GATE_SCRIPT), gate, "--manifest", str(CORPUS_MANIFEST)]
     started = time.perf_counter()
     proc = subprocess.run(argv, cwd=REPO_ROOT, env=env, text=True, check=False)
     elapsed_ms = (time.perf_counter() - started) * 1000.0

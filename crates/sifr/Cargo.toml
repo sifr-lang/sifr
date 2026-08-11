@@ -31,6 +31,7 @@ sha2 = { workspace = true }
 [dev-dependencies]
 serde_json = { workspace = true }
 sifr_stdlib_manifest = { workspace = true }
+tempfile = "3.23.0"
 
 [lints]
 workspace = true

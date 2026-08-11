@@ -1,6 +1,62 @@
 # Ad Hoc Phase: Generated NaN Constant Clippy Quality
 
-Status: deferred follow-up; not a prerequisite for Phase 40.
+Status: complete (2026-08-11). Implementation
+[#3103](https://github.com/sifr-lang/sifr/pull/3103) merged as
+`b0d5fe67c4190bc85bba43d5ddbebb61444eb9ef`.
+
+The final reviewed and gated candidate was
+`921d19bad6b996e3f7180face318756b7c1e7be6`. Its corrected base was
+`c8114ab92b3b96f73207d158e32c6c0c25cc3ea4`.
+
+## Resolution
+
+The compiler now folds annotated non-finite float division constants at the
+module-constant boundary. Code generation emits `f64::NAN`, `f64::INFINITY`,
+and `f64::NEG_INFINITY`. Finite float division stays unchanged.
+
+The release profile now selects `generated_code_quality:full`, which matches
+nightly. PR #3103 removed the `release-full` suite, the GENC-NAN divergence,
+and all associated policy and matrix bindings. No Clippy allow was added.
+
+## Closure Evidence
+
+- Focused lowering, codegen, and stdlib integration tests passed on the final
+  candidate. The complete generated-code Clippy corpus also passed with zero
+  failures.
+- The complete Clippy evidence has SHA-256
+  `17b8369abfe24e50d476914cb52efcc53ff709d6513b10f5419ece2f6d647388`.
+  Its area result has SHA-256
+  `0970fcd48bfd9e487977682a4d836dfbda61dc294fce619ba37a3278df40bf85`.
+- The required cold create-PR run passed every functional check. The known
+  two-miss cold artifact condition exceeded only the warm-cache step budget.
+  Its receipt has SHA-256
+  `cf7a2b53e429e82694117c2e4bf5409bc00cc8cc3c1e8beb463ec53bca402715`.
+- The unchanged warm create-PR run exited 0. Generated-code quality passed
+  5/5, Python interop passed 19/19, Rust interop passed 10/10, and E2E passed
+  140/140. Its receipt has SHA-256
+  `b66324f0e626aabbadaac8cb390375b2387fb10d3e2da665c49e71a38c1adc7e`.
+- Claude Opus returned `SATISFIED` on the final candidate with no blocking
+  findings. The response has SHA-256
+  `f221135d4c7c45b27cf6d1fbe450974cf54f5d3cee4d2e6429b6718419b4e8e9`.
+- The authoritative merge gate exited 0 on the same candidate. Generated-code
+  quality passed 7/7, generated builds passed 70/70, and E2E passed 694/694.
+  Hardening passed 268 variants with zero failures. The merge receipt has
+  SHA-256
+  `e34742825e24350d8b1f528134e5dd876366147134819b7fda0caa5d4117c9d0`.
+  The merge log has SHA-256
+  `c6d9383bf33d36e2501adf23c7a66a432ad1047b85c61eabbf305a37afa39f8e`.
+- Both milestone reviews and the final implementation review were satisfied.
+  No implementation changed after the final review.
+
+## Remaining Work
+
+No in-scope remediation, Clippy allow, release divergence, or deferred blocker
+remains. Follow-up [#3141](https://github.com/sifr-lang/sifr/issues/3141)
+tracks non-finite local expressions. Follow-up
+[#3142](https://github.com/sifr-lang/sifr/issues/3142) tracks non-finite float
+match patterns. Both problems are pre-existing and outside this phase.
+
+## Historical Record
 
 ## Problem
 
