@@ -26,6 +26,7 @@ REQUIRED_FIXTURES = {
     "native_build_script",
     "opaque_handle_tokenizer",
     "opaque_resource_core",
+    "opaque_resource_package_core",
     "opaque_resource_matrix",
     "panic_abort_profile",
     "panic_boundary",

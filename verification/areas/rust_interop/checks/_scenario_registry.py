@@ -86,6 +86,17 @@ REQUIRED_SCENARIO_EXAMPLES = {
             "tokens": OPAQUE_RESOURCE_SCENARIO_TOKENS,
         },
     },
+    "opaque_resource_package_core": {
+        "package_resource_runtime": {
+            "tokens": (
+                "StructuralConstruct",
+                "StructuralProject",
+                "PoisonOnPanic",
+                "@rust.structural",
+                "PackageResource",
+            ),
+        },
+    },
     "panic_abort_profile": {
         "abort_profile_package": {
             "tokens": ("rust-panic-abort", 'panic = "abort"', "legacy_backend"),

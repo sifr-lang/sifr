@@ -423,6 +423,10 @@ class Resource:
         "{generated}"
     );
     assert!(
+        !generated.contains("pub trait __SifrOpaqueResourceMethods"),
+        "{generated}"
+    );
+    assert!(
         generated.contains(
             "bridge::resources::aclose(self).await.map(|__sifr_bridge_ok| __sifr_bridge_ok)"
         ),

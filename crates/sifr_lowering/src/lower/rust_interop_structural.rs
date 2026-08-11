@@ -5,16 +5,30 @@ use sifr_type_system::Type;
 
 use super::LowerCtx;
 
+#[derive(Clone, Copy)]
+pub(in crate::lower) struct StructuralFunctionContract<'a> {
+    pub(in crate::lower) function_name: &'a str,
+    pub(in crate::lower) params: &'a [HirParam],
+    pub(in crate::lower) return_type: &'a Type,
+    pub(in crate::lower) type_params: &'a [String],
+    pub(in crate::lower) declarations: &'a [RustInteropDeclaration],
+    pub(in crate::lower) is_async: bool,
+    pub(in crate::lower) span: TextRange,
+}
+
 pub(in crate::lower) fn validate_structural_function_contract(
-    function_name: &str,
-    params: &[HirParam],
-    return_type: &Type,
-    type_params: &[String],
-    declarations: &[RustInteropDeclaration],
-    is_async: bool,
-    span: TextRange,
+    contract: StructuralFunctionContract<'_>,
     ctx: &mut LowerCtx,
 ) {
+    let StructuralFunctionContract {
+        function_name,
+        params,
+        return_type,
+        type_params,
+        declarations,
+        is_async,
+        span,
+    } = contract;
     if !declarations
         .iter()
         .any(|declaration| declaration.kind == RustInteropDecoratorKind::Structural)
@@ -254,10 +268,10 @@ fn callback_structural_position(
         .collect::<Vec<_>>();
     let result_position = match result.resolve_alias() {
         Type::Result(ok, error) => {
-            if structural_type_position(error, type_param) != StructuralTypePosition::Absent {
-                StructuralTypePosition::Nested
-            } else {
+            if structural_type_position(error, type_param) == StructuralTypePosition::Absent {
                 structural_type_position(ok, type_param)
+            } else {
+                StructuralTypePosition::Nested
             }
         }
         other => structural_type_position(other, type_param),

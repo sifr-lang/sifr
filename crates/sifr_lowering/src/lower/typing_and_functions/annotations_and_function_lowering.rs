@@ -15,7 +15,9 @@ use crate::lower::rust_interop::{
     classify_rust_interop_stub_body, collect_rust_interop_declarations,
     has_rust_interop_decorator_syntax, RustInteropOwner,
 };
-use crate::lower::rust_interop_structural::validate_structural_function_contract;
+use crate::lower::rust_interop_structural::{
+    validate_structural_function_contract, StructuralFunctionContract,
+};
 use crate::lower::{compiler_intrinsics, diagnostics::has_decorator};
 pub(in crate::lower) fn lower_function(
     func: &StmtFunctionDef,
@@ -383,13 +385,15 @@ pub(in crate::lower) fn lower_function(
         .cloned()
         .unwrap_or_default();
     validate_structural_function_contract(
-        func.name.as_str(),
-        &params,
-        &inferred_return_type,
-        &type_params,
-        &rust_interop,
-        effective_is_async,
-        func.name.range(),
+        StructuralFunctionContract {
+            function_name: func.name.as_str(),
+            params: &params,
+            return_type: &inferred_return_type,
+            type_params: &type_params,
+            declarations: &rust_interop,
+            is_async: effective_is_async,
+            span: func.name.range(),
+        },
         ctx,
     );
 

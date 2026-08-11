@@ -582,7 +582,7 @@ impl RustEmitter {
                     target.replace('.', "::")
                 )),
             });
-            self.emit_opaque_rust_method_trait(class, &class_name);
+            self.emit_opaque_rust_method_trait(class, &class_name, module_public);
             return;
         }
 
@@ -773,7 +773,12 @@ impl RustEmitter {
         self.emit_protocol_impls(class, module);
     }
 
-    fn emit_opaque_rust_method_trait(&mut self, class: &HirClass, class_name: &str) {
+    fn emit_opaque_rust_method_trait(
+        &mut self,
+        class: &HirClass,
+        class_name: &str,
+        module_public: bool,
+    ) {
         let methods = class
             .methods
             .iter()
@@ -810,7 +815,7 @@ impl RustEmitter {
         self.current_class_name = saved_class_name;
         self.body_items.push(RustItem::Trait {
             name: trait_name.clone(),
-            visibility: Visibility::Pub,
+            visibility: Self::class_visibility(module_public),
             supertraits: Vec::new(),
             methods: signatures,
         });

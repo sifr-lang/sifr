@@ -227,10 +227,7 @@ fn classify_rust_decorator<'a>(
     None
 }
 
-fn classify_rust_call<'a>(
-    call: &'a ExprCall,
-    ctx: &mut LowerCtx,
-) -> Option<RustInteropDecoratorKind> {
+fn classify_rust_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<RustInteropDecoratorKind> {
     match call.func.as_ref() {
         Expr::Name(name) if name.id.as_str() == "rust" => Some(RustInteropDecoratorKind::Function),
         Expr::Attribute(attr) => {

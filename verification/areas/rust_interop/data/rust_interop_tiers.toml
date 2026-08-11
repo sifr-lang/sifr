@@ -26,6 +26,7 @@ description = "Contract-only, cargo-probe, or runtime-observed evidence for opaq
 fixtures = [
   "opaque_handle_tokenizer",
   "opaque_resource_core",
+  "opaque_resource_package_core",
   "opaque_resource_matrix",
   "close_after_use",
   "structural_bridge_calls",

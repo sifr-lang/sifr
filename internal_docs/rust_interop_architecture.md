@@ -582,6 +582,14 @@ active variant is a `StructuralContractError`, not a user validation error.
 Backend packages map that internal error to their declared stable outer error
 without including input data.
 
+The `opaque_resource_package_core` certification row executes this boundary in
+a synthetic external package. One generated package opens a sealed resource,
+constructs and projects a typed record, and closes the resource. Its paired
+negative path observes alias access fail after close, stable double-close state,
+and redacted poison state, while compiler diagnostics reject Sifr-side direct
+construction and reuse after owned close. This row uses no service-specific
+crate or package-specific compiler path.
+
 The leaf crate `sifr_structural_identity` is the single owner of identity
 encoding and hashing. It provides versioned primitive, unary-container,
 binary-container, tuple, union, and nominal-record composition functions;
@@ -1740,6 +1748,7 @@ verification/areas/rust_interop/
     shared_bridge_crate/          # cargo-probed shared bridge crate boundary
     opaque_handle_tokenizer/
     opaque_resource_core/         # stdlib-owned opaque-resource lifecycle
+    opaque_resource_package_core/ # external-package structural resource lifecycle
     opaque_resource_matrix/       # reqwest::Client, rusqlite, tokio-postgres, redis
     close_after_use/
     bridge_version_field_removal/

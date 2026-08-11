@@ -111,6 +111,15 @@
       "negative_evidence": {"id": "stdlib_handle_double_close_poisoned_access", "status": "passing"}
     },
     {
+      "id": "opaque_resource_package_core",
+      "tier": 2,
+      "capability": "external package structural opaque resource lifecycle",
+      "required_crates": [],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "package_resource_construct_use_close", "status": "passing"},
+      "negative_evidence": {"id": "package_resource_alias_use_after_close_rejected", "status": "passing"}
+    },
+    {
       "id": "opaque_resource_matrix",
       "tier": 2,
       "capability": "resource-shaped opaque handles",

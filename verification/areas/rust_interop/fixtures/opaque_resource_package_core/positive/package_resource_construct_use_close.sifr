@@ -1,0 +1,70 @@
+# fixture: opaque_resource_package_core
+# evidence: positive/package_resource_construct_use_close
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: pass
+
+from sifr.meta import Structural
+
+
+class PackageResourceError(Error):
+    message: str
+
+
+class PackageRecord:
+    number: uint32
+    label: str
+
+
+@rust.opaque(
+    type=bridge.package_resource.PackageResource,
+    send=False,
+    sync=False,
+    clone=none,
+    close=close,
+)
+class PackageResource:
+    @rust(bridge.package_resource.close)
+    def close(own self) -> Result[None, PackageResourceError | RustPanicError]: ...
+
+
+@rust(bridge.package_resource.open)
+def open_package_resource() -> Result[PackageResource, PackageResourceError | RustPanicError]: ...
+
+
+@rust(bridge.package_resource.close_observation)
+def package_resource_close_observation() -> Result[str, PackageResourceError | RustPanicError]: ...
+
+
+@rust.structural
+@rust(bridge.package_resource.construct)
+def package_resource_construct[T: Structural](
+    resource: PackageResource,
+) -> Result[T, PackageResourceError | RustPanicError]: ...
+
+
+@rust.structural
+@rust(bridge.package_resource.use_resource)
+def package_resource_use[T: Structural](
+    resource: PackageResource,
+    value: T,
+) -> Result[str, PackageResourceError | RustPanicError]: ...
+
+
+def verify_package_resource_construct_use_close() -> Result[str, PackageResourceError | RustPanicError]:
+    try:
+        resource: PackageResource = open_package_resource()
+        value: PackageRecord = package_resource_construct(resource)
+        summary: str = package_resource_use(resource, value)
+        expected_number: uint32 = 7
+        assert value.number == expected_number
+        assert value.label == "sealed"
+        assert summary == "number=7;label=sealed;state=open"
+        _closed: None = resource.close()
+        close_state: str = package_resource_close_observation()
+        assert close_state == "closed"
+        return summary + ";close=" + close_state
+    except PackageResourceError as error:
+        raise error
+    except RustPanicError as error:
+        raise error

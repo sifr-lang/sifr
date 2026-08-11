@@ -238,6 +238,27 @@ pub(super) fn lower_regular_call(
         });
     }
 
+    let is_rust_opaque_constructor = ctx.rust_opaque_classes.contains(&func_name)
+        || ctx
+            .scope
+            .lookup_type_alias(&func_name)
+            .is_some_and(|alias| {
+                matches!(
+                    alias.resolve_alias(),
+                    Type::Class { name, .. } if ctx.rust_opaque_classes.contains(name)
+                )
+            });
+    if is_rust_opaque_constructor {
+        ctx.error_with_code_at(
+            DiagnosticCode::RUST_TYPE_PROBE_FAILURE,
+            format!(
+                "sealed Rust opaque resource `{func_name}` cannot be constructed in Sifr; use its declared package factory"
+            ),
+            call.range(),
+        );
+        return None;
+    }
+
     let ft = ctx.functions.get(&func_name).cloned().or_else(|| {
         name_diagnostics::undefined_function(ctx, &func_name, call.func.range());
         None
