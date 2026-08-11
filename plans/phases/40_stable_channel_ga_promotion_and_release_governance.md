@@ -933,14 +933,13 @@ install/update guidance, Rust interop claims, and the VS Code extension.
 - The exact-source release profile remains blocking. The follow-up's 20
   preserved failures are remediated, while closeout validation and review for
   [`ALG-CORPUS`](../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md)
-  remain in progress. Release qualification now includes the complete pinned
-  algorithm corpus plus taxonomy self-test, matching nightly. The indexed,
-  expiry-bound
-  [`GENC-NAN`](../issues/active/adhoc_generated_nan_constant_clippy_quality.md)
-  non-prerequisite record remains: release runs every generated-code corpus
-  entry while requiring its three entries to reproduce only the recorded
-  Clippy lint. Neither profile permits a test skip, broad allow, threshold
-  change, or source fallback.
+  remain in progress. Release qualification includes the complete pinned
+  algorithm corpus plus its taxonomy self-test. This selection matches nightly.
+  [`GENC-NAN`](../issues/archive/adhoc_generated_nan_constant_clippy_quality.md)
+  completed in PR #3103. Release and nightly now run blocking
+  `generated_code_quality:full`, with no expected-failure divergence. Neither
+  profile permits a test skip, broad allow, threshold change, or source
+  fallback.
 
 **Negative validation:**
 
