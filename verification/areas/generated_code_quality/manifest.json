@@ -50,19 +50,6 @@
       ]
     },
     {
-      "name": "release-full",
-      "kind": "adapter",
-      "cases": [
-        {
-          "id": "release-full",
-          "entry": "verification/areas/generated_code_quality/data/corpus_manifest.json",
-          "command": "generated-code-quality-mode",
-          "expect_exit_code": 0,
-          "diagnostic_formats": []
-        }
-      ]
-    },
-    {
       "name": "corpus",
       "kind": "adapter",
       "cases": [

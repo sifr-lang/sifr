@@ -26,6 +26,29 @@ fn dispatcher_result_lowers_simple_module_constant_item() {
 }
 
 #[test]
+fn module_non_finite_float_constants_render_canonically() {
+    for (name, value, expected) in [
+        ("nan", f64::NAN, "const NAN: f64 = f64::NAN;"),
+        ("inf", f64::INFINITY, "const INF: f64 = f64::INFINITY;"),
+        (
+            "neg_inf",
+            f64::NEG_INFINITY,
+            "const NEG_INF: f64 = f64::NEG_INFINITY;",
+        ),
+    ] {
+        let (item, _) = try_lower_simple_module_constant_item_result(
+            name,
+            &Type::Float,
+            &HirExpr::FloatLiteral(value),
+        )
+        .expect("non-finite float module constant should lower")
+        .expect("non-finite float module constant should be a Rust item");
+
+        assert_eq!(crate::render_items(&[item]), format!("{expected}\n"));
+    }
+}
+
+#[test]
 fn dispatcher_result_reports_invalid_module_constant_name() {
     let err =
         try_lower_simple_module_constant_item_result("9bad", &Type::Int, &HirExpr::IntLiteral(42))
