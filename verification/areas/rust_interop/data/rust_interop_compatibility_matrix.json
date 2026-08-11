@@ -195,6 +195,18 @@
       "notes": "Generated monomorphized bridge calls construct and project nested generic/recursive values through an opaque source and use the typed call-scoped callback bridge; invalid structural generic placement and incompatible Rust signatures fail deliberately."
     },
     {
+      "id": "static_program_arena_bridge",
+      "fixture": "static_program_arena_bridge",
+      "category": "supported-through-bridge",
+      "tier": 2,
+      "capability": "compiler-emitted static program with a validated structural arena",
+      "execution_kind": "runtime-observed",
+      "required_crates": [],
+      "positive_evidence": {"id": "static_program_constructs_and_projects_arena", "status": "passing"},
+      "negative_evidence": {"id": "corrupt_static_program_envelope_rejected", "status": "passing"},
+      "notes": "A package const-specializer produces deterministic compiler-emitted data for one concrete type. One monomorphized bridge call reads the sealed program, consumes a checked compact-node arena, constructs the typed value, and projects integers, fixed integers, bytes, sequences, and mappings. The arena contract separately moves an exact integer into SifrInt without narrowing. Corrupt envelopes and invalid node indices fail closed."
+    },
+    {
       "id": "panic_boundary",
       "fixture": "panic_boundary",
       "category": "supported",

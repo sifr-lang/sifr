@@ -42,6 +42,31 @@ fn project_structural_demand_enables_implicit_classes_across_modules() {
         .contains(&sifr_stdlib_manifest::StdlibFeature::StructuralRuntime));
 }
 
+#[test]
+fn static_program_owners_use_structural_implementation_eligibility() {
+    let supported = payload_class();
+    let mut unsupported = payload_class();
+    unsupported.name = "InheritedPayload".to_string();
+    unsupported.parent_class = Some("Base".to_string());
+    let mut direct_bytes = payload_class();
+    direct_bytes.name = "DirectBytes".to_string();
+    direct_bytes.fields = vec![("payload".to_string(), Type::Bytes)];
+    let mut nested_bytes = payload_class();
+    nested_bytes.name = "NestedBytes".to_string();
+    nested_bytes.fields = vec![("payloads".to_string(), Type::List(Box::new(Type::Bytes)))];
+    let module = module(
+        Vec::new(),
+        vec![supported, unsupported, direct_bytes, nested_bytes],
+    );
+
+    let owners = crate::structural_static_program_owners(&module);
+
+    assert!(owners.contains("Payload"));
+    assert!(!owners.contains("InheritedPayload"));
+    assert!(owners.contains("DirectBytes"));
+    assert!(!owners.contains("NestedBytes"));
+}
+
 fn module(functions: Vec<HirFunction>, classes: Vec<HirClass>) -> HirModule {
     HirModule {
         functions,

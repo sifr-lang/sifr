@@ -417,7 +417,7 @@ impl RustEmitter {
         self.body_items.push(RustItem::Fn {
             name: func.name.clone(),
             visibility,
-            type_params: Self::lower_function_type_params(func),
+            type_params: self.lower_function_type_params(func),
             params,
             ret: self.lower_function_return_type(func, is_generator),
             body: lowered_body,

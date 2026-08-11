@@ -1,0 +1,14 @@
+# fixture: static_program_arena_bridge
+# scenario-example: static_program_runtime
+
+[package]
+name = "static_program_runtime"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridges = ["src/bridges"]
+direct-crate-bindings = true

@@ -153,10 +153,11 @@ only. Remaining compiler-native stdlib glue is explicitly allowlisted in
 
 Rust interop Track A certification is complete. The active matrix
 `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
-currently has 21 supported rows, 15 bridge-supported rows, and 1
-unsupported-by-design row. The `structural_bridge_calls` and
-`bridge_version_field_removal` rows have passing positive and negative evidence
-and are included in the stable-claim inventory.
+currently has 21 supported rows, 17 bridge-supported rows, and 1
+unsupported-by-design row. The `structural_bridge_calls`,
+`static_program_arena_bridge`, and `bridge_version_field_removal` rows have
+passing positive and negative evidence and are included in the stable-claim
+inventory.
 
 ## Stdlib Rust Interop Adapter Policy
 

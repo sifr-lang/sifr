@@ -352,7 +352,8 @@ The one generated bridge contract covers:
 
 This section is the supported structural bridge contract.
 `structural_bridge_calls` has passing nested construction, projection, typed
-callback, and deliberate-rejection evidence. The companion
+callback, and deliberate-rejection evidence. `static_program_arena_bridge`
+adds passing static-program, compact-arena, and corrupt-envelope evidence. The companion
 `bridge_version_field_removal` row passes at the same boundary.
 
 Generated projects enable the `sifr_runtime/structural` Cargo feature when the
@@ -437,6 +438,33 @@ contract described here. `Any`, `Unknown`, an unspecialized type variable,
 functions, affine resources, and values containing unsupported borrowed or
 opaque members do not satisfy it. The compiler reports the unsupported member
 path at the declaration or specialization site.
+
+`bytes` has one structural encoding: a scalar byte buffer. The compiler supports
+that encoding for a direct record field. It rejects `bytes` inside a list, set,
+mapping, tuple, optional value, or generic type argument. It does not
+reinterpret nested `bytes` as a sequence of integers.
+
+`sifr.meta.StaticProgram` is the stricter compiler-owned bound for a structural
+call that requires retained const-specialization data. A concrete type satisfies
+this bound only when `@const_specialize` produced a verified value. There is no
+empty program, runtime compilation path, or fallback to `Structural`.
+
+The frontend hashes the declaring module, concrete owner, package module,
+specializer function, canonical structural shape, canonical program value, and
+structural-contract identity. Check and editor analysis retain this identity.
+Build and run also emit the canonical bytes and a sealed typed `StaticProgram<T>`
+envelope. The identity is part of the generated-project cache key. An unrelated
+declaration does not change it, but a relevant shape, metadata, callback, package,
+function, or program change does.
+
+The generated concrete type implements `StaticProgramType`. Package Rust code can
+borrow the program through that trait during the monomorphized call. Sifr code
+cannot construct, mutate, or name the Rust envelope. The envelope contains its
+format, structural contract, bridge contract, program identity, and concrete
+shape identity. A mismatch returns `StaticProgramEnvelopeError` before input data
+is processed. Package code compares the format and bridge contract against the
+exported `STATIC_PROGRAM_FORMAT_VERSION` and `STRUCTURAL_BRIDGE_CONTRACT_VERSION`
+constants. It does not copy private compiler literals.
 
 The marker makes the type variable legal only in these positions:
 
@@ -536,6 +564,10 @@ pub trait StructuralProject: StructuralType {
         visitor: &mut V,
     ) -> Result<(), V::Error>;
 }
+
+pub trait StaticProgramType: StructuralType + Sized + 'static {
+    fn static_program() -> &'static StaticProgram<Self>;
+}
 ```
 
 `structural_construct` is the sole public construction entry. It compares
@@ -589,6 +621,15 @@ negative path observes alias access fail after close, stable double-close state,
 and redacted poison state, while compiler diagnostics reject Sifr-side direct
 construction and reuse after owned close. This row uses no service-specific
 crate or package-specific compiler path.
+
+The `static_program_arena_bridge` row uses a synthetic external package and the
+unversioned manifest contract. One generic call reads its compiler-emitted
+program, consumes a `StructuralArena`, constructs a record, and projects the
+result. The record crosses integers, fixed integers, bytes, lists, and mappings.
+A separate arena test moves a 30-digit exact integer into `SifrInt` without
+narrowing. `StructuralArena::seal` checks the root, child indices, scalar
+payload kinds, and cycles before consumption. Scalars move once. Invalid arenas
+and corrupt program envelopes fail closed through typed errors.
 
 The leaf crate `sifr_structural_identity` is the single owner of identity
 encoding and hashing. It provides versioned primitive, unary-container,
@@ -694,7 +735,7 @@ no data-dependent `unwrap`, `expect`, or assertion.
 The interop build plan and cache identity include the compiler release,
 structural identity algorithm version, every concrete `ShapeIdentity`, required construct
 / project / callback modes, generated implementation digest, backend target and
-source digests, callback identities, panic strategy, target triple, features,
+source digests, static program identities, callback identities, panic strategy, target triple, features,
 and lock state. Source and installed packages materialize identical managed
 structural projections and are checked through the same probe. Package archives
 with missing/stale projections or a mismatched structural digest are rejected;
@@ -1753,6 +1794,7 @@ verification/areas/rust_interop/
     close_after_use/
     bridge_version_field_removal/
     structural_bridge_calls/
+    static_program_arena_bridge/
     panic_boundary/               # contract-only panic-to-error behavior
     panic_boundary_wrapper_emission/
     panic_abort_profile/          # contract-only abort-profile rejection

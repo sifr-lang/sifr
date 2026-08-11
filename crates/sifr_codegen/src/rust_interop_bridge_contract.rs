@@ -38,6 +38,7 @@ pub struct RustBridgeSignatureContract {
     pub params: Vec<RustBridgeParamContract>,
     pub return_type: RustBridgeTypeContract,
     pub structural_type_param: Option<String>,
+    pub static_program_type_param: bool,
     pub panic_error: RustBridgePanicErrorContract,
     pub span: ruff_text_size::TextRange,
 }
@@ -255,6 +256,7 @@ fn signature_contract(
         params,
         return_type,
         structural_type_param: function.structural_type_param.clone(),
+        static_program_type_param: function.static_program_type_param,
         panic_error,
         span: declaration.declaration.span,
     })
@@ -267,6 +269,7 @@ struct ModuleFunction {
     method_kind: Option<sifr_ir::MethodKind>,
     consumes_receiver: bool,
     structural_type_param: Option<String>,
+    static_program_type_param: bool,
 }
 
 pub(crate) struct ModuleCatalog {
@@ -302,6 +305,14 @@ impl ModuleCatalog {
                         })
                         .then(|| function.type_params.first().cloned())
                         .flatten(),
+                    static_program_type_param: module
+                        .type_param_bounds
+                        .get(&function.name)
+                        .is_some_and(|bounds| {
+                            bounds
+                                .values()
+                                .any(|values| values.as_slice() == ["StaticProgram"])
+                        }),
                 },
             );
         }
@@ -339,6 +350,7 @@ impl ModuleCatalog {
                             .first()
                             .is_some_and(|declaration| declaration.consumes_receiver),
                         structural_type_param: None,
+                        static_program_type_param: false,
                     },
                 );
             }

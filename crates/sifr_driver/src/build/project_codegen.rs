@@ -1,10 +1,11 @@
 use super::python_bridges::embedded_bridge_sources;
 use super::python_runtime::{inject_python_runtime_bootstrap, PackagePythonRuntime};
 use crate::diagnostics::{run_codegen_with_boundary, RenderedDiagnostic};
+use crate::frontend::FrontendCompiled;
 use crate::project::{
     assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path, ProjectLowering,
 };
-use sifr_codegen::{generate_rust_multi_with_metadata, StdlibCode};
+use sifr_codegen::{generate_rust_multi_with_metadata, generate_rust_with_stdlib, StdlibCode};
 use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
 use std::collections::{BTreeMap, HashSet};
@@ -40,16 +41,50 @@ impl GeneratedBinaryProject {
     }
 }
 
+pub(super) fn codegen_single_file_frontend(
+    frontend: &FrontendCompiled,
+) -> Result<sifr_codegen::CodegenResult, Vec<RenderedDiagnostic>> {
+    let static_programs = frontend.lowering_result.specialization_outputs.clone();
+    let mut generated = run_codegen_with_boundary(
+        "internal compiler panic during single-file code generation",
+        || generate_rust_with_stdlib(&frontend.lowering_result.module, &frontend.stdlib.code),
+    )
+    .map_err(|error| vec![*error])?;
+    generated.static_programs = static_programs;
+    if generated
+        .interop
+        .rust
+        .structural_identity_algorithm_version
+        .is_some()
+    {
+        generated.static_program_structural_owners =
+            sifr_codegen::structural_static_program_owners(&frontend.lowering_result.module);
+    }
+    Ok(generated)
+}
+
 pub(super) fn generated_single_file_binary_project(
-    codegen_result: sifr_codegen::CodegenResult,
+    mut codegen_result: sifr_codegen::CodegenResult,
 ) -> GeneratedBinaryProject {
+    let static_source = sifr_codegen::emit_static_specialization_programs(
+        &codegen_result.static_programs,
+        &codegen_result.static_program_structural_owners,
+    );
+    if !static_source.is_empty() {
+        codegen_result.rust_source = format!("{static_source}\n{}", codegen_result.rust_source);
+    }
+    let static_cache = sifr_codegen::static_program_cache_fragment(&codegen_result.static_programs);
+    let mut cache_key_fragment = None;
+    if !static_cache.is_empty() {
+        push_cache_key_fragment(&mut cache_key_fragment, "static-programs", &static_cache);
+    }
     GeneratedBinaryProject {
         main_rs: codegen_result.rust_source,
         support_modules: BTreeMap::new(),
         used_stdlib_modules: codegen_result.used_stdlib_modules,
         required_features: codegen_result.required_features,
         interop: codegen_result.interop,
-        cache_key_fragment: None,
+        cache_key_fragment,
         python_runtime: None,
     }
 }
@@ -60,9 +95,11 @@ pub(super) fn generated_project_binary_project(
 ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
     let ProjectLowering {
         hir_modules,
+        external_defs,
         compile_order,
         ..
     } = project_lowering;
+    let static_programs = external_defs.specialization_outputs;
     let module_refs: Vec<(&str, &HirModule)> = compile_order
         .iter()
         .filter_map(|module_name| {
@@ -71,11 +108,36 @@ pub(super) fn generated_project_binary_project(
                 .map(|module| (module_name.as_str(), module))
         })
         .collect();
-    let codegen_result = run_codegen_with_boundary(
+    let mut codegen_result = run_codegen_with_boundary(
         "internal compiler panic during project code generation",
         || generate_rust_multi_with_metadata(&module_refs, stdlib_code),
     )
     .map_err(|error| vec![*error])?;
+    let structural_programs = codegen_result
+        .interop
+        .rust
+        .structural_identity_algorithm_version
+        .is_some();
+    let mut static_cache = Vec::new();
+    for (module_name, outputs) in &static_programs {
+        let structural_owners = if structural_programs {
+            hir_modules
+                .get(module_name)
+                .map(sifr_codegen::structural_static_program_owners)
+                .unwrap_or_default()
+        } else {
+            Default::default()
+        };
+        let static_source =
+            sifr_codegen::emit_static_specialization_programs(outputs, &structural_owners);
+        if static_source.is_empty() {
+            continue;
+        }
+        if let Some(source) = codegen_result.rust_files.get_mut(module_name) {
+            *source = format!("{static_source}\n{source}");
+        }
+        static_cache.extend(outputs.iter().cloned());
+    }
 
     let main_rs = assemble_project_main_rs(&compile_order, &codegen_result.rust_files);
     let support_modules = ordered_non_main_module_names(&compile_order, &codegen_result.rust_files)
@@ -88,13 +150,19 @@ pub(super) fn generated_project_binary_project(
         })
         .collect();
 
+    let static_cache = sifr_codegen::static_program_cache_fragment(&static_cache);
+    let mut cache_key_fragment = None;
+    if !static_cache.is_empty() {
+        push_cache_key_fragment(&mut cache_key_fragment, "static-programs", &static_cache);
+    }
+
     Ok(GeneratedBinaryProject {
         main_rs,
         support_modules,
         used_stdlib_modules: codegen_result.used_stdlib_modules,
         required_features: codegen_result.required_features,
         interop: codegen_result.interop,
-        cache_key_fragment: None,
+        cache_key_fragment,
         python_runtime: None,
     })
 }

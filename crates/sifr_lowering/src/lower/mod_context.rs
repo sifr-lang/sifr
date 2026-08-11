@@ -40,6 +40,9 @@ pub(in crate::lower) struct LowerCtx {
     /// Whether the exact compiler-owned `sifr.meta.Structural` spelling was imported.
     pub(in crate::lower) canonical_structural_marker_imported: bool,
     pub(in crate::lower) local_structural_marker_declared: bool,
+    /// Whether the exact compiler-owned `sifr.meta.StaticProgram` spelling was imported.
+    pub(in crate::lower) canonical_static_program_marker_imported: bool,
+    pub(in crate::lower) local_static_program_marker_declared: bool,
     /// Class type definitions (name -> `Type::Class`)
     pub(in crate::lower) class_types: HashMap<String, Type>,
     /// Instance methods, keyed as `Class.method`, including imported metadata.
@@ -206,6 +209,8 @@ impl LowerCtx {
             json_integer_boundary_requests: Vec::new(),
             canonical_structural_marker_imported: false,
             local_structural_marker_declared: false,
+            canonical_static_program_marker_imported: false,
+            local_static_program_marker_declared: false,
             class_types: HashMap::new(),
             class_instance_methods: HashSet::new(),
             class_method_origins: HashMap::new(),

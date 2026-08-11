@@ -50,6 +50,12 @@ fn push_signature(out: &mut String, signature: &RustBridgeSignatureContract) {
             .as_deref()
             .unwrap_or("<none>"),
     );
+    out.push_str("|static-program=");
+    out.push_str(if signature.static_program_type_param {
+        "required"
+    } else {
+        "absent"
+    });
     out.push_str("|panic-error=");
     out.push_str(match signature.panic_error {
         crate::rust_interop_bridge_contract::RustBridgePanicErrorContract::None => "none",

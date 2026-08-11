@@ -25,7 +25,10 @@ fn resolve_named_bound_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
 }
 
 fn is_builtin_bound(name: &str) -> bool {
-    matches!(name, "Comparable" | "Addable" | "Hashable" | "Structural")
+    matches!(
+        name,
+        "Comparable" | "Addable" | "Hashable" | "Structural" | "StaticProgram"
+    )
 }
 
 fn is_known_bound_name(name: &str, ctx: &LowerCtx) -> bool {
@@ -105,32 +108,34 @@ fn type_satisfies_comparable_bound(ty: &Type, ctx: &LowerCtx) -> bool {
 }
 
 fn supports_structural_bridge_type(ty: &Type, ctx: &LowerCtx) -> bool {
-    supports_structural_bridge_type_inner(ty, ctx, &mut std::collections::HashSet::new())
+    supports_structural_bridge_type_inner(ty, ctx, &mut std::collections::HashSet::new(), false)
 }
 
 fn supports_structural_bridge_type_inner(
     ty: &Type,
     ctx: &LowerCtx,
     visiting: &mut std::collections::HashSet<(String, Vec<Type>)>,
+    direct_record_field: bool,
 ) -> bool {
     match ty.resolve_alias() {
         Type::Int | Type::FixedInt(_) | Type::Float | Type::Bool | Type::Str | Type::None => true,
+        Type::Bytes => direct_record_field,
         Type::TypeVar(name) => typevar_satisfies_spec(name, "Structural", ctx),
-        Type::List(value) => supports_structural_bridge_type_inner(value, ctx, visiting),
+        Type::List(value) => supports_structural_bridge_type_inner(value, ctx, visiting, false),
         Type::Set(value) => {
             supports_hash_key_in_context(value, ctx)
-                && supports_structural_bridge_type_inner(value, ctx, visiting)
+                && supports_structural_bridge_type_inner(value, ctx, visiting, false)
         }
         Type::Dict(key, value) => {
             supports_hash_key_in_context(key, ctx)
-                && supports_structural_bridge_type_inner(key, ctx, visiting)
-                && supports_structural_bridge_type_inner(value, ctx, visiting)
+                && supports_structural_bridge_type_inner(key, ctx, visiting, false)
+                && supports_structural_bridge_type_inner(value, ctx, visiting, false)
         }
         Type::Tuple(values) => {
             values.len() <= 4
                 && values
                     .iter()
-                    .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting))
+                    .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting, false))
         }
         Type::Union(values)
             if values.len() == 2
@@ -141,7 +146,7 @@ fn supports_structural_bridge_type_inner(
             values
                 .iter()
                 .filter(|value| !matches!(value.resolve_alias(), Type::None))
-                .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting))
+                .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting, false))
         }
         Type::Class {
             identity,
@@ -167,13 +172,25 @@ fn supports_structural_bridge_type_inner(
             }
             let supported = type_args
                 .iter()
-                .chain(fields.iter().map(|(_, field)| field))
-                .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting));
+                .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting, false))
+                && fields.iter().all(|(_, field)| {
+                    supports_structural_bridge_type_inner(field, ctx, visiting, true)
+                });
             visiting.remove(&key);
             supported
         }
         _ => false,
     }
+}
+
+fn supports_static_program_type(ty: &Type, ctx: &LowerCtx) -> bool {
+    let Type::Class { name, .. } = ty.resolve_alias() else {
+        return false;
+    };
+    ctx.specialization_requests
+        .iter()
+        .any(|request| request.owner == *name)
+        && supports_structural_bridge_type(ty, ctx)
 }
 
 fn contains_declared_generic_class(
@@ -414,6 +431,7 @@ pub(in crate::lower) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &Lower
         "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str | Type::BigInt),
         "Hashable" => supports_hash_key_in_context(ty, ctx),
         "Structural" => supports_structural_bridge_type(ty, ctx),
+        "StaticProgram" => supports_static_program_type(ty, ctx),
         _ => resolve_named_bound_type(bound, ctx)
             .is_some_and(|bound_ty| ty.is_assignable_to(&bound_ty)),
     }

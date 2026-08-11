@@ -165,6 +165,7 @@ fn optional_integer(expr: &Expr) -> Option<Option<num_bigint::BigInt>> {
 }
 
 fn collect_specialization_requests(decorators: &[Decorator], owner: &str, ctx: &mut LowerCtx) {
+    let mut seen_request = false;
     for decorator in decorators {
         let Expr::Call(call) = &decorator.expression else {
             continue;
@@ -173,6 +174,17 @@ fn collect_specialization_requests(decorators: &[Decorator], owner: &str, ctx: &
         {
             continue;
         }
+        if seen_request {
+            malformed(
+                ctx,
+                "unknown",
+                "duplicate_specialization_request",
+                "a class may declare exactly one @const_specialize decorator",
+                call.range(),
+            );
+            continue;
+        }
+        seen_request = true;
         if call.arguments.args.len() != 2 || !call.arguments.keywords.is_empty() {
             malformed(
                 ctx,
@@ -550,6 +562,22 @@ def inspect(value: int) -> int:
         assert_eq!(diagnostics.len(), 2);
         assert!(diagnostics.iter().all(|diagnostic| {
             diagnostic.code == Some(DiagnosticCode::META_MALFORMED_DECLARATION)
+        }));
+    }
+
+    #[test]
+    fn rejects_duplicate_const_specialization_decorators() {
+        let source = r#"
+@const_specialize("fixture.first", "derive")
+@const_specialize("fixture.second", "derive")
+class Model:
+    value: int
+"#;
+        let parsed = parse_module(source).expect("fixture parses");
+        let diagnostics = errors(lower_module(parsed.suite()));
+        assert!(diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == Some(DiagnosticCode::META_MALFORMED_DECLARATION)
+                && diagnostic.message.contains("exactly one @const_specialize")
         }));
     }
 }

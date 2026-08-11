@@ -5,6 +5,10 @@ class Structural:
     pass
 
 
+class StaticProgram:
+    pass
+
+
 class ConstIssueTemplate:
     package: str
     reason_code: str

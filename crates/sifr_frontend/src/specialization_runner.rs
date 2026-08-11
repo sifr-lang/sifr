@@ -56,6 +56,7 @@ pub(crate) fn run_specializations(
             continue;
         }
         let shape = describe_type(module_name, &target_type, result).to_const_value();
+        let canonical_shape = crate::structural_shape::canonical_value(&shape);
         let Some(functions) = external_defs.const_functions.get(&request.package_module) else {
             errors.push(malformed(
                 &request.package_module,
@@ -115,13 +116,28 @@ pub(crate) fn run_specializations(
             Err(diagnostics) => errors.extend(diagnostics),
             Ok(validated) => {
                 if let Some(value) = &validated.value {
+                    let canonical_value = crate::structural_shape::canonical_value(value);
+                    let structural_contract_version = sifr_structural_identity::ALGORITHM_VERSION;
+                    let program_identity = sifr_structural_identity::static_program_identity(
+                        structural_contract_version,
+                        [
+                            ("module", module_name.as_bytes()),
+                            ("owner", request.owner.as_bytes()),
+                            ("package", request.package_module.as_bytes()),
+                            ("function", request.function.as_bytes()),
+                            ("shape", canonical_shape.as_bytes()),
+                            ("value", canonical_value.as_bytes()),
+                        ],
+                    );
                     result
                         .specialization_outputs
                         .push(StaticSpecializationOutput {
                             owner: request.owner.clone(),
                             package_module: request.package_module.clone(),
                             function: request.function.clone(),
-                            canonical_value: crate::structural_shape::canonical_value(value),
+                            canonical_value,
+                            program_identity: *program_identity.as_bytes(),
+                            structural_contract_version,
                         });
                 }
                 for diagnostic in validated.diagnostics {
@@ -462,6 +478,31 @@ class Model:
         assert!(target.specialization_outputs[0]
             .canonical_value
             .contains("target.Model"));
+        assert_ne!(target.specialization_outputs[0].program_identity, [0; 32]);
+        assert_eq!(
+            target.specialization_outputs[0].structural_contract_version,
+            sifr_structural_identity::ALGORITHM_VERSION
+        );
+        let unrelated = compile(
+            "target",
+            &format!("{TARGET}\n\ndef unrelated() -> int:\n    return 9\n"),
+            &external_defs,
+        )
+        .expect("unrelated declaration compiles");
+        assert_eq!(
+            target.specialization_outputs[0].program_identity,
+            unrelated.specialization_outputs[0].program_identity
+        );
+        let changed = compile(
+            "target",
+            &TARGET.replace("value: int", "value: str"),
+            &external_defs,
+        )
+        .expect("changed shape specializes");
+        assert_ne!(
+            target.specialization_outputs[0].program_identity,
+            changed.specialization_outputs[0].program_identity
+        );
         let cli = warning_diagnostics(None, &target.warnings);
         let editor = warning_diagnostics(
             Some(FrontendSourceContext {

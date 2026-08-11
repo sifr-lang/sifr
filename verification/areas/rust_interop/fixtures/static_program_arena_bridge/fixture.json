@@ -1,0 +1,41 @@
+{
+  "capability": "compiler-emitted static program with a validated structural arena",
+  "diagnostic_family": "SIFR-RUST-TYPE-0001",
+  "evidence": {
+    "negative": {
+      "expected_result": "pass",
+      "id": "corrupt_static_program_envelope_rejected",
+      "path": "negative/corrupt_static_program_envelope_rejected.sifr",
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_static_program_support.rs",
+        "test_name": "test_corrupt_static_program_envelope_rejected"
+      }
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "static_program_constructs_and_projects_arena",
+      "path": "positive/static_program_constructs_and_projects_arena.sifr",
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_static_program_support.rs",
+        "test_name": "test_static_program_constructs_and_projects_arena"
+      }
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {},
+  "id": "static_program_arena_bridge",
+  "required_crates": [],
+  "scenario_examples": {
+    "static_program_runtime": "examples/static_program_runtime"
+  },
+  "schema_version": 2,
+  "tier": 2
+}

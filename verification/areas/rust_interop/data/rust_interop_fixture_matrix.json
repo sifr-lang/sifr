@@ -162,6 +162,15 @@
       "negative_evidence": {"id": "shape_callback_and_lifetime_mismatches_rejected", "status": "passing"}
     },
     {
+      "id": "static_program_arena_bridge",
+      "tier": 2,
+      "capability": "compiler-emitted static program with a validated structural arena",
+      "required_crates": [],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "static_program_constructs_and_projects_arena", "status": "passing"},
+      "negative_evidence": {"id": "corrupt_static_program_envelope_rejected", "status": "passing"}
+    },
+    {
       "id": "panic_boundary",
       "tier": 2,
       "capability": "panic-to-error behavior",

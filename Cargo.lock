@@ -7059,6 +7059,7 @@ dependencies = [
  "sifr_diagnostics",
  "sifr_lowering",
  "sifr_source",
+ "sifr_structural_identity",
  "sifr_syntax",
  "sifr_type_system",
 ]

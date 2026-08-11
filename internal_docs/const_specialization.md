@@ -61,6 +61,16 @@ closed-value encoding; project compilation exports it with the declaring module 
 stages can consume the static result without executing package code again. Failed outcomes never
 produce retained static data.
 
+Each retained result also has one static-program identity. The hash includes the declaring module,
+concrete owner, package module, specializer function, canonical structural shape, canonical result,
+and structural-contract identity. Check and editor analysis retain this identity. Build and run emit
+the canonical bytes. The generated-project cache key includes the same identity.
+
+For a structural Rust call with the compiler-owned `sifr.meta.StaticProgram` bound, the compiler
+also emits a sealed typed `StaticProgram[T]` envelope and implements `StaticProgramType` for the
+concrete specialized type. This bound requires a produced specialization result. It has no empty
+program, runtime compiler, compatibility path, or fallback to the ordinary `Structural` bound.
+
 ## Integer boundary verification
 
 `JsonIntegerBoundaryDescriptor` verification fails closed when the profile is missing, the static

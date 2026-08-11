@@ -97,6 +97,7 @@ fn signature(return_type: RustBridgeTypeContract) -> RustBridgeSignatureContract
         params: Vec::new(),
         return_type,
         structural_type_param: None,
+        static_program_type_param: false,
         panic_error: sifr_codegen::RustBridgePanicErrorContract::None,
         span: TextRange::default(),
     }
@@ -135,12 +136,15 @@ fn structural_probe_normalizes_backend_display_errors_without_erasing_ok_type() 
         unsupported_reason: None,
     });
     signature.structural_type_param = Some("T".to_string());
+    signature.static_program_type_param = true;
 
     let source = structural_signature_probe_source(&signature, "bridge::roundtrip", "T");
 
     assert!(source.contains("let _: Result<T, String>"));
     assert!(source.contains("bridge::roundtrip::<T>()"));
     assert!(source.contains(".map_err(|error| error.to_string())"));
+    assert!(source
+        .contains("StructuralProject + ::sifr_runtime::interop::structural::StaticProgramType"));
 }
 
 #[test]

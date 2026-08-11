@@ -33,6 +33,9 @@ Review artifacts:
 - [`native-pydantic-sifr-ps2-claude-opus-review-pass-1.md`](../../reviews/active/native-pydantic-sifr-ps2-claude-opus-review-pass-1.md)
 - [`native-pydantic-sifr-ps2-claude-opus-review-pass-2.md`](../../reviews/active/native-pydantic-sifr-ps2-claude-opus-review-pass-2.md)
 - [`native-pydantic-sifr-ps2-claude-opus-review-pass-3.md`](../../reviews/active/native-pydantic-sifr-ps2-claude-opus-review-pass-3.md)
+- [`native-pydantic-sifr-ps3-claude-opus-review-pass-1.md`](../../reviews/active/native-pydantic-sifr-ps3-claude-opus-review-pass-1.md)
+- [`native-pydantic-sifr-ps3-claude-opus-review-pass-2.md`](../../reviews/active/native-pydantic-sifr-ps3-claude-opus-review-pass-2.md)
+- [`native-pydantic-sifr-ps3-claude-opus-review-pass-3.md`](../../reviews/active/native-pydantic-sifr-ps3-claude-opus-review-pass-3.md)
 
 Milestone delivery records:
 
@@ -123,7 +126,9 @@ Milestone delivery records:
 - `milestone_ps_3` is the next sequential work.
 - Deferred follow-up work: define an explicit typed package-side structural-shape
   contract before `ps_4`; align registry representative-fixture paths with diagnostic
-  baselines; audit pre-epoch fractional timestamp reconstruction; disambiguate imported
+  baselines; align the pre-existing lowering and codegen structural-eligibility
+  predicates for fixed-width platform integers, metadata, and imported classes;
+  audit pre-epoch fractional timestamp reconstruction; disambiguate imported
   structural metadata/default lookup from colliding local names; accept large negative
   const bounds in integer-boundary decorators; and keep shared floor-arithmetic semantics
   from drifting between frontend const evaluation and runtime execution.
@@ -2205,6 +2210,29 @@ untyped callbacks.
   contracts while consuming the already-passing unversioned-manifest contract.
 - Prove exact integer, bytes, collection and error crossings.
 - Update Rust interop architecture and verification.
+
+Implementation checklist:
+
+- [x] Give each retained const-specialization result one deterministic program
+  identity. Include its owner, package function, canonical value, structural
+  contract, and declaration metadata in that identity.
+- [x] Emit immutable program bytes and a sealed typed program envelope during
+  build. Retain the same identity during check and editor analysis.
+- [x] Include the program identity in generated-project cache keys. Prove that
+  relevant program inputs invalidate the key and unrelated declarations do not.
+- [x] Add reusable sealed document and validated-arena runtime types. Use
+  checked compact node indices and one move-only structural source.
+- [x] Add one synthetic external package that consumes the unversioned Rust
+  manifest contract. It must use a generic structural signature probe and one
+  monomorphized executor call.
+- [x] Prove exact integers, fixed integers, bytes, lists, mappings, records,
+  moved scalar payloads, typed errors, corrupt envelopes, and invalid indices.
+- [x] Prove source and installed package parity, deterministic generated output,
+  cache-key behavior, and cleanup after success and failure.
+- [x] Register passing positive and negative Rust-interop evidence. Update the
+  compatibility matrix, fixture matrix, tiers, and durable architecture.
+- [ ] Run targeted tests, open the milestone pull request, and obtain an exact
+  candidate `SATISFIED` Opus review before the create-PR and merge gates.
 
 Exit gate: the merged and certified structural Rust bridge contract lets a
 synthetic schema executor return a validated arena, construct a typed Sifr

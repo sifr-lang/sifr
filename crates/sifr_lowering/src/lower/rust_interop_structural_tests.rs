@@ -9,19 +9,134 @@ fn structural_externals() -> ExternalDefs {
     let mut externals = ExternalDefs::default();
     externals.classes.insert(
         "sifr.meta".to_string(),
-        HashMap::from([(
-            "Structural".to_string(),
-            Type::Class {
-                identity: Some("sifr.meta.Structural".to_string()),
-                type_args: Vec::new(),
-                name: "Structural".to_string(),
-                fields: Vec::new(),
-                methods: Vec::new(),
-                parent_class: None,
-            },
-        )]),
+        HashMap::from([
+            (
+                "Structural".to_string(),
+                Type::Class {
+                    identity: Some("sifr.meta.Structural".to_string()),
+                    type_args: Vec::new(),
+                    name: "Structural".to_string(),
+                    fields: Vec::new(),
+                    methods: Vec::new(),
+                    parent_class: None,
+                },
+            ),
+            (
+                "StaticProgram".to_string(),
+                Type::Class {
+                    identity: Some("sifr.meta.StaticProgram".to_string()),
+                    type_args: Vec::new(),
+                    name: "StaticProgram".to_string(),
+                    fields: Vec::new(),
+                    methods: Vec::new(),
+                    parent_class: None,
+                },
+            ),
+        ]),
     );
     externals
+}
+
+#[test]
+fn rust_interop_accepts_compiler_owned_static_program_bound() {
+    let source = r"
+from sifr.meta import StaticProgram
+
+class CodecError(Error):
+    message: str
+
+@rust.structural
+@rust(bridge.codec.decode)
+def decode[T: StaticProgram]() -> Result[T, CodecError | RustPanicError]: ...
+";
+    let parsed = parse_module(source).expect("source should parse");
+    let module = lower_module_with_externals(parsed.suite(), &structural_externals())
+        .map(|result| result.module)
+        .expect("static program bound should lower");
+    assert_eq!(module.type_param_bounds["decode"]["T"], ["StaticProgram"]);
+}
+
+#[test]
+fn static_program_bound_requires_a_structural_specialization_owner() {
+    let eligible = r#"
+from sifr.meta import StaticProgram
+
+@const_specialize("package.schema", "derive")
+class Record:
+    value: str
+
+def retain[T: StaticProgram](value: T) -> T:
+    return value
+
+def use() -> Record:
+    return retain(Record("ok"))
+"#;
+    let parsed = parse_module(eligible).expect("source should parse");
+    lower_module_with_externals(parsed.suite(), &structural_externals())
+        .expect("specialized structural class should satisfy StaticProgram");
+
+    let direct_bytes = eligible
+        .replace("value: str", "value: bytes")
+        .replace("Record(\"ok\")", "Record(b\"ok\")");
+    let parsed = parse_module(&direct_bytes).expect("source should parse");
+    lower_module_with_externals(parsed.suite(), &structural_externals())
+        .expect("a direct bytes field has one supported scalar encoding");
+
+    let nested_bytes = eligible
+        .replace("value: str", "value: list[bytes]")
+        .replace("Record(\"ok\")", "Record([b\"ok\"])");
+    let parsed = parse_module(&nested_bytes).expect("source should parse");
+    let errors = match lower_module_with_externals(parsed.suite(), &structural_externals()) {
+        Ok(_) => panic!("nested bytes must not select the sequence encoding"),
+        Err(errors) => errors,
+    };
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'StaticProgram'")
+    }));
+
+    let ineligible = eligible.replace("@const_specialize(\"package.schema\", \"derive\")\n", "");
+    let parsed = parse_module(&ineligible).expect("source should parse");
+    let errors = match lower_module_with_externals(parsed.suite(), &structural_externals()) {
+        Ok(_) => panic!("ordinary class must not receive a static-program fallback"),
+        Err(errors) => errors,
+    };
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'StaticProgram'")
+    }));
+
+    let unsupported = r#"
+from sifr.meta import StaticProgram
+
+class Base:
+    base: str
+
+@const_specialize("package.schema", "derive")
+class Record(Base):
+    value: str
+
+def retain[T: StaticProgram](value: T) -> T:
+    return value
+
+def use(value: Record) -> Record:
+    return retain(value)
+"#;
+    let parsed = parse_module(unsupported).expect("source should parse");
+    let errors = match lower_module_with_externals(parsed.suite(), &structural_externals()) {
+        Ok(_) => panic!("unsupported specialization owner must fail before Rust emission"),
+        Err(errors) => errors,
+    };
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'StaticProgram'")
+    }));
 }
 
 fn lower_ok(source: &str) -> HirModule {

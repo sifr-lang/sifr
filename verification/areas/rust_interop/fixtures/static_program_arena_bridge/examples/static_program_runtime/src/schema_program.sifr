@@ -1,0 +1,31 @@
+class ProgramIssueArgs:
+    problem: str
+
+
+class ProgramIssue:
+    package: str
+    reason_code: str
+    severity: str
+    arguments: ProgramIssueArgs
+    notes: list[str]
+
+
+class ProgramOutcome:
+    status: str
+    value: str | None
+    issues: list[ProgramIssue]
+
+
+@const_eval
+def derive(shape: dict[str, str]) -> ProgramOutcome:
+    identity: str | None = shape["canonical_identity"]
+    if identity is None:
+        issue: ProgramIssue = ProgramIssue(
+            "fixture.static_program",
+            "missing_identity",
+            "fatal",
+            ProgramIssueArgs("shape has no canonical identity"),
+            [],
+        )
+        return ProgramOutcome("failed", None, [issue])
+    return ProgramOutcome("produced", identity, [])
