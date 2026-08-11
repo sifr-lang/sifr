@@ -1,15 +1,13 @@
 use sifr_ir::StaticSpecializationOutput;
 use sifr_type_system::source_class_rust_name;
+use std::collections::BTreeSet;
 use std::fmt::Write as _;
-
-const STATIC_DATA_FORMAT_VERSION: u32 = 1;
-const STRUCTURAL_BRIDGE_CONTRACT_VERSION: u32 = 1;
 
 /// Emits deterministic immutable bytes for every retained package specialization.
 #[must_use]
 pub fn emit_static_specialization_programs(
     outputs: &[StaticSpecializationOutput],
-    structural_interop_enabled: bool,
+    structural_owners: &BTreeSet<String>,
 ) -> String {
     let mut ordered = outputs.to_vec();
     ordered.sort_by(|left, right| {
@@ -32,7 +30,7 @@ pub fn emit_static_specialization_programs(
             "#[doc(hidden)]\npub(crate) const __SIFR_STATIC_PROGRAM_IDENTITY_{suffix}: [u8; 32] = {:?};",
             output.program_identity
         );
-        if structural_interop_enabled {
+        if structural_owners.contains(&output.owner) {
             let owner = source_class_rust_name(&output.owner);
             let identity = output
                 .program_identity
@@ -42,7 +40,7 @@ pub fn emit_static_specialization_programs(
                 .join(", ");
             let _ = writeln!(
                 out,
-                "#[doc(hidden)]\npub(crate) static __SIFR_STATIC_PROGRAM_{suffix}: ::std::sync::LazyLock<::sifr_runtime::interop::structural::StaticProgram<{owner}>> = ::std::sync::LazyLock::new(|| {{\n    let identity = ::sifr_runtime::interop::structural::StaticProgramIdentity::from_bytes([{identity}]);\n    let shape = <{owner} as ::sifr_runtime::interop::structural::StructuralType>::shape_identity();\n    let header = ::sifr_runtime::interop::structural::StaticProgramHeader::__from_compiler({STATIC_DATA_FORMAT_VERSION}, {}, {STRUCTURAL_BRIDGE_CONTRACT_VERSION}, identity, shape, ::sifr_runtime::interop::__generated_glue::token());\n    ::sifr_runtime::interop::structural::StaticProgram::__from_compiler(header, __SIFR_STATIC_PROGRAM_BYTES_{suffix}, ::sifr_runtime::interop::__generated_glue::token())\n}});",
+                "#[doc(hidden)]\npub(crate) static __SIFR_STATIC_PROGRAM_{suffix}: ::std::sync::LazyLock<::sifr_runtime::interop::structural::StaticProgram<{owner}>> = ::std::sync::LazyLock::new(|| {{\n    let identity = ::sifr_runtime::interop::structural::StaticProgramIdentity::from_bytes([{identity}]);\n    let shape = <{owner} as ::sifr_runtime::interop::structural::StructuralType>::shape_identity();\n    let header = ::sifr_runtime::interop::structural::StaticProgramHeader::__from_compiler(::sifr_runtime::interop::structural::STATIC_PROGRAM_FORMAT_VERSION, {}, ::sifr_runtime::interop::structural::STRUCTURAL_BRIDGE_CONTRACT_VERSION, identity, shape, ::sifr_runtime::interop::__generated_glue::token());\n    ::sifr_runtime::interop::structural::StaticProgram::__from_compiler(header, __SIFR_STATIC_PROGRAM_BYTES_{suffix}, ::sifr_runtime::interop::__generated_glue::token())\n}});",
                 output.structural_contract_version
             );
             let _ = writeln!(
@@ -54,15 +52,33 @@ pub fn emit_static_specialization_programs(
     out
 }
 
+/// Returns only specialization owners that can receive all structural bridge implementations.
+#[must_use]
+pub fn structural_static_program_owners(module: &sifr_ir::HirModule) -> BTreeSet<String> {
+    module
+        .classes
+        .iter()
+        .filter(|class| crate::structural_impl_codegen::structural_record_supported(class, module))
+        .map(|class| class.name.clone())
+        .collect()
+}
+
 #[must_use]
 pub fn static_program_cache_fragment(outputs: &[StaticSpecializationOutput]) -> String {
     let mut ordered = outputs.to_vec();
     ordered.sort_by(|left, right| {
-        (&left.owner, &left.package_module, &left.function).cmp(&(
-            &right.owner,
-            &right.package_module,
-            &right.function,
-        ))
+        (
+            &left.owner,
+            &left.package_module,
+            &left.function,
+            left.program_identity,
+        )
+            .cmp(&(
+                &right.owner,
+                &right.package_module,
+                &right.function,
+                right.program_identity,
+            ))
     });
     let mut out = String::new();
     for output in ordered {
@@ -123,10 +139,20 @@ mod tests {
 
     #[test]
     fn emission_contains_static_bytes_identity_and_typed_envelope() {
-        let emitted = emit_static_specialization_programs(&[output(7)], true);
+        let emitted = emit_static_specialization_programs(
+            &[output(7)],
+            &BTreeSet::from(["Record".to_string()]),
+        );
         assert!(emitted.contains("static __SIFR_STATIC_PROGRAM_BYTES_RECORD_SCHEMA_PACKAGE_DERIVE"));
         assert!(emitted.contains("StaticProgram<Record>"));
         assert!(emitted.contains("StaticProgramIdentity::from_bytes([7, 7"));
+    }
+
+    #[test]
+    fn ineligible_owner_keeps_static_bytes_without_typed_structural_impl() {
+        let emitted = emit_static_specialization_programs(&[output(7)], &BTreeSet::new());
+        assert!(emitted.contains("__SIFR_STATIC_PROGRAM_BYTES_"));
+        assert!(!emitted.contains("impl ::sifr_runtime::interop::structural::StaticProgramType"));
     }
 
     #[test]
@@ -138,6 +164,10 @@ mod tests {
         assert_ne!(
             static_program_cache_fragment(&[output(7)]),
             static_program_cache_fragment(&[output(8)])
+        );
+        assert_eq!(
+            static_program_cache_fragment(&[output(7), output(8)]),
+            static_program_cache_fragment(&[output(8), output(7)])
         );
     }
 

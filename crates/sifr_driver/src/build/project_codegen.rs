@@ -51,20 +51,24 @@ pub(super) fn codegen_single_file_frontend(
     )
     .map_err(|error| vec![*error])?;
     generated.static_programs = static_programs;
+    if generated
+        .interop
+        .rust
+        .structural_identity_algorithm_version
+        .is_some()
+    {
+        generated.static_program_structural_owners =
+            sifr_codegen::structural_static_program_owners(&frontend.lowering_result.module);
+    }
     Ok(generated)
 }
 
 pub(super) fn generated_single_file_binary_project(
     mut codegen_result: sifr_codegen::CodegenResult,
 ) -> GeneratedBinaryProject {
-    let structural_programs = codegen_result
-        .interop
-        .rust
-        .structural_identity_algorithm_version
-        .is_some();
     let static_source = sifr_codegen::emit_static_specialization_programs(
         &codegen_result.static_programs,
-        structural_programs,
+        &codegen_result.static_program_structural_owners,
     );
     if !static_source.is_empty() {
         codegen_result.rust_source = format!("{static_source}\n{}", codegen_result.rust_source);
@@ -116,8 +120,16 @@ pub(super) fn generated_project_binary_project(
         .is_some();
     let mut static_cache = Vec::new();
     for (module_name, outputs) in &static_programs {
+        let structural_owners = if structural_programs {
+            hir_modules
+                .get(module_name)
+                .map(sifr_codegen::structural_static_program_owners)
+                .unwrap_or_default()
+        } else {
+            Default::default()
+        };
         let static_source =
-            sifr_codegen::emit_static_specialization_programs(outputs, structural_programs);
+            sifr_codegen::emit_static_specialization_programs(outputs, &structural_owners);
         if static_source.is_empty() {
             continue;
         }

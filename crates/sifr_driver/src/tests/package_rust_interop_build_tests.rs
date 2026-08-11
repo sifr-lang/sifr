@@ -2,7 +2,6 @@ use super::*;
 #[path = "package_rust_interop_test_support.rs"]
 mod test_support;
 use test_support::*;
-
 #[path = "package_rust_interop_advanced_data_support.rs"]
 mod advanced_data_support;
 #[path = "package_rust_interop_backend_ecosystem_support.rs"]

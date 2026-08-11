@@ -87,6 +87,34 @@ def use() -> Record:
                 .message
                 .contains("does not implement protocol 'StaticProgram'")
     }));
+
+    let unsupported = r#"
+from sifr.meta import StaticProgram
+
+class Base:
+    base: str
+
+@const_specialize("package.schema", "derive")
+class Record(Base):
+    value: str
+
+def retain[T: StaticProgram](value: T) -> T:
+    return value
+
+def use(value: Record) -> Record:
+    return retain(value)
+"#;
+    let parsed = parse_module(unsupported).expect("source should parse");
+    let errors = match lower_module_with_externals(parsed.suite(), &structural_externals()) {
+        Ok(_) => panic!("unsupported specialization owner must fail before Rust emission"),
+        Err(errors) => errors,
+    };
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'StaticProgram'")
+    }));
 }
 
 fn lower_ok(source: &str) -> HirModule {

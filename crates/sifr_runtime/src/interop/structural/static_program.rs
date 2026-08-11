@@ -5,6 +5,8 @@ use super::{ShapeIdentity, StaticProgramIdentity};
 use crate::interop::GeneratedGlueToken;
 
 pub const STATIC_PROGRAM_ENVELOPE_VERSION: u32 = 1;
+pub const STATIC_PROGRAM_FORMAT_VERSION: u32 = 1;
+pub const STRUCTURAL_BRIDGE_CONTRACT_VERSION: u32 = 1;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct StaticProgramHeader {

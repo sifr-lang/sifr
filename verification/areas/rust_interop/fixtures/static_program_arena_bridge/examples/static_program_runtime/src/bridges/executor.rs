@@ -6,7 +6,8 @@ use sifr_runtime::interop::structural::{
     structural_construct, ArenaNode, NodeId, StaticProgramType, StructuralConstruct,
     StructuralContractError, StructuralEdge, StructuralEdgeKind, StructuralEnter, StructuralKind,
     StructuralNodeEdge, StructuralProject, StructuralScalar, StructuralScalarRef,
-    StructuralVisitor, VisitControl,
+    StructuralVisitor, VisitControl, STATIC_PROGRAM_FORMAT_VERSION,
+    STRUCTURAL_BRIDGE_CONTRACT_VERSION,
 };
 use sifr_runtime::interop::{Handle, HandleStateError};
 
@@ -155,9 +156,9 @@ where
     let program = T::static_program();
     let header = program.header();
     program.verify_envelope(
-        header.format_version(),
+        STATIC_PROGRAM_FORMAT_VERSION,
         header.structural_contract_version(),
-        header.bridge_contract_version(),
+        STRUCTURAL_BRIDGE_CONTRACT_VERSION,
         header.identity(),
         T::shape_identity(),
     )?;
@@ -189,9 +190,9 @@ where
     let program = T::static_program();
     let header = program.header();
     if let Err(error) = program.verify_envelope(
-        header.format_version().saturating_add(1),
+        STATIC_PROGRAM_FORMAT_VERSION.saturating_add(1),
         header.structural_contract_version(),
-        header.bridge_contract_version(),
+        STRUCTURAL_BRIDGE_CONTRACT_VERSION,
         header.identity(),
         T::shape_identity(),
     ) {

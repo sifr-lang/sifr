@@ -241,6 +241,27 @@ mod tests {
     }
 
     #[test]
+    fn sealed_arena_rejects_a_second_scalar_move() {
+        let mut arena = StructuralArena::seal(
+            primitive("str"),
+            NodeId::new(0),
+            vec![ArenaNode::scalar(
+                StructuralKind::String,
+                StructuralScalar::String("owned".to_string()),
+            )],
+        )
+        .expect("valid arena");
+        assert!(matches!(
+            arena.take_scalar(NodeId::new(0)),
+            Ok(StructuralScalar::String(value)) if value == "owned"
+        ));
+        assert_eq!(
+            arena.take_scalar(NodeId::new(0)),
+            Err(StructuralContractError::AlreadyMoved)
+        );
+    }
+
+    #[test]
     fn sealed_arena_preserves_exact_integer_without_narrowing() {
         let exact = SifrInt::parse_decimal(
             "123456789012345678901234567890",

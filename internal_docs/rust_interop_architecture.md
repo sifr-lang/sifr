@@ -457,7 +457,9 @@ borrow the program through that trait during the monomorphized call. Sifr code
 cannot construct, mutate, or name the Rust envelope. The envelope contains its
 format, structural contract, bridge contract, program identity, and concrete
 shape identity. A mismatch returns `StaticProgramEnvelopeError` before input data
-is processed.
+is processed. Package code compares the format and bridge contract against the
+exported `STATIC_PROGRAM_FORMAT_VERSION` and `STRUCTURAL_BRIDGE_CONTRACT_VERSION`
+constants. It does not copy private compiler literals.
 
 The marker makes the type variable legal only in these positions:
 
