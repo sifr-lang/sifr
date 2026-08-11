@@ -25,7 +25,10 @@ fn resolve_named_bound_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
 }
 
 fn is_builtin_bound(name: &str) -> bool {
-    matches!(name, "Comparable" | "Addable" | "Hashable" | "Structural")
+    matches!(
+        name,
+        "Comparable" | "Addable" | "Hashable" | "Structural" | "StaticProgram"
+    )
 }
 
 fn is_known_bound_name(name: &str, ctx: &LowerCtx) -> bool {
@@ -114,7 +117,13 @@ fn supports_structural_bridge_type_inner(
     visiting: &mut std::collections::HashSet<(String, Vec<Type>)>,
 ) -> bool {
     match ty.resolve_alias() {
-        Type::Int | Type::FixedInt(_) | Type::Float | Type::Bool | Type::Str | Type::None => true,
+        Type::Int
+        | Type::FixedInt(_)
+        | Type::Float
+        | Type::Bool
+        | Type::Str
+        | Type::Bytes
+        | Type::None => true,
         Type::TypeVar(name) => typevar_satisfies_spec(name, "Structural", ctx),
         Type::List(value) => supports_structural_bridge_type_inner(value, ctx, visiting),
         Type::Set(value) => {
@@ -174,6 +183,16 @@ fn supports_structural_bridge_type_inner(
         }
         _ => false,
     }
+}
+
+fn supports_static_program_type(ty: &Type, ctx: &LowerCtx) -> bool {
+    let Type::Class { name, .. } = ty.resolve_alias() else {
+        return false;
+    };
+    ctx.specialization_requests
+        .iter()
+        .any(|request| request.owner == *name)
+        && supports_structural_bridge_type(ty, ctx)
 }
 
 fn contains_declared_generic_class(
@@ -414,6 +433,7 @@ pub(in crate::lower) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &Lower
         "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str | Type::BigInt),
         "Hashable" => supports_hash_key_in_context(ty, ctx),
         "Structural" => supports_structural_bridge_type(ty, ctx),
+        "StaticProgram" => supports_static_program_type(ty, ctx),
         _ => resolve_named_bound_type(bound, ctx)
             .is_some_and(|bound_ty| ty.is_assignable_to(&bound_ty)),
     }

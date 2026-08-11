@@ -1,0 +1,156 @@
+use sifr_ir::StaticSpecializationOutput;
+use sifr_type_system::source_class_rust_name;
+use std::fmt::Write as _;
+
+const STATIC_DATA_FORMAT_VERSION: u32 = 1;
+const STRUCTURAL_BRIDGE_CONTRACT_VERSION: u32 = 1;
+
+/// Emits deterministic immutable bytes for every retained package specialization.
+#[must_use]
+pub fn emit_static_specialization_programs(
+    outputs: &[StaticSpecializationOutput],
+    structural_interop_enabled: bool,
+) -> String {
+    let mut ordered = outputs.to_vec();
+    ordered.sort_by(|left, right| {
+        (&left.owner, &left.package_module, &left.function).cmp(&(
+            &right.owner,
+            &right.package_module,
+            &right.function,
+        ))
+    });
+    let mut out = String::new();
+    for output in &ordered {
+        let suffix = rust_static_suffix(output);
+        let _ = writeln!(
+            out,
+            "#[doc(hidden)]\npub(crate) static __SIFR_STATIC_PROGRAM_BYTES_{suffix}: &[u8] = &{:?};",
+            output.canonical_value.as_bytes()
+        );
+        let _ = writeln!(
+            out,
+            "#[doc(hidden)]\npub(crate) const __SIFR_STATIC_PROGRAM_IDENTITY_{suffix}: [u8; 32] = {:?};",
+            output.program_identity
+        );
+        if structural_interop_enabled {
+            let owner = source_class_rust_name(&output.owner);
+            let identity = output
+                .program_identity
+                .iter()
+                .map(u8::to_string)
+                .collect::<Vec<_>>()
+                .join(", ");
+            let _ = writeln!(
+                out,
+                "#[doc(hidden)]\npub(crate) static __SIFR_STATIC_PROGRAM_{suffix}: ::std::sync::LazyLock<::sifr_runtime::interop::structural::StaticProgram<{owner}>> = ::std::sync::LazyLock::new(|| {{\n    let identity = ::sifr_runtime::interop::structural::StaticProgramIdentity::from_bytes([{identity}]);\n    let shape = <{owner} as ::sifr_runtime::interop::structural::StructuralType>::shape_identity();\n    let header = ::sifr_runtime::interop::structural::StaticProgramHeader::__from_compiler({STATIC_DATA_FORMAT_VERSION}, {}, {STRUCTURAL_BRIDGE_CONTRACT_VERSION}, identity, shape, ::sifr_runtime::interop::__generated_glue::token());\n    ::sifr_runtime::interop::structural::StaticProgram::__from_compiler(header, __SIFR_STATIC_PROGRAM_BYTES_{suffix}, ::sifr_runtime::interop::__generated_glue::token())\n}});",
+                output.structural_contract_version
+            );
+            let _ = writeln!(
+                out,
+                "impl ::sifr_runtime::interop::structural::StaticProgramType for {owner} {{\n    fn static_program() -> &'static ::sifr_runtime::interop::structural::StaticProgram<Self> {{\n        &__SIFR_STATIC_PROGRAM_{suffix}\n    }}\n}}"
+            );
+        }
+    }
+    out
+}
+
+#[must_use]
+pub fn static_program_cache_fragment(outputs: &[StaticSpecializationOutput]) -> String {
+    let mut ordered = outputs.to_vec();
+    ordered.sort_by(|left, right| {
+        (&left.owner, &left.package_module, &left.function).cmp(&(
+            &right.owner,
+            &right.package_module,
+            &right.function,
+        ))
+    });
+    let mut out = String::new();
+    for output in ordered {
+        let _ = writeln!(
+            out,
+            "{}|{}|{}|{}",
+            output.owner,
+            output.package_module,
+            output.function,
+            hex(&output.program_identity)
+        );
+    }
+    out
+}
+
+fn rust_static_suffix(output: &StaticSpecializationOutput) -> String {
+    let readable = format!(
+        "{}_{}_{}",
+        output.owner, output.package_module, output.function
+    )
+    .chars()
+    .map(|character| {
+        if character.is_ascii_alphanumeric() {
+            character.to_ascii_uppercase()
+        } else {
+            '_'
+        }
+    })
+    .collect::<String>();
+    format!(
+        "{readable}_{}",
+        hex(&output.program_identity).to_uppercase()
+    )
+}
+
+fn hex(bytes: &[u8; 32]) -> String {
+    let mut output = String::with_capacity(64);
+    for byte in bytes {
+        let _ = write!(output, "{byte:02x}");
+    }
+    output
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn output(identity: u8) -> StaticSpecializationOutput {
+        StaticSpecializationOutput {
+            owner: "Record".to_string(),
+            package_module: "schema.package".to_string(),
+            function: "derive".to_string(),
+            canonical_value: "record:1:value=int:7".to_string(),
+            program_identity: [identity; 32],
+            structural_contract_version: 1,
+        }
+    }
+
+    #[test]
+    fn emission_contains_static_bytes_identity_and_typed_envelope() {
+        let emitted = emit_static_specialization_programs(&[output(7)], true);
+        assert!(emitted.contains("static __SIFR_STATIC_PROGRAM_BYTES_RECORD_SCHEMA_PACKAGE_DERIVE"));
+        assert!(emitted.contains("StaticProgram<Record>"));
+        assert!(emitted.contains("StaticProgramIdentity::from_bytes([7, 7"));
+    }
+
+    #[test]
+    fn cache_fragment_changes_only_with_program_identity() {
+        assert_eq!(
+            static_program_cache_fragment(&[output(7)]),
+            static_program_cache_fragment(&[output(7)])
+        );
+        assert_ne!(
+            static_program_cache_fragment(&[output(7)]),
+            static_program_cache_fragment(&[output(8)])
+        );
+    }
+
+    #[test]
+    fn emitted_symbols_cannot_collide_after_readable_name_normalization() {
+        let mut dotted = output(7);
+        dotted.package_module = "schema.package".to_string();
+        let mut underscored = output(8);
+        underscored.package_module = "schema_package".to_string();
+
+        assert_ne!(
+            rust_static_suffix(&dotted),
+            rust_static_suffix(&underscored)
+        );
+    }
+}

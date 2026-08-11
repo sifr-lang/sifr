@@ -154,6 +154,17 @@ REQUIRED_SCENARIO_EXAMPLES = {
             ),
         },
     },
+    "static_program_arena_bridge": {
+        "static_program_runtime": {
+            "tokens": (
+                "StaticProgramType",
+                "StructuralArena::seal",
+                "@const_specialize",
+                "@rust.structural",
+                "execute_corrupt",
+            ),
+        },
+    },
     "zero_copy_runtime_matrix": {
         "crate_backed_view_runtime": {"tokens": ZERO_COPY_SCENARIO_TOKENS},
     },

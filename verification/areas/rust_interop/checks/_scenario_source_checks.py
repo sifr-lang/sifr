@@ -81,6 +81,19 @@ def validate_scenario_sifr_source(
             )
 
 
+def validate_auxiliary_sifr_source(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    text: str,
+) -> None:
+    """Reject placeholders without imposing entrypoint-only evidence rules."""
+    if contains_empty_pass_body(text):
+        failures.append(
+            f"{fixture_id}: {raw_path} must not use empty placeholder class bodies"
+        )
+
+
 def reject_generated_bridge_imports(
     failures: list[str],
     fixture_id: str,

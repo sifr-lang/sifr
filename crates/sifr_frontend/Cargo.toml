@@ -13,6 +13,7 @@ sifr_source = { workspace = true }
 sifr_syntax = { workspace = true }
 sifr_type_system = { workspace = true }
 sifr_python_ast = { workspace = true }
+sifr_structural_identity = { workspace = true }
 ruff_text_size = { workspace = true }
 num-bigint = { workspace = true }
 serde = { workspace = true }

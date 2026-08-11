@@ -17,6 +17,8 @@ mod native_build_support;
 mod package_resource_support;
 #[path = "package_rust_interop_proc_macro_support.rs"]
 mod proc_macro_support;
+#[path = "package_rust_interop_static_program_support.rs"]
+mod static_program_support;
 #[path = "package_rust_interop_zero_copy_support.rs"]
 mod zero_copy_support;
 

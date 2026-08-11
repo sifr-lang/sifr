@@ -1,0 +1,58 @@
+# fixture: static_program_arena_bridge
+# evidence: positive/static_program_constructs_and_projects_arena
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: pass
+
+from static_program_runtime.schema_program import derive
+from sifr.meta import StaticProgram
+
+class StaticProgramError(Error):
+    message: str
+
+@const_specialize("static_program_runtime.schema_program", "derive")
+class StaticRecord:
+    exact: int
+    fixed: uint32
+    payload: bytes
+    tags: list[str]
+    lookup: dict[str, int]
+
+@rust.opaque(type=bridge.executor.ValidatedDocument, send=False, sync=False, clone=none, close=close)
+class ValidatedDocument:
+    @rust(bridge.executor.close)
+    def close(own self) -> Result[None, StaticProgramError | RustPanicError]: ...
+
+@rust(bridge.executor.open)
+def open_validated_document() -> Result[ValidatedDocument, StaticProgramError | RustPanicError]: ...
+
+@rust.structural
+@rust(bridge.executor.execute)
+def execute_static_program[T: StaticProgram](own document: ValidatedDocument, value: T) -> Result[T, StaticProgramError | RustPanicError]: ...
+
+@rust(bridge.executor.observation)
+def static_program_observation() -> Result[str, StaticProgramError | RustPanicError]: ...
+
+def input_record() -> StaticRecord:
+    fixed: uint32 = 1
+    return StaticRecord(1, fixed, b"input", ["input"], {"input": 1})
+
+def verify_static_program_constructs_and_projects_arena() -> Result[str, StaticProgramError | RustPanicError]:
+    try:
+        cleanup: ValidatedDocument = open_validated_document()
+        closed: None = cleanup.close()
+        document: ValidatedDocument = open_validated_document()
+        output: StaticRecord = execute_static_program(document, input_record())
+        expected_fixed: uint32 = 42
+        assert output.exact == 123
+        assert output.fixed == expected_fixed
+        assert output.payload == b"arena-bytes"
+        assert output.tags == ["alpha", "beta"]
+        assert output.lookup["left"] == -7
+        assert output.lookup["right"] == 9007199254740991
+        observed: str = static_program_observation()
+        return observed
+    except StaticProgramError as error:
+        raise error
+    except RustPanicError as error:
+        raise error

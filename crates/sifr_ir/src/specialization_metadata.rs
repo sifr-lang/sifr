@@ -47,6 +47,9 @@ pub struct StaticSpecializationOutput {
     pub package_module: String,
     pub function: String,
     pub canonical_value: String,
+    /// Complete deterministic identity for cache keys and emitted envelopes.
+    pub program_identity: [u8; 32],
+    pub structural_contract_version: u32,
 }
 
 #[derive(Debug, Clone)]

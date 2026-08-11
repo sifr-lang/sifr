@@ -2206,6 +2206,29 @@ untyped callbacks.
 - Prove exact integer, bytes, collection and error crossings.
 - Update Rust interop architecture and verification.
 
+Implementation checklist:
+
+- [x] Give each retained const-specialization result one deterministic program
+  identity. Include its owner, package function, canonical value, structural
+  contract, and declaration metadata in that identity.
+- [x] Emit immutable program bytes and a sealed typed program envelope during
+  build. Retain the same identity during check and editor analysis.
+- [x] Include the program identity in generated-project cache keys. Prove that
+  relevant program inputs invalidate the key and unrelated declarations do not.
+- [x] Add reusable sealed document and validated-arena runtime types. Use
+  checked compact node indices and one move-only structural source.
+- [x] Add one synthetic external package that consumes the unversioned Rust
+  manifest contract. It must use a generic structural signature probe and one
+  monomorphized executor call.
+- [x] Prove exact integers, fixed integers, bytes, lists, mappings, records,
+  moved scalar payloads, typed errors, corrupt envelopes, and invalid indices.
+- [x] Prove source and installed package parity, deterministic generated output,
+  cache-key behavior, and cleanup after success and failure.
+- [x] Register passing positive and negative Rust-interop evidence. Update the
+  compatibility matrix, fixture matrix, tiers, and durable architecture.
+- [ ] Run targeted tests, open the milestone pull request, and obtain an exact
+  candidate `SATISFIED` Opus review before the create-PR and merge gates.
+
 Exit gate: the merged and certified structural Rust bridge contract lets a
 synthetic schema executor return a validated arena, construct a typed Sifr
 value, and pull a structural view for output through one monomorphized call.

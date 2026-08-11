@@ -160,11 +160,15 @@ mod stdlib_filter;
 mod stdlib_import_signatures;
 mod stdlib_rust_source;
 pub use stdlib_rust_source::StdlibRustSource;
+mod static_program_codegen;
 mod stmt_support_emitter;
 mod string_char_cache;
 mod string_char_cache_scan;
 mod structural_identity_codegen;
 mod structural_impl_codegen;
+pub use static_program_codegen::{
+    emit_static_specialization_programs, static_program_cache_fragment,
+};
 mod try_error_carrier;
 mod type_emitters;
 mod union_type_helpers;

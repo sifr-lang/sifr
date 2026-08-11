@@ -6,6 +6,9 @@ use sha2::{Digest, Sha256};
 /// release number and changes only when the canonical shape contract changes.
 pub const ALGORITHM_VERSION: u32 = 1;
 
+/// The current compiler-emitted static-program identity algorithm.
+pub const STATIC_PROGRAM_ALGORITHM_VERSION: u32 = 1;
+
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct ShapeIdentity([u8; 32]);
 
@@ -19,6 +22,38 @@ impl ShapeIdentity {
     pub const fn as_bytes(&self) -> &[u8; 32] {
         &self.0
     }
+}
+
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct StaticProgramIdentity([u8; 32]);
+
+impl StaticProgramIdentity {
+    #[must_use]
+    pub const fn from_bytes(bytes: [u8; 32]) -> Self {
+        Self(bytes)
+    }
+
+    #[must_use]
+    pub const fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
+
+/// Hashes the complete compiler-owned envelope for one package-produced static program.
+#[must_use]
+pub fn static_program_identity<'a>(
+    structural_contract_version: u32,
+    fields: impl IntoIterator<Item = (&'a str, &'a [u8])>,
+) -> StaticProgramIdentity {
+    let mut hash = Sha256::new();
+    hash.update(b"sifr-static-program-identity");
+    hash.update(STATIC_PROGRAM_ALGORITHM_VERSION.to_be_bytes());
+    hash.update(structural_contract_version.to_be_bytes());
+    for (name, value) in fields {
+        push_bytes(&mut hash, name.as_bytes());
+        push_bytes(&mut hash, value);
+    }
+    StaticProgramIdentity::from_bytes(hash.finalize().into())
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -224,5 +259,22 @@ mod tests {
     fn default_value_identity_is_typed_and_deterministic() {
         assert_eq!(default_value("int:1"), default_value("int:1"));
         assert_ne!(default_value("int:1"), default_value("str:1"));
+    }
+
+    #[test]
+    fn static_program_identity_is_ordered_and_contract_bound() {
+        let first = static_program_identity(1, [("owner", b"Item".as_slice()), ("value", b"a")]);
+        assert_eq!(
+            first,
+            static_program_identity(1, [("owner", b"Item".as_slice()), ("value", b"a")])
+        );
+        assert_ne!(
+            first,
+            static_program_identity(1, [("value", b"a".as_slice()), ("owner", b"Item")])
+        );
+        assert_ne!(
+            first,
+            static_program_identity(2, [("owner", b"Item".as_slice()), ("value", b"a")])
+        );
     }
 }

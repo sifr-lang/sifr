@@ -202,6 +202,11 @@ fn structural_construct_impl(
         .iter()
         .enumerate()
         .map(|(index, (name, ty))| {
+            if matches!(ty.resolve_alias(), Type::Bytes) {
+                return format!(
+                    "let {name} = {STRUCTURAL}::construct_bytes_at(source, child_nodes[{index}], token)?;"
+                );
+            }
             let rust_type = emitter.class_struct_field_rust_type(class, name, ty);
             let rust_type = crate::Renderer::render_type_string(&rust_type);
             format!(
@@ -270,7 +275,12 @@ fn structural_project_impl(
     let visits = class
         .fields
         .iter()
-        .map(|(name, _)| {
+        .map(|(name, ty)| {
+            if matches!(ty.resolve_alias(), Type::Bytes) {
+                return format!(
+                    "visitor.edge({STRUCTURAL}::StructuralEdge::new({STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\")))?;\n{STRUCTURAL}::project_bytes(&self.{name}, visitor)?;"
+                );
+            }
             format!(
                 "visitor.edge({STRUCTURAL}::StructuralEdge::new({STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\")))?;\n{STRUCTURAL}::StructuralProject::structural_project(&self.{name}, visitor)?;"
             )

@@ -482,6 +482,7 @@ pub(super) fn signature_contract(
         params,
         return_type,
         structural_type_param: None,
+        static_program_type_param: false,
         panic_error: sifr_codegen::RustBridgePanicErrorContract::None,
         span: span(),
     }

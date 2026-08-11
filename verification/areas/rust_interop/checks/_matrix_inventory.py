@@ -35,6 +35,7 @@ REQUIRED_FIXTURES = {
     "same_workspace_crate",
     "shared_bridge_crate",
     "structural_bridge_calls",
+    "static_program_arena_bridge",
     "tensor_dlpack_bridge",
     "zero_copy_bytes",
     "zero_copy_runtime_matrix",

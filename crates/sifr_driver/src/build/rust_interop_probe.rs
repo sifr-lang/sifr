@@ -372,7 +372,11 @@ fn structural_signature_probe_source(
     );
     out.push_str(")\nwhere\n    ");
     out.push_str(type_param);
-    out.push_str(": ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject,\n{\n    let _: ");
+    out.push_str(": ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject");
+    if signature.static_program_type_param {
+        out.push_str(" + ::sifr_runtime::interop::structural::StaticProgramType");
+    }
+    out.push_str(",\n{\n    let _: ");
     let return_type = signature_return_probe_type(&signature.return_type);
     let normalized_return_type = if return_type.display_error_generic {
         return_type.ty.replace("__SifrBridgeError", "String")

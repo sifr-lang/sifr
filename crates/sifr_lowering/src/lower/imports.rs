@@ -172,6 +172,9 @@ pub(in crate::lower) fn resolve_imports_early(
     ctx.local_structural_marker_declared = stmts
         .iter()
         .any(|stmt| matches!(stmt, Stmt::ClassDef(class) if class.name.as_str() == "Structural"));
+    ctx.local_static_program_marker_declared = stmts.iter().any(
+        |stmt| matches!(stmt, Stmt::ClassDef(class) if class.name.as_str() == "StaticProgram"),
+    );
     let aliases_by_module = class_aliases_by_module(stmts, externals, ctx);
     for stmt in stmts {
         if let Stmt::ImportFrom(import_from) = stmt {
@@ -209,6 +212,14 @@ pub(in crate::lower) fn resolve_imports_early(
                     .any(|alias| alias.name.as_str() == "Structural" && alias.asname.is_none())
             {
                 ctx.canonical_structural_marker_imported = true;
+            }
+            if module_name == "sifr.meta"
+                && import_from
+                    .names
+                    .iter()
+                    .any(|alias| alias.name.as_str() == "StaticProgram" && alias.asname.is_none())
+            {
+                ctx.canonical_static_program_marker_imported = true;
             }
             let local_name_for = |original: &str| -> String {
                 aliases

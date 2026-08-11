@@ -30,6 +30,7 @@ fixtures = [
   "opaque_resource_matrix",
   "close_after_use",
   "structural_bridge_calls",
+  "static_program_arena_bridge",
   "panic_boundary",
   "panic_boundary_wrapper_emission",
   "panic_abort_profile",

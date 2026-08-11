@@ -61,6 +61,8 @@ const IO_ERROR_SUBCLASSES: &[&str] = &[
 /// Result of code generation, including the Rust source and metadata.
 pub struct CodegenResult {
     pub rust_source: String,
+    /// Compiler-verified package outputs that must be materialized as static data.
+    pub static_programs: Vec<sifr_ir::StaticSpecializationOutput>,
     pub used_stdlib_modules: HashSet<String>,
     pub used_intrinsic_modules: HashSet<String>,
     /// Required stdlib/runtime features discovered during structured lowering/codegen.
@@ -781,6 +783,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
 
     CodegenResult {
         rust_source,
+        static_programs: Vec::new(),
         used_stdlib_modules: all_used_modules.clone(),
         used_intrinsic_modules: emitter.used_stdlib_modules,
         required_features: {

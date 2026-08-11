@@ -6,7 +6,7 @@ use super::materialize::{
     materialize_cached_binary_project_with_report,
 };
 use super::project_codegen::{
-    apply_package_runtime_metadata, generated_project_binary_project,
+    apply_package_runtime_metadata, codegen_single_file_frontend, generated_project_binary_project,
     generated_single_file_binary_project, GeneratedBinaryProject,
 };
 use super::python_bridges::apply_package_python_bridge_metadata;
@@ -17,7 +17,7 @@ use super::rust_interop::{PackageRustInteropContext, RustInteropModuleSource};
 use super::rust_interop_probe_policy::DirectProbePolicy;
 use super::single_file_interop_cache::{resolve_single_file_metadata, CompiledSingleFileMetadata};
 use super::sysroot_interop::attach_stdlib_rust_interop;
-use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
+use crate::diagnostics::{CompileResult, RenderedDiagnostic};
 use crate::frontend::{parse_source, FrontendCompiled};
 use crate::project::{
     collect_project_hir_source_modules, collect_project_hir_source_modules_with_options,
@@ -27,7 +27,6 @@ use crate::project::{
 };
 use crate::stdlib::{compile_stdlib, StdlibCompiled};
 use crate::workspace::find_workspace_root;
-use sifr_codegen::generate_rust_with_stdlib;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::{FrontendDiagnosticStyle, FrontendSourceContext};
 use sifr_ir::LoweringResult;
@@ -578,11 +577,7 @@ impl RootedEntrypointPlan {
         self,
     ) -> Result<sifr_codegen::CodegenResult, Vec<RenderedDiagnostic>> {
         let frontend = self.into_single_file_frontend()?;
-        run_codegen_with_boundary(
-            "internal compiler panic during single-file code generation",
-            || generate_rust_with_stdlib(&frontend.lowering_result.module, &frontend.stdlib.code),
-        )
-        .map_err(|error| vec![*error])
+        codegen_single_file_frontend(&frontend)
     }
 
     fn into_generated_binary_project(

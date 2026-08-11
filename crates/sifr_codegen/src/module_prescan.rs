@@ -8,6 +8,16 @@ impl RustEmitter {
         self.collect_display_class_metadata(module);
         self.collect_parent_field_metadata(module);
         self.collect_function_signature_metadata(module);
+        self.static_program_functions = module
+            .type_param_bounds
+            .iter()
+            .filter(|(_, bounds)| {
+                bounds
+                    .values()
+                    .any(|values| values.as_slice() == ["StaticProgram"])
+            })
+            .map(|(owner, _)| owner.clone())
+            .collect();
     }
 
     pub(crate) fn collect_import_metadata(&mut self, module: &HirModule) {

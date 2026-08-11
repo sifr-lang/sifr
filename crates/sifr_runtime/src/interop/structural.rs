@@ -2,13 +2,21 @@
 
 use std::fmt;
 
-use super::SifrIntBridge;
+use crate::SifrInt;
 
+mod arena;
 mod implementations;
+mod static_program;
 
+pub use arena::{ArenaNode, StructuralArena};
 pub use sifr_structural_identity::{
     binary_container, enum_shape, metadata, nominal_record, primitive, recursive_reference,
-    refined, tuple, unary_container, union, NominalField, ShapeIdentity, ALGORITHM_VERSION,
+    refined, static_program_identity, tuple, unary_container, union, NominalField, ShapeIdentity,
+    StaticProgramIdentity, ALGORITHM_VERSION, STATIC_PROGRAM_ALGORITHM_VERSION,
+};
+pub use static_program::{
+    StaticProgram, StaticProgramEnvelopeError, StaticProgramHeader, StaticProgramType,
+    STATIC_PROGRAM_ENVELOPE_VERSION,
 };
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -61,7 +69,7 @@ pub enum StructuralScalar {
     Bool(bool),
     SignedInteger { value: i128, width: u16 },
     UnsignedInteger { value: u128, width: u16 },
-    ExactInteger(SifrIntBridge),
+    ExactInteger(SifrInt),
     Float(f64),
     String(String),
     Bytes(Vec<u8>),
@@ -74,7 +82,7 @@ pub enum StructuralScalarRef<'value> {
     Bool(bool),
     SignedInteger { value: i128, width: u16 },
     UnsignedInteger { value: u128, width: u16 },
-    ExactInteger(&'value SifrIntBridge),
+    ExactInteger(&'value SifrInt),
     Float(f64),
     String(&'value str),
     Bytes(&'value [u8]),
@@ -85,6 +93,7 @@ pub enum StructuralScalarRef<'value> {
 pub enum StructuralContractError {
     ShapeMismatch,
     InvalidNode,
+    CyclicArena,
     KindMismatch,
     ArityMismatch,
     MemberMismatch,
@@ -97,6 +106,7 @@ impl fmt::Display for StructuralContractError {
         formatter.write_str(match self {
             Self::ShapeMismatch => "structural shape identity mismatch",
             Self::InvalidNode => "invalid structural node",
+            Self::CyclicArena => "cyclic structural arena",
             Self::KindMismatch => "structural node kind mismatch",
             Self::ArityMismatch => "structural node arity mismatch",
             Self::MemberMismatch => "structural member identity mismatch",
@@ -294,6 +304,26 @@ pub trait StructuralProject: StructuralType {
     ) -> Result<(), V::Error>;
 }
 
+#[doc(hidden)]
+pub fn construct_bytes_at<S: StructuralSource>(
+    source: &mut S,
+    node: NodeId,
+    _token: ConstructToken,
+) -> Result<Vec<u8>, StructuralContractError> {
+    match checked_scalar(source, node, StructuralKind::Bytes)? {
+        StructuralScalar::Bytes(value) => Ok(value),
+        _ => Err(StructuralContractError::ScalarMismatch),
+    }
+}
+
+#[doc(hidden)]
+pub fn project_bytes<'value, V: StructuralVisitor<'value>>(
+    value: &'value [u8],
+    visitor: &mut V,
+) -> Result<(), V::Error> {
+    visitor.scalar(StructuralScalarRef::Bytes(value))
+}
+
 fn checked_scalar<S: StructuralSource>(
     source: &mut S,
     node: NodeId,
@@ -470,6 +500,34 @@ impl StructuralProject for String {
     }
 }
 
+impl StructuralType for SifrInt {
+    fn shape_identity() -> ShapeIdentity {
+        primitive("int")
+    }
+}
+
+impl StructuralConstruct for SifrInt {
+    fn structural_construct_at<S: StructuralSource>(
+        source: &mut S,
+        node: NodeId,
+        _token: ConstructToken,
+    ) -> Result<Self, StructuralContractError> {
+        match checked_scalar(source, node, StructuralKind::ExactInteger)? {
+            StructuralScalar::ExactInteger(value) => Ok(value),
+            _ => Err(StructuralContractError::ScalarMismatch),
+        }
+    }
+}
+
+impl StructuralProject for SifrInt {
+    fn structural_project<'value, V: StructuralVisitor<'value>>(
+        &'value self,
+        visitor: &mut V,
+    ) -> Result<(), V::Error> {
+        visitor.scalar(StructuralScalarRef::ExactInteger(self))
+    }
+}
+
 impl StructuralType for () {
     fn shape_identity() -> ShapeIdentity {
         primitive("None")
@@ -519,10 +577,10 @@ impl<T: StructuralConstruct> StructuralConstruct for Vec<T> {
             .iter()
             .enumerate()
             .map(|(index, edge)| {
-                if edge.kind() != StructuralEdgeKind::Index(index) {
-                    Err(StructuralContractError::MemberMismatch)
-                } else {
+                if edge.kind() == StructuralEdgeKind::Index(index) {
                     Ok(edge.node())
+                } else {
+                    Err(StructuralContractError::MemberMismatch)
                 }
             })
             .collect::<Result<Vec<_>, _>>()?;

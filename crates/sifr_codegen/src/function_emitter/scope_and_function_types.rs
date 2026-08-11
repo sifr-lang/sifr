@@ -705,7 +705,7 @@ impl RustEmitter {
         }
     }
 
-    pub(crate) fn lower_function_type_params(func: &HirFunction) -> Vec<RustTypeParam> {
+    pub(crate) fn lower_function_type_params(&self, func: &HirFunction) -> Vec<RustTypeParam> {
         if func.type_params.is_empty() {
             return Vec::new();
         }
@@ -717,7 +717,9 @@ impl RustEmitter {
                 let structural = func.rust_interop.iter().any(|declaration| {
                     declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
                 });
-                let base = if structural {
+                let base = if structural && self.static_program_functions.contains(&func.name) {
+                    "sifr_runtime::interop::structural::StructuralConstruct + sifr_runtime::interop::structural::StructuralProject + sifr_runtime::interop::structural::StaticProgramType"
+                } else if structural {
                     "sifr_runtime::interop::structural::StructuralConstruct + sifr_runtime::interop::structural::StructuralProject"
                 } else if Self::is_nullcontext_value_forwarder(func) {
                     "Clone + 'static"

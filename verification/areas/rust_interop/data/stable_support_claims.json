@@ -96,6 +96,12 @@
       "capability": "monomorphized structural Rust bridge calls"
     },
     {
+      "id": "static_program_arena_bridge",
+      "category": "supported-through-bridge",
+      "execution_kind": "runtime-observed",
+      "capability": "compiler-emitted static program with a validated structural arena"
+    },
+    {
       "id": "panic_boundary",
       "category": "supported",
       "execution_kind": "contract-only",

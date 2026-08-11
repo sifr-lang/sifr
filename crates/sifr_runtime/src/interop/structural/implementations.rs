@@ -1,7 +1,12 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
-use super::*;
+use super::{
+    binary_container, tuple, unary_container, ConstructToken, NodeId, ShapeIdentity,
+    StructuralConstruct, StructuralContractError, StructuralEdge, StructuralEdgeKind,
+    StructuralEnter, StructuralKind, StructuralProject, StructuralSource, StructuralType,
+    StructuralVisitor, VisitControl,
+};
 
 impl<T: StructuralType> StructuralType for Box<T> {
     fn shape_identity() -> ShapeIdentity {
@@ -124,10 +129,10 @@ where
             .iter()
             .enumerate()
             .map(|(index, edge)| {
-                if edge.kind() != StructuralEdgeKind::Index(index) {
-                    Err(StructuralContractError::MemberMismatch)
-                } else {
+                if edge.kind() == StructuralEdgeKind::Index(index) {
                     Ok(edge.node())
+                } else {
+                    Err(StructuralContractError::MemberMismatch)
                 }
             })
             .collect::<Result<Vec<_>, _>>()?;

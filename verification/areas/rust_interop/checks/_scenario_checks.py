@@ -43,6 +43,7 @@ from _scenario_registry import REQUIRED_SCENARIO_EXAMPLES
 from _scenario_source_checks import (
     read_scenario_text as _read_scenario_text,
     reject_generated_bridge_imports as _reject_generated_bridge_imports,
+    validate_auxiliary_sifr_source as _validate_auxiliary_sifr_source,
     validate_scenario_sifr_source as _validate_scenario_sifr_source,
 )
 from _scenario_zero_copy import (
@@ -130,6 +131,34 @@ def run_self_test() -> tuple[int, str | None]:
         if baseline_failures:
             return cases, f"bridge_type_matrix baseline failed: {baseline_failures}"
         cases += 1
+
+        helper_path = fixture_dir / "examples/bridge_type_roundtrip/src/helper.sifr"
+        helper_path.write_text("class Helper:\n    value: str\n", encoding="utf-8")
+        helper_failures: list[str] = []
+        validate_scenario_examples(
+            helper_failures,
+            "bridge_type_matrix",
+            fixture_dir,
+            raw_examples,
+        )
+        if helper_failures:
+            return cases, f"auxiliary Sifr module was treated as an entrypoint: {helper_failures}"
+        cases += 1
+        helper_path.write_text("class Helper:\n    pass\n", encoding="utf-8")
+        placeholder_failures: list[str] = []
+        validate_scenario_examples(
+            placeholder_failures,
+            "bridge_type_matrix",
+            fixture_dir,
+            raw_examples,
+        )
+        if not any(
+            "empty placeholder class bodies" in failure
+            for failure in placeholder_failures
+        ):
+            return cases, f"auxiliary placeholder was accepted: {placeholder_failures}"
+        cases += 1
+        helper_path.unlink()
 
         mutation_cases = (
             (
@@ -402,10 +431,28 @@ def _validate_scenario_example_dir(
         "zero_copy_runtime_matrix",
     }:
         reject_unsafe_rust(failures, fixture_id, rust_sources, example_dir)
+    entrypoint = example_dir / "src" / "main.sifr"
+    if not entrypoint.is_file() and sifr_sources:
+        entrypoint = sifr_sources[0]
     for source in sifr_sources:
         text = source.read_text(encoding="utf-8")
         raw_source_path = source.relative_to(example_dir).as_posix()
-        _validate_scenario_sifr_source(failures, fixture_id, example, f"{raw_path}/{raw_source_path}", text)
+        source_path = f"{raw_path}/{raw_source_path}"
+        if source == entrypoint:
+            _validate_scenario_sifr_source(
+                failures,
+                fixture_id,
+                example,
+                source_path,
+                text,
+            )
+        else:
+            _validate_auxiliary_sifr_source(
+                failures,
+                fixture_id,
+                source_path,
+                text,
+            )
 
 
 def _scenario_files(example_dir: Path, pattern: str) -> list[Path]:

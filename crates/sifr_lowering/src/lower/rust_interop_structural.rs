@@ -42,25 +42,6 @@ pub(in crate::lower) fn validate_structural_function_contract(
             span,
         );
     }
-    let marker_shadowed = ctx.class_types.get("Structural").is_some_and(|marker| {
-        !matches!(
-            marker.resolve_alias(),
-            Type::Class {
-                identity: Some(identity),
-                ..
-            } if identity == "sifr.meta.Structural"
-        )
-    });
-    if !ctx.canonical_structural_marker_imported
-        || ctx.local_structural_marker_declared
-        || marker_shadowed
-    {
-        structural_type_error(
-            ctx,
-            "the `Structural` bound must be the unaliased compiler-owned `from sifr.meta import Structural` marker",
-            span,
-        );
-    }
     validate_error_and_panic_contract(return_type, declarations, span, ctx);
     let [type_param] = type_params else {
         structural_type_error(
@@ -70,17 +51,49 @@ pub(in crate::lower) fn validate_structural_function_contract(
         );
         return;
     };
-    let has_exact_bound = ctx
+    let exact_bound = ctx
         .type_param_bounds
         .get(function_name)
         .and_then(|bounds| bounds.get(type_param))
-        .is_some_and(|bounds| bounds.as_slice() == ["Structural"]);
-    if !has_exact_bound {
+        .and_then(|bounds| match bounds.as_slice() {
+            [bound] if bound == "Structural" || bound == "StaticProgram" => Some(bound.clone()),
+            _ => None,
+        });
+    if exact_bound.is_none() {
         structural_type_error(
             ctx,
-            format!("type parameter `{type_param}` must have the exact `Structural` bound"),
+            format!(
+                "type parameter `{type_param}` must have the exact `Structural` or `StaticProgram` bound"
+            ),
             span,
         );
+    }
+    match exact_bound.as_deref() {
+        Some("Structural") => {
+            let imported = ctx.canonical_structural_marker_imported;
+            let local = ctx.local_structural_marker_declared;
+            validate_marker(
+                ctx,
+                "Structural",
+                "sifr.meta.Structural",
+                imported,
+                local,
+                span,
+            );
+        }
+        Some("StaticProgram") => {
+            let imported = ctx.canonical_static_program_marker_imported;
+            let local = ctx.local_static_program_marker_declared;
+            validate_marker(
+                ctx,
+                "StaticProgram",
+                "sifr.meta.StaticProgram",
+                imported,
+                local,
+                span,
+            );
+        }
+        _ => {}
     }
 
     let mut used = false;
@@ -127,6 +140,34 @@ pub(in crate::lower) fn validate_structural_function_contract(
         structural_type_error(
             ctx,
             format!("structural type parameter `{type_param}` is not used by the bridge signature"),
+            span,
+        );
+    }
+}
+
+fn validate_marker(
+    ctx: &mut LowerCtx,
+    name: &str,
+    identity: &str,
+    imported: bool,
+    declared_locally: bool,
+    span: TextRange,
+) {
+    let shadowed = ctx.class_types.get(name).is_some_and(|marker| {
+        !matches!(
+            marker.resolve_alias(),
+            Type::Class {
+                identity: Some(actual),
+                ..
+            } if actual == identity
+        )
+    });
+    if !imported || declared_locally || shadowed {
+        structural_type_error(
+            ctx,
+            format!(
+                "the `{name}` bound must be the unaliased compiler-owned `from sifr.meta import {name}` marker"
+            ),
             span,
         );
     }

@@ -175,6 +175,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
 
     CodegenResult {
         rust_source,
+        static_programs: Vec::new(),
         used_stdlib_modules: emitter.used_stdlib_modules.clone(),
         used_intrinsic_modules: emitter.used_stdlib_modules,
         required_features: {
