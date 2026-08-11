@@ -8,8 +8,9 @@ Architecture proper was approved on draft PR
 inventory, repository boundary, and demo ownership are approved.
 `milestone_ps_1` and `milestone_ps_2` are implemented and merged. The required
 `certification_pkg_resource_core` item is complete through merged
-[PR #3123](https://github.com/sifr-lang/sifr/pull/3123). `milestone_ps_3` is the
-next sequential work and is no longer blocked by bridge certification.
+[PR #3123](https://github.com/sifr-lang/sifr/pull/3123). `milestone_ps_3` is
+implemented and merged through [PR #3138](https://github.com/sifr-lang/sifr/pull/3138).
+`milestone_ps_4` is the next sequential work.
 
 Review artifacts:
 
@@ -123,9 +124,33 @@ Milestone delivery records:
 - The exact-SHA Opus review returned `SATISFIED` with no blocking findings.
   The one merge gate passed Python 25/25, Rust interop 10/10, generated builds
   70/70, E2E 694/694, and 268 hardening variants with zero failures.
-- `milestone_ps_3` is the next sequential work.
-- Deferred follow-up work: define an explicit typed package-side structural-shape
-  contract before `ps_4`; align registry representative-fixture paths with diagnostic
+- `milestone_ps_3` merged in
+  [PR #3138](https://github.com/sifr-lang/sifr/pull/3138) at merge commit
+  `2174be634d7d3f9e0053ff893dc9a1d2fc34f64d`. The exact reviewed and gated
+  candidate was `1b1955f681ccce33b2ca65b130f381ef3e9f27ca`.
+- The milestone adds deterministic compiler-owned static-program identities and
+  bytes, a sealed typed program envelope, checked compact node indices, and a
+  move-only structural arena. The synthetic package uses one generic structural
+  signature probe and one monomorphized executor call. It proves exact and fixed
+  integers, bytes, collections, records, moved payloads, typed errors, corrupt
+  envelopes, invalid indices, cleanup, cache invalidation, and source/installed
+  parity. No compatibility layer, fallback, or legacy static-program path exists.
+- Three recorded Opus review passes found and closed unsupported-owner emission,
+  duplicate decorator handling, cache-order and cleanup evidence, and nested bytes
+  encoding. A fresh exact-integration review then returned `SATISFIED` with no
+  blocking or actionable milestone-owned findings; per the reviewer skill, that
+  final response remains outside the Git tree.
+- The unchanged warm create-PR gate passed. Its preceding cold run was
+  functionally green and exceeded only the known external cold-artifact budget
+  tracked by issue #3134. The warm receipt SHA-256 is
+  `270742a07e27aa2cc704dd25693f93b64ef29b47e10f058037664b608f6db0c5`.
+- The one authoritative merge gate exited zero. It passed Python interop 25/25,
+  Rust interop 10/10, generated builds 72/72, E2E 694/694, hardening 268 variants
+  with zero failures, distribution 66/66, sysroot 2/2, generated-code quality
+  7/7, and all representative performance checks. The merge receipt SHA-256 is
+  `caa0dc08aa5d6c855fcd49edd5516cc33b004d59d2f879e7a9443815b83b267e`.
+- `milestone_ps_4` is the next sequential work.
+- Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
   predicates for fixed-width platform integers, metadata, and imported classes;
   audit pre-epoch fractional timestamp reconstruction; disambiguate imported
@@ -2231,7 +2256,7 @@ Implementation checklist:
   cache-key behavior, and cleanup after success and failure.
 - [x] Register passing positive and negative Rust-interop evidence. Update the
   compatibility matrix, fixture matrix, tiers, and durable architecture.
-- [ ] Run targeted tests, open the milestone pull request, and obtain an exact
+- [x] Run targeted tests, open the milestone pull request, and obtain an exact
   candidate `SATISFIED` Opus review before the create-PR and merge gates.
 
 Exit gate: the merged and certified structural Rust bridge contract lets a
