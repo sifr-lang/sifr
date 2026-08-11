@@ -439,6 +439,11 @@ functions, affine resources, and values containing unsupported borrowed or
 opaque members do not satisfy it. The compiler reports the unsupported member
 path at the declaration or specialization site.
 
+`bytes` has one structural encoding: a scalar byte buffer. The compiler supports
+that encoding for a direct record field. It rejects `bytes` inside a list,
+mapping, tuple, optional value, or generic type argument. It does not reinterpret
+nested `bytes` as a sequence of integers.
+
 `sifr.meta.StaticProgram` is the stricter compiler-owned bound for a structural
 call that requires retained const-specialization data. A concrete type satisfies
 this bound only when `@const_specialize` produced a verified value. There is no

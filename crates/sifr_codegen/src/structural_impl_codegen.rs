@@ -48,7 +48,15 @@ pub(crate) fn structural_record_supported(class: &HirClass, module: &HirModule) 
         && class
             .fields
             .iter()
-            .all(|(_, ty)| structural_type_supported(ty, module, &mut visiting))
+            .all(|(_, ty)| structural_record_field_supported(ty, module, &mut visiting))
+}
+
+fn structural_record_field_supported(
+    ty: &Type,
+    module: &HirModule,
+    visiting: &mut BTreeSet<String>,
+) -> bool {
+    matches!(ty.resolve_alias(), Type::Bytes) || structural_type_supported(ty, module, visiting)
 }
 
 fn structural_type_supported(
@@ -57,13 +65,8 @@ fn structural_type_supported(
     visiting: &mut BTreeSet<String>,
 ) -> bool {
     match ty.resolve_alias() {
-        Type::Int
-        | Type::Float
-        | Type::Bool
-        | Type::Str
-        | Type::Bytes
-        | Type::None
-        | Type::TypeVar(_) => true,
+        Type::Int | Type::Float | Type::Bool | Type::Str | Type::None | Type::TypeVar(_) => true,
+        Type::Bytes => false,
         Type::FixedInt(value) => !matches!(
             value,
             sifr_type_system::FixedIntType::ISize | sifr_type_system::FixedIntType::USize
@@ -118,7 +121,7 @@ fn structural_type_supported(
             let supported = candidate
                 .fields
                 .iter()
-                .all(|(_, field)| structural_type_supported(field, module, visiting));
+                .all(|(_, field)| structural_record_field_supported(field, module, visiting));
             visiting.remove(name);
             supported
         }

@@ -27,10 +27,11 @@ identity change.
 ## Remediation
 
 The next candidate makes typed program emission use the same owner eligibility
-predicate as structural implementation emission. Unsupported uses still fail
-through the existing `StaticProgram` protocol diagnostic. Retained static bytes
-remain valid for specialization consumers that do not request the structural
-program contract.
+predicate as structural implementation emission. It does not emit an impossible
+typed implementation for an unsupported owner. Retained static bytes remain
+valid for specialization consumers that do not request the structural program
+contract. Predicate differences that existed before this item remain separate
+follow-up work.
 
 Lowering now rejects a second `@const_specialize` decorator on the same class.
 The cache fragment now sorts tied readable keys by the complete program identity,

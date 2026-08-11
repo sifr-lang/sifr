@@ -75,6 +75,28 @@ def use() -> Record:
     lower_module_with_externals(parsed.suite(), &structural_externals())
         .expect("specialized structural class should satisfy StaticProgram");
 
+    let direct_bytes = eligible
+        .replace("value: str", "value: bytes")
+        .replace("Record(\"ok\")", "Record(b\"ok\")");
+    let parsed = parse_module(&direct_bytes).expect("source should parse");
+    lower_module_with_externals(parsed.suite(), &structural_externals())
+        .expect("a direct bytes field has one supported scalar encoding");
+
+    let nested_bytes = eligible
+        .replace("value: str", "value: list[bytes]")
+        .replace("Record(\"ok\")", "Record([b\"ok\"])");
+    let parsed = parse_module(&nested_bytes).expect("source should parse");
+    let errors = match lower_module_with_externals(parsed.suite(), &structural_externals()) {
+        Ok(_) => panic!("nested bytes must not select the sequence encoding"),
+        Err(errors) => errors,
+    };
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'StaticProgram'")
+    }));
+
     let ineligible = eligible.replace("@const_specialize(\"package.schema\", \"derive\")\n", "");
     let parsed = parse_module(&ineligible).expect("source should parse");
     let errors = match lower_module_with_externals(parsed.suite(), &structural_externals()) {

@@ -34,6 +34,7 @@ Review artifacts:
 - [`native-pydantic-sifr-ps2-claude-opus-review-pass-2.md`](../../reviews/active/native-pydantic-sifr-ps2-claude-opus-review-pass-2.md)
 - [`native-pydantic-sifr-ps2-claude-opus-review-pass-3.md`](../../reviews/active/native-pydantic-sifr-ps2-claude-opus-review-pass-3.md)
 - [`native-pydantic-sifr-ps3-claude-opus-review-pass-1.md`](../../reviews/active/native-pydantic-sifr-ps3-claude-opus-review-pass-1.md)
+- [`native-pydantic-sifr-ps3-claude-opus-review-pass-2.md`](../../reviews/active/native-pydantic-sifr-ps3-claude-opus-review-pass-2.md)
 
 Milestone delivery records:
 
@@ -124,7 +125,9 @@ Milestone delivery records:
 - `milestone_ps_3` is the next sequential work.
 - Deferred follow-up work: define an explicit typed package-side structural-shape
   contract before `ps_4`; align registry representative-fixture paths with diagnostic
-  baselines; audit pre-epoch fractional timestamp reconstruction; disambiguate imported
+  baselines; align the pre-existing lowering and codegen structural-eligibility
+  predicates for fixed-width platform integers, metadata, and imported classes;
+  audit pre-epoch fractional timestamp reconstruction; disambiguate imported
   structural metadata/default lookup from colliding local names; accept large negative
   const bounds in integer-boundary decorators; and keep shared floor-arithmetic semantics
   from drifting between frontend const evaluation and runtime execution.
