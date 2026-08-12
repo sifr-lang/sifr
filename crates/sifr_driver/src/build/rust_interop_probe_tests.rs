@@ -134,8 +134,8 @@ fn signature(return_type: RustBridgeTypeContract) -> RustBridgeSignatureContract
         },
         params: Vec::new(),
         return_type,
-        structural_type_param: None,
-        static_program_type_param: false,
+        structural_type_params: Vec::new(),
+        static_program_type_params: Vec::new(),
         panic_error: sifr_codegen::RustBridgePanicErrorContract::None,
         span: TextRange::default(),
     }
@@ -173,16 +173,51 @@ fn structural_probe_normalizes_backend_display_errors_without_erasing_ok_type() 
         kind: RustBridgeTypeKind::Result,
         unsupported_reason: None,
     });
-    signature.structural_type_param = Some("T".to_string());
-    signature.static_program_type_param = true;
+    signature.structural_type_params = vec!["T".to_string()];
+    signature.static_program_type_params = vec!["T".to_string()];
 
-    let source = structural_signature_probe_source(&signature, "bridge::roundtrip", "T");
+    let source = structural_signature_probe_source(&signature, "bridge::roundtrip");
 
     assert!(source.contains("let _: Result<T, String>"));
     assert!(source.contains("bridge::roundtrip::<T>()"));
     assert!(source.contains(".map_err(|error| error.to_string())"));
     assert!(source
         .contains("StructuralProject + ::sifr_runtime::interop::structural::StaticProgramType"));
+}
+
+#[test]
+fn structural_probe_preserves_distinct_input_and_output_generics() {
+    let mut signature = signature(RustBridgeTypeContract {
+        sifr_type: "Result[Output, BridgeError]".to_string(),
+        rust_borrowed_type: None,
+        rust_owned_type: None,
+        rust_return_type: Some(
+            "Result<Output, crate::__sifr_bridge::main::BridgeErrorBridge>".to_string(),
+        ),
+        kind: RustBridgeTypeKind::Result,
+        unsupported_reason: None,
+    });
+    signature.structural_type_params = vec!["Input".to_string(), "Output".to_string()];
+    signature.static_program_type_params = vec!["Output".to_string()];
+    signature.params = vec![sifr_codegen::RustBridgeParamContract {
+        name: "value".to_string(),
+        convention: sifr_codegen::RustBridgeParamConvention::Borrow,
+        ty: RustBridgeTypeContract {
+            sifr_type: "Input".to_string(),
+            rust_borrowed_type: Some("&Input".to_string()),
+            rust_owned_type: Some("Input".to_string()),
+            rust_return_type: Some("Input".to_string()),
+            kind: RustBridgeTypeKind::StructuralTypeParam,
+            unsupported_reason: None,
+        },
+    }];
+
+    let source = structural_signature_probe_source(&signature, "bridge::convert");
+
+    assert!(source.contains("fn __sifr_probe<Input, Output>"));
+    assert!(source.contains("Output: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject + ::sifr_runtime::interop::structural::StaticProgramType"));
+    assert!(source.contains("Input: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject"));
+    assert!(source.contains("bridge::convert::<Input, Output>"));
 }
 
 #[test]

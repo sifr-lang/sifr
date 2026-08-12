@@ -4,7 +4,7 @@
 # expected-result: static-program-arena-clean
 
 from static_program_runtime.schema_program import derive
-from sifr.meta import StaticProgram
+from sifr.meta import StaticProgram, Structural
 
 
 class StaticProgramError(Error):
@@ -20,6 +20,10 @@ class StaticRecord:
     lookup: dict[str, int]
 
 
+class StructuralInput:
+    label: str
+
+
 @rust.opaque(
     type=bridge.executor.ValidatedDocument,
     send=False,
@@ -33,7 +37,9 @@ class ValidatedDocument:
 
 
 @rust(bridge.executor.open)
-def open_validated_document() -> Result[ValidatedDocument, StaticProgramError | RustPanicError]: ...
+def open_validated_document() -> Result[
+    ValidatedDocument, StaticProgramError | RustPanicError
+]: ...
 
 
 @rust.structural
@@ -45,6 +51,14 @@ def execute_static_program[T: StaticProgram](
 
 
 @rust.structural
+@rust(bridge.executor.execute_distinct)
+def execute_distinct_program[Output: StaticProgram, Input: Structural](
+    own document: ValidatedDocument,
+    value: Input,
+) -> Result[Output, StaticProgramError | RustPanicError]: ...
+
+
+@rust.structural
 @rust(bridge.executor.execute_corrupt)
 def execute_corrupt_program[T: StaticProgram](
     own document: ValidatedDocument,
@@ -53,7 +67,9 @@ def execute_corrupt_program[T: StaticProgram](
 
 
 @rust(bridge.executor.observation)
-def static_program_observation() -> Result[str, StaticProgramError | RustPanicError]: ...
+def static_program_observation() -> Result[
+    str, StaticProgramError | RustPanicError
+]: ...
 
 
 def input_record() -> StaticRecord:
@@ -74,8 +90,18 @@ def verify_static_program_runtime() -> Result[str, StaticProgramError | RustPani
         assert output.tags == ["alpha", "beta"]
         assert output.lookup["left"] == -7
         assert output.lookup["right"] == 9007199254740991
+        distinct_document: ValidatedDocument = open_validated_document()
+        distinct: StaticRecord = execute_distinct_program(
+            distinct_document,
+            StructuralInput("distinct-input"),
+        )
+        assert distinct.exact == 123
+        assert distinct.payload == b"arena-bytes"
         observed: str = static_program_observation()
-        assert observed == "program=sealed;integer=123;fixed=42;bytes=11;tags=alpha,beta;lookup=left:-7,right:9007199254740991;active=0"
+        assert (
+            observed
+            == "program=sealed;integer=123;fixed=42;bytes=11;tags=alpha,beta;lookup=left:-7,right:9007199254740991;active=0"
+        )
         return observed
     except StaticProgramError as error:
         raise error
@@ -83,7 +109,9 @@ def verify_static_program_runtime() -> Result[str, StaticProgramError | RustPani
         raise error
 
 
-def verify_corrupt_program_rejected() -> Result[str, StaticProgramError | RustPanicError]:
+def verify_corrupt_program_rejected() -> Result[
+    str, StaticProgramError | RustPanicError
+]:
     try:
         document: ValidatedDocument = open_validated_document()
         _output: StaticRecord = execute_corrupt_program(document, input_record())

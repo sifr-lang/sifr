@@ -57,6 +57,32 @@ def decode[T: StaticProgram]() -> Result[T, CodecError | RustPanicError]: ...
 }
 
 #[test]
+fn rust_interop_accepts_distinct_structural_input_and_static_output() {
+    let source = r"
+from sifr.meta import StaticProgram, Structural
+
+class CodecError(Error):
+    message: str
+
+@rust.structural
+@rust(bridge.codec.convert)
+def convert[Output: StaticProgram, Input: Structural](
+    value: Input,
+) -> Result[Output, CodecError | RustPanicError]: ...
+";
+    let parsed = parse_module(source).expect("source should parse");
+    let module = lower_module_with_externals(parsed.suite(), &structural_externals())
+        .map(|result| result.module)
+        .expect("distinct structural generics should lower");
+    assert_eq!(module.functions[0].type_params, ["Input", "Output"]);
+    assert_eq!(
+        module.type_param_bounds["convert"]["Output"],
+        ["StaticProgram"]
+    );
+    assert_eq!(module.type_param_bounds["convert"]["Input"], ["Structural"]);
+}
+
+#[test]
 fn static_program_bound_requires_a_structural_specialization_owner() {
     let eligible = r#"
 from sifr.meta import StaticProgram

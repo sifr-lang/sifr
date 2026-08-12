@@ -481,8 +481,8 @@ pub(super) fn signature_contract(
         },
         params,
         return_type,
-        structural_type_param: None,
-        static_program_type_param: false,
+        structural_type_params: Vec::new(),
+        static_program_type_params: Vec::new(),
         panic_error: sifr_codegen::RustBridgePanicErrorContract::None,
         span: span(),
     }

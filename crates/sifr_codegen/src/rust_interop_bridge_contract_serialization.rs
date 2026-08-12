@@ -44,18 +44,17 @@ fn push_signature(out: &mut String, signature: &RustBridgeSignatureContract) {
     out.push_str("|return=");
     push_type_contract(out, &signature.return_type);
     out.push_str("|structural=");
-    out.push_str(
-        signature
-            .structural_type_param
-            .as_deref()
-            .unwrap_or("<none>"),
-    );
-    out.push_str("|static-program=");
-    out.push_str(if signature.static_program_type_param {
-        "required"
+    if signature.structural_type_params.is_empty() {
+        out.push_str("<none>");
     } else {
-        "absent"
-    });
+        out.push_str(&signature.structural_type_params.join(","));
+    }
+    out.push_str("|static-program=");
+    if signature.static_program_type_params.is_empty() {
+        out.push_str("<none>");
+    } else {
+        out.push_str(&signature.static_program_type_params.join(","));
+    }
     out.push_str("|panic-error=");
     out.push_str(match signature.panic_error {
         crate::rust_interop_bridge_contract::RustBridgePanicErrorContract::None => "none",

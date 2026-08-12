@@ -43,105 +43,107 @@ pub(in crate::lower) fn validate_structural_function_contract(
         );
     }
     validate_error_and_panic_contract(return_type, declarations, span, ctx);
-    let [type_param] = type_params else {
+    if type_params.is_empty() {
         structural_type_error(
             ctx,
-            "structural Rust bridge declarations require exactly one type parameter",
+            "structural Rust bridge declarations require at least one type parameter",
             span,
         );
         return;
-    };
-    let exact_bound = ctx
-        .type_param_bounds
-        .get(function_name)
-        .and_then(|bounds| bounds.get(type_param))
-        .and_then(|bounds| match bounds.as_slice() {
-            [bound] if bound == "Structural" || bound == "StaticProgram" => Some(bound.clone()),
-            _ => None,
-        });
-    if exact_bound.is_none() {
-        structural_type_error(
-            ctx,
-            format!(
-                "type parameter `{type_param}` must have the exact `Structural` or `StaticProgram` bound"
-            ),
-            span,
-        );
     }
-    match exact_bound.as_deref() {
-        Some("Structural") => {
-            let imported = ctx.canonical_structural_marker_imported;
-            let local = ctx.local_structural_marker_declared;
-            validate_marker(
+    for type_param in type_params {
+        let exact_bound = ctx
+            .type_param_bounds
+            .get(function_name)
+            .and_then(|bounds| bounds.get(type_param))
+            .and_then(|bounds| match bounds.as_slice() {
+                [bound] if bound == "Structural" || bound == "StaticProgram" => Some(bound.clone()),
+                _ => None,
+            });
+        if exact_bound.is_none() {
+            structural_type_error(
+                ctx,
+                format!(
+                    "type parameter `{type_param}` must have the exact `Structural` or `StaticProgram` bound"
+                ),
+                span,
+            );
+        }
+        match exact_bound.as_deref() {
+            Some("Structural") => validate_marker(
                 ctx,
                 "Structural",
                 "sifr.meta.Structural",
-                imported,
-                local,
+                ctx.canonical_structural_marker_imported,
+                ctx.local_structural_marker_declared,
                 span,
-            );
-        }
-        Some("StaticProgram") => {
-            let imported = ctx.canonical_static_program_marker_imported;
-            let local = ctx.local_static_program_marker_declared;
-            validate_marker(
+            ),
+            Some("StaticProgram") => validate_marker(
                 ctx,
                 "StaticProgram",
                 "sifr.meta.StaticProgram",
-                imported,
-                local,
+                ctx.canonical_static_program_marker_imported,
+                ctx.local_static_program_marker_declared,
+                span,
+            ),
+            _ => {}
+        }
+
+        let mut used = false;
+        for param in params {
+            match structural_type_position(&param.ty, type_param) {
+                StructuralTypePosition::Absent => {}
+                StructuralTypePosition::Direct => {
+                    used = true;
+                    if !param.convention.is_borrowed() || param.convention.is_mutable() {
+                        structural_type_error(
+                            ctx,
+                            format!(
+                                "structural parameter `{}` must be an immutable borrow",
+                                param.name
+                            ),
+                            span,
+                        );
+                    }
+                }
+                StructuralTypePosition::CallScopedCallback => used = true,
+                StructuralTypePosition::Nested => structural_type_error(
+                    ctx,
+                    format!(
+                        "structural type parameter `{type_param}` occurs in an unsupported nested position for `{}`",
+                        param.name
+                    ),
+                    span,
+                ),
+            }
+        }
+        match return_type.resolve_alias() {
+            Type::Result(ok, _) => match structural_type_position(ok, type_param) {
+                StructuralTypePosition::Absent => {}
+                StructuralTypePosition::Direct => used = true,
+                _ => structural_type_error(
+                    ctx,
+                    "a structural return must be the direct successful member of `Result`",
+                    span,
+                ),
+            },
+            other
+                if structural_type_position(other, type_param)
+                    != StructuralTypePosition::Absent =>
+            {
+                structural_type_error(ctx, "a structural return must be inside `Result`", span);
+            }
+            _ => {}
+        }
+        if !used {
+            structural_type_error(
+                ctx,
+                format!(
+                    "structural type parameter `{type_param}` is not used by the bridge signature"
+                ),
                 span,
             );
         }
-        _ => {}
-    }
-
-    let mut used = false;
-    for param in params {
-        match structural_type_position(&param.ty, type_param) {
-            StructuralTypePosition::Absent => {}
-            StructuralTypePosition::Direct => {
-                used = true;
-                if !param.convention.is_borrowed() || param.convention.is_mutable() {
-                    structural_type_error(
-                        ctx,
-                        format!("structural parameter `{}` must be an immutable borrow", param.name),
-                        span,
-                    );
-                }
-            }
-            StructuralTypePosition::CallScopedCallback => used = true,
-            StructuralTypePosition::Nested => structural_type_error(
-                ctx,
-                format!(
-                    "structural type parameter `{type_param}` occurs in an unsupported nested position for `{}`",
-                    param.name
-                ),
-                span,
-            ),
-        }
-    }
-    match return_type.resolve_alias() {
-        Type::Result(ok, _) => match structural_type_position(ok, type_param) {
-            StructuralTypePosition::Absent => {}
-            StructuralTypePosition::Direct => used = true,
-            _ => structural_type_error(
-                ctx,
-                "a structural return must be the direct successful member of `Result`",
-                span,
-            ),
-        },
-        other if structural_type_position(other, type_param) != StructuralTypePosition::Absent => {
-            structural_type_error(ctx, "a structural return must be inside `Result`", span);
-        }
-        _ => {}
-    }
-    if !used {
-        structural_type_error(
-            ctx,
-            format!("structural type parameter `{type_param}` is not used by the bridge signature"),
-            span,
-        );
     }
 }
 
