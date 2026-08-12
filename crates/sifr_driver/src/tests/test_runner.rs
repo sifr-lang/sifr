@@ -86,6 +86,39 @@ def test_dotted_import():
 }
 
 #[test]
+fn test_run_tests_uses_declaring_union_owner_and_named_test_module_upcasts() {
+    let unique = format!(
+        "sifr_test_union_owner_upcast_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    );
+    let test_dir = std::env::temp_dir().join(unique);
+    std::fs::create_dir_all(&test_dir).expect("test dir should be created");
+    std::fs::write(
+        test_dir.join("errors.sifr"),
+        "class FirstError(Error):\n    message: str\n\nclass SecondError(Error):\n    message: str\n\ndef produce() -> Result[int, FirstError | SecondError]:\n    return 1\n",
+    )
+    .expect("union provider should be written");
+    std::fs::write(
+        test_dir.join("app.sifr"),
+        "from errors import produce\n\ndef marker() -> int:\n    return 7\n",
+    )
+    .expect("alphabetically first union consumer should be written");
+    std::fs::write(
+        test_dir.join("test_union_upcast.sifr"),
+        "from app import marker\n\nclass Root:\n    value: int\n\nclass Mid(Root):\n    middle: int\n\n    def __init__(self, value: int, middle: int):\n        super().__init__(value)\n        self.middle = middle\n\nclass Child(Mid):\n    extra: int\n\n    def __init__(self, value: int, middle: int, extra: int):\n        super().__init__(value, middle)\n        self.extra = extra\n\ndef consume(own value: Root) -> int:\n    return value.value\n\ndef test_union_owner_and_upcast():\n    assert marker() == 7\n    assert consume(Child(1, 2, 3)) == 1\n",
+    )
+    .expect("test module should be written");
+
+    let result = run_tests(&test_dir).expect("test runner should compile unions and upcasts");
+    assert!(result, "sifr test run should succeed");
+    let _ = std::fs::remove_dir_all(&test_dir);
+}
+
+#[test]
 fn test_run_tests_reuses_cached_workspace_for_unchanged_project() {
     let unique = format!(
         "sifr_test_cache_reuse_{}_{}",

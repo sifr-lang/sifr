@@ -151,13 +151,18 @@ pub enum Type {
     /// Protocol type: structural interface that maps to Rust `trait`.
     /// Any class with the required methods satisfies the protocol.
     Protocol {
+        identity: Option<String>,
         name: String,
         methods: Vec<(String, FunctionType)>,
     },
 
     /// Newtype wrapper around a primitive type.
     /// `class Port(int)` -> `struct Port(i64)`
-    Newtype { name: String, inner: Box<Type> },
+    Newtype {
+        identity: Option<String>,
+        name: String,
+        inner: Box<Type>,
+    },
 
     // --- Generics ---
     /// Type variable: a generic type parameter (e.g., `T` in `def first[T](items: list[T]) -> T`)
@@ -175,6 +180,7 @@ pub enum Type {
     /// Enum type: `class Color(Enum): RED = 1; GREEN = 2; BLUE = 3`
     /// Maps to a Rust `#[repr(i64)] enum Color { RED = 1, GREEN = 2, BLUE = 3 }`
     Enum {
+        identity: Option<String>,
         name: String,
         variants: Vec<(String, Option<i64>)>,
     },

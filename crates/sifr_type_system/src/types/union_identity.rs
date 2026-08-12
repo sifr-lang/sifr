@@ -71,12 +71,23 @@ impl Type {
             }
             Self::Unknown => atom("unknown"),
             Self::Result(ok, error) => binary("result", ok, error),
-            class @ Self::Class { type_args, .. } => {
-                named_sequence("class", &class.rust_type(), type_args)
-            }
-            Self::Protocol { name, methods } => nominal_methods("protocol", name, methods),
-            Self::Newtype { name, inner } => {
-                let mut key = component("newtype", name);
+            Self::Class {
+                identity,
+                name,
+                type_args,
+                ..
+            } => named_sequence("class", identity.as_deref().unwrap_or(name), type_args),
+            Self::Protocol {
+                identity,
+                name,
+                methods,
+            } => nominal_methods("protocol", identity.as_deref().unwrap_or(name), methods),
+            Self::Newtype {
+                identity,
+                name,
+                inner,
+            } => {
+                let mut key = component("newtype", identity.as_deref().unwrap_or(name));
                 append(&mut key, &inner.union_identity_key());
                 key
             }
@@ -87,7 +98,11 @@ impl Type {
             Self::AsyncCallable(params, conventions, result) => {
                 callable_key("async_callable", params, conventions, result)
             }
-            Self::Enum { name, variants } => enum_key(name, variants),
+            Self::Enum {
+                identity,
+                name,
+                variants,
+            } => enum_key(identity.as_deref().unwrap_or(name), variants),
             Self::BigInt => atom("bigint"),
             Self::Decimal => atom("decimal"),
             Self::BigDecimal => atom("bigdecimal"),
@@ -247,7 +262,8 @@ mod tests {
             parent_class: None,
         };
         let local_int = class("Int", Some("pkg.Int"));
-        let canonicalized_local_int = class("Int", None);
+        let unqualified_local_int = class("Int", None);
+        let aliased_local_int = class("Integer", Some("pkg.Int"));
         let aliased_other_int = class("OtherInt", Some("other.Int"));
         let union = Type::Union(vec![Type::Int, local_int.clone()]);
 
@@ -260,9 +276,13 @@ mod tests {
             local_int.union_variant_name(),
             aliased_other_int.union_variant_name()
         );
+        assert_ne!(
+            local_int.union_variant_name(),
+            unqualified_local_int.union_variant_name()
+        );
         assert_eq!(
             local_int.union_variant_name(),
-            canonicalized_local_int.union_variant_name()
+            aliased_local_int.union_variant_name()
         );
 
         let callable =
@@ -275,5 +295,59 @@ mod tests {
             Type::Union(vec![Type::Int, Type::Str]).union_enum_name(),
             Type::Union(vec![Type::Str, Type::Int]).union_enum_name()
         );
+
+        let newtype = |name: &str, identity: &str| Type::Newtype {
+            identity: Some(identity.to_string()),
+            name: name.to_string(),
+            inner: Box::new(Type::Int),
+        };
+        let enumeration = |name: &str, identity: &str| Type::Enum {
+            identity: Some(identity.to_string()),
+            name: name.to_string(),
+            variants: vec![("READY".to_string(), Some(1))],
+        };
+        let protocol = |name: &str, identity: &str| Type::Protocol {
+            identity: Some(identity.to_string()),
+            name: name.to_string(),
+            methods: Vec::new(),
+        };
+        for (left, right) in [
+            (
+                newtype("Token", "left.Token"),
+                newtype("Token", "right.Token"),
+            ),
+            (
+                enumeration("Status", "left.Status"),
+                enumeration("Status", "right.Status"),
+            ),
+            (
+                protocol("Readable", "left.Readable"),
+                protocol("Readable", "right.Readable"),
+            ),
+        ] {
+            assert_ne!(
+                Type::Union(vec![Type::Int, left]).union_enum_name(),
+                Type::Union(vec![Type::Int, right]).union_enum_name()
+            );
+        }
+        for (original, alias) in [
+            (
+                newtype("Token", "left.Token"),
+                newtype("PublicToken", "left.Token"),
+            ),
+            (
+                enumeration("Status", "left.Status"),
+                enumeration("PublicStatus", "left.Status"),
+            ),
+            (
+                protocol("Readable", "left.Readable"),
+                protocol("PublicReadable", "left.Readable"),
+            ),
+        ] {
+            assert_eq!(
+                Type::Union(vec![Type::Int, original]).union_enum_name(),
+                Type::Union(vec![Type::Int, alias]).union_enum_name()
+            );
+        }
     }
 }

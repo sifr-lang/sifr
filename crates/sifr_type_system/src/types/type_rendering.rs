@@ -721,10 +721,31 @@ impl Type {
                         && cft.return_type.is_assignable_to(&pft.return_type)
                 })
             }),
-            // Protocol types: same name means same protocol
-            (Self::Protocol { name: a, .. }, Self::Protocol { name: b, .. }) => a == b,
-            // Newtype: same name means same newtype (nominal)
-            (Self::Newtype { name: a, .. }, Self::Newtype { name: b, .. }) => a == b,
+            // Nominal types compare their canonical declaration identity when available.
+            (
+                Self::Protocol {
+                    identity: a_identity,
+                    name: a,
+                    ..
+                },
+                Self::Protocol {
+                    identity: b_identity,
+                    name: b,
+                    ..
+                },
+            ) => a_identity.as_deref().unwrap_or(a) == b_identity.as_deref().unwrap_or(b),
+            (
+                Self::Newtype {
+                    identity: a_identity,
+                    name: a,
+                    ..
+                },
+                Self::Newtype {
+                    identity: b_identity,
+                    name: b,
+                    ..
+                },
+            ) => a_identity.as_deref().unwrap_or(a) == b_identity.as_deref().unwrap_or(b),
             // TypeVar: only assignable to the same type parameter name.
             (Self::TypeVar(a), Self::TypeVar(b)) => a == b,
             // Callable: compatible if param and return types match
@@ -746,8 +767,18 @@ impl Type {
                         .all(|((_, pt, _), ct)| pt.is_assignable_to(ct))
                     && ft.return_type.is_assignable_to(ret)
             }
-            // Enum: nominal typing - same name means same enum
-            (Self::Enum { name: a, .. }, Self::Enum { name: b, .. }) => a == b,
+            (
+                Self::Enum {
+                    identity: a_identity,
+                    name: a,
+                    ..
+                },
+                Self::Enum {
+                    identity: b_identity,
+                    name: b,
+                    ..
+                },
+            ) => a_identity.as_deref().unwrap_or(a) == b_identity.as_deref().unwrap_or(b),
             // BigInt: only assignable to BigInt
             (Self::BigInt, Self::BigInt) => true,
             _ => false,

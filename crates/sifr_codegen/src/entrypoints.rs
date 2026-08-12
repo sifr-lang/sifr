@@ -9,7 +9,7 @@ pub fn generate_rust(module: &HirModule) -> String {
 }
 
 /// Generate Rust source code for a test module (with #[test] attributes).
-pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
+pub fn generate_rust_test(module: &HirModule, module_name: &str) -> CodegenResult {
     let mut emitter = RustEmitter::new();
 
     // First pass: collect all union types used in the module
@@ -22,7 +22,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     emitter.generate_enum_definitions();
 
     // Second pass: emit the actual code
-    emitter.emit_module(module, false, true);
+    emitter.emit_named_module(module, false, true, Some(module_name));
 
     let mut module_import_items: Vec<RustItem> = Vec::new();
     for import in &module.imports {

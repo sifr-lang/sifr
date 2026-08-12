@@ -1,5 +1,5 @@
 use super::project_build_check::mktemp_dir;
-use crate::{build_project, check_project};
+use crate::{build, build_project, check_project};
 
 #[test]
 fn test_check_project_imports_generic_function_metadata_through_facade() {
@@ -46,6 +46,113 @@ fn test_build_project_imports_generic_function_metadata_through_facade() {
     .expect("main should be written");
     let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
         .expect("generic function facade should build natively");
+    assert!(binary.exists());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_build_project_shares_union_identity_across_modules() {
+    let dir = mktemp_dir("shared_project_union_identity");
+    std::fs::write(
+        dir.join("errors.sifr"),
+        "class FirstError(Error):\n    message: str\n\nclass SecondError(Error):\n    message: str\n\nclass Payload:\n    value: bool | int | float | str | bytes | None\n    tag: int | str\n\ndef produce() -> Result[int, FirstError | SecondError]:\n    return 7\n\ndef make_payload() -> Payload:\n    return Payload(True, 3)\n",
+    )
+    .expect("union provider should be written");
+    std::fs::write(
+        dir.join("facade.sifr"),
+        "from errors import FirstError as PublicFirstError, Payload as PublicPayload, SecondError as PublicSecondError, make_payload as public_make_payload, produce as public_produce\n",
+    )
+    .expect("union facade should be written");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "from facade import PublicFirstError as E1, PublicPayload as Payload, PublicSecondError as E2, public_make_payload as make_payload, public_produce as produce\n\ndef relay() -> Result[int, E1 | E2]:\n    result: Result[int, E1 | E2] = produce()\n    return result\n\ndef tag_value(payload: Payload) -> int:\n    tag: int | str = payload.tag\n    if isinstance(tag, int):\n        return tag\n    else:\n        return len(tag)\n\ndef main():\n    payload: Payload = make_payload()\n    assert payload.value == True\n    assert tag_value(payload) == 3\n",
+    )
+    .expect("union consumer should be written");
+
+    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
+        .expect("one project-wide union identity should build natively");
+    assert!(binary.exists());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_build_project_keeps_same_basename_enum_and_newtype_unions_distinct() {
+    let dir = mktemp_dir("distinct_enum_newtype_union_identities");
+    let provider = |status_value: i64, token_value: i64| {
+        format!(
+            "from enum import Enum\n\nclass Status(Enum):\n    READY = {status_value}\n\nclass Token(int):\n    pass\n\ndef status() -> Status | int:\n    return Status.READY\n\ndef token() -> Token | str:\n    return Token({token_value})\n"
+        )
+    };
+    std::fs::write(dir.join("left.sifr"), provider(1, 11))
+        .expect("left provider should be written");
+    std::fs::write(dir.join("right.sifr"), provider(2, 22))
+        .expect("right provider should be written");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "from left import Status as LeftStatus, Token as LeftToken, status as left_status, token as left_token\nfrom right import Status as RightStatus, Token as RightToken, status as right_status, token as right_token\n\ndef main():\n    first_status: LeftStatus | int = left_status()\n    second_status: RightStatus | int = right_status()\n    first_token: LeftToken | str = left_token()\n    second_token: RightToken | str = right_token()\n",
+    )
+    .expect("union consumer should be written");
+
+    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
+        .expect("same-basename enum and newtype unions should remain distinct");
+    assert!(binary.exists());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_check_project_keeps_same_basename_protocol_unions_distinct() {
+    let dir = mktemp_dir("distinct_protocol_union_identities");
+    let provider = "class Readable(Protocol):\n    def read(self) -> str:\n        pass\n\ndef accept(value: Readable | int) -> int:\n    return 1\n";
+    std::fs::write(dir.join("left.sifr"), provider).expect("left provider should be written");
+    std::fs::write(dir.join("right.sifr"), provider).expect("right provider should be written");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "from left import Readable as LeftReadable, accept as accept_left\nfrom right import Readable as RightReadable, accept as accept_right\n\ndef use_left(value: LeftReadable | int) -> int:\n    return accept_left(value)\n\ndef use_right(value: RightReadable | int) -> int:\n    return accept_right(value)\n\ndef main():\n    pass\n",
+    )
+    .expect("protocol consumer should be written");
+
+    let errors = check_project(&dir.join("main.sifr"));
+    assert!(
+        errors.is_empty(),
+        "same-basename protocol unions should remain distinct: {errors:?}"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_build_single_file_consumes_three_level_class_upcast() {
+    let dir = mktemp_dir("single_file_three_level_upcast");
+    let source = "class Root:\n    value: int\n\nclass Mid(Root):\n    middle: int\n\n    def __init__(self, value: int, middle: int):\n        super().__init__(value)\n        self.middle = middle\n\nclass Child(Mid):\n    extra: int\n\n    def __init__(self, value: int, middle: int, extra: int):\n        super().__init__(value, middle)\n        self.extra = extra\n\ndef consume(own value: Root) -> int:\n    return value.value\n\ndef as_root(own value: Child) -> Root:\n    return value\n\ndef main():\n    assert consume(Child(1, 2, 3)) == 1\n    root: Root = as_root(Child(4, 5, 6))\n    assert root.value == 4\n";
+
+    let binary = build(source, &dir.join("build_out"))
+        .expect("single-file transitive class upcast should build natively");
+    let status = std::process::Command::new(&binary)
+        .status()
+        .expect("single-file transitive class upcast binary should run");
+    assert!(status.success());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_build_project_keeps_same_basename_union_identities_distinct() {
+    let dir = mktemp_dir("distinct_project_union_identities");
+    let provider = |value: i64| {
+        format!(
+            "class PackageError(Error):\n    message: str\n\nclass OtherError(Error):\n    message: str\n\ndef produce() -> Result[int, PackageError | OtherError]:\n    return {value}\n"
+        )
+    };
+    std::fs::write(dir.join("left.sifr"), provider(1)).expect("left provider should be written");
+    std::fs::write(dir.join("right.sifr"), provider(2)).expect("right provider should be written");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "from left import PackageError as LeftPackageError, OtherError as LeftOtherError, produce as produce_left\nfrom right import PackageError as RightPackageError, OtherError as RightOtherError, produce as produce_right\n\ndef left_value() -> Result[int, LeftPackageError | LeftOtherError]:\n    return produce_left()\n\ndef right_value() -> Result[int, RightPackageError | RightOtherError]:\n    return produce_right()\n\ndef main():\n    pass\n",
+    )
+    .expect("union consumer should be written");
+
+    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
+        .expect("same-basename unions should remain nominally distinct");
     assert!(binary.exists());
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -195,6 +302,35 @@ fn test_build_project_consumes_transitive_class_upcasts() {
     let status = std::process::Command::new(&binary)
         .status()
         .expect("consuming class upcast binary should run");
+    assert!(status.success());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_build_project_crate_roots_non_main_transitive_upcasts() {
+    let dir = mktemp_dir("non_main_transitive_upcast_native");
+    std::fs::write(
+        dir.join("shapes.sifr"),
+        "class Root:\n    value: int\n\nclass Mid(Root):\n    middle: int\n\n    def __init__(self, value: int, middle: int):\n        super().__init__(value)\n        self.middle = middle\n\nclass Child(Mid):\n    extra: int\n\n    def __init__(self, value: int, middle: int, extra: int):\n        super().__init__(value, middle)\n        self.extra = extra\n",
+    )
+    .expect("shape declarations should be written");
+    std::fs::write(
+        dir.join("adapter.sifr"),
+        "from shapes import Child, Root\n\ndef as_root(own value: Child) -> Root:\n    return value\n",
+    )
+    .expect("non-main adapter should be written");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "from adapter import as_root\nfrom shapes import Child, Root\n\ndef main():\n    root: Root = as_root(Child(1, 2, 3))\n    assert root.value == 1\n",
+    )
+    .expect("main consumer should be written");
+
+    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
+        .expect("non-main transitive upcasts should use crate-rooted paths");
+    let status = std::process::Command::new(&binary)
+        .status()
+        .expect("non-main transitive upcast binary should run");
     assert!(status.success());
     let _ = std::fs::remove_dir_all(dir);
 }

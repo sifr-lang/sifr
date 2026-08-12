@@ -5,7 +5,9 @@ use crate::frontend::FrontendCompiled;
 use crate::project::{
     assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path, ProjectLowering,
 };
-use sifr_codegen::{generate_rust_multi_with_metadata, generate_rust_with_stdlib, StdlibCode};
+use sifr_codegen::{
+    generate_rust_multi_with_metadata, generate_rust_with_stdlib_for_module, StdlibCode,
+};
 use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
 use std::collections::{BTreeMap, HashSet};
@@ -47,7 +49,13 @@ pub(super) fn codegen_single_file_frontend(
     let static_programs = frontend.lowering_result.specialization_outputs.clone();
     let mut generated = run_codegen_with_boundary(
         "internal compiler panic during single-file code generation",
-        || generate_rust_with_stdlib(&frontend.lowering_result.module, &frontend.stdlib.code),
+        || {
+            generate_rust_with_stdlib_for_module(
+                &frontend.lowering_result.module,
+                &frontend.stdlib.code,
+                Some("main"),
+            )
+        },
     )
     .map_err(|error| vec![*error])?;
     generated.static_programs = static_programs;

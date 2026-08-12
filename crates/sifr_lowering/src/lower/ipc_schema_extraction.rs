@@ -47,7 +47,7 @@ fn extract_ipc_schema_type_inner(ty: &Type) -> IpcSchemaType {
                 })
                 .collect::<Vec<_>>(),
         },
-        Type::Enum { name, variants } => IpcSchemaType::Enum {
+        Type::Enum { name, variants, .. } => IpcSchemaType::Enum {
             name: name.clone(),
             variants: variants
                 .iter()
@@ -153,6 +153,7 @@ mod tests {
             compatible_version_max: 1,
             request: extract_ipc_schema_type(&request),
             response: extract_ipc_schema_type(&Type::Enum {
+                identity: None,
                 name: "EchoStatus".to_string(),
                 variants: vec![
                     ("Accepted".to_string(), Some(1)),

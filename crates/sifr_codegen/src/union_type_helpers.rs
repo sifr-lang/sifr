@@ -40,6 +40,9 @@ impl RustEmitter {
         }
         // Also scan class method bodies and register their signatures
         for class in &module.classes {
+            for (_, field_type) in &class.fields {
+                self.register_union_type(field_type);
+            }
             let mut has_constructor = false;
             for method in &class.methods {
                 // Register method signature under ClassName::method_name
@@ -188,6 +191,9 @@ impl RustEmitter {
 
         self.enum_items.clear();
         for (enum_name, members) in enums {
+            if self.suppressed_union_enum_definitions.contains(&enum_name) {
+                continue;
+            }
             let is_try_error_carrier = self.try_error_carrier_enums.contains(&enum_name);
             let supports_ordinary_value_traits =
                 !is_try_error_carrier || self.ordinary_union_enums.contains(&enum_name);

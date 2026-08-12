@@ -129,7 +129,7 @@ pub(crate) fn build_test_runner_project(
                 "internal compiler panic during test-module code generation for '{}'",
                 test_file.display()
             ),
-            || generate_rust_test(&lowering_result.module),
+            || generate_rust_test(&lowering_result.module, module_name),
         )
         .map_err(|error| vec![*error])?;
         all_rust_code.push_str("// Tests from: ");

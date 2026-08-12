@@ -17,6 +17,7 @@ pub(super) fn lowers_leaf_expr_variants() {
         enum_name: "Color".to_string(),
         variant: "RED".to_string(),
         ty: sifr_type_system::Type::Enum {
+            identity: None,
             name: "Color".to_string(),
             variants: vec![("RED".to_string(), Some(1))],
         },
@@ -155,6 +156,7 @@ pub(super) fn lowers_bool_and_enum_name_leaf_expr_variants() {
     })
     .expect("alias-bool name lowered");
     let enum_ty = Type::Enum {
+        identity: None,
         name: "Mode".to_string(),
         variants: vec![("A".to_string(), Some(1)), ("B".to_string(), Some(2))],
     };

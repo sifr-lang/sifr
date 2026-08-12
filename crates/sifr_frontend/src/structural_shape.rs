@@ -138,7 +138,7 @@ fn describe_node(
         ),
         Type::Union(members) => describe_union(module_name, members, lowering, visiting),
         Type::TypeVar(name) => ShapeNode::TypeParameter(name.clone()),
-        Type::Enum { name, variants } => ShapeNode::Enum {
+        Type::Enum { name, variants, .. } => ShapeNode::Enum {
             identity: format!("{module_name}.{name}"),
             variants: variants
                 .iter()
@@ -150,7 +150,7 @@ fn describe_node(
                 .collect(),
             metadata: Vec::new(),
         },
-        Type::Newtype { name, inner } => ShapeNode::Newtype {
+        Type::Newtype { name, inner, .. } => ShapeNode::Newtype {
             identity: format!("{module_name}.{name}"),
             inner: Box::new(describe_node(module_name, inner, lowering, visiting)),
             metadata: Vec::new(),

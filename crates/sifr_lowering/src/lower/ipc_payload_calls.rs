@@ -221,6 +221,7 @@ mod tests {
             Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
             Type::Tuple(vec![Type::Int, Type::Str, Type::Bytes]),
             Type::Enum {
+                identity: None,
                 name: "Color".to_string(),
                 variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
             },

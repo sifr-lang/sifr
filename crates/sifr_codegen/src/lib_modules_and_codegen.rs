@@ -227,6 +227,26 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
     module_name: Option<&str>,
     structural_interop_enabled: bool,
 ) -> CodegenResult {
+    generate_rust_with_stdlib_for_module_with_project_policy(
+        module,
+        stdlib_code,
+        module_name,
+        structural_interop_enabled,
+        None,
+        None,
+        None,
+    )
+}
+
+pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
+    module: &HirModule,
+    stdlib_code: &StdlibCode,
+    module_name: Option<&str>,
+    structural_interop_enabled: bool,
+    owned_union_enums: Option<&HashSet<String>>,
+    project_ordinary_union_enums: Option<&HashSet<String>>,
+    project_try_error_carrier_enums: Option<&HashSet<String>>,
+) -> CodegenResult {
     let mut emitter = RustEmitter::new();
     emitter.structural_interop_enabled = structural_interop_enabled;
     // Register stdlib generic classes so user code skips explicit type annotations
@@ -307,6 +327,25 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
 
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);
+    crate::lib_project_codegen::register_imported_union_types(&mut emitter, module, stdlib_code);
+    if let Some(project_ordinary_union_enums) = project_ordinary_union_enums {
+        emitter
+            .ordinary_union_enums
+            .extend(project_ordinary_union_enums.iter().cloned());
+    }
+    if let Some(project_try_error_carrier_enums) = project_try_error_carrier_enums {
+        emitter
+            .try_error_carrier_enums
+            .extend(project_try_error_carrier_enums.iter().cloned());
+    }
+    if let Some(owned_union_enums) = owned_union_enums {
+        emitter.suppressed_union_enum_definitions = emitter
+            .union_enums
+            .keys()
+            .filter(|name| !owned_union_enums.contains(*name))
+            .cloned()
+            .collect();
+    }
 
     // Detect recursive (self-referential) class fields that need Box<T>
     emitter.detect_recursive_fields(module);

@@ -402,7 +402,7 @@ pub(in crate::lower) fn resolve_method_type(
         Type::Protocol { name, methods, .. } => {
             resolve_protocol_method_type(name, methods, method, args, arg_ranges, method_range, ctx)
         }
-        Type::Newtype { name, inner } => {
+        Type::Newtype { name, inner, .. } => {
             resolve_newtype_method_type(name, inner, method, args, arg_ranges, method_range, ctx)
         }
         Type::Enum { name, .. } => {
