@@ -355,6 +355,25 @@ fn keep_me() {}
 }
 
 #[test]
+fn strips_numeric_imports_centralized_by_module_codegen() {
+    let input = r#"
+use num_bigint::BigInt;
+use rust_decimal::Decimal;
+use bigdecimal::BigDecimal;
+fn keep_me(value: Decimal) -> (BigInt, BigDecimal) { todo!() }
+"#;
+    let prepared = collect_and_strip_shared_prelude(input);
+    assert!(!prepared.stripped_code.contains("use num_bigint::BigInt;"));
+    assert!(!prepared
+        .stripped_code
+        .contains("use rust_decimal::Decimal;"));
+    assert!(!prepared
+        .stripped_code
+        .contains("use bigdecimal::BigDecimal;"));
+    assert!(prepared.stripped_code.contains("fn keep_me"));
+}
+
+#[test]
 fn canonical_stdlib_names_are_sealed_across_declarations_and_uses() {
     let input = r#"
 struct FileHandle {}
