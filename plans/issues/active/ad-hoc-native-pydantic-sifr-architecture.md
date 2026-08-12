@@ -327,6 +327,27 @@ Milestone delivery records:
 - [Issue #3161](https://github.com/sifr-lang/sifr/issues/3161) owns exact-artifact
   performance isolation. [Issue #3162](https://github.com/sifr-lang/sifr/issues/3162)
   owns non-blocking nominal and test-layout hardening.
+- The distinct structural-generic prerequisite merged in
+  [PR #3164](https://github.com/sifr-lang/sifr/pull/3164) at merge commit
+  `76c3bcb10bc2a28940003dd9e1b1f92506b72d07`. The exact reviewed candidate
+  was `7ed8e0d95f33859f86ca4033b139db228f3e3ff2`.
+- Structural bridge functions now accept multiple generic parameters with
+  separate `Structural` and `StaticProgram` bounds. The compiler keeps their
+  canonical HIR order and applies each generated trait bound to its owner.
+- Focused lowering, code generation, driver probe, native fixture, Clippy,
+  formatting, maintainability, taxonomy, and file-size checks passed. The
+  Rust-interop area passed 10/10.
+- The warm create-PR gate exited zero. Its receipt SHA-256 is
+  `e877039a90709e39e1950af2b47111e8acdfcc4d2c2891cdffe476dd08f6d229`.
+  Python passed 19/19, Rust passed 10/10, and E2E passed 140/140.
+- The single merge gate passed all executed functional lanes. It stopped on
+  the stale-helper performance isolation problem that issue #3161 owns.
+- A fresh exact-candidate target measured 925,520,586 median instructions
+  against a 936,811,698 limit. Its accepted receipt SHA-256 is
+  `dfe27a5f69dfb818a1506ef7f4baa6900fcd01dc05884a3fd42c96058f3b871e`.
+- Exact-SHA Opus implementation review and validation adjudication returned
+  `SATISFIED` with no blocker. The adjudication response SHA-256 is
+  `2db609c6aad0be3061f79e1d2b70d2ed4f95f6c0939af67a472773e6e777eae0`.
 - `milestone_ps_6` remains active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
