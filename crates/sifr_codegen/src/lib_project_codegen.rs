@@ -318,7 +318,8 @@ pub fn generate_rust_multi_with_metadata(
         .module_class_fields
         .extend(project_class_fields(modules));
     let union_usage = project_union_usage(modules, &project_codegen_code);
-    let stdlib_nominal_plan = project_stdlib_nominal_plan(&union_usage.unions, stdlib_code);
+    let stdlib_nominal_plan =
+        project_stdlib_nominal_plan(&union_usage.unions, stdlib_code, modules);
     let crate_root_modules = HashSet::from(["main"]);
     let mut nominal_type_paths = project_nominal_type_paths(modules, &crate_root_modules);
     nominal_type_paths.extend(stdlib_nominal_plan.nominal_paths.clone());

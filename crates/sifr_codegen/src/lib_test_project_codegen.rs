@@ -41,7 +41,8 @@ pub fn generate_rust_test_project_with_metadata(
         .module_class_fields
         .extend(project_class_fields(&all_modules));
     let union_usage = project_union_usage(&all_modules, &project_code);
-    let stdlib_nominal_plan = project_stdlib_nominal_plan(&union_usage.unions, stdlib_code);
+    let stdlib_nominal_plan =
+        project_stdlib_nominal_plan(&union_usage.unions, stdlib_code, &all_modules);
     let crate_root_modules = test_modules
         .iter()
         .map(|(module_name, _)| *module_name)

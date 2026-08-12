@@ -1,7 +1,7 @@
 use crate::stdlib_filter::strip_rust_items_by_name;
 use crate::{
-    generate_rust_with_stdlib_for_module_with_structural_policy, publicize_generated_module_source,
-    HirModule, StdlibCode,
+    build_error_into_error_impl, generate_rust_with_stdlib_for_module_with_structural_policy,
+    publicize_generated_module_source, HirModule, Renderer, RustFile, StdlibCode,
 };
 use sifr_ir::{HirExpr, HirFunction, HirImport, HirStmt, MethodKind};
 use sifr_stdlib_manifest::StdlibFeature;
@@ -60,12 +60,26 @@ pub(crate) fn relocate_project_stdlib_nominals(
 pub(crate) fn project_stdlib_nominal_plan(
     unions: &HashMap<String, Vec<Type>>,
     stdlib_code: &StdlibCode,
+    modules: &[(&str, &HirModule)],
 ) -> ProjectStdlibNominalPlan {
     let mut declarations = BTreeMap::<String, HashSet<String>>::new();
     let mut builtin_types = BTreeMap::<String, Type>::new();
     for members in unions.values() {
         for member in members {
             collect_shared_nominals(member, &mut declarations, &mut builtin_types);
+        }
+    }
+    let mut python_error_rust_names = HashSet::new();
+    if builtin_types.contains_key("Error") {
+        for (_, module) in modules {
+            if !crate::python_interop_common::module_uses_async_python_declaration(module) {
+                continue;
+            }
+            for (rust_name, ty) in crate::python_interop_common::python_error_contract_types(module)
+            {
+                collect_shared_nominals(&ty, &mut declarations, &mut builtin_types);
+                python_error_rust_names.insert(rust_name);
+            }
         }
     }
     if declarations.is_empty() && builtin_types.is_empty() {
@@ -143,7 +157,16 @@ pub(crate) fn project_stdlib_nominal_plan(
     );
     let probe_name_refs = probe_names.iter().map(String::as_str).collect();
     let shared_source = strip_rust_items_by_name(&generated.rust_source, &probe_name_refs);
-    let shared_source = publicize_generated_module_source(&shared_source);
+    let mut shared_source = publicize_generated_module_source(&shared_source);
+    if !python_error_rust_names.is_empty() {
+        let mut names = python_error_rust_names.into_iter().collect::<Vec<_>>();
+        names.sort();
+        let items = names
+            .iter()
+            .map(|name| build_error_into_error_impl(name))
+            .collect();
+        shared_source.push_str(&Renderer::new().render_file(&RustFile { items }));
+    }
     let mut prelude = format!("mod {SHARED_STDLIB_NOMINAL_MODULE} {{\n");
     for line in shared_source.lines() {
         prelude.push_str("    ");
