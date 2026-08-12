@@ -131,7 +131,7 @@ fn resolve_class(
             local,
         );
     }
-    if externals.error_types.contains(name) {
+    if externals.is_error_type(module_name, name) {
         ctx.error_types.insert(local.to_string());
     }
     register_constructor(ctx, externals, module_name, name, local, class_ty);

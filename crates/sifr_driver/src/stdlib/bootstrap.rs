@@ -132,6 +132,7 @@ fn compile_stdlib_sources_with_sysroot(
         let mut fn_exports = HashMap::new();
         let mut compiler_intrinsic_exports = HashMap::new();
         let mut class_exports = HashMap::new();
+        let mut error_exports = HashSet::new();
         let mut class_instance_method_exports = HashMap::new();
         let mut class_type_param_exports = HashMap::new();
         let mut default_exports = HashMap::new();
@@ -188,6 +189,7 @@ fn compile_stdlib_sources_with_sysroot(
                         functions: &mut fn_exports,
                         compiler_intrinsics: &mut compiler_intrinsic_exports,
                         classes: &mut class_exports,
+                        error_types: &mut error_exports,
                         class_type_params: &mut class_type_param_exports,
                         defaults: &mut default_exports,
                         varargs: &mut vararg_exports,
@@ -208,6 +210,7 @@ fn compile_stdlib_sources_with_sysroot(
                         functions: &mut fn_exports,
                         compiler_intrinsics: &mut compiler_intrinsic_exports,
                         classes: &mut class_exports,
+                        error_types: &mut error_exports,
                         class_type_params: &mut class_type_param_exports,
                         defaults: &mut default_exports,
                         varargs: &mut vararg_exports,
@@ -297,7 +300,7 @@ fn compile_stdlib_sources_with_sysroot(
                     class_type_param_exports.insert(class.name.clone(), class.type_params.clone());
                 }
                 if class.is_error_type {
-                    stdlib_defs.error_types.insert(class.name.clone());
+                    error_exports.insert(class.name.clone());
                 }
             }
         }
@@ -468,6 +471,13 @@ fn compile_stdlib_sources_with_sysroot(
         stdlib_defs
             .classes
             .insert(module_name.to_string(), class_exports);
+        if error_exports.is_empty() {
+            stdlib_defs.error_types.remove(module_name);
+        } else {
+            stdlib_defs
+                .error_types
+                .insert(module_name.to_string(), error_exports);
+        }
         stdlib_defs
             .class_instance_methods
             .insert(module_name.to_string(), class_instance_method_exports);

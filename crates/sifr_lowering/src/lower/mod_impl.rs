@@ -520,7 +520,7 @@ pub(in crate::lower) fn lower_module_impl(
                                         );
                                     }
                                     // Register as error type if flagged in external defs
-                                    if externals.error_types.contains(name) {
+                                    if externals.is_error_type(&stdlib_module_key, name) {
                                         ctx.error_types.insert(local.clone());
                                     }
                                     if let Some(ft) = super::imported_class_identity::imported_constructor_function_type(class_ty) {
@@ -689,7 +689,7 @@ pub(in crate::lower) fn lower_module_impl(
                                     &local,
                                 );
                             }
-                            if externals.error_types.contains(name) {
+                            if externals.is_error_type(&module_name, name) {
                                 ctx.error_types.insert(local.clone());
                             }
                             imports::register_imported_class_instance_methods(

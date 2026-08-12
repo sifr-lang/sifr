@@ -290,7 +290,7 @@ pub(in crate::lower) fn resolve_imports_early(
                                 );
                             }
                             // Register as error type if flagged
-                            if externals.error_types.contains(name) {
+                            if externals.is_error_type(&module_key, name) {
                                 ctx.error_types.insert(local.clone());
                             }
                             if let Some(module_workloads) =

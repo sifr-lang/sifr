@@ -129,7 +129,7 @@ def compute(
         .entry("sifr.python".to_string())
         .or_default()
         .insert("PythonError".to_string(), canonical);
-    externals.error_types.insert("PythonError".to_string());
+    externals.insert_error_type("sifr.python", "PythonError");
     let parsed = parse_module(source).expect("source should parse");
     let lowered = crate::lower_module_with_externals(parsed.suite(), &externals)
         .expect("nominally distinct payloads should lower");

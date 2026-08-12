@@ -76,7 +76,7 @@ fn python_externals() -> ExternalDefs {
     externals
         .function_workloads
         .insert("sifr.python".to_string(), workloads);
-    externals.error_types.insert("PythonError".to_string());
+    externals.insert_error_type("sifr.python", "PythonError");
     externals
 }
 
