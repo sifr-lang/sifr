@@ -301,6 +301,32 @@ Milestone delivery records:
   non-blocking reviewer suggestions for future stdlib alias propagation,
   helper consolidation, and direct cross-package coverage. PR #3157 did not
   absorb them.
+- The composite-union prerequisite merged in
+  [PR #3160](https://github.com/sifr-lang/sifr/pull/3160) at merge commit
+  `ded05e97aba1c0fda3923c6fbd5e1a12f65ffb62`. The exact reviewed candidate
+  was `a42d1806e496df0f959011db7659c52f38959903`.
+- The compiler now keeps canonical identity for cross-module classes,
+  protocols, newtypes, enums, and their unions. Binary and test-project code
+  generation share the required union and nominal imports.
+- A Sifr `main` support module now has an explicit generated test-crate path.
+  Native tests cover two error types, `Result` unions, and composite unions.
+- Ten Opus review rounds closed duplicate imports and test-crate root mapping.
+  The final whole-diff review returned `SATISFIED` with no blocker.
+- The warm create-PR gate exited zero. Its receipt SHA-256 is
+  `4cc51486c1a3ee528f8ce1e44f77a4e3e2ad8374d89d8458430e679f5e09ed83`.
+- The single merge gate passed all executed functional lanes. Python interop
+  passed 25/25, Rust interop passed 10/10, and developer tooling passed 32/32.
+  The merge receipt SHA-256 is
+  `76d95ad391c775e2aec22db093e83ba4a99937ebce4acb8bb9709e4995522873`.
+- One frontend-query work sample used a stale local helper artifact and failed
+  its instruction limit. A fresh governed build of the same candidate measured
+  918,238,900 median instructions against a 936,811,698 limit.
+- The unchanged budget checker accepted that fresh receipt. Its SHA-256 is
+  `2baf1d90deb12990497132ef9ddd2f71966063dca1cc8fb11d4dbb83b9ae997b`.
+  Opus accepted the combined evidence without a second merge gate.
+- [Issue #3161](https://github.com/sifr-lang/sifr/issues/3161) owns exact-artifact
+  performance isolation. [Issue #3162](https://github.com/sifr-lang/sifr/issues/3162)
+  owns non-blocking nominal and test-layout hardening.
 - `milestone_ps_6` remains active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
