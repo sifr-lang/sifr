@@ -166,19 +166,31 @@ fn structural_type_impl(
 ) -> RustItem {
     let identity =
         crate::structural_identity_codegen::class_identity_expression(class, module, module_name);
+    let nominal_identity = nominal_identity(class, module_name);
     RustItem::Impl {
         target: target.to_string(),
         type_params,
         trait_: Some(format!("{STRUCTURAL}::StructuralType")),
-        items: vec![RustItem::Fn {
-            name: "shape_identity".to_string(),
-            visibility: Visibility::Private,
-            type_params: Vec::new(),
-            params: Vec::new(),
-            ret: Some(RustType::Named(format!("{STRUCTURAL}::ShapeIdentity"))),
-            body: vec![RustStmt::Verbatim(identity)],
-            is_async: false,
-        }],
+        items: vec![
+            RustItem::Fn {
+                name: "shape_identity".to_string(),
+                visibility: Visibility::Private,
+                type_params: Vec::new(),
+                params: Vec::new(),
+                ret: Some(RustType::Named(format!("{STRUCTURAL}::ShapeIdentity"))),
+                body: vec![RustStmt::Verbatim(identity)],
+                is_async: false,
+            },
+            RustItem::Fn {
+                name: "nominal_identity".to_string(),
+                visibility: Visibility::Private,
+                type_params: Vec::new(),
+                params: Vec::new(),
+                ret: Some(RustType::Named("Option<&'static str>".to_string())),
+                body: vec![RustStmt::Verbatim(format!("Some({nominal_identity})"))],
+                is_async: false,
+            },
+        ],
     }
 }
 

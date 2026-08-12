@@ -278,6 +278,10 @@ pub fn structural_construct<T: StructuralConstruct, S: StructuralSource>(
 
 pub trait StructuralType {
     fn shape_identity() -> ShapeIdentity;
+
+    fn nominal_identity() -> Option<&'static str> {
+        None
+    }
 }
 
 pub trait StructuralConstruct: StructuralType + Sized {
