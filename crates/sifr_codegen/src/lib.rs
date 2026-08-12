@@ -25,8 +25,10 @@ pub(crate) use lib_task_scope_offload_needs::{
 };
 mod lib_project_codegen;
 mod lib_project_signatures;
+mod lib_test_project_codegen;
 mod rust_interop_error_mapping;
 pub use lib_project_codegen::*;
+pub use lib_test_project_codegen::*;
 mod lib_emitter_state;
 pub use lib_emitter_state::*;
 mod class_emitter;

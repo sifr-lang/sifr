@@ -147,7 +147,15 @@ pub(super) fn generated_project_binary_project(
         static_cache.extend(outputs.iter().cloned());
     }
 
-    let main_rs = assemble_project_main_rs(&compile_order, &codegen_result.rust_files);
+    let generated_main_rs = assemble_project_main_rs(&compile_order, &codegen_result.rust_files);
+    let main_rs = if codegen_result.project_union_prelude.is_empty() {
+        generated_main_rs
+    } else {
+        format!(
+            "{}\n{generated_main_rs}",
+            codegen_result.project_union_prelude.trim_end()
+        )
+    };
     let support_modules = ordered_non_main_module_names(&compile_order, &codegen_result.rust_files)
         .into_iter()
         .filter_map(|module_name| {

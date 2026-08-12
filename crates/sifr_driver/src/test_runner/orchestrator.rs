@@ -6,7 +6,7 @@ use crate::project::{
     ParsedProjectModule,
 };
 use crate::stdlib::compile_stdlib;
-use sifr_codegen::{generate_rust_multi_with_metadata, generate_rust_test};
+use sifr_codegen::generate_rust_test_project_with_metadata;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::{
     compile_module_hir_with_source, FrontendDiagnosticStyle, FrontendSourceContext,
@@ -79,16 +79,7 @@ pub(crate) fn build_test_runner_project(
                 .map(|module| (name.as_str(), module))
         })
         .collect();
-    let support_codegen = run_codegen_with_boundary(
-        "internal compiler panic during support-module code generation",
-        || generate_rust_multi_with_metadata(&support_module_refs, &stdlib_compiled.code),
-    )
-    .map_err(|error| vec![*error])?;
-
-    let mut all_rust_code = String::new();
-    let mut all_stdlib_modules = support_codegen.used_stdlib_modules;
-    let mut all_required_features = support_codegen.required_features;
-
+    let mut lowered_test_modules = BTreeMap::new();
     for (module_name, test_file) in test_files_by_module {
         let Some(parsed) = test_modules.get(module_name.as_str()) else {
             return Err(vec![crate::diagnostics::diagnostic_with_code(
@@ -124,14 +115,35 @@ pub(crate) fn build_test_runner_project(
             }
         };
 
-        let codegen_result = run_codegen_with_boundary(
-            format!(
-                "internal compiler panic during test-module code generation for '{}'",
-                test_file.display()
-            ),
-            || generate_rust_test(&lowering_result.module, module_name),
-        )
-        .map_err(|error| vec![*error])?;
+        lowered_test_modules.insert(module_name.clone(), lowering_result.module);
+    }
+    let test_module_refs = lowered_test_modules
+        .iter()
+        .map(|(name, module)| (name.as_str(), module))
+        .collect::<Vec<_>>();
+    let generated = run_codegen_with_boundary(
+        "internal compiler panic during test-project code generation",
+        || {
+            generate_rust_test_project_with_metadata(
+                &support_module_refs,
+                &test_module_refs,
+                &stdlib_compiled.code,
+            )
+        },
+    )
+    .map_err(|error| vec![*error])?;
+
+    let mut all_rust_code = generated.project_union_prelude;
+    if !all_rust_code.is_empty() {
+        all_rust_code.push('\n');
+    }
+    for (module_name, test_file) in test_files_by_module {
+        let Some(rust_source) = generated.test_rust_files.get(module_name) else {
+            return Err(vec![crate::diagnostics::diagnostic_with_code(
+                format!("missing generated test module '{module_name}'"),
+                DiagnosticCode::INTERNAL_COMPILER_PANIC,
+            )]);
+        };
         all_rust_code.push_str("// Tests from: ");
         if let Some(file_name) = test_file.file_name() {
             all_rust_code.push_str(&file_name.to_string_lossy());
@@ -139,18 +151,16 @@ pub(crate) fn build_test_runner_project(
             all_rust_code.push_str(&test_file.display().to_string());
         }
         all_rust_code.push('\n');
-        all_rust_code.push_str(&codegen_result.rust_source);
+        all_rust_code.push_str(rust_source);
         all_rust_code.push('\n');
-        all_stdlib_modules.extend(codegen_result.used_stdlib_modules);
-        all_required_features.extend(codegen_result.required_features);
     }
 
     Ok(GeneratedTestRunnerProject {
         cache_scope: test_dir.to_path_buf(),
         support_module_names,
-        support_rust_files: support_codegen.rust_files,
+        support_rust_files: generated.support_rust_files,
         all_rust_code,
-        all_stdlib_modules,
-        all_required_features,
+        all_stdlib_modules: generated.used_stdlib_modules,
+        all_required_features: generated.required_features,
     })
 }

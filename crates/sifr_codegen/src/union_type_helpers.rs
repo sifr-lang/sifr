@@ -7,6 +7,87 @@ use sifr_type_system::ParamConvention;
 use sifr_type_system::Type;
 
 impl RustEmitter {
+    fn project_union_member_rust_type(&self, ty: &Type) -> RustType {
+        let resolved = crate::resolve_alias_type_for_plain_call(ty);
+        match resolved {
+            Type::Class {
+                identity,
+                type_args,
+                name,
+                ..
+            } => {
+                let key = identity.as_deref().unwrap_or(name);
+                let Some(path) = self.project_nominal_type_paths.get(key) else {
+                    return sifr_type_to_rust_type(resolved);
+                };
+                if type_args.is_empty() {
+                    RustType::Named(path.clone())
+                } else {
+                    RustType::Generic {
+                        base: path.clone(),
+                        params: type_args
+                            .iter()
+                            .map(|arg| self.project_union_member_rust_type(arg))
+                            .collect(),
+                    }
+                }
+            }
+            Type::Protocol { identity, name, .. } => {
+                let key = identity.as_deref().unwrap_or(name);
+                self.project_nominal_type_paths.get(key).map_or_else(
+                    || sifr_type_to_rust_type(resolved),
+                    |path| RustType::Named(format!("Box<dyn {path}>")),
+                )
+            }
+            Type::Newtype { identity, name, .. } | Type::Enum { identity, name, .. } => {
+                let key = identity.as_deref().unwrap_or(name);
+                self.project_nominal_type_paths
+                    .get(key)
+                    .cloned()
+                    .map_or_else(|| sifr_type_to_rust_type(resolved), RustType::Named)
+            }
+            Type::List(inner) | Type::Iterable(inner) => {
+                RustType::Vec(Box::new(self.project_union_member_rust_type(inner)))
+            }
+            Type::Dict(key, value) => RustType::HashMap(
+                Box::new(self.project_union_member_rust_type(key)),
+                Box::new(self.project_union_member_rust_type(value)),
+            ),
+            Type::Set(inner) => {
+                RustType::HashSet(Box::new(self.project_union_member_rust_type(inner)))
+            }
+            Type::Tuple(items) => RustType::Tuple(
+                items
+                    .iter()
+                    .map(|item| self.project_union_member_rust_type(item))
+                    .collect(),
+            ),
+            Type::Result(ok, error) => RustType::Result(
+                Box::new(self.project_union_member_rust_type(ok)),
+                Box::new(self.project_union_member_rust_type(error)),
+            ),
+            Type::Union(members)
+                if members.iter().any(|member| matches!(member, Type::None))
+                    && members
+                        .iter()
+                        .filter(|member| !matches!(member, Type::None))
+                        .count()
+                        == 1 =>
+            {
+                members
+                    .iter()
+                    .find(|member| !matches!(member, Type::None))
+                    .map_or_else(
+                        || sifr_type_to_rust_type(resolved),
+                        |inner| {
+                            RustType::Option(Box::new(self.project_union_member_rust_type(inner)))
+                        },
+                    )
+            }
+            _ => sifr_type_to_rust_type(resolved),
+        }
+    }
+
     /// Collect all union types from the module that need enum definitions,
     /// and build a map of function signatures for call-site wrapping.
     pub(crate) fn collect_union_types(&mut self, module: &HirModule) {
@@ -201,7 +282,7 @@ impl RustEmitter {
                 .iter()
                 .map(|member| RustEnumVariant {
                     name: member.union_variant_name(),
-                    tuple_fields: vec![sifr_type_to_rust_type(member)],
+                    tuple_fields: vec![self.project_union_member_rust_type(member)],
                     fields: Vec::new(),
                     value: None,
                 })
@@ -230,32 +311,37 @@ impl RustEmitter {
                 variants,
             });
             if is_try_error_carrier {
-                self.enum_items.extend(members.iter().map(|member| {
-                    let variant = member.union_variant_name();
-                    RustItem::Impl {
-                        target: enum_name.clone(),
-                        type_params: Vec::new(),
-                        trait_: Some(format!(
-                            "From<{}>",
-                            crate::render_type(&sifr_type_to_rust_type(member))
-                        )),
-                        items: vec![RustItem::Fn {
-                            name: "from".to_string(),
-                            visibility: Visibility::Private,
+                let conversion_items = members
+                    .iter()
+                    .map(|member| {
+                        let member_type = self.project_union_member_rust_type(member);
+                        let variant = member.union_variant_name();
+                        RustItem::Impl {
+                            target: enum_name.clone(),
                             type_params: Vec::new(),
-                            params: vec![RustParam::Named {
-                                name: "value".to_string(),
-                                ty: sifr_type_to_rust_type(member),
+                            trait_: Some(format!("From<{}>", crate::render_type(&member_type))),
+                            items: vec![RustItem::Fn {
+                                name: "from".to_string(),
+                                visibility: Visibility::Private,
+                                type_params: Vec::new(),
+                                params: vec![RustParam::Named {
+                                    name: "value".to_string(),
+                                    ty: member_type,
+                                }],
+                                ret: Some(RustType::Named("Self".to_string())),
+                                body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        enum_name.clone(),
+                                        variant,
+                                    ])),
+                                    args: vec![RustExpr::Ident("value".to_string())],
+                                }))],
+                                is_async: false,
                             }],
-                            ret: Some(RustType::Named("Self".to_string())),
-                            body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-                                func: Box::new(RustExpr::Path(vec![enum_name.clone(), variant])),
-                                args: vec![RustExpr::Ident("value".to_string())],
-                            }))],
-                            is_async: false,
-                        }],
-                    }
-                }));
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                self.enum_items.extend(conversion_items);
             }
 
             let supports_display = members.iter().all(|member| {

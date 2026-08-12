@@ -80,6 +80,8 @@ pub struct CodegenResult {
 /// Result of multi-module code generation, including aggregate dependency metadata.
 pub struct MultiModuleCodegenResult {
     pub rust_files: HashMap<String, String>,
+    /// The single crate-root prelude that owns all non-optional project union enums.
+    pub project_union_prelude: String,
     pub used_stdlib_modules: HashSet<String>,
     pub required_features: HashSet<StdlibFeature>,
     /// Structured interop metadata required before generated project materialization.

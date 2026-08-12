@@ -86,7 +86,7 @@ def test_dotted_import():
 }
 
 #[test]
-fn test_run_tests_uses_declaring_union_owner_and_named_test_module_upcasts() {
+fn test_run_tests_shares_root_union_prelude_and_named_test_module_upcasts() {
     let unique = format!(
         "sifr_test_union_owner_upcast_{}_{}",
         std::process::id(),
@@ -104,12 +104,12 @@ fn test_run_tests_uses_declaring_union_owner_and_named_test_module_upcasts() {
     .expect("union provider should be written");
     std::fs::write(
         test_dir.join("app.sifr"),
-        "from errors import produce\n\ndef marker() -> int:\n    return 7\n",
+        "from errors import FirstError, SecondError, produce\n\ndef relay() -> Result[int, FirstError | SecondError]:\n    return produce()\n\ndef marker() -> int:\n    return 7\n",
     )
     .expect("alphabetically first union consumer should be written");
     std::fs::write(
         test_dir.join("test_union_upcast.sifr"),
-        "from app import marker\n\nclass Root:\n    value: int\n\nclass Mid(Root):\n    middle: int\n\n    def __init__(self, value: int, middle: int):\n        super().__init__(value)\n        self.middle = middle\n\nclass Child(Mid):\n    extra: int\n\n    def __init__(self, value: int, middle: int, extra: int):\n        super().__init__(value, middle)\n        self.extra = extra\n\ndef consume(own value: Root) -> int:\n    return value.value\n\ndef test_union_owner_and_upcast():\n    assert marker() == 7\n    assert consume(Child(1, 2, 3)) == 1\n",
+        "from app import marker, relay\nfrom errors import FirstError, SecondError\n\nclass Root:\n    value: int\n\nclass Mid(Root):\n    middle: int\n\n    def __init__(self, value: int, middle: int):\n        super().__init__(value)\n        self.middle = middle\n\nclass Child(Mid):\n    extra: int\n\n    def __init__(self, value: int, middle: int, extra: int):\n        super().__init__(value, middle)\n        self.extra = extra\n\ndef consume(own value: Root) -> int:\n    return value.value\n\ndef consume_result(value: Result[int, FirstError | SecondError]) -> int:\n    return 9\n\ndef test_union_owner_and_upcast():\n    assert marker() == 7\n    assert consume_result(relay()) == 9\n    assert consume(Child(1, 2, 3)) == 1\n",
     )
     .expect("test module should be written");
 
