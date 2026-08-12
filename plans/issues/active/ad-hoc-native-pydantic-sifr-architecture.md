@@ -12,7 +12,7 @@ inventory, repository boundary, and demo ownership are approved.
 implemented and merged through [PR #3138](https://github.com/sifr-lang/sifr/pull/3138).
 `milestone_ps_4` and `milestone_ps_5` are implemented and merged in the
 companion repository. `milestone_ps_6` is active. Its general typed static-program
-payload dependency is merged.
+payload and static structural return dependencies are merged.
 
 Review artifacts:
 
@@ -247,6 +247,30 @@ Milestone delivery records:
 - [Issue #3151](https://github.com/sifr-lang/sifr/issues/3151) owns the
   non-blocking reserved-root and synthesized-local collision hardening found
   during review. PR #3152 did not absorb it.
+- The static structural return prerequisite merged in
+  [PR #3155](https://github.com/sifr-lang/sifr/pull/3155) at merge commit
+  `2e607c24d4b0731a51b3f0ae484b7728c3fa3b08`. The exact reviewed candidate
+  was `776f7ff49c4855cb8f788b3a0136ba7115103151`.
+- Generated structural records now expose their compiler-owned nominal
+  identity through `StructuralType`. Return-only `T: StaticProgram` bridges
+  use that identity without parsing schema data.
+- Structural bridge demand enables one sysroot `sifr_runtime` identity in the
+  probe and final generated crate. Ordinary builds do not enable the feature.
+- The exact-candidate Opus review returned `SATISFIED` with no blocker.
+  Runtime, codegen, and probe suites passed 71, 984, and 28 tests.
+- A companion integration proof passed specialization, probing, release
+  compilation, arena construction, and typed value recovery. The recovered
+  value was `7`.
+- The warm create-PR gate passed. The first run passed all generated-code cases
+  but exceeded the existing cold-artifact budget tracked by issue #3134.
+- The single merge gate passed CPython differential, Python 25/25, Rust 10/10,
+  developer tooling 32/32, and all five representative instruction budgets.
+- The gate stopped when the formatter control rejected three unstable samples.
+  [Issue #3120](https://github.com/sifr-lang/sifr/issues/3120) owns that external
+  host-control condition. The unchanged gate was not repeated.
+- [Issue #3154](https://github.com/sifr-lang/sifr/issues/3154) owns the
+  non-blocking review and infrastructure follow-ups. PR #3155 did not absorb
+  them.
 - `milestone_ps_6` remains active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
