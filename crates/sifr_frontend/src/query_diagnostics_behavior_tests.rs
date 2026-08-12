@@ -32,6 +32,34 @@ fn frontend_export_policy_hides_math_bridge_helpers() {
 }
 
 #[test]
+fn project_exports_preserve_imported_error_class_status() {
+    let dir = temp_project_dir("imported_error_class_status");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "from api import ApiError\n\ndef fail() -> Result[int, ApiError]:\n    raise ApiError(\"failed\")\n\ndef main() -> Result[None, ApiError]:\n    try:\n        value: int = fail()\n        assert value == 1\n    except ApiError as error:\n        raise error\n    return None\n",
+    )
+    .expect("main should be written");
+    std::fs::write(
+        dir.join("errors.sifr"),
+        "class PackageError(Error):\n    message: str\n",
+    )
+    .expect("error module should be written");
+    std::fs::write(
+        dir.join("api.sifr"),
+        "from errors import PackageError as ApiError\n",
+    )
+    .expect("facade module should be written");
+    let mut context = load_temp_project(&dir);
+
+    let diagnostics = context.diagnostics_for_project().into_value().diagnostics;
+
+    assert!(
+        diagnostics.is_empty(),
+        "unexpected diagnostics: {diagnostics:?}"
+    );
+}
+
+#[test]
 fn public_constant_value_update_invalidates_reverse_dependents() {
     let dir = temp_project_dir("constant_export_signature_invalidation");
     std::fs::write(

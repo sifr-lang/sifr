@@ -6,6 +6,7 @@ pub(super) struct ReExportMaps<'a> {
     pub(super) functions: &'a mut HashMap<String, FunctionType>,
     pub(super) compiler_intrinsics: &'a mut HashMap<String, CompilerIntrinsicId>,
     pub(super) classes: &'a mut HashMap<String, Type>,
+    pub(super) error_types: &'a mut HashSet<String>,
     pub(super) class_type_params: &'a mut HashMap<String, Vec<String>>,
     pub(super) defaults: &'a mut HashMap<String, Vec<(usize, HirExpr)>>,
     pub(super) varargs: &'a mut HashMap<String, usize>,
@@ -50,6 +51,9 @@ fn copy_named_exports(
             .get(import_module)
             .and_then(|module_classes| module_classes.get(name))
         {
+            if stdlib_defs.is_error_type(import_module, name) {
+                exports.error_types.insert(name.clone());
+            }
             if !exports.classes.contains_key(name) {
                 exports.classes.insert(name.clone(), class_ty.clone());
                 if let Some(type_params) = stdlib_defs
@@ -163,10 +167,26 @@ mod tests {
                     return_type: Box::new(Type::None),
                 },
             );
+        defs.insert_error_type("sifr.origin", "Failure");
+        defs.classes
+            .entry("sifr.origin".to_string())
+            .or_default()
+            .insert(
+                "Failure".to_string(),
+                Type::Class {
+                    identity: None,
+                    type_args: Vec::new(),
+                    name: "Failure".to_string(),
+                    fields: Vec::new(),
+                    methods: Vec::new(),
+                    parent_class: Some("Error".to_string()),
+                },
+            );
 
         let mut functions = HashMap::new();
         let mut compiler_intrinsics = HashMap::new();
         let mut classes = HashMap::new();
+        let mut error_types = HashSet::new();
         let mut class_type_params = HashMap::new();
         let mut defaults = HashMap::new();
         let mut varargs = HashMap::new();
@@ -177,6 +197,7 @@ mod tests {
                 functions: &mut functions,
                 compiler_intrinsics: &mut compiler_intrinsics,
                 classes: &mut classes,
+                error_types: &mut error_types,
                 class_type_params: &mut class_type_params,
                 defaults: &mut defaults,
                 varargs: &mut varargs,
@@ -185,12 +206,13 @@ mod tests {
             },
             &defs,
             "sifr.origin",
-            &["verify".to_string()],
+            &["verify".to_string(), "Failure".to_string()],
         );
 
         assert_eq!(
             compiler_intrinsics.get("verify"),
             Some(&CompilerIntrinsicId::TestAssertTrue)
         );
+        assert!(error_types.contains("Failure"));
     }
 }

@@ -38,7 +38,7 @@ fn python_externals() -> ExternalDefs {
         .functions
         .insert("sifr.python".to_string(), functions);
     externals.classes.insert("sifr.python".to_string(), classes);
-    externals.error_types.insert("PythonError".to_string());
+    externals.insert_error_type("sifr.python", "PythonError");
     externals
 }
 

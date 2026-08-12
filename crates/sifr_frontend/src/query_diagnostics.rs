@@ -183,6 +183,7 @@ pub fn collect_module_exports(
     let mut vararg_exports = HashMap::new();
     let mut python_shape_exports = HashMap::new();
     let mut workload_exports = HashMap::new();
+    let mut error_exports = std::collections::HashSet::new();
     let mut rust_callback_exports = RustCallbackExports::default();
     let (mut generic_exports, mut type_param_bound_exports, local_classes) =
         declared_generic_metadata(module_name, module);
@@ -222,6 +223,9 @@ pub fn collect_module_exports(
 
     for class in &module.classes {
         if !class.name.starts_with('_') {
+            if class.is_error_type {
+                error_exports.insert(class.name.clone());
+            }
             if class
                 .rust_interop
                 .iter()
@@ -375,6 +379,9 @@ pub fn collect_module_exports(
             }
             if let Some(module_classes) = external_defs.classes.get(&import.module) {
                 if let Some(class_type) = module_classes.get(name) {
+                    if external_defs.is_error_type(&import.module, name) {
+                        error_exports.insert(local_name.clone());
+                    }
                     if external_defs
                         .rust_opaque_classes
                         .get(&import.module)
@@ -433,6 +440,13 @@ pub fn collect_module_exports(
     external_defs
         .classes
         .insert(module_name.to_string(), class_exports);
+    if error_exports.is_empty() {
+        external_defs.error_types.remove(module_name);
+    } else {
+        external_defs
+            .error_types
+            .insert(module_name.to_string(), error_exports);
+    }
     if !rust_opaque_exports.is_empty() {
         external_defs
             .rust_opaque_classes

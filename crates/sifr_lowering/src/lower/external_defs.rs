@@ -62,8 +62,8 @@ pub struct ExternalDefs {
     /// Map of `module_name` -> (`constant_name` -> compile-time integer value)
     pub constant_integer_values:
         std::collections::HashMap<String, std::collections::HashMap<String, num_bigint::BigInt>>,
-    /// Set of class names that are error types (class Foo(Error)) across all modules
-    pub error_types: std::collections::HashSet<String>,
+    /// Map of `module_name` -> error class names declared or re-exported by that module.
+    pub error_types: std::collections::HashMap<String, std::collections::HashSet<String>>,
     /// Map of `module_name` -> (`owner_name` -> (`type_var_name` -> bounds))
     pub type_param_bounds: std::collections::HashMap<
         String,
@@ -92,6 +92,20 @@ pub struct ExternalDefs {
 }
 
 impl ExternalDefs {
+    pub fn insert_error_type(&mut self, module_name: &str, class_name: &str) {
+        self.error_types
+            .entry(module_name.to_string())
+            .or_default()
+            .insert(class_name.to_string());
+    }
+
+    #[must_use]
+    pub fn is_error_type(&self, module_name: &str, class_name: &str) -> bool {
+        self.error_types
+            .get(module_name)
+            .is_some_and(|names| names.contains(class_name))
+    }
+
     #[must_use]
     pub fn take_module_specialization_metadata(
         &mut self,
