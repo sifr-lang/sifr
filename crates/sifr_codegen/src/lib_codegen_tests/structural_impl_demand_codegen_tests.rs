@@ -43,6 +43,24 @@ fn project_structural_demand_enables_implicit_classes_across_modules() {
 }
 
 #[test]
+fn structural_impls_escape_rust_keyword_field_identifiers() {
+    let mut keyword = payload_class();
+    keyword.name = "KeywordPayload".to_string();
+    keyword.fields = vec![("type".to_string(), Type::Int)];
+    let models = module(Vec::new(), vec![keyword]);
+    let api = module(vec![structural_function()], Vec::new());
+
+    let generated = generate_rust_multi(&[("models", &models), ("api", &api)]);
+    let models_rust = generated.get("models").expect("models module is generated");
+
+    assert!(models_rust.contains("let r#type ="));
+    assert!(models_rust.contains("Ok(Self { r#type })"));
+    assert!(models_rust.contains("&self.r#type"));
+    assert!(models_rust.contains("RecordField"));
+    assert!(models_rust.contains("\"type\""));
+}
+
+#[test]
 fn static_program_owners_use_structural_implementation_eligibility() {
     let supported = payload_class();
     let mut unsupported = payload_class();
