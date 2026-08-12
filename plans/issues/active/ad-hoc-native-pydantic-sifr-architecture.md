@@ -10,7 +10,8 @@ inventory, repository boundary, and demo ownership are approved.
 `certification_pkg_resource_core` item is complete through merged
 [PR #3123](https://github.com/sifr-lang/sifr/pull/3123). `milestone_ps_3` is
 implemented and merged through [PR #3138](https://github.com/sifr-lang/sifr/pull/3138).
-`milestone_ps_4` is the next sequential work.
+`milestone_ps_4` is implemented and merged in the companion repository.
+`milestone_ps_5` is the next sequential work.
 
 Review artifacts:
 
@@ -149,7 +150,38 @@ Milestone delivery records:
   with zero failures, distribution 66/66, sysroot 2/2, generated-code quality
   7/7, and all representative performance checks. The merge receipt SHA-256 is
   `caa0dc08aa5d6c855fcd49edd5516cc33b004d59d2f879e7a9443815b83b267e`.
-- `milestone_ps_4` is the next sequential work.
+- `milestone_ps_4` merged in companion-repository
+  [PR #1](https://github.com/sifr-lang/pydantic-sifr/pull/1) at merge commit
+  `4b2a1969022e7ab5220e036016a8340d96dba647`. The reviewed and gated candidate
+  was `ade63892f5536a6e5cc1c52576ae0d499849ee7b`.
+- The milestone established the public `sifr-lang/pydantic-sifr` repository,
+  the Sifr package, and the Python-free `pydantic_sifr_core` backend. It pins
+  Pydantic commit `f59e929c999e8b2efc7b12fd0bc1685c1a186be3`, tracks 310 source
+  files and 12,754 API/Core nodes, and excludes the historical standalone Core
+  checkout.
+- Format 1 uses one deterministic Sifr canonicalizer and semantic verifier.
+  The compiler seals its exact bytes, program identity, and shape identity.
+  The Rust core checks only that envelope. It does not parse or verify the
+  schema graph again, and it has no compatibility, fallback, or legacy path.
+- The milestone also added the exact 53-schema-kind and four-field-kind ledger,
+  nine unavailable dispositions, compositional error declarations, checked
+  JSON/input arenas, plan foundations, Python-free jiter, licenses, provenance,
+  property tests, two fuzz targets, and a benchmark harness.
+- The final Opus remediation review returned `SATISFIED` with no in-scope
+  blocker. The canonical create-PR and authoritative merge gates passed. The
+  merge gate ran 4,096 release property cases, compiled both fuzz targets, and
+  left only a stale tracked fuzz lockfile from removed production dependencies.
+- The exact one-file lock correction merged in companion-repository
+  [PR #2](https://github.com/sifr-lang/pydantic-sifr/pull/2) at merge commit
+  `c8200c9ae67e3b504674ea105836b4894413507b`. Its reviewed and gated candidate
+  was `7185f538a57eb54a74f87f9d4d7ae2e8fcbfb387`; Opus returned
+  `SATISFIED`, both locked fuzz builds passed, and the create-PR and merge gates
+  passed with a clean worktree.
+- The released-Sifr round trip binds 689 exact static-program bytes to identity
+  `d6591c059d855809f03be42c991d73a91a42e50c6c141810b3e6195c8efdca72`.
+  Two invalid schema probes return stable `schema_invalid` diagnostics. JSON
+  and schema foundation tests pass with no user-input panic path.
+- `milestone_ps_5` is the next sequential work.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
   predicates for fixed-width platform integers, metadata, and imported classes;
@@ -2265,29 +2297,29 @@ value, and pull a structural view for output through one monomorphized call.
 
 ### milestone_ps_4: Companion Repository and Core Foundation
 
-- Require the released Sifr compiler/sysroot containing certified `ps_1`
+- [x] Require the released Sifr compiler/sysroot containing certified `ps_1`
   through `ps_3` contracts.
-- Create the standalone public GitHub repository
+- [x] Create the standalone public GitHub repository
   [`sifr-lang/pydantic-sifr`](https://github.com/sifr-lang/pydantic-sifr) under
   the `sifr-lang` organization.
-- Establish the external Sifr package and Rust backend layouts there.
-- Track, review, merge, and release all package/core implementation from that
+- [x] Establish the external Sifr package and Rust backend layouts there.
+- [x] Track, review, merge, and release all package/core implementation from that
   repository from this milestone onward.
-- Materialize the total-set `upstream_manifest.toml` before core
+- [x] Materialize the total-set `upstream_manifest.toml` before core
   implementation; prove exact equality with both test roots at the sole
   Pydantic pin and explicitly exclude the historical standalone Core checkout.
-- Generate `tests/provenance/core_schema_kinds.toml` from the pinned
+- [x] Generate `tests/provenance/core_schema_kinds.toml` from the pinned
   `CoreSchemaType`/`CoreSchemaFieldType` literals and prove exact equality with
   the accepted disposition table before defining format version 1.
-- Define Core Schema/program format version 1.
-- Implement that canonicalizer/verifier once as deterministic Sifr package
+- [x] Define Core Schema/program format version 1.
+- [x] Implement that canonicalizer/verifier once as deterministic Sifr package
   code and emit sealed `VerifiedSchemaProgram[T]` static data in every
   specializing frontend mode.
-- Define the built-in/custom error-code registry and verify compositional
+- [x] Define the built-in/custom error-code registry and verify compositional
   `ErrorOverride` declarations.
-- Add error, input, arena and plan foundations.
-- Integrate Python-free `jiter`.
-- Establish licenses, provenance, fuzzing and benchmark harnesses.
+- [x] Add error, input, arena and plan foundations.
+- [x] Integrate Python-free `jiter`.
+- [x] Establish licenses, provenance, fuzzing and benchmark harnesses.
 
 Exit gate: `core/schema_contract` and `core/json_foundation` pass; malformed
 schemas and malformed JSON return stable typed errors with zero panics under
