@@ -227,6 +227,26 @@ Milestone delivery records:
 - The review found a separate pre-existing ambiguity in structural canonical
   metadata. [Issue #3149](https://github.com/sifr-lang/sifr/issues/3149) owns
   that repair. PR #3148 did not absorb it.
+- The structural keyword-field prerequisite merged in
+  [PR #3152](https://github.com/sifr-lang/sifr/pull/3152) at merge commit
+  `e98776bf6ce7eac1a149ced8203f4b8669fa0d3b`. The exact reviewed candidate
+  was `6c7cbdbdeff40dc6a9330f4e13c70e0f36149380`.
+- Generated structural construction and projection now render Rust keyword
+  fields through the canonical identifier renderer. The structural wire name
+  stays unchanged. A field named `type` proves construction and projection.
+- The exact-candidate Opus review returned `SATISFIED` with no blocker.
+  Focused structural tests, all 984 codegen tests, codegen clippy, formatting,
+  and file-size checks passed. The warm create-PR gate passed Python 19/19,
+  Rust 10/10, and E2E 140/140.
+- The one merge gate passed CPython differential 4/4, Python 25/25 with zero
+  read-only mutations, Rust 10/10, and developer tooling 32/32. It stopped on
+  one unrelated incremental frontend instruction sample at 0.20% more than
+  its limit. Five independent controlled work-mode runs then passed the
+  unchanged budget. Their 20-sample medians were 924.71 million to 925.85
+  million instructions, with instruction variation below 0.14%.
+- [Issue #3151](https://github.com/sifr-lang/sifr/issues/3151) owns the
+  non-blocking reserved-root and synthesized-local collision hardening found
+  during review. PR #3152 did not absorb it.
 - `milestone_ps_6` remains active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
