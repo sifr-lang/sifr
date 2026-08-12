@@ -74,12 +74,17 @@ pub(super) fn execute_direct_cargo_probe(
     };
     let dependency_features =
         dependency_features(&probe.backend.dependency_name, backend_root, &probe.path);
+    let requires_structural_runtime = probe
+        .signature
+        .as_ref()
+        .is_some_and(|signature| signature.structural_type_param.is_some());
     let probe_manifest = probe_cargo_toml(
         &probe.backend.dependency_name,
         &probe.backend.cargo_package_name,
         backend_root,
         &probe.sysroot_runtime_crate,
         &dependency_features,
+        requires_structural_runtime,
     );
     let probe_source = probe_source(probe);
     let invocation_cwd = env::current_dir()

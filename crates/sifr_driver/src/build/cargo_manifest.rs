@@ -4,7 +4,10 @@ use sifr_stdlib_manifest::{
     SysrootCrateDependency, SysrootDependencyPlan,
 };
 use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::fmt::Write as _;
 use std::path::Path;
+
+const SIFR_GIT_SOURCE: &str = "https://github.com/sifr-lang/sifr.git";
 
 use sifr_sysroot::SysrootError;
 
@@ -95,6 +98,21 @@ edition = "2021"
         for dep in interop_deps.values() {
             cargo_toml.push_str(dep);
             cargo_toml.push('\n');
+        }
+    }
+
+    if !interop_deps.is_empty() {
+        if let Some(runtime) = dependency_plan
+            .crates
+            .iter()
+            .find(|dependency| dependency.krate == SysrootCrate::SifrRuntime)
+        {
+            let source = toml_quote_string(SIFR_GIT_SOURCE);
+            let path = toml_quote_string(&runtime.path.display().to_string());
+            let _ = write!(
+                cargo_toml,
+                "\n[patch.{source}]\nsifr_runtime = {{ path = {path} }}\n"
+            );
         }
     }
 
@@ -402,10 +420,15 @@ mod tests {
 
     #[test]
     fn generated_cargo_toml_includes_package_bridge_dependency_alias() {
-        let dependency_plan = test_dependency_plan(
+        let mut dependency_plan = test_dependency_plan(
             CargoVendorMode::PackageOwned,
             PathBuf::from("/opt/sifr/vendor"),
         );
+        dependency_plan.crates = vec![SysrootCrateDependency {
+            krate: SysrootCrate::SifrRuntime,
+            path: PathBuf::from("/opt/sifr/crates/sifr_runtime"),
+            features: ["structural".to_string()].into_iter().collect(),
+        }];
         let mut interop = InteropBuildPlan::default();
         interop.rust.resolved_targets = vec![RustInteropResolvedTarget {
             module_name: Some("main".to_string()),
@@ -429,6 +452,9 @@ mod tests {
 
         assert!(cargo_toml.contains(
             "__sifr_bridge_package_local_blake3_bridge = { package = \"local-blake3-bridge\", path = \"/ws/local_blake3_bridge\" }"
+        ));
+        assert!(cargo_toml.contains(
+            "[patch.\"https://github.com/sifr-lang/sifr.git\"]\nsifr_runtime = { path = \"/opt/sifr/crates/sifr_runtime\" }"
         ));
     }
 

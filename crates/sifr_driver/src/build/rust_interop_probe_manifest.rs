@@ -1,25 +1,52 @@
 use std::fmt::Write as _;
 use std::path::Path;
 
+const SIFR_GIT_SOURCE: &str = "https://github.com/sifr-lang/sifr.git";
+
 pub(super) fn probe_cargo_toml(
     dependency_name: &str,
     cargo_package_name: &str,
     backend_root: &Path,
     sysroot_runtime_crate: &Path,
     dependency_features: &[String],
+    requires_structural_runtime: bool,
 ) -> String {
     let mut cargo_toml =
         "[package]\nname = \"sifr-rust-probe\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[dependencies]\n"
             .to_string();
+    let mut dependency_features = dependency_features.to_vec();
+    if dependency_name == "sifr_runtime"
+        && requires_structural_runtime
+        && !dependency_features
+            .iter()
+            .any(|feature| feature == "structural")
+    {
+        dependency_features.push("structural".to_string());
+    }
     cargo_toml.push_str(&dependency_line(
         dependency_name,
         cargo_package_name,
         backend_root,
-        dependency_features,
+        &dependency_features,
     ));
     if dependency_name != "sifr_runtime" {
         let path = toml_quote_path(sysroot_runtime_crate);
-        let _ = writeln!(cargo_toml, "sifr_runtime = {{ path = {path} }}");
+        if requires_structural_runtime {
+            let _ = writeln!(
+                cargo_toml,
+                "sifr_runtime = {{ path = {path}, features = [\"structural\"] }}"
+            );
+        } else {
+            let _ = writeln!(cargo_toml, "sifr_runtime = {{ path = {path} }}");
+        }
+    }
+    if !matches!(dependency_name, "sifr_runtime" | "sifr_stdlib") {
+        let runtime_path = toml_quote_path(sysroot_runtime_crate);
+        let _ = writeln!(
+            cargo_toml,
+            "\n[patch.{source}]\nsifr_runtime = {{ path = {runtime_path} }}",
+            source = toml_quote_string(SIFR_GIT_SOURCE),
+        );
     }
     cargo_toml
 }

@@ -51,25 +51,29 @@ fn sysroot_probe_manifest_uses_sysroot_runtime_crate() {
         Path::new("/opt/sifr/crates/sifr_stdlib"),
         Path::new("/opt/sifr/crates/sifr_runtime"),
         &[],
+        false,
     );
 
     assert!(manifest.contains(
         "sifr_stdlib = { path = \"/opt/sifr/crates/sifr_stdlib\", default-features = false }"
     ));
     assert!(manifest.contains("sifr_runtime = { path = \"/opt/sifr/crates/sifr_runtime\" }"));
+    assert!(!manifest.contains("[patch."));
 }
 
 #[test]
-fn sysroot_runtime_probe_manifest_does_not_duplicate_runtime_dependency() {
+fn sysroot_runtime_probe_manifest_has_one_runtime_dependency() {
     let manifest = probe_cargo_toml(
         "sifr_runtime",
         "sifr_runtime",
         Path::new("/opt/sifr/crates/sifr_runtime"),
         Path::new("/opt/sifr/crates/sifr_runtime"),
         &[],
+        false,
     );
 
     assert_eq!(manifest.matches("sifr_runtime =").count(), 1);
+    assert!(!manifest.contains("[patch."));
 }
 
 #[test]
@@ -80,11 +84,45 @@ fn sysroot_probe_manifest_enables_declared_stdlib_features() {
         Path::new("/opt/sifr/crates/sifr_stdlib"),
         Path::new("/opt/sifr/crates/sifr_runtime"),
         &["platform".to_string()],
+        false,
     );
 
     assert!(manifest.contains(
         "sifr_stdlib = { path = \"/opt/sifr/crates/sifr_stdlib\", default-features = false, features = [\"platform\"] }"
     ));
+}
+
+#[test]
+fn structural_backend_probe_enables_the_sysroot_runtime_feature() {
+    let manifest = probe_cargo_toml(
+        "bridge_backend",
+        "bridge_backend",
+        Path::new("/workspace/bridge_backend"),
+        Path::new("/opt/sifr/crates/sifr_runtime"),
+        &[],
+        true,
+    );
+
+    assert!(manifest.contains(
+        "sifr_runtime = { path = \"/opt/sifr/crates/sifr_runtime\", features = [\"structural\"] }"
+    ));
+    assert!(manifest.contains(
+        "[patch.\"https://github.com/sifr-lang/sifr.git\"]\nsifr_runtime = { path = \"/opt/sifr/crates/sifr_runtime\" }"
+    ));
+}
+
+#[test]
+fn structural_runtime_probe_enables_the_feature_once() {
+    let manifest = probe_cargo_toml(
+        "sifr_runtime",
+        "sifr_runtime",
+        Path::new("/opt/sifr/crates/sifr_runtime"),
+        Path::new("/opt/sifr/crates/sifr_runtime"),
+        &["structural".to_string()],
+        true,
+    );
+
+    assert_eq!(manifest.matches("\"structural\"").count(), 1);
 }
 
 fn signature(return_type: RustBridgeTypeContract) -> RustBridgeSignatureContract {

@@ -32,6 +32,8 @@ fn project_structural_demand_enables_implicit_classes_across_modules() {
     assert!(models_rust.contains("StructuralType"));
     assert!(models_rust.contains("StructuralConstruct"));
     assert!(models_rust.contains("StructuralProject"));
+    assert!(models_rust.contains("fn nominal_identity() -> Option<&'static str>"));
+    assert!(models_rust.contains("Some(\"Payload\")"));
 
     let metadata = crate::generate_rust_multi_with_metadata(
         &[("models", &models), ("api", &api)],
