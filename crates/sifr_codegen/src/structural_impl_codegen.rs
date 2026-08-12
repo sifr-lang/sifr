@@ -205,15 +205,16 @@ fn structural_construct_impl(
         .iter()
         .enumerate()
         .map(|(index, (name, ty))| {
+            let rust_name = crate::Renderer::render_identifier(name);
             if matches!(ty.resolve_alias(), Type::Bytes) {
                 return format!(
-                    "let {name} = {STRUCTURAL}::construct_bytes_at(source, child_nodes[{index}], token)?;"
+                    "let {rust_name} = {STRUCTURAL}::construct_bytes_at(source, child_nodes[{index}], token)?;"
                 );
             }
             let rust_type = emitter.class_struct_field_rust_type(class, name, ty);
             let rust_type = crate::Renderer::render_type_string(&rust_type);
             format!(
-                "let {name} = <{rust_type} as {STRUCTURAL}::StructuralConstruct>::structural_construct_at(source, child_nodes[{index}], token)?;"
+                "let {rust_name} = <{rust_type} as {STRUCTURAL}::StructuralConstruct>::structural_construct_at(source, child_nodes[{index}], token)?;"
             )
         })
         .collect::<Vec<_>>()
@@ -221,7 +222,7 @@ fn structural_construct_impl(
     let mut initializers = class
         .fields
         .iter()
-        .map(|(name, _)| name.clone())
+        .map(|(name, _)| crate::Renderer::render_identifier(name))
         .collect::<Vec<_>>();
     if RustEmitter::class_needs_phantom_marker(class) {
         initializers.push("__sifr_type_marker: std::marker::PhantomData".to_string());
@@ -279,13 +280,14 @@ fn structural_project_impl(
         .fields
         .iter()
         .map(|(name, ty)| {
+            let rust_name = crate::Renderer::render_identifier(name);
             if matches!(ty.resolve_alias(), Type::Bytes) {
                 return format!(
-                    "visitor.edge({STRUCTURAL}::StructuralEdge::new({STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\")))?;\n{STRUCTURAL}::project_bytes(&self.{name}, visitor)?;"
+                    "visitor.edge({STRUCTURAL}::StructuralEdge::new({STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\")))?;\n{STRUCTURAL}::project_bytes(&self.{rust_name}, visitor)?;"
                 );
             }
             format!(
-                "visitor.edge({STRUCTURAL}::StructuralEdge::new({STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\")))?;\n{STRUCTURAL}::StructuralProject::structural_project(&self.{name}, visitor)?;"
+                "visitor.edge({STRUCTURAL}::StructuralEdge::new({STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\")))?;\n{STRUCTURAL}::StructuralProject::structural_project(&self.{rust_name}, visitor)?;"
             )
         })
         .collect::<Vec<_>>()
