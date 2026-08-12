@@ -381,25 +381,15 @@ fn validate_authoritative_registry_entries(
     trusted_vendor_dirs: &[PathBuf],
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     let prepared = registry_entries(prepared_lock)?;
-    let primary = authoritative_locks
-        .first()
-        .map(|lock| registry_entries(lock))
-        .transpose()?
-        .unwrap_or_default();
     let mut authoritative = BTreeSet::new();
     for lock in authoritative_locks {
         authoritative.extend(registry_entries(lock)?);
     }
     let unknown = prepared.iter().find(|entry| {
-        let primary_owns_name = primary
-            .iter()
-            .any(|primary_entry| primary_entry.0 == entry.0);
-        (primary_owns_name && !primary.contains(*entry))
-            || (!primary_owns_name
-                && !authoritative.contains(*entry)
-                && !trusted_vendor_dirs
-                    .iter()
-                    .any(|vendor_dir| vendor_contains(vendor_dir, entry)))
+        !authoritative.contains(*entry)
+            && !trusted_vendor_dirs
+                .iter()
+                .any(|vendor_dir| vendor_contains(vendor_dir, entry))
     });
     let Some((name, version, source, checksum)) = unknown else {
         return Ok(());
@@ -498,7 +488,8 @@ fn cargo_resolution_error(message: impl Into<String>) -> RenderedDiagnostic {
 mod tests {
     use super::{
         normalized_manifest_cache_input, registry_entries, seed_lockfile_from_authorities,
-        CargoResolutionPolicy, CargoVendorMode, PREPARED_LOCK_NONCE,
+        validate_authoritative_registry_entries, CargoResolutionPolicy, CargoVendorMode,
+        PREPARED_LOCK_NONCE,
     };
     use sifr_package::CargoLockMode;
     use std::path::PathBuf;
@@ -554,6 +545,39 @@ mod tests {
         );
     }
 
+    #[test]
+    fn exact_registry_entry_from_each_authority_is_accepted() {
+        let project = test_project("authority_union");
+        let package_lock = project.0.join("package.lock");
+        let sysroot_lock = project.0.join("sysroot.lock");
+        let prepared_lock = project.0.join("prepared.lock");
+        write_registry_lock(&package_lock, "1.0.0", "package-checksum");
+        write_registry_lock(&sysroot_lock, "2.0.0", "sysroot-checksum");
+        write_registry_lock(&prepared_lock, "2.0.0", "sysroot-checksum");
+
+        validate_authoritative_registry_entries(&prepared_lock, &[package_lock, sysroot_lock], &[])
+            .expect("the exact sysroot entry must remain authoritative");
+    }
+
+    #[test]
+    fn registry_entry_missing_from_every_authority_is_rejected() {
+        let project = test_project("unknown_authority");
+        let package_lock = project.0.join("package.lock");
+        let sysroot_lock = project.0.join("sysroot.lock");
+        let prepared_lock = project.0.join("prepared.lock");
+        write_registry_lock(&package_lock, "1.0.0", "package-checksum");
+        write_registry_lock(&sysroot_lock, "2.0.0", "sysroot-checksum");
+        write_registry_lock(&prepared_lock, "3.0.0", "unknown-checksum");
+
+        let error = validate_authoritative_registry_entries(
+            &prepared_lock,
+            &[package_lock, sysroot_lock],
+            &[],
+        )
+        .expect_err("an unknown exact registry entry must fail closed");
+        assert!(error[0].message.contains("shared-package 3.0.0"));
+    }
+
     fn test_project(label: &str) -> TestProject {
         let nonce = PREPARED_LOCK_NONCE.fetch_add(1, Ordering::Relaxed);
         let root = std::env::temp_dir().join(format!(
@@ -573,8 +597,7 @@ mod tests {
             root.join("Cargo.toml"),
             format!(
                 "[package]\nname = \"generated\"\nversion = \"0.1.0\"\n\
-                 [dependencies]\nsame-dependency = {{ path = {:?} }}\n",
-                dependency
+                 [dependencies]\nsame-dependency = {{ path = {dependency:?} }}\n"
             ),
         )
         .expect("generated manifest should be written");
