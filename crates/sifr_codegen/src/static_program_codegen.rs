@@ -30,13 +30,13 @@ pub fn emit_static_specialization_programs(
             "#[doc(hidden)]\npub(crate) const __SIFR_STATIC_PROGRAM_IDENTITY_{suffix}: [u8; 32] = {:?};",
             output.program_identity
         );
-        let value = static_value_expression(&output.value);
-        let _ = writeln!(
-            out,
-            "#[doc(hidden)]\npub(crate) static __SIFR_STATIC_PROGRAM_VALUE_{suffix}: ::sifr_runtime::interop::structural::StaticProgramValue = {value};"
-        );
         if structural_owners.contains(&output.owner) {
             let owner = source_class_rust_name(&output.owner);
+            let value = static_value_expression(&output.value);
+            let _ = writeln!(
+                out,
+                "#[doc(hidden)]\npub(crate) static __SIFR_STATIC_PROGRAM_VALUE_{suffix}: ::sifr_runtime::interop::structural::StaticProgramValue = {value};"
+            );
             let identity = output
                 .program_identity
                 .iter()
@@ -198,6 +198,8 @@ mod tests {
         let emitted = emit_static_specialization_programs(&[output(7)], &BTreeSet::new());
         assert!(emitted.contains("__SIFR_STATIC_PROGRAM_BYTES_"));
         assert!(!emitted.contains("impl ::sifr_runtime::interop::structural::StaticProgramType"));
+        assert!(!emitted.contains("sifr_runtime::"));
+        assert!(!emitted.contains("__SIFR_STATIC_PROGRAM_VALUE_"));
     }
 
     #[test]

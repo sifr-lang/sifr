@@ -572,6 +572,7 @@ pub trait StaticProgramType: StructuralType + Sized + 'static {
     fn static_program() -> &'static StaticProgram<Self>;
 }
 
+#[non_exhaustive]
 pub enum StaticProgramValue {
     None,
     Bool(bool),
@@ -584,6 +585,10 @@ pub enum StaticProgramValue {
     Record(&'static [(&'static str, StaticProgramValue)]),
 }
 ```
+
+`StaticProgramValue` is non-exhaustive for downstream Rust consumers. Its
+compiler-owned variant set is closed for this contract revision. A new variant
+requires a structural contract and cache-identity review.
 
 `structural_construct` is the sole public construction entry. It compares
 `source.shape_identity()` with `<T as StructuralType>::shape_identity()` before

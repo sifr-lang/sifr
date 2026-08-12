@@ -499,6 +499,42 @@ fn generated_project_root(binary_path: &Path) -> PathBuf {
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_build_const_specialization_without_structural_runtime() {
+    let dir = mktemp_dir("package_const_specialization_without_structural_runtime");
+    let app = production_package(&dir, "app", "sifr-const-app", "const_app");
+    let meta = production_package(&dir, "meta", "sifr-const-meta", "const_meta");
+    write_package_source(
+        &meta,
+        "__init__.sifr",
+        "class IssueArgs:\n    problem: str\n\nclass Issue:\n    package: str\n    reason_code: str\n    severity: str\n    arguments: IssueArgs\n    notes: list[str]\n\nclass Outcome:\n    status: str\n    value: str | None\n    issues: list[Issue]\n\n@const_eval\ndef describe(shape: dict[str, str]) -> Outcome:\n    return Outcome(\"produced\", shape[\"canonical_identity\"], [])\n",
+    );
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from const_meta import describe\n\n@const_specialize(\"const_meta\", \"describe\")\nclass Counter:\n    count: int\n\ndef main() -> None:\n    value: Counter = Counter(7)\n    assert value.count == 7\n",
+    );
+    let graph = package_graph(
+        &dir,
+        &[&app, &meta],
+        &[package_edge(&app, "const_meta", &meta)],
+    );
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+    let artifact = build_cached_package_project(&entrypoint)
+        .expect("non-structural const specialization should build");
+    let generated =
+        std::fs::read_to_string(generated_project_root(artifact.binary_path()).join("src/main.rs"))
+            .expect("generated source should be retained");
+    assert!(!generated.contains("sifr_runtime::interop::structural"));
+    let output = std::process::Command::new(artifact.binary_path())
+        .output()
+        .expect("non-structural specialization binary should run");
+    assert!(output.status.success());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_cached_package_project_links_direct_rust_interop_dependency() {
     let dir = mktemp_dir("package_direct_rust_interop");
     let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
