@@ -10,8 +10,8 @@ inventory, repository boundary, and demo ownership are approved.
 `certification_pkg_resource_core` item is complete through merged
 [PR #3123](https://github.com/sifr-lang/sifr/pull/3123). `milestone_ps_3` is
 implemented and merged through [PR #3138](https://github.com/sifr-lang/sifr/pull/3138).
-`milestone_ps_4` is implemented and merged in the companion repository.
-`milestone_ps_5` is the next sequential work.
+`milestone_ps_4` and `milestone_ps_5` are implemented and merged in the
+companion repository. `milestone_ps_6` is the next sequential work.
 
 Review artifacts:
 
@@ -181,7 +181,33 @@ Milestone delivery records:
   `d6591c059d855809f03be42c991d73a91a42e50c6c141810b3e6195c8efdca72`.
   Two invalid schema probes return stable `schema_invalid` diagnostics. JSON
   and schema foundation tests pass with no user-input panic path.
-- `milestone_ps_5` is the next sequential work.
+- `milestone_ps_5` merged in companion-repository
+  [PR #3](https://github.com/sifr-lang/pydantic-sifr/pull/3) at merge commit
+  `0ce1aecfd48af77f52b05578de10512a05914707`. The exact reviewed and gated
+  candidate was `e09014c4926746442c4d174c09cac318500a48eb`.
+- The milestone adds one bounded engine for native, JSON, and strings input.
+  It validates exact and fixed integers, floats, decimals, fractions, complex
+  values, text, bytes, temporal values, UUIDs, URLs, and compiled patterns. It
+  also validates lists, tuples, mappings, sets, frozen sets, embedded JSON, and
+  lazy iterators with stable deferred error locations.
+- The exact compatibility ledger classifies all 19 required PS5 fixture
+  families. It records the Rust-regex, numeric conversion, collection-kind,
+  temporal, URL, bytes, and error-contract adaptations. Integer digit limits
+  fail before large numeric allocation. The implementation has no Python,
+  compatibility, fallback, or legacy runtime path.
+- Four scalar review rounds, four collection review rounds, and three special
+  scalar review rounds closed all blocking findings. The whole-milestone Opus
+  review of the final candidate returned `SATISFIED` with no blockers. Its
+  response remains outside the Git tree at
+  `/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr-claude.CB0DN1/response.md`.
+- The canonical create-PR gate and the single authoritative merge gate passed
+  on the same candidate. The merge gate included release-mode tests and 1,000
+  bounded runs for each scalar, collection, and special validation fuzz target.
+- Opus follow-ups are non-blocking documentation and coverage work: expand the
+  ledger prose for adapted temporal bounds, tuple arity errors, typed numeric
+  collection identity, numeric coercion boundaries, and URL measurement; grow
+  fuzz coverage beyond the required bounded crash smoke.
+- `milestone_ps_6` is the next sequential work.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
   predicates for fixed-width platform integers, metadata, and imported classes;
@@ -2330,21 +2356,21 @@ set/disposition audit per row.
 
 ### milestone_ps_5: Scalar and Collection Validation
 
-- Implement scalar schema nodes and strict/lax conversion.
-- Implement exact/fixed integers, floats, decimals, exact rational fractions,
+- [x] Implement scalar schema nodes and strict/lax conversion.
+- [x] Implement exact/fixed integers, floats, decimals, exact rational fractions,
   complex values, strings and bytes.
-- Integrate temporal and focused scalar libraries, including the Core Schema
+- [x] Integrate temporal and focused scalar libraries, including the Core Schema
   compiled-pattern value node over stdlib `re.Pattern`.
-- Implement numeric/decimal, string-normalization, pattern, length, and
+- [x] Implement numeric/decimal, string-normalization, pattern, length, and
   call-scoped clock-relative temporal constraints with the specified ordering.
-- Implement lists, tuples, mappings, sets and frozen sets.
-- Implement lazy `ValidatedIterator[T]` with fallible `next`, stable deferred
+- [x] Implement lists, tuples, mappings, sets and frozen sets.
+- [x] Implement lazy `ValidatedIterator[T]` with fallible `next`, stable deferred
   error indices, and length/resource limits; it is not silently collected.
-- Implement the embedded-JSON decoder after manifest adaptation supplies an
+- [x] Implement the embedded-JSON decoder after manifest adaptation supplies an
   explicit statically known child schema.
-- Implement native, JSON, and strings input profiles over one validation
+- [x] Implement native, JSON, and strings input profiles over one validation
   engine.
-- Port the corresponding neutral Pydantic Core corpus.
+- [x] Port the corresponding neutral Pydantic Core corpus.
 
 Exit gate: `core/json_values`, `validators/numeric`,
 `validators/complex`, `validators/text_bytes`, `validators/temporal`, `validators/collections`,
