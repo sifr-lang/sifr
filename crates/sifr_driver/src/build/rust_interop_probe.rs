@@ -77,7 +77,7 @@ pub(super) fn execute_direct_cargo_probe(
     let requires_structural_runtime = probe
         .signature
         .as_ref()
-        .is_some_and(|signature| signature.structural_type_param.is_some());
+        .is_some_and(|signature| !signature.structural_type_params.is_empty());
     let probe_manifest = probe_cargo_toml(
         &probe.backend.dependency_name,
         &probe.backend.cargo_package_name,
@@ -263,8 +263,8 @@ fn signature_probe_source(
     if is_python_raw_callback_probe(rust_path) {
         return python_raw_callback_probe_source(signature, rust_path);
     }
-    if let Some(type_param) = signature.structural_type_param.as_deref() {
-        return structural_signature_probe_source(signature, rust_path, type_param);
+    if !signature.structural_type_params.is_empty() {
+        return structural_signature_probe_source(signature, rust_path);
     }
     let params = signature
         .params
@@ -355,12 +355,11 @@ fn signature_probe_source(
 fn structural_signature_probe_source(
     signature: &RustBridgeSignatureContract,
     rust_path: &str,
-    type_param: &str,
 ) -> String {
     let mut out = String::from("#![allow(dead_code)]\n");
     out.push_str(&generated_bridge_type_stubs(signature));
     out.push_str("fn __sifr_probe<");
-    out.push_str(type_param);
+    out.push_str(&signature.structural_type_params.join(", "));
     out.push_str(">(");
     out.push_str(
         &signature
@@ -375,13 +374,17 @@ fn structural_signature_probe_source(
             .collect::<Vec<_>>()
             .join(", "),
     );
-    out.push_str(")\nwhere\n    ");
-    out.push_str(type_param);
-    out.push_str(": ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject");
-    if signature.static_program_type_param {
-        out.push_str(" + ::sifr_runtime::interop::structural::StaticProgramType");
+    out.push_str(")\nwhere\n");
+    for type_param in &signature.structural_type_params {
+        out.push_str("    ");
+        out.push_str(type_param);
+        out.push_str(": ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject");
+        if signature.static_program_type_params.contains(type_param) {
+            out.push_str(" + ::sifr_runtime::interop::structural::StaticProgramType");
+        }
+        out.push_str(",\n");
     }
-    out.push_str(",\n{\n    let _: ");
+    out.push_str("{\n    let _: ");
     let return_type = signature_return_probe_type(&signature.return_type);
     let normalized_return_type = if return_type.display_error_generic {
         return_type.ty.replace("__SifrBridgeError", "String")
@@ -395,7 +398,7 @@ fn structural_signature_probe_source(
     }
     out.push_str(rust_path);
     out.push_str("::<");
-    out.push_str(type_param);
+    out.push_str(&signature.structural_type_params.join(", "));
     out.push_str(">(");
     out.push_str(
         &(0..signature.params.len())

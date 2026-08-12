@@ -37,8 +37,8 @@ pub struct RustBridgeSignatureContract {
     pub owner: RustInteropOwner,
     pub params: Vec<RustBridgeParamContract>,
     pub return_type: RustBridgeTypeContract,
-    pub structural_type_param: Option<String>,
-    pub static_program_type_param: bool,
+    pub structural_type_params: Vec<String>,
+    pub static_program_type_params: Vec<String>,
     pub panic_error: RustBridgePanicErrorContract,
     pub span: ruff_text_size::TextRange,
 }
@@ -216,7 +216,7 @@ fn signature_contract(
         RustInteropOwner::Class { .. } => (None, None),
     };
     let function = function?;
-    let structural_type_param = function.structural_type_param.as_deref();
+    let structural_type_params = function.structural_type_params.as_slice();
     let params = receiver
         .into_iter()
         .chain(function.params.iter().map(|param| RustBridgeParamContract {
@@ -235,7 +235,7 @@ fn signature_contract(
                         CallbackParameterMode::CallScoped
                     },
                 ),
-                structural_type_param,
+                structural_type_params,
             ),
         }))
         .collect::<Vec<_>>();
@@ -246,7 +246,7 @@ fn signature_contract(
         catalog,
         generated_types,
         BridgeTypePosition::Return,
-        structural_type_param,
+        structural_type_params,
     );
     let panic_error = rust_bridge_panic_error_contract(&function.return_type);
     Some(RustBridgeSignatureContract {
@@ -255,8 +255,8 @@ fn signature_contract(
         owner: declaration.owner.clone(),
         params,
         return_type,
-        structural_type_param: function.structural_type_param.clone(),
-        static_program_type_param: function.static_program_type_param,
+        structural_type_params: function.structural_type_params.clone(),
+        static_program_type_params: function.static_program_type_params.clone(),
         panic_error,
         span: declaration.declaration.span,
     })
@@ -268,8 +268,8 @@ struct ModuleFunction {
     return_type: Type,
     method_kind: Option<sifr_ir::MethodKind>,
     consumes_receiver: bool,
-    structural_type_param: Option<String>,
-    static_program_type_param: bool,
+    structural_type_params: Vec<String>,
+    static_program_type_params: Vec<String>,
 }
 
 pub(crate) struct ModuleCatalog {
@@ -290,6 +290,30 @@ impl ModuleCatalog {
         let mut record_classes = BTreeSet::new();
         let mut enum_classes = BTreeSet::new();
         for function in &module.functions {
+            let has_structural_declaration = function.rust_interop.iter().any(|declaration| {
+                declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
+            });
+            let structural_type_params = if has_structural_declaration {
+                function
+                    .type_params
+                    .iter()
+                    .filter(|type_param| {
+                        module
+                            .type_param_bounds
+                            .get(&function.name)
+                            .and_then(|bounds| bounds.get(*type_param))
+                            .is_some_and(|bounds| {
+                                matches!(
+                                    bounds.as_slice(),
+                                    [bound] if bound == "Structural" || bound == "StaticProgram"
+                                )
+                            })
+                    })
+                    .cloned()
+                    .collect()
+            } else {
+                Vec::new()
+            };
             functions.insert(
                 function.name.clone(),
                 ModuleFunction {
@@ -297,22 +321,19 @@ impl ModuleCatalog {
                     return_type: function.return_type.clone(),
                     method_kind: None,
                     consumes_receiver: false,
-                    structural_type_param: function
-                        .rust_interop
+                    structural_type_params,
+                    static_program_type_params: function
+                        .type_params
                         .iter()
-                        .any(|declaration| {
-                            declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
+                        .filter(|type_param| {
+                            module
+                                .type_param_bounds
+                                .get(&function.name)
+                                .and_then(|bounds| bounds.get(*type_param))
+                                .is_some_and(|bounds| bounds.as_slice() == ["StaticProgram"])
                         })
-                        .then(|| function.type_params.first().cloned())
-                        .flatten(),
-                    static_program_type_param: module
-                        .type_param_bounds
-                        .get(&function.name)
-                        .is_some_and(|bounds| {
-                            bounds
-                                .values()
-                                .any(|values| values.as_slice() == ["StaticProgram"])
-                        }),
+                        .cloned()
+                        .collect(),
                 },
             );
         }
@@ -349,8 +370,8 @@ impl ModuleCatalog {
                             .rust_interop
                             .first()
                             .is_some_and(|declaration| declaration.consumes_receiver),
-                        structural_type_param: None,
-                        static_program_type_param: false,
+                        structural_type_params: Vec::new(),
+                        static_program_type_params: Vec::new(),
                     },
                 );
             }
@@ -395,7 +416,7 @@ pub(crate) fn bridge_type_contract(
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
     position: BridgeTypePosition,
-    structural_type_param: Option<&str>,
+    structural_type_params: &[String],
 ) -> RustBridgeTypeContract {
     let resolved = ty.resolve_alias();
     match resolved {
@@ -438,7 +459,7 @@ pub(crate) fn bridge_type_contract(
             catalog,
             generated_types,
             position,
-            structural_type_param,
+            structural_type_params,
         ),
         Type::Dict(key, value) => bridge_dict_type(
             (key, value),
@@ -447,7 +468,7 @@ pub(crate) fn bridge_type_contract(
             catalog,
             generated_types,
             position,
-            structural_type_param,
+            structural_type_params,
         ),
         Type::Union(members) => bridge_union_type(
             members,
@@ -456,7 +477,7 @@ pub(crate) fn bridge_type_contract(
             catalog,
             generated_types,
             position,
-            structural_type_param,
+            structural_type_params,
         ),
         Type::Tuple(items) => bridge_tuple_type(
             items,
@@ -477,7 +498,7 @@ pub(crate) fn bridge_type_contract(
                     catalog,
                     generated_types,
                     BridgeTypePosition::Return,
-                    structural_type_param,
+                    structural_type_params,
                 );
                 let bridge_error = match recoverable_panic_bridge_error(err) {
                     Ok(Some(ordinary_error)) => ordinary_error,
@@ -493,7 +514,7 @@ pub(crate) fn bridge_type_contract(
                     catalog,
                     generated_types,
                     BridgeTypePosition::Return,
-                    structural_type_param,
+                    structural_type_params,
                 );
                 combine_generic_type(
                     "Result",
@@ -578,7 +599,7 @@ pub(crate) fn bridge_type_contract(
                     params,
                     conventions,
                     result,
-                    structural_type_param,
+                    structural_type_params,
                 },
                 module_name,
                 module_catalogs,
@@ -598,7 +619,7 @@ pub(crate) fn bridge_type_contract(
                     params,
                     conventions,
                     result,
-                    structural_type_param,
+                    structural_type_params,
                 },
                 module_name,
                 module_catalogs,
@@ -618,7 +639,7 @@ pub(crate) fn bridge_type_contract(
             unsupported_type(ty, "dynamic Any/Unknown values are not Rust bridge-compatible")
         }
         Type::Never => unsupported_type(ty, "Never is not a Rust bridge value type"),
-        Type::TypeVar(name) if structural_type_param == Some(name.as_str()) => {
+        Type::TypeVar(name) if structural_type_params.contains(name) => {
             RustBridgeTypeContract {
                 sifr_type: name.clone(),
                 rust_borrowed_type: Some(format!("&{name}")),

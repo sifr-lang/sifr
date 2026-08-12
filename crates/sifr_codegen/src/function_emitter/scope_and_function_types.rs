@@ -717,7 +717,11 @@ impl RustEmitter {
                 let structural = func.rust_interop.iter().any(|declaration| {
                     declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
                 });
-                let base = if structural && self.static_program_functions.contains(&func.name) {
+                let static_program = self
+                    .static_program_type_params
+                    .get(&func.name)
+                    .is_some_and(|params| params.contains(tp));
+                let base = if structural && static_program {
                     "sifr_runtime::interop::structural::StructuralConstruct + sifr_runtime::interop::structural::StructuralProject + sifr_runtime::interop::structural::StaticProgramType"
                 } else if structural {
                     "sifr_runtime::interop::structural::StructuralConstruct + sifr_runtime::interop::structural::StructuralProject"

@@ -12,7 +12,7 @@ pub(crate) struct CallbackSignature<'a> {
     pub(crate) params: &'a [Type],
     pub(crate) conventions: &'a [ParamConvention],
     pub(crate) result: &'a Type,
-    pub(crate) structural_type_param: Option<&'a str>,
+    pub(crate) structural_type_params: &'a [String],
 }
 
 pub(crate) fn bridge_call_scoped_callback_type(
@@ -122,7 +122,7 @@ fn callback_rust_types(
                 catalog,
                 generated_types,
                 BridgeTypePosition::Parameter(CallbackParameterMode::Nested),
-                signature.structural_type_param,
+                signature.structural_type_params,
             )
             .rust_owned_type
         })
@@ -136,7 +136,7 @@ fn callback_rust_types(
             catalog,
             generated_types,
             BridgeTypePosition::Return,
-            signature.structural_type_param,
+            signature.structural_type_params,
         );
         let ok_type = ok_contract.rust_return_type.ok_or(())?;
         format!("Result<{ok_type}, String>")
@@ -148,7 +148,7 @@ fn callback_rust_types(
             catalog,
             generated_types,
             BridgeTypePosition::Return,
-            signature.structural_type_param,
+            signature.structural_type_params,
         );
         result_contract.rust_return_type.ok_or(())?
     };

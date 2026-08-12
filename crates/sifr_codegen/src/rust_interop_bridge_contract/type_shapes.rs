@@ -26,7 +26,7 @@ pub(super) fn bridge_list_type(
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
     position: BridgeTypePosition,
-    structural_type_param: Option<&str>,
+    structural_type_params: &[String],
 ) -> RustBridgeTypeContract {
     let inner_ty = bridge_type_contract(
         inner,
@@ -35,7 +35,7 @@ pub(super) fn bridge_list_type(
         catalog,
         generated_types,
         position.nested(),
-        structural_type_param,
+        structural_type_params,
     );
     let Some(inner_owned) = inner_ty.rust_owned_type.clone() else {
         return unsupported_type(
@@ -60,7 +60,7 @@ pub(super) fn bridge_dict_type(
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
     position: BridgeTypePosition,
-    structural_type_param: Option<&str>,
+    structural_type_params: &[String],
 ) -> RustBridgeTypeContract {
     let (key, value) = entries;
     if !matches!(key.resolve_alias(), Type::Str) {
@@ -76,7 +76,7 @@ pub(super) fn bridge_dict_type(
         catalog,
         generated_types,
         position.nested(),
-        structural_type_param,
+        structural_type_params,
     );
     let Some(value_owned) = value_ty.rust_owned_type.clone() else {
         return unsupported_type(
@@ -102,7 +102,7 @@ pub(super) fn bridge_union_type(
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
     position: BridgeTypePosition,
-    structural_type_param: Option<&str>,
+    structural_type_params: &[String],
 ) -> RustBridgeTypeContract {
     if members.len() == 2 {
         let non_none = members
@@ -120,7 +120,7 @@ pub(super) fn bridge_union_type(
                     catalog,
                     generated_types,
                     position.nested(),
-                    structural_type_param,
+                    structural_type_params,
                 );
                 let Some(inner_owned) = inner.rust_owned_type.clone() else {
                     return unsupported_type(

@@ -50,8 +50,8 @@ pub struct RustEmitter {
     /// Emit structural bridge implementations only when the project declares
     /// a structural Rust interop boundary.
     pub(crate) structural_interop_enabled: bool,
-    /// Structural bridge functions whose type parameter requires compiler-emitted static data.
-    pub(crate) static_program_functions: HashSet<String>,
+    /// Static-program type parameters for each structural bridge function.
+    pub(crate) static_program_type_params: HashMap<String, HashSet<String>>,
     /// Set of stdlib/intrinsic modules used (for Cargo dependency injection)
     pub used_stdlib_modules: HashSet<String>,
     /// Set of intrinsic function names (for codegen dispatch)
@@ -229,7 +229,7 @@ impl RustEmitter {
             current_class_name: None,
             current_module_name: None,
             structural_interop_enabled: false,
-            static_program_functions: HashSet::new(),
+            static_program_type_params: HashMap::new(),
             used_stdlib_modules: HashSet::new(),
             intrinsic_functions: HashSet::new(),
             intrinsic_registry_features: HashSet::new(),

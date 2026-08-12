@@ -11,7 +11,7 @@ use sifr_runtime::interop::structural::{
 };
 use sifr_runtime::interop::{Handle, HandleStateError};
 
-const RECORD_IDENTITY: &str = "StaticRecord";
+const RECORD_IDENTITY: &str = "main.StaticRecord";
 static ACTIVE_DOCUMENTS: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Debug)]
@@ -153,14 +153,25 @@ pub fn execute<T>(document: Handle<ValidatedDocument>, input: &T) -> Result<T, S
 where
     T: StructuralConstruct + StructuralProject + StaticProgramType,
 {
-    let program = T::static_program();
+    execute_distinct::<T, T>(document, input)
+}
+
+pub fn execute_distinct<Input, Output>(
+    document: Handle<ValidatedDocument>,
+    input: &Input,
+) -> Result<Output, StaticProgramError>
+where
+    Input: StructuralConstruct + StructuralProject,
+    Output: StructuralConstruct + StructuralProject + StaticProgramType,
+{
+    let program = Output::static_program();
     let header = program.header();
     program.verify_envelope(
         STATIC_PROGRAM_FORMAT_VERSION,
         header.structural_contract_version(),
         STRUCTURAL_BRIDGE_CONTRACT_VERSION,
         header.identity(),
-        T::shape_identity(),
+        Output::shape_identity(),
     )?;
     verify_typed_program_value(program.value())?;
     let _input = project(input)?;
@@ -169,11 +180,11 @@ where
     }
     let nodes = document.into_inner()?.into_nodes();
     let arena = sifr_runtime::interop::structural::StructuralArena::seal(
-        T::shape_identity(),
+        Output::shape_identity(),
         NodeId::new(0),
         nodes,
     )?;
-    let output = structural_construct::<T, _>(arena)?;
+    let output = structural_construct::<Output, _>(arena)?;
     let observed = project(&output)?;
     LAST_OBSERVATION.with_borrow_mut(|slot| *slot = Some(observed.summary()));
     Ok(output)
