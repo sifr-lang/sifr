@@ -11,7 +11,8 @@ inventory, repository boundary, and demo ownership are approved.
 [PR #3123](https://github.com/sifr-lang/sifr/pull/3123). `milestone_ps_3` is
 implemented and merged through [PR #3138](https://github.com/sifr-lang/sifr/pull/3138).
 `milestone_ps_4` and `milestone_ps_5` are implemented and merged in the
-companion repository. `milestone_ps_6` is the next sequential work.
+companion repository. `milestone_ps_6` is active. Its general typed static-program
+payload dependency is merged.
 
 Review artifacts:
 
@@ -207,7 +208,26 @@ Milestone delivery records:
   ledger prose for adapted temporal bounds, tuple arity errors, typed numeric
   collection identity, numeric coercion boundaries, and URL measurement; grow
   fuzz coverage beyond the required bounded crash smoke.
-- `milestone_ps_6` is the next sequential work.
+- The general typed static-program payload dependency for `milestone_ps_6`
+  merged in [PR #3148](https://github.com/sifr-lang/sifr/pull/3148) at merge
+  commit `027d1b63ef716b8dde1bffbc853a0224f0706c4a`. The exact reviewed candidate
+  was `160e6b789349b20ae02df59ede2b4eb78929e561`.
+- The compiler now emits one immutable borrowed `StaticProgramValue` for a
+  structural static-program owner. Non-structural specialization does not add
+  a runtime dependency or generated payload. No parser, cache, compatibility
+  mode, fallback, legacy path, or versioned active name exists.
+- The final Opus implementation and evidence review returned `SATISFIED` with
+  no blocker. The unchanged warm create-PR gate passed. The single merge gate
+  stopped on one parse-only performance sample at 0.18% more than its limit.
+  That benchmark cannot reach the changed path. Five controlled reruns passed
+  with low variance.
+- Exact-candidate continuation passed all crate tests and 694 E2E fixtures. It
+  also passed 182 diagnostics, 17 project/workspace, five regression, 37
+  fuzz/property, and 20 ecosystem hardening variants with zero failures.
+- The review found a separate pre-existing ambiguity in structural canonical
+  metadata. [Issue #3149](https://github.com/sifr-lang/sifr/issues/3149) owns
+  that repair. PR #3148 did not absorb it.
+- `milestone_ps_6` remains active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
   predicates for fixed-width platform integers, metadata, and imported classes;
