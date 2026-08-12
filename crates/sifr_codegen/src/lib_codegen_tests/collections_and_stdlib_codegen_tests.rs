@@ -628,7 +628,7 @@ fn test_generate_rust_multi_assembles_single_rust_file() {
         .expect("generate_project docs should exist");
     let generate_block = &lib_src[start..end];
 
-    assert!(generate_block.contains("generate_rust_with_stdlib_for_module_with_structural_policy("));
+    assert!(generate_block.contains("generate_rust_with_stdlib_for_module_with_project_policy("));
     assert!(generate_block.contains("structural_interop_enabled,"));
     assert!(generate_block.contains("register_imported_generic_classes("));
     assert!(generate_block.contains("render_local_module_imports(module, &project_modules)"));

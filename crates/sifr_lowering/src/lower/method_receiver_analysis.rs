@@ -442,9 +442,17 @@ pub(super) fn method_signature(
             method,
             class_types,
         ),
-        Type::Protocol { name, methods } => {
-            resolved_nominal_method_signature(None, name, methods, method, class_types)
-        }
+        Type::Protocol {
+            identity,
+            name,
+            methods,
+        } => resolved_nominal_method_signature(
+            identity.as_deref(),
+            name,
+            methods,
+            method,
+            class_types,
+        ),
         Type::Enum { name, .. } => functions.get(&format!("{name}.{method}")).cloned(),
         Type::Alias { body, .. } => method_signature(body, method, class_types, functions),
         Type::TypeVar(name) => class_types

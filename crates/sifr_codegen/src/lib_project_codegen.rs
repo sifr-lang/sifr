@@ -1,11 +1,133 @@
 use super::{
-    generate_rust, generate_rust_with_stdlib_for_module_with_structural_policy,
-    module_class_fields, publicize_generated_module_source, HashMap, HashSet, HirModule,
-    MultiModuleCodegenResult, Renderer, RustFile, RustItem, StdlibCode,
+    generate_rust, generate_rust_with_stdlib_for_module_with_project_policy,
+    publicize_generated_module_source, HashMap, HashSet, HirModule, MultiModuleCodegenResult,
+    Renderer, RustFile, RustItem, StdlibCode,
 };
-use crate::lib_project_signatures::project_func_signatures;
+use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
+use crate::project_stdlib_nominals::{
+    project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
+};
+use crate::project_union_prelude::render_project_union_prelude;
 use sifr_stdlib_manifest::{try_generated_cargo_dependencies, StdlibFeature};
 use sifr_type_system::source_class_rust_name;
+
+pub(crate) fn register_imported_union_types(
+    emitter: &mut super::RustEmitter,
+    module: &HirModule,
+    project_code: &StdlibCode,
+) {
+    for import in &module.imports {
+        if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
+            continue;
+        }
+        if let Some(signatures) = project_code.func_signatures.get(&import.module) {
+            for name in &import.names {
+                if let Some((params, return_type)) = signatures.get(name) {
+                    for (param_type, _) in params {
+                        emitter.register_union_type(param_type);
+                    }
+                    emitter.register_union_type(return_type);
+                }
+            }
+        }
+        if let Some(classes) = project_code.module_class_fields.get(&import.module) {
+            for name in &import.names {
+                if let Some(fields) = classes.get(name) {
+                    for (_, field_type) in fields {
+                        emitter.register_union_type(field_type);
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub(crate) struct ProjectUnionUsage {
+    pub(crate) unions: HashMap<String, Vec<sifr_type_system::Type>>,
+    pub(crate) module_unions: HashMap<String, HashSet<String>>,
+    pub(crate) ordinary_unions: HashSet<String>,
+    pub(crate) try_error_unions: HashSet<String>,
+}
+
+pub(crate) fn project_union_usage(
+    modules: &[(&str, &HirModule)],
+    project_code: &StdlibCode,
+) -> ProjectUnionUsage {
+    let mut unions = HashMap::new();
+    let mut module_unions = HashMap::new();
+    let mut ordinary_unions = HashSet::new();
+    let mut try_error_unions = HashSet::new();
+    for (module_name, module) in modules {
+        let mut emitter = super::RustEmitter::new();
+        emitter.collect_union_types(module);
+        register_imported_union_types(&mut emitter, module, project_code);
+        ordinary_unions.extend(emitter.ordinary_union_enums.iter().cloned());
+        try_error_unions.extend(emitter.try_error_carrier_enums.iter().cloned());
+        let names = emitter.union_enums.keys().cloned().collect::<HashSet<_>>();
+        for (name, members) in emitter.union_enums {
+            unions.entry(name).or_insert(members);
+        }
+        module_unions.insert((*module_name).to_string(), names);
+    }
+    ProjectUnionUsage {
+        unions,
+        module_unions,
+        ordinary_unions,
+        try_error_unions,
+    }
+}
+
+pub(crate) fn render_project_union_imports(
+    module_name: &str,
+    module_unions: &HashSet<String>,
+    crate_root_modules: &HashSet<&str>,
+) -> String {
+    if crate_root_modules.contains(module_name) {
+        return String::new();
+    }
+    let mut names = module_unions.iter().collect::<Vec<_>>();
+    names.sort();
+    let items = names
+        .into_iter()
+        .map(|name| RustItem::Use(vec!["crate".to_string(), name.clone()]))
+        .collect::<Vec<_>>();
+    Renderer::new().render_file(&RustFile { items })
+}
+
+pub(crate) fn project_nominal_type_paths(
+    modules: &[(&str, &HirModule)],
+    crate_root_modules: &HashSet<&str>,
+) -> HashMap<String, String> {
+    let mut paths = HashMap::new();
+    let mut basename_counts = HashMap::new();
+    for (_, module) in modules {
+        for class in &module.classes {
+            *basename_counts
+                .entry(class.name.as_str())
+                .or_insert(0_usize) += 1;
+        }
+    }
+    for (module_name, module) in modules {
+        for class in &module.classes {
+            let rust_name = source_class_rust_name(&class.name);
+            let path = if crate_root_modules.contains(module_name) {
+                format!("crate::{rust_name}")
+            } else {
+                format!("crate::{}::{rust_name}", module_name.replace('.', "::"))
+            };
+            let canonical = class
+                .identity
+                .clone()
+                .unwrap_or_else(|| format!("{module_name}.{}", class.name));
+            paths.insert(canonical, path.clone());
+            paths.insert(format!("{module_name}.{}", class.name), path.clone());
+            if basename_counts.get(class.name.as_str()) == Some(&1) {
+                paths.insert(class.name.clone(), path);
+            }
+        }
+    }
+    paths
+}
 
 fn resolve_exported_rust_opaque_class<'a>(
     module_name: &str,
@@ -146,7 +268,7 @@ fn resolve_exported_generic_class<'a>(
     None
 }
 
-fn register_imported_generic_classes(
+pub(crate) fn register_imported_generic_classes(
     code: &mut StdlibCode,
     module: &HirModule,
     project_modules: &HashMap<&str, &HirModule>,
@@ -190,30 +312,64 @@ pub fn generate_rust_multi_with_metadata(
     let structural_interop_enabled = modules
         .iter()
         .any(|(_, module)| crate::rust_interop_plan::module_uses_structural_interop(module));
-
     project_codegen_code
         .func_signatures
         .extend(project_func_signatures(modules));
-    for (module_name, module) in modules {
-        project_codegen_code
-            .module_class_fields
-            .insert((*module_name).to_string(), module_class_fields(module));
-    }
+    project_codegen_code
+        .module_class_fields
+        .extend(project_class_fields(modules));
+    let union_usage = project_union_usage(modules, &project_codegen_code);
+    let stdlib_nominal_plan =
+        project_stdlib_nominal_plan(&union_usage.unions, stdlib_code, modules);
+    let crate_root_modules = HashSet::from(["main"]);
+    let mut nominal_type_paths = project_nominal_type_paths(modules, &crate_root_modules);
+    nominal_type_paths.extend(stdlib_nominal_plan.nominal_paths.clone());
+    let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
+    let project_union_prelude = [stdlib_nominal_plan.prelude.as_str(), union_prelude.as_str()]
+        .into_iter()
+        .filter(|source| !source.trim().is_empty())
+        .map(str::trim_end)
+        .collect::<Vec<_>>()
+        .join("\n\n");
+    used_stdlib_modules.extend(stdlib_nominal_plan.used_stdlib_modules.iter().cloned());
+    required_features.extend(stdlib_nominal_plan.required_features.iter().copied());
 
     for (module_name, module) in modules {
         let module_public = *module_name != "main";
         let mut module_codegen_code = project_codegen_code.clone();
         register_imported_generic_classes(&mut module_codegen_code, module, &project_modules);
-        let codegen_result = generate_rust_with_stdlib_for_module_with_structural_policy(
+        let used_unions = union_usage
+            .module_unions
+            .get(*module_name)
+            .cloned()
+            .unwrap_or_default();
+        let owned_unions = HashSet::new();
+        let codegen_result = generate_rust_with_stdlib_for_module_with_project_policy(
             module,
             &module_codegen_code,
-            None,
+            Some(module_name),
             structural_interop_enabled,
+            Some(&owned_unions),
+            Some(&union_usage.ordinary_unions),
+            Some(&union_usage.try_error_unions),
         );
         let local_imports = render_local_module_imports(module, &project_modules);
-        let mut rust_source = codegen_result.rust_source;
-        if !local_imports.trim().is_empty() {
-            rust_source = format!("{}\n\n{}", local_imports.trim_end(), rust_source);
+        let union_imports =
+            render_project_union_imports(module_name, &used_unions, &crate_root_modules);
+        let mut rust_source = relocate_project_stdlib_nominals(
+            &codegen_result.rust_source,
+            module_name,
+            &stdlib_nominal_plan,
+            &crate_root_modules,
+        );
+        let imports = [local_imports, union_imports]
+            .into_iter()
+            .filter(|source| !source.trim().is_empty())
+            .map(|source| source.trim_end().to_string())
+            .collect::<Vec<_>>()
+            .join("\n");
+        if !imports.is_empty() {
+            rust_source = format!("{imports}\n\n{rust_source}");
         }
         if module_public {
             rust_source = publicize_generated_module_source(&rust_source);
@@ -229,6 +385,7 @@ pub fn generate_rust_multi_with_metadata(
 
     MultiModuleCodegenResult {
         rust_files: files,
+        project_union_prelude,
         used_stdlib_modules,
         required_features,
         interop: crate::rust_interop_plan::interop_build_plan_for_named_modules(
@@ -301,9 +458,307 @@ mod tests {
     use super::*;
     use ruff_text_size::TextRange;
     use sifr_ir::{
-        HirClass, HirClassKind, HirFunction, HirImport, MethodKind, RustInteropAbiRequirements,
-        RustInteropDeclaration, RustInteropDecoratorKind, RustInteropEffect,
+        HirClass, HirClassKind, HirExceptHandler, HirFunction, HirImport, MethodKind,
+        RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
+        RustInteropEffect,
     };
+
+    fn empty_function(name: &str, return_type: sifr_type_system::Type) -> HirFunction {
+        HirFunction {
+            name: name.to_string(),
+            params: Vec::new(),
+            return_type,
+            body: vec![sifr_ir::HirStmt::Return {
+                value: Some(sifr_ir::HirExpr::IntLiteral(1)),
+            }],
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            receiver: None,
+            decorators: Vec::new(),
+            rust_interop: Vec::new(),
+            python_interop: Vec::new(),
+            compiler_intrinsic: None,
+            type_params: Vec::new(),
+        }
+    }
+
+    fn module_with(functions: Vec<HirFunction>, imports: Vec<HirImport>) -> HirModule {
+        HirModule {
+            functions,
+            classes: Vec::new(),
+            imports,
+            constants: Vec::new(),
+            generic_functions: HashMap::new(),
+            type_param_bounds: HashMap::new(),
+        }
+    }
+
+    fn error_type(name: &str) -> sifr_type_system::Type {
+        sifr_type_system::Type::Class {
+            identity: Some(format!("errors.{name}")),
+            type_args: Vec::new(),
+            name: name.to_string(),
+            fields: vec![("message".to_string(), sifr_type_system::Type::Str)],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        }
+    }
+
+    fn error_class(name: &str) -> HirClass {
+        HirClass {
+            name: name.to_string(),
+            identity: Some(format!("errors.{name}")),
+            fields: vec![("message".to_string(), sifr_type_system::Type::Str)],
+            field_defaults: Vec::new(),
+            declaration_metadata: Vec::new(),
+            methods: Vec::new(),
+            is_hashable: true,
+            is_error_type: true,
+            kind: HirClassKind::Regular,
+            operator_impls: Vec::new(),
+            newtype_inner: None,
+            implements_protocols: Vec::new(),
+            parent_class: Some("Error".to_string()),
+            parent_type: None,
+            type_params: Vec::new(),
+            enum_variants: Vec::new(),
+            rust_interop: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn project_unions_have_one_crate_root_definition() {
+        let union = sifr_type_system::Type::Union(vec![
+            sifr_type_system::Type::Int,
+            sifr_type_system::Type::Str,
+        ]);
+        let enum_name = union.union_enum_name();
+        let provider = module_with(vec![empty_function("produce", union.clone())], Vec::new());
+        let consumer = module_with(
+            vec![empty_function("marker", sifr_type_system::Type::Int)],
+            vec![HirImport {
+                module: "provider".to_string(),
+                names: vec!["produce".to_string()],
+                aliases: Vec::new(),
+            }],
+        );
+
+        let generated = generate_rust_multi_with_metadata(
+            &[("main", &consumer), ("provider", &provider)],
+            &StdlibCode::default(),
+        );
+        let provider_source = &generated.rust_files["provider"];
+        assert!(
+            generated
+                .project_union_prelude
+                .contains(&format!("pub enum {enum_name}")),
+            "{}",
+            generated.project_union_prelude
+        );
+        assert_eq!(
+            generated
+                .project_union_prelude
+                .matches(&format!("enum {enum_name}"))
+                .count(),
+            1
+        );
+        assert!(
+            provider_source.contains(&format!("use crate::{enum_name};")),
+            "{provider_source}"
+        );
+        assert!(!generated.rust_files["main"].contains(&format!("enum {enum_name}")));
+    }
+
+    #[test]
+    fn main_owned_union_is_imported_from_the_crate_root() {
+        let union = sifr_type_system::Type::Union(vec![
+            sifr_type_system::Type::Int,
+            sifr_type_system::Type::Str,
+        ]);
+        let enum_name = union.union_enum_name();
+        let owner = module_with(vec![empty_function("produce", union.clone())], Vec::new());
+        let consumer = module_with(vec![empty_function("relay", union.clone())], Vec::new());
+
+        let generated = generate_rust_multi_with_metadata(
+            &[("main", &owner), ("support", &consumer)],
+            &StdlibCode::default(),
+        );
+
+        assert!(generated
+            .project_union_prelude
+            .contains(&format!("enum {enum_name}")));
+        assert!(
+            generated.rust_files["support"].contains(&format!("use crate::{enum_name};")),
+            "{}",
+            generated.rust_files["support"]
+        );
+    }
+
+    #[test]
+    fn dotted_union_user_imports_the_crate_root_definition() {
+        let union = sifr_type_system::Type::Union(vec![
+            sifr_type_system::Type::Int,
+            sifr_type_system::Type::Str,
+        ]);
+        let enum_name = union.union_enum_name();
+        let owner = module_with(vec![empty_function("produce", union.clone())], Vec::new());
+        let consumer = module_with(
+            vec![empty_function("marker", sifr_type_system::Type::Int)],
+            vec![HirImport {
+                module: "pkg.errors".to_string(),
+                names: vec!["produce".to_string()],
+                aliases: Vec::new(),
+            }],
+        );
+
+        let generated = generate_rust_multi_with_metadata(
+            &[("pkg.errors", &owner), ("main", &consumer)],
+            &StdlibCode::default(),
+        );
+
+        assert!(
+            generated.rust_files["pkg.errors"].contains(&format!("use crate::{enum_name};")),
+            "{}",
+            generated.rust_files["pkg.errors"]
+        );
+    }
+
+    #[test]
+    fn root_prelude_combines_try_conversions_with_ordinary_union_traits() {
+        let first = error_type("FirstError");
+        let second = error_type("SecondError");
+        let union = sifr_type_system::Type::Union(vec![first.clone(), second.clone()]);
+        let enum_name = union.union_enum_name();
+        let mut try_function = empty_function("guarded", sifr_type_system::Type::None);
+        try_function.body = vec![sifr_ir::HirStmt::TryExcept {
+            body: vec![sifr_ir::HirStmt::Pass],
+            handlers: vec![HirExceptHandler {
+                error_type: Some("FirstError".to_string()),
+                error_resolved_type: Some(first.clone()),
+                name: None,
+                body: vec![sifr_ir::HirStmt::Pass],
+            }],
+            body_error_types: vec![first, second],
+        }];
+        let mut owner = module_with(vec![try_function], Vec::new());
+        owner.classes = vec![error_class("FirstError"), error_class("SecondError")];
+        let consumer = module_with(vec![empty_function("ordinary", union)], Vec::new());
+
+        let generated = generate_rust_multi_with_metadata(
+            &[("errors", &owner), ("main", &consumer)],
+            &StdlibCode::default(),
+        );
+        let prelude = &generated.project_union_prelude;
+
+        assert!(
+            prelude.contains("#[derive(Debug, Clone, PartialEq, Eq, Hash)]"),
+            "{prelude}"
+        );
+        assert!(
+            prelude.contains("impl From<crate::errors::FirstError>")
+                && prelude.contains(&format!("for {enum_name}")),
+            "{prelude}"
+        );
+        assert!(
+            prelude.contains("impl From<crate::errors::SecondError>"),
+            "{prelude}"
+        );
+    }
+
+    #[test]
+    fn root_prelude_uses_crate_rooted_nominal_payload_paths() {
+        let first = error_type("FirstError");
+        let second = error_type("SecondError");
+        let union = sifr_type_system::Type::Union(vec![first, second]);
+        let mut errors = module_with(vec![empty_function("produce", union.clone())], Vec::new());
+        errors.classes = vec![error_class("FirstError"), error_class("SecondError")];
+        let unrelated = module_with(vec![empty_function("consume", union)], Vec::new());
+
+        let generated = generate_rust_multi_with_metadata(
+            &[("app", &unrelated), ("errors", &errors)],
+            &StdlibCode::default(),
+        );
+
+        assert!(
+            generated
+                .project_union_prelude
+                .contains("crate::errors::FirstError"),
+            "{}",
+            generated.project_union_prelude
+        );
+        assert!(
+            generated
+                .project_union_prelude
+                .contains("crate::errors::SecondError"),
+            "{}",
+            generated.project_union_prelude
+        );
+    }
+
+    #[test]
+    fn root_union_plan_distinguishes_non_class_nominal_identities() {
+        let nominal_pairs = [
+            (
+                sifr_type_system::Type::Newtype {
+                    identity: Some("left.Token".to_string()),
+                    name: "Token".to_string(),
+                    inner: Box::new(sifr_type_system::Type::Int),
+                },
+                sifr_type_system::Type::Newtype {
+                    identity: Some("right.Token".to_string()),
+                    name: "Token".to_string(),
+                    inner: Box::new(sifr_type_system::Type::Int),
+                },
+            ),
+            (
+                sifr_type_system::Type::Enum {
+                    identity: Some("left.Status".to_string()),
+                    name: "Status".to_string(),
+                    variants: vec![("READY".to_string(), Some(1))],
+                },
+                sifr_type_system::Type::Enum {
+                    identity: Some("right.Status".to_string()),
+                    name: "Status".to_string(),
+                    variants: vec![("READY".to_string(), Some(1))],
+                },
+            ),
+            (
+                sifr_type_system::Type::Protocol {
+                    identity: Some("left.Readable".to_string()),
+                    name: "Readable".to_string(),
+                    methods: Vec::new(),
+                },
+                sifr_type_system::Type::Protocol {
+                    identity: Some("right.Readable".to_string()),
+                    name: "Readable".to_string(),
+                    methods: Vec::new(),
+                },
+            ),
+        ];
+
+        for (left, right) in nominal_pairs {
+            let left = module_with(
+                vec![empty_function(
+                    "left",
+                    sifr_type_system::Type::Union(vec![sifr_type_system::Type::Int, left]),
+                )],
+                Vec::new(),
+            );
+            let right = module_with(
+                vec![empty_function(
+                    "right",
+                    sifr_type_system::Type::Union(vec![sifr_type_system::Type::Int, right]),
+                )],
+                Vec::new(),
+            );
+            let usage = project_union_usage(
+                &[("left", &left), ("right", &right)],
+                &StdlibCode::default(),
+            );
+
+            assert_eq!(usage.unions.len(), 2, "{:?}", usage.unions);
+        }
+    }
 
     #[test]
     fn local_imports_bring_opaque_extension_traits_into_scope() {

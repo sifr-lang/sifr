@@ -191,6 +191,7 @@ fn lowers_simple_let_alias_enum_name_rhs() {
     let alias_enum = Type::alias(
         "ColorAlias",
         Type::Enum {
+            identity: None,
             name: "Color".to_string(),
             variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
         },

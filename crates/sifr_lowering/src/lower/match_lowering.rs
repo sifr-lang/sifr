@@ -250,7 +250,7 @@ fn report_enum_exhaustiveness(
     match_stmt: &StmtMatch,
     ctx: &mut LowerCtx,
 ) {
-    let Type::Enum { name, variants } = subject_ty else {
+    let Type::Enum { name, variants, .. } = subject_ty else {
         return;
     };
 

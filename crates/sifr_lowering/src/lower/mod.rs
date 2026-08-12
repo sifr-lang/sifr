@@ -222,6 +222,10 @@ pub fn canonicalize_user_export_type(ty: &Type, local_classes: &HashMap<String, 
     imported_class_identity::canonicalize_export_type(ty, local_classes)
 }
 
+fn declared_class_identity(module: Option<&str>, name: &str) -> Option<String> {
+    module.map(|module| format!("{module}.{name}"))
+}
+
 pub fn canonicalize_user_export_type_in_place(
     ty: &mut Type,
     local_classes: &HashMap<String, String>,

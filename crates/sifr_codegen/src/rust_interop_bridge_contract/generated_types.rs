@@ -137,7 +137,7 @@ impl GeneratedTypeCollector {
                 );
                 generated_class_bridge_type_path(definition_module.as_ref(), class_type)
             }
-            Type::Enum { name, variants } => {
+            Type::Enum { name, variants, .. } => {
                 let definition_module =
                     bridge_type_definition_module(name, module_name, module_catalogs, true)
                         .unwrap_or_else(|_| module_name.cloned());

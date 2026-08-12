@@ -439,7 +439,7 @@ fn test_generate_rust_test_uses_explicit_test_mode_context() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust_test(&module).rust_source;
+    let rust_code = generate_rust_test(&module, "main").rust_source;
     assert!(!rust_code.contains("fn main("));
     assert!(rust_code.contains("#[test]\nfn test_sample()"));
     assert!(rust_code.contains("fn helper()"));
@@ -512,7 +512,7 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let result = generate_rust_test(&module);
+    let result = generate_rust_test(&module, "main");
     assert!(result
         .rust_source
         .contains("use ::std::collections::HashMap;"));
@@ -563,7 +563,7 @@ fn test_generate_rust_test_emits_local_module_import_uses() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_test(&module);
+    let generated = generate_rust_test(&module, "main");
     assert!(
         generated
             .rust_source

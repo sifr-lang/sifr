@@ -443,7 +443,9 @@ impl RustEmitter {
         if self.union_enums.contains_key(preferred) {
             return preferred.to_string();
         }
-        for (candidate, members) in &self.union_enums {
+        let mut candidates = self.union_enums.iter().collect::<Vec<_>>();
+        candidates.sort_by(|(left, _), (right, _)| left.cmp(right));
+        for (candidate, members) in candidates {
             if needed_variants.iter().all(|needed| {
                 members
                     .iter()

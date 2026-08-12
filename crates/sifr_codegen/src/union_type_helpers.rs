@@ -7,6 +7,102 @@ use sifr_type_system::ParamConvention;
 use sifr_type_system::Type;
 
 impl RustEmitter {
+    fn project_nominal_path(&self, identity: Option<&str>, name: &str) -> Option<&str> {
+        if self.project_nominal_type_paths.is_empty() {
+            return None;
+        }
+        let key = identity.unwrap_or(name);
+        if let Some(path) = self.project_nominal_type_paths.get(key) {
+            return Some(path);
+        }
+        if identity.is_some_and(sifr_type_system::is_global_rust_nominal_identity) {
+            return None;
+        }
+        panic!("missing crate-root path for project union nominal identity '{key}'");
+    }
+
+    fn project_union_member_rust_type(&self, ty: &Type) -> RustType {
+        let resolved = crate::resolve_alias_type_for_plain_call(ty);
+        match resolved {
+            class @ Type::Class {
+                identity,
+                type_args,
+                name,
+                ..
+            } => {
+                if class.is_python_object_contract() || class.is_python_resource_identity_contract()
+                {
+                    return sifr_type_to_rust_type(resolved);
+                }
+                let Some(path) = self.project_nominal_path(identity.as_deref(), name) else {
+                    return sifr_type_to_rust_type(resolved);
+                };
+                if type_args.is_empty() {
+                    RustType::Named(path.to_string())
+                } else {
+                    RustType::Generic {
+                        base: path.to_string(),
+                        params: type_args
+                            .iter()
+                            .map(|arg| self.project_union_member_rust_type(arg))
+                            .collect(),
+                    }
+                }
+            }
+            Type::Protocol { identity, name, .. } => self
+                .project_nominal_path(identity.as_deref(), name)
+                .map_or_else(
+                    || sifr_type_to_rust_type(resolved),
+                    |path| RustType::Named(format!("Box<dyn {path}>")),
+                ),
+            Type::Newtype { identity, name, .. } | Type::Enum { identity, name, .. } => self
+                .project_nominal_path(identity.as_deref(), name)
+                .map_or_else(
+                    || sifr_type_to_rust_type(resolved),
+                    |path| RustType::Named(path.to_string()),
+                ),
+            Type::List(inner) | Type::Iterable(inner) => {
+                RustType::Vec(Box::new(self.project_union_member_rust_type(inner)))
+            }
+            Type::Dict(key, value) => RustType::HashMap(
+                Box::new(self.project_union_member_rust_type(key)),
+                Box::new(self.project_union_member_rust_type(value)),
+            ),
+            Type::Set(inner) => {
+                RustType::HashSet(Box::new(self.project_union_member_rust_type(inner)))
+            }
+            Type::Tuple(items) => RustType::Tuple(
+                items
+                    .iter()
+                    .map(|item| self.project_union_member_rust_type(item))
+                    .collect(),
+            ),
+            Type::Result(ok, error) => RustType::Result(
+                Box::new(self.project_union_member_rust_type(ok)),
+                Box::new(self.project_union_member_rust_type(error)),
+            ),
+            Type::Union(members)
+                if members.iter().any(|member| matches!(member, Type::None))
+                    && members
+                        .iter()
+                        .filter(|member| !matches!(member, Type::None))
+                        .count()
+                        == 1 =>
+            {
+                members
+                    .iter()
+                    .find(|member| !matches!(member, Type::None))
+                    .map_or_else(
+                        || sifr_type_to_rust_type(resolved),
+                        |inner| {
+                            RustType::Option(Box::new(self.project_union_member_rust_type(inner)))
+                        },
+                    )
+            }
+            _ => sifr_type_to_rust_type(resolved),
+        }
+    }
+
     /// Collect all union types from the module that need enum definitions,
     /// and build a map of function signatures for call-site wrapping.
     pub(crate) fn collect_union_types(&mut self, module: &HirModule) {
@@ -40,6 +136,9 @@ impl RustEmitter {
         }
         // Also scan class method bodies and register their signatures
         for class in &module.classes {
+            for (_, field_type) in &class.fields {
+                self.register_union_type(field_type);
+            }
             let mut has_constructor = false;
             for method in &class.methods {
                 // Register method signature under ClassName::method_name
@@ -188,6 +287,9 @@ impl RustEmitter {
 
         self.enum_items.clear();
         for (enum_name, members) in enums {
+            if self.suppressed_union_enum_definitions.contains(&enum_name) {
+                continue;
+            }
             let is_try_error_carrier = self.try_error_carrier_enums.contains(&enum_name);
             let supports_ordinary_value_traits =
                 !is_try_error_carrier || self.ordinary_union_enums.contains(&enum_name);
@@ -195,7 +297,7 @@ impl RustEmitter {
                 .iter()
                 .map(|member| RustEnumVariant {
                     name: member.union_variant_name(),
-                    tuple_fields: vec![sifr_type_to_rust_type(member)],
+                    tuple_fields: vec![self.project_union_member_rust_type(member)],
                     fields: Vec::new(),
                     value: None,
                 })
@@ -224,32 +326,37 @@ impl RustEmitter {
                 variants,
             });
             if is_try_error_carrier {
-                self.enum_items.extend(members.iter().map(|member| {
-                    let variant = member.union_variant_name();
-                    RustItem::Impl {
-                        target: enum_name.clone(),
-                        type_params: Vec::new(),
-                        trait_: Some(format!(
-                            "From<{}>",
-                            crate::render_type(&sifr_type_to_rust_type(member))
-                        )),
-                        items: vec![RustItem::Fn {
-                            name: "from".to_string(),
-                            visibility: Visibility::Private,
+                let conversion_items = members
+                    .iter()
+                    .map(|member| {
+                        let member_type = self.project_union_member_rust_type(member);
+                        let variant = member.union_variant_name();
+                        RustItem::Impl {
+                            target: enum_name.clone(),
                             type_params: Vec::new(),
-                            params: vec![RustParam::Named {
-                                name: "value".to_string(),
-                                ty: sifr_type_to_rust_type(member),
+                            trait_: Some(format!("From<{}>", crate::render_type(&member_type))),
+                            items: vec![RustItem::Fn {
+                                name: "from".to_string(),
+                                visibility: Visibility::Private,
+                                type_params: Vec::new(),
+                                params: vec![RustParam::Named {
+                                    name: "value".to_string(),
+                                    ty: member_type,
+                                }],
+                                ret: Some(RustType::Named("Self".to_string())),
+                                body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        enum_name.clone(),
+                                        variant,
+                                    ])),
+                                    args: vec![RustExpr::Ident("value".to_string())],
+                                }))],
+                                is_async: false,
                             }],
-                            ret: Some(RustType::Named("Self".to_string())),
-                            body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-                                func: Box::new(RustExpr::Path(vec![enum_name.clone(), variant])),
-                                args: vec![RustExpr::Ident("value".to_string())],
-                            }))],
-                            is_async: false,
-                        }],
-                    }
-                }));
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                self.enum_items.extend(conversion_items);
             }
 
             let supports_display = members.iter().all(|member| {

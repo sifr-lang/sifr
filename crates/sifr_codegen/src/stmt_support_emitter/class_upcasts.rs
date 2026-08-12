@@ -147,7 +147,7 @@ impl RustEmitter {
             let rendered_target = if index == target_index {
                 self.rust_type_with_generics(target_ty)
             } else {
-                ancestor.replace('.', "::")
+                render_ancestor_rust_type(self.current_module_name.as_deref(), ancestor)
             };
             lowered = crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Verbatim(format!(
@@ -158,6 +158,23 @@ impl RustEmitter {
         }
         lowered
     }
+}
+
+fn render_ancestor_rust_type(current_module: Option<&str>, ancestor: &str) -> String {
+    let Some((module, name)) = ancestor.rsplit_once('.') else {
+        return sifr_type_system::source_class_rust_name(ancestor);
+    };
+    if current_module == Some(module) {
+        return sifr_type_system::source_class_rust_name(name);
+    }
+    if module.starts_with("sifr.") || module.starts_with("_sifr.") {
+        return sifr_type_system::stdlib_class_rust_name(module, name);
+    }
+    format!(
+        "crate::{}::{}",
+        module.replace('.', "::"),
+        sifr_type_system::source_class_rust_name(name)
+    )
 }
 
 fn map_value(
@@ -182,6 +199,7 @@ fn map_value(
 
 #[cfg(test)]
 mod tests {
+    use super::render_ancestor_rust_type;
     use crate::{RustEmitter, RustExpr};
     use sifr_type_system::Type;
 
@@ -209,6 +227,22 @@ mod tests {
                 value.clone()
             ),
             value
+        );
+    }
+
+    #[test]
+    fn ancestor_paths_are_local_stdlib_or_crate_rooted_by_identity() {
+        assert_eq!(
+            render_ancestor_rust_type(Some("models"), "models.Mid"),
+            "Mid"
+        );
+        assert_eq!(
+            render_ancestor_rust_type(Some("adapter"), "models.Mid"),
+            "crate::models::Mid"
+        );
+        assert_eq!(
+            render_ancestor_rust_type(Some("adapter"), "sifr.resource.NullContext"),
+            sifr_type_system::stdlib_class_rust_name("sifr.resource", "NullContext")
         );
     }
 }

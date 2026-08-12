@@ -14,7 +14,7 @@ use crate::{diagnostic_with_code, diagnostic_with_source_range_args_help};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
     canonicalize_user_export_type, localize_user_import_function_type, localize_user_import_type,
-    ExternalDefs, HirDiagnostic, HirModule, LoweringResult, RustInteropDecoratorKind,
+    ExternalDefs, HirClassKind, HirDiagnostic, HirModule, LoweringResult, RustInteropDecoratorKind,
 };
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -269,26 +269,44 @@ pub fn collect_module_exports(
                     },
                 ));
             }
-            let class_ty = canonicalize_user_export_type(
-                &Type::Class {
+            let exported_type = if let Some(inner) = &class.newtype_inner {
+                Type::Newtype {
                     identity: None,
-                    type_args: class
-                        .type_params
-                        .iter()
-                        .cloned()
-                        .map(Type::TypeVar)
-                        .collect(),
                     name: class.name.clone(),
-                    fields: class.fields.clone(),
-                    methods,
-                    parent_class: exported_parent_chain(
-                        class.parent_class.as_deref(),
-                        module,
-                        &imported_ancestry,
-                    ),
-                },
-                &local_classes,
-            );
+                    inner: Box::new(inner.clone()),
+                }
+            } else {
+                match &class.kind {
+                    HirClassKind::Protocol => Type::Protocol {
+                        identity: None,
+                        name: class.name.clone(),
+                        methods,
+                    },
+                    HirClassKind::Enum => Type::Enum {
+                        identity: None,
+                        name: class.name.clone(),
+                        variants: class.enum_variants.clone(),
+                    },
+                    HirClassKind::Regular | HirClassKind::PythonOpaque(_) => Type::Class {
+                        identity: None,
+                        type_args: class
+                            .type_params
+                            .iter()
+                            .cloned()
+                            .map(Type::TypeVar)
+                            .collect(),
+                        name: class.name.clone(),
+                        fields: class.fields.clone(),
+                        methods,
+                        parent_class: exported_parent_chain(
+                            class.parent_class.as_deref(),
+                            module,
+                            &imported_ancestry,
+                        ),
+                    },
+                }
+            };
+            let class_ty = canonicalize_user_export_type(&exported_type, &local_classes);
             class_exports.insert(class.name.clone(), class_ty);
             if let Some(defaults) = lowering_result.class_field_defaults.get(&class.name) {
                 class_field_default_exports.insert(class.name.clone(), defaults.clone());

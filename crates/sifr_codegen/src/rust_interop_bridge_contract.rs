@@ -547,7 +547,7 @@ pub(crate) fn bridge_type_contract(
                 }
             }
         }
-        Type::Enum { name, variants } => {
+        Type::Enum { name, variants, .. } => {
             let declaration_module =
                 match bridge_type_definition_module(name, module_name, module_catalogs, true) {
                     Ok(module_name) => module_name,

@@ -232,6 +232,7 @@ pub(super) fn does_not_lower_mismatched_string_int_compare() {
 #[test]
 pub(super) fn lowers_enum_variant_equality_compare() {
     let enum_ty = Type::Enum {
+        identity: None,
         name: "Color".to_string(),
         variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
     };
@@ -260,6 +261,7 @@ pub(super) fn lowers_enum_variant_equality_compare() {
 #[test]
 pub(super) fn does_not_lower_enum_variant_ordering_compare() {
     let enum_ty = Type::Enum {
+        identity: None,
         name: "Color".to_string(),
         variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
     };
@@ -286,6 +288,7 @@ pub(super) fn lowers_alias_wrapped_enum_variant_equality_compare() {
     let alias_enum_ty = Type::alias(
         "ColorAlias",
         Type::Enum {
+            identity: None,
             name: "Color".to_string(),
             variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
         },
@@ -317,6 +320,7 @@ pub(super) fn does_not_lower_alias_wrapped_enum_variant_ordering_compare() {
     let alias_enum_ty = Type::alias(
         "ColorAlias",
         Type::Enum {
+            identity: None,
             name: "Color".to_string(),
             variants: vec![("RED".to_string(), Some(1)), ("BLUE".to_string(), Some(2))],
         },

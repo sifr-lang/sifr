@@ -625,6 +625,7 @@ fn interop_bridge_generated_field_paths_use_declaring_module() {
 #[test]
 fn interop_bridge_rejects_enum_discriminants_outside_repr_u32() {
     let bad_enum = Type::Enum {
+        identity: None,
         name: "Status".to_string(),
         variants: vec![("Broken".to_string(), Some(-1))],
     };

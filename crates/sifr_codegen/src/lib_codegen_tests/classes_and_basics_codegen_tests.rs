@@ -36,6 +36,22 @@ def main():
 }
 
 #[test]
+fn class_field_union_emits_its_enum_definition() {
+    let union = Type::Union(vec![Type::Int, Type::Str, Type::Bool]);
+    let rust_code = generate_rust_from_source(
+        r#"class Payload:
+    value: int | str | bool
+
+def main():
+    payload = Payload(1)
+"#,
+    );
+
+    assert!(rust_code.contains(&format!("enum {}", union.union_enum_name())));
+    assert!(rust_code.contains(&format!("value: {}", union.union_enum_name())));
+}
+
+#[test]
 fn process_child_resource_derives_are_module_scoped() {
     let module = HirModule {
         functions: vec![],

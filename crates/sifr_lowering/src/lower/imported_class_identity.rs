@@ -271,9 +271,46 @@ fn rename_class_identities(ty: &Type, class_aliases: &HashMap<String, String>) -
         Type::AsyncFunction(function) => {
             Type::AsyncFunction(rename_function_type(function, class_aliases))
         }
-        Type::Newtype { name, inner } => Type::Newtype {
-            name: name.clone(),
+        Type::Newtype {
+            identity,
+            name,
+            inner,
+        } => Type::Newtype {
+            identity: identity.clone(),
+            name: class_aliases
+                .get(name)
+                .cloned()
+                .unwrap_or_else(|| name.clone()),
             inner: Box::new(rename_class_identities(inner, class_aliases)),
+        },
+        Type::Protocol {
+            identity,
+            name,
+            methods,
+        } => Type::Protocol {
+            identity: identity.clone(),
+            name: class_aliases
+                .get(name)
+                .cloned()
+                .unwrap_or_else(|| name.clone()),
+            methods: methods
+                .iter()
+                .map(|(name, function)| {
+                    (name.clone(), rename_function_type(function, class_aliases))
+                })
+                .collect(),
+        },
+        Type::Enum {
+            identity,
+            name,
+            variants,
+        } => Type::Enum {
+            identity: identity.clone(),
+            name: class_aliases
+                .get(name)
+                .cloned()
+                .unwrap_or_else(|| name.clone()),
+            variants: variants.clone(),
         },
         Type::Class {
             identity,
@@ -365,8 +402,7 @@ fn set_canonical_identities(ty: &mut Type, local_classes: &HashMap<String, Strin
         | Type::PythonDlpackTensor(inner)
         | Type::Awaitable(inner)
         | Type::Failure(inner)
-        | Type::TimeoutResult(inner)
-        | Type::Newtype { inner, .. } => set_canonical_identities(inner, local_classes),
+        | Type::TimeoutResult(inner) => set_canonical_identities(inner, local_classes),
         Type::Dict(left, right)
         | Type::Result(left, right)
         | Type::Task(left, right)
@@ -443,6 +479,36 @@ fn set_canonical_identities(ty: &mut Type, local_classes: &HashMap<String, Strin
                         .collect::<Vec<_>>()
                         .join("|");
                 }
+            }
+        }
+        Type::Protocol {
+            identity,
+            name,
+            methods,
+        } => {
+            if identity.is_none() {
+                *identity = local_classes.get(name).cloned();
+            }
+            for (_, method) in methods {
+                for (_, param, _) in &mut method.params {
+                    set_canonical_identities(param, local_classes);
+                }
+                set_canonical_identities(&mut method.return_type, local_classes);
+            }
+        }
+        Type::Newtype {
+            identity,
+            name,
+            inner,
+        } => {
+            if identity.is_none() {
+                *identity = local_classes.get(name).cloned();
+            }
+            set_canonical_identities(inner, local_classes);
+        }
+        Type::Enum { identity, name, .. } => {
+            if identity.is_none() {
+                *identity = local_classes.get(name).cloned();
             }
         }
         _ => {}

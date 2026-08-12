@@ -19,6 +19,8 @@ use sifr_type_system::{FunctionType, ParamConvention, Type};
 
 mod class_type_collection;
 pub(in crate::lower) use class_type_collection::*;
+mod class_iteration_protocol;
+use class_iteration_protocol::validate_iteration_protocol_methods;
 mod class_semantics;
 mod class_shape_metadata;
 mod class_type_helpers;

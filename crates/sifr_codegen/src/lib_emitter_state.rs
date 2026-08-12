@@ -16,6 +16,12 @@ pub struct RustEmitter {
     pub(crate) try_error_carrier_enums: HashSet<String>,
     /// Union enums also used as ordinary source-level values.
     pub(crate) ordinary_union_enums: HashSet<String>,
+    /// Project-owned union enums whose definition is emitted by the crate-root prelude.
+    /// The complete union map remains available to lowering and exhaustiveness checks.
+    pub(crate) suppressed_union_enum_definitions: HashSet<String>,
+    /// Canonical nominal identities mapped to their crate-rooted Rust paths.
+    /// Project union definitions use these paths because they live outside source modules.
+    pub(crate) project_nominal_type_paths: HashMap<String, String>,
     /// Accumulated union enum items to prepend
     pub(crate) enum_items: Vec<RustItem>,
     /// Accumulated non-enum body items to assemble before raw output rendering.
@@ -208,6 +214,8 @@ impl RustEmitter {
             union_enums: HashMap::new(),
             try_error_carrier_enums: HashSet::new(),
             ordinary_union_enums: HashSet::new(),
+            suppressed_union_enum_definitions: HashSet::new(),
+            project_nominal_type_paths: HashMap::new(),
             enum_items: Vec::new(),
             body_items: Vec::new(),
             current_return_type: None,

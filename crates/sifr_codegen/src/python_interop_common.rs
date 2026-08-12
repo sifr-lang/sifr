@@ -31,7 +31,13 @@ pub(crate) fn rust_source_uses_python_runtime(source: &str) -> bool {
 pub(crate) fn python_error_contract_rust_types(
     module: &HirModule,
 ) -> std::collections::BTreeSet<String> {
-    let mut rust_types = std::collections::BTreeSet::new();
+    python_error_contract_types(module).into_keys().collect()
+}
+
+pub(crate) fn python_error_contract_types(
+    module: &HirModule,
+) -> std::collections::BTreeMap<String, Type> {
+    let mut rust_types = std::collections::BTreeMap::new();
     for function in module
         .functions
         .iter()
@@ -44,7 +50,10 @@ pub(crate) fn python_error_contract_rust_types(
     rust_types
 }
 
-fn record_python_error_contract(ty: &Type, rust_types: &mut std::collections::BTreeSet<String>) {
+fn record_python_error_contract(
+    ty: &Type,
+    rust_types: &mut std::collections::BTreeMap<String, Type>,
+) {
     match ty.resolve_alias() {
         Type::Result(_, error) => record_python_error_contract(error, rust_types),
         Type::Union(members) => {
@@ -53,7 +62,9 @@ fn record_python_error_contract(ty: &Type, rust_types: &mut std::collections::BT
             }
         }
         class @ Type::Class { .. } if class.is_python_error_contract() => {
-            rust_types.insert(class.rust_type());
+            rust_types
+                .entry(class.rust_type())
+                .or_insert_with(|| class.clone());
         }
         _ => {}
     }

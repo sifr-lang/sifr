@@ -541,6 +541,15 @@ pub(super) fn is_shared_use_path(path: &[String]) -> bool {
         [runtime, symbol]
             if runtime == "sifr_runtime"
                 && symbol == "SifrInt"
+    ) || matches!(
+        path,
+        [numeric_crate, symbol]
+            if matches!(
+                (numeric_crate.as_str(), symbol.as_str()),
+                ("num_bigint", "BigInt")
+                    | ("rust_decimal", "Decimal")
+                    | ("bigdecimal", "BigDecimal")
+            )
     )
 }
 

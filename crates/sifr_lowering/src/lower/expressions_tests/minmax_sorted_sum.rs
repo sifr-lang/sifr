@@ -739,6 +739,7 @@ pub(super) fn test_class_missing_method_has_class_code() {
 #[test]
 pub(super) fn test_protocol_method_wrong_arity_has_call_code() {
     let protocol_ty = Type::Protocol {
+        identity: None,
         name: "Runner".to_string(),
         methods: vec![(
             "run".to_string(),
@@ -761,6 +762,7 @@ pub(super) fn test_protocol_method_wrong_arity_has_call_code() {
 #[test]
 pub(super) fn test_protocol_missing_method_has_protocol_code() {
     let protocol_ty = Type::Protocol {
+        identity: None,
         name: "Runner".to_string(),
         methods: vec![(
             "run".to_string(),
