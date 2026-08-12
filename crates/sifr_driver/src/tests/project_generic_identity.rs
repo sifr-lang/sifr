@@ -76,6 +76,29 @@ fn test_build_project_shares_union_identity_across_modules() {
 }
 
 #[test]
+fn test_build_project_centralizes_stdlib_nominal_union_payload() {
+    let dir = mktemp_dir("shared_stdlib_nominal_union");
+    std::fs::write(
+        dir.join("helper.sifr"),
+        "from sifr.pathlib import Path\n\ndef pick(flag: bool) -> Path | int:\n    if flag:\n        return Path(\"/tmp\")\n    return 1\n\ndef go() -> int:\n    value: Path | int = pick(True)\n    return 1\n",
+    )
+    .expect("helper should be written");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "from helper import go\nfrom sifr.pathlib import Path\n\ndef main():\n    local: Path | int = Path(\"/var\")\n    assert go() == 1\n",
+    )
+    .expect("main should be written");
+
+    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
+        .expect("stdlib nominal union payload should have one project type");
+    let status = std::process::Command::new(&binary)
+        .status()
+        .expect("generated binary should run");
+    assert!(status.success());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_project_keeps_same_basename_enum_and_newtype_unions_distinct() {
     let dir = mktemp_dir("distinct_enum_newtype_union_identities");

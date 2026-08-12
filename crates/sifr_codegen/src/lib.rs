@@ -92,6 +92,7 @@ mod option_binding_mutability;
 mod output_helpers;
 mod place_emitter;
 mod preamble;
+mod project_stdlib_nominals;
 mod protocol_bridge_emitter;
 pub use preamble::*;
 mod python_arrow_codegen;

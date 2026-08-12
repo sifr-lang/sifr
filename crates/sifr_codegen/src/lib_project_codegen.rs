@@ -5,6 +5,9 @@ use super::{
 };
 use crate::ir_imports::collect_import_needs_from_items;
 use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
+use crate::project_stdlib_nominals::{
+    project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
+};
 use sifr_stdlib_manifest::{try_generated_cargo_dependencies, StdlibFeature};
 use sifr_type_system::source_class_rust_name;
 
@@ -373,9 +376,19 @@ pub fn generate_rust_multi_with_metadata(
         .module_class_fields
         .extend(project_class_fields(modules));
     let union_usage = project_union_usage(modules, &project_codegen_code);
+    let stdlib_nominal_plan = project_stdlib_nominal_plan(&union_usage.unions, stdlib_code);
     let crate_root_modules = HashSet::from(["main"]);
-    let nominal_type_paths = project_nominal_type_paths(modules, &crate_root_modules);
-    let project_union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
+    let mut nominal_type_paths = project_nominal_type_paths(modules, &crate_root_modules);
+    nominal_type_paths.extend(stdlib_nominal_plan.nominal_paths.clone());
+    let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
+    let project_union_prelude = [stdlib_nominal_plan.prelude.as_str(), union_prelude.as_str()]
+        .into_iter()
+        .filter(|source| !source.trim().is_empty())
+        .map(str::trim_end)
+        .collect::<Vec<_>>()
+        .join("\n\n");
+    used_stdlib_modules.extend(stdlib_nominal_plan.used_stdlib_modules.iter().cloned());
+    required_features.extend(stdlib_nominal_plan.required_features.iter().copied());
 
     for (module_name, module) in modules {
         let module_public = *module_name != "main";
@@ -398,7 +411,11 @@ pub fn generate_rust_multi_with_metadata(
         );
         let local_imports = render_local_module_imports(module, &project_modules);
         let union_imports = render_project_union_imports(module_name, &used_unions);
-        let mut rust_source = codegen_result.rust_source;
+        let mut rust_source = relocate_project_stdlib_nominals(
+            &codegen_result.rust_source,
+            module_name,
+            &stdlib_nominal_plan,
+        );
         let imports = [local_imports, union_imports]
             .into_iter()
             .filter(|source| !source.trim().is_empty())
@@ -677,7 +694,8 @@ mod tests {
             }],
             body_error_types: vec![first, second],
         }];
-        let owner = module_with(vec![try_function], Vec::new());
+        let mut owner = module_with(vec![try_function], Vec::new());
+        owner.classes = vec![error_class("FirstError"), error_class("SecondError")];
         let consumer = module_with(vec![empty_function("ordinary", union)], Vec::new());
 
         let generated = generate_rust_multi_with_metadata(
@@ -691,11 +709,14 @@ mod tests {
             "{prelude}"
         );
         assert!(
-            prelude.contains("impl From<FirstError>")
+            prelude.contains("impl From<crate::errors::FirstError>")
                 && prelude.contains(&format!("for {enum_name}")),
             "{prelude}"
         );
-        assert!(prelude.contains("impl From<SecondError>"), "{prelude}");
+        assert!(
+            prelude.contains("impl From<crate::errors::SecondError>"),
+            "{prelude}"
+        );
     }
 
     #[test]

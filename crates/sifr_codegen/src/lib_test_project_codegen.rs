@@ -8,6 +8,9 @@ use crate::lib_project_codegen::{
     render_local_module_imports, render_project_union_imports, render_project_union_prelude,
 };
 use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
+use crate::project_stdlib_nominals::{
+    project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
+};
 use sifr_stdlib_manifest::StdlibFeature;
 
 /// Generated Rust sources and aggregate dependency metadata for one test crate.
@@ -37,12 +40,20 @@ pub fn generate_rust_test_project_with_metadata(
         .module_class_fields
         .extend(project_class_fields(&all_modules));
     let union_usage = project_union_usage(&all_modules, &project_code);
+    let stdlib_nominal_plan = project_stdlib_nominal_plan(&union_usage.unions, stdlib_code);
     let crate_root_modules = test_modules
         .iter()
         .map(|(module_name, _)| *module_name)
         .collect::<HashSet<_>>();
-    let nominal_type_paths = project_nominal_type_paths(&all_modules, &crate_root_modules);
-    let project_union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
+    let mut nominal_type_paths = project_nominal_type_paths(&all_modules, &crate_root_modules);
+    nominal_type_paths.extend(stdlib_nominal_plan.nominal_paths.clone());
+    let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
+    let project_union_prelude = [stdlib_nominal_plan.prelude.as_str(), union_prelude.as_str()]
+        .into_iter()
+        .filter(|source| !source.trim().is_empty())
+        .map(str::trim_end)
+        .collect::<Vec<_>>()
+        .join("\n\n");
     let project_modules = all_modules.iter().copied().collect::<HashMap<_, _>>();
     let structural_interop_enabled = all_modules
         .iter()
@@ -51,8 +62,8 @@ pub fn generate_rust_test_project_with_metadata(
 
     let mut support_rust_files = HashMap::new();
     let mut test_rust_files = HashMap::new();
-    let mut used_stdlib_modules = HashSet::new();
-    let mut required_features = HashSet::new();
+    let mut used_stdlib_modules = stdlib_nominal_plan.used_stdlib_modules.clone();
+    let mut required_features = stdlib_nominal_plan.required_features.clone();
 
     for (module_name, module) in support_modules {
         let mut module_code = project_code.clone();
@@ -85,6 +96,7 @@ pub fn generate_rust_test_project_with_metadata(
         } else {
             format!("{imports}\n\n{}", generated.rust_source)
         };
+        let source = relocate_project_stdlib_nominals(&source, module_name, &stdlib_nominal_plan);
         support_rust_files.insert(
             (*module_name).to_string(),
             publicize_generated_module_source(&source),

@@ -7,24 +7,41 @@ use sifr_type_system::ParamConvention;
 use sifr_type_system::Type;
 
 impl RustEmitter {
+    fn project_nominal_path(&self, identity: Option<&str>, name: &str) -> Option<&str> {
+        if self.project_nominal_type_paths.is_empty() {
+            return None;
+        }
+        let key = identity.unwrap_or(name);
+        if let Some(path) = self.project_nominal_type_paths.get(key) {
+            return Some(path);
+        }
+        if identity.is_some_and(sifr_type_system::is_global_rust_nominal_identity) {
+            return None;
+        }
+        panic!("missing crate-root path for project union nominal identity '{key}'");
+    }
+
     fn project_union_member_rust_type(&self, ty: &Type) -> RustType {
         let resolved = crate::resolve_alias_type_for_plain_call(ty);
         match resolved {
-            Type::Class {
+            class @ Type::Class {
                 identity,
                 type_args,
                 name,
                 ..
             } => {
-                let key = identity.as_deref().unwrap_or(name);
-                let Some(path) = self.project_nominal_type_paths.get(key) else {
+                if class.is_python_object_contract() || class.is_python_resource_identity_contract()
+                {
+                    return sifr_type_to_rust_type(resolved);
+                }
+                let Some(path) = self.project_nominal_path(identity.as_deref(), name) else {
                     return sifr_type_to_rust_type(resolved);
                 };
                 if type_args.is_empty() {
-                    RustType::Named(path.clone())
+                    RustType::Named(path.to_string())
                 } else {
                     RustType::Generic {
-                        base: path.clone(),
+                        base: path.to_string(),
                         params: type_args
                             .iter()
                             .map(|arg| self.project_union_member_rust_type(arg))
@@ -32,20 +49,18 @@ impl RustEmitter {
                     }
                 }
             }
-            Type::Protocol { identity, name, .. } => {
-                let key = identity.as_deref().unwrap_or(name);
-                self.project_nominal_type_paths.get(key).map_or_else(
+            Type::Protocol { identity, name, .. } => self
+                .project_nominal_path(identity.as_deref(), name)
+                .map_or_else(
                     || sifr_type_to_rust_type(resolved),
                     |path| RustType::Named(format!("Box<dyn {path}>")),
-                )
-            }
-            Type::Newtype { identity, name, .. } | Type::Enum { identity, name, .. } => {
-                let key = identity.as_deref().unwrap_or(name);
-                self.project_nominal_type_paths
-                    .get(key)
-                    .cloned()
-                    .map_or_else(|| sifr_type_to_rust_type(resolved), RustType::Named)
-            }
+                ),
+            Type::Newtype { identity, name, .. } | Type::Enum { identity, name, .. } => self
+                .project_nominal_path(identity.as_deref(), name)
+                .map_or_else(
+                    || sifr_type_to_rust_type(resolved),
+                    |path| RustType::Named(path.to_string()),
+                ),
             Type::List(inner) | Type::Iterable(inner) => {
                 RustType::Vec(Box::new(self.project_union_member_rust_type(inner)))
             }
