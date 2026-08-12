@@ -3,11 +3,11 @@ use super::{
     publicize_generated_module_source, HashMap, HashSet, HirModule, MultiModuleCodegenResult,
     Renderer, RustFile, RustItem, StdlibCode,
 };
-use crate::ir_imports::collect_import_needs_from_items;
 use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
 use crate::project_stdlib_nominals::{
     project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
 };
+use crate::project_union_prelude::render_project_union_prelude;
 use sifr_stdlib_manifest::{try_generated_cargo_dependencies, StdlibFeature};
 use sifr_type_system::source_class_rust_name;
 
@@ -126,64 +126,6 @@ pub(crate) fn project_nominal_type_paths(
         }
     }
     paths
-}
-
-pub(crate) fn render_project_union_prelude(
-    usage: &ProjectUnionUsage,
-    nominal_type_paths: &HashMap<String, String>,
-) -> String {
-    if usage.unions.is_empty() {
-        return String::new();
-    }
-    let mut emitter = super::RustEmitter::new();
-    emitter.union_enums.clone_from(&usage.unions);
-    emitter
-        .ordinary_union_enums
-        .clone_from(&usage.ordinary_unions);
-    emitter
-        .try_error_carrier_enums
-        .clone_from(&usage.try_error_unions);
-    emitter
-        .project_nominal_type_paths
-        .clone_from(nominal_type_paths);
-    emitter.generate_enum_definitions();
-
-    let import_needs = collect_import_needs_from_items(&emitter.enum_items);
-    let mut items = Vec::new();
-    if import_needs.collections.needs_hashmap {
-        items.push(RustItem::Use(vec![
-            "std".to_string(),
-            "collections".to_string(),
-            "HashMap".to_string(),
-        ]));
-    }
-    if import_needs.collections.needs_hashset {
-        items.push(RustItem::Use(vec![
-            "std".to_string(),
-            "collections".to_string(),
-            "HashSet".to_string(),
-        ]));
-    }
-    if import_needs.runtime.numeric.needs_bigint {
-        items.push(RustItem::Use(vec![
-            "num_bigint".to_string(),
-            "BigInt".to_string(),
-        ]));
-    }
-    if import_needs.runtime.numeric.needs_decimal {
-        items.push(RustItem::Use(vec![
-            "rust_decimal".to_string(),
-            "Decimal".to_string(),
-        ]));
-    }
-    if import_needs.runtime.numeric.needs_bigdecimal {
-        items.push(RustItem::Use(vec![
-            "bigdecimal".to_string(),
-            "BigDecimal".to_string(),
-        ]));
-    }
-    items.extend(emitter.enum_items);
-    publicize_generated_module_source(&Renderer::new().render_file(&RustFile { items }))
 }
 
 fn resolve_exported_rust_opaque_class<'a>(

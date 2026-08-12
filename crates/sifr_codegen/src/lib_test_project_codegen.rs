@@ -5,12 +5,13 @@ use super::{
 use crate::entrypoints::generate_rust_test_with_project_policy;
 use crate::lib_project_codegen::{
     project_nominal_type_paths, project_union_usage, register_imported_generic_classes,
-    render_local_module_imports, render_project_union_imports, render_project_union_prelude,
+    render_local_module_imports, render_project_union_imports,
 };
 use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
 use crate::project_stdlib_nominals::{
     project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
 };
+use crate::project_union_prelude::render_project_union_prelude;
 use sifr_stdlib_manifest::StdlibFeature;
 
 /// Generated Rust sources and aggregate dependency metadata for one test crate.

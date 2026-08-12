@@ -99,6 +99,29 @@ fn test_build_project_centralizes_stdlib_nominal_union_payload() {
 }
 
 #[test]
+fn test_build_project_isolates_union_prelude_imports() {
+    let dir = mktemp_dir("isolated_union_prelude_imports");
+    std::fs::write(
+        dir.join("helper.sifr"),
+        "def pick(flag: bool) -> dict[str, int] | int:\n    if flag:\n        return {\"value\": 1}\n    return 2\n",
+    )
+    .expect("helper should be written");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "from helper import pick\n\ndef main():\n    local: dict[str, int] = {\"value\": 3}\n    selected: dict[str, int] | int = pick(True)\n    assert local[\"value\"] == 3\n",
+    )
+    .expect("main should be written");
+
+    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
+        .expect("union prelude imports should not conflict with root imports");
+    let status = std::process::Command::new(&binary)
+        .status()
+        .expect("generated binary should run");
+    assert!(status.success());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_build_project_keeps_same_basename_enum_and_newtype_unions_distinct() {
     let dir = mktemp_dir("distinct_enum_newtype_union_identities");

@@ -93,6 +93,7 @@ mod output_helpers;
 mod place_emitter;
 mod preamble;
 mod project_stdlib_nominals;
+mod project_union_prelude;
 mod protocol_bridge_emitter;
 pub use preamble::*;
 mod python_arrow_codegen;

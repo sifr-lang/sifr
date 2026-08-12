@@ -62,6 +62,9 @@ fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
         RustItem::TupleStruct { inner, .. } => collect_type(inner, needs),
         RustItem::Enum { variants, .. } => {
             for variant in variants {
+                for ty in &variant.tuple_fields {
+                    collect_type(ty, needs);
+                }
                 for (_, ty) in &variant.fields {
                     collect_type(ty, needs);
                 }
@@ -353,13 +356,21 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
 fn collect_type(ty: &RustType, needs: &mut IrImportNeeds) {
     match ty {
         RustType::I64 | RustType::F64 | RustType::Bool | RustType::String_ | RustType::Unit => {}
-        RustType::Vec(inner)
-        | RustType::HashSet(inner)
-        | RustType::VecDeque(inner)
-        | RustType::Option(inner) => {
+        RustType::Vec(inner) | RustType::Option(inner) => collect_type(inner, needs),
+        RustType::HashSet(inner) => {
+            needs.collections.needs_hashset = true;
             collect_type(inner, needs);
         }
-        RustType::HashMap(k, v) | RustType::Result(k, v) => {
+        RustType::VecDeque(inner) => {
+            needs.collections.needs_vecdeque = true;
+            collect_type(inner, needs);
+        }
+        RustType::HashMap(k, v) => {
+            needs.collections.needs_hashmap = true;
+            collect_type(k, needs);
+            collect_type(v, needs);
+        }
+        RustType::Result(k, v) => {
             collect_type(k, needs);
             collect_type(v, needs);
         }
@@ -469,7 +480,7 @@ fn mark_symbol(symbol: &str, needs: &mut IrImportNeeds) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{RustLiteral, Visibility};
+    use crate::{RustEnumVariant, RustLiteral, Visibility};
 
     #[test]
     fn collects_unqualified_import_symbols() {
@@ -517,6 +528,29 @@ mod tests {
         assert!(needs.runtime.numeric.needs_bigint);
         assert!(!needs.runtime.numeric.needs_decimal);
         assert!(!needs.runtime.numeric.needs_bigdecimal);
+    }
+
+    #[test]
+    fn collects_imports_from_enum_tuple_payloads() {
+        let items = vec![RustItem::Enum {
+            name: "Payload".to_string(),
+            visibility: Visibility::Private,
+            derives: Vec::new(),
+            repr: None,
+            variants: vec![RustEnumVariant {
+                name: "Mapping".to_string(),
+                tuple_fields: vec![RustType::HashMap(
+                    Box::new(RustType::String_),
+                    Box::new(RustType::I64),
+                )],
+                fields: Vec::new(),
+                value: None,
+            }],
+        }];
+
+        let needs = collect_import_needs_from_items(&items);
+
+        assert!(needs.collections.needs_hashmap);
     }
 
     #[test]
