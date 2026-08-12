@@ -86,7 +86,7 @@ def test_dotted_import():
 }
 
 #[test]
-fn test_run_tests_shares_root_union_prelude_and_named_test_module_upcasts() {
+fn test_run_tests_support_module_named_main_imports_root_owned_unions() {
     let unique = format!(
         "sifr_test_union_owner_upcast_{}_{}",
         std::process::id(),
@@ -103,13 +103,13 @@ fn test_run_tests_shares_root_union_prelude_and_named_test_module_upcasts() {
     )
     .expect("union provider should be written");
     std::fs::write(
-        test_dir.join("app.sifr"),
+        test_dir.join("main.sifr"),
         "from errors import FirstError, SecondError, produce\nfrom sifr.pathlib import Path\n\ndef relay() -> Result[int, FirstError | SecondError]:\n    return produce()\n\ndef pick() -> Path | int:\n    return Path(\"/tmp\")\n\ndef marker() -> int:\n    return 7\n",
     )
     .expect("alphabetically first union consumer should be written");
     std::fs::write(
         test_dir.join("test_union_upcast.sifr"),
-        "from app import marker, pick, relay\nfrom errors import FirstError, SecondError\nfrom sifr.pathlib import Path\n\nclass Root:\n    value: int\n\nclass Mid(Root):\n    middle: int\n\n    def __init__(self, value: int, middle: int):\n        super().__init__(value)\n        self.middle = middle\n\nclass Child(Mid):\n    extra: int\n\n    def __init__(self, value: int, middle: int, extra: int):\n        super().__init__(value, middle)\n        self.extra = extra\n\ndef consume(own value: Root) -> int:\n    return value.value\n\ndef consume_result(value: Result[int, FirstError | SecondError]) -> int:\n    return 9\n\ndef consume_path(value: Path | int) -> int:\n    return 10\n\ndef test_union_owner_and_upcast():\n    assert marker() == 7\n    assert consume_result(relay()) == 9\n    assert consume_path(pick()) == 10\n    assert consume(Child(1, 2, 3)) == 1\n",
+        "from main import marker, pick, relay\nfrom errors import FirstError, SecondError\nfrom sifr.pathlib import Path\n\nclass Root:\n    value: int\n\nclass Mid(Root):\n    middle: int\n\n    def __init__(self, value: int, middle: int):\n        super().__init__(value)\n        self.middle = middle\n\nclass Child(Mid):\n    extra: int\n\n    def __init__(self, value: int, middle: int, extra: int):\n        super().__init__(value, middle)\n        self.extra = extra\n\ndef consume(own value: Root) -> int:\n    return value.value\n\ndef consume_result(value: Result[int, FirstError | SecondError]) -> int:\n    return 9\n\ndef consume_path(value: Path | int) -> int:\n    return 10\n\ndef test_union_owner_and_upcast():\n    assert marker() == 7\n    assert consume_result(relay()) == 9\n    assert consume_path(pick()) == 10\n    assert consume(Child(1, 2, 3)) == 1\n",
     )
     .expect("test module should be written");
 
@@ -499,4 +499,12 @@ fn test_compose_test_runner_lib_declares_dotted_modules_by_namespace() {
     assert!(lib_source.contains("mod math;\n"));
     assert!(!lib_source.contains("mod helpers.nodes;"));
     assert!(lib_source.contains("#[test]\nfn smoke() {}"));
+}
+
+#[test]
+fn test_compose_test_runner_lib_uses_safe_path_for_support_main() {
+    let support_modules = vec!["main".to_string()];
+    let lib_source = compose_test_runner_lib(&support_modules, "");
+
+    assert!(lib_source.contains("#[path = \"__sifr_support_main.rs\"]\nmod main;"));
 }

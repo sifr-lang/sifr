@@ -86,7 +86,7 @@ pub fn generate_rust_test_project_with_metadata(
         );
         let imports = [
             render_local_module_imports(module, &project_modules),
-            render_project_union_imports(module_name, &used_unions),
+            render_project_union_imports(module_name, &used_unions, &crate_root_modules),
         ]
         .into_iter()
         .filter(|source| !source.trim().is_empty())
@@ -98,7 +98,12 @@ pub fn generate_rust_test_project_with_metadata(
         } else {
             format!("{imports}\n\n{}", generated.rust_source)
         };
-        let source = relocate_project_stdlib_nominals(&source, module_name, &stdlib_nominal_plan);
+        let source = relocate_project_stdlib_nominals(
+            &source,
+            module_name,
+            &stdlib_nominal_plan,
+            &crate_root_modules,
+        );
         support_rust_files.insert(
             (*module_name).to_string(),
             publicize_generated_module_source(&source),

@@ -34,13 +34,14 @@ pub(crate) fn relocate_project_stdlib_nominals(
     source: &str,
     module_name: &str,
     plan: &ProjectStdlibNominalPlan,
+    crate_root_modules: &HashSet<&str>,
 ) -> String {
     if plan.rust_names.is_empty() {
         return source.to_string();
     }
     let names = plan.rust_names.iter().map(String::as_str).collect();
     let stripped = strip_rust_items_by_name(source, &names);
-    if module_name == "main" {
+    if crate_root_modules.contains(module_name) {
         return stripped;
     }
     let mut ordered_names = plan.rust_names.iter().collect::<Vec<_>>();

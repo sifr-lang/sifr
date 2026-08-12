@@ -80,8 +80,9 @@ pub(crate) fn project_union_usage(
 pub(crate) fn render_project_union_imports(
     module_name: &str,
     module_unions: &HashSet<String>,
+    crate_root_modules: &HashSet<&str>,
 ) -> String {
-    if module_name == "main" {
+    if crate_root_modules.contains(module_name) {
         return String::new();
     }
     let mut names = module_unions.iter().collect::<Vec<_>>();
@@ -353,11 +354,13 @@ pub fn generate_rust_multi_with_metadata(
             Some(&union_usage.try_error_unions),
         );
         let local_imports = render_local_module_imports(module, &project_modules);
-        let union_imports = render_project_union_imports(module_name, &used_unions);
+        let union_imports =
+            render_project_union_imports(module_name, &used_unions, &crate_root_modules);
         let mut rust_source = relocate_project_stdlib_nominals(
             &codegen_result.rust_source,
             module_name,
             &stdlib_nominal_plan,
+            &crate_root_modules,
         );
         let imports = [local_imports, union_imports]
             .into_iter()

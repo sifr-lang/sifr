@@ -1,10 +1,12 @@
-use super::artifacts::{compose_test_runner_lib, try_generate_test_runner_cargo_plan};
+use super::artifacts::{
+    compose_test_runner_lib, test_support_module_file_path, try_generate_test_runner_cargo_plan,
+};
 use super::orchestrator::GeneratedTestRunnerProject;
 use crate::build::{
     prepare_cached_artifact, sysroot_cargo_config_args, ArtifactCacheReport, PreparedArtifactCache,
 };
 use crate::diagnostics::{write_stderr, write_stderr_line, RenderedDiagnostic};
-use crate::project::{namespace_module_files, rust_module_file_path};
+use crate::project::namespace_module_files;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_stdlib_manifest::SysrootDependencyPlan;
 use std::path::Path;
@@ -70,7 +72,7 @@ pub(crate) fn execute_test_runner_project(
 
         for module_name in &generated_project.support_module_names {
             if let Some(code) = generated_project.support_rust_files.get(module_name) {
-                let module_path = rust_module_file_path(module_name);
+                let module_path = test_support_module_file_path(module_name);
                 let output_path = src_dir.join(&module_path);
                 if let Some(parent) = output_path.parent() {
                     std::fs::create_dir_all(parent).map_err(|error| {
