@@ -12,7 +12,8 @@ inventory, repository boundary, and demo ownership are approved.
 implemented and merged through [PR #3138](https://github.com/sifr-lang/sifr/pull/3138).
 `milestone_ps_4` and `milestone_ps_5` are implemented and merged in the
 companion repository. `milestone_ps_6` is active. Its general typed static-program
-payload and static structural return dependencies are merged.
+payload, static structural return, and package error-export dependencies are
+merged.
 
 Review artifacts:
 
@@ -271,6 +272,35 @@ Milestone delivery records:
 - [Issue #3154](https://github.com/sifr-lang/sifr/issues/3154) owns the
   non-blocking review and infrastructure follow-ups. PR #3155 did not absorb
   them.
+- The package error-export prerequisite merged in
+  [PR #3157](https://github.com/sifr-lang/sifr/pull/3157) at merge commit
+  `cefa3eb2bd951dc814dfb3091c0339a4f80fe20d`. The exact reviewed and gated
+  candidate was `3d00cb2fd71d4fc5d93b467ef49ef789bf9c3350`.
+- Imported package-defined `Error` classes now keep their error status through
+  public aliases and two-hop facade re-exports. Error markers are scoped by
+  module and class, so an ordinary class with the same name does not inherit
+  error behavior.
+- Focused validation passed a native two-hop build and run, 459 driver tests,
+  66 frontend tests, 976 lowering tests, affected-crate Clippy, formatting,
+  maintainability, and file-size checks.
+- The exact-candidate Opus review returned `SATISFIED` with no blocking
+  finding. The response remains outside the Git tree at
+  `/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr-claude.fvHK1U/response.md`.
+- The cold create-PR gate was functionally green and exceeded only the known
+  generated-artifact cold budget tracked by issue #3134. Its receipt SHA-256
+  is `7e3e43028447de5fa4cf4ed842b7530e81a066dbd604da6bcc05bf536e1b497c`.
+  The unchanged warm create-PR gate passed; its receipt SHA-256 is
+  `e58f8ef4a129d8b419535a1397a05160b486988c85ea498784c6f81514f6a79a`.
+- The single authoritative merge gate exited zero. It passed Python interop
+  25/25, Rust interop 10/10, representative performance 8/8, distribution
+  66/66, and sysroot 2/2. Generated-code quality passed 7/7, and generated
+  driver builds passed 74/74. E2E passed 694/694, and 268 hardening variants
+  passed with zero failures. The merge receipt SHA-256 is
+  `8390cef246f579a864f3676476cfee52b03e87d7421edabffc807e153c217a2d`.
+- [Issue #3158](https://github.com/sifr-lang/sifr/issues/3158) owns the
+  non-blocking reviewer suggestions for future stdlib alias propagation,
+  helper consolidation, and direct cross-package coverage. PR #3157 did not
+  absorb them.
 - `milestone_ps_6` remains active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
