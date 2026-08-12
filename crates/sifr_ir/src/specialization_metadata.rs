@@ -37,6 +37,23 @@ pub struct ConstSpecializationRequest {
     pub range: TextRange,
 }
 
+/// Closed package-neutral value retained from successful const specialization.
+///
+/// Integers use canonical decimal text so later compilation stages do not need
+/// an arbitrary-precision integer representation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StaticProgramValue {
+    None,
+    Bool(bool),
+    Integer(String),
+    FloatBits(u64),
+    String(String),
+    Bytes(Vec<u8>),
+    Tuple(Vec<Self>),
+    List(Vec<Self>),
+    Record(Vec<(String, Self)>),
+}
+
 /// A package-owned, compile-time specialization result retained by the frontend.
 ///
 /// The value uses the compiler's deterministic closed-value encoding so later
@@ -47,6 +64,7 @@ pub struct StaticSpecializationOutput {
     pub package_module: String,
     pub function: String,
     pub canonical_value: String,
+    pub value: StaticProgramValue,
     /// Complete deterministic identity for cache keys and emitted envelopes.
     pub program_identity: [u8; 32],
     pub structural_contract_version: u32,

@@ -1,4 +1,4 @@
-use sifr_ir::StaticSpecializationOutput;
+use sifr_ir::{StaticProgramValue, StaticSpecializationOutput};
 use sifr_type_system::source_class_rust_name;
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
@@ -30,6 +30,11 @@ pub fn emit_static_specialization_programs(
             "#[doc(hidden)]\npub(crate) const __SIFR_STATIC_PROGRAM_IDENTITY_{suffix}: [u8; 32] = {:?};",
             output.program_identity
         );
+        let value = static_value_expression(&output.value);
+        let _ = writeln!(
+            out,
+            "#[doc(hidden)]\npub(crate) static __SIFR_STATIC_PROGRAM_VALUE_{suffix}: ::sifr_runtime::interop::structural::StaticProgramValue = {value};"
+        );
         if structural_owners.contains(&output.owner) {
             let owner = source_class_rust_name(&output.owner);
             let identity = output
@@ -40,7 +45,7 @@ pub fn emit_static_specialization_programs(
                 .join(", ");
             let _ = writeln!(
                 out,
-                "#[doc(hidden)]\npub(crate) static __SIFR_STATIC_PROGRAM_{suffix}: ::std::sync::LazyLock<::sifr_runtime::interop::structural::StaticProgram<{owner}>> = ::std::sync::LazyLock::new(|| {{\n    let identity = ::sifr_runtime::interop::structural::StaticProgramIdentity::from_bytes([{identity}]);\n    let shape = <{owner} as ::sifr_runtime::interop::structural::StructuralType>::shape_identity();\n    let header = ::sifr_runtime::interop::structural::StaticProgramHeader::__from_compiler(::sifr_runtime::interop::structural::STATIC_PROGRAM_FORMAT_VERSION, {}, ::sifr_runtime::interop::structural::STRUCTURAL_BRIDGE_CONTRACT_VERSION, identity, shape, ::sifr_runtime::interop::__generated_glue::token());\n    ::sifr_runtime::interop::structural::StaticProgram::__from_compiler(header, __SIFR_STATIC_PROGRAM_BYTES_{suffix}, ::sifr_runtime::interop::__generated_glue::token())\n}});",
+                "#[doc(hidden)]\npub(crate) static __SIFR_STATIC_PROGRAM_{suffix}: ::std::sync::LazyLock<::sifr_runtime::interop::structural::StaticProgram<{owner}>> = ::std::sync::LazyLock::new(|| {{\n    let identity = ::sifr_runtime::interop::structural::StaticProgramIdentity::from_bytes([{identity}]);\n    let shape = <{owner} as ::sifr_runtime::interop::structural::StructuralType>::shape_identity();\n    let header = ::sifr_runtime::interop::structural::StaticProgramHeader::__from_compiler(::sifr_runtime::interop::structural::STATIC_PROGRAM_FORMAT_VERSION, {}, ::sifr_runtime::interop::structural::STRUCTURAL_BRIDGE_CONTRACT_VERSION, identity, shape, ::sifr_runtime::interop::__generated_glue::token());\n    ::sifr_runtime::interop::structural::StaticProgram::__from_compiler(header, __SIFR_STATIC_PROGRAM_BYTES_{suffix}, __SIFR_STATIC_PROGRAM_VALUE_{suffix}, ::sifr_runtime::interop::__generated_glue::token())\n}});",
                 output.structural_contract_version
             );
             let _ = writeln!(
@@ -50,6 +55,40 @@ pub fn emit_static_specialization_programs(
         }
     }
     out
+}
+
+fn static_value_expression(value: &StaticProgramValue) -> String {
+    let path = "::sifr_runtime::interop::structural::StaticProgramValue";
+    match value {
+        StaticProgramValue::None => format!("{path}::None"),
+        StaticProgramValue::Bool(value) => format!("{path}::Bool({value})"),
+        StaticProgramValue::Integer(value) => format!("{path}::Integer({value:?})"),
+        StaticProgramValue::FloatBits(value) => format!("{path}::FloatBits({value})"),
+        StaticProgramValue::String(value) => format!("{path}::String({value:?})"),
+        StaticProgramValue::Bytes(value) => format!("{path}::Bytes(&{value:?})"),
+        StaticProgramValue::Tuple(values) => {
+            format!("{path}::Tuple(&[{}])", static_values_expression(values))
+        }
+        StaticProgramValue::List(values) => {
+            format!("{path}::List(&[{}])", static_values_expression(values))
+        }
+        StaticProgramValue::Record(fields) => format!(
+            "{path}::Record(&[{}])",
+            fields
+                .iter()
+                .map(|(name, value)| format!("({name:?}, {})", static_value_expression(value)))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    }
+}
+
+fn static_values_expression(values: &[StaticProgramValue]) -> String {
+    values
+        .iter()
+        .map(static_value_expression)
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// Returns only specialization owners that can receive all structural bridge implementations.
@@ -132,6 +171,10 @@ mod tests {
             package_module: "schema.package".to_string(),
             function: "derive".to_string(),
             canonical_value: "record:1:value=int:7".to_string(),
+            value: StaticProgramValue::Record(vec![(
+                "value".to_string(),
+                StaticProgramValue::Integer("7".to_string()),
+            )]),
             program_identity: [identity; 32],
             structural_contract_version: 1,
         }
@@ -146,6 +189,8 @@ mod tests {
         assert!(emitted.contains("static __SIFR_STATIC_PROGRAM_BYTES_RECORD_SCHEMA_PACKAGE_DERIVE"));
         assert!(emitted.contains("StaticProgram<Record>"));
         assert!(emitted.contains("StaticProgramIdentity::from_bytes([7, 7"));
+        assert!(emitted.contains("StaticProgramValue::Record"));
+        assert!(emitted.contains("StaticProgramValue::Integer(\"7\")"));
     }
 
     #[test]

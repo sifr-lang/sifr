@@ -358,6 +358,20 @@ impl<'a> DeterministicConstEvaluator<'a> {
                     self.eval_expr(else_expr, environment, depth)
                 }
             }
+            HirExpr::ListLiteral { elements, ty } if matches!(ty.resolve_alias(), Type::Bytes) => {
+                let values = self.eval_elements(elements, environment, depth)?;
+                values
+                    .into_iter()
+                    .map(|value| match value {
+                        ConstValue::Integer(value) => value
+                            .to_string()
+                            .parse::<u8>()
+                            .map_err(|_| type_mismatch("byte literal element is out of range")),
+                        _ => Err(type_mismatch("byte literal element is not an integer")),
+                    })
+                    .collect::<Result<Vec<_>, _>>()
+                    .map(ConstValue::Bytes)
+            }
             HirExpr::ListLiteral { elements, .. } => self
                 .eval_elements(elements, environment, depth)
                 .map(ConstValue::List),
@@ -760,6 +774,15 @@ mod tests {
                 ConstValue::Integer(BigInt::from(2)),
             ])
         );
+    }
+
+    #[test]
+    fn preserves_bytes_as_the_closed_bytes_const_variant() {
+        let lowered = lower("@const_eval\ndef payload() -> bytes:\n    return b\"typed\"\n");
+        let value = DeterministicConstEvaluator::new(&lowered.module)
+            .evaluate_function("payload", Vec::new())
+            .expect("byte const evaluation succeeds");
+        assert_eq!(value, ConstValue::Bytes(b"typed".to_vec()));
     }
 
     #[test]

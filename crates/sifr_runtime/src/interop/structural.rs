@@ -16,7 +16,7 @@ pub use sifr_structural_identity::{
 };
 pub use static_program::{
     StaticProgram, StaticProgramEnvelopeError, StaticProgramHeader, StaticProgramType,
-    STATIC_PROGRAM_ENVELOPE_VERSION, STATIC_PROGRAM_FORMAT_VERSION,
+    StaticProgramValue, STATIC_PROGRAM_ENVELOPE_VERSION, STATIC_PROGRAM_FORMAT_VERSION,
     STRUCTURAL_BRIDGE_CONTRACT_VERSION,
 };
 
