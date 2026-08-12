@@ -8,6 +8,24 @@ pub const STATIC_PROGRAM_ENVELOPE_VERSION: u32 = 1;
 pub const STATIC_PROGRAM_FORMAT_VERSION: u32 = 1;
 pub const STRUCTURAL_BRIDGE_CONTRACT_VERSION: u32 = 1;
 
+/// Borrowed compiler-emitted value produced by package const specialization.
+///
+/// This closed view is allocation-free. Consumers can traverse the verified
+/// result without parsing its canonical byte representation.
+#[non_exhaustive]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum StaticProgramValue {
+    None,
+    Bool(bool),
+    Integer(&'static str),
+    FloatBits(u64),
+    String(&'static str),
+    Bytes(&'static [u8]),
+    Tuple(&'static [Self]),
+    List(&'static [Self]),
+    Record(&'static [(&'static str, Self)]),
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct StaticProgramHeader {
     envelope_version: u32,
@@ -70,6 +88,7 @@ impl StaticProgramHeader {
 pub struct StaticProgram<T> {
     header: StaticProgramHeader,
     bytes: &'static [u8],
+    value: StaticProgramValue,
     _type: PhantomData<fn() -> T>,
 }
 
@@ -84,11 +103,13 @@ impl<T> StaticProgram<T> {
     pub const fn __from_compiler(
         header: StaticProgramHeader,
         bytes: &'static [u8],
+        value: StaticProgramValue,
         _token: GeneratedGlueToken,
     ) -> Self {
         Self {
             header,
             bytes,
+            value,
             _type: PhantomData,
         }
     }
@@ -101,6 +122,11 @@ impl<T> StaticProgram<T> {
     #[must_use]
     pub const fn bytes(&self) -> &'static [u8] {
         self.bytes
+    }
+
+    #[must_use]
+    pub const fn value(&self) -> &StaticProgramValue {
+        &self.value
     }
 
     pub fn verify_envelope(
@@ -176,9 +202,23 @@ mod tests {
             shape,
             __generated_glue::token(),
         );
-        let program =
-            StaticProgram::<String>::__from_compiler(header, b"program", __generated_glue::token());
+        let program = StaticProgram::<String>::__from_compiler(
+            header,
+            b"program",
+            StaticProgramValue::Record(&[(
+                "nodes",
+                StaticProgramValue::List(&[StaticProgramValue::Integer("7")]),
+            )]),
+            __generated_glue::token(),
+        );
         assert_eq!(program.verify_envelope(3, 1, 1, identity, shape), Ok(()));
+        assert_eq!(
+            program.value(),
+            &StaticProgramValue::Record(&[(
+                "nodes",
+                StaticProgramValue::List(&[StaticProgramValue::Integer("7")]),
+            )])
+        );
         assert_eq!(
             program.verify_envelope(4, 1, 1, identity, shape),
             Err(StaticProgramEnvelopeError::FormatVersion)

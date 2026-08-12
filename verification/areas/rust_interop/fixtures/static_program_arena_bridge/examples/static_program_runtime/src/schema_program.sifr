@@ -10,9 +10,21 @@ class ProgramIssue:
     notes: list[str]
 
 
+class ProgramPayload:
+    absent: str | None
+    active: bool
+    count: int
+    ratio: float
+    name: str
+    raw: bytes
+    pair: tuple[str, int]
+    labels: list[str]
+    settings: dict[str, str]
+
+
 class ProgramOutcome:
     status: str
-    value: str | None
+    value: ProgramPayload | None
     issues: list[ProgramIssue]
 
 
@@ -28,4 +40,15 @@ def derive(shape: dict[str, str]) -> ProgramOutcome:
             [],
         )
         return ProgramOutcome("failed", None, [issue])
-    return ProgramOutcome("produced", identity, [])
+    value: ProgramPayload = ProgramPayload(
+        None,
+        True,
+        7,
+        1.5,
+        identity,
+        b"typed",
+        ("node", 2),
+        ["model", "fields"],
+        {"mode": "checked"},
+    )
+    return ProgramOutcome("produced", value, [])

@@ -639,14 +639,14 @@ pub(crate) fn canonical_value(value: &ConstValue) -> String {
         ConstValue::Integer(value) => format!("int:{value}"),
         ConstValue::FloatBits(value) => format!("float:{value:016x}"),
         ConstValue::String(value) => format!("str:{}:{value}", value.len()),
-        ConstValue::Bytes(value) => canonical_bytes(value),
+        ConstValue::Bytes(value) => format!("bytes:{}:{}", value.len(), canonical_bytes(value)),
         ConstValue::Tuple(values) => canonical_values("tuple", values),
         ConstValue::List(values) => canonical_values("list", values),
         ConstValue::Record(values) => format!(
             "record[{}]",
             values
                 .iter()
-                .map(|(key, value)| format!("{key}={}", canonical_value(value)))
+                .map(|(key, value)| { format!("{}:{key}={}", key.len(), canonical_value(value)) })
                 .collect::<Vec<_>>()
                 .join(",")
         ),
@@ -788,5 +788,29 @@ class Port(int):
             .canonical_identity
             .contains("newtype:fixture.nominal.Port"));
         assert!(port_shape.canonical_identity.contains("fixture.kind"));
+    }
+
+    #[test]
+    fn canonical_values_bind_record_keys_and_bytes_without_collisions() {
+        let ambiguous_key = ConstValue::Record(BTreeMap::from([(
+            "a=str:1:x,b".to_string(),
+            ConstValue::None,
+        )]));
+        let two_fields = ConstValue::Record(BTreeMap::from([
+            ("a".to_string(), ConstValue::String("x".to_string())),
+            ("b".to_string(), ConstValue::None),
+        ]));
+        assert_ne!(
+            canonical_value(&ambiguous_key),
+            canonical_value(&two_fields)
+        );
+        assert_eq!(
+            canonical_value(&ConstValue::Bytes(vec![0, 255])),
+            "bytes:2:00ff"
+        );
+        assert_ne!(
+            canonical_value(&ConstValue::Bytes(Vec::new())),
+            canonical_value(&ConstValue::String(String::new()))
+        );
     }
 }

@@ -64,12 +64,15 @@ produce retained static data.
 Each retained result also has one static-program identity. The hash includes the declaring module,
 concrete owner, package module, specializer function, canonical structural shape, canonical result,
 and structural-contract identity. Check and editor analysis retain this identity. Build and run emit
-the canonical bytes. The generated-project cache key includes the same identity.
+the canonical bytes. For a structural static program, they also emit an allocation-free borrowed
+view of the same closed value. The generated-project cache key includes the same identity.
 
 For a structural Rust call with the compiler-owned `sifr.meta.StaticProgram` bound, the compiler
 also emits a sealed typed `StaticProgram[T]` envelope and implements `StaticProgramType` for the
 concrete specialized type. This bound requires a produced specialization result. It has no empty
 program, runtime compiler, compatibility path, or fallback to the ordinary `Structural` bound.
+`StaticProgramValue` is non-exhaustive for Rust consumers. Its current compiler-owned variant set
+is closed for this contract. A new variant requires a contract and cache-identity review.
 
 ## Integer boundary verification
 

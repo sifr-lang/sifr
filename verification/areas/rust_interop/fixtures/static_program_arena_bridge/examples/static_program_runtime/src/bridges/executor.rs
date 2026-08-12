@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use sifr_runtime::interop::structural::{
     structural_construct, ArenaNode, NodeId, StaticProgramType, StructuralConstruct,
     StructuralContractError, StructuralEdge, StructuralEdgeKind, StructuralEnter, StructuralKind,
-    StructuralNodeEdge, StructuralProject, StructuralScalar, StructuralScalarRef,
+    StructuralNodeEdge, StructuralProject, StructuralScalar, StructuralScalarRef, StaticProgramValue,
     StructuralVisitor, VisitControl, STATIC_PROGRAM_FORMAT_VERSION,
     STRUCTURAL_BRIDGE_CONTRACT_VERSION,
 };
@@ -162,6 +162,7 @@ where
         header.identity(),
         T::shape_identity(),
     )?;
+    verify_typed_program_value(program.value())?;
     let _input = project(input)?;
     if program.bytes().is_empty() {
         return Err(StaticProgramError::new("static program payload is empty"));
@@ -176,6 +177,44 @@ where
     let observed = project(&output)?;
     LAST_OBSERVATION.with_borrow_mut(|slot| *slot = Some(observed.summary()));
     Ok(output)
+}
+
+fn verify_typed_program_value(value: &StaticProgramValue) -> Result<(), StaticProgramError> {
+    let StaticProgramValue::Record(fields) = value else {
+        return Err(StaticProgramError::new("static program value is not a record"));
+    };
+    let valid = matches!(program_field(fields, "absent"), Some(StaticProgramValue::None))
+        && matches!(program_field(fields, "active"), Some(StaticProgramValue::Bool(true)))
+        && matches!(program_field(fields, "count"), Some(StaticProgramValue::Integer("7")))
+        && matches!(
+            program_field(fields, "ratio"),
+            Some(StaticProgramValue::FloatBits(bits)) if *bits == 1.5_f64.to_bits()
+        )
+        && matches!(
+            program_field(fields, "name"),
+            Some(StaticProgramValue::String(name)) if name.contains("StaticRecord")
+        )
+        && matches!(program_field(fields, "raw"), Some(StaticProgramValue::Bytes(b"typed")))
+        && matches!(program_field(fields, "pair"), Some(StaticProgramValue::Tuple(values)) if matches!(values, [StaticProgramValue::String("node"), StaticProgramValue::Integer("2")]))
+        && matches!(program_field(fields, "labels"), Some(StaticProgramValue::List(values)) if matches!(values, [StaticProgramValue::String("model"), StaticProgramValue::String("fields")]))
+        && matches!(program_field(fields, "settings"), Some(StaticProgramValue::Record(values)) if matches!(values, [("mode", StaticProgramValue::String("checked"))]));
+    if valid {
+        Ok(())
+    } else {
+        Err(StaticProgramError::new(
+            "static program typed value does not preserve every const variant",
+        ))
+    }
+}
+
+fn program_field<'value>(
+    fields: &'value [(&'static str, StaticProgramValue)],
+    name: &str,
+) -> Option<&'value StaticProgramValue> {
+    fields
+        .iter()
+        .find(|(field, _)| *field == name)
+        .map(|(_, value)| value)
 }
 
 pub fn execute_corrupt<T>(

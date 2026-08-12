@@ -2,8 +2,9 @@
 
 This fixture proves compiler-emitted static program data and a checked structural arena.
 
-The positive case uses one generic, monomorphized Rust call. The call reads the sealed program,
-consumes a validated document, constructs a typed Sifr record, and projects the output.
+The positive case uses one generic, monomorphized Rust call. The call reads the sealed program
+bytes and the compiler-emitted typed value. It consumes a validated document, constructs a typed
+Sifr record, and projects the output.
 The arena runtime test separately proves that a 30-digit exact integer moves into `SifrInt`
 without narrowing.
 

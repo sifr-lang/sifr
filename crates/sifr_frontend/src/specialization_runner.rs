@@ -7,7 +7,7 @@ use ruff_text_size::TextRange;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_lowering::{
     ExternalDefs, HirDiagnostic, HirModule, LoweringResult, LoweringWarningDiagnostic,
-    StaticSpecializationOutput,
+    StaticProgramValue, StaticSpecializationOutput,
 };
 use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -117,6 +117,7 @@ pub(crate) fn run_specializations(
             Ok(validated) => {
                 if let Some(value) = &validated.value {
                     let canonical_value = crate::structural_shape::canonical_value(value);
+                    let static_value = static_program_value(value);
                     let structural_contract_version = sifr_structural_identity::ALGORITHM_VERSION;
                     let program_identity = sifr_structural_identity::static_program_identity(
                         structural_contract_version,
@@ -136,6 +137,7 @@ pub(crate) fn run_specializations(
                             package_module: request.package_module.clone(),
                             function: request.function.clone(),
                             canonical_value,
+                            value: static_value,
                             program_identity: *program_identity.as_bytes(),
                             structural_contract_version,
                         });
@@ -168,6 +170,29 @@ pub(crate) fn run_specializations(
         Ok(())
     } else {
         Err(errors)
+    }
+}
+
+fn static_program_value(value: &crate::ConstValue) -> StaticProgramValue {
+    match value {
+        crate::ConstValue::None => StaticProgramValue::None,
+        crate::ConstValue::Bool(value) => StaticProgramValue::Bool(*value),
+        crate::ConstValue::Integer(value) => StaticProgramValue::Integer(value.to_string()),
+        crate::ConstValue::FloatBits(value) => StaticProgramValue::FloatBits(*value),
+        crate::ConstValue::String(value) => StaticProgramValue::String(value.clone()),
+        crate::ConstValue::Bytes(value) => StaticProgramValue::Bytes(value.clone()),
+        crate::ConstValue::Tuple(values) => {
+            StaticProgramValue::Tuple(values.iter().map(static_program_value).collect())
+        }
+        crate::ConstValue::List(values) => {
+            StaticProgramValue::List(values.iter().map(static_program_value).collect())
+        }
+        crate::ConstValue::Record(values) => StaticProgramValue::Record(
+            values
+                .iter()
+                .map(|(name, value)| (name.clone(), static_program_value(value)))
+                .collect(),
+        ),
     }
 }
 

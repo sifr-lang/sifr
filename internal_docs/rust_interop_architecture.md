@@ -452,8 +452,11 @@ empty program, runtime compilation path, or fallback to `Structural`.
 The frontend hashes the declaring module, concrete owner, package module,
 specializer function, canonical structural shape, canonical program value, and
 structural-contract identity. Check and editor analysis retain this identity.
-Build and run also emit the canonical bytes and a sealed typed `StaticProgram<T>`
-envelope. The identity is part of the generated-project cache key. An unrelated
+Build and run also emit the canonical bytes, the closed const result as immutable
+typed Rust literals, and a sealed `StaticProgram<T>` envelope. The program exposes
+the result as a borrowed `StaticProgramValue`. A consumer does not parse the
+canonical bytes or allocate a second value tree. The identity is part of the
+generated-project cache key. An unrelated
 declaration does not change it, but a relevant shape, metadata, callback, package,
 function, or program change does.
 
@@ -568,7 +571,24 @@ pub trait StructuralProject: StructuralType {
 pub trait StaticProgramType: StructuralType + Sized + 'static {
     fn static_program() -> &'static StaticProgram<Self>;
 }
+
+#[non_exhaustive]
+pub enum StaticProgramValue {
+    None,
+    Bool(bool),
+    Integer(&'static str),
+    FloatBits(u64),
+    String(&'static str),
+    Bytes(&'static [u8]),
+    Tuple(&'static [StaticProgramValue]),
+    List(&'static [StaticProgramValue]),
+    Record(&'static [(&'static str, StaticProgramValue)]),
+}
 ```
+
+`StaticProgramValue` is non-exhaustive for downstream Rust consumers. Its
+compiler-owned variant set is closed for this contract revision. A new variant
+requires a structural contract and cache-identity review.
 
 `structural_construct` is the sole public construction entry. It compares
 `source.shape_identity()` with `<T as StructuralType>::shape_identity()` before
