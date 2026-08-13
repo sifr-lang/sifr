@@ -214,6 +214,46 @@ def encode[T: Structural](value: T) -> Result[bytes, CodecError | RustPanicError
 }
 
 #[test]
+fn structural_bound_accepts_enums_and_supported_ordinary_unions() {
+    lower_ok(
+        r"
+from enum import Enum
+
+class Status(Enum):
+    READY = 4
+    WAITING = 5
+
+def accept[T: Structural](value: T) -> None:
+    pass
+
+def use(choice: int | str, status: Status) -> None:
+    accept(choice)
+    accept(status)
+",
+    );
+}
+
+#[test]
+fn structural_bound_rejects_an_ordinary_union_with_an_unsupported_member() {
+    let errors = lower_errors(
+        r"
+def accept[T: Structural](value: T) -> None:
+    pass
+
+def use(value: int | list[bytes]) -> None:
+    accept(value)
+",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'Structural'")
+    }));
+}
+
+#[test]
 fn rust_interop_rejects_incomplete_structural_error_and_panic_contracts() {
     let panic_only = lower_errors(
         r"

@@ -32,7 +32,11 @@ pub(crate) fn class_identity_expression(
     module: &HirModule,
     module_name: Option<&str>,
 ) -> String {
-    compile_class(class, module, module_name).expression()
+    if class.is_enum() {
+        compile_enum(class, module_name).expression()
+    } else {
+        compile_class(class, module, module_name).expression()
+    }
 }
 
 pub(crate) fn static_class_identity(
@@ -40,7 +44,15 @@ pub(crate) fn static_class_identity(
     module: &HirModule,
     module_name: Option<&str>,
 ) -> Option<ShapeIdentity> {
-    compile_class(class, module, module_name).static_value()
+    if class.is_enum() {
+        compile_enum(class, module_name).static_value()
+    } else {
+        compile_class(class, module, module_name).static_value()
+    }
+}
+
+pub(crate) fn enum_identity_expression(class: &HirClass, module_name: Option<&str>) -> String {
+    compile_enum(class, module_name).expression()
 }
 
 pub(crate) const fn algorithm_version() -> u32 {
@@ -85,6 +97,20 @@ fn compile_class(
     )
 }
 
+fn compile_enum(class: &HirClass, module_name: Option<&str>) -> CompiledIdentity {
+    let nominal = class_nominal_identity(class, module_name);
+    let members = class
+        .enum_variants
+        .iter()
+        .map(|(name, value)| (name.as_str(), *value))
+        .collect::<Vec<_>>();
+    CompiledIdentity::Static(identity::enum_shape(
+        &nominal,
+        &members,
+        class_metadata_identity(Some(class)),
+    ))
+}
+
 fn compile_type(
     ty: &Type,
     module: &HirModule,
@@ -119,11 +145,35 @@ fn compile_type(
             }
         }
         Type::Tuple(values) => compile_many("tuple", values, module, module_name, stack),
-        Type::Union(values) if optional_member(values).is_some() => {
-            let Some(member) = optional_member(values) else {
-                unreachable!("guarded optional union must contain one value member");
-            };
-            compile_unary("optional", member, module, module_name, stack)
+        Type::Union(values) => match optional_member(values) {
+            Some(member) => compile_unary("optional", member, module, module_name, stack),
+            None => compile_many("union", values, module, module_name, stack),
+        },
+        Type::Enum {
+            identity: declared_identity,
+            name,
+            variants,
+        } => {
+            if let Some(class) = module
+                .classes
+                .iter()
+                .find(|class| class.name == *name && class.is_enum())
+            {
+                compile_enum(class, module_name)
+            } else {
+                let nominal = declared_identity.clone().unwrap_or_else(|| {
+                    module_name.map_or_else(|| name.clone(), |module| format!("{module}.{name}"))
+                });
+                let members = variants
+                    .iter()
+                    .map(|(name, value)| (name.as_str(), *value))
+                    .collect::<Vec<_>>();
+                CompiledIdentity::Static(identity::enum_shape(
+                    &nominal,
+                    &members,
+                    identity::metadata(&[]),
+                ))
+            }
         }
         Type::Class {
             identity: class_identity,
@@ -139,6 +189,11 @@ fn compile_type(
                     |class| class_nominal_identity(class, module_name),
                 )
             });
+            if let Some(class) = candidate {
+                if class.is_enum() {
+                    return compile_enum(class, module_name);
+                }
+            }
             if let Some(index) = stack.iter().position(|entry| entry == &nominal) {
                 let Ok(index) = u32::try_from(index) else {
                     unreachable!(

@@ -47,22 +47,31 @@ pub(crate) struct ProjectUnionUsage {
     pub(crate) module_unions: HashMap<String, HashSet<String>>,
     pub(crate) ordinary_unions: HashSet<String>,
     pub(crate) try_error_unions: HashSet<String>,
+    pub(crate) structural_unions: HashSet<String>,
 }
 
 pub(crate) fn project_union_usage(
     modules: &[(&str, &HirModule)],
     project_code: &StdlibCode,
+    structural_interop_enabled: bool,
 ) -> ProjectUnionUsage {
     let mut unions = HashMap::new();
     let mut module_unions = HashMap::new();
     let mut ordinary_unions = HashSet::new();
     let mut try_error_unions = HashSet::new();
+    let mut structural_unions = HashSet::new();
     for (module_name, module) in modules {
         let mut emitter = super::RustEmitter::new();
         emitter.collect_union_types(module);
         register_imported_union_types(&mut emitter, module, project_code);
         ordinary_unions.extend(emitter.ordinary_union_enums.iter().cloned());
         try_error_unions.extend(emitter.try_error_carrier_enums.iter().cloned());
+        if structural_interop_enabled {
+            structural_unions.extend(crate::structural_impl_codegen::structural_union_names(
+                module,
+                &emitter.union_enums,
+            ));
+        }
         let names = emitter.union_enums.keys().cloned().collect::<HashSet<_>>();
         for (name, members) in emitter.union_enums {
             unions.entry(name).or_insert(members);
@@ -74,6 +83,7 @@ pub(crate) fn project_union_usage(
         module_unions,
         ordinary_unions,
         try_error_unions,
+        structural_unions,
     }
 }
 
@@ -318,7 +328,8 @@ pub fn generate_rust_multi_with_metadata(
     project_codegen_code
         .module_class_fields
         .extend(project_class_fields(modules));
-    let union_usage = project_union_usage(modules, &project_codegen_code);
+    let union_usage =
+        project_union_usage(modules, &project_codegen_code, structural_interop_enabled);
     let stdlib_nominal_plan =
         project_stdlib_nominal_plan(&union_usage.unions, stdlib_code, modules);
     let crate_root_modules = HashSet::from(["main"]);
@@ -754,6 +765,7 @@ mod tests {
             let usage = project_union_usage(
                 &[("left", &left), ("right", &right)],
                 &StdlibCode::default(),
+                false,
             );
 
             assert_eq!(usage.unions.len(), 2, "{:?}", usage.unions);

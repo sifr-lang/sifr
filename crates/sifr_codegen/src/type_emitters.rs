@@ -151,6 +151,7 @@ impl RustEmitter {
             trait_: None,
             items: impl_items,
         });
+        self.emit_structural_enum_impls(class);
     }
 
     pub(crate) fn emit_newtype(&mut self, class: &HirClass, inner: &Type, module_public: bool) {

@@ -8,9 +8,9 @@ use sifr_runtime::interop::structural::{
 };
 use sifr_runtime::interop::{CallScopedCallbackBridge, Handle, HandleStateError};
 
-const NESTED_IDENTITY: &str = "NestedValue";
-const LEAF_IDENTITY: &str = "Leaf";
-const BOXED_IDENTITY: &str = "Boxed";
+const NESTED_IDENTITY: &str = "main.NestedValue";
+const LEAF_IDENTITY: &str = "main.Leaf";
+const BOXED_IDENTITY: &str = "main.Boxed";
 
 #[derive(Debug)]
 pub struct StructuralBridgeError {
@@ -126,6 +126,18 @@ fn string(value: &str) -> ArenaNode {
     }
 }
 
+fn signed_integer(value: i64) -> ArenaNode {
+    ArenaNode {
+        kind: StructuralKind::SignedInteger,
+        nominal_identity: None,
+        edges: Vec::new(),
+        scalar: Some(StructuralScalar::SignedInteger {
+            value: i128::from(value),
+            width: 64,
+        }),
+    }
+}
+
 fn sequence(children: &[u32]) -> ArenaNode {
     ArenaNode {
         kind: StructuralKind::Sequence,
@@ -158,6 +170,33 @@ fn optional(child: Option<u32>) -> ArenaNode {
     }
 }
 
+fn union(member: usize, child: u32) -> ArenaNode {
+    ArenaNode {
+        kind: StructuralKind::Union,
+        nominal_identity: None,
+        edges: vec![edge(
+            StructuralEdgeKind::ActiveMember {
+                name: "member",
+                index: member,
+            },
+            child,
+        )],
+        scalar: None,
+    }
+}
+
+fn enumeration(name: &'static str, index: usize, child: u32) -> ArenaNode {
+    ArenaNode {
+        kind: StructuralKind::Enum,
+        nominal_identity: Some("main.Status"),
+        edges: vec![edge(
+            StructuralEdgeKind::ActiveMember { name, index },
+            child,
+        )],
+        scalar: None,
+    }
+}
+
 fn structural_nodes() -> Vec<ArenaNode> {
     vec![
         record(
@@ -185,9 +224,35 @@ fn structural_nodes() -> Vec<ArenaNode> {
     ]
 }
 
+fn sum_nodes() -> Vec<ArenaNode> {
+    vec![
+        record("main.SumPayload", &[("choice", 1), ("status", 3)]),
+        union(1, 2),
+        string("sum"),
+        enumeration("WAITING", 1, 4),
+        signed_integer(5),
+    ]
+}
+
 pub fn open() -> Result<Handle<StructuralArena>, StructuralBridgeError> {
     Ok(Handle::new(StructuralArena {
         nodes: structural_nodes(),
+    }))
+}
+
+pub fn open_sum() -> Result<Handle<StructuralArena>, StructuralBridgeError> {
+    Ok(Handle::new(StructuralArena { nodes: sum_nodes() }))
+}
+
+pub fn open_union() -> Result<Handle<StructuralArena>, StructuralBridgeError> {
+    Ok(Handle::new(StructuralArena {
+        nodes: vec![union(1, 1), string("sum")],
+    }))
+}
+
+pub fn open_enum() -> Result<Handle<StructuralArena>, StructuralBridgeError> {
+    Ok(Handle::new(StructuralArena {
+        nodes: vec![enumeration("WAITING", 1, 1), signed_integer(5)],
     }))
 }
 
@@ -283,7 +348,12 @@ where
             "structural construction accepted a mismatched root identity",
         ));
     }
-    structural_construct::<T, _>(into_source::<T>(source)?).map_err(Into::into)
+    structural_construct::<T, _>(into_source::<T>(source)?).map_err(|error| {
+        StructuralBridgeError::new(format!(
+            "{} construction failed: {error}",
+            std::any::type_name::<T>()
+        ))
+    })
 }
 
 pub fn transform<T>(

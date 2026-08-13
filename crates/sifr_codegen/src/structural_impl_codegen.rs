@@ -1,7 +1,7 @@
 use crate::{RustEmitter, RustItem, RustParam, RustStmt, RustType, RustTypeParam, Visibility};
 use sifr_ir::{HirClass, HirModule, RustInteropDecoratorKind};
 use sifr_type_system::Type;
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashSet};
 
 const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
 
@@ -29,6 +29,24 @@ impl RustEmitter {
             &target,
             type_params,
             &nominal_identity,
+        ));
+    }
+
+    pub(crate) fn emit_structural_enum_impls(&mut self, class: &HirClass) {
+        if !self.structural_interop_enabled || !class.is_enum() {
+            return;
+        }
+        let target = Self::class_impl_target(class);
+        let nominal_identity = nominal_identity(class, self.current_module_name.as_deref());
+        let shape = crate::structural_identity_codegen::enum_identity_expression(
+            class,
+            self.current_module_name.as_deref(),
+        );
+        self.body_items.extend(structural_enum_impls(
+            class,
+            &target,
+            &nominal_identity,
+            &shape,
         ));
     }
 }
@@ -66,6 +84,7 @@ fn structural_type_supported(
 ) -> bool {
     match ty.resolve_alias() {
         Type::Int | Type::Float | Type::Bool | Type::Str | Type::None | Type::TypeVar(_) => true,
+        Type::Enum { .. } => true,
         Type::Bytes => false,
         Type::FixedInt(value) => !matches!(
             value,
@@ -82,17 +101,9 @@ fn structural_type_supported(
                     .iter()
                     .all(|value| structural_type_supported(value, module, visiting))
         }
-        Type::Union(values)
-            if values.len() == 2
-                && values
-                    .iter()
-                    .any(|value| matches!(value.resolve_alias(), Type::None)) =>
-        {
-            values
-                .iter()
-                .filter(|value| !matches!(value.resolve_alias(), Type::None))
-                .all(|value| structural_type_supported(value, module, visiting))
-        }
+        Type::Union(values) => values
+            .iter()
+            .all(|value| structural_type_supported(value, module, visiting)),
         Type::Class { name, .. } => {
             if visiting.contains(name) {
                 return true;
@@ -104,11 +115,15 @@ fn structural_type_supported(
             else {
                 return false;
             };
+            if candidate.is_enum() {
+                return crate::structural_identity_codegen::class_identity_inputs_supported(
+                    candidate,
+                );
+            }
             if candidate.parent_class.is_some()
                 || candidate.is_error_type
                 || candidate.newtype_inner.is_some()
                 || !crate::structural_identity_codegen::class_identity_inputs_supported(candidate)
-                || candidate.is_enum()
                 || candidate.python_opaque_declaration().is_some()
                 || candidate
                     .rust_interop
@@ -128,6 +143,68 @@ fn structural_type_supported(
         Type::Newtype { .. } => false,
         _ => false,
     }
+}
+
+pub(crate) fn structural_union_names(
+    module: &HirModule,
+    unions: &std::collections::HashMap<String, Vec<Type>>,
+) -> HashSet<String> {
+    let mut names = HashSet::new();
+    for class in &module.classes {
+        if structural_record_supported(class, module) {
+            for (_, field) in &class.fields {
+                collect_structural_union_names(field, &mut names);
+            }
+        }
+    }
+    for (name, members) in unions {
+        if members
+            .iter()
+            .all(|member| structural_type_supported(member, module, &mut BTreeSet::new()))
+        {
+            names.insert(name.clone());
+        }
+    }
+    names
+}
+
+fn collect_structural_union_names(ty: &Type, names: &mut HashSet<String>) {
+    match ty.resolve_alias() {
+        Type::Union(values) if !is_optional_union(values) => {
+            names.insert(ty.union_enum_name());
+            for value in values {
+                collect_structural_union_names(value, names);
+            }
+        }
+        Type::Union(values) | Type::Tuple(values) => {
+            for value in values {
+                collect_structural_union_names(value, names);
+            }
+        }
+        Type::List(value) | Type::Set(value) => collect_structural_union_names(value, names),
+        Type::Dict(key, value) => {
+            collect_structural_union_names(key, names);
+            collect_structural_union_names(value, names);
+        }
+        Type::Class {
+            type_args, fields, ..
+        } => {
+            for value in type_args {
+                collect_structural_union_names(value, names);
+            }
+            for (_, value) in fields {
+                collect_structural_union_names(value, names);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn is_optional_union(values: &[Type]) -> bool {
+    values.len() == 2
+        && values
+            .iter()
+            .any(|value| matches!(value.resolve_alias(), Type::None))
 }
 
 fn structural_impl_type_params(class: &HirClass) -> Vec<RustTypeParam> {
@@ -344,4 +421,130 @@ fn structural_project_impl(
             is_async: false,
         }],
     }
+}
+
+fn structural_enum_impls(
+    class: &HirClass,
+    target: &str,
+    nominal_identity: &str,
+    shape: &str,
+) -> Vec<RustItem> {
+    let mut next_value = 1_i64;
+    let mut construct_arms = Vec::with_capacity(class.enum_variants.len());
+    let mut project_arms = Vec::with_capacity(class.enum_variants.len());
+    for (index, (name, declared)) in class.enum_variants.iter().enumerate() {
+        let value = declared.unwrap_or(next_value);
+        next_value = value.saturating_add(1);
+        construct_arms.push(format!(
+            "{STRUCTURAL}::StructuralEdgeKind::ActiveMember {{ name: \"{name}\", index: {index} }} => match <i64 as {STRUCTURAL}::StructuralConstruct>::structural_construct_at(source, child, token) {{ Ok({value}) => Ok(Self::{name}), Ok(_) => Err({STRUCTURAL}::StructuralContractError::MemberMismatch), Err(error) => Err(error), }},"
+        ));
+        project_arms.push(format!(
+            "Self::{name} => {{ visitor.edge({STRUCTURAL}::StructuralEdge::new({STRUCTURAL}::StructuralEdgeKind::ActiveMember {{ name: \"{name}\", index: {index} }}))?; visitor.scalar({STRUCTURAL}::StructuralScalarRef::SignedInteger {{ value: i128::from({value}_i64), width: 64 }})?; }}"
+        ));
+    }
+    let construct_body = format!(
+        "let description = source.node(node)?;\nif description.kind() != {STRUCTURAL}::StructuralKind::Enum {{ return Err({STRUCTURAL}::StructuralContractError::KindMismatch); }}\nif description.nominal_identity() != Some({nominal_identity}) {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}\nlet [edge] = description.edges() else {{ return Err({STRUCTURAL}::StructuralContractError::ArityMismatch); }};\nlet edge_kind = edge.kind();\nlet child = edge.node();\nmatch edge_kind {{\n{}\n_ => Err({STRUCTURAL}::StructuralContractError::MemberMismatch),\n}}",
+        construct_arms.join("\n")
+    );
+    let project_body = format!(
+        "let control = visitor.enter({STRUCTURAL}::StructuralEnter::new({STRUCTURAL}::StructuralKind::Enum, Some({nominal_identity}), 1))?;\nif control == {STRUCTURAL}::VisitControl::Continue {{\nmatch self {{\n{}\n}}\n}}\nvisitor.exit({STRUCTURAL}::StructuralKind::Enum)",
+        project_arms.join("\n")
+    );
+    vec![
+        RustItem::Impl {
+            target: target.to_string(),
+            type_params: Vec::new(),
+            trait_: Some(format!("{STRUCTURAL}::StructuralType")),
+            items: vec![
+                RustItem::Fn {
+                    name: "shape_identity".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: Vec::new(),
+                    params: Vec::new(),
+                    ret: Some(RustType::Named(format!("{STRUCTURAL}::ShapeIdentity"))),
+                    body: vec![RustStmt::Verbatim(shape.to_string())],
+                    is_async: false,
+                },
+                RustItem::Fn {
+                    name: "nominal_identity".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: Vec::new(),
+                    params: Vec::new(),
+                    ret: Some(RustType::Named("Option<&'static str>".to_string())),
+                    body: vec![RustStmt::Verbatim(format!("Some({nominal_identity})"))],
+                    is_async: false,
+                },
+            ],
+        },
+        RustItem::Impl {
+            target: target.to_string(),
+            type_params: Vec::new(),
+            trait_: Some(format!("{STRUCTURAL}::StructuralConstruct")),
+            items: vec![RustItem::Fn {
+                name: "structural_construct_at".to_string(),
+                visibility: Visibility::Private,
+                type_params: vec![RustTypeParam {
+                    name: "S".to_string(),
+                    bounds: vec![format!("{STRUCTURAL}::StructuralSource")],
+                }],
+                params: vec![
+                    RustParam::Named {
+                        name: "source".to_string(),
+                        ty: RustType::Ref {
+                            mutable: true,
+                            inner: Box::new(RustType::Named("S".to_string())),
+                        },
+                    },
+                    RustParam::Named {
+                        name: "node".to_string(),
+                        ty: RustType::Named(format!("{STRUCTURAL}::NodeId")),
+                    },
+                    RustParam::Named {
+                        name: "token".to_string(),
+                        ty: RustType::Named(format!("{STRUCTURAL}::ConstructToken")),
+                    },
+                ],
+                ret: Some(RustType::Named(format!(
+                    "Result<Self, {STRUCTURAL}::StructuralContractError>"
+                ))),
+                body: vec![RustStmt::Verbatim(construct_body)],
+                is_async: false,
+            }],
+        },
+        RustItem::Impl {
+            target: target.to_string(),
+            type_params: Vec::new(),
+            trait_: Some(format!("{STRUCTURAL}::StructuralProject")),
+            items: vec![RustItem::Fn {
+                name: "structural_project".to_string(),
+                visibility: Visibility::Private,
+                type_params: vec![
+                    RustTypeParam {
+                        name: "'value".to_string(),
+                        bounds: Vec::new(),
+                    },
+                    RustTypeParam {
+                        name: "V".to_string(),
+                        bounds: vec![format!("{STRUCTURAL}::StructuralVisitor<'value>")],
+                    },
+                ],
+                params: vec![
+                    RustParam::SelfParamWithLifetime {
+                        mutable: false,
+                        lifetime: "'value".to_string(),
+                    },
+                    RustParam::Named {
+                        name: "visitor".to_string(),
+                        ty: RustType::Ref {
+                            mutable: true,
+                            inner: Box::new(RustType::Named("V".to_string())),
+                        },
+                    },
+                ],
+                ret: Some(RustType::Named("Result<(), V::Error>".to_string())),
+                body: vec![RustStmt::Verbatim(project_body)],
+                is_async: false,
+            }],
+        },
+    ]
 }

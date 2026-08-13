@@ -1,9 +1,10 @@
 use crate::{generate_rust, generate_rust_multi};
 use sifr_ir::{
-    HirClass, HirClassKind, HirFunction, HirModule, MethodKind, RustInteropAbiRequirements,
-    RustInteropDeclaration, RustInteropDecoratorKind, RustInteropEffect,
+    HirClass, HirClassKind, HirFunction, HirModule, HirParam, MethodKind,
+    RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
+    RustInteropEffect,
 };
-use sifr_type_system::Type;
+use sifr_type_system::{ParamConvention, Type};
 
 #[test]
 fn ordinary_class_codegen_skips_structural_impls() {
@@ -19,6 +20,53 @@ fn ordinary_class_codegen_skips_structural_impls() {
     assert!(!metadata
         .required_features
         .contains(&sifr_stdlib_manifest::StdlibFeature::StructuralRuntime));
+}
+
+#[test]
+fn ordinary_union_codegen_skips_structural_impls_without_demand() {
+    let union = Type::Union(vec![Type::Int, Type::Str]);
+    let module = module(vec![ordinary_function("choose", union)], Vec::new());
+
+    let generated = generate_rust(&module);
+
+    assert!(generated.contains("enum __SifrUnion"));
+    assert!(!generated.contains("StructuralType"));
+    assert!(!generated.contains("StructuralConstruct"));
+    assert!(!generated.contains("StructuralProject"));
+
+    let project = crate::generate_rust_multi_with_metadata(
+        &[("main", &module)],
+        &crate::StdlibCode::default(),
+    );
+    let prelude = project.project_union_prelude;
+    assert!(prelude.contains("enum __SifrUnion"));
+    assert!(!prelude.contains("StructuralType"));
+    assert!(!prelude.contains("StructuralConstruct"));
+    assert!(!prelude.contains("StructuralProject"));
+}
+
+#[test]
+fn direct_ordinary_union_gets_structural_impls_when_demanded() {
+    let union = Type::Union(vec![Type::Int, Type::Str]);
+    let module = module(
+        vec![structural_function(), ordinary_function("choose", union)],
+        Vec::new(),
+    );
+
+    let generated = generate_rust(&module);
+
+    assert!(generated.contains("StructuralKind::Union"), "{generated}");
+    assert!(generated.contains("ActiveMember"), "{generated}");
+    assert!(generated.contains("StructuralConstruct"), "{generated}");
+    assert!(generated.contains("StructuralProject"), "{generated}");
+
+    let project = crate::generate_rust_multi_with_metadata(
+        &[("main", &module)],
+        &crate::StdlibCode::default(),
+    );
+    let prelude = project.project_union_prelude;
+    assert!(prelude.contains("StructuralKind::Union"), "{prelude}");
+    assert!(prelude.contains("ActiveMember"), "{prelude}");
 }
 
 #[test]
@@ -60,6 +108,46 @@ fn structural_impls_escape_rust_keyword_field_identifiers() {
     assert!(models_rust.contains("&self.r#type"));
     assert!(models_rust.contains("RecordField"));
     assert!(models_rust.contains("\"type\""));
+}
+
+#[test]
+fn structural_demand_emits_checked_enum_and_ordinary_union_impls() {
+    let mut enumeration = payload_class();
+    enumeration.name = "Status".to_string();
+    enumeration.kind = HirClassKind::Enum;
+    enumeration.fields = Vec::new();
+    enumeration.enum_variants = vec![
+        ("READY".to_string(), Some(4)),
+        ("WAITING".to_string(), None),
+    ];
+    let enum_type = Type::Enum {
+        identity: Some("main.Status".to_string()),
+        name: "Status".to_string(),
+        variants: enumeration.enum_variants.clone(),
+    };
+    let mut container = payload_class();
+    container.name = "SumPayload".to_string();
+    container.fields = vec![
+        (
+            "choice".to_string(),
+            Type::Union(vec![Type::Int, Type::Str]),
+        ),
+        ("status".to_string(), enum_type),
+    ];
+    let module = module(vec![structural_function()], vec![enumeration, container]);
+
+    let generated = generate_rust(&module);
+
+    assert!(generated.contains("StructuralKind::Union"), "{generated}");
+    assert!(generated.contains("ActiveMember"), "{generated}");
+    assert!(generated.contains("StructuralKind::Enum"), "{generated}");
+    assert!(generated.contains("Self::READY"), "{generated}");
+    assert!(generated.contains("Self::WAITING"), "{generated}");
+    assert!(generated.contains("::structural::union"), "{generated}");
+    assert!(
+        generated.contains("ShapeIdentity::from_bytes"),
+        "{generated}"
+    );
 }
 
 #[test]
@@ -139,6 +227,29 @@ fn structural_function() -> HirFunction {
             abi_requirements: RustInteropAbiRequirements::default(),
             consumes_receiver: false,
         }],
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    }
+}
+
+fn ordinary_function(name: &str, parameter_type: Type) -> HirFunction {
+    HirFunction {
+        name: name.to_string(),
+        params: vec![HirParam {
+            name: "value".to_string(),
+            ty: parameter_type,
+            default: None,
+            keyword_only: false,
+            convention: ParamConvention::borrow(),
+        }],
+        return_type: Type::None,
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        receiver: None,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
         python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: Vec::new(),

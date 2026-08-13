@@ -137,17 +137,10 @@ fn supports_structural_bridge_type_inner(
                     .iter()
                     .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting, false))
         }
-        Type::Union(values)
-            if values.len() == 2
-                && values
-                    .iter()
-                    .any(|value| matches!(value.resolve_alias(), Type::None)) =>
-        {
-            values
-                .iter()
-                .filter(|value| !matches!(value.resolve_alias(), Type::None))
-                .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting, false))
-        }
+        Type::Union(values) => values
+            .iter()
+            .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting, false)),
+        Type::Enum { .. } => true,
         Type::Class {
             identity,
             type_args,

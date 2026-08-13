@@ -21,6 +21,9 @@ pub(crate) fn render_project_union_prelude(
         .try_error_carrier_enums
         .clone_from(&usage.try_error_unions);
     emitter
+        .structural_union_enums
+        .clone_from(&usage.structural_unions);
+    emitter
         .project_nominal_type_paths
         .clone_from(nominal_type_paths);
     emitter.generate_enum_definitions();

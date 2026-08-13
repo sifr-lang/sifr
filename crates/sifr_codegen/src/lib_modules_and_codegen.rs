@@ -340,6 +340,11 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
             .try_error_carrier_enums
             .extend(project_try_error_carrier_enums.iter().cloned());
     }
+    if structural_interop_enabled {
+        emitter.structural_union_enums.extend(
+            crate::structural_impl_codegen::structural_union_names(module, &emitter.union_enums),
+        );
+    }
     if let Some(owned_union_enums) = owned_union_enums {
         emitter.suppressed_union_enum_definitions = emitter
             .union_enums

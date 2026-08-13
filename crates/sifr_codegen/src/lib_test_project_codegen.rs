@@ -40,7 +40,10 @@ pub fn generate_rust_test_project_with_metadata(
     project_code
         .module_class_fields
         .extend(project_class_fields(&all_modules));
-    let union_usage = project_union_usage(&all_modules, &project_code);
+    let structural_interop_enabled = all_modules
+        .iter()
+        .any(|(_, module)| crate::rust_interop_plan::module_uses_structural_interop(module));
+    let union_usage = project_union_usage(&all_modules, &project_code, structural_interop_enabled);
     let stdlib_nominal_plan =
         project_stdlib_nominal_plan(&union_usage.unions, stdlib_code, &all_modules);
     let crate_root_modules = test_modules
@@ -57,9 +60,6 @@ pub fn generate_rust_test_project_with_metadata(
         .collect::<Vec<_>>()
         .join("\n\n");
     let project_modules = all_modules.iter().copied().collect::<HashMap<_, _>>();
-    let structural_interop_enabled = all_modules
-        .iter()
-        .any(|(_, module)| crate::rust_interop_plan::module_uses_structural_interop(module));
     let all_union_names = union_usage.unions.keys().cloned().collect::<HashSet<_>>();
 
     let mut support_rust_files = HashMap::new();

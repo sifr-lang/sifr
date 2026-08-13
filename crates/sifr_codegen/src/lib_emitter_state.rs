@@ -16,6 +16,8 @@ pub struct RustEmitter {
     pub(crate) try_error_carrier_enums: HashSet<String>,
     /// Union enums also used as ordinary source-level values.
     pub(crate) ordinary_union_enums: HashSet<String>,
+    /// Ordinary union enums that participate in a structural bridge shape.
+    pub(crate) structural_union_enums: HashSet<String>,
     /// Project-owned union enums whose definition is emitted by the crate-root prelude.
     /// The complete union map remains available to lowering and exhaustiveness checks.
     pub(crate) suppressed_union_enum_definitions: HashSet<String>,
@@ -214,6 +216,7 @@ impl RustEmitter {
             union_enums: HashMap::new(),
             try_error_carrier_enums: HashSet::new(),
             ordinary_union_enums: HashSet::new(),
+            structural_union_enums: HashSet::new(),
             suppressed_union_enum_definitions: HashSet::new(),
             project_nominal_type_paths: HashMap::new(),
             enum_items: Vec::new(),
