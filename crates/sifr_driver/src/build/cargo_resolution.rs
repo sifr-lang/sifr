@@ -13,6 +13,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 const PREPARED_RESOLUTION_DIR: &str = "cargo_resolution";
 static PREPARED_LOCK_NONCE: AtomicU64 = AtomicU64::new(0);
 type RegistryEntry = (String, String, String, String);
+type RegistryCompatibilityFamily = (String, String, String);
 
 #[derive(Clone, Debug)]
 pub(super) struct CargoResolutionPolicy {
@@ -258,12 +259,12 @@ fn overlay_registry_packages(base: &mut toml::Table, overlay: &toml::Table) {
         .and_then(toml::Value::as_array)
         .into_iter()
         .flatten()
-        .filter(|package| package_is_registry(package))
+        .filter(|package| registry_package_compatibility_family(package).is_some())
         .cloned()
         .collect::<Vec<_>>();
-    let overlay_names = overlay_registry
+    let overlay_families = overlay_registry
         .iter()
-        .filter_map(package_name)
+        .filter_map(registry_package_compatibility_family)
         .collect::<BTreeSet<_>>();
     let Some(base_packages) = base
         .entry("package")
@@ -273,25 +274,50 @@ fn overlay_registry_packages(base: &mut toml::Table, overlay: &toml::Table) {
         return;
     };
     base_packages.retain(|package| {
-        !package_is_registry(package)
-            || package_name(package).is_none_or(|name| !overlay_names.contains(name))
+        registry_package_compatibility_family(package)
+            .is_none_or(|family| !overlay_families.contains(&family))
     });
     base_packages.extend(overlay_registry);
 }
 
-fn package_is_registry(package: &toml::Value) -> bool {
-    package
-        .as_table()
-        .and_then(|package| package.get("source"))
-        .and_then(toml::Value::as_str)
-        .is_some_and(|source| source.starts_with("registry+"))
+fn registry_package_compatibility_family(
+    package: &toml::Value,
+) -> Option<RegistryCompatibilityFamily> {
+    let package = package.as_table()?;
+    let source = package.get("source")?.as_str()?;
+    if !source.starts_with("registry+") {
+        return None;
+    }
+    let version = package.get("version")?.as_str()?;
+    Some((
+        package.get("name")?.as_str()?.to_string(),
+        source.to_string(),
+        registry_version_compatibility_family(version),
+    ))
 }
 
-fn package_name(package: &toml::Value) -> Option<&str> {
-    package
-        .as_table()
-        .and_then(|package| package.get("name"))
-        .and_then(toml::Value::as_str)
+fn registry_version_compatibility_family(version: &str) -> String {
+    if version.contains('-') {
+        return format!("exact:{version}");
+    }
+    let core = version.split('+').next().unwrap_or(version);
+    let components = core
+        .split('.')
+        .map(str::parse::<u64>)
+        .collect::<Result<Vec<_>, _>>();
+    let Ok(components) = components else {
+        return format!("exact:{version}");
+    };
+    let [major, minor, patch] = components.as_slice() else {
+        return format!("exact:{version}");
+    };
+    if *major != 0 {
+        format!("major:{major}")
+    } else if *minor != 0 {
+        format!("minor:{major}.{minor}")
+    } else {
+        format!("patch:{major}.{minor}.{patch}")
+    }
 }
 
 fn prepared_lock_path(
@@ -300,7 +326,7 @@ fn prepared_lock_path(
     cargo_prefix_args: &[String],
 ) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     let mut input = Vec::new();
-    push_cache_bytes(&mut input, "sifr-cargo-resolution-v5");
+    push_cache_bytes(&mut input, "sifr-cargo-resolution-v6");
     push_cache_bytes(&mut input, &normalized_manifest_cache_input(project_dir)?);
     for argument in cargo_prefix_args {
         push_cache_bytes(&mut input, argument);
@@ -487,11 +513,12 @@ fn cargo_resolution_error(message: impl Into<String>) -> RenderedDiagnostic {
 #[cfg(test)]
 mod tests {
     use super::{
-        normalized_manifest_cache_input, registry_entries, seed_lockfile_from_authorities,
-        validate_authoritative_registry_entries, CargoResolutionPolicy, CargoVendorMode,
-        PREPARED_LOCK_NONCE,
+        normalized_manifest_cache_input, registry_entries, registry_version_compatibility_family,
+        seed_lockfile_from_authorities, validate_authoritative_registry_entries,
+        CargoResolutionPolicy, CargoVendorMode, PREPARED_LOCK_NONCE,
     };
     use sifr_package::CargoLockMode;
+    use std::collections::BTreeSet;
     use std::path::PathBuf;
     use std::sync::atomic::Ordering;
 
@@ -521,13 +548,37 @@ mod tests {
     }
 
     #[test]
-    fn package_lock_registry_pin_overrides_sysroot_pin() {
+    fn registry_compatibility_families_match_cargo_semver_boundaries() {
+        assert_eq!(
+            registry_version_compatibility_family("1.2.3"),
+            registry_version_compatibility_family("1.9.0")
+        );
+        assert_eq!(
+            registry_version_compatibility_family("0.4.2"),
+            registry_version_compatibility_family("0.4.8")
+        );
+        assert_ne!(
+            registry_version_compatibility_family("0.3.4"),
+            registry_version_compatibility_family("0.4.2")
+        );
+        assert_ne!(
+            registry_version_compatibility_family("0.0.1"),
+            registry_version_compatibility_family("0.0.2")
+        );
+        assert_ne!(
+            registry_version_compatibility_family("1.0.0-alpha.1"),
+            registry_version_compatibility_family("1.0.0-alpha.2")
+        );
+    }
+
+    #[test]
+    fn distinct_registry_versions_from_each_authority_are_seeded() {
         let project = test_project("authority_priority");
         let package_lock = project.0.join("package.lock");
         let sysroot_lock = project.0.join("sysroot.lock");
         let destination = project.0.join("Cargo.lock");
-        write_registry_lock(&package_lock, "1.0.0", "package-checksum");
-        write_registry_lock(&sysroot_lock, "2.0.0", "sysroot-checksum");
+        write_registry_lock(&package_lock, "0.3.4", "package-checksum");
+        write_registry_lock(&sysroot_lock, "0.4.2", "sysroot-checksum");
 
         seed_lockfile_from_authorities(&destination, &[package_lock.clone(), sysroot_lock.clone()])
             .expect("authority locks should merge");
@@ -535,13 +586,39 @@ mod tests {
         let entries = registry_entries(&destination).expect("merged lock should parse");
         assert!(entries.contains(&(
             "shared-package".to_string(),
-            "1.0.0".to_string(),
+            "0.3.4".to_string(),
             "registry+https://github.com/rust-lang/crates.io-index".to_string(),
             "package-checksum".to_string(),
         )));
-        assert!(
-            !entries.iter().any(|entry| entry.1 == "2.0.0"),
-            "the lower-priority sysroot pin must not override the package lock"
+        assert!(entries.contains(&(
+            "shared-package".to_string(),
+            "0.4.2".to_string(),
+            "registry+https://github.com/rust-lang/crates.io-index".to_string(),
+            "sysroot-checksum".to_string(),
+        )));
+    }
+
+    #[test]
+    fn higher_priority_lock_replaces_a_compatible_registry_version() {
+        let project = test_project("exact_authority_priority");
+        let package_lock = project.0.join("package.lock");
+        let sysroot_lock = project.0.join("sysroot.lock");
+        let destination = project.0.join("Cargo.lock");
+        write_registry_lock(&package_lock, "0.4.8", "package-checksum");
+        write_registry_lock(&sysroot_lock, "0.4.6", "sysroot-checksum");
+
+        seed_lockfile_from_authorities(&destination, &[package_lock, sysroot_lock])
+            .expect("authority locks should merge");
+
+        let entries = registry_entries(&destination).expect("merged lock should parse");
+        assert_eq!(
+            entries,
+            BTreeSet::from([(
+                "shared-package".to_string(),
+                "0.4.8".to_string(),
+                "registry+https://github.com/rust-lang/crates.io-index".to_string(),
+                "package-checksum".to_string(),
+            )])
         );
     }
 
