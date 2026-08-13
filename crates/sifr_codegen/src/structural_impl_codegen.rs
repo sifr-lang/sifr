@@ -33,10 +33,7 @@ impl RustEmitter {
     }
 
     pub(crate) fn emit_structural_enum_impls(&mut self, class: &HirClass) {
-        if !self.structural_interop_enabled
-            || !class.is_enum()
-            || class.enum_variants.is_empty()
-            || !crate::structural_identity_codegen::class_identity_inputs_supported(class)
+        if !self.structural_interop_enabled || !class.is_enum() || !structural_enum_supported(class)
         {
             return;
         }
@@ -123,9 +120,7 @@ fn structural_type_supported(
                 return false;
             };
             if candidate.is_enum() {
-                return crate::structural_identity_codegen::class_identity_inputs_supported(
-                    candidate,
-                );
+                return structural_enum_supported(candidate);
             }
             if candidate.parent_class.is_some()
                 || candidate.is_error_type
@@ -166,6 +161,9 @@ fn structural_class_candidate<'a>(
         }) {
             return Some(candidate);
         }
+        if modules.len() != 1 || !modules[0].0.is_empty() {
+            return None;
+        }
     }
     let mut candidates = modules
         .iter()
@@ -173,6 +171,11 @@ fn structural_class_candidate<'a>(
         .filter(|class| class.name == name);
     let candidate = candidates.next()?;
     candidates.next().is_none().then_some(candidate)
+}
+
+fn structural_enum_supported(class: &HirClass) -> bool {
+    !class.enum_variants.is_empty()
+        && crate::structural_identity_codegen::class_identity_inputs_supported(class)
 }
 
 pub(crate) fn structural_union_names(
