@@ -37,6 +37,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
     let mut emitter = RustEmitter::new();
     emitter.structural_interop_enabled = structural_interop_enabled;
     emitter.project_structural_record_identities = project_structural_record_identities.cloned();
+    emitter.structural_identity_module_name = None;
 
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);

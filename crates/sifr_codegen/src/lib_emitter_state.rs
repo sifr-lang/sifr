@@ -55,6 +55,9 @@ pub struct RustEmitter {
     /// Canonical record identities proven structurally supported against the
     /// complete project module graph. `None` keeps single-module eligibility.
     pub(crate) project_structural_record_identities: Option<HashSet<String>>,
+    /// Module qualifier used by structural wire identities. Crate-root modules
+    /// have no qualifier even when project analysis names them `main`.
+    pub(crate) structural_identity_module_name: Option<String>,
     /// Static-program type parameters for each structural bridge function.
     pub(crate) static_program_type_params: HashMap<String, HashSet<String>>,
     /// Set of stdlib/intrinsic modules used (for Cargo dependency injection)
@@ -236,6 +239,7 @@ impl RustEmitter {
             current_module_name: None,
             structural_interop_enabled: false,
             project_structural_record_identities: None,
+            structural_identity_module_name: None,
             static_program_type_params: HashMap::new(),
             used_stdlib_modules: HashSet::new(),
             intrinsic_functions: HashSet::new(),

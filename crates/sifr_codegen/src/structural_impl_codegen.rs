@@ -24,13 +24,14 @@ impl RustEmitter {
         }
         let target = Self::class_impl_target(class);
         let type_params = structural_impl_type_params(class);
-        let nominal_identity = nominal_identity(class, self.current_module_name.as_deref());
+        let structural_module_name = self.structural_identity_module_name.as_deref();
+        let nominal_identity = nominal_identity(class, structural_module_name);
         let type_impl = structural_type_impl(
             class,
             module,
             &target,
             type_params.clone(),
-            self.current_module_name.as_deref(),
+            structural_module_name,
         );
         let construct_impl =
             structural_construct_impl(class, &target, type_params.clone(), &nominal_identity, self);
@@ -50,10 +51,11 @@ impl RustEmitter {
             return;
         }
         let target = Self::class_impl_target(class);
-        let nominal_identity = nominal_identity(class, self.current_module_name.as_deref());
+        let structural_module_name = self.structural_identity_module_name.as_deref();
+        let nominal_identity = nominal_identity(class, structural_module_name);
         let shape = crate::structural_identity_codegen::enum_identity_expression(
             class,
-            self.current_module_name.as_deref(),
+            structural_module_name,
         );
         self.body_items.extend(structural_enum_impls(
             class,

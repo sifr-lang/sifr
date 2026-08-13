@@ -80,10 +80,13 @@ pub fn generate_rust_test_project_with_metadata(
             .get(*module_name)
             .cloned()
             .unwrap_or_default();
+        let structural_identity_module_name =
+            (!crate_root_modules.contains(module_name)).then_some(*module_name);
         let generated = generate_rust_with_stdlib_for_module_with_project_policy(
             module,
             &module_code,
             Some(module_name),
+            structural_identity_module_name,
             structural_interop_enabled,
             Some(&HashSet::new()),
             Some(&union_usage.ordinary_unions),

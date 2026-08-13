@@ -162,6 +162,23 @@ fn project_record_eligibility_resolves_nested_imported_members() {
 }
 
 #[test]
+fn project_root_record_keeps_unqualified_structural_identity() {
+    let module = module(vec![structural_function()], vec![payload_class()]);
+
+    let project = crate::generate_rust_multi_with_metadata(
+        &[("main", &module)],
+        &crate::StdlibCode::default(),
+    );
+    let main_rust = project
+        .rust_files
+        .get("main")
+        .expect("main module is generated");
+
+    assert!(main_rust.contains("Some(\"Payload\")"), "{main_rust}");
+    assert!(!main_rust.contains("Some(\"main.Payload\")"), "{main_rust}");
+}
+
+#[test]
 fn platform_integer_union_does_not_receive_structural_impls() {
     let union = Type::Union(vec![
         Type::Int,
