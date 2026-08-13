@@ -44,17 +44,26 @@ pub fn generate_rust_test_project_with_metadata(
         .iter()
         .any(|(_, module)| crate::rust_interop_plan::module_uses_structural_interop(module));
     let union_usage = project_union_usage(&all_modules, &project_code, structural_interop_enabled);
-    let structural_record_identities = structural_interop_enabled
-        .then(|| {
-            crate::structural_impl_codegen::structural_record_identities_for_project(&all_modules)
-        })
-        .unwrap_or_default();
+    let structural_record_identities = if structural_interop_enabled {
+        crate::structural_impl_codegen::structural_record_identities_for_project(&all_modules)
+    } else {
+        HashSet::new()
+    };
     let stdlib_nominal_plan =
         project_stdlib_nominal_plan(&union_usage.unions, stdlib_code, &all_modules);
     let crate_root_modules = test_modules
         .iter()
         .map(|(module_name, _)| *module_name)
         .collect::<HashSet<_>>();
+    let structural_identity_expressions = if structural_interop_enabled {
+        crate::structural_identity_codegen::class_identity_expressions_for_project(
+            &all_modules,
+            &crate_root_modules,
+            &structural_record_identities,
+        )
+    } else {
+        HashMap::new()
+    };
     let mut nominal_type_paths = project_nominal_type_paths(&all_modules, &crate_root_modules);
     nominal_type_paths.extend(stdlib_nominal_plan.nominal_paths.clone());
     let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
@@ -92,6 +101,7 @@ pub fn generate_rust_test_project_with_metadata(
             Some(&union_usage.ordinary_unions),
             Some(&union_usage.try_error_unions),
             Some(&structural_record_identities),
+            Some(&structural_identity_expressions),
         );
         let imports = [
             render_local_module_imports(module, &project_modules),
@@ -131,6 +141,7 @@ pub fn generate_rust_test_project_with_metadata(
             Some(&union_usage.try_error_unions),
             structural_interop_enabled,
             Some(&structural_record_identities),
+            Some(&structural_identity_expressions),
         );
         test_rust_files.insert((*module_name).to_string(), generated.rust_source);
         used_stdlib_modules.extend(generated.used_stdlib_modules);

@@ -1,8 +1,8 @@
 use crate::{generate_rust, generate_rust_multi};
 use sifr_ir::{
-    HirClass, HirClassKind, HirFunction, HirModule, HirParam, MethodKind,
-    RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
-    RustInteropEffect,
+    DeclarationMetadataTargetKind, HirClass, HirClassKind, HirExpr, HirFunction, HirModule,
+    HirParam, MethodKind, RustInteropAbiRequirements, RustInteropDeclaration,
+    RustInteropDecoratorKind, RustInteropEffect, TypedDeclarationMetadata,
 };
 use sifr_type_system::{ParamConvention, Type};
 
@@ -179,6 +179,21 @@ fn project_root_record_keeps_unqualified_structural_identity() {
 }
 
 #[test]
+fn named_single_file_record_keeps_unqualified_structural_identity() {
+    let module = module(vec![structural_function()], vec![payload_class()]);
+
+    let generated = crate::generate_rust_with_stdlib_for_module(
+        &module,
+        &crate::StdlibCode::default(),
+        Some("main"),
+    )
+    .rust_source;
+
+    assert!(generated.contains("Some(\"Payload\")"), "{generated}");
+    assert!(!generated.contains("Some(\"main.Payload\")"), "{generated}");
+}
+
+#[test]
 fn platform_integer_union_does_not_receive_structural_impls() {
     let union = Type::Union(vec![
         Type::Int,
@@ -278,6 +293,37 @@ fn structural_demand_emits_checked_enum_and_ordinary_union_impls() {
     assert!(generated.contains("::structural::union"), "{generated}");
     assert!(
         generated.contains("ShapeIdentity::from_bytes"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn enum_with_unrepresentable_identity_metadata_gets_no_structural_impl() {
+    let mut enumeration = payload_class();
+    enumeration.name = "Status".to_string();
+    enumeration.kind = HirClassKind::Enum;
+    enumeration.fields = Vec::new();
+    enumeration.enum_variants = vec![("READY".to_string(), Some(1))];
+    enumeration.declaration_metadata = vec![TypedDeclarationMetadata {
+        owner: "Status".to_string(),
+        target_kind: DeclarationMetadataTargetKind::Type,
+        target_name: None,
+        key: "example.policy".to_string(),
+        value_type: Type::Int,
+        value: HirExpr::BinOp {
+            left: Box::new(HirExpr::IntLiteral(1)),
+            op: "+".to_string(),
+            right: Box::new(HirExpr::IntLiteral(1)),
+            ty: Type::Int,
+        },
+        range: Default::default(),
+    }];
+    let module = module(vec![structural_function()], vec![enumeration]);
+
+    let generated = generate_rust(&module);
+
+    assert!(
+        !generated.contains("StructuralType for Status"),
         "{generated}"
     );
 }

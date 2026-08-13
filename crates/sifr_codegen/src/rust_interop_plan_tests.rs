@@ -807,12 +807,18 @@ fn interop_cache_fragment_includes_structural_algorithm_and_concrete_identity() 
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let fragment =
-        interop_build_plan_for_named_modules([(Some("main"), &module)]).cache_key_fragment();
+    let named_plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
+    let root_plan = interop_build_plan_for_named_modules([(None, &module)]);
+    let fragment = named_plan.cache_key_fragment();
 
     assert!(fragment.contains("rust.structural_identity_algorithm_version=1"));
     assert!(fragment.contains("rust.structural_shape_identities=1"));
     assert!(fragment.contains("main:Payload="));
+    assert_eq!(
+        named_plan.rust.structural_shape_identities[0].identity,
+        root_plan.rust.structural_shape_identities[0].identity,
+        "naming a crate-root module main must not change its wire shape"
+    );
 }
 
 fn python_error_fields() -> Vec<(String, Type)> {

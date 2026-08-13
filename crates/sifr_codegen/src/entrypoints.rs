@@ -21,9 +21,11 @@ pub fn generate_rust_test(module: &HirModule, module_name: &str) -> CodegenResul
         None,
         crate::rust_interop_plan::module_uses_structural_interop(module),
         None,
+        None,
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_rust_test_with_project_policy(
     module: &HirModule,
     module_name: &str,
@@ -33,10 +35,13 @@ pub(crate) fn generate_rust_test_with_project_policy(
     project_try_error_carrier_enums: Option<&HashSet<String>>,
     structural_interop_enabled: bool,
     project_structural_record_identities: Option<&HashSet<String>>,
+    project_structural_identity_expressions: Option<&super::HashMap<String, String>>,
 ) -> CodegenResult {
     let mut emitter = RustEmitter::new();
     emitter.structural_interop_enabled = structural_interop_enabled;
     emitter.project_structural_record_identities = project_structural_record_identities.cloned();
+    emitter.project_structural_identity_expressions =
+        project_structural_identity_expressions.cloned();
     emitter.structural_identity_module_name = None;
 
     // First pass: collect all union types used in the module

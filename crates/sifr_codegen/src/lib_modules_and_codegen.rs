@@ -233,8 +233,9 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
         module,
         stdlib_code,
         module_name,
-        module_name,
+        None,
         structural_interop_enabled,
+        None,
         None,
         None,
         None,
@@ -242,6 +243,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     module: &HirModule,
     stdlib_code: &StdlibCode,
@@ -252,10 +254,13 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     project_ordinary_union_enums: Option<&HashSet<String>>,
     project_try_error_carrier_enums: Option<&HashSet<String>>,
     project_structural_record_identities: Option<&HashSet<String>>,
+    project_structural_identity_expressions: Option<&HashMap<String, String>>,
 ) -> CodegenResult {
     let mut emitter = RustEmitter::new();
     emitter.structural_interop_enabled = structural_interop_enabled;
     emitter.project_structural_record_identities = project_structural_record_identities.cloned();
+    emitter.project_structural_identity_expressions =
+        project_structural_identity_expressions.cloned();
     emitter.structural_identity_module_name = structural_identity_module_name.map(str::to_string);
     // Register stdlib generic classes so user code skips explicit type annotations
     emitter

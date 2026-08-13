@@ -111,6 +111,22 @@ fn supports_structural_bridge_type(ty: &Type, ctx: &LowerCtx) -> bool {
     supports_structural_bridge_type_inner(ty, ctx, &mut std::collections::HashSet::new(), false)
 }
 
+fn structural_identity_inputs_supported(class_name: &str, ctx: &LowerCtx) -> bool {
+    if let Some(supported) = ctx.imported_structural_identity_inputs.get(class_name) {
+        return *supported;
+    }
+    ctx.class_field_defaults
+        .get(class_name)
+        .into_iter()
+        .flatten()
+        .all(|(_, value)| sifr_ir::canonical_structural_identity_value(value).is_some())
+        && ctx
+            .declaration_metadata
+            .iter()
+            .filter(|metadata| metadata.owner == class_name)
+            .all(|metadata| sifr_ir::canonical_structural_identity_value(&metadata.value).is_some())
+}
+
 fn supports_structural_bridge_type_inner(
     ty: &Type,
     ctx: &LowerCtx,
@@ -144,7 +160,13 @@ fn supports_structural_bridge_type_inner(
         Type::Union(values) => values
             .iter()
             .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting, false)),
-        Type::Enum { variants, .. } => !variants.is_empty(),
+        Type::Enum { name, variants, .. } => {
+            sifr_ir::structural_identity_enum_variants_supported(variants)
+                && structural_identity_inputs_supported(name, ctx)
+                && !ctx.error_types.contains(name)
+                && !ctx.python_opaque_classes.contains_key(name)
+                && !ctx.rust_opaque_classes.contains(name)
+        }
         Type::Class {
             identity,
             type_args,
@@ -157,6 +179,7 @@ fn supports_structural_bridge_type_inner(
                 || ctx.error_types.contains(name)
                 || ctx.python_opaque_classes.contains_key(name)
                 || ctx.rust_opaque_classes.contains(name)
+                || !structural_identity_inputs_supported(name, ctx)
             {
                 return false;
             }

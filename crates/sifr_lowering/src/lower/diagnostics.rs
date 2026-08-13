@@ -320,7 +320,7 @@ pub(in crate::lower) fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<E
                             None
                         };
                         let v = value.unwrap_or(auto_value);
-                        auto_value = v + 1;
+                        auto_value = v.checked_add(1).unwrap_or(v);
                         variants.push(EnumVariantInfo {
                             name: variant_name,
                             value,
@@ -347,7 +347,7 @@ pub(in crate::lower) fn collect_enum_variants(class_def: &StmtClassDef) -> Vec<E
                         None
                     };
                     let v = value.unwrap_or(auto_value);
-                    auto_value = v + 1;
+                    auto_value = v.checked_add(1).unwrap_or(v);
                     variants.push(EnumVariantInfo {
                         name: variant_name,
                         value,

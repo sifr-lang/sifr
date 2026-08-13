@@ -283,9 +283,7 @@ pub fn interop_build_plan_for_named_modules<'a>(
     if rust.declarations.iter().any(|declaration| {
         declaration.declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
     }) {
-        for (module_name, module) in &module_entries {
-            collect_structural_shape_identities(*module_name, module, &mut rust);
-        }
+        collect_structural_shape_identities_for_project(&module_entries, &mut rust);
     }
     rust.bridge_contracts =
         bridge_contract_plan_for_named_modules(module_entries, &rust.declarations);
@@ -307,28 +305,48 @@ pub(crate) fn module_uses_structural_interop(module: &HirModule) -> bool {
         .any(|declaration| declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural)
 }
 
-fn collect_structural_shape_identities(
-    module_name: Option<&str>,
-    module: &HirModule,
+fn collect_structural_shape_identities_for_project(
+    module_entries: &[(Option<&str>, &HirModule)],
     plan: &mut RustInteropPlan,
 ) {
-    for class in &module.classes {
-        if !crate::structural_impl_codegen::structural_record_supported(class, module) {
-            continue;
-        }
-        plan.structural_identity_algorithm_version =
-            Some(crate::structural_identity_codegen::algorithm_version());
-        let Some(identity) =
-            crate::structural_identity_codegen::static_class_identity(class, module, module_name)
-        else {
-            continue;
-        };
-        plan.structural_shape_identities
-            .push(RustStructuralShapeIdentity {
-                module_name: module_name.map(str::to_string),
-                type_name: class.name.clone(),
-                identity: *identity.as_bytes(),
+    let modules = module_entries
+        .iter()
+        .map(|(module_name, module)| (module_name.unwrap_or(""), *module))
+        .collect::<Vec<_>>();
+    let crate_root_modules = modules
+        .iter()
+        .filter_map(|(module_name, _)| {
+            (module_name.is_empty() || *module_name == "main").then_some(*module_name)
+        })
+        .collect::<std::collections::HashSet<_>>();
+    let record_identities =
+        crate::structural_impl_codegen::structural_record_identities_for_project(&modules);
+    let identities = crate::structural_identity_codegen::static_class_identities_for_project(
+        &modules,
+        &crate_root_modules,
+        &record_identities,
+    );
+    for ((module_name, module), (module_key, _)) in module_entries.iter().zip(&modules) {
+        for class in &module.classes {
+            let key = class.identity.clone().unwrap_or_else(|| {
+                if module_key.is_empty() {
+                    class.name.clone()
+                } else {
+                    format!("{module_key}.{}", class.name)
+                }
             });
+            let Some(identity) = identities.get(&key) else {
+                continue;
+            };
+            plan.structural_identity_algorithm_version =
+                Some(crate::structural_identity_codegen::algorithm_version());
+            plan.structural_shape_identities
+                .push(RustStructuralShapeIdentity {
+                    module_name: module_name.map(str::to_string),
+                    type_name: class.name.clone(),
+                    identity: *identity.as_bytes(),
+                });
+        }
     }
     plan.structural_shape_identities.sort();
 }

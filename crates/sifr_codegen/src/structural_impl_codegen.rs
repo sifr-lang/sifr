@@ -26,12 +26,25 @@ impl RustEmitter {
         let type_params = structural_impl_type_params(class);
         let structural_module_name = self.structural_identity_module_name.as_deref();
         let nominal_identity = nominal_identity(class, structural_module_name);
+        let identity_key = structural_record_identity(class, self.current_module_name.as_deref());
+        let shape = self
+            .project_structural_identity_expressions
+            .as_ref()
+            .and_then(|expressions| expressions.get(&identity_key))
+            .cloned()
+            .unwrap_or_else(|| {
+                crate::structural_identity_codegen::class_identity_expression(
+                    class,
+                    module,
+                    structural_module_name,
+                )
+            });
         let type_impl = structural_type_impl(
             class,
-            module,
             &target,
             type_params.clone(),
             structural_module_name,
+            shape,
         );
         let construct_impl =
             structural_construct_impl(class, &target, type_params.clone(), &nominal_identity, self);
@@ -53,10 +66,18 @@ impl RustEmitter {
         let target = Self::class_impl_target(class);
         let structural_module_name = self.structural_identity_module_name.as_deref();
         let nominal_identity = nominal_identity(class, structural_module_name);
-        let shape = crate::structural_identity_codegen::enum_identity_expression(
-            class,
-            structural_module_name,
-        );
+        let identity_key = structural_record_identity(class, self.current_module_name.as_deref());
+        let shape = self
+            .project_structural_identity_expressions
+            .as_ref()
+            .and_then(|expressions| expressions.get(&identity_key))
+            .cloned()
+            .unwrap_or_else(|| {
+                crate::structural_identity_codegen::enum_identity_expression(
+                    class,
+                    structural_module_name,
+                )
+            });
         self.body_items.extend(structural_enum_impls(
             class,
             &target,
@@ -88,10 +109,12 @@ pub(crate) fn structural_record_identities_for_project(
 
 fn structural_record_identity(class: &HirClass, module_name: Option<&str>) -> String {
     class.identity.clone().unwrap_or_else(|| {
-        module_name.map_or_else(
-            || class.name.clone(),
-            |module_name| format!("{module_name}.{}", class.name),
-        )
+        module_name
+            .filter(|module_name| !module_name.is_empty())
+            .map_or_else(
+                || class.name.clone(),
+                |module_name| format!("{module_name}.{}", class.name),
+            )
     })
 }
 
@@ -128,7 +151,14 @@ fn structural_type_supported(
 ) -> bool {
     match ty.resolve_alias() {
         Type::Int | Type::Float | Type::Bool | Type::Str | Type::None | Type::TypeVar(_) => true,
-        Type::Enum { variants, .. } => !variants.is_empty(),
+        Type::Enum {
+            identity,
+            name,
+            variants,
+        } => structural_class_candidate(identity.as_deref(), name, modules).map_or_else(
+            || sifr_ir::structural_identity_enum_variants_supported(variants),
+            structural_enum_supported,
+        ),
         Type::Bytes => false,
         Type::FixedInt(value) => !matches!(
             value,
@@ -211,9 +241,15 @@ fn structural_class_candidate<'a>(
     candidates.next().is_none().then_some(candidate)
 }
 
-fn structural_enum_supported(class: &HirClass) -> bool {
-    !class.enum_variants.is_empty()
+pub(crate) fn structural_enum_supported(class: &HirClass) -> bool {
+    sifr_ir::structural_identity_enum_variants_supported(&class.enum_variants)
         && crate::structural_identity_codegen::class_identity_inputs_supported(class)
+        && !class.is_error_type
+        && class.python_opaque_declaration().is_none()
+        && !class
+            .rust_interop
+            .iter()
+            .any(|declaration| declaration.kind == RustInteropDecoratorKind::Opaque)
 }
 
 pub(crate) fn structural_union_names(
@@ -275,13 +311,11 @@ fn nominal_identity(class: &HirClass, module_name: Option<&str>) -> String {
 
 fn structural_type_impl(
     class: &HirClass,
-    module: &HirModule,
     target: &str,
     type_params: Vec<RustTypeParam>,
     module_name: Option<&str>,
+    identity: String,
 ) -> RustItem {
-    let identity =
-        crate::structural_identity_codegen::class_identity_expression(class, module, module_name);
     let nominal_identity = nominal_identity(class, module_name);
     RustItem::Impl {
         target: target.to_string(),
