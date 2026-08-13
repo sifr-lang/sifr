@@ -254,6 +254,26 @@ def use(value: int | list[bytes]) -> None:
 }
 
 #[test]
+fn structural_bound_rejects_platform_integer_union_members() {
+    let errors = lower_errors(
+        r"
+def accept[T: Structural](value: T) -> None:
+    pass
+
+def use(value: int | usize) -> None:
+    accept(value)
+",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'Structural'")
+    }));
+}
+
+#[test]
 fn rust_interop_rejects_incomplete_structural_error_and_panic_contracts() {
     let panic_only = lower_errors(
         r"

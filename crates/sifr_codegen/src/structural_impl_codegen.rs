@@ -33,7 +33,11 @@ impl RustEmitter {
     }
 
     pub(crate) fn emit_structural_enum_impls(&mut self, class: &HirClass) {
-        if !self.structural_interop_enabled || !class.is_enum() {
+        if !self.structural_interop_enabled
+            || !class.is_enum()
+            || class.enum_variants.is_empty()
+            || !crate::structural_identity_codegen::class_identity_inputs_supported(class)
+        {
             return;
         }
         let target = Self::class_impl_target(class);
@@ -52,6 +56,11 @@ impl RustEmitter {
 }
 
 pub(crate) fn structural_record_supported(class: &HirClass, module: &HirModule) -> bool {
+    let modules = [("", module)];
+    structural_record_supported_in(class, &modules)
+}
+
+fn structural_record_supported_in(class: &HirClass, modules: &[(&str, &HirModule)]) -> bool {
     let mut visiting = BTreeSet::from([class.name.clone()]);
     class.parent_class.is_none()
         && !class.is_error_type
@@ -66,52 +75,50 @@ pub(crate) fn structural_record_supported(class: &HirClass, module: &HirModule) 
         && class
             .fields
             .iter()
-            .all(|(_, ty)| structural_record_field_supported(ty, module, &mut visiting))
+            .all(|(_, ty)| structural_record_field_supported(ty, modules, &mut visiting))
 }
 
 fn structural_record_field_supported(
     ty: &Type,
-    module: &HirModule,
+    modules: &[(&str, &HirModule)],
     visiting: &mut BTreeSet<String>,
 ) -> bool {
-    matches!(ty.resolve_alias(), Type::Bytes) || structural_type_supported(ty, module, visiting)
+    matches!(ty.resolve_alias(), Type::Bytes) || structural_type_supported(ty, modules, visiting)
 }
 
 fn structural_type_supported(
     ty: &Type,
-    module: &HirModule,
+    modules: &[(&str, &HirModule)],
     visiting: &mut BTreeSet<String>,
 ) -> bool {
     match ty.resolve_alias() {
         Type::Int | Type::Float | Type::Bool | Type::Str | Type::None | Type::TypeVar(_) => true,
-        Type::Enum { .. } => true,
+        Type::Enum { variants, .. } => !variants.is_empty(),
         Type::Bytes => false,
         Type::FixedInt(value) => !matches!(
             value,
             sifr_type_system::FixedIntType::ISize | sifr_type_system::FixedIntType::USize
         ),
-        Type::List(value) | Type::Set(value) => structural_type_supported(value, module, visiting),
+        Type::List(value) | Type::Set(value) => structural_type_supported(value, modules, visiting),
         Type::Dict(key, value) => {
-            structural_type_supported(key, module, visiting)
-                && structural_type_supported(value, module, visiting)
+            structural_type_supported(key, modules, visiting)
+                && structural_type_supported(value, modules, visiting)
         }
         Type::Tuple(values) => {
             values.len() <= 4
                 && values
                     .iter()
-                    .all(|value| structural_type_supported(value, module, visiting))
+                    .all(|value| structural_type_supported(value, modules, visiting))
         }
         Type::Union(values) => values
             .iter()
-            .all(|value| structural_type_supported(value, module, visiting)),
-        Type::Class { name, .. } => {
-            if visiting.contains(name) {
+            .all(|value| structural_type_supported(value, modules, visiting)),
+        Type::Class { identity, name, .. } => {
+            let key = identity.as_deref().unwrap_or(name);
+            if visiting.contains(key) {
                 return true;
             }
-            let Some(candidate) = module
-                .classes
-                .iter()
-                .find(|candidate| candidate.name == *name)
+            let Some(candidate) = structural_class_candidate(identity.as_deref(), name, modules)
             else {
                 return false;
             };
@@ -132,12 +139,12 @@ fn structural_type_supported(
             {
                 return false;
             }
-            visiting.insert(name.clone());
+            visiting.insert(key.to_string());
             let supported = candidate
                 .fields
                 .iter()
-                .all(|(_, field)| structural_record_field_supported(field, module, visiting));
-            visiting.remove(name);
+                .all(|(_, field)| structural_record_field_supported(field, modules, visiting));
+            visiting.remove(key);
             supported
         }
         Type::Newtype { .. } => false,
@@ -145,66 +152,57 @@ fn structural_type_supported(
     }
 }
 
+fn structural_class_candidate<'a>(
+    identity: Option<&str>,
+    name: &str,
+    modules: &'a [(&'a str, &'a HirModule)],
+) -> Option<&'a HirClass> {
+    if let Some(identity) = identity {
+        if let Some(candidate) = modules.iter().find_map(|(module_name, module)| {
+            module.classes.iter().find(|class| {
+                class.identity.as_deref() == Some(identity)
+                    || format!("{module_name}.{}", class.name) == identity
+            })
+        }) {
+            return Some(candidate);
+        }
+    }
+    let mut candidates = modules
+        .iter()
+        .flat_map(|(_, module)| &module.classes)
+        .filter(|class| class.name == name);
+    let candidate = candidates.next()?;
+    candidates.next().is_none().then_some(candidate)
+}
+
 pub(crate) fn structural_union_names(
     module: &HirModule,
     unions: &std::collections::HashMap<String, Vec<Type>>,
 ) -> HashSet<String> {
+    structural_union_names_in(unions, &[("", module)])
+}
+
+pub(crate) fn structural_union_names_for_project(
+    unions: &std::collections::HashMap<String, Vec<Type>>,
+    modules: &[(&str, &HirModule)],
+) -> HashSet<String> {
+    structural_union_names_in(unions, modules)
+}
+
+fn structural_union_names_in(
+    unions: &std::collections::HashMap<String, Vec<Type>>,
+    modules: &[(&str, &HirModule)],
+) -> HashSet<String> {
     let mut names = HashSet::new();
-    for class in &module.classes {
-        if structural_record_supported(class, module) {
-            for (_, field) in &class.fields {
-                collect_structural_union_names(field, &mut names);
-            }
-        }
-    }
     for (name, members) in unions {
         if members
             .iter()
-            .all(|member| structural_type_supported(member, module, &mut BTreeSet::new()))
+            .all(|member| structural_type_supported(member, modules, &mut BTreeSet::new()))
         {
             names.insert(name.clone());
         }
     }
     names
-}
-
-fn collect_structural_union_names(ty: &Type, names: &mut HashSet<String>) {
-    match ty.resolve_alias() {
-        Type::Union(values) if !is_optional_union(values) => {
-            names.insert(ty.union_enum_name());
-            for value in values {
-                collect_structural_union_names(value, names);
-            }
-        }
-        Type::Union(values) | Type::Tuple(values) => {
-            for value in values {
-                collect_structural_union_names(value, names);
-            }
-        }
-        Type::List(value) | Type::Set(value) => collect_structural_union_names(value, names),
-        Type::Dict(key, value) => {
-            collect_structural_union_names(key, names);
-            collect_structural_union_names(value, names);
-        }
-        Type::Class {
-            type_args, fields, ..
-        } => {
-            for value in type_args {
-                collect_structural_union_names(value, names);
-            }
-            for (_, value) in fields {
-                collect_structural_union_names(value, names);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn is_optional_union(values: &[Type]) -> bool {
-    values.len() == 2
-        && values
-            .iter()
-            .any(|value| matches!(value.resolve_alias(), Type::None))
 }
 
 fn structural_impl_type_params(class: &HirClass) -> Vec<RustTypeParam> {
@@ -429,12 +427,12 @@ fn structural_enum_impls(
     nominal_identity: &str,
     shape: &str,
 ) -> Vec<RustItem> {
-    let mut next_value = 1_i64;
     let mut construct_arms = Vec::with_capacity(class.enum_variants.len());
     let mut project_arms = Vec::with_capacity(class.enum_variants.len());
-    for (index, (name, declared)) in class.enum_variants.iter().enumerate() {
-        let value = declared.unwrap_or(next_value);
-        next_value = value.saturating_add(1);
+    for (index, (name, value)) in crate::type_emitters::resolved_enum_variants(class)
+        .into_iter()
+        .enumerate()
+    {
         construct_arms.push(format!(
             "{STRUCTURAL}::StructuralEdgeKind::ActiveMember {{ name: \"{name}\", index: {index} }} => match <i64 as {STRUCTURAL}::StructuralConstruct>::structural_construct_at(source, child, token) {{ Ok({value}) => Ok(Self::{name}), Ok(_) => Err({STRUCTURAL}::StructuralContractError::MemberMismatch), Err(error) => Err(error), }},"
         ));

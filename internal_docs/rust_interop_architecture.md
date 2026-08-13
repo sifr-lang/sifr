@@ -441,7 +441,7 @@ path at the declaration or specialization site.
 
 `bytes` has one structural encoding: a scalar byte buffer. The compiler supports
 that encoding for a direct record field. It rejects `bytes` inside a list, set,
-mapping, tuple, optional value, or generic type argument. It does not
+mapping, tuple, optional value, union member, or generic type argument. It does not
 reinterpret nested `bytes` as a sequence of integers.
 
 `sifr.meta.StaticProgram` is the stricter compiler-owned bound for a structural
@@ -629,7 +629,8 @@ additional edges. Projection emits the same edge before the active value.
 
 A C-like enum is a nominal aggregate `Enum` node with one `ActiveMember` edge.
 The edge contains the declared variant name and declaration index. Its child is
-a signed 64-bit scalar with the declared value. Construction checks the nominal
+a signed 64-bit scalar with the resolved value. Implicit values start at one and
+advance from the previous resolved value. Construction checks the nominal
 identity, variant name, index, and scalar value. Projection emits this same
 shape. Data-carrying variants remain ordinary unions of records.
 

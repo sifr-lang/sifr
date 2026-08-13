@@ -70,6 +70,60 @@ fn direct_ordinary_union_gets_structural_impls_when_demanded() {
 }
 
 #[test]
+fn project_union_resolves_structural_members_from_their_defining_module() {
+    let models = module(Vec::new(), vec![payload_class()]);
+    let payload = Type::Class {
+        identity: Some("models.Payload".to_string()),
+        type_args: Vec::new(),
+        name: "Payload".to_string(),
+        fields: vec![("value".to_string(), Type::Int)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let api = module(
+        vec![
+            structural_function(),
+            ordinary_function("choose", Type::Union(vec![payload, Type::Str])),
+        ],
+        Vec::new(),
+    );
+
+    let project = crate::generate_rust_multi_with_metadata(
+        &[("models", &models), ("main", &api)],
+        &crate::StdlibCode::default(),
+    );
+    let prelude = project.project_union_prelude;
+
+    assert!(prelude.contains("crate::models::Payload"), "{prelude}");
+    assert!(prelude.contains("StructuralKind::Union"), "{prelude}");
+    assert!(prelude.contains("StructuralConstruct"), "{prelude}");
+    assert!(prelude.contains("StructuralProject"), "{prelude}");
+}
+
+#[test]
+fn platform_integer_union_does_not_receive_structural_impls() {
+    let union = Type::Union(vec![
+        Type::Int,
+        Type::FixedInt(sifr_type_system::FixedIntType::USize),
+    ]);
+    let module = module(
+        vec![structural_function(), ordinary_function("choose", union)],
+        Vec::new(),
+    );
+
+    let project = crate::generate_rust_multi_with_metadata(
+        &[("main", &module)],
+        &crate::StdlibCode::default(),
+    );
+    let prelude = project.project_union_prelude;
+
+    assert!(prelude.contains("enum __SifrUnion"));
+    assert!(!prelude.contains("StructuralType"));
+    assert!(!prelude.contains("StructuralConstruct"));
+    assert!(!prelude.contains("StructuralProject"));
+}
+
+#[test]
 fn project_structural_demand_enables_implicit_classes_across_modules() {
     let models = module(Vec::new(), vec![payload_class()]);
     let api = module(vec![structural_function()], Vec::new());

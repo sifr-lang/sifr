@@ -118,7 +118,11 @@ fn supports_structural_bridge_type_inner(
     direct_record_field: bool,
 ) -> bool {
     match ty.resolve_alias() {
-        Type::Int | Type::FixedInt(_) | Type::Float | Type::Bool | Type::Str | Type::None => true,
+        Type::Int | Type::Float | Type::Bool | Type::Str | Type::None => true,
+        Type::FixedInt(value) => !matches!(
+            value,
+            sifr_type_system::FixedIntType::ISize | sifr_type_system::FixedIntType::USize
+        ),
         Type::Bytes => direct_record_field,
         Type::TypeVar(name) => typevar_satisfies_spec(name, "Structural", ctx),
         Type::List(value) => supports_structural_bridge_type_inner(value, ctx, visiting, false),
@@ -140,7 +144,7 @@ fn supports_structural_bridge_type_inner(
         Type::Union(values) => values
             .iter()
             .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting, false)),
-        Type::Enum { .. } => true,
+        Type::Enum { variants, .. } => !variants.is_empty(),
         Type::Class {
             identity,
             type_args,

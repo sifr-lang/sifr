@@ -66,17 +66,15 @@ pub(crate) fn project_union_usage(
         register_imported_union_types(&mut emitter, module, project_code);
         ordinary_unions.extend(emitter.ordinary_union_enums.iter().cloned());
         try_error_unions.extend(emitter.try_error_carrier_enums.iter().cloned());
-        if structural_interop_enabled {
-            structural_unions.extend(crate::structural_impl_codegen::structural_union_names(
-                module,
-                &emitter.union_enums,
-            ));
-        }
         let names = emitter.union_enums.keys().cloned().collect::<HashSet<_>>();
         for (name, members) in emitter.union_enums {
             unions.entry(name).or_insert(members);
         }
         module_unions.insert((*module_name).to_string(), names);
+    }
+    if structural_interop_enabled {
+        structural_unions =
+            crate::structural_impl_codegen::structural_union_names_for_project(&unions, modules);
     }
     ProjectUnionUsage {
         unions,

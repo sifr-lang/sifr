@@ -462,7 +462,7 @@ impl RustEmitter {
             .collect::<Vec<_>>()
             .join("\n");
         let construct_body = format!(
-            "let description = source.node(node)?;\nif description.kind() != {STRUCTURAL}::StructuralKind::Union {{ return Err({STRUCTURAL}::StructuralContractError::KindMismatch); }}\nlet [edge] = description.edges() else {{ return Err({STRUCTURAL}::StructuralContractError::ArityMismatch); }};\nlet edge_kind = edge.kind();\nlet child = edge.node();\nmatch edge_kind {{\n{construct_arms}\n_ => Err({STRUCTURAL}::StructuralContractError::MemberMismatch),\n}}"
+            "let description = source.node(node)?;\nif description.kind() != {STRUCTURAL}::StructuralKind::Union {{ return Err({STRUCTURAL}::StructuralContractError::KindMismatch); }}\nif description.nominal_identity().is_some() {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}\nlet [edge] = description.edges() else {{ return Err({STRUCTURAL}::StructuralContractError::ArityMismatch); }};\nlet edge_kind = edge.kind();\nlet child = edge.node();\nmatch edge_kind {{\n{construct_arms}\n_ => Err({STRUCTURAL}::StructuralContractError::MemberMismatch),\n}}"
         );
         let project_body = format!(
             "let control = visitor.enter({STRUCTURAL}::StructuralEnter::new({STRUCTURAL}::StructuralKind::Union, None, 1))?;\nif control == {STRUCTURAL}::VisitControl::Continue {{\nmatch self {{\n{project_arms}\n}}\n}}\nvisitor.exit({STRUCTURAL}::StructuralKind::Union)"

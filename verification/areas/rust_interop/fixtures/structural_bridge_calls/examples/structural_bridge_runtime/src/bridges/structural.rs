@@ -102,10 +102,7 @@ fn edge(kind: StructuralEdgeKind<'static>, node: u32) -> StructuralNodeEdge<'sta
     StructuralNodeEdge::new(kind, NodeId::new(node))
 }
 
-fn record(
-    nominal_identity: &'static str,
-    fields: &[(&'static str, u32)],
-) -> ArenaNode {
+fn record(nominal_identity: &'static str, fields: &[(&'static str, u32)]) -> ArenaNode {
     ArenaNode {
         kind: StructuralKind::Record,
         nominal_identity: Some(nominal_identity),
@@ -214,7 +211,12 @@ fn structural_nodes() -> Vec<ArenaNode> {
         optional(Some(10)),
         record(
             NESTED_IDENTITY,
-            &[("label", 11), ("leaves", 12), ("payload", 13), ("child", 15)],
+            &[
+                ("label", 11),
+                ("leaves", 12),
+                ("payload", 13),
+                ("child", 15),
+            ],
         ),
         string("tail"),
         sequence(&[]),
@@ -328,10 +330,7 @@ where
     ))
 }
 
-pub fn roundtrip<T>(
-    source: Handle<StructuralArena>,
-    value: &T,
-) -> Result<T, StructuralBridgeError>
+pub fn roundtrip<T>(source: Handle<StructuralArena>, value: &T) -> Result<T, StructuralBridgeError>
 where
     T: StructuralConstruct + StructuralProject,
 {
@@ -366,7 +365,9 @@ where
 {
     let _input_projection = project(value)?;
     let input = structural_construct::<T, _>(into_source::<T>(source)?)?;
-    let output = callback.call((input,)).map_err(StructuralBridgeError::new)?;
+    let output = callback
+        .call((input,))
+        .map_err(StructuralBridgeError::new)?;
     let _output_projection = project(&output)?;
     Ok(output)
 }

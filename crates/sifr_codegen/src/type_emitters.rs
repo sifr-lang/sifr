@@ -48,19 +48,13 @@ impl RustEmitter {
         } else {
             Visibility::Private
         };
-        let mut auto_value = 1_i64;
-        let variants = class
-            .enum_variants
-            .iter()
-            .map(|(name, value)| {
-                let resolved = value.unwrap_or(auto_value);
-                auto_value = resolved + 1;
-                crate::RustEnumVariant {
-                    name: name.clone(),
-                    tuple_fields: Vec::new(),
-                    fields: Vec::new(),
-                    value: Some(RustExpr::Literal(RustLiteral::Int(resolved))),
-                }
+        let variants = resolved_enum_variants(class)
+            .into_iter()
+            .map(|(name, resolved)| crate::RustEnumVariant {
+                name: name.to_string(),
+                tuple_fields: Vec::new(),
+                fields: Vec::new(),
+                value: Some(RustExpr::Literal(RustLiteral::Int(resolved))),
             })
             .collect::<Vec<_>>();
         self.body_items.push(RustItem::Enum {
@@ -332,4 +326,17 @@ impl RustEmitter {
             |_, _| Option::<Vec<RustStmt>>::None,
         )
     }
+}
+
+pub(crate) fn resolved_enum_variants(class: &HirClass) -> Vec<(&str, i64)> {
+    let mut next_value = 1_i64;
+    class
+        .enum_variants
+        .iter()
+        .map(|(name, declared)| {
+            let value = declared.unwrap_or(next_value);
+            next_value = value.saturating_add(1);
+            (name.as_str(), value)
+        })
+        .collect()
 }
