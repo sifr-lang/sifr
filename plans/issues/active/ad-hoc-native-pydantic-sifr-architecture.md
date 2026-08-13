@@ -348,6 +348,33 @@ Milestone delivery records:
 - Exact-SHA Opus implementation review and validation adjudication returned
   `SATISFIED` with no blocker. The adjudication response SHA-256 is
   `2db609c6aad0be3061f79e1d2b70d2ed4f95f6c0939af67a472773e6e777eae0`.
+- The locked-package authority prerequisite merged in
+  [PR #3166](https://github.com/sifr-lang/sifr/pull/3166) at merge commit
+  `0e61c9889418a009b8dd611ecb005d5b27ca749f`. The exact reviewed candidate
+  was `2a10cd9d9fec1c7cbc183171f6b0900a33e09198`.
+- Prepared Cargo entries now use the union of package and sysroot locks as
+  exact authorities. Initial resolution still gives the package lock priority.
+- Unknown exact entries remain rejected. The fix adds no unlocked operation,
+  compatibility path, or fallback.
+- Focused Cargo-resolution tests passed 5/5. Clippy, build, format,
+  maintainability, taxonomy, and the transfer guardrail also passed.
+- The unchanged PS6 dependent package passed `fetch --locked` and
+  `run --locked` with the candidate compiler.
+- Exact-SHA Opus implementation and remediation reviews returned `SATISFIED`
+  with no blockers. The final response SHA-256 is
+  `662bee48ebf47ce30a28473add6d9ef74fadb3e0f5131ff577ca28ce03dcd30b`.
+- The cold create-PR gate was functionally green. It exceeded only the known
+  generated-artifact budget from issue #3134. The unchanged warm gate exited
+  zero with receipt SHA-256
+  `9faa775c38f17fd0245003f4850784f856b85e2cddeb3b1fbc2d64495a40b5c1`.
+- The single merge gate passed all functional lanes that it executed. It then
+  reproduced the stale frontend helper problem from issue #3161.
+- A fresh exact-candidate helper measured 925,032,774 median instructions
+  against the unchanged 936,811,698 limit. The budget checker accepted receipt
+  `8eef6f115108db21c7933ab5431d6c788f5a288679c973fd145547f71db59212`.
+- Opus accepted the combined validation evidence without a second merge gate.
+  Its adjudication response SHA-256 is
+  `5330a6e652cb1cd2d661c22f93ed5236b1601a6baa4a252dffaf3aa2deff878d`.
 - `milestone_ps_6` remains active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
