@@ -375,6 +375,31 @@ Milestone delivery records:
 - Opus accepted the combined validation evidence without a second merge gate.
   Its adjudication response SHA-256 is
   `5330a6e652cb1cd2d661c22f93ed5236b1601a6baa4a252dffaf3aa2deff878d`.
+- The multiversion lock-authority prerequisite merged in
+  [PR #3169](https://github.com/sifr-lang/sifr/pull/3169) at merge commit
+  `89684aecbd2a321c92912a8cee051b9d9a4fc46a`. The exact reviewed candidate
+  was `ed01b930307a9cca1074d4587df645fd5ca8a5c3`.
+- Cargo lock seeding now replaces versions within one Cargo-compatible semver
+  family. It preserves semver-incompatible versions from each authority.
+- Exact prepared-entry validation remains fail-closed. The cache identity was
+  advanced so name-wide seed results cannot be reused.
+- Focused Cargo-resolution tests passed 7/7. Clippy, build, format,
+  maintainability, taxonomy, file-size, and transfer guardrails passed.
+- The unchanged PS6 demo passed `fetch --locked` and `run --locked`. Its
+  release binary built without an unlocked retry or fallback.
+- Exact-SHA Opus implementation review returned `SATISFIED` with no blocker.
+  Its response SHA-256 is
+  `ad130714c6981f6243de4735f5ccefad1402587db3e8e7b4c95283e576088e5c`.
+- The canonical create-PR gate exited zero. Its receipt SHA-256 is
+  `d3e4263e11d18d89d2f5703d0373ec008fa542ec0254922e7f9cdb030fa73721`.
+- The single merge gate passed every executed functional lane. It reproduced
+  the stale frontend helper problem from issue #3161.
+- A fresh exact-candidate helper measured 925,442,120 median instructions
+  against the unchanged 936,811,698 limit. Its accepted receipt SHA-256 is
+  `82bec880219baf54c7c3408e45651fee03428db4f813a88ed2e45ed385b82710`.
+- Opus accepted the combined validation evidence. Its adjudication response
+  SHA-256 is
+  `6ffc165d38afb41b380ac6bf0fbb7d19e080b843ebad9d5be5f8747c9fe13ceb`.
 - `milestone_ps_6` remains active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
