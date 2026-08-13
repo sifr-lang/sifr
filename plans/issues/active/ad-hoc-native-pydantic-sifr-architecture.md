@@ -10,10 +10,8 @@ inventory, repository boundary, and demo ownership are approved.
 `certification_pkg_resource_core` item is complete through merged
 [PR #3123](https://github.com/sifr-lang/sifr/pull/3123). `milestone_ps_3` is
 implemented and merged through [PR #3138](https://github.com/sifr-lang/sifr/pull/3138).
-`milestone_ps_4` and `milestone_ps_5` are implemented and merged in the
-companion repository. `milestone_ps_6` is active. Its general typed static-program
-payload, static structural return, and package error-export dependencies are
-merged.
+`milestone_ps_4` through `milestone_ps_6` are implemented and merged in the
+companion repository. `milestone_ps_7` is active.
 
 Review artifacts:
 
@@ -400,7 +398,31 @@ Milestone delivery records:
 - Opus accepted the combined validation evidence. Its adjudication response
   SHA-256 is
   `6ffc165d38afb41b380ac6bf0fbb7d19e080b843ebad9d5be5f8747c9fe13ceb`.
-- `milestone_ps_6` remains active in the companion repository.
+- `milestone_ps_6` merged in companion-repository
+  [PR #4](https://github.com/sifr-lang/pydantic-sifr/pull/4) at merge commit
+  `db98820655d0a6c50565e9b51a9c63a0008a7001`. The exact reviewed and gated
+  candidate was `d2817e7ac267d842f32e7f996bec1c607e02849d`.
+- The milestone validates model schemas, required, defaulted, and nullable
+  fields, aliases and alias paths, and all extra-field policies. It constructs
+  typed Sifr classes directly from the validated arena. It does not create a
+  third model tree.
+- Native, JSON, and strings entry points use one validation engine. They keep
+  exact integers and move scalar values once. Mapping and set normalization is
+  deterministic. Aggregate errors have stable codes and locations.
+- The dependent demo, PS6 compatibility ledger, static-program identity
+  fixture, typed-construction fuzz target, architecture text, and locked CI
+  gate are included. All three Cargo graphs use exact Sifr merge
+  `89684aecbd2a321c92912a8cee051b9d9a4fc46a`.
+- The final whole-milestone Opus review returned `SATISFIED` with no blockers.
+  Its response SHA-256 is
+  `f6aea6737e4284f0675c3579212602b89fa7d1e19a7f41940e4342013a45f0d5`.
+- The canonical create-PR profile passed. The single merge gate also passed.
+  It included release property tests and 1,000 bounded runs for each of four
+  fuzz targets. The static-program round trip kept 1,464 exact bytes and
+  identity `c24a89ff2f2a7d98471a23db41b127ca624c55eac318b04ce2788cca0841457c`.
+- The implementation has no Python production dependency, compatibility path,
+  fallback, legacy path, or versioned public API name.
+- `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
   predicates for fixed-width platform integers, metadata, and imported classes;
@@ -2577,12 +2599,12 @@ resource limits are enforced.
 
 ### milestone_ps_6: Models, Fields, Defaults and Aliases
 
-- Implement model/record schemas.
-- Implement required/defaulted/nullable distinctions.
-- Implement field metadata, aliases and alias paths.
-- Implement extra-field policies and ephemeral validated-field-count tracking.
-- Implement typed construction into ordinary Sifr classes.
-- Expose the first complete `BaseModel` validation API, including JSON,
+- [x] Implement model/record schemas.
+- [x] Implement required/defaulted/nullable distinctions.
+- [x] Implement field metadata, aliases and alias paths.
+- [x] Implement extra-field policies and ephemeral validated-field-count tracking.
+- [x] Implement typed construction into ordinary Sifr classes.
+- [x] Expose the first complete `BaseModel` validation API, including JSON,
   structural, and strings-profile entry points.
 
 Exit gate: nested models validate JSON and native structural inputs into typed
