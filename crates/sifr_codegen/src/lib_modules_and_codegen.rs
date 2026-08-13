@@ -237,6 +237,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
         None,
         None,
         None,
+        None,
     )
 }
 
@@ -248,9 +249,11 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     owned_union_enums: Option<&HashSet<String>>,
     project_ordinary_union_enums: Option<&HashSet<String>>,
     project_try_error_carrier_enums: Option<&HashSet<String>>,
+    project_structural_record_identities: Option<&HashSet<String>>,
 ) -> CodegenResult {
     let mut emitter = RustEmitter::new();
     emitter.structural_interop_enabled = structural_interop_enabled;
+    emitter.project_structural_record_identities = project_structural_record_identities.cloned();
     // Register stdlib generic classes so user code skips explicit type annotations
     emitter
         .generic_classes

@@ -7,7 +7,19 @@ const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
 
 impl RustEmitter {
     pub(crate) fn emit_structural_record_impls(&mut self, class: &HirClass, module: &HirModule) {
-        if !self.structural_interop_enabled || !structural_record_supported(class, module) {
+        let supported = self
+            .project_structural_record_identities
+            .as_ref()
+            .map_or_else(
+                || structural_record_supported(class, module),
+                |identities| {
+                    identities.contains(&structural_record_identity(
+                        class,
+                        self.current_module_name.as_deref(),
+                    ))
+                },
+            );
+        if !self.structural_interop_enabled || !supported {
             return;
         }
         let target = Self::class_impl_target(class);
@@ -55,6 +67,30 @@ impl RustEmitter {
 pub(crate) fn structural_record_supported(class: &HirClass, module: &HirModule) -> bool {
     let modules = [("", module)];
     structural_record_supported_in(class, &modules)
+}
+
+pub(crate) fn structural_record_identities_for_project(
+    modules: &[(&str, &HirModule)],
+) -> HashSet<String> {
+    modules
+        .iter()
+        .flat_map(|(module_name, module)| {
+            module
+                .classes
+                .iter()
+                .filter(|class| structural_record_supported_in(class, modules))
+                .map(|class| structural_record_identity(class, Some(module_name)))
+        })
+        .collect()
+}
+
+fn structural_record_identity(class: &HirClass, module_name: Option<&str>) -> String {
+    class.identity.clone().unwrap_or_else(|| {
+        module_name.map_or_else(
+            || class.name.clone(),
+            |module_name| format!("{module_name}.{}", class.name),
+        )
+    })
 }
 
 fn structural_record_supported_in(class: &HirClass, modules: &[(&str, &HirModule)]) -> bool {

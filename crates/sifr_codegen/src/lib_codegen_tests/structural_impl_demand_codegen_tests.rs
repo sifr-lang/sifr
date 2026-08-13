@@ -101,6 +101,67 @@ fn project_union_resolves_structural_members_from_their_defining_module() {
 }
 
 #[test]
+fn project_record_eligibility_resolves_nested_imported_members() {
+    let mut leaf = payload_class();
+    leaf.name = "Leaf".to_string();
+    leaf.identity = Some("models.Leaf".to_string());
+    let models = module(Vec::new(), vec![leaf]);
+
+    let leaf_type = Type::Class {
+        identity: Some("models.Leaf".to_string()),
+        type_args: Vec::new(),
+        name: "Leaf".to_string(),
+        fields: vec![("value".to_string(), Type::Int)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let mut payload = payload_class();
+    payload.identity = Some("records.Payload".to_string());
+    payload.fields = vec![("leaf".to_string(), leaf_type.clone())];
+    let payload_type = Type::Class {
+        identity: Some("records.Payload".to_string()),
+        type_args: Vec::new(),
+        name: "Payload".to_string(),
+        fields: vec![("leaf".to_string(), leaf_type)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let records = module(
+        vec![ordinary_function(
+            "choose",
+            Type::Union(vec![payload_type, Type::Str]),
+        )],
+        vec![payload],
+    );
+    let api = module(vec![structural_function()], Vec::new());
+
+    let project = crate::generate_rust_multi_with_metadata(
+        &[("models", &models), ("records", &records), ("main", &api)],
+        &crate::StdlibCode::default(),
+    );
+    let records_rust = project
+        .rust_files
+        .get("records")
+        .expect("records module is generated");
+
+    assert!(
+        records_rust.contains("StructuralType for Payload"),
+        "{records_rust}"
+    );
+    assert!(
+        records_rust.contains("StructuralConstruct for Payload"),
+        "{records_rust}"
+    );
+    assert!(
+        project
+            .project_union_prelude
+            .contains("crate::records::Payload"),
+        "{}",
+        project.project_union_prelude
+    );
+}
+
+#[test]
 fn platform_integer_union_does_not_receive_structural_impls() {
     let union = Type::Union(vec![
         Type::Int,

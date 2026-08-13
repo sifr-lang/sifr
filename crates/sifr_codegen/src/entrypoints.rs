@@ -19,6 +19,8 @@ pub fn generate_rust_test(module: &HirModule, module_name: &str) -> CodegenResul
         None,
         None,
         None,
+        crate::rust_interop_plan::module_uses_structural_interop(module),
+        None,
     )
 }
 
@@ -29,8 +31,12 @@ pub(crate) fn generate_rust_test_with_project_policy(
     project_union_enums: Option<&HashSet<String>>,
     project_ordinary_union_enums: Option<&HashSet<String>>,
     project_try_error_carrier_enums: Option<&HashSet<String>>,
+    structural_interop_enabled: bool,
+    project_structural_record_identities: Option<&HashSet<String>>,
 ) -> CodegenResult {
     let mut emitter = RustEmitter::new();
+    emitter.structural_interop_enabled = structural_interop_enabled;
+    emitter.project_structural_record_identities = project_structural_record_identities.cloned();
 
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);

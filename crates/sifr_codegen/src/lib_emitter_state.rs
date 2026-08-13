@@ -52,6 +52,9 @@ pub struct RustEmitter {
     /// Emit structural bridge implementations only when the project declares
     /// a structural Rust interop boundary.
     pub(crate) structural_interop_enabled: bool,
+    /// Canonical record identities proven structurally supported against the
+    /// complete project module graph. `None` keeps single-module eligibility.
+    pub(crate) project_structural_record_identities: Option<HashSet<String>>,
     /// Static-program type parameters for each structural bridge function.
     pub(crate) static_program_type_params: HashMap<String, HashSet<String>>,
     /// Set of stdlib/intrinsic modules used (for Cargo dependency injection)
@@ -232,6 +235,7 @@ impl RustEmitter {
             current_class_name: None,
             current_module_name: None,
             structural_interop_enabled: false,
+            project_structural_record_identities: None,
             static_program_type_params: HashMap::new(),
             used_stdlib_modules: HashSet::new(),
             intrinsic_functions: HashSet::new(),

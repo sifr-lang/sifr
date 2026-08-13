@@ -328,6 +328,9 @@ pub fn generate_rust_multi_with_metadata(
         .extend(project_class_fields(modules));
     let union_usage =
         project_union_usage(modules, &project_codegen_code, structural_interop_enabled);
+    let structural_record_identities = structural_interop_enabled
+        .then(|| crate::structural_impl_codegen::structural_record_identities_for_project(modules))
+        .unwrap_or_default();
     let stdlib_nominal_plan =
         project_stdlib_nominal_plan(&union_usage.unions, stdlib_code, modules);
     let crate_root_modules = HashSet::from(["main"]);
@@ -361,6 +364,7 @@ pub fn generate_rust_multi_with_metadata(
             Some(&owned_unions),
             Some(&union_usage.ordinary_unions),
             Some(&union_usage.try_error_unions),
+            Some(&structural_record_identities),
         );
         let local_imports = render_local_module_imports(module, &project_modules);
         let union_imports =

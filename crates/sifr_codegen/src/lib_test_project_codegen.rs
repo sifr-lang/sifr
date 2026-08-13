@@ -44,6 +44,11 @@ pub fn generate_rust_test_project_with_metadata(
         .iter()
         .any(|(_, module)| crate::rust_interop_plan::module_uses_structural_interop(module));
     let union_usage = project_union_usage(&all_modules, &project_code, structural_interop_enabled);
+    let structural_record_identities = structural_interop_enabled
+        .then(|| {
+            crate::structural_impl_codegen::structural_record_identities_for_project(&all_modules)
+        })
+        .unwrap_or_default();
     let stdlib_nominal_plan =
         project_stdlib_nominal_plan(&union_usage.unions, stdlib_code, &all_modules);
     let crate_root_modules = test_modules
@@ -83,6 +88,7 @@ pub fn generate_rust_test_project_with_metadata(
             Some(&HashSet::new()),
             Some(&union_usage.ordinary_unions),
             Some(&union_usage.try_error_unions),
+            Some(&structural_record_identities),
         );
         let imports = [
             render_local_module_imports(module, &project_modules),
@@ -120,6 +126,8 @@ pub fn generate_rust_test_project_with_metadata(
             Some(&all_union_names),
             Some(&union_usage.ordinary_unions),
             Some(&union_usage.try_error_unions),
+            structural_interop_enabled,
+            Some(&structural_record_identities),
         );
         test_rust_files.insert((*module_name).to_string(), generated.rust_source);
         used_stdlib_modules.extend(generated.used_stdlib_modules);
