@@ -8,9 +8,11 @@ use sifr_runtime::interop::structural::{
 };
 use sifr_runtime::interop::{CallScopedCallbackBridge, Handle, HandleStateError};
 
-const NESTED_IDENTITY: &str = "NestedValue";
-const LEAF_IDENTITY: &str = "Leaf";
-const BOXED_IDENTITY: &str = "Boxed";
+const NESTED_IDENTITY: &str = "main.NestedValue";
+const LEAF_IDENTITY: &str = "main.Leaf";
+const BOXED_IDENTITY: &str = "main.Boxed";
+const STATUS_IDENTITY: &str = "main.Status";
+const SUM_IDENTITY: &str = "main.SumPayload";
 
 #[derive(Debug)]
 pub struct StructuralBridgeError {
@@ -185,7 +187,7 @@ fn union(member: usize, child: u32) -> ArenaNode {
 fn enumeration(name: &'static str, index: usize, child: u32) -> ArenaNode {
     ArenaNode {
         kind: StructuralKind::Enum,
-        nominal_identity: Some("Status"),
+        nominal_identity: Some(STATUS_IDENTITY),
         edges: vec![edge(
             StructuralEdgeKind::ActiveMember { name, index },
             child,
@@ -228,7 +230,7 @@ fn structural_nodes() -> Vec<ArenaNode> {
 
 fn sum_nodes() -> Vec<ArenaNode> {
     vec![
-        record("SumPayload", &[("choice", 1), ("status", 3)]),
+        record(SUM_IDENTITY, &[("choice", 1), ("status", 3)]),
         union(1, 2),
         string("sum"),
         enumeration("WAITING", 1, 4),

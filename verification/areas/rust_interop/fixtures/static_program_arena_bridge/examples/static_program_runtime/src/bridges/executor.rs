@@ -11,7 +11,7 @@ use sifr_runtime::interop::structural::{
 };
 use sifr_runtime::interop::{Handle, HandleStateError};
 
-const RECORD_IDENTITY: &str = "StaticRecord";
+const RECORD_IDENTITY: &str = "main.StaticRecord";
 static ACTIVE_DOCUMENTS: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Debug)]

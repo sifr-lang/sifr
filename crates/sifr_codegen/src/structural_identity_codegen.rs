@@ -13,12 +13,11 @@ enum CompiledIdentity {
 
 struct IdentityContext<'a> {
     modules: &'a [(&'a str, &'a HirModule)],
-    crate_root_modules: &'a HashSet<&'a str>,
 }
 
 impl<'a> IdentityContext<'a> {
-    fn wire_module_name(&self, module_name: &'a str) -> Option<&'a str> {
-        (!self.crate_root_modules.contains(module_name)).then_some(module_name)
+    fn wire_module_name(module_name: &'a str) -> Option<&'a str> {
+        (!module_name.is_empty()).then_some(module_name)
     }
 
     fn class_candidate(
@@ -88,15 +87,7 @@ pub(crate) fn class_identity_expression(
 ) -> String {
     let module_key = module_name.unwrap_or("");
     let modules = [(module_key, module)];
-    let roots = if module_name.is_none() {
-        HashSet::from([module_key])
-    } else {
-        HashSet::new()
-    };
-    let context = IdentityContext {
-        modules: &modules,
-        crate_root_modules: &roots,
-    };
+    let context = IdentityContext { modules: &modules };
     if class.is_enum() {
         compile_enum(class, module_name).expression()
     } else {
@@ -106,13 +97,9 @@ pub(crate) fn class_identity_expression(
 
 pub(crate) fn class_identity_expressions_for_project(
     modules: &[(&str, &HirModule)],
-    crate_root_modules: &HashSet<&str>,
     structural_record_identities: &HashSet<String>,
 ) -> HashMap<String, String> {
-    let context = IdentityContext {
-        modules,
-        crate_root_modules,
-    };
+    let context = IdentityContext { modules };
     modules
         .iter()
         .flat_map(|(module_name, module)| {
@@ -126,7 +113,7 @@ pub(crate) fn class_identity_expressions_for_project(
                 };
                 supported.then(|| {
                     let compiled = if class.is_enum() {
-                        compile_enum(class, context.wire_module_name(module_name))
+                        compile_enum(class, IdentityContext::wire_module_name(module_name))
                     } else {
                         compile_class(class, module_name, context)
                     };
@@ -139,13 +126,9 @@ pub(crate) fn class_identity_expressions_for_project(
 
 pub(crate) fn static_class_identities_for_project(
     modules: &[(&str, &HirModule)],
-    crate_root_modules: &HashSet<&str>,
     structural_record_identities: &HashSet<String>,
 ) -> HashMap<String, ShapeIdentity> {
-    let context = IdentityContext {
-        modules,
-        crate_root_modules,
-    };
+    let context = IdentityContext { modules };
     modules
         .iter()
         .flat_map(|(module_name, module)| {
@@ -159,7 +142,7 @@ pub(crate) fn static_class_identities_for_project(
                 };
                 let compiled = supported.then(|| {
                     if class.is_enum() {
-                        compile_enum(class, context.wire_module_name(module_name))
+                        compile_enum(class, IdentityContext::wire_module_name(module_name))
                     } else {
                         compile_class(class, module_name, context)
                     }
@@ -177,15 +160,7 @@ pub(crate) fn static_class_identity(
 ) -> Option<ShapeIdentity> {
     let module_key = module_name.unwrap_or("");
     let modules = [(module_key, module)];
-    let roots = if module_name.is_none() {
-        HashSet::from([module_key])
-    } else {
-        HashSet::new()
-    };
-    let context = IdentityContext {
-        modules: &modules,
-        crate_root_modules: &roots,
-    };
+    let context = IdentityContext { modules: &modules };
     if class.is_enum() {
         compile_enum(class, module_name).static_value()
     } else {
@@ -217,7 +192,7 @@ fn compile_class(
     module_name: &str,
     context: &IdentityContext<'_>,
 ) -> CompiledIdentity {
-    let nominal = class_nominal_identity(class, context.wire_module_name(module_name));
+    let nominal = class_nominal_identity(class, IdentityContext::wire_module_name(module_name));
     let mut stack = vec![nominal.clone()];
     let type_arguments = class
         .type_params
@@ -300,11 +275,10 @@ fn compile_type(
                 .class_candidate(declared_identity.as_deref(), name, scope_module_name)
                 .filter(|(_, _, class)| class.is_enum())
             {
-                compile_enum(class, context.wire_module_name(module_name))
+                compile_enum(class, IdentityContext::wire_module_name(module_name))
             } else {
                 let nominal = declared_identity.clone().unwrap_or_else(|| {
-                    context
-                        .wire_module_name(scope_module_name)
+                    IdentityContext::wire_module_name(scope_module_name)
                         .map_or_else(|| name.clone(), |module| format!("{module}.{name}"))
                 });
                 let members = variants
@@ -330,12 +304,12 @@ fn compile_type(
             let nominal = candidate.map_or_else(
                 || class_identity.clone().unwrap_or_else(|| name.clone()),
                 |(module_name, _, class)| {
-                    class_nominal_identity(class, context.wire_module_name(module_name))
+                    class_nominal_identity(class, IdentityContext::wire_module_name(module_name))
                 },
             );
             if let Some((module_name, _, class)) = candidate {
                 if class.is_enum() {
-                    return compile_enum(class, context.wire_module_name(module_name));
+                    return compile_enum(class, IdentityContext::wire_module_name(module_name));
                 }
             }
             if let Some(index) = stack.iter().position(|entry| entry == &nominal) {
@@ -769,13 +743,12 @@ mod tests {
         let modules = [("models", &models), ("main", &main)];
         let expressions = class_identity_expressions_for_project(
             &modules,
-            &HashSet::from(["main"]),
             &HashSet::from(["models.Payload".to_string(), "main.Envelope".to_string()]),
         );
         let payload_identity =
             static_class_identity(&payload, &models, Some("models")).expect("static payload");
         let expected = identity::nominal_record(
-            "Envelope",
+            "main.Envelope",
             &[],
             &[NominalField {
                 name: "payload",

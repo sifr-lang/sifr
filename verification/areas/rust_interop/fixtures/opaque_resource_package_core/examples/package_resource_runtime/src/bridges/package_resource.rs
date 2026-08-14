@@ -10,7 +10,7 @@ use sifr_runtime::interop::structural::{
 };
 use sifr_runtime::interop::{Handle, HandleStateError, PoisonOnPanic, SilentPanicBoundary};
 
-const RECORD_IDENTITY: &str = "PackageRecord";
+const RECORD_IDENTITY: &str = "main.PackageRecord";
 
 #[derive(Debug)]
 pub struct PackageResourceError {

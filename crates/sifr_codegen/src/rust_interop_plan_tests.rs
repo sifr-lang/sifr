@@ -814,10 +814,10 @@ fn interop_cache_fragment_includes_structural_algorithm_and_concrete_identity() 
     assert!(fragment.contains("rust.structural_identity_algorithm_version=1"));
     assert!(fragment.contains("rust.structural_shape_identities=1"));
     assert!(fragment.contains("main:Payload="));
-    assert_eq!(
+    assert_ne!(
         named_plan.rust.structural_shape_identities[0].identity,
         root_plan.rust.structural_shape_identities[0].identity,
-        "naming a crate-root module main must not change its wire shape"
+        "a named project module and an unnamed single-file module have distinct wire identities"
     );
 }
 

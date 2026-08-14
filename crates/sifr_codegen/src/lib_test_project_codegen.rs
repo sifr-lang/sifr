@@ -58,7 +58,6 @@ pub fn generate_rust_test_project_with_metadata(
     let structural_identity_expressions = if structural_interop_enabled {
         crate::structural_identity_codegen::class_identity_expressions_for_project(
             &all_modules,
-            &crate_root_modules,
             &structural_record_identities,
         )
     } else {
@@ -89,8 +88,7 @@ pub fn generate_rust_test_project_with_metadata(
             .get(*module_name)
             .cloned()
             .unwrap_or_default();
-        let structural_identity_module_name =
-            (!crate_root_modules.contains(module_name)).then_some(*module_name);
+        let structural_identity_module_name = Some(*module_name);
         let generated = generate_rust_with_stdlib_for_module_with_project_policy(
             module,
             &module_code,

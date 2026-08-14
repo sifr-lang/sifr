@@ -313,17 +313,10 @@ fn collect_structural_shape_identities_for_project(
         .iter()
         .map(|(module_name, module)| (module_name.unwrap_or(""), *module))
         .collect::<Vec<_>>();
-    let crate_root_modules = modules
-        .iter()
-        .filter_map(|(module_name, _)| {
-            (module_name.is_empty() || *module_name == "main").then_some(*module_name)
-        })
-        .collect::<std::collections::HashSet<_>>();
     let record_identities =
         crate::structural_impl_codegen::structural_record_identities_for_project(&modules);
     let identities = crate::structural_identity_codegen::static_class_identities_for_project(
         &modules,
-        &crate_root_modules,
         &record_identities,
     );
     for ((module_name, module), (module_key, _)) in module_entries.iter().zip(&modules) {
