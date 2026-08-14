@@ -549,6 +549,42 @@ Milestone delivery records:
   point and expose owned reference targets through `SchemaRef` if required.
 - The hardening wave adds no compatibility path, fallback, legacy path, or
   versioned public API name.
+- The PS7 control-composition wave merged in companion-repository
+  [PR #8](https://github.com/sifr-lang/pydantic-sifr/pull/8) at merge commit
+  `c1a2f35dc48b9ba914d6c4a2d9912f91e0c51a11`. The exact reviewed and gated
+  candidate was `8a8bde393d48eab8ebecdcd0be078502e34ad6bb`.
+- The wave implements strict/lax and JSON/structural branch controls. It also
+  implements flattened, nonempty typed chains with direct checked-arena
+  handoff between steps.
+- Control branches must have one structural output identity. Chain handoff
+  keeps the input profile, definition scope, specialized scalar values, and
+  aggregate values.
+- Strict JSON mapping chains rebuild typed keys as JSON object keys. They do
+  not expose the native mapping representation to the next JSON step.
+- An earlier candidate passed the create-PR gate. Its merge-only fuzz build
+  found one incomplete `ValidationOptions` initializer.
+- The correction completed that initializer and preserved strict item checks
+  when lazy generators relax only their container kind.
+- A full Opus review then found the strict JSON mapping handoff defect. Its
+  response SHA-256 is
+  `93ea5cd5d77868d39c65fe05a4b97c931f1b06bd18cf31856f641a38ab7f2cbc`.
+- The exact remediation review returned `SATISFIED` with no blocking findings.
+  Its response SHA-256 is
+  `4e04d32eb0d027b6e285b4132e8fc51f2ab8308308e8608aa3a5694d57661a66`.
+- The refreshed canonical create-PR gate passed on the final candidate. The
+  single final merge gate also exited zero.
+- Evidence includes 8 control tests, 15 collection tests, all workspace tests,
+  release suites, strict Clippy, both locked demos, and the benchmark smoke.
+- All six fuzz targets compiled. Scalar, collection, special, and typed
+  construction targets each completed 1,000 bounded runs.
+- The static-program round trip stayed byte-identical at 1,813 bytes. Its
+  identity is
+  `0a80954bcb655b487d33525efa0dfcd98fce189c12c863b21533e11e7970e4c9`.
+- Reviewer follow-ups remain non-blocking. They cover pattern-key flags,
+  non-finite float keys, stronger key assertions, and JSON key strictness
+  documentation.
+- The control wave adds no compatibility path, fallback, legacy path, or
+  versioned public API name.
 - `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
