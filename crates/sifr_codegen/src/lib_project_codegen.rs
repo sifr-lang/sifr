@@ -47,16 +47,19 @@ pub(crate) struct ProjectUnionUsage {
     pub(crate) module_unions: HashMap<String, HashSet<String>>,
     pub(crate) ordinary_unions: HashSet<String>,
     pub(crate) try_error_unions: HashSet<String>,
+    pub(crate) structural_unions: HashSet<String>,
 }
 
 pub(crate) fn project_union_usage(
     modules: &[(&str, &HirModule)],
     project_code: &StdlibCode,
+    structural_interop_enabled: bool,
 ) -> ProjectUnionUsage {
     let mut unions = HashMap::new();
     let mut module_unions = HashMap::new();
     let mut ordinary_unions = HashSet::new();
     let mut try_error_unions = HashSet::new();
+    let mut structural_unions = HashSet::new();
     for (module_name, module) in modules {
         let mut emitter = super::RustEmitter::new();
         emitter.collect_union_types(module);
@@ -69,11 +72,16 @@ pub(crate) fn project_union_usage(
         }
         module_unions.insert((*module_name).to_string(), names);
     }
+    if structural_interop_enabled {
+        structural_unions =
+            crate::structural_impl_codegen::structural_union_names_for_project(&unions, modules);
+    }
     ProjectUnionUsage {
         unions,
         module_unions,
         ordinary_unions,
         try_error_unions,
+        structural_unions,
     }
 }
 
@@ -318,10 +326,25 @@ pub fn generate_rust_multi_with_metadata(
     project_codegen_code
         .module_class_fields
         .extend(project_class_fields(modules));
-    let union_usage = project_union_usage(modules, &project_codegen_code);
+    let union_usage =
+        project_union_usage(modules, &project_codegen_code, structural_interop_enabled);
+    let structural_record_identities = if structural_interop_enabled {
+        crate::structural_impl_codegen::structural_record_identities_for_project(modules)
+    } else {
+        HashSet::new()
+    };
     let stdlib_nominal_plan =
         project_stdlib_nominal_plan(&union_usage.unions, stdlib_code, modules);
     let crate_root_modules = HashSet::from(["main"]);
+    let structural_identity_expressions = if structural_interop_enabled {
+        crate::structural_identity_codegen::class_identity_expressions_for_project(
+            modules,
+            &crate_root_modules,
+            &structural_record_identities,
+        )
+    } else {
+        HashMap::new()
+    };
     let mut nominal_type_paths = project_nominal_type_paths(modules, &crate_root_modules);
     nominal_type_paths.extend(stdlib_nominal_plan.nominal_paths.clone());
     let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
@@ -344,14 +367,19 @@ pub fn generate_rust_multi_with_metadata(
             .cloned()
             .unwrap_or_default();
         let owned_unions = HashSet::new();
+        let structural_identity_module_name =
+            (!crate_root_modules.contains(module_name)).then_some(*module_name);
         let codegen_result = generate_rust_with_stdlib_for_module_with_project_policy(
             module,
             &module_codegen_code,
             Some(module_name),
+            structural_identity_module_name,
             structural_interop_enabled,
             Some(&owned_unions),
             Some(&union_usage.ordinary_unions),
             Some(&union_usage.try_error_unions),
+            Some(&structural_record_identities),
+            Some(&structural_identity_expressions),
         );
         let local_imports = render_local_module_imports(module, &project_modules);
         let union_imports =
@@ -754,6 +782,7 @@ mod tests {
             let usage = project_union_usage(
                 &[("left", &left), ("right", &right)],
                 &StdlibCode::default(),
+                false,
             );
 
             assert_eq!(usage.unions.len(), 2, "{:?}", usage.unions);

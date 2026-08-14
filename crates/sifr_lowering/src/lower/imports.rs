@@ -247,6 +247,13 @@ pub(in crate::lower) fn resolve_imports_early(
                             );
                             ctx.class_types
                                 .insert(local.clone(), imported_class_ty.clone());
+                            register_imported_structural_identity_inputs(
+                                ctx,
+                                externals,
+                                &module_key,
+                                name,
+                                &local,
+                            );
                             register_imported_class_instance_methods(
                                 ctx,
                                 externals,
@@ -393,4 +400,31 @@ pub(in crate::lower) fn resolve_imports_early(
             }
         }
     }
+}
+
+fn register_imported_structural_identity_inputs(
+    ctx: &mut LowerCtx,
+    externals: &ExternalDefs,
+    module_name: &str,
+    external_name: &str,
+    local_name: &str,
+) {
+    let defaults_supported = externals
+        .class_field_defaults
+        .get(module_name)
+        .and_then(|classes| classes.get(external_name))
+        .into_iter()
+        .flatten()
+        .all(|(_, value)| sifr_ir::canonical_structural_identity_value(value).is_some());
+    let metadata_supported = externals
+        .declaration_metadata
+        .get(module_name)
+        .into_iter()
+        .flatten()
+        .filter(|metadata| metadata.owner == external_name)
+        .all(|metadata| sifr_ir::canonical_structural_identity_value(&metadata.value).is_some());
+    ctx.imported_structural_identity_inputs.insert(
+        local_name.to_string(),
+        defaults_supported && metadata_supported,
+    );
 }

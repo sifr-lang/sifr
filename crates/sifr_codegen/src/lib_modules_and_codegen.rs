@@ -233,24 +233,35 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
         module,
         stdlib_code,
         module_name,
+        None,
         structural_interop_enabled,
+        None,
+        None,
         None,
         None,
         None,
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     module: &HirModule,
     stdlib_code: &StdlibCode,
     module_name: Option<&str>,
+    structural_identity_module_name: Option<&str>,
     structural_interop_enabled: bool,
     owned_union_enums: Option<&HashSet<String>>,
     project_ordinary_union_enums: Option<&HashSet<String>>,
     project_try_error_carrier_enums: Option<&HashSet<String>>,
+    project_structural_record_identities: Option<&HashSet<String>>,
+    project_structural_identity_expressions: Option<&HashMap<String, String>>,
 ) -> CodegenResult {
     let mut emitter = RustEmitter::new();
     emitter.structural_interop_enabled = structural_interop_enabled;
+    emitter.project_structural_record_identities = project_structural_record_identities.cloned();
+    emitter.project_structural_identity_expressions =
+        project_structural_identity_expressions.cloned();
+    emitter.structural_identity_module_name = structural_identity_module_name.map(str::to_string);
     // Register stdlib generic classes so user code skips explicit type annotations
     emitter
         .generic_classes
@@ -339,6 +350,11 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         emitter
             .try_error_carrier_enums
             .extend(project_try_error_carrier_enums.iter().cloned());
+    }
+    if structural_interop_enabled && owned_union_enums.is_none() {
+        emitter.structural_union_enums.extend(
+            crate::structural_impl_codegen::structural_union_names(module, &emitter.union_enums),
+        );
     }
     if let Some(owned_union_enums) = owned_union_enums {
         emitter.suppressed_union_enum_definitions = emitter

@@ -1,7 +1,7 @@
-use sifr_ir::{HirClass, HirExpr, HirModule};
+use sifr_ir::{canonical_structural_identity_value, HirClass, HirModule};
 use sifr_structural_identity::{self as identity, NominalField, ShapeIdentity, ALGORITHM_VERSION};
 use sifr_type_system::Type;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
 
@@ -9,6 +9,60 @@ const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
 enum CompiledIdentity {
     Static(ShapeIdentity),
     Dynamic(String),
+}
+
+struct IdentityContext<'a> {
+    modules: &'a [(&'a str, &'a HirModule)],
+    crate_root_modules: &'a HashSet<&'a str>,
+}
+
+impl<'a> IdentityContext<'a> {
+    fn wire_module_name(&self, module_name: &'a str) -> Option<&'a str> {
+        (!self.crate_root_modules.contains(module_name)).then_some(module_name)
+    }
+
+    fn class_candidate(
+        &self,
+        identity: Option<&str>,
+        name: &str,
+        scope_module_name: &str,
+    ) -> Option<(&'a str, &'a HirModule, &'a HirClass)> {
+        if let Some(identity) = identity {
+            if let Some(candidate) = self.modules.iter().find_map(|(module_name, module)| {
+                module
+                    .classes
+                    .iter()
+                    .find(|class| {
+                        class.identity.as_deref() == Some(identity)
+                            || format!("{module_name}.{}", class.name) == identity
+                    })
+                    .map(|class| (*module_name, *module, class))
+            }) {
+                return Some(candidate);
+            }
+            if self.modules.len() != 1 || !self.modules[0].0.is_empty() {
+                return None;
+            }
+        }
+        if let Some((module_name, module)) = self
+            .modules
+            .iter()
+            .find(|(module_name, _)| *module_name == scope_module_name)
+        {
+            if let Some(class) = module.classes.iter().find(|class| class.name == name) {
+                return Some((*module_name, *module, class));
+            }
+        }
+        let mut candidates = self.modules.iter().filter_map(|(module_name, module)| {
+            module
+                .classes
+                .iter()
+                .find(|class| class.name == name)
+                .map(|class| (*module_name, *module, class))
+        });
+        let candidate = candidates.next()?;
+        candidates.next().is_none().then_some(candidate)
+    }
 }
 
 impl CompiledIdentity {
@@ -32,7 +86,88 @@ pub(crate) fn class_identity_expression(
     module: &HirModule,
     module_name: Option<&str>,
 ) -> String {
-    compile_class(class, module, module_name).expression()
+    let module_key = module_name.unwrap_or("");
+    let modules = [(module_key, module)];
+    let roots = if module_name.is_none() {
+        HashSet::from([module_key])
+    } else {
+        HashSet::new()
+    };
+    let context = IdentityContext {
+        modules: &modules,
+        crate_root_modules: &roots,
+    };
+    if class.is_enum() {
+        compile_enum(class, module_name).expression()
+    } else {
+        compile_class(class, module_key, &context).expression()
+    }
+}
+
+pub(crate) fn class_identity_expressions_for_project(
+    modules: &[(&str, &HirModule)],
+    crate_root_modules: &HashSet<&str>,
+    structural_record_identities: &HashSet<String>,
+) -> HashMap<String, String> {
+    let context = IdentityContext {
+        modules,
+        crate_root_modules,
+    };
+    modules
+        .iter()
+        .flat_map(|(module_name, module)| {
+            let context = &context;
+            module.classes.iter().filter_map(move |class| {
+                let key = project_class_identity(class, module_name);
+                let supported = if class.is_enum() {
+                    crate::structural_impl_codegen::structural_enum_supported(class)
+                } else {
+                    structural_record_identities.contains(&key)
+                };
+                supported.then(|| {
+                    let compiled = if class.is_enum() {
+                        compile_enum(class, context.wire_module_name(module_name))
+                    } else {
+                        compile_class(class, module_name, context)
+                    };
+                    (key, compiled.expression())
+                })
+            })
+        })
+        .collect()
+}
+
+pub(crate) fn static_class_identities_for_project(
+    modules: &[(&str, &HirModule)],
+    crate_root_modules: &HashSet<&str>,
+    structural_record_identities: &HashSet<String>,
+) -> HashMap<String, ShapeIdentity> {
+    let context = IdentityContext {
+        modules,
+        crate_root_modules,
+    };
+    modules
+        .iter()
+        .flat_map(|(module_name, module)| {
+            let context = &context;
+            module.classes.iter().filter_map(move |class| {
+                let key = project_class_identity(class, module_name);
+                let supported = if class.is_enum() {
+                    crate::structural_impl_codegen::structural_enum_supported(class)
+                } else {
+                    structural_record_identities.contains(&key)
+                };
+                let compiled = supported.then(|| {
+                    if class.is_enum() {
+                        compile_enum(class, context.wire_module_name(module_name))
+                    } else {
+                        compile_class(class, module_name, context)
+                    }
+                })?;
+                compiled.static_value().map(|identity| (key, identity))
+            })
+        })
+        .collect()
 }
 
 pub(crate) fn static_class_identity(
@@ -40,7 +175,26 @@ pub(crate) fn static_class_identity(
     module: &HirModule,
     module_name: Option<&str>,
 ) -> Option<ShapeIdentity> {
-    compile_class(class, module, module_name).static_value()
+    let module_key = module_name.unwrap_or("");
+    let modules = [(module_key, module)];
+    let roots = if module_name.is_none() {
+        HashSet::from([module_key])
+    } else {
+        HashSet::new()
+    };
+    let context = IdentityContext {
+        modules: &modules,
+        crate_root_modules: &roots,
+    };
+    if class.is_enum() {
+        compile_enum(class, module_name).static_value()
+    } else {
+        compile_class(class, module_key, &context).static_value()
+    }
+}
+
+pub(crate) fn enum_identity_expression(class: &HirClass, module_name: Option<&str>) -> String {
+    compile_enum(class, module_name).expression()
 }
 
 pub(crate) const fn algorithm_version() -> u32 {
@@ -51,19 +205,19 @@ pub(crate) fn class_identity_inputs_supported(class: &HirClass) -> bool {
     class
         .field_defaults
         .iter()
-        .all(|(_, value)| canonical_hir_value(value).is_some())
+        .all(|(_, value)| canonical_structural_identity_value(value).is_some())
         && class
             .declaration_metadata
             .iter()
-            .all(|metadata| canonical_hir_value(&metadata.value).is_some())
+            .all(|metadata| canonical_structural_identity_value(&metadata.value).is_some())
 }
 
 fn compile_class(
     class: &HirClass,
-    module: &HirModule,
-    module_name: Option<&str>,
+    module_name: &str,
+    context: &IdentityContext<'_>,
 ) -> CompiledIdentity {
-    let nominal = class_nominal_identity(class, module_name);
+    let nominal = class_nominal_identity(class, context.wire_module_name(module_name));
     let mut stack = vec![nominal.clone()];
     let type_arguments = class
         .type_params
@@ -79,16 +233,30 @@ fn compile_class(
         &type_arguments,
         &class.fields,
         Some(class),
-        module,
         module_name,
+        context,
         &mut stack,
     )
 }
 
+fn compile_enum(class: &HirClass, module_name: Option<&str>) -> CompiledIdentity {
+    let nominal = class_nominal_identity(class, module_name);
+    let members = class
+        .enum_variants
+        .iter()
+        .map(|(name, value)| (name.as_str(), *value))
+        .collect::<Vec<_>>();
+    CompiledIdentity::Static(identity::enum_shape(
+        &nominal,
+        &members,
+        class_metadata_identity(Some(class)),
+    ))
+}
+
 fn compile_type(
     ty: &Type,
-    module: &HirModule,
-    module_name: Option<&str>,
+    scope_module_name: &str,
+    context: &IdentityContext<'_>,
     stack: &mut Vec<String>,
 ) -> CompiledIdentity {
     match ty.resolve_alias() {
@@ -102,11 +270,11 @@ fn compile_type(
         Type::TypeVar(name) => CompiledIdentity::Dynamic(format!(
             "<{name} as {STRUCTURAL}::StructuralType>::shape_identity()"
         )),
-        Type::List(value) => compile_unary("list", value, module, module_name, stack),
-        Type::Set(value) => compile_unary("set", value, module, module_name, stack),
+        Type::List(value) => compile_unary("list", value, scope_module_name, context, stack),
+        Type::Set(value) => compile_unary("set", value, scope_module_name, context, stack),
         Type::Dict(key, value) => {
-            let key = compile_type(key, module, module_name, stack);
-            let value = compile_type(value, module, module_name, stack);
+            let key = compile_type(key, scope_module_name, context, stack);
+            let value = compile_type(value, scope_module_name, context, stack);
             match (key.static_value(), value.static_value()) {
                 (Some(key), Some(value)) => {
                     CompiledIdentity::Static(identity::binary_container("mapping", key, value))
@@ -118,12 +286,37 @@ fn compile_type(
                 )),
             }
         }
-        Type::Tuple(values) => compile_many("tuple", values, module, module_name, stack),
-        Type::Union(values) if optional_member(values).is_some() => {
-            let Some(member) = optional_member(values) else {
-                unreachable!("guarded optional union must contain one value member");
-            };
-            compile_unary("optional", member, module, module_name, stack)
+        Type::Tuple(values) => compile_many("tuple", values, scope_module_name, context, stack),
+        Type::Union(values) => match optional_member(values) {
+            Some(member) => compile_unary("optional", member, scope_module_name, context, stack),
+            None => compile_many("union", values, scope_module_name, context, stack),
+        },
+        Type::Enum {
+            identity: declared_identity,
+            name,
+            variants,
+        } => {
+            if let Some((module_name, _, class)) = context
+                .class_candidate(declared_identity.as_deref(), name, scope_module_name)
+                .filter(|(_, _, class)| class.is_enum())
+            {
+                compile_enum(class, context.wire_module_name(module_name))
+            } else {
+                let nominal = declared_identity.clone().unwrap_or_else(|| {
+                    context
+                        .wire_module_name(scope_module_name)
+                        .map_or_else(|| name.clone(), |module| format!("{module}.{name}"))
+                });
+                let members = variants
+                    .iter()
+                    .map(|(name, value)| (name.as_str(), *value))
+                    .collect::<Vec<_>>();
+                CompiledIdentity::Static(identity::enum_shape(
+                    &nominal,
+                    &members,
+                    identity::metadata(&[]),
+                ))
+            }
         }
         Type::Class {
             identity: class_identity,
@@ -132,13 +325,19 @@ fn compile_type(
             fields,
             ..
         } => {
-            let candidate = module.classes.iter().find(|class| class.name == *name);
-            let nominal = class_identity.clone().unwrap_or_else(|| {
-                candidate.map_or_else(
-                    || name.clone(),
-                    |class| class_nominal_identity(class, module_name),
-                )
-            });
+            let candidate =
+                context.class_candidate(class_identity.as_deref(), name, scope_module_name);
+            let nominal = candidate.map_or_else(
+                || class_identity.clone().unwrap_or_else(|| name.clone()),
+                |(module_name, _, class)| {
+                    class_nominal_identity(class, context.wire_module_name(module_name))
+                },
+            );
+            if let Some((module_name, _, class)) = candidate {
+                if class.is_enum() {
+                    return compile_enum(class, context.wire_module_name(module_name));
+                }
+            }
             if let Some(index) = stack.iter().position(|entry| entry == &nominal) {
                 let Ok(index) = u32::try_from(index) else {
                     unreachable!(
@@ -150,11 +349,11 @@ fn compile_type(
             stack.push(nominal.clone());
             let arguments = type_args
                 .iter()
-                .map(|argument| compile_type(argument, module, module_name, stack))
+                .map(|argument| compile_type(argument, scope_module_name, context, stack))
                 .collect::<Vec<_>>();
             let concrete_fields = candidate.map_or_else(
                 || fields.clone(),
-                |class| {
+                |(_, _, class)| {
                     let bindings = class
                         .type_params
                         .iter()
@@ -172,9 +371,9 @@ fn compile_type(
                 &nominal,
                 &arguments,
                 &concrete_fields,
-                candidate,
-                module,
-                module_name,
+                candidate.map(|(_, _, class)| class),
+                candidate.map_or(scope_module_name, |(module_name, _, _)| module_name),
+                context,
                 stack,
             );
             stack.pop();
@@ -249,15 +448,15 @@ fn compile_record(
     type_arguments: &[CompiledIdentity],
     fields: &[(String, Type)],
     class: Option<&HirClass>,
-    module: &HirModule,
-    module_name: Option<&str>,
+    scope_module_name: &str,
+    context: &IdentityContext<'_>,
     stack: &mut Vec<String>,
 ) -> CompiledIdentity {
     let field_identities = fields
         .iter()
         .enumerate()
         .map(|(index, (name, ty))| {
-            let shape = compile_type(ty, module, module_name, stack);
+            let shape = compile_type(ty, scope_module_name, context, stack);
             let default = class.and_then(|class| field_default_identity(class, index));
             (name, shape, default)
         })
@@ -314,11 +513,11 @@ fn compile_record(
 fn compile_unary(
     tag: &str,
     value: &Type,
-    module: &HirModule,
-    module_name: Option<&str>,
+    scope_module_name: &str,
+    context: &IdentityContext<'_>,
     stack: &mut Vec<String>,
 ) -> CompiledIdentity {
-    let value = compile_type(value, module, module_name, stack);
+    let value = compile_type(value, scope_module_name, context, stack);
     value.static_value().map_or_else(
         || {
             CompiledIdentity::Dynamic(format!(
@@ -333,13 +532,13 @@ fn compile_unary(
 fn compile_many(
     tag: &str,
     values: &[Type],
-    module: &HirModule,
-    module_name: Option<&str>,
+    scope_module_name: &str,
+    context: &IdentityContext<'_>,
     stack: &mut Vec<String>,
 ) -> CompiledIdentity {
     let values = values
         .iter()
-        .map(|value| compile_type(value, module, module_name, stack))
+        .map(|value| compile_type(value, scope_module_name, context, stack))
         .collect::<Vec<_>>();
     let static_values = values
         .iter()
@@ -378,7 +577,7 @@ fn field_default_identity(class: &HirClass, field_index: usize) -> Option<ShapeI
         .field_defaults
         .iter()
         .find(|(index, _)| *index == field_index)
-        .and_then(|(_, value)| canonical_hir_value(value))
+        .and_then(|(_, value)| canonical_structural_identity_value(value))
         .map(|value| identity::default_value(&value))
 }
 
@@ -387,7 +586,7 @@ fn class_metadata_identity(class: Option<&HirClass>) -> ShapeIdentity {
         .into_iter()
         .flat_map(|class| &class.declaration_metadata)
         .filter_map(|metadata| {
-            canonical_hir_value(&metadata.value).map(|value| {
+            canonical_structural_identity_value(&metadata.value).map(|value| {
                 format!(
                     "{:?}|{}|{}|{:?}|{}",
                     metadata.target_kind,
@@ -403,57 +602,22 @@ fn class_metadata_identity(class: Option<&HirClass>) -> ShapeIdentity {
     identity::metadata(&entries.iter().map(String::as_str).collect::<Vec<_>>())
 }
 
-fn canonical_hir_value(value: &HirExpr) -> Option<String> {
-    match value {
-        HirExpr::IntLiteral(value) => Some(format!("int:{value}")),
-        HirExpr::LargeIntLiteral(value) => Some(format!("int:{value}")),
-        HirExpr::FloatLiteral(value) => Some(format!("float:{:016x}", value.to_bits())),
-        HirExpr::StringLiteral(value) => Some(format!("str:{}:{value}", value.len())),
-        HirExpr::BoolLiteral(value) => Some(format!("bool:{value}")),
-        HirExpr::NoneLiteral => Some("none".to_string()),
-        HirExpr::ListLiteral { elements, .. } => canonical_sequence("list", elements),
-        HirExpr::TupleLiteral { elements, .. } => canonical_sequence("tuple", elements),
-        HirExpr::SetLiteral { elements, .. } => {
-            let mut elements = elements
-                .iter()
-                .map(canonical_hir_value)
-                .collect::<Option<Vec<_>>>()?;
-            elements.sort();
-            Some(format!("set[{}]", elements.join(",")))
-        }
-        HirExpr::DictLiteral { keys, values, .. } if keys.len() == values.len() => {
-            let mut entries = keys
-                .iter()
-                .zip(values)
-                .map(|(key, value)| {
-                    Some(format!(
-                        "{}={}",
-                        canonical_hir_value(key)?,
-                        canonical_hir_value(value)?
-                    ))
-                })
-                .collect::<Option<Vec<_>>>()?;
-            entries.sort();
-            Some(format!("dict[{}]", entries.join(",")))
-        }
-        _ => None,
-    }
-}
-
-fn canonical_sequence(tag: &str, values: &[HirExpr]) -> Option<String> {
-    let values = values
-        .iter()
-        .map(canonical_hir_value)
-        .collect::<Option<Vec<_>>>()?;
-    Some(format!("{tag}[{}]", values.join(",")))
-}
-
 fn class_nominal_identity(class: &HirClass, module_name: Option<&str>) -> String {
     class.identity.clone().unwrap_or_else(|| {
         module_name.map_or_else(
             || class.name.clone(),
             |module| format!("{module}.{}", class.name),
         )
+    })
+}
+
+fn project_class_identity(class: &HirClass, module_name: &str) -> String {
+    class.identity.clone().unwrap_or_else(|| {
+        if module_name.is_empty() {
+            class.name.clone()
+        } else {
+            format!("{module_name}.{}", class.name)
+        }
     })
 }
 
@@ -470,7 +634,7 @@ fn static_expression(value: ShapeIdentity) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sifr_ir::{DeclarationMetadataTargetKind, HirClassKind, TypedDeclarationMetadata};
+    use sifr_ir::{DeclarationMetadataTargetKind, HirClassKind, HirExpr, TypedDeclarationMetadata};
 
     fn class(name: &str, fields: Vec<(String, Type)>) -> HirClass {
         HirClass {
@@ -556,5 +720,75 @@ mod tests {
         assert_ne!(plain_identity, default_identity);
         assert_ne!(plain_identity, metadata_identity);
         assert_ne!(default_identity, metadata_identity);
+    }
+
+    #[test]
+    fn project_identity_preserves_imported_defaults_and_metadata_inside_union() {
+        let mut payload = class("Payload", vec![("value".to_string(), Type::Int)]);
+        payload.field_defaults = vec![(0, HirExpr::IntLiteral(7))];
+        payload.declaration_metadata = vec![TypedDeclarationMetadata {
+            owner: "Payload".to_string(),
+            target_kind: DeclarationMetadataTargetKind::Type,
+            target_name: None,
+            key: "example.policy".to_string(),
+            value_type: Type::Str,
+            value: HirExpr::StringLiteral("strict".to_string()),
+            range: Default::default(),
+        }];
+        let models = HirModule {
+            functions: Vec::new(),
+            classes: vec![payload.clone()],
+            imports: Vec::new(),
+            constants: Vec::new(),
+            generic_functions: HashMap::new(),
+            type_param_bounds: HashMap::new(),
+        };
+        let payload_type = Type::Class {
+            identity: Some("models.Payload".to_string()),
+            type_args: Vec::new(),
+            name: "Payload".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let envelope = class(
+            "Envelope",
+            vec![(
+                "payload".to_string(),
+                Type::Union(vec![payload_type, Type::Str]),
+            )],
+        );
+        let main = HirModule {
+            functions: Vec::new(),
+            classes: vec![envelope],
+            imports: Vec::new(),
+            constants: Vec::new(),
+            generic_functions: HashMap::new(),
+            type_param_bounds: HashMap::new(),
+        };
+        let modules = [("models", &models), ("main", &main)];
+        let expressions = class_identity_expressions_for_project(
+            &modules,
+            &HashSet::from(["main"]),
+            &HashSet::from(["models.Payload".to_string(), "main.Envelope".to_string()]),
+        );
+        let payload_identity =
+            static_class_identity(&payload, &models, Some("models")).expect("static payload");
+        let expected = identity::nominal_record(
+            "Envelope",
+            &[],
+            &[NominalField {
+                name: "payload",
+                identity: identity::union(&[payload_identity, identity::primitive("str")]),
+                required: true,
+                default_identity: None,
+            }],
+            identity::metadata(&[]),
+        );
+
+        assert_eq!(
+            expressions.get("main.Envelope"),
+            Some(&static_expression(expected))
+        );
     }
 }

@@ -1,9 +1,10 @@
 use crate::{generate_rust, generate_rust_multi};
 use sifr_ir::{
-    HirClass, HirClassKind, HirFunction, HirModule, MethodKind, RustInteropAbiRequirements,
-    RustInteropDeclaration, RustInteropDecoratorKind, RustInteropEffect,
+    DeclarationMetadataTargetKind, HirClass, HirClassKind, HirExpr, HirFunction, HirModule,
+    HirParam, MethodKind, RustInteropAbiRequirements, RustInteropDeclaration,
+    RustInteropDecoratorKind, RustInteropEffect, TypedDeclarationMetadata,
 };
-use sifr_type_system::Type;
+use sifr_type_system::{ParamConvention, Type};
 
 #[test]
 fn ordinary_class_codegen_skips_structural_impls() {
@@ -19,6 +20,200 @@ fn ordinary_class_codegen_skips_structural_impls() {
     assert!(!metadata
         .required_features
         .contains(&sifr_stdlib_manifest::StdlibFeature::StructuralRuntime));
+}
+
+#[test]
+fn ordinary_union_codegen_skips_structural_impls_without_demand() {
+    let union = Type::Union(vec![Type::Int, Type::Str]);
+    let module = module(vec![ordinary_function("choose", union)], Vec::new());
+
+    let generated = generate_rust(&module);
+
+    assert!(generated.contains("enum __SifrUnion"));
+    assert!(!generated.contains("StructuralType"));
+    assert!(!generated.contains("StructuralConstruct"));
+    assert!(!generated.contains("StructuralProject"));
+
+    let project = crate::generate_rust_multi_with_metadata(
+        &[("main", &module)],
+        &crate::StdlibCode::default(),
+    );
+    let prelude = project.project_union_prelude;
+    assert!(prelude.contains("enum __SifrUnion"));
+    assert!(!prelude.contains("StructuralType"));
+    assert!(!prelude.contains("StructuralConstruct"));
+    assert!(!prelude.contains("StructuralProject"));
+}
+
+#[test]
+fn direct_ordinary_union_gets_structural_impls_when_demanded() {
+    let union = Type::Union(vec![Type::Int, Type::Str]);
+    let module = module(
+        vec![structural_function(), ordinary_function("choose", union)],
+        Vec::new(),
+    );
+
+    let generated = generate_rust(&module);
+
+    assert!(generated.contains("StructuralKind::Union"), "{generated}");
+    assert!(generated.contains("ActiveMember"), "{generated}");
+    assert!(generated.contains("StructuralConstruct"), "{generated}");
+    assert!(generated.contains("StructuralProject"), "{generated}");
+
+    let project = crate::generate_rust_multi_with_metadata(
+        &[("main", &module)],
+        &crate::StdlibCode::default(),
+    );
+    let prelude = project.project_union_prelude;
+    assert!(prelude.contains("StructuralKind::Union"), "{prelude}");
+    assert!(prelude.contains("ActiveMember"), "{prelude}");
+}
+
+#[test]
+fn project_union_resolves_structural_members_from_their_defining_module() {
+    let models = module(Vec::new(), vec![payload_class()]);
+    let payload = Type::Class {
+        identity: Some("models.Payload".to_string()),
+        type_args: Vec::new(),
+        name: "Payload".to_string(),
+        fields: vec![("value".to_string(), Type::Int)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let api = module(
+        vec![
+            structural_function(),
+            ordinary_function("choose", Type::Union(vec![payload, Type::Str])),
+        ],
+        Vec::new(),
+    );
+
+    let project = crate::generate_rust_multi_with_metadata(
+        &[("models", &models), ("main", &api)],
+        &crate::StdlibCode::default(),
+    );
+    let prelude = project.project_union_prelude;
+
+    assert!(prelude.contains("crate::models::Payload"), "{prelude}");
+    assert!(prelude.contains("StructuralKind::Union"), "{prelude}");
+    assert!(prelude.contains("StructuralConstruct"), "{prelude}");
+    assert!(prelude.contains("StructuralProject"), "{prelude}");
+}
+
+#[test]
+fn project_record_eligibility_resolves_nested_imported_members() {
+    let mut leaf = payload_class();
+    leaf.name = "Leaf".to_string();
+    leaf.identity = Some("models.Leaf".to_string());
+    let models = module(Vec::new(), vec![leaf]);
+
+    let leaf_type = Type::Class {
+        identity: Some("models.Leaf".to_string()),
+        type_args: Vec::new(),
+        name: "Leaf".to_string(),
+        fields: vec![("value".to_string(), Type::Int)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let mut payload = payload_class();
+    payload.identity = Some("records.Payload".to_string());
+    payload.fields = vec![("leaf".to_string(), leaf_type.clone())];
+    let payload_type = Type::Class {
+        identity: Some("records.Payload".to_string()),
+        type_args: Vec::new(),
+        name: "Payload".to_string(),
+        fields: vec![("leaf".to_string(), leaf_type)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let records = module(
+        vec![ordinary_function(
+            "choose",
+            Type::Union(vec![payload_type, Type::Str]),
+        )],
+        vec![payload],
+    );
+    let api = module(vec![structural_function()], Vec::new());
+
+    let project = crate::generate_rust_multi_with_metadata(
+        &[("models", &models), ("records", &records), ("main", &api)],
+        &crate::StdlibCode::default(),
+    );
+    let records_rust = project
+        .rust_files
+        .get("records")
+        .expect("records module is generated");
+
+    assert!(
+        records_rust.contains("StructuralType for Payload"),
+        "{records_rust}"
+    );
+    assert!(
+        records_rust.contains("StructuralConstruct for Payload"),
+        "{records_rust}"
+    );
+    assert!(
+        project
+            .project_union_prelude
+            .contains("crate::records::Payload"),
+        "{}",
+        project.project_union_prelude
+    );
+}
+
+#[test]
+fn project_root_record_keeps_unqualified_structural_identity() {
+    let module = module(vec![structural_function()], vec![payload_class()]);
+
+    let project = crate::generate_rust_multi_with_metadata(
+        &[("main", &module)],
+        &crate::StdlibCode::default(),
+    );
+    let main_rust = project
+        .rust_files
+        .get("main")
+        .expect("main module is generated");
+
+    assert!(main_rust.contains("Some(\"Payload\")"), "{main_rust}");
+    assert!(!main_rust.contains("Some(\"main.Payload\")"), "{main_rust}");
+}
+
+#[test]
+fn named_single_file_record_keeps_unqualified_structural_identity() {
+    let module = module(vec![structural_function()], vec![payload_class()]);
+
+    let generated = crate::generate_rust_with_stdlib_for_module(
+        &module,
+        &crate::StdlibCode::default(),
+        Some("main"),
+    )
+    .rust_source;
+
+    assert!(generated.contains("Some(\"Payload\")"), "{generated}");
+    assert!(!generated.contains("Some(\"main.Payload\")"), "{generated}");
+}
+
+#[test]
+fn platform_integer_union_does_not_receive_structural_impls() {
+    let union = Type::Union(vec![
+        Type::Int,
+        Type::FixedInt(sifr_type_system::FixedIntType::USize),
+    ]);
+    let module = module(
+        vec![structural_function(), ordinary_function("choose", union)],
+        Vec::new(),
+    );
+
+    let project = crate::generate_rust_multi_with_metadata(
+        &[("main", &module)],
+        &crate::StdlibCode::default(),
+    );
+    let prelude = project.project_union_prelude;
+
+    assert!(prelude.contains("enum __SifrUnion"));
+    assert!(!prelude.contains("StructuralType"));
+    assert!(!prelude.contains("StructuralConstruct"));
+    assert!(!prelude.contains("StructuralProject"));
 }
 
 #[test]
@@ -60,6 +255,77 @@ fn structural_impls_escape_rust_keyword_field_identifiers() {
     assert!(models_rust.contains("&self.r#type"));
     assert!(models_rust.contains("RecordField"));
     assert!(models_rust.contains("\"type\""));
+}
+
+#[test]
+fn structural_demand_emits_checked_enum_and_ordinary_union_impls() {
+    let mut enumeration = payload_class();
+    enumeration.name = "Status".to_string();
+    enumeration.kind = HirClassKind::Enum;
+    enumeration.fields = Vec::new();
+    enumeration.enum_variants = vec![
+        ("READY".to_string(), Some(4)),
+        ("WAITING".to_string(), None),
+    ];
+    let enum_type = Type::Enum {
+        identity: Some("main.Status".to_string()),
+        name: "Status".to_string(),
+        variants: enumeration.enum_variants.clone(),
+    };
+    let mut container = payload_class();
+    container.name = "SumPayload".to_string();
+    container.fields = vec![
+        (
+            "choice".to_string(),
+            Type::Union(vec![Type::Int, Type::Str]),
+        ),
+        ("status".to_string(), enum_type),
+    ];
+    let module = module(vec![structural_function()], vec![enumeration, container]);
+
+    let generated = generate_rust(&module);
+
+    assert!(generated.contains("StructuralKind::Union"), "{generated}");
+    assert!(generated.contains("ActiveMember"), "{generated}");
+    assert!(generated.contains("StructuralKind::Enum"), "{generated}");
+    assert!(generated.contains("Self::READY"), "{generated}");
+    assert!(generated.contains("Self::WAITING"), "{generated}");
+    assert!(generated.contains("::structural::union"), "{generated}");
+    assert!(
+        generated.contains("ShapeIdentity::from_bytes"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn enum_with_unrepresentable_identity_metadata_gets_no_structural_impl() {
+    let mut enumeration = payload_class();
+    enumeration.name = "Status".to_string();
+    enumeration.kind = HirClassKind::Enum;
+    enumeration.fields = Vec::new();
+    enumeration.enum_variants = vec![("READY".to_string(), Some(1))];
+    enumeration.declaration_metadata = vec![TypedDeclarationMetadata {
+        owner: "Status".to_string(),
+        target_kind: DeclarationMetadataTargetKind::Type,
+        target_name: None,
+        key: "example.policy".to_string(),
+        value_type: Type::Int,
+        value: HirExpr::BinOp {
+            left: Box::new(HirExpr::IntLiteral(1)),
+            op: "+".to_string(),
+            right: Box::new(HirExpr::IntLiteral(1)),
+            ty: Type::Int,
+        },
+        range: Default::default(),
+    }];
+    let module = module(vec![structural_function()], vec![enumeration]);
+
+    let generated = generate_rust(&module);
+
+    assert!(
+        !generated.contains("StructuralType for Status"),
+        "{generated}"
+    );
 }
 
 #[test]
@@ -139,6 +405,29 @@ fn structural_function() -> HirFunction {
             abi_requirements: RustInteropAbiRequirements::default(),
             consumes_receiver: false,
         }],
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    }
+}
+
+fn ordinary_function(name: &str, parameter_type: Type) -> HirFunction {
+    HirFunction {
+        name: name.to_string(),
+        params: vec![HirParam {
+            name: "value".to_string(),
+            ty: parameter_type,
+            default: None,
+            keyword_only: false,
+            convention: ParamConvention::borrow(),
+        }],
+        return_type: Type::None,
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        receiver: None,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
         python_interop: Vec::new(),
         compiler_intrinsic: None,
         type_params: Vec::new(),

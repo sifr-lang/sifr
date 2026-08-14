@@ -1,6 +1,8 @@
 use crate::{lower_module_with_externals, ExternalDefs, HirDiagnostic, HirModule};
 use sifr_diagnostics::DiagnosticCode;
-use sifr_ir::RustInteropDecoratorKind;
+use sifr_ir::{
+    DeclarationMetadataTargetKind, HirExpr, RustInteropDecoratorKind, TypedDeclarationMetadata,
+};
 use sifr_python_parser::parse_module;
 use sifr_type_system::Type;
 use std::collections::HashMap;
@@ -210,6 +212,147 @@ def encode[T: Structural](value: T) -> Result[bytes, CodecError | RustPanicError
         declaration.kind == RustInteropDecoratorKind::Structural
             && declaration.target.is_none()
             && declaration.arguments.is_empty()
+    }));
+}
+
+#[test]
+fn structural_bound_accepts_enums_and_supported_ordinary_unions() {
+    lower_ok(
+        r"
+from enum import Enum
+
+class Status(Enum):
+    READY = 4
+    WAITING = 5
+
+def accept[T: Structural](value: T) -> None:
+    pass
+
+def use(choice: int | str, status: Status) -> None:
+    accept(choice)
+    accept(status)
+",
+    );
+}
+
+#[test]
+fn structural_bound_rejects_enum_discriminant_overflow() {
+    let errors = lower_errors(
+        r"
+from enum import Enum
+
+class Status(Enum):
+    LAST = 9223372036854775807
+    OVERFLOW = 'auto'
+
+def accept[T: Structural](value: T) -> None:
+    pass
+
+def use(status: Status) -> None:
+    accept(status)
+",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'Structural'")
+    }));
+}
+
+#[test]
+fn structural_bound_rejects_imported_enum_with_unrepresentable_metadata() {
+    let mut externals = structural_externals();
+    externals.classes.insert(
+        "models".to_string(),
+        HashMap::from([(
+            "Status".to_string(),
+            Type::Enum {
+                identity: Some("models.Status".to_string()),
+                name: "Status".to_string(),
+                variants: vec![("READY".to_string(), Some(1))],
+            },
+        )]),
+    );
+    externals.declaration_metadata.insert(
+        "models".to_string(),
+        vec![TypedDeclarationMetadata {
+            owner: "Status".to_string(),
+            target_kind: DeclarationMetadataTargetKind::Type,
+            target_name: None,
+            key: "example.policy".to_string(),
+            value_type: Type::Int,
+            value: HirExpr::BinOp {
+                left: Box::new(HirExpr::IntLiteral(1)),
+                op: "+".to_string(),
+                right: Box::new(HirExpr::IntLiteral(1)),
+                ty: Type::Int,
+            },
+            range: Default::default(),
+        }],
+    );
+    let source = r"
+from sifr.meta import Structural
+from models import Status
+
+def accept[T: Structural](value: T) -> None:
+    pass
+
+def use(status: Status) -> None:
+    accept(status)
+";
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module_with_externals(parsed.suite(), &externals) {
+        Ok(_) => panic!("unrepresentable imported metadata must fail lowering"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'Structural'")
+    }));
+}
+
+#[test]
+fn structural_bound_rejects_an_ordinary_union_with_an_unsupported_member() {
+    let errors = lower_errors(
+        r"
+def accept[T: Structural](value: T) -> None:
+    pass
+
+def use(value: int | list[bytes]) -> None:
+    accept(value)
+",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'Structural'")
+    }));
+}
+
+#[test]
+fn structural_bound_rejects_platform_integer_union_members() {
+    let errors = lower_errors(
+        r"
+def accept[T: Structural](value: T) -> None:
+    pass
+
+def use(value: int | usize) -> None:
+    accept(value)
+",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'Structural'")
     }));
 }
 

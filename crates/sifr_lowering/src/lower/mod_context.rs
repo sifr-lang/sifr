@@ -35,6 +35,9 @@ pub(in crate::lower) struct LowerCtx {
     /// Class declaration defaults, independent of constructor signatures.
     pub(in crate::lower) class_field_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
     pub(in crate::lower) declaration_metadata: Vec<sifr_ir::TypedDeclarationMetadata>,
+    /// Whether each imported class can preserve all defaults and metadata in a
+    /// compiler-owned structural identity.
+    pub(in crate::lower) imported_structural_identity_inputs: HashMap<String, bool>,
     pub(in crate::lower) specialization_requests: Vec<sifr_ir::ConstSpecializationRequest>,
     pub(in crate::lower) json_integer_boundary_requests: Vec<sifr_ir::JsonIntegerBoundaryRequest>,
     /// Whether the exact compiler-owned `sifr.meta.Structural` spelling was imported.
@@ -205,6 +208,7 @@ impl LowerCtx {
             function_defaults: HashMap::new(),
             class_field_defaults: HashMap::new(),
             declaration_metadata: Vec::new(),
+            imported_structural_identity_inputs: HashMap::new(),
             specialization_requests: Vec::new(),
             json_integer_boundary_requests: Vec::new(),
             canonical_structural_marker_imported: false,

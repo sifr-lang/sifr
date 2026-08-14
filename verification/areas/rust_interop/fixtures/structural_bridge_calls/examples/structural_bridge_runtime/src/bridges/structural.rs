@@ -102,10 +102,7 @@ fn edge(kind: StructuralEdgeKind<'static>, node: u32) -> StructuralNodeEdge<'sta
     StructuralNodeEdge::new(kind, NodeId::new(node))
 }
 
-fn record(
-    nominal_identity: &'static str,
-    fields: &[(&'static str, u32)],
-) -> ArenaNode {
+fn record(nominal_identity: &'static str, fields: &[(&'static str, u32)]) -> ArenaNode {
     ArenaNode {
         kind: StructuralKind::Record,
         nominal_identity: Some(nominal_identity),
@@ -123,6 +120,18 @@ fn string(value: &str) -> ArenaNode {
         nominal_identity: None,
         edges: Vec::new(),
         scalar: Some(StructuralScalar::String(value.to_string())),
+    }
+}
+
+fn signed_integer(value: i64) -> ArenaNode {
+    ArenaNode {
+        kind: StructuralKind::SignedInteger,
+        nominal_identity: None,
+        edges: Vec::new(),
+        scalar: Some(StructuralScalar::SignedInteger {
+            value: i128::from(value),
+            width: 64,
+        }),
     }
 }
 
@@ -158,6 +167,33 @@ fn optional(child: Option<u32>) -> ArenaNode {
     }
 }
 
+fn union(member: usize, child: u32) -> ArenaNode {
+    ArenaNode {
+        kind: StructuralKind::Union,
+        nominal_identity: None,
+        edges: vec![edge(
+            StructuralEdgeKind::ActiveMember {
+                name: "member",
+                index: member,
+            },
+            child,
+        )],
+        scalar: None,
+    }
+}
+
+fn enumeration(name: &'static str, index: usize, child: u32) -> ArenaNode {
+    ArenaNode {
+        kind: StructuralKind::Enum,
+        nominal_identity: Some("Status"),
+        edges: vec![edge(
+            StructuralEdgeKind::ActiveMember { name, index },
+            child,
+        )],
+        scalar: None,
+    }
+}
+
 fn structural_nodes() -> Vec<ArenaNode> {
     vec![
         record(
@@ -175,7 +211,12 @@ fn structural_nodes() -> Vec<ArenaNode> {
         optional(Some(10)),
         record(
             NESTED_IDENTITY,
-            &[("label", 11), ("leaves", 12), ("payload", 13), ("child", 15)],
+            &[
+                ("label", 11),
+                ("leaves", 12),
+                ("payload", 13),
+                ("child", 15),
+            ],
         ),
         string("tail"),
         sequence(&[]),
@@ -185,9 +226,35 @@ fn structural_nodes() -> Vec<ArenaNode> {
     ]
 }
 
+fn sum_nodes() -> Vec<ArenaNode> {
+    vec![
+        record("SumPayload", &[("choice", 1), ("status", 3)]),
+        union(1, 2),
+        string("sum"),
+        enumeration("WAITING", 1, 4),
+        signed_integer(5),
+    ]
+}
+
 pub fn open() -> Result<Handle<StructuralArena>, StructuralBridgeError> {
     Ok(Handle::new(StructuralArena {
         nodes: structural_nodes(),
+    }))
+}
+
+pub fn open_sum() -> Result<Handle<StructuralArena>, StructuralBridgeError> {
+    Ok(Handle::new(StructuralArena { nodes: sum_nodes() }))
+}
+
+pub fn open_union() -> Result<Handle<StructuralArena>, StructuralBridgeError> {
+    Ok(Handle::new(StructuralArena {
+        nodes: vec![union(1, 1), string("sum")],
+    }))
+}
+
+pub fn open_enum() -> Result<Handle<StructuralArena>, StructuralBridgeError> {
+    Ok(Handle::new(StructuralArena {
+        nodes: vec![enumeration("WAITING", 1, 1), signed_integer(5)],
     }))
 }
 
@@ -263,10 +330,7 @@ where
     ))
 }
 
-pub fn roundtrip<T>(
-    source: Handle<StructuralArena>,
-    value: &T,
-) -> Result<T, StructuralBridgeError>
+pub fn roundtrip<T>(source: Handle<StructuralArena>, value: &T) -> Result<T, StructuralBridgeError>
 where
     T: StructuralConstruct + StructuralProject,
 {
@@ -283,7 +347,12 @@ where
             "structural construction accepted a mismatched root identity",
         ));
     }
-    structural_construct::<T, _>(into_source::<T>(source)?).map_err(Into::into)
+    structural_construct::<T, _>(into_source::<T>(source)?).map_err(|error| {
+        StructuralBridgeError::new(format!(
+            "{} construction failed: {error}",
+            std::any::type_name::<T>()
+        ))
+    })
 }
 
 pub fn transform<T>(
@@ -296,7 +365,9 @@ where
 {
     let _input_projection = project(value)?;
     let input = structural_construct::<T, _>(into_source::<T>(source)?)?;
-    let output = callback.call((input,)).map_err(StructuralBridgeError::new)?;
+    let output = callback
+        .call((input,))
+        .map_err(StructuralBridgeError::new)?;
     let _output_projection = project(&output)?;
     Ok(output)
 }

@@ -40,13 +40,30 @@ pub fn generate_rust_test_project_with_metadata(
     project_code
         .module_class_fields
         .extend(project_class_fields(&all_modules));
-    let union_usage = project_union_usage(&all_modules, &project_code);
+    let structural_interop_enabled = all_modules
+        .iter()
+        .any(|(_, module)| crate::rust_interop_plan::module_uses_structural_interop(module));
+    let union_usage = project_union_usage(&all_modules, &project_code, structural_interop_enabled);
+    let structural_record_identities = if structural_interop_enabled {
+        crate::structural_impl_codegen::structural_record_identities_for_project(&all_modules)
+    } else {
+        HashSet::new()
+    };
     let stdlib_nominal_plan =
         project_stdlib_nominal_plan(&union_usage.unions, stdlib_code, &all_modules);
     let crate_root_modules = test_modules
         .iter()
         .map(|(module_name, _)| *module_name)
         .collect::<HashSet<_>>();
+    let structural_identity_expressions = if structural_interop_enabled {
+        crate::structural_identity_codegen::class_identity_expressions_for_project(
+            &all_modules,
+            &crate_root_modules,
+            &structural_record_identities,
+        )
+    } else {
+        HashMap::new()
+    };
     let mut nominal_type_paths = project_nominal_type_paths(&all_modules, &crate_root_modules);
     nominal_type_paths.extend(stdlib_nominal_plan.nominal_paths.clone());
     let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
@@ -57,9 +74,6 @@ pub fn generate_rust_test_project_with_metadata(
         .collect::<Vec<_>>()
         .join("\n\n");
     let project_modules = all_modules.iter().copied().collect::<HashMap<_, _>>();
-    let structural_interop_enabled = all_modules
-        .iter()
-        .any(|(_, module)| crate::rust_interop_plan::module_uses_structural_interop(module));
     let all_union_names = union_usage.unions.keys().cloned().collect::<HashSet<_>>();
 
     let mut support_rust_files = HashMap::new();
@@ -75,14 +89,19 @@ pub fn generate_rust_test_project_with_metadata(
             .get(*module_name)
             .cloned()
             .unwrap_or_default();
+        let structural_identity_module_name =
+            (!crate_root_modules.contains(module_name)).then_some(*module_name);
         let generated = generate_rust_with_stdlib_for_module_with_project_policy(
             module,
             &module_code,
             Some(module_name),
+            structural_identity_module_name,
             structural_interop_enabled,
             Some(&HashSet::new()),
             Some(&union_usage.ordinary_unions),
             Some(&union_usage.try_error_unions),
+            Some(&structural_record_identities),
+            Some(&structural_identity_expressions),
         );
         let imports = [
             render_local_module_imports(module, &project_modules),
@@ -120,6 +139,9 @@ pub fn generate_rust_test_project_with_metadata(
             Some(&all_union_names),
             Some(&union_usage.ordinary_unions),
             Some(&union_usage.try_error_unions),
+            structural_interop_enabled,
+            Some(&structural_record_identities),
+            Some(&structural_identity_expressions),
         );
         test_rust_files.insert((*module_name).to_string(), generated.rust_source);
         used_stdlib_modules.extend(generated.used_stdlib_modules);

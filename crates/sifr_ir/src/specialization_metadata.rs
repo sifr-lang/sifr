@@ -3,6 +3,7 @@
 use crate::HirExpr;
 use ruff_text_size::TextRange;
 use sifr_type_system::Type;
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum DeclarationMetadataTargetKind {
@@ -27,6 +28,75 @@ pub struct TypedDeclarationMetadata {
     pub value_type: Type,
     pub value: HirExpr,
     pub range: TextRange,
+}
+
+/// Return the canonical structural-identity spelling for a closed HIR value.
+///
+/// Lowering and code generation use this one predicate so a type cannot satisfy
+/// the `Structural` bound unless code generation can preserve all of its
+/// defaults and declaration metadata in the wire identity.
+pub fn canonical_structural_identity_value(value: &HirExpr) -> Option<String> {
+    match value {
+        HirExpr::IntLiteral(value) => Some(format!("int:{value}")),
+        HirExpr::LargeIntLiteral(value) => Some(format!("int:{value}")),
+        HirExpr::FloatLiteral(value) => Some(format!("float:{:016x}", value.to_bits())),
+        HirExpr::StringLiteral(value) => Some(format!("str:{}:{value}", value.len())),
+        HirExpr::BoolLiteral(value) => Some(format!("bool:{value}")),
+        HirExpr::NoneLiteral => Some("none".to_string()),
+        HirExpr::ListLiteral { elements, .. } => canonical_sequence("list", elements),
+        HirExpr::TupleLiteral { elements, .. } => canonical_sequence("tuple", elements),
+        HirExpr::SetLiteral { elements, .. } => {
+            let mut elements = elements
+                .iter()
+                .map(canonical_structural_identity_value)
+                .collect::<Option<Vec<_>>>()?;
+            elements.sort();
+            Some(format!("set[{}]", elements.join(",")))
+        }
+        HirExpr::DictLiteral { keys, values, .. } if keys.len() == values.len() => {
+            let mut entries = keys
+                .iter()
+                .zip(values)
+                .map(|(key, value)| {
+                    Some(format!(
+                        "{}={}",
+                        canonical_structural_identity_value(key)?,
+                        canonical_structural_identity_value(value)?
+                    ))
+                })
+                .collect::<Option<Vec<_>>>()?;
+            entries.sort();
+            Some(format!("dict[{}]", entries.join(",")))
+        }
+        _ => None,
+    }
+}
+
+fn canonical_sequence(tag: &str, values: &[HirExpr]) -> Option<String> {
+    let values = values
+        .iter()
+        .map(canonical_structural_identity_value)
+        .collect::<Option<Vec<_>>>()?;
+    Some(format!("{tag}[{}]", values.join(",")))
+}
+
+/// Return whether enum discriminants have one exact, non-overflowing structural encoding.
+pub fn structural_identity_enum_variants_supported(variants: &[(String, Option<i64>)]) -> bool {
+    if variants.is_empty() {
+        return false;
+    }
+    let mut next = Some(1_i64);
+    let mut seen = HashSet::new();
+    for (_, declared) in variants {
+        let Some(value) = declared.or(next) else {
+            return false;
+        };
+        if !seen.insert(value) {
+            return false;
+        }
+        next = value.checked_add(1);
+    }
+    true
 }
 
 #[derive(Debug, Clone)]

@@ -4,6 +4,7 @@
 # expected-result: structural-roundtrip-clean
 
 from sifr.meta import Structural
+from enum import Enum
 from typing import Callable
 
 
@@ -30,6 +31,16 @@ class NestedValue:
     child: NestedValue | None
 
 
+class Status(Enum):
+    READY = 4
+    WAITING = 5
+
+
+class SumPayload:
+    choice: int | str
+    status: Status
+
+
 @rust.opaque(
     type=bridge.structural.StructuralArena,
     send=False,
@@ -44,6 +55,18 @@ class StructuralArena:
 
 @rust(bridge.structural.open)
 def open_structural_arena() -> Result[StructuralArena, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust(bridge.structural.open_sum)
+def open_sum_arena() -> Result[StructuralArena, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust(bridge.structural.open_union)
+def open_union_arena() -> Result[StructuralArena, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust(bridge.structural.open_enum)
+def open_enum_arena() -> Result[StructuralArena, StructuralBridgeError | RustPanicError]: ...
 
 
 @rust.structural
@@ -107,9 +130,21 @@ def verify_structural_bridge_runtime() -> Result[str, StructuralBridgeError | Ru
         )
         assert transformed.label == "root"
         assert transformed.child is not None
+        union_source: StructuralArena = open_union_arena()
+        union_input: int | str = 1
+        union_value: int | str = structural_roundtrip(union_source, union_input)
+        assert str(union_value) == "sum"
+        enum_source: StructuralArena = open_enum_arena()
+        status: Status = structural_roundtrip(enum_source, Status.READY)
+        assert status == Status.WAITING
+        sum_source: StructuralArena = open_sum_arena()
+        sum_input: SumPayload = SumPayload(1, Status.READY)
+        sum_value: SumPayload = structural_roundtrip(sum_source, sum_input)
+        assert str(sum_value.choice) == "sum"
+        assert sum_value.status == Status.WAITING
         cleanup_source: StructuralArena = open_structural_arena()
         closed: None = cleanup_source.close()
-        return projection + ";construction=root/a,b/boxed/tail;callback=typed"
+        return projection + ";construction=root/a,b/boxed/tail;callback=typed;sums=sum/WAITING"
     except StructuralBridgeError as error:
         raise error
     except RustPanicError as error:

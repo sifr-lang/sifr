@@ -394,7 +394,7 @@ fn test_build_structural_bridge_runtime() {
     );
     assert_eq!(
         run_built_package(&entrypoint),
-        "records=3;sequences=1;optionals=1;strings=input,x,input-box;construction=root/a,b/boxed/tail;callback=typed"
+        "records=3;sequences=1;optionals=1;strings=input,x,input-box;construction=root/a,b/boxed/tail;callback=typed;sums=sum/WAITING"
     );
     let _ = std::fs::remove_dir_all(package_root);
 }
