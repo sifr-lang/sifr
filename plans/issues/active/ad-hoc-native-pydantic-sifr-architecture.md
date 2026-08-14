@@ -441,6 +441,27 @@ Milestone delivery records:
   source collision.
 - The prerequisite has no compatibility path, fallback, legacy path, or
   versioned public API name.
+- The project-root structural identity repair merged in Sifr
+  [PR #3182](https://github.com/sifr-lang/sifr/pull/3182) at merge commit
+  `4f5492531e81385dd28efe25adfdd57dd678d2a9`. The exact reviewed candidate was
+  `55210678160b1e43f7aab9245fc12bc9c6698f7d`.
+- Project and test-project records now use their module-qualified nominal
+  identity. Unnamed single-file records remain unqualified.
+- Three Opus review rounds corrected fixture identities, shape hashes, and
+  stale assertions. The final review returned `SATISFIED` with no blockers.
+- The final review response SHA-256 is
+  `b6d7c534497f8ebf122a2a18287e56f8a34b51c8b4a4014df96d14c3fd5737ea`.
+- The unchanged warm create-PR gate exited zero. It passed Python 19/19,
+  Rust interop 10/10, generated quality 5/5, and E2E 140/140.
+- The single merge gate passed every structural bridge case. It also passed
+  Python 25/25, performance 8/8, distribution 66/66, sysroot 2/2, and
+  generated quality 7/7.
+- The gate passed 76 of 77 generated driver builds. The sole failure reproduced
+  unchanged on exact base `6ac919f809bb966493c769a1c5ffb0e41420636b`.
+- Issue [#3179](https://github.com/sifr-lang/sifr/issues/3179) continues to own
+  that duplicate compiler-owned native-handle path defect.
+- The repair adds no compatibility path, fallback, legacy path, or versioned
+  public API name.
 - `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
