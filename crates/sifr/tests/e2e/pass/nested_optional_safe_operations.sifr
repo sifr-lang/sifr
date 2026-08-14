@@ -1,0 +1,382 @@
+class OptionalBox:
+    value: str | None
+
+
+def consume_optional(value: str | None) -> bool:
+    return value is None
+
+
+def dict_get_none(d: dict[str, str | None]) -> bool:
+    value = d.get("a")
+    return value is None
+
+
+def dict_pop_none(mut d: dict[str, str | None]) -> bool:
+    value = d.pop("a")
+    return value is None
+
+
+def list_pop_none(mut values: list[str | None]) -> bool:
+    value = values.pop()
+    return value is None
+
+
+def iterator_next_none(values: list[str | None]) -> bool:
+    value = next(iter(values))
+    return value is None
+
+
+def dict_index_none(d: dict[str, str | None]) -> bool:
+    value = d["a"]
+    return value is None
+
+
+def list_index_none(values: list[str | None]) -> bool:
+    value = values[0]
+    return value is None
+
+
+def dict_get_value(d: dict[str, str | None]) -> str | None:
+    return d.get("a")
+
+
+def dict_pop_value(mut d: dict[str, str | None]) -> str | None:
+    return d.pop("a")
+
+
+def list_pop_value(mut values: list[str | None]) -> str | None:
+    return values.pop()
+
+
+def iterator_next_value(values: list[str | None]) -> str | None:
+    return next(iter(values))
+
+
+def dict_safe_union_no_none(mut values: dict[str, int | str]) -> bool:
+    missing_get = values.get("missing")
+    missing_index = values["missing"]
+    missing_pop = values.pop("missing")
+    return missing_get is None and missing_index is None and missing_pop is None
+
+
+def dict_safe_union_with_none(mut values: dict[str, int | str | None]) -> bool:
+    missing_get = values.get("missing")
+    missing_index = values["missing"]
+    missing_pop = values.pop("missing")
+    return missing_get is None and missing_index is None and missing_pop is None
+
+
+def list_safe_union_no_none(mut values: list[int | str]) -> bool:
+    missing_index = values[0]
+    missing_pop = values.pop()
+    return missing_index is None and missing_pop is None
+
+
+def list_safe_union_with_none(mut values: list[int | str | None]) -> bool:
+    missing_index = values[0]
+    missing_pop = values.pop()
+    return missing_index is None and missing_pop is None
+
+
+def set_safe_union_no_none(mut values: set[int | str]) -> bool:
+    return values.pop() is None
+
+
+def set_safe_union_with_none(mut values: set[int | str | None]) -> bool:
+    return values.pop() is None
+
+
+def plain_union_int() -> int | str:
+    return 1
+
+
+def nullable_union_int() -> int | str | None:
+    return 1
+
+
+def dict_safe_union_present(mut values: dict[str, int | str]) -> bool:
+    values["present"] = plain_union_int()
+    return values.get("present") is not None
+
+
+def list_safe_union_present(mut values: list[int | str]) -> bool:
+    values.append(plain_union_int())
+    return values.pop() is not None
+
+
+def list_safe_nullable_union_present(mut values: list[int | str | None]) -> bool:
+    values.append(nullable_union_int())
+    return values.pop() is not None
+
+
+def set_safe_union_present(mut values: set[int | str]) -> bool:
+    values.add(plain_union_int())
+    return values.pop() is not None
+
+
+def set_safe_nullable_union_present(mut values: set[int | str | None]) -> bool:
+    values.add(nullable_union_int())
+    return values.pop() is not None
+
+
+def consume_nullable_union(value: int | str | None) -> bool:
+    return True
+
+
+def observe_present_nullable_union(value: int | str | None) -> bool:
+    return value is not None
+
+
+def dict_get_nullable_union_consumption(values: dict[str, int | str | None]) -> bool:
+    narrowed = values.get("missing")
+    if narrowed is not None:
+        assert observe_present_nullable_union(narrowed)
+    direct = consume_nullable_union(values.get("missing"))
+    annotated: int | str | None = values.get("missing")
+    return direct and consume_nullable_union(annotated)
+
+
+def dict_pop_nullable_union_consumption(mut values: dict[str, int | str | None]) -> bool:
+    narrowed = values.pop("missing")
+    if narrowed is not None:
+        assert observe_present_nullable_union(narrowed)
+    direct = consume_nullable_union(values.pop("missing"))
+    annotated: int | str | None = values.pop("missing")
+    return direct and consume_nullable_union(annotated)
+
+
+def dict_index_nullable_union_consumption(values: dict[str, int | str | None]) -> bool:
+    narrowed = values["missing"]
+    if narrowed is not None:
+        assert observe_present_nullable_union(narrowed)
+    direct = consume_nullable_union(values["missing"])
+    annotated: int | str | None = values["missing"]
+    return direct and consume_nullable_union(annotated)
+
+
+def list_pop_nullable_union_consumption(mut values: list[int | str | None]) -> bool:
+    narrowed = values.pop()
+    if narrowed is not None:
+        assert observe_present_nullable_union(narrowed)
+    direct = consume_nullable_union(values.pop())
+    annotated: int | str | None = values.pop()
+    return direct and consume_nullable_union(annotated)
+
+
+def list_index_nullable_union_consumption(values: list[int | str | None]) -> bool:
+    narrowed = values[0]
+    if narrowed is not None:
+        assert observe_present_nullable_union(narrowed)
+    direct = consume_nullable_union(values[0])
+    annotated: int | str | None = values[0]
+    return direct and consume_nullable_union(annotated)
+
+
+def set_pop_nullable_union_consumption(mut values: set[int | str | None]) -> bool:
+    narrowed = values.pop()
+    if narrowed is not None:
+        assert observe_present_nullable_union(narrowed)
+    direct = consume_nullable_union(values.pop())
+    annotated: int | str | None = values.pop()
+    return direct and consume_nullable_union(annotated)
+
+
+def nullable_union_collection_consumption(mut values: dict[str, int | str | None]) -> bool:
+    values["present"] = nullable_union_int()
+
+    present_list: list[int | str | None] = []
+    present_list.append(values.get("present"))
+    assert present_list.pop() is not None
+    missing_list: list[int | str | None] = []
+    missing_list.append(values.get("missing"))
+    assert consume_nullable_union(missing_list.pop())
+
+    present_set: set[int | str | None] = set()
+    present_set.add(values.get("present"))
+    assert present_set.pop() is not None
+    missing_set: set[int | str | None] = set()
+    missing_set.add(values.get("missing"))
+    assert consume_nullable_union(missing_set.pop())
+
+    present_dict: dict[str, int | str | None] = {}
+    present_dict["value"] = values.get("present")
+    assert present_dict.get("value") is not None
+    missing_dict: dict[str, int | str | None] = {}
+    missing_dict["value"] = values.get("missing")
+    assert consume_nullable_union(missing_dict.get("value"))
+
+    present_literal: list[int | str | None] = [values.get("present")]
+    assert present_literal.pop() is not None
+    missing_literal: list[int | str | None] = [values.get("missing")]
+    assert consume_nullable_union(missing_literal.pop())
+
+    present_set_literal: set[int | str | None] = {values.get("present")}
+    assert len(present_set_literal) == 1
+    missing_dict_literal: dict[str, int | str | None] = {"value": values.get("missing")}
+    return consume_nullable_union(missing_dict_literal.get("value"))
+
+
+def optional_list_index_literal_value(maybe_values: list[str] | None) -> str | None:
+    stored: list[str | None] = [maybe_values[0]]
+    return stored.pop()
+
+
+def guarded_nullable_union_literals(mut values: dict[str, int | str | None]) -> bool:
+    values["present"] = nullable_union_int()
+    if "present" in values:
+        from_dict: list[int | str | None] = [values["present"]]
+        assert len(from_dict) == 1
+
+    list_values: list[int | str | None] = []
+    list_values.append(nullable_union_int())
+    if len(list_values) > 0:
+        from_list: list[int | str | None] = [list_values[0]]
+        assert len(from_list) == 1
+    return True
+
+
+def guarded_dict_literal_return(
+    values: dict[str, int | str | None],
+) -> list[int | str | None]:
+    if "present" in values:
+        return [values["present"]]
+    return []
+
+
+def guarded_list_literal_return(
+    values: list[int | str | None],
+) -> list[int | str | None]:
+    if len(values) > 0:
+        return [values[0]]
+    return []
+
+
+def main():
+    values: list[str | None] = []
+    values.append(None)
+    assert list_pop_none(values)
+
+    get_values: dict[str, str | None] = {}
+    get_values["a"] = None
+    assert dict_get_none(get_values)
+    assert dict_index_none(get_values)
+
+    pop_values: dict[str, str | None] = {}
+    pop_values["a"] = None
+    assert dict_pop_none(pop_values)
+
+    next_values: list[str | None] = []
+    next_values.append(None)
+    assert iterator_next_none(next_values)
+    assert list_index_none(next_values)
+
+    annotated_get_values: dict[str, str | None] = {}
+    annotated_get_values["a"] = None
+    annotated_get: str | None = annotated_get_values.get("a")
+    assert annotated_get is None
+
+    annotated_pop_values: dict[str, str | None] = {}
+    annotated_pop_values["a"] = None
+    annotated_pop: str | None = annotated_pop_values.pop("a")
+    assert annotated_pop is None
+
+    annotated_list_values: list[str | None] = []
+    annotated_list_values.append(None)
+    annotated_list_pop: str | None = annotated_list_values.pop()
+    assert annotated_list_pop is None
+
+    annotated_next_values: list[str | None] = []
+    annotated_next_values.append(None)
+    annotated_next: str | None = next(iter(annotated_next_values))
+    assert annotated_next is None
+
+    returned_get_values: dict[str, str | None] = {}
+    returned_get_values["a"] = None
+    assert dict_get_value(returned_get_values) is None
+
+    returned_pop_values: dict[str, str | None] = {}
+    returned_pop_values["a"] = None
+    assert dict_pop_value(returned_pop_values) is None
+
+    returned_list_values: list[str | None] = []
+    returned_list_values.append(None)
+    assert list_pop_value(returned_list_values) is None
+
+    returned_next_values: list[str | None] = []
+    returned_next_values.append(None)
+    assert iterator_next_value(returned_next_values) is None
+
+    call_values: dict[str, str | None] = {}
+    call_values["a"] = None
+    assert consume_optional(call_values.get("a"))
+    nested_call_value = call_values.get("a")
+    assert consume_optional(nested_call_value)
+    assert nested_call_value is None
+
+    field_values: dict[str, str | None] = {}
+    field_values["a"] = None
+    box: OptionalBox = OptionalBox(None)
+    box.value = field_values.get("a")
+    assert box.value is None
+
+    dict_union_no_none: dict[str, int | str] = {}
+    assert dict_safe_union_no_none(dict_union_no_none)
+    assert dict_safe_union_present(dict_union_no_none)
+
+    dict_union_with_none: dict[str, int | str | None] = {}
+    assert dict_safe_union_with_none(dict_union_with_none)
+
+    list_union_no_none: list[int | str] = []
+    assert list_safe_union_no_none(list_union_no_none)
+    assert list_safe_union_present(list_union_no_none)
+
+    list_union_with_none: list[int | str | None] = []
+    assert list_safe_union_with_none(list_union_with_none)
+    assert list_safe_nullable_union_present(list_union_with_none)
+
+    set_union_no_none: set[int | str] = set()
+    assert set_safe_union_no_none(set_union_no_none)
+    assert set_safe_union_present(set_union_no_none)
+
+    set_union_with_none: set[int | str | None] = set()
+    assert set_safe_union_with_none(set_union_with_none)
+    assert set_safe_nullable_union_present(set_union_with_none)
+
+    dict_get_consumption_values: dict[str, int | str | None] = {}
+    assert dict_get_nullable_union_consumption(dict_get_consumption_values)
+
+    dict_pop_consumption_values: dict[str, int | str | None] = {}
+    assert dict_pop_nullable_union_consumption(dict_pop_consumption_values)
+
+    dict_index_consumption_values: dict[str, int | str | None] = {}
+    assert dict_index_nullable_union_consumption(dict_index_consumption_values)
+
+    list_pop_consumption_values: list[int | str | None] = []
+    assert list_pop_nullable_union_consumption(list_pop_consumption_values)
+
+    list_index_consumption_values: list[int | str | None] = []
+    assert list_index_nullable_union_consumption(list_index_consumption_values)
+
+    set_pop_consumption_values: set[int | str | None] = set()
+    assert set_pop_nullable_union_consumption(set_pop_consumption_values)
+
+    collection_consumption_values: dict[str, int | str | None] = {}
+    assert nullable_union_collection_consumption(collection_consumption_values)
+
+    assert optional_list_index_literal_value(None) is None
+    optional_index_values: list[str] = []
+    optional_index_values.append("present")
+    assert optional_list_index_literal_value(optional_index_values) is not None
+
+    guarded_literal_values: dict[str, int | str | None] = {}
+    assert guarded_nullable_union_literals(guarded_literal_values)
+    assert len(guarded_dict_literal_return(guarded_literal_values)) == 1
+
+    nullable_none_source: dict[str, int | str | None] = {}
+    guarded_none_values: dict[str, int | str | None] = {}
+    guarded_none_values["present"] = nullable_none_source.get("missing")
+    assert len(guarded_dict_literal_return(guarded_none_values)) == 1
+
+    guarded_list_values: list[int | str | None] = []
+    guarded_list_values.append(nullable_union_int())
+    assert len(guarded_list_literal_return(guarded_list_values)) == 1

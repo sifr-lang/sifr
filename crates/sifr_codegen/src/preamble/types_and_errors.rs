@@ -82,14 +82,9 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
                 task_error_type_to_rust_type(err),
             ],
         },
-        Type::Union(members) => {
-            let non_none: Vec<&Type> = members
-                .iter()
-                .filter(|m| !matches!(m, Type::None))
-                .collect();
-            let has_none = members.iter().any(|m| matches!(m, Type::None));
-            if has_none && non_none.len() == 1 {
-                RustType::Option(Box::new(sifr_type_to_rust_type(non_none[0])))
+        Type::Union(_) => {
+            if let Some(member) = ty.optional_member_type() {
+                RustType::Option(Box::new(sifr_type_to_rust_type(&member)))
             } else {
                 RustType::Named(ty.rust_type())
             }

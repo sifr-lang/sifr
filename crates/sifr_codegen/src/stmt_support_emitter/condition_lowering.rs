@@ -61,7 +61,7 @@ impl RustEmitter {
                 return Ok(None);
             };
             if matches!(
-                crate::resolve_alias_type_for_plain_call(option_inner_ty),
+                crate::resolve_alias_type_for_plain_call(&option_inner_ty),
                 Type::Bool | Type::LiteralBool(_)
             ) {
                 return Ok(Some(crate::RustExpr::MethodCall {
@@ -78,11 +78,11 @@ impl RustEmitter {
                 }));
             }
             if matches!(
-                crate::resolve_alias_type_for_plain_call(option_inner_ty),
+                crate::resolve_alias_type_for_plain_call(&option_inner_ty),
                 Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Float
             ) {
                 let Some(zero_literal) =
-                    Self::zero_literal_for_numeric_truthiness_type_for_ir(option_inner_ty)
+                    Self::zero_literal_for_numeric_truthiness_type_for_ir(&option_inner_ty)
                 else {
                     unreachable!("numeric Option truthiness guard must have a zero literal");
                 };

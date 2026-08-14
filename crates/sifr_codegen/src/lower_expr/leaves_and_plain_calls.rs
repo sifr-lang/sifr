@@ -353,7 +353,17 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 .iter()
                 .map(|element| {
                     try_lower_leaf_expr(element).map(|lowered| {
-                        crate::RustEmitter::clone_non_copy_name_expr_for_ir(element, lowered)
+                        let lowered =
+                            crate::RustEmitter::clone_non_copy_name_expr_for_ir(element, lowered);
+                        if let Type::List(element_ty) = list_ty {
+                            crate::helpers::adapt_collection_value_for_target(
+                                element_ty.as_ref(),
+                                element,
+                                lowered,
+                            )
+                        } else {
+                            lowered
+                        }
                     })
                 })
                 .collect::<Option<Vec<_>>>()?;

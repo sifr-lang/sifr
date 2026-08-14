@@ -106,8 +106,10 @@ pub(crate) fn lower_method_with_context(
         (Type::List(_), "appendleft") if is_deque_data_field => {
             deque::lower_appendleft(object, args)
         }
-        (Type::List(_), "pop") if is_deque_data_field => deque::lower_pop(object, args),
-        (Type::List(_), "popleft") if is_deque_data_field => deque::lower_popleft(object, args),
+        (Type::List(elem), "pop") if is_deque_data_field => deque::lower_pop(object, args)
+            .map(|expr| crate::helpers::normalize_safe_option_result(elem, expr)),
+        (Type::List(elem), "popleft") if is_deque_data_field => deque::lower_popleft(object, args)
+            .map(|expr| crate::helpers::normalize_safe_option_result(elem, expr)),
         (Type::List(_), "append") => list::lower_append(object, args),
         (Type::List(_), "extend") => list::lower_extend(object, args),
         (Type::List(_), "insert") => list::lower_insert(object, args),
@@ -117,7 +119,8 @@ pub(crate) fn lower_method_with_context(
         (Type::List(_), "sort") => list::lower_sort(object, args),
         (Type::List(_), "count") => list::lower_count(object, args),
         (Type::List(_), "contains") => list::lower_contains(object, args),
-        (Type::List(_), "pop") => list::lower_pop(object, args),
+        (Type::List(elem), "pop") => list::lower_pop(object, args)
+            .map(|expr| crate::helpers::normalize_safe_option_result(elem, expr)),
         (Type::List(_), "remove") => list::lower_remove(object, args),
         (Type::List(_), "index") => list::lower_index(object, args),
         (Type::Bytes, "count") => bytes::lower_count(object, args),
@@ -143,8 +146,20 @@ pub(crate) fn lower_method_with_context(
         (Type::Dict(_, _), "clear") => dict::lower_clear(object, args),
         (Type::Dict(_, _), "copy") => dict::lower_copy(object, args),
         (Type::Dict(_, _), "contains") => dict::lower_contains(object, args),
-        (Type::Dict(_, _), "get") => dict::lower_get(object, args),
-        (Type::Dict(_, _), "pop") => dict::lower_pop(object, args),
+        (Type::Dict(_, value), "get") => dict::lower_get(object, args).map(|expr| {
+            if args.len() == 1 {
+                crate::helpers::normalize_safe_option_result(value, expr)
+            } else {
+                expr
+            }
+        }),
+        (Type::Dict(_, value), "pop") => dict::lower_pop(object, args).map(|expr| {
+            if args.len() == 1 {
+                crate::helpers::normalize_safe_option_result(value, expr)
+            } else {
+                expr
+            }
+        }),
         (Type::Dict(_, _), "setdefault") => dict::lower_setdefault(object, args),
         (Type::Set(_), "add") => set::lower_add(object, args),
         (Type::Set(_), "remove") => set::lower_remove(object, args),
@@ -155,7 +170,8 @@ pub(crate) fn lower_method_with_context(
         (Type::Set(_), "issubset") => set::lower_issubset(object, args),
         (Type::Set(_), "issuperset") => set::lower_issuperset(object, args),
         (Type::Set(_), "isdisjoint") => set::lower_isdisjoint(object, args),
-        (Type::Set(_), "pop") => set::lower_pop(object, args),
+        (Type::Set(elem), "pop") => set::lower_pop(object, args)
+            .map(|expr| crate::helpers::normalize_safe_option_result(elem, expr)),
         (Type::Set(_), "union") => set::lower_union(object, args),
         (Type::Set(_), "intersection") => set::lower_intersection(object, args),
         (Type::Set(_), "difference") => set::lower_difference(object, args),
@@ -675,6 +691,44 @@ mod tests {
         assert!(rendered.contains("if desc"));
         assert!(rendered.contains("xs.sort()"));
         assert!(rendered.contains("xs.reverse()"));
+    }
+
+    #[test]
+    fn safe_collection_methods_flatten_optional_payload_absence() {
+        let optional_string = Type::Union(vec![Type::Str, Type::None]);
+
+        let list_pop = lower_method(
+            &Type::List(Box::new(optional_string.clone())),
+            "pop",
+            "values",
+            &[],
+        )
+        .expect("optional list pop lowers");
+        assert_eq!(render_expr(&list_pop.expr), "(values.pop()).flatten()");
+
+        let dict_get = lower_method(
+            &Type::Dict(Box::new(Type::Str), Box::new(optional_string.clone())),
+            "get",
+            "values",
+            &["key".to_string()],
+        )
+        .expect("optional dict get lowers");
+        assert_eq!(
+            render_expr(&dict_get.expr),
+            "(values.get(&key).cloned()).flatten()"
+        );
+
+        let dict_pop = lower_method(
+            &Type::Dict(Box::new(Type::Str), Box::new(optional_string)),
+            "pop",
+            "values",
+            &["key".to_string()],
+        )
+        .expect("optional dict pop lowers");
+        assert_eq!(
+            render_expr(&dict_pop.expr),
+            "(values.remove(&key)).flatten()"
+        );
     }
 
     #[test]

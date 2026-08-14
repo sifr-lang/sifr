@@ -8,6 +8,7 @@ use super::{
 use crate::lower::type_bounds::{
     supports_structural_equality_in_context, supports_total_order_in_context,
 };
+use sifr_type_system::safe_optional_result;
 pub(super) fn resolve_list_method_type(
     elem_ty: &Type,
     method: &str,
@@ -215,14 +216,14 @@ pub(super) fn resolve_list_method_type(
                 }
             }
             // pop() returns Option[T] = T | None
-            Some(Type::Union(vec![elem_ty.clone(), Type::None]))
+            Some(safe_optional_result(elem_ty.clone()))
         }
         "popleft" => {
             if !args.is_empty() {
                 reject_no_method_args(ctx, "list.popleft", arg_ranges, method_range);
                 return None;
             }
-            Some(Type::Union(vec![elem_ty.clone(), Type::None]))
+            Some(safe_optional_result(elem_ty.clone()))
         }
         "appendleft" => {
             if args.len() != 1 {
@@ -487,7 +488,7 @@ pub(super) fn resolve_dict_method_type(
                 }
             } else {
                 // dict.get(key) -> V | None
-                Some(Type::Union(vec![val_ty.clone(), Type::None]))
+                Some(safe_optional_result(val_ty.clone()))
             }
         }
         "pop" => {
@@ -525,7 +526,7 @@ pub(super) fn resolve_dict_method_type(
                 Some(val_ty.clone())
             } else {
                 // pop() returns Option[V] = V | None
-                Some(Type::Union(vec![val_ty.clone(), Type::None]))
+                Some(safe_optional_result(val_ty.clone()))
             }
         }
         "setdefault" => {
@@ -734,7 +735,7 @@ pub(super) fn resolve_set_method_type(
                 return None;
             }
             // Returns Option[T] = T | None (safe: no panic on empty set)
-            Some(Type::Union(vec![elem_ty.clone(), Type::None]))
+            Some(safe_optional_result(elem_ty.clone()))
         }
         _ => {
             ctx.error_with_code_at(

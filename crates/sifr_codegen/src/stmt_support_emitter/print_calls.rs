@@ -57,11 +57,17 @@ impl RustEmitter {
                 let Some(lowered_iterator) = self.lower_stmt_expr_for_ir(&args[0])? else {
                     return Ok(None);
                 };
-                return Ok(Some(crate::RustExpr::MethodCall {
+                let next_expr = crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_iterator),
                     method: "next".to_string(),
                     args: vec![],
-                }));
+                };
+                let Some(payload) = args[0].ty().iterator_element_type() else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::helpers::normalize_safe_option_result(
+                    &payload, next_expr,
+                )));
             }
             if func == "anext" && args.len() == 1 {
                 let Some(lowered_iterator) = self.lower_stmt_expr_for_ir(&args[0])? else {
@@ -184,7 +190,7 @@ impl RustEmitter {
                                 Self::option_inner_type_for_ir(inner.ty())
                             {
                                 let option_format_str =
-                                    if Self::uses_debug_display_format_for_ir(option_inner_ty) {
+                                    if Self::uses_debug_display_format_for_ir(&option_inner_ty) {
                                         "{:?}".to_string()
                                     } else {
                                         "{}".to_string()
@@ -235,7 +241,7 @@ impl RustEmitter {
                 return Ok(None);
             };
             if let Some(inner) = Self::option_inner_type_for_ir(arg.ty()) {
-                let option_format_str = if Self::uses_debug_display_format_for_ir(inner) {
+                let option_format_str = if Self::uses_debug_display_format_for_ir(&inner) {
                     "{:?}".to_string()
                 } else {
                     "{}".to_string()
@@ -313,7 +319,7 @@ impl RustEmitter {
                 return Ok(None);
             };
             if let Some(inner) = Self::option_inner_type_for_ir(arg.ty()) {
-                let option_format_str = if Self::uses_debug_display_format_for_ir(inner) {
+                let option_format_str = if Self::uses_debug_display_format_for_ir(&inner) {
                     "{:?}".to_string()
                 } else {
                     "{}".to_string()

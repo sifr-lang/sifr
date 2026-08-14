@@ -4,6 +4,36 @@ use super::{
     HirExpr, ParamConvention, RustEmitter, RustExpr, Type,
 };
 impl RustEmitter {
+    pub(crate) fn flatten_option_argument_for_ir(
+        arg: &HirExpr,
+        param_ty: &Type,
+        effective_arg_ty: &Type,
+        convention: ParamConvention,
+        lowered_arg: RustExpr,
+    ) -> RustExpr {
+        let adapted = crate::helpers::flatten_option_value_for_target(
+            param_ty,
+            effective_arg_ty,
+            lowered_arg.clone(),
+        );
+        if adapted == lowered_arg {
+            return lowered_arg;
+        }
+        let value = if convention.is_borrowed()
+            && matches!(arg, HirExpr::Name { .. })
+            && !crate::helpers::is_copy_type_for_codegen(effective_arg_ty)
+        {
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Paren(Box::new(lowered_arg))),
+                method: "clone".to_string(),
+                args: Vec::new(),
+            }
+        } else {
+            lowered_arg
+        };
+        crate::helpers::flatten_option_value_for_target(param_ty, effective_arg_ty, value)
+    }
+
     pub(crate) fn try_lower_registry_plain_call_with_signature(
         &mut self,
         func: &str,
@@ -114,6 +144,16 @@ impl RustEmitter {
                 }
             }
 
+            let unadapted_option_arg = lowered_arg.clone();
+            lowered_arg = Self::flatten_option_argument_for_ir(
+                arg,
+                param_ty,
+                &effective_arg_ty,
+                *convention,
+                lowered_arg,
+            );
+            let option_value_adapted = lowered_arg != unadapted_option_arg;
+
             let mut recursive_option_adapted = false;
             if crate::helpers::is_option_type(resolved_param) {
                 if let Some(adapted) = self.try_adapt_recursive_option_constructor_arg_for_ir(
@@ -149,7 +189,7 @@ impl RustEmitter {
                         args: vec![lowered_arg],
                     };
                 }
-            } else if arg_is_option {
+            } else if arg_is_option && !option_value_adapted {
                 if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
                     lowered_arg = crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
@@ -444,6 +484,15 @@ impl RustEmitter {
         }
         let effective_arg_ty = self.effective_registry_expr_ty(arg);
         let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
+        let unadapted_option_arg = lowered_arg.clone();
+        lowered_arg = Self::flatten_option_argument_for_ir(
+            arg,
+            param_ty,
+            &effective_arg_ty,
+            convention,
+            lowered_arg,
+        );
+        let option_value_adapted = lowered_arg != unadapted_option_arg;
         if crate::helpers::is_option_type(param_ty)
             && !arg_is_option
             && !matches!(arg, HirExpr::NoneLiteral)
@@ -459,7 +508,10 @@ impl RustEmitter {
                 func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
                 args: vec![lowered_arg],
             };
-        } else if arg_is_option && !crate::helpers::is_option_type(param_ty) {
+        } else if arg_is_option
+            && !crate::helpers::is_option_type(param_ty)
+            && !option_value_adapted
+        {
             if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
                 lowered_arg = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),

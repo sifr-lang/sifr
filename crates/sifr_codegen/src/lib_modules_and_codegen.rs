@@ -38,7 +38,6 @@ pub(crate) type ModuleFuncSignatures = HashMap<String, FuncSignature>;
 type StdlibFuncSignatures = HashMap<String, ModuleFuncSignatures>;
 pub(crate) type UnionVariantTypes = Vec<(String, Type)>;
 pub(crate) type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
-pub(crate) type IsNoneUnionMatch = (String, String, UnionVariantTypes);
 
 pub use crate::entrypoints::{generate_rust, generate_rust_test, generate_rust_with_metadata};
 

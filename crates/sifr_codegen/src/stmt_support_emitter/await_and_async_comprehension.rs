@@ -165,6 +165,10 @@ impl RustEmitter {
         }
         let lowered_value = self.consuming_value_upcast_for_ir(target_ty, value_ty, lowered_value);
         let lowered_value =
+            crate::helpers::flatten_option_value_for_target(target_ty, value_ty, lowered_value);
+        let lowered_value =
+            crate::helpers::adapt_collection_storage_for_target(target_ty, value_ty, lowered_value);
+        let lowered_value =
             Self::wrap_option_local_value_for_ir(target_ty, value, value_ty, lowered_value);
         if crate::helpers::is_option_type(target_ty) {
             return Ok(lowered_value);
@@ -249,15 +253,8 @@ impl RustEmitter {
         }
     }
 
-    pub(crate) fn option_inner_type_for_ir(ty: &Type) -> Option<&Type> {
-        let resolved = crate::resolve_alias_type_for_plain_call(ty);
-        let Type::Union(members) = resolved else {
-            return None;
-        };
-        if members.len() != 2 || !members.iter().any(|member| matches!(member, Type::None)) {
-            return None;
-        }
-        members.iter().find(|member| !matches!(member, Type::None))
+    pub(crate) fn option_inner_type_for_ir(ty: &Type) -> Option<Type> {
+        ty.optional_member_type()
     }
 
     pub(crate) fn collect_stmt_string_concat_parts_for_ir<'a>(
@@ -473,6 +470,7 @@ impl RustEmitter {
         &mut self,
         value_expr: &HirExpr,
         generators: &[(String, HirExpr, Option<HirExpr>)],
+        result_ty: &Type,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
         let Some((var, iter_expr, maybe_filter)) = generators.first() else {
             return Ok(None);
@@ -486,9 +484,16 @@ impl RustEmitter {
         let Some(lowered_iter) = self.lower_stmt_expr_for_ir(iter_expr)? else {
             return Ok(None);
         };
-        let Some(lowered_value) = self.lower_stmt_expr_for_ir(value_expr)? else {
+        let Some(mut lowered_value) = self.lower_stmt_expr_for_ir(value_expr)? else {
             return Ok(None);
         };
+        if let Type::List(element_ty) = Self::resolve_alias_type_for_loop_iter(result_ty) {
+            lowered_value = crate::helpers::adapt_collection_value_for_target(
+                element_ty.as_ref(),
+                value_expr,
+                lowered_value,
+            );
+        }
 
         let result_ident = "__sifr_async_list_comp".to_string();
         let iter_ident = "__sifr_async_list_iter".to_string();
@@ -573,6 +578,7 @@ impl RustEmitter {
         &mut self,
         value_expr: &HirExpr,
         generators: &[(String, HirExpr, Option<HirExpr>)],
+        result_ty: &Type,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
         let Some((var, iter_expr, maybe_filter)) = generators.first() else {
             return Ok(None);
@@ -586,9 +592,16 @@ impl RustEmitter {
         let Some(lowered_iter) = self.lower_stmt_expr_for_ir(iter_expr)? else {
             return Ok(None);
         };
-        let Some(lowered_value) = self.lower_stmt_expr_for_ir(value_expr)? else {
+        let Some(mut lowered_value) = self.lower_stmt_expr_for_ir(value_expr)? else {
             return Ok(None);
         };
+        if let Type::Set(element_ty) = Self::resolve_alias_type_for_loop_iter(result_ty) {
+            lowered_value = crate::helpers::adapt_collection_value_for_target(
+                element_ty.as_ref(),
+                value_expr,
+                lowered_value,
+            );
+        }
 
         let result_ident = "__sifr_async_set_comp".to_string();
         let iter_ident = "__sifr_async_set_iter".to_string();
@@ -680,6 +693,7 @@ impl RustEmitter {
         key_expr: &HirExpr,
         val_expr: &HirExpr,
         generators: &[(String, HirExpr, Option<HirExpr>)],
+        result_ty: &Type,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
         let Some((var, iter_expr, maybe_filter)) = generators.first() else {
             return Ok(None);
@@ -693,12 +707,24 @@ impl RustEmitter {
         let Some(lowered_iter) = self.lower_stmt_expr_for_ir(iter_expr)? else {
             return Ok(None);
         };
-        let Some(lowered_key) = self.lower_stmt_expr_for_ir(key_expr)? else {
+        let Some(mut lowered_key) = self.lower_stmt_expr_for_ir(key_expr)? else {
             return Ok(None);
         };
-        let Some(lowered_value) = self.lower_stmt_expr_for_ir(val_expr)? else {
+        let Some(mut lowered_value) = self.lower_stmt_expr_for_ir(val_expr)? else {
             return Ok(None);
         };
+        if let Type::Dict(key_ty, value_ty) = Self::resolve_alias_type_for_loop_iter(result_ty) {
+            lowered_key = crate::helpers::adapt_collection_value_for_target(
+                key_ty.as_ref(),
+                key_expr,
+                lowered_key,
+            );
+            lowered_value = crate::helpers::adapt_collection_value_for_target(
+                value_ty.as_ref(),
+                val_expr,
+                lowered_value,
+            );
+        }
 
         let result_ident = "__sifr_async_dict_comp".to_string();
         let iter_ident = "__sifr_async_dict_iter".to_string();

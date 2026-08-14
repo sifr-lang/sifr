@@ -1,5 +1,5 @@
 use sifr_ir::HirExceptHandler;
-use sifr_type_system::Type;
+use sifr_type_system::{make_union, Type};
 
 pub(crate) fn timeout_error_type() -> Type {
     Type::Class {
@@ -13,13 +13,10 @@ pub(crate) fn timeout_error_type() -> Type {
 }
 
 pub(crate) fn exact_try_error_carrier(types: &[Type]) -> Option<Type> {
-    let mut members = types.to_vec();
-    members.sort_by_key(Type::union_variant_name);
-    members.dedup_by(|left, right| left.union_variant_name() == right.union_variant_name());
-    match members.len() {
-        0 => None,
-        1 => members.pop(),
-        _ => Some(Type::Union(members)),
+    if types.is_empty() {
+        None
+    } else {
+        Some(make_union(types.to_vec()))
     }
 }
 
@@ -75,6 +72,25 @@ mod tests {
     }
 
     #[test]
+    fn carrier_uses_the_canonical_union_member_order() {
+        let named_error = |name: &str| Type::Class {
+            identity: Some(format!("a.{name}")),
+            type_args: Vec::new(),
+            name: name.to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let os_error = named_error("OSError");
+        let zero_division = named_error("ZeroDivisionError");
+        let ordinary = make_union(vec![os_error.clone(), zero_division.clone()]);
+        let carrier = exact_try_error_carrier(&[zero_division, os_error])
+            .expect("carrier should contain both errors");
+
+        assert_eq!(carrier, ordinary);
+    }
+
+    #[test]
     fn carrier_collapses_structural_snapshots_of_one_nominal_identity() {
         let first = error("sifr.io.IOError");
         let mut second = first.clone();
@@ -83,10 +99,10 @@ mod tests {
         };
         fields.push(("kind".to_string(), Type::Str));
 
-        assert_eq!(
-            exact_try_error_carrier(&[first.clone(), second]),
-            Some(first)
-        );
+        let forward = exact_try_error_carrier(&[first.clone(), second.clone()]);
+        let reverse = exact_try_error_carrier(&[second.clone(), first]);
+        assert_eq!(forward, reverse);
+        assert_eq!(forward, Some(second));
     }
 
     #[test]

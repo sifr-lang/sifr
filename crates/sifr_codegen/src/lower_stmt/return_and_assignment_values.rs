@@ -49,9 +49,13 @@ pub(super) fn try_lower_simple_return_stmt(
 
     if option_return {
         if is_option_like_type(value.ty()) && !is_none_type(value.ty()) {
-            return Some(vec![RustStmt::Return(Some(try_lower_name_ident_expr(
-                value,
-            )?))]);
+            let lowered = try_lower_name_ident_expr(value)?;
+            let lowered = crate::helpers::flatten_option_value_for_target(
+                ctx.return_type?,
+                value.ty(),
+                lowered,
+            );
+            return Some(vec![RustStmt::Return(Some(lowered))]);
         }
         if matches!(value, HirExpr::NoneLiteral) {
             return Some(vec![RustStmt::Return(Some(RustExpr::Literal(
@@ -117,11 +121,24 @@ pub(super) fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<R
     if let Some(lowered) = crate::fixed_width_literal_expr_for_target(ty, value) {
         return Some(lowered);
     }
+    if is_option_like_type(value.ty()) {
+        let lowered = try_lower_name_ident_expr(value)?;
+        let adapted =
+            crate::helpers::flatten_option_value_for_target(ty, value.ty(), lowered.clone());
+        if adapted != lowered {
+            return Some(adapted);
+        }
+    }
     if is_option_like_type(ty) && matches!(value, HirExpr::NoneLiteral) {
         return Some(RustExpr::Literal(RustLiteral::None));
     }
     if is_option_like_type(ty) && is_option_like_type(value.ty()) && !is_none_type(value.ty()) {
-        return try_lower_name_ident_expr(value);
+        let lowered = try_lower_name_ident_expr(value)?;
+        return Some(crate::helpers::flatten_option_value_for_target(
+            ty,
+            value.ty(),
+            lowered,
+        ));
     }
     if is_option_like_type(ty) && !is_option_like_type(value.ty()) && !is_none_type(value.ty()) {
         return Some(RustExpr::FnCall {
@@ -155,7 +172,12 @@ pub(super) fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<R
     if !is_alias_equivalent_type(ty, value.ty()) {
         return None;
     }
-    try_lower_leaf_or_name_expr(value)
+    let lowered = try_lower_leaf_or_name_expr(value)?;
+    Some(crate::helpers::adapt_collection_storage_for_target(
+        ty,
+        value.ty(),
+        lowered,
+    ))
 }
 
 fn value_requires_consuming_class_upcast(target: &Type, value: &HirExpr) -> bool {

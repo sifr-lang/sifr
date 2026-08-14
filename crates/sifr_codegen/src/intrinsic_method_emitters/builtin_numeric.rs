@@ -743,7 +743,7 @@ impl RustEmitter {
                 };
                 let str_arg_ty = call_return_ty.as_ref().unwrap_or_else(|| args[0].ty());
                 if let Some(inner) = registry_option_inner_type(str_arg_ty) {
-                    let format_str = if registry_uses_debug_display_format(inner) {
+                    let format_str = if registry_uses_debug_display_format(&inner) {
                         "{:?}".to_string()
                     } else {
                         "{}".to_string()

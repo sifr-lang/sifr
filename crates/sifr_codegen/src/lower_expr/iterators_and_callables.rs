@@ -259,6 +259,7 @@ pub(super) fn adapt_simple_map_callable_arg(
 ) -> RustExpr {
     let resolved_param = resolve_alias_type(param_ty);
     let arg_is_option = is_option_like_simple(arg_ty);
+    lowered_arg = crate::helpers::flatten_option_value_for_target(param_ty, arg_ty, lowered_arg);
     if is_option_like_simple(resolved_param) && !arg_is_option {
         lowered_arg = RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),

@@ -1,4 +1,4 @@
-use sifr_type_system::{FunctionType, OwnershipKind, ParamConvention, Type};
+use sifr_type_system::{make_union, FunctionType, OwnershipKind, ParamConvention, Type};
 use std::collections::HashMap;
 
 pub(super) fn imported_constructor_function_type(class_ty: &Type) -> Option<FunctionType> {
@@ -184,7 +184,7 @@ fn rename_class_identities(ty: &Type, class_aliases: &HashMap<String, String>) -
                 .map(|item| rename_class_identities(item, class_aliases))
                 .collect(),
         ),
-        Type::Union(items) => Type::Union(
+        Type::Union(items) => make_union(
             items
                 .iter()
                 .map(|item| rename_class_identities(item, class_aliases))
@@ -416,10 +416,16 @@ fn set_canonical_identities(ty: &mut Type, local_classes: &HashMap<String, Strin
             set_canonical_identities(left, local_classes);
             set_canonical_identities(right, local_classes);
         }
-        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
+        Type::Tuple(items) | Type::Intersection(items) => {
             for item in items {
                 set_canonical_identities(item, local_classes);
             }
+        }
+        Type::Union(items) => {
+            for item in &mut *items {
+                set_canonical_identities(item, local_classes);
+            }
+            *ty = make_union(std::mem::take(items));
         }
         Type::Callable(params, _, result) | Type::AsyncCallable(params, _, result) => {
             for param in params {
@@ -512,5 +518,56 @@ fn set_canonical_identities(ty: &mut Type, local_classes: &HashMap<String, Strin
             }
         }
         _ => {}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn class(name: &str, identity: Option<&str>) -> Type {
+        Type::Class {
+            identity: identity.map(str::to_string),
+            type_args: Vec::new(),
+            name: name.to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        }
+    }
+
+    fn member_identities(ty: Type) -> Vec<String> {
+        let Type::Union(members) = ty else {
+            panic!("expected union");
+        };
+        members.iter().map(Type::union_variant_name).collect()
+    }
+
+    #[test]
+    fn imported_alias_renaming_keeps_union_identity_order() {
+        let original = make_union(vec![
+            class("Alpha", Some("pkg.Alpha")),
+            class("Beta", Some("pkg.Beta")),
+        ]);
+        let aliases = HashMap::from([("Alpha".to_string(), "Zeta".to_string())]);
+        let renamed = rename_class_identities(&original, &aliases);
+
+        assert_eq!(member_identities(original), member_identities(renamed));
+    }
+
+    #[test]
+    fn canonical_identity_insertion_reorders_union_members() {
+        let mut actual = Type::Union(vec![class("Zeta", None), class("Beta", None)]);
+        let identities = HashMap::from([
+            ("Zeta".to_string(), "pkg.Alpha".to_string()),
+            ("Beta".to_string(), "pkg.Beta".to_string()),
+        ]);
+        set_canonical_identities(&mut actual, &identities);
+        let expected = make_union(vec![
+            class("Zeta", Some("pkg.Alpha")),
+            class("Beta", Some("pkg.Beta")),
+        ]);
+
+        assert_eq!(actual, expected);
     }
 }

@@ -111,15 +111,23 @@ pub(super) fn try_lower_simple_subscript_assign_stmt(
     let lowered_value =
         maybe_clone_subscript_assignment_name(value, try_lower_leaf_or_name_expr(value)?);
     match resolve_alias_type(object_ty) {
-        Type::List(_) => Some(vec![build_list_subscript_assign_stmt(
+        Type::List(element_ty) => Some(vec![build_list_subscript_assign_stmt(
             RustExpr::Ident(object.to_string()),
             lowered_index,
-            lowered_value,
+            crate::helpers::flatten_option_value_for_target(
+                element_ty.as_ref(),
+                value.ty(),
+                lowered_value,
+            ),
         )]),
-        Type::Dict(_, _) => Some(vec![build_dict_subscript_assign_stmt(
+        Type::Dict(_, value_ty) => Some(vec![build_dict_subscript_assign_stmt(
             RustExpr::Ident(object.to_string()),
             lowered_index,
-            lowered_value,
+            crate::helpers::flatten_option_value_for_target(
+                value_ty.as_ref(),
+                value.ty(),
+                lowered_value,
+            ),
         )]),
         _ => None,
     }
@@ -238,22 +246,30 @@ pub(super) fn try_lower_simple_nested_subscript_assign_stmt(
     let inner_index_is_option = is_option_like_type(inner_index.ty());
     let target_elem_is_option = is_option_like_type(target_elem_ty);
     let lowered_value = try_lower_leaf_or_name_expr(value)?;
-    let assign_elem_stmt = if is_option_like_type(value.ty()) && !target_elem_is_option {
-        RustStmt::IfLet {
-            pattern: "Some(__nested_assign_value)".to_string(),
-            expr: lowered_value,
-            then_body: vec![RustStmt::Assign {
+    let adapted_value = crate::helpers::flatten_option_value_for_target(
+        target_elem_ty,
+        value.ty(),
+        lowered_value.clone(),
+    );
+    let option_value_adapted = adapted_value != lowered_value;
+    let lowered_value = adapted_value;
+    let assign_elem_stmt =
+        if is_option_like_type(value.ty()) && !target_elem_is_option && !option_value_adapted {
+            RustStmt::IfLet {
+                pattern: "Some(__nested_assign_value)".to_string(),
+                expr: lowered_value,
+                then_body: vec![RustStmt::Assign {
+                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                    value: RustExpr::Ident("__nested_assign_value".to_string()),
+                }],
+                else_body: None,
+            }
+        } else {
+            RustStmt::Assign {
                 target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-                value: RustExpr::Ident("__nested_assign_value".to_string()),
-            }],
-            else_body: None,
-        }
-    } else {
-        RustStmt::Assign {
-            target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-            value: lowered_value,
-        }
-    };
+                value: lowered_value,
+            }
+        };
 
     let mut inner_then_body = vec![RustStmt::Let {
         mutable: false,
@@ -378,24 +394,30 @@ pub(super) fn try_lower_simple_attribute_subscript_assign_stmt(
     value: &HirExpr,
     field_ty: &Type,
 ) -> Option<Vec<RustStmt>> {
-    let lowered_value = try_lower_leaf_or_name_expr(value)?;
-
     match resolve_alias_type(field_ty) {
-        Type::List(_) => Some(vec![build_list_subscript_assign_stmt(
+        Type::List(element_ty) => Some(vec![build_list_subscript_assign_stmt(
             RustExpr::Field {
                 expr: Box::new(RustExpr::Ident(object.to_string())),
                 field: field.to_string(),
             },
             try_lower_leaf_or_name_expr(index)?,
-            lowered_value,
+            crate::helpers::flatten_option_value_for_target(
+                element_ty.as_ref(),
+                value.ty(),
+                try_lower_leaf_or_name_expr(value)?,
+            ),
         )]),
-        Type::Dict(_, _) => Some(vec![build_dict_subscript_assign_stmt(
+        Type::Dict(_, value_ty) => Some(vec![build_dict_subscript_assign_stmt(
             RustExpr::Field {
                 expr: Box::new(RustExpr::Ident(object.to_string())),
                 field: field.to_string(),
             },
             try_lower_attribute_dict_insert_key_expr(index, field_ty)?,
-            lowered_value,
+            crate::helpers::flatten_option_value_for_target(
+                value_ty.as_ref(),
+                value.ty(),
+                try_lower_leaf_or_name_expr(value)?,
+            ),
         )]),
         _ => None,
     }
@@ -421,22 +443,30 @@ pub(super) fn try_lower_simple_attribute_nested_subscript_assign_stmt(
     let inner_index_is_option = is_option_like_type(inner_index.ty());
     let target_elem_is_option = is_option_like_type(target_elem_ty);
     let lowered_value = try_lower_leaf_or_name_expr(value)?;
-    let assign_elem_stmt = if is_option_like_type(value.ty()) && !target_elem_is_option {
-        RustStmt::IfLet {
-            pattern: "Some(__nested_assign_value)".to_string(),
-            expr: lowered_value,
-            then_body: vec![RustStmt::Assign {
+    let adapted_value = crate::helpers::flatten_option_value_for_target(
+        target_elem_ty,
+        value.ty(),
+        lowered_value.clone(),
+    );
+    let option_value_adapted = adapted_value != lowered_value;
+    let lowered_value = adapted_value;
+    let assign_elem_stmt =
+        if is_option_like_type(value.ty()) && !target_elem_is_option && !option_value_adapted {
+            RustStmt::IfLet {
+                pattern: "Some(__nested_assign_value)".to_string(),
+                expr: lowered_value,
+                then_body: vec![RustStmt::Assign {
+                    target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                    value: RustExpr::Ident("__nested_assign_value".to_string()),
+                }],
+                else_body: None,
+            }
+        } else {
+            RustStmt::Assign {
                 target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-                value: RustExpr::Ident("__nested_assign_value".to_string()),
-            }],
-            else_body: None,
-        }
-    } else {
-        RustStmt::Assign {
-            target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-            value: lowered_value,
-        }
-    };
+                value: lowered_value,
+            }
+        };
     let receiver = || RustExpr::Field {
         expr: Box::new(RustExpr::Ident(object.to_string())),
         field: field.to_string(),

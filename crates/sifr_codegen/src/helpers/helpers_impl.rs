@@ -1,4 +1,4 @@
-use super::{IsNoneUnionMatch, IsinstanceUnionMatch, ModuleFuncSignatures};
+use super::{IsinstanceUnionMatch, ModuleFuncSignatures};
 use crate::hir_analysis::{
     queries,
     traversal::{self, TraversalConfig},
@@ -202,17 +202,89 @@ pub(crate) fn default_param_convention(ty: &Type) -> ParamConvention {
 }
 
 pub(crate) fn is_option_type(ty: &Type) -> bool {
-    let resolved = crate::resolve_alias_type_for_plain_call(ty);
-    if let Type::Union(members) = resolved {
-        let non_none: Vec<&Type> = members
-            .iter()
-            .filter(|m| !matches!(m, Type::None))
-            .collect();
-        let has_none = members.iter().any(|m| matches!(m, Type::None));
-        has_none && non_none.len() == 1
-    } else {
-        false
+    ty.optional_member_type().is_some()
+}
+
+fn option_wrapper_depth(ty: &Type) -> usize {
+    let mut current = ty.clone();
+    let mut depth = 0;
+    while let Some(payload) = current.optional_member_type() {
+        depth += 1;
+        current = payload;
     }
+    depth
+}
+
+/// Adapt a representation-significant optional wrapper to its assignable target.
+pub(crate) fn flatten_option_value_for_target(
+    target: &Type,
+    source: &Type,
+    mut value: RustExpr,
+) -> RustExpr {
+    let target_depth = option_wrapper_depth(target);
+    let source_depth = option_wrapper_depth(source);
+    if target_depth == 0 && source_depth == 1 {
+        let Some(source_payload) = source.optional_member_type() else {
+            return value;
+        };
+        let canonical_source_payload =
+            match crate::resolve_alias_type_for_plain_call(&source_payload) {
+                Type::Union(members) => sifr_type_system::make_union(members.clone()),
+                other => other.clone(),
+            };
+        let canonical_target = match crate::resolve_alias_type_for_plain_call(target) {
+            Type::Union(members) => sifr_type_system::make_union(members.clone()),
+            other => other.clone(),
+        };
+        let Type::Union(target_members) = &canonical_target else {
+            return value;
+        };
+        if canonical_source_payload != canonical_target
+            || !target_members
+                .iter()
+                .any(|member| matches!(member.resolve_alias(), Type::None))
+        {
+            return value;
+        }
+        return RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Paren(Box::new(value))),
+            method: "unwrap_or".to_string(),
+            args: vec![RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    canonical_target.union_enum_name(),
+                    Type::None.union_variant_name(),
+                ])),
+                args: vec![RustExpr::Literal(crate::RustLiteral::Unit)],
+            }],
+        };
+    }
+    if target_depth == 0 || source_depth <= target_depth || !source.is_assignable_to(target) {
+        return value;
+    }
+    for _ in target_depth..source_depth {
+        value = RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Paren(Box::new(value))),
+            method: "flatten".to_string(),
+            args: Vec::new(),
+        };
+    }
+    value
+}
+
+/// Normalize nested absence produced by a safe collection operation.
+pub(crate) fn normalize_safe_option_result(payload: &Type, value: RustExpr) -> RustExpr {
+    let canonical_payload = match crate::resolve_alias_type_for_plain_call(payload) {
+        Type::Union(members) => sifr_type_system::make_union(members.clone()),
+        _ => return value,
+    };
+    if is_option_type(&canonical_payload) {
+        return RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Paren(Box::new(value))),
+            method: "flatten".to_string(),
+            args: Vec::new(),
+        };
+    }
+    value
 }
 
 /// Detect truthiness check on an Option variable: `if x:` where x has type T | None.
@@ -313,8 +385,13 @@ pub(crate) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionM
         if func == "isinstance" && args.len() == 2 {
             if let HirExpr::Name { name, ty, .. } = &args[0] {
                 let resolved_ty = crate::resolve_alias_type_for_plain_call(ty);
-                if let Type::Union(members) = resolved_ty {
+                if let Type::Union(raw_members) = resolved_ty {
                     if !is_option_type(resolved_ty) {
+                        let Type::Union(members) =
+                            sifr_type_system::make_union(raw_members.clone())
+                        else {
+                            return None;
+                        };
                         let type_name = match &args[1] {
                             HirExpr::StringLiteral(type_name) => type_name.as_str(),
                             HirExpr::Name { name, .. } => name.as_str(),
@@ -339,7 +416,7 @@ pub(crate) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionM
                         // Check that this type is a member of the union
                         if members.contains(&target_ty) {
                             let variant = target_ty.union_variant_name();
-                            let enum_name = resolved_ty.union_enum_name();
+                            let enum_name = Type::Union(members.clone()).union_enum_name();
                             // Collect other variants for else branch destructuring
                             let other_variants: Vec<(String, Type)> = members
                                 .iter()
@@ -439,40 +516,6 @@ pub(crate) fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
             if let HirExpr::Name { name, ty, .. } = left.as_ref() {
                 if is_option_type(ty) {
                     return Some(name.clone());
-                }
-            }
-        }
-    }
-    None
-}
-
-/// Detect `x is None` pattern for 3+ member unions containing None.
-/// Returns (`var_name`, `enum_name`, `non_none_variants`).
-pub(crate) fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatch> {
-    if let HirExpr::Compare {
-        left,
-        ops,
-        comparators,
-        ..
-    } = expr
-    {
-        if ops.len() == 1 && ops[0] == "is" && matches!(comparators[0], HirExpr::NoneLiteral) {
-            if let HirExpr::Name { name, ty, .. } = left.as_ref() {
-                if let Type::Union(members) = ty {
-                    let has_none = members.iter().any(|m| matches!(m, Type::None));
-                    let non_none: Vec<&Type> = members
-                        .iter()
-                        .filter(|m| !matches!(m, Type::None))
-                        .collect();
-                    // Only match for 3+ member unions (not simple Option)
-                    if has_none && non_none.len() >= 2 {
-                        let enum_name = ty.union_enum_name();
-                        let non_none_variants: Vec<(String, Type)> = non_none
-                            .iter()
-                            .map(|t| (t.union_variant_name(), (*t).clone()))
-                            .collect();
-                        return Some((name.clone(), enum_name, non_none_variants));
-                    }
                 }
             }
         }

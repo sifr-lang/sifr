@@ -29,8 +29,8 @@ fn extract_ipc_schema_type_inner(ty: &Type) -> IpcSchemaType {
                 .map(extract_ipc_schema_type)
                 .collect::<Vec<_>>(),
         ),
-        Type::Union(members) => {
-            extract_option_schema_type(members).unwrap_or_else(|| IpcSchemaType::Unsupported {
+        Type::Union(_) => {
+            extract_option_schema_type(ty).unwrap_or_else(|| IpcSchemaType::Unsupported {
                 type_name: ty.display_name(),
             })
         }
@@ -91,15 +91,10 @@ fn extract_ipc_schema_type_inner(ty: &Type) -> IpcSchemaType {
     }
 }
 
-fn extract_option_schema_type(members: &[Type]) -> Option<IpcSchemaType> {
-    if members.len() != 2 || !members.iter().any(|member| matches!(member, Type::None)) {
-        return None;
-    }
-    let payload = members
-        .iter()
-        .find(|member| !matches!(member, Type::None))?;
+fn extract_option_schema_type(ty: &Type) -> Option<IpcSchemaType> {
+    let payload = ty.optional_member_type()?;
     Some(IpcSchemaType::Option(Box::new(extract_ipc_schema_type(
-        payload,
+        &payload,
     ))))
 }
 

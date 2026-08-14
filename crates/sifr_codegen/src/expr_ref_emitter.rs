@@ -58,17 +58,6 @@ fn uses_debug_display_format(ty: &Type) -> bool {
     }
 }
 
-fn option_inner_type(ty: &Type) -> Option<&Type> {
-    let resolved = crate::resolve_alias_type_for_plain_call(ty);
-    let Type::Union(members) = resolved else {
-        return None;
-    };
-    if members.len() != 2 || !members.iter().any(|member| matches!(member, Type::None)) {
-        return None;
-    }
-    members.iter().find(|member| !matches!(member, Type::None))
-}
-
 fn option_inner_from_rust_type(ty: &Type) -> Option<Type> {
     let rust_ty = ty.rust_type();
     if !rust_ty.starts_with("Option<") {
@@ -90,8 +79,8 @@ fn option_inner_from_rust_type(ty: &Type) -> Option<Type> {
 }
 
 fn display_option_inner_type(expr: &HirExpr) -> Option<Type> {
-    if let Some(inner) = option_inner_type(expr.ty()) {
-        return Some(inner.clone());
+    if let Some(inner) = expr.ty().optional_member_type() {
+        return Some(inner);
     }
     if let HirExpr::Index { object, .. } = expr {
         match crate::resolve_alias_type_for_plain_call(object.ty()) {

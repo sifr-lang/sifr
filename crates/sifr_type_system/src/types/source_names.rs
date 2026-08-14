@@ -35,9 +35,25 @@ pub const GLOBAL_RUST_NOMINAL_IDENTITIES: &[&str] = &[
     "sifr.parallel.WorkerError",
 ];
 
+/// Canonical declarations that have exactly one compiler-generated Rust type
+/// at the crate root. Project-wide union support must reference these types;
+/// it must not reproduce them inside the shared nominal module.
+pub const CRATE_ROOT_RUST_NOMINAL_IDENTITIES: &[&str] = &[
+    "_sifr.fs.NativeFileHandle",
+    "sifr.builtin.CancellationError",
+    "sifr.builtin.TimeoutError",
+    "sifr.parallel.WorkerRuntimeError",
+    "sifr.parallel.WorkerError",
+];
+
 #[must_use]
 pub fn is_global_rust_nominal_identity(identity: &str) -> bool {
     GLOBAL_RUST_NOMINAL_IDENTITIES.contains(&identity)
+}
+
+#[must_use]
+pub fn is_crate_root_rust_nominal_identity(identity: &str) -> bool {
+    CRATE_ROOT_RUST_NOMINAL_IDENTITIES.contains(&identity)
 }
 
 /// Return a collision-free Rust identifier for a source-declared nominal type.
@@ -110,7 +126,10 @@ fn push_hex_byte(target: &mut String, byte: u8) {
 
 #[cfg(test)]
 mod tests {
-    use super::{class_rust_name, source_class_rust_name, stdlib_class_rust_name};
+    use super::{
+        class_rust_name, is_crate_root_rust_nominal_identity, is_global_rust_nominal_identity,
+        source_class_rust_name, stdlib_class_rust_name,
+    };
 
     #[test]
     fn escapes_compiler_namespaces_injectively() {
@@ -156,6 +175,20 @@ mod tests {
         assert_ne!(
             class_rust_name(Some("sifr.json.JsonValue"), "JsonValue"),
             class_rust_name(None, "JsonValue")
+        );
+    }
+
+    #[test]
+    fn native_file_handle_is_crate_root_owned_but_still_sealed() {
+        assert!(is_crate_root_rust_nominal_identity(
+            "_sifr.fs.NativeFileHandle"
+        ));
+        assert!(!is_global_rust_nominal_identity(
+            "_sifr.fs.NativeFileHandle"
+        ));
+        assert_eq!(
+            class_rust_name(Some("_sifr.fs.NativeFileHandle"), "NativeFileHandle"),
+            "__SifrIoNativeFileHandle"
         );
     }
 }

@@ -12,6 +12,7 @@ use super::{
     Ranged, Type,
 };
 use crate::lower::type_bounds::supports_print_formatting;
+use sifr_type_system::safe_optional_result;
 pub(super) enum CallLowering {
     Lowered(HirExpr),
     NoMatch,
@@ -176,7 +177,7 @@ pub(super) fn lower_unshadowed_builtin_call(
         ) {
             return None;
         }
-        let result_ty = Type::Union(vec![elem_ty, Type::None]);
+        let result_ty = safe_optional_result(elem_ty);
         let signature = sifr_type_system::FunctionType {
             receiver: None,
             params: vec![(
@@ -701,7 +702,7 @@ pub(super) fn lower_unshadowed_builtin_call(
                 mutable_arg_places: Vec::new(),
                 func: "min".to_string(),
                 args: vec![arg],
-                ty: Type::Union(vec![elem_ty, Type::None]),
+                ty: safe_optional_result(elem_ty),
             }));
         }
         expression_diagnostics::call_wrong_positional_count(
@@ -774,7 +775,7 @@ pub(super) fn lower_unshadowed_builtin_call(
                 mutable_arg_places: Vec::new(),
                 func: "max".to_string(),
                 args: vec![arg],
-                ty: Type::Union(vec![elem_ty, Type::None]),
+                ty: safe_optional_result(elem_ty),
             }));
         }
         expression_diagnostics::call_wrong_positional_count(

@@ -485,3 +485,41 @@ fn value() -> SifrInt { sifr_runtime::SifrInt::from_i64(1) }
     assert!(absolute.contains("impl ::sifr_runtime::python::PythonResourceIdentity"));
     assert!(absolute.contains("::sifr_runtime::SifrInt::from_i64"));
 }
+
+#[test]
+fn parsed_item_reference_detection_ignores_basename_substrings() {
+    let source = r#"
+struct MyTimeoutError {}
+struct Holder { value: __SifrIoNativeFileHandle }
+fn label() -> &'static str { "TimeoutError" }
+"#;
+
+    assert!(rust_source_references_item_name(
+        source,
+        "__SifrIoNativeFileHandle"
+    ));
+    assert!(!rust_source_references_item_name(source, "TimeoutError"));
+}
+
+#[test]
+fn item_partition_moves_only_exact_named_items() {
+    let source = r#"
+struct __SifrIoNativeFileHandle { value: i64 }
+impl __SifrIoNativeFileHandle { fn value(&self) -> i64 { self.value } }
+struct Holder { value: __SifrIoNativeFileHandle }
+"#;
+    let names = HashSet::from(["__SifrIoNativeFileHandle"]);
+
+    let (selected, remaining) = partition_rust_items_by_name(source, &names);
+
+    assert!(selected.contains("struct __SifrIoNativeFileHandle"));
+    assert!(selected.contains("impl __SifrIoNativeFileHandle"));
+    assert!(!selected.contains("struct Holder"));
+    assert!(remaining.contains("struct Holder"));
+    assert!(!remaining.contains("struct __SifrIoNativeFileHandle"));
+    assert!(rust_source_defines_item_name(
+        &selected,
+        "__SifrIoNativeFileHandle"
+    ));
+    assert!(!rust_source_defines_item_name(&selected, "Holder"));
+}

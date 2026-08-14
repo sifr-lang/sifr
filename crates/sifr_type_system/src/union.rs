@@ -17,8 +17,7 @@ use crate::types::Type;
 pub fn make_union(types: Vec<Type>) -> Type {
     let mut members = Vec::new();
     flatten_into(&mut members, types);
-    deduplicate(&mut members);
-    sort_members(&mut members);
+    normalize_members(&mut members);
 
     match members.len() {
         0 => Type::Never,
@@ -47,6 +46,11 @@ pub fn union_contains(union: &Type, ty: &Type) -> bool {
 /// Used for narrowing: if `x: int | str` and we know `x` is `int`,
 /// the else branch has `x: str`.
 pub fn subtract_from_union(union: &Type, to_remove: &Type) -> Type {
+    if matches!(to_remove.resolve_alias(), Type::None) {
+        if let Some(payload) = union.optional_member_type() {
+            return payload;
+        }
+    }
     match union {
         // Unknown minus a specific type is still Unknown (we can't enumerate what's left)
         Type::Unknown => Type::Unknown,
@@ -152,32 +156,287 @@ fn flatten_into(out: &mut Vec<Type>, types: Vec<Type>) {
     for ty in types {
         match ty {
             Type::Union(inner) => flatten_into(out, inner),
+            Type::Alias { body, .. } if matches!(body.as_ref(), Type::Union(_)) => {
+                flatten_into(out, vec![*body]);
+            }
             other => out.push(other),
         }
     }
 }
 
-/// Remove duplicate types.
-fn deduplicate(types: &mut Vec<Type>) {
-    let mut seen = Vec::new();
-    types.retain(|ty| {
-        if seen.contains(ty) {
-            false
-        } else {
-            seen.push(ty.clone());
-            true
+fn normalize_members(types: &mut Vec<Type>) {
+    if types.len() < 2 {
+        return;
+    }
+    // Remove common exact duplicates before allocating canonical identity keys.
+    let mut exact = Vec::with_capacity(types.len());
+    for ty in types.drain(..) {
+        if !exact.contains(&ty) {
+            exact.push(ty);
         }
-    });
+    }
+    *types = exact;
+    if types.len() < 2 {
+        return;
+    }
+    let mut keyed = types
+        .drain(..)
+        .map(|ty| (type_source_sort_key(&ty), ty))
+        .collect::<Vec<_>>();
+    keyed.sort_unstable_by(|left, right| left.0.cmp(&right.0));
+
+    let mut normalized = Vec::with_capacity(keyed.len());
+    let mut keyed = keyed.into_iter().peekable();
+    while let Some((primary_key, ty)) = keyed.next() {
+        if keyed
+            .peek()
+            .is_none_or(|(next_key, _)| next_key != &primary_key)
+        {
+            normalized.push(ty);
+            continue;
+        }
+        let mut group = vec![ty];
+        while keyed
+            .peek()
+            .is_some_and(|(next_key, _)| next_key == &primary_key)
+        {
+            if let Some((_, member)) = keyed.next() {
+                group.push(member);
+            }
+        }
+        append_normalized_group(&mut normalized, group);
+    }
+    *types = normalized;
 }
 
-/// Sort types for consistent ordering.
-/// Order: None, Bool, Int, fixed-width ints, Float, Str, `LiteralBool`, `LiteralInt`, `LiteralStr`,
-///        List, Dict, Tuple, Range, Iterable, Iterator, Function, Unknown, Any, Never, Union, Intersection, Alias
-fn sort_members(types: &mut [Type]) {
-    types.sort_by_key(type_sort_key);
+fn append_normalized_group(normalized: &mut Vec<Type>, group: Vec<Type>) {
+    if group.len() == 1 {
+        normalized.extend(group);
+        return;
+    }
+
+    let mut unique = Vec::with_capacity(group.len());
+    for ty in group {
+        if !unique.contains(&ty) {
+            unique.push(ty);
+        }
+    }
+    if unique.len() == 1 {
+        normalized.extend(unique);
+        return;
+    }
+
+    let mut keyed = unique
+        .into_iter()
+        .map(|ty| (ty.union_identity_key(), ty))
+        .collect::<Vec<_>>();
+    keyed.sort_unstable_by(|left, right| left.0.cmp(&right.0));
+    let mut deduplicated: Vec<(String, Type)> = Vec::with_capacity(keyed.len());
+    for (identity, ty) in keyed {
+        if let Some((current_identity, current)) = deduplicated.last_mut() {
+            if current_identity == &identity {
+                if representative_key(&ty) > representative_key(current) {
+                    *current = ty;
+                }
+                continue;
+            }
+        }
+        deduplicated.push((identity, ty));
+    }
+    normalized.extend(deduplicated.into_iter().map(|(_, ty)| ty));
 }
 
-fn type_sort_key(ty: &Type) -> (u8, String) {
+fn representative_key(ty: &Type) -> (u8, usize, usize, String, String, String) {
+    let representation = format!("{ty:?}");
+    let (kind, completeness, details, local_name) = match ty {
+        Type::Class {
+            name,
+            fields,
+            methods,
+            parent_class,
+            ..
+        } => (
+            2,
+            (fields.len() + methods.len(), fields.len()),
+            nominal_member_details(fields, methods, parent_class.as_deref()),
+            name.clone(),
+        ),
+        Type::Protocol { name, methods, .. } => (
+            2,
+            (methods.len(), 0),
+            nominal_member_details(&[], methods, None),
+            name.clone(),
+        ),
+        Type::Enum { name, variants, .. } => (
+            2,
+            (variants.len(), 0),
+            enum_member_details(variants),
+            name.clone(),
+        ),
+        Type::Newtype { name, .. } => (1, (0, 0), ty.union_identity_key(), name.clone()),
+        Type::Alias { name, .. } => (
+            1,
+            (type_information_score(ty), 0),
+            ty.union_identity_key(),
+            name.clone(),
+        ),
+        _ => (
+            1,
+            (type_information_score(ty), 0),
+            ty.union_identity_key(),
+            String::new(),
+        ),
+    };
+    (
+        kind,
+        completeness.0,
+        completeness.1,
+        details,
+        local_name,
+        representation,
+    )
+}
+
+fn type_information_score(ty: &Type) -> usize {
+    match ty {
+        Type::List(inner)
+        | Type::Set(inner)
+        | Type::Iterable(inner)
+        | Type::Iterator(inner)
+        | Type::Failure(inner)
+        | Type::TimeoutResult(inner)
+        | Type::Awaitable(inner)
+        | Type::PythonBuffer(inner)
+        | Type::PythonDlpackTensor(inner)
+        | Type::Alias { body: inner, .. }
+        | Type::Newtype { inner, .. } => type_information_score(inner),
+        Type::Dict(left, right)
+        | Type::Result(left, right)
+        | Type::Coroutine(left, right)
+        | Type::Task(left, right)
+        | Type::TaskResult(left, right)
+        | Type::Select2(left, right)
+        | Type::BlockingTask(left, right)
+        | Type::JoinSet(left, right)
+        | Type::AsyncIterator(left, right)
+        | Type::AsyncGenerator(left, right) => {
+            type_information_score(left) + type_information_score(right)
+        }
+        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
+            items.iter().map(type_information_score).sum()
+        }
+        Type::Function(function) | Type::AsyncFunction(function) => {
+            function_information_score(function)
+        }
+        Type::Class {
+            type_args,
+            fields,
+            methods,
+            parent_class,
+            ..
+        } => {
+            fields.len()
+                + methods.len()
+                + usize::from(parent_class.is_some())
+                + type_args.iter().map(type_information_score).sum::<usize>()
+                + fields
+                    .iter()
+                    .map(|(_, field)| type_information_score(field))
+                    .sum::<usize>()
+                + methods
+                    .iter()
+                    .map(|(_, method)| function_information_score(method))
+                    .sum::<usize>()
+        }
+        Type::Protocol { methods, .. } => {
+            methods.len()
+                + methods
+                    .iter()
+                    .map(|(_, method)| function_information_score(method))
+                    .sum::<usize>()
+        }
+        Type::Callable(parameters, _, result) | Type::AsyncCallable(parameters, _, result) => {
+            parameters.iter().map(type_information_score).sum::<usize>()
+                + type_information_score(result)
+        }
+        Type::Enum { variants, .. } => variants.len(),
+        Type::None
+        | Type::Bool
+        | Type::Int
+        | Type::FixedInt(_)
+        | Type::Float
+        | Type::Str
+        | Type::Bytes
+        | Type::Range
+        | Type::Any
+        | Type::Never
+        | Type::LiteralInt(_)
+        | Type::LiteralStr(_)
+        | Type::LiteralBool(_)
+        | Type::Unknown
+        | Type::TypeVar(_)
+        | Type::PythonArrow(_)
+        | Type::PythonDlpackStream
+        | Type::BigInt
+        | Type::Decimal
+        | Type::BigDecimal => 0,
+    }
+}
+
+fn function_information_score(function: &crate::types::FunctionType) -> usize {
+    function
+        .params
+        .iter()
+        .map(|(_, parameter, _)| type_information_score(parameter))
+        .sum::<usize>()
+        + type_information_score(&function.return_type)
+}
+
+fn nominal_member_details(
+    fields: &[(String, Type)],
+    methods: &[(String, crate::types::FunctionType)],
+    parent_class: Option<&str>,
+) -> String {
+    let mut details = String::new();
+    for (name, ty) in fields {
+        append_representative_component(&mut details, "field");
+        append_representative_component(&mut details, name);
+        append_representative_component(&mut details, &ty.union_identity_key());
+    }
+    for (name, function) in methods {
+        append_representative_component(&mut details, "method");
+        append_representative_component(&mut details, name);
+        append_representative_component(
+            &mut details,
+            &Type::Function(function.clone()).union_identity_key(),
+        );
+    }
+    if let Some(parent) = parent_class {
+        append_representative_component(&mut details, "parent");
+        append_representative_component(&mut details, parent);
+    }
+    details
+}
+
+fn enum_member_details(variants: &[(String, Option<i64>)]) -> String {
+    let mut details = String::new();
+    for (name, value) in variants {
+        append_representative_component(&mut details, name);
+        append_representative_component(
+            &mut details,
+            &value.map_or_else(|| "implicit".to_string(), |value| value.to_string()),
+        );
+    }
+    details
+}
+
+fn append_representative_component(target: &mut String, value: &str) {
+    target.push_str(&value.len().to_string());
+    target.push(':');
+    target.push_str(value);
+}
+
+fn type_source_sort_key(ty: &Type) -> (u8, String) {
     match ty {
         Type::None => (0, String::new()),
         Type::Bool => (1, String::new()),
@@ -209,43 +468,24 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::Awaitable(_) => (26, String::new()),
         Type::AsyncIterator(_, _) => (27, String::new()),
         Type::AsyncGenerator(_, _) => (28, String::new()),
-        Type::PythonBuffer(element) => (29, format!("buffer:{}", element.display_name())),
+        Type::PythonBuffer(_) => (29, "buffer".to_string()),
         Type::PythonArrow(kind) => (29, format!("arrow:{}", kind.source_name())),
-        Type::PythonDlpackTensor(element) => {
-            (29, format!("dlpack_tensor:{}", element.display_name()))
-        }
+        Type::PythonDlpackTensor(_) => (29, "dlpack_tensor".to_string()),
         Type::PythonDlpackStream => (29, "dlpack_stream".to_string()),
         Type::Unknown => (29, String::new()),
         Type::Any => (29, String::new()),
         Type::Never => (29, String::new()),
         Type::Union(_) => (30, String::new()),
         Type::Intersection(_) => (31, String::new()),
-        Type::Alias {
-            name, type_args, ..
-        } => (
-            31,
-            if type_args.is_empty() {
-                name.clone()
-            } else {
-                format!(
-                    "{}[{}]",
-                    name,
-                    type_args
-                        .iter()
-                        .map(Type::display_name)
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )
-            },
-        ),
-        Type::Class { .. } => (31, ty.display_name()),
+        Type::Alias { body, .. } => type_source_sort_key(body),
+        Type::Class { identity, name, .. } => (31, identity.as_ref().unwrap_or(name).clone()),
         Type::Result(_, _) => (32, String::new()),
-        Type::Protocol { name, .. } => (33, name.clone()),
-        Type::Newtype { name, .. } => (34, name.clone()),
+        Type::Protocol { identity, name, .. } => (33, identity.as_ref().unwrap_or(name).clone()),
+        Type::Newtype { identity, name, .. } => (34, identity.as_ref().unwrap_or(name).clone()),
         Type::TypeVar(name) => (35, name.clone()),
         Type::Callable(..) => (36, String::new()),
         Type::AsyncCallable(..) => (37, String::new()),
-        Type::Enum { name, .. } => (38, name.clone()),
+        Type::Enum { identity, name, .. } => (38, identity.as_ref().unwrap_or(name).clone()),
         Type::BigInt => (39, String::new()),
         Type::Decimal => (40, String::new()),
         Type::BigDecimal => (41, String::new()),
@@ -336,54 +576,278 @@ mod tests {
     }
 
     #[test]
-    fn test_subtract_from_union() {
-        let u = Type::Union(vec![Type::Int, Type::Str]);
-        let result = subtract_from_union(&u, &Type::Int);
-        assert_eq!(result, Type::Str);
+    fn python_resource_union_dedup_uses_alias_transparent_element_identity() {
+        let byte_alias = Type::Alias {
+            name: "Byte".to_string(),
+            type_args: Vec::new(),
+            body: Box::new(Type::FixedInt(crate::types::FixedIntType::U8)),
+        };
+        let uint8 = Type::FixedInt(crate::types::FixedIntType::U8);
+
+        for (left, right) in [
+            (
+                Type::PythonBuffer(Box::new(byte_alias.clone())),
+                Type::PythonBuffer(Box::new(uint8.clone())),
+            ),
+            (
+                Type::PythonDlpackTensor(Box::new(byte_alias)),
+                Type::PythonDlpackTensor(Box::new(uint8)),
+            ),
+        ] {
+            let forward = make_union(vec![left.clone(), right.clone()]);
+            let reverse = make_union(vec![right, left]);
+            assert!(!matches!(forward, Type::Union(_)));
+            assert_eq!(forward, reverse);
+        }
     }
 
     #[test]
-    fn test_subtract_none_from_optional() {
-        let u = Type::Union(vec![Type::None, Type::Str]);
-        let result = remove_none_from_union(&u);
-        assert_eq!(result, Type::Str);
+    fn nested_nominal_snapshot_dedup_keeps_the_complete_member_in_each_order() {
+        let incomplete = Type::List(Box::new(Type::Class {
+            identity: Some("pkg.Item".to_string()),
+            type_args: Vec::new(),
+            name: "Item".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        }));
+        let complete = Type::List(Box::new(Type::Class {
+            identity: Some("pkg.Item".to_string()),
+            type_args: Vec::new(),
+            name: "Item".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: Vec::new(),
+            parent_class: None,
+        }));
+
+        assert_eq!(
+            make_union(vec![incomplete.clone(), complete.clone()]),
+            complete
+        );
+        assert_eq!(make_union(vec![complete.clone(), incomplete]), complete);
     }
 
     #[test]
-    fn test_intersect_with_union() {
-        let u = Type::Union(vec![Type::Bool, Type::Int, Type::Str]);
-        let result = intersect_with_union(&u, &Type::Int);
-        assert_eq!(result, Type::Int);
+    fn narrowing_preserves_non_union_alias_semantics() {
+        let mapping = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
+        let alias = Type::Alias {
+            name: "__sifr_defaultdict_str_int".to_string(),
+            type_args: Vec::new(),
+            body: Box::new(mapping.clone()),
+        };
+        let optional = make_union(vec![alias.clone(), Type::None]);
+
+        assert_eq!(make_union(vec![mapping, alias.clone()]), alias);
+        assert_eq!(remove_none_from_union(&optional), alias);
     }
 
     #[test]
-    fn test_union_contains() {
-        let u = Type::Union(vec![Type::Int, Type::Str]);
-        assert!(union_contains(&u, &Type::Int));
-        assert!(union_contains(&u, &Type::Str));
-        assert!(!union_contains(&u, &Type::Bool));
+    fn nominal_union_order_uses_declaration_identity_for_equal_source_names() {
+        let class = |identity: &str| Type::Class {
+            identity: Some(identity.to_string()),
+            type_args: Vec::new(),
+            name: "Record".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let enumeration = |identity: &str| Type::Enum {
+            identity: Some(identity.to_string()),
+            name: "Status".to_string(),
+            variants: vec![("READY".to_string(), Some(1))],
+        };
+        let newtype = |identity: &str| Type::Newtype {
+            identity: Some(identity.to_string()),
+            name: "Token".to_string(),
+            inner: Box::new(Type::Int),
+        };
+
+        for (left, right) in [
+            (class("alpha.Record"), class("zoo.Record")),
+            (enumeration("alpha.Status"), enumeration("zoo.Status")),
+            (newtype("alpha.Token"), newtype("zoo.Token")),
+        ] {
+            let expected = make_union(vec![left.clone(), right.clone()]);
+            assert_eq!(make_union(vec![right, left]), expected);
+        }
     }
 
     #[test]
-    fn test_union_contains_none() {
-        let u = Type::Union(vec![Type::None, Type::Str]);
-        assert!(union_contains_none(&u));
-        let u2 = Type::Union(vec![Type::Int, Type::Str]);
-        assert!(!union_contains_none(&u2));
+    fn nominal_union_order_ignores_local_import_spellings() {
+        let class = |name: &str, identity: &str| Type::Class {
+            identity: Some(identity.to_string()),
+            type_args: Vec::new(),
+            name: name.to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let member_names = |union: Type| {
+            let Type::Union(members) = union else {
+                panic!("expected union");
+            };
+            members
+                .iter()
+                .map(Type::union_variant_name)
+                .collect::<Vec<_>>()
+        };
+        let original = make_union(vec![class("Alpha", "pkg.Alpha"), class("Beta", "pkg.Beta")]);
+        let aliased = make_union(vec![class("Zeta", "pkg.Alpha"), class("Beta", "pkg.Beta")]);
+
+        assert_eq!(member_names(original), member_names(aliased));
     }
 
     #[test]
-    fn test_is_assignable_to_union() {
-        let members = vec![Type::Int, Type::Str];
-        assert!(is_assignable_to_union(&Type::Int, &members));
-        assert!(is_assignable_to_union(&Type::Str, &members));
-        assert!(!is_assignable_to_union(&Type::Bool, &members));
+    fn nominal_snapshot_dedup_keeps_the_same_complete_member_in_each_order() {
+        let complete = Type::Class {
+            identity: Some("pkg.Record".to_string()),
+            type_args: Vec::new(),
+            name: "Record".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let incomplete = Type::Class {
+            identity: Some("pkg.Record".to_string()),
+            type_args: Vec::new(),
+            name: "Record".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let forward = make_union(vec![incomplete.clone(), complete.clone()]);
+        let reverse = make_union(vec![complete.clone(), incomplete]);
+
+        assert_eq!(forward, reverse);
+        assert_eq!(forward, complete);
     }
 
     #[test]
-    fn test_literal_overlap_with_base() {
-        let u = Type::Union(vec![Type::Int, Type::Str]);
-        let result = intersect_with_union(&u, &Type::LiteralInt(42));
-        assert_eq!(result, Type::Int);
+    fn nominal_snapshot_dedup_is_independent_of_local_spelling_order() {
+        let class = |name: &str| Type::Class {
+            identity: Some("pkg.Record".to_string()),
+            type_args: Vec::new(),
+            name: name.to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let protocol = |name: &str| Type::Protocol {
+            identity: Some("pkg.Readable".to_string()),
+            name: name.to_string(),
+            methods: Vec::new(),
+        };
+        let newtype = |name: &str| Type::Newtype {
+            identity: Some("pkg.Token".to_string()),
+            name: name.to_string(),
+            inner: Box::new(Type::Int),
+        };
+        let enumeration = |name: &str| Type::Enum {
+            identity: Some("pkg.Status".to_string()),
+            name: name.to_string(),
+            variants: Vec::new(),
+        };
+
+        for (left, right) in [
+            (class("LocalRecord"), class("Record")),
+            (protocol("LocalReadable"), protocol("Readable")),
+            (newtype("LocalToken"), newtype("Token")),
+            (enumeration("LocalStatus"), enumeration("Status")),
+        ] {
+            assert_eq!(
+                make_union(vec![left.clone(), right.clone()]),
+                make_union(vec![right, left])
+            );
+        }
+    }
+
+    #[test]
+    fn nominal_snapshot_completeness_counts_fields_and_methods_together() {
+        let method = crate::types::FunctionType::new(Vec::new(), Type::None);
+        let method_snapshot = Type::Class {
+            identity: Some("pkg.Record".to_string()),
+            type_args: Vec::new(),
+            name: "Record".to_string(),
+            fields: vec![("first".to_string(), Type::Int)],
+            methods: vec![("render".to_string(), method)],
+            parent_class: None,
+        };
+        let field_snapshot = Type::Class {
+            identity: Some("pkg.Record".to_string()),
+            type_args: Vec::new(),
+            name: "Record".to_string(),
+            fields: vec![
+                ("first".to_string(), Type::Int),
+                ("second".to_string(), Type::Str),
+            ],
+            methods: Vec::new(),
+            parent_class: None,
+        };
+
+        assert_eq!(
+            make_union(vec![method_snapshot, field_snapshot.clone()]),
+            field_snapshot
+        );
+    }
+
+    #[test]
+    fn union_order_is_permutation_independent_for_equal_primary_keys() {
+        let error = |identity: &str| Type::Class {
+            identity: Some(identity.to_string()),
+            type_args: Vec::new(),
+            name: "Failure".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let protocol = |identity: &str| Type::Protocol {
+            identity: Some(identity.to_string()),
+            name: "Readable".to_string(),
+            methods: Vec::new(),
+        };
+        let alias = |body| Type::Alias {
+            name: "Value".to_string(),
+            type_args: Vec::new(),
+            body: Box::new(body),
+        };
+
+        for (left, right) in [
+            (
+                Type::List(Box::new(Type::Int)),
+                Type::List(Box::new(Type::Str)),
+            ),
+            (
+                Type::Dict(Box::new(Type::Int), Box::new(Type::Str)),
+                Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+            ),
+            (
+                Type::Set(Box::new(Type::Int)),
+                Type::Set(Box::new(Type::Str)),
+            ),
+            (Type::Tuple(vec![Type::Int]), Type::Range),
+            (
+                Type::Result(Box::new(Type::Int), Box::new(error("alpha.Failure"))),
+                Type::Result(Box::new(Type::Int), Box::new(error("zoo.Failure"))),
+            ),
+            (protocol("alpha.Readable"), protocol("zoo.Readable")),
+            (alias(Type::Int), alias(Type::Str)),
+            (
+                Type::Callable(
+                    vec![Type::Int],
+                    vec![crate::ParamConvention::own()],
+                    Box::new(Type::Bool),
+                ),
+                Type::Callable(
+                    vec![Type::Str],
+                    vec![crate::ParamConvention::own()],
+                    Box::new(Type::Bool),
+                ),
+            ),
+        ] {
+            assert_eq!(
+                make_union(vec![left.clone(), right.clone()]),
+                make_union(vec![right, left])
+            );
+        }
     }
 }

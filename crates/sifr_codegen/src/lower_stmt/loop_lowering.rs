@@ -176,17 +176,7 @@ pub(super) fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -
 
     fn class_has_next(methods: &[(String, FunctionType)]) -> bool {
         class_method_signature(methods, "__next__").is_some_and(|next_ft| {
-            next_ft.params.is_empty()
-                && matches!(next_ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
-                    let has_none = members
-                        .iter()
-                        .any(|member| matches!(member.resolve_alias(), Type::None));
-                    let non_none = members
-                        .iter()
-                        .filter(|member| !matches!(member.resolve_alias(), Type::None))
-                        .count();
-                    has_none && non_none == 1
-                })
+            next_ft.params.is_empty() && next_ft.return_type.optional_member_type().is_some()
         })
     }
 

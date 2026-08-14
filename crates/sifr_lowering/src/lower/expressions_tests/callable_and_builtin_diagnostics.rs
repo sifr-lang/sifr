@@ -644,7 +644,7 @@ pub(super) fn test_bytes_index_and_iteration_expose_uint8() {
     };
     assert_eq!(
         first_ty,
-        &Type::Union(vec![Type::FixedInt(FixedIntType::U8), Type::None])
+        &sifr_type_system::make_union(vec![Type::FixedInt(FixedIntType::U8), Type::None])
     );
 
     let Some(HirStmt::For { target_ty, .. }) = function

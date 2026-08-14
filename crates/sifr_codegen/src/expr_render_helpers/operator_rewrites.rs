@@ -196,22 +196,7 @@ impl RustEmitter {
                             method: projection_method.to_string(),
                             args: vec![],
                         };
-                        if crate::helpers::is_option_type(value_ty.as_ref()) {
-                            crate::RustExpr::MethodCall {
-                                receiver: Box::new(lowered_get),
-                                method: "and_then".to_string(),
-                                args: vec![crate::RustExpr::Closure {
-                                    params: vec![crate::RustParam::Named {
-                                        name: "__v".to_string(),
-                                        ty: crate::RustType::Named("_".to_string()),
-                                    }],
-                                    body: Box::new(crate::RustExpr::Ident("__v".to_string())),
-                                    is_move: false,
-                                }],
-                            }
-                        } else {
-                            lowered_get
-                        }
+                        crate::helpers::normalize_safe_option_result(value_ty.as_ref(), lowered_get)
                     }
                     Type::List(element_ty) => {
                         let projection_method =
@@ -221,7 +206,7 @@ impl RustEmitter {
                         let object_name = "__sifr_index_list".to_string();
                         let index_name = "__sifr_index_i".to_string();
                         let normalized_name = "__sifr_index_norm".to_string();
-                        crate::RustExpr::Block {
+                        let lowered_index = crate::RustExpr::Block {
                             stmts: vec![
                                 crate::RustStmt::Let {
                                     mutable: false,
@@ -287,7 +272,11 @@ impl RustEmitter {
                                 method: projection_method.to_string(),
                                 args: vec![],
                             })),
-                        }
+                        };
+                        crate::helpers::normalize_safe_option_result(
+                            element_ty.as_ref(),
+                            lowered_index,
+                        )
                     }
                     Type::Bytes => {
                         let object_name = "__sifr_index_bytes".to_string();

@@ -235,7 +235,7 @@ fn compile_type(
     stack: &mut Vec<String>,
 ) -> CompiledIdentity {
     match ty.resolve_alias() {
-        Type::Int => CompiledIdentity::Static(identity::primitive("i64")),
+        Type::Int => CompiledIdentity::Static(identity::primitive("int")),
         Type::FixedInt(value) => CompiledIdentity::Static(identity::primitive(value.rust_name())),
         Type::Float => CompiledIdentity::Static(identity::primitive("f64")),
         Type::Bool => CompiledIdentity::Static(identity::primitive("bool")),
@@ -644,6 +644,118 @@ mod tests {
     }
 
     #[test]
+    fn structural_substitution_preserves_generic_union_grouping() {
+        let template =
+            sifr_type_system::make_union(vec![Type::Int, Type::TypeVar("T".to_string())]);
+        let bindings = HashMap::from([("T".to_string(), Type::Bool)]);
+        let actual = substitute_structural_type(&template, &bindings);
+
+        assert_eq!(actual, Type::Union(vec![Type::Int, Type::Bool]));
+    }
+
+    #[test]
+    fn generic_union_identity_matches_reordered_collapsed_and_nested_substitutions() {
+        let modules = Vec::new();
+        let context = IdentityContext { modules: &modules };
+        let template =
+            sifr_type_system::make_union(vec![Type::Str, Type::TypeVar("T".to_string())]);
+        assert_eq!(
+            compile_type(&template, "main", &context, &mut Vec::new()).expression(),
+            format!(
+                "{STRUCTURAL}::union(&[{STRUCTURAL}::ShapeIdentity::from_bytes({:?}), <T as {STRUCTURAL}::StructuralType>::shape_identity()])",
+                identity::primitive("str").as_bytes()
+            )
+        );
+
+        let reordered =
+            substitute_structural_type(&template, &HashMap::from([("T".to_string(), Type::Int)]));
+        let reordered_identity =
+            compile_type(&reordered, "main", &context, &mut Vec::new()).static_value();
+        assert_eq!(
+            reordered_identity,
+            Some(identity::union(&[
+                identity::primitive("str"),
+                identity::primitive("int"),
+            ]))
+        );
+
+        let collapsed =
+            substitute_structural_type(&template, &HashMap::from([("T".to_string(), Type::Str)]));
+        let collapsed_identity =
+            compile_type(&collapsed, "main", &context, &mut Vec::new()).static_value();
+        assert_eq!(collapsed, Type::Union(vec![Type::Str, Type::Str]));
+        assert_eq!(collapsed_identity, Some(identity::primitive("str")));
+
+        let nested_argument = sifr_type_system::make_union(vec![Type::Int, Type::Bool]);
+        let nested = substitute_structural_type(
+            &template,
+            &HashMap::from([("T".to_string(), nested_argument)]),
+        );
+        let nested_identity =
+            compile_type(&nested, "main", &context, &mut Vec::new()).static_value();
+        assert_eq!(
+            nested_identity,
+            Some(identity::union(&[
+                identity::primitive("str"),
+                identity::union(&[identity::primitive("bool"), identity::primitive("int"),]),
+            ]))
+        );
+
+        let optional_template =
+            sifr_type_system::make_union(vec![Type::None, Type::TypeVar("T".to_string())]);
+        assert_eq!(
+            compile_type(&optional_template, "main", &context, &mut Vec::new()).expression(),
+            format!(
+                "{STRUCTURAL}::unary_container(\"optional\", <T as {STRUCTURAL}::StructuralType>::shape_identity())"
+            )
+        );
+        let optional_argument = sifr_type_system::make_union(vec![Type::None, Type::Str]);
+        let nested_optional = substitute_structural_type(
+            &optional_template,
+            &HashMap::from([("T".to_string(), optional_argument)]),
+        );
+        let nested_optional_identity =
+            compile_type(&nested_optional, "main", &context, &mut Vec::new()).static_value();
+        assert_eq!(
+            nested_optional_identity,
+            Some(identity::unary_container(
+                "optional",
+                identity::unary_container("optional", identity::primitive("str")),
+            ))
+        );
+    }
+
+    #[test]
+    fn exact_and_fixed_width_integer_identities_are_distinct() {
+        let modules = Vec::new();
+        let context = IdentityContext { modules: &modules };
+        let exact = compile_type(&Type::Int, "main", &context, &mut Vec::new()).static_value();
+        let fixed = compile_type(
+            &Type::FixedInt(sifr_type_system::FixedIntType::I64),
+            "main",
+            &context,
+            &mut Vec::new(),
+        )
+        .static_value();
+
+        assert_eq!(exact, Some(identity::primitive("int")));
+        assert_eq!(fixed, Some(identity::primitive("i64")));
+        assert_ne!(exact, fixed);
+    }
+
+    #[test]
+    fn structural_identity_recanonicalizes_raw_union_members() {
+        let modules = Vec::new();
+        let context = IdentityContext { modules: &modules };
+        let raw = Type::Union(vec![Type::Int, Type::Bool]);
+        let canonical = sifr_type_system::make_union(vec![Type::Int, Type::Bool]);
+        let actual = compile_type(&raw, "main", &context, &mut Vec::new()).static_value();
+        let expected = compile_type(&canonical, "main", &context, &mut Vec::new()).static_value();
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
     fn mutually_recursive_records_compile_to_static_numbered_identity() {
         let a_to_b = class_type("B", vec![("a".to_string(), class_type("A", Vec::new()))]);
         let b_to_a = class_type("A", vec![("b".to_string(), class_type("B", Vec::new()))]);
@@ -752,7 +864,7 @@ mod tests {
             &[],
             &[NominalField {
                 name: "payload",
-                identity: identity::union(&[payload_identity, identity::primitive("str")]),
+                identity: identity::union(&[identity::primitive("str"), payload_identity]),
                 required: true,
                 default_identity: None,
             }],

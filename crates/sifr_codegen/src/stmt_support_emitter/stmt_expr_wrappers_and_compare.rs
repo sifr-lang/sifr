@@ -106,19 +106,8 @@ macro_rules! stmt_expr_wrappers_range_index {
             if let Some(lowered) = $emitter.try_lower_structured_index_expr(object, index, ty)? {
                 return Ok(Some(lowered));
             }
-            let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
             let index_returns_option = crate::helpers::is_option_type(ty);
-            let option_inner_ty = if let Type::Union(members) = object_ty {
-                let mut non_none = members.iter().filter(|m| !matches!(m, Type::None));
-                let first = non_none.next();
-                if non_none.next().is_none() && members.iter().any(|m| matches!(m, Type::None)) {
-                    first
-                } else {
-                    None
-                }
-            } else {
-                None
-            };
+            let option_inner_ty = object.ty().optional_member_type();
             if let Some(inner_ty) = option_inner_ty {
                 let Some(lowered_object) = $emitter.lower_stmt_expr_for_ir(object)? else {
                     return Ok(None);
@@ -245,6 +234,7 @@ macro_rules! stmt_expr_wrappers_range_index {
             let Some(lowered_index) = $emitter.lower_stmt_expr_for_ir(index)? else {
                 return Ok(None);
             };
+            let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
             match object_ty {
                 Type::Dict(_, value_ty) => {
                     let key_arg = if matches!(index.as_ref(), HirExpr::StringLiteral(_)) {

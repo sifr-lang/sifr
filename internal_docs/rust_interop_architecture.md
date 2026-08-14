@@ -626,6 +626,11 @@ An ordinary union is an aggregate `Union` node with one `ActiveMember` edge.
 The edge name is `member`. Its index selects the stored union-member order, and
 its child contains the active value. Construction rejects unknown indices or
 additional edges. Projection emits the same edge before the active value.
+Canonical member order uses the type category. Nominal types then use their
+stable declaration identity. The compiler-owned member identity resolves all
+remaining ties and merges repeated snapshots of one member.
+Structural union identity sorts and deduplicates member identities. This keeps
+generic and concrete union identities equal after type substitution.
 
 A C-like enum is a nominal aggregate `Enum` node with one `ActiveMember` edge.
 The edge contains the declared variant name and declaration index. Its child is

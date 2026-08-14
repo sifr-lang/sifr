@@ -114,6 +114,62 @@ def main() -> None:
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
+fn unrelated_project_union_keeps_module_local_native_file_handle() {
+    let dir = mktemp_dir("package_unrelated_union_native_handle");
+    let app = production_package(&dir, "app", "sifr-union-fs-app", "union_fs_app");
+    write_package_source(
+        &app,
+        "errors.sifr",
+        r#"class FirstError(Error):
+    message: str
+
+class SecondError(Error):
+    message: str
+
+def produce() -> Result[int, FirstError | SecondError]:
+    return 1
+"#,
+    );
+    write_package_source(
+        &app,
+        "reader.sifr",
+        r#"def read_it() -> str:
+    path: str = "/tmp/sifr_union_fs_probe.txt"
+    try:
+        f = open(path, "r", encoding="utf-8")
+        content: str = f.read()
+        f.close()
+        return content
+    except IOError as error:
+        return error.message
+"#,
+    );
+    write_package_source(
+        &app,
+        "main.sifr",
+        r#"from .errors import FirstError, SecondError, produce
+from .reader import read_it
+
+def relay() -> Result[int, FirstError | SecondError]:
+    return produce()
+
+def main() -> None:
+    print(read_it())
+"#,
+    );
+
+    let graph = package_graph(&dir, &[&app], &[]);
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+    let artifact = build_cached_package_project(&entrypoint)
+        .expect("an unrelated union must not relocate the filesystem native handle");
+
+    assert!(artifact.binary_path().exists());
+    let _ignored = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn canonical_open_handles_build_beside_local_same_basename_classes() {
     let dir = mktemp_dir("package_open_handle_identity_collision");
     let app = production_package(&dir, "app", "sifr-open-app", "open_app");
