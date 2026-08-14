@@ -367,8 +367,7 @@ pub fn generate_rust_multi_with_metadata(
             .cloned()
             .unwrap_or_default();
         let owned_unions = HashSet::new();
-        let structural_identity_module_name =
-            (!crate_root_modules.contains(module_name)).then_some(*module_name);
+        let structural_identity_module_name = Some(*module_name);
         let codegen_result = generate_rust_with_stdlib_for_module_with_project_policy(
             module,
             &module_codegen_code,

@@ -162,7 +162,7 @@ fn project_record_eligibility_resolves_nested_imported_members() {
 }
 
 #[test]
-fn project_root_record_keeps_unqualified_structural_identity() {
+fn project_root_record_keeps_qualified_structural_identity() {
     let module = module(vec![structural_function()], vec![payload_class()]);
 
     let project = crate::generate_rust_multi_with_metadata(
@@ -174,8 +174,8 @@ fn project_root_record_keeps_unqualified_structural_identity() {
         .get("main")
         .expect("main module is generated");
 
-    assert!(main_rust.contains("Some(\"Payload\")"), "{main_rust}");
-    assert!(!main_rust.contains("Some(\"main.Payload\")"), "{main_rust}");
+    assert!(main_rust.contains("Some(\"main.Payload\")"), "{main_rust}");
+    assert!(!main_rust.contains("Some(\"Payload\")"), "{main_rust}");
 }
 
 #[test]
@@ -237,6 +237,23 @@ fn project_structural_demand_enables_implicit_classes_across_modules() {
     assert!(metadata
         .required_features
         .contains(&sifr_stdlib_manifest::StdlibFeature::StructuralRuntime));
+}
+
+#[test]
+fn test_project_root_record_keeps_qualified_structural_identity() {
+    let case = module(vec![structural_function()], vec![payload_class()]);
+    let generated = crate::lib_test_project_codegen::generate_rust_test_project_with_metadata(
+        &[],
+        &[("case", &case)],
+        &crate::StdlibCode::default(),
+    );
+    let case_rust = generated
+        .test_rust_files
+        .get("case")
+        .expect("test module is generated");
+
+    assert!(case_rust.contains("Some(\"case.Payload\")"));
+    assert!(case_rust.contains("description.nominal_identity() != Some(\"case.Payload\")"));
 }
 
 #[test]

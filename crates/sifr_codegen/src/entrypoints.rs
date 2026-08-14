@@ -42,7 +42,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
     emitter.project_structural_record_identities = project_structural_record_identities.cloned();
     emitter.project_structural_identity_expressions =
         project_structural_identity_expressions.cloned();
-    emitter.structural_identity_module_name = None;
+    emitter.structural_identity_module_name = Some(module_name.to_string());
 
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);
