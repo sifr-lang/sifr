@@ -422,6 +422,25 @@ Milestone delivery records:
   identity `c24a89ff2f2a7d98471a23db41b127ca624c55eac318b04ce2788cca0841457c`.
 - The implementation has no Python production dependency, compatibility path,
   fallback, legacy path, or versioned public API name.
+- The `milestone_ps_7` structural-sum prerequisite merged in Sifr
+  [PR #3173](https://github.com/sifr-lang/sifr/pull/3173) at merge commit
+  `6bcce3876bdf4f07fab00c520c58462ec7b9c6ad`. The exact reviewed candidate was
+  `8ed45b3b14122806d3d992de4c3522e8427264b8`.
+- The prerequisite implements package-neutral enum and union construction and
+  projection. It also implements deterministic union ownership and demand gates.
+- The final whole-candidate Opus review returned `SATISFIED` with no blockers.
+  Its response SHA-256 is
+  `c8bf3a4b223e509e3474a2f2e8b4b1b6268fa43600b07ceed0a6d5837530a4ed`.
+- The canonical warm create-PR gate passed. The single merge gate passed every
+  phase-owned lane, all performance cases, and all structural bridge cases.
+- The merge continuation passed the remaining validation, runtime-platform,
+  E2E, hardening, and extra-E2E steps. Hardening covered 268 variants with no
+  errors.
+- One current-main crate error reproduced on the clean base. Issue
+  [#3179](https://github.com/sifr-lang/sifr/issues/3179) owns that nominal-path
+  source collision.
+- The prerequisite has no compatibility path, fallback, legacy path, or
+  versioned public API name.
 - `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
