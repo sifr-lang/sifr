@@ -179,11 +179,10 @@ fn project_root_record_keeps_qualified_structural_identity() {
     assert!(!main_rust.contains("Some(\"Payload\")"), "{main_rust}");
 
     let modules = [("main", &module)];
-    let roots = std::collections::HashSet::from(["main"]);
     let supported =
         crate::structural_impl_codegen::structural_record_identities_for_project(&modules);
     let identities = crate::structural_identity_codegen::static_class_identities_for_project(
-        &modules, &roots, &supported,
+        &modules, &supported,
     );
     let expected = nominal_record(
         "main.Payload",
