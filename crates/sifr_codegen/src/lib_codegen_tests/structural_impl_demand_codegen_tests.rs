@@ -4,6 +4,7 @@ use sifr_ir::{
     HirParam, MethodKind, RustInteropAbiRequirements, RustInteropDeclaration,
     RustInteropDecoratorKind, RustInteropEffect, TypedDeclarationMetadata,
 };
+use sifr_structural_identity::{metadata, nominal_record, primitive, NominalField};
 use sifr_type_system::{ParamConvention, Type};
 
 #[test]
@@ -176,6 +177,26 @@ fn project_root_record_keeps_qualified_structural_identity() {
 
     assert!(main_rust.contains("Some(\"main.Payload\")"), "{main_rust}");
     assert!(!main_rust.contains("Some(\"Payload\")"), "{main_rust}");
+
+    let modules = [("main", &module)];
+    let roots = std::collections::HashSet::from(["main"]);
+    let supported =
+        crate::structural_impl_codegen::structural_record_identities_for_project(&modules);
+    let identities = crate::structural_identity_codegen::static_class_identities_for_project(
+        &modules, &roots, &supported,
+    );
+    let expected = nominal_record(
+        "main.Payload",
+        &[],
+        &[NominalField {
+            name: "value",
+            identity: primitive("i64"),
+            required: true,
+            default_identity: None,
+        }],
+        metadata(&[]),
+    );
+    assert_eq!(identities.get("main.Payload"), Some(&expected));
 }
 
 #[test]
@@ -254,6 +275,7 @@ fn test_project_root_record_keeps_qualified_structural_identity() {
 
     assert!(case_rust.contains("Some(\"case.Payload\")"));
     assert!(case_rust.contains("description.nominal_identity() != Some(\"case.Payload\")"));
+    assert!(!case_rust.contains("Some(\"Payload\")"));
 }
 
 #[test]
