@@ -494,6 +494,29 @@ Milestone delivery records:
   same-bare-name nominal collisions.
 - The wave adds no compatibility path, fallback, legacy path, or versioned
   public API name.
+- The second `milestone_ps_7` companion wave merged in
+  [PR #6](https://github.com/sifr-lang/pydantic-sifr/pull/6) at merge commit
+  `75788bab0e6efbc72533be260883dfa37cf64135`. The exact reviewed and gated
+  candidate was `307eaf940dafcc2f6c01d3812c02d6e7eb18e6d7`.
+- The wave executes owned and compiler-emitted definitions and references. One
+  exact definition scope supports repeated scalar and model references.
+- Recursive model validation now keeps stable nested error paths and enforces
+  the configured depth limit. The public PS7 demo constructs a recursive model
+  from a compiler-emitted static program.
+- Definition construction rejects duplicate names, dangling references, and
+  structural identity or canonical-kind mismatches before input validation.
+- The canonical create-PR gate and the single merge gate passed. Evidence
+  includes 103 workspace tests, release-mode suites, strict Clippy, both locked
+  demos, the benchmark smoke test, and four fuzz targets with 1,000 runs each.
+- The exact-SHA Opus review returned `SATISFIED` with no blockers. Its response
+  SHA-256 is
+  `bf42f675e395d2722020142f950360db22758bdfd5169409e88f67f32ce266f3`.
+- A later PS7 hardening wave owns scope propagation through embedded JSON,
+  defaults, mapping keys, and lazy generators. It also owns reference-aware
+  smart ranking, dead-definition checks, recursive sum ordering, and an active
+  recursion-loop test.
+- The wave adds no compatibility path, fallback, legacy path, or versioned
+  public API name.
 - `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
