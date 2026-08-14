@@ -462,6 +462,38 @@ Milestone delivery records:
   that duplicate compiler-owned native-handle path defect.
 - The repair adds no compatibility path, fallback, legacy path, or versioned
   public API name.
+- The first `milestone_ps_7` companion wave merged in
+  [PR #5](https://github.com/sifr-lang/pydantic-sifr/pull/5) at merge commit
+  `d63bb8ea0a00b6229d8c4e4defab5045c2e2b24f`. The exact reviewed and gated
+  candidate was `368553f93cbe2316686bfb600d54978a12e44bfd`.
+- The wave implements literals, payload-free enums, nullable values, smart and
+  left-to-right ordinary unions, and field/path tagged unions. It also adds
+  labelled aggregate errors, error overrides, explicit auto-collapse, and one
+  public static-program demo.
+- Static smart-union ranking now checks model fields and mapping key/value
+  schemas recursively. Focused tests cover coerced mappings, coerced models,
+  and static left-to-right selection.
+- Canonical union order now separates qualified structural identity from the
+  compiler's bare nominal sort key. The guard covers class, newtype, and enum
+  secondary keys. Cross-module model and enum tests assert the complete union
+  identity.
+- The provenance audit covers 310 files and 12,754 nodes. Its manifest is
+  byte-identical on Python 3.12.5 and 3.13.1, with SHA-256
+  `4dfdfed840829f0fd439b42ebba859f22c9c491f8f7e62595fe2fc4f19fedf0e`.
+- The local create-PR gate and the cold GitHub create-PR gate passed on the
+  exact candidate. Both demos, the static round trip, the Python-free graph,
+  all workspace tests, the benchmark smoke test, and strict Clippy passed.
+- The single merge gate exited zero. It added release-mode suites and 1,000
+  bounded runs for each of four fuzz targets.
+- Four remediation reviews corrected recursive static exactness and nominal
+  union ordering. The final Opus review returned `SATISFIED` with no blockers.
+  Its response SHA-256 is
+  `f9ab19720cdd215d6de5b78e5fbf4c74b51026a3b68dd753bebf358ccafae7b3`.
+- Later PS7 waves own nested sum metadata, typed callback discriminators,
+  definitions, recursion, control composition, validation context, and
+  same-bare-name nominal collisions.
+- The wave adds no compatibility path, fallback, legacy path, or versioned
+  public API name.
 - `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
