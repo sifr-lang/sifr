@@ -517,6 +517,38 @@ Milestone delivery records:
   recursion-loop test.
 - The wave adds no compatibility path, fallback, legacy path, or versioned
   public API name.
+- The PS7 definition hardening wave merged in companion-repository
+  [PR #7](https://github.com/sifr-lang/pydantic-sifr/pull/7) at merge commit
+  `9777da116971acfea592bba566d9d873f5f20bca`. The exact reviewed and gated
+  candidate was `78bc611f1f58218d11a2239e2b3eb70d1355b4e8`.
+- Fresh parsed inputs, defaults, JSON object keys, and lazy generator items now
+  keep their definition scope. Each fresh input starts a new arena-local
+  recursion trace and keeps the shared depth budget.
+- Owned and compiler-emitted smart unions resolve definition references during
+  exactness ranking. Definition-wrapped sums use the same flattened canonical
+  layout during selection and construction.
+- Scope construction checks reachable and unreachable definitions. References
+  cannot target flattened wrappers or nested definition scopes. Owned and
+  compiler-emitted schemas enforce the same rule.
+- Focused validation passed 20 definition tests, static reference rejection,
+  nested depth accounting, strict Clippy, and the file-size guard. The refreshed
+  canonical create-PR gate passed all package checks and both locked demos.
+- The single authoritative merge gate exited zero. It passed all workspace and
+  release foundation tests, six fuzz-target builds, four fuzz targets with
+  1,000 runs each, the benchmark smoke test, and all provenance checks.
+- The first exact-SHA Opus review found one flattened `EmbeddedJson` layout
+  blocker. Its response SHA-256 is
+  `b3a91367fa7038a208d4cf8a844cb1cd6b2e4472255cce4b09168e7e5ef67608`.
+- The remediation also closed all related static-parity, depth, recursion,
+  scope-sharing, traversal, test, and documentation findings. The second
+  exact-SHA review returned `SATISFIED` with no blockers. Its response SHA-256
+  is `07c9ef47bfa2aafc867b5b4e13387bc6657df245914cf4a59aab45ac80e4189e`.
+- Later PS7 work can borrow definition targets during ranking, share each scope
+  map, resolve generator roots through references, and make extra-schema
+  verification explicit. It can also simplify the internal validation entry
+  point and expose owned reference targets through `SchemaRef` if required.
+- The hardening wave adds no compatibility path, fallback, legacy path, or
+  versioned public API name.
 - `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
