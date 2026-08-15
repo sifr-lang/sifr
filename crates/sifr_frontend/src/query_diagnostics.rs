@@ -3,7 +3,7 @@ use super::{
     SourceHash, SourcePath, SourceText, SymbolKind, SymbolView,
 };
 use crate::callable_exports::{exported_function_type, RustCallbackExports};
-use crate::class_method_exports::ClassMethodExports;
+use crate::class_method_exports::{exported_structural_methods, ClassMethodExports};
 pub(crate) use crate::export_type_localization::should_export_callable;
 use crate::export_type_localization::{
     copy_class_generic_metadata, copy_function_generic_metadata, declared_generic_metadata,
@@ -175,6 +175,7 @@ pub fn collect_module_exports(
     let mut class_exports = HashMap::new();
     let mut class_method_exports = ClassMethodExports::default();
     let mut class_type_param_exports = HashMap::new();
+    let mut structural_method_exports = HashMap::new();
     let mut rust_opaque_exports = std::collections::HashSet::new();
     let mut class_field_default_exports = HashMap::new();
     let mut const_exports = HashMap::new();
@@ -308,6 +309,9 @@ pub fn collect_module_exports(
             };
             let class_ty = canonicalize_user_export_type(&exported_type, &local_classes);
             class_exports.insert(class.name.clone(), class_ty);
+            if let Some(methods) = exported_structural_methods(class, &local_classes) {
+                structural_method_exports.insert(class.name.clone(), methods);
+            }
             if let Some(defaults) = lowering_result.class_field_defaults.get(&class.name) {
                 class_field_default_exports.insert(class.name.clone(), defaults.clone());
             }
@@ -316,7 +320,6 @@ pub fn collect_module_exports(
             }
         }
     }
-
     for (name, ty, _) in &module.constants {
         if !name.starts_with('_') {
             const_exports.insert(
@@ -458,6 +461,11 @@ pub fn collect_module_exports(
     external_defs
         .classes
         .insert(module_name.to_string(), class_exports);
+    if !structural_method_exports.is_empty() {
+        external_defs
+            .structural_methods
+            .insert(module_name.to_string(), structural_method_exports);
+    }
     if error_exports.is_empty() {
         external_defs.error_types.remove(module_name);
     } else {

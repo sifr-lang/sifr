@@ -1,6 +1,17 @@
-use crate::hir_nodes::HirExpr;
-use sifr_ir::CompilerIntrinsicId;
-use sifr_type_system::{FunctionType, Type};
+use crate::hir_nodes::{HirExpr, HirParam};
+use sifr_ir::{CompilerIntrinsicId, MethodKind};
+use sifr_type_system::{FunctionType, ReceiverConvention, Type};
+
+/// Package-neutral method contract retained for imported structural shape descriptions.
+#[derive(Debug, Clone)]
+pub struct StructuralMethodExport {
+    pub name: String,
+    pub params: Vec<HirParam>,
+    pub return_type: Type,
+    pub is_async: bool,
+    pub method_kind: MethodKind,
+    pub receiver: Option<ReceiverConvention>,
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct ModuleSpecializationMetadata {
@@ -37,6 +48,14 @@ pub struct ExternalDefs {
     /// Map of `module_name` -> (`class_name` -> `type_param_names`)
     pub class_type_params:
         std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,
+    /// Map of `module_name` -> (`class_name` -> annotated-method-capable contracts).
+    ///
+    /// These are compiler-internal exports. They preserve declaration details that
+    /// `Type::Class::methods` intentionally does not carry.
+    pub structural_methods: std::collections::HashMap<
+        String,
+        std::collections::HashMap<String, Vec<StructuralMethodExport>>,
+    >,
     /// Map of `module_name` -> (`class_name` -> declaration-order field defaults).
     ///
     /// Constructor defaults intentionally remain separate because an explicit constructor is

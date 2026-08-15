@@ -27,7 +27,7 @@ pub use lower::{
     lower_module_sysroot_public_stdlib_with_externals, lower_module_with_externals,
     lower_module_with_externals_and_name, lower_module_with_externals_name_and_options,
     substitute_type_vars, ExternalDefs, LoweringOptions, LoweringSourceOrigin,
-    PythonBridgeTargetAuthority, PythonTrustPolicy,
+    PythonBridgeTargetAuthority, PythonTrustPolicy, StructuralMethodExport,
 };
 pub use scope::{NarrowingSnapshot, Scope};
 pub use sifr_ir::{

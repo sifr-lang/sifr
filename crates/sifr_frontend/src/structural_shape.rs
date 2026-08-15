@@ -3,13 +3,14 @@
 use crate::ConstValue;
 use num_bigint::BigInt;
 use sifr_lowering::{
-    DeclarationMetadataTargetKind, HirClassKind, HirExpr, LoweringResult, TypedDeclarationMetadata,
+    DeclarationMetadataTargetKind, ExternalDefs, HirClassKind, HirExpr, LoweringResult,
+    TypedDeclarationMetadata,
 };
 use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod methods;
-use methods::described_methods;
+use methods::{described_exported_methods, described_methods};
 pub use methods::{ShapeMethod, ShapeParameter};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -93,8 +94,34 @@ pub enum ShapeNode {
 /// key or serialized static description.
 #[must_use]
 pub fn describe_type(module_name: &str, ty: &Type, lowering: &LoweringResult) -> StructuralShape {
+    describe_type_inner(module_name, ty, lowering, None)
+}
+
+/// Describe a type with project export metadata available for imported nominals.
+#[must_use]
+pub fn describe_type_with_externals(
+    module_name: &str,
+    ty: &Type,
+    lowering: &LoweringResult,
+    external_defs: &ExternalDefs,
+) -> StructuralShape {
+    describe_type_inner(module_name, ty, lowering, Some(external_defs))
+}
+
+fn describe_type_inner(
+    module_name: &str,
+    ty: &Type,
+    lowering: &LoweringResult,
+    external_defs: Option<&ExternalDefs>,
+) -> StructuralShape {
     let mut visiting = BTreeSet::new();
-    let root = describe_node(module_name, ty.resolve_alias(), lowering, &mut visiting);
+    let root = describe_node(
+        module_name,
+        ty.resolve_alias(),
+        lowering,
+        external_defs,
+        &mut visiting,
+    );
     let canonical_identity = canonical_node(&root);
     StructuralShape {
         root,
@@ -106,6 +133,7 @@ fn describe_node(
     module_name: &str,
     ty: &Type,
     lowering: &LoweringResult,
+    external_defs: Option<&ExternalDefs>,
     visiting: &mut BTreeSet<String>,
 ) -> ShapeNode {
     match ty {
@@ -123,25 +151,43 @@ fn describe_node(
             module_name,
             element,
             lowering,
+            external_defs,
             visiting,
         ))),
         Type::Dict(key, value) => ShapeNode::Dictionary(
-            Box::new(describe_node(module_name, key, lowering, visiting)),
-            Box::new(describe_node(module_name, value, lowering, visiting)),
+            Box::new(describe_node(
+                module_name,
+                key,
+                lowering,
+                external_defs,
+                visiting,
+            )),
+            Box::new(describe_node(
+                module_name,
+                value,
+                lowering,
+                external_defs,
+                visiting,
+            )),
         ),
         Type::Set(element) => ShapeNode::Set(Box::new(describe_node(
             module_name,
             element,
             lowering,
+            external_defs,
             visiting,
         ))),
         Type::Tuple(elements) => ShapeNode::Tuple(
             elements
                 .iter()
-                .map(|element| describe_node(module_name, element, lowering, visiting))
+                .map(|element| {
+                    describe_node(module_name, element, lowering, external_defs, visiting)
+                })
                 .collect(),
         ),
-        Type::Union(members) => describe_union(module_name, members, lowering, visiting),
+        Type::Union(members) => {
+            describe_union(module_name, members, lowering, external_defs, visiting)
+        }
         Type::TypeVar(name) => ShapeNode::TypeParameter(name.clone()),
         Type::Enum { name, variants, .. } => ShapeNode::Enum {
             identity: format!("{module_name}.{name}"),
@@ -157,7 +203,13 @@ fn describe_node(
         },
         Type::Newtype { name, inner, .. } => ShapeNode::Newtype {
             identity: format!("{module_name}.{name}"),
-            inner: Box::new(describe_node(module_name, inner, lowering, visiting)),
+            inner: Box::new(describe_node(
+                module_name,
+                inner,
+                lowering,
+                external_defs,
+                visiting,
+            )),
             metadata: Vec::new(),
         },
         Type::Class {
@@ -173,6 +225,7 @@ fn describe_node(
             type_args,
             fields,
             lowering,
+            external_defs,
             visiting,
         ),
         other => ShapeNode::Other(other.display_name()),
@@ -187,6 +240,7 @@ fn describe_union(
     module_name: &str,
     members: &[Type],
     lowering: &LoweringResult,
+    external_defs: Option<&ExternalDefs>,
     visiting: &mut BTreeSet<String>,
 ) -> ShapeNode {
     let non_none = members
@@ -198,13 +252,14 @@ fn describe_union(
             module_name,
             non_none[0],
             lowering,
+            external_defs,
             visiting,
         )));
     }
     ShapeNode::Union(
         members
             .iter()
-            .map(|member| describe_node(module_name, member, lowering, visiting))
+            .map(|member| describe_node(module_name, member, lowering, external_defs, visiting))
             .collect(),
     )
 }
@@ -217,6 +272,7 @@ fn describe_class(
     type_args: &[Type],
     fields: &[(String, Type)],
     lowering: &LoweringResult,
+    external_defs: Option<&ExternalDefs>,
     visiting: &mut BTreeSet<String>,
 ) -> ShapeNode {
     let identity = if declared_identity.contains('.') {
@@ -261,7 +317,7 @@ fn describe_class(
             };
         }
         if let Some(inner) = &class.newtype_inner {
-            let inner = describe_node(module_name, inner, lowering, visiting);
+            let inner = describe_node(module_name, inner, lowering, external_defs, visiting);
             visiting.remove(&identity);
             return ShapeNode::Newtype {
                 identity,
@@ -276,47 +332,95 @@ fn describe_class(
         }
     }
 
-    let defaults = lowering.class_field_defaults.get(local_name);
+    let external_class = local_class
+        .is_none()
+        .then(|| {
+            let (source_module, source_name) = identity.rsplit_once('.')?;
+            let external_defs = external_defs?;
+            Some((source_module, source_name, external_defs))
+        })
+        .flatten();
+    let declaration_metadata = external_class
+        .and_then(|(source_module, _, external_defs)| {
+            external_defs.declaration_metadata.get(source_module)
+        })
+        .map_or(lowering.declaration_metadata.as_slice(), Vec::as_slice);
+    let metadata_owner = external_class.map_or(local_name, |(_, source_name, _)| source_name);
+    let defaults = external_class
+        .and_then(|(source_module, source_name, external_defs)| {
+            external_defs
+                .class_field_defaults
+                .get(source_module)
+                .and_then(|classes| classes.get(source_name))
+        })
+        .or_else(|| lowering.class_field_defaults.get(local_name));
     let described_fields = fields
         .iter()
         .enumerate()
         .map(|(index, (name, ty))| ShapeField {
             name: name.clone(),
-            declared_type: describe_node(module_name, ty, lowering, visiting),
+            declared_type: describe_node(module_name, ty, lowering, external_defs, visiting),
             default: defaults
                 .and_then(|values| values.iter().find(|(field, _)| *field == index))
                 .and_then(|(_, value)| const_value_from_hir(value)),
             metadata: metadata_for(
-                &lowering.declaration_metadata,
-                local_name,
+                declaration_metadata,
+                metadata_owner,
                 DeclarationMetadataTargetKind::Field,
                 Some(name),
             ),
         })
         .collect();
-    let described_methods = local_class.map_or_else(Vec::new, |class| {
+    let described_methods = if let Some(class) = local_class {
         described_methods(
             module_name,
             local_name,
             class,
             type_args,
             lowering,
+            external_defs,
             visiting,
         )
-    });
+    } else if let Some((source_module, source_name, external_defs)) = external_class {
+        let methods = external_defs
+            .structural_methods
+            .get(source_module)
+            .and_then(|classes| classes.get(source_name))
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        let type_params = external_defs
+            .class_type_params
+            .get(source_module)
+            .and_then(|classes| classes.get(source_name))
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        described_exported_methods(
+            module_name,
+            source_name,
+            methods,
+            type_params,
+            type_args,
+            declaration_metadata,
+            lowering,
+            Some(external_defs),
+            visiting,
+        )
+    } else {
+        Vec::new()
+    };
     let type_arguments = type_args
         .iter()
-        .map(|argument| describe_node(module_name, argument, lowering, visiting))
+        .map(|argument| describe_node(module_name, argument, lowering, external_defs, visiting))
         .collect();
     visiting.remove(&identity);
     ShapeNode::Nominal {
-        identity,
+        identity: identity.clone(),
         type_arguments,
         fields: described_fields,
         methods: described_methods,
         metadata: metadata_for(
-            &lowering.declaration_metadata,
-            local_name,
+            declaration_metadata,
+            metadata_owner,
             DeclarationMetadataTargetKind::Type,
             None,
         ),

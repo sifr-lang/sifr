@@ -1,7 +1,7 @@
 use super::{describe_node, metadata_for, ShapeMetadata, ShapeNode};
 use sifr_lowering::{
-    substitute_type_vars, DeclarationMetadataTargetKind, HirClass, HirFunction, LoweringResult,
-    MethodKind,
+    substitute_type_vars, DeclarationMetadataTargetKind, HirClass, HirParam, LoweringResult,
+    MethodKind, StructuralMethodExport, TypedDeclarationMetadata,
 };
 use sifr_type_system::{
     ParamConvention, ParamMutability, ParamOwnership, ReceiverConvention, Type,
@@ -34,6 +34,7 @@ pub(super) fn described_methods(
     class: &HirClass,
     type_args: &[Type],
     lowering: &LoweringResult,
+    external_defs: Option<&sifr_lowering::ExternalDefs>,
     visiting: &mut BTreeSet<String>,
 ) -> Vec<ShapeMethod> {
     let mut seen = BTreeSet::new();
@@ -71,7 +72,11 @@ pub(super) fn described_methods(
                 module_name,
                 &entry.owner,
                 declared_name,
-                method,
+                &method.params,
+                &method.return_type,
+                method.method_kind,
+                method.receiver,
+                method.is_async,
                 &bindings,
                 metadata_for(
                     &lowering.declaration_metadata,
@@ -79,7 +84,69 @@ pub(super) fn described_methods(
                     DeclarationMetadataTargetKind::Method,
                     None,
                 ),
+                &lowering.declaration_metadata,
                 lowering,
+                external_defs,
+                visiting,
+            )
+        })
+        .collect()
+}
+
+pub(super) fn described_exported_methods(
+    module_name: &str,
+    class_name: &str,
+    methods: &[StructuralMethodExport],
+    type_params: &[String],
+    type_args: &[Type],
+    declaration_metadata: &[TypedDeclarationMetadata],
+    lowering: &LoweringResult,
+    external_defs: Option<&sifr_lowering::ExternalDefs>,
+    visiting: &mut BTreeSet<String>,
+) -> Vec<ShapeMethod> {
+    let mut seen = BTreeSet::new();
+    let owner_prefix = format!("{class_name}.");
+    let bindings = type_params
+        .iter()
+        .cloned()
+        .zip(type_args.iter().cloned())
+        .collect::<HashMap<_, _>>();
+    declaration_metadata
+        .iter()
+        .filter(|entry| {
+            entry.target_kind == DeclarationMetadataTargetKind::Method
+                && entry.owner.starts_with(&owner_prefix)
+                && seen.insert(entry.owner.clone())
+        })
+        .map(|entry| {
+            let declared_name = &entry.owner[owner_prefix.len()..];
+            let hir_name = if declared_name == "__init__" {
+                "new"
+            } else {
+                declared_name
+            };
+            let Some(method) = methods.iter().find(|method| method.name == hir_name) else {
+                panic!("validated imported method metadata must resolve to an exported method");
+            };
+            described_method(
+                module_name,
+                &entry.owner,
+                declared_name,
+                &method.params,
+                &method.return_type,
+                method.method_kind,
+                method.receiver,
+                method.is_async,
+                &bindings,
+                metadata_for(
+                    declaration_metadata,
+                    &entry.owner,
+                    DeclarationMetadataTargetKind::Method,
+                    None,
+                ),
+                declaration_metadata,
+                lowering,
+                external_defs,
                 visiting,
             )
         })
@@ -90,22 +157,24 @@ fn described_method(
     module_name: &str,
     owner: &str,
     declared_name: &str,
-    method: &HirFunction,
+    params: &[HirParam],
+    return_type: &Type,
+    method_kind: MethodKind,
+    receiver: Option<ReceiverConvention>,
+    is_async: bool,
     bindings: &HashMap<String, Type>,
     metadata: Vec<ShapeMetadata>,
+    declaration_metadata: &[TypedDeclarationMetadata],
     lowering: &LoweringResult,
+    external_defs: Option<&sifr_lowering::ExternalDefs>,
     visiting: &mut BTreeSet<String>,
 ) -> ShapeMethod {
     ShapeMethod {
         name: declared_name.to_string(),
-        kind: method_kind_name(method.method_kind).to_string(),
-        receiver: method
-            .receiver
-            .map(receiver_convention_name)
-            .map(str::to_string),
-        is_async: method.is_async,
-        params: method
-            .params
+        kind: method_kind_name(method_kind).to_string(),
+        receiver: receiver.map(receiver_convention_name).map(str::to_string),
+        is_async,
+        params: params
             .iter()
             .map(|param| ShapeParameter {
                 name: param.name.clone(),
@@ -113,12 +182,13 @@ fn described_method(
                     module_name,
                     &substitute_type_vars(&param.ty, bindings),
                     lowering,
+                    external_defs,
                     visiting,
                 ),
                 convention: param_convention_name(param.convention).to_string(),
                 keyword_only: param.keyword_only,
                 metadata: metadata_for(
-                    &lowering.declaration_metadata,
+                    declaration_metadata,
                     owner,
                     DeclarationMetadataTargetKind::Parameter,
                     Some(&param.name),
@@ -127,8 +197,9 @@ fn described_method(
             .collect(),
         result: Box::new(describe_node(
             module_name,
-            &substitute_type_vars(&method.return_type, bindings),
+            &substitute_type_vars(return_type, bindings),
             lowering,
+            external_defs,
             visiting,
         )),
         metadata,

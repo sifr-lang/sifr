@@ -1,7 +1,7 @@
 use crate::{
-    decode_const_specialization_outcome, describe_type, verify_json_integer_boundary,
-    ConstEvalError, ConstIssueTemplate, DeterministicConstEvaluator, JsonIntegerBoundaryDescriptor,
-    JsonIntegerKind, JsonIntegerProfile, JsonIntegerRepresentation,
+    decode_const_specialization_outcome, describe_type_with_externals,
+    verify_json_integer_boundary, ConstEvalError, ConstIssueTemplate, DeterministicConstEvaluator,
+    JsonIntegerBoundaryDescriptor, JsonIntegerKind, JsonIntegerProfile, JsonIntegerRepresentation,
 };
 use ruff_text_size::TextRange;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
@@ -55,7 +55,8 @@ pub(crate) fn run_specializations(
             ));
             continue;
         }
-        let shape = describe_type(module_name, &target_type, result).to_const_value();
+        let shape = describe_type_with_externals(module_name, &target_type, result, external_defs)
+            .to_const_value();
         let canonical_shape = crate::structural_shape::canonical_value(&shape);
         let Some(functions) = external_defs.const_functions.get(&request.package_module) else {
             errors.push(malformed(
@@ -565,6 +566,68 @@ class Model:
         assert_eq!(cli[0].args, editor[0].args);
         assert_eq!(cli[0].url, editor[0].url);
         assert_eq!(cli[0].message_template, editor[0].message_template);
+    }
+
+    #[test]
+    fn imported_annotated_methods_preserve_nested_program_identity() {
+        fn compile_consumer(method_return: &str) -> StaticSpecializationOutput {
+            let mut external_defs = ExternalDefs::default();
+            let package = compile(
+                "fixture.meta",
+                &package_source("warning", "shape_notice", true),
+                &external_defs,
+            )
+            .expect("package compiles");
+            collect_module_exports("fixture.meta", &package, &mut external_defs);
+
+            let return_expression = if method_return == "T" {
+                "value"
+            } else {
+                "\"\""
+            };
+            let model_source = format!(
+                r#"
+class Box[T]:
+    value: T
+
+    @staticmethod
+    @metadata("fixture.callback", "normalize")
+    @metadata("parameter", "value", "fixture.role", "input")
+    def normalize(value: T) -> {method_return}:
+        return {return_expression}
+"#
+            );
+            let models =
+                compile("models", &model_source, &external_defs).expect("model module compiles");
+            collect_module_exports("models", &models, &mut external_defs);
+
+            let consumer = compile(
+                "consumer",
+                r#"
+from fixture.meta import describe
+from models import Box
+
+@const_specialize("fixture.meta", "describe")
+class Container:
+    item: Box[int]
+"#,
+                &external_defs,
+            )
+            .expect("consumer specializes imported model");
+            consumer
+                .specialization_outputs
+                .into_iter()
+                .next()
+                .expect("consumer emits a static program")
+        }
+
+        let integer = compile_consumer("T");
+        assert!(integer.canonical_value.contains("normalize:static"));
+        assert!(integer.canonical_value.contains("fixture.callback"));
+        assert!(integer.canonical_value.contains("5:value:borrow:false:int"));
+
+        let string = compile_consumer("str");
+        assert_ne!(integer.program_identity, string.program_identity);
     }
 
     #[test]
