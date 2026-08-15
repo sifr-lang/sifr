@@ -405,13 +405,21 @@ impl RustEmitter {
                     field: field.clone(),
                 };
                 let lowered_stmt = match field_ty {
-                    Type::List(_) => {
+                    Type::List(element_ty) => {
                         let Some(index_expr) = self.lower_rendered_expr_for_ir(index)? else {
                             return Ok(None);
                         };
-                        crate::build_list_subscript_assign_stmt(receiver, index_expr, value_expr)
+                        crate::build_list_subscript_assign_stmt(
+                            receiver,
+                            index_expr,
+                            crate::helpers::flatten_option_value_for_target(
+                                element_ty.as_ref(),
+                                value.ty(),
+                                value_expr,
+                            ),
+                        )
                     }
-                    Type::Dict(key_ty, _) => {
+                    Type::Dict(key_ty, value_ty) => {
                         let key_needs_clone = matches!(
                             key_ty.as_ref(),
                             Type::Str | Type::TypeVar(_)
@@ -431,7 +439,14 @@ impl RustEmitter {
                         crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                             receiver: Box::new(receiver),
                             method: "insert".to_string(),
-                            args: vec![index_expr, value_expr],
+                            args: vec![
+                                index_expr,
+                                crate::helpers::flatten_option_value_for_target(
+                                    value_ty.as_ref(),
+                                    value.ty(),
+                                    value_expr,
+                                ),
+                            ],
                         })
                     }
                     _ => return Ok(None),

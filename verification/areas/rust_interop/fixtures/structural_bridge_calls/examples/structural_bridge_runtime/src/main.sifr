@@ -24,6 +24,10 @@ class Boxed[T]:
     value: T
 
 
+class OptionalBox[T]:
+    value: T | None
+
+
 class NestedValue:
     label: str
     leaves: list[Leaf]
@@ -105,6 +109,9 @@ def verify_structural_bridge_runtime() -> Result[str, StructuralBridgeError | Ru
     try:
         projection: str = observe_structural(original)
         assert projection == "records=3;sequences=1;optionals=1;strings=input,x,input-box"
+        nested_optional: OptionalBox[str | None] = OptionalBox(None)
+        nested_optional_projection: str = observe_structural(nested_optional)
+        assert nested_optional_projection == "records=1;sequences=0;optionals=1;strings="
 
         roundtrip_source: StructuralArena = open_structural_arena()
         decoded: NestedValue = structural_roundtrip(roundtrip_source, original)

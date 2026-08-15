@@ -399,6 +399,13 @@ macro_rules! stmt_expr_literals_and_calls {
                     lowered_element =
                         Self::clone_non_copy_name_expr_for_ir(element, lowered_element);
                 }
+                if let Type::List(element_ty) = list_ty {
+                    lowered_element = crate::helpers::adapt_collection_value_for_target(
+                        element_ty.as_ref(),
+                        element,
+                        lowered_element,
+                    );
+                }
                 if matches!(list_ty, Type::Bytes) {
                     lowered_element = crate::RustExpr::Cast {
                         expr: Box::new(lowered_element),
@@ -504,7 +511,7 @@ macro_rules! stmt_expr_literals_and_calls {
             }
             return Ok(Some(crate::RustExpr::Tuple(lowered_elements)));
         }
-        if let HirExpr::DictLiteral { keys, values, .. } = $expr {
+        if let HirExpr::DictLiteral { keys, values, ty } = $expr {
             if keys.len() != values.len() {
                 return Ok(None);
             }
@@ -522,12 +529,24 @@ macro_rules! stmt_expr_literals_and_calls {
                 },
             });
             for (key, value) in keys.iter().zip(values.iter()) {
-                let Some(lowered_key) = $emitter.lower_stmt_expr_for_ir(key)? else {
+                let Some(mut lowered_key) = $emitter.lower_stmt_expr_for_ir(key)? else {
                     return Ok(None);
                 };
-                let Some(lowered_value) = $emitter.lower_stmt_expr_for_ir(value)? else {
+                let Some(mut lowered_value) = $emitter.lower_stmt_expr_for_ir(value)? else {
                     return Ok(None);
                 };
+                if let Type::Dict(key_ty, value_ty) = crate::resolve_alias_type_for_plain_call(ty) {
+                    lowered_key = crate::helpers::adapt_collection_value_for_target(
+                        key_ty.as_ref(),
+                        key,
+                        lowered_key,
+                    );
+                    lowered_value = crate::helpers::adapt_collection_value_for_target(
+                        value_ty.as_ref(),
+                        value,
+                        lowered_value,
+                    );
+                }
                 stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Ident("__dict".to_string())),
                     method: "insert".to_string(),
@@ -539,7 +558,7 @@ macro_rules! stmt_expr_literals_and_calls {
                 expr: Some(Box::new(crate::RustExpr::Ident("__dict".to_string()))),
             }));
         }
-        if let HirExpr::SetLiteral { elements, .. } = $expr {
+        if let HirExpr::SetLiteral { elements, ty } = $expr {
             let mut stmts = Vec::with_capacity(elements.len() + 1);
             stmts.push(crate::RustStmt::Let {
                 mutable: true,
@@ -554,9 +573,16 @@ macro_rules! stmt_expr_literals_and_calls {
                 },
             });
             for element in elements {
-                let Some(lowered_element) = $emitter.lower_stmt_expr_for_ir(element)? else {
+                let Some(mut lowered_element) = $emitter.lower_stmt_expr_for_ir(element)? else {
                     return Ok(None);
                 };
+                if let Type::Set(element_ty) = crate::resolve_alias_type_for_plain_call(ty) {
+                    lowered_element = crate::helpers::adapt_collection_value_for_target(
+                        element_ty.as_ref(),
+                        element,
+                        lowered_element,
+                    );
+                }
                 stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Ident("__set".to_string())),
                     method: "insert".to_string(),
@@ -629,11 +655,17 @@ macro_rules! stmt_expr_literals_and_calls {
                 let Some(lowered_iterator) = $emitter.lower_stmt_expr_for_ir(&args[0])? else {
                     return Ok(None);
                 };
-                return Ok(Some(crate::RustExpr::MethodCall {
+                let next_expr = crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_iterator),
                     method: "next".to_string(),
                     args: vec![],
-                }));
+                };
+                let Some(payload) = args[0].ty().iterator_element_type() else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::helpers::normalize_safe_option_result(
+                    &payload, next_expr,
+                )));
             }
             if func == "anext" && args.len() == 1 {
                 let Some(lowered_iterator) = $emitter.lower_stmt_expr_for_ir(&args[0])? else {
@@ -660,7 +692,7 @@ macro_rules! stmt_expr_literals_and_calls {
                     return Ok(None);
                 };
                 if let Some(inner) = Self::option_inner_type_for_ir(arg.ty()) {
-                    let format_str = if Self::uses_debug_display_format_for_ir(inner) {
+                    let format_str = if Self::uses_debug_display_format_for_ir(&inner) {
                         "{:?}".to_string()
                     } else {
                         "{}".to_string()

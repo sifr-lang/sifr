@@ -186,14 +186,9 @@ impl RustEmitter {
                 self.rust_type_with_generics(ok),
                 self.rust_generator_error_type_with_generics(err)
             ),
-            Type::Union(members) => {
-                let non_none: Vec<&Type> = members
-                    .iter()
-                    .filter(|member| !matches!(member, Type::None))
-                    .collect();
-                let has_none = members.iter().any(|member| matches!(member, Type::None));
-                if has_none && non_none.len() == 1 {
-                    format!("Option<{}>", self.rust_type_with_generics(non_none[0]))
+            Type::Union(_) => {
+                if let Some(member) = ty.optional_member_type() {
+                    format!("Option<{}>", self.rust_type_with_generics(&member))
                 } else {
                     ty.rust_type()
                 }

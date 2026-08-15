@@ -9,7 +9,9 @@ impl std::fmt::Display for Type {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{FixedIntType, FunctionType, IterationCapability, OwnershipKind, ParamConvention};
+    use crate::{
+        make_union, FixedIntType, FunctionType, IterationCapability, OwnershipKind, ParamConvention,
+    };
 
     #[test]
     fn test_ownership_primitives_are_copy() {
@@ -162,7 +164,7 @@ mod tests {
         );
         assert_eq!(
             Type::Bytes.index_result_type(&Type::Int),
-            Some(Type::Union(vec![uint8.clone(), Type::None]))
+            Some(make_union(vec![uint8.clone(), Type::None]))
         );
         assert!(Type::Bytes.is_assignable_to(&Type::Iterable(Box::new(uint8))));
         assert!(!Type::Bytes.is_assignable_to(&Type::Iterable(Box::new(Type::Int))));
@@ -611,14 +613,21 @@ mod tests {
         // Safe indexing returns Option[T] = T | None
         assert_eq!(
             list_int.index_result_type(&Type::Int),
-            Some(Type::Union(vec![Type::Int, Type::None]))
+            Some(make_union(vec![Type::Int, Type::None]))
         );
         assert_eq!(list_int.index_result_type(&Type::Str), None);
 
         let dict_any_int = Type::Dict(Box::new(Type::Any), Box::new(Type::Int));
         assert_eq!(
             dict_any_int.index_result_type(&Type::Str),
-            Some(Type::Union(vec![Type::Int, Type::None]))
+            Some(make_union(vec![Type::Int, Type::None]))
+        );
+
+        let optional_int = make_union(vec![Type::Int, Type::None]);
+        let list_optional_int = Type::List(Box::new(optional_int.clone()));
+        assert_eq!(
+            list_optional_int.index_result_type(&Type::Int),
+            Some(optional_int)
         );
     }
 
@@ -703,6 +712,21 @@ mod tests {
     fn test_union_rust_type_option() {
         let optional_str = Type::Union(vec![Type::None, Type::Str]);
         assert_eq!(optional_str.rust_type(), "Option<String>");
+
+        let nested_optional = Type::Union(vec![Type::None, optional_str.clone()]);
+        assert_eq!(nested_optional.optional_member_type(), Some(optional_str));
+        assert_eq!(nested_optional.rust_type(), "Option<Option<String>>");
+
+        let inner_union = Type::Union(vec![Type::Int, Type::Str]);
+        let nested_general = Type::Union(vec![Type::None, inner_union.clone()]);
+        assert_eq!(
+            nested_general.optional_member_type(),
+            Some(inner_union.clone())
+        );
+        assert_eq!(
+            nested_general.rust_type(),
+            format!("Option<{}>", inner_union.rust_type())
+        );
     }
 
     #[test]

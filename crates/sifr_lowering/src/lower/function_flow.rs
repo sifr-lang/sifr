@@ -1,5 +1,5 @@
 use crate::hir_nodes::HirStmt;
-use sifr_type_system::Type;
+use sifr_type_system::{make_union, Type};
 
 /// Collect all return types from a list of HIR statements (recursively).
 pub(in crate::lower) fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
@@ -93,17 +93,7 @@ pub(in crate::lower) fn collapse_types(types: Vec<Type>, empty_type: Type) -> Ty
     if types.is_empty() {
         return empty_type;
     }
-    if types.len() == 1 {
-        return types.into_iter().next().unwrap_or(Type::Any);
-    }
-    let mut members = types;
-    members.sort_by_key(Type::display_name);
-    members.dedup();
-    if members.len() == 1 {
-        members.into_iter().next().unwrap_or(Type::Any)
-    } else {
-        Type::Union(members)
-    }
+    make_union(types)
 }
 
 pub(in crate::lower) fn infer_function_return_type(
@@ -194,21 +184,41 @@ pub(in crate::lower) fn infer_function_return_type(
 }
 
 fn normalize_generator_yield_type(yielded_type: Type) -> Type {
+    if let Some(member) = yielded_type.optional_member_type() {
+        return member;
+    }
     let Type::Union(members) = yielded_type else {
         return yielded_type;
     };
     if members.is_empty() {
         return Type::Union(members);
     }
-    let non_none: Vec<Type> = members
-        .iter()
-        .filter(|member| !matches!(member, Type::None))
-        .cloned()
-        .collect();
-    let has_none = members.iter().any(|member| matches!(member, Type::None));
-    if has_none && non_none.len() == 1 {
-        non_none.into_iter().next().unwrap_or(Type::Any)
-    } else {
-        Type::Union(members)
+    sifr_type_system::make_union(members)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn imported_class(local_name: &str, identity: &str) -> Type {
+        Type::Class {
+            identity: Some(identity.to_string()),
+            type_args: Vec::new(),
+            name: local_name.to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        }
+    }
+
+    #[test]
+    fn inferred_return_union_uses_declaration_identity_not_local_spelling() {
+        let alpha = imported_class("Zeta", "pkg.Alpha");
+        let beta = imported_class("Beta", "pkg.Beta");
+
+        assert_eq!(
+            collapse_types(vec![beta.clone(), alpha.clone()], Type::Any),
+            sifr_type_system::make_union(vec![alpha, beta])
+        );
     }
 }

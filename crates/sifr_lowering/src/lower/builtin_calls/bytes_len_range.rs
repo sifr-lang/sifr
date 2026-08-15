@@ -111,19 +111,9 @@ pub(in crate::lower) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
     let arg_ty = arg.ty().clone();
 
-    let effective_ty = if let Type::Union(members) = &arg_ty {
-        let non_none: Vec<&Type> = members
-            .iter()
-            .filter(|m| !matches!(m, Type::None))
-            .collect();
-        if non_none.len() == 1 {
-            non_none[0].clone()
-        } else {
-            arg_ty.clone()
-        }
-    } else {
-        arg_ty.clone()
-    };
+    let effective_ty = arg_ty
+        .optional_member_type()
+        .unwrap_or_else(|| arg_ty.clone());
     match effective_ty.resolve_alias() {
         Type::Str
         | Type::Bytes

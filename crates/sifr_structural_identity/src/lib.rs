@@ -89,7 +89,14 @@ pub fn tuple(members: &[ShapeIdentity]) -> ShapeIdentity {
 
 #[must_use]
 pub fn union(members: &[ShapeIdentity]) -> ShapeIdentity {
-    compose_identities("union", members)
+    let mut canonical = members.to_vec();
+    canonical.sort_unstable();
+    canonical.dedup();
+    match canonical.as_slice() {
+        [] => primitive("never"),
+        [member] => *member,
+        _ => compose_identities("union", &canonical),
+    }
 }
 
 #[must_use]
@@ -223,7 +230,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn identities_are_ordered_length_delimited_and_deterministic() {
+    fn identities_are_length_delimited_and_deterministic() {
         let string = primitive("str");
         assert_eq!(string, primitive("str"));
         assert_ne!(string, primitive("bytes"));
@@ -231,10 +238,18 @@ mod tests {
             tuple(&[primitive("a"), primitive("bc")]),
             tuple(&[primitive("ab"), primitive("c")])
         );
-        assert_ne!(
+        assert_eq!(
             union(&[primitive("a"), primitive("b")]),
             union(&[primitive("b"), primitive("a")])
         );
+    }
+
+    #[test]
+    fn union_identity_normalizes_empty_singleton_and_duplicate_members() {
+        let integer = primitive("int");
+        assert_eq!(union(&[]), primitive("never"));
+        assert_eq!(union(&[integer]), integer);
+        assert_eq!(union(&[integer, integer]), integer);
     }
 
     #[test]

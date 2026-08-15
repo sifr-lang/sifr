@@ -9,7 +9,12 @@ impl Type {
     #[must_use]
     pub fn union_enum_name(&self) -> String {
         match self {
-            Self::Union(_) => compiler_identifier("__SifrUnion_", &self.union_identity_key()),
+            Self::Union(members) => match crate::make_union(members.clone()) {
+                canonical @ Self::Union(_) => {
+                    compiler_identifier("__SifrUnion_", &canonical.union_identity_key())
+                }
+                collapsed => collapsed.rust_type(),
+            },
             _ => self.rust_type(),
         }
     }
@@ -20,7 +25,7 @@ impl Type {
         compiler_identifier("__SifrUnionVariant_", &self.union_identity_key())
     }
 
-    fn union_identity_key(&self) -> String {
+    pub(crate) fn union_identity_key(&self) -> String {
         match self {
             Self::Int => atom("int"),
             Self::FixedInt(fixed) => component("fixed", fixed.source_name()),
@@ -43,7 +48,7 @@ impl Type {
             Self::AsyncIterator(item, error) => binary("async_iterator", item, error),
             Self::AsyncGenerator(item, error) => binary("async_generator", item, error),
             Self::PythonBuffer(element) => unary("python_buffer", element),
-            Self::PythonArrow(kind) => format!("python_arrow:{}", kind.source_name()),
+            Self::PythonArrow(kind) => component("python_arrow", kind.source_name()),
             Self::PythonDlpackTensor(element) => unary("python_dlpack_tensor", element),
             Self::PythonDlpackStream => atom("python_dlpack_stream"),
             Self::List(element) => unary("list", element),
@@ -55,7 +60,7 @@ impl Type {
             Self::Iterator(element) => unary("iterator", element),
             Self::Any => atom("any"),
             Self::Never => atom("never"),
-            Self::Union(members) => unordered_sequence("union", members),
+            Self::Union(members) => union_sequence("union", members),
             Self::Intersection(members) => sequence("intersection", members),
             Self::LiteralInt(value) => component("literal_int", &value.to_string()),
             Self::LiteralStr(value) => component("literal_str", value),
@@ -64,11 +69,10 @@ impl Type {
                 name,
                 type_args,
                 body,
-            } => {
-                let mut key = named_sequence("alias", name, type_args);
-                append(&mut key, &body.union_identity_key());
-                key
+            } if matches!(body.as_ref(), Self::Unknown) => {
+                named_sequence("recursive_alias", name, type_args)
             }
+            Self::Alias { body, .. } => body.union_identity_key(),
             Self::Unknown => atom("unknown"),
             Self::Result(ok, error) => binary("result", ok, error),
             Self::Class {
@@ -149,18 +153,34 @@ fn sequence(tag: &str, values: &[Type]) -> String {
     key
 }
 
-fn unordered_sequence(tag: &str, values: &[Type]) -> String {
-    let mut identities = values
-        .iter()
-        .map(Type::union_identity_key)
-        .collect::<Vec<_>>();
+fn union_sequence(tag: &str, values: &[Type]) -> String {
+    let mut identities = Vec::new();
+    collect_union_identities(values, &mut identities);
     identities.sort_unstable();
+    identities.dedup();
+    if identities.len() == 1 {
+        if let Some(identity) = identities.pop() {
+            return identity;
+        }
+    }
     let mut key = component("sequence", tag);
     append(&mut key, &identities.len().to_string());
     for identity in identities {
         append(&mut key, &identity);
     }
     key
+}
+
+fn collect_union_identities(values: &[Type], identities: &mut Vec<String>) {
+    for value in values {
+        match value {
+            Type::Union(nested) => collect_union_identities(nested, identities),
+            Type::Alias { body, .. } if matches!(body.as_ref(), Type::Union(_)) => {
+                collect_union_identities(std::slice::from_ref(body.as_ref()), identities);
+            }
+            other => identities.push(other.union_identity_key()),
+        }
+    }
 }
 
 fn named_sequence(tag: &str, name: &str, values: &[Type]) -> String {
@@ -349,5 +369,33 @@ mod tests {
                 Type::Union(vec![Type::Int, alias]).union_enum_name()
             );
         }
+    }
+
+    #[test]
+    fn raw_identity_duplicate_union_renders_as_its_canonical_member() {
+        let class = Type::Class {
+            identity: Some("pkg.Item".to_string()),
+            type_args: Vec::new(),
+            name: "Item".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let snapshot = Type::Class {
+            identity: Some("pkg.Item".to_string()),
+            type_args: Vec::new(),
+            name: "Item".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        assert_eq!(
+            Type::Union(vec![class.clone(), snapshot]).union_enum_name(),
+            class.rust_type()
+        );
+        assert_eq!(
+            Type::Union(vec![class.clone(), class.clone()]).union_identity_key(),
+            class.union_identity_key()
+        );
     }
 }

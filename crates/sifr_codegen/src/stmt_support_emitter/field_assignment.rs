@@ -54,6 +54,8 @@ impl RustEmitter {
         let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(false);
         };
+        let value_expr =
+            crate::helpers::flatten_option_value_for_target(field_ty, value.ty(), value_expr);
         let value_expr = self.adapt_field_assign_value_for_recursive_storage(
             object,
             field,
@@ -81,6 +83,11 @@ impl RustEmitter {
         let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(None);
         };
+        let value_expr = crate::helpers::flatten_option_value_for_target(
+            nested_field_ty,
+            value.ty(),
+            value_expr,
+        );
         let value_expr = self.adapt_field_assign_value_for_recursive_storage(
             object,
             nested_field,
@@ -150,46 +157,19 @@ impl RustEmitter {
     }
 
     pub(crate) fn optional_recursive_class_name(field_ty: &Type) -> Option<String> {
-        let Type::Union(members) = field_ty.resolve_alias() else {
+        let member = field_ty.optional_member_type()?;
+        let Type::Class { name, .. } = member.resolve_alias() else {
             return None;
         };
-        let mut class_name: Option<String> = None;
-        let mut has_none = false;
-        for member in members {
-            match member.resolve_alias() {
-                Type::Class { name, .. } => class_name = Some(name.clone()),
-                Type::None => has_none = true,
-                _ => {}
-            }
-        }
-        if has_none {
-            class_name
-        } else {
-            None
-        }
+        Some(name.clone())
     }
 
     pub(crate) fn optional_class_name(ty: &Type) -> Option<String> {
-        let Type::Union(members) = ty.resolve_alias() else {
+        let member = ty.optional_member_type()?;
+        let Type::Class { name, .. } = member.resolve_alias() else {
             return None;
         };
-        if members.len() != 2 {
-            return None;
-        }
-        let mut class_name: Option<String> = None;
-        let mut has_none = false;
-        for member in members {
-            match member.resolve_alias() {
-                Type::Class { name, .. } => class_name = Some(name.clone()),
-                Type::None => has_none = true,
-                _ => return None,
-            }
-        }
-        if has_none {
-            class_name
-        } else {
-            None
-        }
+        Some(name.clone())
     }
 
     pub(crate) fn recursive_field_needs_boxing(
@@ -300,13 +280,21 @@ impl RustEmitter {
             field: field.clone(),
         };
         let lowered = match field_ty {
-            Type::List(_) => {
+            Type::List(element_ty) => {
                 let Some(index_expr) = self.lower_stmt_expr_for_ir(index)? else {
                     return Ok(false);
                 };
-                crate::build_list_subscript_assign_stmt(receiver, index_expr, value_expr)
+                crate::build_list_subscript_assign_stmt(
+                    receiver,
+                    index_expr,
+                    crate::helpers::flatten_option_value_for_target(
+                        element_ty.as_ref(),
+                        value.ty(),
+                        value_expr,
+                    ),
+                )
             }
-            Type::Dict(key_ty, _) => {
+            Type::Dict(key_ty, value_ty) => {
                 let key_needs_clone = matches!(key_ty.as_ref(), Type::Str | Type::TypeVar(_))
                     && matches!(index, HirExpr::Name { name, .. }
                         if self.borrowed_params.contains(name.as_str()) || self.mut_borrowed_params.contains(name.as_str()));
@@ -325,7 +313,14 @@ impl RustEmitter {
                 crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                     receiver: Box::new(receiver),
                     method: "insert".to_string(),
-                    args: vec![index_expr, value_expr],
+                    args: vec![
+                        index_expr,
+                        crate::helpers::flatten_option_value_for_target(
+                            value_ty.as_ref(),
+                            value.ty(),
+                            value_expr,
+                        ),
+                    ],
                 })
             }
             _ => return Ok(false),

@@ -189,7 +189,7 @@ fn project_root_record_keeps_qualified_structural_identity() {
         &[],
         &[NominalField {
             name: "value",
-            identity: primitive("i64"),
+            identity: primitive("int"),
             required: true,
             default_identity: None,
         }],

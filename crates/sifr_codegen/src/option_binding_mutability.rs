@@ -21,7 +21,7 @@ pub(crate) fn option_binding_requires_mut(
     let Some(inner_ty) = option_inner_type(option_ty) else {
         return false;
     };
-    let Type::Class { name, .. } = crate::resolve_alias_type_for_plain_call(inner_ty) else {
+    let Type::Class { name, .. } = crate::resolve_alias_type_for_plain_call(&inner_ty) else {
         return false;
     };
     recursive_fields
@@ -29,20 +29,6 @@ pub(crate) fn option_binding_requires_mut(
         .any(|(class_name, _)| class_name == name)
 }
 
-fn option_inner_type(ty: &Type) -> Option<&Type> {
-    let Type::Union(members) = crate::resolve_alias_type_for_plain_call(ty) else {
-        return None;
-    };
-    let mut non_none = members
-        .iter()
-        .filter(|member| !matches!(crate::resolve_alias_type_for_plain_call(member), Type::None));
-    let inner = non_none.next()?;
-    if non_none.next().is_some()
-        || !members
-            .iter()
-            .any(|member| matches!(crate::resolve_alias_type_for_plain_call(member), Type::None))
-    {
-        return None;
-    }
-    Some(inner)
+fn option_inner_type(ty: &Type) -> Option<Type> {
+    ty.optional_member_type()
 }

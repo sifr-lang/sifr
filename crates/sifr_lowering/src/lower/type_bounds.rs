@@ -336,13 +336,8 @@ fn supports_total_order(ty: &Type) -> bool {
 /// Whether `print` can use the exact Display/Debug strategy selected by codegen.
 pub(in crate::lower) fn supports_print_formatting(ty: &Type) -> bool {
     let resolved = ty.resolve_alias();
-    if let Type::Union(members) = resolved {
-        if members.len() == 2 && members.iter().any(|member| matches!(member, Type::None)) {
-            return members
-                .iter()
-                .find(|member| !matches!(member, Type::None))
-                .is_some_and(supports_print_formatting);
-        }
+    if let Some(member) = resolved.optional_member_type() {
+        return supports_print_formatting(&member);
     }
     match resolved {
         Type::List(_)

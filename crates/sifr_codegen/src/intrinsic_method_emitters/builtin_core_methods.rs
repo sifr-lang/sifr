@@ -186,11 +186,17 @@ impl RustEmitter {
                             args: vec![],
                         })
                     }
-                    _ => Some(RustExpr::MethodCall {
-                        receiver: Box::new(lowered_arg),
-                        method: "next".to_string(),
-                        args: vec![],
-                    }),
+                    _ => {
+                        let next_expr = RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "next".to_string(),
+                            args: vec![],
+                        };
+                        let payload = args[0].ty().iterator_element_type()?;
+                        Some(crate::helpers::normalize_safe_option_result(
+                            &payload, next_expr,
+                        ))
+                    }
                 }
             }
             "anext" if args.len() == 1 => {

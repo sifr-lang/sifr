@@ -32,25 +32,7 @@ fn async_result_parts(ty: &Type) -> Option<(Type, Type)> {
 }
 
 fn option_value_type(ty: &Type) -> Option<Type> {
-    let Type::Union(members) = ty.resolve_alias() else {
-        return None;
-    };
-    let has_none = members
-        .iter()
-        .any(|member| matches!(member.resolve_alias(), Type::None));
-    if !has_none {
-        return None;
-    }
-    let non_none = members
-        .iter()
-        .filter(|member| !matches!(member.resolve_alias(), Type::None))
-        .cloned()
-        .collect::<Vec<_>>();
-    if non_none.len() == 1 {
-        non_none.into_iter().next()
-    } else {
-        None
-    }
+    ty.optional_member_type()
 }
 
 pub(in crate::lower) fn async_iterator_parts(ty: &Type) -> Option<(Type, Type)> {

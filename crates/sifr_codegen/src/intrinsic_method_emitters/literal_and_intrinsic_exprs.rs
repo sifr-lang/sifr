@@ -1,4 +1,4 @@
-use super::{intrinsics, HirExpr, RustEmitter};
+use super::{intrinsics, HirExpr, RustEmitter, Type};
 use sifr_ir::CompilerIntrinsicId;
 
 impl RustEmitter {
@@ -6,6 +6,7 @@ impl RustEmitter {
         &mut self,
         keys: &[HirExpr],
         values: &[HirExpr],
+        ty: &Type,
     ) -> Option<crate::RustExpr> {
         if keys.len() != values.len() {
             return None;
@@ -28,13 +29,27 @@ impl RustEmitter {
         }];
 
         for (key, value) in keys.iter().zip(values.iter()) {
+            let lowered_key = self.try_lower_registry_expr_strict(key)?;
+            let lowered_value = self.try_lower_registry_expr_strict(value)?;
+            let (lowered_key, lowered_value) = match ty.resolve_alias() {
+                Type::Dict(key_ty, value_ty) => (
+                    crate::helpers::adapt_collection_value_for_target(
+                        key_ty.as_ref(),
+                        key,
+                        lowered_key,
+                    ),
+                    crate::helpers::adapt_collection_value_for_target(
+                        value_ty.as_ref(),
+                        value,
+                        lowered_value,
+                    ),
+                ),
+                _ => (lowered_key, lowered_value),
+            };
             stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::Ident(map_ident.clone())),
                 method: "insert".to_string(),
-                args: vec![
-                    self.try_lower_registry_expr_strict(key)?,
-                    self.try_lower_registry_expr_strict(value)?,
-                ],
+                args: vec![lowered_key, lowered_value],
             }));
         }
 
@@ -47,6 +62,7 @@ impl RustEmitter {
     pub(crate) fn try_lower_registry_set_literal_expr(
         &mut self,
         elements: &[HirExpr],
+        ty: &Type,
     ) -> Option<crate::RustExpr> {
         let set_ident = "__sifr_registry_set_literal".to_string();
         let mut stmts = vec![crate::RustStmt::Let {
@@ -66,6 +82,14 @@ impl RustEmitter {
 
         for element in elements {
             let lowered = self.try_lower_registry_expr_strict(element)?;
+            let lowered = match ty.resolve_alias() {
+                Type::Set(element_ty) => crate::helpers::adapt_collection_value_for_target(
+                    element_ty.as_ref(),
+                    element,
+                    lowered,
+                ),
+                _ => lowered,
+            };
             stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::Ident(set_ident.clone())),
                 method: "insert".to_string(),

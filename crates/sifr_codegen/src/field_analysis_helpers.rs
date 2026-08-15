@@ -22,19 +22,12 @@ impl RustEmitter {
         same_scc_classes: &HashSet<String>,
     ) -> String {
         match ty {
-            sifr_type_system::Type::Union(members) => {
-                let non_none: Vec<&sifr_type_system::Type> = members
-                    .iter()
-                    .filter(|member| !matches!(member, sifr_type_system::Type::None))
-                    .collect();
-                let has_none = members
-                    .iter()
-                    .any(|member| matches!(member, sifr_type_system::Type::None));
-                if has_none && non_none.len() == 1 {
-                    if type_references_any_class(non_none[0], same_scc_classes) {
+            sifr_type_system::Type::Union(_) => {
+                if let Some(member) = ty.optional_member_type() {
+                    if type_references_any_class(&member, same_scc_classes) {
                         format!(
                             "Option<Box<{}>>",
-                            self.recursive_target_rust_type_for_field(non_none[0])
+                            self.recursive_target_rust_type_for_field(&member)
                         )
                     } else {
                         self.rust_type_with_generics(ty)

@@ -58,15 +58,8 @@ pub(super) fn registry_uses_debug_display_format(ty: &Type) -> bool {
     }
 }
 
-pub(super) fn registry_option_inner_type(ty: &Type) -> Option<&Type> {
-    let resolved = crate::resolve_alias_type_for_plain_call(ty);
-    let Type::Union(members) = resolved else {
-        return None;
-    };
-    if members.len() != 2 || !members.iter().any(|member| matches!(member, Type::None)) {
-        return None;
-    }
-    members.iter().find(|member| !matches!(member, Type::None))
+pub(super) fn registry_option_inner_type(ty: &Type) -> Option<Type> {
+    ty.optional_member_type()
 }
 
 pub(super) fn registry_is_string_like_type(ty: &Type) -> bool {
@@ -173,17 +166,7 @@ pub(super) fn registry_class_method_signature<'a>(
 
 pub(super) fn registry_class_has_next(methods: &[(String, FunctionType)]) -> bool {
     registry_class_method_signature(methods, "__next__").is_some_and(|next_ft| {
-        next_ft.params.is_empty()
-            && matches!(next_ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
-                let has_none = members
-                    .iter()
-                    .any(|member| matches!(member.resolve_alias(), Type::None));
-                let non_none = members
-                    .iter()
-                    .filter(|member| !matches!(member.resolve_alias(), Type::None))
-                    .count();
-                has_none && non_none == 1
-            })
+        next_ft.params.is_empty() && next_ft.return_type.optional_member_type().is_some()
     })
 }
 
@@ -569,12 +552,16 @@ pub(super) fn registry_call_callable_with_owned_args(
         let mut lowered_arg = RustExpr::Ident(name.clone());
         let arg_is_option = crate::helpers::is_option_type(arg_ty);
         let param_is_option = crate::helpers::is_option_type(param_ty);
+        let adapted_arg =
+            crate::helpers::flatten_option_value_for_target(param_ty, arg_ty, lowered_arg.clone());
+        let option_value_adapted = adapted_arg != lowered_arg;
+        lowered_arg = adapted_arg;
         if param_is_option && !arg_is_option {
             lowered_arg = RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
                 args: vec![lowered_arg],
             };
-        } else if !param_is_option && arg_is_option {
+        } else if !param_is_option && arg_is_option && !option_value_adapted {
             lowered_arg = RustEmitter::force_unwrap_option_expr_for_ir(
                 lowered_arg,
                 "compiler-verified callable argument should be Some",

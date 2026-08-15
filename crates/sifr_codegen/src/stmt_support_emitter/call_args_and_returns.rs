@@ -66,6 +66,16 @@ impl RustEmitter {
                     || self.mut_borrowed_params.contains(name)
                     || ty.rust_type().starts_with('&'));
 
+            let unadapted_option_arg = lowered_arg.clone();
+            lowered_arg = Self::flatten_option_argument_for_ir(
+                hir_arg,
+                param_ty,
+                &effective_arg_ty,
+                *convention,
+                lowered_arg,
+            );
+            let option_value_adapted = lowered_arg != unadapted_option_arg;
+
             if matches!(hir_arg, HirExpr::NoneLiteral)
                 && matches!(resolved_param, Type::None | Type::TypeVar(_))
             {
@@ -111,7 +121,7 @@ impl RustEmitter {
                         args: vec![wrapped_inner],
                     };
                 }
-            } else if arg_is_option {
+            } else if arg_is_option && !option_value_adapted {
                 if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
                     lowered_arg = crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),

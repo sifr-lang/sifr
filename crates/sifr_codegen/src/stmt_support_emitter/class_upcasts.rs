@@ -17,14 +17,14 @@ impl RustEmitter {
             if let Some(source_inner) = Self::option_inner_type_for_ir(source_ty) {
                 let value = crate::RustExpr::Ident("__sifr_option_value".to_string());
                 let converted =
-                    self.consuming_value_upcast_for_ir(target_inner, source_inner, value.clone());
+                    self.consuming_value_upcast_for_ir(&target_inner, &source_inner, value.clone());
                 if converted == value {
                     return lowered;
                 }
                 return map_value(lowered, "map", "__sifr_option_value", converted);
             }
             // The ordinary option adapter wraps the converted payload in Some.
-            return self.consuming_value_upcast_for_ir(target_inner, source_ty, lowered);
+            return self.consuming_value_upcast_for_ir(&target_inner, source_ty, lowered);
         }
 
         if let (Type::Result(source_ok, source_error), Type::Result(target_ok, target_error)) =
@@ -111,7 +111,8 @@ impl RustEmitter {
         source_ty: &Type,
         mut lowered: crate::RustExpr,
     ) -> crate::RustExpr {
-        let target_ty = Self::option_inner_type_for_ir(target_ty).unwrap_or(target_ty);
+        let target_inner = Self::option_inner_type_for_ir(target_ty);
+        let target_ty = target_inner.as_ref().unwrap_or(target_ty);
         let (
             Type::Class {
                 identity: source_identity,

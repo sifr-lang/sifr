@@ -324,6 +324,43 @@ pub(crate) fn strip_rust_items_by_name(rust_code: &str, names: &HashSet<&str>) -
     render_items(&kept_items)
 }
 
+pub(crate) fn partition_rust_items_by_name(
+    rust_code: &str,
+    names: &HashSet<&str>,
+) -> (String, String) {
+    let Ok(parsed) = syn::parse_file(rust_code) else {
+        return (String::new(), rust_code.to_string());
+    };
+    let (selected, remaining): (Vec<_>, Vec<_>) = parsed.items.into_iter().partition(|item| {
+        parse_item_name(item)
+            .as_deref()
+            .is_some_and(|name| names.contains(name))
+    });
+    (render_items(&selected), render_items(&remaining))
+}
+
+pub(crate) fn rust_source_references_item_name(rust_code: &str, name: &str) -> bool {
+    let Ok(parsed) = syn::parse_file(rust_code) else {
+        return false;
+    };
+    let item_names = HashSet::from([name.to_string()]);
+    let global_types = HashSet::new();
+    parsed.items.iter().any(|item| {
+        let current_name = parse_item_name(item).unwrap_or_default();
+        referenced_item_names_via_ast(item, &item_names, &current_name, &global_types)
+            .contains(name)
+    })
+}
+
+pub(crate) fn rust_source_defines_item_name(rust_code: &str, name: &str) -> bool {
+    syn::parse_file(rust_code).is_ok_and(|parsed| {
+        parsed
+            .items
+            .iter()
+            .any(|item| parse_item_name(item).as_deref() == Some(name))
+    })
+}
+
 fn parse_stdlib_ir_file(rust_code: &str) -> Option<StdlibIrFile> {
     let Ok(parsed) = syn::parse_file(rust_code) else {
         return None;

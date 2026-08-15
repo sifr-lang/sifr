@@ -1,4 +1,5 @@
 use super::*;
+use crate::RustExpr;
 use sifr_ir::{HirExceptHandler, HirExpr, HirFunction, HirModule, HirParam, HirStmt, MethodKind};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 use std::collections::HashMap;
@@ -553,4 +554,153 @@ fn module_uses_bigint_false_without_bigint() {
     }]);
 
     assert!(!module_uses_bigint(&module));
+}
+
+#[test]
+fn option_target_coercion_flattens_only_excess_wrapper_layers() {
+    let flat = Type::Union(vec![Type::Str, Type::None]);
+    let nested = Type::Union(vec![flat.clone(), Type::None]);
+    let twice_nested = Type::Union(vec![nested.clone(), Type::None]);
+    let value = RustExpr::Ident("value".to_string());
+
+    assert_eq!(
+        flatten_option_value_for_target(&flat, &nested, value.clone()),
+        RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Paren(Box::new(value.clone()))),
+            method: "flatten".to_string(),
+            args: Vec::new(),
+        }
+    );
+    let twice_flattened = flatten_option_value_for_target(&flat, &twice_nested, value.clone());
+    assert!(matches!(
+        twice_flattened,
+        RustExpr::MethodCall { method, receiver, .. }
+            if method == "flatten"
+                && matches!(receiver.as_ref(), RustExpr::Paren(inner)
+                    if matches!(inner.as_ref(), RustExpr::MethodCall { method, .. } if method == "flatten"))
+    ));
+    assert_eq!(
+        flatten_option_value_for_target(&nested, &nested, value.clone()),
+        value.clone()
+    );
+    assert_eq!(
+        flatten_option_value_for_target(&Type::Any, &nested, value.clone()),
+        value.clone()
+    );
+    assert_eq!(
+        flatten_option_value_for_target(&Type::Unknown, &nested, value.clone()),
+        value
+    );
+}
+
+#[test]
+fn option_target_coercion_maps_outer_absence_to_nullable_union_variant() {
+    let target = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
+    let source = Type::Union(vec![target.clone(), Type::None]);
+    let rendered = crate::render_expr(&flatten_option_value_for_target(
+        &target,
+        &source,
+        RustExpr::Ident("value".to_string()),
+    ));
+    assert!(rendered.contains(".unwrap_or("), "{rendered}");
+    assert!(rendered.contains(&target.union_enum_name()), "{rendered}");
+    assert!(
+        rendered.contains(&Type::None.union_variant_name()),
+        "{rendered}"
+    );
+}
+
+#[test]
+fn collection_target_coercion_recovers_contextually_narrowed_safe_get() {
+    let target = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
+    let runtime_source = sifr_type_system::safe_optional_result(target.clone());
+    let expr = HirExpr::MethodCall {
+        object: Box::new(HirExpr::Name {
+            name: "values".to_string(),
+            binding_id: None,
+            ty: Type::Dict(Box::new(Type::Str), Box::new(target.clone())),
+        }),
+        method: "get".to_string(),
+        args: vec![HirExpr::StringLiteral("key".to_string())],
+        receiver_convention: None,
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
+        source: None,
+        ty: runtime_source,
+    };
+    let rendered = crate::render_expr(&adapt_collection_value_for_target(
+        &target,
+        &expr,
+        RustExpr::Ident("value".to_string()),
+    ));
+    assert!(rendered.contains(".unwrap_or("), "{rendered}");
+}
+
+#[test]
+fn collection_target_coercion_does_not_flatten_a_simple_optional_index() {
+    let target = sifr_type_system::make_union(vec![Type::Str, Type::None]);
+    let expr = HirExpr::Index {
+        object: Box::new(HirExpr::Name {
+            name: "maybe_values".to_string(),
+            binding_id: None,
+            ty: sifr_type_system::make_union(vec![Type::List(Box::new(Type::Str)), Type::None]),
+        }),
+        index: Box::new(HirExpr::IntLiteral(0)),
+        ty: target.clone(),
+    };
+    let value = RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident("maybe_values".to_string())),
+        method: "and_then".to_string(),
+        args: Vec::new(),
+    };
+    assert_eq!(
+        adapt_collection_value_for_target(&target, &expr, value.clone()),
+        value
+    );
+}
+
+#[test]
+fn collection_storage_coercion_maps_nested_optional_elements() {
+    let target_element = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
+    let source_element = Type::Union(vec![target_element.clone(), Type::None]);
+    let rendered = crate::render_expr(&adapt_collection_storage_for_target(
+        &Type::List(Box::new(target_element.clone())),
+        &Type::List(Box::new(source_element)),
+        RustExpr::Ident("values".to_string()),
+    ));
+    assert!(rendered.contains(".into_iter().map("), "{rendered}");
+    assert!(rendered.contains(".unwrap_or("), "{rendered}");
+    assert!(
+        rendered.contains(&target_element.union_enum_name()),
+        "{rendered}"
+    );
+}
+
+#[test]
+fn safe_option_result_flattens_simple_option_and_preserves_nullable_union() {
+    let value = RustExpr::Ident("value".to_string());
+    assert_eq!(
+        normalize_safe_option_result(&Type::Union(vec![Type::Str, Type::None]), value.clone()),
+        RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Paren(Box::new(value.clone()))),
+            method: "flatten".to_string(),
+            args: Vec::new(),
+        }
+    );
+    assert_eq!(
+        normalize_safe_option_result(&Type::Str, value.clone()),
+        value
+    );
+
+    let plain_union = sifr_type_system::make_union(vec![Type::Int, Type::Str]);
+    assert_eq!(
+        normalize_safe_option_result(&plain_union, value.clone()),
+        value
+    );
+
+    let nullable_union = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
+    assert_eq!(
+        normalize_safe_option_result(&nullable_union, value.clone()),
+        value
+    );
 }

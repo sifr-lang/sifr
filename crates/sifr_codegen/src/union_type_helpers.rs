@@ -15,7 +15,7 @@ impl RustEmitter {
         if let Some(path) = self.project_nominal_type_paths.get(key) {
             return Some(path);
         }
-        if identity.is_some_and(sifr_type_system::is_global_rust_nominal_identity) {
+        if identity.is_some_and(sifr_type_system::is_crate_root_rust_nominal_identity) {
             return None;
         }
         panic!("missing crate-root path for project union nominal identity '{key}'");
@@ -23,6 +23,9 @@ impl RustEmitter {
 
     fn project_union_member_rust_type(&self, ty: &Type) -> RustType {
         let resolved = crate::resolve_alias_type_for_plain_call(ty);
+        if let Some(member) = resolved.optional_member_type() {
+            return RustType::Option(Box::new(self.project_union_member_rust_type(&member)));
+        }
         match resolved {
             class @ Type::Class {
                 identity,
@@ -81,24 +84,6 @@ impl RustEmitter {
                 Box::new(self.project_union_member_rust_type(ok)),
                 Box::new(self.project_union_member_rust_type(error)),
             ),
-            Type::Union(members)
-                if members.iter().any(|member| matches!(member, Type::None))
-                    && members
-                        .iter()
-                        .filter(|member| !matches!(member, Type::None))
-                        .count()
-                        == 1 =>
-            {
-                members
-                    .iter()
-                    .find(|member| !matches!(member, Type::None))
-                    .map_or_else(
-                        || sifr_type_to_rust_type(resolved),
-                        |inner| {
-                            RustType::Option(Box::new(self.project_union_member_rust_type(inner)))
-                        },
-                    )
-            }
             _ => sifr_type_to_rust_type(resolved),
         }
     }
@@ -205,14 +190,21 @@ impl RustEmitter {
 
     fn register_union_type_with_usage(&mut self, ty: &Type, ordinary_value: bool) {
         let resolved = crate::resolve_alias_type_for_plain_call(ty);
+        // A raw `T | None` is an Option wrapper whose payload grouping is
+        // significant. Only canonicalize unions that are represented by an
+        // enum; the payload union is registered during the recursive walk.
+        if resolved.optional_member_type().is_none() {
+            if let Type::Union(members) = resolved {
+                let canonical = sifr_type_system::make_union(members.clone());
+                if canonical != *resolved {
+                    self.register_union_type_with_usage(&canonical, ordinary_value);
+                    return;
+                }
+            }
+        }
         match resolved {
             Type::Union(members) => {
-                let non_none = members
-                    .iter()
-                    .filter(|member| !matches!(member, Type::None))
-                    .count();
-                let is_option =
-                    members.iter().any(|member| matches!(member, Type::None)) && non_none == 1;
+                let is_option = resolved.optional_member_type().is_some();
                 if !is_option {
                     let enum_name = resolved.union_enum_name();
                     if ordinary_value {
@@ -273,8 +265,12 @@ impl RustEmitter {
     }
 
     fn register_try_error_carrier(&mut self, ty: &Type) {
-        if matches!(ty.resolve_alias(), Type::Union(_)) {
-            self.try_error_carrier_enums.insert(ty.union_enum_name());
+        if let Type::Union(members) = ty.resolve_alias() {
+            let canonical = sifr_type_system::make_union(members.clone());
+            if matches!(canonical, Type::Union(_)) {
+                self.try_error_carrier_enums
+                    .insert(canonical.union_enum_name());
+            }
         }
         self.register_union_type_with_usage(ty, false);
     }
@@ -634,6 +630,36 @@ mod tests {
     }
 
     #[test]
+    fn try_carrier_and_ordinary_union_registration_keep_one_member_order() {
+        let error = |name: &str| Type::Class {
+            identity: Some(format!("a.{name}")),
+            type_args: Vec::new(),
+            name: name.to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let os_error = error("OSError");
+        let zero_division = error("ZeroDivisionError");
+        let ordinary = sifr_type_system::make_union(vec![os_error.clone(), zero_division.clone()]);
+        let raw = Type::Union(vec![zero_division.clone(), os_error.clone()]);
+        let carrier = crate::try_error_carrier::exact_try_error_carrier(&[zero_division, os_error])
+            .expect("carrier should contain both errors");
+
+        let render = |first: &Type| {
+            let mut emitter = RustEmitter::new();
+            emitter.register_union_type(first);
+            emitter.register_try_error_carrier(&carrier);
+            emitter.register_union_type(&ordinary);
+            emitter.generate_enum_definitions();
+            crate::render::render_items(&emitter.enum_items)
+        };
+
+        assert_eq!(render(&raw), render(&ordinary));
+        assert_eq!(render(&carrier), render(&ordinary));
+    }
+
+    #[test]
     fn carrier_only_union_omits_unneeded_value_traits() {
         let union = Type::Union(vec![Type::Int, Type::Str]);
         let mut emitter = RustEmitter::new();
@@ -644,6 +670,45 @@ mod tests {
             panic!("first generated item should be the union enum");
         };
         assert_eq!(derives, &["Debug", "Clone"]);
+    }
+
+    #[test]
+    fn collapsed_try_carrier_does_not_record_a_plain_type_as_an_enum() {
+        let class = Type::Class {
+            identity: Some("tests.Error".to_string()),
+            type_args: Vec::new(),
+            name: "Error".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let snapshot = Type::Class {
+            identity: Some("tests.Error".to_string()),
+            type_args: Vec::new(),
+            name: "Error".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let mut emitter = RustEmitter::new();
+
+        emitter.register_try_error_carrier(&Type::Union(vec![class, snapshot]));
+
+        assert!(emitter.try_error_carrier_enums.is_empty());
+    }
+
+    #[test]
+    fn nested_optional_union_registers_its_grouped_payload_enum() {
+        let inner = sifr_type_system::make_union(vec![Type::Int, Type::Str]);
+        let raw = Type::Union(vec![inner.clone(), Type::None]);
+        let expected_name = inner.union_enum_name();
+        let mut emitter = RustEmitter::new();
+
+        emitter.register_union_type(&raw);
+
+        assert_eq!(raw.rust_type(), format!("Option<{expected_name}>"));
+        assert!(emitter.union_enums.contains_key(&expected_name));
+        assert_eq!(emitter.union_enums.len(), 1);
     }
 
     #[test]

@@ -78,7 +78,7 @@ pub(super) fn replace_inference_holes_with_any(ty: Type) -> Type {
                 .map(replace_inference_holes_with_any)
                 .collect(),
         ),
-        Type::Union(elements) => Type::Union(
+        Type::Union(elements) => sifr_type_system::make_union(
             elements
                 .into_iter()
                 .map(replace_inference_holes_with_any)
@@ -134,5 +134,17 @@ fn collapse_literal(ty: Type) -> Type {
             body: Box::new(collapse_literal(*body)),
         },
         other => other,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn inference_hole_replacement_recanonicalizes_and_deduplicates_unions() {
+        let ty = Type::Union(vec![Type::Unknown, Type::Any]);
+
+        assert_eq!(replace_inference_holes_with_any(ty), Type::Any);
     }
 }

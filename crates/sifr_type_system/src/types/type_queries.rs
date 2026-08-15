@@ -297,8 +297,10 @@ impl Type {
         )
     }
 
-    fn option_like_member_type(ty: &Type) -> Option<Type> {
-        let Type::Union(members) = ty.resolve_alias() else {
+    /// Return the payload of a raw `T | None` wrapper without flattening `T`.
+    #[must_use]
+    pub fn optional_member_type(&self) -> Option<Type> {
+        let Type::Union(members) = self.resolve_alias() else {
             return None;
         };
         let has_none = members
@@ -310,7 +312,7 @@ impl Type {
             .cloned()
             .collect();
         if has_none && non_none.len() == 1 {
-            non_none.first().cloned()
+            non_none.into_iter().next()
         } else {
             None
         }
@@ -324,7 +326,7 @@ impl Type {
         if !next_ft.params.is_empty() {
             return None;
         }
-        let elem = Self::option_like_member_type(next_ft.return_type.as_ref())?;
+        let elem = next_ft.return_type.optional_member_type()?;
         if matches!(elem.resolve_alias(), Type::Class { name, .. } if name == class_name) {
             return None;
         }
@@ -666,17 +668,13 @@ impl Type {
             Self::LiteralBool(_) => "bool".to_string(),
             // Union: special case for T | None -> Option<T>
             Self::Union(members) => {
-                let non_none: Vec<&Type> = members
-                    .iter()
-                    .filter(|m| !matches!(m, Type::None))
-                    .collect();
-                let has_none = members.iter().any(|m| matches!(m, Type::None));
-                if has_none && non_none.len() == 1 {
-                    // T | None -> Option<T>
-                    format!("Option<{}>", non_none[0].rust_type())
+                if let Some(member) = self.optional_member_type() {
+                    format!("Option<{}>", member.rust_type())
                 } else {
-                    // General union -> generated enum name
-                    self.union_enum_name()
+                    match crate::make_union(members.clone()) {
+                        canonical @ Self::Union(_) => canonical.union_enum_name(),
+                        canonical => canonical.rust_type(),
+                    }
                 }
             }
             Self::Intersection(_) => "Box<dyn std::any::Any>".to_string(),

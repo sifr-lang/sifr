@@ -388,6 +388,14 @@ pub(super) fn coerce_simple_assign_value_for_target_type(
     let Some(target_ty) = target_ty else {
         return lowered_value;
     };
+    let adapted_value = crate::helpers::flatten_option_value_for_target(
+        target_ty,
+        value.ty(),
+        lowered_value.clone(),
+    );
+    if adapted_value != lowered_value {
+        return adapted_value;
+    }
     if !crate::helpers::is_option_type(target_ty) {
         return lowered_value;
     }
@@ -395,7 +403,11 @@ pub(super) fn coerce_simple_assign_value_for_target_type(
         return RustExpr::Literal(RustLiteral::None);
     }
     if crate::helpers::is_option_type(value.ty()) {
-        return lowered_value;
+        return crate::helpers::flatten_option_value_for_target(
+            target_ty,
+            value.ty(),
+            lowered_value,
+        );
     }
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec!["Some".to_string()])),

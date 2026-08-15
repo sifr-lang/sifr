@@ -390,7 +390,7 @@ mod tests {
         assert!(errors.iter().any(|error| {
             error
                 .message
-                .contains("type mismatch: expected 'int', got 'int | None'")
+                .contains("type mismatch: expected 'int', got 'None | int'")
         }));
     }
 
@@ -533,7 +533,7 @@ mod tests {
         assert!(errors.iter().any(|error| {
             error
                 .message
-                .contains("type mismatch: expected 'int', got 'int | None'")
+                .contains("type mismatch: expected 'int', got 'None | int'")
         }));
     }
 
@@ -605,7 +605,7 @@ mod tests {
         assert!(errors.iter().any(|error| {
             error
                 .message
-                .contains("type mismatch: expected 'str', got 'str | None'")
+                .contains("type mismatch: expected 'str', got 'None | str'")
         }));
     }
 
@@ -673,7 +673,7 @@ mod tests {
         assert!(errors.iter().any(|error| {
             error
                 .message
-                .contains("type mismatch: expected 'int', got 'int | None'")
+                .contains("type mismatch: expected 'int', got 'None | int'")
         }));
     }
 }

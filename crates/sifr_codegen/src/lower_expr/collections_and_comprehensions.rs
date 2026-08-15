@@ -24,6 +24,8 @@ pub(super) fn try_lower_simple_index_expr(
                 method: projection_method.to_string(),
                 args: vec![],
             };
+            let projected =
+                crate::helpers::normalize_safe_option_result(value_ty.as_ref(), projected);
             if is_option_like_simple(result_ty) {
                 Some(projected)
             } else {
@@ -79,7 +81,7 @@ pub(super) fn try_lower_simple_slice_expr(
 pub(super) fn try_lower_simple_dict_literal_expr(
     keys: &[HirExpr],
     values: &[HirExpr],
-    _ty: &Type,
+    ty: &Type,
 ) -> Option<RustExpr> {
     if keys.len() != values.len() {
         return None;
@@ -88,6 +90,21 @@ pub(super) fn try_lower_simple_dict_literal_expr(
     for (key, value) in keys.iter().zip(values.iter()) {
         let lowered_key = try_lower_leaf_or_name_expr(key)?;
         let lowered_value = try_lower_leaf_or_name_expr(value)?;
+        let (lowered_key, lowered_value) = match resolve_alias_type(ty) {
+            Type::Dict(key_ty, value_ty) => (
+                crate::helpers::adapt_collection_value_for_target(
+                    key_ty.as_ref(),
+                    key,
+                    lowered_key,
+                ),
+                crate::helpers::adapt_collection_value_for_target(
+                    value_ty.as_ref(),
+                    value,
+                    lowered_value,
+                ),
+            ),
+            _ => (lowered_key, lowered_value),
+        };
         entries.push(RustExpr::Tuple(vec![lowered_key, lowered_value]));
     }
 
@@ -102,14 +119,21 @@ pub(super) fn try_lower_simple_dict_literal_expr(
 
 pub(super) fn try_lower_simple_set_literal_expr(
     elements: &[HirExpr],
-    _ty: &Type,
+    ty: &Type,
 ) -> Option<RustExpr> {
     let mut lowered_elements = Vec::with_capacity(elements.len());
     for element in elements {
         let lowered = try_lower_leaf_or_name_expr(element)?;
-        lowered_elements.push(crate::RustEmitter::clone_non_copy_name_expr_for_ir(
-            element, lowered,
-        ));
+        let lowered = crate::RustEmitter::clone_non_copy_name_expr_for_ir(element, lowered);
+        let lowered = match resolve_alias_type(ty) {
+            Type::Set(element_ty) => crate::helpers::adapt_collection_value_for_target(
+                element_ty.as_ref(),
+                element,
+                lowered,
+            ),
+            _ => lowered,
+        };
+        lowered_elements.push(lowered);
     }
 
     Some(RustExpr::FnCall {
@@ -131,10 +155,19 @@ pub(super) fn try_lower_simple_list_comp_expr(
     }
 
     let result_ident = "__sifr_list_comp".to_string();
+    let lowered_expr = try_lower_leaf_or_name_expr(expr)?;
+    let lowered_expr = match resolve_alias_type(ty) {
+        Type::List(element_ty) => crate::helpers::adapt_collection_value_for_target(
+            element_ty.as_ref(),
+            expr,
+            lowered_expr,
+        ),
+        _ => lowered_expr,
+    };
     let mut nested_body = vec![RustStmt::Expr(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(result_ident.clone())),
         method: "push".to_string(),
-        args: vec![try_lower_leaf_or_name_expr(expr)?],
+        args: vec![lowered_expr],
     })];
 
     for (var, iter_expr, maybe_filter) in generators.iter().rev() {
@@ -190,13 +223,27 @@ pub(super) fn try_lower_simple_dict_comp_expr(
     let iter = try_lower_simple_iter_source_expr(iter_expr)?;
 
     let result_ident = "__sifr_dict_comp".to_string();
+    let lowered_key = try_lower_leaf_or_name_expr(key_expr)?;
+    let lowered_value = try_lower_leaf_or_name_expr(val_expr)?;
+    let (lowered_key, lowered_value) = match resolve_alias_type(ty) {
+        Type::Dict(key_ty, value_ty) => (
+            crate::helpers::adapt_collection_value_for_target(
+                key_ty.as_ref(),
+                key_expr,
+                lowered_key,
+            ),
+            crate::helpers::adapt_collection_value_for_target(
+                value_ty.as_ref(),
+                val_expr,
+                lowered_value,
+            ),
+        ),
+        _ => (lowered_key, lowered_value),
+    };
     let insert_stmt = RustStmt::Expr(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(result_ident.clone())),
         method: "insert".to_string(),
-        args: vec![
-            try_lower_leaf_or_name_expr(key_expr)?,
-            try_lower_leaf_or_name_expr(val_expr)?,
-        ],
+        args: vec![lowered_key, lowered_value],
     });
 
     let loop_body = if let Some(filter) = maybe_filter {
@@ -252,10 +299,19 @@ pub(super) fn try_lower_simple_set_comp_expr(
     let iter = try_lower_simple_iter_source_expr(iter_expr)?;
 
     let result_ident = "__sifr_set_comp".to_string();
+    let lowered_expr = try_lower_leaf_or_name_expr(expr)?;
+    let lowered_expr = match resolve_alias_type(ty) {
+        Type::Set(element_ty) => crate::helpers::adapt_collection_value_for_target(
+            element_ty.as_ref(),
+            expr,
+            lowered_expr,
+        ),
+        _ => lowered_expr,
+    };
     let insert_stmt = RustStmt::Expr(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(result_ident.clone())),
         method: "insert".to_string(),
-        args: vec![try_lower_leaf_or_name_expr(expr)?],
+        args: vec![lowered_expr],
     });
 
     let loop_body = if let Some(filter) = maybe_filter {
@@ -461,13 +517,7 @@ pub(super) fn is_enum_like_simple(ty: &Type) -> bool {
 }
 
 pub(super) fn is_option_like_simple(ty: &Type) -> bool {
-    if let Type::Union(members) = resolve_alias_type(ty) {
-        let non_none = members.iter().filter(|m| !matches!(m, Type::None)).count();
-        let has_none = members.iter().any(|m| matches!(m, Type::None));
-        has_none && non_none == 1
-    } else {
-        false
-    }
+    ty.optional_member_type().is_some()
 }
 
 pub(super) fn detect_is_some_guard_name(expr: &HirExpr) -> Option<String> {
@@ -768,57 +818,6 @@ pub(super) fn try_lower_guarded_option_compare_expr(
         op: normalized_op.to_string(),
         right: Box::new(lowered_right),
     })
-}
-
-pub(super) fn try_lower_simple_range_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
-    if let HirExpr::Name { name, ty, .. } = expr {
-        if is_int_like_simple(ty) {
-            return Some(RustExpr::Ident(name.clone()));
-        }
-        return None;
-    }
-    if matches!(expr, HirExpr::RangeLiteral { .. }) {
-        return None;
-    }
-    try_lower_leaf_expr(expr)
-}
-
-pub(super) fn try_lower_mixed_float_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
-    let lowered = try_lower_simple_binop_operand_expr(expr)?;
-    if is_int_like_simple(expr.ty()) {
-        return Some(RustExpr::Cast {
-            expr: Box::new(lowered),
-            ty: RustType::F64,
-        });
-    }
-    Some(lowered)
-}
-
-pub(super) fn try_lower_promoted_integer_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
-    let lowered = match expr {
-        HirExpr::Name { name, ty, .. }
-            if is_int_like_simple(ty) || is_fixed_width_int_like_simple(ty) =>
-        {
-            RustExpr::Ident(name.clone())
-        }
-        _ => try_lower_simple_binop_operand_expr(expr)?,
-    };
-    if is_fixed_width_int_like_simple(expr.ty()) {
-        return Some(RustExpr::Cast {
-            expr: Box::new(lowered),
-            ty: RustType::I64,
-        });
-    }
-    Some(lowered)
-}
-
-pub(super) fn try_lower_simple_binop_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
-    if let HirExpr::Name { name, ty, .. } = expr {
-        if is_numeric_simple(ty) {
-            return Some(RustExpr::Ident(name.clone()));
-        }
-    }
-    try_lower_leaf_expr(expr)
 }
 
 pub(super) fn try_lower_simple_compare_operand_expr(expr: &HirExpr) -> Option<RustExpr> {

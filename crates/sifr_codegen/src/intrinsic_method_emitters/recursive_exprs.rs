@@ -160,13 +160,20 @@ impl RustEmitter {
                         let expects_option = crate::helpers::is_option_type(element_ty.as_ref());
                         let has_option = crate::helpers::is_option_type(&arg_ty);
                         let mut adjusted = arg_exprs[0].clone();
+                        let adapted = crate::helpers::flatten_option_value_for_target(
+                            element_ty.as_ref(),
+                            &arg_ty,
+                            adjusted.clone(),
+                        );
+                        let option_value_adapted = adapted != adjusted;
+                        adjusted = adapted;
                         if expects_option && !has_option && !matches!(args[0], HirExpr::NoneLiteral)
                         {
                             adjusted = crate::RustExpr::FnCall {
                                 func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
                                 args: vec![adjusted],
                             };
-                        } else if !expects_option && has_option {
+                        } else if !expects_option && has_option && !option_value_adapted {
                             if !crate::helpers::is_copy_type_for_codegen(&arg_ty) {
                                 adjusted = crate::RustExpr::MethodCall {
                                     receiver: Box::new(crate::RustExpr::Paren(Box::new(adjusted))),
@@ -604,7 +611,7 @@ impl RustEmitter {
                             let lowered_expr = self.try_lower_registry_expr_strict(expr)?;
                             if let Some(inner_ty) = registry_option_inner_type(expr.ty()) {
                                 let inner_format_str =
-                                    if registry_uses_debug_display_format(inner_ty) {
+                                    if registry_uses_debug_display_format(&inner_ty) {
                                         "{:?}".to_string()
                                     } else {
                                         "{}".to_string()
@@ -805,8 +812,8 @@ impl RustEmitter {
                     step.as_deref(),
                 )
             }
-            HirExpr::DictLiteral { keys, values, .. } => {
-                self.try_lower_registry_dict_literal_expr(keys, values)
+            HirExpr::DictLiteral { keys, values, ty } => {
+                self.try_lower_registry_dict_literal_expr(keys, values, ty)
             }
             HirExpr::ListLiteral { elements, ty } => {
                 if elements.is_empty() {
@@ -817,7 +824,18 @@ impl RustEmitter {
                 let list_ty = crate::resolve_alias_type_for_plain_call(ty);
                 let mut lowered = elements
                     .iter()
-                    .map(|element| self.try_lower_registry_expr_strict(element))
+                    .map(|element| {
+                        let lowered = self.try_lower_registry_expr_strict(element)?;
+                        Some(if let Type::List(element_ty) = list_ty {
+                            crate::helpers::adapt_collection_value_for_target(
+                                element_ty.as_ref(),
+                                element,
+                                lowered,
+                            )
+                        } else {
+                            lowered
+                        })
+                    })
                     .collect::<Option<Vec<_>>>()?;
                 if matches!(list_ty, Type::Bytes) {
                     lowered = lowered
@@ -841,8 +859,8 @@ impl RustEmitter {
                     Some(crate::RustExpr::Tuple(lowered))
                 }
             }
-            HirExpr::SetLiteral { elements, .. } => {
-                self.try_lower_registry_set_literal_expr(elements)
+            HirExpr::SetLiteral { elements, ty } => {
+                self.try_lower_registry_set_literal_expr(elements, ty)
             }
             _ => None,
         }

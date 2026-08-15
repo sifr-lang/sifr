@@ -40,6 +40,13 @@ impl RustEmitter {
         } else {
             lowered_value
         };
+        let adapted_value = crate::helpers::flatten_option_value_for_target(
+            target_elem_ty,
+            value.ty(),
+            lowered_value.clone(),
+        );
+        let option_value_adapted = adapted_value != lowered_value;
+        let lowered_value = adapted_value;
 
         let value_is_option = if crate::helpers::is_option_type(value.ty()) {
             true
@@ -54,7 +61,9 @@ impl RustEmitter {
         } else {
             false
         };
-        let assign_into_elem = if value_is_option && !crate::helpers::is_option_type(target_elem_ty)
+        let assign_into_elem = if value_is_option
+            && !crate::helpers::is_option_type(target_elem_ty)
+            && !option_value_adapted
         {
             RustStmt::IfLet {
                 pattern: "Some(__nested_assign_value)".to_string(),
@@ -253,6 +262,11 @@ impl RustEmitter {
         } else {
             lowered_value
         };
+        let lowered_value = crate::helpers::flatten_option_value_for_target(
+            target_elem_ty,
+            value.ty(),
+            lowered_value,
+        );
 
         let index_is_option = |expr: &HirExpr| {
             if crate::helpers::is_option_type(expr.ty()) {
@@ -419,6 +433,13 @@ impl RustEmitter {
         } else {
             lowered_value
         };
+        let adapted_value = crate::helpers::flatten_option_value_for_target(
+            target_elem_ty.as_ref(),
+            value.ty(),
+            lowered_value.clone(),
+        );
+        let option_value_adapted = adapted_value != lowered_value;
+        let lowered_value = adapted_value;
 
         let value_is_option = if crate::helpers::is_option_type(value.ty()) {
             true
@@ -433,23 +454,25 @@ impl RustEmitter {
         } else {
             false
         };
-        let assign_into_elem =
-            if value_is_option && !crate::helpers::is_option_type(target_elem_ty.as_ref()) {
-                RustStmt::IfLet {
-                    pattern: "Some(__nested_assign_value)".to_string(),
-                    expr: RustExpr::Ident("__nested_assign_value".to_string()),
-                    then_body: vec![RustStmt::Assign {
-                        target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
-                        value: RustExpr::Ident("__nested_assign_value".to_string()),
-                    }],
-                    else_body: None,
-                }
-            } else {
-                RustStmt::Assign {
+        let assign_into_elem = if value_is_option
+            && !crate::helpers::is_option_type(target_elem_ty.as_ref())
+            && !option_value_adapted
+        {
+            RustStmt::IfLet {
+                pattern: "Some(__nested_assign_value)".to_string(),
+                expr: RustExpr::Ident("__nested_assign_value".to_string()),
+                then_body: vec![RustStmt::Assign {
                     target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
                     value: RustExpr::Ident("__nested_assign_value".to_string()),
-                }
-            };
+                }],
+                else_body: None,
+            }
+        } else {
+            RustStmt::Assign {
+                target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
+                value: RustExpr::Ident("__nested_assign_value".to_string()),
+            }
+        };
         let field_receiver = || RustExpr::Field {
             expr: Box::new(Self::object_name_expr_for_ir(object)),
             field: field.to_string(),
@@ -637,6 +660,11 @@ impl RustEmitter {
         } else {
             lowered_value
         };
+        let lowered_value = crate::helpers::flatten_option_value_for_target(
+            target_elem_ty,
+            value.ty(),
+            lowered_value,
+        );
 
         let field_receiver = || RustExpr::Field {
             expr: Box::new(Self::object_name_expr_for_ir(object)),
@@ -780,12 +808,16 @@ impl RustEmitter {
         };
 
         match Self::resolve_alias_type_for_loop_iter(object_ty) {
-            Type::List(_) => Ok(Some(RustStmt::Block(vec![
+            Type::List(element_ty) => Ok(Some(RustStmt::Block(vec![
                 RustStmt::Let {
                     mutable: false,
                     name: "__assign_value".to_string(),
                     ty: None,
-                    value: clone_non_copy_name(value, lowered_value),
+                    value: crate::helpers::flatten_option_value_for_target(
+                        element_ty.as_ref(),
+                        value.ty(),
+                        clone_non_copy_name(value, lowered_value),
+                    ),
                 },
                 crate::build_list_subscript_assign_stmt(
                     RustExpr::Ident(object.to_string()),
@@ -793,7 +825,7 @@ impl RustEmitter {
                     RustExpr::Ident("__assign_value".to_string()),
                 ),
             ]))),
-            Type::Dict(key_ty, _) => {
+            Type::Dict(key_ty, value_ty) => {
                 let key_needs_clone = matches!(key_ty.as_ref(), Type::Str | Type::TypeVar(_))
                     && matches!(index, HirExpr::Name { name, .. }
                         if self.borrowed_params.contains(name.as_str())
@@ -814,7 +846,11 @@ impl RustEmitter {
                         mutable: false,
                         name: "__assign_value".to_string(),
                         ty: None,
-                        value: clone_non_copy_name(value, lowered_value),
+                        value: crate::helpers::flatten_option_value_for_target(
+                            value_ty.as_ref(),
+                            value.ty(),
+                            clone_non_copy_name(value, lowered_value),
+                        ),
                     },
                     crate::build_dict_subscript_assign_stmt(
                         RustExpr::Ident(object.to_string()),

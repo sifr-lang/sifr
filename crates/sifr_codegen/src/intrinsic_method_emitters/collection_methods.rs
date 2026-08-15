@@ -261,6 +261,25 @@ impl RustEmitter {
             );
         }
 
+        let collection_element_target = match (object_ty, method) {
+            (Type::List(element_ty), "append" | "appendleft") => Some((0, element_ty.as_ref())),
+            (Type::List(element_ty), "insert") => Some((1, element_ty.as_ref())),
+            (Type::Set(element_ty), "add") => Some((0, element_ty.as_ref())),
+            (Type::Dict(_, value_ty), "setdefault") => Some((1, value_ty.as_ref())),
+            _ => None,
+        };
+        if let Some((index, target_ty)) = collection_element_target {
+            if let (Some(argument), Some(lowered_arg)) = (args.get(index), arg_exprs.get_mut(index))
+            {
+                let source_ty = self.effective_registry_expr_ty(argument);
+                *lowered_arg = crate::helpers::flatten_option_value_for_target(
+                    target_ty,
+                    &source_ty,
+                    lowered_arg.clone(),
+                );
+            }
+        }
+
         if matches!(object_ty, Type::List(_))
             && matches!(method, "append" | "appendleft")
             && !args.is_empty()

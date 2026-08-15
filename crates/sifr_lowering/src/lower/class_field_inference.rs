@@ -1,5 +1,5 @@
 use sifr_python_ast::{Expr, Operator, Stmt, UnaryOp};
-use sifr_type_system::Type;
+use sifr_type_system::{make_union, Type};
 use std::collections::HashMap;
 
 use super::{simple_expr::lower_expr_simple, LowerCtx};
@@ -19,10 +19,7 @@ fn merge_inferred_types(existing: Type, inferred: Type) -> Type {
     if existing.is_assignable_to(&inferred) {
         return inferred;
     }
-    let mut members = vec![existing, inferred];
-    members.sort_by_key(Type::display_name);
-    members.dedup_by(|left, right| left.display_name() == right.display_name());
-    Type::Union(members)
+    make_union(vec![existing, inferred])
 }
 
 fn upsert_inferred_field(fields: &mut Vec<(String, Type)>, field_name: String, inferred_ty: Type) {
@@ -299,5 +296,32 @@ pub(in crate::lower) fn collect_constructor_self_field_assignments(
             }
             _ => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn imported_class(local_name: &str, identity: &str) -> Type {
+        Type::Class {
+            identity: Some(identity.to_string()),
+            type_args: Vec::new(),
+            name: local_name.to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        }
+    }
+
+    #[test]
+    fn inferred_field_union_uses_declaration_identity_not_local_spelling() {
+        let alpha = imported_class("Zeta", "pkg.Alpha");
+        let beta = imported_class("Beta", "pkg.Beta");
+
+        assert_eq!(
+            merge_inferred_types(beta.clone(), alpha.clone()),
+            sifr_type_system::make_union(vec![alpha, beta])
+        );
     }
 }

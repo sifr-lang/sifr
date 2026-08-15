@@ -20,13 +20,20 @@ impl RustEmitter {
                 if generators.iter().any(|(_, iter_expr, _)| {
                     Self::async_iterator_error_type_for_ir(iter_expr).is_some()
                 }) {
-                    return self.try_lower_async_list_comp_for_ir(expr, generators);
+                    return self.try_lower_async_list_comp_for_ir(expr, generators, ty);
                 }
 
                 let result_ident = "__sifr_list_comp".to_string();
-                let Some(lowered_expr) = self.lower_stmt_expr_for_ir(expr)? else {
+                let Some(mut lowered_expr) = self.lower_stmt_expr_for_ir(expr)? else {
                     return Ok(None);
                 };
+                if let Type::List(element_ty) = Self::resolve_alias_type_for_loop_iter(ty) {
+                    lowered_expr = crate::helpers::adapt_collection_value_for_target(
+                        element_ty.as_ref(),
+                        expr,
+                        lowered_expr,
+                    );
+                }
                 let mut nested_body = vec![RustStmt::Expr(RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Ident(result_ident.clone())),
                     method: "push".to_string(),
@@ -87,17 +94,30 @@ impl RustEmitter {
                     return Ok(None);
                 }
                 if Self::async_iterator_error_type_for_ir(iter_expr).is_some() {
-                    return self.try_lower_async_dict_comp_for_ir(key_expr, val_expr, generators);
+                    return self
+                        .try_lower_async_dict_comp_for_ir(key_expr, val_expr, generators, ty);
                 }
                 let Some(iter) = self.lower_comprehension_iter_for_ir(iter_expr)? else {
                     return Ok(None);
                 };
-                let Some(lowered_key) = self.lower_stmt_expr_for_ir(key_expr)? else {
+                let Some(mut lowered_key) = self.lower_stmt_expr_for_ir(key_expr)? else {
                     return Ok(None);
                 };
-                let Some(lowered_value) = self.lower_stmt_expr_for_ir(val_expr)? else {
+                let Some(mut lowered_value) = self.lower_stmt_expr_for_ir(val_expr)? else {
                     return Ok(None);
                 };
+                if let Type::Dict(key_ty, value_ty) = Self::resolve_alias_type_for_loop_iter(ty) {
+                    lowered_key = crate::helpers::adapt_collection_value_for_target(
+                        key_ty.as_ref(),
+                        key_expr,
+                        lowered_key,
+                    );
+                    lowered_value = crate::helpers::adapt_collection_value_for_target(
+                        value_ty.as_ref(),
+                        val_expr,
+                        lowered_value,
+                    );
+                }
 
                 let result_ident = "__sifr_dict_comp".to_string();
                 let insert_stmt = RustStmt::Expr(RustExpr::MethodCall {
@@ -159,14 +179,21 @@ impl RustEmitter {
                     return Ok(None);
                 }
                 if Self::async_iterator_error_type_for_ir(iter_expr).is_some() {
-                    return self.try_lower_async_set_comp_for_ir(expr, generators);
+                    return self.try_lower_async_set_comp_for_ir(expr, generators, ty);
                 }
                 let Some(iter) = self.lower_comprehension_iter_for_ir(iter_expr)? else {
                     return Ok(None);
                 };
-                let Some(lowered_expr) = self.lower_stmt_expr_for_ir(expr)? else {
+                let Some(mut lowered_expr) = self.lower_stmt_expr_for_ir(expr)? else {
                     return Ok(None);
                 };
+                if let Type::Set(element_ty) = Self::resolve_alias_type_for_loop_iter(ty) {
+                    lowered_expr = crate::helpers::adapt_collection_value_for_target(
+                        element_ty.as_ref(),
+                        expr,
+                        lowered_expr,
+                    );
+                }
 
                 let result_ident = "__sifr_set_comp".to_string();
                 let insert_stmt = RustStmt::Expr(RustExpr::MethodCall {

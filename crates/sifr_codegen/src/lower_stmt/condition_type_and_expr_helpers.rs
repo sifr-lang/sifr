@@ -10,13 +10,7 @@ pub(super) fn resolve_alias_type(ty: &Type) -> &Type {
 }
 
 pub(super) fn is_option_like_type(ty: &Type) -> bool {
-    if let Type::Union(members) = resolve_alias_type(ty) {
-        let non_none = members.iter().filter(|m| !matches!(m, Type::None)).count();
-        let has_none = members.iter().any(|m| matches!(m, Type::None));
-        has_none && non_none == 1
-    } else {
-        false
-    }
+    ty.optional_member_type().is_some()
 }
 
 pub(super) fn detect_option_truthiness_alias(expr: &HirExpr) -> Option<String> {

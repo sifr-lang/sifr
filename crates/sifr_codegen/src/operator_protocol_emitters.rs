@@ -675,12 +675,7 @@ impl RustEmitter {
     }
 
     pub(crate) fn is_option_like_for_operator(ty: &Type) -> bool {
-        if let Type::Union(members) = Self::resolve_alias_type_for_operator_loop_iter(ty) {
-            let non_none = members.iter().filter(|m| !matches!(m, Type::None)).count();
-            let has_none = members.iter().any(|m| matches!(m, Type::None));
-            return has_none && non_none == 1;
-        }
-        false
+        ty.optional_member_type().is_some()
     }
 
     pub(crate) fn resolve_alias_type_for_operator_loop_iter(ty: &Type) -> &Type {

@@ -72,8 +72,8 @@ fn non_ipc_serializable_reason_inner(ty: &Type, visiting: &mut HashSet<String>) 
         Type::Tuple(elems) => elems
             .iter()
             .find_map(|elem| non_ipc_serializable_reason_inner(elem.resolve_alias(), visiting)),
-        Type::Union(members) => {
-            if let Some(non_none) = option_payload_member(members) {
+        Type::Union(_) => {
+            if let Some(non_none) = ty.optional_member_type() {
                 non_ipc_serializable_reason_inner(non_none.resolve_alias(), visiting)
             } else {
                 Some(
@@ -160,13 +160,6 @@ fn non_ipc_serializable_reason_inner(ty: &Type, visiting: &mut HashSet<String>) 
             Some("structural protocol payloads need generated concrete schemas".to_string())
         }
     }
-}
-
-fn option_payload_member(members: &[Type]) -> Option<&Type> {
-    if members.len() != 2 || !members.iter().any(|member| matches!(member, Type::None)) {
-        return None;
-    }
-    members.iter().find(|member| !matches!(member, Type::None))
 }
 
 fn class_has_non_send_marker(name: &str, parent_chain: Option<&str>) -> bool {

@@ -298,7 +298,7 @@ impl Type {
             Self::List(elem) => {
                 if index_ty == &Type::Int {
                     // Safe indexing: returns Option[T] = T | None
-                    Some(Type::Union(vec![*elem.clone(), Type::None]))
+                    Some(crate::safe_optional_result(*elem.clone()))
                 } else {
                     None
                 }
@@ -309,7 +309,7 @@ impl Type {
                     || key.is_assignable_to(index_ty)
                 {
                     // Safe indexing: returns Option[V] = V | None
-                    Some(Type::Union(vec![*val.clone(), Type::None]))
+                    Some(crate::safe_optional_result(*val.clone()))
                 } else {
                     None
                 }
@@ -326,7 +326,7 @@ impl Type {
             Self::Str => {
                 if index_ty == &Type::Int {
                     // Safe indexing: returns Option[str] = str | None
-                    Some(Type::Union(vec![Type::Str, Type::None]))
+                    Some(make_union(vec![Type::Str, Type::None]))
                 } else {
                     None
                 }
@@ -334,7 +334,7 @@ impl Type {
             Self::Bytes => {
                 if index_ty == &Type::Int {
                     // Safe indexing: returns Option[uint8] = uint8 | None
-                    Some(Type::Union(vec![
+                    Some(make_union(vec![
                         Type::FixedInt(FixedIntType::U8),
                         Type::None,
                     ]))
@@ -358,17 +358,7 @@ impl Type {
                 }
             }
             // Union type: if T|None where T is indexable, unwrap and delegate
-            Self::Union(members) => {
-                let non_none: Vec<&Type> = members
-                    .iter()
-                    .filter(|m| !matches!(m, Type::None))
-                    .collect();
-                if non_none.len() == 1 {
-                    non_none[0].index_result_type(index_ty)
-                } else {
-                    None
-                }
-            }
+            Self::Union(_) => self.optional_member_type()?.index_result_type(index_ty),
             _ => None,
         }
     }
@@ -393,17 +383,7 @@ impl Type {
             Self::Range => Some(Type::Int),
             Self::Str => Some(Type::Str),
             Self::Bytes => Some(Type::FixedInt(FixedIntType::U8)),
-            Self::Union(members) => {
-                let non_none: Vec<&Type> = members
-                    .iter()
-                    .filter(|member| !matches!(member, Type::None))
-                    .collect();
-                if non_none.len() == 1 {
-                    non_none[0].contains_element_type()
-                } else {
-                    None
-                }
-            }
+            Self::Union(_) => self.optional_member_type()?.contains_element_type(),
             _ => None,
         }
     }
