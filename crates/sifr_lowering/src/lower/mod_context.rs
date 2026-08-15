@@ -602,7 +602,7 @@ impl LoweringSourceOrigin {
     }
 }
 /// Substitute type variables in a type with concrete types.
-pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
+pub fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
     fn substitute_function_type(
         ft: &FunctionType,
         bindings: &HashMap<String, Type>,

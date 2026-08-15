@@ -241,7 +241,7 @@ pub fn canonicalize_user_export_function_type(
 }
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;
-use mod_context::substitute_type_vars;
+pub use mod_context::substitute_type_vars;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Stmt};
