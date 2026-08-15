@@ -8,6 +8,10 @@ use sifr_lowering::{
 use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet};
 
+mod methods;
+use methods::described_methods;
+pub use methods::{ShapeMethod, ShapeParameter};
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructuralShape {
     pub root: ShapeNode,
@@ -64,6 +68,7 @@ pub enum ShapeNode {
         identity: String,
         type_arguments: Vec<Self>,
         fields: Vec<ShapeField>,
+        methods: Vec<ShapeMethod>,
         metadata: Vec<ShapeMetadata>,
     },
     Enum {
@@ -289,6 +294,16 @@ fn describe_class(
             ),
         })
         .collect();
+    let described_methods = local_class.map_or_else(Vec::new, |class| {
+        described_methods(
+            module_name,
+            local_name,
+            class,
+            type_args,
+            lowering,
+            visiting,
+        )
+    });
     let type_arguments = type_args
         .iter()
         .map(|argument| describe_node(module_name, argument, lowering, visiting))
@@ -298,6 +313,7 @@ fn describe_class(
         identity,
         type_arguments,
         fields: described_fields,
+        methods: described_methods,
         metadata: metadata_for(
             &lowering.declaration_metadata,
             local_name,
@@ -378,6 +394,7 @@ fn canonical_node(node: &ShapeNode) -> String {
             identity,
             type_arguments,
             fields,
+            methods,
             metadata,
         } => {
             let args = canonical_sequence("args", type_arguments);
@@ -397,8 +414,13 @@ fn canonical_node(node: &ShapeNode) -> String {
                 })
                 .collect::<Vec<_>>()
                 .join(",");
+            let methods = methods
+                .iter()
+                .map(canonical_method)
+                .collect::<Vec<_>>()
+                .join(",");
             format!(
-                "class:{identity}:{args}:meta[{}]:fields[{fields}]",
+                "class:{identity}:{args}:meta[{}]:fields[{fields}]:methods[{methods}]",
                 canonical_metadata(metadata)
             )
         }
@@ -439,6 +461,35 @@ fn canonical_node(node: &ShapeNode) -> String {
         ShapeNode::TypeParameter(name) => format!("param:{name}"),
         ShapeNode::Other(name) => format!("other:{name}"),
     }
+}
+
+fn canonical_method(method: &ShapeMethod) -> String {
+    let params = method
+        .params
+        .iter()
+        .map(|param| {
+            format!(
+                "{}:{}:{}:{}:{}:{}",
+                param.name.len(),
+                param.name,
+                param.convention,
+                param.keyword_only,
+                canonical_node(&param.declared_type),
+                canonical_metadata(&param.metadata)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    format!(
+        "{}:{}:{}:{}:{}:params[{params}]:result[{}]:meta[{}]",
+        method.name.len(),
+        method.name,
+        method.kind,
+        method.receiver.as_deref().unwrap_or("none"),
+        method.is_async,
+        canonical_node(&method.result),
+        canonical_metadata(&method.metadata)
+    )
 }
 
 fn node_const_value(node: &ShapeNode) -> ConstValue {
@@ -491,6 +542,7 @@ fn node_const_value(node: &ShapeNode) -> ConstValue {
             identity,
             type_arguments,
             fields,
+            methods,
             metadata,
         } => {
             record.insert(
@@ -527,6 +579,10 @@ fn node_const_value(node: &ShapeNode) -> ConstValue {
                         })
                         .collect(),
                 ),
+            );
+            record.insert(
+                "methods".to_string(),
+                ConstValue::List(methods.iter().map(method_const_value).collect()),
             );
             record.insert("metadata".to_string(), metadata_const_value(metadata));
         }
@@ -597,6 +653,54 @@ fn node_const_value(node: &ShapeNode) -> ConstValue {
         }
     }
     ConstValue::Record(record)
+}
+
+fn method_const_value(method: &ShapeMethod) -> ConstValue {
+    ConstValue::Record(BTreeMap::from([
+        ("name".to_string(), ConstValue::String(method.name.clone())),
+        ("kind".to_string(), ConstValue::String(method.kind.clone())),
+        (
+            "receiver".to_string(),
+            method
+                .receiver
+                .clone()
+                .map(ConstValue::String)
+                .unwrap_or(ConstValue::None),
+        ),
+        ("is_async".to_string(), ConstValue::Bool(method.is_async)),
+        (
+            "params".to_string(),
+            ConstValue::List(
+                method
+                    .params
+                    .iter()
+                    .map(|param| {
+                        ConstValue::Record(BTreeMap::from([
+                            ("name".to_string(), ConstValue::String(param.name.clone())),
+                            ("type".to_string(), node_const_value(&param.declared_type)),
+                            (
+                                "convention".to_string(),
+                                ConstValue::String(param.convention.clone()),
+                            ),
+                            (
+                                "keyword_only".to_string(),
+                                ConstValue::Bool(param.keyword_only),
+                            ),
+                            (
+                                "metadata".to_string(),
+                                metadata_const_value(&param.metadata),
+                            ),
+                        ]))
+                    })
+                    .collect(),
+            ),
+        ),
+        ("result".to_string(), node_const_value(&method.result)),
+        (
+            "metadata".to_string(),
+            metadata_const_value(&method.metadata),
+        ),
+    ]))
 }
 
 fn metadata_const_value(metadata: &[ShapeMetadata]) -> ConstValue {
@@ -686,131 +790,4 @@ fn canonical_sequence(kind: &str, elements: &[ShapeNode]) -> String {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use sifr_lowering::lower_module;
-    use sifr_syntax::parse_module_suite;
-
-    #[test]
-    fn class_shape_preserves_defaults_generics_and_recursive_identity() {
-        let source = "class Node[T]:\n    value: T\n    label: str = \"root\"\n    next: Node[T] | None = None\n";
-        let parsed = parse_module_suite(source, None).expect("fixture parses");
-        let lowered = lower_module(&parsed).expect("fixture lowers");
-        let class = lowered.module.classes.first().expect("class exists");
-        let ty = Type::Class {
-            identity: None,
-            type_args: vec![Type::Int],
-            name: class.name.clone(),
-            fields: class.fields.clone(),
-            methods: Vec::new(),
-            parent_class: None,
-        };
-        let shape = describe_type("fixture.shapes", &ty, &lowered);
-        assert!(shape.canonical_identity.contains("fixture.shapes.Node"));
-        assert!(shape.canonical_identity.contains("label:str:default"));
-        assert!(shape.canonical_identity.contains("ref:fixture.shapes.Node"));
-    }
-
-    #[test]
-    fn union_description_is_deterministic() {
-        let parsed = parse_module_suite("", None).expect("fixture parses");
-        let lowered = lower_module(&parsed).expect("fixture lowers");
-        let ty = Type::Union(vec![Type::Int, Type::Str]);
-        assert_eq!(
-            describe_type("fixture", &ty, &lowered),
-            describe_type("fixture", &ty, &lowered)
-        );
-    }
-
-    #[test]
-    fn explicit_initializer_does_not_erase_field_default_metadata() {
-        let source = "class Config:\n    retries: int = 3\n\n    def __init__(self, retries: int) -> None:\n        self.retries = retries\n";
-        let parsed = parse_module_suite(source, None).expect("fixture parses");
-        let lowered = lower_module(&parsed).expect("fixture lowers");
-        let class = lowered.module.classes.first().expect("class exists");
-        let ty = Type::Class {
-            identity: None,
-            type_args: Vec::new(),
-            name: class.name.clone(),
-            fields: class.fields.clone(),
-            methods: Vec::new(),
-            parent_class: None,
-        };
-        let shape = describe_type("fixture.defaults", &ty, &lowered);
-        assert!(shape
-            .canonical_identity
-            .contains("retries:int:default=int:3"));
-    }
-
-    #[test]
-    fn enum_and_newtype_shapes_preserve_metadata_and_nominal_identity() {
-        let source = r#"
-from enum import Enum
-
-@metadata("fixture.kind", "color")
-@metadata("enum_variant", "RED", "fixture.label", "red")
-class Color(Enum):
-    RED = 1
-    BLUE = 2
-
-@metadata("fixture.kind", "port")
-class Port(int):
-    pass
-"#;
-        let parsed = parse_module_suite(source, None).expect("fixture parses");
-        let lowered = lower_module(&parsed).expect("fixture lowers");
-        let color = &lowered.module.classes[0];
-        let color_ty = Type::Class {
-            identity: None,
-            type_args: Vec::new(),
-            name: color.name.clone(),
-            fields: color.fields.clone(),
-            methods: Vec::new(),
-            parent_class: None,
-        };
-        let color_shape = describe_type("fixture.nominal", &color_ty, &lowered);
-        assert!(color_shape
-            .canonical_identity
-            .contains("enum:fixture.nominal.Color"));
-        assert!(color_shape.canonical_identity.contains("fixture.label"));
-
-        let port = &lowered.module.classes[1];
-        let port_ty = Type::Class {
-            identity: None,
-            type_args: Vec::new(),
-            name: port.name.clone(),
-            fields: port.fields.clone(),
-            methods: Vec::new(),
-            parent_class: None,
-        };
-        let port_shape = describe_type("fixture.nominal", &port_ty, &lowered);
-        assert!(port_shape
-            .canonical_identity
-            .contains("newtype:fixture.nominal.Port"));
-        assert!(port_shape.canonical_identity.contains("fixture.kind"));
-    }
-
-    #[test]
-    fn canonical_values_bind_record_keys_and_bytes_without_collisions() {
-        let ambiguous_key = ConstValue::Record(BTreeMap::from([(
-            "a=str:1:x,b".to_string(),
-            ConstValue::None,
-        )]));
-        let two_fields = ConstValue::Record(BTreeMap::from([
-            ("a".to_string(), ConstValue::String("x".to_string())),
-            ("b".to_string(), ConstValue::None),
-        ]));
-        assert_ne!(
-            canonical_value(&ambiguous_key),
-            canonical_value(&two_fields)
-        );
-        assert_eq!(
-            canonical_value(&ConstValue::Bytes(vec![0, 255])),
-            "bytes:2:00ff"
-        );
-        assert_ne!(
-            canonical_value(&ConstValue::Bytes(Vec::new())),
-            canonical_value(&ConstValue::String(String::new()))
-        );
-    }
-}
+mod tests;

@@ -528,6 +528,30 @@ class Model:
             target.specialization_outputs[0].program_identity,
             changed.specialization_outputs[0].program_identity
         );
+        let with_callback = compile(
+            "target",
+            &format!(
+                "{TARGET}    @staticmethod\n    @metadata(\"fixture.callback\", \"after\")\n    def normalize(value: int) -> int:\n        return 0\n"
+            ),
+            &external_defs,
+        )
+        .expect("annotated method specializes");
+        let with_changed_callback = compile(
+            "target",
+            &format!(
+                "{TARGET}    @staticmethod\n    @metadata(\"fixture.callback\", \"after\")\n    def normalize(value: str) -> int:\n        return 0\n"
+            ),
+            &external_defs,
+        )
+        .expect("changed annotated method specializes");
+        assert_ne!(
+            target.specialization_outputs[0].program_identity,
+            with_callback.specialization_outputs[0].program_identity
+        );
+        assert_ne!(
+            with_callback.specialization_outputs[0].program_identity,
+            with_changed_callback.specialization_outputs[0].program_identity
+        );
         let cli = warning_diagnostics(None, &target.warnings);
         let editor = warning_diagnostics(
             Some(FrontendSourceContext {
