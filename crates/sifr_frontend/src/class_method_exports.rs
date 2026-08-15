@@ -1,8 +1,8 @@
 use sifr_lowering::{
     canonicalize_user_export_type, DeclarationMetadataTargetKind, ExternalDefs, HirClass,
-    MethodKind, StructuralMethodExport, TypedDeclarationMetadata,
+    MethodKind, StructuralMethodExport,
 };
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 
 #[derive(Default)]
 pub(crate) struct ClassMethodExports {
@@ -49,20 +49,12 @@ fn imported_instance_methods(
 fn exported_structural_methods(
     class: &HirClass,
     local_classes: &HashMap<String, String>,
-    declaration_metadata: &[TypedDeclarationMetadata],
+    declared_names: &[&str],
 ) -> Option<Vec<StructuralMethodExport>> {
-    let owner_prefix = format!("{}.", class.name);
-    let mut seen = BTreeSet::new();
-    let methods = declaration_metadata
+    let methods = declared_names
         .iter()
-        .filter(|entry| {
-            entry.target_kind == DeclarationMetadataTargetKind::Method
-                && entry.owner.starts_with(&owner_prefix)
-                && seen.insert(entry.owner.clone())
-        })
-        .filter_map(|entry| {
-            let declared_name = &entry.owner[owner_prefix.len()..];
-            let hir_name = if declared_name == "__init__" {
+        .filter_map(|declared_name| {
+            let hir_name = if *declared_name == "__init__" {
                 "new"
             } else {
                 declared_name
@@ -98,11 +90,34 @@ pub(crate) fn structural_method_map(
     local_classes: &HashMap<String, String>,
     lowering: &sifr_lowering::LoweringResult,
 ) -> HashMap<String, Vec<StructuralMethodExport>> {
+    if module.classes.is_empty() {
+        return HashMap::new();
+    }
+    let mut names_by_class: HashMap<&str, Vec<&str>> = HashMap::new();
+    let mut seen = HashSet::new();
+    for entry in &lowering.declaration_metadata {
+        if entry.target_kind != DeclarationMetadataTargetKind::Method
+            || !seen.insert(entry.owner.as_str())
+        {
+            continue;
+        }
+        let Some((class_name, method_name)) = entry.owner.rsplit_once('.') else {
+            continue;
+        };
+        names_by_class
+            .entry(class_name)
+            .or_default()
+            .push(method_name);
+    }
+    if names_by_class.is_empty() {
+        return HashMap::new();
+    }
     module
         .classes
         .iter()
         .filter_map(|class| {
-            exported_structural_methods(class, local_classes, &lowering.declaration_metadata)
+            let declared_names = names_by_class.get(class.name.as_str())?;
+            exported_structural_methods(class, local_classes, declared_names)
                 .map(|methods| (class.name.clone(), methods))
         })
         .collect()
