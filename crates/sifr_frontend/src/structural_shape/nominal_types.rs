@@ -15,7 +15,7 @@ pub(super) fn describe_enum(
 ) -> ShapeNode {
     let identity = qualified_identity(module_name, declared_identity.unwrap_or(local_name));
     let (metadata, owner) =
-        declaration_metadata_for(&identity, local_name, lowering, external_defs);
+        declaration_metadata_for(module_name, &identity, local_name, lowering, external_defs);
     ShapeNode::Enum {
         identity,
         variants: variants
@@ -47,7 +47,7 @@ pub(super) fn describe_newtype(
 ) -> ShapeNode {
     let identity = qualified_identity(module_name, declared_identity.unwrap_or(local_name));
     let (metadata, owner) =
-        declaration_metadata_for(&identity, local_name, lowering, external_defs);
+        declaration_metadata_for(module_name, &identity, local_name, lowering, external_defs);
     ShapeNode::Newtype {
         identity,
         inner: Box::new(describe_node(
@@ -70,16 +70,18 @@ pub(super) fn qualified_identity(module_name: &str, declared_identity: &str) -> 
 }
 
 fn declaration_metadata_for<'a>(
+    module_name: &str,
     identity: &str,
     local_name: &str,
     lowering: &'a LoweringResult,
     external_defs: Option<&'a ExternalDefs>,
 ) -> (&'a [TypedDeclarationMetadata], String) {
-    if lowering
-        .module
-        .classes
-        .iter()
-        .any(|class| class.name == local_name)
+    if identity == format!("{module_name}.{local_name}")
+        && lowering
+            .module
+            .classes
+            .iter()
+            .any(|class| class.name == local_name)
     {
         return (&lowering.declaration_metadata, local_name.to_string());
     }

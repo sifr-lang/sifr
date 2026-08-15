@@ -291,51 +291,41 @@ fn describe_class(
         return ShapeNode::RecursiveReference(identity);
     }
 
-    let local_class = lowering
-        .module
-        .classes
-        .iter()
-        .find(|class| class.name == local_name);
+    let local_identity = format!("{module_name}.{local_name}");
+    let local_class = (identity == local_identity)
+        .then(|| {
+            lowering
+                .module
+                .classes
+                .iter()
+                .find(|class| class.name == local_name)
+        })
+        .flatten();
     if let Some(class) = local_class {
         if matches!(class.kind, HirClassKind::Enum) {
+            let described = describe_enum(
+                module_name,
+                Some(&identity),
+                local_name,
+                &class.enum_variants,
+                lowering,
+                external_defs,
+            );
             visiting.remove(&identity);
-            return ShapeNode::Enum {
-                identity,
-                variants: class
-                    .enum_variants
-                    .iter()
-                    .map(|(name, value)| ShapeEnumVariant {
-                        name: name.clone(),
-                        value: *value,
-                        metadata: metadata_for(
-                            &lowering.declaration_metadata,
-                            local_name,
-                            DeclarationMetadataTargetKind::EnumVariant,
-                            Some(name),
-                        ),
-                    })
-                    .collect(),
-                metadata: metadata_for(
-                    &lowering.declaration_metadata,
-                    local_name,
-                    DeclarationMetadataTargetKind::Type,
-                    None,
-                ),
-            };
+            return described;
         }
         if let Some(inner) = &class.newtype_inner {
-            let inner = describe_node(module_name, inner, lowering, external_defs, visiting);
+            let described = describe_newtype(
+                module_name,
+                Some(&identity),
+                local_name,
+                inner,
+                lowering,
+                external_defs,
+                visiting,
+            );
             visiting.remove(&identity);
-            return ShapeNode::Newtype {
-                identity,
-                inner: Box::new(inner),
-                metadata: metadata_for(
-                    &lowering.declaration_metadata,
-                    local_name,
-                    DeclarationMetadataTargetKind::Type,
-                    None,
-                ),
-            };
+            return described;
         }
     }
 

@@ -763,24 +763,34 @@ class ImportedUse:
     }
 
     #[test]
-    fn public_import_can_describe_annotated_private_nested_type() {
+    fn public_import_preserves_private_generic_nested_shape() {
         let mut external_defs = ExternalDefs::default();
         let models = compile(
             "models",
             r#"
-class _Hidden:
-    value: int
+class _Hidden[T]:
+    value: T = 0
 
     @metadata("fixture.callback", "read")
-    def read(self) -> int:
+    def read(self) -> T:
         return self.value
 
 class Box:
-    hidden: _Hidden
+    hidden: _Hidden[int]
+
+class LocalUse:
+    item: Box
 "#,
             &external_defs,
         )
         .expect("models compile");
+        let local_use = models
+            .module
+            .classes
+            .iter()
+            .find(|class| class.name == "LocalUse")
+            .expect("local use exists");
+        let local_shape = crate::describe_type("models", &local_use.fields[0].1, &models);
         collect_module_exports("models", &models, &mut external_defs);
         assert!(!external_defs.classes["models"].contains_key("_Hidden"));
         assert!(external_defs.structural_methods["models"].contains_key("_Hidden"));
@@ -803,8 +813,11 @@ class Box:
             &consumer,
             &external_defs,
         );
+        assert_eq!(local_shape.canonical_identity, shape.canonical_identity);
         assert!(shape.canonical_identity.contains("models._Hidden"));
+        assert!(shape.canonical_identity.contains("value:int:default=int:0"));
         assert!(shape.canonical_identity.contains("read:regular"));
+        assert!(shape.canonical_identity.contains("result[int]"));
         assert!(shape.canonical_identity.contains("fixture.callback"));
     }
 

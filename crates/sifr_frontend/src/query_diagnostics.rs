@@ -224,6 +224,12 @@ pub fn collect_module_exports(
     }
 
     for class in &module.classes {
+        if let Some(defaults) = lowering_result.class_field_defaults.get(&class.name) {
+            class_field_default_exports.insert(class.name.clone(), defaults.clone());
+        }
+        if !class.type_params.is_empty() {
+            class_type_param_exports.insert(class.name.clone(), class.type_params.clone());
+        }
         if !class.name.starts_with('_') {
             if class.is_error_type {
                 error_exports.insert(class.name.clone());
@@ -310,12 +316,6 @@ pub fn collect_module_exports(
             };
             let class_ty = canonicalize_user_export_type(&exported_type, &local_classes);
             class_exports.insert(class.name.clone(), class_ty);
-            if let Some(defaults) = lowering_result.class_field_defaults.get(&class.name) {
-                class_field_default_exports.insert(class.name.clone(), defaults.clone());
-            }
-            if !class.type_params.is_empty() {
-                class_type_param_exports.insert(class.name.clone(), class.type_params.clone());
-            }
         }
     }
     for (name, ty, _) in &module.constants {
