@@ -647,6 +647,41 @@ Milestone delivery records:
   row property. PR #9 did not absorb those suggestions.
 - The wave adds no compatibility path, fallback, legacy path, Python production
   dependency, or versioned public API name.
+- The PS7 annotated-method-shape prerequisite merged in Sifr
+  [PR #3193](https://github.com/sifr-lang/sifr/pull/3193) at merge commit
+  `ac8dfade387f8d9b5a6dcd390667c68686485620`. The exact reviewed and gated
+  candidate was `d42dd6a09a46448bf71d4506fbae46e45b50be6b`.
+- Static-program nominal shapes now carry deterministic descriptors for directly
+  annotated local methods. Descriptors preserve source order, source spelling,
+  method kind, receiver, async state, parameter conventions, keyword-only state,
+  declared types, result type, and method or parameter metadata.
+- Method contracts come from the specialized HIR declaration. Generic class
+  arguments are substituted once from the concrete nominal owner, operators are
+  included, and the lowered `new` constructor is serialized as source
+  `__init__`. Unannotated helpers remain absent from the identity.
+- This prerequisite changes const-specialization program identity only. It does
+  not change runtime structural or wire identity, emit a callback runtime, or
+  add a compiler special case for Pydantic.
+- Two exact-SHA Opus reviews found generic-substitution/operator coverage and
+  constructor/async canonicalization blockers. The remediations closed them.
+  The final exact-SHA review returned `SATISFIED` with no blockers; its response
+  SHA-256 is
+  `609fd6b07e81d6f3e481d433cee36538011305051231f7aa1b7afc4554c67cef`.
+- Targeted compiler validation passed 71 frontend tests and 987 lowering tests
+  with one pre-existing ignored test, plus formatting, maintainability, diff,
+  and file-size guards. The first cold create-PR attempt passed every functional
+  lane and exceeded only the tracked generated-artifact cold budget in #3134.
+  The unchanged warm canonical create-PR gate then exited zero.
+- The single authoritative merge gate exited zero. It passed Python interop
+  25/25 with zero read-only mutations, Rust interop 10/10, E2E 695/695,
+  hardening 268 variants with zero failures, all 78 ignored driver generated
+  builds, and all compiler, release, performance, distribution, sysroot, and
+  generated-code-quality lanes. The merge report SHA-256 is
+  `b2ff478e156276bcddb350fff2f7efec35ef94042d226e36ec40f5bd4aeed0e8`.
+- The prerequisite adds no compatibility path, fallback, legacy path, or
+  versioned public API name. The next PS7 wave can build the static-program-
+  indexed typed callback slot table and opaque typed context handle on this
+  method-shape substrate.
 - `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
