@@ -53,22 +53,19 @@ pub(super) fn described_methods(
                 && entry.owner.starts_with(&owner_prefix)
                 && seen.insert(entry.owner.clone())
         })
-        .map(|entry| {
+        .filter_map(|entry| {
             let declared_name = &entry.owner[owner_prefix.len()..];
             let hir_name = if declared_name == "__init__" {
                 "new"
             } else {
                 declared_name
             };
-            let Some(method) = class
+            let method = class
                 .methods
                 .iter()
                 .chain(class.operator_impls.iter().map(|(_, method)| method))
-                .find(|method| method.name == hir_name)
-            else {
-                panic!("validated method metadata must resolve to a lowered method");
-            };
-            described_method(
+                .find(|method| method.name == hir_name)?;
+            Some(described_method(
                 module_name,
                 &entry.owner,
                 declared_name,
@@ -88,11 +85,12 @@ pub(super) fn described_methods(
                 lowering,
                 external_defs,
                 visiting,
-            )
+            ))
         })
         .collect()
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn described_exported_methods(
     module_name: &str,
     class_name: &str,
@@ -104,34 +102,19 @@ pub(super) fn described_exported_methods(
     external_defs: Option<&sifr_lowering::ExternalDefs>,
     visiting: &mut BTreeSet<String>,
 ) -> Vec<ShapeMethod> {
-    let mut seen = BTreeSet::new();
-    let owner_prefix = format!("{class_name}.");
     let bindings = type_params
         .iter()
         .cloned()
         .zip(type_args.iter().cloned())
         .collect::<HashMap<_, _>>();
-    declaration_metadata
+    methods
         .iter()
-        .filter(|entry| {
-            entry.target_kind == DeclarationMetadataTargetKind::Method
-                && entry.owner.starts_with(&owner_prefix)
-                && seen.insert(entry.owner.clone())
-        })
-        .map(|entry| {
-            let declared_name = &entry.owner[owner_prefix.len()..];
-            let hir_name = if declared_name == "__init__" {
-                "new"
-            } else {
-                declared_name
-            };
-            let Some(method) = methods.iter().find(|method| method.name == hir_name) else {
-                panic!("validated imported method metadata must resolve to an exported method");
-            };
+        .map(|method| {
+            let owner = format!("{class_name}.{}", method.name);
             described_method(
                 module_name,
-                &entry.owner,
-                declared_name,
+                &owner,
+                &method.name,
                 &method.params,
                 &method.return_type,
                 method.method_kind,
@@ -140,7 +123,7 @@ pub(super) fn described_exported_methods(
                 &bindings,
                 metadata_for(
                     declaration_metadata,
-                    &entry.owner,
+                    &owner,
                     DeclarationMetadataTargetKind::Method,
                     None,
                 ),
@@ -153,6 +136,7 @@ pub(super) fn described_exported_methods(
         .collect()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn described_method(
     module_name: &str,
     owner: &str,

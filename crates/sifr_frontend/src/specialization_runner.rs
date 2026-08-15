@@ -631,6 +631,184 @@ class Container:
     }
 
     #[test]
+    fn reexported_nominal_shapes_match_local_shapes_without_consumer_fallbacks() {
+        fn field_type<'a>(result: &'a LoweringResult, class_name: &str, field: &str) -> &'a Type {
+            result
+                .module
+                .classes
+                .iter()
+                .find(|class| class.name == class_name)
+                .and_then(|class| class.fields.iter().find(|(name, _)| name == field))
+                .map(|(_, ty)| ty)
+                .expect("fixture field exists")
+        }
+
+        let mut external_defs = ExternalDefs::default();
+        let models = compile(
+            "models",
+            r#"
+from enum import Enum
+
+@metadata("fixture.kind", "color")
+@metadata("enum_variant", "RED", "fixture.label", "red")
+class Color(Enum):
+    RED = 1
+    BLUE = 2
+
+@metadata("fixture.kind", "port")
+class Port(int):
+    pass
+
+class Box[T]:
+    value: T
+
+    @metadata("fixture.callback", "construct")
+    def __init__(self, value: T) -> None:
+        self.value = value
+
+    @metadata("fixture.callback", "compare")
+    def __eq__(self, other: Box[T]) -> bool:
+        return True
+
+    @classmethod
+    @metadata("fixture.callback", "from_value")
+    def from_value(cls, value: T) -> Box[T]:
+        return Box(value)
+
+    @staticmethod
+    @metadata("fixture.callback", "normalize")
+    @metadata("parameter", "value", "fixture.role", "input")
+    async def normalize(*, value: T) -> T:
+        return value
+
+class LocalUse:
+    item: Box[int]
+    color: Color
+    port: Port
+"#,
+            &external_defs,
+        )
+        .expect("models compile");
+        let local_box =
+            crate::describe_type("models", field_type(&models, "LocalUse", "item"), &models);
+        let local_color =
+            crate::describe_type("models", field_type(&models, "LocalUse", "color"), &models);
+        let local_port =
+            crate::describe_type("models", field_type(&models, "LocalUse", "port"), &models);
+        collect_module_exports("models", &models, &mut external_defs);
+
+        let facade = compile(
+            "facade",
+            "from models import Box as Renamed\nfrom models import Color\nfrom models import Port\n",
+            &external_defs,
+        )
+        .expect("facade reexports compile");
+        collect_module_exports("facade", &facade, &mut external_defs);
+        let consumer = compile(
+            "consumer",
+            r#"
+from facade import Renamed, Color, Port
+
+class ImportedUse:
+    item: Renamed[int]
+    color: Color
+    port: Port
+"#,
+            &external_defs,
+        )
+        .expect("consumer compiles");
+
+        let imported_box = crate::describe_type_with_externals(
+            "consumer",
+            field_type(&consumer, "ImportedUse", "item"),
+            &consumer,
+            &external_defs,
+        );
+        let imported_color = crate::describe_type_with_externals(
+            "consumer",
+            field_type(&consumer, "ImportedUse", "color"),
+            &consumer,
+            &external_defs,
+        );
+        let imported_port = crate::describe_type_with_externals(
+            "consumer",
+            field_type(&consumer, "ImportedUse", "port"),
+            &consumer,
+            &external_defs,
+        );
+
+        assert_eq!(
+            local_box.canonical_identity,
+            imported_box.canonical_identity
+        );
+        assert_eq!(
+            local_color.canonical_identity,
+            imported_color.canonical_identity
+        );
+        assert_eq!(
+            local_port.canonical_identity,
+            imported_port.canonical_identity
+        );
+        assert!(imported_box.canonical_identity.contains("__init__:regular"));
+        assert!(imported_box.canonical_identity.contains("__eq__:regular"));
+        assert!(imported_box.canonical_identity.contains("from_value:class"));
+        assert!(imported_box
+            .canonical_identity
+            .contains("normalize:static:none:true"));
+        assert!(imported_box.canonical_identity.contains("fixture.role"));
+        assert!(imported_color.canonical_identity.contains("models.Color"));
+        assert!(imported_color.canonical_identity.contains("fixture.label"));
+        assert!(imported_port.canonical_identity.contains("models.Port"));
+        assert!(imported_port.canonical_identity.contains("fixture.kind"));
+    }
+
+    #[test]
+    fn public_import_can_describe_annotated_private_nested_type() {
+        let mut external_defs = ExternalDefs::default();
+        let models = compile(
+            "models",
+            r#"
+class _Hidden:
+    value: int
+
+    @metadata("fixture.callback", "read")
+    def read(self) -> int:
+        return self.value
+
+class Box:
+    hidden: _Hidden
+"#,
+            &external_defs,
+        )
+        .expect("models compile");
+        collect_module_exports("models", &models, &mut external_defs);
+        assert!(!external_defs.classes["models"].contains_key("_Hidden"));
+        assert!(external_defs.structural_methods["models"].contains_key("_Hidden"));
+
+        let consumer = compile(
+            "consumer",
+            "from models import Box\n\nclass Container:\n    item: Box\n",
+            &external_defs,
+        )
+        .expect("consumer compiles");
+        let container = consumer
+            .module
+            .classes
+            .iter()
+            .find(|class| class.name == "Container")
+            .expect("container exists");
+        let shape = crate::describe_type_with_externals(
+            "consumer",
+            &container.fields[0].1,
+            &consumer,
+            &external_defs,
+        );
+        assert!(shape.canonical_identity.contains("models._Hidden"));
+        assert!(shape.canonical_identity.contains("read:regular"));
+        assert!(shape.canonical_identity.contains("fixture.callback"));
+    }
+
+    #[test]
     fn package_fatal_flows_through_registry_owned_frontend_error() {
         let mut external_defs = ExternalDefs::default();
         let package = compile(

@@ -12,6 +12,10 @@ use std::collections::{BTreeMap, BTreeSet};
 mod methods;
 use methods::{described_exported_methods, described_methods};
 pub use methods::{ShapeMethod, ShapeParameter};
+mod nominal_types;
+use nominal_types::{describe_enum, describe_newtype, qualified_identity};
+mod canonical_helpers;
+use canonical_helpers::{canonical_bytes, canonical_sequence, canonical_values};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructuralShape {
@@ -93,7 +97,12 @@ pub enum ShapeNode {
 /// across hash-map seeds and process boundaries and can be used directly as an incremental query
 /// key or serialized static description.
 #[must_use]
-pub fn describe_type(module_name: &str, ty: &Type, lowering: &LoweringResult) -> StructuralShape {
+#[cfg(test)]
+pub(crate) fn describe_type(
+    module_name: &str,
+    ty: &Type,
+    lowering: &LoweringResult,
+) -> StructuralShape {
     describe_type_inner(module_name, ty, lowering, None)
 }
 
@@ -189,29 +198,31 @@ fn describe_node(
             describe_union(module_name, members, lowering, external_defs, visiting)
         }
         Type::TypeVar(name) => ShapeNode::TypeParameter(name.clone()),
-        Type::Enum { name, variants, .. } => ShapeNode::Enum {
-            identity: format!("{module_name}.{name}"),
-            variants: variants
-                .iter()
-                .map(|(name, value)| ShapeEnumVariant {
-                    name: name.clone(),
-                    value: *value,
-                    metadata: Vec::new(),
-                })
-                .collect(),
-            metadata: Vec::new(),
-        },
-        Type::Newtype { name, inner, .. } => ShapeNode::Newtype {
-            identity: format!("{module_name}.{name}"),
-            inner: Box::new(describe_node(
-                module_name,
-                inner,
-                lowering,
-                external_defs,
-                visiting,
-            )),
-            metadata: Vec::new(),
-        },
+        Type::Enum {
+            identity,
+            name,
+            variants,
+        } => describe_enum(
+            module_name,
+            identity.as_deref(),
+            name,
+            variants,
+            lowering,
+            external_defs,
+        ),
+        Type::Newtype {
+            identity,
+            name,
+            inner,
+        } => describe_newtype(
+            module_name,
+            identity.as_deref(),
+            name,
+            inner,
+            lowering,
+            external_defs,
+            visiting,
+        ),
         Type::Class {
             identity,
             type_args,
@@ -275,11 +286,7 @@ fn describe_class(
     external_defs: Option<&ExternalDefs>,
     visiting: &mut BTreeSet<String>,
 ) -> ShapeNode {
-    let identity = if declared_identity.contains('.') {
-        declared_identity.to_string()
-    } else {
-        format!("{module_name}.{declared_identity}")
-    };
+    let identity = qualified_identity(module_name, declared_identity);
     if !visiting.insert(identity.clone()) {
         return ShapeNode::RecursiveReference(identity);
     }
@@ -340,20 +347,27 @@ fn describe_class(
             Some((source_module, source_name, external_defs))
         })
         .flatten();
-    let declaration_metadata = external_class
-        .and_then(|(source_module, _, external_defs)| {
-            external_defs.declaration_metadata.get(source_module)
-        })
-        .map_or(lowering.declaration_metadata.as_slice(), Vec::as_slice);
-    let metadata_owner = external_class.map_or(local_name, |(_, source_name, _)| source_name);
-    let defaults = external_class
-        .and_then(|(source_module, source_name, external_defs)| {
+    let (declaration_metadata, metadata_owner, defaults) = if local_class.is_some() {
+        (
+            lowering.declaration_metadata.as_slice(),
+            local_name,
+            lowering.class_field_defaults.get(local_name),
+        )
+    } else if let Some((source_module, source_name, external_defs)) = external_class {
+        (
+            external_defs
+                .declaration_metadata
+                .get(source_module)
+                .map_or(&[][..], Vec::as_slice),
+            source_name,
             external_defs
                 .class_field_defaults
                 .get(source_module)
-                .and_then(|classes| classes.get(source_name))
-        })
-        .or_else(|| lowering.class_field_defaults.get(local_name));
+                .and_then(|classes| classes.get(source_name)),
+        )
+    } else {
+        (&[][..], local_name, None)
+    };
     let described_fields = fields
         .iter()
         .enumerate()
@@ -859,38 +873,6 @@ pub(crate) fn canonical_value(value: &ConstValue) -> String {
                 .join(",")
         ),
     }
-}
-
-fn canonical_bytes(value: &[u8]) -> String {
-    const HEX: &[u8; 16] = b"0123456789abcdef";
-    let mut encoded = String::with_capacity(value.len() * 2);
-    for byte in value {
-        encoded.push(char::from(HEX[usize::from(byte >> 4)]));
-        encoded.push(char::from(HEX[usize::from(byte & 0x0f)]));
-    }
-    encoded
-}
-
-fn canonical_values(kind: &str, values: &[ConstValue]) -> String {
-    format!(
-        "{kind}[{}]",
-        values
-            .iter()
-            .map(canonical_value)
-            .collect::<Vec<_>>()
-            .join(",")
-    )
-}
-
-fn canonical_sequence(kind: &str, elements: &[ShapeNode]) -> String {
-    format!(
-        "{kind}[{}]",
-        elements
-            .iter()
-            .map(canonical_node)
-            .collect::<Vec<_>>()
-            .join(",")
-    )
 }
 
 #[cfg(test)]

@@ -1,7 +1,8 @@
 use sifr_lowering::{
-    canonicalize_user_export_type, ExternalDefs, HirClass, MethodKind, StructuralMethodExport,
+    canonicalize_user_export_type, DeclarationMetadataTargetKind, ExternalDefs, HirClass,
+    MethodKind, StructuralMethodExport, TypedDeclarationMetadata,
 };
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 #[derive(Default)]
 pub(crate) struct ClassMethodExports {
@@ -45,38 +46,66 @@ fn imported_instance_methods(
         .unwrap_or_default()
 }
 
-pub(crate) fn exported_structural_methods(
+fn exported_structural_methods(
     class: &HirClass,
     local_classes: &HashMap<String, String>,
+    declaration_metadata: &[TypedDeclarationMetadata],
 ) -> Option<Vec<StructuralMethodExport>> {
-    let methods = class
-        .methods
+    let owner_prefix = format!("{}.", class.name);
+    let mut seen = BTreeSet::new();
+    let methods = declaration_metadata
         .iter()
-        .map(|method| (method.name.as_str(), method))
-        .chain(
-            class
-                .operator_impls
+        .filter(|entry| {
+            entry.target_kind == DeclarationMetadataTargetKind::Method
+                && entry.owner.starts_with(&owner_prefix)
+                && seen.insert(entry.owner.clone())
+        })
+        .filter_map(|entry| {
+            let declared_name = &entry.owner[owner_prefix.len()..];
+            let hir_name = if declared_name == "__init__" {
+                "new"
+            } else {
+                declared_name
+            };
+            let method = class
+                .methods
                 .iter()
-                .map(|(name, method)| (name.as_str(), method)),
-        )
-        .map(|(name, method)| StructuralMethodExport {
-            name: name.to_string(),
-            params: method
-                .params
-                .iter()
-                .cloned()
-                .map(|mut param| {
-                    param.ty = canonicalize_user_export_type(&param.ty, local_classes);
-                    param
-                })
-                .collect(),
-            return_type: canonicalize_user_export_type(&method.return_type, local_classes),
-            is_async: method.is_async,
-            method_kind: method.method_kind,
-            receiver: method.receiver,
+                .chain(class.operator_impls.iter().map(|(_, method)| method))
+                .find(|method| method.name == hir_name)?;
+            Some(StructuralMethodExport {
+                name: declared_name.to_string(),
+                params: method
+                    .params
+                    .iter()
+                    .cloned()
+                    .map(|mut param| {
+                        param.ty = canonicalize_user_export_type(&param.ty, local_classes);
+                        param
+                    })
+                    .collect(),
+                return_type: canonicalize_user_export_type(&method.return_type, local_classes),
+                is_async: method.is_async,
+                method_kind: method.method_kind,
+                receiver: method.receiver,
+            })
         })
         .collect::<Vec<_>>();
     (!methods.is_empty()).then_some(methods)
+}
+
+pub(crate) fn structural_method_map(
+    module: &sifr_lowering::HirModule,
+    local_classes: &HashMap<String, String>,
+    lowering: &sifr_lowering::LoweringResult,
+) -> HashMap<String, Vec<StructuralMethodExport>> {
+    module
+        .classes
+        .iter()
+        .filter_map(|class| {
+            exported_structural_methods(class, local_classes, &lowering.declaration_metadata)
+                .map(|methods| (class.name.clone(), methods))
+        })
+        .collect()
 }
 
 impl ClassMethodExports {

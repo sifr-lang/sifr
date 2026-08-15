@@ -3,7 +3,7 @@ use super::{
     SourceHash, SourcePath, SourceText, SymbolKind, SymbolView,
 };
 use crate::callable_exports::{exported_function_type, RustCallbackExports};
-use crate::class_method_exports::{exported_structural_methods, ClassMethodExports};
+use crate::class_method_exports::{structural_method_map, ClassMethodExports};
 pub(crate) use crate::export_type_localization::should_export_callable;
 use crate::export_type_localization::{
     copy_class_generic_metadata, copy_function_generic_metadata, declared_generic_metadata,
@@ -19,6 +19,7 @@ use sifr_lowering::{
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{BTreeMap, HashMap};
+
 pub(super) fn module_state(
     id: ModuleId,
     file: FileId,
@@ -175,7 +176,6 @@ pub fn collect_module_exports(
     let mut class_exports = HashMap::new();
     let mut class_method_exports = ClassMethodExports::default();
     let mut class_type_param_exports = HashMap::new();
-    let mut structural_method_exports = HashMap::new();
     let mut rust_opaque_exports = std::collections::HashSet::new();
     let mut class_field_default_exports = HashMap::new();
     let mut const_exports = HashMap::new();
@@ -188,6 +188,7 @@ pub fn collect_module_exports(
     let mut rust_callback_exports = RustCallbackExports::default();
     let (mut generic_exports, mut type_param_bound_exports, local_classes) =
         declared_generic_metadata(module_name, module);
+    let structural_method_exports = structural_method_map(module, &local_classes, lowering_result);
     let imported_ancestry = imported_class_ancestry(module, external_defs);
 
     for func in &module.functions {
@@ -309,9 +310,6 @@ pub fn collect_module_exports(
             };
             let class_ty = canonicalize_user_export_type(&exported_type, &local_classes);
             class_exports.insert(class.name.clone(), class_ty);
-            if let Some(methods) = exported_structural_methods(class, &local_classes) {
-                structural_method_exports.insert(class.name.clone(), methods);
-            }
             if let Some(defaults) = lowering_result.class_field_defaults.get(&class.name) {
                 class_field_default_exports.insert(class.name.clone(), defaults.clone());
             }
@@ -461,7 +459,9 @@ pub fn collect_module_exports(
     external_defs
         .classes
         .insert(module_name.to_string(), class_exports);
-    if !structural_method_exports.is_empty() {
+    if structural_method_exports.is_empty() {
+        external_defs.structural_methods.remove(module_name);
+    } else {
         external_defs
             .structural_methods
             .insert(module_name.to_string(), structural_method_exports);
