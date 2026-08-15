@@ -462,6 +462,36 @@ Milestone delivery records:
   that duplicate compiler-owned native-handle path defect.
 - The repair adds no compatibility path, fallback, legacy path, or versioned
   public API name.
+- The deterministic nominal-union prerequisite merged in Sifr
+  [PR #3189](https://github.com/sifr-lang/sifr/pull/3189) at merge commit
+  `f8857c4692903cffc5b150831263d31fb4822d5e`. The exact reviewed and gated
+  candidate was `d62f9658319ee65481398afd9ac19bb6aa41020e`.
+- Union ordering and deduplication now use stable nominal, structural, protocol,
+  newtype, and enum identities. Same-bare-name members stay deterministic across
+  modules and generic substitution. Raw generic and structural wrappers preserve
+  nested optionality until a typed optional boundary flattens it.
+- Project and test-project generation now derive crate-root ownership from the
+  items actually hoisted into the generated crate root. An unrelated union can no
+  longer strip a module-local compiler-owned nominal such as the native file
+  handle.
+- Focused validation passed 135 type-system tests, 1,023 codegen tests, strict
+  affected-library Clippy, formatting, HIR maintainability, the file-size guard,
+  and generated-build regressions for nominal collisions, module-local native
+  handles, and `main`/root test layouts.
+- The canonical create-PR gate exited zero. Its receipt SHA-256 is
+  `0827cb4448778c7fbfb1c7fcae8ef1ff6911d1b94afd75e552c0229f85d2d916`.
+  The single authoritative merge gate also exited zero. It passed all 78 generated
+  driver builds, 1,023 codegen tests, 695 E2E fixtures, and 268 hardening variants
+  with zero failures. Its receipt SHA-256 is
+  `f4cd5b1d22494dd613f21eada04b2a30a30025c24947b89befe456b6fcfec1e8`.
+- The final exact-SHA Opus review returned `SATISFIED` with no blocking findings.
+  Its response SHA-256 is
+  `1edf024c54bb6cfd3812c76567c382aa4410a1875a7ee3d0dd291422685e12f5`.
+- [Issue #3162](https://github.com/sifr-lang/sifr/issues/3162) continues to own
+  non-blocking union-rendering, ownership-list consolidation, and test-layout
+  hardening. PR #3189 did not absorb those follow-ups.
+- The prerequisite adds no compatibility path, fallback, legacy path, or
+  versioned public API name.
 - The first `milestone_ps_7` companion wave merged in
   [PR #5](https://github.com/sifr-lang/pydantic-sifr/pull/5) at merge commit
   `d63bb8ea0a00b6229d8c4e4defab5045c2e2b24f`. The exact reviewed and gated
