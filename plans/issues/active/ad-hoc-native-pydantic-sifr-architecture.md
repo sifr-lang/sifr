@@ -615,6 +615,38 @@ Milestone delivery records:
   documentation.
 - The control wave adds no compatibility path, fallback, legacy path, or
   versioned public API name.
+- The PS7 cumulative-ledger wave merged in companion-repository
+  [PR #9](https://github.com/sifr-lang/pydantic-sifr/pull/9) at merge commit
+  `bc4617c9535d49c25dacc0d345f69d23156ff686`. The exact reviewed and gated
+  candidate was `8f04103ce82c14feb72e88cc3511af2d80b553f4`.
+- The PS7 ledger now cumulatively certifies nine delivered families: literals,
+  enums, ordinary and nullable unions, field/path tagged unions, definitions and
+  recursion, control composition, recursion limits, and smart-union ranking.
+  It binds every upstream-derived row to the pinned PS7 anchor set while keeping
+  the two Sifr-native core families on direct local evidence.
+- The exact-SHA Opus review found one documentation omission in the pending API
+  boundary. The remediation names validator, discriminated-union, and
+  generic-recursion APIs as pending. The final review returned `SATISFIED` with
+  no blockers. Its response SHA-256 is
+  `6673912d688cf74ea97b82d1d8d1bdccdba6fa439678788fa26f7284c4e34cbc`.
+- Targeted validation passed the PS7 ledger unit checks, 8 control tests, 20
+  definitions/recursion tests, 17 sum tests, formatting, and the file-size
+  guard. The canonical create-PR and single merge gates passed against the exact
+  pinned Sifr source toolchain. The merge gate included both locked demos, all
+  workspace and release suites, six fuzz-target builds, and four 1,000-run fuzz
+  campaigns.
+- A separate exact-current-state Opus audit confirmed that the fixed-arity
+  call-scoped callback bridge cannot carry the remaining heterogeneous validator
+  slots or mutable caller context without prohibited erasure. The next
+  package-neutral prerequisite is a static-program-indexed call-scoped typed
+  callback slot table plus an opaque typed context handle. The audit response
+  SHA-256 is
+  `e3ac33233adb7e77ff27e63ed84ecb49ea716afb56ef1bda2ab97aecce0fb5d8`.
+- Non-blocking ledger follow-ups can make the nullable-union evidence pointer
+  more specific and replace the implicit `core/` anchor opt-out with an explicit
+  row property. PR #9 did not absorb those suggestions.
+- The wave adds no compatibility path, fallback, legacy path, Python production
+  dependency, or versioned public API name.
 - `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
