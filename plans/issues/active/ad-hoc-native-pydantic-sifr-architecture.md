@@ -1088,6 +1088,18 @@ Milestone delivery records:
   `30d76666e7682eea122d38997d90f6c48f7b9aaa1350e9e8501436f7c9887694`.
   The companion create-PR gate and single merge gate passed. No Sifr compiler
   source changed.
+- The PS11 canonical demo merged in companion
+  [PR #41](https://github.com/sifr-lang/pydantic-sifr/pull/41) at merge commit
+  `31a092bfa608ce832bc8d1b2edfa3d0fabb59220`. The exact reviewed and gated
+  candidate was `b4bdc52542281266937d0c639af1c50f0e0e5f0e`.
+- `demos/pydantic_sifr_demo.sifr` now exercises valid JSON, aliases, defaults,
+  constraints, and a stable public error. Both companion gates copy that exact
+  file into a fresh dependent package, format-check it, run it, and compare its
+  complete standard output with the checked snapshot. Opus was SATISFIED with
+  no blockers; response SHA-256 is
+  `103174097170fc196a30073a6bef53c9d11fd0ac8cf113d4fdc06abf3c589bd3`.
+  The companion create-PR gate and single merge gate passed, including the
+  exact-file snapshot lane. No Sifr compiler source changed.
 - The PS11 end-to-end package guide merged in companion
   [PR #40](https://github.com/sifr-lang/pydantic-sifr/pull/40) at merge commit
   `a741654472a8dcc76f74bf4b436076c0aea3d5a1`. The exact reviewed and gated
@@ -3486,7 +3498,7 @@ temporary schema form or second validation path remains; `api/networks`,
 - [x] Publish parse/validate/construct/serialize benchmarks.
 - [x] Certify supported compiler/core/package version combinations.
 - [x] Add end-to-end demos and package documentation.
-- Add and snapshot-test the canonical
+- [x] Add and snapshot-test the canonical
   `demos/pydantic_sifr_demo.sifr` in the external `pydantic-sifr` repository.
 - Perform independent whole-architecture and implementation review.
 
