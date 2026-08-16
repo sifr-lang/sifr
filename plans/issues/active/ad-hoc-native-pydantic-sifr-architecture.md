@@ -1075,6 +1075,21 @@ Milestone delivery records:
   companion [issue #30](https://github.com/sifr-lang/pydantic-sifr/issues/30).
   The exact-pin companion create-PR gate and single merge gate passed. No Sifr
   compiler source changed.
+- The PS10 public construction-API cleanup merged in companion
+  [PR #33](https://github.com/sifr-lang/pydantic-sifr/pull/33) at merge commit
+  `49a8b8c7ce9923a7f73e2100ff5ca06a838db580`. The exact reviewed and gated
+  candidate was `84529ab92c793b95b324f9c3089551321fa57867`.
+- The temporary `VerifiedSchemaProgram` Sifr alias, root format-version export,
+  and four unused construction-time version constants were removed. A
+  fail-closed test now enforces the exact package-root exports and scans every
+  package source for those removed names.
+- The one permitted remediation review returned `SATISFIED`; its response
+  SHA-256 is
+  `1a826420dd557cfa7428b6be70e70f7aa8f5ea742a9b868c9ac8388088f46e57`.
+  Broader contract-test self-coverage is tracked separately by companion
+  [issue #32](https://github.com/sifr-lang/pydantic-sifr/issues/32).
+  The exact-pin companion create-PR gate and single merge gate passed. No Sifr
+  compiler source changed.
 - `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3367,7 +3382,7 @@ the coordinated Sifr boundary-artifact PR is merged and its snapshots pass;
 - [x] Publish the API/behavior compatibility matrix.
 - [x] Add migration documentation for Pydantic users.
 - [x] Prove ordinary Sifr classes and the familiar facade use the same engine.
-- Remove any temporary internal API exposed during construction.
+- [x] Remove any temporary internal API exposed during construction.
 
 Exit gate: the documented end-state public API is complete; no public fallback,
 temporary schema form or second validation path remains; `api/networks`,
