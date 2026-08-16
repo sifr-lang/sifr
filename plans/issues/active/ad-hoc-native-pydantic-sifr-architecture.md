@@ -848,6 +848,25 @@ Milestone delivery records:
   passed provenance, package checks, both locked demos, all workspace and
   release suites, benchmark smoke, strict Clippy, fuzz smoke, and merge-only
   foundations.
+- The PS8 typed serialization-policy item merged in companion
+  [PR #13](https://github.com/sifr-lang/pydantic-sifr/pull/13) at merge commit
+  `59d62ef4d0b2c559d08019a08ec00812c0d23a90`. The exact reviewed and gated
+  candidate was `4cb0a3c12f7f412d2a32994a293447236171a59b`.
+- Plans now own field aliases and materialized defaults. Call options use typed
+  field/index paths for recursive include and exclude selections, with exclude
+  precedence, alias output, and none/default omission shared by structural and
+  direct JSON serialization. Default comparison uses only a bounded raw byte
+  capture for the active default-bearing field; JSON still does not construct
+  a generic value tree. No fallback, compatibility API, or legacy signature
+  remains.
+- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+  response SHA-256 is
+  `9b5d1a30b86b6ac3427d27d9e68c740e15a160562354d5d8f4558a5abdbd66ee`.
+- The full core suite, focused output and plan tests 7/7, strict Clippy,
+  formatting, and file-size guard passed. The exact-pin companion create-PR
+  and single merge gates passed provenance, package checks, both locked demos,
+  all workspace and release suites, benchmark smoke, strict Clippy, fuzz
+  smoke, and merge-only foundations.
 - `milestone_ps_8` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3071,7 +3090,7 @@ success/error behavior, bounded execution and complete ownership coverage;
 
 - [x] Implement serializer plans over structural projections.
 - [x] Implement structural and streaming JSON outputs.
-- Implement aliases, typed recursive include/exclude selections, and
+- [x] Implement aliases, typed recursive include/exclude selections, and
   default/none policies.
 - Implement custom field/model serializers and computed fields.
 - Implement caller-owned typed serialization context forwarding.
