@@ -1060,6 +1060,21 @@ Milestone delivery records:
   `f09f84c79fec512c9cc747c5ed7198f75ac0d2a27fd9613f5bd7aa10d73e7dc7`.
   The file-size guard, exact-pin companion create-PR gate, and the single
   authoritative merge gate passed. No Sifr compiler source changed.
+- The PS10 one-engine proof merged in companion
+  [PR #31](https://github.com/sifr-lang/pydantic-sifr/pull/31) at merge commit
+  `ad3d511de1eaa3bd0681cc937066016ba37a1395`. The exact reviewed and gated
+  candidate was `606dcd14bbfc74246186a9be3a94a58dd1c36ebc`.
+- The executable PS6 demo now validates JSON and string-coercing inputs through
+  both the functional entry points and thin class methods, then compares every
+  constructed field. A source contract requires the exact three production
+  Rust bridge declarations and verifies both class methods delegate.
+- The one permitted remediation review returned `SATISFIED`; its response
+  SHA-256 is
+  `77bd1f020e9dba2759007bb6451a8c4700838525b02f861fde24c3f509d30c0f`.
+  Its broader application-facade audit observation is tracked separately by
+  companion [issue #30](https://github.com/sifr-lang/pydantic-sifr/issues/30).
+  The exact-pin companion create-PR gate and single merge gate passed. No Sifr
+  compiler source changed.
 - `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3351,7 +3366,7 @@ the coordinated Sifr boundary-artifact PR is merged and its snapshots pass;
   string substitutes, and package-specific compiler branches are not accepted.
 - [x] Publish the API/behavior compatibility matrix.
 - [x] Add migration documentation for Pydantic users.
-- Prove ordinary Sifr classes and the familiar facade use the same engine.
+- [x] Prove ordinary Sifr classes and the familiar facade use the same engine.
 - Remove any temporary internal API exposed during construction.
 
 Exit gate: the documented end-state public API is complete; no public fallback,
