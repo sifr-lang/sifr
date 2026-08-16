@@ -867,6 +867,12 @@ Milestone delivery records:
   and single merge gates passed provenance, package checks, both locked demos,
   all workspace and release suites, benchmark smoke, strict Clippy, fuzz
   smoke, and merge-only foundations.
+- The PS8 custom serializer and computed-field row is blocked on the same
+  package-neutral handler-bearing method-slot dispatch as PS7 callbacks.
+  Companion [issue #14](https://github.com/sifr-lang/pydantic-sifr/issues/14)
+  records the exact dependency and links the existing PS7 issue #10. The row
+  was skipped without adding dynamic dispatch, a package-specific compiler
+  path, fallback, compatibility behavior, or a legacy callback API.
 - `milestone_ps_8` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3092,7 +3098,8 @@ success/error behavior, bounded execution and complete ownership coverage;
 - [x] Implement structural and streaming JSON outputs.
 - [x] Implement aliases, typed recursive include/exclude selections, and
   default/none policies.
-- Implement custom field/model serializers and computed fields.
+- [ ] Implement custom field/model serializers and computed fields. Blocked by
+  companion issue #14 pending package-neutral handler-bearing method slots.
 - Implement caller-owned typed serialization context forwarding.
 - Preserve temporal output policies and implement Sifr's selected integer JSON
   profile through `sifr_runtime::json`, including typed range errors.
