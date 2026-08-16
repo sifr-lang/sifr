@@ -1075,6 +1075,19 @@ Milestone delivery records:
   companion [issue #30](https://github.com/sifr-lang/pydantic-sifr/issues/30).
   The exact-pin companion create-PR gate and single merge gate passed. No Sifr
   compiler source changed.
+- The PS11 foundation benchmarks merged in companion
+  [PR #38](https://github.com/sifr-lang/pydantic-sifr/pull/38) at merge commit
+  `1e8601d3406cbf5a5cdc16c78902c6ac14432f98`. The exact reviewed and gated
+  candidate was `5b519212d8418448eab2407f594c7657988e98e3`.
+- Criterion now measures parse, validate, typed construction, and serialization
+  as four named operations on one representative model. The published report
+  binds its measured medians to source commit
+  `f8ae63a6069186b0bf811c23649a74cdf5955b96` and records the host, toolchain,
+  workload, and reproduction command. Opus was SATISFIED with no blockers;
+  response SHA-256 is
+  `30d76666e7682eea122d38997d90f6c48f7b9aaa1350e9e8501436f7c9887694`.
+  The companion create-PR gate and single merge gate passed. No Sifr compiler
+  source changed.
 - The PS10 public construction-API cleanup merged in companion
   [PR #33](https://github.com/sifr-lang/pydantic-sifr/pull/33) at merge commit
   `49a8b8c7ce9923a7f73e2100ff5ca06a838db580`. The exact reviewed and gated
@@ -3442,7 +3455,7 @@ temporary schema form or second validation path remains; `api/networks`,
   this milestone.
 - [x] Run differential validation against the pinned oracle.
 - [x] Complete fuzz, property, adversarial resource and panic testing.
-- Publish parse/validate/construct/serialize benchmarks.
+- [x] Publish parse/validate/construct/serialize benchmarks.
 - Certify supported compiler/core/package version combinations.
 - Add end-to-end demos and package documentation.
 - Add and snapshot-test the canonical
