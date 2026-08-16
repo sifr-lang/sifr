@@ -1020,6 +1020,20 @@ Milestone delivery records:
 - The full core suite, strict all-target Clippy, formatting, file-size guard,
   exact-pin companion create-PR gate, and the single authoritative merge gate
   passed.
+- The PS9 deterministic schema snapshots and dialect-conformance item merged
+  in companion [PR #26](https://github.com/sifr-lang/pydantic-sifr/pull/26)
+  at merge commit `f3ad56b9eb1d250e36c8e5f2929e31485c5dac75`. The exact reviewed and
+  gated candidate was `337338b7506f9e514945413746fce4cf21cca391`.
+- Every generated JSON Schema document now declares the Draft 2020-12 dialect
+  at its root. Committed snapshots cover recursive definitions, aliased
+  serialization, and specialized numeric validation. The independent pinned
+  `jsonschema` test dependency meta-validates and compiles all three documents,
+  and repeated generation has a byte-determinism check.
+- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+  response SHA-256 is
+  `a22060c44878cae3e6a78fa2e5b16f51e2663850c4afab051b5542e0ac73f634`.
+  The exact-pin companion create-PR gate and the single authoritative merge
+  gate passed. No Sifr compiler source changed for this item.
 - `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3282,7 +3296,7 @@ JSON; every `serializers/*` fixture family named in the baseline and
 - [x] Support definitions, recursion, aliases, constraints and mode-specific
   representations.
 - [x] Complete public `Fraction` and `Complex` adapter/schema representations.
-- Add deterministic schema snapshots and dialect conformance.
+- [x] Add deterministic schema snapshots and dialect conformance.
 
 Exit gate: validation, serialization and description agree for every supported
 schema node, with no Schemars or alternate metadata authority;
