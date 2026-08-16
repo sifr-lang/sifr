@@ -1102,6 +1102,21 @@ Milestone delivery records:
   `eb549e25506a808bb8225dff8f29fce089c5ae7224d7b9deb1dca170ebe26ee9`.
   The focused audits, file-size guard, exact-pin companion create-PR gate, and
   single merge gate passed. No Sifr compiler source changed.
+- The PS11 live differential gate merged in companion
+  [PR #35](https://github.com/sifr-lang/pydantic-sifr/pull/35) at merge commit
+  `b9a5b2417cef2b1303928044cd51c0e2afb8b849`. The exact final reviewed and
+  gated candidate was `e789643fd17372b44658c392c827bc25fee637cd`.
+- Five shared cases compare canonical success values or stable error code and
+  location against exact Pydantic Core 2.47.0 at the pinned upstream commit.
+  They cover lax and strict integers, ordered string processing, collection
+  coercion, and indexed errors. The certified outcome digest is
+  `b4a31e7e54b284e6a7697ef6bf0ec958c65d9a40959afcc7f85b548fb347c6aa`.
+- The first review found the native probe used the default native profile after
+  parsing JSON. The bounded remediation set the explicit JSON profile. The
+  one permitted remediation review returned `SATISFIED`; its response SHA-256
+  is `8c0dea592e52b02766b9d422cd95fce502f8358f125830b4b99dacda6b23aff1`.
+  The exact-pin companion create-PR gate and single merge gate passed. Python
+  remains absent from the production dependency graph. No compiler changed.
 - `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3406,7 +3421,7 @@ temporary schema form or second validation path remains; `api/networks`,
 - [x] Re-audit the already-complete manifest against its pinned revisions and the
   documented update-pin procedure; no compatibility coverage is deferred to
   this milestone.
-- Run differential validation against the pinned oracle.
+- [x] Run differential validation against the pinned oracle.
 - Complete fuzz, property, adversarial resource and panic testing.
 - Publish parse/validate/construct/serialize benchmarks.
 - Certify supported compiler/core/package version combinations.
