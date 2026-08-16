@@ -24,19 +24,43 @@ fn install_specializer(external_defs: &mut ExternalDefs, slot_references: &[&str
         .join(", ");
     let source = format!(
         r#"
+class SlotProgram:
+    sifr_method_slots: list[str]
+
 class Outcome:
     status: str
-    value: dict[str, list[str]] | None
+    value: SlotProgram | None
     issues: list[str]
 
 @const_eval
 def describe(shape: dict[str, str]) -> Outcome:
-    return Outcome("produced", {{"sifr_method_slots": [{slots}]}}, [])
+    return Outcome("produced", SlotProgram([{slots}]), [])
 "#
     );
     let package =
         compile("fixture.slots", &source, external_defs).expect("slot specializer compiles");
     collect_module_exports("fixture.slots", &package, external_defs);
+}
+
+#[test]
+fn typed_empty_method_slot_field_emits_no_table() {
+    let mut external_defs = ExternalDefs::default();
+    install_specializer(&mut external_defs, &[]);
+    let result = compile(
+        "target",
+        r#"
+from fixture.slots import describe
+
+@const_specialize("fixture.slots", "describe")
+class Record:
+    value: str
+"#,
+        &external_defs,
+    )
+    .expect("typed empty method-slot field specializes");
+    let output = &result.specialization_outputs[0];
+    assert!(output.method_slots.is_empty());
+    assert_eq!(output.method_slot_context, None);
 }
 
 fn diagnostic_codes(

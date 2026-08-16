@@ -47,6 +47,9 @@ pub(crate) fn resolve_method_slots(
     let Some(references) = method_slot_references(value)? else {
         return Ok((Vec::new(), None));
     };
+    if references.is_empty() {
+        return Ok((Vec::new(), None));
+    }
     let mut owner_types = HashMap::new();
     collect_nominal_types(
         target_type,
@@ -138,15 +141,9 @@ fn method_slot_references(
     let crate::ConstValue::List(values) = value else {
         return Err(MethodSlotError::new(
             MethodSlotErrorKind::List,
-            "reserved `sifr_method_slots` must be a nonempty list of strings",
+            "reserved `sifr_method_slots` must be a list of strings",
         ));
     };
-    if values.is_empty() {
-        return Err(MethodSlotError::new(
-            MethodSlotErrorKind::List,
-            "reserved `sifr_method_slots` must not be empty",
-        ));
-    }
     let mut seen = BTreeSet::new();
     let mut references = Vec::with_capacity(values.len());
     for value in values {
