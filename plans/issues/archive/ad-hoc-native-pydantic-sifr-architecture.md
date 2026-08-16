@@ -10,36 +10,39 @@ inventory, repository boundary, and demo ownership are approved.
 `certification_pkg_resource_core` item is complete through merged
 [PR #3123](https://github.com/sifr-lang/sifr/pull/3123). `milestone_ps_3` is
 implemented and merged through [PR #3138](https://github.com/sifr-lang/sifr/pull/3138).
-`milestone_ps_4` through `milestone_ps_6` are implemented and merged in the
-companion repository. The package-neutral method-slot prerequisite for
-`milestone_ps_7` is implemented and merged. The blocked callback rows are
-tracked separately, and `milestone_ps_8` is active in the companion repository.
+`milestone_ps_4` through `milestone_ps_11` are implemented and merged in the
+companion repository. The package-neutral compiler work is merged. Blocked
+callback and temporal rows remain in their owning companion issues. Final
+implementation review and both companion gates are complete. Installed
+release-artifact acceptance is skipped under the phase rule because the Sifr
+release sysroot omits its required structural-identity crate; Sifr issue #3233
+owns that package-neutral release defect.
 
 Review artifacts:
 
-- [`native-pydantic-sifr-architecture-opus5-review-pass-1.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-1.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-2.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-2.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-3.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-3.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-4.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-4.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-5.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-5.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-6.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-6.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-7.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-7.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-8.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-8.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-9.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-9.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-10.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-10.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-11.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-11.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-12.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-12.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-13.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-13.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-14.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-14.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-15.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-15.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-16.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-16.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-17.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-17.md)
-- [`native-pydantic-sifr-ps2-claude-opus-review-pass-1.md`](../../reviews/active/native-pydantic-sifr-ps2-claude-opus-review-pass-1.md)
-- [`native-pydantic-sifr-ps2-claude-opus-review-pass-2.md`](../../reviews/active/native-pydantic-sifr-ps2-claude-opus-review-pass-2.md)
-- [`native-pydantic-sifr-ps2-claude-opus-review-pass-3.md`](../../reviews/active/native-pydantic-sifr-ps2-claude-opus-review-pass-3.md)
-- [`native-pydantic-sifr-ps3-claude-opus-review-pass-1.md`](../../reviews/active/native-pydantic-sifr-ps3-claude-opus-review-pass-1.md)
-- [`native-pydantic-sifr-ps3-claude-opus-review-pass-2.md`](../../reviews/active/native-pydantic-sifr-ps3-claude-opus-review-pass-2.md)
-- [`native-pydantic-sifr-ps3-claude-opus-review-pass-3.md`](../../reviews/active/native-pydantic-sifr-ps3-claude-opus-review-pass-3.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-1.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-1.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-2.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-2.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-3.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-3.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-4.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-4.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-5.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-5.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-6.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-6.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-7.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-7.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-8.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-8.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-9.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-9.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-10.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-10.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-11.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-11.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-12.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-12.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-13.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-13.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-14.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-14.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-15.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-15.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-16.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-16.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-17.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-17.md)
+- [`native-pydantic-sifr-ps2-claude-opus-review-pass-1.md`](../../reviews/archive/native-pydantic-sifr-ps2-claude-opus-review-pass-1.md)
+- [`native-pydantic-sifr-ps2-claude-opus-review-pass-2.md`](../../reviews/archive/native-pydantic-sifr-ps2-claude-opus-review-pass-2.md)
+- [`native-pydantic-sifr-ps2-claude-opus-review-pass-3.md`](../../reviews/archive/native-pydantic-sifr-ps2-claude-opus-review-pass-3.md)
+- [`native-pydantic-sifr-ps3-claude-opus-review-pass-1.md`](../../reviews/archive/native-pydantic-sifr-ps3-claude-opus-review-pass-1.md)
+- [`native-pydantic-sifr-ps3-claude-opus-review-pass-2.md`](../../reviews/archive/native-pydantic-sifr-ps3-claude-opus-review-pass-2.md)
+- [`native-pydantic-sifr-ps3-claude-opus-review-pass-3.md`](../../reviews/archive/native-pydantic-sifr-ps3-claude-opus-review-pass-3.md)
 
 Milestone delivery records:
 
@@ -1189,7 +1192,50 @@ Milestone delivery records:
   and `6f289177fb01b7f98126287083ccc0ed76e372e19e63982e0ca0aa01ba2e674c`.
   The exact-pin companion create-PR gate and single merge gate passed. No Sifr
   compiler source changed.
-- `milestone_ps_9` is now active in the companion repository.
+- The whole-architecture remediation merged in companion
+  [PR #42](https://github.com/sifr-lang/pydantic-sifr/pull/42) at merge commit
+  `0c643a676d821b92ce4dfa824a8f6a5b98073d4c`. The exact final gated candidate
+  was `7d80cbf3683205237a78ecbdc6c3dd24c5c08f62`.
+- Whole-phase Opus review of companion commit
+  `31a092bfa608ce832bc8d1b2edfa3d0fabb59220` found missing public
+  serialization/schema entry points, split schema authorities, fail-open
+  constraint handling, incomplete error overrides, dead legacy authorities,
+  and hand-built strings errors. Review response SHA-256 was
+  `e19c3d7d0cc44232a474c110320c14d6e2546c2263e4b262958c45f89d5c890b`.
+- The permitted remediation review of
+  `06429bfa1da6e795e018a6f45d89f05be057b377` found remaining fail-open sum,
+  literal, recursive-reference, and newtype paths; unbounded unrelated
+  `$defs`; and stale certification language. Review response SHA-256 was
+  `6623bc2d15227f6ddafa9b3edfd5d1a8689d17ab775a8ddb5c504e076d82dcfb`.
+  The phase review-limit rule prohibited a third round.
+- Final candidate `7d80cbf3683205237a78ecbdc6c3dd24c5c08f62` resolves every reported
+  blocker. Constraints fail closed, unsupported newtypes are rejected,
+  repeated model definitions share references, static JSON Schema emits only
+  root-reachable definitions under a 4,096-node bound, optional `None`
+  defaults retain requiredness, and error overrides preserve typed location,
+  context, and protected resource/internal errors. The canonical demo proves
+  validation, mutation, serialization, and matching JSON Schema through the
+  public Sifr package.
+- The companion create-PR gate and single authoritative merge gate passed on
+  that exact candidate. The merge gate included all release property suites at
+  4,096 cases and all six fuzz targets at 1,000 runs. No Sifr compiler source
+  changed for the remediation.
+- Installed-artifact acceptance used a verified extracted Sifr `0.0.0`
+  `aarch64-apple-darwin` archive outside both source checkouts and exact
+  companion merge `0c643a676d821b92ce4dfa824a8f6a5b98073d4c`. Package fetch and formatting
+  passed. Structural bridge probing then failed because the archive contains
+  `crates/sifr_runtime`, whose workspace dependency requires the omitted
+  `crates/sifr_structural_identity`. The archive SHA-256 is
+  `2d59b37ad880ed280b9ee2a04ae32087fdc5edfd891c450527c108fa2227cde3`;
+  the isolated dependent lock SHA-256 is
+  `124a69b7dfa07bbca88eccc731b3dab52a6ee98acf348f5d464d64e923d8f772`.
+  Sifr [issue #3233](https://github.com/sifr-lang/sifr/issues/3233) owns the
+  package-neutral release-artifact fix. The row is skipped rather than
+  absorbed into this companion phase.
+- `milestone_ps_11` and the implementation phase are closed. The incomplete
+  callback, temporal, and installed-release rows remain explicit in their
+  owning issues; no compatibility layer, fallback, legacy authority, or
+  Pydantic-specific compiler behavior was added.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
   predicates for fixed-width platform integers, metadata, and imported classes;
@@ -3500,12 +3546,18 @@ temporary schema form or second validation path remains; `api/networks`,
 - [x] Add end-to-end demos and package documentation.
 - [x] Add and snapshot-test the canonical
   `demos/pydantic_sifr_demo.sifr` in the external `pydantic-sifr` repository.
-- Perform independent whole-architecture and implementation review.
+- [x] Perform independent whole-architecture and implementation review.
 
 Exit gate: all acceptance criteria pass using released Sifr and
 `pydantic-sifr` artifacts without access to the source checkout, Python, or the
 upstream repositories, and the canonical demo runs from an installed package
 without a Sifr compiler source checkout.
+
+Installed-artifact execution is skipped under the phase blocker rule. The
+verified installed Sifr sysroot is not self-contained for structural bridges;
+[issue #3233](https://github.com/sifr-lang/sifr/issues/3233) owns the missing
+package-neutral `sifr_structural_identity` release asset. Package fetch and
+formatting passed before the installed compiler rejected that missing asset.
 
 ## Acceptance Criteria
 
