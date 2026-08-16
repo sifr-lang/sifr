@@ -331,13 +331,17 @@ Example:
 
 ```python
 class UserOut:
-    id: int64           # database identifier, string-encoded by default under json.web
+    id: int64           # database identifier; needs safe bounds or string_ints
     balance_cents: int  # exact app value; public JSON policy decides number vs string
 ```
 
 The framework must not infer persistence or storage width from a source-level `int` field. Models that back SQL, Arrow, or external wire schemas must choose width or serialization policy explicitly.
 
-Under `json.web`, schema-driven public models default to JSON numbers only when the field's static range is inside JavaScript's safe integer range. Wider fields such as `int64`, `uint64`, and exact `int` default to decimal string encoding unless the field is explicitly annotated with a runtime range-checked number policy or an exact-client policy.
+Under `json.web`, schema-driven public models use JSON numbers only when the
+field's complete static range is inside the JavaScript-safe range. Wider fields
+such as `int64`, `uint64`, and exact `int` fail schema generation unless bounds
+prove that range. Select `json.string_ints` explicitly for decimal-string
+encoding, or select `json.exact` with an exact-client policy.
 
 ## Serialization and External Boundaries
 
@@ -376,6 +380,15 @@ OpenAPI/JSON Schema generation must reflect the chosen boundary:
 - fixed-width integer fields map to bounded integer schema with minimum and maximum.
 - `int` fields in `json.web` either declare safe-integer bounds or use `type: string`, `pattern: "^-?[0-9]+$"`, and a Sifr extension marker such as `x-sifr-format: integer-decimal-string`.
 - exact arbitrary `int` fields must not be emitted as ordinary unbounded `type: integer` for browser-targeted clients without an explicit precision policy.
+
+The implemented exact-profile schema marker is
+`x-sifr-integer-profile: exact`. The schema also includes
+`x-sifr-generated-client-warning` so a generated-client backend can require an
+exact JSON integer parser. The backend owns presenting that client warning;
+the compiler continues to own `SIFR-INT-0009` for an unsafe or ambiguous
+boundary. `pydantic_sifr_core::generate_json_schema` consumes the sealed Core
+Schema and the `SerializationPlan` profile. It does not infer another profile
+or fall back from `json.web` to `json.string_ints`.
 
 ### Databases
 

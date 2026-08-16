@@ -964,6 +964,27 @@ Milestone delivery records:
 - The remediation review's later alias-key mechanism defect is recorded in
   companion [issue #20](https://github.com/sifr-lang/pydantic-sifr/issues/20)
   for the explicit PS9 aliases and mode-representation row.
+- The PS9 integer-profile JSON Schema item merged in companion
+  [PR #22](https://github.com/sifr-lang/pydantic-sifr/pull/22) at merge commit
+  `d7620bcaef75580d548f00dfd7bcafb523efbf2a`. The exact final reviewed and
+  gated candidate was `62b22ea7ea530d6fabde33f6d09afb351f3071ea`.
+- Exact, web, and string-integer schemas now preserve their selected profile
+  and complete static range. Web schemas require a wholly JavaScript-safe
+  range and otherwise expose compiler-owned `SIFR-INT-0009` provenance.
+  Integer literals and enum inputs use the same profile path as ordinary
+  integer nodes. No profile fallback or implicit string encoding was added.
+- The first exact-SHA review found integer literals and enum inputs bypassed
+  the profile path. The bounded remediation made those representations
+  profile-aware, and the one permitted remediation review returned
+  `SATISFIED`; its response SHA-256 is
+  `ca9ae1d6b69920eb98b44b41b73e3f28a200f0e5b6ea80d1097e0f68e048ae93`.
+- Thirteen focused JSON Schema tests, the full core suite, strict Clippy,
+  formatting, and file-size guard passed. The exact-pin companion create-PR
+  and single merge gates passed all package, release, provenance, demo, fuzz,
+  benchmark-smoke, and merge-only checks.
+- The coordinated Sifr boundary artifact now names the implemented consumer,
+  generated-client warning ownership, fail-closed web behavior, exact-profile
+  marker, and four exact bounded JSON Schema snapshots.
 - `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3212,9 +3233,9 @@ JSON; every `serializers/*` fixture family named in the baseline and
 - [x] Implement native, JSON, and strings-profile validation plus serialization
   modes.
 - [x] Generate JSON Schema from the same Core Schema.
-- Reflect the selected Sifr integer JSON profile and static range in every
+- [x] Reflect the selected Sifr integer JSON profile and static range in every
   integer schema, failing closed with `SIFR-INT-0009` when ambiguous.
-- Before the external package release, merge a coordinated `sifr-lang/sifr`
+- [x] Before the external package release, merge a coordinated `sifr-lang/sifr`
   documentation/verification PR updating
   `verification/areas/core_language/data/integer_model/serialization_boundary_rules.md`
   with the implemented descriptor consumer, generated-client warning
