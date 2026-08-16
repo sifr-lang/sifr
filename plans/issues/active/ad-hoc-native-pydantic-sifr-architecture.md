@@ -1034,6 +1034,19 @@ Milestone delivery records:
   `a22060c44878cae3e6a78fa2e5b16f51e2663850c4afab051b5542e0ac73f634`.
   The exact-pin companion create-PR gate and the single authoritative merge
   gate passed. No Sifr compiler source changed for this item.
+- The PS10 API and behavior compatibility matrix merged in companion
+  [PR #28](https://github.com/sifr-lang/pydantic-sifr/pull/28) at merge commit
+  `98439b38a87f5e788e4b23f43814d0e9fd93db2c`. The exact reviewed and gated
+  candidate was `f74ceb4410ee7367eba73e23bcbbde345e289cd4`.
+- The public matrix and its machine-readable ledger classify twelve selected
+  surfaces as `same`, `adapted`, or `blocked`. The focused unit gate enforces
+  complete PS10 anchor-family coverage, local evidence for delivered rows, and
+  owning issue links for blocked rows. Exact-SHA Opus review returned
+  `SATISFIED` with no blockers. Its response SHA-256 is
+  `2c00d324f3ebfbb10f6deca2a8bbad6a64d0dcefea527c42666e2e9d7e985b08`.
+- The focused unit suite, file-size guard, exact-pin companion create-PR gate,
+  and the single authoritative merge gate passed. No Sifr compiler source
+  changed for this item.
 - `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3323,7 +3336,7 @@ the coordinated Sifr boundary-artifact PR is merged and its snapshots pass;
   companion [issue #27](https://github.com/sifr-lang/pydantic-sifr/issues/27).
   This row is skipped under the phase blocker rule; Rust-only wrappers, erased
   string substitutes, and package-specific compiler branches are not accepted.
-- Publish the API/behavior compatibility matrix.
+- [x] Publish the API/behavior compatibility matrix.
 - Add migration documentation for Pydantic users.
 - Prove ordinary Sifr classes and the familiar facade use the same engine.
 - Remove any temporary internal API exposed during construction.
