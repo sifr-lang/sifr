@@ -476,7 +476,9 @@ constants. It does not copy private compiler literals.
 declares an ordered method-slot table. The produced specialization value must
 contain the one reserved field `sifr_method_slots: list[str]`. Each string has
 the exact identity-qualified form `module.Type::method`. The list must be
-nonempty and contain no duplicate. A selected method must be present in the
+ordered and contain no duplicate. An empty list emits no method-slot table, so
+a typed specialization payload does not need a second no-callback record. A
+selected method must be present in the
 concrete structural shape, including through an imported or re-exported owner.
 There is no bare-name lookup or runtime registry.
 

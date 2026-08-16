@@ -75,13 +75,14 @@ program, runtime compiler, compatibility path, or fallback to the ordinary `Stru
 is closed for this contract. A new variant requires a contract and cache-identity review.
 
 A produced value can request a method-slot table through exactly one reserved entry:
-`sifr_method_slots: list[str]`. The field is ordered and nonempty. Each value is an exact
+`sifr_method_slots: list[str]`. The field is ordered. An empty list emits no slot table, which
+lets one typed specialization payload cover types with and without callbacks. Each value is an exact
 `module.Type::method` identity, including for imported or re-exported owners. Duplicate,
 unqualified, missing, unannotated, asynchronous, constructor, class-method, non-`Result`, or
 nonstructural method contracts fail with `SIFR-RUST-SLOT-####`. The compiler derives one context
 type and borrow mode from the selected methods and emits the table only when a Rust declaration
 uses the package-neutral `MethodSlots` and `Context` bounds. Programs without caller-owned
-context use `NoContext`. The table identity includes slot order, structural signatures, receiver
+context use `NoContext`. A nonempty table identity includes slot order, structural signatures, receiver
 mode, context shape and borrow mode, handler shapes, and the static-program identity.
 
 ## Integer boundary verification

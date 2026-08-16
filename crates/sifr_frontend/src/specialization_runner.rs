@@ -662,17 +662,16 @@ class Record:
             r#"
 class Outcome:
     status: str
-    value: dict[str, list[str]] | None
+    value: dict[str, str] | None
     issues: list[str]
 
 @const_eval
 def describe(shape: dict[str, str]) -> Outcome:
-    slots: list[str] = []
-    return Outcome("produced", {"sifr_method_slots": slots}, [])
+    return Outcome("produced", {"sifr_method_slots": "target.Record::normalize"}, [])
 "#,
             &external_defs,
         )
-        .expect("invalid-slot package declaration compiles");
+        .expect("malformed-slot package declaration compiles");
         collect_module_exports("fixture.invalid_slots", &package, &mut external_defs);
         let diagnostics = errors(compile(
             "target",
