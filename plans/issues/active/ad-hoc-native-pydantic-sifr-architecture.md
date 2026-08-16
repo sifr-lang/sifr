@@ -877,6 +877,29 @@ Milestone delivery records:
   issue #14 because no serializer handler boundary exists to receive it. This
   row was also skipped; the package does not expose an unused context argument
   or an untyped context container as a placeholder.
+- The PS8 integer JSON-profile item merged in companion
+  [PR #16](https://github.com/sifr-lang/pydantic-sifr/pull/16) at merge commit
+  `70cb8a42cd2229cc909e58ebe4e79c66fdf5f69d`. The exact reviewed and gated
+  candidate was `a8466ed61490ed10446a055c782d4e13336a5aa4`.
+- Each serializer plan now requires one explicit `json.exact`, `json.web`, or
+  `json.string_ints` profile. Fixed-width integers, exact integers, and bounded
+  default comparison all route through `sifr_runtime::json`. A `json.web`
+  violation preserves the typed `JsonIntegerRangeError`, selected profile, and
+  recursive model path. No call-time default, fallback, compatibility shim, or
+  alternate integer encoder was added.
+- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+  response SHA-256 is
+  `903792e47cfe664139aabb841e3cba29611b4369210d603d211e68d78100575c`.
+- Focused serialization tests passed 8/8; the full workspace suite, strict
+  Clippy, formatting, and file-size guard passed. The exact-pin companion
+  create-PR and single merge gates passed provenance, package checks, both
+  locked demos, all workspace and release suites, benchmark smoke, fuzz smoke,
+  and merge-only foundations.
+- Temporal output policy remains blocked until the package exposes current-value
+  typed temporal projections at the serialization boundary. Companion
+  [issue #15](https://github.com/sifr-lang/pydantic-sifr/issues/15) records the
+  later item. The row was skipped without tuple-layout inference, retained
+  validation state, fallback formatting, or compiler-specific assumptions.
 - `milestone_ps_8` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3106,8 +3129,10 @@ success/error behavior, bounded execution and complete ownership coverage;
   companion issue #14 pending package-neutral handler-bearing method slots.
 - [ ] Implement caller-owned typed serialization context forwarding. Blocked
   by companion issue #14 with the serializer callback boundary.
-- Preserve temporal output policies and implement Sifr's selected integer JSON
-  profile through `sifr_runtime::json`, including typed range errors.
+- [x] Implement Sifr's selected integer JSON profile through
+  `sifr_runtime::json`, including typed range errors.
+- [ ] Preserve temporal output policies. Blocked by companion issue #15 until
+  typed temporal current-value projections exist at the serialization boundary.
 - Port serialization tests and benchmarks.
 
 Exit gate: mutated typed models serialize from their current values, not a
