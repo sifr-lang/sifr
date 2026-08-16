@@ -3306,7 +3306,15 @@ the coordinated Sifr boundary-artifact PR is merged and its snapshots pass;
 ### milestone_ps_10: Full Pydantic-Familiar Surface
 
 - Complete the selected `BaseModel`, `Field`, configuration, validator,
-  serializer, computed-field and adapter APIs.
+  serializer, computed-field and adapter APIs. The functional model,
+  field/configuration metadata, and adapter surfaces are delivered. The
+  Pydantic-familiar validator, serializer, and computed-field facade remains
+  blocked on package-neutral handler-bearing method-slot dispatch, tracked by
+  companion issues
+  [#10](https://github.com/sifr-lang/pydantic-sifr/issues/10) and
+  [#14](https://github.com/sifr-lang/pydantic-sifr/issues/14). This row is
+  skipped under the phase blocker rule; no package-specific dispatch,
+  fallback, or second engine is permitted.
 - Complete the selected root-model, specialized network type, field-metadata,
   compiled-pattern field/API, and public error surfaces.
 - Publish the API/behavior compatibility matrix.
