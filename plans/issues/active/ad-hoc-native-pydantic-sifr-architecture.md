@@ -3316,7 +3316,13 @@ the coordinated Sifr boundary-artifact PR is merged and its snapshots pass;
   skipped under the phase blocker rule; no package-specific dispatch,
   fallback, or second engine is permitted.
 - Complete the selected root-model, specialized network type, field-metadata,
-  compiled-pattern field/API, and public error surfaces.
+  compiled-pattern field/API, and public error surfaces. Root adaptation,
+  field metadata, URL/pattern validation, and structured errors are delivered
+  in the shared core. The Sifr-visible nominal network and compiled-pattern
+  values remain blocked on package-neutral structural mappings, tracked by
+  companion [issue #27](https://github.com/sifr-lang/pydantic-sifr/issues/27).
+  This row is skipped under the phase blocker rule; Rust-only wrappers, erased
+  string substitutes, and package-specific compiler branches are not accepted.
 - Publish the API/behavior compatibility matrix.
 - Add migration documentation for Pydantic users.
 - Prove ordinary Sifr classes and the familiar facade use the same engine.
