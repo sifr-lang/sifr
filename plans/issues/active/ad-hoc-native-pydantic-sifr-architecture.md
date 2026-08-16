@@ -1117,6 +1117,25 @@ Milestone delivery records:
   is `8c0dea592e52b02766b9d422cd95fce502f8358f125830b4b99dacda6b23aff1`.
   The exact-pin companion create-PR gate and single merge gate passed. Python
   remains absent from the production dependency graph. No compiler changed.
+- The PS11 bounded robustness certification merged in companion
+  [PR #37](https://github.com/sifr-lang/pydantic-sifr/pull/37) at merge commit
+  `dfd67f9e0854e2531ea388a44a2fd6174c865bb0`. The exact gated candidate was
+  `a8504850970fcf74118633299177c0b1519d0829`.
+- All six declared fuzz targets now compile and execute 1,000 bounded
+  randomized inputs. Scalar and special validation joined the five release
+  property suites at 4,096 cases. A contract derives the complete target set
+  from both the fuzz manifest and target sources. Resource, recursion, and
+  panic evidence remains mandatory.
+- The first review found two property suites were missing and the target set
+  was hardcoded. The bounded remediation closed both defects. The second review
+  then found raw-byte property generation rarely reaches validation; under the
+  phase review-limit rule this new mechanism is tracked separately by companion
+  [issue #36](https://github.com/sifr-lang/pydantic-sifr/issues/36), with no
+  third review round. Review response SHA-256 values are
+  `e30bb393739f6fbb31cef201afa4b385096173abaa2209698c6ee1540984c132`
+  and `6f289177fb01b7f98126287083ccc0ed76e372e19e63982e0ca0aa01ba2e674c`.
+  The exact-pin companion create-PR gate and single merge gate passed. No Sifr
+  compiler source changed.
 - `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3422,7 +3441,7 @@ temporary schema form or second validation path remains; `api/networks`,
   documented update-pin procedure; no compatibility coverage is deferred to
   this milestone.
 - [x] Run differential validation against the pinned oracle.
-- Complete fuzz, property, adversarial resource and panic testing.
+- [x] Complete fuzz, property, adversarial resource and panic testing.
 - Publish parse/validate/construct/serialize benchmarks.
 - Certify supported compiler/core/package version combinations.
 - Add end-to-end demos and package documentation.
