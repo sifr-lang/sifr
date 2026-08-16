@@ -9,6 +9,18 @@ class StaticProgram:
     pass
 
 
+class MethodSlots:
+    pass
+
+
+class Context:
+    pass
+
+
+class NoContext:
+    pass
+
+
 class ConstIssueTemplate:
     package: str
     reason_code: str

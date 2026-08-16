@@ -32,6 +32,11 @@ pub fn emit_static_specialization_programs(
         );
         if structural_owners.contains(&output.owner) {
             let owner = source_class_rust_name(&output.owner);
+            out.push_str(
+                &crate::static_program_slots_codegen::emit_method_slot_table(
+                    output, &owner, &suffix,
+                ),
+            );
             let value = static_value_expression(&output.value);
             let _ = writeln!(
                 out,
@@ -43,9 +48,11 @@ pub fn emit_static_specialization_programs(
                 .map(u8::to_string)
                 .collect::<Vec<_>>()
                 .join(", ");
+            let slot_table =
+                crate::static_program_slots_codegen::slot_table_header_expression(output, &suffix);
             let _ = writeln!(
                 out,
-                "#[doc(hidden)]\npub(crate) static __SIFR_STATIC_PROGRAM_{suffix}: ::std::sync::LazyLock<::sifr_runtime::interop::structural::StaticProgram<{owner}>> = ::std::sync::LazyLock::new(|| {{\n    let identity = ::sifr_runtime::interop::structural::StaticProgramIdentity::from_bytes([{identity}]);\n    let shape = <{owner} as ::sifr_runtime::interop::structural::StructuralType>::shape_identity();\n    let header = ::sifr_runtime::interop::structural::StaticProgramHeader::__from_compiler(::sifr_runtime::interop::structural::STATIC_PROGRAM_FORMAT_VERSION, {}, ::sifr_runtime::interop::structural::STRUCTURAL_BRIDGE_CONTRACT_VERSION, identity, shape, ::sifr_runtime::interop::__generated_glue::token());\n    ::sifr_runtime::interop::structural::StaticProgram::__from_compiler(header, __SIFR_STATIC_PROGRAM_BYTES_{suffix}, __SIFR_STATIC_PROGRAM_VALUE_{suffix}, ::sifr_runtime::interop::__generated_glue::token())\n}});",
+                "#[doc(hidden)]\npub(crate) static __SIFR_STATIC_PROGRAM_{suffix}: ::std::sync::LazyLock<::sifr_runtime::interop::structural::StaticProgram<{owner}>> = ::std::sync::LazyLock::new(|| {{\n    let identity = ::sifr_runtime::interop::structural::StaticProgramIdentity::from_bytes([{identity}]);\n    let shape = <{owner} as ::sifr_runtime::interop::structural::StructuralType>::shape_identity();\n    let header = ::sifr_runtime::interop::structural::StaticProgramHeader::__from_compiler(::sifr_runtime::interop::structural::STATIC_PROGRAM_FORMAT_VERSION, {}, ::sifr_runtime::interop::structural::STRUCTURAL_BRIDGE_CONTRACT_VERSION, identity, shape, {slot_table}, ::sifr_runtime::interop::__generated_glue::token());\n    ::sifr_runtime::interop::structural::StaticProgram::__from_compiler(header, __SIFR_STATIC_PROGRAM_BYTES_{suffix}, __SIFR_STATIC_PROGRAM_VALUE_{suffix}, ::sifr_runtime::interop::__generated_glue::token())\n}});",
                 output.structural_contract_version
             );
             let _ = writeln!(
@@ -133,6 +140,34 @@ pub fn static_program_cache_fragment(outputs: &[StaticSpecializationOutput]) -> 
     out
 }
 
+/// Returns a deterministic build-cache fragment for generated method-slot glue.
+#[must_use]
+pub fn method_slot_cache_fragment(outputs: &[StaticSpecializationOutput]) -> String {
+    let mut ordered = outputs
+        .iter()
+        .filter(|output| !output.method_slots.is_empty())
+        .collect::<Vec<_>>();
+    ordered.sort_by(|left, right| {
+        (&left.owner, &left.package_module, &left.function).cmp(&(
+            &right.owner,
+            &right.package_module,
+            &right.function,
+        ))
+    });
+    let mut out = String::new();
+    for output in ordered {
+        let _ = writeln!(
+            out,
+            "{}|{}|{}|{}|method-slot-table-1",
+            output.owner,
+            output.package_module,
+            output.function,
+            hex(&output.program_identity),
+        );
+    }
+    out
+}
+
 fn rust_static_suffix(output: &StaticSpecializationOutput) -> String {
     let readable = format!(
         "{}_{}_{}",
@@ -164,6 +199,8 @@ fn hex(bytes: &[u8; 32]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sifr_ir::{MethodKind, StaticMethodParam, StaticMethodSlot, StaticMethodSlotContext};
+    use sifr_type_system::{ParamConvention, Type};
 
     fn output(identity: u8) -> StaticSpecializationOutput {
         StaticSpecializationOutput {
@@ -177,6 +214,8 @@ mod tests {
             )]),
             program_identity: [identity; 32],
             structural_contract_version: 1,
+            method_slots: Vec::new(),
+            method_slot_context: None,
         }
     }
 
@@ -219,6 +258,11 @@ mod tests {
     }
 
     #[test]
+    fn empty_slot_tables_do_not_add_a_cache_fragment() {
+        assert!(method_slot_cache_fragment(&[output(7)]).is_empty());
+    }
+
+    #[test]
     fn emitted_symbols_cannot_collide_after_readable_name_normalization() {
         let mut dotted = output(7);
         dotted.package_module = "schema.package".to_string();
@@ -229,5 +273,49 @@ mod tests {
             rust_static_suffix(&dotted),
             rust_static_suffix(&underscored)
         );
+    }
+
+    #[test]
+    fn emits_monomorphic_method_slot_dispatch_and_header_identity() {
+        let mut output = output(9);
+        output.method_slots.push(StaticMethodSlot {
+            owner_identity: "fixture.Record".to_string(),
+            owner_type: Type::Class {
+                identity: Some("fixture.Record".to_string()),
+                type_args: Vec::new(),
+                name: "Record".to_string(),
+                fields: Vec::new(),
+                methods: Vec::new(),
+                parent_class: None,
+            },
+            name: "normalize".to_string(),
+            hir_name: "normalize".to_string(),
+            method_kind: MethodKind::StaticMethod,
+            receiver: None,
+            params: vec![StaticMethodParam {
+                name: "value".to_string(),
+                ty: Type::Str,
+                keyword_only: false,
+                convention: ParamConvention::own(),
+            }],
+            return_type: Type::Result(Box::new(Type::Str), Box::new(Type::Str)),
+            is_async: false,
+            input_type: Type::Str,
+            output_type: Type::Str,
+            context_type: None,
+            context_mutable: false,
+        });
+        output.method_slot_context = Some(StaticMethodSlotContext::None);
+
+        let cache_fragment = method_slot_cache_fragment(&[output.clone()]);
+        assert!(cache_fragment.contains("method-slot-table-1"));
+        assert!(cache_fragment.contains(&hex(&output.program_identity)));
+
+        let emitted =
+            emit_static_specialization_programs(&[output], &BTreeSet::from(["Record".to_string()]));
+        assert!(emitted.contains("impl ::sifr_runtime::interop::structural::MethodSlotTable<::sifr_runtime::interop::structural::NoContext> for Record"));
+        assert!(emitted.contains("match index"));
+        assert!(emitted.contains("Record::normalize(value)"));
+        assert!(emitted.contains("Some(*__SIFR_METHOD_SLOT_IDENTITY_"));
     }
 }

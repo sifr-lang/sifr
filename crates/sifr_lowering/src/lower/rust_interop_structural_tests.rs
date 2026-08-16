@@ -34,9 +34,53 @@ fn structural_externals() -> ExternalDefs {
                     parent_class: None,
                 },
             ),
+            (
+                "MethodSlots".to_string(),
+                Type::Class {
+                    identity: Some("sifr.meta.MethodSlots".to_string()),
+                    type_args: Vec::new(),
+                    name: "MethodSlots".to_string(),
+                    fields: Vec::new(),
+                    methods: Vec::new(),
+                    parent_class: None,
+                },
+            ),
+            (
+                "Context".to_string(),
+                Type::Class {
+                    identity: Some("sifr.meta.Context".to_string()),
+                    type_args: Vec::new(),
+                    name: "Context".to_string(),
+                    fields: Vec::new(),
+                    methods: Vec::new(),
+                    parent_class: None,
+                },
+            ),
         ]),
     );
     externals
+}
+
+#[test]
+fn structural_method_slots_require_one_context() {
+    let source = r"
+from sifr.meta import MethodSlots
+
+class CodecError(Error):
+    message: str
+
+@rust.structural
+@rust(bridge.codec.decode)
+def decode[T: MethodSlots](value: T) -> Result[T, CodecError | RustPanicError]: ...
+";
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module_with_externals(parsed.suite(), &structural_externals()) {
+        Ok(_) => panic!("method-slot bridge without context must fail"),
+        Err(errors) => errors,
+    };
+    assert!(errors
+        .iter()
+        .any(|error| error.code == Some(DiagnosticCode::RUST_SLOT_BOUND)));
 }
 
 #[test]

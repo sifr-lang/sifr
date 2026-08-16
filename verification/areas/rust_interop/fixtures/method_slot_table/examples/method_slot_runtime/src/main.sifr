@@ -1,0 +1,118 @@
+# execution-kind: runtime-observed
+# expected-result: method-slot-dispatch-ok
+
+from method_slot_runtime.schema_program import derive, derive_no_context, derive_shared
+from sifr.meta import Context, MethodSlots, NoContext
+
+
+class SlotFailure(Error):
+    message: str
+
+
+class AppContext:
+    calls: int
+
+
+@const_specialize("method_slot_runtime.schema_program", "derive")
+class Record:
+    value: str
+
+    @staticmethod
+    @metadata("fixture.slot", "normalize")
+    def normalize(
+        own value: str, mut context: AppContext
+    ) -> Result[str, SlotFailure]:
+        context.calls += 1
+        return value + "-normalized"
+
+    @metadata("fixture.slot", "finalize")
+    def finalize(
+        mut self, mut context: AppContext
+    ) -> Result[str, SlotFailure]:
+        self.value = self.value + "-receiver"
+        context.calls += 1
+        return self.value + ""
+
+
+@const_specialize("method_slot_runtime.schema_program", "derive_no_context")
+class NoContextRecord:
+    value: str
+
+    @staticmethod
+    @metadata("fixture.slot", "normalize")
+    def normalize(own value: str) -> Result[str, SlotFailure]:
+        return value + "-no-context"
+
+
+@const_specialize("method_slot_runtime.schema_program", "derive_shared")
+class SharedRecord:
+    value: str
+
+    @staticmethod
+    @metadata("fixture.slot", "normalize")
+    def normalize(
+        own value: str, context: AppContext
+    ) -> Result[str, SlotFailure]:
+        return value + "-shared-" + str(context.calls)
+
+
+@rust.structural
+@rust(bridge.slots.invoke)
+def invoke_slot[T: MethodSlots, C: Context](
+    model: T, own value: str, mut context: C
+) -> Result[str, SlotFailure | RustPanicError]: ...
+
+
+@rust.structural
+@rust(bridge.slots.invoke_shared)
+def invoke_shared_slot[T: MethodSlots, C: Context](
+    model: T, own value: str, context: C
+) -> Result[str, SlotFailure | RustPanicError]: ...
+
+
+@rust.structural
+@rust(bridge.slots.invoke_receiver)
+def invoke_receiver_slot[T: MethodSlots, C: Context](model: T, mut context: C) -> Result[str, SlotFailure | RustPanicError]: ...
+
+
+def verify_method_slot_runtime() -> Result[str, SlotFailure | RustPanicError]:
+    try:
+        model: Record = Record("input")
+        context: AppContext = AppContext(0)
+        output: str = invoke_slot(model, "value", context)
+        assert output == "value-normalized"
+        assert context.calls == 1
+        print(output)
+        receiver_output: str = invoke_receiver_slot(model, context)
+        assert receiver_output == "input-receiver"
+        assert context.calls == 2
+        print(receiver_output)
+        empty: NoContext = NoContext()
+        no_context_model: NoContextRecord = NoContextRecord("input")
+        no_context_output: str = invoke_slot(
+            no_context_model, "value", empty
+        )
+        assert no_context_output == "value-no-context"
+        print(no_context_output)
+        shared_model: SharedRecord = SharedRecord("input")
+        shared_output: str = invoke_shared_slot(
+            shared_model, "value", context
+        )
+        assert shared_output == "value-shared-2"
+        print(shared_output)
+        return "method-slot-dispatch-ok"
+    except SlotFailure as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+
+
+def main() -> Result[None, SlotFailure | RustPanicError]:
+    try:
+        observed: str = verify_method_slot_runtime()
+        assert observed == "method-slot-dispatch-ok"
+    except SlotFailure as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+    return None

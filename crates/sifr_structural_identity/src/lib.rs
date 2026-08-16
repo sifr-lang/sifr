@@ -9,6 +9,9 @@ pub const ALGORITHM_VERSION: u32 = 1;
 /// The current compiler-emitted static-program identity algorithm.
 pub const STATIC_PROGRAM_ALGORITHM_VERSION: u32 = 1;
 
+/// The current compiler-emitted method-slot table identity algorithm.
+pub const METHOD_SLOT_TABLE_ALGORITHM_VERSION: u32 = 1;
+
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct ShapeIdentity([u8; 32]);
 
@@ -39,6 +42,66 @@ impl StaticProgramIdentity {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct SlotTableIdentity([u8; 32]);
+
+impl SlotTableIdentity {
+    #[must_use]
+    pub const fn from_bytes(bytes: [u8; 32]) -> Self {
+        Self(bytes)
+    }
+
+    #[must_use]
+    pub const fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum SlotReceiverIdentity {
+    None,
+    Shared,
+    Exclusive,
+    Owned,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum SlotContextModeIdentity {
+    Shared,
+    Mutable,
+    None,
+}
+
+impl SlotContextModeIdentity {
+    const fn tag(self) -> u8 {
+        match self {
+            Self::Shared => 0,
+            Self::Mutable => 1,
+            Self::None => 2,
+        }
+    }
+}
+
+impl SlotReceiverIdentity {
+    const fn tag(self) -> u8 {
+        match self {
+            Self::None => 0,
+            Self::Shared => 1,
+            Self::Exclusive => 2,
+            Self::Owned => 3,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct SlotIdentitySignature<'a> {
+    pub name: &'a str,
+    pub input: ShapeIdentity,
+    pub output: ShapeIdentity,
+    pub receiver: SlotReceiverIdentity,
+    pub handler: Option<(ShapeIdentity, ShapeIdentity)>,
+}
+
 /// Hashes the complete compiler-owned envelope for one package-produced static program.
 #[must_use]
 pub fn static_program_identity<'a>(
@@ -54,6 +117,40 @@ pub fn static_program_identity<'a>(
         push_bytes(&mut hash, value);
     }
     StaticProgramIdentity::from_bytes(hash.finalize().into())
+}
+
+/// Hashes the complete compiler-owned method-slot table for one static program
+/// and one concrete caller context type.
+#[must_use]
+pub fn slot_table_identity(
+    program: StaticProgramIdentity,
+    context: ShapeIdentity,
+    context_mode: SlotContextModeIdentity,
+    slots: &[SlotIdentitySignature<'_>],
+) -> SlotTableIdentity {
+    let mut hash = Sha256::new();
+    hash.update(b"sifr-method-slot-table-identity");
+    hash.update(METHOD_SLOT_TABLE_ALGORITHM_VERSION.to_be_bytes());
+    push_bytes(&mut hash, program.as_bytes());
+    push_bytes(&mut hash, context.as_bytes());
+    push_bytes(&mut hash, &[context_mode.tag()]);
+    push_usize(&mut hash, slots.len());
+    for (index, slot) in slots.iter().enumerate() {
+        push_usize(&mut hash, index);
+        push_bytes(&mut hash, slot.name.as_bytes());
+        push_bytes(&mut hash, slot.input.as_bytes());
+        push_bytes(&mut hash, slot.output.as_bytes());
+        push_bytes(&mut hash, &[slot.receiver.tag()]);
+        match slot.handler {
+            Some((input, output)) => {
+                push_bytes(&mut hash, &[1]);
+                push_bytes(&mut hash, input.as_bytes());
+                push_bytes(&mut hash, output.as_bytes());
+            }
+            None => push_bytes(&mut hash, &[0]),
+        }
+    }
+    SlotTableIdentity::from_bytes(hash.finalize().into())
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -290,6 +387,67 @@ mod tests {
         assert_ne!(
             first,
             static_program_identity(2, [("owner", b"Item".as_slice()), ("value", b"a")])
+        );
+    }
+
+    #[test]
+    fn slot_table_identity_tracks_order_signatures_and_context() {
+        let program = static_program_identity(1, [("owner", b"Item".as_slice())]);
+        let first = SlotIdentitySignature {
+            name: "normalize",
+            input: primitive("str"),
+            output: primitive("str"),
+            receiver: SlotReceiverIdentity::None,
+            handler: None,
+        };
+        let second = SlotIdentitySignature {
+            name: "finish",
+            input: primitive("str"),
+            output: primitive("str"),
+            receiver: SlotReceiverIdentity::Shared,
+            handler: None,
+        };
+        let identity = slot_table_identity(
+            program,
+            primitive("context-a"),
+            SlotContextModeIdentity::Mutable,
+            &[first, second],
+        );
+        assert_eq!(
+            identity,
+            slot_table_identity(
+                program,
+                primitive("context-a"),
+                SlotContextModeIdentity::Mutable,
+                &[first, second],
+            )
+        );
+        assert_ne!(
+            identity,
+            slot_table_identity(
+                program,
+                primitive("context-a"),
+                SlotContextModeIdentity::Mutable,
+                &[second, first],
+            )
+        );
+        assert_ne!(
+            identity,
+            slot_table_identity(
+                program,
+                primitive("context-b"),
+                SlotContextModeIdentity::Mutable,
+                &[first, second],
+            )
+        );
+        assert_ne!(
+            identity,
+            slot_table_identity(
+                program,
+                primitive("context-a"),
+                SlotContextModeIdentity::Shared,
+                &[first, second],
+            )
         );
     }
 }

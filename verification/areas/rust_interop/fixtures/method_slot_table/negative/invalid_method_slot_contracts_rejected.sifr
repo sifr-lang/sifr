@@ -1,0 +1,36 @@
+# fixture: method_slot_table
+# evidence: negative/invalid_method_slot_contracts_rejected
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: diagnostic
+# expected-diagnostic: SIFR-RUST-SLOT-0001
+
+from method_slot_runtime.schema_program import derive_invalid
+from sifr.meta import Context, MethodSlots
+
+
+class SlotFailure(Error):
+    message: str
+
+
+class AppContext:
+    calls: int
+
+
+@const_specialize("method_slot_runtime.schema_program", "derive_invalid")
+class InvalidRecord:
+    value: str
+
+
+@rust.structural
+@rust(bridge.slots.invoke)
+def invoke_invalid_slot[T: MethodSlots, C: Context](model: T, own value: str, mut context: C) -> Result[str, SlotFailure | RustPanicError]: ...
+
+
+def verify_invalid_method_slot_contracts_rejected() -> Result[
+    str, SlotFailure | RustPanicError
+]:
+    model: InvalidRecord = InvalidRecord("input")
+    context: AppContext = AppContext(0)
+    output: str = invoke_invalid_slot(model, "value", context)
+    return output

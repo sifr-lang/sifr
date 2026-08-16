@@ -172,6 +172,7 @@ where
         STRUCTURAL_BRIDGE_CONTRACT_VERSION,
         header.identity(),
         Output::shape_identity(),
+        header.slot_table_identity(),
     )?;
     verify_typed_program_value(program.value())?;
     let _input = project(input)?;
@@ -245,6 +246,7 @@ where
         STRUCTURAL_BRIDGE_CONTRACT_VERSION,
         header.identity(),
         T::shape_identity(),
+        header.slot_table_identity(),
     ) {
         return Err(StaticProgramError::new(format!(
             "{error};active={}",

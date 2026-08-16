@@ -6,6 +6,7 @@
     "SIFR-RUST-ASYNC-0001": "invalid Rust async/thread-affinity contract",
     "SIFR-RUST-CARGO-0001": "Cargo metadata or lock/profile mismatch",
     "SIFR-RUST-CB-0001": "invalid callback lifetime or threading contract",
+    "SIFR-RUST-SLOT-0001": "invalid static method-slot table contract",
     "SIFR-RUST-CONFIG-0001": "malformed Rust interop decorator",
     "SIFR-RUST-HANDLE-0001": "invalid opaque handle contract",
     "SIFR-RUST-PANIC-0001": "incompatible Rust panic strategy or poisoned handle",
@@ -169,6 +170,15 @@
       "execution_kind": "runtime-observed",
       "positive_evidence": {"id": "static_program_constructs_and_projects_arena", "status": "passing"},
       "negative_evidence": {"id": "corrupt_static_program_envelope_rejected", "status": "passing"}
+    },
+    {
+      "id": "method_slot_table",
+      "tier": 2,
+      "capability": "static-program-indexed typed method slots with caller-owned context",
+      "required_crates": [],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "method_slots_dispatch_with_mutable_context", "status": "passing"},
+      "negative_evidence": {"id": "invalid_method_slot_contracts_rejected", "status": "passing"}
     },
     {
       "id": "panic_boundary",

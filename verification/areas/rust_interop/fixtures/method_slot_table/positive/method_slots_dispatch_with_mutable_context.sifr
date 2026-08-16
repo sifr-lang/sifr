@@ -1,0 +1,42 @@
+# fixture: method_slot_table
+# evidence: positive/method_slots_dispatch_with_mutable_context
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: pass
+
+from method_slot_runtime.schema_program import derive
+from sifr.meta import Context, MethodSlots
+
+
+class SlotFailure(Error):
+    message: str
+
+
+class AppContext:
+    calls: int
+
+
+@const_specialize("method_slot_runtime.schema_program", "derive")
+class Record:
+    value: str
+
+    @staticmethod
+    def normalize(own value: str, mut context: AppContext) -> Result[str, SlotFailure]:
+        context.calls += 1
+        return value + "-normalized"
+
+
+@rust.structural
+@rust(bridge.slots.invoke)
+def invoke_slot[T: MethodSlots, C: Context](model: T, own value: str, mut context: C) -> Result[str, SlotFailure | RustPanicError]: ...
+
+
+def verify_method_slots_dispatch_with_mutable_context() -> Result[
+    str, SlotFailure | RustPanicError
+]:
+    model: Record = Record("input")
+    context: AppContext = AppContext(0)
+    output: str = invoke_slot(model, "value", context)
+    assert output == "value-normalized"
+    assert context.calls == 1
+    return output

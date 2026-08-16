@@ -86,6 +86,10 @@ pub(super) fn generated_single_file_binary_project(
     if !static_cache.is_empty() {
         push_cache_key_fragment(&mut cache_key_fragment, "static-programs", &static_cache);
     }
+    let slot_cache = sifr_codegen::method_slot_cache_fragment(&codegen_result.static_programs);
+    if !slot_cache.is_empty() {
+        push_cache_key_fragment(&mut cache_key_fragment, "slot-tables", &slot_cache);
+    }
     GeneratedBinaryProject {
         main_rs: codegen_result.rust_source,
         support_modules: BTreeMap::new(),
@@ -147,6 +151,8 @@ pub(super) fn generated_project_binary_project(
         static_cache.extend(outputs.iter().cloned());
     }
 
+    let slot_cache = sifr_codegen::method_slot_cache_fragment(&static_cache);
+
     let generated_main_rs = assemble_project_main_rs(&compile_order, &codegen_result.rust_files);
     let main_rs = if codegen_result.project_union_prelude.is_empty() {
         generated_main_rs
@@ -170,6 +176,9 @@ pub(super) fn generated_project_binary_project(
     let mut cache_key_fragment = None;
     if !static_cache.is_empty() {
         push_cache_key_fragment(&mut cache_key_fragment, "static-programs", &static_cache);
+    }
+    if !slot_cache.is_empty() {
+        push_cache_key_fragment(&mut cache_key_fragment, "slot-tables", &slot_cache);
     }
 
     Ok(GeneratedBinaryProject {

@@ -104,6 +104,10 @@ pub(crate) fn family_docs(family: &str) -> FamilyDocs {
             display_name: "Rust callbacks",
             why_it_happens: "A Rust callback lifetime, threading, or backpressure contract was violated.",
         },
+        "RUST-SLOT" => FamilyDocs {
+            display_name: "Rust method slots",
+            why_it_happens: "A compiler-emitted method-slot table, context, signature, or call-scoped handler contract was violated.",
+        },
         "RUST-PANIC" => FamilyDocs {
             display_name: "Rust panic strategy",
             why_it_happens: "A Rust panic strategy, panic mapping, or poisoned-handle rule was violated.",

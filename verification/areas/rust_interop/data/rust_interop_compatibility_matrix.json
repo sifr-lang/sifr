@@ -207,6 +207,18 @@
       "notes": "A package const-specializer produces deterministic compiler-emitted data for one concrete type. One monomorphized bridge call reads the sealed program, consumes a checked compact-node arena, constructs the typed value, and projects integers, fixed integers, bytes, sequences, and mappings. The arena contract separately moves an exact integer into SifrInt without narrowing. Corrupt envelopes and invalid node indices fail closed."
     },
     {
+      "id": "method_slot_table",
+      "fixture": "method_slot_table",
+      "category": "supported-through-bridge",
+      "tier": 2,
+      "capability": "static-program-indexed typed method slots with caller-owned context",
+      "execution_kind": "runtime-observed",
+      "required_crates": [],
+      "positive_evidence": {"id": "method_slots_dispatch_with_mutable_context", "status": "passing"},
+      "negative_evidence": {"id": "invalid_method_slot_contracts_rejected", "status": "passing"},
+      "notes": "Compiler-emitted tables dispatch exact qualified method slots by stable index with mutable, shared, or runtime-owned no-context state. Rust bridges exchange slot input and output only through validated structural arenas."
+    },
+    {
       "id": "panic_boundary",
       "fixture": "panic_boundary",
       "category": "supported",

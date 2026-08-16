@@ -34,6 +34,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `RUST-ASYNC` | `SIFR-RUST-ASYNC-0000` | Rust async, blocking, and runtime-affinity diagnostics. |
 | `RUST-ZC` | `SIFR-RUST-ZC-0000` | Rust zero-copy and borrowed-view diagnostics. |
 | `RUST-CB` | `SIFR-RUST-CB-0000` | Rust callback lifetime, threading, and backpressure diagnostics. |
+| `RUST-SLOT` | `SIFR-RUST-SLOT-0000` | Rust method-slot table, context, and handler diagnostics. |
 | `RUST-PANIC` | `SIFR-RUST-PANIC-0000` | Rust panic strategy, mapping, and poisoned-handle diagnostics. |
 | `RUST-CARGO` | `SIFR-RUST-CARGO-0000` | Rust interop Cargo metadata, lockfile, and profile diagnostics. |
 | `DECIMAL` | `SIFR-DECIMAL-0000` | Decimal literal and fixed-point arithmetic diagnostics. |
@@ -269,6 +270,12 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-RUST-ASYNC-0001`](SIFR-RUST-ASYNC-0001.mdx) | Error | Rust async interop contract is invalid. |
 | [`SIFR-RUST-ZC-0001`](SIFR-RUST-ZC-0001.mdx) | Error | Rust zero-copy or borrowed-view contract is invalid. |
 | [`SIFR-RUST-CB-0001`](SIFR-RUST-CB-0001.mdx) | Error | Rust callback lifetime, threading, or policy contract is invalid. |
+| [`SIFR-RUST-SLOT-0001`](SIFR-RUST-SLOT-0001.mdx) | Error | The reserved method-slot list is malformed. |
+| [`SIFR-RUST-SLOT-0002`](SIFR-RUST-SLOT-0002.mdx) | Error | A selected method-slot target is unavailable or unsupported. |
+| [`SIFR-RUST-SLOT-0003`](SIFR-RUST-SLOT-0003.mdx) | Error | A selected method has an invalid method-slot signature. |
+| [`SIFR-RUST-SLOT-0004`](SIFR-RUST-SLOT-0004.mdx) | Error | A method-slot bridge bound is incomplete or misplaced. |
+| [`SIFR-RUST-SLOT-0005`](SIFR-RUST-SLOT-0005.mdx) | Error | A method-slot context type or borrow mode is invalid. |
+| [`SIFR-RUST-SLOT-0006`](SIFR-RUST-SLOT-0006.mdx) | Error | A method-slot handler is used outside its affine call scope. |
 | [`SIFR-RUST-PANIC-0001`](SIFR-RUST-PANIC-0001.mdx) | Error | Rust panic boundary contract is invalid. |
 | [`SIFR-RUST-CARGO-0001`](SIFR-RUST-CARGO-0001.mdx) | Error | Rust interop Cargo metadata is unavailable or inconsistent. |
 
@@ -301,6 +308,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-RUST-ASYNC-0000`](diagnostic-codes.md) | `RUST-ASYNC` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-RUST-ZC-0000`](diagnostic-codes.md) | `RUST-ZC` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-RUST-CB-0000`](diagnostic-codes.md) | `RUST-CB` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-RUST-SLOT-0000`](diagnostic-codes.md) | `RUST-SLOT` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-RUST-PANIC-0000`](diagnostic-codes.md) | `RUST-PANIC` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-RUST-CARGO-0000`](diagnostic-codes.md) | `RUST-CARGO` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-DECIMAL-0000`](diagnostic-codes.md) | `DECIMAL` | Reserved family base; not emitted as a diagnostic. |

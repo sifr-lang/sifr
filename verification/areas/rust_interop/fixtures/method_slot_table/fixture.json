@@ -1,0 +1,42 @@
+{
+  "capability": "static-program-indexed typed method slots with caller-owned context",
+  "diagnostic_family": "SIFR-RUST-SLOT-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-SLOT-0001",
+      "expected_result": "diagnostic",
+      "id": "invalid_method_slot_contracts_rejected",
+      "path": "negative/invalid_method_slot_contracts_rejected.sifr",
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_frontend",
+        "test_file": "crates/sifr_frontend/src/specialization_runner.rs",
+        "test_name": "invalid_reserved_slot_list_uses_slot_diagnostic"
+      }
+    },
+    "positive": {
+      "expected_result": "pass",
+      "id": "method_slots_dispatch_with_mutable_context",
+      "path": "positive/method_slots_dispatch_with_mutable_context.sifr",
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_method_slots.rs",
+        "test_name": "test_method_slot_runtime"
+      }
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {},
+  "id": "method_slot_table",
+  "required_crates": [],
+  "scenario_examples": {
+    "method_slot_runtime": "examples/method_slot_runtime"
+  },
+  "schema_version": 2,
+  "tier": 2
+}

@@ -6,13 +6,20 @@ use crate::SifrInt;
 
 mod arena;
 mod implementations;
+mod slots;
 mod static_program;
 
 pub use arena::{ArenaNode, StructuralArena};
 pub use sifr_structural_identity::{
     binary_container, enum_shape, metadata, nominal_record, primitive, recursive_reference,
-    refined, static_program_identity, tuple, unary_container, union, NominalField, ShapeIdentity,
-    StaticProgramIdentity, ALGORITHM_VERSION, STATIC_PROGRAM_ALGORITHM_VERSION,
+    refined, slot_table_identity, static_program_identity, tuple, unary_container, union,
+    NominalField, ShapeIdentity, SlotContextModeIdentity, SlotIdentitySignature,
+    SlotReceiverIdentity, SlotTableIdentity, StaticProgramIdentity, ALGORITHM_VERSION,
+    METHOD_SLOT_TABLE_ALGORITHM_VERSION, STATIC_PROGRAM_ALGORITHM_VERSION,
+};
+pub use slots::{
+    MethodSlotTable, NoContext, SharedContext, SlotError, SlotHandler, SlotHandlerSignature,
+    SlotReceiver, SlotSignature, SlotSink, SlotSinkVisitor,
 };
 pub use static_program::{
     StaticProgram, StaticProgramEnvelopeError, StaticProgramHeader, StaticProgramType,

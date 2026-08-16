@@ -1809,6 +1809,54 @@
     },
     {
       "baseline_fixture_id": null,
+      "code": "SIFR-RUST-SLOT-0001",
+      "deferral": {"issue": "rust-interop-method-slot-rendered-fixtures", "owner": "compiler/package-management", "reason": "covered by focused method-slot frontend and package fixtures until rendered diagnostic fixtures are added", "removal_target": "add rendered package diagnostic fixture for malformed method-slot lists"},
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": null,
+      "code": "SIFR-RUST-SLOT-0002",
+      "deferral": {"issue": "rust-interop-method-slot-rendered-fixtures", "owner": "compiler/package-management", "reason": "covered by focused method-slot frontend and package fixtures until rendered diagnostic fixtures are added", "removal_target": "add rendered package diagnostic fixture for invalid slot targets"},
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": null,
+      "code": "SIFR-RUST-SLOT-0003",
+      "deferral": {"issue": "rust-interop-method-slot-rendered-fixtures", "owner": "compiler/package-management", "reason": "covered by focused method-slot frontend and package fixtures until rendered diagnostic fixtures are added", "removal_target": "add rendered package diagnostic fixture for invalid slot signatures"},
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": null,
+      "code": "SIFR-RUST-SLOT-0004",
+      "deferral": {"issue": "rust-interop-method-slot-rendered-fixtures", "owner": "compiler/package-management", "reason": "covered by focused method-slot lowering and package fixtures until rendered diagnostic fixtures are added", "removal_target": "add rendered package diagnostic fixture for invalid method-slot bounds"},
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": null,
+      "code": "SIFR-RUST-SLOT-0005",
+      "deferral": {"issue": "rust-interop-method-slot-rendered-fixtures", "owner": "compiler/package-management", "reason": "covered by focused method-slot lowering and package fixtures until rendered diagnostic fixtures are added", "removal_target": "add rendered package diagnostic fixture for invalid method-slot contexts"},
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": null,
+      "code": "SIFR-RUST-SLOT-0006",
+      "deferral": {"issue": "rust-interop-method-slot-rendered-fixtures", "owner": "compiler/package-management", "reason": "covered by focused method-slot runtime tests until rendered diagnostic fixtures are added", "removal_target": "add rendered package diagnostic fixture for invalid affine slot handlers"},
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": null,
       "code": "SIFR-RUST-PANIC-0001",
       "deferral": {
         "issue": "rust-interop-panic-rendered-fixtures",

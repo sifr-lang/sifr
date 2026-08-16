@@ -1,7 +1,7 @@
 use std::fmt;
 use std::marker::PhantomData;
 
-use super::{ShapeIdentity, StaticProgramIdentity};
+use super::{ShapeIdentity, SlotTableIdentity, StaticProgramIdentity};
 use crate::interop::GeneratedGlueToken;
 
 pub const STATIC_PROGRAM_ENVELOPE_VERSION: u32 = 1;
@@ -34,6 +34,7 @@ pub struct StaticProgramHeader {
     bridge_contract_version: u32,
     identity: StaticProgramIdentity,
     shape_identity: ShapeIdentity,
+    slot_table_identity: Option<SlotTableIdentity>,
 }
 
 impl StaticProgramHeader {
@@ -45,6 +46,7 @@ impl StaticProgramHeader {
         bridge_contract_version: u32,
         identity: StaticProgramIdentity,
         shape_identity: ShapeIdentity,
+        slot_table_identity: Option<SlotTableIdentity>,
         _token: GeneratedGlueToken,
     ) -> Self {
         Self {
@@ -54,6 +56,7 @@ impl StaticProgramHeader {
             bridge_contract_version,
             identity,
             shape_identity,
+            slot_table_identity,
         }
     }
 
@@ -80,6 +83,11 @@ impl StaticProgramHeader {
     #[must_use]
     pub const fn shape_identity(&self) -> ShapeIdentity {
         self.shape_identity
+    }
+
+    #[must_use]
+    pub const fn slot_table_identity(&self) -> Option<SlotTableIdentity> {
+        self.slot_table_identity
     }
 }
 
@@ -136,6 +144,7 @@ impl<T> StaticProgram<T> {
         bridge_contract_version: u32,
         identity: StaticProgramIdentity,
         shape_identity: ShapeIdentity,
+        slot_table_identity: Option<SlotTableIdentity>,
     ) -> Result<(), StaticProgramEnvelopeError> {
         if self.header.envelope_version != STATIC_PROGRAM_ENVELOPE_VERSION {
             return Err(StaticProgramEnvelopeError::EnvelopeVersion);
@@ -155,6 +164,9 @@ impl<T> StaticProgram<T> {
         if self.header.shape_identity != shape_identity {
             return Err(StaticProgramEnvelopeError::ShapeIdentity);
         }
+        if self.header.slot_table_identity != slot_table_identity {
+            return Err(StaticProgramEnvelopeError::SlotTableIdentity);
+        }
         Ok(())
     }
 }
@@ -167,6 +179,7 @@ pub enum StaticProgramEnvelopeError {
     BridgeContract,
     Identity,
     ShapeIdentity,
+    SlotTableIdentity,
 }
 
 impl fmt::Display for StaticProgramEnvelopeError {
@@ -178,6 +191,7 @@ impl fmt::Display for StaticProgramEnvelopeError {
             Self::BridgeContract => "static program bridge contract mismatch",
             Self::Identity => "static program identity mismatch",
             Self::ShapeIdentity => "static program shape identity mismatch",
+            Self::SlotTableIdentity => "static program method-slot table identity mismatch",
         })
     }
 }
@@ -188,7 +202,9 @@ impl std::error::Error for StaticProgramEnvelopeError {}
 mod tests {
     use super::*;
     use crate::interop::__generated_glue;
-    use crate::interop::structural::{primitive, static_program_identity};
+    use crate::interop::structural::{
+        primitive, slot_table_identity, static_program_identity, SlotContextModeIdentity,
+    };
 
     #[test]
     fn sealed_program_verifies_complete_envelope() {
@@ -200,6 +216,7 @@ mod tests {
             1,
             identity,
             shape,
+            None,
             __generated_glue::token(),
         );
         let program = StaticProgram::<String>::__from_compiler(
@@ -211,7 +228,10 @@ mod tests {
             )]),
             __generated_glue::token(),
         );
-        assert_eq!(program.verify_envelope(3, 1, 1, identity, shape), Ok(()));
+        assert_eq!(
+            program.verify_envelope(3, 1, 1, identity, shape, None),
+            Ok(())
+        );
         assert_eq!(
             program.value(),
             &StaticProgramValue::Record(&[(
@@ -220,8 +240,18 @@ mod tests {
             )])
         );
         assert_eq!(
-            program.verify_envelope(4, 1, 1, identity, shape),
+            program.verify_envelope(4, 1, 1, identity, shape, None),
             Err(StaticProgramEnvelopeError::FormatVersion)
+        );
+        let unexpected_slots = slot_table_identity(
+            identity,
+            primitive("method-slot-no-context"),
+            SlotContextModeIdentity::None,
+            &[],
+        );
+        assert_eq!(
+            program.verify_envelope(3, 1, 1, identity, shape, Some(unexpected_slots)),
+            Err(StaticProgramEnvelopeError::SlotTableIdentity)
         );
     }
 }

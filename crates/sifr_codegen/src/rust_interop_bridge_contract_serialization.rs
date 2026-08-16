@@ -55,6 +55,20 @@ fn push_signature(out: &mut String, signature: &RustBridgeSignatureContract) {
     } else {
         out.push_str(&signature.static_program_type_params.join(","));
     }
+    out.push_str("|method-slots=");
+    if let Some(contract) = &signature.method_slot_contract {
+        out.push_str(&contract.owner_type_param);
+        out.push(':');
+        out.push_str(&contract.context_type_param);
+        out.push(':');
+        out.push_str(if contract.context_mutable {
+            "mutable"
+        } else {
+            "shared"
+        });
+    } else {
+        out.push_str("<none>");
+    }
     out.push_str("|panic-error=");
     out.push_str(match signature.panic_error {
         crate::rust_interop_bridge_contract::RustBridgePanicErrorContract::None => "none",
