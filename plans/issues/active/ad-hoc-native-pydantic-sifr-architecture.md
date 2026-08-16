@@ -763,6 +763,28 @@ Milestone delivery records:
   fixture evidence fidelity. PR #3199 did not absorb those follow-ups.
 - The prerequisite adds no compatibility path, fallback, legacy path,
   Pydantic-specific compiler behavior, or versioned public API name.
+- The typed-record field legality addendum merged in Sifr
+  [PR #3203](https://github.com/sifr-lang/sifr/pull/3203) at merge commit
+  `335390b8171fb0a5cda275c22d200a420380c777`. The exact reviewed candidate
+  was `4eb576a46df7e9b9198abc26280152ff9b74ef78`.
+- The reserved dotted specialization key was replaced atomically by the single
+  legal compiler-owned field `sifr_method_slots`. The typed fixture now proves
+  that a structural specialization result can declare and return the field.
+  No alias, compatibility spelling, fallback, or legacy key remains.
+- The exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+  response SHA-256 is
+  `440da0c5a279dd580d505d5879fc2c3303a6a3f3921ca1d4acc716ffe5299572`.
+- Focused frontend and generated-driver tests, strict frontend Clippy, Rust
+  interop inventories, taxonomy, formatting, HIR maintainability, and the
+  file-size guard passed. The canonical create-PR gate passed every lane step;
+  its receipt SHA-256 is
+  `4fee2be48725607c8b62225bbec5ddaefdc27ba60ce724438d33ea8cd0680e1c`.
+- The one merge gate passed every preceding functional lane and stopped only on
+  the cross-run work-counter offset already tracked by issue #3200. The exact
+  candidate then passed the unchanged controlled 20-sample case at 924,385,045
+  median instructions with 0.000844 variation against the 936,811,698 limit.
+  The accepted evidence SHA-256 is
+  `d9467bdfaa644ee923d4ffc42eeb4faaa8ee68a252ecb0e0fc7550700ba9c6a0`.
 - `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
