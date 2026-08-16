@@ -13,6 +13,9 @@ pub struct StructuralMethodExport {
     pub receiver: Option<ReceiverConvention>,
 }
 
+pub type StructuralMethodExports = std::collections::HashMap<String, Vec<StructuralMethodExport>>;
+type StructuralMethodModules = std::collections::HashMap<String, StructuralMethodExports>;
+
 #[derive(Debug, Clone, Default)]
 pub struct ModuleSpecializationMetadata {
     pub class_field_defaults: std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
@@ -52,10 +55,7 @@ pub struct ExternalDefs {
     ///
     /// These are compiler-internal exports. They preserve declaration details that
     /// `Type::Class::methods` intentionally does not carry.
-    pub structural_methods: std::collections::HashMap<
-        String,
-        std::collections::HashMap<String, Vec<StructuralMethodExport>>,
-    >,
+    pub structural_methods: Option<Box<StructuralMethodModules>>,
     /// Map of `module_name` -> (`class_name` -> declaration-order field defaults).
     ///
     /// Constructor defaults intentionally remain separate because an explicit constructor is
@@ -111,6 +111,31 @@ pub struct ExternalDefs {
 }
 
 impl ExternalDefs {
+    pub fn replace_structural_methods(
+        &mut self,
+        module_name: &str,
+        methods: StructuralMethodExports,
+    ) {
+        if methods.is_empty() {
+            let remove_storage = self.structural_methods.as_mut().is_some_and(|modules| {
+                modules.remove(module_name);
+                modules.is_empty()
+            });
+            if remove_storage {
+                self.structural_methods = None;
+            }
+        } else {
+            self.structural_methods
+                .get_or_insert_with(Box::default)
+                .insert(module_name.to_string(), methods);
+        }
+    }
+
+    #[must_use]
+    pub fn structural_methods_for(&self, module_name: &str) -> Option<&StructuralMethodExports> {
+        self.structural_methods.as_deref()?.get(module_name)
+    }
+
     pub fn insert_error_type(&mut self, module_name: &str, class_name: &str) {
         self.error_types
             .entry(module_name.to_string())

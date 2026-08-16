@@ -793,7 +793,9 @@ class LocalUse:
         let local_shape = crate::describe_type("models", &local_use.fields[0].1, &models);
         collect_module_exports("models", &models, &mut external_defs);
         assert!(!external_defs.classes["models"].contains_key("_Hidden"));
-        assert!(external_defs.structural_methods["models"].contains_key("_Hidden"));
+        assert!(external_defs
+            .structural_methods_for("models")
+            .is_some_and(|classes| classes.contains_key("_Hidden")));
 
         let consumer = compile(
             "consumer",

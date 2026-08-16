@@ -459,13 +459,7 @@ pub fn collect_module_exports(
     external_defs
         .classes
         .insert(module_name.to_string(), class_exports);
-    if structural_method_exports.is_empty() {
-        external_defs.structural_methods.remove(module_name);
-    } else {
-        external_defs
-            .structural_methods
-            .insert(module_name.to_string(), structural_method_exports);
-    }
+    external_defs.replace_structural_methods(module_name, structural_method_exports);
     if error_exports.is_empty() {
         external_defs.error_types.remove(module_name);
     } else {

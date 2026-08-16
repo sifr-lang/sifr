@@ -387,8 +387,7 @@ fn describe_class(
         )
     } else if let Some((source_module, source_name, external_defs)) = external_class {
         let methods = external_defs
-            .structural_methods
-            .get(source_module)
+            .structural_methods_for(source_module)
             .and_then(|classes| classes.get(source_name))
             .map(Vec::as_slice)
             .unwrap_or_default();

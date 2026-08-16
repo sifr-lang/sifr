@@ -200,7 +200,7 @@ use default_args::collect_function_defaults;
 pub(in crate::lower) use diagnostic_types::{
     fallback_error_type, HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };
-pub use external_defs::{ExternalDefs, StructuralMethodExport};
+pub use external_defs::{ExternalDefs, StructuralMethodExport, StructuralMethodExports};
 
 pub fn localize_user_import_type(
     ty: &Type,
