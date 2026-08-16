@@ -985,6 +985,22 @@ Milestone delivery records:
 - The coordinated Sifr boundary artifact now names the implemented consumer,
   generated-client warning ownership, fail-closed web behavior, exact-profile
   marker, and four exact bounded JSON Schema snapshots.
+- The PS9 definitions, recursion, aliases, constraints, and mode-specific
+  representations item merged in companion
+  [PR #23](https://github.com/sifr-lang/pydantic-sifr/pull/23) at merge commit
+  `ee3b8d3a3a0a03f039b4812a18baa18186b4f7f1`. The exact reviewed and gated
+  candidate was `9582dd47f6d3e2a5b04a0d4135ae8a3e09b046e2`.
+- JSON Schema now emits deterministic root `$defs` and recursive `$ref`
+  pointers, derives validation and serialization property names from explicit
+  alias options, carries string mapping-key constraints through
+  `propertyNames`, and fails closed for unsupported alias shapes, key types,
+  or mode-specific representations. The legacy mode-only API was removed.
+- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+  response SHA-256 is
+  `7d3f60c3becfae6370a274466c2913d2f82eefd78af818335dc7f9fed668ffd2`.
+  Eighteen focused JSON Schema tests, the full core suite, strict Clippy,
+  formatting, file-size guard, exact-pin companion create-PR gate, and the
+  single authoritative merge gate passed.
 - `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3244,7 +3260,7 @@ JSON; every `serializers/*` fixture family named in the baseline and
   `x-sifr-integer-profile: exact` as the implemented exact-profile schema
   marker. `ps_1` already owns the diagnostic page and Reserved-to-Active
   diagnostic status change.
-- Support definitions, recursion, aliases, constraints and mode-specific
+- [x] Support definitions, recursion, aliases, constraints and mode-specific
   representations.
 - Complete public `Fraction` and `Complex` adapter/schema representations.
 - Add deterministic schema snapshots and dialect conformance.
