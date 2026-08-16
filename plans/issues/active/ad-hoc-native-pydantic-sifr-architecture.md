@@ -1047,6 +1047,19 @@ Milestone delivery records:
 - The focused unit suite, file-size guard, exact-pin companion create-PR gate,
   and the single authoritative merge gate passed. No Sifr compiler source
   changed for this item.
+- The PS10 migration guide merged in companion
+  [PR #29](https://github.com/sifr-lang/pydantic-sifr/pull/29) at merge commit
+  `3fcfcc51b3d2544047ea016ff2df7a4d726bd854`. The exact reviewed and gated
+  candidate was `7cc7dfe7cf5a2b834397a781285759578b6f48ef`.
+- The guide maps familiar Pydantic workflows to the supported native Sifr
+  surface, identifies adapted semantics and blocked callback surfaces, and
+  gives direct migration examples without compatibility shims or fallback
+  paths. Twenty focused documentation-contract tests passed.
+- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+  response SHA-256 is
+  `f09f84c79fec512c9cc747c5ed7198f75ac0d2a27fd9613f5bd7aa10d73e7dc7`.
+  The file-size guard, exact-pin companion create-PR gate, and the single
+  authoritative merge gate passed. No Sifr compiler source changed.
 - `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3337,7 +3350,7 @@ the coordinated Sifr boundary-artifact PR is merged and its snapshots pass;
   This row is skipped under the phase blocker rule; Rust-only wrappers, erased
   string substitutes, and package-specific compiler branches are not accepted.
 - [x] Publish the API/behavior compatibility matrix.
-- Add migration documentation for Pydantic users.
+- [x] Add migration documentation for Pydantic users.
 - Prove ordinary Sifr classes and the familiar facade use the same engine.
 - Remove any temporary internal API exposed during construction.
 
