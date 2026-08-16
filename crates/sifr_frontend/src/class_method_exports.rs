@@ -90,7 +90,12 @@ pub(crate) fn structural_method_map(
     local_classes: &HashMap<String, String>,
     lowering: &sifr_lowering::LoweringResult,
 ) -> HashMap<String, Vec<StructuralMethodExport>> {
-    if module.classes.is_empty() {
+    if module.classes.is_empty()
+        || !lowering
+            .declaration_metadata
+            .iter()
+            .any(|entry| entry.target_kind == DeclarationMetadataTargetKind::Method)
+    {
         return HashMap::new();
     }
     let mut names_by_class: HashMap<&str, Vec<&str>> = HashMap::new();
