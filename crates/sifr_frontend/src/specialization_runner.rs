@@ -1,7 +1,7 @@
 use crate::{
-    decode_const_specialization_outcome, describe_type, verify_json_integer_boundary,
-    ConstEvalError, ConstIssueTemplate, DeterministicConstEvaluator, JsonIntegerBoundaryDescriptor,
-    JsonIntegerKind, JsonIntegerProfile, JsonIntegerRepresentation,
+    decode_const_specialization_outcome, describe_type_with_externals,
+    verify_json_integer_boundary, ConstEvalError, ConstIssueTemplate, DeterministicConstEvaluator,
+    JsonIntegerBoundaryDescriptor, JsonIntegerKind, JsonIntegerProfile, JsonIntegerRepresentation,
 };
 use ruff_text_size::TextRange;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
@@ -55,7 +55,8 @@ pub(crate) fn run_specializations(
             ));
             continue;
         }
-        let shape = describe_type(module_name, &target_type, result).to_const_value();
+        let shape = describe_type_with_externals(module_name, &target_type, result, external_defs)
+            .to_const_value();
         let canonical_shape = crate::structural_shape::canonical_value(&shape);
         let Some(functions) = external_defs.const_functions.get(&request.package_module) else {
             errors.push(malformed(
@@ -420,6 +421,17 @@ mod tests {
         )
     }
 
+    fn field_type<'a>(result: &'a LoweringResult, class_name: &str, field: &str) -> &'a Type {
+        result
+            .module
+            .classes
+            .iter()
+            .find(|class| class.name == class_name)
+            .and_then(|class| class.fields.iter().find(|(name, _)| name == field))
+            .map(|(_, ty)| ty)
+            .expect("fixture field exists")
+    }
+
     fn errors(
         result: Result<LoweringResult, Vec<sifr_diagnostics::RenderedDiagnostic>>,
     ) -> Vec<sifr_diagnostics::RenderedDiagnostic> {
@@ -565,6 +577,194 @@ class Model:
         assert_eq!(cli[0].args, editor[0].args);
         assert_eq!(cli[0].url, editor[0].url);
         assert_eq!(cli[0].message_template, editor[0].message_template);
+    }
+
+    #[test]
+    fn imported_annotated_methods_preserve_nested_program_identity() {
+        fn compile_consumer(method_return: &str) -> StaticSpecializationOutput {
+            let mut external_defs = ExternalDefs::default();
+            let package = compile(
+                "fixture.meta",
+                &package_source("warning", "shape_notice", true),
+                &external_defs,
+            )
+            .expect("package compiles");
+            collect_module_exports("fixture.meta", &package, &mut external_defs);
+
+            let return_expression = if method_return == "T" {
+                "value"
+            } else {
+                "\"\""
+            };
+            let model_source = format!(
+                r#"
+class Box[T]:
+    value: T
+
+    @staticmethod
+    @metadata("fixture.callback", "normalize")
+    @metadata("parameter", "value", "fixture.role", "input")
+    def normalize(value: T) -> {method_return}:
+        return {return_expression}
+"#
+            );
+            let models =
+                compile("models", &model_source, &external_defs).expect("model module compiles");
+            collect_module_exports("models", &models, &mut external_defs);
+
+            let consumer = compile(
+                "consumer",
+                r#"
+from fixture.meta import describe
+from models import Box
+
+@const_specialize("fixture.meta", "describe")
+class Container:
+    item: Box[int]
+"#,
+                &external_defs,
+            )
+            .expect("consumer specializes imported model");
+            consumer
+                .specialization_outputs
+                .into_iter()
+                .next()
+                .expect("consumer emits a static program")
+        }
+
+        let integer = compile_consumer("T");
+        assert!(integer.canonical_value.contains("normalize:static"));
+        assert!(integer.canonical_value.contains("fixture.callback"));
+        assert!(integer.canonical_value.contains("5:value:borrow:false:int"));
+
+        let string = compile_consumer("str");
+        assert_ne!(integer.program_identity, string.program_identity);
+    }
+
+    #[test]
+    fn reexported_nominal_shapes_match_local_shapes_without_consumer_fallbacks() {
+        let mut external_defs = ExternalDefs::default();
+        let models = compile(
+            "models",
+            r#"
+from enum import Enum
+
+@metadata("fixture.kind", "color")
+@metadata("enum_variant", "RED", "fixture.label", "red")
+class Color(Enum):
+    RED = 1
+    BLUE = 2
+
+@metadata("fixture.kind", "port")
+class Port(int):
+    pass
+
+class Box[T]:
+    value: T
+
+    @metadata("fixture.callback", "construct")
+    def __init__(self, value: T) -> None:
+        self.value = value
+
+    @metadata("fixture.callback", "compare")
+    def __eq__(self, other: Box[T]) -> bool:
+        return True
+
+    @classmethod
+    @metadata("fixture.callback", "from_value")
+    def from_value(cls, value: T) -> Box[T]:
+        return Box(value)
+
+    @staticmethod
+    @metadata("fixture.callback", "normalize")
+    @metadata("parameter", "value", "fixture.role", "input")
+    async def normalize(*, value: T) -> T:
+        return value
+
+class LocalUse:
+    item: Box[int]
+    color: Color
+    port: Port
+"#,
+            &external_defs,
+        )
+        .expect("models compile");
+        let describe_local = |field| {
+            crate::describe_type_with_externals(
+                "models",
+                field_type(&models, "LocalUse", field),
+                &models,
+                &external_defs,
+            )
+        };
+        let local_box = describe_local("item");
+        let local_color = describe_local("color");
+        let local_port = describe_local("port");
+        collect_module_exports("models", &models, &mut external_defs);
+
+        let facade = compile(
+            "facade",
+            "from models import Box as Renamed\nfrom models import Color\nfrom models import Port\n",
+            &external_defs,
+        )
+        .expect("facade reexports compile");
+        collect_module_exports("facade", &facade, &mut external_defs);
+        let consumer = compile(
+            "consumer",
+            r#"
+from facade import Renamed, Color, Port
+
+class ImportedUse:
+    item: Renamed[int]
+    color: Color
+    port: Port
+"#,
+            &external_defs,
+        )
+        .expect("consumer compiles");
+
+        let imported_box = crate::describe_type_with_externals(
+            "consumer",
+            field_type(&consumer, "ImportedUse", "item"),
+            &consumer,
+            &external_defs,
+        );
+        let imported_color = crate::describe_type_with_externals(
+            "consumer",
+            field_type(&consumer, "ImportedUse", "color"),
+            &consumer,
+            &external_defs,
+        );
+        let imported_port = crate::describe_type_with_externals(
+            "consumer",
+            field_type(&consumer, "ImportedUse", "port"),
+            &consumer,
+            &external_defs,
+        );
+
+        assert_eq!(
+            local_box.canonical_identity,
+            imported_box.canonical_identity
+        );
+        assert_eq!(
+            local_color.canonical_identity,
+            imported_color.canonical_identity
+        );
+        assert_eq!(
+            local_port.canonical_identity,
+            imported_port.canonical_identity
+        );
+        assert!(imported_box.canonical_identity.contains("__init__:regular"));
+        assert!(imported_box.canonical_identity.contains("__eq__:regular"));
+        assert!(imported_box.canonical_identity.contains("from_value:class"));
+        assert!(imported_box
+            .canonical_identity
+            .contains("normalize:static:none:true"));
+        assert!(imported_box.canonical_identity.contains("fixture.role"));
+        assert!(imported_color.canonical_identity.contains("models.Color"));
+        assert!(imported_color.canonical_identity.contains("fixture.label"));
+        assert!(imported_port.canonical_identity.contains("models.Port"));
+        assert!(imported_port.canonical_identity.contains("fixture.kind"));
     }
 
     #[test]

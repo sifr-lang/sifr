@@ -3,12 +3,13 @@ use super::{
     SourceHash, SourcePath, SourceText, SymbolKind, SymbolView,
 };
 use crate::callable_exports::{exported_function_type, RustCallbackExports};
-use crate::class_method_exports::ClassMethodExports;
+use crate::class_method_exports::{structural_method_map, ClassMethodExports};
 pub(crate) use crate::export_type_localization::should_export_callable;
 use crate::export_type_localization::{
     copy_class_generic_metadata, copy_function_generic_metadata, declared_generic_metadata,
     exported_parent_chain, imported_class_ancestry, reexport_class_aliases,
 };
+use crate::module_export_storage::replace_module_entry;
 use crate::module_signatures::ModuleSignature;
 use crate::{diagnostic_with_code, diagnostic_with_source_range_args_help};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
@@ -19,6 +20,7 @@ use sifr_lowering::{
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{BTreeMap, HashMap};
+
 pub(super) fn module_state(
     id: ModuleId,
     file: FileId,
@@ -187,6 +189,7 @@ pub fn collect_module_exports(
     let mut rust_callback_exports = RustCallbackExports::default();
     let (mut generic_exports, mut type_param_bound_exports, local_classes) =
         declared_generic_metadata(module_name, module);
+    let structural_method_exports = structural_method_map(module, &local_classes, lowering_result);
     let imported_ancestry = imported_class_ancestry(module, external_defs);
 
     for func in &module.functions {
@@ -222,6 +225,12 @@ pub fn collect_module_exports(
     }
 
     for class in &module.classes {
+        if let Some(defaults) = lowering_result.class_field_defaults.get(&class.name) {
+            class_field_default_exports.insert(class.name.clone(), defaults.clone());
+        }
+        if !class.type_params.is_empty() {
+            class_type_param_exports.insert(class.name.clone(), class.type_params.clone());
+        }
         if !class.name.starts_with('_') {
             if class.is_error_type {
                 error_exports.insert(class.name.clone());
@@ -308,15 +317,8 @@ pub fn collect_module_exports(
             };
             let class_ty = canonicalize_user_export_type(&exported_type, &local_classes);
             class_exports.insert(class.name.clone(), class_ty);
-            if let Some(defaults) = lowering_result.class_field_defaults.get(&class.name) {
-                class_field_default_exports.insert(class.name.clone(), defaults.clone());
-            }
-            if !class.type_params.is_empty() {
-                class_type_param_exports.insert(class.name.clone(), class.type_params.clone());
-            }
         }
     }
-
     for (name, ty, _) in &module.constants {
         if !name.starts_with('_') {
             const_exports.insert(
@@ -458,6 +460,7 @@ pub fn collect_module_exports(
     external_defs
         .classes
         .insert(module_name.to_string(), class_exports);
+    external_defs.replace_structural_methods(module_name, structural_method_exports);
     if error_exports.is_empty() {
         external_defs.error_types.remove(module_name);
     } else {
@@ -470,17 +473,18 @@ pub fn collect_module_exports(
             .rust_opaque_classes
             .insert(module_name.to_string(), rust_opaque_exports);
     }
-    if !class_field_default_exports.is_empty() {
-        external_defs
-            .class_field_defaults
-            .insert(module_name.to_string(), class_field_default_exports);
-    }
-    if !lowering_result.declaration_metadata.is_empty() {
-        external_defs.declaration_metadata.insert(
-            module_name.to_string(),
-            lowering_result.declaration_metadata.clone(),
-        );
-    }
+    replace_module_entry(
+        &mut external_defs.class_field_defaults,
+        module_name,
+        class_field_default_exports,
+        HashMap::is_empty,
+    );
+    replace_module_entry(
+        &mut external_defs.declaration_metadata,
+        module_name,
+        lowering_result.declaration_metadata.clone(),
+        Vec::is_empty,
+    );
     if !lowering_result.specialization_requests.is_empty() {
         external_defs.specialization_requests.insert(
             module_name.to_string(),
@@ -500,11 +504,12 @@ pub fn collect_module_exports(
         );
     }
     class_method_exports.store(external_defs, module_name);
-    if !class_type_param_exports.is_empty() {
-        external_defs
-            .class_type_params
-            .insert(module_name.to_string(), class_type_param_exports);
-    }
+    replace_module_entry(
+        &mut external_defs.class_type_params,
+        module_name,
+        class_type_param_exports,
+        HashMap::is_empty,
+    );
     if !generic_exports.is_empty() {
         external_defs
             .generic_functions
