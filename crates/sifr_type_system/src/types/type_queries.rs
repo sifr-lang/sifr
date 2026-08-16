@@ -681,7 +681,9 @@ impl Type {
             Self::Alias { body, .. } => body.rust_type(),
             Self::Unknown => "Box<dyn std::any::Any>".to_string(),
             class @ Self::Class { identity, name, .. } => {
-                if class.is_python_object_contract() {
+                if identity.as_deref() == Some("sifr.meta.NoContext") {
+                    "::sifr_runtime::interop::structural::NoContext".to_string()
+                } else if class.is_python_object_contract() {
                     "::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>"
                         .to_string()
                 } else if class.is_python_resource_identity_contract() {

@@ -464,10 +464,50 @@ The generated concrete type implements `StaticProgramType`. Package Rust code ca
 borrow the program through that trait during the monomorphized call. Sifr code
 cannot construct, mutate, or name the Rust envelope. The envelope contains its
 format, structural contract, bridge contract, program identity, and concrete
-shape identity. A mismatch returns `StaticProgramEnvelopeError` before input data
-is processed. Package code compares the format and bridge contract against the
+shape identity. When the program declares method slots, the envelope also contains
+the exact slot-table identity. A mismatch returns `StaticProgramEnvelopeError`
+before input data is processed. Package code compares the format and bridge contract against the
 exported `STATIC_PROGRAM_FORMAT_VERSION` and `STRUCTURAL_BRIDGE_CONTRACT_VERSION`
 constants. It does not copy private compiler literals.
+
+#### Static method-slot tables
+
+`sifr.meta.MethodSlots` is the compiler-owned bound for a static program that
+declares an ordered method-slot table. The produced specialization value must
+contain the one reserved entry `"sifr.meta.slots": list[str]`. Each string has
+the exact identity-qualified form `module.Type::method`. The list must be
+nonempty and contain no duplicate. A selected method must be present in the
+concrete structural shape, including through an imported or re-exported owner.
+There is no bare-name lookup or runtime registry.
+
+A slot has exactly one structural value channel. For a static method, that
+channel is its first parameter. For an instance method, the receiver is the
+channel and the input arena contains the owner value. A slot must be synchronous,
+must return `Result[Output, Error]`, and must have structural input and successful
+output types. Constructors and class methods are not slot targets.
+
+`sifr.meta.Context` marks the one context type parameter on a method-slot Rust
+bridge. The compiler derives one context type and one borrow mode from all slots
+in the concrete program. Slots without a context can coexist with slots that use
+that derived context. Conflicting types or borrow modes are rejected. Mutable
+mode uses `&mut C`; shared mode uses the runtime `SharedContext<'_, C>` wrapper,
+which cannot mutate `C`. A program with no context parameters uses the runtime-owned
+`sifr.meta.NoContext`. Context values do not enter a structural arena, and the
+native backend cannot select a different context type for the same program.
+
+The compiler emits `MethodSlotTable<C>` only for a concrete specialized owner.
+`invoke_slot` dispatches by the declared list index, constructs the input from a
+checked `StructuralArena`, calls the monomorphic Sifr method, and projects a
+successful value into `SlotSink`. Unknown indices and shape failures are checked
+errors. Generated dispatch contains no reflection, erased object registry,
+compatibility path, or fallback.
+
+`SlotTableIdentity` hashes the static-program identity, context shape, context
+borrow mode, slot order, exact names, input/output shapes, receiver modes, and
+optional handler shapes. The same identity is present in the static-program
+header and generated-project cache input. `SlotHandler<'call>` is a borrowed,
+current-thread-only continuation channel for wrap slots. It cannot be stored or
+sent, and its input and output shapes are part of the table identity.
 
 The marker makes the type variable legal only in these positions:
 
@@ -570,6 +610,18 @@ pub trait StructuralProject: StructuralType {
 
 pub trait StaticProgramType: StructuralType + Sized + 'static {
     fn static_program() -> &'static StaticProgram<Self>;
+}
+
+pub trait MethodSlotTable<Context: StructuralType>: StaticProgramType {
+    fn slot_table_identity() -> SlotTableIdentity;
+    fn slot_signatures() -> &'static [SlotSignature];
+    fn invoke_slot(
+        index: usize,
+        input: StructuralArena,
+        context: &mut Context,
+        handler: Option<&SlotHandler<'_>>,
+        sink: &mut dyn SlotSink,
+    ) -> Result<(), SlotError>;
 }
 
 #[non_exhaustive]

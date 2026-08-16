@@ -9,7 +9,8 @@ use super::{
 };
 use ruff_text_size::TextRange;
 use sifr_codegen::{
-    RustBridgeSignatureContract, RustBridgeTypeContract, RustBridgeTypeKind, RustInteropOwner,
+    RustBridgeMethodSlotContract, RustBridgeSignatureContract, RustBridgeTypeContract,
+    RustBridgeTypeKind, RustInteropOwner,
 };
 use sifr_ir::RustTargetPath;
 use std::path::Path;
@@ -136,6 +137,7 @@ fn signature(return_type: RustBridgeTypeContract) -> RustBridgeSignatureContract
         return_type,
         structural_type_params: Vec::new(),
         static_program_type_params: Vec::new(),
+        method_slot_contract: None,
         panic_error: sifr_codegen::RustBridgePanicErrorContract::None,
         span: TextRange::default(),
     }
@@ -218,6 +220,32 @@ fn structural_probe_preserves_distinct_input_and_output_generics() {
     assert!(source.contains("Output: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject + ::sifr_runtime::interop::structural::StaticProgramType"));
     assert!(source.contains("Input: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject"));
     assert!(source.contains("bridge::convert::<Input, Output>"));
+}
+
+#[test]
+fn method_slot_probe_requires_the_exact_context_relation() {
+    let mut signature = signature(RustBridgeTypeContract {
+        sifr_type: "Result[T, BridgeError]".to_string(),
+        rust_borrowed_type: None,
+        rust_owned_type: None,
+        rust_return_type: Some("Result<T, BridgeError>".to_string()),
+        kind: RustBridgeTypeKind::Result,
+        unsupported_reason: None,
+    });
+    signature.structural_type_params = vec!["C".to_string(), "T".to_string()];
+    signature.static_program_type_params = vec!["T".to_string()];
+    signature.method_slot_contract = Some(RustBridgeMethodSlotContract {
+        owner_type_param: "T".to_string(),
+        context_type_param: "C".to_string(),
+        context_mutable: true,
+    });
+
+    let source = structural_signature_probe_source(&signature, "bridge::validate");
+
+    assert!(source.contains("C: ::sifr_runtime::interop::structural::StructuralType"));
+    assert!(source.contains(
+        "T: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject + ::sifr_runtime::interop::structural::StaticProgramType + ::sifr_runtime::interop::structural::MethodSlotTable<C>"
+    ));
 }
 
 #[test]

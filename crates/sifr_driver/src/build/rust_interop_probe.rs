@@ -378,9 +378,32 @@ fn structural_signature_probe_source(
     for type_param in &signature.structural_type_params {
         out.push_str("    ");
         out.push_str(type_param);
-        out.push_str(": ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject");
+        let is_context = signature
+            .method_slot_contract
+            .as_ref()
+            .is_some_and(|contract| contract.context_type_param == *type_param);
+        if is_context {
+            out.push_str(": ::sifr_runtime::interop::structural::StructuralType");
+        } else {
+            out.push_str(": ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject");
+        }
         if signature.static_program_type_params.contains(type_param) {
             out.push_str(" + ::sifr_runtime::interop::structural::StaticProgramType");
+        }
+        if let Some(contract) = signature
+            .method_slot_contract
+            .as_ref()
+            .filter(|contract| contract.owner_type_param == *type_param)
+        {
+            if contract.context_mutable {
+                out.push_str(" + ::sifr_runtime::interop::structural::MethodSlotTable<");
+                out.push_str(&contract.context_type_param);
+                out.push('>');
+            } else {
+                out.push_str(" + for<'__sifr_context> ::sifr_runtime::interop::structural::MethodSlotTable<::sifr_runtime::interop::structural::SharedContext<'__sifr_context, ");
+                out.push_str(&contract.context_type_param);
+                out.push_str(">>");
+            }
         }
         out.push_str(",\n");
     }

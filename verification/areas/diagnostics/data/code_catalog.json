@@ -2801,6 +2801,78 @@
       "suggestion_applicability": "none"
     },
     {
+      "code": "SIFR-RUST-SLOT-0001",
+      "constant": "RUST_SLOT_LIST",
+      "docs_link": "docs/errors/SIFR-RUST-SLOT-0001.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/package-management",
+      "renderer_support": ["human", "json", "compact"],
+      "representative_fixture": "crates/sifr_frontend/src/specialization_runner.rs::invalid_reserved_slot_list_uses_slot_diagnostic",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RUST-SLOT-0002",
+      "constant": "RUST_SLOT_METHOD",
+      "docs_link": "docs/errors/SIFR-RUST-SLOT-0002.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/package-management",
+      "renderer_support": ["human", "json", "compact"],
+      "representative_fixture": "crates/sifr_frontend/src/slot_table_tests.rs::unavailable_slot_target_uses_method_diagnostic",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RUST-SLOT-0003",
+      "constant": "RUST_SLOT_SIGNATURE",
+      "docs_link": "docs/errors/SIFR-RUST-SLOT-0003.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/package-management",
+      "renderer_support": ["human", "json", "compact"],
+      "representative_fixture": "crates/sifr_frontend/src/slot_table_tests.rs::non_result_slot_uses_signature_diagnostic",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RUST-SLOT-0004",
+      "constant": "RUST_SLOT_BOUND",
+      "docs_link": "docs/errors/SIFR-RUST-SLOT-0004.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/package-management",
+      "renderer_support": ["human", "json", "compact"],
+      "representative_fixture": "crates/sifr_lowering/src/lower/rust_interop_structural_tests.rs::structural_method_slots_require_one_context",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RUST-SLOT-0005",
+      "constant": "RUST_SLOT_CONTEXT",
+      "docs_link": "docs/errors/SIFR-RUST-SLOT-0005.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/package-management",
+      "renderer_support": ["human", "json", "compact"],
+      "representative_fixture": "crates/sifr_frontend/src/slot_table_tests.rs::conflicting_context_borrow_modes_use_context_diagnostic",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-RUST-SLOT-0006",
+      "constant": "RUST_SLOT_HANDLER",
+      "docs_link": "docs/errors/SIFR-RUST-SLOT-0006.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/package-management",
+      "renderer_support": ["human", "json", "compact"],
+      "representative_fixture": "crates/sifr_driver/src/tests/package_rust_interop_method_slots.rs::test_method_slot_lifetime_thread_and_shared_context_rejections",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
       "code": "SIFR-RUST-PANIC-0001",
       "constant": "RUST_PANIC_CONTRACT",
       "docs_link": "docs/errors/SIFR-RUST-PANIC-0001.mdx",

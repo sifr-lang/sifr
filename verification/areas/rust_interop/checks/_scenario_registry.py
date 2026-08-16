@@ -78,6 +78,16 @@ REQUIRED_SCENARIO_EXAMPLES = {
             "tokens": ("bridge.blake3.hash_bytes", "src/bridges", "blake3"),
         },
     },
+    "method_slot_table": {
+        "method_slot_runtime": {
+            "tokens": (
+                "MethodSlotTable",
+                "sifr.meta.slots",
+                "MethodSlots",
+                "Context",
+            ),
+        },
+    },
     "native_build_script": {
         "native_trust_package": {"tokens": NATIVE_BUILD_SCENARIO_TOKENS},
     },

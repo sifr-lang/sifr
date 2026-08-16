@@ -395,6 +395,17 @@
                 ]
               },
               {
+                "group": "RUST-SLOT",
+                "pages": [
+                  "errors/SIFR-RUST-SLOT-0001",
+                  "errors/SIFR-RUST-SLOT-0002",
+                  "errors/SIFR-RUST-SLOT-0003",
+                  "errors/SIFR-RUST-SLOT-0004",
+                  "errors/SIFR-RUST-SLOT-0005",
+                  "errors/SIFR-RUST-SLOT-0006"
+                ]
+              },
+              {
                 "group": "RUST-PANIC",
                 "pages": [
                   "errors/SIFR-RUST-PANIC-0001"

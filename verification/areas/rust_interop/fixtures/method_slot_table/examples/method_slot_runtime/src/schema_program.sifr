@@ -1,0 +1,32 @@
+class ProgramOutcome:
+    status: str
+    value: dict[str, list[str]] | None
+    issues: list[str]
+
+
+@const_eval
+def derive(shape: dict[str, str]) -> ProgramOutcome:
+    return ProgramOutcome(
+        "produced",
+        {
+            "sifr.meta.slots": [
+                "main.Record::normalize",
+                "main.Record::finalize",
+            ]
+        },
+        [],
+    )
+
+
+@const_eval
+def derive_no_context(shape: dict[str, str]) -> ProgramOutcome:
+    return ProgramOutcome(
+        "produced", {"sifr.meta.slots": ["main.NoContextRecord::normalize"]}, []
+    )
+
+
+@const_eval
+def derive_shared(shape: dict[str, str]) -> ProgramOutcome:
+    return ProgramOutcome(
+        "produced", {"sifr.meta.slots": ["main.SharedRecord::normalize"]}, []
+    )

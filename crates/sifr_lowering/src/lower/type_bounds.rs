@@ -27,7 +27,13 @@ fn resolve_named_bound_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
 fn is_builtin_bound(name: &str) -> bool {
     matches!(
         name,
-        "Comparable" | "Addable" | "Hashable" | "Structural" | "StaticProgram"
+        "Comparable"
+            | "Addable"
+            | "Hashable"
+            | "Structural"
+            | "StaticProgram"
+            | "MethodSlots"
+            | "Context"
     )
 }
 
@@ -447,6 +453,8 @@ pub(in crate::lower) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &Lower
         "Hashable" => supports_hash_key_in_context(ty, ctx),
         "Structural" => supports_structural_bridge_type(ty, ctx),
         "StaticProgram" => supports_static_program_type(ty, ctx),
+        "MethodSlots" => supports_static_program_type(ty, ctx),
+        "Context" => supports_structural_bridge_type(ty, ctx),
         _ => resolve_named_bound_type(bound, ctx)
             .is_some_and(|bound_ty| ty.is_assignable_to(&bound_ty)),
     }

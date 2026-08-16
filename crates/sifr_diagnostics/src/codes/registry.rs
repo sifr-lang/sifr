@@ -74,6 +74,12 @@ impl DiagnosticCode {
     pub const RUST_ZERO_COPY_CONTRACT: Self = Self::new("SIFR-RUST-ZC-0001", Severity::Error);
     pub const RUST_PANIC_CONTRACT: Self = Self::new("SIFR-RUST-PANIC-0001", Severity::Error);
     pub const RUST_CALLBACK_CONTRACT: Self = Self::new("SIFR-RUST-CB-0001", Severity::Error);
+    pub const RUST_SLOT_LIST: Self = Self::new("SIFR-RUST-SLOT-0001", Severity::Error);
+    pub const RUST_SLOT_METHOD: Self = Self::new("SIFR-RUST-SLOT-0002", Severity::Error);
+    pub const RUST_SLOT_SIGNATURE: Self = Self::new("SIFR-RUST-SLOT-0003", Severity::Error);
+    pub const RUST_SLOT_BOUND: Self = Self::new("SIFR-RUST-SLOT-0004", Severity::Error);
+    pub const RUST_SLOT_CONTEXT: Self = Self::new("SIFR-RUST-SLOT-0005", Severity::Error);
+    pub const RUST_SLOT_HANDLER: Self = Self::new("SIFR-RUST-SLOT-0006", Severity::Error);
     pub const RUST_CARGO_METADATA: Self = Self::new("SIFR-RUST-CARGO-0001", Severity::Error);
 
     pub const DECIMAL_INVALID_LITERAL: Self = Self::new("SIFR-DECIMAL-0001", Severity::Error);
@@ -506,6 +512,11 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
         reserved_base: "SIFR-RUST-CB-0000",
     },
     DiagnosticFamily {
+        name: "RUST-SLOT",
+        summary: "Rust method-slot table, context, and handler diagnostics.",
+        reserved_base: "SIFR-RUST-SLOT-0000",
+    },
+    DiagnosticFamily {
         name: "RUST-PANIC",
         summary: "Rust panic strategy, mapping, and poisoned-handle diagnostics.",
         reserved_base: "SIFR-RUST-PANIC-0000",
@@ -732,6 +743,12 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::RUST_ZERO_COPY_CONTRACT,
     DiagnosticCode::RUST_PANIC_CONTRACT,
     DiagnosticCode::RUST_CALLBACK_CONTRACT,
+    DiagnosticCode::RUST_SLOT_LIST,
+    DiagnosticCode::RUST_SLOT_METHOD,
+    DiagnosticCode::RUST_SLOT_SIGNATURE,
+    DiagnosticCode::RUST_SLOT_BOUND,
+    DiagnosticCode::RUST_SLOT_CONTEXT,
+    DiagnosticCode::RUST_SLOT_HANDLER,
     DiagnosticCode::RUST_CARGO_METADATA,
     DiagnosticCode::DECIMAL_INVALID_LITERAL,
     DiagnosticCode::DECIMAL_BIGDECIMAL_INVALID_LITERAL,

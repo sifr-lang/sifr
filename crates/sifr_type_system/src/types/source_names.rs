@@ -26,6 +26,8 @@ const CANONICAL_FILE_HANDLE_RUST_NAMES: &[(&str, &str)] = &[
 /// than their merged stdlib module. Exemptions are exact declaration
 /// identities: a same-basename class in another module remains distinct.
 pub const GLOBAL_RUST_NOMINAL_IDENTITIES: &[&str] = &[
+    // Method-slot calls without caller data use the runtime-owned empty context.
+    "sifr.meta.NoContext",
     // Built-in task errors are emitted by the compiler's global error prelude.
     "sifr.builtin.CancellationError",
     "sifr.builtin.TimeoutError",
@@ -44,6 +46,7 @@ pub const CRATE_ROOT_RUST_NOMINAL_IDENTITIES: &[&str] = &[
     "sifr.builtin.TimeoutError",
     "sifr.parallel.WorkerRuntimeError",
     "sifr.parallel.WorkerError",
+    "sifr.meta.NoContext",
 ];
 
 #[must_use]

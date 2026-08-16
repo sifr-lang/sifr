@@ -14,7 +14,11 @@ pub use const_evaluator::*;
 mod structural_shape;
 pub use structural_shape::*;
 mod class_method_exports;
+mod slot_table;
+#[cfg(test)]
+mod slot_table_tests;
 mod specialization_runner;
+mod specialization_support;
 pub use cache_keys::*;
 mod analysis_views;
 pub use analysis_views::*;

@@ -145,10 +145,10 @@ mod rust_interop_panic;
 mod rust_interop_plan;
 pub use rust_interop_bridge_contract::{
     is_rust_generated_bridge_type_path, rust_opaque_handle_type, RustBridgeContractPlan,
-    RustBridgePanicErrorContract, RustBridgeParamContract, RustBridgeParamConvention,
-    RustBridgeSignatureContract, RustBridgeTypeContract, RustBridgeTypeKind,
-    RustGeneratedBridgeField, RustGeneratedBridgeType, RustGeneratedBridgeTypeKind,
-    RustGeneratedBridgeVariant,
+    RustBridgeMethodSlotContract, RustBridgePanicErrorContract, RustBridgeParamContract,
+    RustBridgeParamConvention, RustBridgeSignatureContract, RustBridgeTypeContract,
+    RustBridgeTypeKind, RustGeneratedBridgeField, RustGeneratedBridgeType,
+    RustGeneratedBridgeTypeKind, RustGeneratedBridgeVariant,
 };
 pub use rust_interop_bridge_panic_contract::rust_bridge_panic_error_contract;
 pub use rust_interop_plan::{
@@ -165,13 +165,14 @@ mod stdlib_import_signatures;
 mod stdlib_rust_source;
 pub use stdlib_rust_source::StdlibRustSource;
 mod static_program_codegen;
+mod static_program_slots_codegen;
 mod stmt_support_emitter;
 mod string_char_cache;
 mod string_char_cache_scan;
 mod structural_identity_codegen;
 mod structural_impl_codegen;
 pub use static_program_codegen::{
-    emit_static_specialization_programs, static_program_cache_fragment,
+    emit_static_specialization_programs, method_slot_cache_fragment, static_program_cache_fragment,
     structural_static_program_owners,
 };
 mod try_error_carrier;

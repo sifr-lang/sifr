@@ -1,5 +1,6 @@
 use super::rust_interop_callback_probe::{
     signature_has_call_scoped_callback, stderr_reports_callback_escape,
+    stderr_reports_shared_context_mutation, stderr_reports_slot_handler_escape,
 };
 use super::rust_interop_panic_probe::stderr_reports_invalid_panic_mapper;
 use super::rust_interop_probe::{
@@ -62,6 +63,27 @@ pub(super) fn classify_probe_failure(
                 )],
                 true,
             )
+    } else if stderr_reports_slot_handler_escape(stderr) {
+        (
+            DiagnosticCode::RUST_SLOT_HANDLER,
+            "invalid method-slot handler: {reason}",
+            vec![(
+                "reason",
+                "slot handlers are call-scoped and cannot be stored, returned, or moved to another thread"
+                    .to_string(),
+            )],
+            true,
+        )
+    } else if stderr_reports_shared_context_mutation(stderr) {
+        (
+            DiagnosticCode::RUST_SLOT_CONTEXT,
+            "invalid method-slot context: {reason}",
+            vec![(
+                "reason",
+                "shared method-slot context cannot be mutated".to_string(),
+            )],
+            true,
+        )
     } else if signature_has_call_scoped_callback(probe) && stderr_reports_callback_escape(stderr) {
         (
                 DiagnosticCode::RUST_CALLBACK_CONTRACT,

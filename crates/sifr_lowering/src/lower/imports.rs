@@ -175,6 +175,12 @@ pub(in crate::lower) fn resolve_imports_early(
     ctx.local_static_program_marker_declared = stmts.iter().any(
         |stmt| matches!(stmt, Stmt::ClassDef(class) if class.name.as_str() == "StaticProgram"),
     );
+    ctx.local_method_slots_marker_declared = stmts
+        .iter()
+        .any(|stmt| matches!(stmt, Stmt::ClassDef(class) if class.name.as_str() == "MethodSlots"));
+    ctx.local_context_marker_declared = stmts
+        .iter()
+        .any(|stmt| matches!(stmt, Stmt::ClassDef(class) if class.name.as_str() == "Context"));
     let aliases_by_module = class_aliases_by_module(stmts, externals, ctx);
     for stmt in stmts {
         if let Stmt::ImportFrom(import_from) = stmt {
@@ -220,6 +226,22 @@ pub(in crate::lower) fn resolve_imports_early(
                     .any(|alias| alias.name.as_str() == "StaticProgram" && alias.asname.is_none())
             {
                 ctx.canonical_static_program_marker_imported = true;
+            }
+            if module_name == "sifr.meta"
+                && import_from
+                    .names
+                    .iter()
+                    .any(|alias| alias.name.as_str() == "MethodSlots" && alias.asname.is_none())
+            {
+                ctx.canonical_method_slots_marker_imported = true;
+            }
+            if module_name == "sifr.meta"
+                && import_from
+                    .names
+                    .iter()
+                    .any(|alias| alias.name.as_str() == "Context" && alias.asname.is_none())
+            {
+                ctx.canonical_context_marker_imported = true;
             }
             let local_name_for = |original: &str| -> String {
                 aliases

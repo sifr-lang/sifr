@@ -39,8 +39,16 @@ pub struct RustBridgeSignatureContract {
     pub return_type: RustBridgeTypeContract,
     pub structural_type_params: Vec<String>,
     pub static_program_type_params: Vec<String>,
+    pub method_slot_contract: Option<RustBridgeMethodSlotContract>,
     pub panic_error: RustBridgePanicErrorContract,
     pub span: ruff_text_size::TextRange,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RustBridgeMethodSlotContract {
+    pub owner_type_param: String,
+    pub context_type_param: String,
+    pub context_mutable: bool,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -257,6 +265,7 @@ fn signature_contract(
         return_type,
         structural_type_params: function.structural_type_params.clone(),
         static_program_type_params: function.static_program_type_params.clone(),
+        method_slot_contract: function.method_slot_contract.clone(),
         panic_error,
         span: declaration.declaration.span,
     })
@@ -270,6 +279,41 @@ struct ModuleFunction {
     consumes_receiver: bool,
     structural_type_params: Vec<String>,
     static_program_type_params: Vec<String>,
+    method_slot_contract: Option<RustBridgeMethodSlotContract>,
+}
+
+fn method_slot_contract(
+    module: &HirModule,
+    function: &sifr_ir::HirFunction,
+) -> Option<RustBridgeMethodSlotContract> {
+    let bounds = module.type_param_bounds.get(&function.name)?;
+    let owner_type_param = function
+        .type_params
+        .iter()
+        .find(|type_param| {
+            bounds
+                .get(*type_param)
+                .is_some_and(|bounds| bounds.as_slice() == ["MethodSlots"])
+        })?
+        .clone();
+    let context_type_param = function
+        .type_params
+        .iter()
+        .find(|type_param| {
+            bounds
+                .get(*type_param)
+                .is_some_and(|bounds| bounds.as_slice() == ["Context"])
+        })?
+        .clone();
+    let context_mutable = function.params.iter().find_map(|param| {
+        matches!(param.ty.resolve_alias(), Type::TypeVar(name) if name == &context_type_param)
+            .then_some(param.convention.is_mut_borrow())
+    })?;
+    Some(RustBridgeMethodSlotContract {
+        owner_type_param,
+        context_type_param,
+        context_mutable,
+    })
 }
 
 pub(crate) struct ModuleCatalog {
@@ -305,7 +349,11 @@ impl ModuleCatalog {
                             .is_some_and(|bounds| {
                                 matches!(
                                     bounds.as_slice(),
-                                    [bound] if bound == "Structural" || bound == "StaticProgram"
+                                    [bound]
+                                        if matches!(
+                                            bound.as_str(),
+                                            "Structural" | "StaticProgram" | "MethodSlots" | "Context"
+                                        )
                                 )
                             })
                     })
@@ -330,10 +378,13 @@ impl ModuleCatalog {
                                 .type_param_bounds
                                 .get(&function.name)
                                 .and_then(|bounds| bounds.get(*type_param))
-                                .is_some_and(|bounds| bounds.as_slice() == ["StaticProgram"])
+                            .is_some_and(|bounds| {
+                                matches!(bounds.as_slice(), [bound] if bound == "StaticProgram" || bound == "MethodSlots")
+                            })
                         })
                         .cloned()
                         .collect(),
+                    method_slot_contract: method_slot_contract(module, function),
                 },
             );
         }
@@ -372,6 +423,7 @@ impl ModuleCatalog {
                             .is_some_and(|declaration| declaration.consumes_receiver),
                         structural_type_params: Vec::new(),
                         static_program_type_params: Vec::new(),
+                        method_slot_contract: None,
                     },
                 );
             }

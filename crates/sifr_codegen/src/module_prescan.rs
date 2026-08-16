@@ -14,7 +14,33 @@ impl RustEmitter {
             .filter_map(|(owner, bounds)| {
                 let params = bounds
                     .iter()
-                    .filter(|(_, values)| values.as_slice() == ["StaticProgram"])
+                    .filter(|(_, values)| {
+                        matches!(values.as_slice(), [bound] if bound == "StaticProgram" || bound == "MethodSlots")
+                    })
+                    .map(|(name, _)| name.clone())
+                    .collect::<HashSet<_>>();
+                (!params.is_empty()).then(|| (owner.clone(), params))
+            })
+            .collect();
+        self.method_slot_type_params = module
+            .type_param_bounds
+            .iter()
+            .filter_map(|(owner, bounds)| {
+                let params = bounds
+                    .iter()
+                    .filter(|(_, values)| values.as_slice() == ["MethodSlots"])
+                    .map(|(name, _)| name.clone())
+                    .collect::<HashSet<_>>();
+                (!params.is_empty()).then(|| (owner.clone(), params))
+            })
+            .collect();
+        self.context_type_params = module
+            .type_param_bounds
+            .iter()
+            .filter_map(|(owner, bounds)| {
+                let params = bounds
+                    .iter()
+                    .filter(|(_, values)| values.as_slice() == ["Context"])
                     .map(|(name, _)| name.clone())
                     .collect::<HashSet<_>>();
                 (!params.is_empty()).then(|| (owner.clone(), params))

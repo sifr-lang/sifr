@@ -93,6 +93,72 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         ["target", "reason"]
     ),
     active_entry!(
+        "SIFR-RUST-SLOT-0001",
+        "RUST-SLOT",
+        "The reserved method-slot list is malformed.",
+        Severity::Error,
+        "crates/sifr_frontend/src/specialization_runner.rs::invalid_reserved_slot_list_uses_slot_diagnostic",
+        "invalid reserved method-slot list: {reason}",
+        "sifr_frontend::specialization_runner",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
+        "SIFR-RUST-SLOT-0002",
+        "RUST-SLOT",
+        "A selected method-slot target is unavailable or unsupported.",
+        Severity::Error,
+        "crates/sifr_frontend/src/slot_table_tests.rs::unavailable_slot_target_uses_method_diagnostic",
+        "invalid method-slot target: {reason}",
+        "sifr_frontend::specialization_runner",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
+        "SIFR-RUST-SLOT-0003",
+        "RUST-SLOT",
+        "A selected method has an invalid method-slot signature.",
+        Severity::Error,
+        "crates/sifr_frontend/src/slot_table_tests.rs::non_result_slot_uses_signature_diagnostic",
+        "invalid method-slot signature: {reason}",
+        "sifr_frontend::specialization_runner",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
+        "SIFR-RUST-SLOT-0004",
+        "RUST-SLOT",
+        "A method-slot bridge bound is incomplete or misplaced.",
+        Severity::Error,
+        "crates/sifr_lowering/src/lower/rust_interop_structural_tests.rs::structural_method_slots_require_one_context",
+        "invalid method-slot bridge bound: {reason}",
+        "sifr_lowering::rust_interop_structural",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
+        "SIFR-RUST-SLOT-0005",
+        "RUST-SLOT",
+        "A method-slot context type or borrow mode is invalid.",
+        Severity::Error,
+        "crates/sifr_frontend/src/slot_table_tests.rs::conflicting_context_borrow_modes_use_context_diagnostic",
+        "invalid method-slot context: {reason}",
+        "sifr_frontend::specialization_runner",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
+        "SIFR-RUST-SLOT-0006",
+        "RUST-SLOT",
+        "A method-slot handler is used outside its affine call scope.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/package_rust_interop_method_slots.rs::test_method_slot_lifetime_thread_and_shared_context_rejections",
+        "invalid method-slot handler contract: {reason}",
+        "sifr_driver::build::rust_interop",
+        [arg!("reason")],
+        ["reason"]
+    ),
+    active_entry!(
         "SIFR-RUST-PANIC-0001",
         "RUST-PANIC",
         "Rust panic boundary contract is invalid.",

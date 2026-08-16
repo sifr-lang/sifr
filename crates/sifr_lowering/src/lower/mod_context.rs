@@ -46,6 +46,12 @@ pub(in crate::lower) struct LowerCtx {
     /// Whether the exact compiler-owned `sifr.meta.StaticProgram` spelling was imported.
     pub(in crate::lower) canonical_static_program_marker_imported: bool,
     pub(in crate::lower) local_static_program_marker_declared: bool,
+    /// Whether the exact compiler-owned `sifr.meta.MethodSlots` spelling was imported.
+    pub(in crate::lower) canonical_method_slots_marker_imported: bool,
+    pub(in crate::lower) local_method_slots_marker_declared: bool,
+    /// Whether the exact compiler-owned `sifr.meta.Context` spelling was imported.
+    pub(in crate::lower) canonical_context_marker_imported: bool,
+    pub(in crate::lower) local_context_marker_declared: bool,
     /// Class type definitions (name -> `Type::Class`)
     pub(in crate::lower) class_types: HashMap<String, Type>,
     /// Instance methods, keyed as `Class.method`, including imported metadata.
@@ -215,6 +221,10 @@ impl LowerCtx {
             local_structural_marker_declared: false,
             canonical_static_program_marker_imported: false,
             local_static_program_marker_declared: false,
+            canonical_method_slots_marker_imported: false,
+            local_method_slots_marker_declared: false,
+            canonical_context_marker_imported: false,
+            local_context_marker_declared: false,
             class_types: HashMap::new(),
             class_instance_methods: HashSet::new(),
             class_method_origins: HashMap::new(),

@@ -1,8 +1,8 @@
 //! Typed compiler records for package-neutral compile-time specialization.
 
-use crate::HirExpr;
+use crate::{HirExpr, MethodKind};
 use ruff_text_size::TextRange;
-use sifr_type_system::Type;
+use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
 use std::collections::HashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -138,6 +138,47 @@ pub struct StaticSpecializationOutput {
     /// Complete deterministic identity for cache keys and emitted envelopes.
     pub program_identity: [u8; 32],
     pub structural_contract_version: u32,
+    /// Package-selected, compiler-resolved methods in static invocation order.
+    pub method_slots: Vec<StaticMethodSlot>,
+    /// The one context contract derived from the selected methods. This is
+    /// present exactly when `method_slots` is nonempty.
+    pub method_slot_context: Option<StaticMethodSlotContext>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StaticMethodSlotContext {
+    None,
+    Shared(Type),
+    Mutable(Type),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StaticMethodSlot {
+    /// Exact module-qualified nominal owner identity.
+    pub owner_identity: String,
+    /// Concrete owner type used by generated monomorphic glue.
+    pub owner_type: Type,
+    /// Source spelling retained in the static program slot reference.
+    pub name: String,
+    /// HIR/Rust spelling (`new` for a source `__init__`).
+    pub hir_name: String,
+    pub method_kind: MethodKind,
+    pub receiver: Option<ReceiverConvention>,
+    pub params: Vec<StaticMethodParam>,
+    pub return_type: Type,
+    pub is_async: bool,
+    pub input_type: Type,
+    pub output_type: Type,
+    pub context_type: Option<Type>,
+    pub context_mutable: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StaticMethodParam {
+    pub name: String,
+    pub ty: Type,
+    pub keyword_only: bool,
+    pub convention: ParamConvention,
 }
 
 #[derive(Debug, Clone)]

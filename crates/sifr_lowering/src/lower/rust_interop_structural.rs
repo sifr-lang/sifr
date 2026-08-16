@@ -51,20 +51,54 @@ pub(in crate::lower) fn validate_structural_function_contract(
         );
         return;
     }
+    let bounds = ctx.type_param_bounds.get(function_name);
+    let method_slot_count = type_params
+        .iter()
+        .filter(|type_param| {
+            bounds
+                .and_then(|bounds| bounds.get(*type_param))
+                .is_some_and(|bounds| bounds.as_slice() == ["MethodSlots"])
+        })
+        .count();
+    let context_count = type_params
+        .iter()
+        .filter(|type_param| {
+            bounds
+                .and_then(|bounds| bounds.get(*type_param))
+                .is_some_and(|bounds| bounds.as_slice() == ["Context"])
+        })
+        .count();
+    if method_slot_count > 0 || context_count > 0 {
+        if method_slot_count != 1 || context_count != 1 {
+            slot_contract_error(
+                ctx,
+                DiagnosticCode::RUST_SLOT_BOUND,
+                "a method-slot bridge requires exactly one `MethodSlots` type parameter and one `Context` type parameter",
+                span,
+            );
+        }
+    }
     for type_param in type_params {
         let exact_bound = ctx
             .type_param_bounds
             .get(function_name)
             .and_then(|bounds| bounds.get(type_param))
             .and_then(|bounds| match bounds.as_slice() {
-                [bound] if bound == "Structural" || bound == "StaticProgram" => Some(bound.clone()),
+                [bound]
+                    if matches!(
+                        bound.as_str(),
+                        "Structural" | "StaticProgram" | "MethodSlots" | "Context"
+                    ) =>
+                {
+                    Some(bound.clone())
+                }
                 _ => None,
             });
         if exact_bound.is_none() {
             structural_type_error(
                 ctx,
                 format!(
-                    "type parameter `{type_param}` must have the exact `Structural` or `StaticProgram` bound"
+                    "type parameter `{type_param}` must have the exact `Structural`, `StaticProgram`, `MethodSlots`, or `Context` bound"
                 ),
                 span,
             );
@@ -86,7 +120,28 @@ pub(in crate::lower) fn validate_structural_function_contract(
                 ctx.local_static_program_marker_declared,
                 span,
             ),
+            Some("MethodSlots") => validate_marker(
+                ctx,
+                "MethodSlots",
+                "sifr.meta.MethodSlots",
+                ctx.canonical_method_slots_marker_imported,
+                ctx.local_method_slots_marker_declared,
+                span,
+            ),
+            Some("Context") => validate_marker(
+                ctx,
+                "Context",
+                "sifr.meta.Context",
+                ctx.canonical_context_marker_imported,
+                ctx.local_context_marker_declared,
+                span,
+            ),
             _ => {}
+        }
+
+        if exact_bound.as_deref() == Some("Context") {
+            validate_context_type_parameter(type_param, params, return_type, span, ctx);
+            continue;
         }
 
         let mut used = false;
@@ -144,6 +199,61 @@ pub(in crate::lower) fn validate_structural_function_contract(
                 span,
             );
         }
+    }
+}
+
+fn validate_context_type_parameter(
+    type_param: &str,
+    params: &[HirParam],
+    return_type: &Type,
+    span: TextRange,
+    ctx: &mut LowerCtx,
+) {
+    let mut direct_parameters = 0_usize;
+    for param in params {
+        match structural_type_position(&param.ty, type_param) {
+            StructuralTypePosition::Absent => {}
+            StructuralTypePosition::Direct => {
+                direct_parameters += 1;
+                if !param.convention.is_borrowed() {
+                    slot_contract_error(
+                        ctx,
+                        DiagnosticCode::RUST_SLOT_CONTEXT,
+                        format!(
+                            "context parameter `{}` must be an immutable or mutable borrow",
+                            param.name
+                        ),
+                        span,
+                    );
+                }
+            }
+            _ => slot_contract_error(
+                ctx,
+                DiagnosticCode::RUST_SLOT_CONTEXT,
+                format!(
+                    "context type parameter `{type_param}` occurs outside a direct borrowed parameter"
+                ),
+                span,
+            ),
+        }
+    }
+    if structural_type_position(return_type, type_param) != StructuralTypePosition::Absent {
+        slot_contract_error(
+            ctx,
+            DiagnosticCode::RUST_SLOT_CONTEXT,
+            "a context type cannot be returned",
+            span,
+        );
+    }
+    if direct_parameters != 1 {
+        slot_contract_error(
+            ctx,
+            DiagnosticCode::RUST_SLOT_CONTEXT,
+            format!(
+                "context type parameter `{type_param}` must occur in exactly one direct borrowed parameter"
+            ),
+            span,
+        );
     }
 }
 
@@ -368,4 +478,14 @@ fn structural_type_error(ctx: &mut LowerCtx, message: impl Into<String>, span: T
         ),
         span,
     );
+}
+
+fn slot_contract_error(
+    ctx: &mut LowerCtx,
+    code: DiagnosticCode,
+    message: impl Into<String>,
+    span: TextRange,
+) {
+    let reason = message.into();
+    ctx.error_with_code_at(code, reason, span);
 }

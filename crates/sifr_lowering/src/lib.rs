@@ -34,5 +34,6 @@ pub use scope::{NarrowingSnapshot, Scope};
 pub use sifr_ir::{
     rust_opaque_close_method, DeclarationMetadataTargetKind, HirDiagnostic, LoweringOutcome,
     LoweringResult, LoweringWarningDiagnostic, RevealTypeDiagnostic, RustInteropDecoratorKind,
-    StaticProgramValue, StaticSpecializationOutput, TypedDeclarationMetadata,
+    StaticMethodParam, StaticMethodSlot, StaticMethodSlotContext, StaticProgramValue,
+    StaticSpecializationOutput, TypedDeclarationMetadata,
 };

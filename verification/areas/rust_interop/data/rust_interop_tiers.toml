@@ -31,6 +31,7 @@ fixtures = [
   "close_after_use",
   "structural_bridge_calls",
   "static_program_arena_bridge",
+  "method_slot_table",
   "panic_boundary",
   "panic_boundary_wrapper_emission",
   "panic_abort_profile",

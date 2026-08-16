@@ -1,3 +1,4 @@
+use crate::specialization_support::{malformed, method_slot_diagnostic, static_program_value};
 use crate::{
     decode_const_specialization_outcome, describe_type_with_externals,
     verify_json_integer_boundary, ConstEvalError, ConstIssueTemplate, DeterministicConstEvaluator,
@@ -7,10 +8,10 @@ use ruff_text_size::TextRange;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_lowering::{
     ExternalDefs, HirDiagnostic, HirModule, LoweringResult, LoweringWarningDiagnostic,
-    StaticProgramValue, StaticSpecializationOutput,
+    StaticSpecializationOutput,
 };
 use sifr_type_system::Type;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap};
 
 pub(crate) fn run_specializations(
     module_name: &str,
@@ -55,8 +56,9 @@ pub(crate) fn run_specializations(
             ));
             continue;
         }
-        let shape = describe_type_with_externals(module_name, &target_type, result, external_defs)
-            .to_const_value();
+        let described_shape =
+            describe_type_with_externals(module_name, &target_type, result, external_defs);
+        let shape = described_shape.to_const_value();
         let canonical_shape = crate::structural_shape::canonical_value(&shape);
         let Some(functions) = external_defs.const_functions.get(&request.package_module) else {
             errors.push(malformed(
@@ -117,6 +119,21 @@ pub(crate) fn run_specializations(
             Err(diagnostics) => errors.extend(diagnostics),
             Ok(validated) => {
                 if let Some(value) = &validated.value {
+                    let (method_slots, method_slot_context) =
+                        match crate::slot_table::resolve_method_slots(
+                            value,
+                            &described_shape,
+                            &target_type,
+                            module_name,
+                            result,
+                            external_defs,
+                        ) {
+                            Ok(slots) => slots,
+                            Err(problem) => {
+                                errors.push(method_slot_diagnostic(problem, request.range));
+                                continue;
+                            }
+                        };
                     let canonical_value = crate::structural_shape::canonical_value(value);
                     let static_value = static_program_value(value);
                     let structural_contract_version = sifr_structural_identity::ALGORITHM_VERSION;
@@ -141,6 +158,8 @@ pub(crate) fn run_specializations(
                             value: static_value,
                             program_identity: *program_identity.as_bytes(),
                             structural_contract_version,
+                            method_slots,
+                            method_slot_context,
                         });
                 }
                 for diagnostic in validated.diagnostics {
@@ -171,29 +190,6 @@ pub(crate) fn run_specializations(
         Ok(())
     } else {
         Err(errors)
-    }
-}
-
-fn static_program_value(value: &crate::ConstValue) -> StaticProgramValue {
-    match value {
-        crate::ConstValue::None => StaticProgramValue::None,
-        crate::ConstValue::Bool(value) => StaticProgramValue::Bool(*value),
-        crate::ConstValue::Integer(value) => StaticProgramValue::Integer(value.to_string()),
-        crate::ConstValue::FloatBits(value) => StaticProgramValue::FloatBits(*value),
-        crate::ConstValue::String(value) => StaticProgramValue::String(value.clone()),
-        crate::ConstValue::Bytes(value) => StaticProgramValue::Bytes(value.clone()),
-        crate::ConstValue::Tuple(values) => {
-            StaticProgramValue::Tuple(values.iter().map(static_program_value).collect())
-        }
-        crate::ConstValue::List(values) => {
-            StaticProgramValue::List(values.iter().map(static_program_value).collect())
-        }
-        crate::ConstValue::Record(values) => StaticProgramValue::Record(
-            values
-                .iter()
-                .map(|(name, value)| (name.clone(), static_program_value(value)))
-                .collect(),
-        ),
     }
 }
 
@@ -344,39 +340,6 @@ fn evaluation_error(package: &str, error: &ConstEvalError, range: TextRange) -> 
     )
 }
 
-fn malformed(
-    package: &str,
-    reason_code: &str,
-    problem: impl Into<String>,
-    range: TextRange,
-) -> HirDiagnostic {
-    let problem = problem.into();
-    HirDiagnostic {
-        code: Some(DiagnosticCode::META_MALFORMED_DECLARATION),
-        message: format!(
-            "package {package} declared malformed specialization issue {reason_code}: {problem}"
-        ),
-        args: BTreeMap::from([
-            (
-                "package".to_string(),
-                DiagnosticArg::String(package.to_string()),
-            ),
-            (
-                "reason_code".to_string(),
-                DiagnosticArg::String(reason_code.to_string()),
-            ),
-            (
-                "declaration_problem".to_string(),
-                DiagnosticArg::String(problem),
-            ),
-        ]),
-        help: None,
-        primary_range: Some(range),
-        line: None,
-        col: None,
-    }
-}
-
 fn diagnostic_arg(diagnostic: &HirDiagnostic, name: &str) -> String {
     match diagnostic.args.get(name) {
         Some(DiagnosticArg::String(value)) => value.clone(),
@@ -405,6 +368,7 @@ mod tests {
         collect_module_exports, compile_module_hir, warning_diagnostics, FrontendDiagnosticStyle,
         FrontendSourceContext,
     };
+    use sifr_lowering::StaticMethodSlotContext;
     use sifr_syntax::parse_module_suite;
 
     fn compile(
@@ -639,6 +603,91 @@ class Container:
 
         let string = compile_consumer("str");
         assert_ne!(integer.program_identity, string.program_identity);
+    }
+
+    #[test]
+    fn qualified_reserved_slot_list_resolves_checked_method_contract() {
+        let mut external_defs = ExternalDefs::default();
+        let package = compile(
+            "fixture.slots",
+            r#"
+class Outcome:
+    status: str
+    value: dict[str, list[str]] | None
+    issues: list[str]
+
+@const_eval
+def describe(shape: dict[str, str]) -> Outcome:
+    return Outcome("produced", {"sifr.meta.slots": ["target.Record::normalize"]}, [])
+"#,
+            &external_defs,
+        )
+        .expect("slot package compiles");
+        collect_module_exports("fixture.slots", &package, &mut external_defs);
+
+        let target = compile(
+            "target",
+            r#"
+from fixture.slots import describe
+
+@const_specialize("fixture.slots", "describe")
+class Record:
+    value: str
+
+    @staticmethod
+    @metadata("fixture.slot", "normalize")
+    def normalize(own value: str) -> Result[str, ValueError]:
+        return value
+"#,
+            &external_defs,
+        )
+        .expect("qualified method slot specializes");
+        let output = &target.specialization_outputs[0];
+        assert_eq!(output.method_slots.len(), 1);
+        assert_eq!(output.method_slots[0].owner_identity, "target.Record");
+        assert_eq!(output.method_slots[0].name, "normalize");
+        assert_eq!(output.method_slots[0].input_type, Type::Str);
+        assert_eq!(output.method_slots[0].output_type, Type::Str);
+        assert_eq!(
+            output.method_slot_context,
+            Some(StaticMethodSlotContext::None)
+        );
+    }
+
+    #[test]
+    fn invalid_reserved_slot_list_uses_slot_diagnostic() {
+        let mut external_defs = ExternalDefs::default();
+        let package = compile(
+            "fixture.invalid_slots",
+            r#"
+class Outcome:
+    status: str
+    value: dict[str, list[str]] | None
+    issues: list[str]
+
+@const_eval
+def describe(shape: dict[str, str]) -> Outcome:
+    slots: list[str] = []
+    return Outcome("produced", {"sifr.meta.slots": slots}, [])
+"#,
+            &external_defs,
+        )
+        .expect("invalid-slot package declaration compiles");
+        collect_module_exports("fixture.invalid_slots", &package, &mut external_defs);
+        let diagnostics = errors(compile(
+            "target",
+            r#"
+from fixture.invalid_slots import describe
+
+@const_specialize("fixture.invalid_slots", "describe")
+class Record:
+    value: str
+"#,
+            &external_defs,
+        ));
+        assert!(diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "SIFR-RUST-SLOT-0001"));
     }
 
     #[test]

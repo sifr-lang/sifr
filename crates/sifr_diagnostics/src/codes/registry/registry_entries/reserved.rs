@@ -33,6 +33,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-RUST-ASYNC-0000", "RUST-ASYNC"),
     reserved_family_base("SIFR-RUST-ZC-0000", "RUST-ZC"),
     reserved_family_base("SIFR-RUST-CB-0000", "RUST-CB"),
+    reserved_family_base("SIFR-RUST-SLOT-0000", "RUST-SLOT"),
     reserved_family_base("SIFR-RUST-PANIC-0000", "RUST-PANIC"),
     reserved_family_base("SIFR-RUST-CARGO-0000", "RUST-CARGO"),
     reserved_family_base("SIFR-DECIMAL-0000", "DECIMAL"),

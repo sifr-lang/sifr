@@ -12,7 +12,7 @@ use super::{
     hir_function_returns_sifr_int_with_extra_forced_and_shadowed, is_result_int_type,
     nested_function_mutates_capture, result_int_return_type_to_sifr_int, result_method_key,
     HashMap, HashSet, HirFunction, HirModule, HirParam, HirStmt, NestedFnCapture, OwnershipKind,
-    ParamConvention, RustEmitter, RustExpr, RustParam, RustStmt, RustType, RustTypeParam, Type,
+    ParamConvention, RustEmitter, RustExpr, RustParam, RustStmt, RustType, Type,
 };
 impl RustEmitter {
     pub(crate) fn effective_nested_param_convention(
@@ -703,63 +703,6 @@ impl RustEmitter {
             ),
             _ => false,
         }
-    }
-
-    pub(crate) fn lower_function_type_params(&self, func: &HirFunction) -> Vec<RustTypeParam> {
-        if func.type_params.is_empty() {
-            return Vec::new();
-        }
-        let needs_hash_eq = Self::func_needs_hash_eq(func);
-        func.type_params
-            .iter()
-            .map(|tp| {
-                let extra = Self::extra_bounds_for_type_param(tp, &func.body);
-                let structural = func.rust_interop.iter().any(|declaration| {
-                    declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
-                });
-                let static_program = self
-                    .static_program_type_params
-                    .get(&func.name)
-                    .is_some_and(|params| params.contains(tp));
-                let base = if structural && static_program {
-                    "sifr_runtime::interop::structural::StructuralConstruct + sifr_runtime::interop::structural::StructuralProject + sifr_runtime::interop::structural::StaticProgramType"
-                } else if structural {
-                    "sifr_runtime::interop::structural::StructuralConstruct + sifr_runtime::interop::structural::StructuralProject"
-                } else if Self::is_nullcontext_value_forwarder(func) {
-                    "Clone + 'static"
-                } else if needs_hash_eq {
-                    "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq + 'static"
-                } else {
-                    "Clone + std::fmt::Display + PartialOrd + 'static"
-                };
-                RustTypeParam {
-                    name: tp.clone(),
-                    bounds: vec![format!("{base}{extra}")],
-                }
-            })
-            .collect()
-    }
-
-    fn is_nullcontext_value_forwarder(func: &HirFunction) -> bool {
-        if func.name != "nullcontext" || func.type_params.is_empty() {
-            return false;
-        }
-        if !matches!(&func.return_type, Type::Class { name, .. } if name == "NullContext") {
-            return false;
-        }
-        let [HirStmt::Return {
-            value:
-                Some(crate::HirExpr::ConstructorCall {
-                    class_name, args, ..
-                }),
-        }] = func.body.as_slice()
-        else {
-            return false;
-        };
-        class_name == "NullContext"
-            && args
-                .iter()
-                .all(|arg| matches!(arg, crate::HirExpr::Name { name, .. } if func.params.iter().any(|param| param.name == *name)))
     }
 
     pub(crate) fn lower_function_param_type(
