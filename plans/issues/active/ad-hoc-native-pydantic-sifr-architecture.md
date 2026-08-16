@@ -926,6 +926,23 @@ Milestone delivery records:
   remain in issues #14 and #15. No placeholder serializer or generic-tree
   fallback was added.
 - `milestone_ps_8` is now active in the companion repository.
+- The first PS9 adapter item merged in companion
+  [PR #19](https://github.com/sifr-lang/pydantic-sifr/pull/19) at merge commit
+  `693fbfa11dd1e52647092c204369521d32a33c82`. The exact reviewed and gated
+  candidate was `62fd16f08d64362f1845184da1518b2ac27eac97`.
+- `TypeAdapter[T]` now prepares one Core Schema and one serialization plan,
+  rejects a target shape mismatch at construction, and reuses that state for
+  native, JSON, strings-profile, structural-output, and streaming-JSON calls.
+  Its integer JSON profile is selected statically. No call-time default,
+  fallback, compatibility layer, or legacy adapter path was added.
+- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+  response SHA-256 is
+  `4fa9315c5ea23996dca5e2ecaf5d07114d3421b8c50fae87dcdf4ab78d39ee9f`.
+- Focused adapter tests passed 3/3; the full workspace suite, strict Clippy,
+  formatting, and file-size guard passed. The exact-pin companion create-PR
+  and single merge gates passed all package, release, provenance, demo, fuzz,
+  benchmark-smoke, and merge-only checks.
+- `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
   predicates for fixed-width platform integers, metadata, and imported classes;
@@ -3169,8 +3186,8 @@ JSON; every `serializers/*` fixture family named in the baseline and
 
 ### milestone_ps_9: TypeAdapter and JSON Schema
 
-- Implement reusable `TypeAdapter[T]`.
-- Implement native, JSON, and strings-profile validation plus serialization
+- [x] Implement reusable `TypeAdapter[T]`.
+- [x] Implement native, JSON, and strings-profile validation plus serialization
   modes.
 - Generate JSON Schema from the same Core Schema.
 - Reflect the selected Sifr integer JSON profile and static range in every
