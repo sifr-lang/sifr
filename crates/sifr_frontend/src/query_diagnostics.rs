@@ -9,6 +9,7 @@ use crate::export_type_localization::{
     copy_class_generic_metadata, copy_function_generic_metadata, declared_generic_metadata,
     exported_parent_chain, imported_class_ancestry, reexport_class_aliases,
 };
+use crate::module_export_storage::replace_module_entry;
 use crate::module_signatures::ModuleSignature;
 use crate::{diagnostic_with_code, diagnostic_with_source_range_args_help};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
@@ -472,17 +473,18 @@ pub fn collect_module_exports(
             .rust_opaque_classes
             .insert(module_name.to_string(), rust_opaque_exports);
     }
-    if !class_field_default_exports.is_empty() {
-        external_defs
-            .class_field_defaults
-            .insert(module_name.to_string(), class_field_default_exports);
-    }
-    if !lowering_result.declaration_metadata.is_empty() {
-        external_defs.declaration_metadata.insert(
-            module_name.to_string(),
-            lowering_result.declaration_metadata.clone(),
-        );
-    }
+    replace_module_entry(
+        &mut external_defs.class_field_defaults,
+        module_name,
+        class_field_default_exports,
+        HashMap::is_empty,
+    );
+    replace_module_entry(
+        &mut external_defs.declaration_metadata,
+        module_name,
+        lowering_result.declaration_metadata.clone(),
+        Vec::is_empty,
+    );
     if !lowering_result.specialization_requests.is_empty() {
         external_defs.specialization_requests.insert(
             module_name.to_string(),
@@ -502,11 +504,12 @@ pub fn collect_module_exports(
         );
     }
     class_method_exports.store(external_defs, module_name);
-    if !class_type_param_exports.is_empty() {
-        external_defs
-            .class_type_params
-            .insert(module_name.to_string(), class_type_param_exports);
-    }
+    replace_module_entry(
+        &mut external_defs.class_type_params,
+        module_name,
+        class_type_param_exports,
+        HashMap::is_empty,
+    );
     if !generic_exports.is_empty() {
         external_defs
             .generic_functions

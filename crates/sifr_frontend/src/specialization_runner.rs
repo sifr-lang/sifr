@@ -421,6 +421,17 @@ mod tests {
         )
     }
 
+    fn field_type<'a>(result: &'a LoweringResult, class_name: &str, field: &str) -> &'a Type {
+        result
+            .module
+            .classes
+            .iter()
+            .find(|class| class.name == class_name)
+            .and_then(|class| class.fields.iter().find(|(name, _)| name == field))
+            .map(|(_, ty)| ty)
+            .expect("fixture field exists")
+    }
+
     fn errors(
         result: Result<LoweringResult, Vec<sifr_diagnostics::RenderedDiagnostic>>,
     ) -> Vec<sifr_diagnostics::RenderedDiagnostic> {
@@ -632,17 +643,6 @@ class Container:
 
     #[test]
     fn reexported_nominal_shapes_match_local_shapes_without_consumer_fallbacks() {
-        fn field_type<'a>(result: &'a LoweringResult, class_name: &str, field: &str) -> &'a Type {
-            result
-                .module
-                .classes
-                .iter()
-                .find(|class| class.name == class_name)
-                .and_then(|class| class.fields.iter().find(|(name, _)| name == field))
-                .map(|(_, ty)| ty)
-                .expect("fixture field exists")
-        }
-
         let mut external_defs = ExternalDefs::default();
         let models = compile(
             "models",
@@ -689,12 +689,17 @@ class LocalUse:
             &external_defs,
         )
         .expect("models compile");
-        let local_box =
-            crate::describe_type("models", field_type(&models, "LocalUse", "item"), &models);
-        let local_color =
-            crate::describe_type("models", field_type(&models, "LocalUse", "color"), &models);
-        let local_port =
-            crate::describe_type("models", field_type(&models, "LocalUse", "port"), &models);
+        let describe_local = |field| {
+            crate::describe_type_with_externals(
+                "models",
+                field_type(&models, "LocalUse", field),
+                &models,
+                &external_defs,
+            )
+        };
+        let local_box = describe_local("item");
+        let local_color = describe_local("color");
+        let local_port = describe_local("port");
         collect_module_exports("models", &models, &mut external_defs);
 
         let facade = compile(
@@ -760,67 +765,6 @@ class ImportedUse:
         assert!(imported_color.canonical_identity.contains("fixture.label"));
         assert!(imported_port.canonical_identity.contains("models.Port"));
         assert!(imported_port.canonical_identity.contains("fixture.kind"));
-    }
-
-    #[test]
-    fn public_import_preserves_private_generic_nested_shape() {
-        let mut external_defs = ExternalDefs::default();
-        let models = compile(
-            "models",
-            r#"
-class _Hidden[T]:
-    value: T = 0
-
-    @metadata("fixture.callback", "read")
-    def read(self) -> T:
-        return self.value
-
-class Box:
-    hidden: _Hidden[int]
-
-class LocalUse:
-    item: Box
-"#,
-            &external_defs,
-        )
-        .expect("models compile");
-        let local_use = models
-            .module
-            .classes
-            .iter()
-            .find(|class| class.name == "LocalUse")
-            .expect("local use exists");
-        let local_shape = crate::describe_type("models", &local_use.fields[0].1, &models);
-        collect_module_exports("models", &models, &mut external_defs);
-        assert!(!external_defs.classes["models"].contains_key("_Hidden"));
-        assert!(external_defs
-            .structural_methods_for("models")
-            .is_some_and(|classes| classes.contains_key("_Hidden")));
-
-        let consumer = compile(
-            "consumer",
-            "from models import Box\n\nclass Container:\n    item: Box\n",
-            &external_defs,
-        )
-        .expect("consumer compiles");
-        let container = consumer
-            .module
-            .classes
-            .iter()
-            .find(|class| class.name == "Container")
-            .expect("container exists");
-        let shape = crate::describe_type_with_externals(
-            "consumer",
-            &container.fields[0].1,
-            &consumer,
-            &external_defs,
-        );
-        assert_eq!(local_shape.canonical_identity, shape.canonical_identity);
-        assert!(shape.canonical_identity.contains("models._Hidden"));
-        assert!(shape.canonical_identity.contains("value:int:default=int:0"));
-        assert!(shape.canonical_identity.contains("read:regular"));
-        assert!(shape.canonical_identity.contains("result[int]"));
-        assert!(shape.canonical_identity.contains("fixture.callback"));
     }
 
     #[test]

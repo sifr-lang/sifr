@@ -3,6 +3,10 @@ use sifr_lowering::lower_module;
 use sifr_syntax::parse_module_suite;
 use sifr_type_system::FunctionType;
 
+fn describe_type(module_name: &str, ty: &Type, lowering: &LoweringResult) -> StructuralShape {
+    describe_type_with_externals(module_name, ty, lowering, &ExternalDefs::default())
+}
+
 fn class_type(class: &sifr_lowering::HirClass, type_args: Vec<Type>) -> Type {
     Type::Class {
         identity: None,

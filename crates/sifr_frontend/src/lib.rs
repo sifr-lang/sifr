@@ -26,6 +26,7 @@ pub use frontend_reuse::{FrontendCacheEntryIdentity, FrontendReuseStats};
 mod graph_cache_and_queries;
 pub use graph_cache_and_queries::*;
 mod hir_views;
+mod module_export_storage;
 mod module_signatures;
 mod query_diagnostic_rendering;
 pub(crate) use query_diagnostic_rendering::{
@@ -40,6 +41,8 @@ mod query_diagnostics_behavior_tests;
 #[cfg(test)]
 mod query_diagnostics_equivalence_tests;
 mod source_provider;
+#[cfg(test)]
+mod structural_shape_import_tests;
 pub use source_provider::*;
 mod source_maps;
 pub use source_maps::*;

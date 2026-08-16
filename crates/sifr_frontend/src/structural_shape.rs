@@ -91,21 +91,6 @@ pub enum ShapeNode {
     Other(String),
 }
 
-/// Describe a concrete type as seen from one lowered module.
-///
-/// The output uses only declaration identity and ordered vectors. It therefore remains stable
-/// across hash-map seeds and process boundaries and can be used directly as an incremental query
-/// key or serialized static description.
-#[must_use]
-#[cfg(test)]
-pub(crate) fn describe_type(
-    module_name: &str,
-    ty: &Type,
-    lowering: &LoweringResult,
-) -> StructuralShape {
-    describe_type_inner(module_name, ty, lowering, None)
-}
-
 /// Describe a type with project export metadata available for imported nominals.
 #[must_use]
 pub fn describe_type_with_externals(

@@ -55,7 +55,7 @@ pub struct ExternalDefs {
     ///
     /// These are compiler-internal exports. They preserve declaration details that
     /// `Type::Class::methods` intentionally does not carry.
-    pub structural_methods: Option<Box<StructuralMethodModules>>,
+    structural_methods: Option<Box<StructuralMethodModules>>,
     /// Map of `module_name` -> (`class_name` -> declaration-order field defaults).
     ///
     /// Constructor defaults intentionally remain separate because an explicit constructor is
@@ -134,6 +134,11 @@ impl ExternalDefs {
     #[must_use]
     pub fn structural_methods_for(&self, module_name: &str) -> Option<&StructuralMethodExports> {
         self.structural_methods.as_deref()?.get(module_name)
+    }
+
+    #[must_use]
+    pub fn has_structural_methods(&self) -> bool {
+        self.structural_methods.is_some()
     }
 
     pub fn insert_error_type(&mut self, module_name: &str, class_name: &str) {
