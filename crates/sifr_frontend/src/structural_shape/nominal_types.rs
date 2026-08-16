@@ -11,11 +11,19 @@ pub(super) fn describe_enum(
     local_name: &str,
     variants: &[(String, Option<i64>)],
     lowering: &LoweringResult,
-    external_defs: Option<&ExternalDefs>,
+    external_defs: &ExternalDefs,
 ) -> ShapeNode {
-    let identity = qualified_identity(module_name, declared_identity.unwrap_or(local_name));
-    let (metadata, owner) =
-        declaration_metadata_for(module_name, &identity, local_name, lowering, external_defs);
+    let (source_module, source_name) =
+        identity_parts(module_name, declared_identity.unwrap_or(local_name));
+    let identity = format!("{source_module}.{source_name}");
+    let (metadata, owner) = declaration_metadata_for(
+        module_name,
+        source_module,
+        source_name,
+        local_name,
+        lowering,
+        external_defs,
+    );
     ShapeNode::Enum {
         identity,
         variants: variants
@@ -42,12 +50,20 @@ pub(super) fn describe_newtype(
     local_name: &str,
     inner: &Type,
     lowering: &LoweringResult,
-    external_defs: Option<&ExternalDefs>,
+    external_defs: &ExternalDefs,
     visiting: &mut BTreeSet<String>,
 ) -> ShapeNode {
-    let identity = qualified_identity(module_name, declared_identity.unwrap_or(local_name));
-    let (metadata, owner) =
-        declaration_metadata_for(module_name, &identity, local_name, lowering, external_defs);
+    let (source_module, source_name) =
+        identity_parts(module_name, declared_identity.unwrap_or(local_name));
+    let identity = format!("{source_module}.{source_name}");
+    let (metadata, owner) = declaration_metadata_for(
+        module_name,
+        source_module,
+        source_name,
+        local_name,
+        lowering,
+        external_defs,
+    );
     ShapeNode::Newtype {
         identity,
         inner: Box::new(describe_node(
@@ -61,22 +77,22 @@ pub(super) fn describe_newtype(
     }
 }
 
-pub(super) fn qualified_identity(module_name: &str, declared_identity: &str) -> String {
-    if declared_identity.contains('.') {
-        declared_identity.to_string()
-    } else {
-        format!("{module_name}.{declared_identity}")
-    }
+fn identity_parts<'a>(module_name: &'a str, declared_identity: &'a str) -> (&'a str, &'a str) {
+    declared_identity
+        .rsplit_once('.')
+        .unwrap_or((module_name, declared_identity))
 }
 
 fn declaration_metadata_for<'a>(
     module_name: &str,
-    identity: &str,
+    source_module: &str,
+    source_name: &str,
     local_name: &str,
     lowering: &'a LoweringResult,
-    external_defs: Option<&'a ExternalDefs>,
+    external_defs: &'a ExternalDefs,
 ) -> (&'a [TypedDeclarationMetadata], String) {
-    if identity == format!("{module_name}.{local_name}")
+    if source_module == module_name
+        && source_name == local_name
         && lowering
             .module
             .classes
@@ -85,11 +101,9 @@ fn declaration_metadata_for<'a>(
     {
         return (&lowering.declaration_metadata, local_name.to_string());
     }
-    let Some((source_module, source_name)) = identity.rsplit_once('.') else {
-        return (&[], local_name.to_string());
-    };
     let metadata = external_defs
-        .and_then(|defs| defs.declaration_metadata.get(source_module))
+        .declaration_metadata
+        .get(source_module)
         .map_or(&[][..], Vec::as_slice);
     (metadata, source_name.to_string())
 }

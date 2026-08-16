@@ -34,7 +34,7 @@ pub(super) fn described_methods(
     class: &HirClass,
     type_args: &[Type],
     lowering: &LoweringResult,
-    external_defs: Option<&sifr_lowering::ExternalDefs>,
+    external_defs: &sifr_lowering::ExternalDefs,
     visiting: &mut BTreeSet<String>,
 ) -> Vec<ShapeMethod> {
     let mut seen = BTreeSet::new();
@@ -99,7 +99,7 @@ pub(super) fn described_exported_methods(
     type_args: &[Type],
     declaration_metadata: &[TypedDeclarationMetadata],
     lowering: &LoweringResult,
-    external_defs: Option<&sifr_lowering::ExternalDefs>,
+    external_defs: &sifr_lowering::ExternalDefs,
     visiting: &mut BTreeSet<String>,
 ) -> Vec<ShapeMethod> {
     let bindings = type_params
@@ -150,7 +150,7 @@ fn described_method(
     metadata: Vec<ShapeMetadata>,
     declaration_metadata: &[TypedDeclarationMetadata],
     lowering: &LoweringResult,
-    external_defs: Option<&sifr_lowering::ExternalDefs>,
+    external_defs: &sifr_lowering::ExternalDefs,
     visiting: &mut BTreeSet<String>,
 ) -> ShapeMethod {
     ShapeMethod {

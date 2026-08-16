@@ -13,7 +13,7 @@ mod methods;
 use methods::{described_exported_methods, described_methods};
 pub use methods::{ShapeMethod, ShapeParameter};
 mod nominal_types;
-use nominal_types::{describe_enum, describe_newtype, qualified_identity};
+use nominal_types::{describe_enum, describe_newtype};
 mod canonical_helpers;
 use canonical_helpers::{canonical_bytes, canonical_sequence, canonical_values};
 
@@ -99,14 +99,14 @@ pub fn describe_type_with_externals(
     lowering: &LoweringResult,
     external_defs: &ExternalDefs,
 ) -> StructuralShape {
-    describe_type_inner(module_name, ty, lowering, Some(external_defs))
+    describe_type_inner(module_name, ty, lowering, external_defs)
 }
 
 fn describe_type_inner(
     module_name: &str,
     ty: &Type,
     lowering: &LoweringResult,
-    external_defs: Option<&ExternalDefs>,
+    external_defs: &ExternalDefs,
 ) -> StructuralShape {
     let mut visiting = BTreeSet::new();
     let root = describe_node(
@@ -127,7 +127,7 @@ fn describe_node(
     module_name: &str,
     ty: &Type,
     lowering: &LoweringResult,
-    external_defs: Option<&ExternalDefs>,
+    external_defs: &ExternalDefs,
     visiting: &mut BTreeSet<String>,
 ) -> ShapeNode {
     match ty {
@@ -236,7 +236,7 @@ fn describe_union(
     module_name: &str,
     members: &[Type],
     lowering: &LoweringResult,
-    external_defs: Option<&ExternalDefs>,
+    external_defs: &ExternalDefs,
     visiting: &mut BTreeSet<String>,
 ) -> ShapeNode {
     let non_none = members
@@ -268,10 +268,13 @@ fn describe_class(
     type_args: &[Type],
     fields: &[(String, Type)],
     lowering: &LoweringResult,
-    external_defs: Option<&ExternalDefs>,
+    external_defs: &ExternalDefs,
     visiting: &mut BTreeSet<String>,
 ) -> ShapeNode {
-    let identity = qualified_identity(module_name, declared_identity);
+    let (source_module, source_name) = declared_identity
+        .rsplit_once('.')
+        .unwrap_or((module_name, declared_identity));
+    let identity = format!("{source_module}.{source_name}");
     if !visiting.insert(identity.clone()) {
         return ShapeNode::RecursiveReference(identity);
     }
@@ -314,21 +317,13 @@ fn describe_class(
         }
     }
 
-    let external_class = local_class
-        .is_none()
-        .then(|| {
-            let (source_module, source_name) = identity.rsplit_once('.')?;
-            let external_defs = external_defs?;
-            Some((source_module, source_name, external_defs))
-        })
-        .flatten();
     let (declaration_metadata, metadata_owner, defaults) = if local_class.is_some() {
         (
             lowering.declaration_metadata.as_slice(),
             local_name,
             lowering.class_field_defaults.get(local_name),
         )
-    } else if let Some((source_module, source_name, external_defs)) = external_class {
+    } else {
         (
             external_defs
                 .declaration_metadata
@@ -340,8 +335,6 @@ fn describe_class(
                 .get(source_module)
                 .and_then(|classes| classes.get(source_name)),
         )
-    } else {
-        (&[][..], local_name, None)
     };
     let described_fields = fields
         .iter()
@@ -370,7 +363,7 @@ fn describe_class(
             external_defs,
             visiting,
         )
-    } else if let Some((source_module, source_name, external_defs)) = external_class {
+    } else {
         let methods = external_defs
             .structural_methods_for(source_module)
             .and_then(|classes| classes.get(source_name))
@@ -390,11 +383,9 @@ fn describe_class(
             type_args,
             declaration_metadata,
             lowering,
-            Some(external_defs),
+            external_defs,
             visiting,
         )
-    } else {
-        Vec::new()
     };
     let type_arguments = type_args
         .iter()
