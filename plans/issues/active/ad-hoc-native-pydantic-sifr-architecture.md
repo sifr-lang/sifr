@@ -1001,6 +1001,25 @@ Milestone delivery records:
   Eighteen focused JSON Schema tests, the full core suite, strict Clippy,
   formatting, file-size guard, exact-pin companion create-PR gate, and the
   single authoritative merge gate passed.
+- The PS9 public `Fraction` and `Complex` adapter/schema item merged in
+  companion [PR #25](https://github.com/sifr-lang/pydantic-sifr/pull/25) at
+  merge commit `c0ee5c77efdeccbd6380ef6abccf7e6612b1c533`. The exact final reviewed
+  and gated candidate was `35ebd03a945133d2e998bdfd08e0162939244b94`.
+- The companion now exports immutable specialized numeric values that reuse
+  the prepared validation engine and serialize as canonical fraction and
+  complex strings. Their mode-specific JSON Schemas retain exact rational and
+  complex constraints as Sifr annotations and emit standard numeric keywords
+  only when the exact value round-trips without rounding.
+- The first exact-SHA review found rounded rational constraints could publish
+  false numeric bounds. The bounded remediation made standard keywords
+  round-trip exact, described actual Complex validation inputs, and pinned the
+  strict-native versus serialized-string boundary. The one permitted
+  remediation review returned `SATISFIED` with no blockers. Its new
+  negative-sign NaN formatting mechanism finding is tracked separately by
+  companion [issue #24](https://github.com/sifr-lang/pydantic-sifr/issues/24).
+- The full core suite, strict all-target Clippy, formatting, file-size guard,
+  exact-pin companion create-PR gate, and the single authoritative merge gate
+  passed.
 - `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3262,7 +3281,7 @@ JSON; every `serializers/*` fixture family named in the baseline and
   diagnostic status change.
 - [x] Support definitions, recursion, aliases, constraints and mode-specific
   representations.
-- Complete public `Fraction` and `Complex` adapter/schema representations.
+- [x] Complete public `Fraction` and `Complex` adapter/schema representations.
 - Add deterministic schema snapshots and dialect conformance.
 
 Exit gate: validation, serialization and description agree for every supported
