@@ -7,11 +7,14 @@ and generated serde implementations must satisfy. Runtime JSON profile helpers
 live in `sifr_runtime::json`; framework layers may wrap that API, but must not
 reimplement or weaken the policy.
 
-The planned external `sifr-lang/pydantic-sifr` package is a consumer of this
-contract, not a second integer-schema authority. Its compile-time Core Schema
-must provide a general compiler-owned `JsonIntegerBoundaryDescriptor`; the
-compiler validates the descriptor and owns `SIFR-INT-0009`, while the package
-and native core route execution through `sifr_runtime::json`.
+The external `sifr-lang/pydantic-sifr` package consumes this contract. It is not
+a second integer-schema authority. The compiler validates the general
+`JsonIntegerBoundaryDescriptor` before it seals the Core Schema program and
+owns `SIFR-INT-0009`. The implemented native consumer builds one
+`SerializationPlan` from that sealed schema and its selected profile.
+`TypeAdapter::json_schema` passes the same Core Schema and plan profile to
+`pydantic_sifr_core::generate_json_schema`. Runtime output continues to route
+through `sifr_runtime::json`.
 
 ## JSON Profiles
 
@@ -37,8 +40,8 @@ Sifr `int`.
 | Sifr field | Selected profile | Schema rules |
 | --- | --- | --- |
 | `int8`, `int16`, `int32`, `uint8`, `uint16`, `uint32` | `json.web` | `type: integer` with exact `minimum` and `maximum`; may be TypeScript `number` |
-| `int64`, `uint64` | `json.web` | decimal string by default: `type: string`, `pattern: "^-?[0-9]+$"`, `x-sifr-format: integer-decimal-string`; numeric schema requires an explicit safe-range constraint |
-| `int` | `json.web` | decimal string by default or a typed `JsonIntegerRangeError` policy; numeric schema requires a static safe range |
+| `int64`, `uint64` | `json.web` | numeric schema only with a statically proven safe range; otherwise schema generation fails with `SIFR-INT-0009` |
+| `int` | `json.web` | numeric schema only with a statically proven safe range; otherwise schema generation fails with `SIFR-INT-0009` |
 | any integer | `json.string_ints` | decimal string schema with `x-sifr-format: integer-decimal-string` |
 | any integer | `json.exact` | `type: integer`, `x-sifr-integer-profile: exact`, and a generated-client warning unless the client target supports exact integer parsing |
 
@@ -46,6 +49,65 @@ If a route or model lacks enough policy to select one of these mappings, schema
 generation must fail closed with `SIFR-INT-0009` and include the field path plus
 suggested policies (`json.web` string encoding, explicit safe range,
 `json.string_ints`, or exact-client support).
+
+`pydantic_sifr_core` exposes the compiler-owned code through
+`JsonSchemaError::diagnostic_code` when a `json.web` range is insufficient. It
+does not emit the top-level compiler diagnostic. The exact profile emits
+`x-sifr-generated-client-warning`; each generated-client backend owns turning
+that annotation into its actionable warning and selecting an exact integer
+parser. The package does not silently choose a client representation.
+
+The following objects are the implemented bounded serialization-mode snapshots.
+Object keys are deterministic. An `int32` under `json.web` is:
+
+```json
+{
+  "maximum": 2147483647,
+  "minimum": -2147483648,
+  "type": "integer",
+  "x-sifr-integer-profile": "web"
+}
+```
+
+An `int64` under `json.exact` is:
+
+```json
+{
+  "maximum": 9223372036854775807,
+  "minimum": -9223372036854775808,
+  "type": "integer",
+  "x-sifr-generated-client-warning": "client must use an exact integer JSON parser for this field",
+  "x-sifr-integer-profile": "exact"
+}
+```
+
+An `int32` under `json.string_ints` is:
+
+```json
+{
+  "pattern": "^-?[0-9]+$",
+  "type": "string",
+  "x-sifr-format": "integer-decimal-string",
+  "x-sifr-integer-profile": "string_ints",
+  "x-sifr-maximum": 2147483647,
+  "x-sifr-minimum": -2147483648
+}
+```
+
+An exact `int` constrained to the JavaScript-safe range under `json.web` is:
+
+```json
+{
+  "maximum": 9007199254740991,
+  "minimum": -9007199254740991,
+  "type": "integer",
+  "x-sifr-integer-profile": "web"
+}
+```
+
+Without both safe bounds, the last request returns `IntegerPolicy` with
+diagnostic code `SIFR-INT-0009`. Selecting `json.string_ints` is the explicit
+decimal-string alternative; `json.web` does not fall back to it.
 
 ## TypeScript Client Mapping
 
@@ -57,9 +119,10 @@ Generated TypeScript clients must make precision visible in the type:
 | decimal integer string | branded `SifrDecimalIntString` unless the user opts into plain `string` |
 | exact-client integer profile | `bigint` only when the target runtime and JSON parser strategy are explicitly configured |
 
-`int64`, `uint64`, and exact `int` response fields under `json.web` default to
-decimal strings. A generated TypeScript `number` for those fields is valid only
-when the schema also carries a static safe range.
+`int64`, `uint64`, and exact `int` response fields under `json.web` require a
+static safe range. A generated TypeScript `number` is valid only when the schema
+carries that range. Select `json.string_ints` explicitly for a decimal-string
+wire representation.
 
 ## Generated Serde
 
