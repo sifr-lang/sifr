@@ -12,7 +12,8 @@ inventory, repository boundary, and demo ownership are approved.
 implemented and merged through [PR #3138](https://github.com/sifr-lang/sifr/pull/3138).
 `milestone_ps_4` through `milestone_ps_6` are implemented and merged in the
 companion repository. The package-neutral method-slot prerequisite for
-`milestone_ps_7` is implemented and merged. `milestone_ps_7` is active.
+`milestone_ps_7` is implemented and merged. The blocked callback rows are
+tracked separately, and `milestone_ps_8` is active in the companion repository.
 
 Review artifacts:
 
@@ -806,6 +807,29 @@ Milestone delivery records:
   936,811,698 threshold. The receipt SHA-256 is
   `845d7cb614b3e347078175c842572df2201ec98eb0f84ce083e3a205db724e9b`.
 - `milestone_ps_7` is now active in the companion repository.
+- The PS7 typed-callback and wrap rows that require new compiler capability are
+  tracked by companion [issue #10](https://github.com/sifr-lang/pydantic-sifr/issues/10).
+  The callback-aware specialization works monolithically, but imported const
+  schema modules do not complete within bounded memory, and the current method
+  dispatch does not emit the call-scoped handler needed for wrap semantics.
+  These rows were skipped without adding a compiler-specific package path,
+  fallback, compatibility layer, or legacy API.
+- The first PS8 serializer-plan item merged in companion
+  [PR #11](https://github.com/sifr-lang/pydantic-sifr/pull/11) at merge commit
+  `5ea9bb4a1745001b435e6ce7d1e61daf3085611b`. The exact reviewed candidate
+  was `6331b14a18b0f79b4d3282636f93e9f16eab0b21`.
+- The core now compiles deterministic, depth-bounded serializer topology from
+  the verified owned or static Core Schema. Plans retain the structural shape
+  identity, model projection order, and control and collection children without
+  retaining a validation arena or introducing another schema compiler.
+- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+  response SHA-256 is
+  `e1b8c264806f5a18e495a725da24f48402c1bd515986620b16cc9c7ccad410d8`.
+- Focused plan tests passed 2/2 with strict Clippy and the file-size guard. The
+  exact-pin companion create-PR and single merge gates passed provenance,
+  package checks, both locked demos, all workspace and release suites,
+  benchmark smoke, strict Clippy, fuzz smoke, and merge-only foundations.
+- `milestone_ps_8` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
   predicates for fixed-width platform integers, metadata, and imported classes;
