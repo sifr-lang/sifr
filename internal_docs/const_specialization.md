@@ -75,7 +75,7 @@ program, runtime compiler, compatibility path, or fallback to the ordinary `Stru
 is closed for this contract. A new variant requires a contract and cache-identity review.
 
 A produced value can request a method-slot table through exactly one reserved entry:
-`"sifr.meta.slots": list[str]`. The list is ordered and nonempty. Each value is an exact
+`sifr_method_slots: list[str]`. The field is ordered and nonempty. Each value is an exact
 `module.Type::method` identity, including for imported or re-exported owners. Duplicate,
 unqualified, missing, unannotated, asynchronous, constructor, class-method, non-`Result`, or
 nonstructural method contracts fail with `SIFR-RUST-SLOT-####`. The compiler derives one context

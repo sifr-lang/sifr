@@ -618,7 +618,7 @@ class Outcome:
 
 @const_eval
 def describe(shape: dict[str, str]) -> Outcome:
-    return Outcome("produced", {"sifr.meta.slots": ["target.Record::normalize"]}, [])
+    return Outcome("produced", {"sifr_method_slots": ["target.Record::normalize"]}, [])
 "#,
             &external_defs,
         )
@@ -668,7 +668,7 @@ class Outcome:
 @const_eval
 def describe(shape: dict[str, str]) -> Outcome:
     slots: list[str] = []
-    return Outcome("produced", {"sifr.meta.slots": slots}, [])
+    return Outcome("produced", {"sifr_method_slots": slots}, [])
 "#,
             &external_defs,
         )

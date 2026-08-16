@@ -132,19 +132,19 @@ fn method_slot_references(
     let crate::ConstValue::Record(fields) = value else {
         return Ok(None);
     };
-    let Some(value) = fields.get("sifr.meta.slots") else {
+    let Some(value) = fields.get("sifr_method_slots") else {
         return Ok(None);
     };
     let crate::ConstValue::List(values) = value else {
         return Err(MethodSlotError::new(
             MethodSlotErrorKind::List,
-            "reserved `sifr.meta.slots` must be a nonempty list of strings",
+            "reserved `sifr_method_slots` must be a nonempty list of strings",
         ));
     };
     if values.is_empty() {
         return Err(MethodSlotError::new(
             MethodSlotErrorKind::List,
-            "reserved `sifr.meta.slots` must not be empty",
+            "reserved `sifr_method_slots` must not be empty",
         ));
     }
     let mut seen = BTreeSet::new();
@@ -153,7 +153,7 @@ fn method_slot_references(
         let crate::ConstValue::String(reference) = value else {
             return Err(MethodSlotError::new(
                 MethodSlotErrorKind::List,
-                "reserved `sifr.meta.slots` must contain only strings",
+                "reserved `sifr_method_slots` must contain only strings",
             ));
         };
         if !seen.insert(reference.clone()) {

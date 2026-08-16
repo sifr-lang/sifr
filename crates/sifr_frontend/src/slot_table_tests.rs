@@ -31,7 +31,7 @@ class Outcome:
 
 @const_eval
 def describe(shape: dict[str, str]) -> Outcome:
-    return Outcome("produced", {{"sifr.meta.slots": [{slots}]}}, [])
+    return Outcome("produced", {{"sifr_method_slots": [{slots}]}}, [])
 "#
     );
     let package =

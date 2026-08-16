@@ -82,7 +82,7 @@ REQUIRED_SCENARIO_EXAMPLES = {
         "method_slot_runtime": {
             "tokens": (
                 "MethodSlotTable",
-                "sifr.meta.slots",
+                "sifr_method_slots",
                 "MethodSlots",
                 "Context",
             ),

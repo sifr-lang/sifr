@@ -1,6 +1,10 @@
+class SlotProgram:
+    sifr_method_slots: list[str]
+
+
 class ProgramOutcome:
     status: str
-    value: dict[str, list[str]] | None
+    value: SlotProgram | None
     issues: list[str]
 
 
@@ -8,12 +12,12 @@ class ProgramOutcome:
 def derive(shape: dict[str, str]) -> ProgramOutcome:
     return ProgramOutcome(
         "produced",
-        {
-            "sifr.meta.slots": [
+        SlotProgram(
+            [
                 "main.Record::normalize",
                 "main.Record::finalize",
             ]
-        },
+        ),
         [],
     )
 
@@ -21,12 +25,12 @@ def derive(shape: dict[str, str]) -> ProgramOutcome:
 @const_eval
 def derive_no_context(shape: dict[str, str]) -> ProgramOutcome:
     return ProgramOutcome(
-        "produced", {"sifr.meta.slots": ["main.NoContextRecord::normalize"]}, []
+        "produced", SlotProgram(["main.NoContextRecord::normalize"]), []
     )
 
 
 @const_eval
 def derive_shared(shape: dict[str, str]) -> ProgramOutcome:
     return ProgramOutcome(
-        "produced", {"sifr.meta.slots": ["main.SharedRecord::normalize"]}, []
+        "produced", SlotProgram(["main.SharedRecord::normalize"]), []
     )
