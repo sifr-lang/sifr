@@ -785,6 +785,26 @@ Milestone delivery records:
   median instructions with 0.000844 variation against the 936,811,698 limit.
   The accepted evidence SHA-256 is
   `d9467bdfaa644ee923d4ffc42eeb4faaa8ee68a252ecb0e0fc7550700ba9c6a0`.
+- The empty method-slot list addendum merged in Sifr
+  [PR #3205](https://github.com/sifr-lang/sifr/pull/3205) at merge commit
+  `65674c1e182aaf6fafae132580641cd04e727d42`. The exact reviewed candidate was
+  `514c018c09176fc9456e6f4b34530de2669497c2`.
+- A typed static-program payload can now declare `sifr_method_slots` and return
+  an empty list when it has no callbacks. Empty lists emit no method-slot table;
+  malformed non-list values still produce `SIFR-RUST-SLOT-0001`. No alias,
+  fallback, compatibility form, or Pydantic-specific compiler path was added.
+- The remediation exact-SHA Opus review returned `SATISFIED` with no blocking
+  findings. Its response SHA-256 is
+  `76bda413860ef97ff631a3992dc469f8122c44c190845f672f06c928a93abe66`.
+- Focused frontend, driver, Rust-interop, diagnostics, strict Clippy,
+  formatting, HIR-maintainability, taxonomy, and file-size checks passed. The
+  create-PR receipt SHA-256 is
+  `778db57497f4e1df41fd3df526748413ac414d60bb091810fe23f1444612204d`.
+- The single merge gate passed every functional lane and all ten representative
+  benchmark commands. Its only blocking verdict was the known #3200
+  work-counter offset: 938,532,133 measured instructions against the
+  936,811,698 threshold. The receipt SHA-256 is
+  `845d7cb614b3e347078175c842572df2201ec98eb0f84ce083e3a205db724e9b`.
 - `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
