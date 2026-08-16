@@ -900,6 +900,31 @@ Milestone delivery records:
   [issue #15](https://github.com/sifr-lang/pydantic-sifr/issues/15) records the
   later item. The row was skipped without tuple-layout inference, retained
   validation state, fallback formatting, or compiler-specific assumptions.
+- The delivered PS8 serialization corpus and benchmark bound merged in
+  companion [PR #18](https://github.com/sifr-lang/pydantic-sifr/pull/18) at
+  merge commit `4e47b23d1f1f87e76eb87e892bbc7570373adf04`. The exact final reviewed and
+  gated candidate was `b55032ba352dd7012ae5f1734d2fa26aefb2805a`.
+- Direct corpus tests cover JSON-native scalar and nullable values, sequences,
+  tuples, sets, string-key mappings, structural/JSON projection agreement, and
+  the prior model, alias, selection, default, and integer-profile cases. A
+  guarded PS8 compatibility ledger records only the delivered family bound.
+  Criterion smoke now measures both streaming JSON and structural output with
+  plan and value setup outside the timed closure.
+- The first exact-SHA review found one false canonical set-order claim. The
+  bounded remediation records the actual structural projection-order contract;
+  the one allowed remediation review returned `SATISFIED`. Its response
+  SHA-256 is
+  `79343450c190f54b4d8135f6d34be88998bbdc4597f75741e86bd43f84a2ca2f`.
+- The full workspace and compatibility suites, three serializer-corpus tests,
+  eleven existing output tests, all three benchmark smokes, strict Clippy,
+  formatting, and file-size guard passed. The exact-pin companion create-PR
+  and single merge gates passed all package, release, provenance, demo, fuzz,
+  and merge-only checks.
+- Remaining anchored serializer families are tracked by companion
+  [issue #17](https://github.com/sifr-lang/pydantic-sifr/issues/17) until their
+  PS9/PS10 typed public value surfaces exist; callback and temporal dependencies
+  remain in issues #14 and #15. No placeholder serializer or generic-tree
+  fallback was added.
 - `milestone_ps_8` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3133,7 +3158,9 @@ success/error behavior, bounded execution and complete ownership coverage;
   `sifr_runtime::json`, including typed range errors.
 - [ ] Preserve temporal output policies. Blocked by companion issue #15 until
   typed temporal current-value projections exist at the serialization boundary.
-- Port serialization tests and benchmarks.
+- [ ] Port the remaining serialization tests after their typed public value
+  surfaces land. The delivered corpus and benchmarks merged in companion PR
+  #18; the remaining anchored families are tracked by companion issue #17.
 
 Exit gate: mutated typed models serialize from their current values, not a
 retained validation arena, and no full generic output tree is required for
