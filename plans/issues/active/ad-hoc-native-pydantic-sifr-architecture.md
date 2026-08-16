@@ -1088,6 +1088,22 @@ Milestone delivery records:
   `30d76666e7682eea122d38997d90f6c48f7b9aaa1350e9e8501436f7c9887694`.
   The companion create-PR gate and single merge gate passed. No Sifr compiler
   source changed.
+- The PS11 version certification merged in companion
+  [PR #39](https://github.com/sifr-lang/pydantic-sifr/pull/39) at merge commit
+  `da4f60a2b570cd28f32ea4a43c355cf72b05b3e0`. The exact reviewed and gated
+  candidate was `99db12d8aaae542d8f1f2862aa7f59acb8dc3ab9`.
+- One machine-readable tuple binds the Sifr compiler and runtime source at
+  `4f5492531e81385dd28efe25adfdd57dd678d2a9`, CLI `0.0.0`, package requirement
+  `>=0.3,<0.4`, and package/core `0.1.0-beta.1`. The companion gate rejects a
+  second tuple, version or revision drift, an unbound compiler binary, and
+  stale guide values. No compatibility or fallback path exists. The first
+  review found the gate and guide bindings were not independently tested. The
+  bounded remediation closed both blockers, and the second review was
+  SATISFIED. Review response SHA-256 values are
+  `b81ec4d538e512aca23b8707ca9099cb0ac049c920272de4532160fe96f11cb8` and
+  `28667e0764608ca25fcb8b81aa0ed1361b758f5028a85f70143c2ef4acb45639`.
+  The companion create-PR gate and single merge gate passed. No Sifr compiler
+  source changed.
 - The PS10 public construction-API cleanup merged in companion
   [PR #33](https://github.com/sifr-lang/pydantic-sifr/pull/33) at merge commit
   `49a8b8c7ce9923a7f73e2100ff5ca06a838db580`. The exact reviewed and gated
@@ -3456,7 +3472,7 @@ temporary schema form or second validation path remains; `api/networks`,
 - [x] Run differential validation against the pinned oracle.
 - [x] Complete fuzz, property, adversarial resource and panic testing.
 - [x] Publish parse/validate/construct/serialize benchmarks.
-- Certify supported compiler/core/package version combinations.
+- [x] Certify supported compiler/core/package version combinations.
 - Add end-to-end demos and package documentation.
 - Add and snapshot-test the canonical
   `demos/pydantic_sifr_demo.sifr` in the external `pydantic-sifr` repository.
