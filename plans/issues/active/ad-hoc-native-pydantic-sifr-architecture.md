@@ -11,7 +11,8 @@ inventory, repository boundary, and demo ownership are approved.
 [PR #3123](https://github.com/sifr-lang/sifr/pull/3123). `milestone_ps_3` is
 implemented and merged through [PR #3138](https://github.com/sifr-lang/sifr/pull/3138).
 `milestone_ps_4` through `milestone_ps_6` are implemented and merged in the
-companion repository. `milestone_ps_7` is active.
+companion repository. The package-neutral method-slot prerequisite for
+`milestone_ps_7` is implemented and merged. `milestone_ps_7` is active.
 
 Review artifacts:
 
@@ -720,6 +721,48 @@ Milestone delivery records:
   them.
 - The prerequisite adds no compatibility path, fallback, legacy path, or
   versioned public API name.
+- The PS7 static-program method-slot prerequisite merged in Sifr
+  [PR #3199](https://github.com/sifr-lang/sifr/pull/3199) at merge commit
+  `f3d28b8d16872baa396aa36e6b3f99a8e4735427`. The exact reviewed candidate
+  was `6f12dd6eef1d756a9c7ce89559ed62ead7daa02b`.
+- The compiler now resolves an ordered, identity-qualified slot list from one
+  reserved specialization field. It emits monomorphic method dispatch for
+  mutable, shared, and no-context calls. The runtime carries a call-scoped,
+  current-thread-only handler and a typed context borrow. Slot identity and
+  cache identity include the program, ordered signatures, context identity,
+  and borrow mode.
+- Six active `SIFR-RUST-SLOT-*` diagnostics reject malformed lists, missing
+  methods, invalid signatures, bound or context conflicts, and handler lifetime
+  or thread escape. Generated positive and negative package evidence covers
+  dispatch, shared and mutable context, handler escape, and static-program
+  envelope verification.
+- The exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+  response SHA-256 is
+  `dbf474cecc17cad6270447dda290dea1fa6abc2a93b965ace72210bef4a10811`.
+- Focused validation passed identity, runtime, frontend, lowering, codegen, and
+  driver probe suites. The generated package passed check, build, and execution.
+  Strict affected-library Clippy, formatting, diagnostics, Rust-interop
+  inventories, taxonomy, HIR maintainability, and the file-size guard passed.
+- The cold create-PR gate was functionally green and exceeded only the known
+  generated-artifact cold budget tracked by issue #3134. The unchanged warm
+  create-PR gate exited zero and passed E2E 140/140. Its receipt SHA-256 is
+  `5aee199294e9b79ba52c34d560bb1e58e7687f2e2776608695a1a3cc31b4d3e5`.
+- The single merge gate passed all functional lanes it executed, including
+  Python interop 25/25, Rust interop 10/10, developer tooling 32/32, and all ten
+  representative benchmark commands. One parse-only control reported a stable
+  cross-run retired-instruction offset and rejected its budget. Two independent
+  controlled repeats of the unchanged candidate passed at 920,717,367 and
+  920,747,156 median instructions against the 936,811,698 limit. Their accepted
+  receipt SHA-256 values are
+  `053b764abb45be6f1d4a2a175cfe8d6e4874bf53dd1afdae78b6751bc160c94e`
+  and `76ac60564b84c7c8c506a3173dcb398a4e94676501692b4a1872ee218104dcb2`.
+- [Issue #3200](https://github.com/sifr-lang/sifr/issues/3200) owns the
+  cross-run work-counter offset. [Issue #3201](https://github.com/sifr-lang/sifr/issues/3201)
+  owns the reviewer suggestions for handler-bearing emission, structured slot
+  errors, explicit header invariants, deterministic singleton ownership, and
+  fixture evidence fidelity. PR #3199 did not absorb those follow-ups.
+- The prerequisite adds no compatibility path, fallback, legacy path,
+  Pydantic-specific compiler behavior, or versioned public API name.
 - `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
