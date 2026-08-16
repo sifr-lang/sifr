@@ -829,6 +829,25 @@ Milestone delivery records:
   exact-pin companion create-PR and single merge gates passed provenance,
   package checks, both locked demos, all workspace and release suites,
   benchmark smoke, strict Clippy, fuzz smoke, and merge-only foundations.
+- The PS8 structural and streaming output item merged in companion
+  [PR #12](https://github.com/sifr-lang/pydantic-sifr/pull/12) at merge commit
+  `d4b039e70aa760613abbd038bc9e13d41ea41805`. The exact reviewed and gated
+  candidate was `5cb74bf3d342876a524a3378524a4d21d540d09d`.
+- Serialization now verifies the prepared structural shape before projecting
+  current typed values. Structural output returns the crate-neutral value, and
+  JSON output writes structural visitor events directly to bounded bytes with
+  typed projection, limit, shape, and unsupported-policy errors. It does not
+  retain a validation arena or build a generic JSON tree. Bytes, temporal
+  representations, and integer-profile decisions remain explicit later PS8
+  policy work; no fallback, compatibility, or legacy encoding was added.
+- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+  response SHA-256 is
+  `4b6c131fc4ebc865b237b97922be2e8961fd8b1bf55c0d932eeaa57a2f174df6`.
+- Focused output and plan tests passed 5/5 with strict Clippy, formatting, and
+  the file-size guard. The exact-pin companion create-PR and single merge gates
+  passed provenance, package checks, both locked demos, all workspace and
+  release suites, benchmark smoke, strict Clippy, fuzz smoke, and merge-only
+  foundations.
 - `milestone_ps_8` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3050,8 +3069,8 @@ success/error behavior, bounded execution and complete ownership coverage;
 
 ### milestone_ps_8: Serialization
 
-- Implement serializer plans over structural projections.
-- Implement structural and streaming JSON outputs.
+- [x] Implement serializer plans over structural projections.
+- [x] Implement structural and streaming JSON outputs.
 - Implement aliases, typed recursive include/exclude selections, and
   default/none policies.
 - Implement custom field/model serializers and computed fields.
