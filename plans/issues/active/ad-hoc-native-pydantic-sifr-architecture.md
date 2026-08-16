@@ -1090,6 +1090,18 @@ Milestone delivery records:
   [issue #32](https://github.com/sifr-lang/pydantic-sifr/issues/32).
   The exact-pin companion create-PR gate and single merge gate passed. No Sifr
   compiler source changed.
+- The PS11 manifest and pin certification merged in companion
+  [PR #34](https://github.com/sifr-lang/pydantic-sifr/pull/34) at merge commit
+  `13f50e206a0bf4d109ba0df164f037183ca04c75`. The exact reviewed and gated
+  candidate was `65ced904b23bb60e0cc61daa1ba69aadcec8dff7`.
+- Clean-checkout regeneration reproduced the 310-file, 12,754-node upstream
+  manifest and the 53-schema-kind, 4-field-kind Core Schema universe. The
+  companion now documents exact Pydantic and Sifr revisions, ledger digests,
+  and fail-closed update-pin procedures.
+- Exact-SHA Opus review returned `SATISFIED`; its response SHA-256 is
+  `eb549e25506a808bb8225dff8f29fce089c5ae7224d7b9deb1dca170ebe26ee9`.
+  The focused audits, file-size guard, exact-pin companion create-PR gate, and
+  single merge gate passed. No Sifr compiler source changed.
 - `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3391,7 +3403,7 @@ temporary schema form or second validation path remains; `api/networks`,
 
 ### milestone_ps_11: Certification and Release
 
-- Re-audit the already-complete manifest against its pinned revisions and the
+- [x] Re-audit the already-complete manifest against its pinned revisions and the
   documented update-pin procedure; no compatibility coverage is deferred to
   this milestone.
 - Run differential validation against the pinned oracle.
