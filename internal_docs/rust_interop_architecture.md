@@ -474,7 +474,7 @@ constants. It does not copy private compiler literals.
 
 `sifr.meta.MethodSlots` is the compiler-owned bound for a static program that
 declares an ordered method-slot table. The produced specialization value must
-contain the one reserved entry `"sifr.meta.slots": list[str]`. Each string has
+contain the one reserved field `sifr_method_slots: list[str]`. Each string has
 the exact identity-qualified form `module.Type::method`. The list must be
 nonempty and contain no duplicate. A selected method must be present in the
 concrete structural shape, including through an imported or re-exported owner.
