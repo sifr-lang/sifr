@@ -942,6 +942,28 @@ Milestone delivery records:
   formatting, and file-size guard passed. The exact-pin companion create-PR
   and single merge gates passed all package, release, provenance, demo, fuzz,
   benchmark-smoke, and merge-only checks.
+- The PS9 JSON Schema foundation merged in companion
+  [PR #21](https://github.com/sifr-lang/pydantic-sifr/pull/21) at merge commit
+  `7822214c301c03900d990eaa733bbdc27c9c16d8`. The exact final reviewed and
+  gated candidate was `d8e997a53930749feb93987270d759fe6eabee12`.
+- `TypeAdapter[T]` now generates validation- and serialization-mode JSON Schema
+  by traversing its owned Core Schema. Ordinary scalar, literal, enum, sum,
+  model, collection, temporal, control, and embedded-JSON nodes share that one
+  authority. Unsupported recursive, specialized numeric, byte, and non-exact
+  integer representations fail closed with a typed error.
+- The first exact-SHA review found fixed integer bounds could be widened and
+  byte length/encoding claims did not match the engine. The bounded remediation
+  intersects target and declared bounds, rejects invalid `multipleOf`, and
+  fails closed for byte and decimal representations. The one permitted
+  remediation review returned `SATISFIED`; its response SHA-256 is
+  `aa593676eb0942432172b79be65807b1fd33dee8c09d742d5d0b4e10fbe44b9a`.
+- Six focused JSON Schema tests, the full core suite, strict Clippy,
+  formatting, and file-size guard passed. The exact-pin companion create-PR
+  and single merge gates passed all package, release, provenance, demo, fuzz,
+  benchmark-smoke, and merge-only checks.
+- The remediation review's later alias-key mechanism defect is recorded in
+  companion [issue #20](https://github.com/sifr-lang/pydantic-sifr/issues/20)
+  for the explicit PS9 aliases and mode-representation row.
 - `milestone_ps_9` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3189,7 +3211,7 @@ JSON; every `serializers/*` fixture family named in the baseline and
 - [x] Implement reusable `TypeAdapter[T]`.
 - [x] Implement native, JSON, and strings-profile validation plus serialization
   modes.
-- Generate JSON Schema from the same Core Schema.
+- [x] Generate JSON Schema from the same Core Schema.
 - Reflect the selected Sifr integer JSON profile and static range in every
   integer schema, failing closed with `SIFR-INT-0009` when ambiguous.
 - Before the external package release, merge a coordinated `sifr-lang/sifr`
