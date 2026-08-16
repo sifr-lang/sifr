@@ -443,7 +443,7 @@ Advanced gate:
 - Verification tiers 3-4 and the compatibility matrix are backed by local
   validation evidence for all Track A rows. The future-owned category now
   contains the two Native Pydantic-Sifr rows owned by
-  `plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md`; their
+  `plans/issues/archive/ad-hoc-native-pydantic-sifr-architecture.md`; their
   evidence remains planned and they do not reopen the Track A closeout.
 
 Full Phase 39 exit:
