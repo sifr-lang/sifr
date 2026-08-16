@@ -682,6 +682,44 @@ Milestone delivery records:
   versioned public API name. The next PS7 wave can build the static-program-
   indexed typed callback slot table and opaque typed context handle on this
   method-shape substrate.
+- The PS7 imported-method-shape prerequisite merged in Sifr
+  [PR #3196](https://github.com/sifr-lang/sifr/pull/3196) at merge commit
+  `8901eeed5eafda9cd18ce8f9b4faab56b25125c6`. The exact reviewed and gated
+  candidate was `28444669949a14bf8397ed4495c3e109e414bc26`.
+- Imported and re-exported nominal shapes now preserve annotated method
+  descriptors, generic substitutions, defaults, metadata, private nested
+  identities, and direct enum and newtype source identities. Identity-qualified
+  lookup prevents a colliding local class name from replacing imported shape
+  metadata.
+- Module export replacement and removal clear stale class defaults, declaration
+  metadata, class type parameters, and structural method descriptors. Structural
+  method storage and collection are demand-gated, so ordinary programs do not
+  pay the imported-shape scan or allocation cost.
+- The final exact-SHA Opus review returned `SATISFIED` with no blocking findings.
+  Its response SHA-256 is
+  `bfbf35dffdfc04b559dccbb74ebb8a838b894f9259aa171e1917542e206ce6d1`.
+- Targeted validation passed 77 frontend tests and 987 lowering tests with one
+  ignored test, strict affected-library Clippy, formatting, HIR maintainability,
+  and the file-size guard. Three governed representative performance runs passed
+  all cases and budgets. Their evidence SHA-256 values are
+  `ac99562e696d03a0e9c2b41c251b0073e7ed3b02581d6d172017720a972514b4`,
+  `cc61b1913295db76baf8d8ac7e49f4545428194991d584bce87202a1e41c000e`,
+  and `17a2204177edf19a949f0d8d786083760c68802c9ab1987634ddea2871c87802`.
+- The canonical create-PR gate exited zero. It passed E2E 140/140, Python
+  interop 19/19 with zero mutations, Rust interop 10/10, generated quality 5/5,
+  and all guards. Its receipt SHA-256 is
+  `767abbaec3e97ec42faeec44d5bcd4338fbb6531086386acc6b5d66119770361`.
+- The single authoritative merge gate exited zero. It passed E2E 695/695,
+  hardening 268 variants with zero failures, all 78 generated driver builds,
+  and all compiler, release, performance, distribution, sysroot, and
+  generated-code-quality lanes. Its receipt SHA-256 is
+  `b3f2a072d8b7da43bfbcd921fe5f8727f8c8664bb10b96dbb6134280ed8030b6`.
+- [Issue #3197](https://github.com/sifr-lang/sifr/issues/3197) owns the
+  non-blocking method-export API, invalidation, sysroot-import, metadata-policy,
+  maintainability, and stale-consumption follow-ups. PR #3196 did not absorb
+  them.
+- The prerequisite adds no compatibility path, fallback, legacy path, or
+  versioned public API name.
 - `milestone_ps_7` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
