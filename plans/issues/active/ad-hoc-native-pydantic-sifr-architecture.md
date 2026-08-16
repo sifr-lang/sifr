@@ -873,6 +873,10 @@ Milestone delivery records:
   records the exact dependency and links the existing PS7 issue #10. The row
   was skipped without adding dynamic dispatch, a package-specific compiler
   path, fallback, compatibility behavior, or a legacy callback API.
+- Caller-owned typed serialization-context forwarding is blocked by the same
+  issue #14 because no serializer handler boundary exists to receive it. This
+  row was also skipped; the package does not expose an unused context argument
+  or an untyped context container as a placeholder.
 - `milestone_ps_8` is now active in the companion repository.
 - Deferred follow-up work: align registry representative-fixture paths with diagnostic
   baselines; align the pre-existing lowering and codegen structural-eligibility
@@ -3100,7 +3104,8 @@ success/error behavior, bounded execution and complete ownership coverage;
   default/none policies.
 - [ ] Implement custom field/model serializers and computed fields. Blocked by
   companion issue #14 pending package-neutral handler-bearing method slots.
-- Implement caller-owned typed serialization context forwarding.
+- [ ] Implement caller-owned typed serialization context forwarding. Blocked
+  by companion issue #14 with the serializer callback boundary.
 - Preserve temporal output policies and implement Sifr's selected integer JSON
   profile through `sifr_runtime::json`, including typed range errors.
 - Port serialization tests and benchmarks.
