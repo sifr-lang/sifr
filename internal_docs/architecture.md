@@ -810,6 +810,10 @@ metadata, bounded pure HIR evaluation, package issues, and integer JSON boundary
 frontend authorities shared by CLI, build, tests, and editor analysis. This is compile-time data;
 Sifr does not expose runtime reflection or package-name-specific compiler branches.
 
+The Native Pydantic-Sifr consumer architecture is documented in
+[`native_pydantic_sifr_architecture.md`](native_pydantic_sifr_architecture.md). Its ad hoc phase
+record remains separate under `plans/issues/archive/` and owns milestone and delivery evidence.
+
 ### 5. CI Quality Gates
 
 **Rules for every PR:**

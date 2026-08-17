@@ -442,8 +442,8 @@ Advanced gate:
   `stable_support_claims.json` and its stable-candidate validator.
 - Verification tiers 3-4 and the compatibility matrix are backed by local
   validation evidence for all Track A rows. The future-owned category now
-  contains the two Native Pydantic-Sifr rows owned by
-  `plans/issues/archive/ad-hoc-native-pydantic-sifr-architecture.md`; their
+  contains the two Native Pydantic-Sifr rows designed in
+  `internal_docs/native_pydantic_sifr_architecture.md`; their
   evidence remains planned and they do not reopen the Track A closeout.
 
 Full Phase 39 exit:

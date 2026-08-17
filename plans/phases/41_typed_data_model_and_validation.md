@@ -2,8 +2,10 @@
 
 ## Status
 
-Superseded as an implementation plan by
-[`ad-hoc-native-pydantic-sifr-architecture.md`](../issues/archive/ad-hoc-native-pydantic-sifr-architecture.md).
+Superseded as an implementation plan by the
+[`Native Pydantic-Sifr ad hoc phase`](../issues/archive/ad-hoc-native-pydantic-sifr-architecture.md).
+The durable design is
+[`native_pydantic_sifr_architecture.md`](../../internal_docs/native_pydantic_sifr_architecture.md).
 
 The former draft duplicated typed models, validation, serialization, errors,
 and Pydantic conformance inside the Sifr repository. The accepted architecture
