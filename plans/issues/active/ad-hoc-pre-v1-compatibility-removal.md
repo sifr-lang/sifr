@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Compatibility Removal
 
-Status: in progress; Item 0 merged and ready for Item 1 on 2026-08-18
+Status: in progress; Item 1 merged and ready for Item 2 on 2026-08-18
 
 ## Objective
 
@@ -294,12 +294,12 @@ Scope:
 
 Acceptance criteria:
 
-- [ ] User source cannot resolve `bigint` as a type or runtime type object.
-- [ ] `Type::BigInt` has no production or test occurrence.
-- [ ] Transition-only diagnostics and docs are absent.
-- [ ] Exact `int` arithmetic keeps its documented range and safety behavior.
-- [ ] Fixed-width conversions keep explicit checked boundaries.
-- [ ] No bigint transition fixture or quarantine entry remains.
+- [x] User source cannot resolve `bigint` as a type or runtime type object.
+- [x] `Type::BigInt` has no production or test occurrence.
+- [x] Transition-only diagnostics and docs are absent.
+- [x] Exact `int` arithmetic keeps its documented range and safety behavior.
+- [x] Fixed-width conversions keep explicit checked boundaries.
+- [x] No bigint transition fixture or quarantine entry remains.
 
 Focused validation:
 
@@ -990,7 +990,7 @@ migrates its repository consumers before the old path disappears.
 | Item | Status | PR | Merge SHA | Validation | Review | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | 0. Canonical contract and inventory | merged | [#3237](https://github.com/sifr-lang/sifr/pull/3237) | `4234ced2d405809b8523315b619ceff48c23132e` | Candidate `b518c4cfabbf1b7c5dd2bd8772cdb8aa52228f69`: inventory checker and mutation self-test, documentation structure, file-size and HIR guardrails, Python compile, and diff hygiene passed; no compiler files changed, so Sifr gates were omitted. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3237#issuecomment-5325904790): SATISFIED, no blocking findings. | 61 classified surfaces, 42 owned removals, 13 explicitly retained external/current contracts, and 12 reproducible baseline counts locked. |
-| 1. Public `bigint` transition | pending | — | — | — | — | — |
+| 1. Public `bigint` transition | merged | [#3242](https://github.com/sifr-lang/sifr/pull/3242) | `54a1af60896ec216a5ce1838b50bf1cdd3ebb607` | Candidate `87b9e0ea7ee7ccb49a6a064c07491c1a425e94da`: type-system, lowering, codegen, runtime-int, driver, exact-int, heapq, fixed-width, diagnostics, generated-code panic, formatting, file-size, HIR, and residue checks passed. The one create-PR and one merge gate both stopped on the same verification-taxonomy failure reproduced at base `5285d7cb6d8df3338d2964f5af4308c94b9a3f48`; Item 1 changed none of the reported files. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3242#issuecomment-5326605073): SATISFIED, no blocking findings. | Removed the public transition type and diagnostics while preserving arbitrary-precision `int`; recorded inherited integer-model and verification follow-ups below. |
 | 2. Numeric and random names | pending | — | — | — | — | — |
 | 3. Runtime-information names | pending | — | — | — | — | — |
 | 4. Text and structured-data names | pending | — | — | — | — | — |
@@ -1014,6 +1014,11 @@ migrates its repository consumers before the old path disappears.
 | Item 0 | Strengthen exact owner-token, placeholder, private-import classification, and narrow-path enforcement when the temporary inventory becomes the final no-compatibility guard. | `pre_v1_compat_16_closure` | Non-blocking checker hardening; do not alter the approved Item 0 candidate. |
 | Item 0 | Align the internal `Owned` receiver vocabulary with the source-level `own self` / `own mut self` distinction during receiver implementation. | `pre_v1_compat_8_receivers` | Non-blocking terminology follow-up. |
 | Item 0 | Wire the final compatibility guard into governed verification profiles. | `pre_v1_compat_16_closure` | Non-blocking CI integration follow-up. |
+| Item 1 | Exact integers stored through container/codegen paths still have a pre-existing `SifrInt` versus `i64` representation gap. | `plans/phases/13_type_system_completion.md` integer-model owner | Out of scope for public-alias removal; preserve as integer-model hardening work. |
+| Item 1 | Exact-integer exponentiation accepts a pre-existing literal exponent above `u32::MAX` and truncates it at the Rust cast. | `plans/phases/13_type_system_completion.md` integer-model owner | Out of scope for public-alias removal; add an explicit exponent-bound diagnostic in integer-model hardening work. |
+| Item 1 | The shared annotation resolver gives unsupported `isinstance` type objects a generic annotation diagnostic. | `pre_v1_compat_11_diagnostics` | Consider a purpose-built unsupported-runtime-type-object diagnostic while removing rejection residue. |
+| Item 1 | TypeVar bound-name recognition duplicates the canonical bound-name set. | `plans/phases/13_type_system_completion.md` type-system owner | Consolidate the known bound names in later type-system maintainability work. |
+| Item 1 | The verification-taxonomy checker rejects the compatibility inventory and architecture records, failing both Sifr gates identically at the Item 1 base and candidate SHAs. | `pre_v1_compat_16_closure` | Treat as inherited infrastructure debt and reconcile the final compatibility guard with governed taxonomy checks. |
 
 ## Phase Completion Record
 
