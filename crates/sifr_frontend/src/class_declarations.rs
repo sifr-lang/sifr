@@ -117,7 +117,7 @@ impl ClassDeclaration {
         fields.insert("declaration".to_string(), self.to_const_value(lowering));
     }
 
-    fn to_const_value(&self, lowering: &LoweringResult) -> ConstValue {
+    pub(crate) fn to_const_value(&self, lowering: &LoweringResult) -> ConstValue {
         ConstValue::Record(BTreeMap::from([
             (
                 "identity".to_string(),
@@ -140,6 +140,40 @@ impl ClassDeclaration {
                 ),
             ),
         ]))
+    }
+
+    #[must_use]
+    pub(crate) fn origin_for_range(&self, range: TextRange) -> Option<SourceOriginId> {
+        self.origins
+            .entries
+            .values()
+            .find(|entry| entry.range == range)
+            .or_else(|| {
+                self.origins
+                    .entries
+                    .values()
+                    .filter(|entry| entry.range.contains_range(range))
+                    .min_by_key(|entry| entry.range.len())
+            })
+            .map(|entry| entry.id)
+    }
+
+    #[must_use]
+    pub(crate) fn field_contracts(&self, lowering: &LoweringResult) -> Vec<(String, String)> {
+        lowering
+            .module
+            .classes
+            .iter()
+            .find(|class| class.name == self.name)
+            .into_iter()
+            .flat_map(|class| &class.fields)
+            .map(|(name, ty)| {
+                (
+                    format!("{}.{}.{name}", self.module, self.name),
+                    crate::canonical_types::type_identity(ty),
+                )
+            })
+            .collect()
     }
 
     fn item_const_value(
@@ -203,7 +237,7 @@ impl ClassDeclaration {
                     if let Some((_, ty)) = class.fields.iter().find(|(field, _)| field == name) {
                         record.insert(
                             "declared_type".to_string(),
-                            ConstValue::String(ty.display_name()),
+                            ConstValue::String(crate::canonical_types::type_identity(ty)),
                         );
                     }
                 }
@@ -270,25 +304,24 @@ impl ClassDeclaration {
                             .find(|method| method.name == hir_name)
                     })
                 {
-                    let parameters = method
-                        .params
-                        .iter()
-                        .map(|parameter| {
-                            format!(
-                                "{}:{}:{:?}",
-                                parameter.name,
-                                parameter.ty.display_name(),
-                                parameter.convention
-                            )
-                        })
-                        .collect::<Vec<_>>()
-                        .join(",");
+                    let signature = sifr_type_system::FunctionType {
+                        receiver: method.receiver,
+                        params: method
+                            .params
+                            .iter()
+                            .map(|parameter| {
+                                (
+                                    parameter.name.clone(),
+                                    parameter.ty.clone(),
+                                    parameter.convention,
+                                )
+                            })
+                            .collect(),
+                        return_type: Box::new(method.return_type.clone()),
+                    };
                     record.insert(
                         "signature".to_string(),
-                        ConstValue::String(format!(
-                            "({parameters})->{}",
-                            method.return_type.display_name()
-                        )),
+                        ConstValue::String(crate::canonical_types::function_identity(&signature)),
                     );
                 }
             }

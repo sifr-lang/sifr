@@ -22,7 +22,10 @@ pub struct ModuleSpecializationMetadata {
     pub declaration_metadata: Vec<sifr_ir::TypedDeclarationMetadata>,
     pub declaration_descriptors: Vec<sifr_ir::TypedDeclarationDescriptor>,
     pub class_adapter_providers: Vec<sifr_ir::ClassAdapterProviderDeclaration>,
+    pub class_adapter_markers: Vec<sifr_ir::ClassAdapterMarkerDeclaration>,
+    pub class_adapter_selections: Vec<sifr_ir::ClassAdapterSelection>,
     pub descriptor_functions: Vec<sifr_ir::DeclarationDescriptorFunction>,
+    pub applied_adapter_metadata: Vec<sifr_ir::AppliedAdapterMetadata>,
     pub specialization_requests: Vec<sifr_ir::ConstSpecializationRequest>,
     pub specialization_outputs: Vec<sifr_ir::StaticSpecializationOutput>,
     pub json_integer_boundary_requests: Vec<sifr_ir::JsonIntegerBoundaryRequest>,
@@ -73,6 +76,16 @@ pub struct ExternalDefs {
         String,
         std::collections::HashMap<String, sifr_ir::ClassAdapterProviderDeclaration>,
     >,
+    /// Erased adapter markers keyed by canonical declaring module and symbol.
+    pub class_adapter_markers: std::collections::HashMap<
+        String,
+        std::collections::HashMap<String, sifr_ir::ClassAdapterMarkerDeclaration>,
+    >,
+    /// Adapted class selections keyed by declaring module and class symbol.
+    pub class_adapter_selections: std::collections::HashMap<
+        String,
+        std::collections::HashMap<String, sifr_ir::ClassAdapterSelection>,
+    >,
     /// Canonical descriptor function declarations keyed by module and function.
     pub descriptor_functions: std::collections::HashMap<
         String,
@@ -81,6 +94,9 @@ pub struct ExternalDefs {
     /// Evaluated descriptor uses keyed by the declaring module.
     pub declaration_descriptors:
         std::collections::HashMap<String, Vec<sifr_ir::TypedDeclarationDescriptor>>,
+    /// Typed metadata produced by validated early adapters.
+    pub applied_adapter_metadata:
+        std::collections::HashMap<String, Vec<sifr_ir::AppliedAdapterMetadata>>,
     /// Const-evaluable package function bodies keyed by module and function name.
     pub const_functions:
         std::collections::HashMap<String, std::collections::HashMap<String, sifr_ir::HirFunction>>,
@@ -190,6 +206,20 @@ impl ExternalDefs {
             .into_values()
             .collect::<Vec<_>>();
         descriptor_functions.sort_by(|left, right| left.function.cmp(&right.function));
+        let mut class_adapter_markers = self
+            .class_adapter_markers
+            .remove(module_name)
+            .unwrap_or_default()
+            .into_values()
+            .collect::<Vec<_>>();
+        class_adapter_markers.sort_by(|left, right| left.symbol.cmp(&right.symbol));
+        let mut class_adapter_selections = self
+            .class_adapter_selections
+            .remove(module_name)
+            .unwrap_or_default()
+            .into_values()
+            .collect::<Vec<_>>();
+        class_adapter_selections.sort_by(|left, right| left.owner.cmp(&right.owner));
         ModuleSpecializationMetadata {
             class_field_defaults: self
                 .class_field_defaults
@@ -204,7 +234,13 @@ impl ExternalDefs {
                 .remove(module_name)
                 .unwrap_or_default(),
             class_adapter_providers,
+            class_adapter_markers,
+            class_adapter_selections,
             descriptor_functions,
+            applied_adapter_metadata: self
+                .applied_adapter_metadata
+                .remove(module_name)
+                .unwrap_or_default(),
             specialization_requests: self
                 .specialization_requests
                 .remove(module_name)

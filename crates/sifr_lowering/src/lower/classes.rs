@@ -1,6 +1,6 @@
 use super::diagnostics::{
-    collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
-    is_operator_dunder, is_protocol_class,
+    collect_enum_variants, get_newtype_inner, has_decorator, is_enum_class, is_operator_dunder,
+    is_protocol_class,
 };
 use super::protocol_diagnostics;
 use super::statements::lower_function_stmts;

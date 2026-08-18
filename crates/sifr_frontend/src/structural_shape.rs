@@ -317,25 +317,31 @@ fn describe_class(
         }
     }
 
-    let (declaration_metadata, metadata_owner, defaults) = if local_class.is_some() {
-        (
-            lowering.declaration_metadata.as_slice(),
-            local_name,
-            lowering.class_field_defaults.get(local_name),
-        )
-    } else {
-        (
-            external_defs
-                .declaration_metadata
-                .get(source_module)
-                .map_or(&[][..], Vec::as_slice),
-            source_name,
-            external_defs
-                .class_field_defaults
-                .get(source_module)
-                .and_then(|classes| classes.get(source_name)),
-        )
-    };
+    let (declaration_metadata, adapter_metadata, metadata_owner, defaults) =
+        if local_class.is_some() {
+            (
+                lowering.declaration_metadata.as_slice(),
+                lowering.applied_adapter_metadata.as_slice(),
+                local_name,
+                lowering.class_field_defaults.get(local_name),
+            )
+        } else {
+            (
+                external_defs
+                    .declaration_metadata
+                    .get(source_module)
+                    .map_or(&[][..], Vec::as_slice),
+                external_defs
+                    .applied_adapter_metadata
+                    .get(source_module)
+                    .map_or(&[][..], Vec::as_slice),
+                source_name,
+                external_defs
+                    .class_field_defaults
+                    .get(source_module)
+                    .and_then(|classes| classes.get(source_name)),
+            )
+        };
     let described_fields = fields
         .iter()
         .enumerate()
@@ -345,8 +351,9 @@ fn describe_class(
             default: defaults
                 .and_then(|values| values.iter().find(|(field, _)| *field == index))
                 .and_then(|(_, value)| const_value_from_hir(value)),
-            metadata: metadata_for(
+            metadata: combined_metadata_for(
                 declaration_metadata,
+                adapter_metadata,
                 metadata_owner,
                 DeclarationMetadataTargetKind::Field,
                 Some(name),
@@ -397,13 +404,47 @@ fn describe_class(
         type_arguments,
         fields: described_fields,
         methods: described_methods,
-        metadata: metadata_for(
+        metadata: combined_metadata_for(
             declaration_metadata,
+            adapter_metadata,
             metadata_owner,
             DeclarationMetadataTargetKind::Type,
             None,
         ),
     }
+}
+
+fn combined_metadata_for(
+    metadata: &[TypedDeclarationMetadata],
+    adapter_metadata: &[sifr_lowering::AppliedAdapterMetadata],
+    owner: &str,
+    target_kind: DeclarationMetadataTargetKind,
+    target_name: Option<&str>,
+) -> Vec<ShapeMetadata> {
+    let mut values = metadata_for(metadata, owner, target_kind, target_name);
+    values.extend(
+        adapter_metadata
+            .iter()
+            .filter(|item| {
+                item.owner == owner
+                    && item.target_kind == target_kind
+                    && item.target_name.as_deref() == target_name
+            })
+            .map(|item| ShapeMetadata {
+                key: item.key.clone(),
+                value_type: item.value_type.display_name(),
+                value: validated_adapter_value(&item.value),
+            }),
+    );
+    values
+}
+
+#[allow(clippy::expect_used)]
+fn validated_adapter_value(value: &sifr_lowering::StaticProgramValue) -> ConstValue {
+    // Adapter metadata reaches this point only through static_program_value(),
+    // which canonicalizes integer text while validating the plan.
+    crate::specialization_support::const_value(value)
+        .expect("validated adapter metadata has canonical static values")
 }
 
 fn metadata_for(

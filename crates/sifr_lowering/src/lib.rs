@@ -32,10 +32,11 @@ pub use lower::{
 };
 pub use scope::{NarrowingSnapshot, Scope};
 pub use sifr_ir::{
-    rust_opaque_close_method, CallableIdentity, ClassAdapterProviderDeclaration,
-    DeclarationDescriptorFunction, DeclarationDescriptorKind, DeclarationMetadataTargetKind,
-    HirDiagnostic, LoweringOutcome, LoweringResult, LoweringWarningDiagnostic,
-    RevealTypeDiagnostic, RustInteropDecoratorKind, StaticMethodParam, StaticMethodSlot,
-    StaticMethodSlotContext, StaticProgramValue, StaticSpecializationOutput,
+    rust_opaque_close_method, AppliedAdapterMetadata, CallableIdentity,
+    ClassAdapterMarkerDeclaration, ClassAdapterProviderDeclaration, ClassAdapterSelection,
+    ConstSpecializationRequest, DeclarationDescriptorFunction, DeclarationDescriptorKind,
+    DeclarationMetadataTargetKind, HirDiagnostic, LoweringOutcome, LoweringResult,
+    LoweringWarningDiagnostic, RevealTypeDiagnostic, RustInteropDecoratorKind, StaticMethodParam,
+    StaticMethodSlot, StaticMethodSlotContext, StaticProgramValue, StaticSpecializationOutput,
     TypedDeclarationDescriptor, TypedDeclarationMetadata,
 };

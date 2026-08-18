@@ -1,6 +1,7 @@
 use crate::{
-    ClassAdapterProviderDeclaration, ConstSpecializationRequest, DeclarationDescriptorFunction,
-    FlowGraph, HirExpr, HirModule, JsonIntegerBoundaryRequest, LoweringWarningDiagnostic,
+    AppliedAdapterMetadata, ClassAdapterMarkerDeclaration, ClassAdapterProviderDeclaration,
+    ClassAdapterSelection, ConstSpecializationRequest, DeclarationDescriptorFunction, FlowGraph,
+    HirExpr, HirModule, JsonIntegerBoundaryRequest, LoweringWarningDiagnostic,
     RevealTypeDiagnostic, StaticSpecializationOutput, TypedDeclarationDescriptor,
     TypedDeclarationMetadata,
 };
@@ -21,10 +22,16 @@ pub struct LoweringResult {
     pub declaration_metadata: Vec<TypedDeclarationMetadata>,
     /// Package-owned provider declarations exported by this module.
     pub class_adapter_providers: Vec<ClassAdapterProviderDeclaration>,
+    /// Field-less erased marker declarations exported by this module.
+    pub class_adapter_markers: Vec<ClassAdapterMarkerDeclaration>,
+    /// Canonical providers selected for adapted classes in this module.
+    pub class_adapter_selections: Vec<ClassAdapterSelection>,
     /// Package-owned descriptor function declarations exported by this module.
     pub descriptor_functions: Vec<DeclarationDescriptorFunction>,
     /// Evaluated descriptor uses attached to declarations in this module.
     pub declaration_descriptors: Vec<TypedDeclarationDescriptor>,
+    /// Validated typed metadata returned by early class adapters.
+    pub applied_adapter_metadata: Vec<AppliedAdapterMetadata>,
     /// Resolved non-generic module type aliases available to package declarations.
     pub type_aliases: HashMap<String, Type>,
     pub specialization_requests: Vec<ConstSpecializationRequest>,

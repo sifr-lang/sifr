@@ -7,11 +7,14 @@
 
 mod cache_keys;
 mod callable_exports;
+mod canonical_types;
 mod class_declarations;
 pub use class_declarations::SourceOriginId;
 mod callable_identities;
 mod const_specialization;
 mod descriptor_exports;
+pub use descriptor_exports::erase_marker_imports;
+mod early_adapters;
 mod typed_descriptors;
 pub use const_specialization::*;
 mod const_canonical;

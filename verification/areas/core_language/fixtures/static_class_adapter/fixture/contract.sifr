@@ -1,0 +1,55 @@
+from sifr.meta import ConstSpecializationOutcome, DeclarationInput, DeclarationPlan, PlannedField, PlannedIssue, PlannedMetadata, ShapeInput
+from fixture.contract_types import ContractDescriptor
+
+
+@class_adapter_provider("fixture.contract_types", "ContractDescriptor")
+@const_eval
+def adapt_contract(
+    declaration: DeclarationInput[ContractDescriptor],
+) -> DeclarationPlan[ContractDescriptor]:
+    fields: list[PlannedField] = []
+    metadata: list[PlannedMetadata[ContractDescriptor]] = []
+    issues: list[PlannedIssue[ContractDescriptor]] = []
+    for item in declaration.declaration.items:
+        if item.kind == "field":
+            declared_type: str | None = item.declared_type
+            if declared_type is not None:
+                identity: str = declaration.declaration.identity + "." + item.name
+                fields.append(PlannedField(identity, declared_type))
+    for descriptor in declaration.descriptors:
+        if descriptor.target_kind == "class":
+            metadata.append(
+                PlannedMetadata(
+                    "class",
+                    declaration.declaration.identity,
+                    "fixture.contract",
+                    descriptor.value,
+                )
+            )
+    return DeclarationPlan(
+        fields,
+        metadata,
+        "fixture.contract",
+        "specialize",
+        issues,
+    )
+
+
+@class_adapter_marker("fixture.contract", "adapt_contract")
+class Contract:
+    pass
+
+
+@class_descriptor("fixture.contract", "adapt_contract")
+def contract_config(enabled: bool) -> ContractDescriptor:
+    return ContractDescriptor("class", enabled)
+
+
+@const_eval
+def specialize(
+    shape: ShapeInput[ContractDescriptor],
+) -> ConstSpecializationOutcome[str, ContractDescriptor]:
+    for metadata in shape.root.metadata:
+        if metadata.key == "fixture.contract" and metadata.value.enabled:
+            return ConstSpecializationOutcome("produced", metadata.value.kind, [])
+    return ConstSpecializationOutcome("produced", "missing", [])

@@ -17,6 +17,16 @@ pub(super) fn lower_regular_call(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
+    if ctx.adapter_marker_bindings.contains_key(&func_name) {
+        ctx.error_with_code_at(
+            DiagnosticCode::META_MALFORMED_DECLARATION,
+            format!(
+                "class-adapter marker '{func_name}' is erased and is valid only as a class base"
+            ),
+            call.func.range(),
+        );
+        return None;
+    }
     if ctx.python_import_module_bindings.contains(&func_name) {
         if let Some(arg) = call.arguments.args.first() {
             match arg {

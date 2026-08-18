@@ -556,8 +556,11 @@ impl RootedEntrypointPlan {
             class_field_defaults: specialization_metadata.class_field_defaults,
             declaration_metadata: specialization_metadata.declaration_metadata,
             class_adapter_providers: specialization_metadata.class_adapter_providers,
+            class_adapter_markers: specialization_metadata.class_adapter_markers,
+            class_adapter_selections: specialization_metadata.class_adapter_selections,
             descriptor_functions: specialization_metadata.descriptor_functions,
             declaration_descriptors: specialization_metadata.declaration_descriptors,
+            applied_adapter_metadata: specialization_metadata.applied_adapter_metadata,
             type_aliases: std::collections::HashMap::new(),
             specialization_requests: specialization_metadata.specialization_requests,
             specialization_outputs: specialization_metadata.specialization_outputs,
@@ -570,7 +573,6 @@ impl RootedEntrypointPlan {
             reveal_types: main_diag.reveal_types,
             warnings: main_diag.warnings,
         };
-
         Ok(FrontendCompiled {
             stdlib: self.stdlib,
             lowering_result,

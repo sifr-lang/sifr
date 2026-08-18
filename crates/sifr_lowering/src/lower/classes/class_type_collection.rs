@@ -10,8 +10,8 @@ use super::super::declared_class_identity;
 use super::async_await::coroutine_result_type;
 use super::class_field_inference::collect_constructor_self_field_assignments;
 use super::diagnostics::{
-    collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
-    is_error_class, is_protocol_class,
+    collect_enum_variants, get_newtype_inner, has_decorator, is_enum_class, is_error_class,
+    is_protocol_class,
 };
 use super::parameter_conventions::{
     class_declared_method_param_convention, class_method_param_convention,
@@ -312,7 +312,8 @@ pub(in crate::lower) fn collect_class_type(
     // This will be checked after collecting all fields
 
     // Inherit parent fields and methods for single inheritance
-    let parent_class_name = get_parent_class(class_def);
+    let parent_class_name =
+        crate::lower::descriptor_declarations::data_parent_name(&class_name, ctx);
     let mut parent_class_chain: Option<String> = None;
     if let Some(ref parent_name) = parent_class_name {
         if let Some(parent_ty) = ctx.class_types.get(parent_name).cloned() {

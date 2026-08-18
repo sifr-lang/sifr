@@ -7,7 +7,7 @@ from fixture.contract_types import ContractDescriptor
 def adapt_contract(
     declaration: DeclarationInput[ContractDescriptor],
 ) -> DeclarationPlan[ContractDescriptor]:
-    return DeclarationPlan()
+    return DeclarationPlan([], [], None, None, [])
 
 
 @field_descriptor("fixture.contract", "adapt_contract")

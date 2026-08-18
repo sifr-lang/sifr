@@ -29,7 +29,7 @@ from fixture.contract_types import ContractDescriptor
 @class_adapter_provider("fixture.contract_types", "ContractDescriptor")
 @const_eval
 def adapt_contract(value: DeclarationInput[ContractDescriptor]) -> DeclarationPlan[ContractDescriptor]:
-    return DeclarationPlan()
+    return DeclarationPlan([], [], None, None, [])
 
 @field_descriptor("fixture.contract", "adapt_contract")
 def option(limit: int | None, tags: list[str], callback: CallableIdentity | None) -> ContractDescriptor:
@@ -165,7 +165,7 @@ from fixture.other_types import OtherDescriptor
 @class_adapter_provider("fixture.other_types", "OtherDescriptor")
 @const_eval
 def adapt_other(value: DeclarationInput[OtherDescriptor]) -> DeclarationPlan[OtherDescriptor]:
-    return DeclarationPlan()
+    return DeclarationPlan([], [], None, None, [])
 
 @field_descriptor("fixture.other_contract", "adapt_other")
 def other_field() -> OtherDescriptor:
@@ -394,7 +394,7 @@ from fixture.union_types import Descriptor, FieldIntent, TypeIntent
 @class_adapter_provider("fixture.union_types", "Descriptor")
 @const_eval
 def adapt(value: DeclarationInput[Descriptor]) -> DeclarationPlan[Descriptor]:
-    return DeclarationPlan()
+    return DeclarationPlan([], [], None, None, [])
 
 @field_descriptor("fixture.union_contract", "adapt")
 def required() -> FieldIntent:
@@ -446,7 +446,7 @@ from fixture.contract_types import ContractDescriptor
 @class_adapter_provider("fixture.contract_types", "ContractDescriptor")
 @const_eval
 def adapt_contract(value: DeclarationInput[ContractDescriptor]) -> DeclarationPlan[ContractDescriptor]:
-    return DeclarationPlan()
+    return DeclarationPlan([], [], None, None, [])
 
 @field_descriptor("fixture.contract", "adapt_contract")
 def wrong() -> int:
