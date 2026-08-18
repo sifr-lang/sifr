@@ -1,150 +1,220 @@
-#[derive(Debug, Clone)]
-struct IOError {
-    message: String,
-    kind: String,
+// src/main.rs
+// --- stdlib: _sifr.math ---
+const PI: f64 = 3.141592653589793_f64;
+const E: f64 = 2.718281828459045_f64;
+const TAU: f64 = 6.283185307179586_f64;
+const INF: f64 = f64::INFINITY;
+const NAN: f64 = f64::NAN;
+fn sqrt(x: f64) -> f64 {
+    ::sifr_stdlib::math::sqrt(x)
+}
+fn floor(x: f64) -> i64 {
+    ::sifr_stdlib::math::floor(x).to_i64_saturating()
+}
+fn ceil(x: f64) -> i64 {
+    ::sifr_stdlib::math::ceil(x).to_i64_saturating()
+}
+fn abs_val(x: f64) -> f64 {
+    ::sifr_stdlib::math::abs_val(x)
+}
+fn log(x: f64) -> f64 {
+    ::sifr_stdlib::math::log(x)
+}
+fn cbrt(x: f64) -> f64 {
+    ::sifr_stdlib::math::cbrt(x)
+}
+fn sin(x: f64) -> f64 {
+    ::sifr_stdlib::math::sin(x)
+}
+fn cos(x: f64) -> f64 {
+    ::sifr_stdlib::math::cos(x)
+}
+fn tan(x: f64) -> f64 {
+    ::sifr_stdlib::math::tan(x)
+}
+fn pow_val(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::pow_val(x, y)
+}
+fn min_val(a: f64, b: f64) -> f64 {
+    ::sifr_stdlib::math::min_val(a, b)
+}
+fn max_val(a: f64, b: f64) -> f64 {
+    ::sifr_stdlib::math::max_val(a, b)
+}
+fn round_val(x: f64) -> i64 {
+    ::sifr_stdlib::math::round_val(x).to_i64_saturating()
+}
+fn asin(x: f64) -> f64 {
+    ::sifr_stdlib::math::asin(x)
+}
+fn acos(x: f64) -> f64 {
+    ::sifr_stdlib::math::acos(x)
+}
+fn atan(x: f64) -> f64 {
+    ::sifr_stdlib::math::atan(x)
+}
+fn atan2(y: f64, x: f64) -> f64 {
+    ::sifr_stdlib::math::atan2(y, x)
+}
+fn sinh(x: f64) -> f64 {
+    ::sifr_stdlib::math::sinh(x)
+}
+fn cosh(x: f64) -> f64 {
+    ::sifr_stdlib::math::cosh(x)
+}
+fn tanh(x: f64) -> f64 {
+    ::sifr_stdlib::math::tanh(x)
+}
+fn log10(x: f64) -> f64 {
+    ::sifr_stdlib::math::log10(x)
+}
+fn log2(x: f64) -> f64 {
+    ::sifr_stdlib::math::log2(x)
+}
+fn exp2(x: f64) -> f64 {
+    ::sifr_stdlib::math::exp2(x)
+}
+fn degrees(x: f64) -> f64 {
+    ::sifr_stdlib::math::degrees(x)
+}
+fn radians(x: f64) -> f64 {
+    ::sifr_stdlib::math::radians(x)
+}
+fn isnan(x: f64) -> bool {
+    ::sifr_stdlib::math::isnan(x)
+}
+fn isinf(x: f64) -> bool {
+    ::sifr_stdlib::math::isinf(x)
+}
+fn trunc(x: f64) -> i64 {
+    ::sifr_stdlib::math::trunc(x).to_i64_saturating()
+}
+fn copysign(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::copysign(x, y)
+}
+fn signbit(x: f64) -> bool {
+    ::sifr_stdlib::math::signbit(x)
+}
+fn fmod(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::fmod(x, y)
+}
+fn remainder(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::remainder(x, y)
+}
+fn hypot(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::hypot(x, y)
+}
+fn fma(x: f64, y: f64, z: f64) -> f64 {
+    ::sifr_stdlib::math::fma(x, y, z)
+}
+fn fmax(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::fmax(x, y)
+}
+fn fmin(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::fmin(x, y)
+}
+fn exp(x: f64) -> f64 {
+    ::sifr_stdlib::math::exp(x)
+}
+fn expm1(x: f64) -> f64 {
+    ::sifr_stdlib::math::expm1(x)
+}
+fn log1p(x: f64) -> f64 {
+    ::sifr_stdlib::math::log1p(x)
+}
+fn fabs(x: f64) -> f64 {
+    ::sifr_stdlib::math::fabs(x)
+}
+fn isfinite(x: f64) -> bool {
+    ::sifr_stdlib::math::isfinite(x)
+}
+fn isnormal(x: f64) -> bool {
+    ::sifr_stdlib::math::isnormal(x)
+}
+fn issubnormal(x: f64) -> bool {
+    ::sifr_stdlib::math::issubnormal(x)
+}
+fn acosh(x: f64) -> f64 {
+    ::sifr_stdlib::math::acosh(x)
+}
+fn asinh(x: f64) -> f64 {
+    ::sifr_stdlib::math::asinh(x)
+}
+fn atanh(x: f64) -> f64 {
+    ::sifr_stdlib::math::atanh(x)
+}
+fn isqrt(n: i64) -> i64 {
+    ::sifr_stdlib::math::isqrt(::sifr_runtime::interop::SifrIntBridge::from(n))
+        .to_i64_saturating()
+}
+fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
+    ::sifr_stdlib::math::dist(p, q)
+}
+fn fsum_impl(data: Vec<f64>) -> f64 {
+    ::sifr_stdlib::math::fsum(data)
+}
+fn sumprod_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
+    ::sifr_stdlib::math::sumprod(p, q)
+}
+fn erf(x: f64) -> f64 {
+    ::sifr_stdlib::math::erf(x)
+}
+fn erfc(x: f64) -> f64 {
+    ::sifr_stdlib::math::erfc(x)
+}
+fn gamma(x: f64) -> f64 {
+    ::sifr_stdlib::math::gamma(x)
+}
+fn lgamma(x: f64) -> f64 {
+    ::sifr_stdlib::math::lgamma(x)
+}
+fn frexp(x: f64) -> Vec<f64> {
+    ::sifr_stdlib::math::frexp(x)
+}
+fn ldexp(m: f64, e: i64) -> f64 {
+    ::sifr_stdlib::math::ldexp(m, ::sifr_runtime::interop::SifrIntBridge::from(e))
+}
+fn modf(x: f64) -> Vec<f64> {
+    ::sifr_stdlib::math::modf(x)
+}
+fn nextafter(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::nextafter(x, y)
+}
+fn ulp(x: f64) -> f64 {
+    ::sifr_stdlib::math::ulp(x)
 }
 
-impl IOError {
-    fn new(message: String) -> Self {
-        return Self { message: message, kind: "Other".to_string() };
-    }
+// --- stdlib: sifr.math ---
+fn pow(x: f64, y: f64) -> f64 {
+    pow_val(x, y)
 }
-
-impl std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for IOError {
-}
-
-fn __io_err(e: std::io::Error) -> IOError {
-    let msg = e.to_string();
-    let kind = if e.kind() == std::io::ErrorKind::NotFound { "FileNotFound".to_string() } else { if e.kind() == std::io::ErrorKind::PermissionDenied { "PermissionDenied".to_string() } else { if e.kind() == std::io::ErrorKind::AlreadyExists { "FileExists".to_string() } else { "Other".to_string() } } };
-    return IOError { message: msg, kind: kind };
-}
-
-#[derive(Debug, Clone)]
-struct ParseError {
-    message: String,
-}
-
-impl ParseError {
-    fn new(message: String) -> Self {
-        return Self { message: message };
-    }
-}
-
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for ParseError {
-}
-
-#[derive(Debug, Clone)]
-struct ValueError {
-    message: String,
-}
-
-impl ValueError {
-    fn new(message: String) -> Self {
-        return Self { message: message };
-    }
-}
-
-impl std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for ValueError {
-}
-
-#[derive(Debug, Clone)]
-struct JSONDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl JSONDecodeError {
-    fn new(message: String) -> Self {
-        return Self { message: message, line: 0, column: 0 };
-    }
-}
-
-impl std::fmt::Display for JSONDecodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for JSONDecodeError {
-}
-
-#[derive(Debug, Clone)]
-struct TOMLDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl TOMLDecodeError {
-    fn new(message: String) -> Self {
-        return Self { message: message, line: 0, column: 0 };
-    }
-}
-
-impl std::fmt::Display for TOMLDecodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for TOMLDecodeError {
-}
-
-#[derive(Debug, Clone)]
-struct RegexError {
-    message: String,
-    detail: String,
-}
-
-impl RegexError {
-    fn new(message: String) -> Self {
-        return Self { message: message, detail: String::new() };
-    }
-}
-
-impl std::fmt::Display for RegexError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for RegexError {
-}
+// --- end stdlib ---
 
 #[derive(Debug, Clone, PartialEq)]
-struct Container<T: Clone + std::fmt::Display + PartialOrd> {
+struct Container<T> {
     value: T,
 }
 
-impl<T: Clone + std::fmt::Display + PartialOrd> Container<T> {
+impl<T> Container<T> {
     fn new(value: T) -> Self {
-        return Self { value: value };
-    }
-    fn get(&self) -> T {
-        return self.value.clone();
+        let __sifr_field_init_0: T = value;
+        Self { value: __sifr_field_init_0 }
     }
 }
 
-trait Printable {
+impl<T: Clone> Container<T> {
+    fn get(&self) -> T {
+        self.value.clone()
+    }
+}
+
+impl<T: ::std::fmt::Display> ::std::fmt::Display for Container<T> {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Container(value={})", self.value)
+    }
+}
+
+pub trait Printable {
     fn display(&self) -> String;
 }
 
@@ -155,22 +225,26 @@ struct User {
 
 impl User {
     fn new(name: String) -> Self {
-        return Self { name: name };
-    }
-    fn display(&self) -> String {
-        return format!("User({})", self.name.clone());
+        let __sifr_field_init_0: String = name;
+        Self { name: __sifr_field_init_0 }
     }
 }
 
-impl std::fmt::Display for User {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "User(name={})", self.name);
+impl User {
+    fn display(&self) -> String {
+        format!("User({})", self.name.clone())
+    }
+}
+
+impl ::std::fmt::Display for User {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "User(name={})", self.name)
     }
 }
 
 impl Printable for User {
     fn display(&self) -> String {
-        return User::display(self);
+        User::display(self)
     }
 }
 
@@ -182,37 +256,42 @@ struct Product {
 
 impl Product {
     fn new(title: String, price: f64) -> Self {
-        return Self { title: title, price: price };
-    }
-    fn display(&self) -> String {
-        return format!("Product({}, ${})", self.title.clone(), self.price);
+        let __sifr_field_init_0: String = title;
+        let __sifr_field_init_1: f64 = price;
+        Self { title: __sifr_field_init_0, price: __sifr_field_init_1 }
     }
 }
 
-impl std::fmt::Display for Product {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Product(title={}, price={})", self.title, self.price);
+impl Product {
+    fn display(&self) -> String {
+        format!("Product({}, ${})", self.title.clone(), self.price)
+    }
+}
+
+impl ::std::fmt::Display for Product {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Product(title={}, price={})", self.title, self.price)
     }
 }
 
 impl Printable for Product {
     fn display(&self) -> String {
-        return Product::display(self);
+        Product::display(self)
     }
 }
 
-fn identity<T: Clone + std::fmt::Display + PartialOrd + 'static>(x: &T) -> T {
-    return x.clone();
+fn identity<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(x: &T) -> T {
+    x.clone()
 }
 
-fn repeat<T: Clone + std::fmt::Display + PartialOrd + 'static>(x: &T, n: i64) -> Vec<T> {
+fn repeat<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(x: &T, n: i64) -> Vec<T> {
     let mut result: Vec<T> = vec![];
-    let mut i: i64 = 0 as i64;
+    let mut i: i64 = 0_i64;
     while i < n {
-        result.push(x.clone());
-        i = i + (1 as i64);
+        result.push(x.clone().clone());
+        i += 1_i64;
     }
-    return result;
+    result
 }
 
 fn show(item: Box<dyn Printable>) {
@@ -221,21 +300,21 @@ fn show(item: Box<dyn Printable>) {
 
 fn main() {
     println!("=== PEP 695 Generic Functions ===");
-    println!("{}", identity(&(42 as i64)));
+    println!("{}", identity(&(42_i64)));
     println!("{}", identity(&"hello".to_string()));
-    println!("{:?}", repeat(&"x".to_string(), 3 as i64));
+    println!("{:?}", repeat(&"x".to_string(), 3_i64));
     println!("=== PEP 695 Generic Classes ===");
-    let mut c = Container::new(99 as i64);
+    let c: Container<i64> = Container::new(99_i64);
     println!("{}", c.get());
-    let mut c2 = Container::new("wrapped".to_string());
+    let c2: Container<String> = Container::new("wrapped".to_string());
     println!("{}", c2.get());
     println!("=== Protocol Method Dispatch ===");
     let u: User = User::new("Alice".to_string());
-    let pr: Product = Product::new("Widget".to_string(), 9.99 as f64);
+    let pr: Product = Product::new("Widget".to_string(), 9.99_f64);
     show(Box::new(u));
     show(Box::new(pr));
     println!("=== Multi-Generator Comprehensions ===");
-    let matrix: Vec<Vec<i64>> = vec![vec![1 as i64, 2 as i64, 3 as i64], vec![4 as i64, 5 as i64, 6 as i64], vec![7 as i64, 8 as i64, 9 as i64]];
+    let matrix: Vec<Vec<i64>> = vec![vec![1_i64, 2_i64, 3_i64], vec![4_i64, 5_i64, 6_i64], vec![7_i64, 8_i64, 9_i64]];
     let flat: Vec<i64> = {
     let mut __sifr_list_comp = vec![];
     for row in matrix.iter().cloned() {
@@ -247,10 +326,10 @@ fn main() {
 };
     println!("{:?}", flat);
     println!("=== Stdlib Math Functions ===");
-    println!("{}", (1.0 as f64).ln());
-    println!("{}", (0.0 as f64).sin());
-    println!("{}", (0.0 as f64).cos());
-    println!("{}", (-(42.0 as f64)).abs());
-    println!("{}", (2.0 as f64).powf(10.0 as f64));
-    println!("{}", (3.14 as f64).round() as i64);
+    println!("{}", log(1.0_f64));
+    println!("{}", sin(0.0_f64));
+    println!("{}", cos(0.0_f64));
+    println!("{}", fabs(-(42.0_f64)));
+    println!("{}", ((2.0_f64) as f64).powf((10.0_f64) as f64));
+    println!("{}", (3.14_f64).round() as i64);
 }

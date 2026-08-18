@@ -32,6 +32,19 @@ impl ParseError {
     }
 }
 
+#[derive(Debug, Clone)]
+struct ValueError {
+    message: String,
+}
+
+impl ValueError {
+    fn new(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+        }
+    }
+}
+
 fn time_now() -> f64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -68,15 +81,15 @@ fn next_random_u64() -> u64 {
     }
 }
 
-fn random_int(low: i64, high: i64) -> i64 {
-    if high <= low {
-        return low;
+fn randint(low: i64, high: i64) -> Result<i64, ValueError> {
+    if low > high {
+        return Err(ValueError::new("randint: min must be <= max"));
     }
     let span = (high - low + 1) as u64;
-    low + (next_random_u64() % span) as i64
+    Ok(low + (next_random_u64() % span) as i64)
 }
 
-fn random_float() -> f64 {
+fn random() -> f64 {
     (next_random_u64() as f64) / (u64::MAX as f64 + 1.0)
 }
 
@@ -140,9 +153,11 @@ fn main() {
     println!("Time advanced: {}", t2 > t1);
 
     println!("=== sifr.random ===");
-    let r = random_int(1, 100);
-    println!("Random int [1,100]: {r}");
-    let f = random_float();
+    match randint(1, 100) {
+        Ok(r) => println!("Random int [1,100]: {r}"),
+        Err(error) => println!("Random integer error: {}", error.message),
+    }
+    let f = random();
     println!("Random float [0,1): {f}");
 
     println!("=== sifr.re ===");

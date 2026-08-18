@@ -1,7 +1,7 @@
 # Reference: codegen_intrinsic_migration
 # Reference: compiler-feature-history
 # Demo: codegen_intrinsic_migration (registry scaffold)
-# This demo exercises math intrinsics routed through the new registry path.
+# This demo exercises canonical intrinsic-backed math operations and the public pow wrapper.
 from sifr.math import sqrt, floor, ceil, pow, atan2, isfinite
 
 def main():
