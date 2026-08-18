@@ -1,5 +1,6 @@
 from fixture.facade import Contract, ContractError, contract_config, contract_field
 from fixture.factories import Token as ExternalToken, make_names as external_names
+from fixture.models import ImportedAttached as ImportedAlias, ImportedPlain as PlainAlias
 
 
 def make_names() -> list[str]:
@@ -51,6 +52,13 @@ def main():
     assert attached.inspect() == 41
     assert attached.touch() == 42
     assert consumed.finish() == 43
+    imported: ImportedAlias = ImportedAlias(11)
+    plain: PlainAlias = PlainAlias(12)
+    assert ImportedAlias.describe() == "attached-contract"
+    assert ImportedAlias.echo("imported") == "imported"
+    assert imported.inspect() == 41
+    assert imported.touch() == 42
+    assert plain.value == 12
 
 
 def compile_result_construction() -> Result[AttachedModel, ContractError]:

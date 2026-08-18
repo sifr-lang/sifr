@@ -1,0 +1,11 @@
+from fixture.facade import Contract, contract_config
+
+
+class ImportedAttached(Contract):
+    _config = contract_config(True)
+    value: int
+
+
+class ImportedPlain(Contract):
+    _config = contract_config(True)
+    value: int
