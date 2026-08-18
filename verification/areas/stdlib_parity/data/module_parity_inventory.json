@@ -94,22 +94,23 @@
         {"name": "e", "tokens": ["e >"]},
         {"name": "log", "tokens": ["log("]},
         {"name": "sin", "tokens": ["sin("]},
-        {"name": "cos", "tokens": ["cos("]}
+        {"name": "cos", "tokens": ["cos("]},
+        {"name": "fabs", "tokens": ["fabs("]},
+        {"name": "pow", "tokens": ["pow("]}
       ]
     },
     {
       "id": "stdlib-module-random",
       "module": "sifr.random",
       "owner": "stdlib/random",
-      "support_status": "known_gap",
-      "profile": "inventory-only",
+      "support_status": "supported",
+      "profile": "merge",
       "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/09_random.sifr",
       "command": "check",
-      "known_gap": "Legacy fixture includes random_choice, which is not currently exported by sifr.random.",
       "supported_apis": [
-        {"name": "random_float", "tokens": ["random_float("]},
-        {"name": "random_int", "tokens": ["random_int("]},
-        {"name": "random_choice", "tokens": ["random_choice("]}
+        {"name": "random", "tokens": ["random("]},
+        {"name": "randint", "tokens": ["randint("]},
+        {"name": "choice", "tokens": ["choice("]}
       ]
     },
     {

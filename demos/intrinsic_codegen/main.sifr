@@ -2,15 +2,15 @@
 # Reference: compiler-feature-history
 # Demo: codegen_intrinsic_migration (registry scaffold)
 # This demo exercises math intrinsics routed through the new registry path.
-from sifr.math import sqrt, floor, ceil, pow_val, round_val, atan2, isfinite
+from sifr.math import sqrt, floor, ceil, pow, atan2, isfinite
 
 def main():
     base: float = 9.0
     root: float = sqrt(base)
     rounded_down: int = floor(3.9)
     rounded_up: int = ceil(3.1)
-    powered: float = pow_val(2.0, 3.0)
-    rounded: int = round_val(3.6)
+    powered: float = pow(2.0, 3.0)
+    rounded: int = round(3.6)
     angle: float = atan2(1.0, 1.0)
     finite: bool = isfinite(powered)
 
@@ -28,4 +28,3 @@ def main():
     assert str(f"angle_positive = {angle > 0.0}") == "angle_positive = true"
     print(f"finite = {finite}")
     assert str(f"finite = {finite}") == "finite = true"
-

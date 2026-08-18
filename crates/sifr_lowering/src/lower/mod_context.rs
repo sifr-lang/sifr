@@ -166,6 +166,9 @@ pub(in crate::lower) struct LowerCtx {
         HashMap<String, HashMap<String, HashSet<String>>>,
     pub(in crate::lower) current_module_name: Option<String>,
     pub(in crate::lower) externals: ExternalDefs,
+    /// Local function aliases imported from compiled `_sifr.*` declarations,
+    /// mapped back to the emitted private declaration name.
+    pub(in crate::lower) private_import_function_sources: HashMap<String, String>,
     pub(in crate::lower) explicit_defaultdict_bindings: HashSet<String>,
     pub(in crate::lower) parallel_map_bindings: HashSet<String>,
     pub(in crate::lower) parallel_try_map_bindings: HashSet<String>,
@@ -279,6 +282,7 @@ impl LowerCtx {
             generic_method_dependencies: HashMap::new(),
             current_module_name: None,
             externals: ExternalDefs::default(),
+            private_import_function_sources: HashMap::new(),
             explicit_defaultdict_bindings: HashSet::new(),
             parallel_map_bindings: HashSet::new(),
             parallel_try_map_bindings: HashSet::new(),

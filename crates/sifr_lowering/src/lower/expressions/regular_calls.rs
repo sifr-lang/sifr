@@ -662,6 +662,11 @@ pub(super) fn lower_regular_call(
     } else {
         return_type
     };
+    let emitted_func_name = ctx
+        .private_import_function_sources
+        .get(&func_name)
+        .cloned()
+        .unwrap_or_else(|| func_name.clone());
 
     if let Some(intrinsic) = ctx.compiler_intrinsics.get(&func_name).copied() {
         python_interop::validate_raw_conversion_intrinsic(
@@ -695,7 +700,7 @@ pub(super) fn lower_regular_call(
         })
     } else if python_call_shapes.is_some() {
         Some(HirExpr::PythonCall {
-            func: func_name,
+            func: emitted_func_name,
             args,
             provided_arguments,
             record_expansions: python_record_expansions,
@@ -704,7 +709,7 @@ pub(super) fn lower_regular_call(
     } else {
         Some(HirExpr::Call {
             mutable_arg_places,
-            func: func_name,
+            func: emitted_func_name,
             args,
             ty: call_type,
         })

@@ -1,6 +1,6 @@
 # Consolidated stdlib math coverage for stdlib_consolidation structure rules
 from sifr.math import (
-    sqrt, floor, ceil, pi, e, log, sin, cos, abs_val, pow_val, round_val,
+    sqrt, floor, ceil, pi, e, log, sin, cos, fabs, pow,
     asin, acos, sinh, log10, degrees, trunc, hypot, tau, inf, nan, isnan, isinf,
     factorial, gcd, lcm, comb, perm, isclose, prod, exp, fabs, isfinite,
     erf, erfc, gamma, lgamma, frexp, ldexp, modf, nextafter, ulp,
@@ -25,9 +25,9 @@ def collect_basic_actual() -> list[bool]:
     actual.append(log(1.0) == 0.0)
     actual.append(sin(0.0) == 0.0)
     actual.append(cos(0.0) == 1.0)
-    actual.append(abs_val(-5.0) == 5.0)
-    actual.append(pow_val(2.0, 3.0) == 8.0)
-    actual.append(round_val(3.7) == 4)
+    actual.append(fabs(-5.0) == 5.0)
+    actual.append(pow(2.0, 3.0) == 8.0)
+    actual.append(round(3.7) == 4)
     return actual
 
 def collect_expanded_actual() -> list[bool]:

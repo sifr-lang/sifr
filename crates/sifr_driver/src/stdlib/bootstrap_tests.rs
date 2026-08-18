@@ -240,6 +240,78 @@ fn retained_public_declarations_export_typed_compiler_identity() {
     );
 }
 
+#[test]
+fn numeric_and_random_modules_export_only_canonical_operation_names() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+
+    let math = compiled
+        .defs
+        .functions
+        .get("sifr.math")
+        .expect("sifr.math functions should be exported");
+    for name in ["fabs", "pow"] {
+        assert!(
+            math.contains_key(name),
+            "sifr.math.{name} should be exported"
+        );
+    }
+    for name in [
+        "abs_val",
+        "pow_val",
+        "min_val",
+        "max_val",
+        "round_val",
+        "dist_impl",
+        "fsum_impl",
+        "sumprod_impl",
+    ] {
+        assert!(
+            !math.contains_key(name),
+            "sifr.math.{name} must remain private"
+        );
+    }
+
+    let random = compiled
+        .defs
+        .functions
+        .get("sifr.random")
+        .expect("sifr.random functions should be exported");
+    for name in ["randint", "random", "uniform", "choice"] {
+        assert!(
+            random.contains_key(name),
+            "sifr.random.{name} should be exported"
+        );
+    }
+    for name in [
+        "random_int",
+        "random_float",
+        "random_uniform",
+        "random_randrange",
+        "random_gauss",
+        "random_module_state_words",
+        "random_module_state_index",
+        "random_module_state_gauss_next",
+        "random_module_set_state",
+    ] {
+        assert!(
+            !random.contains_key(name),
+            "sifr.random.{name} must remain private"
+        );
+    }
+
+    for module_name in ["sifr.secrets", "sifr.tempfile"] {
+        let functions = compiled
+            .defs
+            .functions
+            .get(module_name)
+            .unwrap_or_else(|| panic!("{module_name} functions should be exported"));
+        assert!(
+            !functions.contains_key("random_int"),
+            "{module_name}.random_int must remain private"
+        );
+    }
+}
+
 fn fixture_source(module: &str, source: &str, kind: LoadedStdlibSourceKind) -> LoadedStdlibSource {
     let stdlib_root =
         std::fs::canonicalize(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../stdlib"))

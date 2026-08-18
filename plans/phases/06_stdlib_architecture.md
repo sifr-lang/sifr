@@ -72,7 +72,7 @@ status: completed
 7. `lib/sifr/os.sifr` -- wraps `_sifr.sys` + `_sifr.fs` (run_command, get_args)
 8. `lib/sifr/json.sifr` -- wraps `_sifr.json` (json_loads, json_dumps)
 9. `lib/sifr/time.sifr` -- wraps `_sifr.time` (time_now, sleep, time_format)
-10. `lib/sifr/random.sifr` -- wraps `_sifr.crypto` (random_int, random_float, random_choice)
+10. `lib/sifr/random.sifr` -- wraps private `_sifr.crypto` entropy primitives behind the stateful `randint`, `random`, `uniform`, and `choice` API
 11. `lib/sifr/re.sifr` -- wraps `_sifr.regex` (re_match, re_find, re_replace)
 12. `lib/sifr/collections.sifr` -- wraps existing set/counter/defaultdict intrinsics
 13. `lib/sifr/test.sifr` -- already done in milestone_intrinsics (verify still works)

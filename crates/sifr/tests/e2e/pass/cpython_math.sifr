@@ -2,7 +2,7 @@
 from sifr.test import assert_eq, assert_true, assert_false, assert_almost_eq
 from sifr.math import (
     sqrt, floor, ceil, fabs, log, log2, log10, exp, sin, cos, tan,
-    asin, acos, atan, atan2, sinh, cosh, tanh, pow_val, factorial,
+    asin, acos, atan, atan2, sinh, cosh, tanh, pow, factorial,
     gcd, lcm, isnan, isinf, copysign, hypot, trunc, degrees, radians,
     isfinite, fmod, expm1, log1p, pi, e, tau, inf, nan, isclose,
     comb, perm, prod
@@ -78,10 +78,10 @@ def main():
     assert_almost_eq(sqrt(2.0), 1.4142, 0.001)
 
     # --- Power ---
-    assert_almost_eq(pow_val(2.0, 3.0), 8.0, 0.0001)
-    assert_almost_eq(pow_val(2.0, 0.0), 1.0, 0.0001)
-    assert_almost_eq(pow_val(2.0, -1.0), 0.5, 0.0001)
-    assert_almost_eq(pow_val(10.0, 2.0), 100.0, 0.0001)
+    assert_almost_eq(pow(2.0, 3.0), 8.0, 0.0001)
+    assert_almost_eq(pow(2.0, 0.0), 1.0, 0.0001)
+    assert_almost_eq(pow(2.0, -1.0), 0.5, 0.0001)
+    assert_almost_eq(pow(10.0, 2.0), 100.0, 0.0001)
 
     # --- Factorial ---
     assert_eq(factorial(0), 1)
@@ -161,4 +161,3 @@ def main():
     assert_almost_eq(tau, 2.0 * pi, 0.000001)
 
     assert str("cpython_math: all 113 assertions passed") == 'cpython_math: all 113 assertions passed'
-

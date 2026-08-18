@@ -201,6 +201,7 @@ fn compile_stdlib_sources_with_sysroot(
                         &stdlib_defs,
                         &import.module,
                         &import.names,
+                        &import.aliases,
                     );
                 }
             } else if import.module.starts_with("sifr.") {
@@ -222,6 +223,7 @@ fn compile_stdlib_sources_with_sysroot(
                         &stdlib_defs,
                         &import.module,
                         &import.names,
+                        &import.aliases,
                     );
                 }
                 if let Some(deps) = stdlib_code.transitive_deps.get(&import.module) {

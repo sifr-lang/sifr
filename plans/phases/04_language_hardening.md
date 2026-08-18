@@ -362,12 +362,12 @@ Support `[x for row in matrix for x in row]` (multiple `for` clauses in a single
 
 All stdlib signature changes primarily live in `crates/sifr_stdlib` (and codegen mappings where needed):
 
-- **Math**: Add `log`, `sin`, `cos`, `tan`, `pow_val`, `min_val`, `max_val`, `round_val`; rename `fabs` -> `abs_val`
+- **Math**: Add the original intrinsic implementations for `log`, `sin`, `cos`, `tan`, power, min/max, and rounding. The pre-v1 public contract later standardized `fabs` and `pow`; the implementation spellings are private.
 - **IO**: Rename `write_file` -> `write_text`, `read_file` -> `read_text`, `file_exists` -> `exists`
 - **Env**: Rename `get_env` -> `env_get`, `set_env` -> `env_set`
 - **Hash**: Rename `md5_hash` -> `md5`
 - **JSON**: Widen `json_dumps` parameter type from `str` to accept any serializable type
-- **Random**: Widen `random_choice` to accept generic `list[T]` instead of `list[int]`
+- **Random**: Provide generic public `choice[T]`; low-level random intrinsics remain private implementation details.
 
 **Fixes:** `verification/areas/stdlib_parity/fixtures/audits/stdlib/01_math.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/02_json.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/06_io.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/08_env.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/09_random.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/10_hash_encoding.sifr`
 

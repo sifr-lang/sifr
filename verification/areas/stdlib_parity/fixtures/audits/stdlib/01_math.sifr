@@ -2,7 +2,7 @@
 # Test 1: sifr.math -- Full Coverage
 # ============================================================
 
-from sifr.math import sqrt, floor, ceil, pi, e, log, sin, cos, tan, abs_val, pow_val, min_val, max_val, round_val
+from sifr.math import sqrt, floor, ceil, pi, e, log, sin, cos, tan, fabs, pow
 
 def main():
     print(sqrt(16.0))
@@ -14,3 +14,5 @@ def main():
     print(log(1.0))
     print(sin(0.0))
     print(cos(0.0))
+    print(fabs(-5.0))
+    print(pow(2.0, 3.0))

@@ -49,6 +49,8 @@ fn resolve_function(
         return false;
     };
     ctx.functions.insert(local.to_string(), ft.clone());
+    ctx.private_import_function_sources
+        .insert(local.to_string(), name.to_string());
     import_function_metadata(ctx, externals, module_name, name, local);
     true
 }

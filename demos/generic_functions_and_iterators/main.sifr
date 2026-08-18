@@ -62,7 +62,7 @@ def show(own item: Printable) -> None:
 # [expr for x in xs for y in ys]
 
 # --- 5. Stdlib Fixes ---
-from sifr.math import log, sin, cos, abs_val, pow_val, round_val
+from sifr.math import log, sin, cos, fabs, pow
 
 def main():
     # 1. PEP 695 generic functions
@@ -96,6 +96,6 @@ def main():
     print(log(1.0))
     print(sin(0.0))
     print(cos(0.0))
-    print(abs_val(-42.0))
-    print(pow_val(2.0, 10.0))
-    print(round_val(3.14))
+    print(fabs(-42.0))
+    print(pow(2.0, 10.0))
+    print(round(3.14))

@@ -19,13 +19,24 @@ pub(super) fn re_export_stdlib_imports(
     stdlib_defs: &ExternalDefs,
     import_module: &str,
     import_names: &[String],
+    import_aliases: &[(String, String)],
 ) {
     let imported_names = import_names
         .iter()
         .map(String::as_str)
         .collect::<HashSet<_>>();
-    copy_named_exports(exports, stdlib_defs, import_module, import_names);
-    copy_callable_metadata(exports, stdlib_defs, import_module, &imported_names);
+    let aliases = import_aliases
+        .iter()
+        .map(|(original, local)| (original.as_str(), local.as_str()))
+        .collect::<HashMap<_, _>>();
+    copy_named_exports(exports, stdlib_defs, import_module, import_names, &aliases);
+    copy_callable_metadata(
+        exports,
+        stdlib_defs,
+        import_module,
+        &imported_names,
+        &aliases,
+    );
 }
 
 fn copy_named_exports(
@@ -33,8 +44,10 @@ fn copy_named_exports(
     stdlib_defs: &ExternalDefs,
     import_module: &str,
     import_names: &[String],
+    aliases: &HashMap<&str, &str>,
 ) {
     for name in import_names {
+        let export_name = aliases.get(name.as_str()).copied().unwrap_or(name.as_str());
         if let Some(ft) = stdlib_defs
             .functions
             .get(import_module)
@@ -42,7 +55,7 @@ fn copy_named_exports(
         {
             exports
                 .functions
-                .entry(name.clone())
+                .entry(export_name.to_string())
                 .or_insert_with(|| ft.clone());
             continue;
         }
@@ -52,10 +65,12 @@ fn copy_named_exports(
             .and_then(|module_classes| module_classes.get(name))
         {
             if stdlib_defs.is_error_type(import_module, name) {
-                exports.error_types.insert(name.clone());
+                exports.error_types.insert(export_name.to_string());
             }
-            if !exports.classes.contains_key(name) {
-                exports.classes.insert(name.clone(), class_ty.clone());
+            if !exports.classes.contains_key(export_name) {
+                exports
+                    .classes
+                    .insert(export_name.to_string(), class_ty.clone());
                 if let Some(type_params) = stdlib_defs
                     .class_type_params
                     .get(import_module)
@@ -63,7 +78,7 @@ fn copy_named_exports(
                 {
                     exports
                         .class_type_params
-                        .insert(name.clone(), type_params.clone());
+                        .insert(export_name.to_string(), type_params.clone());
                 }
             } else if let Some(type_params) = stdlib_defs
                 .class_type_params
@@ -72,7 +87,7 @@ fn copy_named_exports(
             {
                 exports
                     .class_type_params
-                    .entry(name.clone())
+                    .entry(export_name.to_string())
                     .or_insert_with(|| type_params.clone());
             }
             continue;
@@ -84,7 +99,7 @@ fn copy_named_exports(
         {
             exports
                 .constants
-                .entry(name.clone())
+                .entry(export_name.to_string())
                 .or_insert_with(|| const_ty.clone());
         }
     }
@@ -95,54 +110,75 @@ fn copy_callable_metadata(
     stdlib_defs: &ExternalDefs,
     import_module: &str,
     imported_names: &HashSet<&str>,
+    aliases: &HashMap<&str, &str>,
 ) {
     if let Some(module_intrinsics) = stdlib_defs.compiler_intrinsics.get(import_module) {
         for (callable_name, intrinsic) in module_intrinsics {
-            if is_imported_callable(callable_name, imported_names) {
+            if let Some(export_name) =
+                exported_callable_name(callable_name, imported_names, aliases)
+            {
                 exports
                     .compiler_intrinsics
-                    .entry(callable_name.clone())
+                    .entry(export_name)
                     .or_insert(*intrinsic);
             }
         }
     }
     if let Some(module_defaults) = stdlib_defs.function_defaults.get(import_module) {
         for (callable_name, defaults) in module_defaults {
-            if is_imported_callable(callable_name, imported_names) {
+            if let Some(export_name) =
+                exported_callable_name(callable_name, imported_names, aliases)
+            {
                 exports
                     .defaults
-                    .entry(callable_name.clone())
+                    .entry(export_name)
                     .or_insert_with(|| defaults.clone());
             }
         }
     }
     if let Some(module_varargs) = stdlib_defs.function_varargs.get(import_module) {
         for (callable_name, vararg_index) in module_varargs {
-            if is_imported_callable(callable_name, imported_names) {
-                exports
-                    .varargs
-                    .entry(callable_name.clone())
-                    .or_insert(*vararg_index);
+            if let Some(export_name) =
+                exported_callable_name(callable_name, imported_names, aliases)
+            {
+                exports.varargs.entry(export_name).or_insert(*vararg_index);
             }
         }
     }
     if let Some(module_workloads) = stdlib_defs.function_workloads.get(import_module) {
         for (callable_name, label) in module_workloads {
-            if is_imported_callable(callable_name, imported_names) {
+            if let Some(export_name) =
+                exported_callable_name(callable_name, imported_names, aliases)
+            {
                 exports
                     .workloads
-                    .entry(callable_name.clone())
+                    .entry(export_name)
                     .or_insert_with(|| label.clone());
             }
         }
     }
 }
 
-fn is_imported_callable(callable_name: &str, imported_names: &HashSet<&str>) -> bool {
-    imported_names.contains(callable_name)
-        || callable_name
-            .split_once('.')
-            .is_some_and(|(owner_name, _)| imported_names.contains(owner_name))
+fn exported_callable_name(
+    callable_name: &str,
+    imported_names: &HashSet<&str>,
+    aliases: &HashMap<&str, &str>,
+) -> Option<String> {
+    if imported_names.contains(callable_name) {
+        return Some(
+            aliases
+                .get(callable_name)
+                .copied()
+                .unwrap_or(callable_name)
+                .to_string(),
+        );
+    }
+    let (owner_name, member_name) = callable_name.split_once('.')?;
+    if !imported_names.contains(owner_name) {
+        return None;
+    }
+    let exported_owner = aliases.get(owner_name).copied().unwrap_or(owner_name);
+    Some(format!("{exported_owner}.{member_name}"))
 }
 
 #[cfg(test)]
@@ -207,6 +243,7 @@ mod tests {
             &defs,
             "sifr.origin",
             &["verify".to_string(), "Failure".to_string()],
+            &[],
         );
 
         assert_eq!(
@@ -214,5 +251,51 @@ mod tests {
             Some(&CompilerIntrinsicId::TestAssertTrue)
         );
         assert!(error_types.contains("Failure"));
+    }
+
+    #[test]
+    fn aliased_imports_use_the_local_export_name() {
+        let mut defs = ExternalDefs::default();
+        defs.functions
+            .entry("_sifr.origin".to_string())
+            .or_default()
+            .insert(
+                "legacy".to_string(),
+                FunctionType {
+                    receiver: None,
+                    params: vec![],
+                    return_type: Box::new(Type::Int),
+                },
+            );
+
+        let mut functions = HashMap::new();
+        let mut compiler_intrinsics = HashMap::new();
+        let mut classes = HashMap::new();
+        let mut error_types = HashSet::new();
+        let mut class_type_params = HashMap::new();
+        let mut defaults = HashMap::new();
+        let mut varargs = HashMap::new();
+        let mut workloads = HashMap::new();
+        let mut constants = HashMap::new();
+        re_export_stdlib_imports(
+            &mut ReExportMaps {
+                functions: &mut functions,
+                compiler_intrinsics: &mut compiler_intrinsics,
+                classes: &mut classes,
+                error_types: &mut error_types,
+                class_type_params: &mut class_type_params,
+                defaults: &mut defaults,
+                varargs: &mut varargs,
+                workloads: &mut workloads,
+                constants: &mut constants,
+            },
+            &defs,
+            "_sifr.origin",
+            &["legacy".to_string()],
+            &[("legacy".to_string(), "_legacy_impl".to_string())],
+        );
+
+        assert!(!functions.contains_key("legacy"));
+        assert!(functions.contains_key("_legacy_impl"));
     }
 }

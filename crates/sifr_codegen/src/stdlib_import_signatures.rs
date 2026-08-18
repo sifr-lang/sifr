@@ -45,10 +45,22 @@ pub(crate) fn register_imported_stdlib_signature(
         .get(&import.module)
         .and_then(|sig_map| sig_map.get(name))
     {
-        emitter.func_signatures.insert(local_name, sig.clone());
+        emitter
+            .func_signatures
+            .insert(local_name.clone(), sig.clone());
+        if import.module.starts_with("_sifr.") && local_name != name {
+            emitter
+                .func_signatures
+                .insert(name.to_string(), sig.clone());
+        }
         return;
     }
     if let Some(sig) = transitive_stdlib_signature(stdlib_code, &import.module, name) {
-        emitter.func_signatures.insert(local_name, sig);
+        emitter
+            .func_signatures
+            .insert(local_name.clone(), sig.clone());
+        if import.module.starts_with("_sifr.") && local_name != name {
+            emitter.func_signatures.insert(name.to_string(), sig);
+        }
     }
 }
