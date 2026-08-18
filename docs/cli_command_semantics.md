@@ -31,6 +31,12 @@ Notes:
 - A manifest-less local import receives the ordinary single-file import
   diagnostic. Add `sifr.toml` when multiple local modules must compile
   together.
+- Known issue [#3128](https://github.com/sifr-lang/sifr/issues/3128) affects the
+  package-session preflight. If the current directory contains a source-only
+  manifest without package metadata, this preflight can fail before these
+  rules run. Until the issue is fixed, invoke explicit-file `check`, `run`, and
+  `build` from outside that directory. Alternatively, use a complete package
+  manifest. `emit` and `trace` do not use this preflight.
 
 ## Command Behavior Matrix
 

@@ -2,7 +2,7 @@
 
 ```toml
 [source]
-root = ["src"]
+root = ""
 ```
 
 ## How To Fix It
