@@ -1,28 +1,35 @@
 # CPython test_re.py — ported assertions for sifr.re (helper-structured)
 # Uses CPython-compatible names: search, sub, findall, split (new aliases)
-# re_match has no alias (match is a Python keyword), so it stays as re_match
+# search has no alias (match is a Python keyword), so it stays as search
 from sifr.test import assert_bool_vector_eq
-from sifr.re import re_match, search, sub, findall, split
+from sifr.re import search, sub, findall, split
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 
 def collect_match_actual() -> list[bool]:
     actual: list[bool] = []
     try:
-        m1: bool = re_match("a", "a")
-        m2: bool = re_match("a", "abc")
-        m3: bool = re_match("b", "a")
-        m4: bool = re_match("ab", "abc")
-        m5: bool = re_match("a*", "aaa")
-        m6: bool = re_match("a*", "")
-        m7: bool = re_match("x*", "xxxa")
-        m8: bool = re_match(".", "a")
-        m9: bool = re_match("^abc$", "abc")
-        m10: bool = re_match("^abc$", "abcd")
-        m11: bool = re_match("[0-9]+", "123")
-        m12: bool = re_match("[0-9]+", "abc")
-        m13: bool = re_match("[a-z]+", "hello")
-        m14: bool = re_match("(a|b)", "a")
-        m15: bool = re_match("(a|b)", "b")
-        m16: bool = re_match("(a|b)", "c")
+        m1: bool = has_match("a", "a")
+        m2: bool = has_match("a", "abc")
+        m3: bool = has_match("b", "a")
+        m4: bool = has_match("ab", "abc")
+        m5: bool = has_match("a*", "aaa")
+        m6: bool = has_match("a*", "")
+        m7: bool = has_match("x*", "xxxa")
+        m8: bool = has_match(".", "a")
+        m9: bool = has_match("^abc$", "abc")
+        m10: bool = has_match("^abc$", "abcd")
+        m11: bool = has_match("[0-9]+", "123")
+        m12: bool = has_match("[0-9]+", "abc")
+        m13: bool = has_match("[a-z]+", "hello")
+        m14: bool = has_match("(a|b)", "a")
+        m15: bool = has_match("(a|b)", "b")
+        m16: bool = has_match("(a|b)", "c")
 
         actual.append(m1)
         actual.append(m2)

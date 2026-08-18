@@ -1,5 +1,5 @@
 # Reference: decimal_conversions
-from sifr.json import json_dumps
+from sifr.json import dumps
 
 def main():
     print("decimal_conversions conversion and boundary rules demo")
@@ -24,8 +24,8 @@ def main():
     except DecimalConversionError as e:
         print("unexpected decimal conversion failure: " + e.message)
 
-    print(json_dumps(Decimal("1.2300")))
-    print(json_dumps(BigDecimal("1.2300")))
+    print(dumps(Decimal("1.2300")))
+    print(dumps(BigDecimal("1.2300")))
 
     try:
         out_of_range: int = int(BigDecimal("999999999999999999999999999999999999"))

@@ -70,10 +70,10 @@ status: completed
 5. `lib/sifr/hashlib.sifr` -- wraps `_sifr.crypto` (sha256, md5)
 6. `lib/sifr/io.sifr` -- wraps `_sifr.fs` + `_sifr.io` (read_text, write_text, exists, read_lines, `open()` / `File` context manager). Needs new intrinsics: `_sifr.fs.open_file`, `read_fd`, `write_fd`, `close_fd`
 7. `lib/sifr/os.sifr` -- wraps `_sifr.sys` + `_sifr.fs` for OS and filesystem operations; process arguments belong to `sifr.sys.argv`
-8. `lib/sifr/json.sifr` -- wraps `_sifr.json` (json_loads, json_dumps)
+8. `stdlib/sifr/json.sifr` -- exposes canonical `loads` and `dumps` over private `_sifr.json` intrinsics
 9. `lib/sifr/time.sifr` -- wraps private `_sifr.time.time_now` and `time_format` as public `time` and `strftime`; `sleep`, `perf_counter`, and `monotonic` keep their distinct names
 10. `lib/sifr/random.sifr` -- wraps private `_sifr.crypto` entropy primitives behind the stateful `randint`, `random`, `uniform`, and `choice` API
-11. `lib/sifr/re.sifr` -- wraps `_sifr.regex` (re_match, re_find, re_replace)
+11. `stdlib/sifr/re.sifr` -- exposes canonical regex operations over private `_sifr.regex` intrinsics
 12. `lib/sifr/collections.sifr` -- wraps existing set/counter/defaultdict intrinsics
 13. `lib/sifr/test.sifr` -- already done in milestone_intrinsics (verify still works)
 

@@ -1,7 +1,14 @@
 # Test error subclass handling: IOError subclasses, extra fields, parent catch-all
 from sifr.io import read_text, write_text
-from sifr.json import JsonValue, json_loads
-from sifr.re import re_match
+from sifr.json import JsonValue, loads
+from sifr.re import search
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 
 
 def main():
@@ -43,14 +50,14 @@ def main():
 
     # 5. JSONDecodeError has line and column fields
     try:
-        result: JsonValue = json_loads("{invalid json")
+        result: JsonValue = loads("{invalid json")
     except JSONDecodeError as e:
         assert str(f"5: json line={e.line} col={e.column}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
 
     # 6. RegexError has detail field
     try:
-        m: bool = re_match("[invalid", "test")
+        m: bool = has_match("[invalid", "test")
     except RegexError as e:
         assert str("6: regex detail ok") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1

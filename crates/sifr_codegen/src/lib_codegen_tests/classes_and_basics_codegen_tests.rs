@@ -1,6 +1,22 @@
 use super::*;
 
 #[test]
+fn user_defined_filter_call_shadows_the_functional_builtin() {
+    let rust_code = generate_rust_from_source(
+        r#"def filter(own names: list[str], pattern: str) -> list[str]:
+    return names
+
+def main():
+    names: list[str] = ["main.py"]
+    selected: list[str] = filter(names, "*.py")
+"#,
+    );
+
+    assert!(rust_code.contains("let selected: Vec<String> = filter(names,"));
+    assert!(!rust_code.contains("names(__filter_value)"));
+}
+
+#[test]
 fn test_fieldless_class_gets_default_constructor() {
     let rust_code = generate_rust_from_source(
         r#"class Codec:

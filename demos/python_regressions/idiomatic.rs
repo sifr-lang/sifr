@@ -618,7 +618,7 @@ fn _match(name: &String, mut ni: i64, pattern: &String, mut pi: i64) -> bool {
     }
     return ni == (name.chars().count() as i64);
 }
-fn fnmatch_filter(names: &[String], pattern: &String) -> Vec<String> {
+fn filter(names: &[String], pattern: &String) -> Vec<String> {
     let mut result: Vec<String> = vec![];
     for name in names.iter().cloned() {
         if fnmatch(&name, pattern) {
@@ -2966,7 +2966,7 @@ fn main() {
         assert!(!__cond)
     };
     let names: Vec<String> = vec!["a.py".to_string(), "b.txt".to_string(), "c.py".to_string()];
-    let filtered: Vec<String> = fnmatch_filter(&names, &"*.py".to_string());
+    let filtered: Vec<String> = filter(&names, &"*.py".to_string());
     assert_eq!(filtered.len() as i64, 2 as i64);
     println!("fnmatch: OK");
     let sorted_list: Vec<i64> = vec![1 as i64, 3 as i64, 5 as i64, 7 as i64, 9 as i64];

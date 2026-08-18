@@ -52,7 +52,7 @@ fn truncated_bigint_from_bigdecimal(value: &BigDecimal) -> BigInt {
     }
 }
 
-fn json_dumps<T: std::fmt::Display>(value: T) -> String {
+fn dumps<T: std::fmt::Display>(value: T) -> String {
     format!("\"{value}\"")
 }
 
@@ -81,8 +81,8 @@ fn main() {
         Err(_) => println!("unexpected decimal conversion failure: invalid decimal"),
     }
 
-    println!("{}", json_dumps(dec("1.2300")));
-    println!("{}", json_dumps(big("1.2300")));
+    println!("{}", dumps(dec("1.2300")));
+    println!("{}", dumps(big("1.2300")));
 
     match int_from_bigdecimal(&big("999999999999999999999999999999999999")) {
         Ok(out_of_range) => println!("{out_of_range}"),

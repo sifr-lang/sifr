@@ -18,7 +18,7 @@ from sifr.itertools import chain, take, flatten
 from sifr.textwrap import fill, indent
 from sifr.csv import parse_row, format_row
 from sifr.argparse import parse_flag, parse_option
-from sifr.fnmatch import fnmatch, fnmatch_filter
+from sifr.fnmatch import fnmatch, filter
 from sifr.test import assert_eq, assert_true
 
 def main():

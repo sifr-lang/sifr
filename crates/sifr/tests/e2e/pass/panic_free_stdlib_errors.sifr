@@ -6,9 +6,9 @@
 from sifr.io import read_text, read_lines
 from sifr.os import listdir, rmdir, remove_file, rename
 from sifr.shutil import copy
-from sifr.json import JsonValue, json_loads
-from sifr.tomllib import TomlValue, toml_loads
-from sifr.re import re_match, search, findall, split, sub
+from sifr.json import JsonValue, JSONDecoder
+from sifr.tomllib import TomlValue, loads
+from sifr.re import search, findall, split, sub
 from sifr.base64 import b64decode
 from sifr.random import randint
 from sifr.secrets import randbelow
@@ -18,6 +18,17 @@ from sifr.graphlib import topological_sort, CycleError
 from sifr.uuid import uuid_from_hex, UUID
 from sifr.ipaddress import ip_to_int
 from sifr.datetime import from_timestamp, datetime
+
+def _load_json(text: str) -> Result[JsonValue, JSONDecodeError]:
+    decoder: JSONDecoder = JSONDecoder()
+    return decoder.decode(text)
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 
 def main():
     io_errors: int = 0
@@ -69,17 +80,17 @@ def main():
     # === 2. Parse Safety ===
 
     try:
-        j1: JsonValue = json_loads("not json")
+        j1: JsonValue = _load_json("not json")
     except JSONDecodeError as e:
         parse_errors = parse_errors + 1
 
     try:
-        t1: TomlValue = toml_loads("not toml [[[" )
+        t1: TomlValue = loads("not toml [[[" )
     except TOMLDecodeError as e:
         parse_errors = parse_errors + 1
 
     try:
-        m1: bool = re_match("[invalid", "text")
+        m1: bool = has_match("[invalid", "text")
     except RegexError as e:
         parse_errors = parse_errors + 1
 

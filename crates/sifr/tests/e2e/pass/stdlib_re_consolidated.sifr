@@ -1,22 +1,29 @@
 # Consolidated stdlib re coverage for stdlib_consolidation structure rules
 from sifr.re import (
-    re_match, re_find, re_replace, re_findall, re_split,
+    search, sub, findall, split,
     Match, compile, fullmatch, Pattern, compile_flags, search_flags, IGNORECASE
 )
 from sifr.test import assert_bool_vector_eq
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 
 def collect_core_actual() -> list[bool]:
     actual: list[bool] = []
 
     try:
-        number_match: bool = re_match("[0-9]+", "hello 42 world")
-        no_number_raw: bool = re_match("[0-9]+", "no numbers here")
+        number_match: bool = has_match("[0-9]+", "hello 42 world")
+        no_number_raw: bool = has_match("[0-9]+", "no numbers here")
         no_number_match: bool = not no_number_raw
         actual.append(no_number_match)
         actual.append(number_match)
-        found: str | None = re_find("[0-9]+", "hello 42 world")
+        found: str | None = search("[0-9]+", "hello 42 world")
         actual.append(str(found) == "42")
-        replaced: str = re_replace("[0-9]+", "NUM", "hello 42 world 7")
+        replaced: str = sub("[0-9]+", "NUM", "hello 42 world 7")
         actual.append(replaced == "hello NUM world NUM")
     except RegexError as e:
         actual.append(False)
@@ -28,9 +35,9 @@ def collect_core_actual() -> list[bool]:
 def collect_expanded_actual() -> list[bool]:
     actual: list[bool] = []
     try:
-        matches: list[str] = re_findall("[0-9]+", "abc123def456")
+        matches: list[str] = findall("[0-9]+", "abc123def456")
         actual.append(len(matches) == 2)
-        parts: list[str] = re_split(",", "a,b,c")
+        parts: list[str] = split(",", "a,b,c")
         actual.append(len(parts) == 3)
     except RegexError as e:
         actual.append(False)

@@ -24,14 +24,14 @@ fn loads(text: &str) -> Result<JsonValue, JsonDecodeError> {
     })
 }
 
-fn json_dumps(value: impl Into<JsonValue>) -> String {
+fn dumps(value: impl Into<JsonValue>) -> String {
     value.into().to_string()
 }
 
 fn collect_positive_actual() -> Vec<bool> {
     let parsed_obj = loads("{\"name\":\"sifr\"}");
     let parsed_arr = loads("[1,2,3]");
-    let parsed_roundtrip = loads(&json_dumps(7));
+    let parsed_roundtrip = loads(&dumps(7));
 
     vec![
         parsed_obj
@@ -43,8 +43,8 @@ fn collect_positive_actual() -> Vec<bool> {
         parsed_roundtrip
             .as_ref()
             .is_ok_and(|value| value.to_string() == "7"),
-        json_dumps("hello") == "\"hello\"",
-        json_dumps(false) == "false",
+        dumps("hello") == "\"hello\"",
+        dumps(false) == "false",
     ]
 }
 

@@ -4667,6 +4667,11 @@ fn re_split_flags(
         })
 }
 
+// --- stdlib: sifr.re ---
+fn findall(pattern: &String, text: &String) -> Result<Vec<String>, RegexError> {
+    re_findall(pattern, text)
+}
+
 // --- stdlib: sifr.timeit ---
 fn default_timer() -> f64 {
     perf_counter()
@@ -5244,7 +5249,7 @@ fn _decode_toml_tokens(
         }
     }
 }
-fn toml_loads(
+fn loads(
     text: &String,
 ) -> Result<__SifrStdlib_sifr_x2etomllib_x2eTomlValue, TOMLDecodeError> {
     let __sifr_try_res: Result<
@@ -5264,11 +5269,6 @@ fn toml_loads(
             return Err(TOMLDecodeError::new(e.message));
         }
     }
-}
-fn loads(
-    text: &String,
-) -> Result<__SifrStdlib_sifr_x2etomllib_x2eTomlValue, TOMLDecodeError> {
-    toml_loads(text)
 }
 
 // --- stdlib: _sifr.uuid ---
@@ -5618,7 +5618,7 @@ fn main() {
         assert!((format!("{}", format!("getcwd error: {}", err.message)) == "stdlib_parity demo: all checks passed!"));
     }
     let __sifr_try_res: Result<(), RegexError> = (|| {
-    let matches: Vec<String> = re_findall(&"[0-9]+".to_string(), &"abc123def456".to_string())?;
+    let matches: Vec<String> = findall(&"[0-9]+".to_string(), &"abc123def456".to_string())?;
     assert_eq!(matches.len() as i64, 2_i64);
     Ok(())
 })();

@@ -1,5 +1,5 @@
 # CPython test_json — structured-value assertions for sifr.json
-from sifr.json import JsonValue, loads, json_dumps
+from sifr.json import JsonValue, loads, dumps
 
 
 def main() -> None:
@@ -29,19 +29,19 @@ def main() -> None:
     except JSONDecodeError as e:
         assert False
 
-    assert json_dumps("hello") == "\"hello\""
-    assert json_dumps("") == "\"\""
-    assert json_dumps(42) == "42"
-    assert json_dumps(0) == "0"
-    assert json_dumps(True) == "true"
-    assert json_dumps(False) == "false"
-    assert json_dumps(3.14) == "3.14"
+    assert dumps("hello") == "\"hello\""
+    assert dumps("") == "\"\""
+    assert dumps(42) == "42"
+    assert dumps(0) == "0"
+    assert dumps(True) == "true"
+    assert dumps(False) == "false"
+    assert dumps(3.14) == "3.14"
 
     try:
-        roundtrip_int: JsonValue = loads(json_dumps(42))
-        roundtrip_true: JsonValue = loads(json_dumps(True))
-        roundtrip_false: JsonValue = loads(json_dumps(False))
-        roundtrip_float: JsonValue = loads(json_dumps(3.14))
+        roundtrip_int: JsonValue = loads(dumps(42))
+        roundtrip_true: JsonValue = loads(dumps(True))
+        roundtrip_false: JsonValue = loads(dumps(False))
+        roundtrip_float: JsonValue = loads(dumps(3.14))
         assert str(roundtrip_int) == "42"
         assert str(roundtrip_true) == "true"
         assert str(roundtrip_false) == "false"

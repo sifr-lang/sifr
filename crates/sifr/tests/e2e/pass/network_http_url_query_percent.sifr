@@ -3,10 +3,10 @@ from sifr.url import (
     UrlError,
     UrlQuery,
     build_query,
-    build_url,
+    build,
     normalize_path,
     parse_query,
-    parse_url,
+    parse,
     percent_decode,
     percent_decode_bytes,
     percent_encode,
@@ -16,7 +16,7 @@ from sifr.url import (
 
 def main() -> Result[None, Error]:
     try:
-        parsed: Url = parse_url("https://user:pass@example.com:8443/a/../b?x=1&x=2#frag")
+        parsed: Url = parse("https://user:pass@example.com:8443/a/../b?x=1&x=2#frag")
         assert parsed.get_scheme() == "https"
         assert parsed.get_username() == "user"
         assert parsed.get_password() == "pass"
@@ -26,23 +26,23 @@ def main() -> Result[None, Error]:
         assert parsed.get_query() == "x=1&x=2"
         assert parsed.get_fragment() == "frag"
 
-        built: Url = build_url("https", "xn--bcher-kva.example", "/docs", "q=sifr", 443)
+        built: Url = build("https", "xn--bcher-kva.example", "/docs", "q=sifr", 443)
         assert built.get_host() == "xn--bcher-kva.example"
         assert built.get_path() == "/docs"
         assert built.get_query() == "q=sifr"
 
-        ipv4: Url = parse_url("http://127.0.0.1:8080/health")
+        ipv4: Url = parse("http://127.0.0.1:8080/health")
         assert ipv4.get_host() == "127.0.0.1"
         assert ipv4.get_port() == 8080
-        ipv6: Url = build_url("http", "::1", "/ready", None, 8080)
+        ipv6: Url = build("http", "::1", "/ready", None, 8080)
         assert ipv6.get_host() == "[::1]"
         assert ipv6.get_port() == 8080
         assert ipv6.get_path() == "/ready"
-        safe_build: Url = build_url("https", "example.com", "/", None, None)
+        safe_build: Url = build("https", "example.com", "/", None, None)
         assert safe_build.get_fragment() is None
-        escaped_ascii_host: Url = parse_url("https://%61.example/ok")
+        escaped_ascii_host: Url = parse("https://%61.example/ok")
         assert escaped_ascii_host.get_host() == "a.example"
-        encoded_slash_path: Url = parse_url("https://example.com/a/%2F/b")
+        encoded_slash_path: Url = parse("https://example.com/a/%2F/b")
         assert encoded_slash_path.get_path() == "/a/%2F/b"
 
         encoded: str = percent_encode("a b/ç")
@@ -71,7 +71,7 @@ def main() -> Result[None, Error]:
 
     blocked_host: bool = False
     try:
-        _blocked: Url = parse_url("https://é.example/")
+        _blocked: Url = parse("https://é.example/")
         assert False
     except UrlError as e:
         blocked_host = "non-ASCII URL hosts are blocked" in e.message
@@ -79,7 +79,7 @@ def main() -> Result[None, Error]:
 
     escaped_blocked_host: bool = False
     try:
-        _escaped_blocked: Url = parse_url("https://%C3%A9.example/")
+        _escaped_blocked: Url = parse("https://%C3%A9.example/")
         assert False
     except UrlError as e:
         escaped_blocked_host = "non-ASCII URL hosts are blocked" in e.message
@@ -95,7 +95,7 @@ def main() -> Result[None, Error]:
 
     bad_port: bool = False
     try:
-        _bad_url: Url = build_url("https", "example.com", "/", None, 70000)
+        _bad_url: Url = build("https", "example.com", "/", None, 70000)
         assert False
     except UrlError as e:
         bad_port = "URL port must be in 0..65535" in e.message
@@ -103,7 +103,7 @@ def main() -> Result[None, Error]:
 
     bad_scheme: bool = False
     try:
-        _bad_scheme: Url = build_url("https://attacker.example/?", "example.com", "/", None, None)
+        _bad_scheme: Url = build("https://attacker.example/?", "example.com", "/", None, None)
         assert False
     except UrlError as e:
         bad_scheme = "invalid URL scheme" in e.message
@@ -111,7 +111,7 @@ def main() -> Result[None, Error]:
 
     host_fragment_injection: bool = False
     try:
-        _host_fragment: Url = build_url("https", "evil.example#frag", "/", None, None)
+        _host_fragment: Url = build("https", "evil.example#frag", "/", None, None)
         assert False
     except UrlError as e:
         host_fragment_injection = "invalid URL host" in e.message
@@ -119,7 +119,7 @@ def main() -> Result[None, Error]:
 
     host_userinfo_injection: bool = False
     try:
-        _host_userinfo: Url = build_url("https", "user@example.com", "/", None, None)
+        _host_userinfo: Url = build("https", "user@example.com", "/", None, None)
         assert False
     except UrlError as e:
         host_userinfo_injection = "invalid URL host" in e.message
@@ -127,7 +127,7 @@ def main() -> Result[None, Error]:
 
     host_path_injection: bool = False
     try:
-        _host_path: Url = build_url("https", "example.com/path", "/", None, None)
+        _host_path: Url = build("https", "example.com/path", "/", None, None)
         assert False
     except UrlError as e:
         host_path_injection = "invalid URL host" in e.message

@@ -1,4 +1,8 @@
 // src/main.rs
+use ::rust_decimal::Decimal;
+
+use ::bigdecimal::BigDecimal;
+
 // --- stdlib: _sifr.sys ---
 fn run_command(cmd: &String) -> Result<String, IOError> {
     ::sifr_stdlib::sys::run_command(cmd)
@@ -2668,6 +2672,60 @@ for __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x
     }
 }
 #[derive(Debug, Clone, PartialEq)]
+enum __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0 {
+    __SifrUnionVariant_4_x3aatom4_x3abool(bool),
+    __SifrUnionVariant_4_x3aatom3_x3aint(i64),
+    __SifrUnionVariant_4_x3aatom5_x3afloat(f64),
+    __SifrUnionVariant_4_x3aatom3_x3astr(String),
+    __SifrUnionVariant_5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0(
+        __SifrStdlib_sifr_x2ejson_x2eJsonValue,
+    ),
+    __SifrUnionVariant_4_x3aatom7_x3adecimal(Decimal),
+    __SifrUnionVariant_4_x3aatom10_x3abigdecimal(BigDecimal),
+}
+impl ::std::fmt::Display
+for __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0 {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match self {
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom4_x3abool(
+                v,
+            ) => {
+                return write!(f, "{}", v);
+            }
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom3_x3aint(
+                v,
+            ) => {
+                return write!(f, "{}", v);
+            }
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom5_x3afloat(
+                v,
+            ) => {
+                return write!(f, "{}", v);
+            }
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom3_x3astr(
+                v,
+            ) => {
+                return write!(f, "{}", v);
+            }
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0(
+                v,
+            ) => {
+                return write!(f, "{}", v);
+            }
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom7_x3adecimal(
+                v,
+            ) => {
+                return write!(f, "{}", v);
+            }
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom10_x3abigdecimal(
+                v,
+            ) => {
+                return write!(f, "{}", v);
+            }
+        }
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
 struct __SifrStdlib_sifr_x2ejson_x2eJsonValue {
     kind: String,
     bool_value: Option<bool>,
@@ -2866,8 +2924,57 @@ impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
 }
 impl ::std::fmt::Display for __SifrStdlib_sifr_x2ejson_x2eJsonValue {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "{}", dumps(& self))
+        write!(
+            f, "{}", dumps(&
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0((self)
+            .clone()))
+        )
     }
+}
+fn from_bool(value: bool) -> __SifrStdlib_sifr_x2ejson_x2eJsonValue {
+    let bool_value: Option<bool> = Some(value);
+    __SifrStdlib_sifr_x2ejson_x2eJsonValue::new(
+        "bool".to_string(),
+        bool_value,
+        None,
+        None,
+        None,
+    )
+}
+fn from_int(value: i64) -> __SifrStdlib_sifr_x2ejson_x2eJsonValue {
+    let int_value: Option<i64> = Some(value);
+    __SifrStdlib_sifr_x2ejson_x2eJsonValue::new(
+        "int".to_string(),
+        None,
+        int_value,
+        None,
+        None,
+    )
+}
+fn from_float(value: f64) -> __SifrStdlib_sifr_x2ejson_x2eJsonValue {
+    let float_value: Option<f64> = Some(value);
+    __SifrStdlib_sifr_x2ejson_x2eJsonValue::new(
+        "float".to_string(),
+        None,
+        None,
+        float_value,
+        None,
+    )
+}
+fn from_str(value: &String) -> __SifrStdlib_sifr_x2ejson_x2eJsonValue {
+    let str_value: Option<String> = Some({
+        let mut __sifr_concat: String = String::with_capacity(value.len() + 0usize);
+        __sifr_concat.push_str((value).as_str());
+        __sifr_concat.push_str("");
+        __sifr_concat
+    });
+    __SifrStdlib_sifr_x2ejson_x2eJsonValue::new(
+        "str".to_string(),
+        None,
+        None,
+        None,
+        str_value,
+    )
 }
 fn _json_token_at(tokens: &Vec<String>, index: i64) -> Result<String, JSONDecodeError> {
     let value: Option<String> = {
@@ -3266,7 +3373,9 @@ fn _json_bridge_tokens(value: &__SifrStdlib_sifr_x2ejson_x2eJsonValue) -> Vec<St
     let mut tokens: Vec<String> = vec![];
     _json_append_tokens(tokens, value)
 }
-fn loads(s: &String) -> Result<__SifrStdlib_sifr_x2ejson_x2eJsonValue, JSONDecodeError> {
+fn _loads_impl(
+    s: &String,
+) -> Result<__SifrStdlib_sifr_x2ejson_x2eJsonValue, JSONDecodeError> {
     let __sifr_try_res: Result<
         Result<__SifrStdlib_sifr_x2ejson_x2eJsonValue, JSONDecodeError>,
         JSONDecodeError,
@@ -3285,13 +3394,43 @@ fn loads(s: &String) -> Result<__SifrStdlib_sifr_x2ejson_x2eJsonValue, JSONDecod
         }
     }
 }
-fn json_loads(
-    s: &String,
-) -> Result<__SifrStdlib_sifr_x2ejson_x2eJsonValue, JSONDecodeError> {
-    loads(s)
+fn loads(s: &String) -> Result<__SifrStdlib_sifr_x2ejson_x2eJsonValue, JSONDecodeError> {
+    _loads_impl(s)
 }
-fn dumps(value: &__SifrStdlib_sifr_x2ejson_x2eJsonValue) -> String {
-    json_dump_tokens(&_json_bridge_tokens(value))
+fn dumps(
+    value: &__SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0,
+) -> String {
+    if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0(
+        value,
+    ) = value {
+        return json_dump_tokens(&_json_bridge_tokens(value));
+    } else {
+        if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom4_x3abool(
+            value,
+        ) = value {
+            return json_dump_tokens(&_json_bridge_tokens(&from_bool((value).clone())));
+        } else {
+            if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom3_x3aint(
+                value,
+            ) = value {
+                return json_dump_tokens(
+                    &_json_bridge_tokens(&from_int((value).clone())),
+                );
+            } else {
+                if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom5_x3afloat(
+                    value,
+                ) = value {
+                    return json_dump_tokens(
+                        &_json_bridge_tokens(&from_float((value).clone())),
+                    );
+                } else {
+                    return json_dump_tokens(
+                        &_json_bridge_tokens(&from_str(&format!("{}", value))),
+                    );
+                }
+            }
+        }
+    }
 }
 
 // --- stdlib: _sifr.math ---
@@ -3725,7 +3864,7 @@ fn main() {
     }
     println!("=== sifr.json ===");
     let __sifr_try_res: Result<(), JSONDecodeError> = (|| {
-    let data: __SifrStdlib_sifr_x2ejson_x2eJsonValue = json_loads(&"{\"language\":\"sifr\",\"version\":1}".to_string())?;
+    let data: __SifrStdlib_sifr_x2ejson_x2eJsonValue = loads(&"{\"language\":\"sifr\",\"version\":1}".to_string())?;
     println!("Parsed JSON: {}", data);
     Ok(())
 })();

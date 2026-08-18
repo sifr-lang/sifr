@@ -207,7 +207,7 @@ status: completed
 - `sifr.logging`: structured logging with levels (debug, info, warn, error)
 - Each module has integration tests verifying the Sifr API against the Rust crate behavior
 - Generated Cargo.toml includes correct dependencies for used stdlib modules
-- E2E pass tests: math_ops, time_basic, random_gen, regex_match, hashlib_sha256, base64_encode, stream_lines, logging_basic
+- E2E pass tests: math_ops, time_basic, random_gen, regex_match, hashlib_sha256, b64encode, stream_lines, logging_basic
 - CPython parity tests pass with safe error handling (no panics, `Result`/`Option` where CPython raises). Reference: `Lib/test/test_math.py`, `Lib/test/test_time.py`, `Lib/test/test_random.py`, `Lib/test/test_re/`
 - Milestone demo in `./demos/extended_stdlib/main.sifr`
 
@@ -223,9 +223,9 @@ status: completed
 
 1. **Redundant `.to_string()` on string literal args** — stdlib functions that accept `&str` receive `"literal".to_string()` instead of `"literal"` directly
 2. **Redundant `.clone()` on `vec![...]` literals** — set operations clone freshly-created vecs
-3. `**json_dumps` emits `.clone()` instead of `serde_json::to_string**` — incorrect serialization
+3. `**dumps` emits `.clone()` instead of `serde_json::to_string**` — incorrect serialization
 4. `**set_intersection` re-creates second set inside filter closure** — O(n*m) allocation instead of O(n+m)
-5. `**re_replace` uses `.to_string().as_str()**` — unnecessary String allocation
+5. `**sub` uses `.to_string().as_str()**` — unnecessary String allocation
 6. **Hash/encoding functions use `.to_string().as_bytes()**` — should use `.as_bytes()` directly on literals
 
 ### Implementation
@@ -237,7 +237,7 @@ Add `emit_expr_as_str_ref` helper to `RustEmitter` that emits bare `"literal"` f
 - All stdlib function calls emit clean, idiomatic Rust without redundant allocations
 - String literals passed directly to Rust APIs that accept `&str` / `AsRef<str>`
 - Vec literals not cloned unnecessarily in set operations
-- `json_dumps` uses `serde_json::to_string`
+- `dumps` uses `serde_json::to_string`
 - `set_intersection` hoists second arg before filter
 - All existing E2E tests pass (no regressions)
 - All Phase 3 demos produce identical output with cleaner Rust

@@ -1,5 +1,5 @@
 # Reference: decimal_verification_corpus_determinism
-from sifr.json import json_dumps
+from sifr.json import dumps
 
 def main():
     d: decimal = Decimal("-7.5")
@@ -38,8 +38,8 @@ def main():
     except DecimalConversionError as e:
         assert False
 
-    assert json_dumps(Decimal("1.2300")) == '"1.2300"'
-    assert json_dumps(BigDecimal("1.2300")) == '"1.2300"'
+    assert dumps(Decimal("1.2300")) == '"1.2300"'
+    assert dumps(BigDecimal("1.2300")) == '"1.2300"'
 
     baseline_tmp_d: decimal = Decimal("1.2345") * Decimal("3.0")
     baseline_d: str = str(baseline_tmp_d.quantize(3))

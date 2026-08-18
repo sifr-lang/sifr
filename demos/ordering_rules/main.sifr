@@ -42,14 +42,14 @@ def main():
     print(first_two)
 
     # ─── Gap 2: CPython-compatible names ─────────────────────────────
-    # json: loads (alias for json_loads)
+    # json: loads (alias for loads)
     try:
         parsed: JsonValue = loads("{\"key\": 42}")
         print(parsed)
     except JSONDecodeError as err:
         print(f"json error: {err.message}")
 
-    # re: search, sub, findall, split (aliases for re_find, re_replace, etc.)
+    # re: search, sub, findall, split (aliases for search, sub, etc.)
     try:
         found: str | None = search("\\d+", "abc123")
         if found is not None:

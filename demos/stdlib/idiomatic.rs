@@ -8,7 +8,7 @@ fn getcwd() -> Result<String, String> {
         .map_err(|error| error.to_string())
 }
 
-fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, String> {
+fn findall(pattern: &str, text: &str) -> Result<Vec<String>, String> {
     if pattern != "[0-9]+" {
         return Err(format!("unsupported pattern: {pattern}"));
     }
@@ -254,7 +254,7 @@ fn main() {
         Err(message) => panic!("unexpected getcwd failure: {}", message),
     }
 
-    match re_findall("[0-9]+", "abc123def456") {
+    match findall("[0-9]+", "abc123def456") {
         Ok(matches) => assert_eq!(matches.len(), 2),
         Err(message) => panic!("unexpected regex failure: {}", message),
     }

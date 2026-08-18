@@ -52,32 +52,32 @@ fn with_flags(pattern: &str, flags: i64) -> String {
     prefix + pattern
 }
 
-fn re_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
+fn has_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
     Ok(compile_pattern(pattern)?
         .find(text)
         .is_some_and(|matched| matched.start() == 0))
 }
 
-fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
     Ok(compile_pattern(pattern)?
         .find(text)
         .map(|matched| matched.as_str().to_string()))
 }
 
-fn re_replace(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
+fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
     Ok(compile_pattern(pattern)?
         .replace_all(text, replacement)
         .into_owned())
 }
 
-fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
     Ok(compile_pattern(pattern)?
         .find_iter(text)
         .map(|matched| matched.as_str().to_string())
         .collect())
 }
 
-fn re_split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+fn split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
     Ok(compile_pattern(pattern)?
         .split(text)
         .map(str::to_string)
@@ -93,11 +93,11 @@ fn search_flags(pattern: &str, text: &str, flags: i64) -> Result<Option<String>,
 fn collect_primary_actual() -> Vec<bool> {
     match (|| -> Result<Vec<bool>, RegexError> {
         Ok(vec![
-            re_match("[0-9]+", "42 bottles")?,
-            re_find("[0-9]+", "id=9000")?.as_deref() == Some("9000"),
-            re_replace("\\s+", "-", "hello   world")? == "hello-world",
-            format!("{:?}", re_findall("[a-z]+", "ab 12 cd")?) == "[\"ab\", \"cd\"]",
-            format!("{:?}", re_split(":+", "a:b::c")?) == "[\"a\", \"b\", \"c\"]",
+            has_match("[0-9]+", "42 bottles")?,
+            search("[0-9]+", "id=9000")?.as_deref() == Some("9000"),
+            sub("\\s+", "-", "hello   world")? == "hello-world",
+            format!("{:?}", findall("[a-z]+", "ab 12 cd")?) == "[\"ab\", \"cd\"]",
+            format!("{:?}", split(":+", "a:b::c")?) == "[\"a\", \"b\", \"c\"]",
             search_flags("hello", "HELLO", IGNORECASE)?.is_some(),
         ])
     })() {

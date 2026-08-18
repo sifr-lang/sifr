@@ -1,5 +1,5 @@
 # Consolidated stdlib fnmatch coverage for stdlib_consolidation structure rules
-from sifr.fnmatch import fnmatch, fnmatch_filter, fnmatchcase
+from sifr.fnmatch import fnmatch, filter, fnmatchcase
 from sifr.test import assert_bool_vector_eq
 
 def collect_match_actual() -> list[bool]:
@@ -21,10 +21,10 @@ def collect_match_actual() -> list[bool]:
 def collect_filter_actual() -> list[bool]:
     actual: list[bool] = []
     names: list[str] = ["a.txt", "b.py", "c.txt", "d.rs"]
-    matched: list[str] = fnmatch_filter(names, "*.txt")
+    matched: list[str] = filter(names, "*.txt")
     actual.append(str(matched) == "[\"a.txt\", \"c.txt\"]")
-    actual.append(str(fnmatch_filter(names, "a*")) == "[\"a.txt\"]")
-    actual.append(str(fnmatch_filter(names, "z*")) == "[]")
+    actual.append(str(filter(names, "a*")) == "[\"a.txt\"]")
+    actual.append(str(filter(names, "z*")) == "[]")
     return actual
 
 def append_all(mut target: list[bool], values: list[bool]):

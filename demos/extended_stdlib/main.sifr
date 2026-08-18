@@ -13,9 +13,16 @@
 
 from sifr.time import time, sleep
 from sifr.random import randint, random
-from sifr.re import re_match, re_find, re_replace
+from sifr.re import search, sub
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 from sifr.hashlib import sha256, md5
-from sifr.base64 import base64_encode, base64_decode
+from sifr.base64 import b64encode, b64decode
 
 def main():
     # ----------------------------------------------------------
@@ -45,12 +52,12 @@ def main():
     # ----------------------------------------------------------
     print("=== sifr.re ===")
     try:
-        matched: bool = re_match("[0-9]+", "hello 42")
+        matched: bool = has_match("[0-9]+", "hello 42")
         print(f"Match digits in 'hello 42': {matched}")
-        found: str | None = re_find("[0-9]+", "price is $42.99")
+        found: str | None = search("[0-9]+", "price is $42.99")
         if found is not None:
             print(f"Found: {found}")
-        replaced: str = re_replace("[0-9]+", "N", "a1b2c3")
+        replaced: str = sub("[0-9]+", "N", "a1b2c3")
         print(f"Replace: {replaced}")
     except RegexError as err:
         print(f"regex error: {err.message}")
@@ -66,10 +73,10 @@ def main():
     # 5. sifr.base64 — Base64
     # ----------------------------------------------------------
     print("=== sifr.base64 ===")
-    encoded: str = base64_encode("Hello, Sifr!")
+    encoded: str = b64encode("Hello, Sifr!")
     print(f"Base64 encode: {encoded}")
     try:
-        decoded_b64: str = base64_decode(encoded)
+        decoded_b64: str = b64decode(encoded)
         print(f"Base64 decode: {decoded_b64}")
     except ParseError as err:
         print(f"base64 error: {err.message}")

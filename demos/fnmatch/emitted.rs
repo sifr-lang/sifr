@@ -1,47 +1,54 @@
+// src/main.rs
 // --- stdlib: sifr.fnmatch ---
 fn fnmatch(name: &String, pattern: &String) -> bool {
-    return _match(name, 0 as i64, pattern, 0 as i64);
+    _match(name, 0_i64, pattern, 0_i64)
 }
 fn _match(name: &String, mut ni: i64, pattern: &String, mut pi: i64) -> bool {
-    while pi < (pattern.chars().count() as i64) {
+    while (pi < (pattern.chars().count() as i64)) {
         let pc: Option<String> = Some({
-            let Some(__indexed_char) = pattern.chars().nth(pi as usize) else {
+            let Some(__indexed_char) = pattern
+                .chars()
+                .nth(pi as usize)
+                .map(|c| c.to_string()) else {
                 unreachable!("compiler-verified string index should be in range");
             };
-            __indexed_char.to_string()
+            __indexed_char
         });
         if let Some(pc) = pc {
-            if pc == "*".to_string() {
-                pi = pi + (1 as i64);
-                if pi == (pattern.len() as i64) {
+            if pc == "*" {
+                pi += 1_i64;
+                if (pi == (pattern.chars().count() as i64)) {
                     return true;
                 }
                 let mut j: i64 = ni;
-                while j <= (name.chars().count() as i64) {
+                while (j <= (name.chars().count() as i64)) {
                     if _match(name, j, pattern, pi) {
                         return true;
                     }
-                    j = j + (1 as i64);
+                    j += 1_i64;
                 }
                 return false;
             } else {
-                if pc == "?".to_string() {
-                    if ni >= (name.len() as i64) {
+                if pc == "?" {
+                    if (ni >= (name.chars().count() as i64)) {
                         return false;
                     }
-                    ni = ni + (1 as i64);
-                    pi = pi + (1 as i64);
+                    ni += 1_i64;
+                    pi += 1_i64;
                 } else {
-                    if ni >= (name.len() as i64) {
+                    if (ni >= (name.chars().count() as i64)) {
                         return false;
                     }
                     let nc: Option<String> = Some({
-                        let Some(__indexed_char) = name.chars().nth(ni as usize) else {
+                        let Some(__indexed_char) = name
+                            .chars()
+                            .nth(ni as usize)
+                            .map(|c| c.to_string()) else {
                             unreachable!(
                                 "compiler-verified string index should be in range"
                             );
                         };
-                        __indexed_char.to_string()
+                        __indexed_char
                     });
                     if let Some(nc) = nc {
                         if nc != pc {
@@ -50,44 +57,39 @@ fn _match(name: &String, mut ni: i64, pattern: &String, mut pi: i64) -> bool {
                     } else {
                         return false;
                     }
-                    ni = ni + (1 as i64);
-                    pi = pi + (1 as i64);
+                    ni += 1_i64;
+                    pi += 1_i64;
                 }
             }
         } else {
             return false;
         }
     }
-    return ni == (name.chars().count() as i64);
+    (ni == (name.chars().count() as i64))
 }
-fn fnmatch_filter(names: &Vec<String>, pattern: &String) -> Vec<String> {
+fn fnmatchcase(name: &String, pattern: &String) -> bool {
+    _match(name, 0_i64, pattern, 0_i64)
+}
+fn filter(names: &Vec<String>, pattern: &String) -> Vec<String> {
     let mut result: Vec<String> = vec![];
     for name in names.iter().cloned() {
         if fnmatch(&name, pattern) {
-            result.push(name);
+            result.push(name.clone());
         }
     }
-    return result;
-}
-fn fnmatchcase(name: &String, pattern: &String) -> bool {
-    return _match(name, 0 as i64, pattern, 0 as i64);
+    result
 }
 
 // --- stdlib: sifr.test ---
-fn assert_eq<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    actual: &T,
-    expected: &T,
-) {
-    assert!(* actual == * expected);
-}
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0 as i64;
+    let mut i: i64 = 0_i64;
     while i < (actual.len() as i64) {
         assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i = i + (1 as i64);
+        i += 1_i64;
     }
 }
+// --- end stdlib ---
 
 fn collect_match_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
@@ -97,15 +99,15 @@ fn collect_match_actual() -> Vec<bool> {
     actual.push(fnmatch(&"abc".to_string(), &"a?c".to_string()));
     let case_sensitive_miss: bool = !(fnmatchcase(&"AbC".to_string(), &"abc".to_string()));
     actual.push(case_sensitive_miss);
-    return actual;
+    actual
 }
 
 fn collect_filter_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let names: Vec<String> = vec!["main.py".to_string(), "notes.txt".to_string(), "lib.py".to_string()];
-    actual.push((format!("{:?}", fnmatch_filter(&names, &"*.py".to_string()))).as_str() == ("[\"main.py\", \"lib.py\"]".to_string()).as_str());
-    actual.push((format!("{:?}", fnmatch_filter(&names, &"README*".to_string()))).as_str() == ("[]".to_string()).as_str());
-    return actual;
+    actual.push((format!("{:?}", filter(&names, &"*.py".to_string()))).as_str() == ("[\"main.py\", \"lib.py\"]".to_string()).as_str());
+    actual.push((format!("{:?}", filter(&names, &"README*".to_string()))).as_str() == ("[]".to_string()).as_str());
+    actual
 }
 
 fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {

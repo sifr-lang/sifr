@@ -1,8 +1,8 @@
 # CPython test_fnmatch.py — ported assertions for sifr.fnmatch
-# Note: fnmatch_filter is used instead of the CPython alias 'filter' because
+# Note: filter is used instead of the CPython alias 'filter' because
 # 'filter' conflicts with the built-in filter(func, iterable) function
 from sifr.test import assert_bool_vector_eq
-from sifr.fnmatch import fnmatch, fnmatch_filter, fnmatchcase
+from sifr.fnmatch import fnmatch, filter, fnmatchcase
 
 def collect_fnmatch_core_actual() -> list[bool]:
     actual: list[bool] = []
@@ -53,18 +53,18 @@ def collect_fnmatchcase_actual() -> list[bool]:
 def collect_filter_primary_actual() -> list[bool]:
     actual: list[bool] = []
     names: list[str] = ["Python", "Ruby", "Perl", "Tcl"]
-    r1: list[str] = fnmatch_filter(names, "P*")
+    r1: list[str] = filter(names, "P*")
     actual.append(len(r1) == 2)
     actual.append(str(r1) == "[\"Python\", \"Perl\"]")
 
-    r2: list[str] = fnmatch_filter(names, "R*")
+    r2: list[str] = filter(names, "R*")
     actual.append(len(r2) == 1)
 
-    r3: list[str] = fnmatch_filter(names, "X*")
+    r3: list[str] = filter(names, "X*")
     actual.append(len(r3) == 0)
 
     files: list[str] = ["test.py", "test.rb", "test.js", "main.py"]
-    r4: list[str] = fnmatch_filter(files, "*.py")
+    r4: list[str] = filter(files, "*.py")
     actual.append(len(r4) == 2)
     actual.append(str(r4) == "[\"test.py\", \"main.py\"]")
     return actual
@@ -97,13 +97,13 @@ def collect_more_patterns_actual() -> list[bool]:
 def collect_filter_secondary_actual() -> list[bool]:
     actual: list[bool] = []
     all_files: list[str] = ["a.txt", "b.txt", "c.py", "d.py", "e.rs"]
-    txt: list[str] = fnmatch_filter(all_files, "*.txt")
+    txt: list[str] = filter(all_files, "*.txt")
     actual.append(len(txt) == 2)
-    py: list[str] = fnmatch_filter(all_files, "*.py")
+    py: list[str] = filter(all_files, "*.py")
     actual.append(len(py) == 2)
-    rs: list[str] = fnmatch_filter(all_files, "*.rs")
+    rs: list[str] = filter(all_files, "*.rs")
     actual.append(len(rs) == 1)
-    all_match: list[str] = fnmatch_filter(all_files, "*")
+    all_match: list[str] = filter(all_files, "*")
     actual.append(len(all_match) == 5)
     return actual
 

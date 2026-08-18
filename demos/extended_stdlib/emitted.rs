@@ -358,6 +358,14 @@ fn ends_with(data: &Vec<u8>, suffix: &Vec<u8>) -> bool {
     true
 }
 
+// --- stdlib: sifr.base64 ---
+fn b64encode(s: &String) -> String {
+    base64_encode(s)
+}
+fn b64decode(s: &String) -> Result<String, ParseError> {
+    base64_decode(s)
+}
+
 // --- stdlib: _sifr.fs ---
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrIoNativeFileHandle {
@@ -1662,6 +1670,18 @@ fn re_split_flags(
         })
 }
 
+// --- stdlib: sifr.re ---
+fn search(pattern: &String, text: &String) -> Result<Option<String>, RegexError> {
+    re_find(pattern, text)
+}
+fn sub(
+    pattern: &String,
+    replacement: &String,
+    text: &String,
+) -> Result<String, RegexError> {
+    re_replace(pattern, replacement, text)
+}
+
 // --- stdlib: sifr.time ---
 fn time() -> f64 {
     time_now()
@@ -1781,6 +1801,23 @@ impl ::std::fmt::Display for RegexError {
 impl ::std::error::Error for RegexError {
 }
 
+fn has_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
+    let __sifr_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {
+    let found: Option<String> = search(pattern, text)?;
+    return Ok(Ok((found != None)));
+    unreachable!("sifr try/except return capture fell through");
+})();
+    match __sifr_try_res {
+        Ok(__sifr_ret_val) => {
+            return __sifr_ret_val;
+        },
+        Err(__sifr_try_err) => {
+            let error = __sifr_try_err.clone();
+            return Err(RegexError::new(error.message));
+        },
+    }
+}
+
 fn main() {
     println!("=== sifr.time ===");
     let t1: f64 = time();
@@ -1802,13 +1839,13 @@ fn main() {
     println!("Random float [0,1): {}", f);
     println!("=== sifr.re ===");
     let __sifr_try_res: Result<(), RegexError> = (|| {
-    let matched: bool = re_match(&"[0-9]+".to_string(), &"hello 42".to_string())?;
+    let matched: bool = has_match(&"[0-9]+".to_string(), &"hello 42".to_string())?;
     println!("Match digits in \'hello 42\': {}", matched);
-    let found: Option<String> = re_find(&"[0-9]+".to_string(), &"price is $42.99".to_string())?;
+    let found: Option<String> = search(&"[0-9]+".to_string(), &"price is $42.99".to_string())?;
     if let Some(found) = found {
         println!("Found: {}", found);
     }
-    let replaced: String = re_replace(&"[0-9]+".to_string(), &"N".to_string(), &"a1b2c3".to_string())?;
+    let replaced: String = sub(&"[0-9]+".to_string(), &"N".to_string(), &"a1b2c3".to_string())?;
     println!("Replace: {}", replaced);
     Ok(())
 })();
@@ -1820,10 +1857,10 @@ fn main() {
     println!("SHA-256(\'sifr\'): {}", sha256(&"sifr".to_string()));
     println!("MD5(\'sifr\'): {}", md5(&"sifr".to_string()));
     println!("=== sifr.base64 ===");
-    let encoded: String = base64_encode(&"Hello, Sifr!".to_string());
+    let encoded: String = b64encode(&"Hello, Sifr!".to_string());
     println!("Base64 encode: {}", encoded);
     let __sifr_try_res: Result<(), ParseError> = (|| {
-    let decoded_b64: String = base64_decode(&encoded)?;
+    let decoded_b64: String = b64decode(&encoded)?;
     println!("Base64 decode: {}", decoded_b64);
     Ok(())
 })();

@@ -1,12 +1,11 @@
-from _sifr.fs import read_text, write_text
-from _sifr.json import (
-    json_dump_tokens,
-    json_dump_tokens_exact,
-    json_dump_tokens_string_ints,
-    json_dump_tokens_web,
-    json_load_tokens,
-    json_validate_integer_digit_limits,
-)
+from _sifr.fs import read_text as _read_text_impl
+from _sifr.fs import write_text as _write_text_impl
+from _sifr.json import json_dump_tokens as _json_dump_tokens_impl
+from _sifr.json import json_dump_tokens_exact as _json_dump_tokens_exact_impl
+from _sifr.json import json_dump_tokens_string_ints as _json_dump_tokens_string_ints_impl
+from _sifr.json import json_dump_tokens_web as _json_dump_tokens_web_impl
+from _sifr.json import json_load_tokens as _json_load_tokens_impl
+from _sifr.json import json_validate_integer_digit_limits as _json_validate_integer_digit_limits_impl
 from sifr.io import FileHandle
 
 
@@ -152,7 +151,7 @@ class JSONEncoder:
         return dumps(value)
 
     def dump(self, value: JsonValue, path: str) -> Result[None, IOError]:
-        return write_text(path, self.encode(value))
+        return _write_text_impl(path, self.encode(value))
 
     def dump_handle(self, value: JsonValue, fh: FileHandle) -> Result[None, IOError]:
         return fh.write(self.encode(value))
@@ -163,7 +162,7 @@ class JSONDecoder:
         pass
 
     def decode(self, s: str) -> Result[JsonValue, JSONDecodeError]:
-        return loads(s)
+        return _loads_impl(s)
 
     def load(self, path: str) -> Result[JsonValue, Error]:
         return load(path)
@@ -366,25 +365,25 @@ def _json_bridge_tokens(value: JsonValue) -> list[str]:
     return _json_append_tokens(tokens, value)
 
 
-def loads(s: str) -> Result[JsonValue, JSONDecodeError]:
+def _loads_impl(s: str) -> Result[JsonValue, JSONDecodeError]:
     try:
-        tokens: list[str] = json_load_tokens(s)
+        tokens: list[str] = _json_load_tokens_impl(s)
         return _json_decode_tokens(tokens)
     except JSONDecodeError as e:
         raise e
 
 
-def json_loads(s: str) -> Result[JsonValue, JSONDecodeError]:
-    return loads(s)
+def loads(s: str) -> Result[JsonValue, JSONDecodeError]:
+    return _loads_impl(s)
 
 
 def validate_integer_digit_limits(s: str) -> Result[None, JsonLimitError]:
-    return json_validate_integer_digit_limits(s)
+    return _json_validate_integer_digit_limits_impl(s)
 
 
 def _decode_loaded_json(content: str) -> Result[JsonValue, Error]:
     try:
-        value: JsonValue = loads(content)
+        value: JsonValue = _loads_impl(content)
         return value
     except JSONDecodeError as e:
         raise Error(e.message)
@@ -400,7 +399,7 @@ def load_handle(fh: FileHandle) -> Result[JsonValue, Error]:
 
 
 def load(path: str) -> Result[JsonValue, Error]:
-    content_result: Result[str, IOError] = read_text(path)
+    content_result: Result[str, IOError] = _read_text_impl(path)
     try:
         content: str = content_result
         return _decode_loaded_json(content)
@@ -408,51 +407,29 @@ def load(path: str) -> Result[JsonValue, Error]:
         raise Error(e.message)
 
 
-def dumps(value: JsonValue) -> str:
-    return json_dump_tokens(_json_bridge_tokens(value))
+def dumps(value: JsonValue | bool | int | float | str | decimal | bigdecimal) -> str:
+    if isinstance(value, JsonValue):
+        return _json_dump_tokens_impl(_json_bridge_tokens(value))
+    elif isinstance(value, bool):
+        return _json_dump_tokens_impl(_json_bridge_tokens(from_bool(value)))
+    elif isinstance(value, int):
+        return _json_dump_tokens_impl(_json_bridge_tokens(from_int(value)))
+    elif isinstance(value, float):
+        return _json_dump_tokens_impl(_json_bridge_tokens(from_float(value)))
+    else:
+        return _json_dump_tokens_impl(_json_bridge_tokens(from_str(str(value))))
 
 
 def dumps_exact(value: JsonValue) -> str:
-    return json_dump_tokens_exact(_json_bridge_tokens(value))
+    return _json_dump_tokens_exact_impl(_json_bridge_tokens(value))
 
 
 def dumps_web(value: JsonValue) -> Result[str, JsonIntegerRangeError]:
-    return json_dump_tokens_web(_json_bridge_tokens(value))
+    return _json_dump_tokens_web_impl(_json_bridge_tokens(value))
 
 
 def dumps_string_ints(value: JsonValue) -> str:
-    return json_dump_tokens_string_ints(_json_bridge_tokens(value))
-
-
-def json_dumps(
-    own value: JsonValue | bool | int | float | str | decimal | bigdecimal,
-) -> str:
-    if isinstance(value, JsonValue):
-        return dumps(value)
-    elif isinstance(value, bool):
-        return dumps(from_bool(value))
-    elif isinstance(value, int):
-        return dumps(from_int(value))
-    elif isinstance(value, float):
-        return dumps(from_float(value))
-    else:
-        return dumps(from_str(str(value)))
-
-
-def json_dumps_value(value: JsonValue) -> str:
-    return dumps(value)
-
-
-def json_dumps_value_exact(value: JsonValue) -> str:
-    return dumps_exact(value)
-
-
-def json_dumps_value_web(value: JsonValue) -> Result[str, JsonIntegerRangeError]:
-    return dumps_web(value)
-
-
-def json_dumps_value_string_ints(value: JsonValue) -> str:
-    return dumps_string_ints(value)
+    return _json_dump_tokens_string_ints_impl(_json_bridge_tokens(value))
 
 
 def dump_handle(value: JsonValue, fh: FileHandle) -> Result[None, IOError]:
@@ -462,4 +439,4 @@ def dump_handle(value: JsonValue, fh: FileHandle) -> Result[None, IOError]:
 
 def dump(value: JsonValue, path: str) -> Result[None, IOError]:
     payload: str = dumps(value)
-    return write_text(path, payload)
+    return _write_text_impl(path, payload)

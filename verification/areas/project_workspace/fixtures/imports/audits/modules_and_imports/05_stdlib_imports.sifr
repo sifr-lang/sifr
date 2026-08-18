@@ -3,8 +3,8 @@
 # ============================================================
 
 from sifr.math import sqrt
-from sifr.json import json_dumps
+from sifr.json import dumps
 
 def main():
     print(sqrt(4.0))
-    print(json_dumps("hello"))
+    print(dumps("hello"))

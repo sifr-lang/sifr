@@ -3,11 +3,11 @@
 # Validates stdlib intrinsic registry behavior after stdlib.rs decomposition.
 
 from sifr.math import floor, pi
-from sifr.json import json_dumps
+from sifr.json import dumps
 from sifr.test import assert_eq
 
 def main():
     assert_eq(floor(pi), 3)
-    payload: str = json_dumps("ok")
+    payload: str = dumps("ok")
     print("stdlib_modules stdlib registry split demo:")
     print(payload)

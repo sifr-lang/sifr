@@ -41,7 +41,7 @@ fn fnmatchcase(name: &str, pattern: &str) -> bool {
     wildcard_match(name, pattern)
 }
 
-fn fnmatch_filter(names: &[String], pattern: &str) -> Vec<String> {
+fn filter(names: &[String], pattern: &str) -> Vec<String> {
     names
         .iter()
         .filter(|name| fnmatch(name, pattern))
@@ -66,8 +66,8 @@ fn collect_filter_actual() -> Vec<bool> {
     ];
 
     vec![
-        fnmatch_filter(&names, "*.py") == vec!["main.py".to_string(), "lib.py".to_string()],
-        fnmatch_filter(&names, "README*").is_empty(),
+        filter(&names, "*.py") == vec!["main.py".to_string(), "lib.py".to_string()],
+        filter(&names, "README*").is_empty(),
     ]
 }
 

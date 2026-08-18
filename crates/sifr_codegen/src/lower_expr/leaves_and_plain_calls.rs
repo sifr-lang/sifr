@@ -730,10 +730,6 @@ pub(super) fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option
     if func == "map" {
         return try_lower_simple_map_call_expr(args);
     }
-    if func == "filter" {
-        return try_lower_simple_filter_call_expr(args);
-    }
-
     if is_reserved_builtin_call_func(func) {
         return None;
     }

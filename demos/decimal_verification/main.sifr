@@ -1,5 +1,5 @@
 # Reference: decimal_verification
-from sifr.json import json_dumps
+from sifr.json import dumps
 
 def main():
     print("decimal_verification verification corpus and determinism gates demo")
@@ -12,8 +12,8 @@ def main():
     print(bd // BigDecimal("2"))
     print(bd % BigDecimal("2"))
 
-    print(json_dumps(Decimal("1.2300")))
-    print(json_dumps(BigDecimal("1.2300")))
+    print(dumps(Decimal("1.2300")))
+    print(dumps(BigDecimal("1.2300")))
 
     baseline_tmp_d: decimal = Decimal("1.2345") * Decimal("3.0")
     baseline_d: str = str(baseline_tmp_d.quantize(3))

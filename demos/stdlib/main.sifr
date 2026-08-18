@@ -11,7 +11,7 @@
 from sifr.test import assert_eq, assert_true
 from sifr.math import asin, tau, isnan, nan
 from sifr.os import getcwd
-from sifr.re import re_findall
+from sifr.re import findall
 from sifr.graphlib import topological_sort, CycleError
 from sifr.uuid import uuid4
 from sifr.platform import system, machine
@@ -39,7 +39,7 @@ def main():
 
     # re -- findall
     try:
-        matches: list[str] = re_findall("[0-9]+", "abc123def456")
+        matches: list[str] = findall("[0-9]+", "abc123def456")
         assert_eq(len(matches), 2)
     except RegexError as err:
         print(f"regex error: {err.message}")

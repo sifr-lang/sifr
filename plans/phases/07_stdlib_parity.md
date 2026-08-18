@@ -164,14 +164,14 @@ status: done
 ### Key Renames
 
 - `sifr.math`: `abs_val` → `fabs`, `pow_val` → `pow`
-- `sifr.re`: `re_match` → `match`, `re_find` → `search`, `re_replace` → `sub`, `re_findall` → `findall`, `re_split` → `split`
-- `sifr.json`: `json_loads` → `loads`, `json_dumps` → `dumps`
+- `sifr.re`: `search`, `sub`, `findall`, `split`, `finditer`, `compile`, and `fullmatch`; `Pattern.is_match` is the keyword-safe match spelling
+- `sifr.json`: `loads`, `dumps`, `dumps_exact`, `dumps_web`, and `dumps_string_ints`
 - `sifr.shutil`: `move_file` → `move`
-- `sifr.base64`: `base64_encode` → `b64encode`, `base64_decode` → `b64decode`
+- `sifr.base64`: `b64encode`, `b64decode`, and their explicitly typed bytes and options variants
 - `sifr.random`: `random_int` → `randint`, `random_float` → `random`, `random_choice` → `choice`, `random_uniform` → `uniform`
 - `sifr.platform`: `platform_system` → `system`, `platform_arch` → `machine`
 - `sifr.time`: `time_now` → `time`, `time_format` → `strftime`
-- `sifr.fnmatch`: `fnmatch_filter` → `filter`
+- `sifr.fnmatch`: `filter`
 
 ### Rust Keyword Handling
 
@@ -272,14 +272,14 @@ The plan says: *"lazy_iterators after compiler_hardening: Lazy iteration is a co
 
 All 9 functions in `lib/sifr/itertools.sifr` (`chain`, `chain_str`, `repeat_val`, `take`, `flatten`, `enumerate_list`, `pairwise`, `batched`, `islice`) are implemented eagerly — they build a `list` with `.append()` and return it. They should use `yield` to be lazy generators, now that the lazy iterator codegen (`std::iter::from_fn`) is in place.
 
-### Gap 2: CPython tests use old names (cpython_tests was done BEFORE stdlib_naming was verified)
+### Gap 2: Canonical CPython fixture names (closed)
 
-The CPython test files were written using old pre-rename function names:
-- `cpython_json.sifr`: uses `json_loads`/`json_dumps` instead of `loads`/`dumps`
-- `cpython_fnmatch.sifr`: uses `fnmatch_filter` instead of `filter`
-- `cpython_re.sifr`: uses `re_match` instead of the CPython-compatible alias
+The CPython test files now use the canonical public names:
+- `cpython_json.sifr`: uses the canonical `loads`/`dumps` surface
+- `cpython_fnmatch.sifr`: uses the canonical `filter` spelling
+- `cpython_re.sifr`: uses `search(...) is not None` for top-level match checks
 
-These should be updated to use the new CPython-compatible names to validate that the naming alignment actually works end-to-end.
+These fixtures validate the canonical naming alignment end-to-end.
 
 ### Gap 3: Callable struct fields can't be called (compiler_hardening was done AFTER stdlib_class_rollout)
 

@@ -366,7 +366,7 @@ All stdlib signature changes primarily live in `crates/sifr_stdlib` (and codegen
 - **IO**: Rename `write_file` -> `write_text`, `read_file` -> `read_text`, `file_exists` -> `exists`
 - **Env**: Keep `_sifr.sys.env_get` and `_sifr.sys.env_set` private; expose `getenv_opt`, typed-default `getenv`, and `setenv` publicly.
 - **Hash**: Rename `md5_hash` -> `md5`
-- **JSON**: Widen `json_dumps` parameter type from `str` to accept any serializable type
+- **JSON**: Widen `dumps` parameter type from `str` to accept any serializable type
 - **Random**: Provide generic public `choice[T]`; low-level random intrinsics remain private implementation details.
 
 **Fixes:** `verification/areas/stdlib_parity/fixtures/audits/stdlib/01_math.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/02_json.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/06_io.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/08_env.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/09_random.sifr`, `verification/areas/stdlib_parity/fixtures/audits/stdlib/10_hash_encoding.sifr`

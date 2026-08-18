@@ -38,18 +38,18 @@ status: completed (PR #159)
 
 ### Work Items
 
-- `json_loads` -> `Result[str, JSONDecodeError]`
+- `loads` -> `Result[JsonValue, JSONDecodeError]`
 - `toml_parse` -> `Result[str, TOMLDecodeError]`
-- `base64_decode` / `urlsafe_b64decode` -> `Result[str, ParseError]` (generic is fine here — no module-specific error type needed for base64)
+- `b64decode` / `urlsafe_b64decode` -> `Result[str, ParseError]` (generic is fine here — no module-specific error type needed for base64)
 - `decode_utf8` / `bytes_from_hex` -> `Result[str, ParseError]`
-- Regex intrinsics (`re_match`, `re_replace`, `re_findall`, `re_split`) -> `Result[T, RegexError]`
+- Canonical regex operations (`search`, `sub`, `findall`, `split`) -> `Result[T, RegexError]`
 - Update all `.sifr` wrappers and E2E tests
 
 ### Definition of Done (milestone_parse_safety)
 
 - All parse/decode intrinsics return `Result` with specific error types
 - E2E tests for both valid and invalid input
-- A `try` block containing both `json_loads` and `toml_parse` requires handling both `JSONDecodeError` and `TOMLDecodeError` (exhaustiveness checking)
+- A `try` block containing both JSON `loads` and TOML `loads` requires handling both `JSONDecodeError` and `TOMLDecodeError` (exhaustiveness checking)
 
 ---
 
@@ -400,7 +400,7 @@ Affected intrinsics: `read_text`, `write_text`, `read_lines`, `append_text`, `ge
 - **Pass test: specific subclass handling** — `read_text` on missing file caught by `except FileNotFoundError`; `e.message` contains Rust's error text
 - **Pass test: parent catch-all** — `except IOError as e` catches `FileNotFoundError`
 - **Pass test: mixed subclass + parent** — `except FileNotFoundError` + `except IOError` covers all cases
-- **Pass test: mixed error families** — `try` block with `read_text` (IOError family) + `json_loads` (JSONDecodeError), catching `FileNotFoundError` + `IOError` + `JSONDecodeError`
+- **Pass test: mixed error families** — `try` block with `read_text` (IOError family) + JSON `loads` (`JSONDecodeError`), catching `FileNotFoundError` + `IOError` + `JSONDecodeError`
 - **Pass test: JSONDecodeError fields** — `except JSONDecodeError as e` with access to `e.message`, `e.line`, and `e.column`
 - **Pass test: TOMLDecodeError fields** — `except TOMLDecodeError as e` with access to `e.message`, `e.line`, and `e.column`
 - **Pass test: RegexError field** — `except RegexError as e` with access to `e.message` and `e.detail`
@@ -438,10 +438,10 @@ Affected intrinsics: `read_text`, `write_text`, `read_lines`, `append_text`, `ge
 **Codegen — subclass dispatch (critical):**
 - All ~16 I/O intrinsic sites use the shared `__io_err` helper to map `std::io::ErrorKind` to the most specific `IOError` variant, preserving `e.to_string()` as `message`
 - No intrinsic raises a generic parent error when a more specific subclass applies
-- `json_loads` extracts `line()`, `column()`, and `to_string()` from `serde_json::Error` into `JSONDecodeError` fields
+- JSON `loads` extracts `line()`, `column()`, and `to_string()` from `serde_json::Error` into `JSONDecodeError` fields
 - `toml_parse` extracts `line_col()` and `to_string()` from `toml::de::Error` into `TOMLDecodeError` fields
 - Regex intrinsics extract `to_string()` into both `message` and `detail` on `RegexError`
-- Parse intrinsics (`int()`, `float()`, `base64_decode`, etc.) preserve `e.to_string()` as `message` on `ParseError`
+- Parse operations (`int()`, `float()`, `b64decode`, etc.) preserve `e.to_string()` as `message` on `ParseError`
 
 **Existing code compatibility:**
 - All existing E2E tests pass — `e.message` continues to work unchanged
