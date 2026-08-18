@@ -186,6 +186,34 @@ impl DescriptorCollector<'_> {
                             sifr_lowering::MethodKind::StaticMethod => "static",
                             sifr_lowering::MethodKind::ClassMethod => "class",
                         });
+                    let classmethod_index = function.decorator_list.iter().position(|decorator| {
+                        matches!(
+                            &decorator.expression,
+                            Expr::Name(name) if name.id.as_str() == "classmethod"
+                        )
+                    });
+                    if let Some(classmethod_index) = classmethod_index {
+                        for (index, decorator) in function.decorator_list.iter().enumerate() {
+                            let Some((declaration, call)) =
+                                self.resolver.call(&decorator.expression)
+                            else {
+                                continue;
+                            };
+                            if declaration.kind == DeclarationDescriptorKind::Method
+                                && (index + 1 != classmethod_index
+                                    || classmethod_index + 1 != function.decorator_list.len())
+                            {
+                                self.errors.push(diagnostic(
+                                    DiagnosticCode::META_MALFORMED_DECLARATION,
+                                    format!(
+                                        "method descriptor '{}' must be the outer decorator with @classmethod directly above the method",
+                                        declaration.function
+                                    ),
+                                    call.range(),
+                                ));
+                            }
+                        }
+                    }
                     for decorator in &function.decorator_list {
                         self.collect_use(
                             &decorator.expression,
@@ -313,11 +341,39 @@ impl DescriptorCollector<'_> {
             return;
         }
         self.current_provider = Some(provider);
+        let target_callable = if expected_kind == DeclarationDescriptorKind::Method {
+            let prefix = format!("{owner}.");
+            let method = target_identity
+                .strip_prefix(&prefix)
+                .and_then(|identity| identity.split_once(':').map(|(method, _)| method))
+                .unwrap_or(target_identity.as_str());
+            if let Some(identity) = crate::callable_identities::method_declaration(
+                self.module_name,
+                self.result,
+                owner,
+                method,
+            ) {
+                Some(identity)
+            } else {
+                self.errors.push(diagnostic(
+                    DiagnosticCode::META_MALFORMED_DECLARATION,
+                    format!(
+                        "method descriptor '{}' target does not have a checked method identity",
+                        declaration.function
+                    ),
+                    call.range(),
+                ));
+                return;
+            }
+        } else {
+            None
+        };
         match self.evaluate_call(declaration, call) {
             Ok(value) => self.descriptors.push(TypedDeclarationDescriptor {
                 owner: owner.to_string(),
                 target_kind: expected_kind,
                 target_identity,
+                target_callable,
                 provider_module: declaration.provider_module.clone(),
                 provider_function: declaration.provider_function.clone(),
                 value_type: declaration.return_type.clone(),

@@ -2,15 +2,9 @@
 
 use crate::ConstValue;
 use ruff_text_size::{Ranged, TextRange};
-use sifr_lowering::LoweringResult;
+use sifr_lowering::{LoweringResult, SourceOriginId};
 use sifr_python_ast::{Decorator, Expr, Stmt, StmtClassDef, StmtFunctionDef};
 use std::collections::BTreeMap;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct SourceOriginId {
-    namespace: [u8; 32],
-    index: u32,
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum SourceOriginKind {
@@ -41,7 +35,7 @@ pub(crate) struct SourceOriginTable {
 impl SourceOriginTable {
     #[must_use]
     pub(crate) fn resolve(&self, id: SourceOriginId) -> Option<&SourceOriginEntry> {
-        (id.namespace == self.namespace)
+        id.belongs_to(self.namespace)
             .then(|| self.entries.get(&id))
             .flatten()
     }
@@ -568,10 +562,7 @@ impl DeclarationCollector {
     }
 
     fn add_origin(&mut self, kind: SourceOriginKind, range: TextRange) -> SourceOriginId {
-        let id = SourceOriginId {
-            namespace: self.namespace,
-            index: self.next_origin,
-        };
+        let id = SourceOriginId::new(self.namespace, self.next_origin);
         self.next_origin = self.next_origin.saturating_add(1);
         self.entries
             .insert(id, SourceOriginEntry { id, kind, range });

@@ -386,6 +386,7 @@ fn collect_class_bases(stmts: &[Stmt], ctx: &mut LowerCtx) {
                 .collect(),
             data_parent,
             field_plans: Vec::new(),
+            handler_plans: Vec::new(),
             adapter_invocation_identity: [0; 32],
             post_adapter_identity: [0; 32],
             range: markers

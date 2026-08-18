@@ -9,7 +9,7 @@ mod cache_keys;
 mod callable_exports;
 mod canonical_types;
 mod class_declarations;
-pub use class_declarations::SourceOriginId;
+pub use sifr_lowering::SourceOriginId;
 mod callable_identities;
 mod const_specialization;
 mod descriptor_exports;

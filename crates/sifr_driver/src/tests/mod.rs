@@ -2,6 +2,7 @@ mod adapter_defaults;
 mod diagnostics;
 mod discovery_and_workspace;
 mod early_adapters;
+mod handler_descriptors;
 mod package_project_build_check;
 mod panic_boundary;
 mod project_build_check;

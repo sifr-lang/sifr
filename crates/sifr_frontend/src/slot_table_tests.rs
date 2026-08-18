@@ -142,10 +142,10 @@ class Record:
 }
 
 #[test]
-fn non_result_slot_uses_signature_diagnostic() {
+fn infallible_slot_uses_checked_output_signature() {
     let mut external_defs = ExternalDefs::default();
     install_specializer(&mut external_defs, &["target.Record::normalize"]);
-    let codes = diagnostic_codes(compile(
+    let result = compile(
         "target",
         r#"
 from fixture.slots import describe
@@ -160,8 +160,11 @@ class Record:
         return value
 "#,
         &external_defs,
-    ));
-    assert!(codes.iter().any(|code| code == "SIFR-RUST-SLOT-0003"));
+    )
+    .expect("infallible checked method slot specializes");
+    let slot = &result.specialization_outputs[0].method_slots[0];
+    assert_eq!(slot.output_type, sifr_type_system::Type::Str);
+    assert!(!slot.is_fallible);
 }
 
 #[test]

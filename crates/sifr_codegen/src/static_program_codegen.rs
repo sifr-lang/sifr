@@ -339,6 +339,12 @@ mod tests {
             output_type: Type::Str,
             context_type: None,
             context_mutable: false,
+            descriptor_type: None,
+            descriptor_value: None,
+            descriptor_origin: None,
+            descriptor_range: None,
+            declaration_order: None,
+            is_fallible: true,
         });
         output.method_slot_context = Some(StaticMethodSlotContext::None);
 

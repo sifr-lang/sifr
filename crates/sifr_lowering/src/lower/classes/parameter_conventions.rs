@@ -14,7 +14,9 @@ pub(in crate::lower) fn declared_receiver_convention(
         .map_or_else(AstParamConvention::borrow, |parameter| {
             parameter.parameter.convention
         });
-    if convention.is_mutable() {
+    if convention.is_owned() {
+        ReceiverConvention::Owned
+    } else if convention.is_mutable() {
         ReceiverConvention::MutableBorrow
     } else {
         ReceiverConvention::SharedBorrow

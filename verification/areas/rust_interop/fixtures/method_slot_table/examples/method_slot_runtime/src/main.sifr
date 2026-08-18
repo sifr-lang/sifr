@@ -1,7 +1,7 @@
 # execution-kind: runtime-observed
 # expected-result: method-slot-dispatch-ok
 
-from method_slot_runtime.schema_program import derive, derive_no_context, derive_shared
+from method_slot_runtime.schema_program import SlotContract, slot
 from sifr.meta import Context, MethodSlots, NoContext
 
 
@@ -14,18 +14,20 @@ class AppContext:
 
 
 @const_specialize("method_slot_runtime.schema_program", "derive")
-class Record:
+class Record(SlotContract):
     value: str
 
     @staticmethod
-    @metadata("fixture.slot", "normalize")
+    @slot("normalize")
     def normalize(
         own value: str, mut context: AppContext
     ) -> Result[str, SlotFailure]:
+        if value == "error":
+            raise SlotFailure("typed-handler-error")
         context.calls += 1
         return value + "-normalized"
 
-    @metadata("fixture.slot", "finalize")
+    @slot("finalize")
     def finalize(
         mut self, mut context: AppContext
     ) -> Result[str, SlotFailure]:
@@ -34,25 +36,25 @@ class Record:
         return self.value + ""
 
 
-@const_specialize("method_slot_runtime.schema_program", "derive_no_context")
-class NoContextRecord:
+@const_specialize("method_slot_runtime.schema_program", "derive")
+class NoContextRecord(SlotContract):
     value: str
 
-    @staticmethod
-    @metadata("fixture.slot", "normalize")
-    def normalize(own value: str) -> Result[str, SlotFailure]:
+    @slot("normalize")
+    @classmethod
+    def normalize(cls, own value: str) -> Result[str, SlotFailure]:
         return value + "-no-context"
 
 
-@const_specialize("method_slot_runtime.schema_program", "derive_shared")
-class SharedRecord:
+@const_specialize("method_slot_runtime.schema_program", "derive")
+class SharedRecord(SlotContract):
     value: str
 
     @staticmethod
-    @metadata("fixture.slot", "normalize")
+    @slot("normalize")
     def normalize(
         own value: str, context: AppContext
-    ) -> Result[str, SlotFailure]:
+    ) -> str:
         return value + "-shared-" + str(context.calls)
 
 
@@ -83,6 +85,15 @@ def verify_method_slot_runtime() -> Result[str, SlotFailure | RustPanicError]:
         assert output == "value-normalized"
         assert context.calls == 1
         print(output)
+        try:
+            unexpected: str = invoke_slot(model, "error", context)
+            assert unexpected == "unreachable"
+            assert False
+        except SlotFailure as error:
+            assert str(error).find("typed-handler-error") is not None
+        except RustPanicError as error:
+            raise error
+        assert context.calls == 1
         receiver_output: str = invoke_receiver_slot(model, context)
         assert receiver_output == "input-receiver"
         assert context.calls == 2

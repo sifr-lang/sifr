@@ -106,7 +106,7 @@ class Consumable:
 
     assert!(rust_code.contains("fn read(&self) -> i64"));
     assert!(rust_code.contains("fn bump(&mut self)"));
-    assert!(rust_code.contains("fn close(&self)"));
+    assert!(rust_code.contains("fn close(self)"));
 }
 
 #[test]

@@ -113,6 +113,7 @@ pub(crate) fn method_slot_diagnostic(
     error: crate::slot_table::MethodSlotError,
     range: TextRange,
 ) -> HirDiagnostic {
+    let primary_range = error.range().unwrap_or(range);
     let code = match error.kind() {
         crate::slot_table::MethodSlotErrorKind::List => DiagnosticCode::RUST_SLOT_LIST,
         crate::slot_table::MethodSlotErrorKind::Method => DiagnosticCode::RUST_SLOT_METHOD,
@@ -130,7 +131,7 @@ pub(crate) fn method_slot_diagnostic(
         },
         args: BTreeMap::from([("reason".to_string(), DiagnosticArg::String(reason))]),
         help: None,
-        primary_range: Some(range),
+        primary_range: Some(primary_range),
         line: None,
         col: None,
     }
