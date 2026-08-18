@@ -1,7 +1,7 @@
 class Number:
     value: int
 
-    def __neg__(self) -> Number:
+    def __neg__(own self) -> Number:
         return Number(-self.value)
 
     def __eq__(self, other: Number) -> bool:

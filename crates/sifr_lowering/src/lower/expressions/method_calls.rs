@@ -306,7 +306,11 @@ pub(in crate::lower) fn lower_method_call(
         if ctx.python_consuming_methods.contains(&qualified)
             || ctx.rust_consuming_methods.contains(&qualified)
         {
-            ReceiverConvention::Owned
+            if receiver_convention.is_owned() {
+                receiver_convention
+            } else {
+                ReceiverConvention::Owned
+            }
         } else {
             receiver_convention
         }
@@ -324,7 +328,7 @@ pub(in crate::lower) fn lower_method_call(
     let declared_class_owned = matches!(object_ty.resolve_alias(), Type::Class { .. })
         && method_type
             .as_ref()
-            .is_some_and(|signature| signature.receiver == Some(ReceiverConvention::Owned));
+            .is_some_and(|signature| signature.receiver.is_some_and(ReceiverConvention::is_owned));
     if declared_class_owned && !interop_receiver_already_consumed {
         consume_declared_owned_receiver(&object, attr.value.range(), ctx);
     }

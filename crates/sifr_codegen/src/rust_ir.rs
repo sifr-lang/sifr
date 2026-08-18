@@ -322,6 +322,7 @@ pub enum RustParam {
     SelfParam { mutable: bool },
     SelfParamWithLifetime { mutable: bool, lifetime: String },
     SelfValue,
+    MutableSelfValue,
     Named { name: String, ty: RustType },
     NamedMut { name: String, ty: RustType },
 }

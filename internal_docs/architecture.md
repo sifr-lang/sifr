@@ -492,9 +492,8 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
   - `own mut x: list[int]` -> owned mutable -> `mut x: Vec<SifrInt>` under the integer-model amendment
   Scalar value-semantic types (`int`, fixed-width integers, `float`, `bool`) remain reusable after calls regardless of annotation; `mut` on those parameters only affects local rebinding/mutation semantics, not observable ownership transfer.
 - **Method receivers:** source syntax is authoritative. `self` selects
-  `SharedBorrow`, `mut self` selects `MutableBorrow`, and both `own self` and
-  `own mut self` select `Owned`; the owned forms retain their declared binding
-  mutability separately. Lowering stores that explicit contract in method
+  `SharedBorrow`, `mut self` selects `MutableBorrow`, `own self` selects
+  `Owned`, and `own mut self` selects `OwnedMutable`. Lowering stores that explicit contract in method
   signatures, `HirFunction`, and every resolved method call. Protocol checking,
   codegen, and flow analysis consume the declaration and do not infer or
   reinterpret it from the method body, delegation, fields, generics, protocols,
@@ -565,7 +564,7 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
 
 **Implementation responsibilities:**
 
-- classes: implement method receiver inference (`&self` / `&mut self` / `self`)
+- classes: preserve explicit method receiver conventions (`&self` / `&mut self` / `self` / `mut self`)
 - borrow_default: implement borrow-by-default parameter conventions and codegen
 - borrow_hardening: implement exclusivity checking and error diagnostics
 - own-mut-parameter-convention: extend parameter conventions so owned mutable parameters are first-class and lower canonically to Rust `mut x: T`

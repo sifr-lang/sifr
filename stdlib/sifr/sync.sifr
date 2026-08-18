@@ -34,7 +34,7 @@ class Channel[T]:
     def is_closed(self) -> bool:
         return self._closed
 
-    def close(self) -> None:
+    def close(mut self) -> None:
         self._closed = True
 
     def clone(self) -> Channel[T]:
@@ -43,13 +43,13 @@ class Channel[T]:
             copy.close()
         return copy
 
-    def push(self, own value: T) -> Result[None, ClosedError]:
+    def push(mut self, own value: T) -> Result[None, ClosedError]:
         if self._closed:
             raise ClosedError()
         self._buffer.append(value)
         return None
 
-    def pop(self) -> Result[T, ClosedError]:
+    def pop(mut self) -> Result[T, ClosedError]:
         if len(self._buffer) == 0:
             raise ClosedError()
         value: T = self._buffer[0]
@@ -66,13 +66,13 @@ class ChannelSender[T]:
     def __str__(self) -> str:
         return "ChannelSender"
 
-    async def send(self, own value: T) -> Result[None, ClosedError]:
+    async def send(mut self, own value: T) -> Result[None, ClosedError]:
         channel: Channel[T] = self._channel
         sent: Result[None, ClosedError] = channel.push(value)
         self._channel = channel
         return sent
 
-    def close(self) -> None:
+    def close(mut self) -> None:
         channel: Channel[T] = self._channel
         channel.close()
         self._channel = channel
@@ -90,7 +90,7 @@ class ChannelReceiver[T]:
     def __str__(self) -> str:
         return "ChannelReceiver"
 
-    async def receive(self) -> Result[T, ClosedError]:
+    async def receive(mut self) -> Result[T, ClosedError]:
         channel: Channel[T] = self._channel
         received: Result[T, ClosedError] = channel.pop()
         self._channel = channel
@@ -178,13 +178,13 @@ class Semaphore:
     def __init__(self, permits: int):
         self._permits = permits
 
-    async def acquire(self) -> Result[SemaphorePermit, ClosedError]:
+    async def acquire(mut self) -> Result[SemaphorePermit, ClosedError]:
         if self._permits > 0:
             self._permits = self._permits - 1
             return SemaphorePermit()
         return SemaphorePermit()
 
-    def try_acquire(self) -> Result[SemaphorePermit, WouldBlockError]:
+    def try_acquire(mut self) -> Result[SemaphorePermit, WouldBlockError]:
         if self._permits > 0:
             self._permits = self._permits - 1
             return SemaphorePermit()

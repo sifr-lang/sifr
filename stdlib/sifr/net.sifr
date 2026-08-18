@@ -63,14 +63,14 @@ class TcpStream:
         except NetError as e:
             raise e
 
-    async def close(own self) -> Result[None, NetError]:
+    async def close(own mut self) -> Result[None, NetError]:
         self._closed = True
         try:
             return await net_tcp_stream_close(self._handle)
         except NetError as e:
             raise e
 
-    def split(own self) -> Result[tuple[TcpReadHalf, TcpWriteHalf], NetError]:
+    def split(own mut self) -> Result[tuple[TcpReadHalf, TcpWriteHalf], NetError]:
         self._closed = True
         try:
             handles: list[int] = net_tcp_stream_split(self._handle)
@@ -115,7 +115,7 @@ class TcpReadHalf:
         except NetError as e:
             raise e
 
-    def close(self) -> Result[None, NetError]:
+    def close(mut self) -> Result[None, NetError]:
         if self._closed:
             raise NetError("TCP read half is already closed")
         self._closed = True
@@ -148,7 +148,7 @@ class TcpWriteHalf:
         except NetError as e:
             raise e
 
-    def close(self) -> Result[None, NetError]:
+    def close(mut self) -> Result[None, NetError]:
         if self._closed:
             raise NetError("TCP write half is already closed")
         self._closed = True
@@ -176,7 +176,7 @@ class TcpListener:
         except NetError as e:
             raise e
 
-    def close(self) -> Result[None, NetError]:
+    def close(mut self) -> Result[None, NetError]:
         if self._closed:
             raise NetError("TCP listener is already closed")
         self._closed = True

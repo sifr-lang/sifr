@@ -172,13 +172,13 @@ class SequenceMatcher:
         self._a = a + ""
         self._b = b + ""
 
-    def set_seq1(self, a: str) -> None:
+    def set_seq1(mut self, a: str) -> None:
         self._a = a + ""
 
-    def set_seq2(self, b: str) -> None:
+    def set_seq2(mut self, b: str) -> None:
         self._b = b + ""
 
-    def set_seqs(self, a: str, b: str) -> None:
+    def set_seqs(mut self, a: str, b: str) -> None:
         self._a = a + ""
         self._b = b + ""
 

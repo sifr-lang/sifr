@@ -24,11 +24,11 @@ class Owner:
     def pick(self) -> Inner:
         return self.inner
 
-    def update(self, value: int | None) -> int | None:
+    def update(mut self, value: int | None) -> int | None:
         self.value = value
         return self.value
 
-    def conflict(self) -> int | None:
+    def conflict(mut self) -> int | None:
         return self.update(self.pick().values[0])
 "#;
     let parsed = parse_module(source).expect("source should parse");
@@ -56,10 +56,10 @@ class Owner:
     def pick(self) -> Inner:
         return self.inner
 
-    def replace(self, own values: list[int]) -> None:
+    def replace(mut self, own values: list[int]) -> None:
         self.values = values
 
-    def conflict(self) -> None:
+    def conflict(mut self) -> None:
         self.replace(self.pick().values[:1])
 "#;
     let parsed = parse_module(source).expect("source should parse");
@@ -90,18 +90,18 @@ class Owner:
     value: int | None
     values: list[int]
 
-    def update(self, value: int | None) -> int | None:
+    def update(mut self, value: int | None) -> int | None:
         self.value = value
         return self.value
 
-    def replace(self, own values: list[int]) -> None:
+    def replace(mut self, own values: list[int]) -> None:
         self.values = values
 
 class Coordinator:
     owner: Owner
     source: Source
 
-    def apply(self) -> int | None:
+    def apply(mut self) -> int | None:
         self.owner.replace(self.source.snapshot().values[:1])
         return self.owner.update(self.source.snapshot().values[0])
 "#;
@@ -117,14 +117,14 @@ class Receiver:
     value: int | None
     index: int
 
-    def update(self, value: int | None) -> int | None:
+    def update(mut self, value: int | None) -> int | None:
         self.value = value
         return self.value
 
 class Coordinator:
     receiver: Receiver
 
-    def conflict_index(self, other: tuple[list[int], list[int]]) -> int | None:
+    def conflict_index(mut self, other: tuple[list[int], list[int]]) -> int | None:
         return self.receiver.update(other[self.receiver.index][0])
 "#;
     let parsed = parse_module(source).expect("source should parse");
@@ -149,13 +149,13 @@ class Receiver:
     values: list[int]
     index: int
 
-    def replace(self, own values: list[int]) -> None:
+    def replace(mut self, own values: list[int]) -> None:
         self.values = values
 
 class Coordinator:
     receiver: Receiver
 
-    def conflict_slice(self, other: tuple[list[int], list[int]]) -> None:
+    def conflict_slice(mut self, other: tuple[list[int], list[int]]) -> None:
         self.receiver.replace(other[self.receiver.index][:1])
 "#;
     let parsed = parse_module(source).expect("source should parse");
@@ -181,11 +181,11 @@ class Receiver:
     values: list[int]
     index: int
 
-    def update(self, value: int | None) -> int | None:
+    def update(mut self, value: int | None) -> int | None:
         self.value = value
         return self.value
 
-    def replace(self, own values: list[int]) -> None:
+    def replace(mut self, own values: list[int]) -> None:
         self.values = values
 
 class Source:
@@ -195,7 +195,7 @@ class Coordinator:
     receiver: Receiver
     source: Source
 
-    def accepted(self, other: tuple[list[int], list[int]]) -> int | None:
+    def accepted(mut self, other: tuple[list[int], list[int]]) -> int | None:
         self.receiver.replace(other[self.source.index][:1])
         return self.receiver.update(other[self.source.index][0])
 "#;

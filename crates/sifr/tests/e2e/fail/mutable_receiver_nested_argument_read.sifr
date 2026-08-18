@@ -2,7 +2,7 @@
 class Helper:
     items: list[int]
 
-    def append_count(self, count: int) -> None:
+    def append_count(mut self, count: int) -> None:
         self.items.append(count)
 
 

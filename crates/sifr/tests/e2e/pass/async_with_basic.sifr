@@ -12,11 +12,11 @@ class AsyncResource:
         self.entered = False
         self.exited = False
 
-    async def __aenter__(self) -> Result[int, ResourceError]:
+    async def __aenter__(mut self) -> Result[int, ResourceError]:
         self.entered = True
         return self.value
 
-    async def __aexit__(self, _cause: AsyncExitCause) -> Result[None, ResourceError]:
+    async def __aexit__(mut self, _cause: AsyncExitCause) -> Result[None, ResourceError]:
         assert self.entered
         assert not self.exited
         self.exited = True

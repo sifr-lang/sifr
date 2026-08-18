@@ -23,11 +23,11 @@ class Owner:
         self.value = None
         self.values = []
 
-    def update(self, value: int | None) -> int | None:
+    def update(mut self, value: int | None) -> int | None:
         self.value = value
         return self.value
 
-    def replace(self, own values: list[int]) -> None:
+    def replace(mut self, own values: list[int]) -> None:
         self.values = values
 
 
@@ -39,7 +39,7 @@ class Coordinator:
         self.owner = owner
         self.source = source
 
-    def apply(self) -> int | None:
+    def apply(mut self) -> int | None:
         self.owner.replace(self.source.snapshot().values[:1])
         return self.owner.update(self.source.snapshot().values[0])
 

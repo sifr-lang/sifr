@@ -45,7 +45,7 @@ class TlsClientConfig:
         self._handle = handle
         self._closed = False
 
-    def close(self) -> Result[None, TlsError]:
+    def close(mut self) -> Result[None, TlsError]:
         if self._closed:
             raise TlsError("TLS client config is already closed")
         self._closed = True
@@ -68,7 +68,7 @@ class TlsServerConfig:
         self._handle = handle
         self._closed = False
 
-    def close(self) -> Result[None, TlsError]:
+    def close(mut self) -> Result[None, TlsError]:
         if self._closed:
             raise TlsError("TLS server config is already closed")
         self._closed = True
@@ -120,14 +120,14 @@ class TlsStream:
         except TlsError as e:
             raise e
 
-    async def close(own self) -> Result[None, TlsError]:
+    async def close(own mut self) -> Result[None, TlsError]:
         self._closed = True
         try:
             return await tls_stream_close(self._handle)
         except TlsError as e:
             raise e
 
-    def split(own self) -> Result[tuple[TlsReadHalf, TlsWriteHalf], TlsError]:
+    def split(own mut self) -> Result[tuple[TlsReadHalf, TlsWriteHalf], TlsError]:
         self._closed = True
         try:
             handles: list[int] = tls_stream_split(self._handle)
@@ -164,7 +164,7 @@ class TlsReadHalf:
         except TlsError as e:
             raise e
 
-    def close(self) -> Result[None, TlsError]:
+    def close(mut self) -> Result[None, TlsError]:
         if self._closed:
             raise TlsError("TLS read half is already closed")
         self._closed = True
@@ -203,7 +203,7 @@ class TlsWriteHalf:
         except TlsError as e:
             raise e
 
-    async def close(own self) -> Result[None, TlsError]:
+    async def close(own mut self) -> Result[None, TlsError]:
         self._closed = True
         try:
             return await tls_write_half_close(self._handle)

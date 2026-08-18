@@ -107,7 +107,7 @@ class timedelta:
     def total_seconds_float(self) -> float:
         return float(self.total_microseconds()) / 1000000.0
 
-    def __add__(self, other: timedelta) -> timedelta:
+    def __add__(own self, other: timedelta) -> timedelta:
         total: int = self.total_microseconds() + other.total_microseconds()
         d: int = total // 86400000000
         remaining: int = total % 86400000000
@@ -115,7 +115,7 @@ class timedelta:
         us: int = remaining % 1000000
         return timedelta(d, s, us)
 
-    def __sub__(self, other: timedelta) -> timedelta:
+    def __sub__(own self, other: timedelta) -> timedelta:
         total: int = self.total_microseconds() - other.total_microseconds()
         d: int = total // 86400000000
         remaining: int = total % 86400000000

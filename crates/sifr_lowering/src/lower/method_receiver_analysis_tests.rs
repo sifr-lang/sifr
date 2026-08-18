@@ -184,7 +184,7 @@ fn same_call_place_conflict_populates_canonical_binding_argument() {
 class Helper:
     items: list[int]
 
-    def absorb(self, mut other: Helper) -> None:
+    def absorb(mut self, mut other: Helper) -> None:
         self.items.append(1)
         other.items.append(2)
 
@@ -285,11 +285,11 @@ class Owner:
     value: int
     callback: Callable[[int], int]
 
-    def update(self, value: int) -> int:
+    def update(mut self, value: int) -> int:
         self.value = value
         return self.value
 
-    def conflict(self) -> int:
+    def conflict(mut self) -> int:
         return self.update(self.callback(2))
 "#;
     let parsed = parse_module(source).expect("source should parse");
@@ -310,7 +310,7 @@ fn invoked_callable_field_footprint_accepts_disjoint_sibling_place() {
 class Helper:
     value: int
 
-    def update(self, value: int) -> int:
+    def update(mut self, value: int) -> int:
         self.value = value
         return self.value
 
@@ -318,7 +318,7 @@ class Owner:
     helper: Helper
     callback: Callable[[int], int]
 
-    def accepted(self) -> int:
+    def accepted(mut self) -> int:
         return self.helper.update(self.callback(2))
 "#;
     let parsed = parse_module(source).expect("source should parse");
@@ -331,14 +331,14 @@ fn actual_method_shadowing_callable_field_stays_conservative() {
 class Helper:
     value: int
 
-    def update(self, value: int) -> int:
+    def update(mut self, value: int) -> int:
         self.value = value
         return self.value
 
 class Base:
     value: int
 
-    def run(self, value: int) -> int:
+    def run(mut self, value: int) -> int:
         self.value = value
         return self.value
 
@@ -346,7 +346,7 @@ class Child(Base):
     helper: Helper
     run: Callable[[int], int]
 
-    def conflict(self) -> int:
+    def conflict(mut self) -> int:
         return self.helper.update(self.run(2))
 "#;
     let parsed = parse_module(source).expect("source should parse");
@@ -374,11 +374,11 @@ class Owner:
     def pick(self) -> Inner:
         return self.inner
 
-    def update(self, value: int) -> int:
+    def update(mut self, value: int) -> int:
         self.value = value
         return self.value
 
-    def conflict(self) -> int:
+    def conflict(mut self) -> int:
         return self.update(self.pick().callback(2))
 "#;
     let parsed = parse_module(source).expect("source should parse");
@@ -414,24 +414,24 @@ def accepted(mut node: Node) -> None:
 }
 
 #[test]
-fn receiver_inference_closes_transitive_delegation_and_attaches_call_metadata() {
+fn explicit_mutable_receivers_close_transitive_delegation_and_attach_call_metadata() {
     let source = r#"
 class Leaf:
     value: int
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.value += 1
 
 class Middle:
     leaf: Leaf
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.leaf.bump()
 
 class Root:
     middle: Middle
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.middle.bump()
 "#;
     let module = lower(source);
@@ -464,7 +464,7 @@ fn inherited_receiver_metadata_uses_declaring_method_origin() {
 class Base:
     value: int
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.value += 1
 
 class Child(Base):
@@ -473,7 +473,7 @@ class Child(Base):
 class Owner:
     child: Child
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.child.bump()
 "#;
     let module = lower(source);
@@ -516,19 +516,19 @@ class Owner:
 }
 
 #[test]
-fn generic_receiver_specializations_keep_inferred_conventions() {
+fn generic_receiver_specializations_keep_explicit_conventions() {
     let source = r#"
 class Cell[T]:
     value: T
     updates: int
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.updates += 1
 
 class Owner[T]:
     cell: Cell[T]
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.cell.bump()
 
 def mutate(mut owner: Owner[int]) -> None:
@@ -567,7 +567,7 @@ class Mutable(Protocol):
 class Counter:
     value: int
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.value += 1
 
 def invoke(own mut entity: Mutable) -> None:
@@ -689,6 +689,62 @@ def invoke(own value: Plain) -> Result[str, BridgeError]:
 }
 
 #[test]
+fn owned_mutable_receiver_keeps_distinct_declaration_and_call_metadata() {
+    let source = r#"
+class Counter:
+    value: int
+
+    def take(own mut self) -> int:
+        self.value += 1
+        return self.value
+
+def invoke(own value: Counter) -> int:
+    return value.take()
+"#;
+    let module = lower(source);
+    assert_eq!(
+        method(&module, "Counter", "take").receiver,
+        Some(ReceiverConvention::OwnedMutable)
+    );
+    let HirStmt::Return {
+        value: Some(HirExpr::MethodCall {
+            receiver_convention,
+            ..
+        }),
+    } = &module.functions[0].body[0]
+    else {
+        panic!("owned mutable call should remain in the return expression");
+    };
+    assert_eq!(*receiver_convention, Some(ReceiverConvention::OwnedMutable));
+}
+
+#[test]
+fn owned_immutable_receiver_mutation_reports_one_declaration_error() {
+    let source = r#"
+class Counter:
+    value: int
+
+    def take(own self) -> int:
+        self.value += 1
+        return self.value
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("owned immutable mutation must fail"),
+        Err(errors) => errors,
+    };
+    let receiver_errors = errors
+        .iter()
+        .filter(|error| error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION))
+        .collect::<Vec<_>>();
+    assert_eq!(receiver_errors.len(), 1, "{errors:?}");
+    assert_eq!(
+        receiver_errors[0].primary_range,
+        Some(range_for(source, "take"))
+    );
+}
+
+#[test]
 fn instance_syntax_static_method_call_does_not_trip_receiver_invariant() {
     let source = r#"
 class Utility:
@@ -718,7 +774,7 @@ fn nested_receiver_and_regular_mut_argument_share_checked_place_metadata() {
 class Leaf:
     value: int
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.value += 1
 
 class Mid:

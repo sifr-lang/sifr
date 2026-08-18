@@ -62,6 +62,7 @@ impl Renderer {
                 }
             }
             RustParam::SelfValue => "self".to_string(),
+            RustParam::MutableSelfValue => "mut self".to_string(),
             RustParam::Named { name, ty } => {
                 format!(
                     "{}: {}",
@@ -551,7 +552,8 @@ impl Renderer {
         match param {
             RustParam::SelfParam { .. }
             | RustParam::SelfParamWithLifetime { .. }
-            | RustParam::SelfValue => "self".to_string(),
+            | RustParam::SelfValue
+            | RustParam::MutableSelfValue => "self".to_string(),
             RustParam::Named { name, ty } | RustParam::NamedMut { name, ty } => {
                 let rendered_name = Self::render_identifier(name);
                 if matches!(ty, RustType::Named(name) if name == "_") {
@@ -567,7 +569,8 @@ impl Renderer {
         match param {
             RustParam::SelfParam { .. }
             | RustParam::SelfParamWithLifetime { .. }
-            | RustParam::SelfValue => "self".to_string(),
+            | RustParam::SelfValue
+            | RustParam::MutableSelfValue => "self".to_string(),
             RustParam::Named { name, .. } | RustParam::NamedMut { name, .. } => {
                 Self::render_identifier(name)
             }

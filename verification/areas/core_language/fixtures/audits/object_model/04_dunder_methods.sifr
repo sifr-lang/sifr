@@ -15,7 +15,7 @@ class Vector:
     def __str__(self) -> str:
         return f"Vector({self.x}, {self.y})"
 
-    def __add__(self, other: Vector) -> Vector:
+    def __add__(own self, other: Vector) -> Vector:
         return Vector(self.x + other.x, self.y + other.y)
 
     def __eq__(self, other: Vector) -> bool:

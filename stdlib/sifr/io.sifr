@@ -70,7 +70,7 @@ class IOBase:
     def __init__(self) -> None:
         self._closed = False
 
-    def close(self) -> None:
+    def close(mut self) -> None:
         self._closed = True
 
     def closed(self) -> bool:
@@ -117,7 +117,7 @@ class FileHandle:
         self._mode = mode
         self._closed = False
 
-    def close(self) -> None:
+    def close(mut self) -> None:
         if self._closed:
             return
         file_close(self._handle)
@@ -193,7 +193,7 @@ class FileHandle:
     def __enter__(self) -> FileHandle:
         return self
 
-    def __exit__(self) -> None:
+    def __exit__(mut self) -> None:
         self.close()
 
 
@@ -207,7 +207,7 @@ class BinaryFileHandle:
         self._mode = mode
         self._closed = False
 
-    def close(self) -> None:
+    def close(mut self) -> None:
         if self._closed:
             return
         file_close(self._handle)
@@ -256,7 +256,7 @@ class BinaryFileHandle:
     def __enter__(self) -> BinaryFileHandle:
         return self
 
-    def __exit__(self) -> None:
+    def __exit__(mut self) -> None:
         self.close()
 
 
@@ -300,7 +300,7 @@ class TextFileHandle:
         self._decode_errors = decode_errors
         self._encode_errors = encode_errors
 
-    def close(self) -> None:
+    def close(mut self) -> None:
         self._binary.close()
 
     def closed(self) -> bool:
@@ -347,7 +347,7 @@ class TextFileHandle:
     def __enter__(self) -> TextFileHandle:
         return self
 
-    def __exit__(self) -> None:
+    def __exit__(mut self) -> None:
         self.close()
 
 
@@ -366,7 +366,7 @@ class TextReader:
     def readlines(self) -> Result[list[str], IOError]:
         raise IOError("TextReader.readlines is deferred; use read().split(\"\\n\")")
 
-    def close(self) -> None:
+    def close(mut self) -> None:
         self._closed = True
 
 
@@ -380,7 +380,7 @@ class TextWriter:
         _ = text
         raise IOError("TextWriter direct construction is unsupported; use open_text")
 
-    def close(self) -> None:
+    def close(mut self) -> None:
         self._closed = True
 
 
@@ -394,7 +394,7 @@ class StringIO:
         self._cursor = 0
         self._closed = False
 
-    def close(self) -> None:
+    def close(mut self) -> None:
         self._closed = True
 
     def closed(self) -> bool:
@@ -405,7 +405,7 @@ class StringIO:
             raise IOError(_closed_stream_error())
         return None
 
-    def read(self, size: int | None = None) -> Result[str, IOError]:
+    def read(mut self, size: int | None = None) -> Result[str, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
         start: int = self._cursor
@@ -420,7 +420,7 @@ class StringIO:
         self._cursor = end
         return piece
 
-    def write(self, data: str) -> Result[None, IOError]:
+    def write(mut self, data: str) -> Result[None, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
         left: str = self._buffer[:self._cursor]
@@ -435,7 +435,7 @@ class StringIO:
     def getvalue(self) -> str:
         return self._buffer
 
-    def seek(self, offset: int, whence: int = 0) -> Result[int, IOError]:
+    def seek(mut self, offset: int, whence: int = 0) -> Result[int, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
         origin: int = 0
@@ -482,7 +482,7 @@ class BytesIO:
         self._cursor = 0
         self._closed = False
 
-    def close(self) -> None:
+    def close(mut self) -> None:
         self._closed = True
 
     def closed(self) -> bool:
@@ -493,7 +493,7 @@ class BytesIO:
             raise IOError(_closed_stream_error())
         return None
 
-    def read_bytes(self, size: int | None = None) -> Result[bytes, IOError]:
+    def read_bytes(mut self, size: int | None = None) -> Result[bytes, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
         start: int = self._cursor
@@ -508,7 +508,7 @@ class BytesIO:
         self._cursor = end
         return chunk
 
-    def write_bytes(self, data: bytes) -> Result[None, IOError]:
+    def write_bytes(mut self, data: bytes) -> Result[None, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
         if self._cursor == len(self._buffer):
@@ -527,7 +527,7 @@ class BytesIO:
     def getvalue(self) -> bytes:
         return self._buffer
 
-    def seek(self, offset: int, whence: int = 0) -> Result[int, IOError]:
+    def seek(mut self, offset: int, whence: int = 0) -> Result[int, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
         origin: int = 0

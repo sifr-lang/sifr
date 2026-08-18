@@ -776,9 +776,9 @@ if !_broke {
 
 - `**class` -> `struct` + `impl`:** class definitions become Rust structs with named fields
 - `**__init__` -> `new()`:** constructor mapping
-- **Methods:** `self` parameter maps to `&self` or `&mut self`
+- **Methods:** explicit receiver syntax maps to `&self`, `&mut self`, `self`, or `mut self`
 - **Field access:** `obj.field` maps to Rust field access
-- **Method receiver inference:** compiler determines `&self` vs `&mut self` vs `self` from body analysis (see Cross-cutting Contracts: Borrow and Lifetime Strategy)
+- **Method receiver declarations:** this completed milestone originally inferred receivers. The pre-v1 compatibility-removal phase replaced that behavior with explicit source conventions.
 - **Auto-derived traits:** `Debug`, `Clone`, `PartialEq` auto-derived on all classes (conditional `Eq`/`Hash` when all fields support it)
 - `**isinstance` narrowing for class types:** extends milestone_type_system's narrowing engine to class instances
 - **Class instances as union members:** `Circle | Square` -> Rust enum with one variant per class
@@ -836,7 +836,7 @@ Now that classes exist with auto-derived `Hash + Eq`:
 
 - `class` compiles to Rust `struct` + `impl`
 - `__init__` maps to `new()` constructor
-- Method receiver inference (`&self` / `&mut self` / `self`) works correctly
+- Explicit method receiver declarations (`self` / `mut self` / `own self` / `own mut self`) work correctly
 - Field access compiles to Rust field access
 - Auto-derived traits (`Debug`, `Clone`, `PartialEq`, conditional `Eq`/`Hash`) on all classes
 - `isinstance` narrowing works for class types
@@ -1178,7 +1178,7 @@ def main():
 
 **Rationale:** Phase 1 is complete, so all codegen patterns are now established. Every demo generates correct Rust, but with recurring quality issues: unnecessary `mut`, redundant `format!` nesting, verbose string handling, and wasteful HashMap lookups. Fixing these now prevents the issues from compounding as Phase 2 adds more complex codegen.
 
-> **Note:** Some codegen issues are already covered by upcoming milestones: method receiver inference (`&self` vs `&mut self`) is in `milestone_classes`, redundant `as f64` will be addressed in `milestone_protocols` with operator overloading, and `std::collections::HashMap` qualification will improve as import handling matures.
+> **Historical note:** This milestone originally covered method receiver inference. The pre-v1 compatibility-removal phase later replaced inference with explicit receiver declarations.
 
 ### Tasks
 

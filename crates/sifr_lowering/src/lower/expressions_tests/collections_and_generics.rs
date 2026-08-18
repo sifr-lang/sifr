@@ -46,7 +46,7 @@ pub(super) fn test_empty_list_specialization_survives_loop_append() {
 #[test]
 pub(super) fn test_generic_class_receiver_refines_from_method_arguments() {
     let result = lower_source(
-        "class Bucket[T]:\n    items: list[T]\n\n    def __init__(self):\n        self.items = []\n\n    def push(self, value: T) -> None:\n        self.items.append(value)\n\n    def first(self) -> T | None:\n        if len(self.items) == 0:\n            return None\n        return self.items[0]\n\ndef main() -> int:\n    bucket = Bucket()\n    bucket.push(1)\n    value = bucket.first()\n    if value is None:\n        return 0\n    return value + 1\n",
+        "class Bucket[T]:\n    items: list[T]\n\n    def __init__(self):\n        self.items = []\n\n    def push(mut self, value: T) -> None:\n        self.items.append(value)\n\n    def first(self) -> T | None:\n        if len(self.items) == 0:\n            return None\n        return self.items[0]\n\ndef main() -> int:\n    bucket = Bucket()\n    bucket.push(1)\n    value = bucket.first()\n    if value is None:\n        return 0\n    return value + 1\n",
     );
     assert!(
         result.is_ok(),
@@ -57,7 +57,7 @@ pub(super) fn test_generic_class_receiver_refines_from_method_arguments() {
 #[test]
 pub(super) fn test_generic_class_receiver_refinement_rejects_mixed_argument_types() {
     let result = lower_source(
-        "class Bucket[T]:\n    items: list[T]\n\n    def __init__(self):\n        self.items = []\n\n    def push(self, value: T) -> None:\n        self.items.append(value)\n\ndef main() -> None:\n    bucket = Bucket()\n    bucket.push(1)\n    bucket.push(\"x\")\n",
+        "class Bucket[T]:\n    items: list[T]\n\n    def __init__(self):\n        self.items = []\n\n    def push(mut self, value: T) -> None:\n        self.items.append(value)\n\ndef main() -> None:\n    bucket = Bucket()\n    bucket.push(1)\n    bucket.push(\"x\")\n",
     );
     assert!(
         result.is_err(),
@@ -231,7 +231,7 @@ pub(super) fn test_guarded_zero_index_list_pop_narrows_to_element_type() {
 #[test]
 pub(super) fn test_guarded_list_pop_on_field_access_narrows_to_element_type() {
     let result = lower_source(
-        "class Q:\n    data: list[int]\n\n    def __init__(self):\n        self.data = [1, 2]\n\n    def pop_one(self) -> int:\n        while self.data:\n            item: int = self.data.pop()\n            return item\n        return 0\n",
+        "class Q:\n    data: list[int]\n\n    def __init__(self):\n        self.data = [1, 2]\n\n    def pop_one(mut self) -> int:\n        while self.data:\n            item: int = self.data.pop()\n            return item\n        return 0\n",
     );
     assert!(
         result.is_ok(),

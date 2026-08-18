@@ -116,7 +116,9 @@ impl RustEmitter {
                 }
                 self.lower_stmt_expr_for_ir(object)
             }
-            Some(ReceiverConvention::Owned) => self.lower_stmt_expr_for_ir(object),
+            Some(ReceiverConvention::Owned | ReceiverConvention::OwnedMutable) => {
+                self.lower_stmt_expr_for_ir(object)
+            }
             None => Ok(None),
         }
     }
@@ -174,7 +176,9 @@ impl RustEmitter {
             Some(ReceiverConvention::SharedBorrow) => self
                 .emit_shared_receiver_path(object)
                 .or_else(|| self.try_lower_registry_expr_strict(object)),
-            Some(ReceiverConvention::Owned) => self.try_lower_registry_expr_strict(object),
+            Some(ReceiverConvention::Owned | ReceiverConvention::OwnedMutable) => {
+                self.try_lower_registry_expr_strict(object)
+            }
             None => None,
         }
     }

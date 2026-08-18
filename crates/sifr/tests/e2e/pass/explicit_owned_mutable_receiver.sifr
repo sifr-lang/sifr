@@ -1,0 +1,10 @@
+class Counter:
+    value: int
+
+    def take(own mut self) -> int:
+        self.value += 1
+        return self.value
+
+def main():
+    counter = Counter(41)
+    assert counter.take() == 42

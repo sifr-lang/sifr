@@ -325,10 +325,10 @@ def from_list[T: Hashable](items: list[T]) -> Counter[T]:
 
 ### Pipeline Verification Points
 
-1. **HIR lowering:** `Counter` class in `collections.sifr` lowered to `HirClass` with fields, methods, receiver inference
+1. **HIR lowering:** `Counter` class in `collections.sifr` lowers to `HirClass` with fields, methods, and explicit receiver conventions
 2. **Driver export:** `compile_stdlib()` populates `ExternalDefs.classes["sifr.collections"]["Counter"]` with `Type::Class`
 3. **User import:** `from sifr.collections import Counter` resolves via `externals.classes` lookup, registers constructor
-4. **Codegen:** `pub struct Counter`, `pub fn new(...)`, methods emitted with correct `&self`/`&mut self`
+4. **Codegen:** `pub struct Counter`, `pub fn new(...)`, and methods emitted with their declared receiver conventions
 
 ### Final Implementation and Evidence
 
@@ -351,7 +351,7 @@ def from_list[T: Hashable](items: list[T]) -> Counter[T]:
 | Risk | Likelihood | Impact | Mitigation |
 | --- | --- | --- | --- |
 | Class export pipeline has untested edge cases | Medium | High | This milestone specifically exercises and validates this path |
-| Method receiver inference wrong for stdlib classes | Low | Medium | Already proven in user-defined class E2E tests |
+| Method receiver declaration wrong for stdlib classes | Low | Medium | User-defined class E2E tests cover explicit conventions. |
 | `pub_mode` doesn't apply correctly to class methods | Low | High | Codegen already handles `pub_mode` for struct, impl, and methods |
 | Generic dict operations regress | Low | Medium | Counter E2E and type-system coverage exercises construction, mutation, queries, and arithmetic. |
 

@@ -1,0 +1,11 @@
+# expect-error[col=9]: SIFR-OWN-0005
+# A shared receiver cannot be reinterpreted from its method body.
+
+class Counter:
+    value: int
+
+    def increment(self) -> None:
+        self.value += 1
+
+def main():
+    print("unreachable")

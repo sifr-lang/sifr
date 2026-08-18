@@ -21,7 +21,7 @@ class ChildFormatter(LogFormatter):
 class JsonValue:
     value: int
 
-    def __add__(self, other: StdJsonValue) -> StdJsonValue:
+    def __add__(own self, other: StdJsonValue) -> StdJsonValue:
         return other
 
 

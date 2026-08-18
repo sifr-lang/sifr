@@ -202,7 +202,7 @@ fn receiver_expression(receiver: Option<ReceiverConvention>) -> &'static str {
         Some(ReceiverConvention::MutableBorrow) => {
             "::sifr_runtime::interop::structural::SlotReceiver::Exclusive"
         }
-        Some(ReceiverConvention::Owned) => {
+        Some(ReceiverConvention::Owned | ReceiverConvention::OwnedMutable) => {
             "::sifr_runtime::interop::structural::SlotReceiver::Owned"
         }
     }
@@ -217,7 +217,7 @@ fn receiver_identity_expression(receiver: Option<ReceiverConvention>) -> &'stati
         Some(ReceiverConvention::MutableBorrow) => {
             "::sifr_runtime::interop::structural::SlotReceiverIdentity::Exclusive"
         }
-        Some(ReceiverConvention::Owned) => {
+        Some(ReceiverConvention::Owned | ReceiverConvention::OwnedMutable) => {
             "::sifr_runtime::interop::structural::SlotReceiverIdentity::Owned"
         }
     }

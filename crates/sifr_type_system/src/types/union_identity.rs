@@ -200,6 +200,7 @@ fn function_key(tag: &str, function: &FunctionType) -> String {
             Some(super::ReceiverConvention::SharedBorrow) => "receiver:shared",
             Some(super::ReceiverConvention::MutableBorrow) => "receiver:mutable",
             Some(super::ReceiverConvention::Owned) => "receiver:owned",
+            Some(super::ReceiverConvention::OwnedMutable) => "receiver:owned-mutable",
         },
     );
     append(&mut key, &function.params.len().to_string());

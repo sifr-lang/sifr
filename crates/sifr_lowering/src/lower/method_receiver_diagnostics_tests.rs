@@ -3,7 +3,7 @@ use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_python_parser::parse_module;
 
 #[test]
-fn inferred_mutable_receiver_rejects_shared_protocol_conformance() {
+fn explicit_mutable_receiver_rejects_shared_protocol_conformance() {
     let source = r#"
 class Shared(Protocol):
     def update(self) -> None:
@@ -12,7 +12,7 @@ class Shared(Protocol):
 class MutableImplementation:
     value: int
 
-    def update(self) -> None:
+    def update(mut self) -> None:
         self.value += 1
 
 class SharedImplementation:
@@ -52,13 +52,13 @@ class Shared(Protocol):
 class FirstMutableImplementation:
     value: int
 
-    def update(self) -> None:
+    def update(mut self) -> None:
         self.value += 1
 
 class SecondMutableImplementation:
     value: int
 
-    def update(self) -> None:
+    def update(mut self) -> None:
         self.value += 1
 "#;
     let parsed = parse_module(source).expect("source should parse");
@@ -100,7 +100,7 @@ fn fixed_trait_receiver_rejects_transitive_receiver_mutation() {
 class Counter:
     value: int
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.value += 1
 
     def __eq__(self, other: Counter) -> bool:
@@ -114,7 +114,7 @@ class Counter:
     };
     let error = errors
         .iter()
-        .find(|error| error.code == Some(DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION))
+        .find(|error| error.code == Some(DiagnosticCode::PROTO_FIXED_RECEIVER_VIOLATION))
         .expect("fixed receiver diagnostic should be present");
     assert_eq!(
         error.args.get("class_name"),
@@ -127,6 +127,41 @@ class Counter:
     assert_eq!(
         error.args.get("trait_name"),
         Some(&DiagnosticArg::String("PartialEq".to_string()))
+    );
+}
+
+#[test]
+fn fixed_trait_receivers_require_explicit_source_conventions() {
+    let source = r#"
+class Addable(Protocol):
+    def __add__(self, other: Addable) -> Addable:
+        ...
+
+class Value:
+    number: int
+
+    def __add__(self, other: Value) -> Value:
+        return Value(self.number + other.number)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("fixed receiver declaration mismatches must fail"),
+        Err(errors) => errors,
+    };
+    let violations = errors
+        .iter()
+        .filter(|error| error.code == Some(DiagnosticCode::PROTO_FIXED_RECEIVER_VIOLATION))
+        .collect::<Vec<_>>();
+    assert_eq!(violations.len(), 2, "{errors:?}");
+    assert_eq!(
+        violations
+            .iter()
+            .map(|error| error.args.get("class_name"))
+            .collect::<Vec<_>>(),
+        vec![
+            Some(&DiagnosticArg::String("Addable".to_string())),
+            Some(&DiagnosticArg::String("Value".to_string())),
+        ]
     );
 }
 
@@ -182,7 +217,7 @@ class Foxtrot:
     };
     let class_names = errors
         .iter()
-        .filter(|error| error.code == Some(DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION))
+        .filter(|error| error.code == Some(DiagnosticCode::PROTO_FIXED_RECEIVER_VIOLATION))
         .map(|error| match error.args.get("class_name") {
             Some(DiagnosticArg::String(class_name)) => class_name.as_str(),
             other => panic!("class_name argument should be populated: {other:?}"),
@@ -200,7 +235,7 @@ fn immutable_parameter_field_receivers_report_root_binding_argument() {
 class Helper:
     items: list[int]
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.items.append(1)
 
 class Owner:

@@ -1,7 +1,7 @@
 class Helper:
     items: list[int]
 
-    def bump_and_count(self) -> int:
+    def bump_and_count(mut self) -> int:
         self.items.append(1)
         return len(self.items)
 

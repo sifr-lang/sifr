@@ -10,7 +10,7 @@ class OneShotStream:
     def __init__(self):
         self.done = False
 
-    async def anext(self) -> Result[Option[int], StreamError]:
+    async def anext(mut self) -> Result[Option[int], StreamError]:
         if self.done:
             return None
         self.done = True

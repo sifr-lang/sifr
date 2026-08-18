@@ -6,7 +6,7 @@ class CounterStream:
     current: int
     stop: int
 
-    async def anext(self) -> Result[Option[int], StreamError]:
+    async def anext(mut self) -> Result[Option[int], StreamError]:
         if self.current >= self.stop:
             return None
         value: int = self.current
@@ -18,7 +18,7 @@ class CounterStream:
 class StreamOwner:
     stream: CounterStream
 
-    async def take(self) -> Result[Option[int], StreamError]:
+    async def take(mut self) -> Result[Option[int], StreamError]:
         return await anext(self.stream)
 
 

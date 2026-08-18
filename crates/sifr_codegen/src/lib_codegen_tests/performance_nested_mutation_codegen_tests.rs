@@ -10,7 +10,7 @@ class Store:
     def __init__(self):
         self.rows = {}
 
-    def put(self, key: str, value: int) -> None:
+    def put(mut self, key: str, value: int) -> None:
         self.rows[key] = value
 "#,
     );
@@ -29,7 +29,7 @@ class Store:
     def __init__(self):
         self.rows = []
 
-    def put(self, row: int, key: str, value: int) -> None:
+    def put(mut self, row: int, key: str, value: int) -> None:
         self.rows[row][key] = value
 "#,
     );
@@ -87,7 +87,7 @@ class PriorityBuckets:
         self.lower = []
         self.upper = []
 
-    def rebalance(self, value: int) -> None:
+    def rebalance(mut self, value: int) -> None:
         push_value(self.lower, value)
         moved: int | None = pop_value(self.lower)
         if moved is not None:

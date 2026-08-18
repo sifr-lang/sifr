@@ -256,7 +256,7 @@ impl Scope {
         self.define_binding_with_convention(
             name,
             ty,
-            matches!(convention, ReceiverConvention::MutableBorrow),
+            convention.is_mutable(),
             BindingKind::Receiver,
             true,
             None,
@@ -395,7 +395,7 @@ impl Scope {
     pub fn patch_receiver_convention(&mut self, id: BindingId, convention: ReceiverConvention) {
         if let Some(fact) = self.retained_bindings.get_mut(&id) {
             fact.receiver_convention = Some(convention);
-            fact.mutability = if matches!(convention, ReceiverConvention::MutableBorrow) {
+            fact.mutability = if convention.is_mutable() {
                 BindingMutability::Mutable
             } else {
                 BindingMutability::Immutable
@@ -405,11 +405,26 @@ impl Scope {
             for info in frame.values_mut() {
                 if info.binding_id == id {
                     info.receiver_convention = Some(convention);
-                    info.mutability = if matches!(convention, ReceiverConvention::MutableBorrow) {
+                    info.mutability = if convention.is_mutable() {
                         BindingMutability::Mutable
                     } else {
                         BindingMutability::Immutable
                     };
+                }
+            }
+        }
+    }
+
+    /// Permit later lowering checks to continue after the declaration-site
+    /// diagnostic for a receiver that requires explicit `mut` syntax.
+    pub fn patch_receiver_mutability_for_recovery(&mut self, id: BindingId) {
+        if let Some(fact) = self.retained_bindings.get_mut(&id) {
+            fact.mutability = BindingMutability::Mutable;
+        }
+        for frame in &mut self.frames {
+            for info in frame.values_mut() {
+                if info.binding_id == id {
+                    info.mutability = BindingMutability::Mutable;
                 }
             }
         }

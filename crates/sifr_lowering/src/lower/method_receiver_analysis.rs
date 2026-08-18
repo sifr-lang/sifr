@@ -15,7 +15,7 @@ struct MethodKey {
     method: String,
 }
 
-struct FixedReceiverMutation {
+struct FixedReceiverViolation {
     class_name: String,
     method: String,
     trait_name: &'static str,
@@ -29,15 +29,12 @@ struct ProtocolReceiverMismatch {
     range: TextRange,
 }
 
-pub(super) fn infer_and_annotate_class_receivers(classes: &mut [HirClass], ctx: &mut LowerCtx) {
+pub(super) fn validate_and_annotate_class_receivers(classes: &mut [HirClass], ctx: &mut LowerCtx) {
     let mut mutable = HashSet::new();
     let mut dependencies: HashMap<MethodKey, HashSet<MethodKey>> = HashMap::new();
-    let mut fixed_receivers = HashSet::new();
+    let mut fixed_receivers = HashMap::new();
 
     for class in classes.iter_mut() {
-        if matches!(class.kind, HirClassKind::Protocol) {
-            continue;
-        }
         for method in &mut class.methods {
             collect_method_facts(
                 &class.name,
@@ -73,7 +70,7 @@ pub(super) fn infer_and_annotate_class_receivers(classes: &mut [HirClass], ctx: 
         }
         mutable.extend(newly_mutable);
     }
-    validate_fixed_receiver_mutations(&fixed_receivers, &mutable, ctx);
+    validate_fixed_receiver_conventions(&fixed_receivers, &mutable, ctx);
 
     for class in classes.iter_mut() {
         for method in &mut class.methods {
@@ -83,10 +80,24 @@ pub(super) fn infer_and_annotate_class_receivers(classes: &mut [HirClass], ctx: 
             };
             if mutable.contains(&key)
                 && method.method_kind == MethodKind::Regular
-                && method.receiver != Some(ReceiverConvention::Owned)
+                && method
+                    .receiver
+                    .is_some_and(|receiver| !receiver.is_mutable())
                 && fixed_trait_receiver_convention(&method.name).is_none()
             {
-                method.receiver = Some(ReceiverConvention::MutableBorrow);
+                let range = ctx
+                    .method_source_ranges
+                    .get(&format!("{}.{}", class.name, method.name))
+                    .copied()
+                    .unwrap_or_default();
+                super::ownership_diagnostics::immutable_parameter_mutation(ctx, "self", range);
+                if let Some(binding_id) = ctx
+                    .method_receiver_bindings
+                    .get(&format!("{}.{}", class.name, method.name))
+                    .copied()
+                {
+                    ctx.scope.patch_receiver_mutability_for_recovery(binding_id);
+                }
             }
             persist_method_receiver(&class.name, method, ctx);
         }
@@ -141,7 +152,7 @@ fn collect_method_facts(
     ctx: &mut LowerCtx,
     mutable: &mut HashSet<MethodKey>,
     dependencies: &mut HashMap<MethodKey, HashSet<MethodKey>>,
-    fixed_receivers: &mut HashSet<MethodKey>,
+    fixed_receivers: &mut HashMap<MethodKey, (ReceiverConvention, Option<ReceiverConvention>)>,
 ) {
     let mut calls = HashSet::new();
     let mut call_mutates_receiver = false;
@@ -203,14 +214,12 @@ fn collect_method_facts(
         class: class_name.to_string(),
         method: method.name.clone(),
     };
-    if fixed_trait_receiver_convention(&method.name).is_some() {
-        fixed_receivers.insert(key.clone());
-    } else if method.method_kind != MethodKind::Regular
-        || method.receiver == Some(ReceiverConvention::Owned)
-    {
+    if let Some(required) = fixed_trait_receiver_convention(&method.name) {
+        fixed_receivers.insert(key.clone(), (required, method.receiver));
+    } else if method.method_kind != MethodKind::Regular {
         return;
     }
-    if method.receiver == Some(ReceiverConvention::MutableBorrow)
+    if method.receiver.is_some_and(ReceiverConvention::is_mutable)
         || directly_mutates_receiver
         || call_mutates_receiver
     {
@@ -219,15 +228,17 @@ fn collect_method_facts(
     dependencies.insert(key, calls);
 }
 
-fn validate_fixed_receiver_mutations(
-    fixed_receivers: &HashSet<MethodKey>,
+fn validate_fixed_receiver_conventions(
+    fixed_receivers: &HashMap<MethodKey, (ReceiverConvention, Option<ReceiverConvention>)>,
     mutable: &HashSet<MethodKey>,
     ctx: &mut LowerCtx,
 ) {
     let mut violations = fixed_receivers
         .iter()
-        .filter(|key| mutable.contains(*key))
-        .map(|key| FixedReceiverMutation {
+        .filter(|(key, (required, declared))| {
+            mutable.contains(*key) || *declared != Some(*required)
+        })
+        .map(|(key, _)| FixedReceiverViolation {
             class_name: key.class.clone(),
             method: key.method.clone(),
             trait_name: fixed_trait_name(&key.method),
@@ -247,7 +258,7 @@ fn validate_fixed_receiver_mutations(
     });
 
     for violation in violations {
-        method_receiver_diagnostics::fixed_receiver_mutation(
+        method_receiver_diagnostics::fixed_receiver_violation(
             ctx,
             &violation.class_name,
             &violation.method,

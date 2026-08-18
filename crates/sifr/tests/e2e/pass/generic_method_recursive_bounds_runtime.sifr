@@ -35,7 +35,7 @@ class NegBox[T]:
     def negated(self) -> T:
         return -self.value
 
-    def __neg__(self) -> T:
+    def __neg__(own self) -> T:
         return self.negated()
 
 def main() -> None:

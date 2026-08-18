@@ -2,7 +2,7 @@
 class Helper:
     items: list[int]
 
-    def absorb_items(self, mut items: list[int]) -> None:
+    def absorb_items(mut self, mut items: list[int]) -> None:
         self.items.append(1)
         items.append(2)
 

@@ -110,7 +110,12 @@ pub(super) fn validate_function_method_places(function: &mut HirFunction, ctx: &
                     }
                 }
             }
-            Some(ReceiverConvention::SharedBorrow | ReceiverConvention::Owned) | None => None,
+            Some(
+                ReceiverConvention::SharedBorrow
+                | ReceiverConvention::Owned
+                | ReceiverConvention::OwnedMutable,
+            )
+            | None => None,
         };
 
         *mutable_arg_places =
@@ -230,8 +235,14 @@ fn validate_call_overlaps(
             }
         }
     }
-    if let Some((receiver, Some(ReceiverConvention::SharedBorrow | ReceiverConvention::Owned))) =
-        receiver.object
+    if let Some((
+        receiver,
+        Some(
+            ReceiverConvention::SharedBorrow
+            | ReceiverConvention::Owned
+            | ReceiverConvention::OwnedMutable,
+        ),
+    )) = receiver.object
     {
         for (index, mutable_place) in mutable_arg_places.iter().enumerate() {
             let Some(MutableArgumentTarget::Place(mutable_place)) = mutable_place else {
@@ -243,8 +254,8 @@ fn validate_call_overlaps(
         }
     }
 
-    let legacy_pairs =
-        report_legacy_name_conflicts(args, conventions, arg_ranges, function_name, ctx);
+    let same_binding_pairs =
+        report_same_binding_conflicts(args, conventions, arg_ranges, function_name, ctx);
     for (mutable_index, mutable_place) in mutable_arg_places.iter().enumerate() {
         let Some(MutableArgumentTarget::Place(mutable_place)) = mutable_place else {
             continue;
@@ -257,7 +268,7 @@ fn validate_call_overlaps(
                 mutable_index.min(other_index),
                 mutable_index.max(other_index),
             );
-            if legacy_pairs.contains(&pair) {
+            if same_binding_pairs.contains(&pair) {
                 continue;
             }
             if other_index < mutable_index
@@ -279,7 +290,7 @@ fn validate_call_overlaps(
     }
 }
 
-fn report_legacy_name_conflicts(
+fn report_same_binding_conflicts(
     args: &[HirExpr],
     conventions: &[ParamConvention],
     arg_ranges: &[TextRange],
@@ -384,9 +395,7 @@ fn prove_mutable_place(
             }
         }
         BindingKind::Receiver => {
-            if allow_pending_receiver
-                || fact.receiver_convention == Some(ReceiverConvention::MutableBorrow)
-            {
+            if allow_pending_receiver || fact.mutability == BindingMutability::Mutable {
                 Ok(place)
             } else {
                 Err(InvalidPlace::Unsupported)

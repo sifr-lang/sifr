@@ -158,7 +158,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PROTO-0003`](SIFR-PROTO-0003.mdx) | Error | Context-manager protocol is missing. |
 | [`SIFR-PROTO-0004`](SIFR-PROTO-0004.mdx) | Error | Hashable or comparable protocol is required. |
 | [`SIFR-PROTO-0005`](SIFR-PROTO-0005.mdx) | Error | Protocol receiver convention mismatch. |
-| [`SIFR-PROTO-0006`](SIFR-PROTO-0006.mdx) | Error | Fixed Rust trait receiver mutation is unsupported. |
+| [`SIFR-PROTO-0006`](SIFR-PROTO-0006.mdx) | Error | Fixed Rust trait receiver convention is violated. |
 | [`SIFR-CLASS-0001`](SIFR-CLASS-0001.mdx) | Error | Class fields require an initializer or super initializer. |
 | [`SIFR-CLASS-0002`](SIFR-CLASS-0002.mdx) | Error | Required field declared after a defaulted field. |
 | [`SIFR-CLASS-0003`](SIFR-CLASS-0003.mdx) | Error | Duplicate enum or class value, or invalid variant. |

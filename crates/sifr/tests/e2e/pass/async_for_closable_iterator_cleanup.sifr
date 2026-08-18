@@ -12,7 +12,7 @@ class ClosableCounter:
         self.stop = stop
         self.closed = False
 
-    async def anext(self) -> Result[Option[int], StreamCloseError]:
+    async def anext(mut self) -> Result[Option[int], StreamCloseError]:
         if self.current >= self.stop:
             return None
         value: int = self.current
@@ -20,7 +20,7 @@ class ClosableCounter:
         next_value: Option[int] = value
         return next_value
 
-    async def aclose(self) -> Result[None, StreamCloseError]:
+    async def aclose(mut self) -> Result[None, StreamCloseError]:
         self.closed = True
         return None
 

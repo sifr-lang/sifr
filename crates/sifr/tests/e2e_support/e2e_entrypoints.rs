@@ -352,7 +352,7 @@ fn test_receiver_place_representative_diagnostics_populate_declared_args() {
         sifr_diagnostics::DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION,
         sifr_diagnostics::DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE,
         sifr_diagnostics::DiagnosticCode::PROTO_RECEIVER_CONVENTION_MISMATCH,
-        sifr_diagnostics::DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION,
+        sifr_diagnostics::DiagnosticCode::PROTO_FIXED_RECEIVER_VIOLATION,
     ];
 
     for code in codes {

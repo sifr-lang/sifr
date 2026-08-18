@@ -170,7 +170,7 @@ impl DiagnosticCode {
         Self::new("SIFR-PROTO-0004", Severity::Error);
     pub const PROTO_RECEIVER_CONVENTION_MISMATCH: Self =
         Self::new("SIFR-PROTO-0005", Severity::Error);
-    pub const PROTO_FIXED_RECEIVER_MUTATION: Self = Self::new("SIFR-PROTO-0006", Severity::Error);
+    pub const PROTO_FIXED_RECEIVER_VIOLATION: Self = Self::new("SIFR-PROTO-0006", Severity::Error);
 
     pub const CLASS_MISSING_INITIALIZER: Self = Self::new("SIFR-CLASS-0001", Severity::Error);
     pub const CLASS_REQUIRED_FIELD_AFTER_DEFAULT: Self =
@@ -811,7 +811,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING,
     DiagnosticCode::PROTO_HASHABLE_OR_COMPARABLE_REQUIRED,
     DiagnosticCode::PROTO_RECEIVER_CONVENTION_MISMATCH,
-    DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION,
+    DiagnosticCode::PROTO_FIXED_RECEIVER_VIOLATION,
     DiagnosticCode::CLASS_MISSING_INITIALIZER,
     DiagnosticCode::CLASS_REQUIRED_FIELD_AFTER_DEFAULT,
     DiagnosticCode::CLASS_DUPLICATE_OR_INVALID_VALUE,

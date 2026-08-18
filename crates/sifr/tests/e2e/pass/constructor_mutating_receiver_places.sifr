@@ -7,7 +7,7 @@ class Helper:
         self.count = 0
         self.values.append(1)
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.values.append(1)
 
 
@@ -20,7 +20,7 @@ class Owner:
         self.helper.count = 7
         self.finish()
 
-    def finish(self) -> None:
+    def finish(mut self) -> None:
         self.helper.bump()
 
     def total(self) -> int:

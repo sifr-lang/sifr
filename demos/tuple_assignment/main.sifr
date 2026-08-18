@@ -29,7 +29,7 @@ class RunningBounds:
         self.left = left
         self.right = right
 
-    def rotate(self, next_value: int) -> None:
+    def rotate(mut self, next_value: int) -> None:
         self.left, self.right = self.right, next_value
 
     def as_text(self) -> str:
