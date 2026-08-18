@@ -1806,24 +1806,37 @@ fn main() {
     }
     let iter_ok: bool = (sum_bytes(&payload) == (1497_i64));
     let contains_ok: bool = (({
+    let __bytes_receiver = &payload;
+    {
     let __needle = 98_i64;
-    if (__needle < 0) || (__needle > 255) { false } else { payload.contains(&(__needle as u8)) }
+    if (__needle < 0) || (__needle > 255) { false } else { __bytes_receiver.contains(&(__needle as u8)) }
+}
 }) && (!({
+    let __bytes_receiver = &payload;
+    {
     let __needle = 512_i64;
-    if (__needle < 0) || (__needle > 255) { false } else { payload.contains(&(__needle as u8)) }
+    if (__needle < 0) || (__needle > 255) { false } else { __bytes_receiver.contains(&(__needle as u8)) }
+}
 })));
     let count_ok: bool = (((({
+    let __bytes_receiver = &payload;
+    {
     let __needle = 98_i64;
-    if (__needle < 0) || (__needle > 255) { 0 } else { payload.iter().filter(|__x| **__x == (__needle as u8)).count() as i64 }
+    if (__needle < 0) || (__needle > 255) { 0 } else { __bytes_receiver.iter().filter(|__x| **__x == (__needle as u8)).count() as i64 }
+}
 }) == (1_i64))) && ((({
+    let __bytes_receiver = &payload;
+    {
     let __needle = 512_i64;
-    if (__needle < 0) || (__needle > 255) { 0 } else { payload.iter().filter(|__x| **__x == (__needle as u8)).count() as i64 }
+    if (__needle < 0) || (__needle > 255) { 0 } else { __bytes_receiver.iter().filter(|__x| **__x == (__needle as u8)).count() as i64 }
+}
 }) == (0_i64))));
     let mut hex_ok: bool = false;
     let __sifr_try_res: Result<(), ParseError> = (|| {
     let hexed: String = {
-    let mut __hex = String::with_capacity(payload.len().saturating_mul(2));
-    for __byte in payload.iter() {
+    let __bytes_receiver = &payload;
+    let mut __hex = String::with_capacity(__bytes_receiver.len().saturating_mul(2));
+    for __byte in __bytes_receiver.iter() {
         __hex.push_str(&format!("{:02x}", *__byte));
     }
     __hex

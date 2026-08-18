@@ -756,8 +756,9 @@ fn main() {
     }
     let __sifr_try_res: Result<(), ParseError> = (|| {
     let hex_hello: String = {
-    let mut __hex = String::with_capacity(vec![(104_i64) as u8, (101_i64) as u8, (108_i64) as u8, (108_i64) as u8, (111_i64) as u8].len().saturating_mul(2));
-    for __byte in vec![(104_i64) as u8, (101_i64) as u8, (108_i64) as u8, (108_i64) as u8, (111_i64) as u8].iter() {
+    let __bytes_receiver = &vec![(104_i64) as u8, (101_i64) as u8, (108_i64) as u8, (108_i64) as u8, (111_i64) as u8];
+    let mut __hex = String::with_capacity(__bytes_receiver.len().saturating_mul(2));
+    for __byte in __bytes_receiver.iter() {
         __hex.push_str(&format!("{:02x}", *__byte));
     }
     __hex

@@ -246,8 +246,9 @@ fn main() {
     let mut conversion_ok: bool = false;
     let __sifr_try_res: Result<(), ParseError> = (|| {
     let as_hex: String = {
-    let mut __hex = String::with_capacity(payload.len().saturating_mul(2));
-    for __byte in payload.iter() {
+    let __bytes_receiver = &payload;
+    let mut __hex = String::with_capacity(__bytes_receiver.len().saturating_mul(2));
+    for __byte in __bytes_receiver.iter() {
         __hex.push_str(&format!("{:02x}", *__byte));
     }
     __hex

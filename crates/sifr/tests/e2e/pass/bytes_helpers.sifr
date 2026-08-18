@@ -1,6 +1,17 @@
 # Reference: stdlib_parity_bytes_0_architecture_lock
 
 
+class BytesFactory:
+    calls: int
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def make(mut self) -> bytes:
+        self.calls = self.calls + 1
+        return b"bytes-rule0"
+
+
 def main() -> None:
     payload: bytes = b"bytes-rule0"
     assert len(payload) == 11
@@ -11,6 +22,12 @@ def main() -> None:
     suffix: bytes = b"rule0"
     assert payload.startswith(prefix)
     assert payload.endswith(suffix)
+
+    factory: BytesFactory = BytesFactory()
+    assert factory.make().hex() == "62797465732d72756c6530"
+    assert factory.calls == 1
+    assert factory.make().find(114) == 6
+    assert factory.calls == 2
 
     conversion_ok: bool = False
     try:

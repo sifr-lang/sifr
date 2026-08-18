@@ -268,19 +268,24 @@ fn render_opt_int(value: Option<i64>) -> String {
 fn collect_primary_actual(payload: &Vec<u8>) -> Vec<String> {
     let mut actual: Vec<String> = vec![];
     actual.push(format!("{}", {
+    let __bytes_receiver = &payload;
+    {
     let __needle = 115_i64;
-    if (__needle < 0) || (__needle > 255) { 0 } else { payload.iter().filter(|__x| **__x == (__needle as u8)).count() as i64 }
+    if (__needle < 0) || (__needle > 255) { 0 } else { __bytes_receiver.iter().filter(|__x| **__x == (__needle as u8)).count() as i64 }
+}
 }));
     actual.push(render_opt_int({
+    let __bytes_receiver = &payload;
+    {
     let __needle = 45_i64;
     if (__needle < 0) || (__needle > 255) { None } else { {
-    let __len = payload.len() as i64;
+    let __len = __bytes_receiver.len() as i64;
     let __start = 0;
     let __stop = __len;
     let mut __i = __start;
     let mut __result = None;
     while (__i < __stop) && (__result == None) {
-        if let Some(__x) = payload.get(__i as usize) {
+        if let Some(__x) = __bytes_receiver.get(__i as usize) {
             if *__x == (__needle as u8) {
                 __result = Some(__i);
             }
@@ -289,6 +294,7 @@ fn collect_primary_actual(payload: &Vec<u8>) -> Vec<String> {
     }
     __result
 } }
+}
 }));
     actual.push(format!("{}", payload.starts_with(&vec![(98_i64) as u8, (121_i64) as u8, (116_i64) as u8, (101_i64) as u8, (115_i64) as u8])));
     actual.push(format!("{}", payload.ends_with(&vec![(101_i64) as u8, (51_i64) as u8, (48_i64) as u8])));
@@ -298,8 +304,9 @@ fn collect_primary_actual(payload: &Vec<u8>) -> Vec<String> {
 fn bytes_to_hex_or_empty(payload: &Vec<u8>) -> String {
     let __sifr_try_res: Result<String, ParseError> = (|| {
     let hx: String = {
-    let mut __hex = String::with_capacity(payload.len().saturating_mul(2));
-    for __byte in payload.iter() {
+    let __bytes_receiver = &payload;
+    let mut __hex = String::with_capacity(__bytes_receiver.len().saturating_mul(2));
+    for __byte in __bytes_receiver.iter() {
         __hex.push_str(&format!("{:02x}", *__byte));
     }
     __hex

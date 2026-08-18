@@ -77,45 +77,67 @@ fn byte_range_guard_expr(
     }
 }
 
+fn bind_receiver_once(object: &RustExpr, expr: RustExpr) -> RustExpr {
+    RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__bytes_receiver".to_string(),
+            ty: None,
+            value: RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(object.clone()),
+            },
+        }],
+        expr: Some(Box::new(expr)),
+    }
+}
+
+fn bound_receiver() -> RustExpr {
+    RustExpr::Ident("__bytes_receiver".to_string())
+}
+
 pub(super) fn lower_count(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(byte_range_guard_expr(
-        args[0].clone(),
-        RustExpr::Cast {
-            expr: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
+    Some(bind_receiver_once(
+        object,
+        byte_range_guard_expr(
+            args[0].clone(),
+            RustExpr::Cast {
+                expr: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(object.clone()),
-                        method: "iter".to_string(),
-                        args: vec![],
-                    }),
-                    method: "filter".to_string(),
-                    args: vec![RustExpr::Closure {
-                        params: vec![RustParam::Named {
-                            name: "__x".to_string(),
-                            ty: RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(RustExpr::BinOp {
-                            left: Box::new(RustExpr::Deref(Box::new(RustExpr::Deref(Box::new(
-                                RustExpr::Ident("__x".to_string()),
-                            ))))),
-                            op: "==".to_string(),
-                            right: Box::new(RustExpr::Cast {
-                                expr: Box::new(RustExpr::Ident("__needle".to_string())),
-                                ty: RustType::Named("u8".to_string()),
-                            }),
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(bound_receiver()),
+                            method: "iter".to_string(),
+                            args: vec![],
                         }),
-                        is_move: false,
-                    }],
+                        method: "filter".to_string(),
+                        args: vec![RustExpr::Closure {
+                            params: vec![RustParam::Named {
+                                name: "__x".to_string(),
+                                ty: RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(RustExpr::BinOp {
+                                left: Box::new(RustExpr::Deref(Box::new(RustExpr::Deref(
+                                    Box::new(RustExpr::Ident("__x".to_string())),
+                                )))),
+                                op: "==".to_string(),
+                                right: Box::new(RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Ident("__needle".to_string())),
+                                    ty: RustType::Named("u8".to_string()),
+                                }),
+                            }),
+                            is_move: false,
+                        }],
+                    }),
+                    method: "count".to_string(),
+                    args: vec![],
                 }),
-                method: "count".to_string(),
-                args: vec![],
-            }),
-            ty: RustType::I64,
-        },
-        int(0),
+                ty: RustType::I64,
+            },
+            int(0),
+        ),
     ))
 }
 
@@ -123,20 +145,23 @@ pub(super) fn lower_contains(object: &RustExpr, args: &[RustExpr]) -> Option<Rus
     if args.len() != 1 {
         return None;
     }
-    Some(byte_range_guard_expr(
-        args[0].clone(),
-        RustExpr::MethodCall {
-            receiver: Box::new(object.clone()),
-            method: "contains".to_string(),
-            args: vec![RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(RustExpr::Cast {
-                    expr: Box::new(RustExpr::Ident("__needle".to_string())),
-                    ty: RustType::Named("u8".to_string()),
-                }),
-            }],
-        },
-        RustExpr::Literal(crate::RustLiteral::Bool(false)),
+    Some(bind_receiver_once(
+        object,
+        byte_range_guard_expr(
+            args[0].clone(),
+            RustExpr::MethodCall {
+                receiver: Box::new(bound_receiver()),
+                method: "contains".to_string(),
+                args: vec![RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Cast {
+                        expr: Box::new(RustExpr::Ident("__needle".to_string())),
+                        ty: RustType::Named("u8".to_string()),
+                    }),
+                }],
+            },
+            RustExpr::Literal(crate::RustLiteral::Bool(false)),
+        ),
     ))
 }
 
@@ -144,109 +169,114 @@ pub(super) fn lower_find(object: &RustExpr, args: &[RustExpr]) -> Option<RustExp
     if args.is_empty() || args.len() > 3 {
         return None;
     }
-    Some(byte_range_guard_expr(
-        args[0].clone(),
-        RustExpr::Block {
-            stmts: vec![
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__len".to_string(),
-                    ty: None,
-                    value: RustExpr::Cast {
-                        expr: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(object.clone()),
-                            method: "len".to_string(),
-                            args: vec![],
-                        }),
-                        ty: RustType::I64,
+    Some(bind_receiver_once(
+        object,
+        byte_range_guard_expr(
+            args[0].clone(),
+            RustExpr::Block {
+                stmts: vec![
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__len".to_string(),
+                        ty: None,
+                        value: RustExpr::Cast {
+                            expr: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(bound_receiver()),
+                                method: "len".to_string(),
+                                args: vec![],
+                            }),
+                            ty: RustType::I64,
+                        },
                     },
-                },
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__start".to_string(),
-                    ty: None,
-                    value: list_bound_expr(args.get(1), 0),
-                },
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__stop".to_string(),
-                    ty: None,
-                    value: if let Some(stop) = args.get(2) {
-                        list_bound_expr(Some(stop), 0)
-                    } else {
-                        RustExpr::Ident("__len".to_string())
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__start".to_string(),
+                        ty: None,
+                        value: list_bound_expr(args.get(1), 0),
                     },
-                },
-                RustStmt::Let {
-                    mutable: true,
-                    name: "__i".to_string(),
-                    ty: None,
-                    value: RustExpr::Ident("__start".to_string()),
-                },
-                RustStmt::Let {
-                    mutable: true,
-                    name: "__result".to_string(),
-                    ty: None,
-                    value: RustExpr::Path(vec!["None".to_string()]),
-                },
-                RustStmt::While {
-                    cond: RustExpr::BinOp {
-                        left: Box::new(RustExpr::BinOp {
-                            left: Box::new(RustExpr::Ident("__i".to_string())),
-                            op: "<".to_string(),
-                            right: Box::new(RustExpr::Ident("__stop".to_string())),
-                        }),
-                        op: "&&".to_string(),
-                        right: Box::new(RustExpr::BinOp {
-                            left: Box::new(RustExpr::Ident("__result".to_string())),
-                            op: "==".to_string(),
-                            right: Box::new(RustExpr::Path(vec!["None".to_string()])),
-                        }),
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__stop".to_string(),
+                        ty: None,
+                        value: if let Some(stop) = args.get(2) {
+                            list_bound_expr(Some(stop), 0)
+                        } else {
+                            RustExpr::Ident("__len".to_string())
+                        },
                     },
-                    body: vec![
-                        RustStmt::IfLet {
-                            pattern: "Some(__x)".to_string(),
-                            expr: RustExpr::MethodCall {
-                                receiver: Box::new(object.clone()),
-                                method: "get".to_string(),
-                                args: vec![RustExpr::Cast {
-                                    expr: Box::new(RustExpr::Ident("__i".to_string())),
-                                    ty: RustType::Named("usize".to_string()),
-                                }],
-                            },
-                            then_body: vec![RustStmt::If {
-                                cond: RustExpr::BinOp {
-                                    left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
-                                        "__x".to_string(),
-                                    )))),
-                                    op: "==".to_string(),
-                                    right: Box::new(RustExpr::Cast {
-                                        expr: Box::new(RustExpr::Ident("__needle".to_string())),
-                                        ty: RustType::Named("u8".to_string()),
-                                    }),
+                    RustStmt::Let {
+                        mutable: true,
+                        name: "__i".to_string(),
+                        ty: None,
+                        value: RustExpr::Ident("__start".to_string()),
+                    },
+                    RustStmt::Let {
+                        mutable: true,
+                        name: "__result".to_string(),
+                        ty: None,
+                        value: RustExpr::Path(vec!["None".to_string()]),
+                    },
+                    RustStmt::While {
+                        cond: RustExpr::BinOp {
+                            left: Box::new(RustExpr::BinOp {
+                                left: Box::new(RustExpr::Ident("__i".to_string())),
+                                op: "<".to_string(),
+                                right: Box::new(RustExpr::Ident("__stop".to_string())),
+                            }),
+                            op: "&&".to_string(),
+                            right: Box::new(RustExpr::BinOp {
+                                left: Box::new(RustExpr::Ident("__result".to_string())),
+                                op: "==".to_string(),
+                                right: Box::new(RustExpr::Path(vec!["None".to_string()])),
+                            }),
+                        },
+                        body: vec![
+                            RustStmt::IfLet {
+                                pattern: "Some(__x)".to_string(),
+                                expr: RustExpr::MethodCall {
+                                    receiver: Box::new(bound_receiver()),
+                                    method: "get".to_string(),
+                                    args: vec![RustExpr::Cast {
+                                        expr: Box::new(RustExpr::Ident("__i".to_string())),
+                                        ty: RustType::Named("usize".to_string()),
+                                    }],
                                 },
-                                then_body: vec![RustStmt::Assign {
-                                    target: RustExpr::Ident("__result".to_string()),
-                                    value: RustExpr::FnCall {
-                                        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                                        args: vec![RustExpr::Ident("__i".to_string())],
+                                then_body: vec![RustStmt::If {
+                                    cond: RustExpr::BinOp {
+                                        left: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                                            "__x".to_string(),
+                                        )))),
+                                        op: "==".to_string(),
+                                        right: Box::new(RustExpr::Cast {
+                                            expr: Box::new(RustExpr::Ident("__needle".to_string())),
+                                            ty: RustType::Named("u8".to_string()),
+                                        }),
                                     },
+                                    then_body: vec![RustStmt::Assign {
+                                        target: RustExpr::Ident("__result".to_string()),
+                                        value: RustExpr::FnCall {
+                                            func: Box::new(RustExpr::Path(
+                                                vec!["Some".to_string()],
+                                            )),
+                                            args: vec![RustExpr::Ident("__i".to_string())],
+                                        },
+                                    }],
+                                    else_body: None,
                                 }],
                                 else_body: None,
-                            }],
-                            else_body: None,
-                        },
-                        RustStmt::AugAssign {
-                            target: RustExpr::Ident("__i".to_string()),
-                            op: "+".to_string(),
-                            value: int(1),
-                        },
-                    ],
-                },
-            ],
-            expr: Some(Box::new(RustExpr::Ident("__result".to_string()))),
-        },
-        RustExpr::Path(vec!["None".to_string()]),
+                            },
+                            RustStmt::AugAssign {
+                                target: RustExpr::Ident("__i".to_string()),
+                                op: "+".to_string(),
+                                value: int(1),
+                            },
+                        ],
+                    },
+                ],
+                expr: Some(Box::new(RustExpr::Ident("__result".to_string()))),
+            },
+            RustExpr::Path(vec!["None".to_string()]),
+        ),
     ))
 }
 
@@ -279,6 +309,15 @@ pub(super) fn lower_hex(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr
     Some(RustExpr::Block {
         stmts: vec![
             RustStmt::Let {
+                mutable: false,
+                name: "__bytes_receiver".to_string(),
+                ty: None,
+                value: RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(object.clone()),
+                },
+            },
+            RustStmt::Let {
                 mutable: true,
                 name: "__hex".to_string(),
                 ty: None,
@@ -289,7 +328,7 @@ pub(super) fn lower_hex(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr
                     ])),
                     args: vec![RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(object.clone()),
+                            receiver: Box::new(bound_receiver()),
                             method: "len".to_string(),
                             args: vec![],
                         }),
@@ -301,7 +340,7 @@ pub(super) fn lower_hex(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr
             RustStmt::For {
                 var: "__byte".to_string(),
                 iter: RustExpr::MethodCall {
-                    receiver: Box::new(object.clone()),
+                    receiver: Box::new(bound_receiver()),
                     method: "iter".to_string(),
                     args: vec![],
                 },

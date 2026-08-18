@@ -194,8 +194,11 @@ fn b16encode(s: &String) -> Result<String, ParseError> {
         return Ok(
             Ok(
                 ({
-                    let mut __hex = String::with_capacity(data.len().saturating_mul(2));
-                    for __byte in data.iter() {
+                    let __bytes_receiver = &data;
+                    let mut __hex = String::with_capacity(
+                        __bytes_receiver.len().saturating_mul(2),
+                    );
+                    for __byte in __bytes_receiver.iter() {
                         __hex.push_str(&format!("{:02x}", * __byte));
                     }
                     __hex

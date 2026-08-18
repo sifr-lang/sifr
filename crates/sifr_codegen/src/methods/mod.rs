@@ -793,7 +793,8 @@ mod tests {
             .expect("bytes contains lowers");
         let contains_rendered = render_expr(&contains.expr);
         assert!(contains_rendered.contains("__needle > 255"));
-        assert!(contains_rendered.contains("payload.contains(&(__needle as u8))"));
+        assert!(contains_rendered.contains("__bytes_receiver.contains(&(__needle as u8))"));
+        assert_eq!(contains_rendered.matches("payload").count(), 1);
 
         let find = lower_method(
             &Type::Bytes,
@@ -805,6 +806,7 @@ mod tests {
         let find_rendered = render_expr(&find.expr);
         assert!(find_rendered.contains("__needle as u8"));
         assert!(find_rendered.contains("None"));
+        assert_eq!(find_rendered.matches("payload").count(), 1);
 
         let startswith = lower_method(
             &Type::Bytes,
@@ -824,7 +826,9 @@ mod tests {
 
         let hex = lower_method(&Type::Bytes, "hex", "payload", &[]).expect("bytes hex lowers");
         let hex_rendered = render_expr(&hex.expr);
-        assert!(hex_rendered.contains("String::with_capacity(payload.len().saturating_mul(2))"));
+        assert!(hex_rendered.contains("let __bytes_receiver = &payload;"));
+        assert_eq!(hex_rendered.matches("payload").count(), 1);
+        assert!(hex_rendered.contains("__bytes_receiver.len().saturating_mul(2)"));
         assert!(hex_rendered.contains("format!(\"{:02x}\", *__byte)"));
 
         let to_ints =

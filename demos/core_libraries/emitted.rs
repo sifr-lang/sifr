@@ -1329,10 +1329,9 @@ fn _hash_bytes(algorithm: &String, data: &Vec<u8>) -> Vec<u8> {
 }
 fn _hash_hex(algorithm: &String, data: &Vec<u8>) -> String {
     {
-        let mut __hex = String::with_capacity(
-            _hash_bytes(algorithm, data).len().saturating_mul(2),
-        );
-        for __byte in _hash_bytes(algorithm, data).iter() {
+        let __bytes_receiver = &_hash_bytes(algorithm, data);
+        let mut __hex = String::with_capacity(__bytes_receiver.len().saturating_mul(2));
+        for __byte in __bytes_receiver.iter() {
             __hex.push_str(&format!("{:02x}", * __byte));
         }
         __hex
