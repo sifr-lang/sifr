@@ -105,10 +105,6 @@ fn discover_receipt_path(env: &ReceiptDiscoveryEnv) -> Result<PathBuf, Box<Rende
                 }
             }
         }
-        let receipt_path = bin_dir.join("install.json");
-        if receipt_path.is_file() {
-            return Ok(receipt_path);
-        }
     }
 
     if let Some(home_dir) = &env.home_dir {
@@ -172,9 +168,7 @@ fn validate_receipt_eligibility(
     }
     let sysroot_path = canonicalize_for_receipt(Path::new(&receipt.sysroot_path), "sysroot_path")?;
     let expected_binary_parent = sysroot_path.join("bin");
-    if !paths_same_after_canonicalization(&expected_binary_parent, binary_parent)
-        && !paths_same_after_canonicalization(&sysroot_path, binary_parent)
-    {
+    if !paths_same_after_canonicalization(&expected_binary_parent, binary_parent) {
         return Err(unmanaged_receipt_diagnostic(format!(
             "standalone install receipt binary_path {} is not paired with sysroot_path {}",
             receipt.binary_path, receipt.sysroot_path
@@ -608,8 +602,8 @@ mod tests {
     }
 
     #[test]
-    fn discovers_manifest_dir_before_adjacent_manifest() {
-        let tmp = TestDir::new("discovery-order");
+    fn discovers_explicit_manifest_dir() {
+        let tmp = TestDir::new("explicit-manifest");
         let binary = tmp.path().join("bin/sifr");
         touch(&binary);
         write_receipt(
@@ -618,13 +612,6 @@ mod tests {
             "beta",
             &binary,
         );
-        write_receipt(
-            &tmp.path().join("bin/install.json"),
-            "0.1.0-alpha.1",
-            "alpha",
-            &binary,
-        );
-
         let discovered = discover_install_receipt(&ReceiptDiscoveryEnv {
             current_executable: binary,
             manifest_dir: Some(tmp.path().join("manifest")),
@@ -708,13 +695,13 @@ mod tests {
     }
 
     #[test]
-    fn accepts_flat_custom_install_layout() {
-        let tmp = TestDir::new("flat-custom");
+    fn rejects_binary_at_sysroot_root() {
+        let tmp = TestDir::new("binary-at-sysroot-root");
         let install_dir = tmp.path().join("toolchain");
         let binary = install_dir.join("sifr");
         let receipt_path = install_dir.join("install.json");
         touch(&binary);
-        fs::write(install_dir.join("sysroot.toml"), "").expect("write flat sysroot manifest");
+        fs::write(install_dir.join("sysroot.toml"), "").expect("write sysroot manifest");
         fs::write(
             &receipt_path,
             serde_json::json!({
@@ -735,19 +722,20 @@ mod tests {
             })
             .to_string(),
         )
-        .expect("write flat receipt");
+        .expect("write receipt");
 
-        let discovered = discover_install_receipt(&ReceiptDiscoveryEnv {
+        let error = discover_install_receipt(&ReceiptDiscoveryEnv {
             current_executable: binary,
             manifest_dir: Some(install_dir),
             home_dir: None,
         })
-        .expect("flat install receipt discovers");
+        .expect_err("binary at the sysroot root is unmanaged");
 
         assert_eq!(
-            discovered.receipt.sysroot_path,
-            discovered.receipt.install_dir
+            error.code,
+            DiagnosticCode::SELF_UPDATE_UNMANAGED_RECEIPT.code()
         );
+        assert!(error.message.contains("not paired with sysroot_path"));
     }
 
     #[test]

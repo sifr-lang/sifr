@@ -76,9 +76,8 @@ Withdrawn or unknown versions fail before installer execution.
 
 Set `SIFR_INSTALL_DIR` to place the managed binary directory somewhere other
 than `~/.sifr/bin`. The installer writes the binary to
-`SIFR_INSTALL_DIR/sifr` and, when the directory ends in `/bin`, installs the
-sysroot next to that `bin` directory. For legacy flat custom directories that
-do not end in `/bin`, the same directory is used as the sysroot root.
+`SIFR_INSTALL_DIR/sifr`. The directory must end in `/bin`. Its parent is the
+toolchain root.
 
 ```bash
 curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/.local/sifr/bin" sh
