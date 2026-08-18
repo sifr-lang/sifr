@@ -3,7 +3,7 @@ use super::rust_interop::{PackageRustInteropContext, RustInteropModuleSource};
 use crate::stdlib::StdlibRustInterop;
 use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot};
 use sifr_package::{
-    BackendCrateMetadata, CargoPackageId, ImportRoot, PackageClassification, PackageSourceMap,
+    BackendCrateMetadata, CargoPackageId, PackageClassification, PackageSourceMap,
     PackageSourceRoot, RustInteropConfig, SifrEdition, SifrManifest, SifrPackageGraph,
     SifrPackageId, SifrPackageMetadata, SifrPackageName, TrustPolicy,
 };
@@ -221,10 +221,7 @@ fn sysroot_package(
             edition: SifrEdition("2026".to_string()),
             compiler_requirement: sifr_package::CompilerRequirement(">=0.3,<0.4".to_string()),
             default_run: None,
-            source_roots: vec![PackageSourceRoot(
-                sysroot.paths.stdlib_private_sources.clone(),
-            )],
-            exports: vec![ImportRoot("_sifr".to_string())],
+            source_root: PackageSourceRoot(sysroot.paths.stdlib_private_sources.clone()),
             source_features: BTreeMap::new(),
             scripts: BTreeMap::new(),
             dependencies: BTreeMap::new(),
@@ -235,7 +232,6 @@ fn sysroot_package(
                 bridges: Vec::new(),
                 direct_crate_bindings: true,
             },
-            production_schema: true,
         },
         aliases: BTreeMap::new(),
     }

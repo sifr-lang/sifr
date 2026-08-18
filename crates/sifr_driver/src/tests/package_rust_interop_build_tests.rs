@@ -39,7 +39,7 @@ const SHARED_BRIDGE_EVIDENCE: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/shared_bridge_crate/positive/stable_runtime_types_only.sifr"
 );
 const SHARED_BRIDGE_NEGATIVE: &str = include_str!(
-    "../../../../verification/areas/rust_interop/fixtures/shared_bridge_crate/negative/package_generated_type_import_rejected.sifr"
+    "../../../../verification/areas/rust_interop/fixtures/shared_bridge_crate/negative/src/package_generated_type_import_rejected.sifr"
 );
 const SHARED_BRIDGE_NEGATIVE_MANIFEST: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/shared_bridge_crate/negative/sifr.toml"

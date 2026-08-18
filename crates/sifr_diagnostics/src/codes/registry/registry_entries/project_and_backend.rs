@@ -97,7 +97,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "WORKSPACE",
             "Legacy workspace import target is ambiguous; source imports use SIFR-IMPORT-0005.",
             Severity::Error,
-            "verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import",
+            "crates/sifr_diagnostics/src/codes/registry/registry_entries/project_and_backend.rs",
             "module {module} is ambiguous in workspace {workspace}",
             "sifr_driver::project::discovery",
             [

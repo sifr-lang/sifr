@@ -39,4 +39,4 @@ No `cargo_metadata` crate and no `cargo` internal crates are linked in package-m
 
 ## Cargo Source Cache Boundary
 
-Sifr does not parse Cargo registry, Git checkout, or source-cache internals. Source ids are opaque Cargo identifiers. Package roots are trusted only after Cargo exposes them through metadata/fetch, then Sifr validates `sifr.toml`, source roots, exports, markers, trust policy, archive contents, and import boundaries itself.
+Sifr does not parse Cargo registry, Git checkout, or source-cache internals. Source ids are opaque Cargo identifiers. Package roots are trusted only after Cargo exposes them through metadata/fetch, then Sifr validates `sifr.toml`, the source root, source-declared exports, markers, trust policy, archive contents, and import boundaries itself.

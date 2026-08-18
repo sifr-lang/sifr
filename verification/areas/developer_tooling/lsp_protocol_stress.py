@@ -190,7 +190,7 @@ def run_project_save_reuses_project_owner() -> None:
     with tempfile.TemporaryDirectory(prefix="sifr-lsp-project-save-") as raw:
         root = Path(raw)
         (root / "sifr.toml").write_text(
-            '[package]\nname = "lsp_project_save"\n[source]\nroots = ["."]\n',
+            '[package]\nname = "lsp_project_save"\n[source]\nroot = "."\n',
             encoding="utf-8",
         )
         main = root / "main.sifr"

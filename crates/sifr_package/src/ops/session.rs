@@ -16,7 +16,6 @@ pub struct PackageSession {
     pub workspace_root: PathBuf,
     pub manifest_path: Option<PathBuf>,
     pub source_root: Option<PathBuf>,
-    pub source_roots: Vec<PathBuf>,
     pub manifest_less_mode: bool,
     pub lock_mode: CargoLockMode,
     pub manifest: Option<SifrManifest>,
@@ -66,7 +65,6 @@ impl PackageSession {
                 workspace_root: options.current_dir,
                 manifest_path: None,
                 source_root: None,
-                source_roots: Vec::new(),
                 manifest_less_mode: true,
                 lock_mode: options.lock_mode,
                 manifest: None,
@@ -78,17 +76,11 @@ impl PackageSession {
             .unwrap_or_else(|| options.current_dir.clone());
         let cargo_id = session_cargo_id(&workspace_root);
         let manifest = SifrManifest::load(&cargo_id, &manifest_path)?;
-        let source_roots = manifest
-            .source_roots
-            .iter()
-            .map(|root| workspace_root.join(&root.0))
-            .collect::<Vec<_>>();
-        let source_root = source_roots.first().cloned();
+        let source_root = Some(workspace_root.join(&manifest.source_root.0));
         Ok(Self {
             workspace_root,
             manifest_path: Some(manifest_path),
             source_root,
-            source_roots,
             manifest_less_mode: false,
             lock_mode: options.lock_mode,
             manifest: Some(manifest),
@@ -315,17 +307,12 @@ impl PackageSession {
         if self.manifest_less_mode {
             return Ok(());
         }
-        if self.source_roots.is_empty() {
+        let Some(source_root) = &self.source_root else {
             return Ok(());
-        }
-        if self
-            .source_roots
-            .iter()
-            .any(|source_root| path_is_under(file, source_root))
-        {
+        };
+        if path_is_under(file, source_root) {
             Ok(())
         } else {
-            let source_root = self.source_roots.first().unwrap_or(&self.workspace_root);
             Err(PackageDiagnostic::explicit_file_outside_source_root(
                 file,
                 source_root,
@@ -365,15 +352,15 @@ impl PackageSession {
     }
 
     pub(super) fn discover_app_targets(&self) -> Result<Vec<AppTarget>, PackageDiagnostic> {
-        if self.source_roots.is_empty() {
+        let Some(source_root) = &self.source_root else {
             return Ok(Vec::new());
-        }
+        };
         let package_name = self
             .manifest
             .as_ref()
             .map(|manifest| manifest.package_name.0.clone())
             .unwrap_or_else(|| "main".to_string());
-        let targets = discover_app_targets(&self.source_roots, &package_name)?;
+        let targets = discover_app_targets(source_root, &package_name)?;
         Ok(targets)
     }
 }

@@ -43,17 +43,19 @@ fn primary_test_span(file: &str, line: u32, column: u32) -> DiagnosticSpan {
 }
 
 #[test]
-fn test_render_package_diagnostic_preserves_manifest_origin_and_help() {
-    let diagnostic = PackageDiagnostic::manifest_exports_not_production(
+fn test_render_package_diagnostic_preserves_manifest_origin() {
+    let diagnostic = PackageDiagnostic::invalid_sifr_manifest(
         &CargoPackageId("path+file:///demo#pkg@0.1.0".to_string()),
-        Path::new("/demo/sifr.toml"),
+        Path::new("/demo/sifr.toml").to_path_buf(),
+        "exports",
+        "unsupported field",
     );
 
     let rendered = render_package_diagnostic(diagnostic);
 
     assert_eq!(
         rendered.code,
-        DiagnosticCode::PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION.code()
+        DiagnosticCode::PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST.code()
     );
     assert_eq!(
         rendered.args.get("origin_kind"),
@@ -65,9 +67,9 @@ fn test_render_package_diagnostic_preserves_manifest_origin_and_help() {
     );
     assert_eq!(
         rendered.args.get("manifest_key"),
-        Some(&DiagnosticArg::String("exports.modules".to_string()))
+        Some(&DiagnosticArg::String("exports".to_string()))
     );
-    assert!(rendered.help.is_some());
+    assert!(rendered.help.is_none());
 }
 
 #[test]
@@ -214,10 +216,6 @@ fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
         (
             "could not resolve import 'helper'; tried entry-relative '/tmp/helper.sifr' and workspace-relative '/tmp/lib/helper.sifr'",
             DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT,
-        ),
-        (
-            "module 'helper' is ambiguous in workspace '/tmp/ws': matches '/tmp/a/helper.sifr' and '/tmp/b/helper.sifr'; reorder [source].roots or rename one module to disambiguate",
-            DiagnosticCode::WORKSPACE_AMBIGUOUS_IMPORT,
         ),
         (
             "module 'helpers.nodes' resolves to file '/tmp/ws/lib/helpers/nodes.sifr' but parent name 'helpers' is also a module file '/tmp/ws/lib/helpers.sifr'; package directories are not supported",

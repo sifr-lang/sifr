@@ -9,22 +9,20 @@ pub(super) struct AppTarget {
 }
 
 pub(super) fn discover_app_targets(
-    source_roots: &[PathBuf],
+    source_root: &Path,
     package_name: &str,
 ) -> Result<Vec<AppTarget>, PackageDiagnostic> {
     let mut targets = Vec::new();
     let mut provider = DiskSourceProvider::new();
-    for source_root in source_roots {
-        let main = source_root.join("main.sifr");
-        if provider.is_file(&main) {
-            targets.push(AppTarget {
-                name: package_name.to_string(),
-                path: main,
-            });
-        }
-        let bin_root = source_root.join("bin");
-        collect_bin_targets(&bin_root, &bin_root, &mut targets, &mut provider)?;
+    let main = source_root.join("main.sifr");
+    if provider.is_file(&main) {
+        targets.push(AppTarget {
+            name: package_name.to_string(),
+            path: main,
+        });
     }
+    let bin_root = source_root.join("bin");
+    collect_bin_targets(&bin_root, &bin_root, &mut targets, &mut provider)?;
     Ok(targets)
 }
 

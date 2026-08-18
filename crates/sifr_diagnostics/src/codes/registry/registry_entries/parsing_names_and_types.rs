@@ -207,9 +207,9 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "IMPORT",
             "Ambiguous source module import target.",
             Severity::Error,
-            "verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import_canonical",
+            "verification/areas/package_management/fixtures/package/package_ambiguous_import_canonical",
             "ambiguous import target: '{module}'",
-            "sifr_driver::project::discovery",
+            "sifr_package::imports::source_map",
             [
                 arg!("module"),
                 json_arg!("candidate_paths"),

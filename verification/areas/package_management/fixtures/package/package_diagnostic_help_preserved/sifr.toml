@@ -5,6 +5,3 @@ sifr-version = ">=0.3,<0.4"
 
 [source]
 root = "src"
-
-[exports]
-modules = ["package_diagnostic_help_preserved"]

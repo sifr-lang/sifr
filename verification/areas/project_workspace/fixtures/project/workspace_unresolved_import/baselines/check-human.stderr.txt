@@ -1,9 +1,0 @@
-error[SIFR-IMPORT-0002]: unknown import target: 'missing.helper'
-  --> verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/main.sifr:1:6
-     |
-   1 | from missing.helper import value
-     |      ^^^^^^^^^^^^^^
-  = note: tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/missing/helper.sifr
-  = note: tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/lib/missing/helper.sifr
-  = note: tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/workspace_unresolved_import/./missing/helper.sifr
-  = docs: https://docs.sifr.sh/errors/SIFR-IMPORT-0002

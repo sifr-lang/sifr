@@ -4,8 +4,8 @@ use crate::cargo::metadata::{
 use crate::diag::PackageDiagnostic;
 use crate::graph::scopes::{derive_direct_dependency_scopes, DirectDependencyScope};
 use crate::manifest::metadata::CargoSifrAliasMetadata;
-use crate::manifest::sifr::{ImportRoot, SifrManifest, SifrPackageName};
-use crate::manifest::validate::{validate_exports_match_sources, validate_source_roots_exist};
+use crate::manifest::sifr::{SifrManifest, SifrPackageName};
+use crate::manifest::validate::validate_source_root_exists;
 use crate::source::layout::{validate_pure_marker_file, MarkerValidation};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -141,8 +141,7 @@ fn load_sifr_package(
     manifest_path: &Path,
 ) -> Result<SifrPackageMetadata, PackageDiagnostic> {
     let manifest = SifrManifest::load(&package.id, manifest_path)?;
-    validate_source_roots_exist(&package.id, manifest_path, package_root, &manifest)?;
-    validate_exports_match_sources(&package.id, manifest_path, package_root, &manifest)?;
+    validate_source_root_exists(&package.id, manifest_path, package_root, &manifest)?;
     if !manifest.declares_rust_backend() {
         validate_pure_markers(package, &package.id)?;
     }
@@ -386,9 +385,4 @@ fn classification_package_id(
         ) => Some(package_id.clone()),
         Some(PackageClassification::BackendRust) | None => None,
     }
-}
-
-#[must_use]
-pub fn exported_roots(package: &SifrPackageMetadata) -> BTreeSet<ImportRoot> {
-    package.manifest.exports.iter().cloned().collect()
 }

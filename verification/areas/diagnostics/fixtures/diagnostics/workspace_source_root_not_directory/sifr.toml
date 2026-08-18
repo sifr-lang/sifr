@@ -1,2 +1,2 @@
 [source]
-roots = ["missing"]
+root = "missing"

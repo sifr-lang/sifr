@@ -13,14 +13,14 @@ pub struct WorkspaceRoot {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SifrWorkspaceConfig {
-    pub source_roots: Vec<PathBuf>,
+    pub source_root: PathBuf,
     pub package_name: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct SifrManifest {
     package_name: Option<String>,
-    source_roots: Vec<String>,
+    source_root: String,
 }
 
 pub fn find_workspace_root(entry: &Path) -> Result<Option<WorkspaceRoot>, Vec<RenderedDiagnostic>> {
@@ -62,16 +62,11 @@ fn parse_workspace_config_with_provider(
         .read_file(manifest_path)
         .map_err(|error| vec![parse_manifest_error(manifest_path, error)])?;
     let manifest = parse_manifest(manifest_path, source.as_str())?;
-    let source_roots = manifest
-        .source_roots
-        .iter()
-        .map(|source_root| {
-            validate_source_root_with_provider(workspace_root, source_root, provider)
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+    let source_root =
+        validate_source_root_with_provider(workspace_root, &manifest.source_root, provider)?;
 
     Ok(SifrWorkspaceConfig {
-        source_roots,
+        source_root,
         package_name: manifest.package_name,
     })
 }
@@ -96,38 +91,36 @@ fn parse_manifest(
         })
         .transpose()?;
 
-    let source_roots = value
-        .get("source")
-        .and_then(toml::Value::as_table)
-        .and_then(|source| source.get("roots"))
-        .map(|roots| parse_source_roots(manifest_path, roots))
+    let source = value.get("source").and_then(toml::Value::as_table);
+    if source.is_some_and(|source| source.contains_key("roots")) {
+        return Err(parse_manifest_schema_error(
+            manifest_path,
+            "source.roots is unsupported; use source.root",
+        ));
+    }
+    let source_root = source
+        .and_then(|source| source.get("root"))
+        .map(|root| parse_source_root(manifest_path, root))
         .transpose()?
-        .unwrap_or_else(|| vec![".".to_string()]);
+        .unwrap_or_else(|| "src".to_string());
 
     Ok(SifrManifest {
         package_name,
-        source_roots,
+        source_root,
     })
 }
 
-fn parse_source_roots(
+fn parse_source_root(
     manifest_path: &Path,
-    roots: &toml::Value,
-) -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
-    let Some(entries) = roots.as_array() else {
+    root: &toml::Value,
+) -> Result<String, Vec<RenderedDiagnostic>> {
+    let Some(root) = root.as_str() else {
         return Err(parse_manifest_schema_error(
             manifest_path,
-            "source.roots must be a list of strings",
+            "source.root must be a string",
         ));
     };
-    entries
-        .iter()
-        .map(|entry| {
-            entry.as_str().map(str::to_string).ok_or_else(|| {
-                parse_manifest_schema_error(manifest_path, "source.roots must be a list of strings")
-            })
-        })
-        .collect()
+    Ok(root.to_string())
 }
 
 fn validate_source_root_with_provider(
@@ -219,7 +212,7 @@ impl SourceRootErrorKind {
 
 fn source_root_error(source_root: &str, kind: SourceRootErrorKind) -> RenderedDiagnostic {
     crate::diagnostics::diagnostic_with_code(
-        format!("[source].roots entry '{source_root}' {}", kind.reason()),
+        format!("[source].root '{source_root}' {}", kind.reason()),
         kind.code(),
     )
 }

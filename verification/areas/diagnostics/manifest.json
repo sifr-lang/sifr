@@ -623,24 +623,6 @@
           ]
         },
         {
-          "id": "package_manifest_exports_not_production",
-          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_manifest_exports_not_production/sifr.toml",
-          "command": "package-check-default",
-          "expect_exit_code": 2,
-          "diagnostic_formats": [
-            "compact"
-          ]
-        },
-        {
-          "id": "package_manifest_bin_tables_not_production",
-          "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_manifest_bin_tables_not_production/sifr.toml",
-          "command": "package-check-default",
-          "expect_exit_code": 2,
-          "diagnostic_formats": [
-            "compact"
-          ]
-        },
-        {
           "id": "package_missing_sifr_manifest",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/package_missing_sifr_manifest/src/main.sifr",
           "command": "package-check",
@@ -1371,7 +1353,7 @@
         },
         {
           "id": "meta_specialization_fatal",
-          "entry": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_fatal/main.sifr",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_fatal/src/main.sifr",
           "command": "check",
           "expect_exit_code": 1,
           "diagnostic_formats": [
@@ -1380,7 +1362,7 @@
         },
         {
           "id": "meta_specialization_warning",
-          "entry": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_warning/main.sifr",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_warning/src/main.sifr",
           "command": "check",
           "expect_exit_code": 0,
           "diagnostic_formats": [
@@ -1416,8 +1398,8 @@
         },
         {
           "id": "source_import_ambiguous_module",
-          "entry": "verification/areas/diagnostics/fixtures/diagnostics/source_import_ambiguous_module/main.sifr",
-          "command": "check",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/source_import_ambiguous_module/src/main.sifr",
+          "command": "package-check",
           "expect_exit_code": 1,
           "diagnostic_formats": [
             "compact"
@@ -1434,7 +1416,7 @@
         },
         {
           "id": "source_import_namespace_collision",
-          "entry": "verification/areas/diagnostics/fixtures/diagnostics/source_import_namespace_collision/main.sifr",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/source_import_namespace_collision/src/main.sifr",
           "command": "check",
           "expect_exit_code": 1,
           "diagnostic_formats": [

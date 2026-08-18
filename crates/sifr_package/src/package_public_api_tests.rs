@@ -130,12 +130,11 @@ fn production_manifest_defaults_source_root_to_src_and_preserves_unknown_keys() 
     )
     .expect("manifest parses");
 
-    assert!(manifest.production_schema);
-    assert_eq!(manifest.source_roots[0].0, PathBuf::from("src"));
+    assert_eq!(manifest.source_root.0, PathBuf::from("src"));
 }
 
 #[test]
-fn production_manifest_exports_report_0701() {
+fn manifest_exports_use_normal_unsupported_field_diagnostic() {
     let diagnostic = SifrManifest::parse(
         &CargoPackageId("path+file:///tmp/demo#sifr-demo@0.1.0".to_string()),
         Path::new("/tmp/demo/sifr.toml"),
@@ -145,12 +144,15 @@ fn production_manifest_exports_report_0701() {
 
     assert_eq!(
         diagnostic.code,
-        DiagnosticCode::PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION
+        DiagnosticCode::PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST
     );
+    assert!(diagnostic
+        .message
+        .contains("invalid sifr.toml key 'exports'"));
 }
 
 #[test]
-fn production_manifest_bin_tables_report_0711() {
+fn manifest_bin_tables_use_normal_unsupported_field_diagnostic() {
     let diagnostic = SifrManifest::parse(
         &CargoPackageId("path+file:///tmp/demo#sifr-demo@0.1.0".to_string()),
         Path::new("/tmp/demo/sifr.toml"),
@@ -160,8 +162,9 @@ fn production_manifest_bin_tables_report_0711() {
 
     assert_eq!(
         diagnostic.code,
-        DiagnosticCode::PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION
+        DiagnosticCode::PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST
     );
+    assert!(diagnostic.message.contains("invalid sifr.toml key 'bin'"));
 }
 
 fn graph(
@@ -185,7 +188,7 @@ fn production_package(
     fs::create_dir_all(root.join("src")).expect("create src");
     fs::write(
         root.join("src/lib.rs"),
-        "// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.\n",
+        "// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.\n",
     )
     .expect("write marker");
     fs::write(

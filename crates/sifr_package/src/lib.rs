@@ -236,10 +236,9 @@ mod tests {
 
     fn write_pure_package(package_root: &Path, cargo_name: &str, sifr_name: &str) {
         fs::create_dir_all(package_root.join("src")).expect("create src");
-        fs::create_dir_all(package_root.join(format!("sifr/{sifr_name}"))).expect("create sifr");
         fs::write(
             package_root.join("src/lib.rs"),
-            "// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.\n",
+            "// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.\n",
         )
         .expect("write marker");
         fs::write(
@@ -252,15 +251,11 @@ mod tests {
         fs::write(
             package_root.join("sifr.toml"),
             format!(
-                "[package]\nname = \"{sifr_name}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroots = [\"sifr\"]\n\n[exports]\nmodules = [\"{sifr_name}\"]\n"
+                "[package]\nname = \"{sifr_name}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n"
             ),
         )
         .expect("write sifr.toml");
-        fs::write(
-            package_root.join(format!("sifr/{sifr_name}/__init__.sifr")),
-            "",
-        )
-        .expect("write init");
+        fs::write(package_root.join("src/__init__.sifr"), "").expect("write init");
     }
 
     fn metadata_json(workspace_root: &Path, package_roots: &[&PathBuf]) -> String {

@@ -140,7 +140,7 @@ def run_semantic_corpus() -> None:
     with tempfile.TemporaryDirectory(prefix="sifr-lsp-semantic-") as raw:
         root = Path(raw)
         (root / "sifr.toml").write_text(
-            '[package]\nname = "lsp_semantic"\n[source]\nroots = ["."]\n',
+            '[package]\nname = "lsp_semantic"\n[source]\nroot = "."\n',
             encoding="utf-8",
         )
         main = root / "main.sifr"

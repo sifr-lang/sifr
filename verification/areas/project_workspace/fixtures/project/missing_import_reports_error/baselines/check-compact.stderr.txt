@@ -1,2 +1,0 @@
-1 error, 0 warnings, 0 notes
-E SIFR-IMPORT-0002 verification/areas/project_workspace/fixtures/project/missing_import_reports_error/main.sifr:1:6 unknown import target: 'missing_math_utils'

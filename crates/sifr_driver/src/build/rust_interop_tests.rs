@@ -12,7 +12,7 @@ use sifr_ir::{
     RustInteropDecoratorKind, RustInteropEffect, RustInteropValue, RustTargetPath,
 };
 use sifr_package::{
-    BackendCrateMetadata, CargoPackageId, ImportRoot, PackageClassification, PackageSourceMap,
+    BackendCrateMetadata, CargoPackageId, PackageClassification, PackageSourceMap,
     PackageSourceRoot, RustInteropConfig, SifrEdition, SifrManifest, SifrPackageGraph,
     SifrPackageId, SifrPackageMetadata, SifrPackageName, TrustPolicy,
 };
@@ -683,8 +683,7 @@ fn package_context_with_root(
             edition: SifrEdition("2026".to_string()),
             compiler_requirement: sifr_package::CompilerRequirement(">=0.3,<0.4".to_string()),
             default_run: None,
-            source_roots: vec![PackageSourceRoot(PathBuf::from("sifr"))],
-            exports: vec![ImportRoot("app".to_string())],
+            source_root: PackageSourceRoot(PathBuf::from("src")),
             source_features: BTreeMap::new(),
             scripts: BTreeMap::new(),
             dependencies: BTreeMap::new(),
@@ -695,7 +694,6 @@ fn package_context_with_root(
                 bridges: Vec::new(),
                 direct_crate_bindings: true,
             },
-            production_schema: false,
         },
         aliases: BTreeMap::new(),
     };

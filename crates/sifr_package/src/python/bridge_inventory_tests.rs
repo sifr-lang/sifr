@@ -259,7 +259,7 @@ fn same_package_imports_include_package_and_intermediate_ancestors() {
 #[test]
 fn misplaced_bridge_root_and_reserved_runtime_import_are_rejected() {
     let fixture = BridgeFixture::new("misplaced");
-    fixture.write_at("sifr/python_bridges/wrong.py", "VALUE = 1\n");
+    fixture.write_at("python_bridges/wrong.py", "VALUE = 1\n");
     fixture.write("reserved.py", "import __sifr_bridge__.foreign\n");
 
     let diagnostics = discover_python_bridge_inventory(&fixture.package)

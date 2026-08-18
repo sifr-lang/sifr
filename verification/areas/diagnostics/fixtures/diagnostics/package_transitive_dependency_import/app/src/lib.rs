@@ -1,1 +1,1 @@
-// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.
+// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.

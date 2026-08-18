@@ -42,7 +42,6 @@ struct ImportDependency {
 pub(crate) struct ResolutionError {
     pub(crate) module_name: String,
     pub(crate) tried_paths: Vec<PathBuf>,
-    pub(crate) matches: Vec<PathBuf>,
     kind: ResolutionFailureKind,
 }
 
@@ -55,7 +54,7 @@ pub(crate) struct ModuleResolver {
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct WorkspaceModuleSources {
     workspace_root: PathBuf,
-    source_roots: Vec<PathBuf>,
+    source_root: PathBuf,
 }
 
 impl ModuleResolver {
@@ -74,7 +73,7 @@ impl ModuleResolver {
             entry_parent: entry_parent.into(),
             workspace: Some(WorkspaceModuleSources {
                 workspace_root: workspace.dir,
-                source_roots: workspace.config.source_roots,
+                source_root: workspace.config.source_root,
             }),
         }
     }
@@ -114,45 +113,23 @@ impl ModuleResolver {
             return Err(ResolutionError {
                 module_name: module_name.to_string(),
                 tried_paths: vec![entry_path],
-                matches: Vec::new(),
                 kind: ResolutionFailureKind::Unresolved,
             });
         };
 
         let relative_path = module_name_to_relative_path(module_name);
-        let mut tried_paths = vec![entry_path];
-        let mut matches = Vec::new();
-        for source_root in &workspace.source_roots {
-            let candidate = workspace
-                .workspace_root
-                .join(source_root)
-                .join(&relative_path);
-            tried_paths.push(candidate.clone());
-            if provider.is_file(&candidate) && !matches.contains(&candidate) {
-                matches.push(candidate);
-            }
-        }
-
-        if matches.len() > 1 {
-            return Err(ResolutionError {
-                module_name: module_name.to_string(),
-                tried_paths,
-                matches,
-                kind: ResolutionFailureKind::Ambiguous,
-            });
-        }
-
-        if let Some(path) = matches.into_iter().next() {
-            let source_root = workspace
-                .source_roots
-                .iter()
-                .find(|source_root| path.starts_with(workspace.workspace_root.join(source_root)))
-                .cloned()
-                .unwrap_or_else(|| PathBuf::from("."));
+        let path = workspace
+            .workspace_root
+            .join(&workspace.source_root)
+            .join(&relative_path);
+        let tried_paths = vec![entry_path, path.clone()];
+        if provider.is_file(&path) {
             let resolved = ResolvedModule {
                 module_name: module_name.to_string(),
                 path,
-                origin: ModuleOrigin::WorkspaceSource { source_root },
+                origin: ModuleOrigin::WorkspaceSource {
+                    source_root: workspace.source_root.clone(),
+                },
             };
             self.reject_namespace_file_collision(&resolved, provider)?;
             return Ok(resolved);
@@ -161,7 +138,6 @@ impl ModuleResolver {
         Err(ResolutionError {
             module_name: module_name.to_string(),
             tried_paths,
-            matches: Vec::new(),
             kind: ResolutionFailureKind::Unresolved,
         })
     }
@@ -179,7 +155,6 @@ impl ModuleResolver {
         Err(ResolutionError {
             module_name: resolved.module_name.clone(),
             tried_paths: vec![resolved.path.clone(), parent_path],
-            matches: Vec::new(),
             kind: ResolutionFailureKind::NamespaceFileCollision { parent_name },
         })
     }
@@ -208,12 +183,12 @@ impl ModuleResolver {
         let relative_path = module_name_to_relative_path(module_name);
         let mut candidates = vec![self.entry_parent.join(&relative_path)];
         if let Some(workspace) = &self.workspace {
-            candidates.extend(workspace.source_roots.iter().map(|source_root| {
+            candidates.push(
                 workspace
                     .workspace_root
-                    .join(source_root)
-                    .join(&relative_path)
-            }));
+                    .join(&workspace.source_root)
+                    .join(&relative_path),
+            );
         }
         candidates
     }
@@ -222,7 +197,6 @@ impl ModuleResolver {
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum ResolutionFailureKind {
     Unresolved,
-    Ambiguous,
     NamespaceFileCollision { parent_name: String },
 }
 
@@ -232,10 +206,6 @@ impl ResolutionError {
             ResolutionFailureKind::Unresolved => crate::diagnostics::diagnostic_with_code(
                 unresolved_import_message(&self.module_name, &self.tried_paths),
                 DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT,
-            ),
-            ResolutionFailureKind::Ambiguous => crate::diagnostics::diagnostic_with_code(
-                ambiguous_import_message(&self.module_name, resolver, &self.matches),
-                DiagnosticCode::WORKSPACE_AMBIGUOUS_IMPORT,
             ),
             ResolutionFailureKind::NamespaceFileCollision { parent_name } => {
                 let resolved_path = self
@@ -283,25 +253,6 @@ impl ResolutionError {
                         ("tried_paths", DiagnosticArg::String(tried_paths.clone())),
                     ],
                     path_notes("tried", &self.tried_paths),
-                )
-            }
-            ResolutionFailureKind::Ambiguous => {
-                let candidate_paths = display_paths(&self.matches);
-                (
-                    DiagnosticCode::IMPORT_AMBIGUOUS_SOURCE_MODULE,
-                    "ambiguous import target: '{module}'",
-                    vec![
-                        ("module", DiagnosticArg::String(self.module_name.clone())),
-                        (
-                            "resolution_scope",
-                            DiagnosticArg::String(resolution_scope(resolver)),
-                        ),
-                        (
-                            "candidate_paths",
-                            DiagnosticArg::String(candidate_paths.clone()),
-                        ),
-                    ],
-                    path_notes("candidate", &self.matches),
                 )
             }
             ResolutionFailureKind::NamespaceFileCollision { parent_name } => {
@@ -573,26 +524,6 @@ fn unresolved_import_message(module_name: &str, tried_paths: &[PathBuf]) -> Stri
     format!(
         "could not resolve import '{module_name}'; tried entry-relative '{entry_path}' and workspace-relative {}",
         workspace_paths.join(", ")
-    )
-}
-
-fn ambiguous_import_message(
-    module_name: &str,
-    resolver: &ModuleResolver,
-    matches: &[PathBuf],
-) -> String {
-    let workspace_root = resolver
-        .workspace
-        .as_ref()
-        .map(|workspace| workspace.workspace_root.display().to_string())
-        .unwrap_or_default();
-    let match_paths: Vec<String> = matches
-        .iter()
-        .map(|path| format!("'{}'", path.display()))
-        .collect();
-    format!(
-        "module '{module_name}' is ambiguous in workspace '{workspace_root}': matches {}; reorder [source].roots or rename one module to disambiguate",
-        match_paths.join(" and ")
     )
 }
 

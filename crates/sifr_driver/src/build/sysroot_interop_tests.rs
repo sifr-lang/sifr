@@ -9,9 +9,9 @@ use super::sysroot_interop::attach_stdlib_rust_interop;
 use crate::stdlib::{StdlibRustInterop, StdlibRustInteropModuleSource};
 use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot, RustInteropTrustRequirementKind};
 use sifr_package::{
-    CargoPackageId, ImportRoot, PackageClassification, PackageSourceMap, PackageSourceRoot,
-    RustInteropConfig, SifrEdition, SifrManifest, SifrPackageGraph, SifrPackageId,
-    SifrPackageMetadata, SifrPackageName, TrustPolicy,
+    CargoPackageId, PackageClassification, PackageSourceMap, PackageSourceRoot, RustInteropConfig,
+    SifrEdition, SifrManifest, SifrPackageGraph, SifrPackageId, SifrPackageMetadata,
+    SifrPackageName, TrustPolicy,
 };
 use sifr_stdlib_manifest::{CargoVendorMode, SysrootCrate};
 use sifr_sysroot::{
@@ -254,8 +254,7 @@ fn user_context() -> PackageRustInteropContext {
             edition: SifrEdition("2026".to_string()),
             compiler_requirement: sifr_package::CompilerRequirement(">=0.3,<0.4".to_string()),
             default_run: None,
-            source_roots: vec![PackageSourceRoot(PathBuf::from("sifr"))],
-            exports: vec![ImportRoot("app".to_string())],
+            source_root: PackageSourceRoot(PathBuf::from("src")),
             source_features: BTreeMap::new(),
             scripts: BTreeMap::new(),
             dependencies: BTreeMap::new(),
@@ -269,7 +268,6 @@ fn user_context() -> PackageRustInteropContext {
                 bridges: Vec::new(),
                 direct_crate_bindings: true,
             },
-            production_schema: false,
         },
         aliases: BTreeMap::new(),
     };

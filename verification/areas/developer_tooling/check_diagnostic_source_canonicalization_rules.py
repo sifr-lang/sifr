@@ -41,7 +41,6 @@ PARSER_FIXTURES = {
 
 PROJECT_FIXTURES = {
     "workspace_missing_import_canonical": "SIFR-IMPORT-0002",
-    "workspace_ambiguous_import_canonical": "SIFR-IMPORT-0005",
     "workspace_namespace_collision_canonical": "SIFR-IMPORT-0006",
 }
 
@@ -113,7 +112,12 @@ def check_required_fixtures(root: Path) -> None:
         path = root / "verification/areas/diagnostics/fixtures/diagnostics" / fixture / "main.sifr"
         require(path.is_file(), f"required parser fixture missing: {fixture}")
     for fixture in PROJECT_FIXTURES | CYCLE_FIXTURES:
-        path = root / "verification/areas/project_workspace/fixtures/project" / fixture / "main.sifr"
+        path = (
+            root
+            / "verification/areas/project_workspace/fixtures/project"
+            / fixture
+            / "src/main.sifr"
+        )
         require(path.is_file(), f"required project fixture missing: {fixture}")
     for fixture in PACKAGE_FIXTURES | PACKAGE_FATAL_FIXTURES:
         path = root / "verification/areas/package_management/fixtures/package" / fixture
@@ -344,12 +348,11 @@ def check_project_runtime_rules(root: Path) -> None:
     base = root / "verification/areas/project_workspace/fixtures/project"
     required_args = {
         "workspace_missing_import_canonical": {"resolution_scope", "tried_paths"},
-        "workspace_ambiguous_import_canonical": {"resolution_scope", "candidate_paths"},
         "workspace_namespace_collision_canonical": {"resolved_path", "parent_path"},
     }
     forbidden = set(LEGACY_WORKSPACE_IMPORT_CODES)
     for fixture, code in PROJECT_FIXTURES.items():
-        entry = base / fixture / "main.sifr"
+        entry = base / fixture / "src" / "main.sifr"
         json_result = run_sifr(["--diagnostic-format", "json", "check", str(entry)])
         assert_json_rules(
             json_result,
@@ -365,7 +368,7 @@ def check_project_runtime_rules(root: Path) -> None:
 def check_cycle_runtime_rules(root: Path) -> None:
     base = root / "verification/areas/project_workspace/fixtures/project"
     for fixture, code in CYCLE_FIXTURES.items():
-        entry = base / fixture / "main.sifr"
+        entry = base / fixture / "src" / "main.sifr"
         json_result = run_sifr(["--diagnostic-format", "json", "check", str(entry)])
         assert_json_rules(
             json_result,
@@ -447,9 +450,9 @@ def check_package_help_rules(root: Path) -> None:
     )
     assert_json_rules(
         help_result,
-        expected_code="SIFR-PACKAGE-0701",
+        expected_code="SIFR-PACKAGE-0403",
         case_id="package_diagnostic_help_preserved",
-        required_args={"origin_kind", "manifest_path", "manifest_key"},
+        required_args={"origin_kind", "cargo_package_id"},
         require_help=True,
         require_span=False,
     )

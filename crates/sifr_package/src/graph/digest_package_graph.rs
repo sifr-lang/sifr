@@ -21,7 +21,7 @@ struct CanonicalGraphPackage<'a> {
     package_id: &'a str,
     cargo_package_id: &'a str,
     sifr_name: &'a str,
-    exports: Vec<&'a str>,
+    import_root: &'a str,
     rust: CanonicalRustInteropConfig,
     rust_trust: CanonicalRustTrust<'a>,
     python: CanonicalPythonConfig<'a>,
@@ -91,12 +91,7 @@ impl<'a> From<&'a SifrPackageGraph> for CanonicalGraph<'a> {
                     package_id: &package.package_id.0,
                     cargo_package_id: &package.cargo_package_id.0,
                     sifr_name: &package.sifr_name.0,
-                    exports: package
-                        .manifest
-                        .exports
-                        .iter()
-                        .map(|root| root.0.as_str())
-                        .collect(),
+                    import_root: &package.sifr_name.0,
                     rust: CanonicalRustInteropConfig {
                         bridges: package
                             .manifest
