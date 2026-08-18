@@ -330,6 +330,9 @@ class ProfileRunner:
         print("Running file-size guardrails")
         run_python("scripts/check_file_size_guardrails.py")
 
+        print("Running generated demo freshness guardrail")
+        run_python("scripts/check_demo_emitted_freshness.py")
+
         print("Running source crate dependency-direction guardrail")
         run_python("scripts/check_source_crate_dependency_direction.py")
         run_python("scripts/check_source_crate_dependency_direction.py", "--self-test")

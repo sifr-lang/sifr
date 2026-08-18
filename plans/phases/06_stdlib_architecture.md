@@ -23,12 +23,12 @@ status: completed
 1. Rename current `sifr.*` registry to `_sifr.*` in the compiler-host stdlib contract (`sifr_stdlib`) -- mechanical rename of intrinsic module/member metadata and public stdlib module checks
 2. Rename `emit_stdlib_call` to `emit_intrinsic_call` in [sifr_codegen/src/lib.rs](../../crates/sifr_codegen/src/lib.rs)
 3. Split current 55 functions into initial intrinsic primitives across `_sifr.fs`, `_sifr.sys`, `_sifr.io`, `_sifr.time`, `_sifr.math`, `_sifr.crypto`, `_sifr.regex`, `_sifr.json`
-4. Add `lib/sifr/` directory with `.sifr` files embedded via `include_str!`
+4. Add `stdlib/sifr/` directory with `.sifr` files embedded via `include_str!`
 5. Update driver ([sifr_driver/src/lib.rs](../../crates/sifr_driver/src/lib.rs)) to discover and compile embedded stdlib `.sifr` modules before user modules (two-phase compilation)
 6. Update lowering import resolution to resolve stdlib `.sifr` files first, falling back to `_sifr.*` intrinsics
 7. Update codegen to handle stdlib modules as regular Rust `mod`/`use` (not inline emit)
-8. Block user imports of `_sifr.*` in lowering import resolution -- emit a compile error if user code tries to `from _sifr.X import Y` (only stdlib `.sifr` files may import intrinsics). Trust boundary: the compiler distinguishes stdlib from user code by checking whether the source originated from the embedded `lib/sifr/` module set (via `sifr_stdlib` source inventory), not by filename convention.
-9. Proof-of-concept: `lib/sifr/test.sifr` (assert_eq, assert_ne, assert_true, assert_false are pure Sifr)
+8. Block user imports of `_sifr.*` in lowering import resolution -- emit a compile error if user code tries to `from _sifr.X import Y` (only stdlib `.sifr` files may import intrinsics). Trust boundary: the compiler distinguishes stdlib from user code by checking whether the source originated from the embedded `stdlib/sifr/` module set (via `sifr_stdlib` source inventory), not by filename convention.
+9. Proof-of-concept: `stdlib/sifr/test.sifr` (assert_eq, assert_ne, assert_true, assert_false are pure Sifr)
 
 ### Design Constraint: Safety Contract
 
@@ -63,19 +63,19 @@ status: completed
 
 ### Modules to Migrate (in dependency order)
 
-1. `lib/sifr/env.sifr` -- wraps private `_sifr.sys` environment intrinsics behind `getenv_opt`, typed-default `getenv`, `setenv`, `unsetenv`, `keys`, `values`, and `items`
-2. `lib/sifr/bytes.sifr` -- wraps `_sifr.io` (encode_utf8, decode_utf8, to_hex, from_hex)
-3. `lib/sifr/base64.sifr` -- wraps `_sifr.crypto` or pure Sifr (b64encode, b64decode)
-4. `lib/sifr/math.sifr` -- wraps `_sifr.math` (12 functions + pi, e constants)
-5. `lib/sifr/hashlib.sifr` -- wraps `_sifr.crypto` (sha256, md5)
-6. `lib/sifr/io.sifr` -- wraps `_sifr.fs` + `_sifr.io` (read_text, write_text, exists, read_lines, `open()` / `File` context manager). Needs new intrinsics: `_sifr.fs.open_file`, `read_fd`, `write_fd`, `close_fd`
-7. `lib/sifr/os.sifr` -- wraps `_sifr.sys` + `_sifr.fs` for OS and filesystem operations; process arguments belong to `sifr.sys.argv`
+1. `stdlib/sifr/env.sifr` -- wraps private `_sifr.sys` environment intrinsics behind `getenv_opt`, typed-default `getenv`, `setenv`, `unsetenv`, `keys`, `values`, and `items`
+2. `stdlib/sifr/bytes.sifr` -- wraps `_sifr.io` (encode_utf8, decode_utf8, to_hex, from_hex)
+3. `stdlib/sifr/base64.sifr` -- wraps `_sifr.crypto` or pure Sifr (b64encode, b64decode)
+4. `stdlib/sifr/math.sifr` -- wraps `_sifr.math` (12 functions + pi, e constants)
+5. `stdlib/sifr/hashlib.sifr` -- wraps `_sifr.crypto` (sha256, md5)
+6. `stdlib/sifr/io.sifr` -- wraps `_sifr.fs` + `_sifr.io` (read_text, write_text, exists, read_lines, `open()` / `File` context manager). Needs new intrinsics: `_sifr.fs.open_file`, `read_fd`, `write_fd`, `close_fd`
+7. `stdlib/sifr/os.sifr` -- wraps `_sifr.sys` + `_sifr.fs` for OS and filesystem operations; process arguments belong to `sifr.sys.argv`
 8. `stdlib/sifr/json.sifr` -- exposes canonical `loads` and `dumps` over private `_sifr.json` intrinsics
-9. `lib/sifr/time.sifr` -- wraps private `_sifr.time.time_now` and `time_format` as public `time` and `strftime`; `sleep`, `perf_counter`, and `monotonic` keep their distinct names
-10. `lib/sifr/random.sifr` -- wraps private `_sifr.crypto` entropy primitives behind the stateful `randint`, `random`, `uniform`, and `choice` API
+9. `stdlib/sifr/time.sifr` -- wraps private `_sifr.time.time_now` and `time_format` as public `time` and `strftime`; `sleep`, `perf_counter`, and `monotonic` keep their distinct names
+10. `stdlib/sifr/random.sifr` -- wraps private `_sifr.crypto` entropy primitives behind the stateful `randint`, `random`, `uniform`, and `choice` API
 11. `stdlib/sifr/re.sifr` -- exposes canonical regex operations over private `_sifr.regex` intrinsics
-12. `lib/sifr/collections.sifr` -- wraps existing set/counter/defaultdict intrinsics
-13. `lib/sifr/test.sifr` -- already done in milestone_intrinsics (verify still works)
+12. `stdlib/sifr/collections.sifr` -- wraps existing set/counter/defaultdict intrinsics
+13. `stdlib/sifr/test.sifr` -- already done in milestone_intrinsics (verify still works)
 
 **Note:** During migration, two modules are renamed to match Python conventions: `sifr.hash` -> `sifr.hashlib`, `sifr.encoding` -> `sifr.base64`. This is a deliberate pre-1.0 breaking change; existing tests and code must be updated as part of this milestone.
 
@@ -105,23 +105,23 @@ status: completed
 
 ### Pure Sifr Modules (no new intrinsics needed)
 
-1. `lib/sifr/string.sifr` -- `ascii_letters`, `digits`, `punctuation`, `whitespace` constants
-2. `lib/sifr/statistics.sifr` -- `mean`, `median`, `stdev`, `variance`
-3. `lib/sifr/bisect.sifr` -- `bisect_left`, `bisect_right`, `insort`
-4. `lib/sifr/heapq.sifr` -- `heappush`, `heappop`, `heapify`, `nlargest`, `nsmallest`
-5. `lib/sifr/functools.sifr` -- `reduce`
-6. `lib/sifr/itertools.sifr` -- `chain`, `zip_longest`, `groupby`
-7. `lib/sifr/textwrap.sifr` -- `wrap`, `fill`, `dedent`, `indent`
-8. `lib/sifr/csv.sifr` -- `reader`, `writer`
-9. `lib/sifr/argparse.sifr` -- `ArgumentParser` class with `add_argument`, `parse_args`
+1. `stdlib/sifr/string.sifr` -- `ascii_letters`, `digits`, `punctuation`, `whitespace` constants
+2. `stdlib/sifr/statistics.sifr` -- `mean`, `median`, `stdev`, `variance`
+3. `stdlib/sifr/bisect.sifr` -- `bisect_left`, `bisect_right`, `insort`
+4. `stdlib/sifr/heapq.sifr` -- `heappush`, `heappop`, `heapify`, `nlargest`, `nsmallest`
+5. `stdlib/sifr/functools.sifr` -- `reduce`
+6. `stdlib/sifr/itertools.sifr` -- `chain`, `zip_longest`, `groupby`
+7. `stdlib/sifr/textwrap.sifr` -- `wrap`, `fill`, `dedent`, `indent`
+8. `stdlib/sifr/csv.sifr` -- `reader`, `writer`
+9. `stdlib/sifr/argparse.sifr` -- `ArgumentParser` class with `add_argument`, `parse_args`
 
 ### Intrinsic-backed Modules (need new `_sifr.*` primitives)
 
-10. `lib/sifr/fnmatch.sifr` -- `fnmatch`, `filter`, `translate` (wraps `_sifr.regex`)
-11. `lib/sifr/glob.sifr` -- `glob`, `iglob` (wraps `_sifr.fs.list_dir` + fnmatch)
-12. `lib/sifr/shutil.sifr` -- `copy`, `copytree`, `rmtree`, `move` (wraps `_sifr.fs` -- needs new intrinsics: `copy_file`, `walk_dir`)
-13. `lib/sifr/tempfile.sifr` -- `mkstemp`, `mkdtemp` (wraps `_sifr.fs` + `_sifr.crypto.random_bytes`)
-14. `lib/sifr/secrets.sifr` -- `token_hex`, `token_urlsafe`, `token_bytes`, `choice` (wraps `_sifr.crypto`)
+10. `stdlib/sifr/fnmatch.sifr` -- `fnmatch`, `filter`, `translate` (wraps `_sifr.regex`)
+11. `stdlib/sifr/glob.sifr` -- `glob`, `iglob` (wraps `_sifr.fs.list_dir` + fnmatch)
+12. `stdlib/sifr/shutil.sifr` -- `copy`, `copytree`, `rmtree`, `move` (wraps `_sifr.fs` -- needs new intrinsics: `copy_file`, `walk_dir`)
+13. `stdlib/sifr/tempfile.sifr` -- `mkstemp`, `mkdtemp` (wraps `_sifr.fs` + `_sifr.crypto.random_bytes`)
+14. `stdlib/sifr/secrets.sifr` -- `token_hex`, `token_urlsafe`, `token_bytes`, `choice` (wraps `_sifr.crypto`)
 
 **New intrinsics needed:** `_sifr.fs.copy_file`, `_sifr.fs.walk_dir` (2 new primitives added to existing `_sifr.fs`)
 
@@ -159,16 +159,16 @@ status: completed
 
 ### Part B -- New Modules (remaining Tier 1+2)
 
-1. `lib/sifr/difflib.sifr` -- `unified_diff`, `get_close_matches`, `SequenceMatcher` (pure Sifr, algorithmic)
-2. `lib/sifr/graphlib.sifr` -- `TopologicalSorter` (pure Sifr, algorithmic)
-3. `lib/sifr/ipaddress.sifr` -- `ip_address`, `ip_network` (pure Sifr, parsing + math)
-4. `lib/sifr/timeit.sifr` -- `timeit`, `repeat` (wraps `_sifr.time.perf_counter_ns`)
-5. `lib/sifr/platform.sifr` -- `system`, `machine`, `node`, `release`, `version`, `processor` (wraps private `_sifr.platform` intrinsics)
-6. `lib/sifr/tomllib.sifr` -- `loads`, `load` (wraps new `_sifr.toml` intrinsic)
-7. `lib/sifr/datetime.sifr` -- `date`, `datetime`, `timedelta`, `timezone` (wraps new `_sifr.datetime` intrinsic)
-8. `lib/sifr/pathlib.sifr` -- `Path` class with `/` operator, `exists`, `read_text`, `write_text`, `stem`, `suffix`, `parent` (wraps `_sifr.fs`)
-9. `lib/sifr/uuid.sifr` -- `uuid4` (wraps `_sifr.crypto.random_bytes`)
-10. `lib/sifr/logging.sifr` -- `Logger`, `getLogger`, `info`, `warning`, `error`, `debug` (wraps `_sifr.io` + `_sifr.time`)
+1. `stdlib/sifr/difflib.sifr` -- `unified_diff`, `get_close_matches`, `SequenceMatcher` (pure Sifr, algorithmic)
+2. `stdlib/sifr/graphlib.sifr` -- `TopologicalSorter` (pure Sifr, algorithmic)
+3. `stdlib/sifr/ipaddress.sifr` -- `ip_address`, `ip_network` (pure Sifr, parsing + math)
+4. `stdlib/sifr/timeit.sifr` -- `timeit`, `repeat` (wraps `_sifr.time.perf_counter_ns`)
+5. `stdlib/sifr/platform.sifr` -- `system`, `machine`, `node`, `release`, `version`, `processor` (wraps private `_sifr.platform` intrinsics)
+6. `stdlib/sifr/tomllib.sifr` -- `loads`, `load` (wraps new `_sifr.toml` intrinsic)
+7. `stdlib/sifr/datetime.sifr` -- `date`, `datetime`, `timedelta`, `timezone` (wraps new `_sifr.datetime` intrinsic)
+8. `stdlib/sifr/pathlib.sifr` -- `Path` class with `/` operator, `exists`, `read_text`, `write_text`, `stem`, `suffix`, `parent` (wraps `_sifr.fs`)
+9. `stdlib/sifr/uuid.sifr` -- `uuid4` (wraps `_sifr.crypto.random_bytes`)
+10. `stdlib/sifr/logging.sifr` -- `Logger`, `getLogger`, `info`, `warning`, `error`, `debug` (wraps `_sifr.io` + `_sifr.time`)
 
 **New intrinsics needed:** `_sifr.toml.toml_parse`, `_sifr.datetime.*` (4 primitives), `_sifr.sys.platform_os`, `_sifr.sys.platform_arch`, `_sifr.math` inverse trig/hyperbolic (~8 primitives)
 
