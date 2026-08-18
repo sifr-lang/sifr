@@ -7,13 +7,16 @@ use std::collections::HashMap;
 
 pub fn erase_marker_imports(module: &mut HirModule, external_defs: &ExternalDefs) {
     for import in &mut module.imports {
-        let Some(markers) = external_defs.class_adapter_markers.get(&import.module) else {
-            continue;
-        };
-        import.names.retain(|name| !markers.contains_key(name));
-        import
-            .aliases
-            .retain(|(original, _)| !markers.contains_key(original));
+        let markers = external_defs.class_adapter_markers.get(&import.module);
+        let sets = external_defs.attached_api_sets.get(&import.module);
+        import.names.retain(|name| {
+            !markers.is_some_and(|items| items.contains_key(name))
+                && !sets.is_some_and(|items| items.contains_key(name))
+        });
+        import.aliases.retain(|(original, _)| {
+            !markers.is_some_and(|items| items.contains_key(original))
+                && !sets.is_some_and(|items| items.contains_key(original))
+        });
     }
     module.imports.retain(|import| !import.names.is_empty());
 }
@@ -35,6 +38,25 @@ pub(crate) fn add_aliases(
                         identity: Some(format!("{}.{}", marker.module, marker.symbol)),
                         type_args: Vec::new(),
                         name: marker.symbol.clone(),
+                        fields: Vec::new(),
+                        methods: Vec::new(),
+                        parent_class: None,
+                    },
+                )
+            }),
+    );
+    exports.extend(
+        lowering
+            .attached_api_sets
+            .iter()
+            .filter(|set| !set.identity.symbol.starts_with('_'))
+            .map(|set| {
+                (
+                    set.identity.symbol.clone(),
+                    Type::Class {
+                        identity: Some(format!("{}.{}", set.identity.module, set.identity.symbol)),
+                        type_args: Vec::new(),
+                        name: set.identity.symbol.clone(),
                         fields: Vec::new(),
                         methods: Vec::new(),
                         parent_class: None,
@@ -89,6 +111,20 @@ pub(crate) fn store(
         .iter()
         .filter(|selection| !selection.owner.starts_with('_'))
         .map(|selection| (selection.owner.clone(), selection.clone()))
+        .collect::<HashMap<_, _>>();
+    let sets = lowering
+        .attached_api_sets
+        .iter()
+        .filter(|set| !set.identity.symbol.starts_with('_'))
+        .map(|set| (set.identity.symbol.clone(), set.clone()))
+        .collect::<HashMap<_, _>>();
+    let apis = lowering
+        .attached_apis
+        .iter()
+        .filter(|declaration| {
+            crate::query_diagnostics::should_export_callable(module_name, &declaration.function)
+        })
+        .map(|declaration| (declaration.function.clone(), declaration.clone()))
         .collect::<HashMap<_, _>>();
 
     for import in &module.imports {
@@ -148,6 +184,18 @@ pub(crate) fn store(
         &mut external_defs.class_adapter_selections,
         module_name,
         selections,
+        HashMap::is_empty,
+    );
+    replace_module_entry(
+        &mut external_defs.attached_api_sets,
+        module_name,
+        sets,
+        HashMap::is_empty,
+    );
+    replace_module_entry(
+        &mut external_defs.attached_apis,
+        module_name,
+        apis,
         HashMap::is_empty,
     );
     replace_module_entry(

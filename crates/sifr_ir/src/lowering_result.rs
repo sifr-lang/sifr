@@ -1,9 +1,9 @@
 use crate::{
-    AppliedAdapterMetadata, ClassAdapterMarkerDeclaration, ClassAdapterProviderDeclaration,
-    ClassAdapterSelection, ConstSpecializationRequest, DeclarationDescriptorFunction, FlowGraph,
-    HirExpr, HirModule, JsonIntegerBoundaryRequest, LoweringWarningDiagnostic,
-    RevealTypeDiagnostic, StaticSpecializationOutput, TypedDeclarationDescriptor,
-    TypedDeclarationMetadata,
+    AppliedAdapterMetadata, AttachedApiDeclaration, AttachedApiSetDeclaration,
+    ClassAdapterMarkerDeclaration, ClassAdapterProviderDeclaration, ClassAdapterSelection,
+    ConstSpecializationRequest, DeclarationDescriptorFunction, FlowGraph, HirExpr, HirModule,
+    JsonIntegerBoundaryRequest, LoweringWarningDiagnostic, RevealTypeDiagnostic,
+    StaticSpecializationOutput, TypedDeclarationDescriptor, TypedDeclarationMetadata,
 };
 use num_bigint::BigInt;
 use sifr_type_system::Type;
@@ -24,6 +24,10 @@ pub struct LoweringResult {
     pub class_adapter_providers: Vec<ClassAdapterProviderDeclaration>,
     /// Field-less erased marker declarations exported by this module.
     pub class_adapter_markers: Vec<ClassAdapterMarkerDeclaration>,
+    /// Erased attached-API namespaces exported by this module.
+    pub attached_api_sets: Vec<AttachedApiSetDeclaration>,
+    /// Checked package functions exported through attached-API namespaces.
+    pub attached_apis: Vec<AttachedApiDeclaration>,
     /// Canonical providers selected for adapted classes in this module.
     pub class_adapter_selections: Vec<ClassAdapterSelection>,
     /// Package-owned descriptor function declarations exported by this module.

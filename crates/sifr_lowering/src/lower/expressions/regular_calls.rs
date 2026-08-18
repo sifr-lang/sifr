@@ -27,6 +27,16 @@ pub(super) fn lower_regular_call(
         );
         return None;
     }
+    if ctx.attached_api_set_bindings.contains(&func_name) {
+        ctx.error_with_code_at(
+            DiagnosticCode::META_MALFORMED_DECLARATION,
+            format!(
+                "attached-API set '{func_name}' is erased and cannot be constructed at runtime"
+            ),
+            call.func.range(),
+        );
+        return None;
+    }
     if ctx.python_import_module_bindings.contains(&func_name) {
         if let Some(arg) = call.arguments.args.first() {
             match arg {

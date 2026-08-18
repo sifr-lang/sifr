@@ -144,6 +144,8 @@ class DeclarationPlan[D]:
     specialization_function: str | None
     issues: list[PlannedIssue[D]]
     handlers: list[PlannedHandler[D]] = []
+    attached_api_module: str | None = None
+    attached_api_symbol: str | None = None
 
 
 class ShapeMetadata[D]:

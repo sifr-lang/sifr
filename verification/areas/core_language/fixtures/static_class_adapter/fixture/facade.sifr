@@ -1,1 +1,2 @@
+from fixture.api import ContractError
 from fixture.contract import Contract, contract_config, contract_field

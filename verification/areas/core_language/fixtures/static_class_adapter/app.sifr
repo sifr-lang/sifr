@@ -1,4 +1,4 @@
-from fixture.facade import Contract, contract_config, contract_field
+from fixture.facade import Contract, ContractError, contract_config, contract_field
 from fixture.factories import Token as ExternalToken, make_names as external_names
 
 
@@ -28,6 +28,11 @@ class Model(Contract):
     external_token: ExternalToken = contract_field(default_factory=ExternalToken)
 
 
+class AttachedModel(Contract):
+    _config = contract_config(True)
+    value: int
+
+
 def main():
     first: Model = Model(7)
     second: Model = Model(8)
@@ -39,3 +44,14 @@ def main():
     assert first.free_names == []
     assert first.static_names == []
     assert first.external_free == []
+    attached: AttachedModel = AttachedModel(9)
+    consumed: AttachedModel = AttachedModel(10)
+    print(AttachedModel.describe())
+    assert AttachedModel.echo("residual") == "residual"
+    assert attached.inspect() == 41
+    assert attached.touch() == 42
+    assert consumed.finish() == 43
+
+
+def compile_result_construction() -> Result[AttachedModel, ContractError]:
+    return AttachedModel.construct()

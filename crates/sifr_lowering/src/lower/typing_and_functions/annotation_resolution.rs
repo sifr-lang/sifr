@@ -11,6 +11,9 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
     match expr {
         Expr::Name(name) => {
             if name.id.as_str() == "Self" {
+                if let Some(type_param) = ctx.attached_self_type_param.as_ref() {
+                    return Type::TypeVar(type_param.clone());
+                }
                 if let Some(current_class) = ctx.current_class.as_deref() {
                     if let Some(class_ty) = ctx.class_types.get(current_class) {
                         return class_ty.clone();
@@ -27,6 +30,15 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                 ctx.error_with_code_at(
                     DiagnosticCode::META_MALFORMED_DECLARATION,
                     "class-adapter markers are erased base-only declarations and cannot be used as annotations".to_string(),
+                    name.range(),
+                );
+                return Type::Any;
+            }
+            if ctx.attached_api_set_bindings.contains(name.id.as_str()) {
+                ctx.error_with_code_at(
+                    DiagnosticCode::META_MALFORMED_DECLARATION,
+                    "attached-API sets are erased declarations and cannot be used as annotations"
+                        .to_string(),
                     name.range(),
                 );
                 return Type::Any;
