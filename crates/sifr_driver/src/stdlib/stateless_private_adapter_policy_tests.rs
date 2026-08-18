@@ -32,10 +32,6 @@ const COMPLETED_MIGRATED_PRIVATE_DECLARATIONS: &[(&str, &str)] = &[
         include_str!("../../../../stdlib/_sifr/datetime.sifr"),
     ),
     (
-        "_sifr.collections",
-        include_str!("../../../../stdlib/_sifr/collections.sifr"),
-    ),
-    (
         "_sifr.regex",
         include_str!("../../../../stdlib/_sifr/regex.sifr"),
     ),

@@ -2,47 +2,45 @@
 # Updated to use native dict[str, int] Counter class (borrow-by-default behavior)
 from sifr.test import assert_bool_vector_eq
 from sifr.collections import (
-    Counter, deque, from_list,
-    new_set, set_from_list, set_add, set_contains, set_remove,
-    set_len, set_union, set_intersection
+    Counter, deque, from_list
 )
 
 def collect_set_actual() -> list[bool]:
     actual: list[bool] = []
-    s1: list[int] = new_set()
-    actual.append(set_len(s1) == 0)
+    s1: set[int] = set()
+    actual.append(len(s1) == 0)
 
-    s1 = set_add(s1, 1)
-    actual.append(set_len(s1) == 1)
-    actual.append(set_contains(s1, 1))
-    missing_two_initial: bool = not set_contains(s1, 2)
+    s1.add(1)
+    actual.append(len(s1) == 1)
+    actual.append(s1.contains(1))
+    missing_two_initial: bool = not s1.contains(2)
     actual.append(missing_two_initial)
 
-    s1 = set_add(s1, 2)
-    s1 = set_add(s1, 3)
-    actual.append(set_len(s1) == 3)
+    s1.add(2)
+    s1.add(3)
+    actual.append(len(s1) == 3)
 
-    s1 = set_remove(s1, 2)
-    actual.append(set_len(s1) == 2)
-    missing_two_after_remove: bool = not set_contains(s1, 2)
+    s1.remove(2)
+    actual.append(len(s1) == 2)
+    missing_two_after_remove: bool = not s1.contains(2)
     actual.append(missing_two_after_remove)
 
-    s1 = set_add(s1, 1)
-    actual.append(set_len(s1) == 2)
+    s1.add(1)
+    actual.append(len(s1) == 2)
 
     items: list[int] = [10, 20, 30, 10, 20]
-    s2: list[int] = set_from_list(items)
-    actual.append(set_len(s2) == 3)
-    actual.append(set_contains(s2, 10))
-    actual.append(set_contains(s2, 20))
-    actual.append(set_contains(s2, 30))
+    s2: set[int] = set(items)
+    actual.append(len(s2) == 3)
+    actual.append(s2.contains(10))
+    actual.append(s2.contains(20))
+    actual.append(s2.contains(30))
 
-    a_set: list[int] = set_from_list([1, 2, 3])
-    b_set: list[int] = set_from_list([2, 3, 4])
-    u: list[int] = set_union(a_set, b_set)
-    inter: list[int] = set_intersection(a_set, b_set)
-    actual.append(set_len(u) == 4)
-    actual.append(set_len(inter) == 2)
+    a_set: set[int] = set([1, 2, 3])
+    b_set: set[int] = set([2, 3, 4])
+    u: set[int] = a_set.union(b_set)
+    inter: set[int] = a_set.intersection(b_set)
+    actual.append(len(u) == 4)
+    actual.append(len(inter) == 2)
     return actual
 
 def collect_counter_actual() -> list[bool]:

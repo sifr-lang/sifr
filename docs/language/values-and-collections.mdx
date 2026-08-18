@@ -93,14 +93,12 @@ Use a tuple when the position of each value has meaning and the shape is known.
 
 ## Sets
 
-Sifr's set helpers live in `sifr.collections` and return deduplicated list values. This keeps ownership straightforward while still giving you set operations.
+`set[T]` is a built-in generic collection. It deduplicates its input and supports first-class set operations.
 
 ```python
-from sifr.collections import set_from_list, set_intersection
-
-left: list[int] = set_from_list([1, 2, 2, 3])
-right: list[int] = set_from_list([3, 4])
-common: list[int] = set_intersection(left, right)
+left: set[int] = set([1, 2, 2, 3])
+right: set[int] = set([3, 4])
+common: set[int] = left.intersection(right)
 ```
 
 ## Truthiness

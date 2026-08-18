@@ -3,99 +3,6 @@ use ::std::collections::HashMap;
 
 use ::std::collections::VecDeque;
 
-// --- stdlib: _sifr.collections ---
-fn _new_set_impl() -> Vec<i64> {
-    ::sifr_stdlib::collections::new_set()
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
-        .collect()
-}
-fn _set_from_list_impl(items: Vec<i64>) -> Vec<i64> {
-    ::sifr_stdlib::collections::set_from_list(
-            items
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-        )
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
-        .collect()
-}
-fn _set_add_impl(s: Vec<i64>, item: i64) -> Vec<i64> {
-    ::sifr_stdlib::collections::set_add(
-            s
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-            ::sifr_runtime::interop::SifrIntBridge::from(item),
-        )
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
-        .collect()
-}
-fn _set_contains_impl(s: &Vec<i64>, item: i64) -> bool {
-    ::sifr_stdlib::collections::set_contains(
-        &s
-            .iter()
-            .copied()
-            .map(::sifr_runtime::interop::SifrIntBridge::from)
-            .collect::<Vec<_>>(),
-        ::sifr_runtime::interop::SifrIntBridge::from(item),
-    )
-}
-fn _set_remove_impl(s: Vec<i64>, item: i64) -> Vec<i64> {
-    ::sifr_stdlib::collections::set_remove(
-            s
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-            ::sifr_runtime::interop::SifrIntBridge::from(item),
-        )
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
-        .collect()
-}
-fn _set_len_impl(s: &Vec<i64>) -> i64 {
-    ::sifr_stdlib::collections::set_len(
-            &s
-                .iter()
-                .copied()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-        )
-        .to_i64_saturating()
-}
-fn _set_union_impl(a: Vec<i64>, b: Vec<i64>) -> Vec<i64> {
-    ::sifr_stdlib::collections::set_union(
-            a
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-            b
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-        )
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
-        .collect()
-}
-fn _set_intersection_impl(a: Vec<i64>, b: Vec<i64>) -> Vec<i64> {
-    ::sifr_stdlib::collections::set_intersection(
-            a
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-            b
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-        )
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
-        .collect()
-}
-
 // --- stdlib: sifr.collections ---
 #[derive(Debug, Clone, PartialEq)]
 struct __SifrStdlib_sifr_x2ecollections_x2eCounter<T: std::hash::Hash + Eq> {
@@ -982,21 +889,12 @@ fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     top
 }
-fn heapify_copy<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    data: &Vec<T>,
-) -> Vec<T> {
-    let mut result: Vec<T> = vec![];
-    for val in data.iter().cloned() {
-        result.push(val.clone().clone());
-    }
-    heapify(&mut result);
-    result
-}
 fn nsmallest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     n: i64,
     data: &Vec<T>,
 ) -> Vec<T> {
-    let mut heap: Vec<T> = heapify_copy(data);
+    let mut heap: Vec<T> = data.clone();
+    heapify(&mut heap);
     let mut result: Vec<T> = vec![];
     let mut count: i64 = 0_i64;
     while count < n {
@@ -1025,7 +923,8 @@ fn nlargest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }
         return result;
     }
-    let mut heap: Vec<T> = heapify_copy(data);
+    let mut heap: Vec<T> = data.clone();
+    heapify(&mut heap);
     let mut all_sorted: Vec<T> = vec![];
     while ((heap.len() as i64) > (0_i64)) {
         let val2: Option<T> = heappop(&mut heap);

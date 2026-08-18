@@ -194,7 +194,6 @@ pub fn feature_for_codegen_requirement(name: &str) -> Option<StdlibFeature> {
 #[must_use]
 pub fn features_for_stdlib_module(module_name: &str) -> &'static [StdlibFeature] {
     match module_name {
-        "sifr.collections" | "_sifr.collections" => &[],
         "_sifr.fs" => &[StdlibFeature::Fs],
         "sifr.env" | "sifr.sys" | "_sifr.sys" => &[StdlibFeature::Sys],
         "sifr.time" | "_sifr.time" => &[],

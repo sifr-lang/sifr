@@ -687,6 +687,95 @@ fn binary_and_hashing_exports_use_only_first_class_bytes_contracts() {
 }
 
 #[test]
+fn collections_and_sorted_insert_modules_export_only_canonical_operations() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+
+    assert!(
+        !compiled.defs.functions.contains_key("_sifr.collections"),
+        "the retired list-backed private adapter module must not be compiled"
+    );
+
+    let collections = compiled
+        .defs
+        .functions
+        .get("sifr.collections")
+        .expect("sifr.collections functions should be exported");
+    for name in ["from_list"] {
+        assert!(
+            collections.contains_key(name),
+            "sifr.collections.{name} should exist"
+        );
+    }
+    let collection_classes = compiled
+        .defs
+        .classes
+        .get("sifr.collections")
+        .expect("sifr.collections classes should be exported");
+    for name in ["Counter", "deque", "frozenset"] {
+        assert!(
+            collection_classes.contains_key(name),
+            "sifr.collections.{name} should exist"
+        );
+    }
+    for removed in [
+        "new_set",
+        "set_from_list",
+        "set_add",
+        "set_contains",
+        "set_remove",
+        "set_len",
+        "set_union",
+        "set_intersection",
+    ] {
+        assert!(
+            !collections.contains_key(removed),
+            "sifr.collections.{removed} must not be exported"
+        );
+    }
+
+    let heapq = compiled
+        .defs
+        .functions
+        .get("sifr.heapq")
+        .expect("sifr.heapq functions should be exported");
+    for name in [
+        "heapify",
+        "heappush",
+        "heappop",
+        "heapreplace",
+        "heappushpop",
+    ] {
+        assert!(heapq.contains_key(name), "sifr.heapq.{name} should exist");
+    }
+    for removed in [
+        "heapify_copy",
+        "heappush_copy",
+        "heappop_val",
+        "heappop_rest",
+    ] {
+        assert!(
+            !heapq.contains_key(removed),
+            "sifr.heapq.{removed} must not be exported"
+        );
+    }
+
+    let bisect = compiled
+        .defs
+        .functions
+        .get("sifr.bisect")
+        .expect("sifr.bisect functions should be exported");
+    for name in ["insort", "insort_left", "insort_right"] {
+        assert!(bisect.contains_key(name), "sifr.bisect.{name} should exist");
+    }
+    for removed in ["insort_left_copy", "insort_right_copy"] {
+        assert!(
+            !bisect.contains_key(removed),
+            "sifr.bisect.{removed} must not be exported"
+        );
+    }
+}
+
+#[test]
 fn private_stdlib_imports_resolve_only_from_compiled_source_exports() {
     let sources = [
         fixture_source(

@@ -442,7 +442,7 @@ mod tests {
     #[test]
     fn direct_rust_function_body_converts_owned_integer_list_arguments() {
         let func = HirFunction {
-            name: "set_from_list".to_string(),
+            name: "roundtrip_ints".to_string(),
             params: vec![HirParam {
                 name: "items".to_string(),
                 ty: Type::List(Box::new(Type::Int)),
@@ -458,7 +458,7 @@ mod tests {
             decorators: Vec::new(),
             rust_interop: vec![declaration(
                 RustInteropDecoratorKind::Function,
-                &["sifr_stdlib", "collections", "set_from_list"],
+                &["fixture_bridge", "roundtrip_ints"],
             )],
             python_interop: Vec::new(),
             compiler_intrinsic: None,
@@ -473,14 +473,14 @@ mod tests {
 
         assert_eq!(
             render_expr(&expr),
-            "::sifr_stdlib::collections::set_from_list(items.into_iter().map(::sifr_runtime::interop::SifrIntBridge::from).collect::<Vec<_>>()).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
+            "fixture_bridge::roundtrip_ints(items.into_iter().map(::sifr_runtime::interop::SifrIntBridge::from).collect::<Vec<_>>()).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
         );
     }
 
     #[test]
     fn direct_rust_function_body_converts_borrowed_integer_list_arguments() {
         let func = HirFunction {
-            name: "set_len".to_string(),
+            name: "count_ints".to_string(),
             params: vec![HirParam {
                 name: "items".to_string(),
                 ty: Type::List(Box::new(Type::Int)),
@@ -496,7 +496,7 @@ mod tests {
             decorators: Vec::new(),
             rust_interop: vec![declaration(
                 RustInteropDecoratorKind::Function,
-                &["sifr_stdlib", "collections", "set_len"],
+                &["fixture_bridge", "count_ints"],
             )],
             python_interop: Vec::new(),
             compiler_intrinsic: None,
@@ -511,7 +511,7 @@ mod tests {
 
         assert_eq!(
             render_expr(&expr),
-            "::sifr_stdlib::collections::set_len(&items.iter().copied().map(::sifr_runtime::interop::SifrIntBridge::from).collect::<Vec<_>>()).to_i64_saturating()"
+            "fixture_bridge::count_ints(&items.iter().copied().map(::sifr_runtime::interop::SifrIntBridge::from).collect::<Vec<_>>()).to_i64_saturating()"
         );
     }
 

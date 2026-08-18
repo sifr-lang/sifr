@@ -3,8 +3,6 @@ mod cache;
 mod interop;
 mod re_exports;
 #[cfg(test)]
-mod stateless_collections_codegen_tests;
-#[cfg(test)]
 mod stateless_crypto_codegen_tests;
 #[cfg(test)]
 mod stateless_fs_codegen_tests;

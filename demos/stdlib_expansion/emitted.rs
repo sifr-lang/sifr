@@ -3509,21 +3509,12 @@ fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     top
 }
-fn heapify_copy<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    data: &Vec<T>,
-) -> Vec<T> {
-    let mut result: Vec<T> = vec![];
-    for val in data.iter().cloned() {
-        result.push(val.clone().clone());
-    }
-    heapify(&mut result);
-    result
-}
 fn nsmallest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     n: i64,
     data: &Vec<T>,
 ) -> Vec<T> {
-    let mut heap: Vec<T> = heapify_copy(data);
+    let mut heap: Vec<T> = data.clone();
+    heapify(&mut heap);
     let mut result: Vec<T> = vec![];
     let mut count: i64 = 0_i64;
     while count < n {

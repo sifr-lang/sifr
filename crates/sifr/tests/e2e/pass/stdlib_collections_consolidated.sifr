@@ -1,24 +1,30 @@
 # Consolidated stdlib collections coverage for stdlib_consolidation structure rules
 from sifr.collections import (
-    Counter, from_list, deque,
-    new_set, set_add, set_contains, set_remove, set_len, set_union, set_intersection, set_from_list
+    Counter, from_list, deque
 )
 from sifr.test import assert_bool_vector_eq
 
 def collect_set_actual() -> list[bool]:
     actual: list[bool] = []
-    actual.append(set_len(new_set()) == 0)
-    actual.append(set_len(set_from_list([1, 2, 2, 3, 3, 3])) == 3)
-    actual.append(set_contains(set_from_list([1, 2, 3]), 2))
-    missing_five: bool = not set_contains(set_from_list([1, 2, 3]), 5)
+    empty: set[int] = set([0])
+    empty.remove(0)
+    actual.append(len(empty) == 0)
+    actual.append(len(set([1, 2, 2, 3, 3, 3])) == 3)
+    actual.append(set([1, 2, 3]).contains(2))
+    missing_five: bool = not set([1, 2, 3]).contains(5)
     actual.append(missing_five)
-    actual.append(set_len(set_add(set_from_list([1, 2]), 3)) == 3)
-    actual.append(set_len(set_add(set_from_list([1, 2, 3]), 2)) == 3)
-    missing_two_after_remove: bool = not set_contains(set_remove(set_from_list([1, 2, 3]), 2), 2)
+    added: set[int] = set([1, 2])
+    added.add(3)
+    actual.append(len(added) == 3)
+    added.add(3)
+    actual.append(len(added) == 3)
+    removed: set[int] = set([1, 2, 3])
+    removed.remove(2)
+    missing_two_after_remove: bool = not removed.contains(2)
     actual.append(missing_two_after_remove)
-    actual.append(set_len(set_remove(set_from_list([1, 2, 3]), 2)) == 2)
-    actual.append(set_len(set_union(set_from_list([1, 2, 3]), set_from_list([3, 4, 5]))) == 5)
-    actual.append(set_len(set_intersection(set_from_list([1, 2, 3]), set_from_list([3, 4, 5]))) == 1)
+    actual.append(len(removed) == 2)
+    actual.append(len(set([1, 2, 3]).union(set([3, 4, 5]))) == 5)
+    actual.append(len(set([1, 2, 3]).intersection(set([3, 4, 5]))) == 1)
     return actual
 
 def collect_counter_actual() -> list[bool]:

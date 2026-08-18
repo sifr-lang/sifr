@@ -21,7 +21,7 @@ def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
     except RegexError as error:
         raise RegexError(error.message)
 from sifr.string import capwords, ascii_lowercase
-from sifr.collections import new_set, set_add, set_len, Counter, from_list
+from sifr.collections import Counter, from_list
 from sifr.itertools import chain, repeat, take, flatten
 from sifr.pathlib import basename, dirname, extension
 from sifr.datetime import timedelta
@@ -113,10 +113,10 @@ def main():
     print("string: OK")
 
     # ===== collections =====
-    s: list[int] = new_set()
-    s = set_add(s, 1)
-    s = set_add(s, 2)
-    assert_eq(set_len(s), 2)
+    s: set[int] = set()
+    s.add(1)
+    s.add(2)
+    assert_eq(len(s), 2)
     words: list[str] = ["a", "b", "a", "a"]
     c: Counter[str] = from_list(words)
     assert_eq(c.get("a"), 3)

@@ -68,59 +68,6 @@ where
     Counter::from_slice(values)
 }
 
-fn set_from_list<T>(values: &[T]) -> Vec<T>
-where
-    T: Clone + Eq + Hash,
-{
-    let mut seen = HashSet::new();
-    let mut result = Vec::new();
-
-    for value in values {
-        if seen.insert(value.clone()) {
-            result.push(value.clone());
-        }
-    }
-
-    result
-}
-
-fn set_union<T>(left: &[T], right: &[T]) -> Vec<T>
-where
-    T: Clone + Eq + Hash,
-{
-    let mut result = set_from_list(left);
-    let mut seen: HashSet<_> = result.iter().cloned().collect();
-
-    for value in right {
-        if seen.insert(value.clone()) {
-            result.push(value.clone());
-        }
-    }
-
-    result
-}
-
-fn set_intersection<T>(left: &[T], right: &[T]) -> Vec<T>
-where
-    T: Clone + Eq + Hash,
-{
-    let right_values: HashSet<_> = right.iter().cloned().collect();
-    let mut emitted = HashSet::new();
-    let mut result = Vec::new();
-
-    for value in left {
-        if right_values.contains(value) && emitted.insert(value.clone()) {
-            result.push(value.clone());
-        }
-    }
-
-    result
-}
-
-fn set_len<T>(values: &[T]) -> usize {
-    values.len()
-}
-
 #[derive(Debug, Clone)]
 struct Deque<T> {
     values: VecDeque<T>,
@@ -162,8 +109,8 @@ impl<T> Deque<T> {
 }
 
 fn collect_set_and_counter_actual() -> Vec<bool> {
-    let left = set_from_list(&[1, 2, 3]);
-    let right = set_from_list(&[3, 4, 5]);
+    let left = HashSet::from([1, 2, 3]);
+    let right = HashSet::from([3, 4, 5]);
     let counts = from_list(
         &["x", "y", "x", "z", "x", "y"]
             .into_iter()
@@ -172,8 +119,8 @@ fn collect_set_and_counter_actual() -> Vec<bool> {
     );
 
     vec![
-        set_len(&set_union(&left, &right)) == 5,
-        set_len(&set_intersection(&left, &right)) == 1,
+        left.union(&right).count() == 5,
+        left.intersection(&right).count() == 1,
         counts.get(&"x".to_string()) == 3,
         counts.most_common(2) == vec![("x".to_string(), 3), ("y".to_string(), 2)],
     ]

@@ -1,15 +1,15 @@
 ---
 title: "Collections and Data Structures in the Sifr Stdlib"
 sidebarTitle: "Collections"
-description: "Use sifr.collections for Counter, deque, and set helpers. Safe indexing returns Option instead of crashing, with full iteration and comprehension support."
+description: "Use sifr.collections for Counter, deque, defaultdict, and frozenset. Built-in collection indexing returns Option instead of crashing."
 ---
 
-Sifr's `sifr.collections` module provides the familiar Python collection types you already know — `Counter`, `deque`, `defaultdict`, plus set construction and operation helpers — with one important safety improvement: indexing operations that could fail return `Option` instead of raising `KeyError` or `IndexError`. You get compile-time visibility into every case where a lookup might not find a value.
+Sifr's `sifr.collections` module provides familiar collection types such as `Counter`, `deque`, `defaultdict`, and `frozenset`. Built-in `set[T]` is a first-class language type and needs no import. Indexing operations that could fail return `Option` instead of raising `KeyError` or `IndexError`, so every missing-value case is visible in the type system.
 
 ## Importing
 
 ```python
-from sifr.collections import Counter, from_list, deque, set_from_list, set_union, set_intersection, set_len
+from sifr.collections import Counter, from_list, deque, defaultdict, frozenset
 ```
 
 <Note>
@@ -55,19 +55,17 @@ if maybe_score is not None:
 
 ## Sets
 
-Sifr represents sets as deduplicated `list[T]` values constructed through the helper functions in `sifr.collections`. This keeps ownership unambiguous while providing the set operations you need:
+`set[T]` is a built-in generic mutable collection. Construct it directly and use its methods:
 
 ```python
-from sifr.collections import set_from_list, set_union, set_intersection, set_len
+left: set[int] = set([1, 2, 3])
+right: set[int] = set([3, 4, 5])
 
-left: list[int] = set_from_list([1, 2, 3])
-right: list[int] = set_from_list([3, 4, 5])
+union_set: set[int] = left.union(right)
+inter_set: set[int] = left.intersection(right)
 
-union_set: list[int] = set_union(left, right)       # [1, 2, 3, 4, 5]
-inter_set: list[int] = set_intersection(left, right) # [3]
-
-print(set_len(union_set))        # 5
-print(set_len(inter_set))        # 1
+print(len(union_set))        # 5
+print(len(inter_set))        # 1
 ```
 
 ## Counter
@@ -116,14 +114,14 @@ if value is not None:
 The following is the complete collections demo from the Sifr repository, showing sets, `Counter`, and `deque` working together:
 
 ```python
-from sifr.collections import Counter, from_list, deque, set_from_list, set_union, set_intersection, set_len
+from sifr.collections import Counter, from_list, deque
 
 def collect_set_and_counter_checks() -> list[bool]:
     checks: list[bool] = []
-    left: list[int] = set_from_list([1, 2, 3])
-    right: list[int] = set_from_list([3, 4, 5])
-    checks.append(set_len(set_union(left, right)) == 5)
-    checks.append(set_len(set_intersection(left, right)) == 1)
+    left: set[int] = set([1, 2, 3])
+    right: set[int] = set([3, 4, 5])
+    checks.append(len(left.union(right)) == 5)
+    checks.append(len(left.intersection(right)) == 1)
 
     counts: Counter[str] = from_list(["x", "y", "x", "z", "x", "y"])
     checks.append(counts.get("x") == 3)

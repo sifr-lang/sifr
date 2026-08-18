@@ -59,7 +59,6 @@ impl std::error::Error for StdlibSourceInventoryError {}
 
 pub const PRIVATE_STDLIB_MODULES: &[&str] = &[
     "_sifr.calendar",
-    "_sifr.collections",
     "_sifr.compress",
     "_sifr.crypto",
     "_sifr.datetime",

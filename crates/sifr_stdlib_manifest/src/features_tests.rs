@@ -13,21 +13,27 @@ fn generated_cargo_dependencies(
 }
 
 #[test]
-fn stdlib_module_dependencies_use_only_sysroot_crates_for_json_and_collections() {
-    let stdlib_modules = HashSet::from([
-        "sifr.collections".to_string(),
-        "_sifr.collections".to_string(),
-        "sifr.random".to_string(),
-    ]);
+fn stdlib_module_dependencies_use_only_sysroot_crates_for_json_and_random() {
+    let stdlib_modules = HashSet::from(["sifr.collections".to_string(), "sifr.random".to_string()]);
     let required_features = HashSet::from([StdlibFeature::SerdeJson, StdlibFeature::Rand]);
 
     let deps = generated_cargo_dependencies(&stdlib_modules, &required_features);
-    assert!(deps[0].contains("features = [\"collections\", \"json\", \"random\"]"));
+    assert!(deps[0].contains("features = [\"json\", \"random\"]"));
 
     assert_eq!(deps.len(), 1);
     assert!(deps[0].starts_with("sifr_stdlib = "));
     assert!(!deps.iter().any(|dep| dep.starts_with("serde_json = ")));
     assert!(!deps.iter().any(|dep| dep.starts_with("serde = ")));
+}
+
+#[test]
+fn pure_sifr_collections_module_does_not_enable_a_rust_feature() {
+    let deps = generated_cargo_dependencies(
+        &HashSet::from(["sifr.collections".to_string()]),
+        &HashSet::new(),
+    );
+
+    assert!(deps.is_empty());
 }
 
 #[test]
@@ -335,8 +341,6 @@ fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
         ("_sifr.math", &["math"][..]),
         ("sifr.hashlib", &["hash"][..]),
         ("sifr.base64", &["base64"][..]),
-        ("sifr.collections", &["collections"][..]),
-        ("_sifr.collections", &["collections"][..]),
         ("sifr.re", &["regex"][..]),
         ("_sifr.regex", &["regex"][..]),
         ("sifr.pathlib", &["fs"][..]),

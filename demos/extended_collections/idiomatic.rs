@@ -19,27 +19,6 @@ impl Counter {
     }
 }
 
-fn set_from_list(values: &[i64]) -> BTreeSet<i64> {
-    values.iter().copied().collect()
-}
-
-fn set_add(mut values: BTreeSet<i64>, value: i64) -> BTreeSet<i64> {
-    values.insert(value);
-    values
-}
-
-fn set_contains(values: &BTreeSet<i64>, value: i64) -> bool {
-    values.contains(&value)
-}
-
-fn set_union(left: &BTreeSet<i64>, right: &BTreeSet<i64>) -> BTreeSet<i64> {
-    left.union(right).copied().collect()
-}
-
-fn set_intersection(left: &BTreeSet<i64>, right: &BTreeSet<i64>) -> BTreeSet<i64> {
-    left.intersection(right).copied().collect()
-}
-
 fn encode_utf8(text: &str) -> Vec<u8> {
     text.as_bytes().to_vec()
 }
@@ -68,29 +47,27 @@ fn bytes_from_hex(text: &str) -> Result<Vec<u8>, String> {
 
 fn main() {
     println!("=== Set Operations ===");
+    let mut values = BTreeSet::from([1, 2, 2, 3, 3]);
     println!(
         "Set from [1,2,2,3,3]: length = {}",
-        set_from_list(&[1, 2, 2, 3, 3]).len()
+        values.len()
     );
+    values.insert(4);
     println!(
         "After adding 4: length = {}",
-        set_add(set_from_list(&[1, 2, 3]), 4).len()
+        values.len()
     );
-    println!(
-        "Contains 2: {}",
-        set_contains(&set_from_list(&[1, 2, 3]), 2)
-    );
-    println!(
-        "Contains 5: {}",
-        set_contains(&set_from_list(&[1, 2, 3]), 5)
-    );
+    println!("Contains 2: {}", values.contains(&2));
+    println!("Contains 5: {}", values.contains(&5));
+    let left = BTreeSet::from([1, 2, 3]);
+    let right = BTreeSet::from([3, 4, 5]);
     println!(
         "Union [1,2,3] | [3,4,5]: length = {}",
-        set_union(&set_from_list(&[1, 2, 3]), &set_from_list(&[3, 4, 5])).len()
+        left.union(&right).count()
     );
     println!(
         "Intersection [1,2,3] & [3,4,5]: length = {}",
-        set_intersection(&set_from_list(&[1, 2, 3]), &set_from_list(&[3, 4, 5])).len()
+        left.intersection(&right).count()
     );
 
     println!("=== Counter ===");
