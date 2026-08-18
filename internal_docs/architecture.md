@@ -875,7 +875,9 @@ cycle with later handler and attached-API outputs.
 Attached package APIs are erased compile-time declarations grouped into canonical module-and-set
 identities. Adapter output selects exactly one set. Provisional lowering may expose visible
 package candidates so class bodies can type-check before adapter execution, while final lowering
-uses only the selected set as authority. Attached signatures are added to the adapted
+uses only the selected set as authority. Imported adapter selections are finalized external facts;
+consumer lowering never applies provisional candidates to an imported owner, including when its
+final plan selected no set. Attached signatures are added to the adapted
 `Type::Class` surface without adding HIR methods, structural members, handler slots, or synthesized
 method bodies. Calls lower directly to the declared package function through deterministic hidden
 imports. The lowering substitutes the concrete owner and `Self`, infers residual type parameters,

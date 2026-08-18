@@ -218,13 +218,29 @@ fn supports_structural_bridge_type_inner(
 }
 
 fn supports_static_program_type(ty: &Type, ctx: &LowerCtx) -> bool {
-    let Type::Class { name, .. } = ty.resolve_alias() else {
+    let Type::Class { identity, name, .. } = ty.resolve_alias() else {
         return false;
     };
-    ctx.specialization_requests
+    let local_request = ctx
+        .specialization_requests
         .iter()
-        .any(|request| request.owner == *name)
-        && supports_structural_bridge_type(ty, ctx)
+        .any(|request| request.owner == *name);
+    let imported_identity = identity
+        .as_deref()
+        .and_then(|canonical| canonical.rsplit_once('.'));
+    let imported_request = imported_identity
+        .and_then(|(module, canonical_owner)| {
+            ctx.externals
+                .specialization_requests
+                .get(module)
+                .map(|requests| (requests, canonical_owner))
+        })
+        .is_some_and(|(requests, canonical_owner)| {
+            requests
+                .iter()
+                .any(|request| request.owner == canonical_owner)
+        });
+    (local_request || imported_request) && supports_structural_bridge_type(ty, ctx)
 }
 
 fn contains_declared_generic_class(

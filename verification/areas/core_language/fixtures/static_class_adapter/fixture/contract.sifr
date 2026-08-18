@@ -42,6 +42,11 @@ def adapt_contract(
                     descriptor.value,
                 )
             )
+    attached_api_module: str | None = "fixture.api"
+    attached_api_symbol: str | None = "ContractApi"
+    if declaration.declaration.name == "ImportedPlain":
+        attached_api_module = None
+        attached_api_symbol = None
     return DeclarationPlan(
         fields,
         metadata,
@@ -49,8 +54,8 @@ def adapt_contract(
         "specialize",
         issues,
         [],
-        "fixture.api",
-        "ContractApi",
+        attached_api_module,
+        attached_api_symbol,
     )
 
 

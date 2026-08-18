@@ -3,13 +3,13 @@ use crate::{collect_project_hir_modules, compile_stdlib};
 use sifr_ir::{DeclarationMetadataTargetKind, StaticProgramValue};
 use std::collections::HashMap;
 
-const TYPES: &str = r#"
+pub(super) const TYPES: &str = r#"
 class ContractDescriptor:
     kind: str
     enabled: bool
 "#;
 
-const CONTRACT: &str = r#"
+pub(super) const CONTRACT: &str = r#"
 from sifr.meta import ConstSpecializationOutcome, DeclarationInput, DeclarationPlan, PlannedField, PlannedIssue, PlannedIssueLabel, PlannedMetadata, ShapeInput
 from fixture.contract_types import ContractDescriptor
 
@@ -56,7 +56,7 @@ def specialize(shape: ShapeInput[ContractDescriptor]) -> ConstSpecializationOutc
     raise ValueError("adapter metadata was not applied")
 "#;
 
-fn project(main: &str, contract: &str) -> HashMap<String, Vec<sifr_python_ast::Stmt>> {
+pub(super) fn project(main: &str, contract: &str) -> HashMap<String, Vec<sifr_python_ast::Stmt>> {
     HashMap::from([
         ("fixture.contract_types".to_string(), parse_suite(TYPES)),
         ("fixture.contract".to_string(), parse_suite(contract)),
@@ -64,7 +64,7 @@ fn project(main: &str, contract: &str) -> HashMap<String, Vec<sifr_python_ast::S
     ])
 }
 
-fn compile_errors(
+pub(super) fn compile_errors(
     modules: &HashMap<String, Vec<sifr_python_ast::Stmt>>,
     message: &str,
 ) -> Vec<sifr_diagnostics::RenderedDiagnostic> {
@@ -75,7 +75,7 @@ fn compile_errors(
     }
 }
 
-fn attached_contract() -> String {
+pub(super) fn attached_contract() -> String {
     CONTRACT
         .replace(
             "from sifr.meta import ",

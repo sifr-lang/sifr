@@ -20,9 +20,14 @@ pub(super) fn apply(ctx: &mut LowerCtx) {
     let mut imports: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
 
     for (owner, selection) in selections {
+        let owner_is_local = ctx
+            .class_adapter_selections
+            .iter()
+            .any(|candidate| candidate.owner == owner);
+        let selection_is_finalized = ctx.attached_api_selections_finalized || !owner_is_local;
         let (declarations, provisional) = match selection.attached_api_set.as_ref() {
             Some(set) => (declarations_for_set(ctx, set, &module), false),
-            None if ctx.attached_api_selections_finalized => continue,
+            None if selection_is_finalized => continue,
             None => (
                 provisional_declarations(ctx, &selection.provider_module),
                 true,
@@ -84,8 +89,14 @@ pub(super) fn apply(ctx: &mut LowerCtx) {
             if let Some(Type::Class { methods, .. }) = ctx.class_types.get_mut(&owner) {
                 methods.push((declaration.public_name.clone(), surface));
             }
+            let canonical_qualified = class_name(&owner_type)
+                .filter(|name| *name != owner)
+                .map(|name| format!("{name}.{}", declaration.public_name));
             if declaration.receiver != AttachedApiReceiver::Type {
                 ctx.class_instance_methods.insert(qualified.clone());
+                if let Some(canonical) = canonical_qualified.as_ref() {
+                    ctx.class_instance_methods.insert(canonical.clone());
+                }
             }
             let emitted_function = if declaration.module == module {
                 declaration.function.clone()
@@ -97,14 +108,16 @@ pub(super) fn apply(ctx: &mut LowerCtx) {
                     .insert(declaration.function.clone(), alias.clone());
                 alias
             };
-            ctx.attached_method_bindings.insert(
-                qualified,
-                AttachedMethodBinding {
-                    declaration,
-                    emitted_function,
-                    provisional,
-                },
-            );
+            let binding = AttachedMethodBinding {
+                declaration,
+                emitted_function,
+                provisional,
+            };
+            ctx.attached_method_bindings
+                .insert(qualified, binding.clone());
+            if let Some(canonical) = canonical_qualified {
+                ctx.attached_method_bindings.insert(canonical, binding);
+            }
         }
     }
 
@@ -234,6 +247,13 @@ fn substitute_function_type(
 fn class_methods(owner_type: &Type) -> Option<&[(String, FunctionType)]> {
     match owner_type.resolve_alias() {
         Type::Class { methods, .. } => Some(methods),
+        _ => None,
+    }
+}
+
+fn class_name(owner_type: &Type) -> Option<&str> {
+    match owner_type.resolve_alias() {
+        Type::Class { name, .. } => Some(name),
         _ => None,
     }
 }
