@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-19. M0-M7d are complete; M7e is active.
+Status: active on 2026-08-19. M0-M7e are complete; M8 is next.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -1144,9 +1144,42 @@ Acceptance criteria:
 Exit gate: a package can validate a partial structural record and rely on the
 adapted class's final checked defaults during construction.
 
-State: active
+State: complete
 Issue: [`sifr-lang/sifr#3278`](https://github.com/sifr-lang/sifr/issues/3278)
-Next action: complete validation and exact-SHA review.
+PR: [`sifr-lang/sifr#3281`](https://github.com/sifr-lang/sifr/pull/3281)
+Base SHA: `3ecb0efce8110de961b183cc13e1ada9ba4a1a03`
+Candidate SHA: `fde6eee6dfbc5e11d6bd704f7ced37c2c6fafe52`
+Merge SHA: `7ffadf0944e6ced5198664a2744ae9ae8d954f6d`
+Changed paths: package-neutral structural field-default states; canonical
+factory identities through HIR, local and imported bound checks, shape and
+cache identity; named-edge partial record construction with checked defaults;
+focused frontend, lowering, codegen, and driver coverage; durable architecture
+documents; and the native static-class-adapter partial-construction fixture.
+Validation: 15 structural-shape tests, 29 structural/codegen tests, all 11
+adapter-default tests, and 18 structural-bound tests passed. Workspace clippy,
+formatting, diff checks, HIR maintainability, and the unified 900-line
+file-size guardrail passed. The Cargo-backed package-neutral fixture built
+through rustc and ran, covering omitted constant and factory defaults, fresh
+factory values, required omissions, unknown and duplicate edges, empty
+records, and generated-local name hygiene. The compiler unit command passed
+109 CLI tests and 37 of 38 harness tests; its only failure was the
+`protocol_bound_unknown_forwarded_typevar.sifr` expectation owned by the
+explicitly out-of-scope pre-v1 work.
+Review: the exact-SHA Opus review returned `SATISFIED` with no blockers
+([evidence](https://github.com/sifr-lang/sifr/pull/3281#issuecomment-5334456131)).
+The create-PR and merge gates were each attempted exactly once on the reviewed
+candidate. Coverage readiness passed, but both stopped before compiler tests
+in the shared verification-taxonomy preflight owned by the explicitly
+out-of-scope parallel pre-v1 work; neither was repeated
+([evidence](https://github.com/sifr-lang/sifr/pull/3281#issuecomment-5334465865)).
+Deferred follow-up: M12 owns remaining generated-local name hardening, a
+responsibility split before further growth of class-body lowering, a two-sided
+factory-freshness assertion, and explicit documentation or enforcement of
+default evaluation before later required-field rejection. These were
+non-blocking Opus findings.
+The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
+outside this phase.
+Next action: resume the preserved M8 package work.
 
 ### M8: Pydantic Model, Field, and Configuration Declarations
 
@@ -1334,7 +1367,7 @@ Scope:
 - Run compiler, package, differential, property, fuzz, and resource tests.
 - Run source-package and installed-package certification.
 - Publish representative validation and serialization benchmarks.
-- Close the deferred compiler and fixture hardening recorded by M0-M7d.
+- Close the deferred compiler and fixture hardening recorded by M0-M7e.
 - Obtain independent implementation and whole-phase review.
 
 Acceptance criteria:
@@ -1423,7 +1456,7 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M7d are merged and recorded; M8 is next.
+Current state: M0-M7e are merged and recorded; M8 is next.
 
 Next action: resume the preserved M8 work in `sifr-lang/pydantic-sifr` on the
 merged compiler substrate.
