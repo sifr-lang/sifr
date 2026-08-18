@@ -929,22 +929,6 @@
       "suggestion_applicability": "none"
     },
     {
-      "code": "SIFR-INT-0011",
-      "constant": "INT_BIGINT_TRANSITION_ALIAS",
-      "docs_link": "docs/errors/SIFR-INT-0011.mdx",
-      "machine_applicable": false,
-      "owner": "compiler/core-language",
-      "renderer_support": [
-        "human",
-        "json",
-        "compact"
-      ],
-      "representative_fixture": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_bigint_transition_warning",
-      "severity": "Warning",
-      "stability": "stable",
-      "suggestion_applicability": "none"
-    },
-    {
       "code": "SIFR-INTERNAL-0001",
       "constant": "INTERNAL_COMPILER_PANIC",
       "docs_link": "docs/errors/SIFR-INTERNAL-0001.mdx",
@@ -3108,22 +3092,6 @@
         "compact"
       ],
       "representative_fixture": "crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr",
-      "severity": "Error",
-      "stability": "stable",
-      "suggestion_applicability": "none"
-    },
-    {
-      "code": "SIFR-TYPE-0006",
-      "constant": "TYPE_INT_BIGINT_MIXED",
-      "docs_link": "docs/errors/SIFR-TYPE-0006.mdx",
-      "machine_applicable": false,
-      "owner": "compiler/core-language",
-      "renderer_support": [
-        "human",
-        "json",
-        "compact"
-      ],
-      "representative_fixture": "crates/sifr/tests/e2e/fail/bigint_int_mixed_arithmetic.sifr",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"

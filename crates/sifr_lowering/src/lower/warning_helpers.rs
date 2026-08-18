@@ -20,11 +20,4 @@ impl LowerCtx {
                 primary_range: Some(range),
             });
     }
-
-    pub(in crate::lower) fn warn_bigint_transition_alias(&mut self, range: TextRange) {
-        self.warnings
-            .push(LoweringWarningDiagnostic::BigIntTransitionAlias {
-                primary_range: Some(range),
-            });
-    }
 }

@@ -35,15 +35,14 @@ def collect_int_actual() -> list[bool]:
     actual.append(len(inplace) == 7)
     return actual
 
-def collect_bigint_actual() -> list[bool]:
-    # TEMPORARY TRANSITION FIXTURE: exercises the public bigint alias until alias removal.
+def collect_exact_int_actual() -> list[bool]:
     actual: list[bool] = []
-    data: list[bigint] = [bigint(30), bigint(10), bigint(40), bigint(20)]
+    data: list[int] = [30, 10, 40, 20]
     heapify(data)
-    first: bigint | None = heappop(data)
-    actual.append(first is not None and first == bigint(10))
-    smallest: list[bigint] = nsmallest(2, data)
-    smallest_ok: bool = smallest == [bigint(20), bigint(30)]
+    first: int | None = heappop(data)
+    actual.append(first is not None and first == 10)
+    smallest: list[int] = nsmallest(2, data)
+    smallest_ok: bool = smallest == [20, 30]
     actual.append(smallest_ok)
     return actual
 
@@ -93,7 +92,7 @@ def main():
     ]
     actual: list[bool] = []
     append_all(actual, collect_int_actual())
-    append_all(actual, collect_bigint_actual())
+    append_all(actual, collect_exact_int_actual())
     append_all(actual, collect_float_actual())
     append_all(actual, collect_rank_actual())
     assert_bool_vector_eq(actual, expected)

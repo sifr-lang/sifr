@@ -1,8 +1,0 @@
-# TEMPORARY TRANSITION FIXTURE: exercises the public bigint alias until alias removal.
-def main():
-    b: bigint = bigint(42)
-    try:
-        n: int = int(b)
-        assert str(n) == '42'
-    except OverflowError as e:
-        _ = str("overflow")

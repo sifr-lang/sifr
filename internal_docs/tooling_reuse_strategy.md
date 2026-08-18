@@ -180,7 +180,6 @@ Recommended Sifr configuration shape:
 [diagnostics.rules]
 unused-import = "warn"
 unreachable-code = "warn"
-bigint-transition-alias = "warn"
 all-policy = "warn"
 
 [diagnostics]

@@ -519,44 +519,6 @@ fn try_body_has_value_return_ignores_return_none() {
 }
 
 #[test]
-fn module_uses_bigint_detects_try_handler_branches() {
-    let module = mk_module_with_main(vec![HirStmt::TryExcept {
-        body: vec![HirStmt::Pass],
-        handlers: vec![HirExceptHandler {
-            error_type: Some("Error".to_string()),
-            error_resolved_type: None,
-            name: Some("e".to_string()),
-            body: vec![HirStmt::Let {
-                name: "n".to_string(),
-                ty: Type::BigInt,
-                value: HirExpr::Call {
-                    mutable_arg_places: Vec::new(),
-                    func: "bigint".to_string(),
-                    args: vec![HirExpr::IntLiteral(3)],
-                    ty: Type::BigInt,
-                },
-                is_mutable: true,
-            }],
-        }],
-        body_error_types: vec![test_error_type("Error")],
-    }]);
-
-    assert!(module_uses_bigint(&module));
-}
-
-#[test]
-fn module_uses_bigint_false_without_bigint() {
-    let module = mk_module_with_main(vec![HirStmt::Let {
-        name: "x".to_string(),
-        ty: Type::Int,
-        value: HirExpr::IntLiteral(1),
-        is_mutable: true,
-    }]);
-
-    assert!(!module_uses_bigint(&module));
-}
-
-#[test]
 fn option_target_coercion_flattens_only_excess_wrapper_layers() {
     let flat = Type::Union(vec![Type::Str, Type::None]);
     let nested = Type::Union(vec![flat.clone(), Type::None]);

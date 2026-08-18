@@ -729,7 +729,6 @@ pub(crate) fn bridge_type_contract(
         | Type::LiteralBool(_)
         | Type::Protocol { .. }
         | Type::Newtype { .. }
-        | Type::BigInt
         | Type::Decimal
         | Type::BigDecimal => unsupported_type(
             ty,

@@ -232,7 +232,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
         used_intrinsic_modules: emitter.used_stdlib_modules,
         required_features: {
             let mut features = emitter.intrinsic_registry_features;
-            if emitter.runtime_needs.bigint() || import_needs.runtime.numeric.needs_bigint {
+            if import_needs.runtime.numeric.needs_bigint {
                 features.insert(sifr_stdlib_manifest::StdlibFeature::NumBigint);
                 features.insert(sifr_stdlib_manifest::StdlibFeature::NumTraits);
             }

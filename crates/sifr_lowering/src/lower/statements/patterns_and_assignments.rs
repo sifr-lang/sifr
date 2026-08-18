@@ -416,8 +416,6 @@ pub(in crate::lower) fn lower_ann_assign(
         }
         // Type check: value must be assignable to declared type
         let final_ty = expr.ty().clone();
-        // int literals are assignable to bigint (coercion: 42 -> BigInt::from(42))
-        let is_int_to_bigint = final_ty == Type::Int && declared_type == Type::BigInt;
         let fixed_width_fit =
             validate_fixed_width_initializer(ctx, &declared_type, &expr, initializer_range);
         let fixed_width_not_const = matches!(fixed_width_fit, FixedWidthInitializerFit::NotConst);
@@ -426,9 +424,8 @@ pub(in crate::lower) fn lower_ann_assign(
         }
         let class_specialization_conflict =
             class_specialization_payload_conflicts(&final_ty, &declared_type);
-        if !is_int_to_bigint
-            && ((fixed_width_not_const && !final_ty.is_assignable_to(&declared_type))
-                || class_specialization_conflict)
+        if (fixed_width_not_const && !final_ty.is_assignable_to(&declared_type))
+            || class_specialization_conflict
         {
             ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,

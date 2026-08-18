@@ -1,10 +1,38 @@
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, ExprCall};
+use sifr_type_system::infer::resolve_type_annotation;
 
 use super::LowerCtx;
 
 const TYPEVAR_CONSTRAINT_PREFIX: &str = "__constraint__:";
+
+fn is_known_typevar_spec(name: &str, ctx: &LowerCtx) -> bool {
+    matches!(
+        name,
+        "Comparable"
+            | "Addable"
+            | "Hashable"
+            | "Structural"
+            | "StaticProgram"
+            | "MethodSlots"
+            | "Context"
+    ) || resolve_type_annotation(name).is_some()
+        || ctx.scope.lookup_type_alias(name).is_some()
+        || ctx.class_types.contains_key(name)
+}
+
+fn validate_typevar_spec(name: &str, range: TextRange, ctx: &mut LowerCtx) -> bool {
+    if is_known_typevar_spec(name, ctx) {
+        return true;
+    }
+    ctx.error_with_code_at(
+        DiagnosticCode::NAME_UNKNOWN_TYPE,
+        format!("unknown type: '{name}'"),
+        range,
+    );
+    false
+}
 
 pub(crate) fn encode_typevar_constraint(name: &str) -> String {
     format!("{TYPEVAR_CONSTRAINT_PREFIX}{name}")
@@ -22,26 +50,24 @@ fn invalid_typevar_shape(ctx: &mut LowerCtx, message: impl Into<String>, range: 
     );
 }
 
-fn warn_bigint_transition_name(ctx: &mut LowerCtx, name: &str, range: TextRange) {
-    if name == "bigint" {
-        ctx.warn_bigint_transition_alias(range);
-    }
-}
-
 /// Parse a `TypeVar` bound/constraint expression from PEP 695 syntax.
 /// `T: Bound` is treated as a hard bound; `T: (A, B)` is treated as constraints.
 pub(crate) fn parse_typevar_bound_expr(expr: &Expr, ctx: &mut LowerCtx) -> Vec<String> {
     match expr {
         Expr::Name(name) => {
-            warn_bigint_transition_name(ctx, name.id.as_str(), name.range());
-            vec![name.id.to_string()]
+            if validate_typevar_spec(&name.id, name.range(), ctx) {
+                vec![name.id.to_string()]
+            } else {
+                Vec::new()
+            }
         }
         Expr::Tuple(tuple) => {
             let mut specs = Vec::new();
             for elt in &tuple.elts {
                 if let Expr::Name(name) = elt {
-                    warn_bigint_transition_name(ctx, name.id.as_str(), name.range());
-                    specs.push(encode_typevar_constraint(&name.id));
+                    if validate_typevar_spec(&name.id, name.range(), ctx) {
+                        specs.push(encode_typevar_constraint(&name.id));
+                    }
                 } else {
                     invalid_typevar_shape(
                         ctx,
@@ -79,8 +105,9 @@ pub(crate) fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCt
         saw_constraints = true;
         match arg {
             Expr::Name(name) => {
-                warn_bigint_transition_name(ctx, name.id.as_str(), name.range());
-                specs.push(encode_typevar_constraint(&name.id));
+                if validate_typevar_spec(&name.id, name.range(), ctx) {
+                    specs.push(encode_typevar_constraint(&name.id));
+                }
             }
             _ => invalid_typevar_shape(
                 ctx,
@@ -107,8 +134,9 @@ pub(crate) fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCt
                 saw_bound = true;
                 match &kw.value {
                     Expr::Name(name) => {
-                        warn_bigint_transition_name(ctx, name.id.as_str(), name.range());
-                        specs.push(name.id.to_string());
+                        if validate_typevar_spec(&name.id, name.range(), ctx) {
+                            specs.push(name.id.to_string());
+                        }
                     }
                     _ => invalid_typevar_shape(
                         ctx,
@@ -131,8 +159,9 @@ pub(crate) fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCt
                     Expr::Tuple(tuple) => {
                         for elt in &tuple.elts {
                             if let Expr::Name(name) = elt {
-                                warn_bigint_transition_name(ctx, name.id.as_str(), name.range());
-                                specs.push(encode_typevar_constraint(&name.id));
+                                if validate_typevar_spec(&name.id, name.range(), ctx) {
+                                    specs.push(encode_typevar_constraint(&name.id));
+                                }
                             } else {
                                 invalid_typevar_shape(
                                     ctx,
@@ -143,8 +172,9 @@ pub(crate) fn parse_typevar_declaration_specs(call: &ExprCall, ctx: &mut LowerCt
                         }
                     }
                     Expr::Name(name) => {
-                        warn_bigint_transition_name(ctx, name.id.as_str(), name.range());
-                        specs.push(encode_typevar_constraint(&name.id));
+                        if validate_typevar_spec(&name.id, name.range(), ctx) {
+                            specs.push(encode_typevar_constraint(&name.id));
+                        }
                     }
                     _ => invalid_typevar_shape(
                         ctx,

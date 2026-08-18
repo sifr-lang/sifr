@@ -136,9 +136,9 @@
       "evidence_category": "ownership-borrowing"
     },
     {
-      "id": "e2e-003-bigint-arithmetic",
+      "id": "e2e-003-exact-int-arbitrary-precision",
       "group": "e2e-pass-representative",
-      "source_path": "crates/sifr/tests/e2e/pass/bigint_arithmetic.sifr",
+      "source_path": "crates/sifr/tests/e2e/pass/exact_int_arbitrary_precision.sifr",
       "expected_command": "build",
       "evidence_category": "decimal-integer"
     },

@@ -145,11 +145,6 @@ pub(super) fn test_scalar_builtin_wrong_arg_counts_have_call_code() {
         ("repr", "repr()", "repr() takes exactly 1 argument, got 0"),
         ("int", "int()", "int() takes exactly 1 argument, got 0"),
         (
-            "bigint",
-            "bigint()",
-            "bigint() takes exactly 1 argument, got 0",
-        ),
-        (
             "float",
             "float()",
             "float() takes exactly 1 argument, got 0",
@@ -176,9 +171,7 @@ pub(super) fn test_scalar_builtin_wrong_arg_counts_have_call_code() {
 
 #[test]
 pub(super) fn test_scalar_builtin_keywords_have_call_code() {
-    let callables = [
-        "abs", "hash", "round", "repr", "int", "bigint", "float", "bool",
-    ];
+    let callables = ["abs", "hash", "round", "repr", "int", "float", "bool"];
 
     for callable in callables {
         let source = format!("def main():\n    _value = {callable}(value=1)\n");
@@ -213,11 +206,6 @@ pub(super) fn test_scalar_builtin_type_mismatches_have_type_code() {
             "round",
             "round(\"x\")",
             "round() argument must be numeric, got 'str'",
-        ),
-        (
-            "bigint",
-            "bigint(\"x\")",
-            "bigint() requires int, bigint, decimal, or bigdecimal argument, got 'str'",
         ),
     ];
 

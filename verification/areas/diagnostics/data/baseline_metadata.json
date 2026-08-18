@@ -1133,21 +1133,6 @@
     {
       "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
-      "fixture_id": "e2e_bigint_int_mixed_arithmetic",
-      "normalizers": [
-        "workspace-path",
-        "tmp-path",
-        "crlf",
-        "artifact-cache-lines"
-      ],
-      "owner": "compiler/core-language",
-      "renderer": "compact",
-      "source_hash": "sha256:753ca2bd87288bb5ec0f712f7134aae79fe3d16f6a346b4c50f705be82c959be",
-      "suite": "baselines"
-    },
-    {
-      "bless_reason": "Compact diagnostic baseline coverage for core semantic fail fixtures.",
-      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2572",
       "fixture_id": "e2e_blocking_io_direct_call_in_async_rejected",
       "normalizers": [
         "workspace-path",
@@ -2223,21 +2208,6 @@
       "owner": "compiler/core-language",
       "renderer": "compact",
       "source_hash": "sha256:03cdaa3a4e6ae25850c39cf4dde569d3e8279682429d7bca01b8bcfe1404d83c",
-      "suite": "baselines"
-    },
-    {
-      "bless_reason": "Compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
-      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2576",
-      "fixture_id": "semantic_bigint_transition_alias",
-      "normalizers": [
-        "workspace-path",
-        "tmp-path",
-        "crlf",
-        "artifact-cache-lines"
-      ],
-      "owner": "compiler/core-language",
-      "renderer": "compact",
-      "source_hash": "sha256:17bea456c7565356da6b61c3cb3dc05d188f32ab54863e54829137ac10459437",
       "suite": "baselines"
     },
     {

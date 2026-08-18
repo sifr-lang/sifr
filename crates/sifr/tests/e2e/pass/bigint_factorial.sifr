@@ -1,9 +1,0 @@
-# TEMPORARY TRANSITION FIXTURE: exercises the public bigint alias until alias removal.
-def factorial(n: int) -> bigint:
-    if n <= 1:
-        return bigint(1)
-    return bigint(n) * factorial(n - 1)
-
-def main():
-    assert str(factorial(10)) == '3628800'
-    assert str(factorial(20)) == '2432902008176640000'

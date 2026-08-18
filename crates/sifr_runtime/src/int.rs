@@ -204,6 +204,11 @@ impl SifrInt {
         Self::from_bigint(floor_mod_bigint(&self.as_bigint(), &rhs.as_bigint()))
     }
 
+    #[must_use]
+    pub fn pow(&self, exponent: u32) -> Self {
+        Self::from_bigint(self.as_bigint().pow(exponent))
+    }
+
     try_to_fixed_width!(try_to_i8, i8, "i8", to_i8);
     try_to_fixed_width!(try_to_i16, i16, "i16", to_i16);
     try_to_fixed_width!(try_to_i32, i32, "i32", to_i32);
@@ -578,6 +583,16 @@ mod tests {
         let result = SifrInt::from_i64(i64::MAX) + SifrInt::from_i64(1);
         assert!(matches!(result, SifrInt::Big(_)));
         assert_eq!(result.to_string(), "9223372036854775808");
+    }
+
+    #[test]
+    fn exponentiation_promotes_and_normalizes() {
+        let large = SifrInt::from_i64(2).pow(100);
+        assert!(matches!(large, SifrInt::Big(_)));
+        assert_eq!(large.to_string(), "1267650600228229401496703205376");
+
+        let small = SifrInt::from_i64(2).pow(10);
+        assert_eq!(small, SifrInt::Small(1024));
     }
 
     #[test]

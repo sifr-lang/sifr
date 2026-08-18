@@ -77,7 +77,6 @@ The remaining cleanup target is to move these helper failures from message strin
 | `(DiagnosticCode::DECIMAL_FLOAT_MIXED, message)` | arithmetic or comparison mixing float with the decimal family | `SIFR-DECIMAL-0003` | `crates/sifr/tests/e2e/fail/decimal_float_mixed_arithmetic.sifr` |
 | `(DiagnosticCode::DECIMAL_MIXED_WITH_BIGDECIMAL, message)` | arithmetic or comparison mixing decimal and bigdecimal | `SIFR-DECIMAL-0004` | `crates/sifr/tests/e2e/fail/decimal_bigdecimal_mixed_arithmetic.sifr` |
 | `(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR, message)` | unsupported arithmetic/comparison/unary/bool operator | `SIFR-TYPE-0005` | `crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr` |
-| `(DiagnosticCode::TYPE_INT_BIGINT_MIXED, message)` | transition-only int/bigint arithmetic or comparison requires conversion while the public `bigint` alias remains available; retire with the alias-removal PR | `SIFR-TYPE-0006` | `crates/sifr/tests/e2e/fail/bigint_int_mixed_arithmetic.sifr`, `crates/sifr/tests/e2e/fail/bigint_int_mixed_comparison.sifr` |
 
 ## Driver And CLI Surface
 
@@ -300,7 +299,6 @@ These entries are the proposed active registry population for `diagnostic regist
 | `SIFR-TYPE-0003` | if/conditional branch type mismatch | `if_expression` lowering | `crates/sifr/tests/e2e/fail/ternary_type_mismatch.sifr` |
 | `SIFR-TYPE-0004` | missing required type annotation/inference boundary | type annotation/inference | `crates/sifr/tests/e2e/fail/missing_type_annotation.sifr`, plus class/protocol/enum/newtype/nested/vararg fixtures |
 | `SIFR-TYPE-0005` | unsupported operator or operand types | `sifr_type_system` / HIR expression lowering | `crates/sifr/tests/e2e/fail/optional_arithmetic_without_narrowing.sifr` |
-| `SIFR-TYPE-0006` | transition-only int/bigint mixed arithmetic/comparison without conversion; retire with the public alias-removal PR | type system numeric checks | bigint mixed arithmetic/comparison fixtures |
 | `SIFR-TYPE-0007` | invalid type annotation shape | type annotation lowering | `crates/sifr/tests/e2e/fail/invalid_type_annotation.sifr`, plus Callable/Result/TypeVar/generic annotation-shape fixtures |
 | `SIFR-TYPE-0008` | container literal element/key/value type conflict | container literal specialization | `crates/sifr/tests/e2e/fail/container_literal_type_conflict.sifr`, plus dict-key/dict-value/set/tuple fixtures |
 | `SIFR-TYPE-0009` | tuple/list unpacking shape mismatch | tuple unpack lowering | `crates/sifr/tests/e2e/fail/tuple_dynamic_list_shape.sifr` |

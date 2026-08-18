@@ -451,7 +451,6 @@ pub(super) fn lower_unshadowed_builtin_call(
         // int(float) -> int (infallible truncation)
         // int(int) -> int (identity)
         // int(bool) -> int (True=1, False=0)
-        // int(bigint) -> Result[int, OverflowError] (may overflow i64)
         // int(decimal|bigdecimal) -> Result[int, DecimalConversionError] (truncate toward zero)
         let result_ty = if arg_ty == Type::Str {
             let parse_error_ty =
@@ -467,20 +466,6 @@ pub(super) fn lower_unshadowed_builtin_call(
                         parent_class: None,
                     });
             Type::Result(Box::new(Type::Int), Box::new(parse_error_ty))
-        } else if arg_ty == Type::BigInt {
-            let overflow_error_ty =
-                ctx.class_types
-                    .get("OverflowError")
-                    .cloned()
-                    .unwrap_or(Type::Class {
-                        identity: None,
-                        type_args: Vec::new(),
-                        name: "OverflowError".to_string(),
-                        fields: vec![("message".to_string(), Type::Str)],
-                        methods: vec![],
-                        parent_class: None,
-                    });
-            Type::Result(Box::new(Type::Int), Box::new(overflow_error_ty))
         } else if matches!(arg_ty, Type::Decimal | Type::BigDecimal) {
             Type::Result(
                 Box::new(Type::Int),
@@ -494,52 +479,6 @@ pub(super) fn lower_unshadowed_builtin_call(
             func: "int".to_string(),
             args: vec![arg],
             ty: result_ty,
-        }));
-    }
-
-    // bigint(n) — convert int|bigint|decimal|bigdecimal to bigint
-    if func_name == "bigint" {
-        ctx.warn_bigint_transition_alias(call.func.range());
-        if !call.arguments.keywords.is_empty() {
-            expression_diagnostics::call_unexpected_keyword(
-                ctx,
-                "bigint() does not accept keyword arguments".to_string(),
-                first_call_keyword_range(call),
-            );
-            return None;
-        }
-        if call.arguments.args.len() != 1 {
-            expression_diagnostics::call_wrong_positional_count(
-                ctx,
-                format!(
-                    "bigint() takes exactly 1 argument, got {}",
-                    call.arguments.args.len()
-                ),
-                call_arity_range(call),
-            );
-            return None;
-        }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
-        let arg_ty = arg.ty().clone();
-        if !matches!(
-            arg_ty,
-            Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Decimal | Type::BigDecimal
-        ) {
-            expression_diagnostics::type_mismatch(
-                ctx,
-                format!(
-                    "bigint() requires int, bigint, decimal, or bigdecimal argument, got '{}'",
-                    arg_ty.display_name()
-                ),
-                call.arguments.args[0].range(),
-            );
-            return None;
-        }
-        return Some(CallLowering::Lowered(HirExpr::Call {
-            mutable_arg_places: Vec::new(),
-            func: "bigint".to_string(),
-            args: vec![arg],
-            ty: Type::BigInt,
         }));
     }
 

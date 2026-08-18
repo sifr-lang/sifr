@@ -832,6 +832,11 @@ pub(super) fn hir_expr_needs_sifr_int_storage(
                     && !shadowed_module_bindings.contains(name))
         }
         HirExpr::Call { func, .. } => function_sifr_int_returns.contains(func),
+        HirExpr::BinOp { op, ty, .. }
+            if op == "**" && matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int) =>
+        {
+            true
+        }
         HirExpr::BinOp {
             left,
             op,

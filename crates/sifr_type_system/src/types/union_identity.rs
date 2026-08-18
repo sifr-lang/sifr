@@ -107,7 +107,6 @@ impl Type {
                 name,
                 variants,
             } => enum_key(identity.as_deref().unwrap_or(name), variants),
-            Self::BigInt => atom("bigint"),
             Self::Decimal => atom("decimal"),
             Self::BigDecimal => atom("bigdecimal"),
         }

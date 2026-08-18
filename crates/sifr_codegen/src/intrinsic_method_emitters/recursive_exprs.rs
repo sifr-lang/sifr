@@ -755,35 +755,10 @@ impl RustEmitter {
                 right,
                 ty,
             } if matches!(op.as_str(), "+" | "-" | "*" | "/" | "//" | "%")
-                && matches!(
-                    ty,
-                    Type::Float | Type::Int | Type::LiteralInt(_) | Type::BigInt
-                ) =>
+                && matches!(ty, Type::Float | Type::Int | Type::LiteralInt(_)) =>
             {
-                let mut left_expr = self.try_lower_registry_expr_strict(left)?;
-                let mut right_expr = self.try_lower_registry_expr_strict(right)?;
-                if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::BigInt) {
-                    if matches!(
-                        left.as_ref(),
-                        HirExpr::Name { .. } | HirExpr::FieldAccess { .. }
-                    ) {
-                        left_expr = crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(left_expr))),
-                            method: "clone".to_string(),
-                            args: vec![],
-                        };
-                    }
-                    if matches!(
-                        right.as_ref(),
-                        HirExpr::Name { .. } | HirExpr::FieldAccess { .. }
-                    ) {
-                        right_expr = crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(right_expr))),
-                            method: "clone".to_string(),
-                            args: vec![],
-                        };
-                    }
-                }
+                let left_expr = self.try_lower_registry_expr_strict(left)?;
+                let right_expr = self.try_lower_registry_expr_strict(right)?;
                 Some(crate::RustExpr::BinOp {
                     left: Box::new(left_expr),
                     op: if op == "//" {

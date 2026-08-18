@@ -48,7 +48,6 @@ pub fn resolve_type_annotation(name: &str) -> Option<Type> {
         "Reversible" => Some(Type::reversible(Type::Any)),
         "Unknown" => Some(Type::Unknown),
         "Never" => Some(Type::Never),
-        "bigint" => Some(Type::BigInt),
         "decimal" => Some(Type::Decimal),
         "bigdecimal" => Some(Type::BigDecimal),
         _ => None,

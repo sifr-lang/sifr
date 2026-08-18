@@ -214,7 +214,6 @@ impl RustEmitter {
             | Type::Newtype { .. }
             | Type::TypeVar(_)
             | Type::Enum { .. }
-            | Type::BigInt
             | Type::Decimal
             | Type::BigDecimal => false,
             Type::List(_)

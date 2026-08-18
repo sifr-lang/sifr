@@ -456,7 +456,6 @@ impl Type {
             Self::TypeVar(_) => OwnershipKind::Move, // conservative: treat as Move
             Self::Callable(..) | Self::AsyncCallable(..) => OwnershipKind::Copy,
             Self::Enum { .. } => OwnershipKind::Copy, // enums are Copy (repr(i64))
-            Self::BigInt => OwnershipKind::Move,      // heap-allocated, not Copy
             Self::BigDecimal => OwnershipKind::Move,
             // Union/Intersection: Move if any member is Move
             Self::Union(members) | Self::Intersection(members) => {
@@ -626,7 +625,6 @@ impl Type {
                 )
             }
             Self::Enum { name, .. } => name.clone(),
-            Self::BigInt => "bigint".to_string(),
             Self::Decimal => "decimal".to_string(),
             Self::BigDecimal => "bigdecimal".to_string(),
         }
@@ -755,7 +753,6 @@ impl Type {
             Self::Newtype { name, .. } => source_class_rust_name(name),
             Self::TypeVar(name) => name.clone(), // Generic type parameter name (e.g., T)
             Self::Enum { name, .. } => source_class_rust_name(name),
-            Self::BigInt => "BigInt".to_string(),
             Self::Decimal => "Decimal".to_string(),
             Self::BigDecimal => "BigDecimal".to_string(),
             Self::Callable(params, conventions, ret) => {

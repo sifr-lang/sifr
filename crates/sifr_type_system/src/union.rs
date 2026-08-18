@@ -377,7 +377,6 @@ fn type_information_score(ty: &Type) -> usize {
         | Type::TypeVar(_)
         | Type::PythonArrow(_)
         | Type::PythonDlpackStream
-        | Type::BigInt
         | Type::Decimal
         | Type::BigDecimal => 0,
     }
@@ -486,9 +485,8 @@ fn type_source_sort_key(ty: &Type) -> (u8, String) {
         Type::Callable(..) => (36, String::new()),
         Type::AsyncCallable(..) => (37, String::new()),
         Type::Enum { identity, name, .. } => (38, identity.as_ref().unwrap_or(name).clone()),
-        Type::BigInt => (39, String::new()),
-        Type::Decimal => (40, String::new()),
-        Type::BigDecimal => (41, String::new()),
+        Type::Decimal => (39, String::new()),
+        Type::BigDecimal => (40, String::new()),
     }
 }
 

@@ -822,32 +822,6 @@ pub(super) fn test_enum_missing_method_has_class_code() {
 }
 
 #[test]
-pub(super) fn test_bigint_clone_wrong_arity_has_call_code() {
-    let source = "def main():\n    value: bigint = bigint(1)\n    value.clone(1)\n";
-    let result = lower_source(source);
-    assert!(result.is_err());
-    let errors = result.unwrap_err();
-    assert!(errors.iter().any(|error| {
-        error.message == "bigint.clone() takes no arguments"
-            && error.code == Some(DiagnosticCode::CALL_WRONG_POSITIONAL_COUNT)
-            && error.primary_range == Some(range_for_after(source, "value.clone(", "1"))
-    }));
-}
-
-#[test]
-pub(super) fn test_bigint_missing_method_has_stdlib_code() {
-    let source = "def main():\n    value: bigint = bigint(1)\n    value.missing()\n";
-    let result = lower_source(source);
-    assert!(result.is_err());
-    let errors = result.unwrap_err();
-    assert!(errors.iter().any(|error| {
-        error.message == "type 'bigint' has no method 'missing'"
-            && error.code == Some(DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE)
-            && error.primary_range == Some(range_for_after(source, "value.", "missing"))
-    }));
-}
-
-#[test]
 pub(super) fn test_generic_type_missing_method_has_stdlib_code() {
     let source = "def use_value[T](value: T):\n    value.missing()\n";
     let result = lower_source(source);

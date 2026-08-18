@@ -479,20 +479,20 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
                 type_params: vec![],
             },
             HirFunction {
-                name: "helper_bigint".to_string(),
+                name: "helper_int".to_string(),
                 params: vec![HirParam {
                     name: "x".to_string(),
-                    ty: Type::BigInt,
+                    ty: Type::Int,
                     default: None,
                     keyword_only: false,
                     convention: ParamConvention::own(),
                 }],
-                return_type: Type::BigInt,
+                return_type: Type::Int,
                 body: vec![HirStmt::Return {
                     value: Some(HirExpr::Name {
                         name: "x".to_string(),
                         binding_id: None,
-                        ty: Type::BigInt,
+                        ty: Type::Int,
                     }),
                 }],
                 is_async: false,
@@ -519,11 +519,11 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
     assert!(result
         .rust_source
         .contains("use ::std::collections::HashSet;"));
-    assert!(result.rust_source.contains("use ::num_bigint::BigInt;"));
-    assert!(result
+    assert!(!result.rust_source.contains("use ::sifr_runtime::SifrInt;"));
+    assert!(!result
         .required_features
         .contains(&sifr_stdlib_manifest::StdlibFeature::NumBigint));
-    assert!(result
+    assert!(!result
         .required_features
         .contains(&sifr_stdlib_manifest::StdlibFeature::NumTraits));
 }

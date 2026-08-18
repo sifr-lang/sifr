@@ -1,10 +1,7 @@
 use super::{IsinstanceUnionMatch, ModuleFuncSignatures};
-use crate::hir_analysis::{
-    queries,
-    traversal::{self, TraversalConfig},
-};
+use crate::hir_analysis::{queries, traversal};
 use crate::RustExpr;
-use sifr_ir::{HirExpr, HirFunction, HirModule, HirStmt};
+use sifr_ir::{HirExpr, HirStmt};
 use sifr_type_system::{OwnershipKind, ParamConvention, ReceiverConvention, Type};
 use std::collections::{HashMap, HashSet};
 
@@ -521,97 +518,6 @@ pub(crate) fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
         }
     }
     None
-}
-
-/// Check if a module uses the `bigint` type anywhere.
-pub(crate) fn module_uses_bigint(module: &HirModule) -> bool {
-    fn type_has_bigint(ty: &Type) -> bool {
-        match ty {
-            Type::BigInt => true,
-            Type::List(t) | Type::Set(t) => type_has_bigint(t),
-            Type::Dict(k, v) => type_has_bigint(k) || type_has_bigint(v),
-            Type::Tuple(ts) | Type::Union(ts) => ts.iter().any(type_has_bigint),
-            Type::Result(ok, err) => type_has_bigint(ok) || type_has_bigint(err),
-            _ => false,
-        }
-    }
-    fn stmt_type_has_bigint(stmt: &HirStmt) -> bool {
-        match stmt {
-            HirStmt::Let { ty, .. } => type_has_bigint(ty),
-            HirStmt::For { target_ty, .. } | HirStmt::AsyncFor { target_ty, .. } => {
-                type_has_bigint(target_ty)
-            }
-            HirStmt::TupleUnpack { targets, .. } => {
-                targets.iter().any(|target| type_has_bigint(&target.ty))
-            }
-            HirStmt::StarUnpack {
-                before,
-                star,
-                after,
-                ..
-            } => {
-                before.iter().any(|(_, ty)| type_has_bigint(ty))
-                    || type_has_bigint(&star.1)
-                    || after.iter().any(|(_, ty)| type_has_bigint(ty))
-            }
-            HirStmt::SubscriptAssign { object_ty, .. }
-            | HirStmt::NestedSubscriptAssign { object_ty, .. }
-            | HirStmt::SubscriptAugAssign { object_ty, .. } => type_has_bigint(object_ty),
-            HirStmt::AttributeNestedSubscriptAssign { field_ty, .. }
-            | HirStmt::AttributeSubscriptAssign { field_ty, .. } => type_has_bigint(field_ty),
-            HirStmt::NestedFieldAssign {
-                nested_field_ty, ..
-            } => type_has_bigint(nested_field_ty),
-            HirStmt::Match { subject_ty, .. } => type_has_bigint(subject_ty),
-            HirStmt::NestedFunction { func, .. } => {
-                func.params.iter().any(|param| type_has_bigint(&param.ty))
-                    || type_has_bigint(&func.return_type)
-            }
-            _ => false,
-        }
-    }
-    fn function_uses_bigint(func: &HirFunction) -> bool {
-        if type_has_bigint(&func.return_type) {
-            return true;
-        }
-        if func.params.iter().any(|p| type_has_bigint(&p.ty)) {
-            return true;
-        }
-        let found = std::cell::Cell::new(false);
-        let mut on_stmt = |stmt: &HirStmt| {
-            if !found.get() && stmt_type_has_bigint(stmt) {
-                found.set(true);
-            }
-        };
-        let mut on_expr = |expr: &HirExpr| {
-            if !found.get() && type_has_bigint(expr.ty()) {
-                found.set(true);
-            }
-        };
-        traversal::walk_stmts(
-            &func.body,
-            TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
-            &mut on_stmt,
-            &mut on_expr,
-        );
-        found.get()
-    }
-    for func in &module.functions {
-        if function_uses_bigint(func) {
-            return true;
-        }
-    }
-    for class in &module.classes {
-        if class.fields.iter().any(|(_, t)| type_has_bigint(t)) {
-            return true;
-        }
-        for method in &class.methods {
-            if function_uses_bigint(method) {
-                return true;
-            }
-        }
-    }
-    false
 }
 
 /// Collect all parts of a chained string concatenation (`a + b + c`).

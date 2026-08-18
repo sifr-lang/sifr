@@ -175,7 +175,7 @@ pub(in crate::lower) fn lower_decimal_constructor_call(
             Type::Decimal
         }
         Type::Int | Type::LiteralInt(_) | Type::Decimal => Type::Decimal,
-        Type::BigInt | Type::BigDecimal => Type::Result(
+        Type::BigDecimal => Type::Result(
             Box::new(Type::Decimal),
             Box::new(decimal_conversion_error_type(ctx)),
         ),
@@ -192,7 +192,7 @@ pub(in crate::lower) fn lower_decimal_constructor_call(
             ctx.error_with_code_at(
                 DiagnosticCode::DECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
                 format!(
-                    "Decimal() requires str, int, bigint, decimal, or bigdecimal argument, got '{}'",
+                    "Decimal() requires str, int, decimal, or bigdecimal argument, got '{}'",
                     arg_ty.display_name()
                 ),
                 call.arguments.args[0].range(),
@@ -247,7 +247,7 @@ pub(in crate::lower) fn lower_bigdecimal_constructor_call(
                 return None;
             }
         }
-        Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Decimal | Type::BigDecimal => {}
+        Type::Int | Type::LiteralInt(_) | Type::Decimal | Type::BigDecimal => {}
         Type::Float => {
             ctx.error_with_code_at(
                 DiagnosticCode::DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
@@ -261,7 +261,7 @@ pub(in crate::lower) fn lower_bigdecimal_constructor_call(
             ctx.error_with_code_at(
                 DiagnosticCode::DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,
                 format!(
-                    "BigDecimal() requires str, int, bigint, decimal, or bigdecimal argument, got '{}'",
+                    "BigDecimal() requires str, int, decimal, or bigdecimal argument, got '{}'",
                     arg_ty.display_name()
                 ),
                 call.arguments.args[0].range(),

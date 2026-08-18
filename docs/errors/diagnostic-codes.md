@@ -88,7 +88,6 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-TYPE-0003`](SIFR-TYPE-0003.mdx) | Error | If-expression or conditional branches have incompatible types. |
 | [`SIFR-TYPE-0004`](SIFR-TYPE-0004.mdx) | Error | A required type annotation is missing. |
 | [`SIFR-TYPE-0005`](SIFR-TYPE-0005.mdx) | Error | Unsupported operator or operand types. |
-| [`SIFR-TYPE-0006`](SIFR-TYPE-0006.mdx) | Error | Int and bigint are mixed without an explicit conversion. |
 | [`SIFR-TYPE-0007`](SIFR-TYPE-0007.mdx) | Error | Invalid type annotation shape. |
 | [`SIFR-TYPE-0008`](SIFR-TYPE-0008.mdx) | Error | Container literal elements, keys, or values have conflicting types. |
 | [`SIFR-TYPE-0009`](SIFR-TYPE-0009.mdx) | Error | Tuple or list unpacking shape mismatch. |
@@ -119,7 +118,6 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-INT-0006`](SIFR-INT-0006.mdx) | Error | Exact integer to float conversion requires handling precision loss. |
 | [`SIFR-INT-0007`](SIFR-INT-0007.mdx) | Error | Bool and integer comparison requires explicit conversion. |
 | [`SIFR-INT-0009`](SIFR-INT-0009.mdx) | Error | JSON or web-safe integer serialization boundary is missing or unsafe. |
-| [`SIFR-INT-0011`](SIFR-INT-0011.mdx) | Warning | Temporary bigint transition alias used. |
 | [`SIFR-META-0001`](SIFR-META-0001.mdx) | Error | Package const specialization reported a fatal issue. |
 | [`SIFR-META-0002`](SIFR-META-0002.mdx) | Warning | Package const specialization reported a hard warning. |
 | [`SIFR-META-0003`](SIFR-META-0003.mdx) | Error | Package const-specialization issue declaration is malformed. |

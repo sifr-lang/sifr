@@ -587,16 +587,6 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "semantic_bigint_transition_alias",
-      "code": "SIFR-INT-0011",
-      "deferral": null,
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [
-        "compact"
-      ],
-      "suggestion_rendering_fixture": null
-    },
-    {
       "baseline_fixture_id": "presentation_rules_cases",
       "code": "SIFR-INTERNAL-0001",
       "deferral": null,
@@ -2006,16 +1996,6 @@
     {
       "baseline_fixture_id": "e2e_optional_arithmetic_reachable_after_partial_narrowing",
       "code": "SIFR-TYPE-0005",
-      "deferral": null,
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [
-        "compact"
-      ],
-      "suggestion_rendering_fixture": null
-    },
-    {
-      "baseline_fixture_id": "e2e_bigint_int_mixed_arithmetic",
-      "code": "SIFR-TYPE-0006",
       "deferral": null,
       "multi_error_recovery_fixture": null,
       "renderer_formats": [

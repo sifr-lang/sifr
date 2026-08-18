@@ -373,12 +373,6 @@ macro_rules! stmt_expr_binop {
             if is_move_arith_op {
                 lowered_left = $emitter.clone_borrowed_generic_operand(left, resolved_left_ty, lowered_left);
                 lowered_right = $emitter.clone_borrowed_generic_operand(right, resolved_right_ty, lowered_right);
-                if matches!(resolved_left_ty, Type::BigInt) {
-                    lowered_left = crate::RustExpr::Clone(Box::new(lowered_left));
-                }
-                if matches!(resolved_right_ty, Type::BigInt) {
-                    lowered_right = crate::RustExpr::Clone(Box::new(lowered_right));
-                }
                 if matches!(resolved_left_ty, Type::BigDecimal) {
                     lowered_left = crate::RustExpr::Clone(Box::new(lowered_left));
                 }
@@ -388,7 +382,7 @@ macro_rules! stmt_expr_binop {
             }
             if matches!(
                 resolved_result_ty,
-                Type::Int | Type::Float | Type::LiteralInt(_) | Type::TypeVar(_) | Type::BigInt
+                Type::Int | Type::Float | Type::LiteralInt(_) | Type::TypeVar(_)
             ) {
                 if Self::option_inner_type_for_ir(ty).is_none() {
                     if Self::option_inner_type_for_ir(left.ty()).is_some()
@@ -416,36 +410,6 @@ macro_rules! stmt_expr_binop {
             }
 
             if matches!(resolved_result_ty, Type::Decimal) {
-                let lower_bigint_to_decimal =
-                    |value: crate::RustExpr| crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Path(vec![
-                                "Decimal".to_string(),
-                                "from_str_exact".to_string(),
-                            ])),
-                            args: vec![crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Paren(Box::new(value))),
-                                    method: "to_string".to_string(),
-                                    args: vec![],
-                                }),
-                                method: "as_str".to_string(),
-                                args: vec![],
-                            }],
-                        }),
-                        method: "unwrap_or_else".to_string(),
-                        args: vec![crate::RustExpr::Closure {
-                            params: vec![crate::RustParam::Named {
-                                name: "__e".to_string(),
-                                ty: crate::RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(crate::RustExpr::MacroCall {
-                                name: "unreachable".to_string(),
-                                args: vec![],
-                            }),
-                            is_move: false,
-                        }],
-                    };
                 if matches!(resolved_left_ty, Type::Int | Type::LiteralInt(_)) {
                     lowered_left = crate::RustExpr::FnCall {
                         func: Box::new(crate::RustExpr::Path(vec![
@@ -454,8 +418,6 @@ macro_rules! stmt_expr_binop {
                         ])),
                         args: vec![lowered_left],
                     };
-                } else if matches!(resolved_left_ty, Type::BigInt) {
-                    lowered_left = lower_bigint_to_decimal(lowered_left);
                 }
                 if op != "**" && matches!(resolved_right_ty, Type::Int | Type::LiteralInt(_)) {
                     lowered_right = crate::RustExpr::FnCall {
@@ -465,8 +427,6 @@ macro_rules! stmt_expr_binop {
                         ])),
                         args: vec![lowered_right],
                     };
-                } else if op != "**" && matches!(resolved_right_ty, Type::BigInt) {
-                    lowered_right = lower_bigint_to_decimal(lowered_right);
                 }
             }
 
@@ -497,7 +457,7 @@ macro_rules! stmt_expr_binop {
                     };
                 if matches!(
                     resolved_left_ty,
-                    Type::Int | Type::LiteralInt(_) | Type::BigInt
+                    Type::Int | Type::LiteralInt(_)
                 ) {
                     lowered_left = crate::RustExpr::FnCall {
                         func: Box::new(crate::RustExpr::Path(vec![
@@ -512,7 +472,7 @@ macro_rules! stmt_expr_binop {
                 if op != "**"
                     && matches!(
                         resolved_right_ty,
-                        Type::Int | Type::LiteralInt(_) | Type::BigInt
+                        Type::Int | Type::LiteralInt(_)
                     )
                 {
                     lowered_right = crate::RustExpr::FnCall {
@@ -749,45 +709,7 @@ macro_rules! stmt_expr_binop {
                     }));
                 }
                 if matches!(resolved_result_ty, Type::Decimal) {
-                    let exponent_i64 = if matches!(resolved_right_ty, Type::BigInt) {
-                        crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::FnCall {
-                                func: Box::new(crate::RustExpr::Path(vec![
-                                    "i64".to_string(),
-                                    "try_from".to_string(),
-                                ])),
-                                args: vec![crate::RustExpr::Ref {
-                                    mutable: false,
-                                    expr: Box::new(crate::RustExpr::Paren(Box::new(
-                                        lowered_right.clone(),
-                                    ))),
-                                }],
-                            }),
-                            method: "map_or_else".to_string(),
-                            args: vec![
-                                crate::RustExpr::Closure {
-                                    params: vec![crate::RustParam::Named {
-                                        name: "__e".to_string(),
-                                        ty: crate::RustType::Named("_".to_string()),
-                                    }],
-                                    body: Box::new(runtime_exit_block(
-                                        "runtime error: decimal exponent is out of i64 range",
-                                    )),
-                                    is_move: false,
-                                },
-                                crate::RustExpr::Closure {
-                                    params: vec![crate::RustParam::Named {
-                                        name: "__v".to_string(),
-                                        ty: crate::RustType::Named("_".to_string()),
-                                    }],
-                                    body: Box::new(crate::RustExpr::Ident("__v".to_string())),
-                                    is_move: false,
-                                },
-                            ],
-                        }
-                    } else {
-                        lowered_right.clone()
-                    };
+                    let exponent_i64 = lowered_right.clone();
                     return Ok(Some(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::FnCall {
                             func: Box::new(crate::RustExpr::Path(vec![
@@ -823,45 +745,7 @@ macro_rules! stmt_expr_binop {
                     }));
                 }
                 if matches!(resolved_result_ty, Type::BigDecimal) {
-                    let exponent_i64 = if matches!(resolved_right_ty, Type::BigInt) {
-                        crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::FnCall {
-                                func: Box::new(crate::RustExpr::Path(vec![
-                                    "i64".to_string(),
-                                    "try_from".to_string(),
-                                ])),
-                                args: vec![crate::RustExpr::Ref {
-                                    mutable: false,
-                                    expr: Box::new(crate::RustExpr::Paren(Box::new(
-                                        lowered_right.clone(),
-                                    ))),
-                                }],
-                            }),
-                            method: "map_or_else".to_string(),
-                            args: vec![
-                                crate::RustExpr::Closure {
-                                    params: vec![crate::RustParam::Named {
-                                        name: "__e".to_string(),
-                                        ty: crate::RustType::Named("_".to_string()),
-                                    }],
-                                    body: Box::new(runtime_exit_block(
-                                        "runtime error: bigdecimal exponent is out of i64 range",
-                                    )),
-                                    is_move: false,
-                                },
-                                crate::RustExpr::Closure {
-                                    params: vec![crate::RustParam::Named {
-                                        name: "__v".to_string(),
-                                        ty: crate::RustType::Named("_".to_string()),
-                                    }],
-                                    body: Box::new(crate::RustExpr::Ident("__v".to_string())),
-                                    is_move: false,
-                                },
-                            ],
-                        }
-                    } else {
-                        lowered_right.clone()
-                    };
+                    let exponent_i64 = lowered_right.clone();
                     return Ok(Some(round_bigdecimal_with_default_context(
                         crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_left))),
@@ -875,6 +759,16 @@ macro_rules! stmt_expr_binop {
                             ],
                         },
                     )));
+                }
+                if matches!(resolved_result_ty, Type::Int) {
+                    return Ok(Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new($emitter.coerce_expr_to_sifr_int_value(lowered_left)),
+                        method: "pow".to_string(),
+                        args: vec![crate::RustExpr::Cast {
+                            expr: Box::new(lowered_right),
+                            ty: crate::RustType::Named("u32".to_string()),
+                        }],
+                    }));
                 }
                 return Ok(Some(crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_left))),

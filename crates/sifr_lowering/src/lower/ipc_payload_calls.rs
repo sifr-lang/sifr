@@ -128,7 +128,7 @@ fn non_ipc_serializable_reason_inner(ty: &Type, visiting: &mut HashSet<String>) 
         Type::PythonDlpackTensor(_) | Type::PythonDlpackStream => {
             Some("Python DLPack resources are affine and process-local".to_string())
         }
-        Type::BigInt | Type::Decimal | Type::BigDecimal => {
+        Type::Decimal | Type::BigDecimal => {
             Some("this numeric family is not part of the initial IPC schema set".to_string())
         }
         Type::Task(_, _)

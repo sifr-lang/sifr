@@ -39,9 +39,6 @@ pub enum LoweringWarningDiagnostic {
     UnreachableStatement {
         primary_range: Option<TextRange>,
     },
-    BigIntTransitionAlias {
-        primary_range: Option<TextRange>,
-    },
     MetaPackageIssue {
         package: String,
         reason_code: String,

@@ -185,10 +185,7 @@ pub enum Type {
         variants: Vec<(String, Option<i64>)>,
     },
 
-    // --- Integer Safety ---
-    /// Arbitrary-precision integer (`bigint` in Sifr, `num_bigint::BigInt` in Rust)
-    /// Unlike `int` (i64), `bigint` never overflows — it grows as needed.
-    BigInt,
+    // --- Decimal Types ---
     /// Fixed-precision decimal (`decimal` in Sifr, `rust_decimal::Decimal` in Rust)
     Decimal,
     /// Arbitrary-precision decimal (`bigdecimal` in Sifr, `bigdecimal::BigDecimal` in Rust)

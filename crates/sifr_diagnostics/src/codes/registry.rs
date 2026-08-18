@@ -40,7 +40,6 @@ impl DiagnosticCode {
     pub const TYPE_IF_BRANCH_MISMATCH: Self = Self::new("SIFR-TYPE-0003", Severity::Error);
     pub const TYPE_MISSING_ANNOTATION: Self = Self::new("SIFR-TYPE-0004", Severity::Error);
     pub const TYPE_UNSUPPORTED_OPERATOR: Self = Self::new("SIFR-TYPE-0005", Severity::Error);
-    pub const TYPE_INT_BIGINT_MIXED: Self = Self::new("SIFR-TYPE-0006", Severity::Error);
     pub const TYPE_INVALID_ANNOTATION: Self = Self::new("SIFR-TYPE-0007", Severity::Error);
     pub const TYPE_CONTAINER_ELEMENT_CONFLICT: Self = Self::new("SIFR-TYPE-0008", Severity::Error);
     pub const TYPE_UNPACK_SHAPE_MISMATCH: Self = Self::new("SIFR-TYPE-0009", Severity::Error);
@@ -104,7 +103,6 @@ impl DiagnosticCode {
         Self::new("SIFR-INT-0006", Severity::Error);
     pub const INT_BOOL_INTEGER_COMPARISON: Self = Self::new("SIFR-INT-0007", Severity::Error);
     pub const INT_JSON_BOUNDARY_POLICY: Self = Self::new("SIFR-INT-0009", Severity::Error);
-    pub const INT_BIGINT_TRANSITION_ALIAS: Self = Self::new("SIFR-INT-0011", Severity::Warning);
 
     pub const IO_TEXT_OPEN_REQUIRES_ENCODING: Self = Self::new("SIFR-IO-0801", Severity::Error);
     pub const IO_OPEN_MODE_REQUIRES_LITERAL: Self = Self::new("SIFR-IO-0802", Severity::Error);
@@ -691,7 +689,6 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::TYPE_IF_BRANCH_MISMATCH,
     DiagnosticCode::TYPE_MISSING_ANNOTATION,
     DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
-    DiagnosticCode::TYPE_INT_BIGINT_MIXED,
     DiagnosticCode::TYPE_INVALID_ANNOTATION,
     DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
     DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
@@ -765,7 +762,6 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING,
     DiagnosticCode::INT_BOOL_INTEGER_COMPARISON,
     DiagnosticCode::INT_JSON_BOUNDARY_POLICY,
-    DiagnosticCode::INT_BIGINT_TRANSITION_ALIAS,
     DiagnosticCode::IO_TEXT_OPEN_REQUIRES_ENCODING,
     DiagnosticCode::IO_OPEN_MODE_REQUIRES_LITERAL,
     DiagnosticCode::ENCODING_HANDLER_REQUIRES_STATIC_VALUE,
