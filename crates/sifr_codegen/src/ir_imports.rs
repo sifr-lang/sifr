@@ -220,7 +220,8 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
                     }
                     RustParam::SelfParam { .. }
                     | RustParam::SelfParamWithLifetime { .. }
-                    | RustParam::SelfValue => {}
+                    | RustParam::SelfValue
+                    | RustParam::MutableSelfValue => {}
                 }
             }
             if let Some(ret) = ret {

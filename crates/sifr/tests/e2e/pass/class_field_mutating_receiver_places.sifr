@@ -1,7 +1,7 @@
 class Helper:
     items: list[int]
 
-    def bump(self, value: int) -> None:
+    def bump(mut self, value: int) -> None:
         self.items.append(value)
 
 
@@ -13,7 +13,7 @@ class Owner:
     direct: Helper
     mid: Mid
 
-    def mutate(self) -> None:
+    def mutate(mut self) -> None:
         self.direct.bump(1)
         self.mid.inner.bump(2)
 
@@ -26,14 +26,14 @@ class ChildOwner(BaseOwner):
     def __init__(self, inherited: Helper):
         super().__init__(inherited)
 
-    def mutate_inherited(self) -> None:
+    def mutate_inherited(mut self) -> None:
         self.inherited.bump(3)
 
 
 class Holder[T]:
     value: T
 
-    def replace(self, own value: T) -> None:
+    def replace(mut self, own value: T) -> None:
         self.value = value
 
 def mutate_borrowed(mut owner: Owner) -> None:

@@ -14,13 +14,23 @@ pub(in crate::lower) fn declared_receiver_convention(
         .map_or_else(AstParamConvention::borrow, |parameter| {
             parameter.parameter.convention
         });
-    if convention.is_owned() {
+    if convention.is_owned() && convention.is_mutable() {
+        ReceiverConvention::OwnedMutable
+    } else if convention.is_owned() {
         ReceiverConvention::Owned
     } else if convention.is_mutable() {
         ReceiverConvention::MutableBorrow
     } else {
         ReceiverConvention::SharedBorrow
     }
+}
+
+pub(in crate::lower) fn interop_owned_receiver(
+    declared: Option<ReceiverConvention>,
+) -> ReceiverConvention {
+    declared
+        .filter(|receiver| receiver.is_owned())
+        .unwrap_or(ReceiverConvention::Owned)
 }
 
 pub(in crate::lower) fn fixed_trait_receiver_convention(
@@ -35,14 +45,6 @@ pub(in crate::lower) fn fixed_trait_receiver_convention(
         }
         _ => None,
     }
-}
-
-pub(in crate::lower) fn declared_method_receiver_convention(
-    method: &str,
-    parameters: &Parameters,
-) -> ReceiverConvention {
-    fixed_trait_receiver_convention(method)
-        .unwrap_or_else(|| declared_receiver_convention(parameters))
 }
 
 pub(in crate::lower) fn class_method_param_convention(

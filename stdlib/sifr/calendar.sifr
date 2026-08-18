@@ -87,7 +87,7 @@ class Calendar:
     def getfirstweekday(self) -> int:
         return self.firstweekday
 
-    def setfirstweekday(self, firstweekday: int) -> None:
+    def setfirstweekday(mut self, firstweekday: int) -> None:
         self.firstweekday = _normalize_firstweekday(firstweekday)
 
     def iterweekdays(self) -> list[int]:

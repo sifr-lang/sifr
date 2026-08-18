@@ -51,13 +51,13 @@ class ZipReadHandle:
         self._cursor = 0
         self._closed = False
 
-    def close(self) -> None:
+    def close(mut self) -> None:
         self._closed = True
 
     def closed(self) -> bool:
         return self._closed
 
-    def read_bytes(self, size: int | None = None) -> Result[bytes, IOError]:
+    def read_bytes(mut self, size: int | None = None) -> Result[bytes, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
 

@@ -212,7 +212,7 @@ pub(super) fn test_star_unpack_requires_list_has_primary_range() {
 #[test]
 pub(super) fn test_tuple_unpack_allows_attribute_targets() {
     let module = lower_source(
-        "class Pair:\n    x: int\n    y: int\n    def __init__(self):\n        self.x = 1\n        self.y = 2\n    def swap(self):\n        self.x, self.y = self.y, self.x\n",
+        "class Pair:\n    x: int\n    y: int\n    def __init__(self):\n        self.x = 1\n        self.y = 2\n    def swap(mut self):\n        self.x, self.y = self.y, self.x\n",
     )
     .unwrap();
     let pair_class = module

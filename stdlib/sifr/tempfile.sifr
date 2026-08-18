@@ -103,7 +103,7 @@ class NamedTemporaryFile:
     def closed(self) -> bool:
         return self._closed
 
-    def _cleanup_path(self) -> Result[None, IOError]:
+    def _cleanup_path(mut self) -> Result[None, IOError]:
         if self._cleaned:
             return None
         if exists(self._path):
@@ -114,20 +114,20 @@ class NamedTemporaryFile:
         self._cleaned = True
         return None
 
-    def close(self) -> Result[None, IOError]:
+    def close(mut self) -> Result[None, IOError]:
         self._closed = True
         if self._delete:
             return self._cleanup_path()
         return None
 
-    def cleanup(self) -> Result[None, IOError]:
+    def cleanup(mut self) -> Result[None, IOError]:
         self._closed = True
         return self._cleanup_path()
 
     def __enter__(self) -> NamedTemporaryFile:
         return self
 
-    def __exit__(self) -> None:
+    def __exit__(mut self) -> None:
         try:
             _closed_done: None = self.close()
         except IOError as e:
@@ -155,11 +155,11 @@ class TemporaryDirectory:
     def closed(self) -> bool:
         return self._closed
 
-    def close(self) -> Result[None, IOError]:
+    def close(mut self) -> Result[None, IOError]:
         self._closed = True
         return None
 
-    def cleanup(self) -> Result[None, IOError]:
+    def cleanup(mut self) -> Result[None, IOError]:
         if self._cleaned:
             self._closed = True
             return None
@@ -175,7 +175,7 @@ class TemporaryDirectory:
     def __enter__(self) -> TemporaryDirectory:
         return self
 
-    def __exit__(self) -> None:
+    def __exit__(mut self) -> None:
         try:
             _cleaned_done: None = self.cleanup()
         except IOError as e:

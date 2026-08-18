@@ -408,6 +408,7 @@ const fn receiver_convention_name(convention: ReceiverConvention) -> &'static st
         ReceiverConvention::SharedBorrow => "borrow",
         ReceiverConvention::MutableBorrow => "mut_borrow",
         ReceiverConvention::Owned => "own",
+        ReceiverConvention::OwnedMutable => "own_mut",
     }
 }
 

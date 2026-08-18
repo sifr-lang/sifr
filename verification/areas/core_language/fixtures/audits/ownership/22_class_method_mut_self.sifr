@@ -8,7 +8,7 @@
 class Counter:
     count: int
 
-    def increment(self):
+    def increment(mut self):
         self.count = self.count + 1
 
 def main():

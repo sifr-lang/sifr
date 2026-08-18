@@ -1,14 +1,14 @@
 class Accumulator:
     values: list[int]
 
-    def push(self, value: int) -> None:
+    def push(mut self, value: int) -> None:
         self.values.append(value)
 
-    def push_count(self, value: int) -> int:
+    def push_count(mut self, value: int) -> int:
         self.values.append(value)
         return len(self.values)
 
-    def push_result(self, value: int) -> Result[int, ValueError]:
+    def push_result(mut self, value: int) -> Result[int, ValueError]:
         self.values.append(value)
         return len(self.values)
 
@@ -20,7 +20,7 @@ class Pair:
     left: Accumulator
     right: Accumulator
 
-    def mutate_in_expression_contexts(self) -> int:
+    def mutate_in_expression_contexts(mut self) -> int:
         self.left.push(1)
         assigned: int = self.left.push_count(2)
         assert assigned == 2
@@ -29,7 +29,7 @@ class Pair:
             self.left.push(value)
         return self.left.push_count(5)
 
-    def mutate_with_shared_sibling_read(self) -> None:
+    def mutate_with_shared_sibling_read(mut self) -> None:
         self.left.push(self.right.peek())
 
     def read_only_field_receiver(self) -> int:
@@ -40,14 +40,14 @@ class MutableFailure(Error):
     message: str
     notes: list[int]
 
-    def note(self, value: int) -> None:
+    def note(mut self, value: int) -> None:
         self.notes.append(value)
 
 
 class SetOwner:
     values: set[str]
 
-    def add_last_use(self) -> None:
+    def add_last_use(mut self) -> None:
         item: str = "added"
         self.values.add(item)
 
@@ -55,7 +55,7 @@ class SetOwner:
 class IteratorOwner:
     values: Iterator[int]
 
-    def take(self) -> int | None:
+    def take(mut self) -> int | None:
         return next(self.values)
 
 
@@ -68,7 +68,7 @@ class WithResource:
     def __exit__(self) -> None:
         pass
 
-    def push(self, value: int) -> None:
+    def push(mut self, value: int) -> None:
         self.values.append(value)
 
 

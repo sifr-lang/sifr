@@ -257,7 +257,7 @@ class ConfigParser:
     def defaults(self) -> dict[str, str | None]:
         return _copy_values(self._defaults)
 
-    def read_string(self, text: str) -> Result[None, ParsingError]:
+    def read_string(mut self, text: str) -> Result[None, ParsingError]:
         current_section: str = ""
         default_section: str = _default_section()
         for line_no, raw_line in enumerate(text.split("\n"), start=1):
@@ -302,7 +302,7 @@ class ConfigParser:
                 raise e
         return None
 
-    def read(self, path: str) -> Result[list[str], IOError]:
+    def read(mut self, path: str) -> Result[list[str], IOError]:
         try:
             content: str = read_text(path)
             try:
@@ -431,7 +431,7 @@ class ConfigParser:
             return False
         return fallback
 
-    def set(self, section: str, option: str, value: str | None) -> None:
+    def set(mut self, section: str, option: str, value: str | None) -> None:
         normalized: str = _normalize_option(option)
         default_section: str = _default_section()
         if section == default_section:
@@ -455,7 +455,7 @@ class ConfigParser:
         created_section[normalized] = _copy_optional_str(value)
         self._sections[section] = created_section
 
-    def add_section(self, section: str) -> None:
+    def add_section(mut self, section: str) -> None:
         default_section: str = _default_section()
         if section == default_section:
             return
@@ -463,7 +463,7 @@ class ConfigParser:
             return
         self._sections[section] = {}
 
-    def remove_option(self, section: str, option: str) -> bool:
+    def remove_option(mut self, section: str, option: str) -> bool:
         normalized: str = _normalize_option(option)
         default_section: str = _default_section()
         if section == default_section:
@@ -480,7 +480,7 @@ class ConfigParser:
             return False
         return False
 
-    def remove_section(self, section: str) -> bool:
+    def remove_section(mut self, section: str) -> bool:
         default_section: str = _default_section()
         if section == default_section:
             return False

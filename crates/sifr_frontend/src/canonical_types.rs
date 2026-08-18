@@ -10,6 +10,7 @@ pub(crate) fn function_identity(function: &FunctionType) -> String {
         Some(ReceiverConvention::SharedBorrow) => "shared",
         Some(ReceiverConvention::MutableBorrow) => "mutable",
         Some(ReceiverConvention::Owned) => "owned",
+        Some(ReceiverConvention::OwnedMutable) => "owned-mutable",
     };
     format!(
         "fn[receiver={receiver};params={};return={}]",

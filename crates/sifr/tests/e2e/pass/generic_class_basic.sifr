@@ -5,7 +5,7 @@ class Stack[T]:
     def __init__(self, items: list[T]):
         self.items = items
 
-    def push(self, item: T) -> None:
+    def push(mut self, item: T) -> None:
         self.items.append(item)
 
     def size(self) -> int:
@@ -17,4 +17,3 @@ def main():
     s.push(2)
     s.push(3)
     assert str(s.size()) == '3'
-

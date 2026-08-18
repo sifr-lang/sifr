@@ -80,7 +80,7 @@ fn test_mut_on_local_nested_function_mutborrow_call_argument() {
 }
 
 #[test]
-fn inferred_class_receiver_signatures_are_emitted_from_hir_metadata() {
+fn explicit_class_receiver_signatures_are_emitted_from_hir_metadata() {
     let rust_code = generate_rust_from_source(
         r#"
 class Counter:
@@ -89,24 +89,32 @@ class Counter:
     def read(self) -> int:
         return self.value
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.value += 1
 
 class Owner:
     counter: Counter
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.counter.bump()
 
 class Consumable:
     def close(own self) -> None:
         pass
+
+class MutableConsumable:
+    value: int
+
+    def take(own mut self) -> int:
+        self.value += 1
+        return self.value
 "#,
     );
 
     assert!(rust_code.contains("fn read(&self) -> i64"));
     assert!(rust_code.contains("fn bump(&mut self)"));
     assert!(rust_code.contains("fn close(self)"));
+    assert!(rust_code.contains("fn take(mut self) -> i64"));
 }
 
 #[test]
@@ -137,7 +145,7 @@ fn checked_field_receivers_emit_original_storage_without_clone_or_temporary() {
 class Helper:
     items: list[int]
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.items.append(1)
 
 class Mid:
@@ -150,7 +158,7 @@ class Child(Base):
     def __init__(self, mid: Mid):
         super().__init__(mid)
 
-    def run(self) -> None:
+    def run(mut self) -> None:
         self.mid.helper.bump()
 "#,
     );
@@ -175,7 +183,7 @@ class Helper:
         self.items = []
         self.items.append(1)
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.items.append(1)
 
 class Base:

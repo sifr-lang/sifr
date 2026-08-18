@@ -83,7 +83,7 @@ class Counter[T: Hashable]:
             return val
         return default
 
-    def increment(self, key: T) -> None:
+    def increment(mut self, key: T) -> None:
         val: int | None = self.counts[key]
         if val is not None:
             self.counts[key] = val + 1
@@ -165,10 +165,10 @@ class Counter[T: Hashable]:
     def copy(self) -> Counter[T]:
         return Counter(source=self.counts)
 
-    def clear(self) -> None:
+    def clear(mut self) -> None:
         self.counts = {}
 
-    def update(self, other: Counter[T]) -> None:
+    def update(mut self, other: Counter[T]) -> None:
         for key in other.counts.keys():
             other_val: int | None = other.counts[key]
             if other_val is not None:
@@ -178,7 +178,7 @@ class Counter[T: Hashable]:
                 else:
                     self.counts[key] = other_val
 
-    def subtract(self, other: Counter[T]) -> None:
+    def subtract(mut self, other: Counter[T]) -> None:
         for key in other.counts.keys():
             other_val: int | None = other.counts[key]
             if other_val is not None:
@@ -206,7 +206,7 @@ class Counter[T: Hashable]:
             ki = ki + 1
         return result
 
-    def __add__(self, other: Counter[T]) -> Counter[T]:
+    def __add__(own self, other: Counter[T]) -> Counter[T]:
         new_counts: dict[T, int] = {}
         for key in self.counts.keys():
             a_val: int | None = self.counts[key]
@@ -227,7 +227,7 @@ class Counter[T: Hashable]:
                         new_counts[key2] = b_val2
         return Counter(source=new_counts)
 
-    def __sub__(self, other: Counter[T]) -> Counter[T]:
+    def __sub__(own self, other: Counter[T]) -> Counter[T]:
         new_counts: dict[T, int] = {}
         for key in self.counts.keys():
             a_val: int | None = self.counts[key]
@@ -276,7 +276,7 @@ class deque[T]:
         self.maxlen = maxlen
         self._data = data
 
-    def append(self, val: T) -> None:
+    def append(mut self, val: T) -> None:
         self._data.append(val)
         maxlen_opt: int | None = self.maxlen
         if maxlen_opt is not None:
@@ -284,7 +284,7 @@ class deque[T]:
             if len(self._data) > maxlen:
                 self._data.popleft()
 
-    def appendleft(self, val: T) -> None:
+    def appendleft(mut self, val: T) -> None:
         self._data.appendleft(val)
         maxlen_opt: int | None = self.maxlen
         if maxlen_opt is not None:
@@ -292,12 +292,12 @@ class deque[T]:
             if len(self._data) > maxlen:
                 self._data.pop()
 
-    def pop(self) -> T | None:
+    def pop(mut self) -> T | None:
         if len(self._data) == 0:
             return None
         return self._data.pop()
 
-    def popleft(self) -> T | None:
+    def popleft(mut self) -> T | None:
         if len(self._data) == 0:
             return None
         return self._data.popleft()
@@ -311,10 +311,10 @@ class deque[T]:
             result.append(v)
         return result
 
-    def clear(self) -> None:
+    def clear(mut self) -> None:
         self._data.clear()
 
-    def extend(self, items: list[T]) -> None:
+    def extend(mut self, items: list[T]) -> None:
         for v in items:
             self._data.append(v)
         maxlen_opt: int | None = self.maxlen
@@ -323,7 +323,7 @@ class deque[T]:
             while len(self._data) > maxlen:
                 self._data.popleft()
 
-    def extendleft(self, items: list[T]) -> None:
+    def extendleft(mut self, items: list[T]) -> None:
         for v in items:
             self._data.appendleft(v)
         maxlen_opt: int | None = self.maxlen
@@ -335,14 +335,14 @@ class deque[T]:
     def copy(self) -> deque[T]:
         return deque(self.to_list(), maxlen=self.maxlen)
 
-    def reverse(self) -> None:
+    def reverse(mut self) -> None:
         items: list[T] = self.to_list()
         items.reverse()
         self._data.clear()
         for item in items:
             self._data.append(item)
 
-    def rotate(self, n: int = 1) -> None:
+    def rotate(mut self, n: int = 1) -> None:
         length: int = len(self._data)
         if length == 0:
             return
@@ -388,7 +388,7 @@ class deque[T]:
             i = i + 1
         return None
 
-    def remove(self, value: T) -> None:
+    def remove(mut self, value: T) -> None:
         idx: int | None = self.index(value, 0, None)
         if idx is not None:
             rebuilt: list[T] = []

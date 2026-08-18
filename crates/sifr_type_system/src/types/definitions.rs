@@ -361,11 +361,23 @@ pub enum ReceiverConvention {
     SharedBorrow,
     /// Borrow the receiver mutably.
     MutableBorrow,
-    /// Consume the receiver.
+    /// Consume the receiver without granting a mutable local binding.
     Owned,
+    /// Consume the receiver and grant a mutable local binding.
+    OwnedMutable,
 }
 
 impl ReceiverConvention {
+    #[must_use]
+    pub const fn is_owned(self) -> bool {
+        matches!(self, Self::Owned | Self::OwnedMutable)
+    }
+
+    #[must_use]
+    pub const fn is_mutable(self) -> bool {
+        matches!(self, Self::MutableBorrow | Self::OwnedMutable)
+    }
+
     /// Whether an implementation receiver can satisfy a protocol declaration.
     ///
     /// A shared implementation is valid for a mutable protocol because it
@@ -377,6 +389,7 @@ impl ReceiverConvention {
             (Self::SharedBorrow, Self::SharedBorrow | Self::MutableBorrow)
                 | (Self::MutableBorrow, Self::MutableBorrow)
                 | (Self::Owned, Self::Owned)
+                | (Self::OwnedMutable, Self::OwnedMutable)
         )
     }
 }
@@ -520,5 +533,10 @@ mod receiver_tests {
             !ReceiverConvention::MutableBorrow.satisfies_protocol(ReceiverConvention::SharedBorrow)
         );
         assert!(ReceiverConvention::Owned.satisfies_protocol(ReceiverConvention::Owned));
+        assert!(
+            ReceiverConvention::OwnedMutable.satisfies_protocol(ReceiverConvention::OwnedMutable)
+        );
+        assert!(!ReceiverConvention::Owned.satisfies_protocol(ReceiverConvention::OwnedMutable));
+        assert!(!ReceiverConvention::OwnedMutable.satisfies_protocol(ReceiverConvention::Owned));
     }
 }

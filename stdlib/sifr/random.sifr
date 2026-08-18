@@ -98,13 +98,13 @@ class Random:
         self._index = _MT_N
         self._gauss_next = None
 
-    def seed(self, seed_value: int | None = None) -> None:
+    def seed(mut self, seed_value: int | None = None) -> None:
         normalized_seed: int = _normalize_seed_input(seed_value)
         self._state_words = _seed_words_from_seed(normalized_seed)
         self._index = _MT_N
         self._gauss_next = None
 
-    def _twist(self) -> None:
+    def _twist(mut self) -> None:
         i: int = 0
         while i < _MT_N:
             y: int = (
@@ -121,7 +121,7 @@ class Random:
 
         self._index = 0
 
-    def _next_u32(self) -> int:
+    def _next_u32(mut self) -> int:
         if self._index >= _MT_N:
             self._twist()
 
@@ -134,13 +134,13 @@ class Random:
         y = y ^ (y >> 18)
         return y & _MT_WORD_MASK
 
-    def random(self) -> float:
+    def random(mut self) -> float:
         return float(self._next_u32()) / 4294967296.0
 
-    def uniform(self, minimum: float, maximum: float) -> float:
+    def uniform(mut self, minimum: float, maximum: float) -> float:
         return minimum + (maximum - minimum) * self.random()
 
-    def randrange(self, start: int, stop: int | None = None, step: int = 1) -> Result[int, ValueError]:
+    def randrange(mut self, start: int, stop: int | None = None, step: int = 1) -> Result[int, ValueError]:
         if step == 0:
             raise ValueError("randrange: step must not be zero")
 
@@ -173,12 +173,12 @@ class Random:
         pick: int = self._next_u32() % count
         return actual_start + pick * step
 
-    def randint(self, minimum: int, maximum: int) -> Result[int, ValueError]:
+    def randint(mut self, minimum: int, maximum: int) -> Result[int, ValueError]:
         if minimum > maximum:
             raise ValueError("randint: min must be <= max")
         return self.randrange(minimum, maximum + 1, 1)
 
-    def getrandbits(self, k: int) -> Result[int, ValueError]:
+    def getrandbits(mut self, k: int) -> Result[int, ValueError]:
         if k < 0:
             raise ValueError("getrandbits: number of bits must be >= 0")
 
@@ -195,7 +195,7 @@ class Random:
             bits_left = bits_left - take
         return result
 
-    def randbytes(self, n: int) -> Result[bytes, ValueError]:
+    def randbytes(mut self, n: int) -> Result[bytes, ValueError]:
         if n < 0:
             raise ValueError("randbytes: n must be >= 0")
 
@@ -207,7 +207,7 @@ class Random:
             i = i + 1
         return bytes.from_ints(values)
 
-    def gauss(self, mu: float, sigma: float) -> float:
+    def gauss(mut self, mu: float, sigma: float) -> float:
         cached: float | None = self._gauss_next
         if cached is not None:
             self._gauss_next = None
@@ -229,7 +229,7 @@ class Random:
     def getstate(self) -> RandomState:
         return RandomState(3, _clone_words(self._state_words), self._index, self._gauss_next)
 
-    def setstate(self, state: RandomState) -> Result[None, ValueError]:
+    def setstate(mut self, state: RandomState) -> Result[None, ValueError]:
         if state.version != 3:
             raise ValueError("setstate: unsupported version")
         if len(state.state_words) != _MT_N:

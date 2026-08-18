@@ -9,7 +9,7 @@ class Crate:
 class Owner:
     stock: Crate
 
-    def conflict(self) -> None:
+    def conflict(mut self) -> None:
         # expect-error[col=28]: SIFR-OWN-0002
         self.stock.observe(self.stock)
 

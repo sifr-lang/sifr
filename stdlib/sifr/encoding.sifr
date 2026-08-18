@@ -328,7 +328,7 @@ class Decoder:
         self._exhausted = False
         self._pending = b""
 
-    def decode(self, data: bytes, final: bool = False) -> Result[DecodeOutcome, DecodeError]:
+    def decode(mut self, data: bytes, final: bool = False) -> Result[DecodeOutcome, DecodeError]:
         if self._exhausted:
             raise DecodeError("decoder is exhausted")
         try:
@@ -353,7 +353,7 @@ class Encoder:
         self._errors = _encode_handler_or_strict(errors)
         self._exhausted = False
 
-    def encode(self, text: str, final: bool = False) -> Result[EncodeOutcome, EncodeError]:
+    def encode(mut self, text: str, final: bool = False) -> Result[EncodeOutcome, EncodeError]:
         if self._exhausted:
             raise EncodeError("encoder is exhausted")
         try:

@@ -2,7 +2,7 @@
 
 class Counter:
     count: int
-    def increment(self) -> None:
+    def increment(mut self) -> None:
         self.count += 1
 
 def main():

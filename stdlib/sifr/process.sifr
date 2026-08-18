@@ -103,7 +103,7 @@ class PipeReader:
         self._closed = False
 
     @blocking_io
-    def read(self, max_bytes: int) -> Result[bytes, ProcessError]:
+    def read(mut self, max_bytes: int) -> Result[bytes, ProcessError]:
         if self._closed:
             raise ProcessError("process pipe reader is already closed")
         try:
@@ -115,14 +115,14 @@ class PipeReader:
             raise e
 
     @blocking_io
-    def read_all(self) -> Result[bytes, ProcessError]:
+    def read_all(mut self) -> Result[bytes, ProcessError]:
         if self._closed:
             raise ProcessError("process pipe reader is already closed")
         self._closed = True
         return process_pipe_read_all(self._handle)
 
     @blocking_io
-    def close(self) -> Result[None, ProcessError]:
+    def close(mut self) -> Result[None, ProcessError]:
         if self._closed:
             raise ProcessError("process pipe reader is already closed")
         self._closed = True
@@ -144,7 +144,7 @@ class PipeWriter:
         return process_pipe_write_all(self._handle, data)
 
     @blocking_io
-    def close(self) -> Result[None, ProcessError]:
+    def close(mut self) -> Result[None, ProcessError]:
         if self._closed:
             raise ProcessError("process pipe writer is already closed")
         self._closed = True
@@ -168,7 +168,7 @@ class Child:
         return process_terminate(self._handle)
 
     @blocking_io
-    def wait(self) -> Result[Status, ProcessError]:
+    def wait(mut self) -> Result[Status, ProcessError]:
         if self._waited:
             raise ProcessError("process child has already been waited")
         self._waited = True
@@ -372,31 +372,31 @@ class Command:
         self.stdout_mode = "inherit"
         self.stderr_mode = "inherit"
 
-    def arg(self, value: str) -> None:
+    def arg(mut self, value: str) -> None:
         self.arguments.append(value)
 
-    def args(self, values: list[str]) -> None:
+    def args(mut self, values: list[str]) -> None:
         for value in values:
             self.arguments.append(value)
 
-    def set_env(self, key: str, value: str) -> None:
+    def set_env(mut self, key: str, value: str) -> None:
         self.env_vars.append(key + "=" + value)
 
-    def cwd(self, path: str) -> None:
+    def cwd(mut self, path: str) -> None:
         self.working_dir = path + ""
         self.has_working_dir = True
 
-    def stdin_bytes(self, data: bytes) -> None:
+    def stdin_bytes(mut self, data: bytes) -> None:
         self.stdin_data = self.stdin_data + data
         self.has_stdin_data = True
 
-    def stdin(self, mode: Stdio) -> None:
+    def stdin(mut self, mode: Stdio) -> None:
         self.stdin_mode = mode.mode + ""
 
-    def stdout(self, mode: Stdio) -> None:
+    def stdout(mut self, mode: Stdio) -> None:
         self.stdout_mode = mode.mode + ""
 
-    def stderr(self, mode: Stdio) -> None:
+    def stderr(mut self, mode: Stdio) -> None:
         self.stderr_mode = mode.mode + ""
 
 

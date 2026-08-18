@@ -10,7 +10,7 @@ class Todo:
         self.title = title
         self.done = False
 
-    def complete(self) -> None:
+    def complete(mut self) -> None:
         self.done = True
 
     def __str__(self) -> str:
@@ -23,7 +23,7 @@ class TodoList:
     def __init__(self):
         self.items = []
 
-    def add(self, title: str) -> None:
+    def add(mut self, title: str) -> None:
         self.items.append(Todo(title))
 
     def complete_item(self, index: int) -> None:

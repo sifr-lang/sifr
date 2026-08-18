@@ -18,6 +18,7 @@ impl RustEmitter {
             ReceiverConvention::SharedBorrow => RustParam::SelfParam { mutable: false },
             ReceiverConvention::MutableBorrow => RustParam::SelfParam { mutable: true },
             ReceiverConvention::Owned => RustParam::SelfValue,
+            ReceiverConvention::OwnedMutable => RustParam::MutableSelfValue,
         }
     }
 

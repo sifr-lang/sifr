@@ -2258,7 +2258,7 @@
     },
     {
       "code": "SIFR-PROTO-0006",
-      "constant": "PROTO_FIXED_RECEIVER_MUTATION",
+      "constant": "PROTO_FIXED_RECEIVER_VIOLATION",
       "docs_link": "docs/errors/SIFR-PROTO-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",

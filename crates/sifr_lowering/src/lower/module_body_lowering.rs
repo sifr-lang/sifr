@@ -17,7 +17,7 @@ pub(super) fn lower_module_bodies(
         })
         .collect();
     generic_method_requirements::close_generic_method_requirements(ctx);
-    super::method_receiver_analysis::infer_and_annotate_class_receivers(&mut classes, ctx);
+    super::method_receiver_analysis::validate_and_annotate_class_receivers(&mut classes, ctx);
     for class in &mut classes {
         for method in class
             .methods

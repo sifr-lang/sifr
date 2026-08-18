@@ -68,13 +68,13 @@ class Handler:
         self._level = level
         self._formatter = Formatter("%(levelname)s:%(name)s:%(message)s")
 
-    def set_level(self, level: int) -> None:
+    def set_level(mut self, level: int) -> None:
         self._level = level
 
     def level(self) -> int:
         return self._level
 
-    def set_formatter(self, fmt: Formatter) -> None:
+    def set_formatter(mut self, fmt: Formatter) -> None:
         self._formatter = Formatter(fmt._fmt + "")
 
     def format_template(self) -> str:
@@ -99,13 +99,13 @@ class StreamHandler:
         self._level = level
         self._formatter = Formatter("%(levelname)s:%(name)s:%(message)s")
 
-    def set_level(self, level: int) -> None:
+    def set_level(mut self, level: int) -> None:
         self._level = level
 
     def level(self) -> int:
         return self._level
 
-    def set_formatter(self, fmt: Formatter) -> None:
+    def set_formatter(mut self, fmt: Formatter) -> None:
         self._formatter = Formatter(fmt._fmt + "")
 
     def format_template(self) -> str:
@@ -137,13 +137,13 @@ class FileHandler:
     def path(self) -> str:
         return self._path
 
-    def set_level(self, level: int) -> None:
+    def set_level(mut self, level: int) -> None:
         self._level = level
 
     def level(self) -> int:
         return self._level
 
-    def set_formatter(self, fmt: Formatter) -> None:
+    def set_formatter(mut self, fmt: Formatter) -> None:
         self._formatter = Formatter(fmt._fmt + "")
 
     def format_template(self) -> str:
@@ -178,13 +178,13 @@ class NullHandler:
         self._level = level
         self._formatter = Formatter("%(levelname)s:%(name)s:%(message)s")
 
-    def set_level(self, level: int) -> None:
+    def set_level(mut self, level: int) -> None:
         self._level = level
 
     def level(self) -> int:
         return self._level
 
-    def set_formatter(self, fmt: Formatter) -> None:
+    def set_formatter(mut self, fmt: Formatter) -> None:
         self._formatter = Formatter(fmt._fmt + "")
 
     def format_template(self) -> str:
@@ -214,31 +214,31 @@ class Logger:
         self._handler_level = NOTSET
         self._handler_fmt = "%(levelname)s:%(name)s:%(message)s"
 
-    def set_level(self, level: int) -> None:
+    def set_level(mut self, level: int) -> None:
         self._level = level
 
-    def set_file(self, path: str) -> None:
+    def set_file(mut self, path: str) -> None:
         self._log_path = path + ""
 
-    def add_handler(self, handler: FileHandler) -> None:
+    def add_handler(mut self, handler: FileHandler) -> None:
         self._handler_kind = "file"
         self._handler_path = handler.path()
         self._handler_level = handler.level()
         self._handler_fmt = "%(levelname)s:%(name)s:%(message)s"
 
-    def set_stream_handler(self, handler: StreamHandler) -> None:
+    def set_stream_handler(mut self, handler: StreamHandler) -> None:
         self._handler_kind = "stream"
         self._handler_path = ""
         self._handler_level = handler.level()
         self._handler_fmt = "%(levelname)s:%(name)s:%(message)s"
 
-    def set_null_handler(self, handler: NullHandler) -> None:
+    def set_null_handler(mut self, handler: NullHandler) -> None:
         self._handler_kind = "null"
         self._handler_path = ""
         self._handler_level = handler.level()
         self._handler_fmt = "%(levelname)s:%(name)s:%(message)s"
 
-    def clear_handler(self) -> None:
+    def clear_handler(mut self) -> None:
         self._handler_kind = ""
         self._handler_path = ""
         self._handler_level = NOTSET

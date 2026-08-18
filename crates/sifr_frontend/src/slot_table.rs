@@ -660,7 +660,7 @@ fn finish_method_slot(
         slot.context_type = Some(context.ty.clone());
         slot.context_mutable = context.convention.is_mutable();
     }
-    if slot.receiver == Some(ReceiverConvention::Owned)
+    if slot.receiver.is_some_and(ReceiverConvention::is_owned)
         && !same_nominal_specialization(&slot.output_type, &slot.owner_type)
     {
         return Err(MethodSlotError::new(

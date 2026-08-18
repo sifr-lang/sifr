@@ -743,7 +743,7 @@ class Store:
     def __init__(self):
         self.values = {}
 
-    def put(self, key: str, value: str, timestamp: int) -> None:
+    def put(mut self, key: str, value: str, timestamp: int) -> None:
         if key not in self.values:
             self.values[key] = []
         if key in self.values:
@@ -772,7 +772,7 @@ class Cache:
     def __init__(self):
         self.entries = {}
 
-    def remove(self, key: int) -> None:
+    def remove(mut self, key: int) -> None:
         del self.entries[key]
 "#,
     );
@@ -791,13 +791,13 @@ class Buckets:
     def __init__(self):
         self.values = {}
 
-    def push(self, key: int, value: int) -> None:
+    def push(mut self, key: int, value: int) -> None:
         if key not in self.values:
             self.values[key] = []
         if key in self.values:
             self.values[key].append(value)
 
-    def take(self, key: int) -> int:
+    def take(mut self, key: int) -> int:
         if key in self.values:
             popped = self.values[key].pop()
             if popped is not None:

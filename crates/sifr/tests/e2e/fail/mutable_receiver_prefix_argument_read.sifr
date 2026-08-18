@@ -2,7 +2,7 @@
 class Helper:
     items: list[int]
 
-    def observe_owner(self, owner: Owner) -> None:
+    def observe_owner(mut self, owner: Owner) -> None:
         self.items.append(len(owner.helper.items))
 
 

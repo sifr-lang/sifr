@@ -29,10 +29,10 @@ class Counter:
     def __init__(self):
         self.count = 0
 
-    def increment(self) -> None:
+    def increment(mut self) -> None:
         self.count += 1
 
-    def decrement(self) -> None:
+    def decrement(mut self) -> None:
         self.count -= 1
 
     def get(self) -> int:

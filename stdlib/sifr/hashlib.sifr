@@ -31,7 +31,7 @@ class HashObject:
         self.digest_size = digest_size
         self.block_size = block_size
 
-    def update(self, data: bytes) -> None:
+    def update(mut self, data: bytes) -> None:
         self._data = self._data + data
 
     def hexdigest(self) -> str:

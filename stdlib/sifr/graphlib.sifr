@@ -68,13 +68,13 @@ class TopologicalSorter:
         self._ready_order = []
         self._next_index = 0
 
-    def _record_node(self, node: int) -> None:
+    def _record_node(mut self, node: int) -> None:
         if not _contains_int(self.nodes, node):
             self.nodes.append(node)
         if node > self.max_node:
             self.max_node = node
 
-    def add(self, node: int, predecessor: int) -> None:
+    def add(mut self, node: int, predecessor: int) -> None:
         self._record_node(node)
         self._record_node(predecessor)
         self.from_nodes.append(predecessor)
@@ -83,7 +83,7 @@ class TopologicalSorter:
         self._ready_order = []
         self._next_index = 0
 
-    def add_many(self, node: int, predecessors: list[int]) -> None:
+    def add_many(mut self, node: int, predecessors: list[int]) -> None:
         self._record_node(node)
         if len(predecessors) == 0:
             self._prepared = False
@@ -100,7 +100,7 @@ class TopologicalSorter:
                 filtered.append(candidate)
         return filtered
 
-    def prepare(self) -> Result[None, CycleError]:
+    def prepare(mut self) -> Result[None, CycleError]:
         self._prepared = False
         self._ready_order = []
         self._next_index = 0
@@ -122,7 +122,7 @@ class TopologicalSorter:
             return None
         return None
 
-    def get_ready(self) -> Result[list[int], CycleError]:
+    def get_ready(mut self) -> Result[list[int], CycleError]:
         if not self._prepared:
             try:
                 _prepared: None = self.prepare()
@@ -135,7 +135,7 @@ class TopologicalSorter:
                 return [current]
         return []
 
-    def done(self, node: int) -> None:
+    def done(mut self, node: int) -> None:
         if not self._prepared:
             return
         if self._next_index >= len(self._ready_order):
@@ -149,7 +149,7 @@ class TopologicalSorter:
             return False
         return self._next_index < len(self._ready_order)
 
-    def reset(self) -> None:
+    def reset(mut self) -> None:
         self._prepared = False
         self._ready_order = []
         self._next_index = 0

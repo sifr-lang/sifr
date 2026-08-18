@@ -67,7 +67,7 @@ Apply this convention-aware logic to **all call paths** in `lower.rs`:
 - `Callable`-typed variable calls (extract conventions from the `Callable` type variant)
 - Method calls (non-self parameters propagate conventions through `HirParam`)
 
-**Note:** Constructor calls do not need convention changes -- constructors always take ownership of their arguments. Method `self` receivers continue to use auto-inference (`&self`/`&mut self` from body analysis).
+**Note:** Constructor calls always take ownership of their arguments. The later pre-v1 compatibility-removal phase made method receiver conventions explicit.
 
 **Key files:** `crates/sifr_lowering/src/lower/` (function call lowering, callable_info path, lower_method_call)
 

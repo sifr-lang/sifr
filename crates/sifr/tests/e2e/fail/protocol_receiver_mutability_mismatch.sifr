@@ -7,5 +7,5 @@ class Shared(Protocol):
 class MutableImplementation:
     value: int
 
-    def update(self) -> None:
+    def update(mut self) -> None:
         self.value += 1

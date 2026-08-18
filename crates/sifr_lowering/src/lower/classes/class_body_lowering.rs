@@ -1,8 +1,8 @@
 use super::class_shape_metadata::{declaration_metadata, field_defaults};
 use super::is_hashable_type;
 use super::parameter_conventions::{
-    class_method_param_convention, class_method_param_default, declared_method_receiver_convention,
-    prepare_method_param_ownership,
+    class_method_param_convention, class_method_param_default, declared_receiver_convention,
+    interop_owned_receiver, prepare_method_param_ownership,
 };
 use super::rust_opaque_validation as opaque;
 use super::{
@@ -111,7 +111,7 @@ pub(in crate::lower) fn lower_class(
             if let Stmt::FunctionDef(func) = stmt {
                 let method_name = func.name.to_string();
                 ctx.scope.push();
-                let receiver = declared_method_receiver_convention(&method_name, &func.parameters);
+                let receiver = declared_receiver_convention(&func.parameters);
                 let receiver_id =
                     ctx.scope
                         .define_receiver("self".to_string(), class_ty.clone(), receiver);
@@ -251,7 +251,7 @@ pub(in crate::lower) fn lower_class(
                 } // Skip __init__ for newtypes
                 ctx.current_class = Some(class_name.clone());
                 ctx.scope.push();
-                let receiver = declared_method_receiver_convention(&method_name, &func.parameters);
+                let receiver = declared_receiver_convention(&func.parameters);
                 let receiver_id =
                     ctx.scope
                         .define_receiver("self".to_string(), class_ty.clone(), receiver);
@@ -431,7 +431,7 @@ pub(in crate::lower) fn lower_class(
                 MethodKind::Regular
             };
             let declared_receiver = (method_kind == MethodKind::Regular)
-                .then(|| declared_method_receiver_convention(&method_name, &func.parameters));
+                .then(|| declared_receiver_convention(&func.parameters));
             ctx.method_source_ranges
                 .insert(format!("{class_name}.{method_name}"), func.name.range());
 
@@ -560,7 +560,7 @@ pub(in crate::lower) fn lower_class(
                     .iter()
                     .any(|declaration| declaration.consumes_receiver)
             {
-                method_ft.receiver = Some(sifr_type_system::ReceiverConvention::Owned);
+                method_ft.receiver = Some(interop_owned_receiver(method_ft.receiver));
             }
             if !python_interop.is_empty() && !is_python_opaque {
                 ctx.error_with_code_at(

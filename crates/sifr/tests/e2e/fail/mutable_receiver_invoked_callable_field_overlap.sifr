@@ -7,11 +7,11 @@ class Owner:
         self.value = 0
         self.callback = callback
 
-    def update(self, value: int) -> int:
+    def update(mut self, value: int) -> int:
         self.value = value
         return self.value
 
-    def conflict(self) -> int:
+    def conflict(mut self) -> int:
         return self.update(self.callback(2))
 
 

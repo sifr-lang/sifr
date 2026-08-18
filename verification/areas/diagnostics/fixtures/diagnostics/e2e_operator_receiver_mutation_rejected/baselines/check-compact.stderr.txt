@@ -1,2 +1,2 @@
 1 error, 0 warnings, 0 notes
-E SIFR-PROTO-0006 verification/areas/diagnostics/fixtures/diagnostics/e2e_operator_receiver_mutation_rejected/main.sifr:6:9 class 'Counter' method '__eq__' cannot mutate its receiver because Rust trait 'PartialEq' fixes the receiver convention
+E SIFR-PROTO-0006 verification/areas/diagnostics/fixtures/diagnostics/e2e_operator_receiver_mutation_rejected/main.sifr:6:9 class 'Counter' method '__eq__' violates the receiver convention fixed by Rust trait 'PartialEq'

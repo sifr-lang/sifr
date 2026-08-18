@@ -153,7 +153,7 @@ class Ordered[A, B]:
 class NegBox[T]:
     value: T
 
-    def __neg__(self) -> T:
+    def __neg__(own self) -> T:
         return -self.value
 "#,
     );
@@ -199,7 +199,7 @@ class NegBox[T]:
     def negated(self) -> T:
         return -self.value
 
-    def __neg__(self) -> T:
+    def __neg__(own self) -> T:
         return self.negated()
 
 class Ordered[T]:

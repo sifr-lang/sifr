@@ -10,7 +10,7 @@ class Counter:
 class DelegatingCounter:
     value: int
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.value += 1
 
     # expect-error[col=9]: SIFR-PROTO-0006

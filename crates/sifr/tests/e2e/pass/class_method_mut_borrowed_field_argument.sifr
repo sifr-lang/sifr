@@ -1,7 +1,7 @@
 class Crate:
     items: list[int]
 
-    def merge(self, mut other: Crate) -> None:
+    def merge(mut self, mut other: Crate) -> None:
         self.items.append(5)
         other.items.append(7)
 
@@ -10,7 +10,7 @@ class Depot:
     stock: Crate
     helper: Crate
 
-    def refill(self) -> None:
+    def refill(mut self) -> None:
         self.helper.merge(self.stock)
 
     def refill_explicit(mut self) -> None:

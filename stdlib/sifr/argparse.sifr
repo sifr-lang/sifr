@@ -172,7 +172,7 @@ class Namespace:
         self._bool_values = []
         self._list_values = []
 
-    def set(self, name: str, value: str) -> None:
+    def set(mut self, name: str, value: str) -> None:
         updated: list[tuple[str, str]] = []
         replaced: bool = False
         for key, current in self._str_values:
@@ -185,7 +185,7 @@ class Namespace:
             updated.append((name + "", value + ""))
         self._str_values = updated
 
-    def set_bool(self, name: str, value: bool) -> None:
+    def set_bool(mut self, name: str, value: bool) -> None:
         updated: list[tuple[str, bool]] = []
         replaced: bool = False
         for key, current in self._bool_values:
@@ -198,7 +198,7 @@ class Namespace:
             updated.append((name + "", value))
         self._bool_values = updated
 
-    def set_list(self, name: str, values: list[str]) -> None:
+    def set_list(mut self, name: str, values: list[str]) -> None:
         copied: list[str] = []
         for value in values:
             copied.append(value + "")
@@ -250,7 +250,7 @@ class Namespace:
             return copied
         return []
 
-    def merge_from(self, other: Namespace) -> None:
+    def merge_from(mut self, other: Namespace) -> None:
         for key, value in other._str_values:
             self.set(key, value)
         for key2, value2 in other._bool_values:
@@ -305,18 +305,18 @@ class ArgumentParser:
     def prog(self) -> str:
         return self._prog + ""
 
-    def add_subparsers(self, dest: str = "command") -> None:
+    def add_subparsers(mut self, dest: str = "command") -> None:
         if dest != "":
             self._subparsers_dest = dest + ""
 
-    def add_parser(self, name: str, own parser: ArgumentParser) -> None:
+    def add_parser(mut self, name: str, own parser: ArgumentParser) -> None:
         specs_copy: list[ArgumentSpec] = []
         for spec in parser._specs:
             specs_copy.append(spec)
         self._subparsers.append((name + "", specs_copy))
 
     def _append_spec(
-        self,
+        mut self,
         name: str,
         dest: str,
         action: str,
@@ -346,7 +346,7 @@ class ArgumentParser:
         self._specs.append(spec)
 
     def add_argument(
-        self,
+        mut self,
         name: str,
         dest: str = "",
         action: str = "store",
@@ -355,7 +355,7 @@ class ArgumentParser:
         self.add_argument_typed(name, dest, action, default, "1", "str")
 
     def add_argument_typed(
-        self,
+        mut self,
         name: str,
         dest: str = "",
         action: str = "store",

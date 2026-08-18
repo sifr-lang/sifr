@@ -83,10 +83,10 @@ class DialectRegistry:
             "unix": unix_dialect(),
         }
 
-    def register(self, name: str, dialect: Dialect) -> None:
+    def register(mut self, name: str, dialect: Dialect) -> None:
         self._dialects[name + ""] = _copy_dialect(dialect)
 
-    def unregister(self, name: str) -> bool:
+    def unregister(mut self, name: str) -> bool:
         if name in self._dialects:
             _ = self._dialects.pop(name)
             return True
@@ -505,7 +505,7 @@ class reader:
         self._rows = rows
         self._pos = 0
 
-    def __next__(self) -> list[str] | None:
+    def __next__(mut self) -> list[str] | None:
         if self._pos >= len(self._rows):
             return None
         row: list[str] | None = self._rows[self._pos]
@@ -558,13 +558,13 @@ class writer:
         self.dialect = resolved_dialect
         self._rows = []
 
-    def writerow(self, row: list[str]) -> None:
+    def writerow(mut self, row: list[str]) -> None:
         copied: list[str] = []
         for value in row:
             copied.append(value)
         self._rows.append(copied)
 
-    def writerows(self, rows: list[list[str]]) -> None:
+    def writerows(mut self, rows: list[list[str]]) -> None:
         for row in rows:
             copied: list[str] = []
             for value in row:
@@ -648,7 +648,7 @@ class DictReader:
             copied.append(field + "")
         return copied
 
-    def __next__(self) -> dict[str, str] | None:
+    def __next__(mut self) -> dict[str, str] | None:
         while self._pos < len(self._rows):
             row: list[str] | None = self._rows[self._pos]
             self._pos = self._pos + 1
@@ -731,12 +731,12 @@ class DictWriter:
         self.extrasaction = action
         self._writer = writer_value
 
-    def writeheader(self) -> None:
+    def writeheader(mut self) -> None:
         current_writer: writer = self._writer
         current_writer.writerow(self.fieldnames)
         self._writer = current_writer
 
-    def writerow(self, row: dict[str, str]) -> None:
+    def writerow(mut self, row: dict[str, str]) -> None:
         ordered: list[str] = []
         for fieldname in self.fieldnames:
             if fieldname in row:
@@ -747,7 +747,7 @@ class DictWriter:
         current_writer.writerow(ordered)
         self._writer = current_writer
 
-    def writerows(self, rows: list[dict[str, str]]) -> None:
+    def writerows(mut self, rows: list[dict[str, str]]) -> None:
         current_writer: writer = self._writer
         for row in rows:
             ordered: list[str] = []

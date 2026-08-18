@@ -15,8 +15,8 @@ use super::diagnostics::{
 };
 use super::parameter_conventions::{
     class_declared_method_param_convention, class_method_param_convention,
-    declared_method_receiver_convention, inherit_class_methods,
-    record_declared_class_method_metadata, replace_method_signature,
+    declared_receiver_convention, inherit_class_methods, record_declared_class_method_metadata,
+    replace_method_signature,
 };
 use super::simple_expr::lower_expr_simple;
 use super::typing_and_functions::resolve_annotation_expr;
@@ -239,10 +239,7 @@ pub(in crate::lower) fn collect_class_type(
                     Type::None
                 };
                 let ft = FunctionType {
-                    receiver: Some(declared_method_receiver_convention(
-                        &method_name,
-                        &func.parameters,
-                    )),
+                    receiver: Some(declared_receiver_convention(&func.parameters)),
                     params,
                     return_type: Box::new(method_signature_return_type(func, return_ty)),
                 };
@@ -288,7 +285,7 @@ pub(in crate::lower) fn collect_class_type(
                 } else {
                     Type::None
                 };
-                let receiver = declared_method_receiver_convention(&method_name, &func.parameters);
+                let receiver = declared_receiver_convention(&func.parameters);
                 methods.push((
                     method_name,
                     FunctionType {
@@ -696,9 +693,8 @@ pub(in crate::lower) fn collect_class_type(
                         ctx.function_workload_annotations
                             .insert(format!("{class_name}.{method_name}"), workload);
                     }
-                    let receiver = (!is_static && !is_class).then(|| {
-                        declared_method_receiver_convention(&method_name, &func.parameters)
-                    });
+                    let receiver = (!is_static && !is_class)
+                        .then(|| declared_receiver_convention(&func.parameters));
                     replace_method_signature(
                         &mut methods,
                         method_name,

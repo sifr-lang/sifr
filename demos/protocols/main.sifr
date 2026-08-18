@@ -24,7 +24,7 @@ class Vec2:
         self.x = x
         self.y = y
 
-    def __add__(self, other: Vec2) -> Vec2:
+    def __add__(own self, other: Vec2) -> Vec2:
         return Vec2(self.x + other.x, self.y + other.y)
 
     def __eq__(self, other: Vec2) -> bool:

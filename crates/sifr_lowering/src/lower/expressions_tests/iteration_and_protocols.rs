@@ -54,7 +54,7 @@ pub(super) fn test_user_defined_iterable_class_participates_in_builtin_iteration
 #[test]
 pub(super) fn test_next_accepts_user_defined_iterator_class() {
     let result = lower_source(
-        "class CounterIter:\n    value: int\n\n    def __init__(self, start: int):\n        self.value = start\n\n    def __iter__(self) -> Iterator[int]:\n        return iter([self.value])\n\n    def __next__(self) -> int | None:\n        if self.value <= 0:\n            return None\n        out: int = self.value\n        self.value = self.value - 1\n        return out\n\n\ndef main():\n    it: CounterIter = CounterIter(2)\n    first: int | None = next(it)\n",
+        "class CounterIter:\n    value: int\n\n    def __init__(self, start: int):\n        self.value = start\n\n    def __iter__(self) -> Iterator[int]:\n        return iter([self.value])\n\n    def __next__(mut self) -> int | None:\n        if self.value <= 0:\n            return None\n        out: int = self.value\n        self.value = self.value - 1\n        return out\n\n\ndef main():\n    it: CounterIter = CounterIter(2)\n    first: int | None = next(it)\n",
     );
     assert!(result.is_ok(), "{result:?}");
 }

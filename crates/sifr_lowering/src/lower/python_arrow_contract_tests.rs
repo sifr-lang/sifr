@@ -513,7 +513,7 @@ fn affine_consuming_operator_parameters_fail_closed() {
 #[test]
 fn borrowed_non_affine_operator_parameters_preserve_return_semantics() {
     lower_ok(
-        "class Value:\n    number: int\n\nclass Identity:\n    def __add__(self, other: Value) -> Value:\n        return other\n",
+        "class Value:\n    number: int\n\nclass Identity:\n    def __add__(own self, other: Value) -> Value:\n        return other\n",
     );
 }
 

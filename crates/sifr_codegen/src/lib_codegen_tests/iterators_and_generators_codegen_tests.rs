@@ -379,7 +379,7 @@ fn test_generate_rust_nested_string_function_closure_params_are_typed() {
 #[test]
 fn test_generate_rust_tuple_field_assignment_emits_mutable_self_receiver() {
     let rust_code = generate_rust_from_source(
-        "class RunningBounds:\n    left: int\n    right: int\n\n    def __init__(self, left: int, right: int):\n        self.left = left\n        self.right = right\n\n    def rotate(self, next_value: int) -> None:\n        self.left, self.right = self.right, next_value\n",
+        "class RunningBounds:\n    left: int\n    right: int\n\n    def __init__(self, left: int, right: int):\n        self.left = left\n        self.right = right\n\n    def rotate(mut self, next_value: int) -> None:\n        self.left, self.right = self.right, next_value\n",
     );
 
     assert!(rust_code.contains("fn rotate(&mut self, next_value: i64)"));

@@ -1,7 +1,7 @@
 class NegBox[T]:
     value: T
 
-    def __neg__(self) -> T:
+    def __neg__(own self) -> T:
         return -self.value
 
 

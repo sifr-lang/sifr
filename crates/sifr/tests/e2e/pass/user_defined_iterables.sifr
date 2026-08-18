@@ -11,7 +11,7 @@ class CountdownIter:
     def __iter__(self) -> Iterator[int]:
         return iter([self.current])
 
-    def __next__(self) -> int | None:
+    def __next__(mut self) -> int | None:
         if self.current <= 0:
             return None
         value: int = self.current

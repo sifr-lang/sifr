@@ -1,25 +1,24 @@
 ## Erroneous Code
 
 ```python
-class Counter:
-    value: int
+class Point:
+    x: int
 
-    def __str__(self) -> str:
-        self.value += 1
-        return str(self.value)
+    def __add__(self, other: Point) -> Point:
+        return Point(self.x + other.x)
 ```
 
 ## How To Fix It
 
-Keep operator and display methods read-only because their Rust trait receiver
-shape is fixed.
+Declare the receiver convention that the Rust trait requires. Arithmetic
+operators consume the receiver, so use `own self`.
 
 ## Fixed Code
 
 ```python
-class Counter:
-    value: int
+class Point:
+    x: int
 
-    def __str__(self) -> str:
-        return str(self.value)
+    def __add__(own self, other: Point) -> Point:
+        return Point(self.x + other.x)
 ```

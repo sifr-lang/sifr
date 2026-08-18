@@ -2,7 +2,7 @@
 class Helper:
     values: list[int]
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.values.append(1)
 
 

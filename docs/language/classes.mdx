@@ -62,6 +62,33 @@ def main():
     print(f"Rectangle height: {rect.height}")
 ```
 
+## Receiver Conventions
+
+The receiver syntax defines ownership and mutation. The compiler does not infer a different convention from the method body.
+
+| Syntax | Meaning |
+| --- | --- |
+| `self` | Borrow the value. The method cannot mutate it. |
+| `mut self` | Borrow and mutate the value. The caller keeps ownership. |
+| `own self` | Consume the value. The method cannot mutate its local binding. |
+| `own mut self` | Consume the value and mutate its local binding. |
+
+Use `mut self` when a method changes a field or calls another mutable method on the receiver.
+
+```python
+class Counter:
+    value: int
+
+    def increment(mut self) -> None:
+        self.value += 1
+
+    def take(own mut self) -> int:
+        self.value += 1
+        return self.value
+```
+
+Protocols use the same explicit conventions. An implementation must satisfy the receiver convention in the protocol declaration.
+
 ## Classes in Union Types
 
 Classes are first-class members of union types. Declare a parameter as `Dog | Cat | Bird` and the compiler tracks all three possibilities throughout the function body.

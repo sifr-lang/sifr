@@ -1,7 +1,7 @@
 class Helper:
     items: list[int]
 
-    def bump(self) -> None:
+    def bump(mut self) -> None:
         self.items.append(1)
 
 

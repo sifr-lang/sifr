@@ -5,7 +5,7 @@ class Inner:
 class Outer:
     inner: Inner
 
-    def append_to_inner(self) -> None:
+    def append_to_inner(mut self) -> None:
         self.inner.items.append(11)
 
 
