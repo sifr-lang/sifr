@@ -29,8 +29,8 @@
       "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/08_env.sifr",
       "command": "check",
       "supported_apis": [
-        {"name": "env_get", "tokens": ["env_get("]},
-        {"name": "env_set", "tokens": ["env_set("]}
+        {"name": "getenv_opt", "tokens": ["getenv_opt("]},
+        {"name": "setenv", "tokens": ["setenv("]}
       ]
     },
     {
@@ -161,7 +161,7 @@
       "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/07_time.sifr",
       "command": "check",
       "supported_apis": [
-        {"name": "time_now", "tokens": ["time_now("]},
+        {"name": "time", "tokens": ["time("]},
         {"name": "sleep", "tokens": ["sleep("]}
       ]
     }

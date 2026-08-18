@@ -46,7 +46,7 @@ impl Datetime {
     }
 }
 
-fn utc() -> Timezone {
+fn utc_timezone() -> Timezone {
     Timezone::new(0)
 }
 
@@ -76,7 +76,7 @@ fn main() {
     assert_eq!(name_v3.version(), 3);
     assert_eq!(name_v5.version(), 5);
 
-    let utc_now = now(utc());
+    let utc_now = now(utc_timezone());
     assert!(utc_now.isoformat().ends_with("+00:00"));
 
     let plus_two = timezone(7_200);

@@ -4,7 +4,7 @@
 from sifr.io import exists
 from sifr.hashlib import sha256
 from sifr.base64 import base64_encode, base64_decode
-from sifr.env import env_get
+from sifr.env import getenv_opt
 
 def main():
     # sifr.io wraps _sifr.fs/_sifr.fs intrinsics

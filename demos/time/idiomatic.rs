@@ -84,10 +84,6 @@ fn unix_seconds_now() -> f64 {
         .as_secs_f64()
 }
 
-fn time_now() -> f64 {
-    unix_seconds_now()
-}
-
 fn time() -> f64 {
     unix_seconds_now()
 }
@@ -149,7 +145,7 @@ fn collect_clock_actual() -> Vec<bool> {
     let before_mono = monotonic();
     sleep(0.01);
     vec![
-        time_now() > 0.0 && time() > 0.0,
+        time() > 0.0,
         perf_counter() >= before_perf && monotonic() >= before_mono,
     ]
 }

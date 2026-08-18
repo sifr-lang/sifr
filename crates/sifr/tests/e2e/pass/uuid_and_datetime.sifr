@@ -8,7 +8,7 @@ from sifr.uuid import (
     uuid3,
     uuid5,
 )
-from sifr.datetime import datetime, timezone, from_timestamp, UTC, utc
+from sifr.datetime import datetime, timezone, from_timestamp, UTC
 
 
 def main() -> None:
@@ -23,8 +23,7 @@ def main() -> None:
     assert dns_v5.to_str() == "886313e1-3b8a-5372-9b90-0c9aee199e5d"
 
     assert str(UTC()) == "UTC"
-    assert str(utc()) == "UTC"
-    assert UTC() == utc()
+    assert UTC() == timezone(0)
 
     epoch_utc_ok: bool = False
     try:

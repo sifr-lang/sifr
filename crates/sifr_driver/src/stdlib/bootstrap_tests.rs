@@ -312,6 +312,108 @@ fn numeric_and_random_modules_export_only_canonical_operation_names() {
     }
 }
 
+#[test]
+fn runtime_information_modules_export_only_canonical_operation_names() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+
+    for (module_name, canonical, private) in [
+        (
+            "sifr.platform",
+            &[
+                "system",
+                "machine",
+                "node",
+                "release",
+                "version",
+                "processor",
+            ][..],
+            &[
+                "platform_system",
+                "platform_arch",
+                "platform_node",
+                "platform_release",
+                "platform_version",
+                "platform_processor",
+            ][..],
+        ),
+        (
+            "sifr.time",
+            &["time", "strftime", "sleep", "perf_counter", "monotonic"][..],
+            &["time_now", "time_format"][..],
+        ),
+        (
+            "sifr.sys",
+            &["argv", "exit", "version", "platform", "maxsize"][..],
+            &[
+                "get_args",
+                "sys_exit",
+                "sys_version",
+                "sys_platform",
+                "sys_maxsize",
+            ][..],
+        ),
+        (
+            "sifr.env",
+            &[
+                "getenv_opt",
+                "getenv",
+                "setenv",
+                "unsetenv",
+                "keys",
+                "values",
+                "items",
+            ][..],
+            &[
+                "env_get",
+                "env_set",
+                "env_unset",
+                "env_keys",
+                "env_values",
+                "env_items",
+            ][..],
+        ),
+    ] {
+        let functions = compiled
+            .defs
+            .functions
+            .get(module_name)
+            .unwrap_or_else(|| panic!("{module_name} functions should be exported"));
+        for name in canonical {
+            assert!(
+                functions.contains_key(*name),
+                "{module_name}.{name} should be exported"
+            );
+        }
+        for name in private {
+            assert!(
+                !functions.contains_key(*name),
+                "{module_name}.{name} must remain private"
+            );
+        }
+    }
+
+    let datetime = compiled
+        .defs
+        .functions
+        .get("sifr.datetime")
+        .expect("sifr.datetime functions should be exported");
+    assert!(datetime.contains_key("UTC"));
+    assert!(!datetime.contains_key("utc"));
+    assert!(!datetime.contains_key("time_now"));
+
+    for module_name in ["sifr.random", "sifr.os"] {
+        let functions = compiled
+            .defs
+            .functions
+            .get(module_name)
+            .unwrap_or_else(|| panic!("{module_name} functions should be exported"));
+        assert!(
+            !functions.contains_key("time_now") && !functions.contains_key("get_args"),
+            "{module_name} must not leak runtime-information intrinsics"
+        );
+    }
+}
+
 fn fixture_source(module: &str, source: &str, kind: LoadedStdlibSourceKind) -> LoadedStdlibSource {
     let stdlib_root =
         std::fs::canonicalize(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../stdlib"))

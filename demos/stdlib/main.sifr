@@ -14,7 +14,7 @@ from sifr.os import getcwd
 from sifr.re import re_findall
 from sifr.graphlib import topological_sort, CycleError
 from sifr.uuid import uuid4
-from sifr.platform import platform_system, platform_arch
+from sifr.platform import system, machine
 from sifr.pathlib import join_path, basename, extension
 from sifr.logging import log_info
 from sifr.difflib import get_close_matches, unified_diff
@@ -60,9 +60,9 @@ def main():
     assert_true(len(id) > 0)
 
     # platform -- system info
-    sys: str = platform_system()
+    sys: str = system()
     assert_true(len(sys) > 0)
-    arch: str = platform_arch()
+    arch: str = machine()
     assert_true(len(arch) > 0)
 
     # pathlib -- path manipulation

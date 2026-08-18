@@ -79,14 +79,14 @@ fn env_store() -> &'static Mutex<BTreeMap<String, String>> {
     STORE.get_or_init(|| Mutex::new(BTreeMap::new()))
 }
 
-fn env_set(key: &str, value: &str) {
+fn setenv(key: &str, value: &str) {
     env_store()
         .lock()
         .unwrap_or_else(|poison| poison.into_inner())
         .insert(key.to_string(), value.to_string());
 }
 
-fn env_get(key: &str) -> Option<String> {
+fn getenv_opt(key: &str) -> Option<String> {
     env_store()
         .lock()
         .unwrap_or_else(|poison| poison.into_inner())
@@ -143,11 +143,11 @@ fn main() {
     }
 
     println!("=== sifr.env ===");
-    env_set("SIFR_DEMO", "active");
-    if let Some(value) = env_get("SIFR_DEMO") {
+    setenv("SIFR_DEMO", "active");
+    if let Some(value) = getenv_opt("SIFR_DEMO") {
         println!("SIFR_DEMO = {value}");
     }
-    if env_get("SIFR_NONEXISTENT").is_none() {
+    if getenv_opt("SIFR_NONEXISTENT").is_none() {
         println!("SIFR_NONEXISTENT not set");
     }
 

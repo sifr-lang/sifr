@@ -54,18 +54,6 @@ fn processor() -> String {
     machine()
 }
 
-fn platform_system() -> String {
-    system()
-}
-
-fn platform_arch() -> String {
-    machine()
-}
-
-fn platform_node() -> String {
-    node()
-}
-
 fn collect_core_actual() -> Vec<bool> {
     let sys_name = system();
     vec![
@@ -83,16 +71,10 @@ fn collect_host_actual() -> Vec<bool> {
     ]
 }
 
-fn collect_alias_actual() -> Vec<bool> {
-    vec![platform_system() == system() && platform_arch() == machine() && platform_node() == node()]
-}
-
 fn main() {
     let mut actual = Vec::new();
     actual.extend(collect_core_actual());
     actual.extend(collect_host_actual());
-    actual.extend(collect_alias_actual());
-
-    assert_bool_vector_eq(&actual, &[true, true, true, true, true, true, true]);
+    assert_bool_vector_eq(&actual, &[true, true, true, true, true, true]);
     println!("platform platform parity demo: pass");
 }

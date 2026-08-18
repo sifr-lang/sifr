@@ -317,7 +317,7 @@
     {
       "module": "time",
       "api_class": "o1_wrapper",
-      "representative_apis": ["time_now", "perf_counter", "monotonic"],
+      "representative_apis": ["time", "perf_counter", "monotonic"],
       "expected_asymptotic": "O(1)",
       "observed_asymptotic": "O(1)",
       "constant_factor_delta_band": "waived",

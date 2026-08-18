@@ -1,6 +1,6 @@
 from _sifr.crypto import random_float as _random_float_impl, random_gauss as _random_gauss_impl, random_int as _random_int_impl, random_randrange as _random_randrange_impl, random_uniform as _random_uniform_impl
 from _sifr.crypto import random_module_state_words as _module_state_words_impl, random_module_state_index as _module_state_index_impl, random_module_state_gauss_next as _module_state_gauss_next_impl, random_module_set_state as _module_set_state_impl
-from _sifr.time import time_now
+from _sifr.time import time_now as _time_impl
 from sifr.bytes import bytes_from_ints
 from sifr.math import cos, log, pi, sin, sqrt
 
@@ -32,7 +32,7 @@ def _clone_words(words: list[int]) -> list[int]:
 def _normalize_seed_input(seed_value: int | None) -> int:
     if seed_value is not None:
         return seed_value
-    return int(time_now() * 1000000.0)
+    return int(_time_impl() * 1000000.0)
 
 
 def _seed_words_from_seed(seed_value: int) -> list[int]:

@@ -1,6 +1,6 @@
 # sifr.os — OS operations
 # File system operations return Result[T, IOError] for safe error handling.
-from _sifr.sys import run_command, get_args, getpid, cpu_count, which, os_sep, os_linesep, os_name
+from _sifr.sys import run_command, getpid, cpu_count, which, os_sep, os_linesep, os_name
 from _sifr.fs import getcwd, listdir, mkdir, rmdir, remove_file, rename, is_file, is_dir, chdir, stat_size, disk_usage
 
 def stat(path: str) -> Result[int, IOError]:

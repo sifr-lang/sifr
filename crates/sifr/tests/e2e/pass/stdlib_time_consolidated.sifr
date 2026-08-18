@@ -1,12 +1,12 @@
 # Consolidated stdlib time coverage for stdlib_consolidation structure rules
-from sifr.time import time_now, time, sleep, strftime, strptime, gmtime_struct, localtime_struct, perf_counter, monotonic, struct_time
+from sifr.time import time, sleep, strftime, strptime, gmtime_struct, localtime_struct, perf_counter, monotonic, struct_time
 from sifr.time import mktime, TIMEZONE, ALTZONE, DAYLIGHT, TZNAME
 from sifr.test import assert_bool_vector_eq
 
 
 def collect_clock_actual() -> list[bool]:
     actual: list[bool] = []
-    now_ok: bool = time_now() > 0.0 and time() > 0.0
+    now_ok: bool = time() > 0.0
     actual.append(now_ok)
 
     perf_before: float = perf_counter()

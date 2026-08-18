@@ -63,15 +63,15 @@ status: completed
 
 ### Modules to Migrate (in dependency order)
 
-1. `lib/sifr/env.sifr` -- wraps `_sifr.sys` (env_get, env_set) -- simplest, good first migration
+1. `lib/sifr/env.sifr` -- wraps private `_sifr.sys` environment intrinsics behind `getenv_opt`, typed-default `getenv`, `setenv`, `unsetenv`, `keys`, `values`, and `items`
 2. `lib/sifr/bytes.sifr` -- wraps `_sifr.io` (encode_utf8, decode_utf8, to_hex, from_hex)
 3. `lib/sifr/base64.sifr` -- wraps `_sifr.crypto` or pure Sifr (b64encode, b64decode)
 4. `lib/sifr/math.sifr` -- wraps `_sifr.math` (12 functions + pi, e constants)
 5. `lib/sifr/hashlib.sifr` -- wraps `_sifr.crypto` (sha256, md5)
 6. `lib/sifr/io.sifr` -- wraps `_sifr.fs` + `_sifr.io` (read_text, write_text, exists, read_lines, `open()` / `File` context manager). Needs new intrinsics: `_sifr.fs.open_file`, `read_fd`, `write_fd`, `close_fd`
-7. `lib/sifr/os.sifr` -- wraps `_sifr.sys` + `_sifr.fs` (run_command, get_args)
+7. `lib/sifr/os.sifr` -- wraps `_sifr.sys` + `_sifr.fs` for OS and filesystem operations; process arguments belong to `sifr.sys.argv`
 8. `lib/sifr/json.sifr` -- wraps `_sifr.json` (json_loads, json_dumps)
-9. `lib/sifr/time.sifr` -- wraps `_sifr.time` (time_now, sleep, time_format)
+9. `lib/sifr/time.sifr` -- wraps private `_sifr.time.time_now` and `time_format` as public `time` and `strftime`; `sleep`, `perf_counter`, and `monotonic` keep their distinct names
 10. `lib/sifr/random.sifr` -- wraps private `_sifr.crypto` entropy primitives behind the stateful `randint`, `random`, `uniform`, and `choice` API
 11. `lib/sifr/re.sifr` -- wraps `_sifr.regex` (re_match, re_find, re_replace)
 12. `lib/sifr/collections.sifr` -- wraps existing set/counter/defaultdict intrinsics
@@ -163,7 +163,7 @@ status: completed
 2. `lib/sifr/graphlib.sifr` -- `TopologicalSorter` (pure Sifr, algorithmic)
 3. `lib/sifr/ipaddress.sifr` -- `ip_address`, `ip_network` (pure Sifr, parsing + math)
 4. `lib/sifr/timeit.sifr` -- `timeit`, `repeat` (wraps `_sifr.time.perf_counter_ns`)
-5. `lib/sifr/platform.sifr` -- `system`, `machine`, `architecture` (wraps `_sifr.sys.platform_os`, `platform_arch`)
+5. `lib/sifr/platform.sifr` -- `system`, `machine`, `node`, `release`, `version`, `processor` (wraps private `_sifr.platform` intrinsics)
 6. `lib/sifr/tomllib.sifr` -- `loads`, `load` (wraps new `_sifr.toml` intrinsic)
 7. `lib/sifr/datetime.sifr` -- `date`, `datetime`, `timedelta`, `timezone` (wraps new `_sifr.datetime` intrinsic)
 8. `lib/sifr/pathlib.sifr` -- `Path` class with `/` operator, `exists`, `read_text`, `write_text`, `stem`, `suffix`, `parent` (wraps `_sifr.fs`)

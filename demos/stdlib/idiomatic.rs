@@ -85,11 +85,11 @@ fn uuid4() -> String {
     format!("{first:08x}-{second:04x}-{third:04x}-{fourth:04x}-{fifth:012x}")
 }
 
-fn platform_system() -> String {
+fn system() -> String {
     std::env::consts::OS.to_string()
 }
 
-fn platform_arch() -> String {
+fn machine() -> String {
     std::env::consts::ARCH.to_string()
 }
 
@@ -267,8 +267,8 @@ fn main() {
     }
 
     assert!(!uuid4().is_empty());
-    assert!(!platform_system().is_empty());
-    assert!(!platform_arch().is_empty());
+    assert!(!system().is_empty());
+    assert!(!machine().is_empty());
 
     assert_eq!(join_path("/usr", "local"), "/usr/local");
     assert_eq!(basename("/home/user/file.txt"), "file.txt");

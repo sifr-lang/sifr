@@ -2,18 +2,18 @@
 # Test 8: sifr.env
 # ============================================================
 
-from sifr.env import env_get, env_set
+from sifr.env import getenv_opt, setenv
 
 def main():
-    home: str | None = env_get("HOME")
+    home: str | None = getenv_opt("HOME")
     if home is not None:
         print("HOME exists")
 
-    missing: str | None = env_get("SIFR_NONEXISTENT_12345")
+    missing: str | None = getenv_opt("SIFR_NONEXISTENT_12345")
     if missing is None:
         print("missing is None")
 
-    env_set("SIFR_TEST_VAR", "hello")
-    val: str | None = env_get("SIFR_TEST_VAR")
+    setenv("SIFR_TEST_VAR", "hello")
+    val: str | None = getenv_opt("SIFR_TEST_VAR")
     if val is not None:
         print(f"set/get: {val}")
