@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-18. M0-M7 are complete; M7b is next.
+Status: active on 2026-08-18. M0-M7b are complete; M8 is next.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -953,6 +953,36 @@ Acceptance criteria:
 Exit gate: imported adapted owners preserve their finalized attached-API
 selection exactly, including an explicit absence of attached APIs.
 
+State: complete
+PR: [`sifr-lang/sifr#3268`](https://github.com/sifr-lang/sifr/pull/3268)
+Base SHA: `fbd736ef861e1148230711100191f2e5af543667`
+Candidate SHA: `071aaa51a53dce22df0156158eecb7e6b483d095`
+Merge SHA: `9adf70c3e712981b3f5c230d876c8866dbe3f4d2`
+Changed paths: imported attached-owner finality and canonical/local binding
+keys; external specialization-request resolution for imported concrete owners;
+selected, unselected, aliased, residual-generic, and unbound-generic driver
+coverage; a cross-module package fixture; and the durable imported-selection
+architecture contract.
+Validation: all three imported attached-API tests and all 19 early-adapter
+tests passed. The cross-module source package fixture built and ran all six
+modules and printed `attached-contract`. Workspace clippy, formatting, diff,
+HIR maintainability, and the 900-line file-size guardrail passed. The exact-SHA
+Opus review was SATISFIED with no blocker
+([evidence](https://github.com/sifr-lang/sifr/pull/3268#issuecomment-5332717375)).
+The create-PR and merge gates were each attempted exactly once on the final
+candidate. Both stopped in the shared coverage-matrix preflight at the stale
+`bytes` classification and verification-taxonomy findings dominated by the
+out-of-scope parallel pre-v1 work; neither reached an M7b-specific failure and
+neither was repeated
+([evidence](https://github.com/sifr-lang/sifr/pull/3268#issuecomment-5332740000)).
+Deferred follow-up: M12 strengthens imported unbound-generic coverage with an
+exported specialization request, verifies canonical binding keys against the
+class identity, makes module-less canonical identities explicit, and resolves
+the pre-existing external/private attached-function filtering asymmetry.
+The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
+outside this phase.
+Next action: implement M8 Pydantic model, field, and configuration declarations.
+
 ### M8: Pydantic Model, Field, and Configuration Declarations
 
 Owner: `sifr-lang/pydantic-sifr`.
@@ -1227,7 +1257,8 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0 contract lock and coverage inventory merged and recorded.
+Current state: M0-M7b are merged and recorded.
 
-Next action: complete M1. Add spanned pre-finalization declarations and
-source-origin package issues through one CLI/LSP diagnostic path.
+Next action: complete M8 in `sifr-lang/pydantic-sifr`. Declare the familiar
+model, field, configuration, constraint, and specialized public-value facade
+on the installed M1-M7b compiler substrate without raw metadata.
