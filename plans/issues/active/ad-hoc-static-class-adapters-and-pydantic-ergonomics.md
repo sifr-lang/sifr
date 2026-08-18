@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-18. M0-M4 are complete; M5 is next.
+Status: active on 2026-08-18. M0-M5 are complete; M6 is next.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -732,6 +732,43 @@ Acceptance criteria:
 
 Exit gate: a package can describe ordered field and class handler pipelines
 without compiler knowledge of handler semantics.
+
+State: complete
+PR: [`sifr-lang/sifr#3258`](https://github.com/sifr-lang/sifr/pull/3258)
+Base SHA: `4f3a475428b6c9ca789acd76212d6619f2e32d6b`
+Candidate SHA: `2cdc8380ccc710f7a1dc86e9b5bbeedfa07d9d66`
+Merge SHA: `ad3bf8bcde7673b9d1616ac9d49a96bc7ab9d258`
+Changed paths: sealed method and source-origin identities, descriptor-planned
+handler selection, structural method shapes and exports, checked slot
+resolution, `Self` and declared-owned receiver lowering, static-program
+code generation, focused driver tests, the non-Pydantic method-slot fixture,
+`sifr.meta`, and const-specialization documentation.
+Validation: the focused handler-descriptor suite; broad lowering, frontend,
+codegen, and driver library tests; the runtime handler pipeline; lifetime,
+thread, and shared-context rejection fixtures; receiver codegen tests;
+workspace clippy; formatting; HIR maintainability; the 900-line file-size
+guardrail (`PASS`, 3153 files); documentation links; and `git diff --check` all
+passed. The known M4 fallback-parent diagnostic test remained excluded and
+unchanged. The exact-SHA Opus review returned `SATISFIED` with no blocking
+findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3258#issuecomment-5329994650)).
+The create-PR and merge gates were each attempted once on the unchanged final
+candidate and both stopped at the separately owned pre-v1
+verification-taxonomy mechanism; neither gate was repeated
+([evidence](https://github.com/sifr-lang/sifr/pull/3258#issuecomment-5330023792)).
+The handler-slot substrate from
+[`pydantic-sifr#10`](https://github.com/sifr-lang/pydantic-sifr/issues/10) was
+transferred here and that issue was closed; public wrap continuations remain
+terminally excluded.
+Deferred follow-up: M12 must align declared-owned field/temporary receiver
+tracking with opaque-resource move diagnostics; make the intended `Self`
+availability for static and class methods explicit; state and test the
+`@staticmethod` descriptor stacking rule; key adapter-selection lookup by
+class identity rather than a bare name; and make slot identity explicitly
+self-describing for fallibility. These were non-blocking Opus suggestions.
+The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
+outside this phase.
+Next action: implement M6 structural public values and output mappings.
 
 ### M6: Structural Public Values and Output Mappings
 
