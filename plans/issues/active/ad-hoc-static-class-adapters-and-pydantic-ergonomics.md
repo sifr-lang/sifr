@@ -514,6 +514,43 @@ Acceptance criteria:
 Exit gate: a package can collect typed declaration intent without raw metadata
 decorators or package-name compiler branches.
 
+State: complete
+PR: [`sifr-lang/sifr#3248`](https://github.com/sifr-lang/sifr/pull/3248)
+Base SHA: `041df3957b2f441541b806e0540ecb19fa23668b`
+Candidate SHA: `fd36ef34cdda167c915429c3079f8d35935934c9`
+Merge SHA: `9e19a7333d2a892f17c78c74fd73d9b78052aeda`
+Changed paths: typed-descriptor declaration, lowering, export, evaluation, callable
+identity, static-program, driver, and codegen files under `crates/`; `sifr.meta`;
+the const-specialization and architecture documentation; and the non-Pydantic
+`typed_declaration_descriptors` fixture.
+Validation: all 10 focused typed-descriptor driver tests; callable canonical
+round-trip and codegen emission tests; class-declaration origin/order tests;
+workspace clippy; formatting; HIR maintainability; the 900-line file-size
+guardrail (`PASS`, 3144 files); `git diff --check`; and direct `sifr check` of
+the four-kind fixture. The broad non-E2E run passed 109 CLI unit tests and 12
+build-output integration tests before its fail corpus reached the separately
+owned pre-v1 `protocol_bound_unknown_forwarded_typevar.sifr`/CFG behavior.
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3248#issuecomment-5327488451)).
+The create-PR and merge gates were each run once on the unchanged candidate.
+Both stopped at the pre-v1-owned verification-taxonomy checker, which rejected
+its own compatibility inventory and ordinary M2 `fixture.contract` names
+before M2-specific lanes; the exact evidence is recorded on the PR
+([create-PR](https://github.com/sifr-lang/sifr/pull/3248#issuecomment-5327495639),
+[merge](https://github.com/sifr-lang/sifr/pull/3248#issuecomment-5327500694)).
+Deferred follow-up: M3 should replace derive-`Debug` callable signature and
+generic-argument identity strings with a declared canonical encoder before
+adapter execution consumes them; emit local malformed diagnostics when a
+decorated provider or descriptor signature is unavailable; decide whether
+cross-module const helpers are part of adapter evaluation; and verify or narrow
+the type-alias export boundary. M4 should cover union-wrapped nested
+`Annotated` descriptors and assert evaluated descriptor values when it owns
+flattening and order. M12 certification should register and run the four-kind
+fixture, including its runtime assertion. The pre-v1 taxonomy checker remains
+owned by the parallel pre-v1 phase and was not changed by M2.
+Next action: implement M3 erased marker bases and early adapter execution.
+
 ### M3: Erased Marker Bases and Early Adapter Execution
 
 Owner: `sifr-lang/sifr`.
