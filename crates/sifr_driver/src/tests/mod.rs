@@ -1,3 +1,4 @@
+mod adapter_defaults;
 mod diagnostics;
 mod discovery_and_workspace;
 mod early_adapters;

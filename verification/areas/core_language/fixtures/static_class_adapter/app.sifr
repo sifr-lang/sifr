@@ -1,11 +1,41 @@
-from fixture.facade import Contract, contract_config
+from fixture.facade import Contract, contract_config, contract_field
+from fixture.factories import Token as ExternalToken, make_names as external_names
+
+
+def make_names() -> list[str]:
+    return []
+
+
+class Factory:
+    @staticmethod
+    def make_names() -> list[str]:
+        return []
+
+
+class Token:
+    pass
 
 
 class Model(Contract):
     _config = contract_config(True)
     value: int
+    enabled: bool = contract_field(default=True)
+    tags: list[str] = contract_field(default_factory=list)
+    free_names: list[str] = contract_field(default_factory=make_names)
+    static_names: list[str] = contract_field(default_factory=Factory.make_names)
+    token: Token = contract_field(default_factory=Token)
+    external_free: list[str] = contract_field(default_factory=external_names)
+    external_token: ExternalToken = contract_field(default_factory=ExternalToken)
 
 
 def main():
-    model: Model = Model(7)
-    assert model.value == 7
+    first: Model = Model(7)
+    second: Model = Model(8)
+    first.tags.append("one")
+    assert first.value == 7
+    assert first.enabled
+    assert first.tags == ["one"]
+    assert second.tags == []
+    assert first.free_names == []
+    assert first.static_names == []
+    assert first.external_free == []

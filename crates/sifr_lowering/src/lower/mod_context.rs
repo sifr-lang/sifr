@@ -42,9 +42,12 @@ pub(in crate::lower) struct LowerCtx {
         HashMap<String, sifr_ir::ClassAdapterMarkerDeclaration>,
     pub(in crate::lower) adapted_class_bindings: HashMap<String, sifr_ir::ClassAdapterSelection>,
     pub(in crate::lower) class_data_parents: HashMap<String, Option<String>>,
+    pub(in crate::lower) adapter_field_plans:
+        std::collections::BTreeMap<String, Vec<sifr_ir::AdapterFieldPlan>>,
     pub(in crate::lower) descriptor_functions: Vec<sifr_ir::DeclarationDescriptorFunction>,
     pub(in crate::lower) descriptor_bindings:
         HashMap<String, sifr_ir::DeclarationDescriptorFunction>,
+    pub(in crate::lower) imported_symbol_bindings: HashMap<(String, String), String>,
     /// Whether each imported class can preserve all defaults and metadata in a
     /// compiler-owned structural identity.
     pub(in crate::lower) imported_structural_identity_inputs: HashMap<String, bool>,
@@ -233,8 +236,10 @@ impl LowerCtx {
             adapter_marker_bindings: HashMap::new(),
             adapted_class_bindings: HashMap::new(),
             class_data_parents: HashMap::new(),
+            adapter_field_plans: std::collections::BTreeMap::new(),
             descriptor_functions: Vec::new(),
             descriptor_bindings: HashMap::new(),
+            imported_symbol_bindings: HashMap::new(),
             imported_structural_identity_inputs: HashMap::new(),
             specialization_requests: Vec::new(),
             json_integer_boundary_requests: Vec::new(),
@@ -395,6 +400,7 @@ impl LowerCtx {
     pub(in crate::lower) fn with_options(mut self, options: LoweringOptions) -> Self {
         self.python_trust_policy = options.python_trust_policy;
         self.python_bridge_authorities = options.python_bridge_authorities;
+        self.adapter_field_plans = options.adapter_field_plans;
         self
     }
 
@@ -605,6 +611,7 @@ pub struct PythonTrustPolicy {
 pub struct LoweringOptions {
     pub python_trust_policy: Option<PythonTrustPolicy>,
     pub python_bridge_authorities: std::collections::BTreeMap<String, PythonBridgeTargetAuthority>,
+    pub adapter_field_plans: std::collections::BTreeMap<String, Vec<sifr_ir::AdapterFieldPlan>>,
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]

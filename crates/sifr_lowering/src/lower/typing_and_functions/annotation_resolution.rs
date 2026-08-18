@@ -10,6 +10,14 @@ use super::{
 pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     match expr {
         Expr::Name(name) => {
+            if ctx.adapter_marker_bindings.contains_key(name.id.as_str()) {
+                ctx.error_with_code_at(
+                    DiagnosticCode::META_MALFORMED_DECLARATION,
+                    "class-adapter markers are erased base-only declarations and cannot be used as annotations".to_string(),
+                    name.range(),
+                );
+                return Type::Any;
+            }
             // Check type variables first (e.g., T from TypeVar)
             if ctx.type_vars.contains(name.id.as_str()) {
                 return Type::TypeVar(name.id.to_string());

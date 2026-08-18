@@ -23,19 +23,25 @@ pub(crate) fn add_aliases(
     local_classes: &HashMap<String, String>,
     exports: &mut HashMap<String, Type>,
 ) {
-    exports.extend(lowering.class_adapter_markers.iter().map(|marker| {
-        (
-            marker.symbol.clone(),
-            Type::Class {
-                identity: Some(format!("{}.{}", marker.module, marker.symbol)),
-                type_args: Vec::new(),
-                name: marker.symbol.clone(),
-                fields: Vec::new(),
-                methods: Vec::new(),
-                parent_class: None,
-            },
-        )
-    }));
+    exports.extend(
+        lowering
+            .class_adapter_markers
+            .iter()
+            .filter(|marker| !marker.symbol.starts_with('_'))
+            .map(|marker| {
+                (
+                    marker.symbol.clone(),
+                    Type::Class {
+                        identity: Some(format!("{}.{}", marker.module, marker.symbol)),
+                        type_args: Vec::new(),
+                        name: marker.symbol.clone(),
+                        fields: Vec::new(),
+                        methods: Vec::new(),
+                        parent_class: None,
+                    },
+                )
+            }),
+    );
     exports.extend(
         lowering
             .type_aliases

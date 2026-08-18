@@ -158,39 +158,35 @@ impl ClassDeclaration {
             .map(|entry| entry.id)
     }
 
-    #[must_use]
-    pub(crate) fn field_contracts(&self, lowering: &LoweringResult) -> Vec<(String, String)> {
-        lowering
-            .module
-            .classes
-            .iter()
-            .find(|class| class.name == self.name)
-            .into_iter()
-            .flat_map(|class| &class.fields)
-            .map(|(name, ty)| {
-                (
-                    format!("{}.{}.{name}", self.module, self.name),
-                    crate::canonical_types::type_identity(ty),
-                )
-            })
-            .collect()
-    }
-
     fn item_const_value(
         &self,
         order: usize,
         item: &ClassDeclarationItem,
         lowering: &LoweringResult,
     ) -> ConstValue {
+        let item_name = match item {
+            ClassDeclarationItem::Field { name, .. }
+            | ClassDeclarationItem::ClassItem { name, .. }
+            | ClassDeclarationItem::Method { name, .. } => name,
+        };
         let mut record = BTreeMap::from([
             (
                 "order".to_string(),
                 ConstValue::Integer(num_bigint::BigInt::from(order)),
             ),
+            (
+                "identity".to_string(),
+                ConstValue::String(format!("{}.{}.{}", self.module, self.name, item_name)),
+            ),
             ("annotation_origin".to_string(), ConstValue::None),
             ("value_origin".to_string(), ConstValue::None),
             ("return_origin".to_string(), ConstValue::None),
             ("declared_type".to_string(), ConstValue::None),
+            (
+                "default_kind".to_string(),
+                ConstValue::String("required".to_string()),
+            ),
+            ("default_value".to_string(), ConstValue::None),
             ("signature".to_string(), ConstValue::None),
             (
                 "value_argument_origins".to_string(),
@@ -239,6 +235,30 @@ impl ClassDeclaration {
                             "declared_type".to_string(),
                             ConstValue::String(crate::canonical_types::type_identity(ty)),
                         );
+                    }
+                    if let Some(index) = class
+                        .fields
+                        .iter()
+                        .enumerate()
+                        .rev()
+                        .find_map(|(index, (field, _))| (field == name).then_some(index))
+                    {
+                        if let Some(value) = lowering
+                            .class_field_defaults
+                            .get(&self.name)
+                            .into_iter()
+                            .flatten()
+                            .find(|(field, _)| *field == index)
+                            .and_then(|(_, value)| {
+                                crate::structural_shape::const_value_from_hir(value)
+                            })
+                        {
+                            record.insert(
+                                "default_kind".to_string(),
+                                ConstValue::String("const".to_string()),
+                            );
+                            record.insert("default_value".to_string(), value);
+                        }
                     }
                 }
             }

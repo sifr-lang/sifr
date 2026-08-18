@@ -316,7 +316,10 @@ pub(in crate::lower) fn collect_class_type(
         crate::lower::descriptor_declarations::data_parent_name(&class_name, ctx);
     let mut parent_class_chain: Option<String> = None;
     if let Some(ref parent_name) = parent_class_name {
-        if let Some(parent_ty) = ctx.class_types.get(parent_name).cloned() {
+        if let Some(parent_ty) =
+            crate::lower::descriptor_declarations::data_parent_type(class_def, ctx)
+                .or_else(|| ctx.class_types.get(parent_name).cloned())
+        {
             if let Type::Class {
                 identity: parent_identity,
                 name: parent_type_name,
@@ -356,6 +359,7 @@ pub(in crate::lower) fn collect_class_type(
             );
         }
     }
+    let inherited_field_count = fields.len();
 
     // Register a preliminary class type so self-referential annotations work
     // (e.g., `def distance(self, other: Point)` inside class Point)
@@ -388,9 +392,33 @@ pub(in crate::lower) fn collect_class_type(
             Stmt::AnnAssign(ann) => {
                 if let Expr::Name(name) = ann.target.as_ref() {
                     let ty = resolve_annotation_expr(&ann.annotation, ctx);
-                    let field_idx = fields.len();
+                    let inherited_override = fields
+                        .iter()
+                        .take(inherited_field_count)
+                        .position(|(field, _)| field == name.id.as_str());
+                    if let Some(index) = inherited_override {
+                        if !fields[index].1.is_assignable_to(&ty)
+                            || !ty.is_assignable_to(&fields[index].1)
+                        {
+                            ctx.error_with_code_at(
+                                DiagnosticCode::TYPE_MISMATCH,
+                                format!(
+                                    "inherited field '{}' cannot be re-annotated from '{}' to '{}'",
+                                    name.id,
+                                    fields[index].1.display_name(),
+                                    ty.display_name()
+                                ),
+                                ann.annotation.range(),
+                            );
+                            continue;
+                        }
+                        fields[index].1 = ty.clone();
+                    }
+                    let field_idx = inherited_override.unwrap_or(fields.len());
                     let own_field_idx = own_fields.len();
-                    fields.push((name.id.to_string(), ty));
+                    if inherited_override.is_none() {
+                        fields.push((name.id.to_string(), ty));
+                    }
                     own_fields.push((name.id.to_string(), name.range()));
                     // Collect default value if present (for auto-init default params)
                     if let Some(ref default_expr) = ann.value {
@@ -407,6 +435,23 @@ pub(in crate::lower) fn collect_class_type(
                                         .to_string(),
                                     default_expr.range(),
                                 );
+                            } else if ctx
+                                .class_adapter_selections
+                                .iter()
+                                .any(|selection| selection.owner == class_name)
+                            {
+                                // The provisional pass must permit calls that omit a
+                                // descriptor-owned default. The adapter replaces this
+                                // typed sentinel before any finalized HIR is retained.
+                                field_defaults.push((
+                                    field_idx,
+                                    HirExpr::Name {
+                                        name: "__sifr_adapter_provisional_default".to_string(),
+                                        binding_id: None,
+                                        ty: fields[field_idx].1.clone(),
+                                    },
+                                ));
+                                own_field_default_indices.insert(own_field_idx);
                             }
                             continue;
                         }
@@ -691,6 +736,19 @@ pub(in crate::lower) fn collect_class_type(
         );
     }
 
+    if ctx.adapter_field_plans.contains_key(&class_name) {
+        field_defaults = crate::lower::adapter_field_plans::defaults_for_class(
+            &class_name,
+            &fields,
+            field_defaults,
+            ctx,
+        );
+        own_field_default_indices = field_defaults
+            .iter()
+            .filter_map(|(index, _)| index.checked_sub(inherited_field_count))
+            .collect();
+    }
+
     let is_python_opaque = ctx.python_opaque_classes.contains_key(&class_name);
     let generic_type_args = ctx
         .class_declared_type_params
@@ -739,9 +797,14 @@ pub(in crate::lower) fn collect_class_type(
         }
 
         // Inheritance diagnostic: warn when child has own fields but no __init__ and extends a parent
-        if parent_class_name
-            .as_deref()
-            .is_some_and(|parent| parent != "NonSend")
+        if !ctx
+            .class_adapter_selections
+            .iter()
+            .any(|selection| selection.owner == class_name)
+            && !ctx.adapter_field_plans.contains_key(&class_name)
+            && parent_class_name
+                .as_deref()
+                .is_some_and(|parent| parent != "NonSend")
         {
             let parent_field_count = if let Some(ref pname) = parent_class_name {
                 ctx.class_types.get(pname).map_or(0, |ty| {

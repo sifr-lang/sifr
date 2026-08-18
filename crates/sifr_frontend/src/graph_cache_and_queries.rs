@@ -364,16 +364,24 @@ pub fn compile_module_hir_with_source_and_options(
                 let applied_metadata = std::mem::take(&mut result.applied_adapter_metadata);
                 let specialization_requests = std::mem::take(&mut result.specialization_requests);
                 let adapter_warnings = result.warnings[lowering_warning_count..].to_vec();
+                let mut final_options = lowering_options;
+                final_options.adapter_field_plans = result
+                    .class_adapter_selections
+                    .iter()
+                    .map(|selection| (selection.owner.clone(), selection.field_plans.clone()))
+                    .collect();
+                let applied_selections = result.class_adapter_selections.clone();
                 result = match lower_module_with_externals_name_and_options(
                     module_name,
                     stmts,
                     external_defs,
-                    lowering_options,
+                    final_options,
                 ) {
                     Ok(mut finalized) => {
                         finalized.declaration_descriptors = descriptors;
                         finalized.applied_adapter_metadata = applied_metadata;
                         finalized.specialization_requests = specialization_requests;
+                        finalized.class_adapter_selections = applied_selections;
                         finalized.warnings.extend(adapter_warnings);
                         finalized
                     }

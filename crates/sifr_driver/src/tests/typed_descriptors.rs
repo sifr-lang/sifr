@@ -267,6 +267,40 @@ class Contract:
 }
 
 #[test]
+fn nested_annotated_descriptors_flatten_inner_to_outer_before_rhs() {
+    let modules = descriptor_project(
+        r#"
+from typing import Annotated
+from fixture.contract import bounded, option
+
+class Contract:
+    value: Annotated[Annotated[int, bounded(1)], bounded(2)] | None = option(3, [], None)
+"#,
+    );
+    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let project = collect_project_hir_modules(&modules, stdlib_defs)
+        .expect("nested Annotated descriptor project should compile");
+    let descriptors = project
+        .external_defs
+        .declaration_descriptors
+        .get("main")
+        .expect("descriptor uses are exported");
+    let limits = descriptors
+        .iter()
+        .map(|descriptor| {
+            let StaticProgramValue::Record(fields) = &descriptor.value else {
+                panic!("descriptor should preserve its record value");
+            };
+            match fields.iter().find(|(name, _)| name == "limit") {
+                Some((_, StaticProgramValue::Integer(value))) => value.clone(),
+                value => panic!("expected integer limit, got {value:?}"),
+            }
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(limits, vec!["1", "2", "3"]);
+}
+
+#[test]
 fn unrelated_same_basename_is_not_a_descriptor() {
     let mut modules = descriptor_project(
         r#"

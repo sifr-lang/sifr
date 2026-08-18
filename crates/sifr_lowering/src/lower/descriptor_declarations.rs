@@ -25,6 +25,18 @@ pub(in crate::lower) fn data_parent_name(class_name: &str, ctx: &LowerCtx) -> Op
     ctx.class_data_parents.get(class_name).cloned().flatten()
 }
 
+pub(in crate::lower) fn data_parent_type(class: &StmtClassDef, ctx: &mut LowerCtx) -> Option<Type> {
+    let parent_name = data_parent_name(class.name.as_str(), ctx)?;
+    let base = class
+        .bases()
+        .iter()
+        .find(|base| base_symbol(base).is_some_and(|(name, _, _)| name == parent_name))?
+        .clone();
+    Some(crate::lower::typing_and_functions::resolve_annotation_expr(
+        &base, ctx,
+    ))
+}
+
 pub(in crate::lower) fn erase_markers(module: &mut HirModule, ctx: &LowerCtx) {
     let erased = ctx
         .class_adapter_markers
@@ -194,6 +206,8 @@ fn import_bindings(stmts: &[Stmt], ctx: &mut LowerCtx) {
                 .asname
                 .as_ref()
                 .map_or_else(|| original.clone(), ToString::to_string);
+            ctx.imported_symbol_bindings
+                .insert((module.clone(), original.clone()), local.clone());
             if let Some(declaration) = ctx
                 .externals
                 .descriptor_functions
@@ -273,17 +287,19 @@ fn collect_class_bases(stmts: &[Stmt], ctx: &mut LowerCtx) {
         let mut markers = Vec::new();
         let mut data_parents = Vec::new();
         for base in class.bases() {
-            let Expr::Name(name) = base else {
+            let Some((name, range, is_parameterized)) = base_symbol(base) else {
                 continue;
             };
-            if let Some(marker) = ctx.adapter_marker_bindings.get(name.id.as_str()) {
-                markers.push((name.range(), marker.clone()));
+            if !is_parameterized {
+                if let Some(marker) = ctx.adapter_marker_bindings.get(name) {
+                    markers.push((range, marker.clone()));
+                    continue;
+                }
+            }
+            if special_base(name) {
                 continue;
             }
-            if special_base(name.id.as_str()) {
-                continue;
-            }
-            data_parents.push((name.range(), name.id.to_string()));
+            data_parents.push((range, name.to_string()));
         }
         // Preserve the language's existing first-parent behavior for ordinary
         // classes. The one-data-parent restriction belongs to adapted classes.
@@ -369,6 +385,9 @@ fn collect_class_bases(stmts: &[Stmt], ctx: &mut LowerCtx) {
                 )
                 .collect(),
             data_parent,
+            field_plans: Vec::new(),
+            adapter_invocation_identity: [0; 32],
+            post_adapter_identity: [0; 32],
             range: markers
                 .first()
                 .map_or_else(|| class.range(), |(range, _)| *range),
@@ -377,6 +396,17 @@ fn collect_class_bases(stmts: &[Stmt], ctx: &mut LowerCtx) {
             ctx.adapted_class_bindings
                 .insert(class.name.to_string(), selection);
         }
+    }
+}
+
+fn base_symbol(base: &Expr) -> Option<(&str, ruff_text_size::TextRange, bool)> {
+    match base {
+        Expr::Name(name) => Some((name.id.as_str(), name.range(), false)),
+        Expr::Subscript(subscript) => match subscript.value.as_ref() {
+            Expr::Name(name) => Some((name.id.as_str(), subscript.range(), true)),
+            _ => None,
+        },
+        _ => None,
     }
 }
 
@@ -537,7 +567,9 @@ fn local_provider<'a>(
     descriptor: &DeclarationDescriptorFunction,
 ) -> Option<&'a ClassAdapterProviderDeclaration> {
     ctx.class_adapter_providers.iter().find(|provider| {
-        module == descriptor.provider_module && provider.function == descriptor.provider_function
+        module == descriptor.provider_module
+            && provider.module == descriptor.provider_module
+            && provider.function == descriptor.provider_function
     })
 }
 
@@ -577,9 +609,10 @@ fn finalize_markers_and_selections(ctx: &mut LowerCtx, module: &str) {
     for index in 0..ctx.class_adapter_markers.len() {
         let marker = ctx.class_adapter_markers[index].clone();
         let provider = if marker.provider_module == module {
-            ctx.class_adapter_providers
-                .iter()
-                .find(|provider| provider.function == marker.provider_function)
+            ctx.class_adapter_providers.iter().find(|provider| {
+                provider.module == marker.provider_module
+                    && provider.function == marker.provider_function
+            })
         } else {
             ctx.externals
                 .class_adapter_providers
@@ -605,9 +638,10 @@ fn finalize_markers_and_selections(ctx: &mut LowerCtx, module: &str) {
     for index in 0..ctx.class_adapter_selections.len() {
         let selection = ctx.class_adapter_selections[index].clone();
         let provider = if selection.provider_module == module {
-            ctx.class_adapter_providers
-                .iter()
-                .find(|provider| provider.function == selection.provider_function)
+            ctx.class_adapter_providers.iter().find(|provider| {
+                provider.module == selection.provider_module
+                    && provider.function == selection.provider_function
+            })
         } else {
             ctx.externals
                 .class_adapter_providers
@@ -669,6 +703,19 @@ fn closed_structural_type(ty: &Type, visiting: &mut HashSet<String>) -> bool {
         }
         Type::LiteralInt(_) | Type::LiteralStr(_) | Type::LiteralBool(_) => true,
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::special_base;
+
+    #[test]
+    fn adapter_parent_collection_preserves_language_special_bases() {
+        for name in ["Error", "Protocol", "int", "float", "str", "bool", "Enum"] {
+            assert!(special_base(name));
+        }
+        assert!(!special_base("DataParent"));
     }
 }
 

@@ -861,6 +861,17 @@ consumed class assignments are therefore metadata inputs, not runtime defaults o
 and external-definition boundary carry these records across modules without selecting a package or
 adapter implementation.
 
+Class adapters run across an explicit provisional-to-final lowering boundary. The provisional
+declaration input flattens inherited fields and methods before local declarations, preserves their
+canonical declaring identities, substitutes concrete generic parent arguments, and orders nested
+`Annotated` descriptors from inner to outer before right-hand-side descriptors. A validated plan
+normalizes every field to required, constant-default, or checked zero-argument factory-default
+state; final lowering alone materializes constructor defaults, and factory expressions execute at
+each call so mutable values are not shared. Adapter invocation identity hashes the source-location-
+free declaration input and provider HIR before evaluation. Post-adapter identity separately binds
+the invocation to the validated output and is an input to static-program identity, avoiding a
+cycle with later handler and attached-API outputs.
+
 The Native Pydantic-Sifr consumer architecture is documented in
 [`native_pydantic_sifr_architecture.md`](native_pydantic_sifr_architecture.md).
 The architecture includes the package-neutral static class-adapter contract.

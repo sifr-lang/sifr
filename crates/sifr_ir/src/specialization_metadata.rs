@@ -147,7 +147,26 @@ pub struct ClassAdapterSelection {
     pub descriptor_type: Type,
     pub marker_identities: Vec<String>,
     pub data_parent: Option<String>,
+    pub field_plans: Vec<AdapterFieldPlan>,
+    pub adapter_invocation_identity: [u8; 32],
+    pub post_adapter_identity: [u8; 32],
     pub range: TextRange,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AdapterFieldPlan {
+    pub identity: String,
+    pub name: String,
+    pub declared_type: Type,
+    pub default: AdapterFieldDefault,
+    pub validation_policy: Option<StaticProgramValue>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AdapterFieldDefault {
+    Required,
+    Const(StaticProgramValue),
+    Factory(CallableIdentity),
 }
 
 /// Canonical declaration exported by a package descriptor function.

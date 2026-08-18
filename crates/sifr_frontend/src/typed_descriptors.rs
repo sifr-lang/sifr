@@ -9,7 +9,7 @@ use sifr_lowering::{
     HirFunction, HirModule, LoweringResult, StaticProgramValue, TypedDeclarationDescriptor,
 };
 use sifr_python_ast::visitor::{self, Visitor};
-use sifr_python_ast::{Expr, ExprCall, Number, Stmt, StmtClassDef};
+use sifr_python_ast::{Expr, ExprCall, Number, Operator, Stmt, StmtClassDef};
 use sifr_type_system::{FunctionType, Type};
 use std::collections::{BTreeMap, HashMap, HashSet};
 
@@ -231,6 +231,13 @@ impl DescriptorCollector<'_> {
     }
 
     fn collect_annotation(&mut self, expression: &Expr, owner: &str, target: String) {
+        if let Expr::BinOp(union) = expression {
+            if matches!(union.op, Operator::BitOr) {
+                self.collect_annotation(&union.left, owner, target.clone());
+                self.collect_annotation(&union.right, owner, target);
+            }
+            return;
+        }
         let Expr::Subscript(subscript) = expression else {
             return;
         };
@@ -238,6 +245,12 @@ impl DescriptorCollector<'_> {
             let Expr::Tuple(tuple) = subscript.slice.as_ref() else {
                 return;
             };
+            // Flatten from the declared type outward. This preserves the
+            // source order of nested Annotated layers, after which RHS
+            // descriptors are collected by the surrounding declaration pass.
+            if let Some(inner) = tuple.elts.first() {
+                self.collect_annotation(inner, owner, target.clone());
+            }
             for descriptor in tuple.elts.iter().skip(1) {
                 self.collect_use(
                     descriptor,
@@ -245,9 +258,6 @@ impl DescriptorCollector<'_> {
                     owner,
                     target.clone(),
                 );
-            }
-            if let Some(inner) = tuple.elts.first() {
-                self.collect_annotation(inner, owner, target);
             }
             return;
         }
@@ -443,7 +453,7 @@ impl DescriptorCollector<'_> {
 
     fn argument_value(&self, expression: &Expr, expected: &Type) -> DescriptorResult<ConstValue> {
         if let Some(value) = literal_const_value(expression) {
-            if const_value_assignable(&value, expected) {
+            if const_value_assignable(&value, expected) || static_value_expected(expected) {
                 return Ok(value);
             }
         }
@@ -649,6 +659,11 @@ pub(crate) fn const_value_assignable(value: &ConstValue, expected: &Type) -> boo
         {
             matches!(value, ConstValue::CallableIdentity(_))
         }
+        Type::Class { identity, name, .. }
+            if name == "StaticValue" && identity.as_deref() == Some("sifr.meta.StaticValue") =>
+        {
+            !matches!(value, ConstValue::SourceOrigin(_))
+        }
         Type::Class { fields, .. } => matches!(value, ConstValue::Record(values)
             if values.len() == fields.len()
                 && fields.iter().all(|(name, field)| values
@@ -674,6 +689,16 @@ fn callable_expected(expected: &Type) -> bool {
             name == "CallableIdentity" && identity.as_deref() == Some("sifr.meta.CallableIdentity")
         }
         Type::Union(members) => members.iter().any(callable_expected),
+        _ => false,
+    }
+}
+
+fn static_value_expected(expected: &Type) -> bool {
+    match expected.resolve_alias() {
+        Type::Class { identity, name, .. } => {
+            name == "StaticValue" && identity.as_deref() == Some("sifr.meta.StaticValue")
+        }
+        Type::Union(members) => members.iter().any(static_value_expected),
         _ => false,
     }
 }

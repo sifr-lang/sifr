@@ -29,6 +29,7 @@ mod slot_table_tests;
 mod specialization_runner;
 mod specialization_support;
 pub use cache_keys::*;
+mod adapter_program_identity;
 mod analysis_views;
 pub use analysis_views::*;
 mod editor_semantics;
