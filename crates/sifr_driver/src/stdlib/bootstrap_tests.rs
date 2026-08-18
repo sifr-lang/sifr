@@ -496,12 +496,20 @@ fn text_and_data_modules_export_only_canonical_operation_names() {
                 "base64_decode_bytes",
                 "base64_encode_opts",
                 "base64_decode_opts",
+                "standard_b64encode",
+                "standard_b64decode",
+                "standard_b64encode_bytes",
+                "standard_b64decode_bytes",
+                "encodebytes",
+                "decodebytes",
+                "encodebytes_bytes",
+                "decodebytes_bytes",
             ][..],
         ),
         (
             "sifr.fnmatch",
-            &["fnmatch", "fnmatchcase", "filter", "filterfalse"][..],
-            &["fnmatch_filter"][..],
+            &["fnmatch", "filter", "filterfalse"][..],
+            &["fnmatch_filter", "fnmatchcase"][..],
         ),
         (
             "sifr.html",
@@ -556,6 +564,18 @@ fn text_and_data_modules_export_only_canonical_operation_names() {
             );
         }
     }
+
+    let base64 = compiled
+        .defs
+        .functions
+        .get("sifr.base64")
+        .expect("sifr.base64 functions should be exported");
+    let text_encode = base64.get("b64encode").expect("text base64 encoder");
+    let bytes_encode = base64.get("b64encode_bytes").expect("bytes base64 encoder");
+    assert_eq!(text_encode.params[0].1, Type::Str);
+    assert_eq!(*text_encode.return_type, Type::Str);
+    assert_eq!(bytes_encode.params[0].1, Type::Bytes);
+    assert_eq!(*bytes_encode.return_type, Type::Bytes);
 
     let regex_classes = compiled
         .defs
@@ -684,6 +704,12 @@ fn binary_and_hashing_exports_use_only_first_class_bytes_contracts() {
         .map(|(_, signature)| signature)
         .expect("HashObject.digest signature");
     assert_eq!(*digest.return_type, Type::Bytes);
+    let hexdigest = methods
+        .iter()
+        .find(|(method, _)| method == "hexdigest")
+        .map(|(_, signature)| signature)
+        .expect("HashObject.hexdigest signature");
+    assert_eq!(*hexdigest.return_type, Type::Str);
 }
 
 #[test]
@@ -764,15 +790,23 @@ fn collections_and_sorted_insert_modules_export_only_canonical_operations() {
         .functions
         .get("sifr.bisect")
         .expect("sifr.bisect functions should be exported");
-    for name in ["insort", "insort_left", "insort_right"] {
+    for name in ["bisect_left", "bisect_right", "insort_left", "insort_right"] {
         assert!(bisect.contains_key(name), "sifr.bisect.{name} should exist");
     }
-    for removed in ["insort_left_copy", "insort_right_copy"] {
+    for removed in ["bisect", "insort", "insort_left_copy", "insort_right_copy"] {
         assert!(
             !bisect.contains_key(removed),
             "sifr.bisect.{removed} must not be exported"
         );
     }
+
+    let statistics = compiled
+        .defs
+        .functions
+        .get("sifr.statistics")
+        .expect("sifr.statistics functions should be exported");
+    assert!(statistics.contains_key("mean"));
+    assert!(!statistics.contains_key("fmean"));
 }
 
 #[test]

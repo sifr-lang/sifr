@@ -1,59 +1,70 @@
+// src/main.rs
 fn pattern_basic() -> i64 {
-    let add = |a, b| {
-    return a + b;
+    let add = |a: i64, b: i64| {
+    a + b
 };
-    return add(3 as i64, 7 as i64);
+    add(3_i64, 7_i64)
 }
 
 fn pattern_closure() -> i64 {
-    let multiplier: i64 = 3 as i64;
-    let multiply = |x| {
-    return x * multiplier;
+    let multiplier: i64 = 3_i64;
+    let multiply = |x: i64| {
+    x * multiplier
 };
-    return multiply(5 as i64);
+    multiply(5_i64)
 }
 
 fn pattern_recursive() -> i64 {
     fn factorial(n: i64) -> i64 {
-        if n <= (1 as i64) {
-            return 1 as i64;
+        if n <= (1_i64) {
+            return 1_i64;
         }
-        return n * factorial(n - (1 as i64));
+        return n * factorial(n - (1_i64));
     }
-    return factorial(6 as i64);
+    factorial(6_i64)
 }
 
 fn pattern_recursive_capture() -> i64 {
-    let limit: i64 = 100 as i64;
+    let limit: i64 = 100_i64;
     fn sum_up(i: i64, acc: i64, limit: i64) -> i64 {
         if i > limit {
             return acc;
         }
-        return sum_up(i + (1 as i64), acc + i, limit);
+        return sum_up(i + (1_i64), acc + i, limit);
     }
-    return sum_up(1 as i64, 0 as i64, limit);
+    sum_up(1_i64, 0_i64, limit)
 }
 
 fn pattern_multiple() -> String {
-    let greet = |name| {
-    return format!("{}{}", "Hello, ".to_string(), name);
+    let greet = |name: &String| {
+    {
+    let mut __sifr_concat: String = String::with_capacity(7usize + name.len());
+    __sifr_concat.push_str("Hello, ");
+    __sifr_concat.push_str((name).as_str());
+    __sifr_concat
+}
 };
-    let exclaim = |msg| {
-    return format!("{}{}", msg, "!".to_string());
+    let exclaim = |msg: &String| {
+    {
+    let mut __sifr_concat: String = String::with_capacity(msg.len() + 1usize);
+    __sifr_concat.push_str((msg).as_str());
+    __sifr_concat.push('!');
+    __sifr_concat
+}
 };
-    return exclaim(greet("Sifr".to_string()));
+    exclaim(&greet(&"Sifr".to_string()))
 }
 
 fn pattern_params() -> i64 {
     fn power(base: i64, exp: i64) -> i64 {
-        if exp <= (0 as i64) {
-            return 1 as i64;
+        if exp <= (0_i64) {
+            return 1_i64;
         }
-        return base * power(base, exp - (1 as i64));
+        return base * power(base, exp - (1_i64));
     }
-    let a: i64 = power(2 as i64, 10 as i64);
-    let b: i64 = power(3 as i64, 4 as i64);
-    return a + b;
+    let a: i64 = power(2_i64, 10_i64);
+    let b: i64 = power(3_i64, 4_i64);
+    a + b
 }
 
 fn main() {

@@ -788,6 +788,7 @@ mod tests {
         let count_rendered = render_expr(&count.expr);
         assert!(count_rendered.contains("__needle < 0"));
         assert!(count_rendered.contains("__needle as u8"));
+        assert_eq!(count_rendered.matches("payload").count(), 1);
 
         let contains = lower_method(&Type::Bytes, "contains", "payload", &["needle".to_string()])
             .expect("bytes contains lowers");

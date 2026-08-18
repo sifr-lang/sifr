@@ -1,27 +1,28 @@
-#[derive(Debug, Clone)]
+// src/main.rs
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
 
 impl ValueError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
-impl std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+impl ::std::fmt::Display for ValueError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
     }
 }
 
-impl std::error::Error for ValueError {
+impl ::std::error::Error for ValueError {
 }
 
 fn classify(flag: bool) -> i64 {
     let __sifr_try_res: Result<i64, ValueError> = (|| {
     if flag {
-        return Ok(5 as i64);
+        return Ok(5_i64);
     }
     return Err(ValueError::new("bad value".to_string()));
     unreachable!("sifr try/except return capture fell through");
@@ -32,7 +33,7 @@ fn classify(flag: bool) -> i64 {
         },
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return 77 as i64;
+            return 77_i64;
         },
     }
 }

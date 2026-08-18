@@ -1,12 +1,10 @@
 # CPython RFC4648 vector subset + deterministic roundtrip matrix for sifr.base64
 from sifr.base64 import (
     b64encode, b64decode,
-    standard_b64encode, standard_b64decode,
     urlsafe_b64encode, urlsafe_b64decode,
     b32encode, b32decode,
     b32hexencode, b32hexdecode,
-    b16encode, b16decode,
-    encodebytes, decodebytes
+    b16encode, b16decode
 )
 from sifr.test import assert_eq
 
@@ -25,14 +23,6 @@ def check_roundtrip(payload: str):
         assert_eq(d1, payload)
     except ParseError as e:
         assert str("unexpected parse error: " + e.message) == 'roundtrip matrix: pass'
-        assert False
-
-    e2: str = standard_b64encode(payload)
-    try:
-        d2: str = standard_b64decode(e2)
-        assert_eq(d2, payload)
-    except ParseError as e:
-        _ = str("unexpected parse error: " + e.message)
         assert False
 
     e3: str = urlsafe_b64encode(payload)
@@ -63,14 +53,6 @@ def check_roundtrip(payload: str):
         e6: str = b16encode(payload)
         d6: str = b16decode(e6)
         assert_eq(d6, payload)
-    except ParseError as e:
-        _ = str("unexpected parse error: " + e.message)
-        assert False
-
-    e7: str = encodebytes(payload)
-    try:
-        d7: str = decodebytes(e7)
-        assert_eq(d7, payload)
     except ParseError as e:
         _ = str("unexpected parse error: " + e.message)
         assert False

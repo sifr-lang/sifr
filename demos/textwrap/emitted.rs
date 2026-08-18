@@ -1,72 +1,70 @@
+// src/main.rs
 // --- stdlib: sifr.test ---
-fn assert_eq<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    actual: &T,
-    expected: &T,
-) {
-    assert!(* actual == * expected);
-}
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0 as i64;
+    let mut i: i64 = 0_i64;
     while i < (actual.len() as i64) {
         assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i = i + (1 as i64);
+        i += 1_i64;
     }
 }
 
 // --- stdlib: sifr.textwrap ---
 fn _replace_whitespace_chars(text: &String, replace_tabs: bool) -> String {
     let normalized: String = text
-        .replace(&"\n".to_string(), &" ".to_string())
-        .replace(&"\r".to_string(), &" ".to_string())
-        .replace(&"\u{b}".to_string(), &" ".to_string())
-        .replace(&"\u{c}".to_string(), &" ".to_string());
+        .replace('\n', " ")
+        .replace('\r', " ")
+        .replace('\u{b}', " ")
+        .replace('\u{c}', " ");
     if replace_tabs {
-        return normalized.replace(&"\t".to_string(), &" ".to_string());
+        return normalized.replace('\t', " ");
     }
-    return normalized;
+    normalized
 }
 fn _expand_tabs_impl(text: &String, tabsize: i64) -> String {
+    let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     let mut effective_tabsize: i64 = tabsize;
-    if effective_tabsize <= (0 as i64) {
-        effective_tabsize = 1 as i64;
+    if effective_tabsize <= (0_i64) {
+        effective_tabsize = 1_i64;
     }
     let mut result: String = "".to_string();
-    let mut column: i64 = 0 as i64;
-    let mut i: i64 = 0 as i64;
-    while i < (text.chars().count() as i64) {
+    let mut column: i64 = 0_i64;
+    let mut i: i64 = 0_i64;
+    while (i < (__sifr_chars_text.len() as i64)) {
         let ch_opt: Option<String> = Some({
-            let Some(__indexed_char) = text.chars().nth(i as usize) else {
+            let Some(__indexed_char) = __sifr_chars_text
+                .get(i as usize)
+                .map(|c| c.to_string()) else {
                 unreachable!("compiler-verified string index should be in range");
             };
-            __indexed_char.to_string()
+            __indexed_char
         });
         if let Some(ch_opt) = ch_opt {
             let ch: String = ch_opt;
-            if ch == "\t".to_string() {
+            if ch == "\t" {
                 let mut spaces: i64 = effective_tabsize - (column % effective_tabsize);
-                if spaces <= (0 as i64) {
+                if spaces <= (0_i64) {
                     spaces = effective_tabsize;
                 }
-                let mut j: i64 = 0 as i64;
+                let mut j: i64 = 0_i64;
                 while j < spaces {
-                    result = format!("{}{}", result, " ".to_string());
-                    j = j + (1 as i64);
+                    result.push(' ');
+                    j += 1_i64;
                 }
-                column = column + spaces;
+                column += spaces;
             } else {
-                if (ch == "\n".to_string()) || (ch == "\r".to_string()) {
-                    result = format!("{}{}", result, ch);
-                    column = 0 as i64;
+                if (ch == "\n") || (ch == "\r") {
+                    result.push_str((ch).as_str());
+                    column = 0_i64;
                 } else {
-                    result = format!("{}{}", result, ch);
-                    column = column + (1 as i64);
+                    result.push_str((ch).as_str());
+                    column += 1_i64;
                 }
             }
         }
-        i = i + (1 as i64);
+        i += 1_i64;
     }
-    return result;
+    result
 }
 fn _prepare_text(
     text: &String,
@@ -74,34 +72,42 @@ fn _prepare_text(
     tabsize: i64,
     replace_whitespace: bool,
 ) -> String {
-    let mut prepared: String = format!("{}{}", text, "".to_string());
+    let mut prepared: String = {
+        let mut __sifr_concat: String = String::with_capacity(text.len() + 0usize);
+        __sifr_concat.push_str((text).as_str());
+        __sifr_concat.push_str("");
+        __sifr_concat
+    };
     if expand_tabs {
         prepared = _expand_tabs_impl(&prepared, tabsize);
     }
     if replace_whitespace {
         prepared = _replace_whitespace_chars(&prepared, true);
     }
-    return prepared;
+    prepared
 }
 fn _normalize_whitespace(text: &String) -> String {
-    return _prepare_text(text, true, 8 as i64, true);
+    _prepare_text(text, true, 8_i64, true)
 }
 fn _has_non_whitespace(text: &String) -> bool {
-    let mut i: i64 = 0 as i64;
-    while i < (text.chars().count() as i64) {
+    let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
+    let mut i: i64 = 0_i64;
+    while (i < (__sifr_chars_text.len() as i64)) {
         let ch: Option<String> = Some({
-            let Some(__indexed_char) = text.chars().nth(i as usize) else {
+            let Some(__indexed_char) = __sifr_chars_text
+                .get(i as usize)
+                .map(|c| c.to_string()) else {
                 unreachable!("compiler-verified string index should be in range");
             };
-            __indexed_char.to_string()
+            __indexed_char
         });
         if let Some(ch) = ch {
-            if ch != " ".to_string() {
-                if ch != "\t".to_string() {
-                    if ch != "\n".to_string() {
-                        if ch != "\r".to_string() {
-                            if ch != "\u{b}".to_string() {
-                                if ch != "\u{c}".to_string() {
+            if ch != " " {
+                if ch != "\t" {
+                    if ch != "\n" {
+                        if ch != "\r" {
+                            if ch != "\u{b}" {
+                                if ch != "\u{c}" {
                                     return true;
                                 }
                             }
@@ -110,104 +116,118 @@ fn _has_non_whitespace(text: &String) -> bool {
                 }
             }
         }
-        i = i + (1 as i64);
+        i += 1_i64;
     }
-    return false;
+    false
 }
 fn _split_word_units(word: &String, break_on_hyphens: bool) -> Vec<String> {
     if !break_on_hyphens {
-        return vec![format!("{}{}", word, "".to_string())];
+        return vec![
+            { let mut __sifr_concat : String = String::with_capacity(word.len() +
+            0usize); __sifr_concat.push_str((word).as_str()); __sifr_concat.push_str("");
+            __sifr_concat }
+        ];
     }
     let parts: Vec<String> = word
-        .split(&"-".to_string())
+        .split('-')
         .map(|s| s.to_string())
         .collect::<Vec<String>>();
-    if (parts.len() as i64) <= (1 as i64) {
-        return vec![format!("{}{}", word, "".to_string())];
+    if ((parts.len() as i64) <= (1_i64)) {
+        return vec![
+            { let mut __sifr_concat : String = String::with_capacity(word.len() +
+            0usize); __sifr_concat.push_str((word).as_str()); __sifr_concat.push_str("");
+            __sifr_concat }
+        ];
     }
     let mut units: Vec<String> = vec![];
-    let mut index: i64 = 0 as i64;
+    let mut index: i64 = 0_i64;
     for part in parts.iter().cloned() {
-        let is_last: bool = index == ((parts.len() as i64) - (1 as i64));
+        let __sifr_chars_part: Vec<char> = part.chars().collect::<Vec<char>>();
+        let is_last: bool = (index == ((parts.len() as i64) - (1_i64)));
         if is_last {
-            if (part.chars().count() as i64) > (0 as i64) {
-                units.push(part);
+            if ((__sifr_chars_part.len() as i64) > (0_i64)) {
+                units.push(part.clone());
             }
         } else {
-            if (part.chars().count() as i64) == (0 as i64) {
+            if ((__sifr_chars_part.len() as i64) == (0_i64)) {
                 units.push("-".to_string());
             } else {
-                units.push(format!("{}{}", part, "-".to_string()));
+                units.push(format!("{}{}", part, "-"));
             }
         }
-        index = index + (1 as i64);
+        index += 1_i64;
     }
-    if (units.len() as i64) == (0 as i64) {
-        units.push(format!("{}{}", word, "".to_string()));
+    if ((units.len() as i64) == (0_i64)) {
+        units.push(format!("{}{}", word, ""));
     }
-    return units;
+    units
 }
 fn _trim_line(line: &String) -> String {
-    let mut start: i64 = 0 as i64;
-    while ((start < (line.chars().count() as i64))
+    let __sifr_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
+    let mut start: i64 = 0_i64;
+    while (start < (__sifr_chars_line.len() as i64))
         && (({
-            let __sifr_index_str = &line;
-            let __sifr_index_i = start;
-            let __sifr_index_norm = if __sifr_index_i < 0 {
-                ((__sifr_index_str.chars().count() as i64) + __sifr_index_i) as usize
-            } else {
-                __sifr_index_i as usize
+            let Some(__indexed_char) = __sifr_chars_line
+                .get(start as usize)
+                .map(|c| c.to_string()) else {
+                unreachable!("compiler-verified string index should be in range");
             };
-            __sifr_index_str.chars().nth(__sifr_index_norm).map(|c| c.to_string())
-        }) == Some(" ".to_string())))
+            __indexed_char
+        }) == " ")
     {
-        start = start + (1 as i64);
+        start += 1_i64;
     }
-    let mut end: i64 = line.chars().count() as i64;
-    while ((end > start)
-        && (({
-            let __sifr_index_str = &line;
-            let __sifr_index_i = end - (1 as i64);
-            let __sifr_index_norm = if __sifr_index_i < 0 {
-                ((__sifr_index_str.chars().count() as i64) + __sifr_index_i) as usize
-            } else {
-                __sifr_index_i as usize
-            };
-            __sifr_index_str.chars().nth(__sifr_index_norm).map(|c| c.to_string())
-        }) == Some(" ".to_string())))
+    let mut end: i64 = __sifr_chars_line.len() as i64;
+    while (end > start)
+        && (__sifr_chars_line.get((end - (1_i64)) as usize).map(|c| c.to_string())
+            == Some(" ".to_string()))
     {
-        end = end - (1 as i64);
+        end -= 1_i64;
     }
-    return String::from_iter(
-        (line)
-            .chars()
-            .skip((start).max(0) as usize)
-            .take(((end).max(0) - (start).max(0)).max(0) as usize),
-    );
+    {
+        let _slice_src = &__sifr_chars_line;
+        let _slice_len_i64 = _slice_src.len() as i64;
+        let _slice_start_i64 = if start < 0 {
+            (_slice_len_i64 + start).max(0)
+        } else {
+            start.min(_slice_len_i64)
+        };
+        let _slice_stop_i64 = if end < 0 {
+            (_slice_len_i64 + end).max(0)
+        } else {
+            end.min(_slice_len_i64)
+        };
+        String::from_iter(
+            _slice_src
+                .iter()
+                .skip(_slice_start_i64 as usize)
+                .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                .copied(),
+        )
+    }
 }
 fn _finalize_line(line: &String, drop_whitespace: bool) -> String {
     if drop_whitespace {
         return _trim_line(line);
     }
-    return format!("{}{}", line, "".to_string());
+    {
+        let mut __sifr_concat: String = String::with_capacity(line.len() + 0usize);
+        __sifr_concat.push_str((line).as_str());
+        __sifr_concat.push_str("");
+        __sifr_concat
+    }
 }
 fn _wrap_impl(text: &String, width: i64) -> Vec<String> {
     let normalized: String = _normalize_whitespace(text);
-    return _wrap_with_indents(
-        &normalized,
-        width,
-        &"".to_string(),
-        &"".to_string(),
-        true,
-        true,
-    );
+    _wrap_with_indents(&normalized, width, &"".to_string(), &"".to_string(), true, true)
 }
 fn _effective_content_width(total_width: i64, indent: &String) -> i64 {
-    let available: i64 = total_width - (indent.chars().count() as i64);
-    if available <= (0 as i64) {
-        return 1 as i64;
+    let __sifr_chars_indent: Vec<char> = indent.chars().collect::<Vec<char>>();
+    let available: i64 = total_width - (__sifr_chars_indent.len() as i64);
+    if available <= (0_i64) {
+        return 1_i64;
     }
-    return available;
+    available
 }
 fn _push_current_line(
     result: &mut Vec<String>,
@@ -219,12 +239,13 @@ fn _push_current_line(
         &format!("{}{}", indent, line),
         drop_whitespace,
     );
+    let __sifr_chars_candidate: Vec<char> = candidate.chars().collect::<Vec<char>>();
     if drop_whitespace {
-        if (candidate.chars().count() as i64) > (0 as i64) {
-            result.push(candidate);
+        if ((__sifr_chars_candidate.len() as i64) > (0_i64)) {
+            result.push(candidate.clone());
         }
     } else {
-        result.push(candidate);
+        result.push(candidate.clone());
     }
 }
 fn _wrap_with_indents(
@@ -236,7 +257,7 @@ fn _wrap_with_indents(
     drop_whitespace: bool,
 ) -> Vec<String> {
     let words: Vec<String> = text
-        .split(&" ".to_string())
+        .split(' ')
         .map(|s| s.to_string())
         .collect::<Vec<String>>();
     let mut result: Vec<String> = vec![];
@@ -246,24 +267,26 @@ fn _wrap_with_indents(
     for raw_word in words.iter().cloned() {
         let units: Vec<String> = _split_word_units(&raw_word, break_on_hyphens);
         for word in units.iter().cloned() {
-            if (word.chars().count() as i64) == (0 as i64) {
+            let __sifr_chars_word: Vec<char> = word.chars().collect::<Vec<char>>();
+            if ((__sifr_chars_word.len() as i64) == (0_i64)) {
                 if drop_whitespace {
                     continue;
                 }
-                if (current.chars().count() as i64) > (0 as i64) {
-                    if ((current.chars().count() as i64) + (1 as i64)) <= current_limit {
-                        current = format!("{}{}", current, " ".to_string());
+                if ((current.chars().count() as i64) > (0_i64)) {
+                    if (((current.chars().count() as i64) + (1_i64)) <= current_limit) {
+                        current.push(' ');
                     }
                 }
                 continue;
             }
-            if (current.chars().count() as i64) == (0 as i64) {
+            if ((current.chars().count() as i64) == (0_i64)) {
                 current = word;
             } else {
-                if (((current.chars().count() as i64) + (1 as i64))
-                    + (word.chars().count() as i64)) <= current_limit
+                if ((((current.chars().count() as i64) + (1_i64))
+                    + (__sifr_chars_word.len() as i64)) <= current_limit)
                 {
-                    current = format!("{}{}{}", current, " ".to_string(), word);
+                    current.push(' ');
+                    current.push_str((word).as_str());
                 } else {
                     if first_line {
                         _push_current_line(
@@ -290,7 +313,7 @@ fn _wrap_with_indents(
             }
         }
     }
-    if (current.chars().count() as i64) > (0 as i64) {
+    if ((current.chars().count() as i64) > (0_i64)) {
         if first_line {
             _push_current_line(&mut result, &current, initial_indent, drop_whitespace);
         } else {
@@ -302,61 +325,64 @@ fn _wrap_with_indents(
             );
         }
     }
-    return result;
+    result
 }
 fn wrap(text: &String, width: i64) -> Result<Vec<String>, ValueError> {
-    if width <= (0 as i64) {
+    if width <= (0_i64) {
         return Err(ValueError::new("wrap: width must be > 0".to_string()));
     }
-    return Ok(_wrap_impl(text, width));
+    Ok(_wrap_impl(text, width))
 }
 fn fill(text: &String, width: i64) -> Result<String, ValueError> {
-    if width <= (0 as i64) {
+    if width <= (0_i64) {
         return Err(ValueError::new("fill: width must be > 0".to_string()));
     }
     let lines: Vec<String> = _wrap_impl(text, width);
     let mut result: String = "".to_string();
-    let mut i: i64 = 0 as i64;
+    let mut i: i64 = 0_i64;
     for line in lines.iter().cloned() {
-        if i > (0 as i64) {
-            result = format!("{}{}", result, "\n".to_string());
+        if i > (0_i64) {
+            result.push('\n');
         }
-        result = format!("{}{}", result, line);
-        i = i + (1 as i64);
+        result.push_str((line).as_str());
+        i += 1_i64;
     }
-    return Ok(result);
+    Ok(result)
 }
 fn dedent(text: &String) -> String {
     let lines: Vec<String> = text
-        .split(&"\n".to_string())
+        .split('\n')
         .map(|s| s.to_string())
         .collect::<Vec<String>>();
-    let mut min_indent: i64 = 0 as i64;
+    let mut min_indent: i64 = 0_i64;
     let mut have_indent: bool = false;
     for line in lines.iter().cloned() {
+        let __sifr_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
         if _has_non_whitespace(&line) {
-            let mut spaces: i64 = 0 as i64;
-            let mut j: i64 = 0 as i64;
+            let mut spaces: i64 = 0_i64;
+            let mut j: i64 = 0_i64;
             let mut done: bool = false;
-            while j < (line.chars().count() as i64) {
+            while (j < (__sifr_chars_line.len() as i64)) {
                 if !done {
                     let ch: Option<String> = Some({
-                        let Some(__indexed_char) = line.chars().nth(j as usize) else {
+                        let Some(__indexed_char) = __sifr_chars_line
+                            .get(j as usize)
+                            .map(|c| c.to_string()) else {
                             unreachable!(
                                 "compiler-verified string index should be in range"
                             );
                         };
-                        __indexed_char.to_string()
+                        __indexed_char
                     });
                     if let Some(ch) = ch {
-                        if ch == " ".to_string() {
-                            spaces = spaces + (1 as i64);
+                        if ch == " " {
+                            spaces += 1_i64;
                         } else {
                             done = true;
                         }
                     }
                 }
-                j = j + (1 as i64);
+                j += 1_i64;
             }
             if !have_indent {
                 min_indent = spaces;
@@ -371,131 +397,177 @@ fn dedent(text: &String) -> String {
     let mut result: String = "".to_string();
     let mut first: bool = true;
     for line2 in lines.iter().cloned() {
+        let __sifr_chars_line2: Vec<char> = line2.chars().collect::<Vec<char>>();
         if !first {
-            result = format!("{}{}", result, "\n".to_string());
+            result.push('\n');
         }
         first = false;
         if have_indent {
-            if (line2.chars().count() as i64) > min_indent {
-                result = format!(
-                    "{}{}", result, String::from_iter((line2).chars().skip((min_indent)
-                    .max(0) as usize))
-                );
+            if ((__sifr_chars_line2.len() as i64) > min_indent) {
+                result
+                    .push_str(
+                        ({
+                            let _slice_src = &__sifr_chars_line2;
+                            let _slice_len_i64 = _slice_src.len() as i64;
+                            let _slice_start_i64 = if min_indent < 0 {
+                                (_slice_len_i64 + min_indent).max(0)
+                            } else {
+                                min_indent.min(_slice_len_i64)
+                            };
+                            let _slice_stop_i64 = _slice_len_i64;
+                            String::from_iter(
+                                _slice_src
+                                    .iter()
+                                    .skip(_slice_start_i64 as usize)
+                                    .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                                    .copied(),
+                            )
+                        })
+                            .as_str(),
+                    );
             } else {
-                result = format!("{}{}", result, line2);
+                result.push_str((line2).as_str());
             }
         } else {
-            result = format!(
-                "{}{}", result, String::from_iter((line2).chars().skip((min_indent)
-                .max(0) as usize))
-            );
+            result
+                .push_str(
+                    ({
+                        let _slice_src = &__sifr_chars_line2;
+                        let _slice_len_i64 = _slice_src.len() as i64;
+                        let _slice_start_i64 = if min_indent < 0 {
+                            (_slice_len_i64 + min_indent).max(0)
+                        } else {
+                            min_indent.min(_slice_len_i64)
+                        };
+                        let _slice_stop_i64 = _slice_len_i64;
+                        String::from_iter(
+                            _slice_src
+                                .iter()
+                                .skip(_slice_start_i64 as usize)
+                                .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                                .copied(),
+                        )
+                    })
+                        .as_str(),
+                );
         }
     }
-    return result;
+    result
 }
 fn indent(text: &String, prefix: &String) -> String {
     let lines: Vec<String> = text
-        .split(&"\n".to_string())
+        .split('\n')
         .map(|s| s.to_string())
         .collect::<Vec<String>>();
     let mut result: String = "".to_string();
     let mut first: bool = true;
     for line in lines.iter().cloned() {
         if !first {
-            result = format!("{}{}", result, "\n".to_string());
+            result.push('\n');
         }
         first = false;
         if _has_non_whitespace(&line) {
-            result = format!("{}{}{}", result, prefix, line);
+            result.push_str((prefix).as_str());
+            result.push_str((line).as_str());
         } else {
-            result = format!("{}{}", result, line);
+            result.push_str((line).as_str());
         }
     }
-    return result;
+    result
 }
 fn shorten(text: &String, width: i64) -> String {
     let normalized: String = _normalize_whitespace(text);
     let words: Vec<String> = normalized
-        .split(&" ".to_string())
+        .split(' ')
         .map(|s| s.to_string())
         .collect::<Vec<String>>();
     let mut result: String = "".to_string();
     for word in words.iter().cloned() {
-        if (word.chars().count() as i64) == (0 as i64) {} else {
-            if (result.chars().count() as i64) == (0 as i64) {
+        let __sifr_chars_word: Vec<char> = word.chars().collect::<Vec<char>>();
+        if ((__sifr_chars_word.len() as i64) == (0_i64)) {} else {
+            if ((result.chars().count() as i64) == (0_i64)) {
                 result = word;
             } else {
-                if ((((result.chars().count() as i64) + (1 as i64))
-                    + (word.chars().count() as i64)) + (4 as i64)) <= width
+                if (((((result.chars().count() as i64) + (1_i64))
+                    + (__sifr_chars_word.len() as i64)) + (4_i64)) <= width)
                 {
-                    result = format!("{}{}{}", result, " ".to_string(), word);
+                    result.push(' ');
+                    result.push_str((word).as_str());
                 } else {
-                    return format!("{}{}", result, " [...]".to_string());
+                    return {
+                        let mut __sifr_concat: String = String::with_capacity(
+                            result.len() + 6usize,
+                        );
+                        __sifr_concat.push_str((result).as_str());
+                        __sifr_concat.push_str(" [...]");
+                        __sifr_concat
+                    };
                 }
             }
         }
     }
-    return result;
+    result
 }
+// --- end stdlib ---
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
 
 impl ValueError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
-impl std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+impl ::std::fmt::Display for ValueError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
     }
 }
 
-impl std::error::Error for ValueError {
+impl ::std::error::Error for ValueError {
 }
 
 fn collect_wrap_fill_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let lines: Vec<String> = wrap(&"alpha\tbeta\ngamma".to_string(), 10 as i64)?;
+    let lines: Vec<String> = wrap(&"alpha\tbeta\ngamma".to_string(), 10_i64)?;
     actual.push((format!("{:?}", lines)).as_str() == ("[\"alpha beta\", \"gamma\"]".to_string()).as_str());
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         actual.push(false);
     }
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let filled: String = fill(&"alpha\tbeta\ngamma".to_string(), 10 as i64)?;
-    actual.push(filled == "alpha beta\ngamma".to_string());
-    return Ok(());
+    let filled: String = fill(&"alpha\tbeta\ngamma".to_string(), 10_i64)?;
+    actual.push(filled == "alpha beta\ngamma");
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         actual.push(false);
     }
-    return actual;
+    actual
 }
 
 fn collect_other_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     actual.push((dedent(&"  x\n  y".to_string())).as_str() == ("x\ny".to_string()).as_str());
     actual.push((indent(&"x\n \ny".to_string(), &">> ".to_string())).as_str() == (">> x\n \n>> y".to_string()).as_str());
-    actual.push((shorten(&"alpha beta gamma".to_string(), 16 as i64)).as_str() == ("alpha beta [...]".to_string()).as_str());
+    actual.push((shorten(&"alpha beta gamma".to_string(), 16_i64)).as_str() == ("alpha beta [...]".to_string()).as_str());
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let wrap_empty: Vec<String> = wrap(&"".to_string(), 5 as i64)?;
+    let wrap_empty: Vec<String> = wrap(&"".to_string(), 5_i64)?;
     actual.push((format!("{:?}", wrap_empty)).as_str() == ("[]".to_string()).as_str());
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         actual.push(false);
     }
-    return actual;
+    actual
 }
 
 fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {

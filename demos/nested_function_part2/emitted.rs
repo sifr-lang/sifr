@@ -1,11 +1,12 @@
+// src/main.rs
 fn power_two(exp: i64) -> i64 {
     fn helper(n: i64) -> i64 {
-        if n == (0 as i64) {
-            return 1 as i64;
+        if n == (0_i64) {
+            return 1_i64;
         }
-        return (2 as i64) * helper(n - (1 as i64));
+        return (2_i64) * helper(n - (1_i64));
     }
-    return helper(exp);
+    helper(exp)
 }
 
 fn sum_to(limit: i64) -> i64 {
@@ -13,12 +14,12 @@ fn sum_to(limit: i64) -> i64 {
         if i > limit {
             return acc;
         }
-        return helper(i + (1 as i64), acc + i, limit);
+        return helper(i + (1_i64), acc + i, limit);
     }
-    return helper(1 as i64, 0 as i64, limit);
+    helper(1_i64, 0_i64, limit)
 }
 
 fn main() {
-    assert!(power_two(10 as i64) == (1024 as i64));
-    assert!(sum_to(10 as i64) == (55 as i64));
+    assert!((power_two(10_i64) == (1024_i64)));
+    assert!((sum_to(10_i64) == (55_i64)));
 }

@@ -288,7 +288,7 @@
       "id": "stdlib-base64-names",
       "area": "stdlib-text-data",
       "old_surface": "base64_encode, base64_decode, their bytes and options variants, and unrenamed private crypto imports",
-      "canonical_contract": "b64encode, b64decode, standard_b64encode, standard_b64decode, encodebytes, decodebytes, and explicitly typed bytes variants",
+      "canonical_contract": "b64encode, b64decode, and explicitly typed bytes variants, plus the distinct URL-safe and base16/base32 families",
       "behavior_difference": "text and bytes signatures remain distinct where their input and output types differ; same-signature base64_* aliases disappear",
       "consumers": ["stdlib/sifr/base64.sifr", "demos", "verification/areas/stdlib_parity"],
       "visibility": "public-export",

@@ -1,5 +1,6 @@
+// src/main.rs
 // --- stdlib: sifr.heapq ---
-fn _sift_down_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn _sift_down_max<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &mut Vec<T>,
     mut pos: i64,
     n: i64,
@@ -7,8 +8,8 @@ fn _sift_down_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
     let mut done: bool = false;
     while !done {
         let mut largest: i64 = pos;
-        let left: i64 = ((2 as i64) * pos) + (1 as i64);
-        let right: i64 = ((2 as i64) * pos) + (2 as i64);
+        let left: i64 = ((2_i64) * pos) + (1_i64);
+        let right: i64 = ((2_i64) * pos) + (2_i64);
         if left < n {
             let current_val: Option<T> = {
                 let __sifr_index_list = &data;
@@ -101,7 +102,7 @@ fn _sift_down_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                         };
                         if __idx_norm >= 0 {
                             if let Some(__elem) = data.get_mut(__idx_norm as usize) {
-                                *__elem = tmp_largest;
+                                *__elem = tmp_largest.clone();
                             }
                         }
                     }
@@ -114,7 +115,7 @@ fn _sift_down_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                         };
                         if __idx_norm >= 0 {
                             if let Some(__elem) = data.get_mut(__idx_norm as usize) {
-                                *__elem = tmp_pos;
+                                *__elem = tmp_pos.clone();
                             }
                         }
                     }
@@ -124,37 +125,30 @@ fn _sift_down_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
         }
     }
 }
-fn _heapify_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(data: &mut Vec<T>) {
+fn _heapify_max<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+    data: &mut Vec<T>,
+) {
     "Convert list to a max-heap in-place. O(n) time.".to_string();
     let n: i64 = data.len() as i64;
-    let mut i: i64 = (n / (2 as i64)) - (1 as i64);
-    while i >= (0 as i64) {
+    let mut i: i64 = (n / (2_i64)) - (1_i64);
+    while i >= (0_i64) {
         _sift_down_max(data, i, n);
-        i = i - (1 as i64);
+        i -= 1_i64;
     }
 }
-fn _heappop_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn _heappop_max<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     heap: &mut Vec<T>,
 ) -> Option<T> {
     "Pop and return the largest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
         .to_string();
     let n: i64 = heap.len() as i64;
-    if n == (0 as i64) {
+    if n == (0_i64) {
         return None;
     }
-    let top: Option<T> = {
-        let __sifr_index_list = &heap;
-        let __sifr_index_i = 0 as i64;
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_list.get(__sifr_index_norm).cloned()
-    };
+    let top: Option<T> = Some(heap[(0_i64) as usize].clone());
     let last: Option<T> = {
         let __sifr_index_list = &heap;
-        let __sifr_index_i = n - (1 as i64);
+        let __sifr_index_i = n - (1_i64);
         let __sifr_index_norm = if __sifr_index_i < 0 {
             ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
         } else {
@@ -162,12 +156,17 @@ fn _heappop_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
         };
         __sifr_index_list.get(__sifr_index_norm).cloned()
     };
-    heap.pop();
+    {
+        let Some(__sifr_nonempty_pop_value) = heap.pop() else {
+            unreachable!("compiler-verified non-empty pop should return Some");
+        };
+        __sifr_nonempty_pop_value
+    };
     let n2: i64 = heap.len() as i64;
-    if n2 > (0 as i64) {
+    if n2 > (0_i64) {
         if let Some(last) = last {
             {
-                let __idx_raw = 0 as i64;
+                let __idx_raw = 0_i64;
                 let __idx_norm = if __idx_raw < 0 {
                     (heap.len() as i64) + __idx_raw
                 } else {
@@ -175,27 +174,27 @@ fn _heappop_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                 };
                 if __idx_norm >= 0 {
                     if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                        *__elem = last;
+                        *__elem = last.clone();
                     }
                 }
             }
         }
-        _sift_down_max(heap, 0 as i64, n2);
+        _sift_down_max(heap, 0_i64, n2);
     }
-    return top;
+    top
 }
-fn _heapreplace_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn _heapreplace_max<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     heap: &mut Vec<T>,
     item: T,
 ) -> Option<T> {
     "Pop and return the largest item, then push item onto the heap.\n    Returns None if the heap is empty. O(log n) time."
         .to_string();
-    if (heap.len() as i64) == (0 as i64) {
+    if (heap.len() as i64) == (0_i64) {
         return None;
     }
-    let top: Option<T> = Some(heap[(0 as i64) as usize].clone());
+    let top: Option<T> = Some(heap[(0_i64) as usize].clone());
     {
-        let __idx_raw = 0 as i64;
+        let __idx_raw = 0_i64;
         let __idx_norm = if __idx_raw < 0 {
             (heap.len() as i64) + __idx_raw
         } else {
@@ -203,31 +202,33 @@ fn _heapreplace_max<T: Clone + std::fmt::Display + PartialOrd + 'static>(
         };
         if __idx_norm >= 0 {
             if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                *__elem = item;
+                *__elem = item.clone();
             }
         }
     }
-    _sift_down_max(heap, 0 as i64, heap.len() as i64);
-    return top;
+    let heap_len: i64 = heap.len() as i64;
+    _sift_down_max(heap, 0_i64, heap_len);
+    top
 }
+// --- end stdlib ---
 
 fn drain(heap: &mut Vec<i64>) -> Vec<i64> {
     let mut result: Vec<i64> = vec![];
-    while (heap.len() as i64) > (0 as i64) {
+    while ((heap.len() as i64) > (0_i64)) {
         let value: Option<i64> = _heappop_max(heap);
         if let Some(value) = value {
             result.push(value);
         }
     }
-    return result;
+    result
 }
 
 fn main() {
-    let mut stones: Vec<i64> = vec![2 as i64, 7 as i64, 4 as i64, 1 as i64, 8 as i64, 1 as i64];
+    let mut stones: Vec<i64> = vec![2_i64, 7_i64, 4_i64, 1_i64, 8_i64, 1_i64];
     _heapify_max(&mut stones);
     println!("{}", format!("{:?}", drain(&mut stones)));
-    let mut probe: Vec<i64> = vec![4 as i64, 10 as i64, 7 as i64];
+    let mut probe: Vec<i64> = vec![4_i64, 10_i64, 7_i64];
     _heapify_max(&mut probe);
-    _heapreplace_max(&mut probe, 6 as i64);
+    _heapreplace_max(&mut probe, 6_i64);
     println!("{}", format!("{:?}", drain(&mut probe)));
 }

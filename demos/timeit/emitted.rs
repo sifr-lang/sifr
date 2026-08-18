@@ -1,257 +1,190 @@
+// src/main.rs
+// --- stdlib: sifr.test ---
+fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+    assert_eq!(actual.len() as i64, expected.len() as i64);
+    let mut i: i64 = 0_i64;
+    while i < (actual.len() as i64) {
+        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
+        i += 1_i64;
+    }
+}
+
+// --- stdlib: _sifr.time ---
+fn time_now() -> f64 {
+    ::sifr_stdlib::time::time_now()
+}
+fn time_format(epoch: f64, fmt: &String) -> String {
+    ::sifr_stdlib::time::time_format(epoch, fmt)
+}
+fn perf_counter() -> f64 {
+    ::sifr_stdlib::time::perf_counter()
+}
+fn sleep(seconds: f64) {
+    ::sifr_stdlib::time::sleep(seconds);
+}
+fn monotonic() -> f64 {
+    ::sifr_stdlib::time::monotonic()
+}
+fn strptime(s: &String, fmt: &String) -> Result<String, ValueError> {
+    ::sifr_stdlib::time::strptime(s, fmt)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| ValueError {
+            message: __sifr_bridge_error.to_string(),
+        })
+}
+fn _strptime_intrinsic(s: &String, fmt: &String) -> Result<String, ValueError> {
+    ::sifr_stdlib::time::strptime(s, fmt)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| ValueError {
+            message: __sifr_bridge_error.to_string(),
+        })
+}
+fn gmtime(epoch: f64) -> String {
+    ::sifr_stdlib::time::gmtime(epoch)
+}
+fn _gmtime_intrinsic(epoch: f64) -> String {
+    ::sifr_stdlib::time::gmtime(epoch)
+}
+fn localtime(epoch: f64) -> String {
+    ::sifr_stdlib::time::localtime(epoch)
+}
+fn _localtime_intrinsic(epoch: f64) -> String {
+    ::sifr_stdlib::time::localtime(epoch)
+}
+fn time_strptime(s: &String, fmt: &String) -> Result<Vec<i64>, ValueError> {
+    ::sifr_stdlib::time::time_strptime(s, fmt)
+        .map(|__sifr_bridge_ok| {
+            __sifr_bridge_ok
+                .into_iter()
+                .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+                .collect()
+        })
+        .map_err(|__sifr_bridge_error| ValueError {
+            message: __sifr_bridge_error.to_string(),
+        })
+}
+fn time_gmtime() -> Vec<i64> {
+    ::sifr_stdlib::time::time_gmtime()
+        .into_iter()
+        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+        .collect()
+}
+fn time_localtime() -> Vec<i64> {
+    ::sifr_stdlib::time::time_localtime()
+        .into_iter()
+        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+        .collect()
+}
+
 // --- stdlib: sifr.timeit ---
 fn default_timer() -> f64 {
-    return std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs_f64();
+    perf_counter()
 }
 fn _elapsed_non_negative(start: f64, end: f64) -> f64 {
     let elapsed: f64 = end - start;
-    if elapsed < (0.0 as f64) {
-        return 0.0 as f64;
+    if elapsed < (0.0_f64) {
+        return 0.0_f64;
     }
-    return elapsed;
+    elapsed
 }
 fn timeit(stmt: impl Fn(), number: i64) -> f64 {
-    let start: f64 = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs_f64();
-    let mut i: i64 = 0 as i64;
+    let start: f64 = perf_counter();
+    let mut i: i64 = 0_i64;
     while i < number {
         stmt();
-        i = i + (1 as i64);
+        i += 1_i64;
     }
-    let end: f64 = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs_f64();
-    return _elapsed_non_negative(start, end);
+    let end: f64 = perf_counter();
+    _elapsed_non_negative(start, end)
 }
 fn repeat(stmt: impl Fn(), count: i64, number: i64) -> Vec<f64> {
     let mut results: Vec<f64> = vec![];
-    let mut r: i64 = 0 as i64;
+    let mut r: i64 = 0_i64;
     while r < count {
-        let start: f64 = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs_f64();
-        let mut i: i64 = 0 as i64;
+        let start: f64 = perf_counter();
+        let mut i: i64 = 0_i64;
         while i < number {
             stmt();
-            i = i + (1 as i64);
+            i += 1_i64;
         }
-        let end: f64 = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs_f64();
+        let end: f64 = perf_counter();
         let elapsed: f64 = _elapsed_non_negative(start, end);
         results.push(elapsed);
-        r = r + (1 as i64);
+        r += 1_i64;
     }
-    return results;
+    results
 }
+// --- end stdlib ---
 
-// --- stdlib: sifr.test ---
-fn assert_eq<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    actual: &T,
-    expected: &T,
-) {
-    assert!(* actual == * expected);
-}
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0 as i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i = i + (1 as i64);
-    }
-}
-
-#[derive(Debug, Clone)]
-struct IOError {
-    message: String,
-    kind: String,
-}
-
-impl IOError {
-    fn new(message: String) -> Self {
-        return Self { message: message, kind: "Other".to_string() };
-    }
-}
-
-impl std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for IOError {
-}
-
-fn __io_err(e: std::io::Error) -> IOError {
-    let msg = e.to_string();
-    let kind = if e.kind() == std::io::ErrorKind::NotFound { "FileNotFound".to_string() } else { if e.kind() == std::io::ErrorKind::PermissionDenied { "PermissionDenied".to_string() } else { if e.kind() == std::io::ErrorKind::AlreadyExists { "FileExists".to_string() } else { "Other".to_string() } } };
-    return IOError { message: msg, kind: kind };
-}
-
-#[derive(Debug, Clone)]
-struct ParseError {
-    message: String,
-}
-
-impl ParseError {
-    fn new(message: String) -> Self {
-        return Self { message: message };
-    }
-}
-
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for ParseError {
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
 
 impl ValueError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
-impl std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+impl ::std::fmt::Display for ValueError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
     }
 }
 
-impl std::error::Error for ValueError {
-}
-
-#[derive(Debug, Clone)]
-struct JSONDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl JSONDecodeError {
-    fn new(message: String) -> Self {
-        return Self { message: message, line: 0, column: 0 };
-    }
-}
-
-impl std::fmt::Display for JSONDecodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for JSONDecodeError {
-}
-
-#[derive(Debug, Clone)]
-struct TOMLDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl TOMLDecodeError {
-    fn new(message: String) -> Self {
-        return Self { message: message, line: 0, column: 0 };
-    }
-}
-
-impl std::fmt::Display for TOMLDecodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for TOMLDecodeError {
-}
-
-#[derive(Debug, Clone)]
-struct RegexError {
-    message: String,
-    detail: String,
-}
-
-impl RegexError {
-    fn new(message: String) -> Self {
-        return Self { message: message, detail: String::new() };
-    }
-}
-
-impl std::fmt::Display for RegexError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for RegexError {
+impl ::std::error::Error for ValueError {
 }
 
 fn workload() {
-    let mut total: i64 = 0 as i64;
-    let mut i: i64 = 0 as i64;
-    while i < (100 as i64) {
-        total = total + i;
-        i = i + (1 as i64);
+    let mut total: i64 = 0_i64;
+    let mut i: i64 = 0_i64;
+    while i < (100_i64) {
+        total += i;
+        i += 1_i64;
     }
 }
 
 fn all_non_negative(values: &Vec<f64>) -> bool {
-    let mut i: i64 = 0 as i64;
-    while i < (values.len() as i64) {
+    let mut i: i64 = 0_i64;
+    while (i < (values.len() as i64)) {
         let current: Option<f64> = Some(values[i as usize]);
         let Some(current) = current else {
             return false;
         };
-        if current < (0.0 as f64) {
+        if current < (0.0_f64) {
             return false;
         }
-        i = i + (1 as i64);
+        i += 1_i64;
     }
-    return true;
+    true
 }
 
 fn collect_timer_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let t1: f64 = default_timer();
-    {
-    let __secs = 0.01 as f64;
-    if __secs.is_finite() && (__secs > 0.0) { std::thread::sleep(std::time::Duration::from_nanos((__secs * 1000000000.0) as u64)) } else { () }
-};
+    sleep(0.01_f64);
     let t2: f64 = default_timer();
     actual.push(t2 >= t1);
-    return actual;
+    actual
 }
 
 fn collect_repeat_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    let elapsed: f64 = timeit(workload, 10 as i64);
-    actual.push(elapsed >= (0.0 as f64));
-    let repeated: Vec<f64> = repeat(workload, 3 as i64, 10 as i64);
-    actual.push((repeated.len() as i64) == (3 as i64));
+    let elapsed: f64 = timeit(workload, 10_i64);
+    actual.push(elapsed >= (0.0_f64));
+    let repeated: Vec<f64> = repeat(workload, 3_i64, 10_i64);
+    actual.push((repeated.len() as i64) == (3_i64));
     actual.push(all_non_negative(&repeated));
-    return actual;
+    actual
 }
 
 fn collect_edge_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    actual.push((repeat(workload, 0 as i64, 5 as i64).len() as i64) == (0 as i64));
-    actual.push(timeit(workload, 0 as i64) >= (0.0 as f64));
-    actual.push((repeat(workload, 2 as i64, 0 as i64).len() as i64) == (2 as i64));
-    return actual;
+    actual.push((repeat(workload, 0_i64, 5_i64).len() as i64) == (0_i64));
+    actual.push(timeit(workload, 0_i64) >= (0.0_f64));
+    actual.push((repeat(workload, 2_i64, 0_i64).len() as i64) == (2_i64));
+    actual
 }
 
 fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {

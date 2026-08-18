@@ -1,17 +1,18 @@
+// src/main.rs
 fn apply_twice(f: impl Fn(i64) -> i64, value: i64) -> i64 {
-    return f(f(value));
+    f(f(value))
 }
 
 fn score(base: i64) -> i64 {
-    let offset: i64 = 3 as i64;
-    let add_offset = |x| {
-    return x + offset;
+    let offset: i64 = 3_i64;
+    let add_offset = |x: i64| {
+    x + offset
 };
-    let amplify = |x| {
-    return x * (2 as i64);
+    let amplify = |x: i64| {
+    x * (2_i64)
 };
     let adjusted: i64 = apply_twice(add_offset, base);
-    return amplify(adjusted);
+    amplify(adjusted)
 }
 
 fn bounded_sum(limit: i64) -> i64 {
@@ -19,12 +20,12 @@ fn bounded_sum(limit: i64) -> i64 {
         if i > limit {
             return acc;
         }
-        return helper(i + (1 as i64), acc + i, limit);
+        return helper(i + (1_i64), acc + i, limit);
     }
-    return helper(1 as i64, 0 as i64, limit);
+    helper(1_i64, 0_i64, limit)
 }
 
 fn main() {
-    assert!(score(4 as i64) == (20 as i64));
-    assert!(bounded_sum(5 as i64) == (15 as i64));
+    assert!((score(4_i64) == (20_i64)));
+    assert!((bounded_sum(5_i64) == (15_i64)));
 }

@@ -199,6 +199,7 @@ fn compile_stdlib_sources_with_sysroot(
                     re_export_stdlib_imports(
                         &mut exports,
                         &stdlib_defs,
+                        module_name,
                         &import.module,
                         &import.names,
                         &import.aliases,
@@ -221,6 +222,7 @@ fn compile_stdlib_sources_with_sysroot(
                     re_export_stdlib_imports(
                         &mut exports,
                         &stdlib_defs,
+                        module_name,
                         &import.module,
                         &import.names,
                         &import.aliases,
@@ -248,6 +250,10 @@ fn compile_stdlib_sources_with_sysroot(
                     .map_or(name.as_str(), |(owner, _)| owner);
                 should_export_callable(module_name, owner_name)
             });
+            class_exports.retain(|name, _| should_export_callable(module_name, name));
+            error_exports.retain(|name| should_export_callable(module_name, name));
+            class_type_param_exports.retain(|name, _| should_export_callable(module_name, name));
+            const_exports.retain(|name, _| !name.starts_with('_'));
         }
         let const_integer_value_exports = collect_public_constant_integer_value_exports(
             result.module.constants.iter().filter_map(|(name, _, _)| {

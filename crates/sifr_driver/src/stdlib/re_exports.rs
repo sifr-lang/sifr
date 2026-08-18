@@ -17,19 +17,42 @@ pub(super) struct ReExportMaps<'a> {
 pub(super) fn re_export_stdlib_imports(
     exports: &mut ReExportMaps<'_>,
     stdlib_defs: &ExternalDefs,
+    exporting_module: &str,
     import_module: &str,
     import_names: &[String],
     import_aliases: &[(String, String)],
 ) {
-    let imported_names = import_names
-        .iter()
-        .map(String::as_str)
-        .collect::<HashSet<_>>();
     let aliases = import_aliases
         .iter()
         .map(|(original, local)| (original.as_str(), local.as_str()))
         .collect::<HashMap<_, _>>();
-    copy_named_exports(exports, stdlib_defs, import_module, import_names, &aliases);
+    let exportable_names = import_names
+        .iter()
+        .filter(|name| {
+            if !import_module.starts_with("_sifr.") {
+                return true;
+            }
+            let local_name = aliases.get(name.as_str()).copied().unwrap_or(name.as_str());
+            crate::private_re_exports::approved_private_re_export(
+                exporting_module,
+                import_module,
+                name,
+                local_name,
+            )
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    let imported_names = exportable_names
+        .iter()
+        .map(String::as_str)
+        .collect::<HashSet<_>>();
+    copy_named_exports(
+        exports,
+        stdlib_defs,
+        import_module,
+        &exportable_names,
+        &aliases,
+    );
     copy_callable_metadata(
         exports,
         stdlib_defs,
@@ -241,6 +264,7 @@ mod tests {
                 constants: &mut constants,
             },
             &defs,
+            "sifr.facade",
             "sifr.origin",
             &["verify".to_string(), "Failure".to_string()],
             &[],
@@ -254,10 +278,10 @@ mod tests {
     }
 
     #[test]
-    fn aliased_imports_use_the_local_export_name() {
+    fn public_aliased_imports_use_the_local_export_name() {
         let mut defs = ExternalDefs::default();
         defs.functions
-            .entry("_sifr.origin".to_string())
+            .entry("sifr.origin".to_string())
             .or_default()
             .insert(
                 "legacy".to_string(),
@@ -290,12 +314,96 @@ mod tests {
                 constants: &mut constants,
             },
             &defs,
-            "_sifr.origin",
+            "sifr.facade",
+            "sifr.origin",
             &["legacy".to_string()],
             &[("legacy".to_string(), "_legacy_impl".to_string())],
         );
 
         assert!(!functions.contains_key("legacy"));
         assert!(functions.contains_key("_legacy_impl"));
+    }
+
+    #[test]
+    fn unapproved_private_imports_do_not_enter_public_exports() {
+        let mut defs = ExternalDefs::default();
+        defs.functions
+            .entry("_sifr.origin".to_string())
+            .or_default()
+            .insert(
+                "implementation_name".to_string(),
+                FunctionType {
+                    receiver: None,
+                    params: vec![],
+                    return_type: Box::new(Type::Int),
+                },
+            );
+        defs.classes
+            .entry("_sifr.origin".to_string())
+            .or_default()
+            .insert(
+                "ImplementationClass".to_string(),
+                Type::Class {
+                    identity: None,
+                    type_args: Vec::new(),
+                    name: "ImplementationClass".to_string(),
+                    fields: Vec::new(),
+                    methods: Vec::new(),
+                    parent_class: None,
+                },
+            );
+        defs.constants
+            .entry("_sifr.origin".to_string())
+            .or_default()
+            .insert("IMPLEMENTATION_VALUE".to_string(), Type::Int);
+
+        let mut functions = HashMap::new();
+        let mut compiler_intrinsics = HashMap::new();
+        let mut classes = HashMap::new();
+        let mut error_types = HashSet::new();
+        let mut class_type_params = HashMap::new();
+        let mut defaults = HashMap::new();
+        let mut varargs = HashMap::new();
+        let mut workloads = HashMap::new();
+        let mut constants = HashMap::new();
+        re_export_stdlib_imports(
+            &mut ReExportMaps {
+                functions: &mut functions,
+                compiler_intrinsics: &mut compiler_intrinsics,
+                classes: &mut classes,
+                error_types: &mut error_types,
+                class_type_params: &mut class_type_params,
+                defaults: &mut defaults,
+                varargs: &mut varargs,
+                workloads: &mut workloads,
+                constants: &mut constants,
+            },
+            &defs,
+            "sifr.facade",
+            "_sifr.origin",
+            &[
+                "implementation_name".to_string(),
+                "ImplementationClass".to_string(),
+                "IMPLEMENTATION_VALUE".to_string(),
+            ],
+            &[
+                (
+                    "implementation_name".to_string(),
+                    "public_alias".to_string(),
+                ),
+                (
+                    "ImplementationClass".to_string(),
+                    "PublicClassAlias".to_string(),
+                ),
+                (
+                    "IMPLEMENTATION_VALUE".to_string(),
+                    "PUBLIC_VALUE_ALIAS".to_string(),
+                ),
+            ],
+        );
+
+        assert!(functions.is_empty());
+        assert!(classes.is_empty());
+        assert!(constants.is_empty());
     }
 }

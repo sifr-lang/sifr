@@ -1,6 +1,6 @@
 // src/main.rs
 // --- stdlib: sifr.heapq ---
-fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd>(
+fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &mut Vec<T>,
     mut pos: i64,
     n: i64,
@@ -125,7 +125,7 @@ fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd
         }
     }
 }
-fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd>(
+fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     heap: &mut Vec<T>,
     mut pos: i64,
 ) {

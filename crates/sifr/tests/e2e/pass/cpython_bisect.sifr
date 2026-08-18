@@ -1,5 +1,5 @@
 # CPython test_bisect.py — ported assertions for sifr.bisect
-# Note: Sifr's insort functions return new lists (functional style)
+# Note: Sifr's insort_right functions return new lists (functional style)
 from sifr.test import assert_eq
 from sifr.bisect import bisect_left, bisect_right, insort_left, insort_right
 
@@ -71,7 +71,7 @@ def assert_insort_right_cases():
     assert_eq(len(ins3), 4)
     assert str(ins3) == '[1, 3, 4, 5]'
 
-    # insort with duplicates
+    # insort_right with duplicates
     ins4: list[int] = [1, 3, 3, 5]
     insort_left(ins4, 3)
     assert_eq(len(ins4), 5)

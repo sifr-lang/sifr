@@ -49,7 +49,7 @@ class TranslationError(Error):
     message: str
 
 
-def i18n_locale_canonicalize(locale: str) -> Result[str, LocaleIdError]:
+def _i18n_locale_canonicalize(locale: str) -> Result[str, LocaleIdError]:
     try:
         value: str = _i18n_locale_canonicalize_impl(locale)
         return value
@@ -57,7 +57,7 @@ def i18n_locale_canonicalize(locale: str) -> Result[str, LocaleIdError]:
         raise LocaleIdError(e.message)
 
 
-def i18n_locale_maximize(locale: str) -> Result[str, LocaleIdError]:
+def _i18n_locale_maximize(locale: str) -> Result[str, LocaleIdError]:
     try:
         value: str = _i18n_locale_maximize_impl(locale)
         return value
@@ -65,7 +65,7 @@ def i18n_locale_maximize(locale: str) -> Result[str, LocaleIdError]:
         raise LocaleIdError(e.message)
 
 
-def i18n_locale_minimize(locale: str) -> Result[str, LocaleIdError]:
+def _i18n_locale_minimize(locale: str) -> Result[str, LocaleIdError]:
     try:
         value: str = _i18n_locale_minimize_impl(locale)
         return value
@@ -73,11 +73,11 @@ def i18n_locale_minimize(locale: str) -> Result[str, LocaleIdError]:
         raise LocaleIdError(e.message)
 
 
-def i18n_host_locale() -> str | None:
+def _i18n_host_locale() -> str | None:
     return _i18n_host_locale_impl()
 
 
-def i18n_format_number(locale: str, value: str) -> Result[str, FormatError]:
+def _i18n_format_number(locale: str, value: str) -> Result[str, FormatError]:
     try:
         formatted: str = _i18n_format_number_impl(locale, value)
         return formatted
@@ -85,7 +85,7 @@ def i18n_format_number(locale: str, value: str) -> Result[str, FormatError]:
         raise FormatError(e.message)
 
 
-def i18n_format_datetime(
+def _i18n_format_datetime(
     locale: str,
     style: str,
     year: int,
@@ -111,7 +111,7 @@ def i18n_format_datetime(
         raise FormatError(e.message)
 
 
-def i18n_plural_category(locale: str, rule_type: str, value: str) -> Result[str, PluralRulesError]:
+def _i18n_plural_category(locale: str, rule_type: str, value: str) -> Result[str, PluralRulesError]:
     try:
         category: str = _i18n_plural_category_impl(locale, rule_type, value)
         return category
@@ -119,7 +119,7 @@ def i18n_plural_category(locale: str, rule_type: str, value: str) -> Result[str,
         raise PluralRulesError(e.message)
 
 
-def i18n_collate(locale: str, strength: str, left: str, right: str) -> Result[int, FormatError]:
+def _i18n_collate(locale: str, strength: str, left: str, right: str) -> Result[int, FormatError]:
     try:
         value: int = _i18n_collate_impl(locale, strength, left, right)
         return value
@@ -127,7 +127,7 @@ def i18n_collate(locale: str, strength: str, left: str, right: str) -> Result[in
         raise FormatError(e.message)
 
 
-def i18n_mo_validate(catalog: bytes) -> Result[str, CatalogError]:
+def _i18n_mo_validate(catalog: bytes) -> Result[str, CatalogError]:
     try:
         value: str = _i18n_mo_validate_impl(catalog)
         return value
@@ -135,7 +135,7 @@ def i18n_mo_validate(catalog: bytes) -> Result[str, CatalogError]:
         raise CatalogError(e.message)
 
 
-def i18n_mo_load_file(path: str) -> Result[bytes, CatalogError]:
+def _i18n_mo_load_file(path: str) -> Result[bytes, CatalogError]:
     try:
         catalog: bytes = _i18n_mo_load_file_impl(path)
         return catalog
@@ -143,7 +143,7 @@ def i18n_mo_load_file(path: str) -> Result[bytes, CatalogError]:
         raise CatalogError(e.message)
 
 
-def i18n_mo_lookup(catalog: bytes, message_id: str) -> Result[str | None, CatalogError]:
+def _i18n_mo_lookup(catalog: bytes, message_id: str) -> Result[str | None, CatalogError]:
     try:
         value: str | None = _i18n_mo_lookup_impl(catalog, message_id)
         return value
@@ -151,7 +151,7 @@ def i18n_mo_lookup(catalog: bytes, message_id: str) -> Result[str | None, Catalo
         raise CatalogError(e.message)
 
 
-def i18n_mo_lookup_context(
+def _i18n_mo_lookup_context(
     catalog: bytes, context: str, message_id: str
 ) -> Result[str | None, CatalogError]:
     try:
@@ -161,7 +161,7 @@ def i18n_mo_lookup_context(
         raise CatalogError(e.message)
 
 
-def i18n_mo_lookup_plural(
+def _i18n_mo_lookup_plural(
     catalog: bytes, singular: str, plural: str, count: int
 ) -> Result[str | None, CatalogError]:
     try:
@@ -171,7 +171,7 @@ def i18n_mo_lookup_plural(
         raise CatalogError(e.message)
 
 
-def i18n_mo_lookup_context_plural(
+def _i18n_mo_lookup_context_plural(
     catalog: bytes, context: str, singular: str, plural: str, count: int
 ) -> Result[str | None, CatalogError]:
     try:
@@ -192,21 +192,21 @@ class LocaleId:
 
     def canonical(self) -> Result[LocaleId, LocaleIdError]:
         try:
-            canonical: str = i18n_locale_canonicalize(self.value)
+            canonical: str = _i18n_locale_canonicalize(self.value)
             return LocaleId(canonical)
         except LocaleIdError as e:
             raise LocaleIdError(e.message)
 
     def maximize(self) -> Result[LocaleId, LocaleIdError]:
         try:
-            expanded: str = i18n_locale_maximize(self.value)
+            expanded: str = _i18n_locale_maximize(self.value)
             return LocaleId(expanded)
         except LocaleIdError as e:
             raise LocaleIdError(e.message)
 
     def minimize(self) -> Result[LocaleId, LocaleIdError]:
         try:
-            minimized: str = i18n_locale_minimize(self.value)
+            minimized: str = _i18n_locale_minimize(self.value)
             return LocaleId(minimized)
         except LocaleIdError as e:
             raise LocaleIdError(e.message)
@@ -219,7 +219,7 @@ class NumberFormatter:
         self.locale = locale
 
     def format(self, value: str) -> Result[str, FormatError]:
-        return i18n_format_number(self.locale.to_string(), value)
+        return _i18n_format_number(self.locale.to_string(), value)
 
 
 class DateTimeFormatter:
@@ -231,7 +231,7 @@ class DateTimeFormatter:
         self.style = style + ""
 
     def format_parts(self, year: int, month: int, day: int, hour: int, minute: int, second: int) -> Result[str, FormatError]:
-        return i18n_format_datetime(
+        return _i18n_format_datetime(
             self.locale.to_string(),
             self.style,
             year,
@@ -252,7 +252,7 @@ class PluralRules:
         self.rule_type = rule_type + ""
 
     def category(self, value: str) -> Result[str, PluralRulesError]:
-        return i18n_plural_category(self.locale.to_string(), self.rule_type, value)
+        return _i18n_plural_category(self.locale.to_string(), self.rule_type, value)
 
 
 class Collator:
@@ -264,7 +264,7 @@ class Collator:
         self.strength = strength + ""
 
     def compare(self, left: str, right: str) -> Result[int, FormatError]:
-        return i18n_collate(self.locale.to_string(), self.strength, left, right)
+        return _i18n_collate(self.locale.to_string(), self.strength, left, right)
 
 
 class Message:
@@ -299,18 +299,18 @@ class Bundle:
         self._catalog = catalog
 
     def lookup(self, message_id: str) -> Result[str | None, CatalogError]:
-        return i18n_mo_lookup(self._catalog, message_id)
+        return _i18n_mo_lookup(self._catalog, message_id)
 
     def lookup_context(self, context: str, message_id: str) -> Result[str | None, CatalogError]:
-        return i18n_mo_lookup_context(self._catalog, context, message_id)
+        return _i18n_mo_lookup_context(self._catalog, context, message_id)
 
     def lookup_plural(self, singular: str, plural: str, count: int) -> Result[str | None, CatalogError]:
-        return i18n_mo_lookup_plural(self._catalog, singular, plural, count)
+        return _i18n_mo_lookup_plural(self._catalog, singular, plural, count)
 
     def lookup_context_plural(
         self, context: str, singular: str, plural: str, count: int
     ) -> Result[str | None, CatalogError]:
-        return i18n_mo_lookup_context_plural(self._catalog, context, singular, plural, count)
+        return _i18n_mo_lookup_context_plural(self._catalog, context, singular, plural, count)
 
 
 class Translator:
@@ -414,26 +414,26 @@ class Translator:
 
 def parse_locale(value: str) -> Result[LocaleId, LocaleIdError]:
     try:
-        canonical: str = i18n_locale_canonicalize(value)
+        canonical: str = _i18n_locale_canonicalize(value)
         return LocaleId(canonical)
     except LocaleIdError as e:
         raise LocaleIdError(e.message)
 
 
 def canonicalize_locale(value: str) -> Result[str, LocaleIdError]:
-    return i18n_locale_canonicalize(value)
+    return _i18n_locale_canonicalize(value)
 
 
 def maximize_locale(value: str) -> Result[str, LocaleIdError]:
-    return i18n_locale_maximize(value)
+    return _i18n_locale_maximize(value)
 
 
 def minimize_locale(value: str) -> Result[str, LocaleIdError]:
-    return i18n_locale_minimize(value)
+    return _i18n_locale_minimize(value)
 
 
 def host_locale() -> LocaleId | None:
-    raw: str | None = i18n_host_locale()
+    raw: str | None = _i18n_host_locale()
     if raw is not None:
         return LocaleId(raw)
     return None
@@ -473,7 +473,7 @@ def context_plural_message(context: str, singular: str, plural: str, count: int)
 
 def bundle_from_mo_bytes(catalog: bytes) -> Result[Bundle, CatalogError]:
     try:
-        _validated: str = i18n_mo_validate(catalog)
+        _validated: str = _i18n_mo_validate(catalog)
         return Bundle(catalog)
     except CatalogError as e:
         raise CatalogError(e.message)
@@ -481,7 +481,7 @@ def bundle_from_mo_bytes(catalog: bytes) -> Result[Bundle, CatalogError]:
 
 def load_mo_file(path: str) -> Result[Bundle, CatalogError]:
     try:
-        catalog: bytes = i18n_mo_load_file(path)
+        catalog: bytes = _i18n_mo_load_file(path)
         return Bundle(catalog)
     except CatalogError as e:
         raise CatalogError(e.message)

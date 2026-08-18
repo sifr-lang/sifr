@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+// src/main.rs
+use ::std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(i64)]
@@ -8,18 +9,18 @@ enum Color {
     BLUE = 3,
 }
 
-impl std::fmt::Display for Color {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "{:?}", self);
+impl ::std::fmt::Display for Color {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
 impl Color {
     fn name(&self) -> String {
-        return format!("{:?}", self);
+        format!("{:?}", self)
     }
     fn value(&self) -> i64 {
-        return *self as i64;
+        *self as i64
     }
 }
 
@@ -31,18 +32,18 @@ enum HttpStatus {
     INTERNAL_ERROR = 500,
 }
 
-impl std::fmt::Display for HttpStatus {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "{:?}", self);
+impl ::std::fmt::Display for HttpStatus {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
 impl HttpStatus {
     fn name(&self) -> String {
-        return format!("{:?}", self);
+        format!("{:?}", self)
     }
     fn value(&self) -> i64 {
-        return *self as i64;
+        *self as i64
     }
 }
 
@@ -55,18 +56,18 @@ enum Direction {
     WEST = 4,
 }
 
-impl std::fmt::Display for Direction {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "{:?}", self);
+impl ::std::fmt::Display for Direction {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
 impl Direction {
     fn name(&self) -> String {
-        return format!("{:?}", self);
+        format!("{:?}", self)
     }
     fn value(&self) -> i64 {
-        return *self as i64;
+        *self as i64
     }
     fn is_vertical(&self) -> bool {
         match self {
@@ -137,8 +138,8 @@ fn main() {
     println!("{}", c.name());
     println!("{}", c.value());
     println!("=== Comparison ===");
-    println!("{}", c == Color::RED);
-    println!("{}", c == Color::BLUE);
+    println!("{}", (c == Color::RED));
+    println!("{}", (c == Color::BLUE));
     println!("=== Pattern Matching ===");
     println!("{}", describe_color(Color::GREEN));
     println!("{}", describe_color(Color::BLUE));
@@ -156,9 +157,9 @@ fn main() {
     println!("{}", Direction::EAST.opposite());
     println!("=== Enum as Dict Key ===");
     let mut scores: HashMap<Color, i64> = HashMap::from([]);
-    scores.insert(Color::RED, 10 as i64);
-    scores.insert(Color::GREEN, 20 as i64);
-    scores.insert(Color::BLUE, 30 as i64);
+    scores.insert(Color::RED, 10_i64);
+    scores.insert(Color::GREEN, 20_i64);
+    scores.insert(Color::BLUE, 30_i64);
     let v: Option<i64> = scores.get(&Color::GREEN).copied();
     if let Some(v) = v {
         println!("{}", v);

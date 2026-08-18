@@ -19,7 +19,6 @@ macro_rules! binary_float {
 }
 
 unary_float!(sqrt, sqrt);
-unary_float!(abs_val, abs);
 unary_float!(log, ln);
 unary_float!(cbrt, cbrt);
 unary_float!(exp2, exp2);

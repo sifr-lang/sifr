@@ -1,6 +1,6 @@
 # Consolidated stdlib statistics coverage for stdlib_consolidation structure rules
 from sifr.statistics import (
-    mean, median, mode, fmean, harmonic_mean, median_low, median_high,
+    mean, median, mode, harmonic_mean, median_low, median_high,
     multimode, quantiles, covariance, correlation, linear_regression,
     variance, pvariance, stdev, pstdev, StatisticsError
 )
@@ -39,12 +39,6 @@ def collect_positive_actual() -> list[bool]:
     try:
         mo: int = mode([1, 2, 2, 3, 3, 3, 4])
         actual.append(mo == 3)
-    except StatisticsError as e:
-        actual.append(False)
-
-    try:
-        fm: float = fmean([1.0, 2.0, 3.0, 4.0, 5.0])
-        actual.append(near(fm, 3.0, 0.0001))
     except StatisticsError as e:
         actual.append(False)
 
@@ -158,7 +152,7 @@ def collect_negative_actual_ok() -> list[bool]:
 def main():
     positive_expected: list[bool] = [
         True, True, True, True, True, True, True, True, True,
-        True, True, True, True, True, True, True, True
+        True, True, True, True, True, True, True
     ]
     positive_actual: list[bool] = collect_positive_actual()
     assert_bool_vector_eq(positive_actual, positive_expected)

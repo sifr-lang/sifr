@@ -67,9 +67,6 @@ fn _match(name: &String, mut ni: i64, pattern: &String, mut pi: i64) -> bool {
     }
     (ni == (name.chars().count() as i64))
 }
-fn fnmatchcase(name: &String, pattern: &String) -> bool {
-    _match(name, 0_i64, pattern, 0_i64)
-}
 fn filter(names: &Vec<String>, pattern: &String) -> Vec<String> {
     let mut result: Vec<String> = vec![];
     for name in names.iter().cloned() {
@@ -97,7 +94,7 @@ fn collect_match_actual() -> Vec<bool> {
     let no_txt_match: bool = !(fnmatch(&"hello.py".to_string(), &"*.txt".to_string()));
     actual.push(no_txt_match);
     actual.push(fnmatch(&"abc".to_string(), &"a?c".to_string()));
-    let case_sensitive_miss: bool = !(fnmatchcase(&"AbC".to_string(), &"abc".to_string()));
+    let case_sensitive_miss: bool = !(fnmatch(&"AbC".to_string(), &"abc".to_string()));
     actual.push(case_sensitive_miss);
     actual
 }

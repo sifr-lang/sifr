@@ -45,14 +45,6 @@ fn b64decode(payload: &str) -> Result<String, ParseError> {
         .and_then(decode_to_utf8)
 }
 
-fn standard_b64encode(payload: &str) -> String {
-    b64encode(payload)
-}
-
-fn standard_b64decode(payload: &str) -> Result<String, ParseError> {
-    b64decode(payload)
-}
-
 fn urlsafe_b64encode(payload: &str) -> String {
     URL_SAFE.encode(payload)
 }
@@ -97,8 +89,6 @@ fn collect_positive_actual() -> Vec<String> {
     vec![
         b64encode("foo"),
         b64decode("Zm9v").unwrap_or_default(),
-        standard_b64encode("foo"),
-        standard_b64decode("Zm9v").unwrap_or_default(),
         urlsafe_encoded.clone(),
         urlsafe_b64decode(&urlsafe_encoded).unwrap_or_default(),
         b16_encoded.clone(),
@@ -118,8 +108,6 @@ fn main() {
     assert_vector_eq(
         &actual,
         &[
-            "Zm9v".to_string(),
-            "foo".to_string(),
             "Zm9v".to_string(),
             "foo".to_string(),
             "aGVsbG8=".to_string(),

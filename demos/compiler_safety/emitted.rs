@@ -1,3 +1,4 @@
+// src/main.rs
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct FileResource {
     path: String,
@@ -5,19 +6,25 @@ struct FileResource {
 
 impl FileResource {
     fn new(path: String) -> Self {
-        return Self { path: path };
-    }
-    fn __enter__(&self) -> FileResource {
-        return self.clone();
-    }
-    fn __exit__(&self) {
-        return;
+        let __sifr_field_init_0: String = path;
+        Self { path: __sifr_field_init_0 }
     }
 }
 
-impl std::fmt::Display for FileResource {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "FileResource(path={})", self.path);
+impl FileResource {
+    fn __enter__(&self) -> FileResource {
+        self.clone()
+    }
+}
+
+impl FileResource {
+    fn __exit__(&self) {
+    }
+}
+
+impl ::std::fmt::Display for FileResource {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "FileResource(path={})", self.path)
     }
 }
 
@@ -28,19 +35,25 @@ struct DBConnection {
 
 impl DBConnection {
     fn new(name: String) -> Self {
-        return Self { name: name };
-    }
-    fn __enter__(&self) -> DBConnection {
-        return self.clone();
-    }
-    fn __exit__(&self) {
-        return;
+        let __sifr_field_init_0: String = name;
+        Self { name: __sifr_field_init_0 }
     }
 }
 
-impl std::fmt::Display for DBConnection {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "DBConnection(name={})", self.name);
+impl DBConnection {
+    fn __enter__(&self) -> DBConnection {
+        self.clone()
+    }
+}
+
+impl DBConnection {
+    fn __exit__(&self) {
+    }
+}
+
+impl ::std::fmt::Display for DBConnection {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "DBConnection(name={})", self.name)
     }
 }
 
@@ -51,12 +64,17 @@ struct Config {
 
 impl Config {
     fn new(value: i64, callback: impl Fn(i64) -> i64 + 'static) -> Self {
-        return Self { value: value, callback: Box::new(callback) };
+        let __sifr_field_init_0: i64 = value;
+        let __sifr_field_init_1: Box<dyn Fn(i64) -> i64> = Box::new(callback);
+        Self { value: __sifr_field_init_0, callback: __sifr_field_init_1 }
     }
 }
 
+impl Config {
+}
+
 fn double(x: i64) -> i64 {
-    return x * (2 as i64);
+    x * (2_i64)
 }
 
 fn demo_early_return() -> Vec<String> {
@@ -70,11 +88,11 @@ fn demo_early_return() -> Vec<String> {
         }
         let mut __guard_0 = __WithGuard0 { ctx: __ctx_0 };
         let f = __guard_0.ctx.__enter__();
-        output.push(format!("{}{}", "Reading: ".to_string(), f.path));
+        output.push(format!("{}{}", "Reading: ", f.path));
     }
     output.push("Closing: data.csv".to_string());
     output.push("42".to_string());
-    return output;
+    output
 }
 
 fn main() {
@@ -89,17 +107,17 @@ fn main() {
         }
         let mut __guard_0 = __WithGuard0 { ctx: __ctx_0 };
         let f = __guard_0.ctx.__enter__();
-        events.push(format!("{}{}", "Using: ".to_string(), f.path));
+        events.push(format!("{}{}", "Using: ", f.path));
     }
     events.push("Closing: config.json".to_string());
     events.push("=== Context Manager: Early Return ===".to_string());
     let result_events: Vec<String> = demo_early_return();
     for item in result_events.iter().cloned() {
-        events.push(item);
+        events.push(item.clone());
     }
     events.push("=== Context Manager: Break in Loop ===".to_string());
-    let mut i: i64 = 0 as i64;
-    while i < (3 as i64) {
+    let mut i: i64 = 0_i64;
+    while i < (3_i64) {
         events.push("Connecting: db".to_string());
         let mut should_break: bool = false;
         {
@@ -110,17 +128,17 @@ fn main() {
             }
             let mut __guard_0 = __WithGuard0 { ctx: __ctx_0 };
             let conn = __guard_0.ctx.__enter__();
-            if i == (1 as i64) {
+            if i == (1_i64) {
                 should_break = true;
             } else {
-                events.push(format!("{}{}", "Query on: ".to_string(), conn.name));
+                events.push(format!("{}{}", "Query on: ", conn.name));
             }
         }
         events.push("Disconnecting: db".to_string());
         if should_break {
             break;
         }
-        i = i + (1 as i64);
+        i += 1_i64;
     }
     events.push("=== Multiple Context Managers ===".to_string());
     events.push("Opening: input.txt".to_string());
@@ -140,12 +158,12 @@ fn main() {
         }
         let mut __guard_1 = __WithGuard1 { ctx: __ctx_1 };
         let db = __guard_1.ctx.__enter__();
-        events.push(format!("{}{}", format!("{}{}", format!("{}{}", "Processing with: ".to_string(), fin.path), " and ".to_string()), db.name));
+        events.push(format!("{}{}", format!("{}{}", format!("{}{}", "Processing with: ", fin.path), " and "), db.name));
     }
     events.push("Disconnecting: postgres".to_string());
     events.push("Closing: input.txt".to_string());
     events.push("=== Callable Struct Field ===".to_string());
-    let c: Config = Config::new(21 as i64, double);
+    let c: Config = Config::new(21_i64, double);
     events.push(format!("{}", c.value));
     events.push("=== Compiler Hardening Demo Complete ===".to_string());
     assert!(events == vec!["=== Context Manager: Normal Exit ===".to_string(), "Opening: config.json".to_string(), "Using: config.json".to_string(), "Closing: config.json".to_string(), "=== Context Manager: Early Return ===".to_string(), "Opening: data.csv".to_string(), "Reading: data.csv".to_string(), "Closing: data.csv".to_string(), "42".to_string(), "=== Context Manager: Break in Loop ===".to_string(), "Connecting: db".to_string(), "Query on: db".to_string(), "Disconnecting: db".to_string(), "Connecting: db".to_string(), "Disconnecting: db".to_string(), "=== Multiple Context Managers ===".to_string(), "Opening: input.txt".to_string(), "Connecting: postgres".to_string(), "Processing with: input.txt and postgres".to_string(), "Disconnecting: postgres".to_string(), "Closing: input.txt".to_string(), "=== Callable Struct Field ===".to_string(), "21".to_string(), "=== Compiler Hardening Demo Complete ===".to_string()]);

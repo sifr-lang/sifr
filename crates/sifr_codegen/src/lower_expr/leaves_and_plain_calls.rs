@@ -727,9 +727,6 @@ pub(super) fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option
     if func == "divmod" {
         return try_lower_simple_divmod_call_expr(args);
     }
-    if func == "map" {
-        return try_lower_simple_map_call_expr(args);
-    }
     if is_reserved_builtin_call_func(func) {
         return None;
     }

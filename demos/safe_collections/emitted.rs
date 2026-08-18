@@ -1,14 +1,15 @@
+// src/main.rs
 fn main() {
-    let mut items: Vec<i64> = vec![10 as i64, 20 as i64, 30 as i64];
+    let mut items: Vec<i64> = vec![10_i64, 20_i64, 30_i64];
     {
-    if let Some(__pos) = items.iter().position(|__x| *__x == (99 as i64)) {
+    if let Some(__pos) = items.iter().position(|__x| *__x == (99_i64)) {
         items.remove(__pos);
     }
 };
     println!("After removing missing 99:");
     println!("{:?}", items);
     {
-    if let Some(__pos) = items.iter().position(|__x| *__x == (20 as i64)) {
+    if let Some(__pos) = items.iter().position(|__x| *__x == (20_i64)) {
         items.remove(__pos);
     }
 };
@@ -34,7 +35,7 @@ fn main() {
     if let Some(pos) = pos {
         println!("Found \'bob\' at index {}", pos);
     } else {
-        println!("'bob' not found");
+        println!("\'bob\' not found");
     }
     let missing: Option<i64> = {
     let __len = names.len() as i64;
@@ -55,9 +56,9 @@ fn main() {
     if let Some(missing) = missing {
         println!("Found \'dave\' at index {}", missing);
     } else {
-        println!("'dave' not found (safe: returned None)");
+        println!("\'dave\' not found (safe: returned None)");
     }
-    let nums: Vec<i64> = vec![5 as i64, 3 as i64, 8 as i64, 1 as i64, 9 as i64];
+    let nums: Vec<i64> = vec![5_i64, 3_i64, 8_i64, 1_i64, 9_i64];
     let lo: Option<i64> = (nums).iter().copied().min();
     let hi: Option<i64> = (nums).iter().copied().max();
     if let Some(lo) = lo {
@@ -78,14 +79,14 @@ fn main() {
     } else {
         println!("max([]) = None (safe!)");
     }
-    let floats: Vec<f64> = vec![3.14 as f64, 1.0 as f64, 2.71 as f64, 0.5 as f64];
+    let floats: Vec<f64> = vec![3.14_f64, 1.0_f64, 2.71_f64, 0.5_f64];
     println!("sorted floats:");
     println!("{:?}", {
     let mut __sifr_sorted_v = (floats).iter().copied().collect::<Vec<_>>();
     __sifr_sorted_v.sort_by(f64::total_cmp);
     __sifr_sorted_v
 });
-    let mut stack: Vec<i64> = vec![42 as i64];
+    let mut stack: Vec<i64> = vec![42_i64];
     let val1: Option<i64> = stack.pop();
     let val2: Option<i64> = stack.pop();
     if let Some(val1) = val1 {
@@ -96,9 +97,9 @@ fn main() {
     } else {
         println!("pop on empty = None (safe!)");
     }
-    println!("min(3, 7) = {}", std::cmp::min(3 as i64, 7 as i64));
-    println!("max(3, 7) = {}", std::cmp::max(3 as i64, 7 as i64));
-    println!("");
+    println!("min(3, 7) = {}", ::std::cmp::min(3_i64, 7_i64));
+    println!("max(3, 7) = {}", ::std::cmp::max(3_i64, 7_i64));
+    println!();
     println!("All collection operations are panic-free!");
     println!("  - list.remove(missing) -> no-op");
     println!("  - list.index(missing) -> None");

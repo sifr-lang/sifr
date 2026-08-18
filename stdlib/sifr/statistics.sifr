@@ -82,9 +82,6 @@ def pstdev(data: list[float]) -> Result[float, StatisticsError]:
     v: float = total / float(n)
     return sqrt(v)
 
-def fmean(data: list[float]) -> Result[float, StatisticsError]:
-    return mean(data)
-
 def harmonic_mean(data: list[float]) -> Result[float, StatisticsError]:
     n: int = len(data)
     if n == 0:

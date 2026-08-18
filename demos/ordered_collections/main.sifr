@@ -1,7 +1,7 @@
 # Reference: ordered-collections-sample
 # Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.collections import Counter, deque, from_list
-from sifr.bisect import bisect, insort
+from sifr.bisect import bisect_right, insort_right
 from sifr.heapq import heapify, heappushpop, heapreplace
 
 def main():
@@ -14,8 +14,8 @@ def main():
     print(queue.to_list())
 
     ordered: list[int] = [1, 3, 5]
-    insort(ordered, 4)
-    print(bisect(ordered, 4))
+    insort_right(ordered, 4)
+    print(bisect_right(ordered, 4))
 
     heap: list[int] = [1, 3, 5]
     heapify(heap)

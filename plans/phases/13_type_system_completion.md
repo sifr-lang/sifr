@@ -61,7 +61,7 @@ These are only generated if the class does not already define them explicitly.
 
 ### Migration
 
-- Audit all existing stdlib classes in `lib/sifr/` and demos. For each class where `__init__` is a simple field-assignment constructor, remove the explicit `__init__` and verify the auto-generated one produces identical behavior
+- Audit all existing stdlib classes in `stdlib/sifr/` and demos. For each class where `__init__` is a simple field-assignment constructor, remove the explicit `__init__` and verify the auto-generated one produces identical behavior
 - Do NOT remove `__init__` from classes that have logic in the constructor (validation, computed fields, `super().__init__()` calls)
 - Update all demos to use the shorter form where applicable
 
@@ -572,7 +572,7 @@ Internal helpers (`_sift_down`, `_sift_up`) also become generic.
 
 #### Other stdlib modules to audit
 
-For each module in `lib/sifr/`, audit whether any functions are type-specific where they should be generic:
+For each module in `stdlib/sifr/`, audit whether any functions are type-specific where they should be generic:
 
 - `statistics.sifr`: functions operate on `list[float]` — correct (statistics are inherently float-based), no change needed
 - `math.sifr`: functions operate on `int` or `float` — correct, no change needed

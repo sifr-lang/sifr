@@ -11,6 +11,7 @@ mod build;
 mod diagnostics;
 mod export_policy;
 mod frontend;
+mod private_re_exports;
 mod project;
 mod python_binding;
 mod stdlib;

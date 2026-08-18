@@ -1,3 +1,4 @@
+// src/main.rs
 fn classify(items: &Vec<i64>) -> String {
     let mut result: String = "init".to_string();
     {
@@ -11,11 +12,11 @@ fn classify(items: &Vec<i64>) -> String {
             result = "else".to_string();
         }
     }
-    return result;
+    result
 }
 
 fn main() {
     println!("while_else while-else structured support demo:");
     println!("{}", classify(&vec![]));
-    println!("{}", classify(&vec![1 as i64]));
+    println!("{}", classify(&vec![1_i64]));
 }

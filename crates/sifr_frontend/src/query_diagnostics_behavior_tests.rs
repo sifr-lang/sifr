@@ -4,18 +4,18 @@ use crate::{
 };
 
 #[test]
-fn frontend_export_policy_hides_math_bridge_helpers() {
+fn frontend_export_policy_hides_private_math_bridge_aliases() {
     assert!(!crate::query_diagnostics::should_export_callable(
         "sifr.math",
-        "dist_impl"
+        "_dist_impl"
     ));
     assert!(!crate::query_diagnostics::should_export_callable(
         "sifr.math",
-        "fsum_impl"
+        "_fsum_impl"
     ));
     assert!(!crate::query_diagnostics::should_export_callable(
         "sifr.math",
-        "sumprod_impl"
+        "_sumprod_impl"
     ));
     assert!(crate::query_diagnostics::should_export_callable(
         "sifr.math",

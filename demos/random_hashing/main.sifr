@@ -24,8 +24,13 @@ def main() -> None:
         _ = str(e.message)
     assert decode_ok
 
-    h = sha256(b"random_hashing_seed")
-    digest: str = h.hexdigest()
+    digest: str = ""
+    try:
+        hash_payload: bytes = payload.encode()
+        h = sha256(hash_payload)
+        digest = h.hexdigest()
+    except ParseError as e:
+        _ = str(e.message)
     assert len(digest) == 64
 
     print("rng_random_hashing_lock_demo: pass")

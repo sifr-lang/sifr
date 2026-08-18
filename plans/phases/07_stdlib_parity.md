@@ -118,13 +118,15 @@ status: done
 ### Pure-Sifr Functions
 
 - `sifr.math`: `factorial`, `gcd`, `lcm`, `comb`, `perm`, `isclose`, `prod`
-- `sifr.statistics`: `fmean`, `harmonic_mean`, `geometric_mean`, `median_low`, `median_high`
+- `sifr.statistics`: `harmonic_mean`, `geometric_mean`, `median_low`, `median_high`
+  (`fmean` was later removed as a same-operation alias of canonical `mean`)
 - `sifr.bisect`: `insort_right`
 - `sifr.heapq`: `heapreplace`, `heappushpop`
 - `sifr.string`: `printable`, `capwords`
 - `sifr.textwrap`: `shorten`
 - `sifr.pathlib`: `stem`, `is_absolute`
-- `sifr.fnmatch`: `fnmatchcase`
+- `sifr.fnmatch`: canonical `fnmatch` (`fnmatchcase` was later removed as a
+  same-operation alias under Sifr's deterministic case-sensitive contract)
 - `sifr.ipaddress`: `int_to_ip`, `is_multicast`, `is_global`
 - `sifr.itertools`: `pairwise`, `batched`, `islice`
 - `sifr.tempfile`: `gettempdir`
@@ -270,7 +272,7 @@ status: done
 
 The plan says: *"lazy_iterators after compiler_hardening: Lazy iteration is a compiler feature that should be in place before adding new stdlib functions. This way, itertools functions in milestone_stdlib_functions can be written as lazy generators from the start."*
 
-All 9 functions in `lib/sifr/itertools.sifr` (`chain`, `chain_str`, `repeat_val`, `take`, `flatten`, `enumerate_list`, `pairwise`, `batched`, `islice`) are implemented eagerly — they build a `list` with `.append()` and return it. They should use `yield` to be lazy generators, now that the lazy iterator codegen (`std::iter::from_fn`) is in place.
+All 9 functions in `stdlib/sifr/itertools.sifr` (`chain`, `chain_str`, `repeat_val`, `take`, `flatten`, `enumerate_list`, `pairwise`, `batched`, `islice`) are implemented eagerly — they build a `list` with `.append()` and return it. They should use `yield` to be lazy generators, now that the lazy iterator codegen (`std::iter::from_fn`) is in place.
 
 ### Gap 2: Canonical CPython fixture names (closed)
 

@@ -1,3 +1,4 @@
+// src/main.rs
 fn main() {
     println!("verification_baselines suite taxonomy and baseline governance demo");
     println!("diagnostics and project suites are baseline-backed");

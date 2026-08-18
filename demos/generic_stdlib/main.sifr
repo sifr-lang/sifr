@@ -6,7 +6,7 @@
 # generic deque[T], generic heapq with Comparable bounds, and exact int support.
 
 from sifr.itertools import chain, take, flatten, cycle, islice, compress, pairwise, repeat, zip_longest, accumulate, dropwhile, takewhile, filterfalse
-from sifr.heapq import heapify, heappop, heappush, nsmallest, nlargest
+from sifr.heapq import nsmallest, nlargest
 from sifr.collections import Counter, from_list, deque
 from sifr.functools import reduce
 from sifr.random import shuffle

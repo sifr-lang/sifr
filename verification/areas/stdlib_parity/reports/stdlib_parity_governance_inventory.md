@@ -52,7 +52,7 @@ Terminal state legend for this capability:
 | `str` | `parity-closed` | `verification/areas/stdlib_parity/reports/stdlib_parity_a2_cpython_traceability.md` | Split/replace and bound typing closed for shipped surface. |
 | `bytes` (first-class immutable surface) | `intentional-diff` | `verification/areas/stdlib_parity/reports/stdlib_parity_a2_cpython_traceability.md`, `verification/areas/stdlib_parity/reports/stdlib_parity_bytes_0_cpython_traceability.md`, `verification/areas/stdlib_parity/reports/stdlib_parity_bytes_1_cpython_traceability.md`, `verification/areas/stdlib_parity/reports/stdlib_parity_bytes_2_cpython_traceability.md`, `verification/areas/stdlib_parity/reports/stdlib_parity_bytes_3_cpython_traceability.md`, `verification/areas/stdlib_parity/reports/stdlib_parity_bytes_4_cpython_traceability.md`, `verification/areas/stdlib_parity/reports/stdlib_parity_bytes_5_cpython_traceability.md` | Immutable first-class `bytes` is now shipped and uses raw-byte backend storage; remaining intentional diffs are narrowed to deferred `bytearray`/`memoryview`/buffer-protocol and non-UTF-8 codec families. |
 
-## Per-Module Readiness Inventory (`lib/sifr`)
+## Per-Module Readiness Inventory (`stdlib/sifr`)
 
 | Module | Readiness implementation pass | Terminal state | Evidence |
 | --- | --- | --- | --- |
@@ -188,7 +188,7 @@ Canonical issue for revisit tracking: `issues/python-source-parity-and-builtin-s
 
 ## Exit-Gate Readiness Summary (Capability 7)
 
-- Canonical inventories are now centralized in this document for builtins, core object models, and all shipped `lib/sifr` modules.
+- Canonical inventories are now centralized in this document for builtins, core object models, and all shipped `stdlib/sifr` modules.
 - Every shipped module is assigned a terminal governance state (`parity-closed`, `intentional-diff`, or `host-limited`).
 - The per-implementation pass CPython traceability corpus is canonically linked for the full readiness path (`stdlib_parity_a1` through `stdlib_parity_e2`) plus parity-extension readiness implementation passes (`stdlib_parity_ext_1` through `stdlib_parity_ext_4`).
 - All residual non-parity surfaces are explicit in the waiver index with rationale and revisit rules.

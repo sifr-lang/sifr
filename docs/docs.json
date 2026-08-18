@@ -122,6 +122,7 @@
             "pages": [
               "stdlib/overview",
               "stdlib/module-index",
+              "stdlib/public-api",
               "stdlib/collections",
               "stdlib/io-filesystem",
               "stdlib/networking",

@@ -14,7 +14,7 @@ Scope: core first-class `bytes` type, object-model foundation, and immutability 
 | --- | --- | --- | --- |
 | `test_bytes` core immutable behaviors (`len`, equality, concat, indexing, slicing, iteration) | first-class `bytes` value type with explicit typed operations | `adapted` (closed for capability-set-1 scope) | `crates/sifr/tests/e2e/pass/bytes_basics.sifr`<br>`crates/sifr/tests/e2e/pass/cpython_bytes_subset.sifr`<br>`crates/sifr/tests/e2e/pass/stdlib_bytes.sifr`<br>`crates/sifr/tests/e2e/pass/stdlib_bytes_safety.sifr` |
 | bytes mutation families (`append`, item assignment) | compile-time immutability enforcement for `bytes` | `adapted` (closed for capability-set-1 scope) | `crates/sifr/tests/e2e/fail/bytes_append_unsupported.sifr`<br>`crates/sifr/tests/e2e/fail/bytes_subscript_assignment_unsupported.sifr` |
-| compatibility helper parity (`lib/sifr/bytes.sifr`) | keep compatibility exports while moving canonical semantics to first-class `bytes` | `adapted` | `demos/bytes_basics/main.sifr`<br>`demos/bytes_iteration/main.sifr` |
+| public helper ownership | first-class `bytes` is the only owner; the former transition module is removed | `adapted` (shipped) | `crates/sifr/tests/e2e/pass/bytes_helpers.sifr`<br>`demos/bytes_basics/main.sifr` |
 
 ## Classified waivers carried from text encoding capability
 

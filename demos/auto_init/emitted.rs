@@ -1,3 +1,4 @@
+// src/main.rs
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Point {
     x: i64,
@@ -6,13 +7,16 @@ struct Point {
 
 impl Point {
     fn new(x: i64, y: i64) -> Self {
-        return Self { x: x, y: y };
+        Self { x, y }
     }
 }
 
-impl std::fmt::Display for Point {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Point(x={}, y={})", self.x, self.y);
+impl Point {
+}
+
+impl ::std::fmt::Display for Point {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Point(x={}, y={})", self.x, self.y)
     }
 }
 
@@ -25,13 +29,16 @@ struct Config {
 
 impl Config {
     fn new(debug: bool, timeout: i64, name: String) -> Self {
-        return Self { debug: debug, timeout: timeout, name: name };
+        Self { debug, timeout, name }
     }
 }
 
-impl std::fmt::Display for Config {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Config(debug={}, timeout={}, name={})", self.debug, self.timeout, self.name);
+impl Config {
+}
+
+impl ::std::fmt::Display for Config {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Config(debug={}, timeout={}, name={})", self.debug, self.timeout, self.name)
     }
 }
 
@@ -44,13 +51,16 @@ struct Person {
 
 impl Person {
     fn new(first_name: String, last_name: String, age: i64) -> Self {
-        return Self { first_name: first_name, last_name: last_name, age: age };
+        Self { first_name, last_name, age }
     }
 }
 
-impl std::fmt::Display for Person {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Person(first_name={}, last_name={}, age={})", self.first_name, self.last_name, self.age);
+impl Person {
+}
+
+impl ::std::fmt::Display for Person {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Person(first_name={}, last_name={}, age={})", self.first_name, self.last_name, self.age)
     }
 }
 
@@ -62,39 +72,122 @@ struct Rectangle {
 
 impl Rectangle {
     fn new(width: i64, height: i64) -> Self {
-        return Self { width: width, height: height };
-    }
-    fn area(&self) -> i64 {
-        return self.width * self.height;
+        let __sifr_field_init_0: i64 = width;
+        let __sifr_field_init_1: i64 = height;
+        Self { width: __sifr_field_init_0, height: __sifr_field_init_1 }
     }
 }
 
-impl std::fmt::Display for Rectangle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "{}", format!("{}{}{}{}{}", "Rectangle(".to_string(), format!("{}", self.width), "x".to_string(), format!("{}", self.height), ")".to_string()));
+impl Rectangle {
+    fn area(&self) -> i64 {
+        self.width * self.height
+    }
+}
+
+impl ::std::fmt::Display for Rectangle {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "{}", {
+    let mut __sifr_concat: String = String::with_capacity((((10usize + 0usize) + 1usize) + 0usize) + 1usize);
+    __sifr_concat.push_str("Rectangle(");
+    __sifr_concat.push_str((format!("{}", self.width)).as_str());
+    __sifr_concat.push('x');
+    __sifr_concat.push_str((format!("{}", self.height)).as_str());
+    __sifr_concat.push(')');
+    __sifr_concat
+})
     }
 }
 
 fn main() {
-    let p: Point = Point::new(3 as i64, 4 as i64);
-    println!("{}", format!("{}{}", "point x = ".to_string(), format!("{}", p.x)));
-    println!("{}", format!("{}{}", "point y = ".to_string(), format!("{}", p.y)));
-    println!("{}", format!("{}{}", "point str = ".to_string(), format!("{}", p)));
-    let p2: Point = Point::new(3 as i64, 4 as i64);
-    let p3: Point = Point::new(5 as i64, 6 as i64);
-    println!("{}", format!("{}{}", "point eq = ".to_string(), format!("{}", p == p2)));
-    println!("{}", format!("{}{}", "point neq = ".to_string(), format!("{}", p == p3)));
-    let c1: Config = Config::new(false, 30 as i64, "default".to_string());
-    println!("{}", format!("{}{}", "config debug default = ".to_string(), format!("{}", c1.debug)));
-    println!("{}", format!("{}{}", "config timeout default = ".to_string(), format!("{}", c1.timeout)));
-    println!("{}", format!("{}{}", "config name default = ".to_string(), c1.name));
-    let c2: Config = Config::new(true, 60 as i64, "production".to_string());
-    println!("{}", format!("{}{}", "config debug custom = ".to_string(), format!("{}", c2.debug)));
-    println!("{}", format!("{}{}", "config timeout custom = ".to_string(), format!("{}", c2.timeout)));
-    println!("{}", format!("{}{}", "config name custom = ".to_string(), c2.name));
-    let person: Person = Person::new("Alice".to_string(), "Smith".to_string(), 30 as i64);
-    println!("{}", format!("{}{}", "person str = ".to_string(), format!("{}", person)));
-    let mut r: Rectangle = Rectangle::new(5 as i64, 3 as i64);
-    println!("{}", format!("{}{}", "rect area = ".to_string(), format!("{}", r.area())));
-    println!("{}", format!("{}{}", "rect str = ".to_string(), format!("{}", r)));
+    let p: Point = Point::new(3_i64, 4_i64);
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(10usize + 0usize);
+    __sifr_concat.push_str("point x = ");
+    __sifr_concat.push_str((format!("{}", p.x)).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(10usize + 0usize);
+    __sifr_concat.push_str("point y = ");
+    __sifr_concat.push_str((format!("{}", p.y)).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(12usize + 0usize);
+    __sifr_concat.push_str("point str = ");
+    __sifr_concat.push_str((format!("{}", p)).as_str());
+    __sifr_concat
+});
+    let p2: Point = Point::new(3_i64, 4_i64);
+    let p3: Point = Point::new(5_i64, 6_i64);
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(11usize + 0usize);
+    __sifr_concat.push_str("point eq = ");
+    __sifr_concat.push_str((format!("{}", p == p2)).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(12usize + 0usize);
+    __sifr_concat.push_str("point neq = ");
+    __sifr_concat.push_str((format!("{}", p == p3)).as_str());
+    __sifr_concat
+});
+    let c1: Config = Config::new(false, 30_i64, "default".to_string());
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(23usize + 0usize);
+    __sifr_concat.push_str("config debug default = ");
+    __sifr_concat.push_str((format!("{}", c1.debug)).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(25usize + 0usize);
+    __sifr_concat.push_str("config timeout default = ");
+    __sifr_concat.push_str((format!("{}", c1.timeout)).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(22usize + 0usize);
+    __sifr_concat.push_str("config name default = ");
+    __sifr_concat.push_str((c1.name).as_str());
+    __sifr_concat
+});
+    let c2: Config = Config::new(true, 60_i64, "production".to_string());
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(22usize + 0usize);
+    __sifr_concat.push_str("config debug custom = ");
+    __sifr_concat.push_str((format!("{}", c2.debug)).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(24usize + 0usize);
+    __sifr_concat.push_str("config timeout custom = ");
+    __sifr_concat.push_str((format!("{}", c2.timeout)).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(21usize + 0usize);
+    __sifr_concat.push_str("config name custom = ");
+    __sifr_concat.push_str((c2.name).as_str());
+    __sifr_concat
+});
+    let person: Person = Person::new("Alice".to_string(), "Smith".to_string(), 30_i64);
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
+    __sifr_concat.push_str("person str = ");
+    __sifr_concat.push_str((format!("{}", person)).as_str());
+    __sifr_concat
+});
+    let r: Rectangle = Rectangle::new(5_i64, 3_i64);
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(12usize + 0usize);
+    __sifr_concat.push_str("rect area = ");
+    __sifr_concat.push_str((format!("{}", r.area())).as_str());
+    __sifr_concat
+});
+    println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(11usize + 0usize);
+    __sifr_concat.push_str("rect str = ");
+    __sifr_concat.push_str((format!("{}", r)).as_str());
+    __sifr_concat
+});
 }

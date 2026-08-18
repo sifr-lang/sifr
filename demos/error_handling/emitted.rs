@@ -1,61 +1,71 @@
-#[derive(Debug, Clone)]
+// src/main.rs
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
 
 impl ParseError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+impl ::std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
     }
 }
 
-impl std::error::Error for ParseError {
+impl ::std::error::Error for ParseError {
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct DivisionError {
     message: String,
 }
 
 impl DivisionError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
-impl std::fmt::Display for DivisionError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+impl ::std::fmt::Display for DivisionError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
     }
 }
 
-impl std::error::Error for DivisionError {
+impl ::std::error::Error for DivisionError {
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 struct ValidationError {
     message: String,
 }
 
 impl ValidationError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
-impl std::fmt::Display for ValidationError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "{}", self.message);
+impl ValidationError {
+}
+
+impl ::std::fmt::Debug for ValidationError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        f.debug_struct("ValidationError").field("message", &self.message).finish()
     }
 }
 
-impl std::error::Error for ValidationError {
+impl ::std::fmt::Display for ValidationError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl ::std::error::Error for ValidationError {
 }
 
 fn validate_range(x: i64, lo: i64, hi: i64) -> Result<i64, ValidationError> {
@@ -65,14 +75,14 @@ fn validate_range(x: i64, lo: i64, hi: i64) -> Result<i64, ValidationError> {
     if x > hi {
         return Err(ValidationError::new(format!("value out of range: {}", x)));
     }
-    return Ok(x);
+    Ok(x)
 }
 
 fn safe_divide(a: i64, b: i64) -> Result<i64, DivisionError> {
-    if b == (0 as i64) {
+    if b == (0_i64) {
         return Err(DivisionError::new("division by zero".to_string()));
     }
-    return Ok(a / b);
+    Ok(a / b)
 }
 
 fn main() {
@@ -80,7 +90,7 @@ fn main() {
     let __sifr_try_res: Result<(), ParseError> = (|| {
     let n: i64 = ("42".to_string()).parse::<i64>().map_err(|e| ParseError { message: e.to_string() })?;
     println!("parsed: {}", n);
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
@@ -89,7 +99,7 @@ fn main() {
     let __sifr_try_res: Result<(), ParseError> = (|| {
     let n2: i64 = ("not_a_number".to_string()).parse::<i64>().map_err(|e| ParseError { message: e.to_string() })?;
     println!("parsed: {}", n2);
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
@@ -97,18 +107,18 @@ fn main() {
     }
     println!("=== Custom Error Types ===");
     let __sifr_try_res: Result<(), ValidationError> = (|| {
-    let v: i64 = validate_range(50 as i64, 0 as i64, 100 as i64)?;
+    let v: i64 = validate_range(50_i64, 0_i64, 100_i64)?;
     println!("validated: {}", v);
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("caught: {}", e.message);
     }
     let __sifr_try_res: Result<(), ValidationError> = (|| {
-    let v2: i64 = validate_range(-(5 as i64), 0 as i64, 100 as i64)?;
+    let v2: i64 = validate_range(-(5_i64), 0_i64, 100_i64)?;
     println!("validated: {}", v2);
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
@@ -116,46 +126,46 @@ fn main() {
     }
     println!("=== Try/Except with Auto-Unwrap ===");
     let __sifr_try_res: Result<(), ValidationError> = (|| {
-    let a: i64 = validate_range(100 as i64, 0 as i64, 200 as i64)?;
+    let a: i64 = validate_range(100_i64, 0_i64, 200_i64)?;
     println!("result: {}", a);
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("error handled: {}", e.message);
     }
     let __sifr_try_res: Result<(), ValidationError> = (|| {
-    let b: i64 = validate_range(999 as i64, 0 as i64, 200 as i64)?;
+    let b: i64 = validate_range(999_i64, 0_i64, 200_i64)?;
     println!("result: {}", b);
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("error handled: {}", e.message);
     }
     println!("=== Infallible Conversions ===");
-    let x1: i64 = (3.7 as f64) as i64;
+    let x1: i64 = (3.7_f64) as i64;
     println!("int(3.7) = {}", x1);
-    let x2: f64 = (5 as i64) as f64;
+    let x2: f64 = (5_i64) as f64;
     println!("float(5) = {}", x2);
-    let x3: String = format!("{}", 42 as i64);
+    let x3: String = format!("{}", 42_i64);
     println!("str(42) = {}", x3);
-    let x4: bool = (1 as i64) != 0;
+    let x4: bool = (1_i64) != 0;
     println!("bool(1) = {}", x4);
     println!("=== Raise in Result Functions ===");
     let __sifr_try_res: Result<(), DivisionError> = (|| {
-    let d1: i64 = safe_divide(10 as i64, 3 as i64)?;
+    let d1: i64 = safe_divide(10_i64, 3_i64)?;
     println!("divide(10, 3) = {}", d1);
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("divide error: {}", e.message);
     }
     let __sifr_try_res: Result<(), DivisionError> = (|| {
-    let d2: i64 = safe_divide(10 as i64, 0 as i64)?;
+    let d2: i64 = safe_divide(10_i64, 0_i64)?;
     println!("divide(10, 0) = {}", d2);
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
@@ -164,7 +174,7 @@ fn main() {
     println!("=== Assert Statement ===");
     println!("all assertions passed");
     println!("=== Explicit Discard ===");
-    let _: Result<i64, DivisionError> = safe_divide(10 as i64, 2 as i64);
+    let _ = safe_divide(10_i64, 2_i64);
     println!("result discarded safely");
     println!("demo complete!");
 }

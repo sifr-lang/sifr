@@ -295,9 +295,6 @@ fn filterfalse(names: &Vec<String>, pattern: &String) -> Vec<String> {
     }
     result
 }
-fn fnmatchcase(name: &String, pattern: &String) -> bool {
-    _match(name, 0_i64, pattern, 0_i64)
-}
 fn _translate_literal(ch: &String) -> String {
     if (ch).as_str() == "." {
         return "\\.".to_string();
@@ -694,12 +691,12 @@ impl __SifrStdlib_sifr_x2eencoding_x2eEncoding {
     fn canonical_label(
         &self,
     ) -> Result<String, __SifrStdlib_sifr_x2eencoding_x2eDecodeError> {
-        encoding_canonical_label(&self.label)
+        _encoding_canonical_label(&self.label)
     }
 }
 impl __SifrStdlib_sifr_x2eencoding_x2eEncoding {
     fn is_supported(&self) -> bool {
-        encoding_is_supported(&self.label)
+        _encoding_is_supported(&self.label)
     }
 }
 impl ::std::fmt::Display for __SifrStdlib_sifr_x2eencoding_x2eEncoding {
@@ -858,14 +855,14 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             >,
             __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
         > = (|| {
-            let outcome: __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome = encoding_decode_incremental_outcome(
+            let outcome: __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome = _encoding_decode_incremental_outcome(
                 data,
                 &self._pending,
                 &self._encoding.clone().label,
                 &self._errors.clone().name,
                 r#final,
             )?;
-            let next_pending: Vec<u8> = encoding_decode_incremental_pending(
+            let next_pending: Vec<u8> = _encoding_decode_incremental_pending(
                 data,
                 &self._pending,
                 &self._encoding.clone().label,
@@ -966,10 +963,10 @@ impl ::std::fmt::Display for __SifrStdlib_sifr_x2eencoding_x2eEncoder {
         )
     }
 }
-fn encoding_is_supported(label: &String) -> bool {
+fn _encoding_is_supported(label: &String) -> bool {
     _encoding_is_supported_impl(label)
 }
-fn encoding_canonical_label(
+fn _encoding_canonical_label(
     label: &String,
 ) -> Result<String, __SifrStdlib_sifr_x2eencoding_x2eDecodeError> {
     let __sifr_try_res: Result<
@@ -990,7 +987,7 @@ fn encoding_canonical_label(
         }
     }
 }
-fn encoding_decode_text(
+fn _encoding_decode_text(
     data: &Vec<u8>,
     encoding: &String,
     errors: &String,
@@ -1013,7 +1010,7 @@ fn encoding_decode_text(
         }
     }
 }
-fn encoding_decode_recoveries(
+fn _encoding_decode_recoveries(
     data: &Vec<u8>,
     encoding: &String,
     errors: &String,
@@ -1040,7 +1037,7 @@ fn encoding_decode_recoveries(
         }
     }
 }
-fn encoding_decode_outcome(
+fn _encoding_decode_outcome(
     data: &Vec<u8>,
     encoding: &String,
     errors: &String,
@@ -1076,7 +1073,7 @@ fn encoding_decode_outcome(
         }
     }
 }
-fn encoding_decode_incremental_outcome(
+fn _encoding_decode_incremental_outcome(
     data: &Vec<u8>,
     pending: &Vec<u8>,
     encoding: &String,
@@ -1122,7 +1119,7 @@ fn encoding_decode_incremental_outcome(
         }
     }
 }
-fn encoding_decode_incremental_pending(
+fn _encoding_decode_incremental_pending(
     data: &Vec<u8>,
     pending: &Vec<u8>,
     encoding: &String,
@@ -1151,7 +1148,7 @@ fn encoding_decode_incremental_pending(
         }
     }
 }
-fn encoding_encode_bytes(
+fn _encoding_encode_bytes(
     text: &String,
     encoding: &String,
     errors: &String,
@@ -1174,7 +1171,7 @@ fn encoding_encode_bytes(
         }
     }
 }
-fn encoding_encode_recoveries(
+fn _encoding_encode_recoveries(
     text: &String,
     encoding: &String,
     errors: &String,
@@ -1201,7 +1198,7 @@ fn encoding_encode_recoveries(
         }
     }
 }
-fn encoding_encode_outcome(
+fn _encoding_encode_outcome(
     text: &String,
     encoding: &String,
     errors: &String,
@@ -1373,7 +1370,7 @@ fn decode_outcome(
         >,
         __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
     > = (|| {
-        return Ok(encoding_decode_outcome(data, &enc.label.clone(), &handler_name));
+        return Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name));
         unreachable!("sifr try/except return capture fell through");
     })();
     match __sifr_try_res {
@@ -1429,7 +1426,7 @@ fn encode_outcome(
         >,
         __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
     > = (|| {
-        return Ok(encoding_encode_outcome(text, &enc.label.clone(), &handler_name));
+        return Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name));
         unreachable!("sifr try/except return capture fell through");
     })();
     match __sifr_try_res {

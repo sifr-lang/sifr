@@ -17,6 +17,22 @@ def main():
 }
 
 #[test]
+fn user_defined_map_call_shadows_the_functional_builtin() {
+    let rust_code = generate_rust_from_source(
+        r#"def map(own values: list[int], offset: int) -> list[int]:
+    return values
+
+def main():
+    values: list[int] = [1, 2]
+    selected: list[int] = map(values, 10)
+"#,
+    );
+
+    assert!(rust_code.contains("map(values,"), "{rust_code}");
+    assert!(!rust_code.contains(".map(|"));
+}
+
+#[test]
 fn test_fieldless_class_gets_default_constructor() {
     let rust_code = generate_rust_from_source(
         r#"class Codec:

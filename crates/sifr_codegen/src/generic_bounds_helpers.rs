@@ -2,7 +2,6 @@ use crate::{RustEmitter, RustItem};
 use sifr_ir::{HirClass, HirFunction, HirStmt};
 use sifr_type_system::{FunctionType, OwnershipKind, Type};
 use std::collections::{HashMap, HashSet};
-use std::fmt::Write as _;
 
 impl RustEmitter {
     pub(crate) fn class_needs_phantom_marker(class: &HirClass) -> bool {
@@ -664,15 +663,6 @@ impl RustEmitter {
             extra.push("PartialOrd".to_string());
         }
         extra
-    }
-
-    pub(crate) fn extra_bounds_for_type_param(tp: &str, body: &[HirStmt]) -> String {
-        Self::extra_bound_items_for_type_param(tp, body)
-            .into_iter()
-            .fold(String::new(), |mut extra, bound| {
-                let _ = write!(extra, " + {bound}");
-                extra
-            })
     }
 
     /// Rust trait requirements are transitive across calls on any instance of

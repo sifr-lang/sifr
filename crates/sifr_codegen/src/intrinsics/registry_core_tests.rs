@@ -453,7 +453,6 @@ pub(crate) fn random_intrinsics_are_owned_by_compiled_stdlib_declarations() {
     for (name, args) in [
         ("random_int", &["1", "9"][..]),
         ("random_float", &[][..]),
-        ("random_choice", &["items"][..]),
         ("random_uniform", &["0.0", "1.0"][..]),
         ("random_shuffle", &["vals"][..]),
         ("random_sample", &["vals", "3"][..]),

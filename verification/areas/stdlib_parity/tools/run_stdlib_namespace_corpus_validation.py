@@ -92,7 +92,7 @@ def scan_bare_stdlib_attrs(paths: list[Path]) -> list[str]:
     for path in paths:
         for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
             stripped = line.strip()
-            if stripped.startswith("#"):
+            if stripped.startswith("#") or stripped.startswith("@python("):
                 continue
             match = BARE_STDLIB_ATTR_RE.search(line)
             if match:

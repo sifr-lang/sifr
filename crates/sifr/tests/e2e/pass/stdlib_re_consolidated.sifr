@@ -5,19 +5,13 @@ from sifr.re import (
 )
 from sifr.test import assert_bool_vector_eq
 
-def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
-    try:
-        found: str | None = search(pattern, text)
-        return found is not None
-    except RegexError as error:
-        raise RegexError(error.message)
-
 def collect_core_actual() -> list[bool]:
     actual: list[bool] = []
 
     try:
-        number_match: bool = has_match("[0-9]+", "hello 42 world")
-        no_number_raw: bool = has_match("[0-9]+", "no numbers here")
+        digit_pattern: Pattern = compile("[0-9]+")
+        number_match: bool = digit_pattern.is_match("hello 42 world")
+        no_number_raw: bool = digit_pattern.is_match("no numbers here")
         no_number_match: bool = not no_number_raw
         actual.append(no_number_match)
         actual.append(number_match)

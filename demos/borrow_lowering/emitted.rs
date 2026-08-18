@@ -1,57 +1,70 @@
-#[derive(Debug, Clone)]
-enum BoolOrIntOrStr {
-    Bool(bool),
-    Int(i64),
-    Str(String),
-}
-
-impl std::fmt::Display for BoolOrIntOrStr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            BoolOrIntOrStr::Bool(v) => {
-                return write!(f, "{}", v);
-            },
-            BoolOrIntOrStr::Int(v) => {
-                return write!(f, "{}", v);
-            },
-            BoolOrIntOrStr::Str(v) => {
-                return write!(f, "{}", v);
-            },
+// src/main.rs
+mod __sifr_project_unions {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr {
+        __SifrUnionVariant_4_x3aatom3_x3aint(i64),
+        __SifrUnionVariant_4_x3aatom3_x3astr(String),
+    }
+    impl ::std::fmt::Display
+    for __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match self {
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+            }
+        }
+    }
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool {
+        __SifrUnionVariant_4_x3aatom4_x3abool(bool),
+        __SifrUnionVariant_4_x3aatom3_x3aint(i64),
+        __SifrUnionVariant_4_x3aatom3_x3astr(String),
+    }
+    impl ::std::fmt::Display
+    for __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match self {
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom4_x3abool(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3aint(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3astr(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+            }
         }
     }
 }
-
-#[derive(Debug, Clone)]
-enum IntOrStr {
-    Int(i64),
-    Str(String),
-}
-
-impl std::fmt::Display for IntOrStr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            IntOrStr::Int(v) => {
-                return write!(f, "{}", v);
-            },
-            IntOrStr::Str(v) => {
-                return write!(f, "{}", v);
-            },
-        }
-    }
-}
-
+pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr;
+pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool;
 fn find_user(name: &String) -> Option<String> {
-    if name.clone() == "alice".to_string() {
+    if (name).as_str() == "alice" {
         return Some("Alice Smith".to_string());
     }
-    return None;
+    None
 }
 
-fn process(x: &IntOrStr) -> String {
-    if let IntOrStr::Int(x) = x {
+fn process(x: &__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr) -> String {
+    if let __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(x) = x {
         return format!("number: {}", x);
     } else {
-        if let IntOrStr::Str(x) = x {
+        if let __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr(x) = x {
             return format!("string: {}", x);
         } else {
             unreachable!("sifr union narrowing fell through exhaustive branch chain");
@@ -59,14 +72,14 @@ fn process(x: &IntOrStr) -> String {
     }
 }
 
-fn classify(x: &BoolOrIntOrStr) -> String {
-    if let BoolOrIntOrStr::Int(x) = x {
+fn classify(x: &__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool) -> String {
+    if let __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3aint(x) = x {
         return "int".to_string();
     } else {
-        if let BoolOrIntOrStr::Str(x) = x {
+        if let __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3astr(x) = x {
             return "str".to_string();
         } else {
-            if let BoolOrIntOrStr::Bool(x) = x {
+            if let __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom4_x3abool(x) = x {
                 return "bool".to_string();
             } else {
                 unreachable!("sifr union narrowing fell through exhaustive branch chain");
@@ -79,11 +92,11 @@ fn process_optional(x: &Option<String>) -> String {
     if let Some(x) = x.as_ref() {
         return x.to_uppercase();
     }
-    return "none".to_string();
+    "none".to_string()
 }
 
 fn consume(s: String) -> String {
-    return s;
+    s
 }
 
 fn main() {
@@ -95,12 +108,12 @@ fn main() {
     if missing.is_none() {
         println!("not found");
     }
-    println!("{}", process(&IntOrStr::Int(42 as i64)));
-    println!("{}", process(&IntOrStr::Str("hello".to_string())));
-    println!("{}", classify(&BoolOrIntOrStr::Int(1 as i64)));
-    println!("{}", classify(&BoolOrIntOrStr::Str("hi".to_string())));
-    println!("{}", classify(&BoolOrIntOrStr::Bool(true)));
-    println!("{}", process_optional(&Some("world".to_string())));
+    println!("{}", process(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(42_i64)));
+    println!("{}", process(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr(("hello".to_string()).clone())));
+    println!("{}", classify(&__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3aint(1_i64)));
+    println!("{}", classify(&__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3astr(("hi".to_string()).clone())));
+    println!("{}", classify(&__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom4_x3abool(true)));
+    println!("{}", process_optional(&Some(("world".to_string()).clone())));
     println!("{}", process_optional(&None));
     let mut s: String = "hello".to_string();
     let x: String = consume(s);

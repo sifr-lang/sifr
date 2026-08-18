@@ -1,5 +1,5 @@
 # Consolidated stdlib fnmatch coverage for stdlib_consolidation structure rules
-from sifr.fnmatch import fnmatch, filter, fnmatchcase
+from sifr.fnmatch import fnmatch, filter
 from sifr.test import assert_bool_vector_eq
 
 def collect_match_actual() -> list[bool]:
@@ -9,7 +9,7 @@ def collect_match_actual() -> list[bool]:
     no_txt_match: bool = not fnmatch("hello.py", "*.txt")
     match_cat: bool = fnmatch("cat", "c?t")
     no_long_match: bool = not fnmatch("cart", "c?t")
-    no_case_fold: bool = not fnmatchcase("AbC", "abc")
+    no_case_fold: bool = not fnmatch("AbC", "abc")
     actual.append(match_exact)
     actual.append(match_txt)
     actual.append(no_txt_match)
