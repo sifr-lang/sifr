@@ -90,19 +90,14 @@ pub(crate) fn structural_method_map(
     local_classes: &HashMap<String, String>,
     lowering: &sifr_lowering::LoweringResult,
 ) -> HashMap<String, Vec<StructuralMethodExport>> {
-    if module.classes.is_empty()
-        || !lowering
-            .declaration_metadata
-            .iter()
-            .any(|entry| entry.target_kind == DeclarationMetadataTargetKind::Method)
-    {
+    if module.classes.is_empty() {
         return HashMap::new();
     }
     let mut names_by_class: HashMap<&str, Vec<&str>> = HashMap::new();
-    let mut seen = HashSet::new();
+    let mut seen: HashSet<String> = HashSet::new();
     for entry in &lowering.declaration_metadata {
         if entry.target_kind != DeclarationMetadataTargetKind::Method
-            || !seen.insert(entry.owner.as_str())
+            || !seen.insert(entry.owner.clone())
         {
             continue;
         }
@@ -113,6 +108,26 @@ pub(crate) fn structural_method_map(
             .entry(class_name)
             .or_default()
             .push(method_name);
+    }
+    for selection in &lowering.class_adapter_selections {
+        for handler in &selection.handler_plans {
+            let Some(owner) = handler.callable.owner.as_deref() else {
+                continue;
+            };
+            let Some(class_name) = owner.rsplit_once('.').map(|(_, name)| name) else {
+                continue;
+            };
+            if local_classes.get(class_name).map(String::as_str) != Some(owner) {
+                continue;
+            }
+            let key = format!("{class_name}.{}", handler.callable.symbol);
+            if seen.insert(key) {
+                names_by_class
+                    .entry(class_name)
+                    .or_default()
+                    .push(handler.callable.symbol.as_str());
+            }
+        }
     }
     if names_by_class.is_empty() {
         return HashMap::new();

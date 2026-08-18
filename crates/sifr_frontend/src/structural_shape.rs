@@ -607,8 +607,16 @@ fn canonical_method(method: &ShapeMethod) -> String {
         })
         .collect::<Vec<_>>()
         .join(",");
+    let target = method.target.as_ref().map_or_else(
+        || "none".to_string(),
+        |target| canonical_value(&ConstValue::CallableIdentity(target.clone())),
+    );
+    let descriptor = method
+        .descriptor
+        .as_ref()
+        .map_or_else(|| "none".to_string(), canonical_value);
     format!(
-        "{}:{}:{}:{}:{}:params[{params}]:result[{}]:meta[{}]",
+        "{}:{}:{}:{}:{}:target[{target}]:descriptor[{descriptor}]:params[{params}]:result[{}]:meta[{}]",
         method.name.len(),
         method.name,
         method.kind,
@@ -619,7 +627,7 @@ fn canonical_method(method: &ShapeMethod) -> String {
     )
 }
 
-fn node_const_value(node: &ShapeNode) -> ConstValue {
+pub(super) fn node_const_value(node: &ShapeNode) -> ConstValue {
     let mut record = BTreeMap::new();
     match node {
         ShapeNode::Primitive(name) => {
@@ -709,7 +717,7 @@ fn node_const_value(node: &ShapeNode) -> ConstValue {
             );
             record.insert(
                 "methods".to_string(),
-                ConstValue::List(methods.iter().map(method_const_value).collect()),
+                ConstValue::List(methods.iter().map(methods::const_value).collect()),
             );
             record.insert("metadata".to_string(), metadata_const_value(metadata));
         }
@@ -782,55 +790,7 @@ fn node_const_value(node: &ShapeNode) -> ConstValue {
     ConstValue::Record(record)
 }
 
-fn method_const_value(method: &ShapeMethod) -> ConstValue {
-    ConstValue::Record(BTreeMap::from([
-        ("name".to_string(), ConstValue::String(method.name.clone())),
-        ("kind".to_string(), ConstValue::String(method.kind.clone())),
-        (
-            "receiver".to_string(),
-            method
-                .receiver
-                .clone()
-                .map(ConstValue::String)
-                .unwrap_or(ConstValue::None),
-        ),
-        ("is_async".to_string(), ConstValue::Bool(method.is_async)),
-        (
-            "params".to_string(),
-            ConstValue::List(
-                method
-                    .params
-                    .iter()
-                    .map(|param| {
-                        ConstValue::Record(BTreeMap::from([
-                            ("name".to_string(), ConstValue::String(param.name.clone())),
-                            ("type".to_string(), node_const_value(&param.declared_type)),
-                            (
-                                "convention".to_string(),
-                                ConstValue::String(param.convention.clone()),
-                            ),
-                            (
-                                "keyword_only".to_string(),
-                                ConstValue::Bool(param.keyword_only),
-                            ),
-                            (
-                                "metadata".to_string(),
-                                metadata_const_value(&param.metadata),
-                            ),
-                        ]))
-                    })
-                    .collect(),
-            ),
-        ),
-        ("result".to_string(), node_const_value(&method.result)),
-        (
-            "metadata".to_string(),
-            metadata_const_value(&method.metadata),
-        ),
-    ]))
-}
-
-fn metadata_const_value(metadata: &[ShapeMetadata]) -> ConstValue {
+pub(super) fn metadata_const_value(metadata: &[ShapeMetadata]) -> ConstValue {
     ConstValue::List(
         metadata
             .iter()

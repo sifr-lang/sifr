@@ -507,6 +507,7 @@ pub(in crate::lower) fn collect_class_type(
             // Method definitions
             Stmt::FunctionDef(func) => {
                 let method_name = func.name.to_string();
+                let previous_current_class = ctx.current_class.replace(class_name.clone());
                 method_ranges.insert(method_name.clone(), func.name.range());
                 if method_name == "__init__" {
                     // Constructor: extract params (skip `self`)
@@ -715,6 +716,7 @@ pub(in crate::lower) fn collect_class_type(
                         ctx,
                     );
                 }
+                ctx.current_class = previous_current_class;
             }
             Stmt::Pass(_) => {} // Allow pass in class body
             _ => {

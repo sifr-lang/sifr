@@ -3,6 +3,25 @@
 use crate::{HirExpr, MethodKind};
 use ruff_text_size::TextRange;
 use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
+
+/// Opaque compiler-issued source-origin identity used only for diagnostics.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct SourceOriginId {
+    namespace: [u8; 32],
+    index: u32,
+}
+
+impl SourceOriginId {
+    #[must_use]
+    pub const fn new(namespace: [u8; 32], index: u32) -> Self {
+        Self { namespace, index }
+    }
+
+    #[must_use]
+    pub fn belongs_to(self, namespace: [u8; 32]) -> bool {
+        self.namespace == namespace
+    }
+}
 use std::collections::HashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -148,9 +167,21 @@ pub struct ClassAdapterSelection {
     pub marker_identities: Vec<String>,
     pub data_parent: Option<String>,
     pub field_plans: Vec<AdapterFieldPlan>,
+    pub handler_plans: Vec<AdapterHandlerPlan>,
     pub adapter_invocation_identity: [u8; 32],
     pub post_adapter_identity: [u8; 32],
     pub range: TextRange,
+}
+
+/// One package-selected user method carried from adaptation into specialization.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AdapterHandlerPlan {
+    pub callable: CallableIdentity,
+    pub descriptor_type: Type,
+    pub descriptor_value: StaticProgramValue,
+    pub descriptor_origin: SourceOriginId,
+    pub descriptor_range: TextRange,
+    pub declaration_order: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -198,6 +229,8 @@ pub struct TypedDeclarationDescriptor {
     pub owner: String,
     pub target_kind: DeclarationDescriptorKind,
     pub target_identity: String,
+    /// Sealed checked method identity for method descriptors only.
+    pub target_callable: Option<CallableIdentity>,
     pub provider_module: String,
     pub provider_function: String,
     pub value_type: Type,
@@ -281,6 +314,13 @@ pub struct StaticMethodSlot {
     pub output_type: Type,
     pub context_type: Option<Type>,
     pub context_mutable: bool,
+    /// Package method descriptor retained for handler-aware code generation.
+    pub descriptor_type: Option<Type>,
+    pub descriptor_value: Option<StaticProgramValue>,
+    pub descriptor_origin: Option<SourceOriginId>,
+    pub descriptor_range: Option<TextRange>,
+    pub declaration_order: Option<usize>,
+    pub is_fallible: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

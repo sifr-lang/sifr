@@ -118,16 +118,22 @@ All five components participate in the canonical result and therefore the static
 identity. Packages can carry this value through records and collections but cannot construct it
 from strings. A new variant requires a contract and cache-identity review.
 
-A produced value can request a method-slot table through exactly one reserved entry:
-`sifr_method_slots: list[str]`. The field is ordered. An empty list emits no slot table, which
-lets one typed specialization payload cover types with and without callbacks. Each value is an exact
-`module.Type::method` identity, including for imported or re-exported owners. Duplicate,
-unqualified, missing, unannotated, asynchronous, constructor, class-method, non-`Result`, or
-nonstructural method contracts fail with `SIFR-RUST-SLOT-####`. The compiler derives one context
-type and borrow mode from the selected methods and emits the table only when a Rust declaration
-uses the package-neutral `MethodSlots` and `Context` bounds. Programs without caller-owned
-context use `NoContext`. A nonempty table identity includes slot order, structural signatures, receiver
-mode, context shape and borrow mode, handler shapes, and the static-program identity.
+A produced value can request a method-slot table through the reserved `sifr_method_slots` field.
+The field is ordered. An empty list emits no slot table, which lets one typed specialization
+payload cover types with and without handlers. Package method descriptors expose compiler-sealed
+`CallableIdentity` values in the structural shape. The adapter validates the descriptor value and
+source origin, and the specializer selects those identities through `sifr_method_slots`. Legacy
+annotated slots can still use exact `module.Type::method` strings.
+
+The compiler accepts synchronous static, class, shared-instance, mutable-instance, and owned
+receiver handlers. A checked handler can return an infallible structural value or a typed `Result`.
+An owned receiver must return the exact current `Self` specialization, directly or as the successful
+`Result` value. Duplicate, unqualified, missing, constructor, asynchronous, invalid-context, and
+nonstructural contracts fail with `SIFR-RUST-SLOT-####` at the method descriptor when one exists.
+The compiler derives one context type and borrow mode from the selected methods. Programs without
+caller-owned context use `NoContext`. A nonempty table identity includes slot order, structural
+signatures, receiver mode, context shape and borrow mode, descriptor-backed handler identities,
+and the static-program identity.
 
 ## Integer boundary verification
 

@@ -59,6 +59,43 @@ pub(crate) fn contract_for_identity(
     .contract(identity)
 }
 
+pub(crate) fn method_declaration(
+    module_name: &str,
+    result: &LoweringResult,
+    owner: &str,
+    method_name: &str,
+) -> Option<CallableIdentity> {
+    let class = result
+        .module
+        .classes
+        .iter()
+        .find(|class| class.name == owner)?;
+    let hir_name = if method_name == "__init__" {
+        "new"
+    } else {
+        method_name
+    };
+    let method = class
+        .methods
+        .iter()
+        .chain(class.operator_impls.iter().map(|(_, method)| method))
+        .find(|method| method.name == hir_name)?;
+    let local_classes = result
+        .module
+        .classes
+        .iter()
+        .map(|class| (class.name.clone(), format!("{module_name}.{}", class.name)))
+        .collect();
+    let function = canonicalize_user_export_function_type(&function_type(method), &local_classes);
+    Some(CallableIdentity {
+        module: module_name.to_string(),
+        owner: Some(format!("{module_name}.{owner}")),
+        symbol: method_name.to_string(),
+        generic_arguments: Vec::new(),
+        signature: signature(&function),
+    })
+}
+
 struct Resolver<'a> {
     module_name: &'a str,
     result: &'a LoweringResult,

@@ -1,15 +1,29 @@
-use super::{describe_node, metadata_for, ShapeMetadata, ShapeNode};
+use super::{
+    describe_node, metadata_const_value, metadata_for, node_const_value, validated_adapter_value,
+    ShapeMetadata, ShapeNode,
+};
+use crate::ConstValue;
+use num_bigint::BigInt;
 use sifr_lowering::{
-    substitute_type_vars, DeclarationMetadataTargetKind, HirClass, HirParam, LoweringResult,
-    MethodKind, StructuralMethodExport, TypedDeclarationMetadata,
+    substitute_type_vars, AdapterHandlerPlan, CallableIdentity, DeclarationMetadataTargetKind,
+    HirClass, HirParam, LoweringResult, MethodKind, SourceOriginId, StructuralMethodExport,
+    TypedDeclarationMetadata,
 };
 use sifr_type_system::{
     ParamConvention, ParamMutability, ParamOwnership, ReceiverConvention, Type,
 };
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ShapeMethod {
+    /// Compiler-sealed checked method target for package-selected handlers.
+    pub target: Option<CallableIdentity>,
+    /// Package-owned descriptor value paired with `target`.
+    pub descriptor: Option<ConstValue>,
+    /// Diagnostic-only source location token for the descriptor application.
+    pub origin: Option<SourceOriginId>,
+    /// Package declaration/inheritance order for deterministic selection.
+    pub declaration_order: Option<usize>,
     pub name: String,
     pub kind: String,
     pub receiver: Option<String>,
@@ -26,6 +40,81 @@ pub struct ShapeParameter {
     pub convention: String,
     pub keyword_only: bool,
     pub metadata: Vec<ShapeMetadata>,
+}
+
+pub(super) fn const_value(method: &ShapeMethod) -> ConstValue {
+    ConstValue::Record(BTreeMap::from([
+        (
+            "target".to_string(),
+            method
+                .target
+                .clone()
+                .map(ConstValue::CallableIdentity)
+                .unwrap_or(ConstValue::None),
+        ),
+        (
+            "descriptor".to_string(),
+            method.descriptor.clone().unwrap_or(ConstValue::None),
+        ),
+        (
+            "origin".to_string(),
+            method
+                .origin
+                .map(ConstValue::SourceOrigin)
+                .unwrap_or(ConstValue::None),
+        ),
+        (
+            "declaration_order".to_string(),
+            method
+                .declaration_order
+                .map(BigInt::from)
+                .map(ConstValue::Integer)
+                .unwrap_or(ConstValue::None),
+        ),
+        ("name".to_string(), ConstValue::String(method.name.clone())),
+        ("kind".to_string(), ConstValue::String(method.kind.clone())),
+        (
+            "receiver".to_string(),
+            method
+                .receiver
+                .clone()
+                .map(ConstValue::String)
+                .unwrap_or(ConstValue::None),
+        ),
+        ("is_async".to_string(), ConstValue::Bool(method.is_async)),
+        (
+            "params".to_string(),
+            ConstValue::List(
+                method
+                    .params
+                    .iter()
+                    .map(|param| {
+                        ConstValue::Record(BTreeMap::from([
+                            ("name".to_string(), ConstValue::String(param.name.clone())),
+                            ("type".to_string(), node_const_value(&param.declared_type)),
+                            (
+                                "convention".to_string(),
+                                ConstValue::String(param.convention.clone()),
+                            ),
+                            (
+                                "keyword_only".to_string(),
+                                ConstValue::Bool(param.keyword_only),
+                            ),
+                            (
+                                "metadata".to_string(),
+                                metadata_const_value(&param.metadata),
+                            ),
+                        ]))
+                    })
+                    .collect(),
+            ),
+        ),
+        ("result".to_string(), node_const_value(&method.result)),
+        (
+            "metadata".to_string(),
+            metadata_const_value(&method.metadata),
+        ),
+    ]))
 }
 
 pub(super) fn described_methods(
@@ -45,7 +134,22 @@ pub(super) fn described_methods(
         .cloned()
         .zip(type_args.iter().cloned())
         .collect::<HashMap<_, _>>();
-    lowering
+    let handlers = lowering
+        .class_adapter_selections
+        .iter()
+        .find(|selection| selection.owner == class.name)
+        .map(|selection| selection.handler_plans.as_slice())
+        .unwrap_or_default();
+    let handler_targets = handlers
+        .iter()
+        .filter_map(|handler| {
+            Some((
+                handler.callable.owner.clone()?,
+                handler.callable.symbol.clone(),
+            ))
+        })
+        .collect::<BTreeSet<_>>();
+    let mut methods = lowering
         .declaration_metadata
         .iter()
         .filter(|entry| {
@@ -65,6 +169,13 @@ pub(super) fn described_methods(
                 .iter()
                 .chain(class.operator_impls.iter().map(|(_, method)| method))
                 .find(|method| method.name == hir_name)?;
+            let local_owner = class
+                .identity
+                .clone()
+                .unwrap_or_else(|| format!("{module_name}.{}", class.name));
+            if handler_targets.contains(&(local_owner, declared_name.to_string())) {
+                return None;
+            }
             Some(described_method(
                 module_name,
                 &entry.owner,
@@ -87,7 +198,97 @@ pub(super) fn described_methods(
                 visiting,
             ))
         })
-        .collect()
+        .collect::<Vec<_>>();
+    let mut ordered_handlers = handlers.iter().collect::<Vec<_>>();
+    ordered_handlers.sort_by_key(|handler| handler.declaration_order);
+    for handler in ordered_handlers {
+        methods.push(described_handler(
+            module_name,
+            class_name,
+            class,
+            handler,
+            &bindings,
+            lowering,
+            external_defs,
+            visiting,
+        ));
+    }
+    methods
+}
+
+#[allow(clippy::too_many_arguments)]
+fn described_handler(
+    module_name: &str,
+    class_name: &str,
+    class: &HirClass,
+    handler: &AdapterHandlerPlan,
+    bindings: &HashMap<String, Type>,
+    lowering: &LoweringResult,
+    external_defs: &sifr_lowering::ExternalDefs,
+    visiting: &mut BTreeSet<String>,
+) -> ShapeMethod {
+    let declared_name = handler.callable.symbol.as_str();
+    let hir_name = if declared_name == "__init__" {
+        "new"
+    } else {
+        declared_name
+    };
+    let local_owner = class
+        .identity
+        .clone()
+        .unwrap_or_else(|| format!("{module_name}.{}", class.name));
+    let detailed = (handler.callable.owner.as_deref() == Some(local_owner.as_str()))
+        .then(|| {
+            class
+                .methods
+                .iter()
+                .chain(class.operator_impls.iter().map(|(_, method)| method))
+                .find(|method| method.name == hir_name)
+        })
+        .flatten();
+    let mut method = if let Some(method) = detailed {
+        let owner = format!("{class_name}.{declared_name}");
+        described_method(
+            module_name,
+            &owner,
+            declared_name,
+            &method.params,
+            &method.return_type,
+            method.method_kind,
+            method.receiver,
+            method.is_async,
+            bindings,
+            metadata_for(
+                &lowering.declaration_metadata,
+                &owner,
+                DeclarationMetadataTargetKind::Method,
+                None,
+            ),
+            &lowering.declaration_metadata,
+            lowering,
+            external_defs,
+            visiting,
+        )
+    } else {
+        ShapeMethod {
+            target: None,
+            descriptor: None,
+            origin: None,
+            declaration_order: None,
+            name: declared_name.to_string(),
+            kind: "inherited".to_string(),
+            receiver: None,
+            is_async: false,
+            params: Vec::new(),
+            result: Box::new(ShapeNode::Other("checked_handler".to_string())),
+            metadata: Vec::new(),
+        }
+    };
+    method.target = Some(handler.callable.clone());
+    method.descriptor = Some(validated_adapter_value(&handler.descriptor_value));
+    method.origin = Some(handler.descriptor_origin);
+    method.declaration_order = Some(handler.declaration_order);
+    method
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -154,6 +355,10 @@ fn described_method(
     visiting: &mut BTreeSet<String>,
 ) -> ShapeMethod {
     ShapeMethod {
+        target: None,
+        descriptor: None,
+        origin: None,
+        declaration_order: None,
         name: declared_name.to_string(),
         kind: method_kind_name(method_kind).to_string(),
         receiver: receiver.map(receiver_convention_name).map(str::to_string),

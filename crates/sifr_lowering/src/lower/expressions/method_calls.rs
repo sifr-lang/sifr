@@ -308,6 +308,21 @@ pub(in crate::lower) fn lower_method_call(
     } else {
         receiver_convention
     };
+    let interop_receiver_already_consumed = match object_ty.resolve_alias() {
+        Type::Class { name, .. } => {
+            let qualified = format!("{name}.{method_name}");
+            ctx.python_consuming_methods.contains(&qualified)
+                || ctx.rust_consuming_methods.contains(&qualified)
+        }
+        _ => false,
+    };
+    let declared_class_owned = matches!(object_ty.resolve_alias(), Type::Class { .. })
+        && method_type
+            .as_ref()
+            .is_some_and(|signature| signature.receiver == Some(ReceiverConvention::Owned));
+    if declared_class_owned && !interop_receiver_already_consumed {
+        consume_declared_owned_receiver(&object, attr.value.range(), ctx);
+    }
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method_name,
@@ -322,6 +337,25 @@ pub(in crate::lower) fn lower_method_call(
         }),
         ty: return_ty,
     })
+}
+
+fn consume_declared_owned_receiver(object: &HirExpr, range: TextRange, ctx: &mut LowerCtx) {
+    let HirExpr::Name { name, .. } = object else {
+        return;
+    };
+    if ctx.borrowed_params.contains(name) {
+        ctx.error_with_code_at(
+            DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES,
+            format!(
+                "cannot consume borrowed parameter '{name}' through an owned receiver; accept it with `own`"
+            ),
+            range,
+        );
+    } else if ctx.scope.is_moved(name) {
+        super::ownership_diagnostics::use_after_move(ctx, name, range);
+    } else {
+        ctx.mark_moved_with_flow(name);
+    }
 }
 
 /// Resolve the return type of a method call on a given type.

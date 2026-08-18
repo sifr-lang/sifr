@@ -30,7 +30,7 @@ pub enum ConstValue {
     CallableIdentity(sifr_lowering::CallableIdentity),
     /// Compiler-issued diagnostic token. Package const code can carry this
     /// value but cannot construct it or retain it in a static program.
-    SourceOrigin(crate::class_declarations::SourceOriginId),
+    SourceOrigin(sifr_lowering::SourceOriginId),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

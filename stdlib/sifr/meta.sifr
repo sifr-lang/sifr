@@ -87,6 +87,7 @@ class ClassDeclaration:
 class DescriptorUse[D]:
     target_kind: str
     target_identity: str
+    target_callable: CallableIdentity | None
     value: D
     origin: SourceOrigin
 
@@ -115,6 +116,12 @@ class PlannedMetadata[D]:
     value: D
 
 
+class PlannedHandler[D]:
+    target: CallableIdentity
+    descriptor: D
+    origin: SourceOrigin
+
+
 class PlannedIssueLabel:
     origin: SourceOrigin
     message: str
@@ -136,6 +143,7 @@ class DeclarationPlan[D]:
     specialization_module: str | None
     specialization_function: str | None
     issues: list[PlannedIssue[D]]
+    handlers: list[PlannedHandler[D]] = []
 
 
 class ShapeMetadata[D]:
@@ -143,8 +151,16 @@ class ShapeMetadata[D]:
     value: D
 
 
+class ShapeMethod[D]:
+    target: CallableIdentity | None
+    descriptor: D | None
+    origin: SourceOrigin | None
+    declaration_order: int | None
+
+
 class ShapeRoot[D]:
     metadata: list[ShapeMetadata[D]]
+    methods: list[ShapeMethod[D]]
 
 
 class ShapeInput[D]:

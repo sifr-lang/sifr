@@ -10,6 +10,19 @@ use super::{
 pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
     match expr {
         Expr::Name(name) => {
+            if name.id.as_str() == "Self" {
+                if let Some(current_class) = ctx.current_class.as_deref() {
+                    if let Some(class_ty) = ctx.class_types.get(current_class) {
+                        return class_ty.clone();
+                    }
+                }
+                invalid_type_annotation(
+                    ctx,
+                    "Self is valid only in an ordinary class method annotation",
+                    name.range(),
+                );
+                return Type::Any;
+            }
             if ctx.adapter_marker_bindings.contains_key(name.id.as_str()) {
                 ctx.error_with_code_at(
                     DiagnosticCode::META_MALFORMED_DECLARATION,

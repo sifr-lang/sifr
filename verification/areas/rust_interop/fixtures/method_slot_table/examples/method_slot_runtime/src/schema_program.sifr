@@ -1,36 +1,50 @@
+from sifr.meta import CallableIdentity, ConstSpecializationOutcome, DeclarationInput, DeclarationPlan, PlannedField, PlannedHandler, ShapeInput
+
+
+class SlotDescriptor:
+    tag: str
+
+
+@class_adapter_provider("method_slot_runtime.schema_program", "SlotDescriptor")
+@const_eval
+def adapt_slots(declaration: DeclarationInput[SlotDescriptor]) -> DeclarationPlan[SlotDescriptor]:
+    fields: list[PlannedField] = []
+    handlers: list[PlannedHandler[SlotDescriptor]] = []
+    for item in declaration.declaration.items:
+        if item.kind == "field":
+            declared_type = item.declared_type
+            if declared_type is None:
+                continue
+            fields.append(PlannedField(item.identity, declared_type))
+    for descriptor in declaration.descriptors:
+        if descriptor.target_kind == "method":
+            target = descriptor.target_callable
+            if target is None:
+                continue
+            handlers.append(PlannedHandler(target, descriptor.value, descriptor.origin))
+    return DeclarationPlan(fields, [], None, None, [], handlers)
+
+
+@class_adapter_marker("method_slot_runtime.schema_program", "adapt_slots")
+class SlotContract:
+    pass
+
+
+@method_descriptor("method_slot_runtime.schema_program", "adapt_slots")
+def slot(tag: str) -> SlotDescriptor:
+    return SlotDescriptor(tag)
+
+
 class SlotProgram:
-    sifr_method_slots: list[str]
-
-
-class ProgramOutcome:
-    status: str
-    value: SlotProgram | None
-    issues: list[str]
+    sifr_method_slots: list[CallableIdentity]
 
 
 @const_eval
-def derive(shape: dict[str, str]) -> ProgramOutcome:
-    return ProgramOutcome(
-        "produced",
-        SlotProgram(
-            [
-                "main.Record::normalize",
-                "main.Record::finalize",
-            ]
-        ),
-        [],
-    )
-
-
-@const_eval
-def derive_no_context(shape: dict[str, str]) -> ProgramOutcome:
-    return ProgramOutcome(
-        "produced", SlotProgram(["main.NoContextRecord::normalize"]), []
-    )
-
-
-@const_eval
-def derive_shared(shape: dict[str, str]) -> ProgramOutcome:
-    return ProgramOutcome(
-        "produced", SlotProgram(["main.SharedRecord::normalize"]), []
-    )
+def derive(shape: ShapeInput[SlotDescriptor]) -> ConstSpecializationOutcome[SlotProgram, SlotDescriptor]:
+    slots: list[CallableIdentity] = []
+    for method in shape.root.methods:
+        target = method.target
+        descriptor = method.descriptor
+        if target is not None and descriptor is not None:
+            slots.append(target)
+    return ConstSpecializationOutcome("produced", SlotProgram(slots), [])

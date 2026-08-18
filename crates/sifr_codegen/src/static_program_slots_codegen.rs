@@ -108,8 +108,17 @@ fn slot_arm(index: usize, slot: &StaticMethodSlot, context: &StaticMethodSlotCon
                 .is_some_and(|param| param.convention.is_mut_borrow()));
     let binding = if mutable_input { "mut " } else { "" };
     let call = slot_call_expression(slot, context);
+    let dispatch = if slot.is_fallible {
+        format!(
+            "match {call} {{\n                    Ok(output) => {STRUCTURAL}::StructuralProject::structural_project(&output, &mut {STRUCTURAL}::SlotSinkVisitor::new(sink)).map_err({STRUCTURAL}::SlotError::Contract),\n                    Err(error) => Err({STRUCTURAL}::SlotError::Slot(error.to_string())),\n                }}"
+        )
+    } else {
+        format!(
+            "let output = {call};\n                {STRUCTURAL}::StructuralProject::structural_project(&output, &mut {STRUCTURAL}::SlotSinkVisitor::new(sink)).map_err({STRUCTURAL}::SlotError::Contract)"
+        )
+    };
     format!(
-        "            {index}usize => {{\n                let {binding}value = {STRUCTURAL}::structural_construct::<{input}, _>(input).map_err({STRUCTURAL}::SlotError::Contract)?;\n                match {call} {{\n                    Ok(output) => {STRUCTURAL}::StructuralProject::structural_project(&output, &mut {STRUCTURAL}::SlotSinkVisitor::new(sink)).map_err({STRUCTURAL}::SlotError::Contract),\n                    Err(error) => Err({STRUCTURAL}::SlotError::Slot(error.to_string())),\n                }}\n            }}"
+        "            {index}usize => {{\n                let {binding}value = {STRUCTURAL}::structural_construct::<{input}, _>(input).map_err({STRUCTURAL}::SlotError::Contract)?;\n                {dispatch}\n            }}"
     )
 }
 

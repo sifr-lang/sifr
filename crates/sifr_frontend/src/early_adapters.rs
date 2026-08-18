@@ -1,20 +1,25 @@
 //! Erased marker selection and bounded early class-adapter execution.
 
+mod adapter_input;
+mod handler_plans;
 mod inheritance;
+
+use adapter_input::adapter_input;
+use handler_plans::validate_handlers;
 
 use crate::package_issues::{
     evaluation_error, issue_templates, replace_unknown_package, SpecializationDiagnostic,
     SpecializationDiagnostics,
 };
-use crate::specialization_support::{const_value, malformed, static_program_value};
+use crate::specialization_support::{malformed, static_program_value};
 use crate::{
     decode_const_specialization_outcome, package_note, ConstIssueSeverity, ConstPackageIssue,
     ConstValue, DeterministicConstEvaluator,
 };
 use sifr_lowering::{
-    AdapterFieldDefault, AdapterFieldPlan, AppliedAdapterMetadata, ClassAdapterSelection,
-    ConstSpecializationRequest, DeclarationDescriptorKind, DeclarationMetadataTargetKind,
-    LoweringWarningDiagnostic, TypedDeclarationDescriptor,
+    AdapterFieldDefault, AdapterFieldPlan, AdapterHandlerPlan, AppliedAdapterMetadata,
+    ClassAdapterSelection, ConstSpecializationRequest, DeclarationMetadataTargetKind,
+    LoweringWarningDiagnostic,
 };
 use sifr_lowering::{ExternalDefs, HirModule, LoweringResult};
 use sifr_type_system::Type;
@@ -189,65 +194,6 @@ fn run_one(
     }
 }
 
-fn adapter_input(
-    module_name: &str,
-    result: &LoweringResult,
-    external_defs: &ExternalDefs,
-    declaration: &crate::class_declarations::ClassDeclaration,
-    selection: &ClassAdapterSelection,
-    descriptors: &[&TypedDeclarationDescriptor],
-) -> Result<ConstValue, &'static str> {
-    let descriptors = descriptors
-        .iter()
-        .map(|descriptor| {
-            let origin = declaration
-                .origin_for_range(descriptor.range)
-                .ok_or("descriptor source origin is unavailable")?;
-            Ok(ConstValue::Record(BTreeMap::from([
-                (
-                    "target_kind".to_string(),
-                    ConstValue::String(descriptor_kind(descriptor.target_kind).to_string()),
-                ),
-                (
-                    "target_identity".to_string(),
-                    ConstValue::String(canonical_target(module_name, &descriptor.target_identity)),
-                ),
-                ("value".to_string(), const_value(&descriptor.value)?),
-                ("origin".to_string(), ConstValue::SourceOrigin(origin)),
-            ])))
-        })
-        .collect::<Result<Vec<_>, &'static str>>()?;
-    let data_parent = selection
-        .data_parent
-        .as_ref()
-        .and_then(|_| {
-            result
-                .module
-                .classes
-                .iter()
-                .find(|class| class.name == selection.owner)
-                .and_then(|class| class.parent_type.as_ref())
-        })
-        .map_or(ConstValue::None, |parent| {
-            ConstValue::String(crate::canonical_types::type_identity(parent))
-        });
-    let declaration =
-        inheritance::declaration_value(module_name, result, external_defs, declaration, selection)?;
-    Ok(ConstValue::Record(BTreeMap::from([
-        ("declaration".to_string(), declaration),
-        ("descriptors".to_string(), ConstValue::List(descriptors)),
-        (
-            "provider_module".to_string(),
-            ConstValue::String(selection.provider_module.clone()),
-        ),
-        (
-            "provider_function".to_string(),
-            ConstValue::String(selection.provider_function.clone()),
-        ),
-        ("data_parent".to_string(), data_parent),
-    ])))
-}
-
 fn const_functions(
     result: &LoweringResult,
     external_defs: &ExternalDefs,
@@ -302,11 +248,11 @@ fn validate_issues(
         ));
         return None;
     };
-    if fields.len() != 5 {
+    if fields.len() != 6 {
         diagnostics.push(malformed(
             &selection.provider_module,
             "adapter_plan",
-            "adapter plan must contain exactly these fields: fields, metadata, specialization_module, specialization_function, and issues",
+            "adapter plan must contain exactly these fields: fields, metadata, specialization_module, specialization_function, issues, and handlers",
             selection.range,
         ));
         return None;
@@ -380,6 +326,7 @@ fn validate_issues(
 
 struct ValidatedPlan {
     fields: Vec<AdapterFieldPlan>,
+    handlers: Vec<AdapterHandlerPlan>,
     metadata: Vec<AppliedAdapterMetadata>,
     specialization: Option<(String, String)>,
 }
@@ -395,7 +342,7 @@ fn validate_plan(
     let ConstValue::Record(mut fields) = value else {
         return Err("adapter plan value must be a record".to_string());
     };
-    if fields.len() != 4 {
+    if fields.len() != 5 {
         return Err("adapter plan contains unknown output fields".to_string());
     }
     let planned_fields = take_list(&mut fields, "fields")?;
@@ -426,6 +373,14 @@ fn validate_plan(
             )
         })
         .collect::<Result<Vec<_>, _>>()?;
+    let handlers = validate_handlers(
+        module_name,
+        declaration,
+        result,
+        external_defs,
+        selection,
+        take_list(&mut fields, "handlers")?,
+    )?;
     let module = take_optional_string(&mut fields, "specialization_module")?;
     let function = take_optional_string(&mut fields, "specialization_function")?;
     if !fields.is_empty() {
@@ -451,6 +406,7 @@ fn validate_plan(
     }
     Ok(ValidatedPlan {
         fields: planned_fields,
+        handlers,
         metadata,
         specialization,
     })
@@ -805,6 +761,7 @@ fn apply_plan(
         .find(|candidate| candidate.owner == selection.owner)
     {
         applied.field_plans = plan.fields;
+        applied.handler_plans = plan.handlers;
         applied.adapter_invocation_identity = adapter_invocation_identity;
         applied.post_adapter_identity = post_adapter_identity;
     }
@@ -818,20 +775,6 @@ fn apply_plan(
                 function,
                 range: selection.range,
             });
-    }
-}
-
-fn canonical_target(module_name: &str, target: &str) -> String {
-    let target = target.split_once(':').map_or(target, |(target, _)| target);
-    format!("{module_name}.{target}")
-}
-
-fn descriptor_kind(kind: DeclarationDescriptorKind) -> &'static str {
-    match kind {
-        DeclarationDescriptorKind::Field => "field",
-        DeclarationDescriptorKind::Class => "class",
-        DeclarationDescriptorKind::Method => "method",
-        DeclarationDescriptorKind::Type => "type",
     }
 }
 
