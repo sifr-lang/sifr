@@ -319,6 +319,7 @@ pub fn collect_module_exports(
             class_exports.insert(class.name.clone(), class_ty);
         }
     }
+    crate::descriptor_exports::add_aliases(lowering_result, &local_classes, &mut class_exports);
     for (name, ty, _) in &module.constants {
         if !name.starts_with('_') {
             const_exports.insert(
@@ -485,6 +486,7 @@ pub fn collect_module_exports(
         lowering_result.declaration_metadata.clone(),
         Vec::is_empty,
     );
+    crate::descriptor_exports::store(module_name, module, lowering_result, external_defs);
     if !lowering_result.specialization_requests.is_empty() {
         external_defs.specialization_requests.insert(
             module_name.to_string(),

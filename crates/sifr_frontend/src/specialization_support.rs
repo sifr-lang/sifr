@@ -31,6 +31,9 @@ pub(crate) fn static_program_value(
                 .map(|(name, value)| Ok((name.clone(), static_program_value(value)?)))
                 .collect::<Result<Vec<_>, &'static str>>()?,
         ),
+        crate::ConstValue::CallableIdentity(identity) => {
+            StaticProgramValue::CallableIdentity(identity.clone())
+        }
         crate::ConstValue::SourceOrigin(_) => {
             return Err("source origins cannot be retained in a static program")
         }

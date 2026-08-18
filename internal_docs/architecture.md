@@ -853,6 +853,14 @@ metadata, bounded pure HIR evaluation, package issues, and integer JSON boundary
 frontend authorities shared by CLI, build, tests, and editor analysis. This is compile-time data;
 Sifr does not expose runtime reflection or package-name-specific compiler branches.
 
+The frontend retains package-neutral declaration descriptors as typed compile-time values. It
+canonicalizes provider and descriptor declarations during lowering, resolves callable identities
+by module, owner, symbol, generic arguments, and checked signature, and evaluates descriptor calls
+under the const-evaluation budget before class-adapter selection. Descriptor field expressions and
+consumed class assignments are therefore metadata inputs, not runtime defaults or storage. The IR
+and external-definition boundary carry these records across modules without selecting a package or
+adapter implementation.
+
 The Native Pydantic-Sifr consumer architecture is documented in
 [`native_pydantic_sifr_architecture.md`](native_pydantic_sifr_architecture.md).
 The architecture includes the package-neutral static class-adapter contract.

@@ -1,0 +1,26 @@
+from typing import Annotated
+from fixture.contract import before_call, bounded, contract_config, option as field_option
+
+
+def normalize(own value: str) -> str:
+    return value
+
+
+class Contract:
+    _config = contract_config(True)
+    name: Annotated[str, bounded(32)] = field_option(
+        enabled=True,
+        limit=None,
+        tags=["public", "trimmed"],
+        callback=normalize,
+    )
+
+    @staticmethod
+    @before_call("normalize")
+    def parse(own value: str) -> str:
+        return value
+
+
+def main():
+    contract: Contract = Contract("example")
+    assert contract.name == "example"

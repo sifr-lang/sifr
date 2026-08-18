@@ -310,35 +310,52 @@ pub fn compile_module_hir_with_source_and_options(
         external_defs,
         lowering_options,
     ) {
-        Ok(mut result) => match crate::specialization_runner::run_specializations(
-            module_name,
-            &mut result,
-            external_defs,
-            &class_declarations,
-        ) {
-            Ok(()) => Ok(result),
-            Err(errors) => Err(errors
-                .into_iter()
-                .map(|error| match error {
-                    crate::package_issues::SpecializationDiagnostic::Hir(error) => {
+        Ok(mut result) => {
+            if let Err(errors) =
+                crate::typed_descriptors::collect(module_name, stmts, &mut result, external_defs)
+            {
+                return Err(errors
+                    .into_iter()
+                    .map(|error| {
                         hir_diagnostic_to_rendered(
                             module_name,
                             diagnostic_style,
                             source_context,
                             error,
                         )
-                    }
-                    crate::package_issues::SpecializationDiagnostic::Package(issue) => {
-                        crate::package_issues::render_package_issue(
-                            module_name,
-                            diagnostic_style,
-                            source_context,
-                            &issue,
-                        )
-                    }
-                })
-                .collect()),
-        },
+                    })
+                    .collect());
+            }
+            match crate::specialization_runner::run_specializations(
+                module_name,
+                &mut result,
+                external_defs,
+                &class_declarations,
+            ) {
+                Ok(()) => Ok(result),
+                Err(errors) => Err(errors
+                    .into_iter()
+                    .map(|error| match error {
+                        crate::package_issues::SpecializationDiagnostic::Hir(error) => {
+                            hir_diagnostic_to_rendered(
+                                module_name,
+                                diagnostic_style,
+                                source_context,
+                                error,
+                            )
+                        }
+                        crate::package_issues::SpecializationDiagnostic::Package(issue) => {
+                            crate::package_issues::render_package_issue(
+                                module_name,
+                                diagnostic_style,
+                                source_context,
+                                &issue,
+                            )
+                        }
+                    })
+                    .collect()),
+            }
+        }
         Err(errors) => Err(errors
             .into_iter()
             .map(|error| {

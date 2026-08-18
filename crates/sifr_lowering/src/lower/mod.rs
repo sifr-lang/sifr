@@ -35,6 +35,7 @@ mod declaration_hint_safety;
 mod declaration_metadata;
 mod default_args;
 mod defaultdict_refinement;
+mod descriptor_declarations;
 #[cfg(test)]
 mod diagnostic_transport_tests;
 mod diagnostic_types;

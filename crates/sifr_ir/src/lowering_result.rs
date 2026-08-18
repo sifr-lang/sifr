@@ -1,9 +1,11 @@
 use crate::{
-    ConstSpecializationRequest, FlowGraph, HirExpr, HirModule, JsonIntegerBoundaryRequest,
-    LoweringWarningDiagnostic, RevealTypeDiagnostic, StaticSpecializationOutput,
+    ClassAdapterProviderDeclaration, ConstSpecializationRequest, DeclarationDescriptorFunction,
+    FlowGraph, HirExpr, HirModule, JsonIntegerBoundaryRequest, LoweringWarningDiagnostic,
+    RevealTypeDiagnostic, StaticSpecializationOutput, TypedDeclarationDescriptor,
     TypedDeclarationMetadata,
 };
 use num_bigint::BigInt;
+use sifr_type_system::Type;
 use std::collections::HashMap;
 
 /// Result of lowering, including the HIR module and any diagnostics.
@@ -17,6 +19,14 @@ pub struct LoweringResult {
     pub class_field_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
     /// Typed, const-evaluable metadata attached to declarations in this module.
     pub declaration_metadata: Vec<TypedDeclarationMetadata>,
+    /// Package-owned provider declarations exported by this module.
+    pub class_adapter_providers: Vec<ClassAdapterProviderDeclaration>,
+    /// Package-owned descriptor function declarations exported by this module.
+    pub descriptor_functions: Vec<DeclarationDescriptorFunction>,
+    /// Evaluated descriptor uses attached to declarations in this module.
+    pub declaration_descriptors: Vec<TypedDeclarationDescriptor>,
+    /// Resolved non-generic module type aliases available to package declarations.
+    pub type_aliases: HashMap<String, Type>,
     pub specialization_requests: Vec<ConstSpecializationRequest>,
     /// Validated, deterministic outputs produced by package specializers.
     pub specialization_outputs: Vec<StaticSpecializationOutput>,

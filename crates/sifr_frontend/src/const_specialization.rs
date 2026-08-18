@@ -26,6 +26,8 @@ pub enum ConstValue {
     Tuple(Vec<Self>),
     List(Vec<Self>),
     Record(BTreeMap<String, Self>),
+    /// Compiler-sealed identity of one checked callable target.
+    CallableIdentity(sifr_lowering::CallableIdentity),
     /// Compiler-issued diagnostic token. Package const code can carry this
     /// value but cannot construct it or retain it in a static program.
     SourceOrigin(crate::class_declarations::SourceOriginId),
@@ -417,6 +419,7 @@ fn validate_const_value(value: &ConstValue, depth: usize) -> Result<(), String> 
         ConstValue::SourceOrigin(_) => {
             Err("source origins cannot be package template arguments".to_string())
         }
+        ConstValue::CallableIdentity(_) => Ok(()),
         ConstValue::None
         | ConstValue::Bool(_)
         | ConstValue::Integer(_)

@@ -88,7 +88,11 @@ also emits a sealed typed `StaticProgram[T]` envelope and implements `StaticProg
 concrete specialized type. This bound requires a produced specialization result. It has no empty
 program, runtime compiler, compatibility path, or fallback to the ordinary `Structural` bound.
 `StaticProgramValue` is non-exhaustive for Rust consumers. Its current compiler-owned variant set
-is closed for this contract. A new variant requires a contract and cache-identity review.
+is closed for this contract. It includes `CallableIdentity`, a sealed checked target containing the
+canonical module, optional owner, symbol, concrete generic arguments, and canonical signature.
+All five components participate in the canonical result and therefore the static-program and cache
+identity. Packages can carry this value through records and collections but cannot construct it
+from strings. A new variant requires a contract and cache-identity review.
 
 A produced value can request a method-slot table through exactly one reserved entry:
 `sifr_method_slots: list[str]`. The field is ordered. An empty list emits no slot table, which

@@ -31,10 +31,20 @@ class SourceOrigin:
     pass
 
 
+class CallableIdentity:
+    pass
+
+
+class CallArgumentDeclaration:
+    name: str | None
+    origin: SourceOrigin
+
+
 class ClassDecoratorDeclaration:
     name: str
     origin: SourceOrigin
     argument_origins: list[SourceOrigin]
+    arguments: list[CallArgumentDeclaration]
 
 
 class ClassParameterDeclaration:
@@ -54,6 +64,7 @@ class ClassDeclarationItem:
     declared_type: str | None
     signature: str | None
     value_argument_origins: list[SourceOrigin]
+    value_arguments: list[CallArgumentDeclaration]
     decorators: list[ClassDecoratorDeclaration]
     parameters: list[ClassParameterDeclaration]
 
@@ -64,6 +75,32 @@ class ClassDeclaration:
     origin: SourceOrigin
     decorators: list[ClassDecoratorDeclaration]
     items: list[ClassDeclarationItem]
+
+
+class DescriptorUse[D]:
+    target_kind: str
+    target_identity: str
+    value: D
+    origin: SourceOrigin
+
+
+class DeclarationInput[D]:
+    declaration: ClassDeclaration
+    descriptors: list[DescriptorUse[D]]
+
+
+class DeclarationPlan[D]:
+    pass
+
+
+class ShapeMetadata[D]:
+    key: str
+    value: D
+
+
+class ShapeInput[D]:
+    canonical_identity: str
+    metadata: list[ShapeMetadata[D]]
 
 
 class ConstIssueLabel:

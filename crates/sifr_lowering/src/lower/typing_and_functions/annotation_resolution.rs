@@ -107,6 +107,25 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                 }
             };
             match base_name.as_str() {
+                "Annotated" => {
+                    let Expr::Tuple(tuple) = sub.slice.as_ref() else {
+                        invalid_type_annotation(
+                            ctx,
+                            "Annotated requires a type and at least one descriptor",
+                            sub.slice.range(),
+                        );
+                        return Type::Any;
+                    };
+                    if tuple.elts.len() < 2 {
+                        invalid_type_annotation(
+                            ctx,
+                            "Annotated requires a type and at least one descriptor",
+                            sub.slice.range(),
+                        );
+                        return Type::Any;
+                    }
+                    resolve_annotation_expr(&tuple.elts[0], ctx)
+                }
                 "list" => {
                     let elem_ty = resolve_annotation_expr(&sub.slice, ctx);
                     Type::List(Box::new(elem_ty))

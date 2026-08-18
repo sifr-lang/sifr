@@ -393,6 +393,22 @@ pub(in crate::lower) fn collect_class_type(
                     own_fields.push((name.id.to_string(), name.range()));
                     // Collect default value if present (for auto-init default params)
                     if let Some(ref default_expr) = ann.value {
+                        if let Some(kind) =
+                            crate::lower::descriptor_declarations::descriptor_kind_for_call(
+                                default_expr,
+                                ctx,
+                            )
+                        {
+                            if kind != sifr_ir::DeclarationDescriptorKind::Field {
+                                ctx.error_with_code_at(
+                                    DiagnosticCode::META_MALFORMED_DECLARATION,
+                                    "descriptor function is not valid on an annotated field"
+                                        .to_string(),
+                                    default_expr.range(),
+                                );
+                            }
+                            continue;
+                        }
                         if let Some(hir_default) = lower_expr_simple(default_expr) {
                             field_defaults.push((field_idx, hir_default));
                             own_field_default_indices.insert(own_field_idx);
@@ -407,6 +423,37 @@ pub(in crate::lower) fn collect_class_type(
                             );
                         }
                     }
+                }
+            }
+            Stmt::Assign(assign) => {
+                let Some(kind) = crate::lower::descriptor_declarations::descriptor_kind_for_call(
+                    &assign.value,
+                    ctx,
+                ) else {
+                    unsupported_class_declaration(
+                        ctx,
+                        &class_name,
+                        "unsupported statement in class body",
+                        stmt.range(),
+                    );
+                    continue;
+                };
+                if kind != sifr_ir::DeclarationDescriptorKind::Class {
+                    ctx.error_with_code_at(
+                        DiagnosticCode::META_MALFORMED_DECLARATION,
+                        "descriptor function is not valid on a consumed class assignment"
+                            .to_string(),
+                        assign.value.range(),
+                    );
+                } else if assign.targets.len() != 1
+                    || !matches!(assign.targets.first(), Some(Expr::Name(_)))
+                {
+                    ctx.error_with_code_at(
+                        DiagnosticCode::META_MALFORMED_DECLARATION,
+                        "a consumed class descriptor requires one simple assignment target"
+                            .to_string(),
+                        stmt.range(),
+                    );
                 }
             }
             // Method definitions

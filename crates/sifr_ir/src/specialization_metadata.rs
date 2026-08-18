@@ -107,6 +107,62 @@ pub struct ConstSpecializationRequest {
     pub range: TextRange,
 }
 
+/// The declaration location accepted by one package descriptor function.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum DeclarationDescriptorKind {
+    Field,
+    Class,
+    Method,
+    Type,
+}
+
+/// Canonical identity of a package-owned class-adapter provider.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ClassAdapterProviderDeclaration {
+    pub module: String,
+    pub function: String,
+    pub descriptor_module: String,
+    pub descriptor_symbol: String,
+    pub descriptor_type: Type,
+    pub range: TextRange,
+}
+
+/// Canonical declaration exported by a package descriptor function.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DeclarationDescriptorFunction {
+    pub module: String,
+    pub function: String,
+    pub provider_module: String,
+    pub provider_function: String,
+    pub descriptor_type: Type,
+    pub return_type: Type,
+    pub kind: DeclarationDescriptorKind,
+    pub range: TextRange,
+}
+
+/// Compiler-sealed identity for a statically checked callable const value.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct CallableIdentity {
+    pub module: String,
+    pub owner: Option<String>,
+    pub symbol: String,
+    pub generic_arguments: Vec<String>,
+    pub signature: String,
+}
+
+/// One evaluated descriptor attached to an existing declaration target.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TypedDeclarationDescriptor {
+    pub owner: String,
+    pub target_kind: DeclarationDescriptorKind,
+    pub target_identity: String,
+    pub provider_module: String,
+    pub provider_function: String,
+    pub value_type: Type,
+    pub value: StaticProgramValue,
+    pub range: TextRange,
+}
+
 /// Closed package-neutral value retained from successful const specialization.
 ///
 /// Integers use canonical decimal text so later compilation stages do not need
@@ -122,6 +178,7 @@ pub enum StaticProgramValue {
     Tuple(Vec<Self>),
     List(Vec<Self>),
     Record(Vec<(String, Self)>),
+    CallableIdentity(CallableIdentity),
 }
 
 /// A package-owned, compile-time specialization result retained by the frontend.
