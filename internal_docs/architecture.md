@@ -854,8 +854,15 @@ frontend authorities shared by CLI, build, tests, and editor analysis. This is c
 Sifr does not expose runtime reflection or package-name-specific compiler branches.
 
 The Native Pydantic-Sifr consumer architecture is documented in
-[`native_pydantic_sifr_architecture.md`](native_pydantic_sifr_architecture.md). Its ad hoc phase
-record remains separate under `plans/issues/archive/` and owns milestone and delivery evidence.
+[`native_pydantic_sifr_architecture.md`](native_pydantic_sifr_architecture.md).
+The architecture includes the package-neutral static class-adapter contract.
+This contract supports typed declaration descriptors, erased marker bases,
+checked handler references, and attached package APIs.
+
+The completed engine phase remains under `plans/issues/archive/`. The active
+ergonomics phase remains under `plans/issues/active/`. These records own
+milestones and delivery evidence. The ergonomics phase is
+[`ad-hoc-static-class-adapters-and-pydantic-ergonomics.md`](../plans/issues/active/ad-hoc-static-class-adapters-and-pydantic-ergonomics.md).
 
 ### 5. CI Quality Gates
 

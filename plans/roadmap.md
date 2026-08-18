@@ -89,6 +89,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | GENC-NAN | Ad Hoc Generated NaN Constant Clippy Quality | completed and audited | [adhoc_generated_nan_constant_clippy_quality.md](./issues/archive/adhoc_generated_nan_constant_clippy_quality.md) | PR #3103 emits canonical non-finite float constants, removes the release divergence, and restores blocking `generated_code_quality:full` for release. |
 | REVIEWER-RESTORE | Ad Hoc Distinct Release Reviewer Restoration | active, non-blocking | [ad-hoc-distinct-release-reviewer-restoration.md](./issues/active/ad-hoc-distinct-release-reviewer-restoration.md) | Replace the expiring Phase 40 single-maintainer protected-approval exception with a distinct release/distribution reviewer while preserving historical waiver-bound evidence. |
 | 41 | Native Pydantic-Sifr | implementation closed; installed structural release artifact tracked by #3233 | [phase record](./issues/archive/ad-hoc-native-pydantic-sifr-architecture.md), [architecture](../internal_docs/native_pydantic_sifr_architecture.md), [superseded phase note](./phases/41_typed_data_model_and_validation.md) | Native package/core, conformance, documentation, and demo are merged; the package-neutral installed-sysroot asset omission remains in issue #3233. |
+| PS-2 | Static Class Adapters and Pydantic Ergonomics | proposed, M0 contract lock is next | [phase record](./issues/active/ad-hoc-static-class-adapters-and-pydantic-ergonomics.md), [architecture](../internal_docs/native_pydantic_sifr_architecture.md) | Add package-neutral static class adapters, then use them for the complete selected Pydantic-Sifr declaration and model API. |
 | 42 | Web Framework and Platform Expansion | planned | [42_web_framework_and_platform_expansion.md](./phases/42_web_framework_and_platform_expansion.md) | Web stack with typed extractors and platform expansion baseline |
 | 43 | Data Science and ML | planned | [43_data_science_ml.md](./phases/43_data_science_ml.md) | DataFrame, tensor, and ML inference workflows |
 
@@ -122,7 +123,8 @@ flowchart LR
     p38 --> p39["Phase 39\nRust Interop"]
     p39 --> p40["Phase 40\nStable GA Governance"]
     p40 --> p41["Phase 41\nNative Pydantic-Sifr"]
-    p41 --> p42["Phase 42\nWeb + Platform Expansion"]
+    p41 --> ps2["PS-2\nPydantic Ergonomics"]
+    ps2 --> p42["Phase 42\nWeb + Platform Expansion"]
     p42 --> p43["Phase 43\nData Science + ML"]
 ```
 
