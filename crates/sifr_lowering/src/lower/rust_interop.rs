@@ -28,25 +28,20 @@ pub(in crate::lower) fn collect_rust_opaque_close_methods(stmts: &[Stmt], ctx: &
         let Stmt::ClassDef(class_def) = stmt else {
             continue;
         };
-        let opaque = class_def.decorator_list.iter().find_map(|decorator| {
-            let Expr::Call(call) = &decorator.expression else {
-                return None;
-            };
-            let Expr::Attribute(attribute) = call.func.as_ref() else {
-                return None;
-            };
-            let Expr::Name(root) = attribute.value.as_ref() else {
-                return None;
-            };
-            if root.id.as_str() != "rust" || attribute.attr.as_str() != "opaque" {
-                return None;
-            }
-            Some(call)
-        });
+        let opaque = rust_opaque_decorator_call(&class_def.decorator_list);
         let Some(opaque) = opaque else {
             continue;
         };
         ctx.rust_opaque_classes.insert(class_def.name.to_string());
+        if opaque.arguments.keywords.iter().any(|keyword| {
+            keyword
+                .arg
+                .as_ref()
+                .is_some_and(|name| name.as_str() == "structural")
+        }) {
+            ctx.rust_structural_classes
+                .insert(class_def.name.to_string());
+        }
         let close_method = opaque.arguments.keywords.iter().find_map(|keyword| {
             if keyword
                 .arg
@@ -66,6 +61,34 @@ pub(in crate::lower) fn collect_rust_opaque_close_methods(stmts: &[Stmt], ctx: &
                 .insert(format!("{}.{}", class_def.name, close_method));
         }
     }
+}
+
+pub(in crate::lower) fn has_rust_opaque_structural_mapping_syntax(
+    decorators: &[Decorator],
+) -> bool {
+    rust_opaque_decorator_call(decorators).is_some_and(|opaque| {
+        opaque.arguments.keywords.iter().any(|keyword| {
+            keyword
+                .arg
+                .as_ref()
+                .is_some_and(|name| name.as_str() == "structural")
+        })
+    })
+}
+
+fn rust_opaque_decorator_call(decorators: &[Decorator]) -> Option<&ExprCall> {
+    decorators.iter().find_map(|decorator| {
+        let Expr::Call(call) = &decorator.expression else {
+            return None;
+        };
+        let Expr::Attribute(attribute) = call.func.as_ref() else {
+            return None;
+        };
+        let Expr::Name(root) = attribute.value.as_ref() else {
+            return None;
+        };
+        (root.id.as_str() == "rust" && attribute.attr.as_str() == "opaque").then_some(call)
+    })
 }
 
 impl RustInteropStubBody {

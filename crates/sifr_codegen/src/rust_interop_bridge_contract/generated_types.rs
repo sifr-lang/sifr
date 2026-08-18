@@ -1,8 +1,8 @@
 use super::{
-    ModuleCatalog, RustGeneratedBridgeField, RustGeneratedBridgeType, RustGeneratedBridgeTypeKind,
-    RustGeneratedBridgeVariant,
+    ModuleCatalog, OpaqueRustType, RustGeneratedBridgeField, RustGeneratedBridgeType,
+    RustGeneratedBridgeTypeKind, RustGeneratedBridgeVariant,
 };
-use sifr_ir::{HirClass, RustInteropDecoratorKind, RustInteropValue};
+use sifr_ir::HirClass;
 use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -301,24 +301,19 @@ fn catalog_contains_bridge_type(catalog: &ModuleCatalog, name: &str, is_enum: bo
 }
 
 pub(super) fn opaque_rust_type_path(class: &HirClass) -> Option<String> {
-    class
-        .rust_interop
-        .iter()
-        .find(|declaration| declaration.kind == RustInteropDecoratorKind::Opaque)?
-        .arguments
-        .iter()
-        .find(|argument| argument.name.as_deref() == Some("type"))
-        .and_then(|argument| match &argument.value {
-            RustInteropValue::TargetPath(path) => Some(path.dotted()),
-            _ => None,
-        })
+    sifr_ir::rust_opaque_type_path(&class.rust_interop).map(sifr_ir::RustTargetPath::dotted)
+}
+
+pub(super) fn opaque_rust_structural_mapping_path(class: &HirClass) -> Option<String> {
+    sifr_ir::rust_opaque_structural_mapping(&class.rust_interop)
+        .map(sifr_ir::RustTargetPath::dotted)
 }
 
 pub(super) fn opaque_type_definition(
     name: &str,
     current_module: Option<&String>,
     module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
-) -> Result<Option<String>, String> {
+) -> Result<Option<OpaqueRustType>, String> {
     let current_key = current_module.cloned();
     if let Some(target) = module_catalogs
         .get(&current_key)

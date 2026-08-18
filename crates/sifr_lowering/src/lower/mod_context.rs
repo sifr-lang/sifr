@@ -86,6 +86,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) rust_consuming_methods: HashSet<String>,
     /// Local and imported class names backed by sealed Rust opaque resources.
     pub(in crate::lower) rust_opaque_classes: HashSet<String>,
+    /// Rust opaque value classes with an explicit package structural mapping.
+    pub(in crate::lower) rust_structural_classes: HashSet<String>,
     /// Qualified context exits callable only from dedicated Python-with lowering.
     pub(in crate::lower) python_context_exit_methods: HashSet<String>,
     /// Current scope for name resolution
@@ -261,6 +263,7 @@ impl LowerCtx {
             python_consuming_methods: HashSet::new(),
             rust_consuming_methods: HashSet::new(),
             rust_opaque_classes: HashSet::new(),
+            rust_structural_classes: HashSet::new(),
             python_context_exit_methods: HashSet::new(),
             scope: Scope::new(),
             task_group_error_types: HashMap::new(),

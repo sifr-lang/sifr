@@ -1,0 +1,102 @@
+# fixture: structural_bridge_calls
+# evidence: positive/specialized_structural_value_and_output
+# evidence-status: passing
+# execution-kind: runtime-observed
+# expected-result: pass
+
+from sifr.meta import Structural
+from sifr.json import JsonValue
+
+
+class StructuralBridgeError(Error):
+    message: str
+
+
+@rust.opaque(
+    type=bridge.structural.Token,
+    structural=bridge.structural.TokenMapping,
+    send=True,
+    sync=True,
+    clone=none,
+    close=none,
+)
+class MappedToken:
+    @rust(bridge.structural.mapped_value)
+    def value(self) -> Result[str, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust.structural
+@rust(bridge.structural.observe)
+def observe_structural[T: Structural](value: T) -> Result[str, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust.structural
+@rust(bridge.structural.construct_mapped)
+def construct_mapped[T: Structural](value: str) -> Result[T, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust.structural
+@rust(bridge.structural.structural_output)
+def structural_output[T: Structural]() -> Result[T, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust(bridge.structural.consume_mapped)
+def consume_mapped(own value: MappedToken) -> Result[str, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust(bridge.structural.token_drop_count)
+def token_drop_count() -> Result[uint32, StructuralBridgeError | RustPanicError]: ...
+
+
+def mapped_panic_is_contained() -> bool:
+    try:
+        _value: MappedToken = construct_mapped("panic")
+    except StructuralBridgeError:
+        return False
+    except RustPanicError:
+        return True
+    return False
+
+
+def verify_specialized_structural_value_and_output() -> Result[str, StructuralBridgeError | RustPanicError]:
+    try:
+        mapped: MappedToken = construct_mapped("installed-token")
+        mapped_value: str = mapped.value()
+        assert mapped_value == "installed-token"
+        projection: str = observe_structural(mapped)
+        assert projection == "records=1;sequences=0;optionals=0;strings=installed-token"
+        invalid_rejected: bool = False
+        try:
+            _invalid: MappedToken = construct_mapped("invalid")
+        except StructuralBridgeError:
+            invalid_rejected = True
+        except RustPanicError:
+            invalid_rejected = False
+        assert invalid_rejected
+        assert mapped_panic_is_contained()
+        output: dict[str, JsonValue] = structural_output()
+        output_name: JsonValue | None = output.get("name")
+        assert output_name is not None
+        if output_name is not None:
+            assert output_name.as_str() == "mapped-output"
+        consumed: str = consume_mapped(mapped)
+        assert consumed == "installed-token;drops=1"
+        drops: uint32 = token_drop_count()
+        expected_drops: uint32 = 1
+        assert drops == expected_drops
+        return "mapped=installed-token;output=mapped-output;drops=1"
+    except StructuralBridgeError as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+
+
+def main() -> Result[None, StructuralBridgeError | RustPanicError]:
+    try:
+        result: str = verify_specialized_structural_value_and_output()
+        print(result)
+    except StructuralBridgeError as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+    return None

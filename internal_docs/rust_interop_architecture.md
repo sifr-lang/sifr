@@ -197,6 +197,8 @@ RustInteropDecoratorValue =
 Opaque decorator keys are fixed:
 
 - `type=` names the Rust type wrapped by the opaque handle.
+- `structural=` optionally names the package-owned Rust mapping type for a
+  native value that participates in structural construction and projection.
 - `send=` and `sync=` declare whether the generated Sifr handle may cross Sifr task/thread boundaries.
 - `clone=` declares generated clone behavior.
 - `close=` declares cleanup behavior.
@@ -212,6 +214,17 @@ class aliases and re-exports. Package-bridge members forward the borrowed or
 owned `Handle<T>` receiver as the first bridge argument. `Self.method` members
 instead access the wrapped Rust value through `inner_ref` or `into_inner`, so
 their bridge-signature contract does not invent an explicit receiver argument.
+
+An opaque declaration with `structural=Mapping` is a native value mapping, not
+a resource handle. It is emitted as
+`sifr_runtime::interop::structural::MappedValue<T, Mapping>`. The mapping type
+must implement `StructuralMapping<T>` and supplies the exact shape identity,
+optional nominal identity, node-scoped construction, and borrowed projection.
+The generated Cargo probe verifies that trait implementation before codegen.
+The Sifr class has no structural fields, parent, or type parameters. It cannot
+declare an explicit close method or thread affinity; moving the value transfers
+`T`, and normal Rust drop cleans it up. `clone=arc` and custom resource-clone
+policies do not apply to mapped values.
 
 Every opaque instance member returns `Result[...]`. A `Self.method` target is
 valid only on a regular instance method. Generated code resolves `inner_ref`
@@ -438,6 +451,22 @@ contract described here. `Any`, `Unknown`, an unspecialized type variable,
 functions, affine resources, and values containing unsupported borrowed or
 opaque members do not satisfy it. The compiler reports the unsupported member
 path at the declaration or specialization site.
+
+Package-defined native values satisfy `Structural` only through the opt-in
+`@rust.opaque(..., structural=Mapping)` contract. The runtime carrier delegates
+`StructuralType`, `StructuralConstruct`, and `StructuralProject` to the checked
+`StructuralMapping<T>` implementation. Construction returns a value only after
+the mapping succeeds, projection borrows the native value, and the generated
+Rust call boundary contains mapping panics in the declaration's typed panic
+channel. This mechanism preserves specialized identities such as URLs,
+multi-host URLs, and compiled patterns without adding them to the compiler's
+ordinary direct-value table.
+
+Project structural demand also emits structural implementations for imported
+checked stdlib records after canonical stdlib name sealing. This permits native
+structural output to construct values such as `dict[str, JsonValue]` directly;
+the record retains the exact `sifr.json.JsonValue` nominal and shape identity
+and does not serialize through JSON bytes.
 
 `bytes` has one structural encoding: a scalar byte buffer. The compiler supports
 that encoding for a direct record field. It rejects `bytes` inside a list, set,

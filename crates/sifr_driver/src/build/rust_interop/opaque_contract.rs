@@ -6,6 +6,7 @@ use sifr_ir::{RustInteropValue, RustTargetPath};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct OpaqueContract {
     pub(super) rust_type: RustTargetPath,
+    pub(super) structural_mapping: Option<RustTargetPath>,
     pub(super) send: bool,
     pub(super) sync: bool,
     pub(super) clone_policy: OpaqueClonePolicy,
@@ -66,6 +67,7 @@ pub(super) fn parse_opaque_contract(
     }
 
     let mut rust_type = None;
+    let mut structural_mapping = None;
     let mut send = false;
     let mut sync = false;
     let mut clone_policy = OpaqueClonePolicy::None;
@@ -87,6 +89,13 @@ pub(super) fn parse_opaque_contract(
                 _ => diagnostics.push(malformed(
                     argument.span,
                     "`type=` must be a dotted Rust target path",
+                )),
+            },
+            "structural" => match &argument.value {
+                RustInteropValue::TargetPath(path) => structural_mapping = Some(path.clone()),
+                _ => diagnostics.push(malformed(
+                    argument.span,
+                    "`structural=` must be a dotted Rust mapping type path",
                 )),
             },
             "send" => match &argument.value {
@@ -150,12 +159,41 @@ pub(super) fn parse_opaque_contract(
         ));
         return Err(diagnostics);
     };
+    if structural_mapping.is_some()
+        && matches!(
+            close_policy,
+            OpaqueClosePolicy::Close | OpaqueClosePolicy::AsyncClose
+        )
+    {
+        diagnostics.push(malformed(
+            declaration.declaration.span,
+            "structurally mapped opaque values cannot declare an explicit close method",
+        ));
+    }
+    if structural_mapping.is_some() && thread_affinity != OpaqueThreadAffinity::None {
+        diagnostics.push(malformed(
+            declaration.declaration.span,
+            "structurally mapped opaque values cannot declare thread affinity",
+        ));
+    }
+    if structural_mapping.is_some()
+        && matches!(
+            clone_policy,
+            OpaqueClonePolicy::Arc | OpaqueClonePolicy::Custom
+        )
+    {
+        diagnostics.push(malformed(
+            declaration.declaration.span,
+            "structurally mapped opaque values cannot use resource-sharing clone policies",
+        ));
+    }
     if !diagnostics.is_empty() {
         return Err(diagnostics);
     }
 
     Ok(OpaqueContract {
         rust_type,
+        structural_mapping,
         send,
         sync,
         clone_policy,

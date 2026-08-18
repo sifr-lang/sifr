@@ -180,10 +180,19 @@ fn supports_structural_bridge_type_inner(
             parent_class,
             ..
         } => {
+            if ctx.rust_opaque_classes.contains(name) {
+                return ctx.rust_structural_classes.contains(name)
+                    && parent_class.is_none()
+                    && type_args.is_empty()
+                    && fields.is_empty()
+                    && ctx
+                        .class_declared_type_params
+                        .get(name)
+                        .is_none_or(Vec::is_empty);
+            }
             if parent_class.is_some()
                 || ctx.error_types.contains(name)
                 || ctx.python_opaque_classes.contains_key(name)
-                || ctx.rust_opaque_classes.contains(name)
                 || !structural_identity_inputs_supported(name, ctx)
             {
                 return false;

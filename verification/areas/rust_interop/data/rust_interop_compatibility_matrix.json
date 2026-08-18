@@ -190,9 +190,9 @@
       "capability": "monomorphized structural Rust bridge calls",
       "execution_kind": "runtime-observed",
       "required_crates": [],
-      "positive_evidence": {"id": "nested_recursive_structural_roundtrip", "status": "passing"},
+      "positive_evidence": {"id": "specialized_structural_value_and_output", "status": "passing"},
       "negative_evidence": {"id": "shape_callback_and_lifetime_mismatches_rejected", "status": "passing"},
-      "notes": "Generated monomorphized bridge calls construct and project nested generic/recursive values through an opaque source and use the typed call-scoped callback bridge; invalid structural generic placement and incompatible Rust signatures fail deliberately."
+      "notes": "Generated monomorphized bridge calls construct and project nested generic/recursive values, package-mapped native nominals, and direct structural JSON output; typed callback, invalid-shape, panic, move, and cleanup behavior pass while incompatible Rust signatures fail deliberately."
     },
     {
       "id": "static_program_arena_bridge",

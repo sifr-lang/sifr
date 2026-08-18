@@ -7,6 +7,9 @@ use sifr_ir::{
 };
 use sifr_type_system::{ParamConvention, Type};
 
+#[path = "rust_interop_plan_tests/mapped_structural_tests.rs"]
+mod mapped_structural_tests;
+
 #[test]
 fn interop_build_plan_collects_function_class_and_method_declarations() {
     let module = HirModule {

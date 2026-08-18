@@ -6,10 +6,12 @@ use crate::SifrInt;
 
 mod arena;
 mod implementations;
+mod mapped;
 mod slots;
 mod static_program;
 
 pub use arena::{ArenaNode, StructuralArena};
+pub use mapped::{MappedValue, StructuralMapping};
 pub use sifr_structural_identity::{
     binary_container, enum_shape, metadata, nominal_record, primitive, recursive_reference,
     refined, slot_table_identity, static_program_identity, tuple, unary_container, union,

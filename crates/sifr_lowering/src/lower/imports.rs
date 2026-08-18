@@ -70,6 +70,13 @@ fn register_imported_rust_opaque_class(
     {
         ctx.rust_opaque_classes.insert(local_name.to_string());
     }
+    if externals
+        .rust_structural_classes
+        .get(module)
+        .is_some_and(|classes| classes.contains(source_name))
+    {
+        ctx.rust_structural_classes.insert(local_name.to_string());
+    }
 }
 
 pub(in crate::lower) fn class_aliases_by_module(

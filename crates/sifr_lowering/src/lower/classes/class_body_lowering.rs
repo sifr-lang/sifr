@@ -4,7 +4,7 @@ use super::parameter_conventions::{
     class_method_param_convention, class_method_param_default, declared_method_receiver_convention,
     prepare_method_param_ownership,
 };
-use super::rust_opaque_validation::validate_rust_opaque_close_method;
+use super::rust_opaque_validation as opaque;
 use super::{
     collect_enum_variants, constructor_uninitialized_storage_at_first_self_use,
     function_body_contains_yield, get_newtype_inner, has_decorator, is_enum_class,
@@ -35,7 +35,7 @@ pub(in crate::lower) fn lower_class(
     let is_python_opaque = ctx.python_opaque_classes.contains_key(&class_name);
     let is_protocol = is_protocol_class(class_def);
     let newtype_inner = get_newtype_inner(class_def);
-
+    opaque::validate_structurally_mapped_opaque_class(class_def, &class_ty, ctx);
     // For protocol definitions, emit a HirClass with is_protocol=true
     if is_protocol {
         let methods_sigs = match &class_ty {
@@ -721,7 +721,7 @@ pub(in crate::lower) fn lower_class(
         false,
         false,
     );
-    validate_rust_opaque_close_method(class_def, &hir_methods, &rust_interop, ctx);
+    opaque::validate_rust_opaque_close_method(class_def, &hir_methods, &rust_interop, ctx);
 
     let semantic_close_methods = hir_methods
         .iter()

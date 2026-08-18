@@ -17,8 +17,8 @@ use crate::rust_interop_plan::{RustInteropOwner, RustInteropPlanDeclaration};
 use generated_types::{
     absolute_runtime_target, bridge_type_definition_module, class_bridge_declaration_name,
     class_bridge_definition_module, generated_bridge_type_path, generated_class_bridge_type_path,
-    is_generated_bridge_type_path, opaque_rust_type_path, opaque_type_definition,
-    GeneratedTypeCollector,
+    is_generated_bridge_type_path, opaque_rust_structural_mapping_path, opaque_rust_type_path,
+    opaque_type_definition, GeneratedTypeCollector,
 };
 use sifr_ir::HirModule;
 use sifr_type_system::{ParamConvention, ParamOwnership, Type};
@@ -319,10 +319,16 @@ fn method_slot_contract(
 pub(crate) struct ModuleCatalog {
     functions: BTreeMap<String, ModuleFunction>,
     methods: BTreeMap<(String, String), ModuleFunction>,
-    opaque_classes: BTreeMap<String, String>,
+    opaque_classes: BTreeMap<String, OpaqueRustType>,
     error_classes: BTreeSet<String>,
     record_classes: BTreeSet<String>,
     enum_classes: BTreeSet<String>,
+}
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) struct OpaqueRustType {
+    pub(crate) native: String,
+    pub(crate) structural_mapping: Option<String>,
 }
 
 impl ModuleCatalog {
@@ -395,7 +401,13 @@ impl ModuleCatalog {
                 .any(|declaration| declaration.kind == sifr_ir::RustInteropDecoratorKind::Opaque)
             {
                 if let Some(target) = opaque_rust_type_path(class) {
-                    opaque_classes.insert(class.name.clone(), target);
+                    opaque_classes.insert(
+                        class.name.clone(),
+                        OpaqueRustType {
+                            native: target,
+                            structural_mapping: opaque_rust_structural_mapping_path(class),
+                        },
+                    );
                 }
             }
             if class.is_enum() {
@@ -738,8 +750,8 @@ pub(crate) fn bridge_type_contract(
     }
 }
 
-fn opaque_handle_type(name: &str, target: &str) -> RustBridgeTypeContract {
-    let rust_type = rust_opaque_handle_type(target);
+fn opaque_handle_type(name: &str, target: &OpaqueRustType) -> RustBridgeTypeContract {
+    let rust_type = rust_opaque_storage_type(&target.native, target.structural_mapping.as_deref());
     RustBridgeTypeContract {
         sifr_type: name.to_string(),
         rust_borrowed_type: Some(format!("&{rust_type}")),
@@ -755,6 +767,20 @@ pub fn rust_opaque_handle_type(target: &str) -> String {
     format!(
         "::sifr_runtime::interop::Handle<{}>",
         absolute_runtime_target(target)
+    )
+}
+
+#[must_use]
+pub(crate) fn rust_opaque_storage_type(target: &str, structural_mapping: Option<&str>) -> String {
+    structural_mapping.map_or_else(
+        || rust_opaque_handle_type(target),
+        |mapping| {
+            format!(
+                "::sifr_runtime::interop::structural::MappedValue<{}, {}>",
+                absolute_runtime_target(target),
+                absolute_runtime_target(mapping)
+            )
+        },
     )
 }
 

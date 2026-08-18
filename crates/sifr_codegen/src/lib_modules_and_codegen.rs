@@ -130,6 +130,8 @@ pub struct StdlibCode {
     /// Map of `module_name` -> (`class_name` -> ordered class fields).
     /// Multi-module project codegen also uses this for local helper modules.
     pub module_class_fields: HashMap<String, HashMap<String, Vec<(String, Type)>>>,
+    /// Checked stdlib classes retained for late project-policy implementations.
+    pub module_class_templates: HashMap<String, HashMap<String, sifr_ir::HirClass>>,
 }
 
 pub(super) fn module_func_signatures(module: &HirModule) -> ModuleFuncSignatures {
@@ -372,6 +374,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
 
     // Second pass: emit the actual code
     emitter.emit_named_module(module, false, false, module_name);
+    emitter.emit_imported_stdlib_structural_impls(module, stdlib_code);
 
     // Build stdlib preamble first so we can check for error type references
     let mut stdlib_preamble = String::new();
