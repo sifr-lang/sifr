@@ -7,10 +7,6 @@
 # In-place sorted-insert (borrow-by-default with `mut`):
 #   insort_left(mut a, x)    -- insert x into sorted list a in-place (left variant)
 #   insort_right(mut a, x)   -- insert x into sorted list a in-place (right variant)
-#
-# Functional sorted-insert (backward compatibility):
-#   insort_left_copy(a, x) -> list   -- returns new sorted list
-#   insort_right_copy(a, x) -> list  -- returns new sorted list
 def bisect_left[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = None) -> int:
     left: int = lo
     if left < 0:
@@ -78,35 +74,3 @@ def insort_right[T: Comparable](mut a: list[T], x: T, lo: int = 0, hi: int | Non
 
 def insort[T: Comparable](mut a: list[T], x: T, lo: int = 0, hi: int | None = None) -> None:
     insort_right(a, x, lo, hi)
-
-# ── Functional API (backward compatibility) ───────────────────────────────────
-
-def insort_left_copy[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = None) -> list[T]:
-    pos: int = bisect_left(a, x, lo, hi)
-    result: list[T] = []
-    i: int = 0
-    while i < len(a):
-        if i == pos:
-            result.append(x)
-        val: T | None = a[i]
-        if val is not None:
-            result.append(val)
-        i = i + 1
-    if pos == len(a):
-        result.append(x)
-    return result
-
-def insort_right_copy[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = None) -> list[T]:
-    pos: int = bisect_right(a, x, lo, hi)
-    result: list[T] = []
-    i: int = 0
-    while i < len(a):
-        if i == pos:
-            result.append(x)
-        val: T | None = a[i]
-        if val is not None:
-            result.append(val)
-        i = i + 1
-    if pos == len(a):
-        result.append(x)
-    return result

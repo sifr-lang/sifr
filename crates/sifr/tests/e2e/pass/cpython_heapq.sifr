@@ -1,7 +1,7 @@
 # CPython test_heapq.py — ported assertions for sifr.heapq
 # Updated to use the in-place mut-parameter API (borrow-by-default behavior)
 from sifr.test import assert_eq
-from sifr.heapq import heapify, heappush, heappop, heappop_rest, nsmallest, nlargest, heappushpop, heapreplace, merge
+from sifr.heapq import heapify, heappush, heappop, nsmallest, nlargest, heappushpop, heapreplace, merge
 
 def assert_push_pop_cases():
     h1: list[int] = []
@@ -77,7 +77,7 @@ def assert_pushpop_replace_cases():
     if r2 is not None:
         assert_eq(r2, 3)
 
-    # --- heapreplace (uses functional API internally) ---
+    # --- heapreplace mutates the heap in place ---
     h7: list[int] = [1, 5, 7]
     r3: int | None = heapreplace(h7, 10)
     if r3 is not None:

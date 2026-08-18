@@ -333,7 +333,7 @@ pub(crate) fn lowers_test_intrinsics_via_registry() {
 }
 
 #[test]
-pub(crate) fn collections_bridge_helpers_are_not_intrinsics() {
+pub(crate) fn retired_collections_helpers_are_not_intrinsics() {
     for retired in [
         "new_set",
         "set_from_list",
@@ -346,7 +346,7 @@ pub(crate) fn collections_bridge_helpers_are_not_intrinsics() {
     ] {
         assert!(
             lower_intrinsic(retired, &["value".to_string()]).is_none(),
-            "{retired} should lower through _sifr.collections private Rust interop declarations"
+            "{retired} must remain absent after the list-backed compatibility API is removed"
         );
     }
 }

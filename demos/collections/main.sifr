@@ -1,13 +1,13 @@
 # Reference: collections
-from sifr.collections import Counter, from_list, deque, set_from_list, set_union, set_intersection, set_len
+from sifr.collections import Counter, from_list, deque
 from sifr.test import assert_bool_vector_eq
 
 def collect_set_and_counter_actual() -> list[bool]:
     actual: list[bool] = []
-    left: list[int] = set_from_list([1, 2, 3])
-    right: list[int] = set_from_list([3, 4, 5])
-    actual.append(set_len(set_union(left, right)) == 5)
-    actual.append(set_len(set_intersection(left, right)) == 1)
+    left: set[int] = set([1, 2, 3])
+    right: set[int] = set([3, 4, 5])
+    actual.append(len(left.union(right)) == 5)
+    actual.append(len(left.intersection(right)) == 1)
 
     counts: Counter[str] = from_list(["x", "y", "x", "z", "x", "y"])
     actual.append(counts.get("x") == 3)

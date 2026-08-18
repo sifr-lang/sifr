@@ -1,21 +1,6 @@
-// --- stdlib: sifr.test ---
-fn assert_eq<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    actual: &T,
-    expected: &T,
-) {
-    assert!(* actual == * expected);
-}
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0 as i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i = i + (1 as i64);
-    }
-}
-
+// src/main.rs
 // --- stdlib: sifr.heapq ---
-fn _sift_down<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd>(
     data: &mut Vec<T>,
     mut pos: i64,
     n: i64,
@@ -23,8 +8,8 @@ fn _sift_down<T: Clone + std::fmt::Display + PartialOrd + 'static>(
     let mut done: bool = false;
     while !done {
         let mut smallest: i64 = pos;
-        let left: i64 = ((2 as i64) * pos) + (1 as i64);
-        let right: i64 = ((2 as i64) * pos) + (2 as i64);
+        let left: i64 = ((2_i64) * pos) + (1_i64);
+        let right: i64 = ((2_i64) * pos) + (2_i64);
         if left < n {
             let s_val: Option<T> = {
                 let __sifr_index_list = &data;
@@ -117,7 +102,7 @@ fn _sift_down<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                         };
                         if __idx_norm >= 0 {
                             if let Some(__elem) = data.get_mut(__idx_norm as usize) {
-                                *__elem = tmp_sm;
+                                *__elem = tmp_sm.clone();
                             }
                         }
                     }
@@ -130,7 +115,7 @@ fn _sift_down<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                         };
                         if __idx_norm >= 0 {
                             if let Some(__elem) = data.get_mut(__idx_norm as usize) {
-                                *__elem = tmp_pos;
+                                *__elem = tmp_pos.clone();
                             }
                         }
                     }
@@ -140,16 +125,16 @@ fn _sift_down<T: Clone + std::fmt::Display + PartialOrd + 'static>(
         }
     }
 }
-fn _sift_up<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd>(
     heap: &mut Vec<T>,
     mut pos: i64,
 ) {
     let mut done: bool = false;
     while !done {
-        if pos <= (0 as i64) {
+        if pos <= (0_i64) {
             done = true;
         } else {
-            let parent: i64 = (pos - (1 as i64)) / (2 as i64);
+            let parent: i64 = (pos - (1_i64)) / (2_i64);
             let p_val: Option<T> = {
                 let __sifr_index_list = &heap;
                 let __sifr_index_i = parent;
@@ -182,7 +167,7 @@ fn _sift_up<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                             };
                             if __idx_norm >= 0 {
                                 if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                                    *__elem = c_val;
+                                    *__elem = c_val.clone();
                                 }
                             }
                         }
@@ -195,7 +180,7 @@ fn _sift_up<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                             };
                             if __idx_norm >= 0 {
                                 if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                                    *__elem = p_val;
+                                    *__elem = p_val.clone();
                                 }
                             }
                         }
@@ -212,46 +197,37 @@ fn _sift_up<T: Clone + std::fmt::Display + PartialOrd + 'static>(
         }
     }
 }
-fn heapify<T: Clone + std::fmt::Display + PartialOrd + 'static>(data: &mut Vec<T>) {
+fn heapify<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(data: &mut Vec<T>) {
     "Convert list to a min-heap in-place. O(n) time.".to_string();
     let n: i64 = data.len() as i64;
-    let mut i: i64 = (n / (2 as i64)) - (1 as i64);
-    while i >= (0 as i64) {
+    let mut i: i64 = (n / (2_i64)) - (1_i64);
+    while i >= (0_i64) {
         _sift_down(data, i, n);
-        i = i - (1 as i64);
+        i -= 1_i64;
     }
 }
-fn heappush<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn heappush<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     heap: &mut Vec<T>,
     item: &T,
 ) {
     "Push item onto the heap in-place. O(log n) time.".to_string();
-    heap.push(item.clone());
-    let pos: i64 = (heap.len() as i64) - (1 as i64);
+    heap.push(item.clone().clone());
+    let pos: i64 = (heap.len() as i64) - (1_i64);
     _sift_up(heap, pos);
 }
-fn heappop<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     heap: &mut Vec<T>,
 ) -> Option<T> {
     "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
         .to_string();
     let n: i64 = heap.len() as i64;
-    if n == (0 as i64) {
+    if n == (0_i64) {
         return None;
     }
-    let top: Option<T> = {
-        let __sifr_index_list = &heap;
-        let __sifr_index_i = 0 as i64;
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_list.get(__sifr_index_norm).cloned()
-    };
+    let top: Option<T> = Some(heap[(0_i64) as usize].clone());
     let last: Option<T> = {
         let __sifr_index_list = &heap;
-        let __sifr_index_i = n - (1 as i64);
+        let __sifr_index_i = n - (1_i64);
         let __sifr_index_norm = if __sifr_index_i < 0 {
             ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
         } else {
@@ -259,12 +235,17 @@ fn heappop<T: Clone + std::fmt::Display + PartialOrd + 'static>(
         };
         __sifr_index_list.get(__sifr_index_norm).cloned()
     };
-    heap.pop();
+    {
+        let Some(__sifr_nonempty_pop_value) = heap.pop() else {
+            unreachable!("compiler-verified non-empty pop should return Some");
+        };
+        __sifr_nonempty_pop_value
+    };
     let n2: i64 = heap.len() as i64;
-    if n2 > (0 as i64) {
+    if n2 > (0_i64) {
         if let Some(last) = last {
             {
-                let __idx_raw = 0 as i64;
+                let __idx_raw = 0_i64;
                 let __idx_norm = if __idx_raw < 0 {
                     (heap.len() as i64) + __idx_raw
                 } else {
@@ -272,71 +253,63 @@ fn heappop<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                 };
                 if __idx_norm >= 0 {
                     if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                        *__elem = last;
+                        *__elem = last.clone();
                     }
                 }
             }
         }
-        _sift_down(heap, 0 as i64, n2);
+        _sift_down(heap, 0_i64, n2);
     }
-    return top;
+    top
 }
-fn heapify_copy<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    data: &Vec<T>,
-) -> Vec<T> {
-    let mut result: Vec<T> = vec![];
-    for val in data.iter().cloned() {
-        result.push(val.clone());
-    }
-    heapify(&mut result);
-    return result;
-}
-fn nsmallest<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn nsmallest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     n: i64,
     data: &Vec<T>,
 ) -> Vec<T> {
-    let mut heap: Vec<T> = heapify_copy(data);
+    let mut heap: Vec<T> = data.clone();
+    heapify(&mut heap);
     let mut result: Vec<T> = vec![];
-    let mut count: i64 = 0 as i64;
+    let mut count: i64 = 0_i64;
     while count < n {
-        if (heap.len() as i64) == (0 as i64) {
+        if ((heap.len() as i64) == (0_i64)) {
             return result;
         }
         let val: Option<T> = heappop(&mut heap);
         if let Some(val) = val {
-            result.push(val.clone());
+            result.push(val.clone().clone());
         }
-        count = count + (1 as i64);
+        count += 1_i64;
     }
-    return result;
+    result
 }
-fn nlargest<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn nlargest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     n: i64,
     data: &Vec<T>,
 ) -> Vec<T> {
-    if n <= (0 as i64) {
+    if n <= (0_i64) {
         return vec![];
     }
-    if n >= (data.len() as i64) {
+    if (n >= (data.len() as i64)) {
         let mut result: Vec<T> = vec![];
         for val in data.iter().cloned() {
-            result.push(val.clone());
+            result.push(val.clone().clone());
         }
         return result;
     }
-    let mut heap: Vec<T> = heapify_copy(data);
+    let mut heap: Vec<T> = data.clone();
+    heapify(&mut heap);
     let mut all_sorted: Vec<T> = vec![];
-    while (heap.len() as i64) > (0 as i64) {
+    while ((heap.len() as i64) > (0_i64)) {
         let val2: Option<T> = heappop(&mut heap);
         if let Some(val2) = val2 {
-            all_sorted.push(val2.clone());
+            all_sorted.push(val2.clone().clone());
         }
     }
     let mut result2: Vec<T> = vec![];
-    let mut i: i64 = (all_sorted.len() as i64) - (1 as i64);
-    let mut count: i64 = 0 as i64;
+    let mut i: i64 = (all_sorted.len() as i64) - (1_i64);
+    let mut count: i64 = 0_i64;
     while count < n {
-        if i < (0 as i64) {
+        if i < (0_i64) {
             return result2;
         }
         let v: Option<T> = {
@@ -350,35 +323,46 @@ fn nlargest<T: Clone + std::fmt::Display + PartialOrd + 'static>(
             __sifr_index_list.get(__sifr_index_norm).cloned()
         };
         if let Some(v) = v {
-            result2.push(v.clone());
+            result2.push(v.clone().clone());
         }
-        i = i - (1 as i64);
-        count = count + (1 as i64);
+        i -= 1_i64;
+        count += 1_i64;
     }
-    return result2;
+    result2
 }
+
+// --- stdlib: sifr.test ---
+fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+    assert_eq!(actual.len() as i64, expected.len() as i64);
+    let mut i: i64 = 0_i64;
+    while i < (actual.len() as i64) {
+        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
+        i += 1_i64;
+    }
+}
+// --- end stdlib ---
 
 fn collect_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let mut heap: Vec<i64> = vec![];
-    heappush(&mut heap, &(5 as i64));
-    heappush(&mut heap, &(1 as i64));
-    heappush(&mut heap, &(3 as i64));
+    heappush(&mut heap, &(5_i64));
+    heappush(&mut heap, &(1_i64));
+    heappush(&mut heap, &(3_i64));
     let first: Option<i64> = heappop(&mut heap);
     let second: Option<i64> = heappop(&mut heap);
-    actual.push(first.is_some() && (first == Some(1 as i64)));
-    actual.push(second.is_some() && (second == Some(3 as i64)));
-    let mut data: Vec<i64> = vec![4 as i64, 2 as i64, 7 as i64, 1 as i64, 5 as i64];
+    actual.push(first.is_some() && (first == Some(1_i64)));
+    actual.push(second.is_some() && (second == Some(3_i64)));
+    let mut data: Vec<i64> = vec![4_i64, 2_i64, 7_i64, 1_i64, 5_i64];
     heapify(&mut data);
     let top: Option<i64> = heappop(&mut data);
-    actual.push(top.is_some() && (top == Some(1 as i64)));
-    let items: Vec<i64> = vec![9 as i64, 3 as i64, 7 as i64, 1 as i64, 5 as i64];
-    actual.push((format!("{:?}", nsmallest(3 as i64, &items))).as_str() == ("[1, 3, 5]".to_string()).as_str());
-    actual.push((format!("{:?}", nlargest(2 as i64, &items))).as_str() == ("[9, 7]".to_string()).as_str());
+    actual.push(top.is_some() && (top == Some(1_i64)));
+    let items: Vec<i64> = vec![9_i64, 3_i64, 7_i64, 1_i64, 5_i64];
+    actual.push((format!("{:?}", nsmallest(3_i64, &items))).as_str() == ("[1, 3, 5]".to_string()).as_str());
+    actual.push((format!("{:?}", nlargest(2_i64, &items))).as_str() == ("[9, 7]".to_string()).as_str());
     let mut empty_heap: Vec<i64> = vec![];
     actual.push(heappop(&mut empty_heap) == None);
     actual.push((format!("{:?}", items)).as_str() == ("[9, 3, 7, 1, 5]".to_string()).as_str());
-    return actual;
+    actual
 }
 
 fn main() {

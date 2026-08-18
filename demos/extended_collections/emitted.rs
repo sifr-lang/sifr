@@ -1,98 +1,7 @@
 // src/main.rs
 use ::std::collections::HashMap;
 
-// --- stdlib: _sifr.collections ---
-fn _new_set_impl() -> Vec<i64> {
-    ::sifr_stdlib::collections::new_set()
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
-        .collect()
-}
-fn _set_from_list_impl(items: Vec<i64>) -> Vec<i64> {
-    ::sifr_stdlib::collections::set_from_list(
-            items
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-        )
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
-        .collect()
-}
-fn _set_add_impl(s: Vec<i64>, item: i64) -> Vec<i64> {
-    ::sifr_stdlib::collections::set_add(
-            s
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-            ::sifr_runtime::interop::SifrIntBridge::from(item),
-        )
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
-        .collect()
-}
-fn _set_contains_impl(s: &Vec<i64>, item: i64) -> bool {
-    ::sifr_stdlib::collections::set_contains(
-        &s
-            .iter()
-            .copied()
-            .map(::sifr_runtime::interop::SifrIntBridge::from)
-            .collect::<Vec<_>>(),
-        ::sifr_runtime::interop::SifrIntBridge::from(item),
-    )
-}
-fn _set_remove_impl(s: Vec<i64>, item: i64) -> Vec<i64> {
-    ::sifr_stdlib::collections::set_remove(
-            s
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-            ::sifr_runtime::interop::SifrIntBridge::from(item),
-        )
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
-        .collect()
-}
-fn _set_len_impl(s: &Vec<i64>) -> i64 {
-    ::sifr_stdlib::collections::set_len(
-            &s
-                .iter()
-                .copied()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-        )
-        .to_i64_saturating()
-}
-fn _set_union_impl(a: Vec<i64>, b: Vec<i64>) -> Vec<i64> {
-    ::sifr_stdlib::collections::set_union(
-            a
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-            b
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-        )
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
-        .collect()
-}
-fn _set_intersection_impl(a: Vec<i64>, b: Vec<i64>) -> Vec<i64> {
-    ::sifr_stdlib::collections::set_intersection(
-            a
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-            b
-                .into_iter()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-        )
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
-        .collect()
-}
+use ::std::collections::HashSet;
 
 // --- stdlib: sifr.collections ---
 #[derive(Debug, Clone, PartialEq)]
@@ -448,31 +357,6 @@ for &__SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
         __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(new_counts), None)
     }
 }
-fn _copy_int_list(items: &Vec<i64>) -> Vec<i64> {
-    let mut copied: Vec<i64> = vec![];
-    for item in items.iter().copied() {
-        copied.push(item);
-    }
-    copied
-}
-fn set_from_list(items: &Vec<i64>) -> Vec<i64> {
-    _set_from_list_impl(_copy_int_list(items))
-}
-fn set_add(s: &Vec<i64>, item: i64) -> Vec<i64> {
-    _set_add_impl(_copy_int_list(s), item)
-}
-fn set_contains(s: &Vec<i64>, item: i64) -> bool {
-    _set_contains_impl(s, item)
-}
-fn set_len(s: &Vec<i64>) -> i64 {
-    _set_len_impl(s)
-}
-fn set_union(a: &Vec<i64>, b: &Vec<i64>) -> Vec<i64> {
-    _set_union_impl(_copy_int_list(a), _copy_int_list(b))
-}
-fn set_intersection(a: &Vec<i64>, b: &Vec<i64>) -> Vec<i64> {
-    _set_intersection_impl(_copy_int_list(a), _copy_int_list(b))
-}
 fn from_list<
     T: Clone + ::std::fmt::Display + PartialOrd + ::std::hash::Hash + Eq + 'static,
 >(items: &Vec<T>) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
@@ -731,12 +615,16 @@ impl ::std::error::Error for ScopeFailure {
 
 fn main() {
     println!("=== Set Operations ===");
-    println!("Set from [1,2,2,3,3]: length = {}", set_len(&set_from_list(&vec![1_i64, 2_i64, 2_i64, 3_i64, 3_i64])));
-    println!("After adding 4: length = {}", set_len(&set_add(&set_from_list(&vec![1_i64, 2_i64, 3_i64]), 4_i64)));
-    println!("Contains 2: {}", set_contains(&set_from_list(&vec![1_i64, 2_i64, 3_i64]), 2_i64));
-    println!("Contains 5: {}", set_contains(&set_from_list(&vec![1_i64, 2_i64, 3_i64]), 5_i64));
-    println!("Union [1,2,3] | [3,4,5]: length = {}", set_len(&set_union(&set_from_list(&vec![1_i64, 2_i64, 3_i64]), &set_from_list(&vec![3_i64, 4_i64, 5_i64]))));
-    println!("Intersection [1,2,3] & [3,4,5]: length = {}", set_len(&set_intersection(&set_from_list(&vec![1_i64, 2_i64, 3_i64]), &set_from_list(&vec![3_i64, 4_i64, 5_i64]))));
+    let mut values: HashSet<i64> = (vec![1_i64, 2_i64, 2_i64, 3_i64, 3_i64]).into_iter().collect::<std::collections::HashSet<_>>();
+    println!("Set from [1,2,2,3,3]: length = {}", values.len() as i64);
+    values.insert(4_i64);
+    println!("After adding 4: length = {}", values.len() as i64);
+    println!("Contains 2: {}", values.contains(&(2_i64)));
+    println!("Contains 5: {}", values.contains(&(5_i64)));
+    let left: HashSet<i64> = (vec![1_i64, 2_i64, 3_i64]).into_iter().collect::<std::collections::HashSet<_>>();
+    let right: HashSet<i64> = (vec![3_i64, 4_i64, 5_i64]).into_iter().collect::<std::collections::HashSet<_>>();
+    println!("Union [1,2,3] | [3,4,5]: length = {}", left.union(&right).cloned().collect::<std::collections::HashSet<_>>().len() as i64);
+    println!("Intersection [1,2,3] & [3,4,5]: length = {}", left.intersection(&right).cloned().collect::<std::collections::HashSet<_>>().len() as i64);
     println!("=== Counter ===");
     let fruits: Vec<String> = vec!["apple".to_string(), "banana".to_string(), "apple".to_string(), "cherry".to_string(), "banana".to_string(), "apple".to_string()];
     let fruit_counter: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(&fruits);

@@ -1,31 +1,32 @@
 # Adapted CPython collections subset for sifr.collections (canonical vector format)
-from sifr.collections import Counter, from_list, deque, new_set, set_from_list, set_add, set_contains, set_remove, set_len, set_union, set_intersection
+from sifr.collections import Counter, from_list, deque
 from sifr.test import assert_bool_vector_eq
 
 def collect_set_actual() -> list[bool]:
     actual: list[bool] = []
-    empty_set: list[int] = new_set()
-    actual.append(set_len(empty_set) == 0)
+    empty_set: set[int] = set([0])
+    empty_set.remove(0)
+    actual.append(len(empty_set) == 0)
 
-    s: list[int] = set_from_list([1, 2, 2, 3])
-    actual.append(set_len(s) == 3)
-    actual.append(set_contains(s, 2))
-    missing_four: bool = not set_contains(s, 4)
+    s: set[int] = set([1, 2, 2, 3])
+    actual.append(len(s) == 3)
+    actual.append(s.contains(2))
+    missing_four: bool = not s.contains(4)
     actual.append(missing_four)
 
-    s_added: list[int] = set_add(s, 4)
-    actual.append(set_len(s_added) == 4)
-    s_dup: list[int] = set_add(s_added, 4)
-    actual.append(set_len(s_dup) == 4)
-    s_removed: list[int] = set_remove(s_dup, 2)
-    removed_two: bool = not set_contains(s_removed, 2)
+    s.add(4)
+    actual.append(len(s) == 4)
+    s.add(4)
+    actual.append(len(s) == 4)
+    s.remove(2)
+    removed_two: bool = not s.contains(2)
     actual.append(removed_two)
-    actual.append(set_len(s_removed) == 3)
+    actual.append(len(s) == 3)
 
-    u: list[int] = set_union(set_from_list([1, 2, 2, 3]), set_from_list([3, 4, 5]))
-    inter: list[int] = set_intersection(set_from_list([1, 2, 2, 3]), set_from_list([3, 5]))
-    actual.append(set_len(u) == 5)
-    actual.append(set_len(inter) == 1)
+    u: set[int] = set([1, 2, 2, 3]).union(set([3, 4, 5]))
+    inter: set[int] = set([1, 2, 2, 3]).intersection(set([3, 5]))
+    actual.append(len(u) == 5)
+    actual.append(len(inter) == 1)
     return actual
 
 def collect_counter_actual() -> list[bool]:

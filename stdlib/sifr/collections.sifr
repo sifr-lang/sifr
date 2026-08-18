@@ -1,46 +1,4 @@
 # sifr.collections — Extended collection types
-from _sifr.collections import _new_set_impl, _set_from_list_impl, _set_add_impl, _set_contains_impl, _set_remove_impl, _set_len_impl, _set_union_impl, _set_intersection_impl
-
-
-def _copy_int_list(items: list[int]) -> list[int]:
-    copied: list[int] = []
-    for item in items:
-        copied.append(item)
-    return copied
-
-
-def new_set() -> list[int]:
-    return _new_set_impl()
-
-
-def set_from_list(items: list[int]) -> list[int]:
-    return _set_from_list_impl(_copy_int_list(items))
-
-
-def set_add(s: list[int], item: int) -> list[int]:
-    return _set_add_impl(_copy_int_list(s), item)
-
-
-def set_contains(s: list[int], item: int) -> bool:
-    return _set_contains_impl(s, item)
-
-
-def set_remove(s: list[int], item: int) -> list[int]:
-    return _set_remove_impl(_copy_int_list(s), item)
-
-
-def set_len(s: list[int]) -> int:
-    return _set_len_impl(s)
-
-
-def set_union(a: list[int], b: list[int]) -> list[int]:
-    return _set_union_impl(_copy_int_list(a), _copy_int_list(b))
-
-
-def set_intersection(a: list[int], b: list[int]) -> list[int]:
-    return _set_intersection_impl(_copy_int_list(a), _copy_int_list(b))
-
-
 class frozenset[T: Hashable]:
     # Immutable set value. Construction copies the input so no mutable alias can change it.
     _values: set[T]

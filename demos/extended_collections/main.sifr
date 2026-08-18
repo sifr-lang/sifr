@@ -8,7 +8,6 @@
 #   bytes            — first-class encode/decode and hex conversion
 # ============================================================
 
-from sifr.collections import set_from_list, set_add, set_contains, set_len, set_union, set_intersection
 from sifr.collections import Counter, from_list
 
 def main():
@@ -18,18 +17,22 @@ def main():
     print("=== Set Operations ===")
 
     # Create a set from a list (deduplicates)
-    print(f"Set from [1,2,2,3,3]: length = {set_len(set_from_list([1, 2, 2, 3, 3]))}")
+    values: set[int] = set([1, 2, 2, 3, 3])
+    print(f"Set from [1,2,2,3,3]: length = {len(values)}")
 
     # Add element
-    print(f"After adding 4: length = {set_len(set_add(set_from_list([1, 2, 3]), 4))}")
+    values.add(4)
+    print(f"After adding 4: length = {len(values)}")
 
     # Contains
-    print(f"Contains 2: {set_contains(set_from_list([1, 2, 3]), 2)}")
-    print(f"Contains 5: {set_contains(set_from_list([1, 2, 3]), 5)}")
+    print(f"Contains 2: {values.contains(2)}")
+    print(f"Contains 5: {values.contains(5)}")
 
     # Union and intersection
-    print(f"Union [1,2,3] | [3,4,5]: length = {set_len(set_union(set_from_list([1, 2, 3]), set_from_list([3, 4, 5])))}")
-    print(f"Intersection [1,2,3] & [3,4,5]: length = {set_len(set_intersection(set_from_list([1, 2, 3]), set_from_list([3, 4, 5])))}")
+    left: set[int] = set([1, 2, 3])
+    right: set[int] = set([3, 4, 5])
+    print(f"Union [1,2,3] | [3,4,5]: length = {len(left.union(right))}")
+    print(f"Intersection [1,2,3] & [3,4,5]: length = {len(left.intersection(right))}")
 
     # ----------------------------------------------------------
     # 2. Counter

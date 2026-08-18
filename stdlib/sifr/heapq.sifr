@@ -7,11 +7,6 @@
 #   heappop(mut heap) -> item | None -- pop smallest item, heapify in-place
 #   heapreplace(mut heap, item) -> item | None -- replace smallest item in-place
 #   heappushpop(mut heap, item) -> item | None -- push then pop in-place
-#
-# Functional API (for backward compatibility):
-#   heapify_copy(data) -> list   -- returns a new heap (copy)
-#   heappush_copy(heap, item) -> list
-#   heappop_val(heap) -> item | None   -- returns only the popped value
 T = TypeVar("T")
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
@@ -198,39 +193,6 @@ def _heappushpop_max[T: Comparable](mut heap: list[T], item: T) -> T | None:
     _heappush_max(heap, item)
     return _heappop_max(heap)
 
-# ── Functional API (backward compatibility) ───────────────────────────────────
-
-def heapify_copy[T: Comparable](data: list[T]) -> list[T]:
-    result: list[T] = []
-    for val in data:
-        result.append(val)
-    heapify(result)
-    return result
-
-def heappush_copy[T: Comparable](heap: list[T], item: T) -> list[T]:
-    result: list[T] = []
-    for val in heap:
-        result.append(val)
-    heappush(result, item)
-    return result
-
-def heappop_val[T: Comparable](heap: list[T]) -> T | None:
-    """Return the smallest item without modifying the original heap.
-    Creates a temporary copy."""
-    if len(heap) == 0:
-        return None
-    tmp: list[T] = []
-    for val in heap:
-        tmp.append(val)
-    return heappop(tmp)
-
-def heappop_rest[T: Comparable](heap: list[T]) -> list[T]:
-    result: list[T] = []
-    for val in heap:
-        result.append(val)
-    heappop(result)
-    return result
-
 def heapreplace[T: Comparable](mut heap: list[T], own item: T) -> T | None:
     if len(heap) == 0:
         return None
@@ -289,7 +251,8 @@ def merge[T: Comparable](*iterables: list[T]) -> list[T]:
     return result
 
 def nsmallest[T: Comparable](n: int, data: list[T]) -> list[T]:
-    heap: list[T] = heapify_copy(data)
+    heap: list[T] = data.copy()
+    heapify(heap)
     result: list[T] = []
     count: int = 0
     while count < n:
@@ -311,7 +274,8 @@ def nlargest[T: Comparable](n: int, data: list[T]) -> list[T]:
             result.append(val)
         return result
     # Collect all into a heap, then pop all and take last n
-    heap: list[T] = heapify_copy(data)
+    heap: list[T] = data.copy()
+    heapify(heap)
     all_sorted: list[T] = []
     while len(heap) > 0:
         val2: T | None = heappop(heap)
