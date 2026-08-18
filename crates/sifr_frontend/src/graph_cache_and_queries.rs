@@ -308,7 +308,7 @@ pub fn compile_module_hir_with_source_and_options(
         module_name,
         stmts,
         external_defs,
-        lowering_options,
+        lowering_options.clone(),
     ) {
         Ok(mut result) => {
             if let Err(errors) =
@@ -325,6 +325,72 @@ pub fn compile_module_hir_with_source_and_options(
                         )
                     })
                     .collect());
+            }
+            let lowering_warning_count = result.warnings.len();
+            if let Err(errors) = crate::early_adapters::run(
+                module_name,
+                &mut result,
+                external_defs,
+                &class_declarations,
+            ) {
+                return Err(errors
+                    .into_iter()
+                    .map(|error| match error {
+                        crate::package_issues::SpecializationDiagnostic::Hir(error) => {
+                            hir_diagnostic_to_rendered(
+                                module_name,
+                                diagnostic_style,
+                                source_context,
+                                error,
+                            )
+                        }
+                        crate::package_issues::SpecializationDiagnostic::Package(issue) => {
+                            crate::package_issues::render_package_issue(
+                                module_name,
+                                diagnostic_style,
+                                source_context,
+                                &issue,
+                            )
+                        }
+                    })
+                    .collect());
+            }
+            if !result.class_adapter_selections.is_empty() {
+                // The first lowering pass provides typed, provisional declarations to
+                // adapters. Rebuild adapted modules afterward so the HIR consumed by
+                // specialization/codegen is the finalized class representation. M4 can
+                // apply validated field/default plans at this explicit boundary.
+                let descriptors = std::mem::take(&mut result.declaration_descriptors);
+                let applied_metadata = std::mem::take(&mut result.applied_adapter_metadata);
+                let specialization_requests = std::mem::take(&mut result.specialization_requests);
+                let adapter_warnings = result.warnings[lowering_warning_count..].to_vec();
+                result = match lower_module_with_externals_name_and_options(
+                    module_name,
+                    stmts,
+                    external_defs,
+                    lowering_options,
+                ) {
+                    Ok(mut finalized) => {
+                        finalized.declaration_descriptors = descriptors;
+                        finalized.applied_adapter_metadata = applied_metadata;
+                        finalized.specialization_requests = specialization_requests;
+                        finalized.warnings.extend(adapter_warnings);
+                        finalized
+                    }
+                    Err(errors) => {
+                        return Err(errors
+                            .into_iter()
+                            .map(|error| {
+                                hir_diagnostic_to_rendered(
+                                    module_name,
+                                    diagnostic_style,
+                                    source_context,
+                                    error,
+                                )
+                            })
+                            .collect());
+                    }
+                };
             }
             match crate::specialization_runner::run_specializations(
                 module_name,

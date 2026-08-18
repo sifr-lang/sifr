@@ -40,6 +40,42 @@ pub(crate) fn static_program_value(
     })
 }
 
+pub(crate) fn const_value(value: &StaticProgramValue) -> Result<crate::ConstValue, &'static str> {
+    Ok(match value {
+        StaticProgramValue::None => crate::ConstValue::None,
+        StaticProgramValue::Bool(value) => crate::ConstValue::Bool(*value),
+        StaticProgramValue::Integer(value) => crate::ConstValue::Integer(
+            value
+                .parse()
+                .map_err(|_| "static integer value is not canonical decimal text")?,
+        ),
+        StaticProgramValue::FloatBits(value) => crate::ConstValue::FloatBits(*value),
+        StaticProgramValue::String(value) => crate::ConstValue::String(value.clone()),
+        StaticProgramValue::Bytes(value) => crate::ConstValue::Bytes(value.clone()),
+        StaticProgramValue::Tuple(values) => crate::ConstValue::Tuple(
+            values
+                .iter()
+                .map(const_value)
+                .collect::<Result<Vec<_>, _>>()?,
+        ),
+        StaticProgramValue::List(values) => crate::ConstValue::List(
+            values
+                .iter()
+                .map(const_value)
+                .collect::<Result<Vec<_>, _>>()?,
+        ),
+        StaticProgramValue::Record(values) => crate::ConstValue::Record(
+            values
+                .iter()
+                .map(|(name, value)| Ok((name.clone(), const_value(value)?)))
+                .collect::<Result<BTreeMap<_, _>, &'static str>>()?,
+        ),
+        StaticProgramValue::CallableIdentity(identity) => {
+            crate::ConstValue::CallableIdentity(identity.clone())
+        }
+    })
+}
+
 pub(crate) fn malformed(
     package: &str,
     reason_code: &str,

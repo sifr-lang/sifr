@@ -623,7 +623,7 @@ fn literal_const_value(expression: &Expr) -> Option<ConstValue> {
     }
 }
 
-fn const_value_assignable(value: &ConstValue, expected: &Type) -> bool {
+pub(crate) fn const_value_assignable(value: &ConstValue, expected: &Type) -> bool {
     match expected.resolve_alias() {
         Type::Union(members) => members
             .iter()

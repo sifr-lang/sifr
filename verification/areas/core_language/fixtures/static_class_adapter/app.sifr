@@ -1,0 +1,11 @@
+from fixture.facade import Contract, contract_config
+
+
+class Model(Contract):
+    _config = contract_config(True)
+    value: int
+
+
+def main():
+    model: Model = Model(7)
+    assert model.value == 7

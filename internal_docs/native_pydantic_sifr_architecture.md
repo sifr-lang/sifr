@@ -387,8 +387,9 @@ one closed structural descriptor type `D`:
 
 ```sifr
 @class_adapter_provider("fixture.contract_types", "ContractDescriptor")
+@const_eval
 def adapt_contract(
-    declaration: ClassDeclaration[ContractDescriptor],
+    declaration: DeclarationInput[ContractDescriptor],
 ) -> DeclarationPlan[ContractDescriptor]:
     ...
 ```

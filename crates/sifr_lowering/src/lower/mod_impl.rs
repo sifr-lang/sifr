@@ -842,6 +842,7 @@ pub(in crate::lower) fn lower_module_impl(
                 function.decorators.push("const_eval".to_string());
             }
         }
+        super::descriptor_declarations::erase_markers(&mut module, &ctx);
         for violation in super::method_call_verifier::verify_module_method_calls(
             &mut module,
             &ctx.class_types,
@@ -863,8 +864,11 @@ pub(in crate::lower) fn lower_module_impl(
             class_field_defaults: ctx.class_field_defaults.clone(),
             declaration_metadata: ctx.declaration_metadata.clone(),
             class_adapter_providers: ctx.class_adapter_providers.clone(),
+            class_adapter_markers: ctx.class_adapter_markers.clone(),
+            class_adapter_selections: ctx.class_adapter_selections.clone(),
             descriptor_functions: ctx.descriptor_functions.clone(),
             declaration_descriptors: Vec::new(),
+            applied_adapter_metadata: Vec::new(),
             type_aliases: ctx.scope.type_aliases().clone(),
             specialization_requests: ctx.specialization_requests.clone(),
             specialization_outputs: Vec::new(),

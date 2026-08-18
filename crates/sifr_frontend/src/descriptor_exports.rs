@@ -5,11 +5,37 @@ use sifr_lowering::{canonicalize_user_export_type, ExternalDefs, HirModule, Lowe
 use sifr_type_system::Type;
 use std::collections::HashMap;
 
+pub fn erase_marker_imports(module: &mut HirModule, external_defs: &ExternalDefs) {
+    for import in &mut module.imports {
+        let Some(markers) = external_defs.class_adapter_markers.get(&import.module) else {
+            continue;
+        };
+        import.names.retain(|name| !markers.contains_key(name));
+        import
+            .aliases
+            .retain(|(original, _)| !markers.contains_key(original));
+    }
+    module.imports.retain(|import| !import.names.is_empty());
+}
+
 pub(crate) fn add_aliases(
     lowering: &LoweringResult,
     local_classes: &HashMap<String, String>,
     exports: &mut HashMap<String, Type>,
 ) {
+    exports.extend(lowering.class_adapter_markers.iter().map(|marker| {
+        (
+            marker.symbol.clone(),
+            Type::Class {
+                identity: Some(format!("{}.{}", marker.module, marker.symbol)),
+                type_args: Vec::new(),
+                name: marker.symbol.clone(),
+                fields: Vec::new(),
+                methods: Vec::new(),
+                parent_class: None,
+            },
+        )
+    }));
     exports.extend(
         lowering
             .type_aliases
@@ -46,6 +72,18 @@ pub(crate) fn store(
         })
         .map(|declaration| (declaration.function.clone(), declaration.clone()))
         .collect::<HashMap<_, _>>();
+    let mut markers = lowering
+        .class_adapter_markers
+        .iter()
+        .filter(|marker| !marker.symbol.starts_with('_'))
+        .map(|marker| (marker.symbol.clone(), marker.clone()))
+        .collect::<HashMap<_, _>>();
+    let mut selections = lowering
+        .class_adapter_selections
+        .iter()
+        .filter(|selection| !selection.owner.starts_with('_'))
+        .map(|selection| (selection.owner.clone(), selection.clone()))
+        .collect::<HashMap<_, _>>();
 
     for import in &module.imports {
         for name in &import.names {
@@ -69,7 +107,21 @@ pub(crate) fn store(
                 .get(&import.module)
                 .and_then(|exports| exports.get(name))
             {
-                functions.insert(local_name, declaration.clone());
+                functions.insert(local_name.clone(), declaration.clone());
+            }
+            if let Some(marker) = external_defs
+                .class_adapter_markers
+                .get(&import.module)
+                .and_then(|exports| exports.get(name))
+            {
+                markers.insert(local_name.clone(), marker.clone());
+            }
+            if let Some(selection) = external_defs
+                .class_adapter_selections
+                .get(&import.module)
+                .and_then(|exports| exports.get(name))
+            {
+                selections.insert(local_name.clone(), selection.clone());
             }
         }
     }
@@ -81,10 +133,28 @@ pub(crate) fn store(
         HashMap::is_empty,
     );
     replace_module_entry(
+        &mut external_defs.class_adapter_markers,
+        module_name,
+        markers,
+        HashMap::is_empty,
+    );
+    replace_module_entry(
+        &mut external_defs.class_adapter_selections,
+        module_name,
+        selections,
+        HashMap::is_empty,
+    );
+    replace_module_entry(
         &mut external_defs.descriptor_functions,
         module_name,
         functions,
         HashMap::is_empty,
+    );
+    replace_module_entry(
+        &mut external_defs.applied_adapter_metadata,
+        module_name,
+        lowering.applied_adapter_metadata.clone(),
+        Vec::is_empty,
     );
     replace_module_entry(
         &mut external_defs.declaration_descriptors,

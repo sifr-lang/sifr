@@ -262,25 +262,6 @@ pub(in crate::lower) fn is_operator_dunder(name: &str) -> bool {
     OPERATOR_DUNDERS.contains(&name)
 }
 
-/// Get the parent class name for single inheritance.
-/// Returns None for Error, Protocol, and primitive base classes.
-pub(in crate::lower) fn get_parent_class(class_def: &StmtClassDef) -> Option<String> {
-    for base in class_def.bases() {
-        if let Expr::Name(n) = base {
-            let name = n.id.as_str();
-            // Skip special base classes
-            if matches!(
-                name,
-                "Error" | "Protocol" | "int" | "float" | "str" | "bool" | "Enum"
-            ) {
-                return None;
-            }
-            return Some(name.to_string());
-        }
-    }
-    None
-}
-
 /// Check if a class is an enum (inherits from Enum)
 pub(in crate::lower) fn is_enum_class(class_def: &StmtClassDef) -> bool {
     for base in class_def.bases() {

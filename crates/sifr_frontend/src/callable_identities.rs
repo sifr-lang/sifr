@@ -278,7 +278,7 @@ impl Resolver<'_> {
                     return format!("{}.{}", self.module_name, class.name);
                 }
                 if let Some(alias) = self.result.type_aliases.get(name.id.as_str()) {
-                    return format!("{:?}", alias.resolve_alias());
+                    return crate::canonical_types::type_identity(alias.resolve_alias());
                 }
                 for import in &self.result.module.imports {
                     for imported in &import.names {
@@ -291,7 +291,7 @@ impl Resolver<'_> {
                             .get(&import.module)
                             .and_then(|classes| classes.get(imported))
                         {
-                            return format!("{:?}", ty.resolve_alias());
+                            return crate::canonical_types::type_identity(ty.resolve_alias());
                         }
                     }
                 }
@@ -386,5 +386,5 @@ fn function_type(function: &HirFunction) -> FunctionType {
 }
 
 fn signature(function: &FunctionType) -> String {
-    format!("{function:?}")
+    crate::canonical_types::function_identity(function)
 }

@@ -87,10 +87,44 @@ class DescriptorUse[D]:
 class DeclarationInput[D]:
     declaration: ClassDeclaration
     descriptors: list[DescriptorUse[D]]
+    provider_module: str
+    provider_function: str
+    data_parent: str | None
+
+
+class PlannedField:
+    identity: str
+    declared_type: str
+
+
+class PlannedMetadata[D]:
+    target_kind: str
+    target_identity: str
+    key: str
+    value: D
+
+
+class PlannedIssueLabel:
+    origin: SourceOrigin
+    message: str
+
+
+class PlannedIssue[D]:
+    package: str
+    reason_code: str
+    severity: str
+    arguments: D
+    primary_origin: SourceOrigin
+    labels: list[PlannedIssueLabel]
+    notes: list[str]
 
 
 class DeclarationPlan[D]:
-    pass
+    fields: list[PlannedField]
+    metadata: list[PlannedMetadata[D]]
+    specialization_module: str | None
+    specialization_function: str | None
+    issues: list[PlannedIssue[D]]
 
 
 class ShapeMetadata[D]:
@@ -98,9 +132,13 @@ class ShapeMetadata[D]:
     value: D
 
 
+class ShapeRoot[D]:
+    metadata: list[ShapeMetadata[D]]
+
+
 class ShapeInput[D]:
     canonical_identity: str
-    metadata: list[ShapeMetadata[D]]
+    root: ShapeRoot[D]
 
 
 class ConstIssueLabel:

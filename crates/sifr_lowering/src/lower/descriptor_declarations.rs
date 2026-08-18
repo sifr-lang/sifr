@@ -1,21 +1,39 @@
 //! Canonical package declarations for typed class-adapter descriptors.
 
-use super::{str, Expr, LowerCtx, Ranged, Stmt, Type};
+use super::{str, Expr, HirModule, LowerCtx, Ranged, Stmt, Type};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{
-    ClassAdapterProviderDeclaration, DeclarationDescriptorFunction, DeclarationDescriptorKind,
+    ClassAdapterMarkerDeclaration, ClassAdapterProviderDeclaration, ClassAdapterSelection,
+    DeclarationDescriptorFunction, DeclarationDescriptorKind,
 };
-use sifr_python_ast::{Decorator, StmtFunctionDef};
+use sifr_python_ast::{Decorator, StmtClassDef, StmtFunctionDef};
 use std::collections::HashSet;
 
 pub(in crate::lower) fn prepare(stmts: &[Stmt], ctx: &mut LowerCtx) {
     import_bindings(stmts, ctx);
     for stmt in stmts {
-        let Stmt::FunctionDef(function) = stmt else {
-            continue;
-        };
-        collect_local_declarations(function, ctx);
+        match stmt {
+            Stmt::FunctionDef(function) => collect_local_declarations(function, ctx),
+            Stmt::ClassDef(class) => collect_local_marker(class, ctx),
+            _ => {}
+        }
     }
+    collect_class_bases(stmts, ctx);
+}
+
+pub(in crate::lower) fn data_parent_name(class_name: &str, ctx: &LowerCtx) -> Option<String> {
+    ctx.class_data_parents.get(class_name).cloned().flatten()
+}
+
+pub(in crate::lower) fn erase_markers(module: &mut HirModule, ctx: &LowerCtx) {
+    let erased = ctx
+        .class_adapter_markers
+        .iter()
+        .map(|marker| marker.symbol.as_str())
+        .collect::<HashSet<_>>();
+    module
+        .classes
+        .retain(|class| !erased.contains(class.name.as_str()));
 }
 
 pub(in crate::lower) fn descriptor_kind_for_call(
@@ -60,6 +78,12 @@ pub(in crate::lower) fn finalize(ctx: &mut LowerCtx) {
             continue;
         }
         let Some(function_type) = ctx.functions.get(&declaration.function).cloned() else {
+            malformed(
+                ctx,
+                "adapter_provider_signature",
+                "class-adapter provider function signature is unavailable",
+                declaration.range,
+            );
             continue;
         };
         if !provider_signature_matches(&function_type, &descriptor_type) {
@@ -89,6 +113,12 @@ pub(in crate::lower) fn finalize(ctx: &mut LowerCtx) {
             continue;
         };
         let Some(function_type) = ctx.functions.get(&declaration.function) else {
+            malformed(
+                ctx,
+                "descriptor_signature",
+                "descriptor function signature is unavailable",
+                declaration.range,
+            );
             continue;
         };
         if function_type
@@ -119,6 +149,8 @@ pub(in crate::lower) fn finalize(ctx: &mut LowerCtx) {
         ctx.descriptor_bindings
             .insert(declaration.function.clone(), declaration);
     }
+
+    finalize_markers_and_selections(ctx, &module);
 }
 
 fn descriptor_return_assignable(source: &Type, target: &Type) -> bool {
@@ -156,21 +188,203 @@ fn import_bindings(stmts: &[Stmt], ctx: &mut LowerCtx) {
         };
         let module =
             ctx.effective_import_module_name(module.as_ref(), import.level, &ctx.externals);
-        let Some(exports) = ctx.externals.descriptor_functions.get(&module) else {
-            continue;
-        };
         for alias in &import.names {
             let original = alias.name.to_string();
-            let Some(declaration) = exports.get(&original) else {
-                continue;
-            };
             let local = alias
                 .asname
                 .as_ref()
                 .map_or_else(|| original.clone(), ToString::to_string);
-            ctx.descriptor_bindings.insert(local, declaration.clone());
+            if let Some(declaration) = ctx
+                .externals
+                .descriptor_functions
+                .get(&module)
+                .and_then(|exports| exports.get(&original))
+            {
+                ctx.descriptor_bindings
+                    .insert(local.clone(), declaration.clone());
+            }
+            if let Some(marker) = ctx
+                .externals
+                .class_adapter_markers
+                .get(&module)
+                .and_then(|exports| exports.get(&original))
+            {
+                ctx.adapter_marker_bindings
+                    .insert(local.clone(), marker.clone());
+            }
+            if let Some(selection) = ctx
+                .externals
+                .class_adapter_selections
+                .get(&module)
+                .and_then(|exports| exports.get(&original))
+            {
+                ctx.adapted_class_bindings
+                    .insert(local.clone(), selection.clone());
+            }
         }
     }
+}
+
+fn collect_local_marker(class: &StmtClassDef, ctx: &mut LowerCtx) {
+    let Some(decorator) = class.decorator_list.iter().find_map(|decorator| {
+        declaration_decorator(decorator, ctx)
+            .filter(|(name, _, _)| name == "class_adapter_marker")
+            .map(|(_, module, function)| (decorator.expression.range(), module, function))
+    }) else {
+        return;
+    };
+    let valid_body = class
+        .body
+        .iter()
+        .all(|statement| matches!(statement, Stmt::Pass(_)));
+    if !class.bases().is_empty() || !valid_body {
+        malformed(
+            ctx,
+            "adapter_marker_shape",
+            "@class_adapter_marker requires a field-less class containing only pass",
+            class.range(),
+        );
+    }
+    let declaration = ClassAdapterMarkerDeclaration {
+        module: ctx.current_module_name.clone().unwrap_or_default(),
+        symbol: class.name.to_string(),
+        provider_module: decorator.1,
+        provider_function: decorator.2,
+        descriptor_type: Type::Any,
+        range: decorator.0,
+    };
+    ctx.adapter_marker_bindings
+        .insert(class.name.to_string(), declaration.clone());
+    ctx.class_adapter_markers.push(declaration);
+}
+
+fn collect_class_bases(stmts: &[Stmt], ctx: &mut LowerCtx) {
+    for statement in stmts {
+        let Stmt::ClassDef(class) = statement else {
+            continue;
+        };
+        if ctx
+            .adapter_marker_bindings
+            .contains_key(class.name.as_str())
+        {
+            ctx.class_data_parents.insert(class.name.to_string(), None);
+            continue;
+        }
+        let mut markers = Vec::new();
+        let mut data_parents = Vec::new();
+        for base in class.bases() {
+            let Expr::Name(name) = base else {
+                continue;
+            };
+            if let Some(marker) = ctx.adapter_marker_bindings.get(name.id.as_str()) {
+                markers.push((name.range(), marker.clone()));
+                continue;
+            }
+            if special_base(name.id.as_str()) {
+                continue;
+            }
+            data_parents.push((name.range(), name.id.to_string()));
+        }
+        // Preserve the language's existing first-parent behavior for ordinary
+        // classes. The one-data-parent restriction belongs to adapted classes.
+        let data_parent = data_parents.first().map(|(_, name)| name.clone());
+        ctx.class_data_parents
+            .insert(class.name.to_string(), data_parent.clone());
+        let inherited = data_parent
+            .as_ref()
+            .and_then(|parent| ctx.adapted_class_bindings.get(parent))
+            .cloned();
+        if markers.is_empty() && inherited.is_none() {
+            continue;
+        }
+        for (range, _) in data_parents.iter().skip(1) {
+            malformed(
+                ctx,
+                "adapter_data_parent",
+                "an adapted class permits at most one ordinary data parent",
+                *range,
+            );
+        }
+        let selected_provider = markers
+            .first()
+            .map(|(_, marker)| {
+                (
+                    marker.provider_module.clone(),
+                    marker.provider_function.clone(),
+                    marker.descriptor_type.clone(),
+                )
+            })
+            .or_else(|| {
+                inherited.as_ref().map(|selection| {
+                    (
+                        selection.provider_module.clone(),
+                        selection.provider_function.clone(),
+                        selection.descriptor_type.clone(),
+                    )
+                })
+            });
+        let Some(selected_provider) = selected_provider else {
+            continue;
+        };
+        for (range, marker) in markers.iter().skip(1) {
+            if (
+                marker.provider_module.as_str(),
+                marker.provider_function.as_str(),
+            ) != (selected_provider.0.as_str(), selected_provider.1.as_str())
+            {
+                malformed(
+                    ctx,
+                    "adapter_provider_conflict",
+                    "class bases select conflicting canonical adapter providers",
+                    *range,
+                );
+            }
+        }
+        if let Some(parent) = &inherited {
+            if (
+                parent.provider_module.as_str(),
+                parent.provider_function.as_str(),
+            ) != (selected_provider.0.as_str(), selected_provider.1.as_str())
+            {
+                malformed(
+                    ctx,
+                    "adapter_parent_provider",
+                    "adapted data parent and marker must select the same canonical provider",
+                    class.range(),
+                );
+            }
+        }
+        ctx.class_adapter_selections.push(ClassAdapterSelection {
+            owner: class.name.to_string(),
+            provider_module: selected_provider.0,
+            provider_function: selected_provider.1,
+            descriptor_type: selected_provider.2,
+            marker_identities: markers
+                .iter()
+                .map(|(_, marker)| format!("{}.{}", marker.module, marker.symbol))
+                .chain(
+                    inherited
+                        .iter()
+                        .flat_map(|selection| selection.marker_identities.iter().cloned()),
+                )
+                .collect(),
+            data_parent,
+            range: markers
+                .first()
+                .map_or_else(|| class.range(), |(range, _)| *range),
+        });
+        if let Some(selection) = ctx.class_adapter_selections.last().cloned() {
+            ctx.adapted_class_bindings
+                .insert(class.name.to_string(), selection);
+        }
+    }
+}
+
+fn special_base(name: &str) -> bool {
+    matches!(
+        name,
+        "Error" | "Protocol" | "int" | "float" | "str" | "bool" | "Enum"
+    )
 }
 
 fn collect_local_declarations(function: &StmtFunctionDef, ctx: &mut LowerCtx) {
@@ -246,7 +460,11 @@ fn declaration_decorator(
         return None;
     };
     let declaration_name = name.id.as_str();
-    if declaration_name != "class_adapter_provider" && descriptor_kind(declaration_name).is_none() {
+    if !matches!(
+        declaration_name,
+        "class_adapter_provider" | "class_adapter_marker"
+    ) && descriptor_kind(declaration_name).is_none()
+    {
         return None;
     }
     if call.arguments.args.len() != 2 || !call.arguments.keywords.is_empty() {
@@ -353,6 +571,61 @@ fn generic_contract(candidate: &Type, expected_name: &str, descriptor: &Type) ->
                 && descriptor.is_assignable_to(&type_args[0])
                 && type_args[0].is_assignable_to(descriptor)
     )
+}
+
+fn finalize_markers_and_selections(ctx: &mut LowerCtx, module: &str) {
+    for index in 0..ctx.class_adapter_markers.len() {
+        let marker = ctx.class_adapter_markers[index].clone();
+        let provider = if marker.provider_module == module {
+            ctx.class_adapter_providers
+                .iter()
+                .find(|provider| provider.function == marker.provider_function)
+        } else {
+            ctx.externals
+                .class_adapter_providers
+                .get(&marker.provider_module)
+                .and_then(|providers| providers.get(&marker.provider_function))
+        }
+        .cloned();
+        let Some(provider) = provider else {
+            malformed(
+                ctx,
+                "adapter_marker_provider",
+                "@class_adapter_marker references an unknown canonical provider",
+                marker.range,
+            );
+            continue;
+        };
+        ctx.class_adapter_markers[index].descriptor_type = provider.descriptor_type.clone();
+        if let Some(binding) = ctx.adapter_marker_bindings.get_mut(&marker.symbol) {
+            binding.descriptor_type = provider.descriptor_type;
+        }
+    }
+
+    for index in 0..ctx.class_adapter_selections.len() {
+        let selection = ctx.class_adapter_selections[index].clone();
+        let provider = if selection.provider_module == module {
+            ctx.class_adapter_providers
+                .iter()
+                .find(|provider| provider.function == selection.provider_function)
+        } else {
+            ctx.externals
+                .class_adapter_providers
+                .get(&selection.provider_module)
+                .and_then(|providers| providers.get(&selection.provider_function))
+        }
+        .cloned();
+        let Some(provider) = provider else {
+            malformed(
+                ctx,
+                "adapter_selection_provider",
+                "adapter marker selected an unavailable canonical provider",
+                selection.range,
+            );
+            continue;
+        };
+        ctx.class_adapter_selections[index].descriptor_type = provider.descriptor_type;
+    }
 }
 
 fn closed_structural_type(ty: &Type, visiting: &mut HashSet<String>) -> bool {

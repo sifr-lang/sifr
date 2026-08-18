@@ -21,6 +21,10 @@ their specialization functions and the meaning of the static values they produce
 - `@json_integer_boundary(field, profile, representation, minimum, maximum)` declares a
   package-neutral integer JSON boundary. `profile` is `exact`, `web`, `string_ints`, or `None`;
   representation is `default`, `number`, or `decimal_string`.
+- `@class_adapter_provider("descriptor.module", "Descriptor")` marks an `@const_eval` function
+  whose exact signature is `(DeclarationInput[D]) -> DeclarationPlan[D]`.
+- `@class_adapter_marker("provider.module", "provider_function")` marks a field-less, erased
+  class that selects one canonical provider when used as a class base.
 
 The public `sifr.meta` module contains `SourceOrigin`, `ClassDeclaration`,
 `ClassDecoratorDeclaration`, `ClassParameterDeclaration`, `ClassDeclarationItem`,
@@ -46,6 +50,26 @@ references. Its canonical identity includes defaults and metadata and is indepen
 iteration order. Recursive occurrences are identity references rather than expanded copies.
 
 Structural descriptions are compile-time data only. They do not create a runtime reflection API.
+
+## Early class adapters
+
+An adapter marker is a compile-time base, not a data parent. It contributes no stored fields,
+constructor parameters, runtime class value, or `super()` work. An adapted class can select only
+one canonical provider and can also have one ordinary data parent. Conflicting providers and a
+second data parent fail at the base declaration.
+
+The frontend first builds a provisional typed declaration, evaluates its descriptor calls, and
+runs the selected adapter with `DeclarationInput[D]`. It validates the returned bounded plan
+before it rebuilds the finalized class HIR. The M3 plan must echo every stored field identity,
+order, and canonical type exactly. It can add typed metadata for the class or its existing fields,
+emit bounded package issues, and request at most one package specialization. Unknown plan fields,
+field additions or removals, type changes, method-body output, forged origins, and descriptor-type
+mismatches fail closed.
+
+The provider descriptor type `D` is also the metadata value type in `ShapeInput[D]`. Adapter
+metadata therefore reaches specialization as its checked record or closed-union value rather than
+as a string. Adapter evaluation uses the normal deterministic const evaluator limits, and its
+issues use the same package-owned templates and compiler-owned source origins as specialization.
 
 ## Evaluation and outcomes
 

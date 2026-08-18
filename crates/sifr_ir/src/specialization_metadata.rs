@@ -127,6 +127,29 @@ pub struct ClassAdapterProviderDeclaration {
     pub range: TextRange,
 }
 
+/// A field-less compile-time marker that selects one canonical adapter provider.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ClassAdapterMarkerDeclaration {
+    pub module: String,
+    pub symbol: String,
+    pub provider_module: String,
+    pub provider_function: String,
+    pub descriptor_type: Type,
+    pub range: TextRange,
+}
+
+/// The canonical provider selected for one source class before finalization.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ClassAdapterSelection {
+    pub owner: String,
+    pub provider_module: String,
+    pub provider_function: String,
+    pub descriptor_type: Type,
+    pub marker_identities: Vec<String>,
+    pub data_parent: Option<String>,
+    pub range: TextRange,
+}
+
 /// Canonical declaration exported by a package descriptor function.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DeclarationDescriptorFunction {
@@ -161,6 +184,17 @@ pub struct TypedDeclarationDescriptor {
     pub value_type: Type,
     pub value: StaticProgramValue,
     pub range: TextRange,
+}
+
+/// Typed metadata produced by a validated class-adapter plan.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AppliedAdapterMetadata {
+    pub owner: String,
+    pub target_kind: DeclarationMetadataTargetKind,
+    pub target_name: Option<String>,
+    pub key: String,
+    pub value_type: Type,
+    pub value: StaticProgramValue,
 }
 
 /// Closed package-neutral value retained from successful const specialization.

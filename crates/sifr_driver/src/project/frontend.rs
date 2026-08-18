@@ -7,8 +7,9 @@ use sifr_diagnostics::DiagnosticCode;
 #[cfg(test)]
 use sifr_frontend::compile_module_hir;
 use sifr_frontend::{
-    collect_module_exports, compile_module_hir_with_source_and_options, reveal_type_diagnostics,
-    warning_diagnostics, FrontendDiagnosticStyle, FrontendModuleDiagnostics, FrontendSourceContext,
+    collect_module_exports, compile_module_hir_with_source_and_options, erase_marker_imports,
+    reveal_type_diagnostics, warning_diagnostics, FrontendDiagnosticStyle,
+    FrontendModuleDiagnostics, FrontendSourceContext,
 };
 use sifr_ir::FlowGraph;
 use sifr_lowering::{ExternalDefs, HirModule, LoweringOptions, LoweringResult};
@@ -43,13 +44,16 @@ pub(crate) fn compile_frontend_modules(
         };
         let result = compile_module_hir(module_name, stmts, &external_defs, diagnostic_style)?;
         let LoweringResult {
-            module,
+            mut module,
             flow_graph,
             class_field_defaults,
             declaration_metadata,
             class_adapter_providers,
+            class_adapter_markers,
+            class_adapter_selections,
             descriptor_functions,
             declaration_descriptors,
+            applied_adapter_metadata,
             type_aliases,
             specialization_requests,
             specialization_outputs,
@@ -68,8 +72,11 @@ pub(crate) fn compile_frontend_modules(
             class_field_defaults,
             declaration_metadata,
             class_adapter_providers,
+            class_adapter_markers,
+            class_adapter_selections,
             descriptor_functions,
             declaration_descriptors,
+            applied_adapter_metadata,
             type_aliases,
             specialization_requests,
             specialization_outputs,
@@ -83,6 +90,7 @@ pub(crate) fn compile_frontend_modules(
             warnings: warnings.clone(),
         };
         collect_module_exports(module_name, &lowering_result, &mut external_defs);
+        erase_marker_imports(&mut module, &external_defs);
         hir_modules.insert(module_name.clone(), module);
         flow_graphs.insert(module_name.clone(), flow_graph);
         module_diagnostics.insert(
@@ -122,13 +130,16 @@ pub(crate) fn compile_single_frontend_module_with_source_and_options(
         lowering_options,
     )?;
     let LoweringResult {
-        module,
+        mut module,
         flow_graph,
         class_field_defaults,
         declaration_metadata,
         class_adapter_providers,
+        class_adapter_markers,
+        class_adapter_selections,
         descriptor_functions,
         declaration_descriptors,
+        applied_adapter_metadata,
         type_aliases,
         specialization_requests,
         specialization_outputs,
@@ -147,8 +158,11 @@ pub(crate) fn compile_single_frontend_module_with_source_and_options(
         class_field_defaults,
         declaration_metadata,
         class_adapter_providers,
+        class_adapter_markers,
+        class_adapter_selections,
         descriptor_functions,
         declaration_descriptors,
+        applied_adapter_metadata,
         type_aliases,
         specialization_requests,
         specialization_outputs,
@@ -162,6 +176,7 @@ pub(crate) fn compile_single_frontend_module_with_source_and_options(
         warnings: warnings.clone(),
     };
     collect_module_exports(module_name, &lowering_result, &mut external_defs);
+    erase_marker_imports(&mut module, &external_defs);
 
     Ok(ProjectLowering {
         hir_modules: HashMap::from([(module_name.to_string(), module)]),
@@ -249,13 +264,16 @@ pub(crate) fn collect_project_hir_source_modules_with_options(
             source: &parsed_module.source,
         };
         let LoweringResult {
-            module,
+            mut module,
             flow_graph,
             class_field_defaults,
             declaration_metadata,
             class_adapter_providers,
+            class_adapter_markers,
+            class_adapter_selections,
             descriptor_functions,
             declaration_descriptors,
+            applied_adapter_metadata,
             type_aliases,
             specialization_requests,
             specialization_outputs,
@@ -274,8 +292,11 @@ pub(crate) fn collect_project_hir_source_modules_with_options(
             class_field_defaults,
             declaration_metadata,
             class_adapter_providers,
+            class_adapter_markers,
+            class_adapter_selections,
             descriptor_functions,
             declaration_descriptors,
+            applied_adapter_metadata,
             type_aliases,
             specialization_requests,
             specialization_outputs,
@@ -289,6 +310,7 @@ pub(crate) fn collect_project_hir_source_modules_with_options(
             warnings: warnings.clone(),
         };
         collect_module_exports(module_name, &lowering_result, &mut external_defs);
+        erase_marker_imports(&mut module, &external_defs);
         hir_modules.insert(module_name.clone(), module);
         flow_graphs.insert(module_name.clone(), flow_graph);
         module_diagnostics.insert(

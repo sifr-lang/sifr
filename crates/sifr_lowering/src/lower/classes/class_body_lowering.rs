@@ -7,11 +7,11 @@ use super::parameter_conventions::{
 use super::rust_opaque_validation::validate_rust_opaque_close_method;
 use super::{
     collect_enum_variants, constructor_uninitialized_storage_at_first_self_use,
-    function_body_contains_yield, get_newtype_inner, get_parent_class, has_decorator,
-    is_enum_class, is_operator_dunder, is_protocol_class, lower_function_stmts,
-    missing_method_param_annotation, resolve_annotation_expr, unsupported_class_declaration, Expr,
-    FunctionType, HirClass, HirClassKind, HirFunction, HirParam, LowerCtx, MethodKind,
-    ParamConvention, Ranged, Stmt, StmtClassDef, Type,
+    function_body_contains_yield, get_newtype_inner, has_decorator, is_enum_class,
+    is_operator_dunder, is_protocol_class, lower_function_stmts, missing_method_param_annotation,
+    resolve_annotation_expr, unsupported_class_declaration, Expr, FunctionType, HirClass,
+    HirClassKind, HirFunction, HirParam, LowerCtx, MethodKind, ParamConvention, Ranged, Stmt,
+    StmtClassDef, Type,
 };
 use crate::lower::ownership_diagnostics;
 use crate::lower::python_interop::{
@@ -385,7 +385,8 @@ pub(in crate::lower) fn lower_class(
         _ => return None,
     };
 
-    let parent_class_name = get_parent_class(class_def);
+    let parent_class_name =
+        crate::lower::descriptor_declarations::data_parent_name(&class_name, ctx);
     let parent_type = parent_class_name
         .as_ref()
         .and_then(|parent_name| ctx.class_types.get(parent_name))

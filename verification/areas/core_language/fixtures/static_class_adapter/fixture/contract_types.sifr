@@ -1,0 +1,3 @@
+class ContractDescriptor:
+    kind: str
+    enabled: bool
