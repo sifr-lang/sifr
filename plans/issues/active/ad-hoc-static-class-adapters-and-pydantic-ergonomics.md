@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-18. M0 is complete; M1 is next.
+Status: active on 2026-08-18. M0-M3 are complete; M4 is next.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -577,6 +577,47 @@ Acceptance criteria:
 
 Exit gate: an external package can adapt a normal class before the compiler
 builds its constructor and structural shape.
+
+State: complete
+PR: [`sifr-lang/sifr#3252`](https://github.com/sifr-lang/sifr/pull/3252)
+Base SHA: `79e2f6a51ca7166f5aef813b9325817c56dd0038`
+Candidate SHA: `28cb499ba96cabd65e31c7577927911eef9d6648`
+Merge SHA: `cc9f1a48a860074817cc0dcdde91ef113a5590c7`
+Changed paths: adapter-marker, declaration-plan, canonical type identity,
+pre-finalization execution, structural metadata, export, driver plumbing, and
+focused tests under `crates/`; `sifr.meta`; const-specialization and durable
+architecture documentation; and the non-Pydantic `static_class_adapter`
+fixture.
+Validation: all 10 focused early-adapter driver tests; all 10 typed-descriptor
+regression tests; the canonical callable/type identity unit test; direct
+`sifr check` and native `sifr run` of the four-module facade/re-export fixture;
+workspace clippy; formatting; HIR maintainability; the 900-line file-size
+guardrail (`PASS`, 3146 files); and `git diff --check`. The broad non-E2E
+command passed 109 CLI unit tests, 12 build-output integration tests, and 37
+of 38 E2E harness tests; its only failure was the separately owned pre-v1
+`protocol_bound_unknown_forwarded_typevar.sifr` CFG/diagnostic mismatch.
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3252#issuecomment-5328092741)).
+The create-PR and merge gates were each run once on the unchanged candidate.
+Both stopped at the pre-v1-owned verification-taxonomy checker before
+M3-specific lanes; the checker rejected its own compatibility inventory and
+ordinary M2/M3 source words. Exact evidence is recorded on the PR
+([create-PR](https://github.com/sifr-lang/sifr/pull/3252#issuecomment-5328100347),
+[merge](https://github.com/sifr-lang/sifr/pull/3252#issuecomment-5328107699)).
+Deferred follow-up: M4 must normalize the adapter field echo against inferred
+constructor fields and inherited re-annotations; preserve or explicitly test
+the old special-base parent-selection semantics; reject private-marker exports
+and annotation-position marker misuse locally; use direct module identity for
+local provider lookup; and replace the remaining enum-variant debug-derived
+canonical identity. M12 must register both non-Pydantic descriptor/adapter
+fixtures in automated verification, exercise a real unknown plan output, and
+revisit the validated adapter-value invariant without a compiler panic path.
+The minor declaration-plan diagnostic wording should be corrected with the
+next mechanism edit. Cross-module const helpers remain optional package
+ergonomics rather than an M3 requirement. The pre-v1 worktree and failures
+remain entirely outside this phase.
+Next action: implement M4 defaults, `Annotated`, inheritance, and identity.
 
 ### M4: Defaults, `Annotated`, Inheritance, and Identity
 
