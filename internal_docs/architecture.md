@@ -216,6 +216,48 @@ import collections
 
 **Migration note:** code that relies heavily on exception propagation, import-time side effects, arbitrary-precision integers, or runtime reflection will require redesign when porting to Sifr. The compiler provides clear diagnostics for each divergence.
 
+### Pre-v1 canonical API contracts
+
+The checked-in compatibility inventory at
+`verification/compatibility/pre_v1_compatibility_inventory.json` is the
+authority for the pre-v1 removal phase. Public stdlib modules must expose the
+canonical wrapper names from that inventory, and imports from `_sifr.*` must be
+renamed when they are implementation details. The inventory distinguishes
+public exports from private implementation imports and assigns every removal
+to one phase item.
+
+The canonical numeric spellings are `sifr.math.fabs` and `sifr.math.pow`;
+`abs_val`, `pow_val`, `min_val`, `max_val`, and `round_val` are private
+intrinsic spellings, not public aliases. The canonical module-state random
+operations are `randint`, `random`, `uniform`, and `choice`. Runtime-information
+modules expose their wrapper names (`system`, `time`, `argv`, `getenv`, and the
+other inventory entries) rather than intrinsic-shaped imports. `UTC` is the
+single public zero-offset timezone constructor.
+
+The canonical text/data spellings are the unprefixed public operations:
+`re.search`/`sub`/`findall`/`split`, `json.loads`, the `json.dumps*` family,
+`tomllib.loads`, the `base64.b64*` family, `fnmatch.filter`, `html.escape` and
+`unescape`, `calendar.isleap`/`weekday`/`monthrange`, and `url.parse`/`build`.
+Typed text and bytes Base64 operations remain distinct because their input and
+output types differ. `Pattern.is_match` is the approved spelling for the Rust
+and Sifr keyword conflict.
+
+First-class `bytes` owns binary storage and construction. Hashing is
+bytes-native; text callers encode explicitly. `HashObject.digest()` and
+`hexdigest()` remain distinct because one returns bytes and the other returns
+hexadecimal text. First-class generic `set[T]` replaces list-backed set
+helpers. `heapq` and `bisect` use explicit mutating operations only.
+
+Receiver syntax has no compatibility interpretation: `self` is a shared
+borrow, `mut self` is a mutable borrow, `own self` is an immutable owned
+receiver, and `own mut self` is a mutable owned receiver. Method-body analysis
+does not change the declared convention.
+
+The same inventory locks the external and current product contracts excluded
+from broad compatibility scans, including DLPack capsule requirements, the LSP
+UTF-16 default, Phase 40 release bootstrap `legacy-index` evidence, and
+`RuleStatus::Deprecated` lint lifecycle metadata.
+
 ### API Naming Divergences
 
 Several stdlib functions intentionally diverge from CPython names due to Rust keyword conflicts or Sifr type-system constraints. This table is the authoritative reference — do not "fix" these names or introduce inconsistent workarounds.
@@ -223,10 +265,8 @@ Several stdlib functions intentionally diverge from CPython names due to Rust ke
 | sifr name | CPython name | reason |
 |---|---|---|
 | `sifr.shutil.move_file` | `shutil.move` | `move` is a Rust keyword |
-| `sifr.math.abs_val` | `math.fabs` (float abs) | `abs` is a Sifr built-in; `abs_val` is the intrinsic name used internally |
-| `sifr.math.pow_val` | `math.pow` | `pow` shadows the built-in; `pow_val` is the intrinsic; `sifr.math.pow` is the CPython-compatible wrapper |
-| `sifr.math.min_val` / `sifr.math.max_val` | `min` / `max` | `min`/`max` are Sifr built-ins; `min_val`/`max_val` are the float-specific intrinsics |
-| `sifr.math.round_val` | `round` | `round` is a Sifr built-in; `round_val` is the float intrinsic |
+| `sifr.math.fabs` | `math.fabs` | Canonical public float-absolute operation; `_sifr.math.abs_val` is private implementation detail. |
+| `sifr.math.pow` | `math.pow` | Canonical public float-power operation; `_sifr.math.pow_val` is private implementation detail. |
 | `sifr.itertools.repeat` | `itertools.repeat` | CPython-compatible name; `repeat_val` was the old non-CPython name (removed) |
 | `sifr.itertools.count` | `itertools.count` | CPython-compatible lazy counter iterator |
 | `sifr.itertools.count_from` | — (bounded helper over `count`) | Sifr extension; finite convenience helper equivalent to `islice(count(start, step), n)` |
@@ -451,13 +491,16 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
   - `own x: list[int]` -> owned immutable -> `x: Vec<SifrInt>` under the integer-model amendment
   - `own mut x: list[int]` -> owned mutable -> `mut x: Vec<SifrInt>` under the integer-model amendment
   Scalar value-semantic types (`int`, fixed-width integers, `float`, `bool`) remain reusable after calls regardless of annotation; `mut` on those parameters only affects local rebinding/mutation semantics, not observable ownership transfer.
-- **Method receivers:** lowering owns one canonical `ReceiverConvention`
-  (`SharedBorrow`, `MutableBorrow`, or `Owned`) and stores it in method
-  signatures, `HirFunction`, and every resolved method call. User class
-  methods infer `SharedBorrow` or `MutableBorrow` to a fixed point across
-  delegation, fields, generics, protocols, and inheritance; declaration-first
-  foreign methods may explicitly use `Owned`. Codegen and flow analysis consume
-  this metadata and do not re-infer receiver mutability. Constructor `self` is
+- **Method receivers:** source syntax is authoritative. `self` selects
+  `SharedBorrow`, `mut self` selects `MutableBorrow`, and both `own self` and
+  `own mut self` select `Owned`; the owned forms retain their declared binding
+  mutability separately. Lowering stores that explicit contract in method
+  signatures, `HirFunction`, and every resolved method call. Protocol checking,
+  codegen, and flow analysis consume the declaration and do not infer or
+  reinterpret it from the method body, delegation, fields, generics, protocols,
+  or inheritance. The pre-v1 compatibility-removal phase owns deletion of the
+  current inference implementation before this contract is considered closed.
+  Constructor `self` is
   fresh mutable storage even though the Rust constructor is a static `new`
   function. Constructor field values and self-independent statements are
   evaluated in source order. At the first statement that needs `self`, codegen
@@ -470,7 +513,7 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
   initialization.
 - **Mutable receiver and argument places:** lowering proves mutable storage as
   a `BindingId` root plus nominal field projections. Stable owned locals,
-  mutable/`own mut` parameters, inferred mutable `self`, and supported
+  mutable/`own mut` parameters, explicitly mutable `self`, and supported
   non-optional/non-recursive field paths are accepted. Indexes, slices,
   optional/recursive projections, callable fields, loop/comprehension
   elements, and match captures are rejected before codegen. Owned receiver
