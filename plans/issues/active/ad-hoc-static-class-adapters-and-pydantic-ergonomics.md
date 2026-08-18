@@ -168,30 +168,33 @@ The package work includes:
 
 ### Deliberate exclusions
 
-This phase does not implement:
+These exclusions are terminal for this phase. Their reasons are architectural,
+not missing milestone dependencies:
 
-- Python metaclasses or runtime class mutation,
-- dynamic `create_model`,
-- arbitrary syntax-tree macros,
-- runtime schema construction,
-- Python plugins or custom Core Schema hooks,
-- Pydantic dataclasses,
-- private attributes,
-- `validate_call`,
-- `model_construct` and dynamic `model_copy` updates,
-- runtime `model_fields` and `model_rebuild`,
-- ORM `from_attributes`,
-- arbitrary runtime types,
-- multiple data inheritance,
-- mixed class-adapter providers,
-- assignment-validation interception,
-- Python-compatible frozen-model emulation,
-- public wrap-handler continuations,
-- wildcard `field_validator("*")` targeting, and
-- schema generation for an unbound generic model.
+| Excluded feature | Terminal reason |
+| --- | --- |
+| Python metaclasses or runtime class mutation | Classes and schema programs are finalized statically; runtime mutation would invalidate checked layout and identity. |
+| Dynamic `create_model` | Runtime type and schema creation conflicts with concrete compile-time type identity and sealed programs. |
+| Arbitrary syntax-tree macros | The adapter is deliberately limited to typed declarations and a bounded plan so packages cannot rewrite language semantics. |
+| Runtime schema construction | One build-time canonicalizer and sealed static program remain the only schema authority. |
+| Python plugins or custom Core Schema hooks | Published binaries contain no Python runtime, and open runtime hooks would bypass the checked schema contract. |
+| Pydantic dataclasses | Dataclass field discovery and construction are a separate authoring model; this phase standardizes the adapted-class model only. |
+| Private attributes | An adapter cannot add hidden per-instance storage or fields outside the declared structural layout. |
+| `validate_call` | Intercepting arbitrary function calls is a separate function-adaptation mechanism, not class declaration adaptation. |
+| `model_construct` | Construction that bypasses validation conflicts with the sealed validate-and-construct boundary. |
+| Dynamic `model_copy` updates | Dynamic field updates conflict with static field typing and ownership; ordinary Sifr construction or explicit cloning is used instead. |
+| Runtime `model_fields` and `model_rebuild` | Runtime reflection and schema rebuilding conflict with immutable compile-time shapes and programs. |
+| ORM `from_attributes` | Arbitrary attribute probing has no place in Sifr's typed structural-input contract. |
+| Arbitrary runtime types | Values require a statically checked type and structural or declared nominal mapping; there is no unchecked runtime-type escape. |
+| Multiple data inheritance | One data parent preserves deterministic layout, constructor synthesis, and field identity. |
+| Mixed class-adapter providers | Two providers would create ambiguous declaration-plan, ordering, and cache authorities. |
+| Assignment-validation interception | Intercepting ordinary field mutation would change core assignment semantics and ownership rather than adapt a declaration. |
+| Python-compatible frozen-model emulation | Sifr uses ordinary static immutability and ownership contracts instead of a Python runtime flag. |
+| Public wrap-handler continuations | A user-visible continuation would require a new ownership, lifetime, and effect contract; internal engine wrap nodes do not expose that continuation. |
+| Wildcard `field_validator("*")` targeting | Explicit field identities keep target checking, diagnostics, inheritance, and ordering static and deterministic. |
+| Schema generation for an unbound generic model | A schema program requires a concrete owner type, substituted fields, and a complete cache identity. |
 
-These exclusions are terminal for this phase. They are not hidden later
-milestones.
+No milestone in this phase implements or depends on an excluded feature.
 
 ## Architecture Boundaries
 
@@ -249,18 +252,59 @@ The phase must not add:
 - Record external blockers in their owning issue.
 - Stop the current item when an external blocker prevents completion.
 
+## M0 Coverage and Ownership Inventory
+
+The implementation baseline for this inventory is compiler merge
+`afc87ef9dbe669ced9eca1b2fa57a9eeef809ffb` and `pydantic-sifr` main
+`0c643a676d821b92ce4dfa824a8f6a5b98073d4c` on 2026-08-18. The completed
+native engine remains the sole execution path. The table identifies the
+existing path, the package-neutral compiler mechanism still required, and the
+one package or engine owner for every selected feature family.
+
+| Selected feature family | Current implementation support | Compiler mechanism owner | Package/engine owner and delivery |
+| --- | --- | --- | --- |
+| `BaseModel`, adapted inheritance, and concrete generic models | Ordinary data inheritance and raw `@const_specialize` exist; no erased marker facade exists. | M1-M4 declaration collection, marker, defaults, inheritance, and identity | `pydantic-sifr` M8 declares the marker and adapter; the existing Core Schema engine is reused. |
+| `Field`, `ConfigDict`, and `Annotated` | Raw `@metadata` strings and a scalar-declared `ShapeMetadata.value` feed the current specializer. | M1-M4 spanned typed descriptors, typed `D`, normalized defaults, and ordered annotation descriptors | `pydantic-sifr` M8 owns descriptor values, merge rules, configuration, and Core Schema derivation. |
+| Required, constant-default, and factory-default fields | Ordinary defaults and engine default nodes exist, but descriptor calls cannot finalize constructor requiredness and factories have no sealed callable identity. | M2 and M4 own `CallableIdentity`, field states, type checking, constructor synthesis, and identity. | `pydantic-sifr` M8 owns default validation policy and schema nodes. |
+| Aliases, alias paths/choices, generators, constraints, extras, strictness, field schema annotations, and unconditional field exclusion | The engine and raw-metadata specializer already implement the selected policies. | M1-M4 provide precise origins and typed declaration delivery only. | `pydantic-sifr` M8 replaces raw metadata and remains the sole policy/schema owner. |
+| Nested, optional, union, tagged-union, recursive, enum, literal, and concrete generic model derivation | The existing Core Schema path supports these shapes through raw specialization. | M2-M4 preserve typed recursive identity, descriptors, inheritance, and concrete substitution. | `pydantic-sifr` M8 derives the same existing schema nodes from the new facade. |
+| URL, multi-host URL, and compiled-pattern public values | The native core validates specialized payloads, but safe Sifr-visible nominal construction/projection is missing. | M6 owns package-neutral nominal mapping and structural output. | `pydantic-sifr` M8 owns public wrapper mappings and schema behavior; issue #27 transfers when M6 changes its substrate. |
+| Field and model validators | Checked method-slot prototypes and engine validator stages exist; declaration-bound handler selection and dispatch are incomplete. | M5 owns checked method descriptors, `Self`, owned receivers, handler identity, dispatch, and cleanup. | `pydantic-sifr` M9 owns modes, targets, ordering, context, errors, and schema placement; issue #10 transfers when its owned handler substrate is changed. |
+| Field/model serializers and computed fields | Serializer plans exist, but checked user serializer/computed method dispatch is blocked. | M5 supplies handler slots; M6 supplies structural output; M7 supplies dump attachment. | `pydantic-sifr` M10 owns handler policy, `when_used`, computed fields, selection, serialization mode, and corpus; issues #14 and the selected rows of #17 transfer here. |
+| Structural, JSON, and strings-profile validation | Free functions use the sealed engine; strings input is currently `bytes`, not generic structural `S`. | M7 owns attached type methods; M11 owns the generic all-string structural-input check. | `pydantic-sifr` M11 owns public signatures and keeps the existing validator engine. |
+| Structural and JSON serialization, typed include/exclude, alias/default/`None` policies | `model_dump_json` and the serializer engine exist; no `dict[str, JsonValue]` structural dump exists. | M6 owns structural dictionary output; M7 owns attached instance methods. | `pydantic-sifr` M10 owns dump signatures and serialization policy over the existing engine. |
+| Validation-mode and serialization-mode JSON Schema | The existing free function emits from the sealed program but requires a dummy typed value. | M7 owns type-directed attached APIs with no owner value. | `pydantic-sifr` M11 owns the type method and configuration over the existing JSON Schema engine. |
+| Structured validation and serialization errors | The native core has structured validation details; facade coverage and complete serialization error exposure remain. | M1 supplies descriptor-origin diagnostics; M5-M7 preserve checked callback/API boundaries. | `pydantic-sifr` M9-M11 own public error types, context, and aggregation. |
+| `RootModel[T]` | Non-model roots work in the engine; no familiar declared generic facade exists. | M3-M4 and M7 provide marker adaptation, concrete generic identity, and APIs. | `pydantic-sifr` M8 declares the stored `root` field and M11 completes operations. |
+| `TypeAdapter[T]` | The Rust core has a reusable typed adapter and target-inferred functional calls; no selected public class facade exists. | M7 provides concrete owner/API substitution and rejects unbound generic programs. | `pydantic-sifr` M11 owns the facade and routes it to the same sealed program. |
+
+### Public operation replacement inventory
+
+| Public operation | Baseline path | Classification | Final owner |
+| --- | --- | --- | --- |
+| `Model.model_validate` | `model_validate[T, Input](input)` free function | Existing path to attach and retain only as a thin functional view | Compiler M7 attachment; package M11 signature and engine call |
+| `Model.model_validate_json` | `model_validate_json[T](bytes)` free function | Existing path to attach and retain only as a thin functional view | Compiler M7; package M11 |
+| `Model.model_validate_strings` | `model_validate_strings[T](bytes)` free function | Existing path to replace with generic structural `S`, attach, and retain as a thin view | Compiler M7/M11 checking; package M11 |
+| `model.model_dump` | No public structural-dictionary operation | Net-new facade over the existing serializer plan and M6 structural output | Compiler M6/M7; package M10 |
+| `model.model_dump_json` | `model_dump_json[T](value)` free function | Existing path to attach and retain only as a thin functional view | Compiler M7; package M10 |
+| `Model.model_json_schema` | `model_json_schema[T](target: T)` free function whose value is ignored | Existing path to replace with a type-directed call and retain only as a thin functional view without a dummy value | Compiler M7; package M11 |
+| `TypeAdapter[T]` validation, dump, and schema methods | Reusable native typed adapter plus target-inferred free functions | Net-new public facade over existing sealed-program operations | Compiler M7; package M11 |
+| `RootModel[T]` validation, dump, and schema methods | Engine supports non-model roots; no declared facade | Net-new public facade using the same attached operation sets | Compiler M3/M4/M7; package M8/M11 |
+
+All operation facades above call the existing Core Schema program. None owns a
+second validator, serializer, schema generator, or configuration authority.
+
 ## Existing Dependency Reconciliation
 
-M0 must reconcile this phase with existing issue owners:
+M0 reconciles this phase with the existing owners as follows:
 
-- [`sifr-lang/sifr#3233`](https://github.com/sifr-lang/sifr/issues/3233) owns the
-  missing structural-identity asset in the installed sysroot.
-- [`pydantic-sifr#10`](https://github.com/sifr-lang/pydantic-sifr/issues/10)
-  owns modular const-graph and handler-slot prerequisites.
-- [`pydantic-sifr#14`](https://github.com/sifr-lang/pydantic-sifr/issues/14)
-  owns serializer and computed-field callback support.
-- [`pydantic-sifr#27`](https://github.com/sifr-lang/pydantic-sifr/issues/27)
-  owns structural mapping gaps for public values.
+| Existing issue | Current state and ownership disposition |
+| --- | --- |
+| [`sifr-lang/sifr#3233`](https://github.com/sifr-lang/sifr/issues/3233) | Closed before M0. Its self-contained installed-sysroot result is a consumed M7 publication prerequisite, not active duplicate work. |
+| [`pydantic-sifr#10`](https://github.com/sifr-lang/pydantic-sifr/issues/10) | Remains the owner of modular const-graph and handler-slot gaps until M5 or M8 first changes that code. That merge unit must transfer the selected substrate into this phase, update or close #10, and leave public wrap continuations terminally excluded. |
+| [`pydantic-sifr#14`](https://github.com/sifr-lang/pydantic-sifr/issues/14) | Remains the owner of serializer/computed callback execution and typed context until M10 changes the owned package code. M10 must transfer and update or close #14 in the same merge unit. |
+| [`pydantic-sifr#17`](https://github.com/sifr-lang/pydantic-sifr/issues/17) | Remains the serializer-corpus owner. M10 transfers only rows selected by this phase when their typed surfaces land; out-of-scope temporal, Decimal, Complex, and UUID work remains with its existing owners. |
+| [`pydantic-sifr#27`](https://github.com/sifr-lang/pydantic-sifr/issues/27) | Remains the owner of specialized public-value mapping gaps until M6 changes the substrate. M6 must transfer and update or close #27 in the same merge unit. |
 
 Transfer an issue into this phase before its milestone changes that issue's
 owned code. Close or update the old issue in the same merge unit. Do not keep

@@ -373,6 +373,124 @@ An adapter cannot:
 - generate arbitrary HIR or Rust code, or
 - select behavior from an unresolved package or decorator basename.
 
+### Package-author declaration syntax
+
+The compiler-owned package-author surface uses declaration decorators. These
+decorators are compile-time declarations, have no runtime value, and resolve
+every referenced module and symbol by canonical imported identity. String
+arguments below identify a module and a symbol separately, as they do for
+`@const_specialize("package.module", "function")`; they are not late-bound
+qualified-name strings.
+
+An adapter provider is a const function whose decorator binds the provider to
+one closed structural descriptor type `D`:
+
+```sifr
+@class_adapter_provider("fixture.contract_types", "ContractDescriptor")
+def adapt_contract(
+    declaration: ClassDeclaration[ContractDescriptor],
+) -> DeclarationPlan[ContractDescriptor]:
+    ...
+```
+
+`@class_adapter_provider("module", "descriptor_type")` is valid only on a
+const-evaluable function with the exact generic input and output relationship
+above. The strings resolve the declared `D`; the annotations must resolve to
+that same type. The decorated function's canonical identity is the provider
+identity. `D` can be a record or a closed union of records, but it cannot be
+`Any`, contain runtime resources, or depend on an unresolved type variable.
+Declaring the provider and `D` does not select that provider for any class.
+
+Descriptor functions name their provider with the same two-string module and
+symbol form:
+
+```sifr
+@field_descriptor("fixture.contract", "adapt_contract")
+def option(...) -> ContractDescriptor:
+    ...
+
+@class_descriptor("fixture.contract", "adapt_contract")
+def contract_config(...) -> ContractDescriptor:
+    ...
+
+@method_descriptor("fixture.contract", "adapt_contract")
+def before_call(...) -> ContractDescriptor:
+    ...
+
+@type_descriptor("fixture.contract", "adapt_contract")
+def bounded(...) -> ContractDescriptor:
+    ...
+```
+
+Each descriptor decorator implies bounded const evaluation and is valid only
+when every return member is assignable to the provider's declared `D`. The
+decorator kind fixes the declaration locations where calls are accepted. The
+compiler rejects a provider mismatch before invoking either descriptor or
+adapter code.
+
+A field-less marker class selects the provider explicitly:
+
+```sifr
+@class_adapter_marker("fixture.contract", "adapt_contract")
+class Contract:
+    pass
+```
+
+`@class_adapter_marker` is the only declaration that selects a provider for a
+class hierarchy. The provider function, its `D`, and the marker are separate
+canonical declarations, so descriptor collection can be implemented and
+checked before marker-base selection is enabled.
+
+One consumed, field-less declaration fixes an attached-API set identity, and
+package functions enter that set through `@attached_api`:
+
+```sifr
+@attached_api_set
+class ContractApi:
+    pass
+
+@attached_api(
+    "fixture.api",
+    "ContractApi",
+    public_name="decode",
+    receiver="type",
+    owner="T",
+)
+def decode[T: StaticProgram, Input: Structural](
+    input: Input,
+) -> Result[T, DecodeError]:
+    ...
+
+@attached_api(
+    "fixture.api",
+    "ContractApi",
+    public_name="encode",
+    receiver="immutable",
+    owner="T",
+)
+def encode[T: StaticProgram](target: T) -> Result[bytes, EncodeError]:
+    ...
+```
+
+`@attached_api_set` consumes the class declaration as a compile-time namespace;
+the class has no runtime value or storage. The two leading strings on
+`@attached_api` resolve that set's canonical module and symbol. The adapter
+plan selects the same identity. `public_name` is a literal identifier.
+`receiver` is exactly `"type"`, `"immutable"`, `"mutable"`, or `"owned"`.
+`owner` names one declared type parameter: a type receiver substitutes it
+without passing a dummy value; an instance receiver requires the first
+function parameter to use that owner type with the matching default-borrow,
+`mut`, or `own` convention. Remaining type parameters stay available for
+normal call-site inference.
+
+A method descriptor call on a user method produces a sealed method-declaration
+identity in `ClassDeclaration[D]`. An adapter can return only that identity in
+a handler reference; it cannot construct a target from a method-name string.
+The compiler resolves `@classmethod`, `@staticmethod`, and receiver form before
+it evaluates the package method descriptor. This is the complete
+package-author syntax: normal model authors use the package's descriptor
+functions and marker base, not these compiler declaration decorators.
+
 ### Marker bases
 
 A package can mark a field-less class as a class-adapter marker. The compiler
@@ -1868,6 +1986,37 @@ Permanent Sifr-safe differences include:
 - error codes are Sifr-owned even when initially mapped from a Pydantic case.
 
 The compatibility documentation includes a searchable API/behavior matrix.
+
+### Terminal ergonomic exclusions
+
+The following exclusions are final architecture decisions, not deferred
+milestone dependencies:
+
+| Excluded feature | Reason |
+| --- | --- |
+| Python metaclasses or runtime class mutation | Static class and schema finalization cannot remain sound if runtime code changes checked declarations or layout. |
+| Dynamic `create_model` | Runtime type creation has no concrete compile-time owner or sealed schema-program identity. |
+| Arbitrary syntax-tree macros | Packages receive typed declarations and return a bounded plan so they cannot redefine language semantics. |
+| Runtime schema construction | Build-time package canonicalization and one sealed program are the sole schema authority. |
+| Python plugins or custom Core Schema hooks | Published artifacts contain no Python runtime, and open runtime hooks would bypass static schema verification. |
+| Pydantic dataclasses | Dataclass discovery and construction form a separate authoring model from the selected adapted-class contract. |
+| Private attributes | Adapters cannot add hidden storage outside the declared structural layout. |
+| `validate_call` | General function-call interception requires a function-adapter contract that this class-adapter architecture does not introduce. |
+| `model_construct` | Bypassing validation conflicts with the sealed validate-and-construct boundary. |
+| Dynamic `model_copy` updates | Dynamic field updates conflict with static typing and ownership; ordinary Sifr construction or explicit cloning is the replacement. |
+| Runtime `model_fields` and `model_rebuild` | Runtime reflection and schema rebuilding conflict with immutable compile-time shapes and programs. |
+| ORM `from_attributes` | Arbitrary attribute probing is outside the typed structural-input contract. |
+| Arbitrary runtime types | Every public value requires a statically checked structural or declared nominal mapping. |
+| Multiple data inheritance | One data parent preserves deterministic layout, constructor synthesis, and inherited field identity. |
+| Mixed class-adapter providers | Multiple providers would create ambiguous plan, ordering, and cache authorities. |
+| Assignment-validation interception | Intercepting ordinary mutation would change Sifr assignment and ownership semantics rather than adapt a declaration. |
+| Python-compatible frozen-model emulation | Sifr's ordinary immutability and ownership rules are the static replacement. |
+| Public wrap-handler continuations | Exposing a continuation requires a new ownership, lifetime, and effect contract; engine-internal wrap nodes remain non-public. |
+| Wildcard `field_validator("*")` targeting | Explicit field identities preserve static target checking, diagnostics, inheritance, and deterministic ordering. |
+| Schema generation for an unbound generic model | Program identity and field shapes exist only after concrete owner-type substitution. |
+
+No implementation milestone depends on these features. A future proposal would
+need its own architecture rather than treating one as unfinished work here.
 
 ## Safety and Resource Contract
 
