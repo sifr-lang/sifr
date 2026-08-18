@@ -21,7 +21,7 @@ The phase is complete when all these conditions are true:
 - Each stdlib operation has one canonical public name and signature.
 - First-class types replace temporary helper modules and procedural adapters.
 - Receiver rules do not infer or reinterpret syntax for source compatibility.
-- Package manifests accept one source-root schema and one source layout.
+- Package manifests accept one source-root schema and one single-root layout.
 - The installer accepts one canonical layout.
 - Diagnostics do not retain old Sifr codes or old syntax recognizers.
 - Lowering does not recognize hidden `__compat_*` names.
@@ -56,9 +56,9 @@ The initial audit found these Sifr-owned compatibility surfaces:
 | Hashing | String helpers coexist with bytes-native helpers | Keep one canonical bytes-native contract. |
 | Sorted collections | `heapq` and `bisect` keep copy-returning compatibility APIs | Keep the canonical mutating APIs. |
 | Receivers | Lowering retains inferred mutability and old `own self` interpretation | Lock explicit receiver rules, then remove compatibility inference. |
-| Package manifests | `[source].root` and `[source].roots` select different schemas and source layouts | Keep `[source].root` and the `src/` layout only. |
+| Package manifests | Package and driver readers accept different source-root schemas and defaults | Keep `[source].root` and the `src/` default only. |
 | Installation | Self-update accepts toolchain-root and flat layouts | Keep one toolchain-root layout. |
-| Diagnostics | Old workspace codes and old syntax recognizers remain | Keep canonical diagnostics only. |
+| Diagnostics | Production project paths emit old workspace codes beside canonical import codes | Keep canonical diagnostics only. |
 | Hidden names | Two `__compat_sifr_*` recognizers remain after alias generation was removed | Remove the recognizers and their tests. |
 | Verification | Profiles require `legacy_facade` and accept schema versions 1 and 2 | Keep one schema and one selected-area execution model. |
 | E2E expectations | The harness accepts assertions and `# expect-stdout` directives | Keep assertion-based runtime checks only. |
@@ -76,6 +76,9 @@ Primary evidence files:
 - `internal_docs/distribution_pipeline.md`
 - `docs/package_management.md`
 - `crates/sifr_package/src/manifest/production.rs`
+- `crates/sifr_driver/src/workspace/mod.rs`
+- `crates/sifr_driver/src/project/discovery.rs`
+- `crates/sifr_driver/src/project/compile_order.rs`
 - `crates/sifr_package/src/imports/source_map.rs`
 - `crates/sifr/tests/e2e_support/harness_model.rs`
 - `internal_docs/typescript_go_architecture_transfer_guardrails.md`
@@ -322,6 +325,7 @@ Scope:
 - If the old export remains live, canonicalize `random_choice` or `choice`.
 - Preserve module-state behavior through the canonical random API.
 - Migrate all docs, demos, fixtures, snapshots, and audit sources.
+- Delete `demos/stdlib_aliases/` and its `stdlib_naming` reference.
 - Remove old exports and their compiler manifest entries.
 
 Acceptance criteria:
@@ -523,6 +527,8 @@ Scope:
 - Implement the approved owned-receiver meaning or reject unsupported forms.
 - Require explicit receiver syntax in protocols and implementations.
 - Update stdlib classes, demos, fixtures, algorithmic corpora, and docs.
+- Classify `report_legacy_name_conflicts` as current ownership behavior.
+- Rename it to describe same-binding conflicts without the `legacy` term.
 - Keep compiler-synthesized constructor storage rules separate.
 
 Acceptance criteria:
@@ -533,6 +539,7 @@ Acceptance criteria:
 - [ ] Protocol conformance compares explicit receiver conventions.
 - [ ] Owned receiver behavior has native runtime coverage.
 - [ ] Repository Sifr sources use explicit canonical receiver syntax.
+- [ ] Current same-binding conflict reporting has no compatibility name.
 
 Focused validation:
 
@@ -547,32 +554,52 @@ Focused validation:
 
 ID: `pre_v1_compat_9_package_layout`
 
-Purpose: Keep one package manifest schema and one source layout.
+Purpose: Keep one package manifest schema and one single-root layout.
 
 Scope:
 
 - Keep `[source].root` as the only source-root key.
-- Keep `src/` as the default and canonical source layout.
-- Remove `[source].roots` parsing and its `sifr/` default.
+- Keep one relative source root and use `src/` as its default.
+- Remove `[source].roots` from the package and driver readers.
+- Remove the package `sifr/` default and the driver `.` default.
+- Replace driver source-root collections with one source root.
+- Remove driver multi-root resolution and its ambiguity messages.
 - Remove the schema selection that depends on the presence of `roots`.
 - Reject `[exports].modules` and `[[bin]]` in all package manifests.
+- Remove `parse_exports`, the manifest `exports` field, and
+  `validate_exports_match_sources`.
+- Derive the canonical `ImportRoot` value from the package name only.
+- Retain `ImportRoot` as an internal namespace type, not a manifest reader.
+- Remove the dedicated not-production diagnostics for old manifest tables.
+- Use the normal unsupported-field diagnostic for those tables.
+- Remove the related `SIFR-PACKAGE-0701` and `SIFR-PACKAGE-0711` docs,
+  fixtures, registry rows, and generated catalog data.
+- Retain `SIFR-WORKSPACE-0001` through `SIFR-WORKSPACE-0004`.
+- Update these codes for one `[source].root` and its validation errors.
 - Migrate package and project-workspace fixtures to `src/__init__.sifr`.
+- Migrate driver workspace tests to the single-root schema and default.
+- Remove `test_package_cli_check_explicit_file_falls_back_for_legacy_workspace_manifest`.
 - Update package tests, snapshots, examples, and public documentation.
 - Remove the Layout Migration section from `docs/package_management.md`.
 - Do not add a manifest converter, source-root fallback, or warning period.
 
 Acceptance criteria:
 
-- [ ] The manifest parser accepts `[source].root` only.
-- [ ] A package without `[source]` uses `src/` only.
-- [ ] The manifest parser rejects `[source].roots`.
+- [ ] Every package and workspace reader accepts `[source].root` only.
+- [ ] Each reader accepts at most one relative source root.
+- [ ] Each reader defaults to `src/` when `[source]` is absent.
+- [ ] No crate reads `[source].roots` or handles multiple source roots.
 - [ ] The manifest parser rejects `[exports].modules` and `[[bin]]`.
+- [ ] Import roots come from canonical package names only.
+- [ ] Workspace source-root diagnostics describe `[source].root` only.
 - [ ] All repository package fixtures use the canonical source layout.
-- [ ] Public package documentation describes one schema and one layout.
+- [ ] Public package documentation describes one single-root layout.
 
 Focused validation:
 
 - `sifr_package` manifest and source-map tests
+- `sifr_driver` workspace, discovery, and diagnostic tests
+- CLI mode-resolution tests
 - Package public-API tests
 - Project-workspace verification suites
 - Package-management documentation checks
@@ -616,9 +643,15 @@ Purpose: Keep one diagnostic family for each current compiler error.
 Scope:
 
 - Remove `SIFR-WORKSPACE-0101` through `SIFR-WORKSPACE-0104`.
-- Keep canonical `SIFR-IMPORT-*` diagnostics for source import errors.
-- Remove test-only workspace diagnostic emitters and rendering harness rows.
+- Migrate production project emitters to canonical `SIFR-IMPORT-*` codes.
+- Replace `ResolutionError::to_diagnostic` with a canonical span-less builder.
+- Use an `<unknown>` primary location for a span-less root-module error.
+- Keep resolution-scope, tried-path, and candidate-path notes.
+- Emit `SIFR-IMPORT-0007` for span-less project import cycles.
+- Remove the old production constants and rendering harness rows.
 - Remove old diagnostic docs and index entries.
+- Update `workspace_unresolved_import` and `workspace_ambiguous_import`.
+- Update root-module, namespace-collision, and project-cycle fixtures.
 - Remove migration-only stdlib module replacement tables.
 - Replace old Rust interop key recognition with canonical decorator validation.
 - Remove `diagnostic_legacy_display` and `legacy_diagnostic_display` helpers.
@@ -627,6 +660,8 @@ Scope:
 Acceptance criteria:
 
 - [ ] Each active compiler error has one diagnostic code.
+- [ ] Project root-module and cycle errors emit `SIFR-IMPORT-*` only.
+- [ ] Span-less import diagnostics use canonical codes and `<unknown>`.
 - [ ] No active diagnostic title or message describes a Sifr form as legacy.
 - [ ] Old stdlib names do not receive a migration suggestion table.
 - [ ] Old Rust decorator keys do not use a special parser branch.
@@ -637,6 +672,7 @@ Focused validation:
 
 - Diagnostic registry and catalog checks
 - Import-resolution tests
+- Project-workspace root-module and cycle tests
 - Rust interop declaration tests
 - CLI rendering and `--explain` tests
 - Documentation error-code link checks
@@ -820,7 +856,8 @@ Required forbidden classes:
 - list-backed set compatibility helpers,
 - copy-returning heapq and bisect compatibility helpers,
 - Sifr-owned legacy schema readers,
-- legacy package manifest keys and the `sifr/` source-root layout,
+- `[source].roots` readers, multi-root handling, and non-`src/` defaults,
+- manifest-level export and binary-table readers,
 - `legacy_facade` and legacy summary lines,
 - legacy `# expect-stdout` harness expectations,
 - `__compat_sifr_*` recognition,
