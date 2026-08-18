@@ -1,21 +1,20 @@
 # sifr.platform — Platform information
-from _sifr.platform import platform_system, platform_arch, platform_node, platform_release, platform_version, platform_processor
+from _sifr.platform import platform_system as _system_impl, platform_arch as _machine_impl, platform_node as _node_impl, platform_release as _release_impl, platform_version as _version_impl, platform_processor as _processor_impl
 
-# CPython-compatible aliases
 def system() -> str:
-    return platform_system()
+    return _system_impl()
 
 def machine() -> str:
-    return platform_arch()
+    return _machine_impl()
 
 def node() -> str:
-    return platform_node()
+    return _node_impl()
 
 def release() -> str:
-    return platform_release()
+    return _release_impl()
 
 def version() -> str:
-    return platform_version()
+    return _version_impl()
 
 def processor() -> str:
-    return platform_processor()
+    return _processor_impl()

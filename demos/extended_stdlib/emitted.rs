@@ -1661,6 +1661,11 @@ fn re_split_flags(
             detail: __sifr_bridge_error.to_string(),
         })
 }
+
+// --- stdlib: sifr.time ---
+fn time() -> f64 {
+    time_now()
+}
 // --- end stdlib ---
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1778,10 +1783,10 @@ impl ::std::error::Error for RegexError {
 
 fn main() {
     println!("=== sifr.time ===");
-    let t1: f64 = time_now();
+    let t1: f64 = time();
     println!("Current epoch: {}", t1);
     sleep(0.01_f64);
-    let t2: f64 = time_now();
+    let t2: f64 = time();
     println!("Time advanced: {}", (t2 > t1));
     println!("=== sifr.random ===");
     let __sifr_try_res: Result<(), ValueError> = (|| {

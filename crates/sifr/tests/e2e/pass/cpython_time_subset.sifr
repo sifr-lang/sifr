@@ -1,14 +1,14 @@
 # Adapted CPython time subset for sifr.time (canonical bool-vector format)
-from sifr.time import time_now, time, sleep, strftime, strptime, gmtime_struct, localtime_struct, perf_counter, monotonic, struct_time
+from sifr.time import time, sleep, strftime, strptime, gmtime_struct, localtime_struct, perf_counter, monotonic, struct_time
 from sifr.time import mktime, TIMEZONE, ALTZONE, DAYLIGHT, TZNAME
 from sifr.test import assert_bool_vector_eq
 
 
 def collect_clock_actual() -> list[bool]:
     actual: list[bool] = []
-    now_direct: float = time_now()
-    now_alias: float = time()
-    now_ok: bool = now_direct > 0.0 and now_alias > 0.0
+    first_now: float = time()
+    second_now: float = time()
+    now_ok: bool = first_now > 0.0 and second_now >= first_now
     actual.append(now_ok)
 
     perf_before: float = perf_counter()

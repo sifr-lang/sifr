@@ -1,23 +1,23 @@
 # Extended parity/safety checks for sifr.env
-from sifr.env import env_get, env_set, env_unset, getenv, setenv, unsetenv, keys, values, items
+from sifr.env import getenv, getenv_opt, setenv, unsetenv, keys, values, items
 
 def main():
     # Baseline set/get
-    env_set("SIFR_ENV_EXT_A", "1")
+    setenv("SIFR_ENV_EXT_A", "1")
     assert str(getenv("SIFR_ENV_EXT_A", "x")) == '1'
 
     # Unset and fallback behavior
-    env_unset("SIFR_ENV_EXT_A")
-    missing: str | None = env_get("SIFR_ENV_EXT_A")
+    unsetenv("SIFR_ENV_EXT_A")
+    missing: str | None = getenv_opt("SIFR_ENV_EXT_A")
     if missing is None:
         assert str("unset ok") == 'unset ok'
 
     # Invalid key should be handled safely (no panic, no set)
-    bad: str | None = env_get("BAD=KEY")
+    bad: str | None = getenv_opt("BAD=KEY")
     if bad is None:
         assert str("invalid safe") == 'invalid safe'
-    env_set("BAD=KEY", "blocked")
-    bad_after: str | None = env_get("BAD=KEY")
+    setenv("BAD=KEY", "blocked")
+    bad_after: str | None = getenv_opt("BAD=KEY")
     if bad_after is None:
         assert str("invalid set blocked") == 'invalid set blocked'
 
@@ -42,4 +42,3 @@ def main():
             found = True
     assert str(found) == 'true'
     unsetenv("SIFR_ENV_EXT_C")
-

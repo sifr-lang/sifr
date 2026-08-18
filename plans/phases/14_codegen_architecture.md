@@ -731,10 +731,10 @@ status: done
 The current function has ~80 match arms covering:
 - `sifr.io`: `read_text`, `write_text`, `exists`, `read_lines`, `append_text`, `getcwd`, `listdir`, `mkdir`, `rmdir`, `remove_file`, `rename`, `is_file`, `is_dir`, `copy_file`, `walk_dir`, `rmdir_all`, `gettempdir`, `makedirs`
 - `sifr.json`: `json_loads`, `json_dumps`
-- `sifr.env`: `env_get`, `env_set`, `env_unset`, `env_keys`, `env_values`, `env_items`
-- `sifr.os`: `run_command`, `get_args`
+- `sifr.env`: `getenv_opt`, typed-default `getenv`, `setenv`, `unsetenv`, `keys`, `values`, `items`; the `env_*` implementation names stay private in `_sifr.sys`
+- `sifr.os`: `run_command`; process arguments use `sifr.sys.argv`
 - `_sifr.math`: `sqrt`, `floor`, `ceil`, `abs_val`, `log`, `cbrt`, `exp2`, `sin`, `cos`, `tan`, `pow_val`, `round_val`, `min_val`, `max_val`, `gamma`, `lgamma`, etc.; public `sifr.math` keeps only canonical names such as `fabs` and `pow`.
-- `sifr.time`: `time_now`, `sleep`, `perf_counter`, `monotonic`
+- `sifr.time`: `time`, `strftime`, `sleep`, `perf_counter`, `monotonic`; the clock and formatting implementation names stay private in `_sifr.time`
 - `_sifr.crypto`: private entropy and random-state intrinsics; public `sifr.random` exposes the stateful `random`, `randint`, `uniform`, and `choice` operations.
 - `sifr.re`: `regex_match`, `regex_search`, `regex_findall`, `regex_sub`, `regex_split`
 - `sifr.hashlib`: `sha256`, `md5`, `sha1`, `sha512`

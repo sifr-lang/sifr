@@ -1,6 +1,5 @@
 # Reference: platform
 from sifr.platform import system, machine, node, release, version, processor
-from sifr.platform import platform_system, platform_arch, platform_node
 from sifr.test import assert_bool_vector_eq
 
 
@@ -21,23 +20,15 @@ def collect_host_actual() -> list[bool]:
     return actual
 
 
-def collect_alias_actual() -> list[bool]:
-    actual: list[bool] = []
-    actual.append(platform_system() == system() and platform_arch() == machine() and platform_node() == node())
-    return actual
-
-
 def append_all(mut target: list[bool], values: list[bool]):
     for value in values:
         target.append(value)
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_core_actual())
     append_all(actual, collect_host_actual())
-    append_all(actual, collect_alias_actual())
-
     assert_bool_vector_eq(actual, expected)
     print("platform platform parity demo: pass")

@@ -1,5 +1,5 @@
 # sifr.time — Time operations
-from _sifr.time import time_now, sleep, time_format, perf_counter, monotonic
+from _sifr.time import time_now as _time_impl, sleep, time_format as _strftime_impl, perf_counter, monotonic
 from _sifr.time import _strptime_intrinsic, _gmtime_intrinsic, _localtime_intrinsic
 
 # Stable timezone constants (no timezone mutation surface in this implementation).
@@ -235,13 +235,12 @@ def _to_struct_time(rendered: str) -> struct_time:
     return struct_time(year, month, day, hour, minute, second, wday, yday, 0)
 
 
-# CPython-compatible aliases
 def time() -> float:
-    return time_now()
+    return _time_impl()
 
 
 def strftime(fmt: str, epoch: float) -> str:
-    return time_format(epoch, fmt)
+    return _strftime_impl(epoch, fmt)
 
 
 def strptime(s: str, fmt: str) -> Result[str, ValueError]:

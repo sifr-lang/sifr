@@ -1,6 +1,5 @@
 # Consolidated stdlib platform coverage for stdlib_consolidation structure rules
 from sifr.platform import system, machine, node, release, version, processor
-from sifr.platform import platform_system, platform_arch, platform_node, platform_release, platform_version, platform_processor
 from sifr.test import assert_bool_vector_eq
 
 
@@ -22,25 +21,15 @@ def collect_host_actual() -> list[bool]:
     return actual
 
 
-def collect_alias_actual() -> list[bool]:
-    actual: list[bool] = []
-    alias_ok: bool = platform_system() == system() and platform_arch() == machine() and platform_processor() == processor()
-    actual.append(alias_ok)
-    host_alias_ok: bool = platform_node() == node() and len(platform_release()) > 0 and len(platform_version()) > 0
-    actual.append(host_alias_ok)
-    return actual
-
-
 def append_all(mut target: list[bool], values: list[bool]):
     for value in values:
         target.append(value)
 
 
 def main():
-    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True]
     actual: list[bool] = []
     append_all(actual, collect_core_actual())
     append_all(actual, collect_host_actual())
-    append_all(actual, collect_alias_actual())
     assert_bool_vector_eq(actual, expected)
     assert str("stdlib_platform_consolidated: pass") == "stdlib_platform_consolidated: pass"

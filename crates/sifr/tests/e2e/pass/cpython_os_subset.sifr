@@ -1,6 +1,7 @@
 # Adapted CPython os subset for sifr.os (canonical bool-vector format)
-from sifr.os import run_command, get_args, getcwd, listdir, mkdir, rmdir, remove_file, rename, is_file, is_dir, chdir
+from sifr.os import run_command, getcwd, listdir, mkdir, rmdir, remove_file, rename, is_file, is_dir, chdir
 from sifr.os import getpid, cpu_count, which, disk_usage, stat
+from sifr.sys import argv
 from sifr.io import write_text
 from sifr.test import assert_bool_vector_eq
 
@@ -17,7 +18,7 @@ def collect_runtime_actual() -> list[bool]:
         _ = str(e.message)
     actual.append(shell_ok)
 
-    args: list[str] = get_args()
+    args: list[str] = argv()
     actual.append(len(args) > 0)
 
     try:

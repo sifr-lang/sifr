@@ -13,7 +13,7 @@
 
 from sifr.io import read_text, write_text, exists, read_lines
 from sifr.json import JsonValue, json_loads
-from sifr.env import env_get, env_set
+from sifr.env import getenv_opt, setenv
 from sifr.os import run_command
 from sifr.math import sqrt, floor, ceil, pi, e
 
@@ -63,12 +63,12 @@ def main():
     # ----------------------------------------------------------
     print("=== sifr.env ===")
 
-    _: None = env_set("SIFR_DEMO", "active")
-    val: str | None = env_get("SIFR_DEMO")
+    _: None = setenv("SIFR_DEMO", "active")
+    val: str | None = getenv_opt("SIFR_DEMO")
     if val is not None:
         print(f"SIFR_DEMO = {val}")
 
-    missing: str | None = env_get("SIFR_NONEXISTENT")
+    missing: str | None = getenv_opt("SIFR_NONEXISTENT")
     if missing is None:
         print("SIFR_NONEXISTENT not set")
 

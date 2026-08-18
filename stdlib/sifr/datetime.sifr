@@ -1,6 +1,6 @@
 # sifr.datetime — Date and time classes
 from _sifr.datetime import datetime_now_struct, datetime_format, datetime_from_timestamp
-from _sifr.time import time_now
+from _sifr.time import time_now as _time_impl
 
 def _is_leap_year(year: int) -> bool:
     return (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
@@ -164,10 +164,6 @@ class timezone:
 
 def UTC() -> timezone:
     return timezone(0)
-
-
-def utc() -> timezone:
-    return UTC()
 
 
 class datetime:
@@ -413,7 +409,7 @@ def _from_timestamp_microseconds_with_tz(value: int, tz: timezone | None) -> Res
 
 
 def now(tz: timezone | None = None) -> datetime:
-    current_epoch: float = time_now()
+    current_epoch: float = _time_impl()
     try:
         current: datetime = _from_timestamp_with_tz(current_epoch, tz)
         return current

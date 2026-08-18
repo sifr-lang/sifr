@@ -45,7 +45,7 @@ impl ValueError {
     }
 }
 
-fn time_now() -> f64 {
+fn time() -> f64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_secs_f64())
@@ -146,10 +146,10 @@ fn base64_decode(text: &str) -> Result<String, ParseError> {
 
 fn main() {
     println!("=== sifr.time ===");
-    let t1 = time_now();
+    let t1 = time();
     println!("Current epoch: {t1}");
     sleep(0.01);
-    let t2 = time_now();
+    let t2 = time();
     println!("Time advanced: {}", t2 > t1);
 
     println!("=== sifr.random ===");

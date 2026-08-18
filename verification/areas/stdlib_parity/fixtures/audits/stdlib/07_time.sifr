@@ -2,10 +2,10 @@
 # Test 7: sifr.time
 # ============================================================
 
-from sifr.time import time_now, sleep
+from sifr.time import time, sleep
 
 def main():
-    t: float = time_now()
+    t: float = time()
     print(t > 0.0)
     sleep(0.01)
     print("slept ok")

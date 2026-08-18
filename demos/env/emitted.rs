@@ -1,46 +1,99 @@
-// --- stdlib: sifr.test ---
-fn assert_eq<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    actual: &T,
-    expected: &T,
-) {
-    assert!(* actual == * expected);
+// src/main.rs
+// --- stdlib: _sifr.sys ---
+fn run_command(cmd: &String) -> Result<String, IOError> {
+    ::sifr_stdlib::sys::run_command(cmd)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0 as i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i = i + (1 as i64);
-    }
+fn env_get(key: &String) -> Option<String> {
+    ::sifr_stdlib::sys::env_get(key)
+}
+fn env_set(key: &String, value: &String) {
+    ::sifr_stdlib::sys::env_set(key, value);
+}
+fn env_unset(key: &String) {
+    ::sifr_stdlib::sys::env_unset(key);
+}
+fn env_keys() -> Vec<String> {
+    ::sifr_stdlib::sys::env_keys()
+}
+fn env_values() -> Vec<String> {
+    ::sifr_stdlib::sys::env_values()
+}
+fn env_items() -> Vec<String> {
+    ::sifr_stdlib::sys::env_items()
+}
+fn get_args() -> Vec<String> {
+    ::sifr_stdlib::sys::get_args()
+}
+fn sys_exit(code: i64) {
+    ::sifr_stdlib::sys::sys_exit(::sifr_runtime::interop::SifrIntBridge::from(code));
+}
+fn sys_version() -> String {
+    ::sifr_stdlib::sys::sys_version()
+}
+fn sys_platform() -> String {
+    ::sifr_stdlib::sys::sys_platform()
+}
+fn sys_maxsize() -> i64 {
+    ::sifr_stdlib::sys::sys_maxsize().to_i64_saturating()
+}
+fn getpid() -> i64 {
+    ::sifr_stdlib::sys::getpid().to_i64_saturating()
+}
+fn cpu_count() -> i64 {
+    ::sifr_stdlib::sys::cpu_count().to_i64_saturating()
+}
+fn which(name: &String) -> Option<String> {
+    ::sifr_stdlib::sys::which(name)
+}
+fn os_sep() -> String {
+    ::sifr_stdlib::sys::os_sep()
+}
+fn os_linesep() -> String {
+    ::sifr_stdlib::sys::os_linesep()
+}
+fn os_name() -> String {
+    ::sifr_stdlib::sys::os_name()
 }
 
 // --- stdlib: sifr.env ---
 fn getenv_opt(key: &String) -> Option<String> {
-    return {
-        let __k = key;
-        if __k.is_empty() || (__k.contains('=') || __k.as_bytes().contains(&0)) {
-            None
-        } else {
-            std::env::var(__k).ok()
-        }
-    };
+    env_get(key)
 }
 fn getenv(key: &String, default_value: &String) -> String {
-    let val: Option<String> = {
-        let __k = key;
-        if __k.is_empty() || (__k.contains('=') || __k.as_bytes().contains(&0)) {
-            None
-        } else {
-            std::env::var(__k).ok()
-        }
-    };
+    let val: Option<String> = env_get(key);
     let Some(val) = val else {
-        return format!("{}{}", default_value, "".to_string());
+        return {
+            let mut __sifr_concat: String = String::with_capacity(
+                default_value.len() + 0usize,
+            );
+            __sifr_concat.push_str((default_value).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
     };
-    return val;
+    val
+}
+fn setenv(key: &String, value: &String) {
+    env_set(key, value);
+}
+fn unsetenv(key: &String) {
+    env_unset(key);
 }
 
-#[derive(Debug, Clone)]
+// --- stdlib: sifr.test ---
+fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+    assert_eq!(actual.len() as i64, expected.len() as i64);
+    let mut i: i64 = 0_i64;
+    while i < (actual.len() as i64) {
+        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
+        i += 1_i64;
+    }
+}
+// --- end stdlib ---
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct IOError {
     message: String,
     kind: String,
@@ -48,180 +101,66 @@ struct IOError {
 
 impl IOError {
     fn new(message: String) -> Self {
-        return Self { message: message, kind: "Other".to_string() };
+        Self { message, kind: "Other".to_string() }
     }
 }
 
-impl std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+impl ::std::fmt::Display for IOError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
     }
 }
 
-impl std::error::Error for IOError {
+impl ::std::error::Error for IOError {
 }
 
-fn __io_err(e: std::io::Error) -> IOError {
+fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
-    let kind = if e.kind() == std::io::ErrorKind::NotFound { "FileNotFound".to_string() } else { if e.kind() == std::io::ErrorKind::PermissionDenied { "PermissionDenied".to_string() } else { if e.kind() == std::io::ErrorKind::AlreadyExists { "FileExists".to_string() } else { "Other".to_string() } } };
-    return IOError { message: msg, kind: kind };
+    let kind = {
+    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
+    match __sifr_io_kind {
+    Some(::std::io::ErrorKind::NotFound) => {
+        "FileNotFound".to_string()
+    },
+    Some(::std::io::ErrorKind::PermissionDenied) => {
+        "PermissionDenied".to_string()
+    },
+    Some(::std::io::ErrorKind::AlreadyExists) => {
+        "FileExists".to_string()
+    },
+    Some(::std::io::ErrorKind::IsADirectory) => {
+        "IsADirectory".to_string()
+    },
+    Some(::std::io::ErrorKind::NotADirectory) => {
+        "NotADirectory".to_string()
+    },
+    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+        "DirectoryNotEmpty".to_string()
+    },
+    _ => {
+        "Other".to_string()
+    },
 }
-
-#[derive(Debug, Clone)]
-struct ParseError {
-    message: String,
-}
-
-impl ParseError {
-    fn new(message: String) -> Self {
-        return Self { message: message };
-    }
-}
-
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for ParseError {
-}
-
-#[derive(Debug, Clone)]
-struct ValueError {
-    message: String,
-}
-
-impl ValueError {
-    fn new(message: String) -> Self {
-        return Self { message: message };
-    }
-}
-
-impl std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for ValueError {
-}
-
-#[derive(Debug, Clone)]
-struct JSONDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl JSONDecodeError {
-    fn new(message: String) -> Self {
-        return Self { message: message, line: 0, column: 0 };
-    }
-}
-
-impl std::fmt::Display for JSONDecodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for JSONDecodeError {
-}
-
-#[derive(Debug, Clone)]
-struct TOMLDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl TOMLDecodeError {
-    fn new(message: String) -> Self {
-        return Self { message: message, line: 0, column: 0 };
-    }
-}
-
-impl std::fmt::Display for TOMLDecodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for TOMLDecodeError {
-}
-
-#[derive(Debug, Clone)]
-struct RegexError {
-    message: String,
-    detail: String,
-}
-
-impl RegexError {
-    fn new(message: String) -> Self {
-        return Self { message: message, detail: String::new() };
-    }
-}
-
-impl std::fmt::Display for RegexError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for RegexError {
+};
+    IOError { message: msg, kind }
 }
 
 fn main() {
-    {
-    let __k = "SIFR_ENV_SAMPLE".to_string();
-    if !__k.is_empty() && (!__k.contains('=') && !__k.as_bytes().contains(&0)) {
-        std::env::remove_var(__k);
-    }
-};
-    {
-    let __k = "SIFR_ENV_SAMPLE".to_string();
-    let __v = "env".to_string();
-    if !__k.is_empty() && (!__k.contains('=') && (!__k.as_bytes().contains(&0) && !__v.as_bytes().contains(&0))) {
-        std::env::set_var(__k, __v);
-    }
-};
+    unsetenv(&"SIFR_ENV_SAMPLE".to_string());
+    setenv(&"SIFR_ENV_SAMPLE".to_string(), &"env".to_string());
     let with_default: String = getenv(&"SIFR_ENV_SAMPLE".to_string(), &"fallback".to_string());
     println!("{}", with_default);
-    assert!(format!("{}", with_default) == "env".to_string());
-    {
-    let __k = "SIFR_ENV_SAMPLE".to_string();
-    if !__k.is_empty() && (!__k.contains('=') && !__k.as_bytes().contains(&0)) {
-        std::env::remove_var(__k);
-    }
-};
+    assert!((format!("{}", with_default) == "env"));
+    unsetenv(&"SIFR_ENV_SAMPLE".to_string());
     let without_default: Option<String> = getenv_opt(&"SIFR_ENV_SAMPLE".to_string());
-    assert!(format!("{}", without_default.is_none()) == "true".to_string());
-    assert!(format!("{}", getenv(&"SIFR_ENV_SAMPLE".to_string(), &"fallback".to_string())) == "fallback".to_string());
+    assert!((format!("{}", without_default.is_none()) == "true"));
+    assert!((format!("{}", getenv(&"SIFR_ENV_SAMPLE".to_string(), &"fallback".to_string())) == "fallback"));
     let invalid_expected_lookup_found: Vec<bool> = vec![false, false];
     let mut invalid_actual_lookup_found: Vec<bool> = vec![];
-    {
-    let __k = "".to_string();
-    let __v = "x".to_string();
-    if !__k.is_empty() && (!__k.contains('=') && (!__k.as_bytes().contains(&0) && !__v.as_bytes().contains(&0))) {
-        std::env::set_var(__k, __v);
-    }
-};
-    invalid_actual_lookup_found.push(({
-    let __k = "".to_string();
-    if __k.is_empty() || (__k.contains('=') || __k.as_bytes().contains(&0)) { None } else { std::env::var(__k).ok() }
-}) != None);
-    {
-    let __k = "A=B".to_string();
-    let __v = "x".to_string();
-    if !__k.is_empty() && (!__k.contains('=') && (!__k.as_bytes().contains(&0) && !__v.as_bytes().contains(&0))) {
-        std::env::set_var(__k, __v);
-    }
-};
-    invalid_actual_lookup_found.push(({
-    let __k = "A=B".to_string();
-    if __k.is_empty() || (__k.contains('=') || __k.as_bytes().contains(&0)) { None } else { std::env::var(__k).ok() }
-}) != None);
+    setenv(&"".to_string(), &"x".to_string());
+    invalid_actual_lookup_found.push(getenv_opt(&"".to_string()) != None);
+    setenv(&"A=B".to_string(), &"x".to_string());
+    invalid_actual_lookup_found.push(getenv_opt(&"A=B".to_string()) != None);
     assert_bool_vector_eq(&invalid_actual_lookup_found, &invalid_expected_lookup_found);
     println!("env env parity demo: pass");
 }

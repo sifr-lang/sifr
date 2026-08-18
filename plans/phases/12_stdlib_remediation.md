@@ -44,7 +44,7 @@ The `open()` built-in was specified in Phase 11's `milestone_stdlib_class_deepen
 #### Work Items
 
 - `datetime.time` class with `hour`, `minute`, `second` fields, `isoformat()`, `__eq__`, `__str__`
-- `datetime.timezone` class with `utc` constant and `offset` field
+- `datetime.timezone` class with the canonical `UTC()` zero-offset constructor and `offset` field
 - `datetime.now()` must return a `datetime` object (not a string). This requires a new intrinsic `_sifr.datetime.datetime_now_struct` that returns year/month/day/hour/minute/second as integers, which the Sifr `datetime` constructor uses
 - `datetime.today()` alias for `datetime.now()` (date portion only, returns `date` object)
 

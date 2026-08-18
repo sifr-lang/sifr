@@ -364,7 +364,7 @@ All stdlib signature changes primarily live in `crates/sifr_stdlib` (and codegen
 
 - **Math**: Add the original intrinsic implementations for `log`, `sin`, `cos`, `tan`, power, min/max, and rounding. The pre-v1 public contract later standardized `fabs` and `pow`; the implementation spellings are private.
 - **IO**: Rename `write_file` -> `write_text`, `read_file` -> `read_text`, `file_exists` -> `exists`
-- **Env**: Rename `get_env` -> `env_get`, `set_env` -> `env_set`
+- **Env**: Keep `_sifr.sys.env_get` and `_sifr.sys.env_set` private; expose `getenv_opt`, typed-default `getenv`, and `setenv` publicly.
 - **Hash**: Rename `md5_hash` -> `md5`
 - **JSON**: Widen `json_dumps` parameter type from `str` to accept any serializable type
 - **Random**: Provide generic public `choice[T]`; low-level random intrinsics remain private implementation details.

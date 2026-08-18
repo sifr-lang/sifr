@@ -1,5 +1,5 @@
 # Adapted CPython env subset for sifr.env safety model
-from sifr.env import env_get, env_set, env_unset, getenv, getenv_opt, keys, values, items
+from sifr.env import getenv, getenv_opt, setenv, unsetenv, keys, values, items
 from sifr.test import assert_vector_eq, assert_bool_vector_eq
 
 def has_equals_pair(own pairs: list[str]) -> bool:
@@ -12,9 +12,9 @@ def has_equals_pair(own pairs: list[str]) -> bool:
 
 def main():
     # Keep this fixture deterministic.
-    env_unset("SIFR_ENV_P30_VALUE")
-    env_unset("SIFR_ENV_P30_MISSING")
-    env_set("SIFR_ENV_P30_VALUE", "v")
+    unsetenv("SIFR_ENV_P30_VALUE")
+    unsetenv("SIFR_ENV_P30_MISSING")
+    setenv("SIFR_ENV_P30_VALUE", "v")
 
     # Canonical parity fixture vectors: inputs, expected, actual.
     inputs: list[str] = ["SIFR_ENV_P30_VALUE", "SIFR_ENV_P30_MISSING"]
@@ -40,8 +40,8 @@ def main():
     for bad_key in invalid_inputs:
         set_key: str = bad_key + ""
         lookup_key: str = bad_key + ""
-        env_set(set_key, "blocked")
-        blocked: str | None = env_get(lookup_key)
+        setenv(set_key, "blocked")
+        blocked: str | None = getenv_opt(lookup_key)
         invalid_actual_lookup_found.append(blocked is not None)
     assert_bool_vector_eq(invalid_actual_lookup_found, invalid_expected_lookup_found)
 

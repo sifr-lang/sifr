@@ -11,7 +11,7 @@
 #   sifr.base64   — Base64 encoding/decoding
 # ============================================================
 
-from sifr.time import time_now, sleep
+from sifr.time import time, sleep
 from sifr.random import randint, random
 from sifr.re import re_match, re_find, re_replace
 from sifr.hashlib import sha256, md5
@@ -22,10 +22,10 @@ def main():
     # 1. sifr.time — Time operations
     # ----------------------------------------------------------
     print("=== sifr.time ===")
-    t1: float = time_now()
+    t1: float = time()
     print(f"Current epoch: {t1}")
     sleep(0.01)
-    t2: float = time_now()
+    t2: float = time()
     print(f"Time advanced: {t2 > t1}")
 
     # ----------------------------------------------------------
