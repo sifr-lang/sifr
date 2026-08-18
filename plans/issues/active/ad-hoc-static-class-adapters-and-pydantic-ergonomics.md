@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-18. M0-M3 are complete; M4 is next.
+Status: active on 2026-08-18. M0-M4 are complete; M5 is next.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -653,6 +653,49 @@ Acceptance criteria:
 
 Exit gate: an adapter can define complete field requiredness, defaults,
 annotation metadata, and single-inheritance input without an identity cycle.
+
+State: complete
+PR: [`sifr-lang/sifr#3255`](https://github.com/sifr-lang/sifr/pull/3255)
+Base SHA: `157b3e67c9af8138096fc55e08b7dc2acc8d2c1b`
+Candidate SHA: `ab9047d8cdf3a297d6af19a8ac143165e7d61205`
+Merge SHA: `ef80a2eeea01f46a96b4c36d9c76808eb3fe5f6e`
+Changed paths: normalized field plans, constructor defaults, callable and type
+identity, inheritance delivery, adapter-program identity, and focused driver
+tests under `crates/`; `sifr.meta`; durable architecture documentation; and the
+four-module `static_class_adapter` native fixture.
+Validation: all 10 focused defaults, inheritance, and identity tests; all 13
+early-adapter tests; all 11 typed-descriptor tests; the special-base regression;
+the native four-module fixture; workspace clippy; formatting; HIR
+maintainability; the 900-line file-size guardrail (`PASS`, 3150 files); and
+`git diff --check`. The final full driver library run passed 500 tests with 76
+ignored. The earlier broad non-E2E command passed 109 CLI unit tests and 12
+build-output tests; its E2E harness passed 37 of 38, with only the separately
+owned pre-v1 `protocol_bound_unknown_forwarded_typevar.sifr` CFG/diagnostic
+mismatch failing.
+Review evidence: the initial exact-SHA Opus review found two blocking omissions
+in inherited-default index mapping and provider source-span identity
+([evidence](https://github.com/sifr-lang/sifr/pull/3255#issuecomment-5329040853)).
+Both were remediated in one batch. The one permitted remediation review on the
+final candidate returned `SATISFIED` with no blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3255#issuecomment-5329113489)).
+The create-PR and merge gates were each run once on the unchanged final
+candidate. Both stopped at the externally owned pre-v1 verification-taxonomy
+checker after its other readiness cases passed; the checker rejected its own
+compatibility inventory and broad ordinary M4 source words. Exact evidence is
+recorded on the PR
+([create-PR](https://github.com/sifr-lang/sifr/pull/3255#issuecomment-5329125919),
+[merge](https://github.com/sifr-lang/sifr/pull/3255#issuecomment-5329133010)).
+Deferred follow-up: M12 must remove declaration-order-sensitive `BindingId`
+values from provider-program identity; cover mutually assignable alias
+reannotations during finalization; make fallback parent resolution follow the
+actual imported binding without losing inherited parent fields; and preserve
+semantic interop declarations while excluding only their diagnostic spans from
+provider identity. It must also decide and test inherited-default ordering
+before required local fields. The stale unused `contract_types.sifr` fixture
+shape and broader native inheritance/generic coverage remain fixture-cleanup
+work for M12. The pre-v1 worktree and failures remain entirely outside this
+phase.
+Next action: implement M5 handler-bearing method descriptors.
 
 ### M5: Handler-Bearing Method Descriptors
 
