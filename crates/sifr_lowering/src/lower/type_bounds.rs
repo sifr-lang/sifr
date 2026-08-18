@@ -190,7 +190,7 @@ fn supports_structural_bridge_type_inner(
                         .get(name)
                         .is_none_or(Vec::is_empty);
             }
-            if parent_class.is_some()
+            if (parent_class.is_some() && !ctx.adapted_class_bindings.contains_key(name))
                 || ctx.error_types.contains(name)
                 || ctx.python_opaque_classes.contains_key(name)
                 || !structural_identity_inputs_supported(name, ctx)

@@ -373,6 +373,12 @@ pub(in crate::lower) fn lower_function(
                 } else {
                     None
                 }
+            } else if matches!(
+                &d.expression,
+                Expr::Call(call)
+                    if matches!(call.func.as_ref(), Expr::Name(name) if name.id.as_str() == "attached_api")
+            ) {
+                Some("attached_api".to_string())
             } else {
                 None
             }

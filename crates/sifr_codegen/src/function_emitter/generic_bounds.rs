@@ -27,6 +27,7 @@ impl RustEmitter {
                     .static_program_type_params
                     .get(&func.name)
                     .is_some_and(|params| params.contains(type_param));
+                let attached_api = func.decorators.iter().any(|item| item == "attached_api");
                 let method_slots = self
                     .method_slot_type_params
                     .get(&func.name)
@@ -42,7 +43,7 @@ impl RustEmitter {
                         .to_string()
                 } else if structural {
                     "sifr_runtime::interop::structural::StructuralConstruct + sifr_runtime::interop::structural::StructuralProject".to_string()
-                } else if Self::is_nullcontext_value_forwarder(func) {
+                } else if attached_api || Self::is_nullcontext_value_forwarder(func) {
                     "Clone + 'static".to_string()
                 } else if needs_hash_eq {
                     "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq + 'static".to_string()

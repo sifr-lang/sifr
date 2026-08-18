@@ -370,6 +370,19 @@ pub fn compile_module_hir_with_source_and_options(
                     .iter()
                     .map(|selection| (selection.owner.clone(), selection.field_plans.clone()))
                     .collect();
+                final_options.attached_api_sets = result
+                    .class_adapter_selections
+                    .iter()
+                    .filter_map(|selection| {
+                        selection
+                            .attached_api_set
+                            .clone()
+                            .map(|set| (selection.owner.clone(), set))
+                    })
+                    .collect();
+                final_options
+                    .specialization_requests
+                    .clone_from(&specialization_requests);
                 let applied_selections = result.class_adapter_selections.clone();
                 result = match lower_module_with_externals_name_and_options(
                     module_name,

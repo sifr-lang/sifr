@@ -8,7 +8,7 @@ pub(crate) fn canonical_constructor_class_name(class_name: &str, ty: &Type) -> S
 }
 
 pub(crate) fn canonical_plain_call_name_for_ir(func: &str) -> &str {
-    func
+    func.split_once("::<").map_or(func, |(name, _)| name)
 }
 
 pub(crate) fn plain_call_target_for_ir(func: &str) -> RustExpr {

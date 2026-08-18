@@ -316,6 +316,7 @@ pub(crate) fn collect_mutated_vars(
     }
 
     fn canonical_mutating_call_name(func: &str) -> &str {
+        let func = crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func);
         func.rsplit('.').next().unwrap_or(func)
     }
 

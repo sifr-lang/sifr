@@ -23,6 +23,8 @@ pub struct ModuleSpecializationMetadata {
     pub declaration_descriptors: Vec<sifr_ir::TypedDeclarationDescriptor>,
     pub class_adapter_providers: Vec<sifr_ir::ClassAdapterProviderDeclaration>,
     pub class_adapter_markers: Vec<sifr_ir::ClassAdapterMarkerDeclaration>,
+    pub attached_api_sets: Vec<sifr_ir::AttachedApiSetDeclaration>,
+    pub attached_apis: Vec<sifr_ir::AttachedApiDeclaration>,
     pub class_adapter_selections: Vec<sifr_ir::ClassAdapterSelection>,
     pub descriptor_functions: Vec<sifr_ir::DeclarationDescriptorFunction>,
     pub applied_adapter_metadata: Vec<sifr_ir::AppliedAdapterMetadata>,
@@ -83,6 +85,16 @@ pub struct ExternalDefs {
     pub class_adapter_markers: std::collections::HashMap<
         String,
         std::collections::HashMap<String, sifr_ir::ClassAdapterMarkerDeclaration>,
+    >,
+    /// Erased attached-API namespaces keyed by canonical declaring module and symbol.
+    pub attached_api_sets: std::collections::HashMap<
+        String,
+        std::collections::HashMap<String, sifr_ir::AttachedApiSetDeclaration>,
+    >,
+    /// Checked attached package functions keyed by declaring module and function.
+    pub attached_apis: std::collections::HashMap<
+        String,
+        std::collections::HashMap<String, sifr_ir::AttachedApiDeclaration>,
     >,
     /// Adapted class selections keyed by declaring module and class symbol.
     pub class_adapter_selections: std::collections::HashMap<
@@ -216,6 +228,20 @@ impl ExternalDefs {
             .into_values()
             .collect::<Vec<_>>();
         class_adapter_markers.sort_by(|left, right| left.symbol.cmp(&right.symbol));
+        let mut attached_api_sets = self
+            .attached_api_sets
+            .remove(module_name)
+            .unwrap_or_default()
+            .into_values()
+            .collect::<Vec<_>>();
+        attached_api_sets.sort_by(|left, right| left.identity.symbol.cmp(&right.identity.symbol));
+        let mut attached_apis = self
+            .attached_apis
+            .remove(module_name)
+            .unwrap_or_default()
+            .into_values()
+            .collect::<Vec<_>>();
+        attached_apis.sort_by(|left, right| left.function.cmp(&right.function));
         let mut class_adapter_selections = self
             .class_adapter_selections
             .remove(module_name)
@@ -238,6 +264,8 @@ impl ExternalDefs {
                 .unwrap_or_default(),
             class_adapter_providers,
             class_adapter_markers,
+            attached_api_sets,
+            attached_apis,
             class_adapter_selections,
             descriptor_functions,
             applied_adapter_metadata: self

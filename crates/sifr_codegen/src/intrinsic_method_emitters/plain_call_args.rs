@@ -345,16 +345,17 @@ impl RustEmitter {
         func: &str,
         arg_len: usize,
     ) -> Option<Vec<(Type, ParamConvention)>> {
-        if let Some((params, _)) = self.func_signatures.get(func) {
+        let canonical = crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func);
+        if let Some((params, _)) = self.func_signatures.get(canonical) {
             return Some(params.clone());
         }
-        if let Some(params) = self.callable_var_conventions.get(func) {
+        if let Some(params) = self.callable_var_conventions.get(canonical) {
             return Some(params.clone());
         }
 
         let mut candidate: Option<Vec<(Type, ParamConvention)>> = None;
         for (name, (params, _)) in &self.func_signatures {
-            if name.rsplit("::").next() != Some(func) || params.len() < arg_len {
+            if name.rsplit("::").next() != Some(canonical) || params.len() < arg_len {
                 continue;
             }
             if candidate.is_some() {

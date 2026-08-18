@@ -118,7 +118,7 @@ pub fn structural_identity_enum_variants_supported(variants: &[(String, Option<i
     true
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConstSpecializationRequest {
     pub owner: String,
     pub package_module: String,
@@ -157,6 +157,44 @@ pub struct ClassAdapterMarkerDeclaration {
     pub range: TextRange,
 }
 
+/// Canonical identity of one erased package-owned attached-API namespace.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct AttachedApiSetIdentity {
+    pub module: String,
+    pub symbol: String,
+}
+
+/// A field-less compile-time namespace that owns a fixed attached-API set.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AttachedApiSetDeclaration {
+    pub identity: AttachedApiSetIdentity,
+    pub range: TextRange,
+}
+
+/// Receiver form selected by one attached package function.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum AttachedApiReceiver {
+    Type,
+    Immutable,
+    Mutable,
+    Owned,
+}
+
+/// Checked package function exported as one member of an attached-API set.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AttachedApiDeclaration {
+    pub module: String,
+    pub function: String,
+    pub set: AttachedApiSetIdentity,
+    pub public_name: String,
+    pub receiver: AttachedApiReceiver,
+    pub owner_type_param: String,
+    pub type_params: Vec<String>,
+    pub type_param_bounds: std::collections::BTreeMap<String, Vec<String>>,
+    pub function_type: sifr_type_system::FunctionType,
+    pub range: TextRange,
+}
+
 /// The canonical provider selected for one source class before finalization.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ClassAdapterSelection {
@@ -168,6 +206,7 @@ pub struct ClassAdapterSelection {
     pub data_parent: Option<String>,
     pub field_plans: Vec<AdapterFieldPlan>,
     pub handler_plans: Vec<AdapterHandlerPlan>,
+    pub attached_api_set: Option<AttachedApiSetIdentity>,
     pub adapter_invocation_identity: [u8; 32],
     pub post_adapter_identity: [u8; 32],
     pub range: TextRange,

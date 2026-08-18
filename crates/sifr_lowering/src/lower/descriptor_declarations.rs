@@ -14,7 +14,10 @@ pub(in crate::lower) fn prepare(stmts: &[Stmt], ctx: &mut LowerCtx) {
     for stmt in stmts {
         match stmt {
             Stmt::FunctionDef(function) => collect_local_declarations(function, ctx),
-            Stmt::ClassDef(class) => collect_local_marker(class, ctx),
+            Stmt::ClassDef(class) => {
+                collect_local_marker(class, ctx);
+                super::attached_api_declarations::collect_set(class, ctx);
+            }
             _ => {}
         }
     }
@@ -42,6 +45,11 @@ pub(in crate::lower) fn erase_markers(module: &mut HirModule, ctx: &LowerCtx) {
         .class_adapter_markers
         .iter()
         .map(|marker| marker.symbol.as_str())
+        .chain(
+            ctx.attached_api_sets
+                .iter()
+                .map(|set| set.identity.symbol.as_str()),
+        )
         .collect::<HashSet<_>>();
     module
         .classes
@@ -162,6 +170,8 @@ pub(in crate::lower) fn finalize(ctx: &mut LowerCtx) {
             .insert(declaration.function.clone(), declaration);
     }
 
+    super::attached_api_declarations::finalize(ctx, &module);
+
     finalize_markers_and_selections(ctx, &module);
 }
 
@@ -235,6 +245,14 @@ fn import_bindings(stmts: &[Stmt], ctx: &mut LowerCtx) {
                 ctx.adapted_class_bindings
                     .insert(local.clone(), selection.clone());
             }
+            if ctx
+                .externals
+                .attached_api_sets
+                .get(&module)
+                .is_some_and(|exports| exports.contains_key(&original))
+            {
+                ctx.attached_api_set_bindings.insert(local.clone());
+            }
         }
     }
 }
@@ -293,6 +311,15 @@ fn collect_class_bases(stmts: &[Stmt], ctx: &mut LowerCtx) {
             if !is_parameterized {
                 if let Some(marker) = ctx.adapter_marker_bindings.get(name) {
                     markers.push((range, marker.clone()));
+                    continue;
+                }
+                if ctx.attached_api_set_bindings.contains(name) {
+                    malformed(
+                        ctx,
+                        "attached_api_set_use",
+                        "attached-API sets are erased declarations and cannot be class bases",
+                        range,
+                    );
                     continue;
                 }
             }
@@ -387,6 +414,10 @@ fn collect_class_bases(stmts: &[Stmt], ctx: &mut LowerCtx) {
             data_parent,
             field_plans: Vec::new(),
             handler_plans: Vec::new(),
+            attached_api_set: ctx
+                .final_attached_api_sets
+                .get(class.name.as_str())
+                .cloned(),
             adapter_invocation_identity: [0; 32],
             post_adapter_identity: [0; 32],
             range: markers
@@ -421,6 +452,12 @@ fn special_base(name: &str) -> bool {
 fn collect_local_declarations(function: &StmtFunctionDef, ctx: &mut LowerCtx) {
     let module = ctx.current_module_name.clone().unwrap_or_default();
     for decorator in &function.decorator_list {
+        if let Some(declaration) =
+            super::attached_api_declarations::declaration(function, decorator, ctx)
+        {
+            ctx.attached_apis.push(declaration);
+            continue;
+        }
         let Some((name, first, second)) = declaration_decorator(decorator, ctx) else {
             continue;
         };
@@ -720,7 +757,12 @@ mod tests {
     }
 }
 
-fn malformed(ctx: &mut LowerCtx, reason: &str, detail: &str, range: ruff_text_size::TextRange) {
+pub(super) fn malformed(
+    ctx: &mut LowerCtx,
+    reason: &str,
+    detail: &str,
+    range: ruff_text_size::TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::META_MALFORMED_DECLARATION,
         format!("malformed typed descriptor declaration {reason}: {detail}"),

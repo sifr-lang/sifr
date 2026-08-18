@@ -131,7 +131,9 @@ pub(in crate::lower) fn lower_module_impl(
             }
 
             let previous_owner = ctx.current_owner.replace(function_name.clone());
+            ctx.attached_self_type_param = super::attached_api_declarations::owner_type_param(func);
             let ft = extract_function_type(func, &mut ctx);
+            ctx.attached_self_type_param = None;
             ctx.current_owner = previous_owner;
             // Track which type variables this function uses (makes it generic)
             let mut func_type_vars = Vec::new();
@@ -260,6 +262,7 @@ pub(in crate::lower) fn lower_module_impl(
     }
     ctx.async_suspension_summaries = async_effects::collect_async_suspension_summaries(stmts);
     super::descriptor_declarations::finalize(&mut ctx);
+    super::attached_api_surfaces::apply(&mut ctx);
     // Collect import statements and resolve imported names
     let mut imports = Vec::new();
     for stmt in stmts {
@@ -811,6 +814,7 @@ pub(in crate::lower) fn lower_module_impl(
         }
     }
     ctx.compiler_intrinsics.extend(module_compiler_intrinsics);
+    imports.extend(ctx.synthetic_attached_imports.clone());
     let constants = module_constants_lowering::collect_module_constants(stmts, &mut ctx);
     // Infer module returns as one mutually visible group so forward calls are source-order neutral.
     super::module_function_inference::infer_unannotated_returns(stmts, &mut ctx);
@@ -865,6 +869,8 @@ pub(in crate::lower) fn lower_module_impl(
             declaration_metadata: ctx.declaration_metadata.clone(),
             class_adapter_providers: ctx.class_adapter_providers.clone(),
             class_adapter_markers: ctx.class_adapter_markers.clone(),
+            attached_api_sets: ctx.attached_api_sets.clone(),
+            attached_apis: ctx.attached_apis.clone(),
             class_adapter_selections: ctx.class_adapter_selections.clone(),
             descriptor_functions: ctx.descriptor_functions.clone(),
             declaration_descriptors: Vec::new(),
