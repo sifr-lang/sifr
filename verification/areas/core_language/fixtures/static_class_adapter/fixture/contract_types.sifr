@@ -1,3 +1,16 @@
+from sifr.meta import CallableIdentity, StaticValue
+
+
+class ContractAlias:
+    path: list[str]
+
+
 class ContractDescriptor:
     kind: str
     enabled: bool
+    default_kind: str
+    default_value: StaticValue | None
+    default_factory: CallableIdentity | None
+    alias: str | None = None
+    validation_alias: str | ContractAlias | None = None
+    threshold: int | float | None = None

@@ -666,3 +666,42 @@ fn safe_option_result_flattens_simple_option_and_preserves_nullable_union() {
         value
     );
 }
+
+#[test]
+fn union_member_wrapper_uses_unit_for_none_payload() {
+    let target = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
+    let wrapped = wrap_union_member_expr(
+        &target,
+        &Type::None,
+        RustExpr::Literal(crate::RustLiteral::None),
+    )
+    .expect("none should be wrapped as an ordinary union member");
+    let rendered = crate::render_expr(&wrapped);
+    assert!(rendered.contains(&target.union_enum_name()), "{rendered}");
+    assert!(rendered.ends_with("(())"), "{rendered}");
+}
+
+#[test]
+fn optional_member_widens_into_larger_union_without_source_enum() {
+    let target = sifr_type_system::make_union(vec![
+        Type::Str,
+        Type::None,
+        Type::Class {
+            identity: Some("fixture.Path".to_string()),
+            type_args: Vec::new(),
+            name: "Path".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        },
+    ]);
+    let source = sifr_type_system::make_union(vec![Type::Str, Type::None]);
+    let widened =
+        widen_option_value_for_union_target(&target, &source, RustExpr::Ident("value".to_string()))
+            .expect("optional subset should widen into the target union");
+    let rendered = crate::render_expr(&widened);
+    assert!(rendered.contains(".map("), "{rendered}");
+    assert!(rendered.contains(".unwrap_or("), "{rendered}");
+    assert!(rendered.contains(&target.union_enum_name()), "{rendered}");
+    assert!(!rendered.contains(&source.union_enum_name()), "{rendered}");
+}

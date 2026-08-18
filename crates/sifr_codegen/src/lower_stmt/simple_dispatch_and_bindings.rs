@@ -396,6 +396,23 @@ pub(super) fn coerce_simple_assign_value_for_target_type(
     if adapted_value != lowered_value {
         return adapted_value;
     }
+    if let Some(widened) = crate::helpers::widen_option_value_for_union_target(
+        target_ty,
+        value.ty(),
+        lowered_value.clone(),
+    ) {
+        return widened;
+    }
+    let wrapped_member = if matches!(value, HirExpr::NoneLiteral) {
+        &Type::None
+    } else {
+        value.ty()
+    };
+    if let Some(wrapped) =
+        crate::helpers::wrap_union_member_expr(target_ty, wrapped_member, lowered_value.clone())
+    {
+        return wrapped;
+    }
     if !crate::helpers::is_option_type(target_ty) {
         return lowered_value;
     }

@@ -84,7 +84,17 @@ impl RustEmitter {
 
             if convention.is_owned() {
                 lowered_arg =
-                    self.consuming_class_upcast_for_ir(param_ty, &effective_arg_ty, lowered_arg);
+                    self.consuming_value_upcast_for_ir(param_ty, &effective_arg_ty, lowered_arg);
+            } else if let Some(wrapped) = crate::helpers::wrap_union_member_expr(
+                param_ty,
+                if matches!(hir_arg, HirExpr::NoneLiteral) {
+                    &Type::None
+                } else {
+                    &effective_arg_ty
+                },
+                lowered_arg.clone(),
+            ) {
+                lowered_arg = wrapped;
             }
 
             let mut recursive_option_adapted = false;

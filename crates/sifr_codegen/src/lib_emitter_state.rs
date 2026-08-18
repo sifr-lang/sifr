@@ -658,6 +658,7 @@ impl RustEmitter {
                         self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?;
                     if !crate::helpers::is_option_type(&target_ty)
                         && crate::helpers::is_option_type(value.ty())
+                        && !value.ty().is_assignable_to(&target_ty)
                     {
                         let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
                             RustExpr::Ident(name.clone())
@@ -680,6 +681,7 @@ impl RustEmitter {
                         self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?;
                     if !crate::helpers::is_option_type(&target_ty)
                         && crate::helpers::is_option_type(value.ty())
+                        && !value.ty().is_assignable_to(&target_ty)
                     {
                         let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
                             RustExpr::Ident(name.clone())

@@ -97,11 +97,24 @@ pub(super) fn try_lower_simple_return_stmt(
 
     if let Some(return_ty) = ctx.return_type {
         if let Type::Union(members) = resolve_alias_type(return_ty) {
-            if is_option_like_type(value.ty()) && !matches!(value.ty(), Type::None) {
+            if is_option_like_type(value.ty())
+                && !matches!(value, HirExpr::NoneLiteral)
+                && !is_none_type(value.ty())
+            {
                 return None;
             }
             let lowered = try_lower_leaf_or_name_expr(value)?;
-            let variant = crate::helpers::find_union_variant(members, value.ty())?;
+            let member_ty = if matches!(value, HirExpr::NoneLiteral) || is_none_type(value.ty()) {
+                &Type::None
+            } else {
+                value.ty()
+            };
+            if let Some(wrapped) =
+                crate::helpers::wrap_union_member_expr(return_ty, member_ty, lowered.clone())
+            {
+                return Some(vec![RustStmt::Return(Some(wrapped))]);
+            }
+            let variant = crate::helpers::find_union_variant(members, member_ty)?;
             let enum_name = return_ty.union_enum_name();
             return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![enum_name, variant])),
@@ -157,11 +170,23 @@ pub(super) fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<R
     }
     if let Type::Union(members) = resolve_alias_type(ty) {
         let lowered = try_lower_leaf_or_name_expr(value)?;
-        let variant = crate::helpers::find_union_variant(members, value.ty())?;
-        return Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![ty.union_enum_name(), variant])),
-            args: vec![lowered],
-        });
+        let member_ty = if matches!(value, HirExpr::NoneLiteral) {
+            &Type::None
+        } else {
+            value.ty()
+        };
+        if let Some(wrapped) =
+            crate::helpers::wrap_union_member_expr(ty, member_ty, lowered.clone())
+        {
+            return Some(wrapped);
+        }
+        return (|| {
+            let variant = crate::helpers::find_union_variant(members, member_ty)?;
+            Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![ty.union_enum_name(), variant])),
+                args: vec![lowered],
+            })
+        })();
     }
     if matches!(
         crate::resolve_alias_type_for_plain_call(ty),

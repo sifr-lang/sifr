@@ -268,6 +268,68 @@ pub(crate) fn flatten_option_value_for_target(
     value
 }
 
+/// Widen an ordinary `T | None` (`Option<T>`) into a larger enum-backed union.
+/// The source wrapper must be mapped member-by-member; treating it as the
+/// target representation either drops the present value or references an
+/// enum that does not represent the source option.
+pub(crate) fn widen_option_value_for_union_target(
+    target: &Type,
+    source: &Type,
+    value: RustExpr,
+) -> Option<RustExpr> {
+    let Type::Union(target_members) = crate::resolve_alias_type_for_plain_call(target) else {
+        return None;
+    };
+    if is_option_type(target) {
+        return None;
+    }
+    let source_payload = source.optional_member_type()?;
+    if matches!(
+        crate::resolve_alias_type_for_plain_call(&source_payload),
+        Type::Union(_)
+    ) {
+        return None;
+    }
+    let payload_member = find_union_member(target_members, &source_payload)?;
+    if !target_members
+        .iter()
+        .any(|member| matches!(member.resolve_alias(), Type::None))
+    {
+        return None;
+    }
+    let target_name = target.union_enum_name();
+    let present = RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            target_name.clone(),
+            payload_member.union_variant_name(),
+        ])),
+        args: vec![RustExpr::Ident("__sifr_union_value".to_string())],
+    };
+    let mapped = RustExpr::MethodCall {
+        receiver: Box::new(value),
+        method: "map".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![crate::RustParam::Named {
+                name: "__sifr_union_value".to_string(),
+                ty: crate::RustType::Named("_".to_string()),
+            }],
+            body: Box::new(present),
+            is_move: false,
+        }],
+    };
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Paren(Box::new(mapped))),
+        method: "unwrap_or".to_string(),
+        args: vec![RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                target_name,
+                Type::None.union_variant_name(),
+            ])),
+            args: vec![RustExpr::Literal(crate::RustLiteral::Unit)],
+        }],
+    })
+}
+
 /// Normalize nested absence produced by a safe collection operation.
 pub(crate) fn normalize_safe_option_result(payload: &Type, value: RustExpr) -> RustExpr {
     let canonical_payload = match crate::resolve_alias_type_for_plain_call(payload) {
@@ -464,9 +526,17 @@ pub(crate) fn wrap_union_member_expr(
         return None;
     }
     let variant = find_union_variant(members, member_ty)?;
+    let payload = if matches!(
+        crate::resolve_alias_type_for_plain_call(member_ty),
+        Type::None
+    ) {
+        RustExpr::Literal(crate::RustLiteral::Unit)
+    } else {
+        lowered
+    };
     Some(RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![union_ty.union_enum_name(), variant])),
-        args: vec![lowered],
+        args: vec![payload],
     })
 }
 

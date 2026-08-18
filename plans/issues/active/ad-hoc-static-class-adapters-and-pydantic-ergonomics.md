@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-18. M0-M7b are complete; M8 is next.
+Status: active on 2026-08-18. M0-M7b are complete; M7c is active.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -983,6 +983,45 @@ The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
 outside this phase.
 Next action: implement M8 Pydantic model, field, and configuration declarations.
 
+### M7c: Typed Adapter Union and Shared-Nominal Code Generation
+
+Owner: `sifr-lang/sifr`.
+
+Scope:
+
+- Emit unit payloads for `None` members of enum-backed unions.
+- Widen ordinary optional values into larger union representations without
+  requiring a source enum that does not exist in Rust.
+- Preserve optional-to-union assignment semantics when the target itself
+  accepts `None`.
+- Share compiler-owned stdlib nominal types once across generated project
+  modules, including their structural implementations.
+- Preserve reusable owned records after clone-capable field reads while
+  retaining move behavior for affine fields and checked storage places.
+- Extend the synthetic static-class-adapter fixture with cross-module typed
+  descriptors and non-domain optional/union fields.
+
+Acceptance criteria:
+
+- A package descriptor declared in one module can carry compiler-owned
+  `sifr.meta` values and be consumed by an adapter in another module.
+- `None`, `T | None`, and `T | U | None` descriptor values lower to valid Rust
+  in locals, assignments, returns, and constructor arguments.
+- Assigning `T | None` into a wider union that accepts `None` preserves the
+  source absence instead of retaining the previous target value.
+- Repeated clone-capable field reads do not partially move their owning
+  record; affine field reads remain move-only.
+- The package-neutral static-class-adapter fixture builds and runs.
+- The paused M8 fields-and-configuration demo builds and runs without a
+  Pydantic-specific compiler path.
+
+Exit gate: typed cross-module adapter descriptors with optional and wider-union
+fields generate valid Rust and unblock M8.
+
+State: active
+Issue: [`sifr-lang/sifr#3271`](https://github.com/sifr-lang/sifr/issues/3271)
+Next action: complete M7c, then resume M8 without changing its preserved work.
+
 ### M8: Pydantic Model, Field, and Configuration Declarations
 
 Owner: `sifr-lang/pydantic-sifr`.
@@ -1257,8 +1296,7 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M7b are merged and recorded.
+Current state: M0-M7b are merged and recorded; M7c is active.
 
-Next action: complete M8 in `sifr-lang/pydantic-sifr`. Declare the familiar
-model, field, configuration, constraint, and specialized public-value facade
-on the installed M1-M7b compiler substrate without raw metadata.
+Next action: complete M7c in `sifr-lang/sifr`, then resume the preserved M8
+work in `sifr-lang/pydantic-sifr` on the merged compiler substrate.

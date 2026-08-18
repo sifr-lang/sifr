@@ -322,6 +322,12 @@ class Child(Parent):
 fn reexported_default_descriptors_finalize_constructor_parameters() {
     let modules = HashMap::from([
         (
+            "fixture.api".to_string(),
+            parse_suite(include_str!(
+                "../../../../verification/areas/core_language/fixtures/static_class_adapter/fixture/api.sifr"
+            )),
+        ),
+        (
             "fixture.contract_types".to_string(),
             parse_suite(include_str!(
                 "../../../../verification/areas/core_language/fixtures/static_class_adapter/fixture/contract_types.sifr"

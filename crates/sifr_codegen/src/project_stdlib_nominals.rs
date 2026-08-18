@@ -77,6 +77,7 @@ pub(crate) fn project_stdlib_nominal_plan(
     unions: &HashMap<String, Vec<Type>>,
     stdlib_code: &StdlibCode,
     modules: &[(&str, &HirModule)],
+    structural_interop_enabled: bool,
 ) -> ProjectStdlibNominalPlan {
     let mut declarations = BTreeMap::<String, HashSet<String>>::new();
     let mut builtin_types = BTreeMap::<String, Type>::new();
@@ -84,6 +85,9 @@ pub(crate) fn project_stdlib_nominal_plan(
         for member in members {
             collect_shared_nominals(member, &mut declarations, &mut builtin_types);
         }
+    }
+    for (_, module) in modules {
+        collect_module_nominals(module, &mut declarations, &mut builtin_types);
     }
     let mut python_error_rust_names = HashSet::new();
     if builtin_types.contains_key("Error") {
@@ -169,7 +173,7 @@ pub(crate) fn project_stdlib_nominal_plan(
         &synthetic_module,
         stdlib_code,
         Some("main"),
-        false,
+        structural_interop_enabled,
     );
     let probe_name_refs = probe_names.iter().map(String::as_str).collect();
     let shared_source = strip_rust_items_by_name(&generated.rust_source, &probe_name_refs);
@@ -256,6 +260,47 @@ fn collect_function_nominals(
     collect_shared_nominals(&function.return_type, declarations, builtin_types);
 }
 
+fn collect_hir_function_nominals(
+    function: &HirFunction,
+    declarations: &mut BTreeMap<String, HashSet<String>>,
+    builtin_types: &mut BTreeMap<String, Type>,
+) {
+    for parameter in &function.params {
+        collect_shared_nominals(&parameter.ty, declarations, builtin_types);
+    }
+    collect_shared_nominals(&function.return_type, declarations, builtin_types);
+    for ty in crate::hir_analysis::queries::collect_let_declared_types(&function.body) {
+        collect_shared_nominals(&ty, declarations, builtin_types);
+    }
+}
+
+fn collect_module_nominals(
+    module: &HirModule,
+    declarations: &mut BTreeMap<String, HashSet<String>>,
+    builtin_types: &mut BTreeMap<String, Type>,
+) {
+    for function in &module.functions {
+        collect_hir_function_nominals(function, declarations, builtin_types);
+    }
+    for class in &module.classes {
+        for (_, field) in &class.fields {
+            collect_shared_nominals(field, declarations, builtin_types);
+        }
+        if let Some(parent) = &class.parent_type {
+            collect_shared_nominals(parent, declarations, builtin_types);
+        }
+        for method in &class.methods {
+            collect_hir_function_nominals(method, declarations, builtin_types);
+        }
+        for (_, operator) in &class.operator_impls {
+            collect_hir_function_nominals(operator, declarations, builtin_types);
+        }
+    }
+    for (_, ty, _) in &module.constants {
+        collect_shared_nominals(ty, declarations, builtin_types);
+    }
+}
+
 fn collect_shared_nominals(
     ty: &Type,
     declarations: &mut BTreeMap<String, HashSet<String>>,
@@ -266,6 +311,8 @@ fn collect_shared_nominals(
             identity,
             type_args,
             name,
+            fields,
+            methods,
             ..
         } => {
             if crate::BUILTIN_ERROR_CLASSES.contains(&name.as_str()) {
@@ -278,6 +325,16 @@ fn collect_shared_nominals(
             }
             for type_arg in type_args {
                 collect_shared_nominals(type_arg, declarations, builtin_types);
+            }
+            if identity.as_deref().is_some_and(|identity| {
+                identity.starts_with("sifr.") || identity.starts_with("_sifr.")
+            }) {
+                for (_, field) in fields {
+                    collect_shared_nominals(field, declarations, builtin_types);
+                }
+                for (_, method) in methods {
+                    collect_function_nominals(method, declarations, builtin_types);
+                }
             }
         }
         Type::Protocol {
@@ -390,7 +447,7 @@ mod tests {
             ],
         )]);
 
-        let plan = project_stdlib_nominal_plan(&unions, &StdlibCode::default(), &[]);
+        let plan = project_stdlib_nominal_plan(&unions, &StdlibCode::default(), &[], false);
 
         assert!(plan.prelude.contains("pub struct TimeoutError"));
         assert!(plan

@@ -49,8 +49,12 @@ pub fn generate_rust_test_project_with_metadata(
     } else {
         HashSet::new()
     };
-    let stdlib_nominal_plan =
-        project_stdlib_nominal_plan(&union_usage.unions, stdlib_code, &all_modules);
+    let stdlib_nominal_plan = project_stdlib_nominal_plan(
+        &union_usage.unions,
+        stdlib_code,
+        &all_modules,
+        structural_interop_enabled,
+    );
     let crate_root_modules = test_modules
         .iter()
         .map(|(module_name, _)| *module_name)

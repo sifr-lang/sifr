@@ -123,23 +123,24 @@ impl RustEmitter {
                 }
                 lowered_arg =
                     self.consuming_value_upcast_for_ir(param_ty, &effective_arg_ty, lowered_arg);
-            } else if let Type::Union(members) = resolved_param {
+            } else if let Type::Union(_) = resolved_param {
                 if !crate::helpers::is_option_type(resolved_param)
                     && !matches!(
                         crate::resolve_alias_type_for_plain_call(&effective_arg_ty),
                         Type::Union(_)
                     )
                 {
-                    if let Some(variant) =
-                        crate::helpers::find_union_variant(members, &effective_arg_ty)
-                    {
-                        lowered_arg = crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Path(vec![
-                                resolved_param.union_enum_name(),
-                                variant,
-                            ])),
-                            args: vec![lowered_arg],
-                        };
+                    let member_ty = if matches!(arg, HirExpr::NoneLiteral) {
+                        &Type::None
+                    } else {
+                        &effective_arg_ty
+                    };
+                    if let Some(wrapped) = crate::helpers::wrap_union_member_expr(
+                        resolved_param,
+                        member_ty,
+                        lowered_arg.clone(),
+                    ) {
+                        lowered_arg = wrapped;
                     }
                 }
             }
