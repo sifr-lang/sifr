@@ -69,7 +69,7 @@ def demo_configparser() -> None:
 def demo_gzip() -> None:
     print("=== gzip ===")
     data: str = "Sifr stdlib gzip compression!"
-    compressed: list[int] = compress(data)
+    compressed: bytes = compress(data)
     print("compressed len > 0 = " + str(len(compressed) > 0))
     try:
         decompressed: str = decompress(compressed)

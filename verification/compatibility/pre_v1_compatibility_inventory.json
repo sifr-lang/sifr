@@ -362,7 +362,7 @@
       "old_surface": "sifr.bytes wrappers for encode, decode, hex, integer-list construction, sized construction, byte search, and prefix tests",
       "canonical_contract": "first-class bytes methods and constructors; any non-method helper must have one non-transition owner",
       "behavior_difference": "approved search and prefix behavior moves to first-class bytes before the transition module disappears",
-      "consumers": ["stdlib/sifr/bytes.sifr", "demos", "verification/areas/stdlib_parity", "crates/sifr_codegen"],
+      "consumers": ["demos", "verification/areas/stdlib_parity", "crates/sifr_codegen"],
       "visibility": "public-export",
       "classification": "merge-then-remove",
       "disposition": "remove",

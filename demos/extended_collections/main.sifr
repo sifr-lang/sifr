@@ -5,12 +5,11 @@
 # ============================================================
 # Demonstrates extended collection types and binary data:
 #   sifr.collections — Set, Counter, DefaultDict
-#   sifr.bytes       — encode/decode, hex conversion
+#   bytes            — first-class encode/decode and hex conversion
 # ============================================================
 
 from sifr.collections import set_from_list, set_add, set_contains, set_len, set_union, set_intersection
 from sifr.collections import Counter, from_list
-from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
 
 def main():
     # ----------------------------------------------------------
@@ -49,26 +48,26 @@ def main():
     print("=== Bytes ===")
 
     # Encode string to bytes
-    print(f"'hello' encoded: {len(encode_utf8('hello'))} bytes")
+    print(f"'hello' encoded: {len(b'hello')} bytes")
 
     # Roundtrip: encode then decode
     try:
-        roundtrip: str = decode_utf8(encode_utf8("Sifr"))
+        roundtrip: str = b"Sifr".decode()
         print(f"Roundtrip: {roundtrip}")
     except ParseError as err:
         print(f"decode error: {err.message}")
 
     # Hex encoding
     try:
-        hex_hello: str = bytes_to_hex(encode_utf8("hello"))
+        hex_hello: str = b"hello".hex()
         print(f"'hello' as hex: {hex_hello}")
     except ParseError as err:
         print(f"hex encode error: {err.message}")
 
     # Hex decoding
     try:
-        hex_bytes: bytes = bytes_from_hex("536966")
-        decoded: str = decode_utf8(hex_bytes)
+        hex_bytes: bytes = bytes.from_hex("536966")
+        decoded: str = hex_bytes.decode()
         print(f"Hex '536966' decoded: {decoded}")
     except ParseError as err:
         print(f"hex error: {err.message}")

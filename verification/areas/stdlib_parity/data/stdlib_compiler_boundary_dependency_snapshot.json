@@ -8,9 +8,6 @@
     },
     "sifr_stdlib": {
       "default-features": false,
-      "features": [
-        "bytes"
-      ],
       "sysroot-crate": "sifr_stdlib"
     }
   }

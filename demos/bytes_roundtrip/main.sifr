@@ -1,18 +1,17 @@
 # Reference: bytes_bytes_roundtrip
 # Reference: first-class-bytes-and-binary-surface-foundation
-from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, starts_with, ends_with
 
 
 def main() -> None:
-    payload: bytes = encode_utf8("binary-sample")
-    assert starts_with(payload, encode_utf8("binary"))
-    assert ends_with(payload, encode_utf8("sample"))
+    payload: bytes = b"binary-sample"
+    assert payload.startswith(b"binary")
+    assert payload.endswith(b"sample")
 
     conversion_ok: bool = False
     try:
-        as_hex: str = bytes_to_hex(payload)
-        restored: bytes = bytes_from_hex(as_hex)
-        text: str = decode_utf8(restored)
+        as_hex: str = payload.hex()
+        restored: bytes = bytes.from_hex(as_hex)
+        text: str = restored.decode()
         conversion_ok = text == "binary-sample"
     except ParseError as e:
         _ = str(e.message)

@@ -1,23 +1,39 @@
 # Reference: stdlib_parity_bytes_0_architecture_lock
-from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, count_byte, find_byte, starts_with, ends_with
+
+
+class BytesFactory:
+    calls: int
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def make(mut self) -> bytes:
+        self.calls = self.calls + 1
+        return b"bytes-rule0"
 
 
 def main() -> None:
-    payload: bytes = encode_utf8("bytes-rule0")
+    payload: bytes = b"bytes-rule0"
     assert len(payload) == 11
-    assert count_byte(payload, 101) == 2
-    assert find_byte(payload, 114) == 6
+    assert payload.count(101) == 2
+    assert payload.find(114) == 6
 
-    prefix: bytes = encode_utf8("bytes")
-    suffix: bytes = encode_utf8("rule0")
-    assert starts_with(payload, prefix)
-    assert ends_with(payload, suffix)
+    prefix: bytes = b"bytes"
+    suffix: bytes = b"rule0"
+    assert payload.startswith(prefix)
+    assert payload.endswith(suffix)
+
+    factory: BytesFactory = BytesFactory()
+    assert factory.make().hex() == "62797465732d72756c6530"
+    assert factory.calls == 1
+    assert factory.make().find(114) == 6
+    assert factory.calls == 2
 
     conversion_ok: bool = False
     try:
-        hex_text: str = bytes_to_hex(payload)
-        rebuilt: bytes = bytes_from_hex(hex_text)
-        roundtrip: str = decode_utf8(rebuilt)
+        hex_text: str = payload.hex()
+        rebuilt: bytes = bytes.from_hex(hex_text)
+        roundtrip: str = rebuilt.decode()
         conversion_ok = roundtrip == "bytes-rule0"
     except ParseError as e:
         _ = str(e.message)

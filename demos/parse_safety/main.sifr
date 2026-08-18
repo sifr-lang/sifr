@@ -6,13 +6,12 @@
 #   - JSONDecodeError for loads
 #   - TOMLDecodeError for toml_parse / tomllib.loads
 #   - RegexError for search/search/sub/findall/split
-#   - ParseError for b64decode, urlsafe_b64decode, decode_utf8, bytes_from_hex
+#   - ParseError for b64decode, urlsafe_b64decode, bytes.decode, bytes.from_hex
 
 from sifr.json import JsonValue, JSONDecoder, dumps
 from sifr.tomllib import TomlValue, loads
 from sifr.re import search, sub, findall, split
 from sifr.base64 import b64encode, b64decode
-from sifr.bytes import encode_utf8, decode_utf8, bytes_from_hex
 
 def _load_json(text: str) -> Result[JsonValue, JSONDecodeError]:
     decoder: JSONDecoder = JSONDecoder()
@@ -130,32 +129,32 @@ def demo_base64():
 def demo_bytes():
     print("=== Bytes Safety ===")
 
-    # decode_utf8 success
+    # bytes.decode success
     try:
-        text: str = decode_utf8(encode_utf8("hello sifr"))
+        text: str = b"hello sifr".decode()
         print(f"utf8: {text}")
     except ParseError as e:
         print(f"unexpected: {e.message}")
 
-    # decode_utf8 error — invalid bytes
+    # bytes.decode error — invalid bytes
     try:
         bad_bytes: bytes = b"\xff\xfe\xfd"
-        bad_text: str = decode_utf8(bad_bytes)
+        bad_text: str = bad_bytes.decode()
         print("should not reach here")
     except ParseError as e:
         print(f"caught utf8 ParseError: {e.message}")
 
-    # bytes_from_hex success
+    # bytes.from_hex success
     try:
-        hex_data: bytes = bytes_from_hex("48656c6c6f")
-        decoded_hex: str = decode_utf8(hex_data)
+        hex_data: bytes = bytes.from_hex("48656c6c6f")
+        decoded_hex: str = hex_data.decode()
         print(f"from hex: {decoded_hex}")
     except ParseError as e:
         print(f"unexpected: {e.message}")
 
-    # bytes_from_hex error — invalid hex
+    # bytes.from_hex error — invalid hex
     try:
-        bad_hex: bytes = bytes_from_hex("ZZZZ")
+        bad_hex: bytes = bytes.from_hex("ZZZZ")
         print("should not reach here")
     except ParseError as e:
         print(f"caught hex ParseError: {e.message}")

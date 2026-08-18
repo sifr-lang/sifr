@@ -473,12 +473,12 @@ class StringIO:
 
 
 class BytesIO:
-    _buffer: list[int]
+    _buffer: bytes
     _cursor: int
     _closed: bool
 
     def __init__(self, initial: bytes = b"") -> None:
-        self._buffer = initial.to_ints()
+        self._buffer = initial
         self._cursor = 0
         self._closed = False
 
@@ -493,13 +493,6 @@ class BytesIO:
             raise IOError(_closed_stream_error())
         return None
 
-    def _slice_to_bytes(self, values: list[int]) -> Result[bytes, IOError]:
-        try:
-            built: bytes = bytes.from_ints(values)
-            return built
-        except ValueError as e:
-            raise IOError(e.message)
-
     def read_bytes(self, size: int | None = None) -> Result[bytes, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
@@ -511,30 +504,24 @@ class BytesIO:
                 requested: int = start + maybe_size
                 if requested < end:
                     end = requested
-        chunk: list[int] = self._buffer[start:end]
+        chunk: bytes = self._buffer[start:end]
         self._cursor = end
-        return self._slice_to_bytes(chunk)
+        return chunk
 
     def write_bytes(self, data: bytes) -> Result[None, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
-        values: list[int] = data.to_ints()
-        i: int = 0
-        while i < len(values):
-            maybe_value: int | None = values[i]
-            if maybe_value is None:
-                raise IOError("bytes write invariant violation")
-            idx: int = self._cursor + i
-            if idx < len(self._buffer):
-                self._buffer[idx] = maybe_value
-            else:
-                self._buffer.append(maybe_value)
-            i = i + 1
-        self._cursor = self._cursor + len(values)
+        left: bytes = self._buffer[:self._cursor]
+        tail_start: int = self._cursor + len(data)
+        right: bytes = b""
+        if tail_start < len(self._buffer):
+            right = self._buffer[tail_start:]
+        self._buffer = left + data + right
+        self._cursor = self._cursor + len(data)
         return None
 
     def getvalue(self) -> Result[bytes, IOError]:
-        return self._slice_to_bytes(self._buffer)
+        return self._buffer
 
     def seek(self, offset: int, whence: int = 0) -> Result[int, IOError]:
         if self._closed:

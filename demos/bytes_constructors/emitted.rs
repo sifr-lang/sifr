@@ -1,66 +1,272 @@
-#[derive(Debug, Clone)]
+// src/main.rs
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct IOError {
+    message: String,
+    kind: String,
+}
+
+impl IOError {
+    fn new(message: String) -> Self {
+        Self { message, kind: "Other".to_string() }
+    }
+}
+
+impl ::std::fmt::Display for IOError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for IOError {
+}
+
+fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+    let msg = e.to_string();
+    let kind = {
+    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
+    match __sifr_io_kind {
+    Some(::std::io::ErrorKind::NotFound) => {
+        "FileNotFound".to_string()
+    },
+    Some(::std::io::ErrorKind::PermissionDenied) => {
+        "PermissionDenied".to_string()
+    },
+    Some(::std::io::ErrorKind::AlreadyExists) => {
+        "FileExists".to_string()
+    },
+    Some(::std::io::ErrorKind::IsADirectory) => {
+        "IsADirectory".to_string()
+    },
+    Some(::std::io::ErrorKind::NotADirectory) => {
+        "NotADirectory".to_string()
+    },
+    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+        "DirectoryNotEmpty".to_string()
+    },
+    _ => {
+        "Other".to_string()
+    },
+}
+};
+    IOError { message: msg, kind }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
 
 impl ParseError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+impl ::std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
     }
 }
 
-impl std::error::Error for ParseError {
+impl ::std::error::Error for ParseError {
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
 
 impl ValueError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
-impl std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+impl ::std::fmt::Display for ValueError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
     }
 }
 
-impl std::error::Error for ValueError {
+impl ::std::error::Error for ValueError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct JSONDecodeError {
+    message: String,
+    line: i64,
+    column: i64,
+}
+
+impl JSONDecodeError {
+    fn new(message: String) -> Self {
+        Self { message, line: 0, column: 0 }
+    }
+}
+
+impl ::std::fmt::Display for JSONDecodeError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for JSONDecodeError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct JsonIntegerRangeError {
+    message: String,
+    path: String,
+    profile: String,
+}
+
+impl JsonIntegerRangeError {
+    fn new(message: String) -> Self {
+        Self { message, path: String::new(), profile: String::new() }
+    }
+}
+
+impl ::std::fmt::Display for JsonIntegerRangeError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for JsonIntegerRangeError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct JsonLimitError {
+    message: String,
+    limit: i64,
+}
+
+impl JsonLimitError {
+    fn new(message: String) -> Self {
+        Self { message, limit: 0 }
+    }
+}
+
+impl ::std::fmt::Display for JsonLimitError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for JsonLimitError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct TOMLDecodeError {
+    message: String,
+    line: i64,
+    column: i64,
+}
+
+impl TOMLDecodeError {
+    fn new(message: String) -> Self {
+        Self { message, line: 0, column: 0 }
+    }
+}
+
+impl ::std::fmt::Display for TOMLDecodeError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for TOMLDecodeError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct RegexError {
+    message: String,
+    detail: String,
+}
+
+impl RegexError {
+    fn new(message: String) -> Self {
+        Self { message, detail: String::new() }
+    }
+}
+
+impl ::std::fmt::Display for RegexError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for RegexError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct TimeoutError {
+    message: String,
+}
+
+impl TimeoutError {
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+}
+
+impl ::std::fmt::Display for TimeoutError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for TimeoutError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct ScopeFailure {
+    message: String,
+}
+
+impl ScopeFailure {
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+}
+
+impl ::std::fmt::Display for ScopeFailure {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for ScopeFailure {
 }
 
 fn main() {
     let mut size_ok: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
     let zeros: Vec<u8> = ({
-    let __size = 6 as i64;
+    let __size = 6_i64;
     if __size < 0 {
         return Err(ValueError { message: "bytes(size) requires a non-negative size".to_string().to_string() });
     }
-    Ok((0..__size).map(|_| 0 as u8).collect::<Vec<u8>>())
+    Ok::<Vec<u8>, ValueError>((0..__size).map(|_| 0_u8).collect::<Vec<u8>>())
 })?;
-    assert!((zeros.len() as i64) == (6 as i64));
+    assert!((zeros.len() as i64) == (6_i64));
     size_ok = true;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", format!("{}{}", "unexpected ValueError: ".to_string(), e.message));
+        println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(23usize + 0usize);
+    __sifr_concat.push_str("unexpected ValueError: ");
+    __sifr_concat.push_str((e.message).as_str());
+    __sifr_concat
+});
     }
     assert!(size_ok);
     let mut from_ints_ok: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
     let from_list: Vec<u8> = ({
-    let __vals = vec![83 as i64, 105 as i64, 102 as i64, 114 as i64];
+    let __vals = vec![83_i64, 105_i64, 102_i64, 114_i64];
     let mut __out = Vec::new();
     for __pair in __vals.iter().enumerate() {
         if (*__pair.1 < 0) || (*__pair.1 > 255) {
@@ -68,16 +274,33 @@ fn main() {
         }
         __out.push(*__pair.1 as u8);
     }
-    Ok(__out)
+    Ok::<Vec<u8>, ValueError>(__out)
 })?;
-    assert!(from_list.get((0 as i64) as usize).map(|__byte| *__byte as i64) == Some(83 as i64));
-    assert!(from_list.get((3 as i64) as usize).map(|__byte| *__byte as i64) == Some(114 as i64));
+    let first: Option<u8> = from_list.get((0_i64) as usize).map(|__byte| *__byte as u8);
+    let last: Option<u8> = from_list.get((3_i64) as usize).map(|__byte| *__byte as u8);
+    if let Some(first) = first {
+        let expected_first: u8 = 83u8;
+        assert!(first == expected_first);
+    } else {
+        assert!(false);
+    }
+    if let Some(last) = last {
+        let expected_last: u8 = 114u8;
+        assert!(last == expected_last);
+    } else {
+        assert!(false);
+    }
     from_ints_ok = true;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", format!("{}{}", "unexpected ValueError: ".to_string(), e.message));
+        println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(23usize + 0usize);
+    __sifr_concat.push_str("unexpected ValueError: ");
+    __sifr_concat.push_str((e.message).as_str());
+    __sifr_concat
+});
     }
     assert!(from_ints_ok);
     let mut from_hex_ok: bool = false;
@@ -99,43 +322,42 @@ fn main() {
     }
     let mut result = Vec::new();
     for pair in cleaned.as_bytes().chunks(2) {
-        let pair_str = std::str::from_utf8(pair).map_err(|e| ParseError { message: e.to_string() })?;
+        let pair_str = ::std::str::from_utf8(pair).map_err(|e| ParseError { message: e.to_string() })?;
         result.push(u8::from_str_radix(pair_str, 16).map_err(|e| ParseError { message: e.to_string() })?);
     }
-    Ok(result)
+    Ok::<Vec<u8>, ParseError>(result)
 })?;
-    let from_hex_text: String = String::from_utf8(from_hex.iter().copied().collect::<Vec<u8>>()).map_err(|e| ParseError { message: e.to_string() })?;
-    assert!(from_hex_text == "Sifr".to_string());
+    let from_hex_text: String = ::sifr_runtime::encoding::decode_text(&from_hex, &"utf-8".to_string(), &"strict".to_string()).map_err(|__message| ParseError { message: __message })?;
+    assert!(from_hex_text == "Sifr");
     from_hex_ok = true;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", format!("{}{}", "unexpected ParseError: ".to_string(), e.message));
+        println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(23usize + 0usize);
+    __sifr_concat.push_str("unexpected ParseError: ");
+    __sifr_concat.push_str((e.message).as_str());
+    __sifr_concat
+});
     }
     assert!(from_hex_ok);
     let mut encode_ok: bool = false;
     let __sifr_try_res: Result<(), ParseError> = (|| {
-    let encoded: Vec<u8> = ({
-    let __encoding = "utf-8".to_string();
-    let __encoding_lower = __encoding.to_ascii_lowercase();
-    if (__encoding_lower != "utf-8".to_string()) && (__encoding_lower != "utf8".to_string()) { Err(ParseError { message: format!("{} currently supports only UTF-8 encoding, got {}", "str.encode()".to_string(), __encoding) }) } else { Ok({
-    let __s = "bytes_constructors-demo".to_string();
-    __s.as_bytes().to_vec()
-}) }
-})?;
-    let decoded: String = ({
-    let __encoding = "utf-8".to_string();
-    let __encoding_lower = __encoding.to_ascii_lowercase();
-    if (__encoding_lower != "utf-8".to_string()) && (__encoding_lower != "utf8".to_string()) { Err(ParseError { message: format!("{} currently supports only UTF-8 encoding, got {}", "bytes.decode()".to_string(), __encoding) }) } else { String::from_utf8(encoded.iter().copied().collect::<Vec<u8>>()).map_err(|e| ParseError { message: e.to_string() }) }
-})?;
-    assert!(decoded == "bytes_constructors-demo".to_string());
+    let encoded: Vec<u8> = ::sifr_runtime::encoding::encode_bytes(&"bytes_constructors-demo".to_string(), &"utf-8".to_string(), &"strict".to_string()).map_err(|__message| ParseError { message: __message })?;
+    let decoded: String = ::sifr_runtime::encoding::decode_text(&encoded, &"utf-8".to_string(), &"strict".to_string()).map_err(|__message| ParseError { message: __message })?;
+    assert!(decoded == "bytes_constructors-demo");
     encode_ok = true;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", format!("{}{}", "unexpected ParseError: ".to_string(), e.message));
+        println!("{}", {
+    let mut __sifr_concat: String = String::with_capacity(23usize + 0usize);
+    __sifr_concat.push_str("unexpected ParseError: ");
+    __sifr_concat.push_str((e.message).as_str());
+    __sifr_concat
+});
     }
     assert!(encode_ok);
     println!("bytes_bytes_constructors_surface_demo: ok");

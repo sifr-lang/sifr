@@ -1,23 +1,22 @@
-# Test sifr.bytes module
-from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
+# Test first-class bytes operations
 
 def main():
     try:
         # Encode string to bytes
-        data: bytes = encode_utf8("hello")
+        data: bytes = b"hello"
         assert str(len(data)) == '5'
 
         # Decode bytes back to string
-        text: str = decode_utf8(encode_utf8("hello"))
+        text: str = b"hello".decode()
         assert str(text) == 'hello'
 
         # Hex encoding
-        hex_str: str = bytes_to_hex(encode_utf8("hello"))
+        hex_str: str = b"hello".hex()
         assert str(hex_str) == '68656c6c6f'
 
         # Hex decoding
-        hex_bytes: bytes = bytes_from_hex("68656c6c6f")
-        result: str = decode_utf8(hex_bytes)
+        hex_bytes: bytes = bytes.from_hex("68656c6c6f")
+        result: str = hex_bytes.decode()
         assert str(result) == 'hello'
     except ParseError as e:
         _ = str("unexpected error: " + e.message)

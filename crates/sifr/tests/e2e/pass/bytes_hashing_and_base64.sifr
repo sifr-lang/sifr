@@ -4,46 +4,44 @@ from sifr.base64 import (
     standard_b64decode_bytes, standard_b64encode_bytes,
     urlsafe_b64decode_bytes, urlsafe_b64encode_bytes
 )
-from sifr.bytes import encode_utf8
-from sifr.hashlib import HashObject, new, new_bytes
+from sifr.hashlib import HashObject, new
 from sifr.test import assert_eq, assert_true
 
 
 def main() -> None:
     try:
-        payload: bytes = encode_utf8("abc")
+        payload: bytes = b"abc"
 
-        h_bytes: HashObject = new_bytes("sha256", payload)
+        h_bytes: HashObject = new("sha256", payload)
         assert_eq(
             h_bytes.hexdigest(),
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
         )
         assert_true(len(h_bytes.digest()) == 32)
-        assert_true(h_bytes.digest_bytes() == h_bytes.digest())
 
-        h_bytes.update_bytes(payload)
+        h_bytes.update(payload)
         assert_eq(
             h_bytes.hexdigest(),
             "bbb59da3af939f7af5f360f2ceb80a496e3bae1cd87dde426db0ae40677e1c2c"
         )
 
-        h_text: HashObject = new("sha256", "abc")
-        h_expected: HashObject = new_bytes("sha256", payload)
-        assert_eq(h_text.digest(), h_expected.digest())
+        h_direct: HashObject = new("sha256", b"abc")
+        h_expected: HashObject = new("sha256", payload)
+        assert_eq(h_direct.digest(), h_expected.digest())
 
-        h_empty: HashObject = new_bytes("sha256", b"")
+        h_empty: HashObject = new("sha256", b"")
         assert_eq(
             h_empty.hexdigest(),
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         )
         assert_true(len(h_empty.digest()) == 32)
 
-        h_mixed: HashObject = new_bytes("sha256", b"")
-        h_mixed.update("ab")
-        h_mixed.update_bytes(encode_utf8("c"))
+        h_mixed: HashObject = new("sha256", b"")
+        h_mixed.update(b"ab")
+        h_mixed.update(b"c")
         assert_eq(h_mixed.hexdigest(), h_expected.hexdigest())
 
-        base_payload: bytes = encode_utf8("hello+bytes")
+        base_payload: bytes = b"hello+bytes"
         enc: bytes = b64encode_bytes(base_payload)
         dec: bytes = b64decode_bytes(enc)
         assert_eq(dec, base_payload)
@@ -57,7 +55,7 @@ def main() -> None:
         assert_eq(url_dec, base_payload)
 
         try:
-            _bad_decoded: bytes = b64decode_bytes(encode_utf8("@@@@"))
+            _bad_decoded: bytes = b64decode_bytes(b"@@@@")
             assert_true(False)
         except ParseError as e:
             assert_true(len(e.message) > 0)

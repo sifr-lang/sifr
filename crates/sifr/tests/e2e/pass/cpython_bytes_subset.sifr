@@ -1,5 +1,4 @@
-# Adapted CPython bytes subset for sifr.bytes
-from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, count_byte, find_byte, starts_with, ends_with
+# Adapted CPython bytes subset for first-class bytes
 from sifr.test import assert_vector_eq, assert_bool_vector_eq
 
 def render_opt_int(own value: int | None) -> str:
@@ -9,7 +8,7 @@ def render_opt_int(own value: int | None) -> str:
 
 def bytes_to_hex_or_err(payload: bytes) -> str:
     try:
-        hex_out: str = bytes_to_hex(payload)
+        hex_out: str = payload.hex()
         return hex_out
     except ParseError as e:
         _ = str(e.message)
@@ -17,8 +16,8 @@ def bytes_to_hex_or_err(payload: bytes) -> str:
 
 def bytes_from_hex_to_text_or_err(payload: str) -> str:
     try:
-        parsed: bytes = bytes_from_hex(payload)
-        text: str = decode_utf8(parsed)
+        parsed: bytes = bytes.from_hex(payload)
+        text: str = parsed.decode()
         return text
     except ParseError as e:
         _ = str(e.message)
@@ -26,13 +25,13 @@ def bytes_from_hex_to_text_or_err(payload: str) -> str:
 
 def collect_primary_actual() -> list[str]:
     actual: list[str] = []
-    data: bytes = encode_utf8("mississippi")
-    actual.append(str(count_byte(data, 115)))
-    actual.append(render_opt_int(find_byte(data, 112)))
-    actual.append(render_opt_int(find_byte(data, 120)))
-    actual.append(str(starts_with(data, encode_utf8("miss"))))
-    actual.append(str(ends_with(data, encode_utf8("ippi"))))
-    actual.append(bytes_to_hex_or_err(encode_utf8("Hi")))
+    data: bytes = b"mississippi"
+    actual.append(str(data.count(115)))
+    actual.append(render_opt_int(data.find(112)))
+    actual.append(render_opt_int(data.find(120)))
+    actual.append(str(data.startswith(b"miss")))
+    actual.append(str(data.endswith(b"ippi")))
+    actual.append(bytes_to_hex_or_err(b"Hi"))
     actual.append(bytes_from_hex_to_text_or_err("48 69"))
     return actual
 
@@ -40,7 +39,7 @@ def collect_hex_error_actual_ok(inputs: list[str]) -> list[bool]:
     hex_actual_ok: list[bool] = []
     for s in inputs:
         try:
-            _bad_hex: bytes = bytes_from_hex(s)
+            _bad_hex: bytes = bytes.from_hex(s)
             hex_actual_ok.append(True)
         except ParseError as e:
             hex_actual_ok.append(False)
@@ -49,12 +48,12 @@ def collect_hex_error_actual_ok(inputs: list[str]) -> list[bool]:
 def collect_decode_error_actual_ok() -> list[bool]:
     decode_actual_ok: list[bool] = []
     try:
-        bad_text: str = decode_utf8(b"\xff")
+        bad_text: str = b"\xff".decode()
         decode_actual_ok.append(True)
     except ParseError as e:
         decode_actual_ok.append(False)
     try:
-        good_text: str = decode_utf8(b"Hi")
+        good_text: str = b"Hi".decode()
         decode_actual_ok.append(True)
     except ParseError as e:
         decode_actual_ok.append(False)

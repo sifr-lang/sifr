@@ -21,7 +21,7 @@ def main():
     assert_true(pi > 3.14)
 
     # sifr.hashlib (renamed from sifr.hash, wraps _sifr.crypto)
-    h: str = sha256("hello")
+    h: str = sha256(b"hello").hexdigest()
     assert_true(len(h) == 64)
 
     # sifr.base64 (renamed from sifr.encoding, wraps _sifr.crypto)
@@ -34,4 +34,3 @@ def main():
         assert str(f"base64 error: {err.message}") == "stdlib_migration demo: all checks passed!"
 
     print("stdlib_migration demo: all checks passed!")
-

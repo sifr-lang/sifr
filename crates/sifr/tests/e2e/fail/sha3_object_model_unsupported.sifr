@@ -4,5 +4,5 @@ from sifr.hashlib import HashObject, sha3_256_obj
 
 def main() -> None:
     # sha3_256_obj currently stays on Result-based unsupported boundary.
-    h: HashObject = sha3_256_obj("abc")
+    h: HashObject = sha3_256_obj(b"abc")
     _ = h.hexdigest()

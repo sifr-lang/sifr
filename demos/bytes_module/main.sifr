@@ -1,6 +1,5 @@
 # Reference: bytes_module
 # bytes_module bytes parity demo
-from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex, count_byte, find_byte, starts_with, ends_with
 from sifr.test import assert_vector_eq, assert_bool_vector_eq
 
 def render_opt_int(own value: int | None) -> str:
@@ -10,15 +9,15 @@ def render_opt_int(own value: int | None) -> str:
 
 def collect_primary_actual(payload: bytes) -> list[str]:
     actual: list[str] = []
-    actual.append(str(count_byte(payload, 115)))
-    actual.append(render_opt_int(find_byte(payload, 45)))
-    actual.append(str(starts_with(payload, encode_utf8("bytes"))))
-    actual.append(str(ends_with(payload, encode_utf8("e30"))))
+    actual.append(str(payload.count(115)))
+    actual.append(render_opt_int(payload.find(45)))
+    actual.append(str(payload.startswith(b"bytes")))
+    actual.append(str(payload.endswith(b"e30")))
     return actual
 
 def bytes_to_hex_or_empty(payload: bytes) -> str:
     try:
-        hx: str = bytes_to_hex(payload)
+        hx: str = payload.hex()
         return hx
     except ParseError as e:
         _ = str(e.message)
@@ -26,8 +25,8 @@ def bytes_to_hex_or_empty(payload: bytes) -> str:
 
 def bytes_from_hex_to_text_or_empty(payload: str) -> str:
     try:
-        parsed: bytes = bytes_from_hex(payload)
-        txt: str = decode_utf8(parsed)
+        parsed: bytes = bytes.from_hex(payload)
+        txt: str = parsed.decode()
         return txt
     except ParseError as e:
         _ = str(e.message)
@@ -36,13 +35,13 @@ def bytes_from_hex_to_text_or_empty(payload: str) -> str:
 def collect_invalid_actual_ok() -> list[bool]:
     invalid_actual_ok: list[bool] = []
     try:
-        odd: bytes = bytes_from_hex("abc")
+        odd: bytes = bytes.from_hex("abc")
         _ = str(len(odd))
         invalid_actual_ok.append(True)
     except ParseError as e:
         invalid_actual_ok.append(False)
     try:
-        bad_utf8: str = decode_utf8(b"\xff")
+        bad_utf8: str = b"\xff".decode()
         _ = str(bad_utf8)
         invalid_actual_ok.append(True)
     except ParseError as e:
@@ -50,12 +49,12 @@ def collect_invalid_actual_ok() -> list[bool]:
     return invalid_actual_ok
 
 def main():
-    payload: bytes = encode_utf8("bytes-bytes_module")
+    payload: bytes = b"bytes-bytes_module"
     expected: list[str] = ["2", "5", "true", "false"]
     actual: list[str] = collect_primary_actual(payload)
     assert_vector_eq(actual, expected)
 
-    hex_text: str = bytes_to_hex_or_empty(encode_utf8("Hi"))
+    hex_text: str = bytes_to_hex_or_empty(b"Hi")
     assert str(len(hex_text) > 0) == "true"
     assert str(hex_text) == "4869"
 

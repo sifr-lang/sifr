@@ -58,7 +58,6 @@ impl fmt::Display for StdlibSourceInventoryError {
 impl std::error::Error for StdlibSourceInventoryError {}
 
 pub const PRIVATE_STDLIB_MODULES: &[&str] = &[
-    "_sifr.bytes",
     "_sifr.calendar",
     "_sifr.collections",
     "_sifr.compress",
@@ -100,10 +99,6 @@ pub const STDLIB_SOURCES: &[StdlibSource] = &[
     StdlibSource {
         module: "sifr.env",
         source: include_str!("../../../stdlib/sifr/env.sifr"),
-    },
-    StdlibSource {
-        module: "sifr.bytes",
-        source: include_str!("../../../stdlib/sifr/bytes.sifr"),
     },
     StdlibSource {
         module: "sifr.encoding",
@@ -741,52 +736,52 @@ mod tests {
     fn load_stdlib_sources_rejects_public_import_cycles() {
         let root = complete_source_tree("cycle_public_import");
         let sysroot = resolved_sysroot(&root.path);
-        let bytes_path = root.path.join("stdlib/sifr/bytes.sifr");
         let encoding_path = root.path.join("stdlib/sifr/encoding.sifr");
-        fs::write(&bytes_path, "from sifr.encoding import Encoding\n")
+        let unicode_path = root.path.join("stdlib/sifr/unicode.sifr");
+        fs::write(&encoding_path, "from sifr.unicode import Unicode\n")
             .expect("write forward half of cycle");
-        fs::write(&encoding_path, "from sifr.bytes import Bytes\n")
+        fs::write(&unicode_path, "from sifr.encoding import Encoding\n")
             .expect("write backward half of cycle");
 
         let error = load_stdlib_sources_from_sysroot(&sysroot)
             .expect_err("public stdlib import cycle should fail");
 
         assert!(error.message.contains(
-            "public stdlib module sifr.bytes imports sifr.encoding before it is available"
+            "public stdlib module sifr.encoding imports sifr.unicode before it is available"
         ));
-        assert_eq!(error.path, Some(bytes_path));
+        assert_eq!(error.path, Some(encoding_path));
     }
 
     #[test]
     fn load_stdlib_tooling_sources_rejects_private_declaration_imports() {
         let root = complete_source_tree("private_declaration_import");
         let sysroot = resolved_sysroot(&root.path);
-        let bytes_path = root.path.join("stdlib/_sifr/bytes.sifr");
-        fs::write(&bytes_path, "from _sifr.fs import open\n").expect("write private import");
+        let math_path = root.path.join("stdlib/_sifr/math.sifr");
+        fs::write(&math_path, "from _sifr.fs import open\n").expect("write private import");
 
         let error = load_stdlib_tooling_sources_from_sysroot(&sysroot)
             .expect_err("private stdlib declaration import should fail");
 
         assert!(error
             .message
-            .contains("private stdlib declaration _sifr.bytes imports _sifr.fs"));
-        assert_eq!(error.path, Some(bytes_path));
+            .contains("private stdlib declaration _sifr.math imports _sifr.fs"));
+        assert_eq!(error.path, Some(math_path));
     }
 
     #[test]
     fn load_stdlib_tooling_sources_rejects_private_declaration_public_imports() {
         let root = complete_source_tree("private_declaration_public_import");
         let sysroot = resolved_sysroot(&root.path);
-        let bytes_path = root.path.join("stdlib/_sifr/bytes.sifr");
-        fs::write(&bytes_path, "from sifr.bytes import Bytes\n").expect("write public import");
+        let math_path = root.path.join("stdlib/_sifr/math.sifr");
+        fs::write(&math_path, "from sifr.encoding import Encoding\n").expect("write public import");
 
         let error = load_stdlib_tooling_sources_from_sysroot(&sysroot)
             .expect_err("private stdlib declaration public import should fail");
 
         assert!(error
             .message
-            .contains("private stdlib declaration _sifr.bytes imports sifr.bytes"));
-        assert_eq!(error.path, Some(bytes_path));
+            .contains("private stdlib declaration _sifr.math imports sifr.encoding"));
+        assert_eq!(error.path, Some(math_path));
     }
 
     fn complete_source_tree(label: &str) -> TempRoot {

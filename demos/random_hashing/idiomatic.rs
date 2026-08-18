@@ -75,19 +75,19 @@ fn b64decode(text: &str) -> Result<String, ParseError> {
 
 #[derive(Debug, Clone)]
 struct Sha256Object {
-    input: String,
+    input: Vec<u8>,
 }
 
 impl Sha256Object {
     fn hexdigest(&self) -> String {
-        let digest = Sha256::digest(self.input.as_bytes());
+        let digest = Sha256::digest(&self.input);
         format!("{digest:x}")
     }
 }
 
-fn sha256_obj(text: &str) -> Sha256Object {
+fn sha256(data: &[u8]) -> Sha256Object {
     Sha256Object {
-        input: text.to_string(),
+        input: data.to_vec(),
     }
 }
 
@@ -103,7 +103,7 @@ fn main() {
     let decode_ok = b64decode(&encoded).is_ok_and(|decoded| decoded == payload);
     assert!(decode_ok);
 
-    let digest = sha256_obj(payload).hexdigest();
+    let digest = sha256(b"random_hashing_seed").hexdigest();
     assert_eq!(digest.len(), 64);
 
     println!("rng_random_hashing_lock_demo: pass");

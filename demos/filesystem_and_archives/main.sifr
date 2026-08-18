@@ -37,7 +37,7 @@ def main():
         print("tempfile.mkstemp = " + temp_file)
         print("tempfile.mkdtemp = " + temp_dir)
 
-        compressed: list[int] = compress("archive sample")
+        compressed: bytes = compress("archive sample")
         try:
             restored: str = decompress(compressed)
             print("gzip roundtrip = " + restored)

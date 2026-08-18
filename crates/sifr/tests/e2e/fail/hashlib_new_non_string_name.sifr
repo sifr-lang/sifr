@@ -3,5 +3,5 @@ from sifr.hashlib import new
 
 
 def main():
-    h = new(123, "abc")
+    h = new(123, b"abc")
     _ = h

@@ -2,7 +2,7 @@
 # hashlib hashlib parity demo
 from sifr.hashlib import (
     sha256, md5,
-    sha256_obj, md5_obj, copy_hash,
+    copy_hash,
     new, algorithms_guaranteed, file_digest,
     HashObject, HashlibError
 )
@@ -18,18 +18,18 @@ def contains(values: list[str], needle: str) -> bool:
 def collect_positive_actual(tmp_path: str) -> list[str]:
     actual: list[str] = []
 
-    h = sha256_obj("")
-    h.update("a")
-    h.update("bc")
-    actual.append(str(h.hexdigest() == sha256("abc")))
-    actual.append(str(len(h.digest()) == 32 and h.digest_bytes() == h.digest()))
+    h = sha256(b"")
+    h.update(b"a")
+    h.update(b"bc")
+    actual.append(str(h.hexdigest() == sha256(b"abc").hexdigest()))
+    actual.append(str(len(h.digest()) == 32))
 
     c = copy_hash(h)
-    c.update("x")
-    actual.append(str(c.hexdigest() == sha256("abcx")))
+    c.update(b"x")
+    actual.append(str(c.hexdigest() == sha256(b"abcx").hexdigest()))
 
-    m = md5_obj("hello")
-    actual.append(str(m.hexdigest() == md5("hello")))
+    m = md5(b"hello")
+    actual.append(str(m.hexdigest() == md5(b"hello").hexdigest()))
     actual.append(str(contains(algorithms_guaranteed(), "sha256")))
     actual.append(m.hexdigest())
     try:
@@ -42,7 +42,7 @@ def collect_positive_actual(tmp_path: str) -> list[str]:
 def collect_negative_actual_ok() -> list[bool]:
     actual_ok: list[bool] = []
     try:
-        bad: HashObject = new("sha3_256", "")
+        bad: HashObject = new("sha3_256", b"")
         _ = str(bad.name)
         actual_ok.append(True)
     except ValueError as e:

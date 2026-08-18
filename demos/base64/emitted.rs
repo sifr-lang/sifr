@@ -1,206 +1,211 @@
-// --- stdlib: sifr.bytes ---
-fn decode_utf8(data: &Vec<u8>) -> Result<String, ParseError> {
-    return String::from_utf8(data.iter().copied().collect::<Vec<u8>>())
-        .map_err(|e| ParseError {
-            message: e.to_string(),
-        });
+// src/main.rs
+// --- stdlib: _sifr.crypto ---
+fn random_int(min: i64, max: i64) -> i64 {
+    ::sifr_stdlib::random::random_int(
+            ::sifr_runtime::interop::SifrIntBridge::from(min),
+            ::sifr_runtime::interop::SifrIntBridge::from(max),
+        )
+        .to_i64_saturating()
 }
-fn bytes_from_hex(s: &String) -> Result<Vec<u8>, ParseError> {
-    return {
-        let s: String = s.to_string();
-        let mut cleaned = String::new();
-        for ch in s.chars() {
-            if ch.is_ascii_whitespace() {
-                continue;
-            }
-            if !ch.is_ascii_hexdigit() {
-                return Err(ParseError {
-                    message: format!("invalid hex character: {}", ch),
-                });
-            }
-            cleaned.push(ch);
-        }
-        if (cleaned.len() % 2) != 0 {
-            return Err(ParseError {
-                message: "fromhex() arg must contain an even number of hexadecimal digits"
-                    .to_string()
-                    .to_string(),
-            });
-        }
-        let mut result = Vec::new();
-        for pair in cleaned.as_bytes().chunks(2) {
-            let pair_str = std::str::from_utf8(pair)
-                .map_err(|e| ParseError {
-                    message: e.to_string(),
-                })?;
-            result
-                .push(
-                    u8::from_str_radix(pair_str, 16)
-                        .map_err(|e| ParseError {
-                            message: e.to_string(),
-                        })?,
-                );
-        }
-        Ok(result)
-    };
+fn random_float() -> f64 {
+    ::sifr_stdlib::random::random_float()
 }
-fn bytes_from_ints(values: &Vec<i64>) -> Result<Vec<u8>, ValueError> {
-    return {
-        let __vals = values;
-        let mut __out = Vec::new();
-        for __pair in __vals.iter().enumerate() {
-            if (*__pair.1 < 0) || (*__pair.1 > 255) {
-                return Err(ValueError {
-                    message: format!(
-                        "byte out of range at index {}: {}", __pair.0, * __pair.1
-                    ),
-                });
-            }
-            __out.push(*__pair.1 as u8);
-        }
-        Ok(__out)
-    };
+fn random_uniform(min: f64, max: f64) -> f64 {
+    ::sifr_stdlib::random::random_uniform(min, max)
 }
-fn bytes_with_size(size: i64) -> Result<Vec<u8>, ValueError> {
-    return {
-        let __size = size;
-        if __size < 0 {
-            return Err(ValueError {
-                message: "bytes(size) requires a non-negative size"
-                    .to_string()
-                    .to_string(),
-            });
-        }
-        Ok((0..__size).map(|_| 0 as u8).collect::<Vec<u8>>())
-    };
+fn random_randrange(start: i64, stop: i64, step: i64) -> Result<i64, ValueError> {
+    ::sifr_stdlib::random::random_randrange(
+            ::sifr_runtime::interop::SifrIntBridge::from(start),
+            ::sifr_runtime::interop::SifrIntBridge::from(stop),
+            ::sifr_runtime::interop::SifrIntBridge::from(step),
+        )
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())
+        .map_err(|__sifr_bridge_error| ValueError {
+            message: __sifr_bridge_error.to_string(),
+        })
 }
-fn encode_utf8_result(s: &String) -> Result<Vec<u8>, ParseError> {
-    return Ok({
-        let __s = s;
-        __s.as_bytes().to_vec()
-    });
+fn random_gauss(mu: f64, sigma: f64) -> f64 {
+    ::sifr_stdlib::random::random_gauss(mu, sigma)
 }
-fn count_byte(data: &Vec<u8>, value: i64) -> i64 {
-    let mut count: i64 = 0 as i64;
-    for b in data.iter().map(|__byte| *__byte as i64) {
-        if b == value {
-            count = count + (1 as i64);
-        }
-    }
-    return count;
+fn random_module_state_words() -> Vec<i64> {
+    ::sifr_stdlib::random::random_module_state_words()
+        .into_iter()
+        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+        .collect()
 }
-fn find_byte(data: &Vec<u8>, value: i64) -> Option<i64> {
-    let mut idx: i64 = 0 as i64;
-    for b in data.iter().map(|__byte| *__byte as i64) {
-        if b == value {
-            return Some(idx);
-        }
-        idx = idx + (1 as i64);
-    }
-    return None;
+fn random_module_state_index() -> i64 {
+    ::sifr_stdlib::random::random_module_state_index().to_i64_saturating()
 }
-fn starts_with(data: &Vec<u8>, prefix: &Vec<u8>) -> bool {
-    if (prefix.len() as i64) > (data.len() as i64) {
-        return false;
-    }
-    let mut i: i64 = 0 as i64;
-    while i < (prefix.len() as i64) {
-        let a: Option<i64> = data.get(i as usize).map(|__byte| *__byte as i64);
-        let b: Option<i64> = prefix.get(i as usize).map(|__byte| *__byte as i64);
-        let Some(a) = a else {
-            return false;
-        };
-        let Some(b) = b else {
-            return false;
-        };
-        if a != b {
-            return false;
-        }
-        i = i + (1 as i64);
-    }
-    return true;
+fn random_module_state_gauss_next() -> Option<f64> {
+    ::sifr_stdlib::random::random_module_state_gauss_next()
 }
-fn ends_with(data: &Vec<u8>, suffix: &Vec<u8>) -> bool {
-    if (suffix.len() as i64) > (data.len() as i64) {
-        return false;
-    }
-    let offset: i64 = (data.len() as i64) - (suffix.len() as i64);
-    let mut i: i64 = 0 as i64;
-    while i < (suffix.len() as i64) {
-        let a: Option<i64> = data
-            .get((offset + i) as usize)
-            .map(|__byte| *__byte as i64);
-        let b: Option<i64> = suffix.get(i as usize).map(|__byte| *__byte as i64);
-        let Some(a) = a else {
-            return false;
-        };
-        let Some(b) = b else {
-            return false;
-        };
-        if a != b {
-            return false;
-        }
-        i = i + (1 as i64);
-    }
-    return true;
+fn random_module_set_state(
+    words: &Vec<i64>,
+    index: i64,
+    gauss_next: Option<f64>,
+) -> Result<(), ValueError> {
+    ::sifr_stdlib::random::random_module_set_state(
+            &words
+                .iter()
+                .copied()
+                .map(::sifr_runtime::interop::SifrIntBridge::from)
+                .collect::<Vec<_>>(),
+            ::sifr_runtime::interop::SifrIntBridge::from(index),
+            gauss_next.map(|__sifr_bridge_item_0| __sifr_bridge_item_0),
+        )
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| ValueError {
+            message: __sifr_bridge_error.to_string(),
+        })
+}
+fn base64_encode(s: &String) -> String {
+    ::sifr_stdlib::base64::base64_encode(s)
+}
+fn base64_encode_bytes(data: &Vec<u8>) -> Vec<u8> {
+    ::sifr_stdlib::base64::base64_encode_bytes(data)
+}
+fn base64_decode(s: &String) -> Result<String, ParseError> {
+    ::sifr_stdlib::base64::base64_decode(s)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| ParseError {
+            message: __sifr_bridge_error.to_string(),
+        })
+}
+fn base64_decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
+    ::sifr_stdlib::base64::base64_decode_bytes(data)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| ParseError {
+            message: __sifr_bridge_error.to_string(),
+        })
+}
+fn base64_encode_opts(
+    s: &String,
+    altchars: &String,
+    wrapcol: i64,
+) -> Result<String, ParseError> {
+    ::sifr_stdlib::base64::base64_encode_opts(
+            s,
+            altchars,
+            ::sifr_runtime::interop::SifrIntBridge::from(wrapcol),
+        )
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| ParseError {
+            message: __sifr_bridge_error.to_string(),
+        })
+}
+fn base64_decode_opts(
+    s: &String,
+    altchars: &String,
+    validate: bool,
+    ignorechars: &String,
+) -> Result<String, ParseError> {
+    ::sifr_stdlib::base64::base64_decode_opts(s, altchars, validate, ignorechars)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| ParseError {
+            message: __sifr_bridge_error.to_string(),
+        })
+}
+fn urlsafe_b64encode(s: &String) -> String {
+    ::sifr_stdlib::base64::urlsafe_b64encode(s)
+}
+fn urlsafe_b64encode_bytes(data: &Vec<u8>) -> Vec<u8> {
+    ::sifr_stdlib::base64::urlsafe_b64encode_bytes(data)
+}
+fn urlsafe_b64decode(s: &String) -> Result<String, ParseError> {
+    ::sifr_stdlib::base64::urlsafe_b64decode(s)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| ParseError {
+            message: __sifr_bridge_error.to_string(),
+        })
+}
+fn urlsafe_b64decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
+    ::sifr_stdlib::base64::urlsafe_b64decode_bytes(data)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| ParseError {
+            message: __sifr_bridge_error.to_string(),
+        })
+}
+fn b32encode(s: &String) -> String {
+    ::sifr_stdlib::base64::b32encode(s)
+}
+fn b32decode(s: &String) -> Result<String, ParseError> {
+    ::sifr_stdlib::base64::b32decode(s)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| ParseError {
+            message: __sifr_bridge_error.to_string(),
+        })
+}
+fn b32hexencode(s: &String) -> String {
+    ::sifr_stdlib::base64::b32hexencode(s)
+}
+fn b32hexdecode(s: &String) -> Result<String, ParseError> {
+    ::sifr_stdlib::base64::b32hexdecode(s)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| ParseError {
+            message: __sifr_bridge_error.to_string(),
+        })
+}
+fn sha256_bytes(data: &Vec<u8>) -> Vec<u8> {
+    ::sifr_stdlib::hash::sha256_bytes(data)
+}
+fn md5_bytes(data: &Vec<u8>) -> Vec<u8> {
+    ::sifr_stdlib::hash::md5_bytes(data)
+}
+fn sha1_bytes(data: &Vec<u8>) -> Vec<u8> {
+    ::sifr_stdlib::hash::sha1_bytes(data)
+}
+fn sha224_bytes(data: &Vec<u8>) -> Vec<u8> {
+    ::sifr_stdlib::hash::sha224_bytes(data)
+}
+fn sha384_bytes(data: &Vec<u8>) -> Vec<u8> {
+    ::sifr_stdlib::hash::sha384_bytes(data)
+}
+fn sha512_bytes(data: &Vec<u8>) -> Vec<u8> {
+    ::sifr_stdlib::hash::sha512_bytes(data)
+}
+fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
+    ::sifr_stdlib::hash::blake2b_bytes(data)
+}
+fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
+    ::sifr_stdlib::hash::blake2s_bytes(data)
 }
 
 // --- stdlib: sifr.base64 ---
 fn b64encode(s: &String) -> String {
-    return base64::Engine::encode(
-        &base64::engine::general_purpose::STANDARD,
-        &s.as_bytes(),
-    );
+    base64_encode(s)
 }
 fn b64decode(s: &String) -> Result<String, ParseError> {
-    return {
-        let __bytes = base64::Engine::decode(
-                &base64::engine::general_purpose::STANDARD,
-                &s.as_bytes(),
-            )
-            .map_err(|e| ParseError {
-                message: e.to_string(),
-            })?;
-        String::from_utf8(__bytes)
-            .map_err(|e| ParseError {
-                message: e.to_string(),
-            })
-    };
+    base64_decode(s)
 }
 fn standard_b64encode(s: &String) -> String {
-    return base64::Engine::encode(
-        &base64::engine::general_purpose::STANDARD,
-        &s.as_bytes(),
-    );
+    base64_encode(s)
 }
 fn standard_b64decode(s: &String) -> Result<String, ParseError> {
-    return {
-        let __bytes = base64::Engine::decode(
-                &base64::engine::general_purpose::STANDARD,
-                &s.as_bytes(),
-            )
-            .map_err(|e| ParseError {
-                message: e.to_string(),
-            })?;
-        String::from_utf8(__bytes)
-            .map_err(|e| ParseError {
-                message: e.to_string(),
-            })
-    };
+    base64_decode(s)
 }
 fn b16encode(s: &String) -> Result<String, ParseError> {
     let __sifr_try_res: Result<Result<String, ParseError>, ParseError> = (|| {
-        let raw: String = Ok(
-            ({
-                let __s = s;
-                __s.as_bytes().to_vec()
-            })
-                .iter()
-                .map(|__byte| format!("{:02x}", * __byte))
-                .collect::<Vec<String>>()
-                .join(""),
-        )?;
-        return Ok(Ok(raw.to_uppercase()));
+        let data: Vec<u8> = ::sifr_runtime::encoding::encode_bytes(
+                &s,
+                &"utf-8".to_string(),
+                &"strict".to_string(),
+            )
+            .map_err(|__message| ParseError { message: __message })?;
+        return Ok(
+            Ok(
+                ({
+                    let __bytes_receiver = &data;
+                    let mut __hex = String::with_capacity(
+                        __bytes_receiver.len().saturating_mul(2),
+                    );
+                    for __byte in __bytes_receiver.iter() {
+                        __hex.push_str(&format!("{:02x}", * __byte));
+                    }
+                    __hex
+                })
+                    .to_uppercase(),
+            ),
+        );
         unreachable!("sifr try/except return capture fell through");
     })();
     match __sifr_try_res {
@@ -238,7 +243,7 @@ fn b16decode(s: &String) -> Result<String, ParseError> {
             }
             let mut result = Vec::new();
             for pair in cleaned.as_bytes().chunks(2) {
-                let pair_str = std::str::from_utf8(pair)
+                let pair_str = ::std::str::from_utf8(pair)
                     .map_err(|e| ParseError {
                         message: e.to_string(),
                     })?;
@@ -250,13 +255,15 @@ fn b16decode(s: &String) -> Result<String, ParseError> {
                             })?,
                     );
             }
-            Ok(result)
+            Ok::<Vec<u8>, ParseError>(result)
         })?;
         return Ok(
-            String::from_utf8(data.iter().copied().collect::<Vec<u8>>())
-                .map_err(|e| ParseError {
-                    message: e.to_string(),
-                }),
+            ::sifr_runtime::encoding::decode_text(
+                    &data,
+                    &"utf-8".to_string(),
+                    &"strict".to_string(),
+                )
+                .map_err(|__message| ParseError { message: __message }),
         );
         unreachable!("sifr try/except return capture fell through");
     })();
@@ -272,171 +279,74 @@ fn b16decode(s: &String) -> Result<String, ParseError> {
 }
 
 // --- stdlib: sifr.test ---
-fn assert_eq<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    actual: &T,
-    expected: &T,
-) {
-    assert!(* actual == * expected);
-}
 fn assert_vector_eq(actual: &Vec<String>, expected: &Vec<String>) {
     assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0 as i64;
+    let mut i: i64 = 0_i64;
     while i < (actual.len() as i64) {
         assert!(Some(actual[i as usize].clone()) == expected.get(i as usize).cloned());
-        i = i + (1 as i64);
+        i += 1_i64;
     }
 }
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0 as i64;
+    let mut i: i64 = 0_i64;
     while i < (actual.len() as i64) {
         assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i = i + (1 as i64);
+        i += 1_i64;
     }
 }
+// --- end stdlib ---
 
-#[derive(Debug, Clone)]
-struct IOError {
-    message: String,
-    kind: String,
-}
-
-impl IOError {
-    fn new(message: String) -> Self {
-        return Self { message: message, kind: "Other".to_string() };
-    }
-}
-
-impl std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for IOError {
-}
-
-fn __io_err(e: std::io::Error) -> IOError {
-    let msg = e.to_string();
-    let kind = if e.kind() == std::io::ErrorKind::NotFound { "FileNotFound".to_string() } else { if e.kind() == std::io::ErrorKind::PermissionDenied { "PermissionDenied".to_string() } else { if e.kind() == std::io::ErrorKind::AlreadyExists { "FileExists".to_string() } else { "Other".to_string() } } };
-    return IOError { message: msg, kind: kind };
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
 
 impl ParseError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+impl ::std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
     }
 }
 
-impl std::error::Error for ParseError {
+impl ::std::error::Error for ParseError {
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
 
 impl ValueError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
-impl std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+impl ::std::fmt::Display for ValueError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
     }
 }
 
-impl std::error::Error for ValueError {
-}
-
-#[derive(Debug, Clone)]
-struct JSONDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl JSONDecodeError {
-    fn new(message: String) -> Self {
-        return Self { message: message, line: 0, column: 0 };
-    }
-}
-
-impl std::fmt::Display for JSONDecodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for JSONDecodeError {
-}
-
-#[derive(Debug, Clone)]
-struct TOMLDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl TOMLDecodeError {
-    fn new(message: String) -> Self {
-        return Self { message: message, line: 0, column: 0 };
-    }
-}
-
-impl std::fmt::Display for TOMLDecodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for TOMLDecodeError {
-}
-
-#[derive(Debug, Clone)]
-struct RegexError {
-    message: String,
-    detail: String,
-}
-
-impl RegexError {
-    fn new(message: String) -> Self {
-        return Self { message: message, detail: String::new() };
-    }
-}
-
-impl std::fmt::Display for RegexError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
-    }
-}
-
-impl std::error::Error for RegexError {
+impl ::std::error::Error for ValueError {
 }
 
 fn encode_b64_or_empty(payload: &String) -> String {
-    return b64encode(payload);
+    b64encode(payload)
 }
 
 fn encode_standard_b64_or_empty(payload: &String) -> String {
-    return standard_b64encode(payload);
+    standard_b64encode(payload)
 }
 
 fn encode_urlsafe_b64_or_empty(payload: &String) -> String {
-    return base64::Engine::encode(&base64::engine::general_purpose::URL_SAFE, &payload.as_bytes());
+    urlsafe_b64encode(payload)
 }
 
 fn decode_b64_or_empty(payload: &String) -> String {
@@ -451,7 +361,7 @@ fn decode_b64_or_empty(payload: &String) -> String {
         },
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            let _: String = format!("{}", format!("{}{}", "unexpected: ".to_string(), e.message));
+            let _ = format!("{}", format!("{}{}", "unexpected: ", e.message));
             return "".to_string();
         },
     }
@@ -469,7 +379,7 @@ fn decode_standard_b64_or_empty(payload: &String) -> String {
         },
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            let _: String = format!("{}", format!("{}{}", "unexpected: ".to_string(), e.message));
+            let _ = format!("{}", format!("{}{}", "unexpected: ", e.message));
             return "".to_string();
         },
     }
@@ -477,10 +387,7 @@ fn decode_standard_b64_or_empty(payload: &String) -> String {
 
 fn decode_urlsafe_b64_or_empty(payload: &String) -> String {
     let __sifr_try_res: Result<String, ParseError> = (|| {
-    let decoded: String = ({
-    let __bytes = base64::Engine::decode(&base64::engine::general_purpose::URL_SAFE, &payload.as_bytes()).map_err(|e| ParseError { message: e.to_string() })?;
-    String::from_utf8(__bytes).map_err(|e| ParseError { message: e.to_string() })
-})?;
+    let decoded: String = urlsafe_b64decode(payload)?;
     return Ok(decoded);
     unreachable!("sifr try/except return capture fell through");
 })();
@@ -490,7 +397,7 @@ fn decode_urlsafe_b64_or_empty(payload: &String) -> String {
         },
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            let _: String = format!("{}", format!("{}{}", "unexpected: ".to_string(), e.message));
+            let _ = format!("{}", format!("{}{}", "unexpected: ", e.message));
             return "".to_string();
         },
     }
@@ -501,13 +408,13 @@ fn b16_encode_or_empty(payload: &String) -> String {
     let __sifr_try_res: Result<(), ParseError> = (|| {
     let out: String = b16encode(payload)?;
     encoded = out;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _: String = format!("{}", format!("{}{}", "unexpected: ".to_string(), e.message));
+        let _ = format!("{}", format!("{}{}", "unexpected: ", e.message));
     }
-    return encoded;
+    encoded
 }
 
 fn b16_decode_or_empty(payload: &String) -> String {
@@ -515,13 +422,13 @@ fn b16_decode_or_empty(payload: &String) -> String {
     let __sifr_try_res: Result<(), ParseError> = (|| {
     let out: String = b16decode(payload)?;
     decoded = out;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _: String = format!("{}", format!("{}{}", "unexpected: ".to_string(), e.message));
+        let _ = format!("{}", format!("{}{}", "unexpected: ", e.message));
     }
-    return decoded;
+    decoded
 }
 
 fn collect_positive_actual() -> Vec<String> {
@@ -531,14 +438,24 @@ fn collect_positive_actual() -> Vec<String> {
     actual.push(encode_standard_b64_or_empty(&"foo".to_string()));
     actual.push(decode_standard_b64_or_empty(&"Zm9v".to_string()));
     let urlsafe_encoded: String = encode_urlsafe_b64_or_empty(&"hello".to_string());
-    let urlsafe_encoded_for_decode: String = format!("{}{}", urlsafe_encoded, "".to_string());
-    actual.push(urlsafe_encoded);
+    let urlsafe_encoded_for_decode: String = {
+    let mut __sifr_concat: String = String::with_capacity(urlsafe_encoded.len() + 0usize);
+    __sifr_concat.push_str((urlsafe_encoded).as_str());
+    __sifr_concat.push_str("");
+    __sifr_concat
+};
+    actual.push(urlsafe_encoded.clone());
     actual.push(decode_urlsafe_b64_or_empty(&urlsafe_encoded_for_decode));
     let b16_encoded: String = b16_encode_or_empty(&"Hi".to_string());
-    let b16_encoded_for_decode: String = format!("{}{}", b16_encoded, "".to_string());
-    actual.push(b16_encoded);
+    let b16_encoded_for_decode: String = {
+    let mut __sifr_concat: String = String::with_capacity(b16_encoded.len() + 0usize);
+    __sifr_concat.push_str((b16_encoded).as_str());
+    __sifr_concat.push_str("");
+    __sifr_concat
+};
+    actual.push(b16_encoded.clone());
     actual.push(b16_decode_or_empty(&b16_encoded_for_decode));
-    return actual;
+    actual
 }
 
 fn collect_decode_actual_ok(inputs: &Vec<String>) -> Vec<bool> {
@@ -546,16 +463,16 @@ fn collect_decode_actual_ok(inputs: &Vec<String>) -> Vec<bool> {
     for payload in inputs.iter().cloned() {
         let __sifr_try_res: Result<(), ParseError> = (|| {
     let decoded: String = b64decode(&payload)?;
-    let _: String = format!("{}", decoded);
+    let _ = format!("{}", decoded);
     actual_ok.push(true);
-    return Ok(());
+    Ok(())
 })();
         if let Err(__sifr_try_err) = __sifr_try_res {
             let e = __sifr_try_err.clone();
             actual_ok.push(false);
         }
     }
-    return actual_ok;
+    actual_ok
 }
 
 fn main() {

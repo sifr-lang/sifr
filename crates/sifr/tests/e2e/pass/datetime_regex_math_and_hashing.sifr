@@ -105,16 +105,16 @@ def collect_hashlib_actual() -> list[bool]:
     digest_alias_ok: bool = False
     unsupported_rejected: bool = False
     try:
-        h: HashObject = new("sha256", "abc")
+        h: HashObject = new("sha256", b"abc")
         sha_ok = h.hexdigest() == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-        digest_alias_ok = len(h.digest()) == 32 and h.digest_bytes() == h.digest()
+        digest_alias_ok = len(h.digest()) == 32
     except ValueError as e:
         _ = e.message
     actual.append(sha_ok)
     actual.append(digest_alias_ok)
 
     try:
-        _bad: HashObject = new("sha3_256", "")
+        _bad: HashObject = new("sha3_256", b"")
         _ = _bad.name
     except ValueError as e:
         _ = e.message

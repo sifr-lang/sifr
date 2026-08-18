@@ -2168,18 +2168,15 @@ impl ::std::fmt::Display for __SifrStdlib_sifr_x2eio_x2eStringIO {
         )
     }
 }
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrStdlib_sifr_x2eio_x2eBytesIO {
-    _buffer: Vec<i64>,
+    _buffer: Vec<u8>,
     _cursor: i64,
     _closed: bool,
 }
 impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
     fn new(initial: Vec<u8>) -> Self {
-        let __sifr_field_init_0: Vec<i64> = initial
-            .iter()
-            .map(|__byte| *__byte as i64)
-            .collect::<Vec<i64>>();
+        let __sifr_field_init_0: Vec<u8> = initial;
         let __sifr_field_init_1: i64 = 0_i64;
         let __sifr_field_init_2: bool = false;
         Self {
@@ -2208,38 +2205,6 @@ impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
     }
 }
 impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
-    fn _slice_to_bytes(&self, values: &Vec<i64>) -> Result<Vec<u8>, IOError> {
-        let __sifr_try_res: Result<Result<Vec<u8>, IOError>, ValueError> = (|| {
-            let built: Vec<u8> = ({
-                let __vals = values;
-                let mut __out = Vec::new();
-                for __pair in __vals.iter().enumerate() {
-                    if (*__pair.1 < 0) || (*__pair.1 > 255) {
-                        return Err(ValueError {
-                            message: format!(
-                                "byte out of range at index {}: {}", __pair.0, * __pair.1
-                            ),
-                        });
-                    }
-                    __out.push(*__pair.1 as u8);
-                }
-                Ok::<Vec<u8>, ValueError>(__out)
-            })?;
-            return Ok(Ok(built));
-            unreachable!("sifr try/except return capture fell through");
-        })();
-        match __sifr_try_res {
-            Ok(__sifr_ret_val) => {
-                return __sifr_ret_val;
-            }
-            Err(__sifr_try_err) => {
-                let e = __sifr_try_err.clone();
-                return Err(IOError::new(e.message));
-            }
-        }
-    }
-}
-impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
     fn read_bytes(&mut self, size: Option<i64>) -> Result<Vec<u8>, IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
@@ -2255,7 +2220,7 @@ impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
                 }
             }
         }
-        let chunk: Vec<i64> = {
+        let chunk: Vec<u8> = {
             let _slice_src = &self._buffer.clone();
             let _slice_len_i64 = _slice_src.len() as i64;
             let _slice_start_i64 = if start < 0 {
@@ -2277,7 +2242,7 @@ impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
             )
         };
         self._cursor = end;
-        self._slice_to_bytes(&chunk)
+        Ok(chunk)
     }
 }
 impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
@@ -2285,43 +2250,61 @@ impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        let values: Vec<i64> = data
-            .iter()
-            .map(|__byte| *__byte as i64)
-            .collect::<Vec<i64>>();
-        let mut i: i64 = 0_i64;
-        while (i < (values.len() as i64)) {
-            let maybe_value: Option<i64> = Some(values[i as usize]);
-            let Some(maybe_value) = maybe_value else {
-                return Err(IOError::new("bytes write invariant violation".to_string()));
-            };
-            let idx: i64 = self._cursor + i;
-            if (idx < (self._buffer.len() as i64)) {
-                {
-                    let __idx_raw = idx;
-                    let __idx_norm = if __idx_raw < 0 {
-                        (self._buffer.len() as i64) + __idx_raw
-                    } else {
-                        __idx_raw
-                    };
-                    if __idx_norm >= 0 {
-                        if let Some(__elem) = self._buffer.get_mut(__idx_norm as usize) {
-                            *__elem = maybe_value;
-                        }
-                    }
-                }
+        let left: Vec<u8> = {
+            let _slice_src = &self._buffer.clone();
+            let _slice_len_i64 = _slice_src.len() as i64;
+            let _slice_start_i64 = 0;
+            let _slice_stop_i64 = if self._cursor < 0 {
+                (_slice_len_i64 + self._cursor).max(0)
             } else {
-                self._buffer.push(maybe_value);
-            }
-            i += 1_i64;
+                self._cursor.min(_slice_len_i64)
+            };
+            Vec::from_iter(
+                _slice_src
+                    .iter()
+                    .skip(_slice_start_i64 as usize)
+                    .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                    .cloned(),
+            )
+        };
+        let tail_start: i64 = self._cursor + (data.len() as i64);
+        let mut right: Vec<u8> = vec![];
+        if (tail_start < (self._buffer.len() as i64)) {
+            right = {
+                let _slice_src = &self._buffer.clone();
+                let _slice_len_i64 = _slice_src.len() as i64;
+                let _slice_start_i64 = if tail_start < 0 {
+                    (_slice_len_i64 + tail_start).max(0)
+                } else {
+                    tail_start.min(_slice_len_i64)
+                };
+                let _slice_stop_i64 = _slice_len_i64;
+                Vec::from_iter(
+                    _slice_src
+                        .iter()
+                        .skip(_slice_start_i64 as usize)
+                        .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                        .cloned(),
+                )
+            };
         }
-        self._cursor += values.len() as i64;
+        self._buffer = {
+            let mut __v = ({
+                let mut __v = (left).clone();
+                __v.extend((data).iter().cloned());
+                __v
+            })
+                .clone();
+            __v.extend((right).iter().cloned());
+            __v
+        };
+        self._cursor += data.len() as i64;
         Ok(())
     }
 }
 impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
     fn getvalue(&self) -> Result<Vec<u8>, IOError> {
-        self._slice_to_bytes(&self._buffer.clone())
+        Ok(self._buffer.clone())
     }
 }
 impl __SifrStdlib_sifr_x2eio_x2eBytesIO {

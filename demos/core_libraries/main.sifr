@@ -32,7 +32,7 @@ def main():
         print("statistics error: " + e.message)
 
     try:
-        h: HashObject = new("sha256", "hashlib-sample")
+        h: HashObject = new("sha256", b"hashlib-sample")
         print("hashlib.sha256 len = " + str(len(h.hexdigest())))
     except ValueError as e:
         print("hashlib error: " + e.message)

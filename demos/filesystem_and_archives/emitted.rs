@@ -495,61 +495,11 @@ fn zip_namelist(zip_path: &String) -> Result<Vec<String>, IOError> {
 }
 
 // --- stdlib: sifr.gzip ---
-fn compress(data: &String) -> Vec<i64> {
+fn compress(data: &String) -> Vec<u8> {
     _gzip_compress_bytes_impl(data)
-        .iter()
-        .map(|__byte| *__byte as i64)
-        .collect::<Vec<i64>>()
 }
-fn _gzip_payload_from_ints(data: &Vec<i64>) -> Result<Vec<u8>, IOError> {
-    let __sifr_try_res: Result<Result<Vec<u8>, IOError>, ValueError> = (|| {
-        let built: Vec<u8> = ({
-            let __vals = data;
-            let mut __out = Vec::new();
-            for __pair in __vals.iter().enumerate() {
-                if (*__pair.1 < 0) || (*__pair.1 > 255) {
-                    return Err(ValueError {
-                        message: format!(
-                            "byte out of range at index {}: {}", __pair.0, * __pair.1
-                        ),
-                    });
-                }
-                __out.push(*__pair.1 as u8);
-            }
-            Ok::<Vec<u8>, ValueError>(__out)
-        })?;
-        return Ok(Ok(built));
-        unreachable!("sifr try/except return capture fell through");
-    })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
-        }
-    }
-}
-fn _gzip_decompress_payload(payload: &Vec<u8>) -> Result<String, IOError> {
-    _gzip_decompress_bytes_impl(payload)
-}
-fn decompress(data: &Vec<i64>) -> Result<String, IOError> {
-    let __sifr_try_res: Result<Result<String, IOError>, IOError> = (|| {
-        let payload: Vec<u8> = _gzip_payload_from_ints(data)?;
-        let text: String = _gzip_decompress_payload(&payload)?;
-        return Ok(Ok(text));
-        unreachable!("sifr try/except return capture fell through");
-    })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            return Err(e);
-        }
-    }
+fn decompress(data: &Vec<u8>) -> Result<String, IOError> {
+    _gzip_decompress_bytes_impl(data)
 }
 
 // --- stdlib: _sifr.encoding ---
@@ -2265,50 +2215,26 @@ fn b32hexdecode(s: &String) -> Result<String, ParseError> {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn sha256(s: &String) -> String {
-    ::sifr_stdlib::hash::sha256(s)
-}
 fn sha256_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::sha256_bytes(data)
-}
-fn md5(s: &String) -> String {
-    ::sifr_stdlib::hash::md5(s)
 }
 fn md5_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::md5_bytes(data)
 }
-fn sha1(s: &String) -> String {
-    ::sifr_stdlib::hash::sha1(s)
-}
 fn sha1_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::sha1_bytes(data)
-}
-fn sha224(s: &String) -> String {
-    ::sifr_stdlib::hash::sha224(s)
 }
 fn sha224_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::sha224_bytes(data)
 }
-fn sha384(s: &String) -> String {
-    ::sifr_stdlib::hash::sha384(s)
-}
 fn sha384_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::sha384_bytes(data)
-}
-fn sha512(s: &String) -> String {
-    ::sifr_stdlib::hash::sha512(s)
 }
 fn sha512_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::sha512_bytes(data)
 }
-fn blake2b(s: &String) -> String {
-    ::sifr_stdlib::hash::blake2b(s)
-}
 fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2b_bytes(data)
-}
-fn blake2s(s: &String) -> String {
-    ::sifr_stdlib::hash::blake2s(s)
 }
 fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
@@ -2914,7 +2840,7 @@ fn main() {
     __sifr_concat.push_str((temp_dir).as_str());
     __sifr_concat
 });
-    let compressed: Vec<i64> = compress(&"archive sample".to_string());
+    let compressed: Vec<u8> = compress(&"archive sample".to_string());
     let __sifr_try_res: Result<(), IOError> = (|| {
     let restored: String = decompress(&compressed)?;
     println!("{}", {

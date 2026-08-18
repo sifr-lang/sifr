@@ -3,10 +3,9 @@ from sifr.hashlib import sha256, md5
 
 def main():
     # SHA-256 of empty string
-    h: str = sha256("")
+    h: str = sha256(b"").hexdigest()
     assert str(h) == 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
     # MD5 of empty string
-    m: str = md5("")
+    m: str = md5(b"").hexdigest()
     assert str(m) == 'd41d8cd98f00b204e9800998ecf8427e'
-

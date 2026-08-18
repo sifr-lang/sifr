@@ -42,7 +42,7 @@ This page is an orientation map. The deeper reference pages cover the modules mo
 | `sifr.datetime` | Dates, times, durations, and timezone-aware values. |
 | `sifr.random` | Seeded random number generation. |
 | `sifr.statistics` | Mean, median, variance, and related statistics. |
-| `sifr.hashlib` | Hash functions, HMAC construction, and digest objects. |
+| `sifr.hashlib` | Bytes-native MD5, SHA-1, SHA-2, and BLAKE2 digest objects. |
 | `sifr.uuid` | UUID construction, parsing, and formatting. |
 | `sifr.base64` | Base64 text and byte encoding helpers. |
 | `sifr.tomllib` | TOML value parsing helpers. |
@@ -86,7 +86,9 @@ This page is an orientation map. The deeper reference pages cover the modules mo
 | `sifr.unicode` | Unicode data, normalization, names, categories, and segmentation. |
 | `sifr.i18n` | Locale ids, number formatting, plural rules, and translation catalogs. |
 | `sifr.html` | HTML escaping and unescaping. |
-| `sifr.bytes` | Byte construction, search, and UTF-8 conversion helpers. |
+
+Byte construction, search, hexadecimal formatting, and UTF-8 conversion are
+first-class `bytes` operations. They do not require a stdlib import.
 
 ## Concurrency and Runtime
 

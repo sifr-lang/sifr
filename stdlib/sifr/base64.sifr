@@ -13,8 +13,6 @@ from _sifr.crypto import b32encode as _b32encode_impl
 from _sifr.crypto import b32decode as _b32decode_impl
 from _sifr.crypto import b32hexencode as _b32hexencode_impl
 from _sifr.crypto import b32hexdecode as _b32hexdecode_impl
-from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
-
 def urlsafe_b64encode(s: str) -> str:
     return _urlsafe_b64encode_impl(s)
 
@@ -83,14 +81,14 @@ def decodebytes_bytes(data: bytes) -> Result[bytes, ParseError]:
 
 def b16encode(s: str) -> Result[str, ParseError]:
     try:
-        raw: str = bytes_to_hex(encode_utf8(s))
-        return raw.upper()
+        data: bytes = s.encode()
+        return data.hex().upper()
     except ParseError as e:
         raise e
 
 def b16decode(s: str) -> Result[str, ParseError]:
     try:
-        data: bytes = bytes_from_hex(s)
-        return decode_utf8(data)
+        data: bytes = bytes.from_hex(s)
+        return data.decode()
     except ParseError as e:
         raise e

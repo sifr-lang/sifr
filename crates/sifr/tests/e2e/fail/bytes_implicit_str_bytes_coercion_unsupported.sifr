@@ -1,6 +1,5 @@
 # Reference: stdlib_parity_bytes_0_implicit_str_bytes_coercion_unsupported
-from sifr.bytes import decode_utf8
 
 
 def main() -> None:
-    _ = decode_utf8("abc")
+    _ = "abc".decode()

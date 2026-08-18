@@ -2,8 +2,8 @@
 from sifr.hashlib import sha224, sha384, blake2b, blake2s
 
 def main():
-    s: str = "hello"
-    assert str("sha224 len = " + str(len(sha224(s)))) == 'sha224 len = 56'
-    assert str("sha384 len = " + str(len(sha384(s)))) == 'sha384 len = 96'
-    assert str("blake2b len = " + str(len(blake2b(s)))) == 'blake2b len = 128'
-    assert str("blake2s len = " + str(len(blake2s(s)))) == 'blake2s len = 64'
+    data: bytes = b"hello"
+    assert str("sha224 len = " + str(len(sha224(data).hexdigest()))) == 'sha224 len = 56'
+    assert str("sha384 len = " + str(len(sha384(data).hexdigest()))) == 'sha384 len = 96'
+    assert str("blake2b len = " + str(len(blake2b(data).hexdigest()))) == 'blake2b len = 128'
+    assert str("blake2s len = " + str(len(blake2s(data).hexdigest()))) == 'blake2s len = 64'

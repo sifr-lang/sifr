@@ -92,13 +92,12 @@ exact_intrinsics = [
 ]
 
 [[surface]]
-id = "sifr.bytes::primitive_constructors"
+id = "first-class-bytes::primitive-construction"
 state = "retained-by-design"
-owner = "stdlib-native-boundary-completion"
-issue = "stdlib-native-boundary-completion"
-evidence_links = ["stdlib-native-boundary-completion"]
-declaration_files = ["stdlib/_sifr/bytes.sifr"]
-reason = "Public checked sifr.bytes wrapper bodies route bytes.from_hex, bytes.from_ints, and bytes(size) to primitive compiler-language construction HIR. Strict hex formatting routes separately through the checked _sifr.bytes Rust bridge declaration."
+owner = "pre_v1_compat_5_binary_hashing"
+issue = "pre_v1_compat_5_binary_hashing"
+evidence_links = ["pre_v1_compat_5_binary_hashing"]
+reason = "First-class bytes.from_hex, bytes.from_ints, and bytes(size) constructors lower directly to typed compiler-language construction HIR."
 registry_files = ["bytes.rs"]
 lowering_files = [
   "crates/sifr_lowering/src/lower/builtin_calls/bytes_len_range.rs",

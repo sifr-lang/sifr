@@ -83,7 +83,6 @@ implementation imports under `stdlib/sifr`.
 
 | Private module | Current public wrappers |
 | --- | --- |
-| `_sifr.bytes` | `bytes.sifr`, `hashlib.sifr` |
 | `_sifr.calendar` | `calendar.sifr` |
 | `_sifr.collections` | `collections.sifr` |
 | `_sifr.compress` | `gzip.sifr`, `zipfile.sifr` |
@@ -508,8 +507,7 @@ Current migrated leaves include the stateless `_sifr.platform`, `_sifr.html`,
 `_sifr.toml`, `_sifr.datetime`, and `_sifr.compress` private declaration
 modules, plus the hash helper subset and full base encoding helper subset of
 the shared `_sifr.crypto` private module used by `sifr.hashlib` and
-`sifr.base64`, and the `encode_utf8`/`bytes_to_hex` helper subset of
-`_sifr.bytes`.
+`sifr.base64`.
 Their public wrappers continue to live in
 `stdlib/sifr/platform.sifr`, `stdlib/sifr/html.sifr`,
 `stdlib/sifr/calendar.sifr`, `stdlib/sifr/uuid.sifr`,
@@ -517,14 +515,14 @@ Their public wrappers continue to live in
 `stdlib/sifr/url.sifr`, `stdlib/sifr/tomllib.sifr`,
 `stdlib/sifr/hashlib.sifr`, `stdlib/sifr/base64.sifr`,
 `stdlib/sifr/datetime.sifr`, `stdlib/sifr/gzip.sifr`,
-`stdlib/sifr/zipfile.sifr`, and `stdlib/sifr/bytes.sifr`, while generated code
+`stdlib/sifr/zipfile.sifr`, while generated code
 emits the private preamble functions and calls `sifr_stdlib::platform::*`,
 `sifr_stdlib::html::*`, `sifr_stdlib::calendar::*`,
 `sifr_stdlib::uuid::*`, `sifr_stdlib::math::*`, `sifr_stdlib::regex::*`,
 `sifr_stdlib::url::*`, `sifr_stdlib::toml::*`, `sifr_stdlib::hash::*`,
 `sifr_stdlib::base64::*`, `sifr_stdlib::time::*`,
-`sifr_stdlib::gzip::*`, `sifr_stdlib::zipfile::*`, and
-`sifr_stdlib::bytes::*` through feature-gated sysroot dependencies. Direct
+`sifr_stdlib::gzip::*` and `sifr_stdlib::zipfile::*` through feature-gated
+sysroot dependencies. Direct
 Rust interop wrappers bridge Sifr `int` values through
 `sifr_runtime::interop::SifrIntBridge` at this boundary, including `list[int]`
 calendar returns, owned `list[int]` collection inputs, borrowed `list[int]`
@@ -533,15 +531,15 @@ clone into `Option<String>` at the sysroot crate boundary. Public math aggregate
 helpers such as `dist`, `fsum`, and `sumprod` keep read-only list parameters in
 `stdlib/sifr/math.sifr` and copy into private owned-vector Rust interop helpers,
 so private bridge ownership does not leak into the public API.
-`stdlib/sifr/hashlib.sifr` uses the same boundary pattern for string and bytes
-helpers: public `sha*`, `md5`, and `blake2*` functions wrap private underscored
-aliases imported from `_sifr.crypto`, keeping borrowed Rust interop parameters
-out of public generated call sites. `stdlib/sifr/bytes.sifr` also wraps
-`_sifr.bytes` helper declarations so public `encode_utf8` and `bytes_to_hex`
-calls with literals and owned bytes do not expose private borrowed Rust
-interop signatures. `bytes.from_hex`, `bytes.from_ints`, `bytes(size)`,
-`bytes_to_hex_strict`, `str.encode`, and `bytes.decode` remain retained
-compiler-owned language glue covered by the retained native-surface allowlist.
+`stdlib/sifr/hashlib.sifr` exposes one bytes-native object model: public
+`sha*`, `md5`, and `blake2*` constructors accept `bytes`, `HashObject.update`
+accepts `bytes`, `digest` returns `bytes`, and `hexdigest` formats that digest
+through first-class `bytes.hex`. Private underscored aliases imported from
+`_sifr.crypto` keep borrowed Rust interop parameters out of public generated
+call sites. `bytes.from_hex`, `bytes.from_ints`, `bytes(size)`, `str.encode`,
+and `bytes.decode` remain compiler-owned first-class language operations
+covered by the retained native-surface allowlist. Byte search, prefix checks,
+and hexadecimal formatting lower as first-class `bytes` methods.
 `stdlib/sifr/base64.sifr` uses the same
 pattern for base64, URL-safe base64, base32, and base32hex encoders, decoders,
 and option helpers. `stdlib/sifr/re.sifr` uses the same wrapper pattern for

@@ -40,7 +40,7 @@ Platform rules: [platform_rules.md](../platform/platform_rules.md).
 
 | Decision | Outcome | Evidence |
 | --- | --- | --- |
-| byte-buffer public name | The `ByteBuffer` placeholder is resolved to Sifr's existing built-in `bytes` type. No import is required for the type; helper constructors/utilities live under `sifr.bytes`. | Reuses the existing owned immutable byte-buffer value model and avoids creating a second public byte type for TCP/TLS/HTTP. |
+| byte-buffer public name | The `ByteBuffer` placeholder is resolved to Sifr's existing built-in `bytes` type. Construction and inspection use first-class `bytes` operations without an import. | Reuses the existing owned immutable byte-buffer value model and avoids creating a second public byte type for TCP/TLS/HTTP. |
 | TCP full-duplex | `TcpStream.split()` consumes a live stream and returns owned affine `TcpReadHalf` and `TcpWriteHalf`; recombine and borrowed split are rejected for v1. | Prevents shared mutable aliasing while allowing task-separated full-duplex protocols. |
 | TCP half-close | `shutdown_write()` is accepted; it preserves the read side, returns deterministic repeated-shutdown evidence, and write-after-shutdown is a typed error. | Required for request-end signaling and protocol-correct loopback tests. |
 | DNS | `tokio::net::lookup_host` is accepted; custom resolver records and Happy Eyeballs are deferred. | Respects host resolver configuration without adding resolver product policy. |
@@ -82,7 +82,7 @@ Platform rules: [platform_rules.md](../platform/platform_rules.md).
 | `RequestHead` | production-substrate | stable-production-substrate | Method, URL/authority target metadata, version, headers; no body ownership. |
 | `ResponseHead` | production-substrate | stable-production-substrate | Status, version, headers; no body ownership. |
 | `BodyStream` | production-substrate | stable-production-substrate | Async stream of built-in `bytes` chunks with typed EOF/cancellation/reset evidence. |
-| `BodyChunk` | production-substrate | compiler-known-intrinsic | Built-in `bytes` type; helper API under `sifr.bytes`. |
+| `BodyChunk` | production-substrate | compiler-known-intrinsic | Built-in `bytes` type with first-class construction and inspection operations. |
 | `Trailers` | production-substrate | stable-production-substrate | Accepted for HTTP/2 and HTTP/1.1 chunked bodies as `HeaderMap` after EOF; disabled by default for collected bodies unless explicitly requested. |
 | `HttpError`, `ProtocolError`, `HeaderError`, `BodyError` | production-substrate | stable-production-substrate | Flat typed error classes with deterministic lower-layer, cancellation, timeout, and size evidence messages. |
 

@@ -16,8 +16,8 @@ This lock exists to prevent later implementation passes from reintroducing state
 | `random` deterministic model | `RandomState(version, state_words, index, gauss_next)` is the canonical state container. `Random` owns deterministic mutable state; module-level helpers delegate to one module-global `Random` instance. |
 | `random` non-deterministic model | `SystemRandom` remains host-backed and explicitly does not support state export/import (`getstate`/`setstate`). |
 | `random` bytes API | `randbytes(n)` is in-scope and must return first-class `bytes` via raw-byte-backed storage paths only. |
-| `hashlib` bytes-native model | `HashObject.digest() -> bytes` is the canonical binary digest surface, with `digest_bytes()` alias and `update_bytes(bytes)` support. |
-| `hashlib` constructor model | `new_bytes(name, data: bytes = bytes())` is the canonical bytes-first constructor entry for Unicode core capability. |
+| `hashlib` bytes-native model | `HashObject.digest() -> bytes` is the canonical binary digest surface, and `HashObject.update(bytes)` is the only incremental update contract. |
+| `hashlib` constructor model | `new(name, data: bytes = b"")` and the named bytes-native constructors are canonical. Text callers encode explicitly. |
 | SHA3/SHAKE policy | SHA3/SHAKE APIs are in-scope only when backed by actual runtime dependency support; SHAKE requires explicit output length and returns `bytes`. |
 | `base64` boundary | binary-oriented APIs must consume/return first-class `bytes`; text helpers may remain as compatibility overlays. |
 | `statistics` boundary | readiness targets stay float/int deterministic surfaces only; decimal/fraction/context-sensitive semantics remain explicitly unsupported. |
@@ -29,7 +29,7 @@ The following capability-owned gaps are explicitly present at entry and are trea
 
 - `random` remains stateless host-intrinsic wrappers (`seed`, `getstate`, `setstate`, `Random`, `SystemRandom`, `randbytes`) are not shipped.
 - `hashlib` digest surface is currently hex-string based (`digest() -> str` alias to `hexdigest()`), and bytes-native object APIs are absent.
-- bytes-oriented `hashlib` constructor (`new_bytes`) is absent.
+- a bytes-oriented `hashlib` constructor is absent.
 - residual `textwrap` formatter ecosystem fields and package-wide `html` parser family remain unsupported.
 
 ## Permanent Sifr-Safe Diffs (Locked for This Capability)

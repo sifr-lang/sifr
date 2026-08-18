@@ -1,14 +1,13 @@
 # Reference: safety_basics
 # Reference: safety-basics-history
 # Safety basics demo: parity foundation safety + harness baseline
-from sifr.bytes import decode_utf8
 from sifr.base64 import b64encode
 from sifr.test import assert_vector_eq
 
 def main():
     # Safety behavior: invalid UTF-8 byte sequences return ParseError (no panic).
     try:
-        bad: str = decode_utf8(b"\xff")
+        bad: str = b"\xff".decode()
         print(False)
         assert str(False) == "true"
     except ParseError as e:

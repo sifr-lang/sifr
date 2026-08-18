@@ -73,14 +73,6 @@ fn bytes_for_algorithm(name: &str, data: &[u8]) -> Result<Vec<u8>, ValueError> {
     }
 }
 
-fn sha256(data: &str) -> String {
-    hexify(&encode_sha256(data.as_bytes()))
-}
-
-fn md5(data: &str) -> String {
-    hexify(&encode_md5(data.as_bytes()))
-}
-
 #[derive(Clone, Debug)]
 struct HashObject {
     name: String,
@@ -88,8 +80,8 @@ struct HashObject {
 }
 
 impl HashObject {
-    fn update(&mut self, data: &str) {
-        self.data.extend_from_slice(data.as_bytes());
+    fn update(&mut self, data: &[u8]) {
+        self.data.extend_from_slice(data);
     }
 
     fn hexdigest(&self) -> String {
@@ -101,23 +93,19 @@ impl HashObject {
     fn digest(&self) -> Vec<u8> {
         bytes_for_algorithm(&self.name, &self.data).unwrap_or_default()
     }
-
-    fn digest_bytes(&self) -> Vec<u8> {
-        self.digest()
-    }
 }
 
-fn sha256_obj(data: &str) -> HashObject {
+fn sha256(data: &[u8]) -> HashObject {
     HashObject {
         name: "sha256".to_string(),
-        data: data.as_bytes().to_vec(),
+        data: data.to_vec(),
     }
 }
 
-fn md5_obj(data: &str) -> HashObject {
+fn md5(data: &[u8]) -> HashObject {
     HashObject {
         name: "md5".to_string(),
-        data: data.as_bytes().to_vec(),
+        data: data.to_vec(),
     }
 }
 
@@ -125,10 +113,10 @@ fn copy_hash(hash: &HashObject) -> HashObject {
     hash.clone()
 }
 
-fn new(name: &str, data: &str) -> Result<HashObject, ValueError> {
+fn new(name: &str, data: &[u8]) -> Result<HashObject, ValueError> {
     match name {
-        "md5" => Ok(md5_obj(data)),
-        "sha256" => Ok(sha256_obj(data)),
+        "md5" => Ok(md5(data)),
+        "sha256" => Ok(sha256(data)),
         _ => Err(ValueError::new(format!(
             "unsupported hash algorithm: {name}"
         ))),
@@ -157,18 +145,18 @@ fn contains(values: &[String], needle: &str) -> bool {
 fn collect_positive_actual(tmp_path: &str) -> Vec<String> {
     let mut actual = Vec::new();
 
-    let mut hash = sha256_obj("");
-    hash.update("a");
-    hash.update("bc");
-    actual.push((hash.hexdigest() == sha256("abc")).to_string());
-    actual.push((hash.digest().len() == 32 && hash.digest_bytes() == hash.digest()).to_string());
+    let mut hash = sha256(b"");
+    hash.update(b"a");
+    hash.update(b"bc");
+    actual.push((hash.hexdigest() == sha256(b"abc").hexdigest()).to_string());
+    actual.push((hash.digest().len() == 32).to_string());
 
     let mut copy = copy_hash(&hash);
-    copy.update("x");
-    actual.push((copy.hexdigest() == sha256("abcx")).to_string());
+    copy.update(b"x");
+    actual.push((copy.hexdigest() == sha256(b"abcx").hexdigest()).to_string());
 
-    let md5_hash = md5_obj("hello");
-    actual.push((md5_hash.hexdigest() == md5("hello")).to_string());
+    let md5_hash = md5(b"hello");
+    actual.push((md5_hash.hexdigest() == md5(b"hello").hexdigest()).to_string());
     actual.push(contains(&algorithms_guaranteed(), "sha256").to_string());
     actual.push(md5_hash.hexdigest());
     actual.push(file_digest(tmp_path, "sha256").unwrap_or_else(|_| "ERR".to_string()));
@@ -177,7 +165,7 @@ fn collect_positive_actual(tmp_path: &str) -> Vec<String> {
 }
 
 fn collect_negative_actual_ok() -> Vec<bool> {
-    vec![new("sha3_256", "").is_ok()]
+    vec![new("sha3_256", b"").is_ok()]
 }
 
 fn main() {

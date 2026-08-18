@@ -6,7 +6,7 @@ from sifr.test import assert_bool_vector_eq
 def collect_core_actual() -> list[bool]:
     actual: list[bool] = []
     payload: str = "gzip parity sample"
-    compressed: list[int] = compress(payload)
+    compressed: bytes = compress(payload)
     actual.append(len(compressed) > 0)
 
     roundtrip_ok: bool = False
@@ -32,7 +32,7 @@ def collect_negative_actual() -> list[bool]:
 
     invalid_data_rejected: bool = False
     try:
-        _bad: str = decompress([1, 2, 3, 4])
+        _bad: str = decompress(b"\x01\x02\x03\x04")
         _ = _bad
     except IOError as e:
         _ = e.message
@@ -40,7 +40,7 @@ def collect_negative_actual() -> list[bool]:
     actual.append(invalid_data_rejected)
 
     truncated_data_rejected: bool = False
-    sample: list[int] = compress("truncate me")
+    sample: bytes = compress("truncate me")
     if len(sample) > 2:
         try:
             _truncated: str = decompress(sample[0:2])

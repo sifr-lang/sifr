@@ -105,7 +105,7 @@
     },
     {
       "decision": "byte_buffer",
-      "outcome": "ByteBuffer placeholder resolves to Sifr built-in bytes; no import required for the type, helper namespace is sifr.bytes",
+      "outcome": "ByteBuffer placeholder resolves to Sifr built-in bytes; construction and inspection use first-class bytes operations without an import",
       "evidence": "Existing built-in bytes value model is owned and immutable; network/TLS/HTTP signatures use bytes."
     },
     {

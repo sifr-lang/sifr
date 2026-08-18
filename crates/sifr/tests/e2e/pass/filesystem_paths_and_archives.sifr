@@ -124,7 +124,7 @@ def collect_shutil_temp_actual() -> list[bool]:
 def collect_gzip_zip_actual() -> list[bool]:
     actual: list[bool] = []
     payload: str = "filesystem-d1"
-    compressed: list[int] = compress(payload)
+    compressed: bytes = compress(payload)
     compress_ok: bool = len(compressed) > 0
 
     decompress_ok: bool = False
@@ -139,7 +139,7 @@ def collect_gzip_zip_actual() -> list[bool]:
         _ = e.message
 
     try:
-        _bad_restore: str = decompress([1, 2, 3, 4])
+        _bad_restore: str = decompress(b"\x01\x02\x03\x04")
         _ = _bad_restore
     except IOError as e:
         _ = e.message
