@@ -92,19 +92,14 @@ fn deferred_stdlib_module_has_import_code() {
 }
 
 #[test]
-fn unsupported_legacy_stdlib_module_has_import_code_and_replacement_args() {
-    let source = "from sifr.asyncio import sleep\n\ndef main():\n    pass\n";
+fn unknown_sifr_module_uses_generic_import_diagnostic() {
+    let source = "from sifr.not_a_module import value\n\ndef main():\n    pass\n";
     let errors = lower_errors(source);
 
     assert!(errors.iter().any(|error| {
-        error.message == "legacy stdlib module 'sifr.asyncio' is unsupported; use 'sifr.task'"
-            && error.code == Some(DiagnosticCode::IMPORT_UNSUPPORTED_LEGACY_STDLIB)
-            && error.primary_range == Some(range_for(source, "from sifr.asyncio import sleep"))
-            && string_arg(error, "legacy_module") == Some("sifr.asyncio")
-            && string_arg(error, "suggested_module") == Some("sifr.task")
-            && string_arg(error, "imported_names") == Some("sleep")
-            && string_arg(error, "reason")
-                == Some("structured tasks are exposed through the native task model")
+        error.message == "unknown import target: 'sifr.not_a_module'"
+            && error.code == Some(DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE)
+            && error.primary_range == Some(range_for(source, "from sifr.not_a_module import value"))
     }));
 }
 

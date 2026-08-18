@@ -375,14 +375,6 @@ fn parse_keyword_arguments(
             );
             return None;
         };
-        if matches!(name.as_str(), "crate" | "path") {
-            malformed(
-                ctx,
-                "legacy Rust interop keys `crate=` and `path=` are not supported; use a dotted target path".to_string(),
-                keyword.range(),
-            );
-            return None;
-        }
         let value = parse_value(&keyword.value, owner, ctx)?;
         arguments.push(RustInteropArgument {
             name: Some(name.to_string()),

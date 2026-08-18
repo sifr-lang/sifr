@@ -11,13 +11,6 @@ use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const LEGACY_WORKSPACE_IMPORT_CODES: &[&str] = &[
-    "SIFR-WORKSPACE-0101",
-    "SIFR-WORKSPACE-0102",
-    "SIFR-WORKSPACE-0103",
-    "SIFR-WORKSPACE-0104",
-];
-
 const PARSER_FIXTURES: &[(&str, &str)] = &[
     ("parser_bad_indent", "SIFR-PARSE-0002"),
     ("parser_unterminated_string", "SIFR-PARSE-0003"),
@@ -256,15 +249,8 @@ fn check_project_fixture(
 ) -> Result<(), String> {
     let entry = base.join(fixture).join("main.sifr");
     let diagnostics = check_project(&entry);
-    assert_rules(
-        &diagnostics,
-        code,
-        fixture,
-        LEGACY_WORKSPACE_IMPORT_CODES,
-        required_args,
-        true,
-        true,
-    )?;
+    assert_rules(&diagnostics, code, fixture, &[], required_args, true, true)?;
+    assert_no_prefix(&diagnostics, fixture, "SIFR-WORKSPACE-01")?;
     assert_text_formats(&diagnostics, code, &entry)
 }
 
@@ -306,15 +292,8 @@ fn check_package_runtime_rules(root: &Path) -> Result<(), String> {
     for (fixture, code, required_args) in PACKAGE_FIXTURES {
         let package = base.join(fixture);
         let diagnostics = package_diagnostics(&package)?;
-        assert_rules(
-            &diagnostics,
-            code,
-            fixture,
-            LEGACY_WORKSPACE_IMPORT_CODES,
-            required_args,
-            true,
-            true,
-        )?;
+        assert_rules(&diagnostics, code, fixture, &[], required_args, true, true)?;
+        assert_no_prefix(&diagnostics, fixture, "SIFR-WORKSPACE-01")?;
         assert_no_prefix(&diagnostics, fixture, "SIFR-PACKAGE-")?;
         assert_text_formats(&diagnostics, code, &package)?;
     }

@@ -170,7 +170,7 @@
       "expected_exit": 1,
       "expected_stdout_contains": [],
       "expected_diagnostic_contains": [
-        "SIFR-IMPORT-0009",
+        "SIFR-IMPORT-0002",
         "sifr.task",
         "sifr.process",
         "sifr.runtime",

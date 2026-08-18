@@ -607,12 +607,7 @@ pub(in crate::lower) fn lower_module_impl(
                     });
                     continue;
                 }
-                imports::report_unknown_stdlib_module(
-                    &mut ctx,
-                    &module_name,
-                    &imported_names,
-                    import_range,
-                );
+                imports::report_unknown_stdlib_module(&mut ctx, &module_name, import_range);
                 continue;
             }
 

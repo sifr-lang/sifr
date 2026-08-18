@@ -817,22 +817,6 @@
       "suggestion_applicability": "none"
     },
     {
-      "code": "SIFR-IMPORT-0009",
-      "constant": "IMPORT_UNSUPPORTED_LEGACY_STDLIB",
-      "docs_link": "docs/errors/SIFR-IMPORT-0009.mdx",
-      "machine_applicable": false,
-      "owner": "compiler/core-language",
-      "renderer_support": [
-        "human",
-        "json",
-        "compact"
-      ],
-      "representative_fixture": "crates/sifr/tests/e2e/fail/legacy_sifr_asyncio_removed.sifr",
-      "severity": "Error",
-      "stability": "stable",
-      "suggestion_applicability": "none"
-    },
-    {
       "code": "SIFR-INT-0001",
       "constant": "INT_FIXED_WIDTH_OUT_OF_RANGE",
       "docs_link": "docs/errors/SIFR-INT-0001.mdx",
@@ -3252,70 +3236,6 @@
         "compact"
       ],
       "representative_fixture": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
-      "severity": "Error",
-      "stability": "stable",
-      "suggestion_applicability": "none"
-    },
-    {
-      "code": "SIFR-WORKSPACE-0101",
-      "constant": "WORKSPACE_UNRESOLVED_IMPORT",
-      "docs_link": "docs/errors/SIFR-WORKSPACE-0101.mdx",
-      "machine_applicable": false,
-      "owner": "compiler/frontend",
-      "renderer_support": [
-        "human",
-        "json",
-        "compact"
-      ],
-      "representative_fixture": "verification/areas/project_workspace/fixtures/project/workspace_unresolved_import",
-      "severity": "Error",
-      "stability": "stable",
-      "suggestion_applicability": "none"
-    },
-    {
-      "code": "SIFR-WORKSPACE-0102",
-      "constant": "WORKSPACE_AMBIGUOUS_IMPORT",
-      "docs_link": "docs/errors/SIFR-WORKSPACE-0102.mdx",
-      "machine_applicable": false,
-      "owner": "compiler/frontend",
-      "renderer_support": [
-        "human",
-        "json",
-        "compact"
-      ],
-      "representative_fixture": "crates/sifr_diagnostics/src/codes/registry/registry_entries/project_and_backend.rs",
-      "severity": "Error",
-      "stability": "stable",
-      "suggestion_applicability": "none"
-    },
-    {
-      "code": "SIFR-WORKSPACE-0103",
-      "constant": "WORKSPACE_NAMESPACE_COLLISION",
-      "docs_link": "docs/errors/SIFR-WORKSPACE-0103.mdx",
-      "machine_applicable": false,
-      "owner": "compiler/frontend",
-      "renderer_support": [
-        "human",
-        "json",
-        "compact"
-      ],
-      "representative_fixture": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
-      "severity": "Error",
-      "stability": "stable",
-      "suggestion_applicability": "none"
-    },
-    {
-      "code": "SIFR-WORKSPACE-0104",
-      "constant": "WORKSPACE_IMPORT_CYCLE",
-      "docs_link": "docs/errors/SIFR-WORKSPACE-0104.mdx",
-      "machine_applicable": false,
-      "owner": "compiler/frontend",
-      "renderer_support": [
-        "human",
-        "json",
-        "compact"
-      ],
-      "representative_fixture": "crates/sifr_driver/src/tests/project_graph.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"

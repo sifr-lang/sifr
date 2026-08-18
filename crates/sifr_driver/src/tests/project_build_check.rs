@@ -1,5 +1,5 @@
 use crate::{build_cached_project, build_project, check_project, emit_project, CompileResult};
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{render_compact_diagnostics, DiagnosticCode};
 
 pub(super) fn mktemp_dir(name: &str) -> std::path::PathBuf {
     let unique = format!(
@@ -603,18 +603,10 @@ def broken() -> int:
         .err()
         .expect("build_project should fail with same frontend error");
 
-    let check_messages: Vec<String> = check_errors
-        .iter()
-        .map(crate::diagnostics::diagnostic_legacy_display)
-        .collect();
-    let build_messages: Vec<String> = build_errors
-        .iter()
-        .map(crate::diagnostics::diagnostic_legacy_display)
-        .collect();
+    let check_messages = render_compact_diagnostics(&check_errors);
+    let build_messages = render_compact_diagnostics(&build_errors);
     assert_eq!(check_messages, build_messages);
-    assert!(build_messages
-        .iter()
-        .any(|m| m.contains("[helper] return type mismatch")));
+    assert!(build_messages.contains("return type mismatch"));
 
     let _ = std::fs::remove_dir_all(&dir);
 }

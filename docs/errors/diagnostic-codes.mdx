@@ -85,7 +85,6 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-IMPORT-0006`](/errors/SIFR-IMPORT-0006) | Error | Source module namespace and file import collision. |
 | [`SIFR-IMPORT-0007`](/errors/SIFR-IMPORT-0007) | Error | Circular source module import graph. |
 | [`SIFR-IMPORT-0008`](/errors/SIFR-IMPORT-0008) | Error | Bare CPython-style stdlib import attempt. |
-| [`SIFR-IMPORT-0009`](/errors/SIFR-IMPORT-0009) | Error | Unsupported legacy Sifr stdlib module import. |
 | [`SIFR-TYPE-0002`](/errors/SIFR-TYPE-0002) | Error | Expected and actual types are incompatible. |
 | [`SIFR-TYPE-0003`](/errors/SIFR-TYPE-0003) | Error | If-expression or conditional branches have incompatible types. |
 | [`SIFR-TYPE-0004`](/errors/SIFR-TYPE-0004) | Error | A required type annotation is missing. |
@@ -183,10 +182,6 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-WORKSPACE-0002`](/errors/SIFR-WORKSPACE-0002) | Error | Workspace source root escapes the workspace root. |
 | [`SIFR-WORKSPACE-0003`](/errors/SIFR-WORKSPACE-0003) | Error | Workspace source root is not a directory. |
 | [`SIFR-WORKSPACE-0004`](/errors/SIFR-WORKSPACE-0004) | Error | Workspace source root entry has an invalid shape or path. |
-| [`SIFR-WORKSPACE-0101`](/errors/SIFR-WORKSPACE-0101) | Error | Legacy workspace import target could not be resolved; source imports use [`SIFR-IMPORT-0002`](/errors/SIFR-IMPORT-0002). |
-| [`SIFR-WORKSPACE-0102`](/errors/SIFR-WORKSPACE-0102) | Error | Legacy workspace import target is ambiguous; source imports use [`SIFR-IMPORT-0005`](/errors/SIFR-IMPORT-0005). |
-| [`SIFR-WORKSPACE-0103`](/errors/SIFR-WORKSPACE-0103) | Error | Legacy workspace namespace package collision; source imports use [`SIFR-IMPORT-0006`](/errors/SIFR-IMPORT-0006). |
-| [`SIFR-WORKSPACE-0104`](/errors/SIFR-WORKSPACE-0104) | Error | Legacy workspace import graph cycle; source imports use [`SIFR-IMPORT-0007`](/errors/SIFR-IMPORT-0007). |
 | [`SIFR-BUILD-0002`](/errors/SIFR-BUILD-0002) | Error | Build file materialization failed. |
 | [`SIFR-BUILD-0003`](/errors/SIFR-BUILD-0003) | Error | Temporary build workspace creation failed. |
 | [`SIFR-BUILD-0004`](/errors/SIFR-BUILD-0004) | Error | Cargo manifest generation failed. |

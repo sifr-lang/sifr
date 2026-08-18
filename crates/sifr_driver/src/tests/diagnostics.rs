@@ -167,8 +167,8 @@ fn test_diagnostic_labels_are_derived_from_diagnostic_codes() {
         (DiagnosticCode::STDLIB_CACHE_FAILURE, "build error"),
         (DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE, "type error"),
         (DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST, "build error"),
-        (DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT, "build error"),
-        (DiagnosticCode::WORKSPACE_IMPORT_CYCLE, "build error"),
+        (DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE, "type error"),
+        (DiagnosticCode::IMPORT_CYCLE, "type error"),
         (
             DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
             "parse error",
@@ -185,12 +185,6 @@ fn test_diagnostic_labels_are_derived_from_diagnostic_codes() {
 
     for (code, label) in cases {
         assert_eq!(diagnostic_label_for_code(code), label);
-        assert_eq!(
-            crate::diagnostics::diagnostic_legacy_display(
-                &crate::diagnostics::diagnostic_with_code("message", code)
-            ),
-            format!("{label}: message")
-        );
     }
 }
 
@@ -208,29 +202,6 @@ fn test_compiler_diagnostics_preserve_order() {
     assert_eq!(diagnostics[1].message, "second");
     assert_eq!(diagnostics[0].code, "SIFR-TYPE-0002");
     assert_eq!(diagnostics[1].code, "SIFR-BUILD-0002");
-}
-
-#[test]
-fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
-    let cases = [
-        (
-            "could not resolve import 'helper'; tried entry-relative '/tmp/helper.sifr' and workspace-relative '/tmp/lib/helper.sifr'",
-            DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT,
-        ),
-        (
-            "module 'helpers.nodes' resolves to file '/tmp/ws/lib/helpers/nodes.sifr' but parent name 'helpers' is also a module file '/tmp/ws/lib/helpers.sifr'; package directories are not supported",
-            DiagnosticCode::WORKSPACE_NAMESPACE_COLLISION,
-        ),
-    ];
-
-    for (message, code) in cases {
-        let diagnostic = crate::diagnostics::diagnostic_with_code(message, code);
-        assert_eq!(diagnostic.code, code.code());
-        assert_eq!(
-            diagnostic.url,
-            format!("https://docs.sifr.sh/errors/{}", code.code())
-        );
-    }
 }
 
 #[test]

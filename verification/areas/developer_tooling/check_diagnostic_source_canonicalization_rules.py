@@ -22,12 +22,7 @@ NEW_IMPORT_CODES = {
     "SIFR-IMPORT-0007": "IMPORT_CYCLE",
 }
 
-LEGACY_WORKSPACE_IMPORT_CODES = {
-    "SIFR-WORKSPACE-0101": "SIFR-IMPORT-0002",
-    "SIFR-WORKSPACE-0102": "SIFR-IMPORT-0005",
-    "SIFR-WORKSPACE-0103": "SIFR-IMPORT-0006",
-    "SIFR-WORKSPACE-0104": "SIFR-IMPORT-0007",
-}
+REMOVED_WORKSPACE_IMPORT_PREFIX = "SIFR-WORKSPACE-01"
 
 PARSER_FIXTURES = {
     "parser_bad_indent": "SIFR-PARSE-0002",
@@ -152,15 +147,6 @@ def check_registry_and_docs(root: Path) -> None:
             f"{code} docs page missing",
         )
         require(f"[`{code}`]" in docs_index, f"{code} missing from diagnostic docs index")
-
-
-def check_legacy_code_docs(root: Path) -> None:
-    for legacy, replacement in LEGACY_WORKSPACE_IMPORT_CODES.items():
-        text = read_text(root, f"docs/errors/{legacy}.mdx")
-        require(
-            replacement in text and "legacy" in text.lower(),
-            f"{legacy} docs must name legacy replacement {replacement}",
-        )
 
 
 def cargo_debug_dir() -> Path:
@@ -350,7 +336,6 @@ def check_project_runtime_rules(root: Path) -> None:
         "workspace_missing_import_canonical": {"resolution_scope", "tried_paths"},
         "workspace_namespace_collision_canonical": {"resolved_path", "parent_path"},
     }
-    forbidden = set(LEGACY_WORKSPACE_IMPORT_CODES)
     for fixture, code in PROJECT_FIXTURES.items():
         entry = base / fixture / "src" / "main.sifr"
         json_result = run_sifr(["--diagnostic-format", "json", "check", str(entry)])
@@ -358,7 +343,7 @@ def check_project_runtime_rules(root: Path) -> None:
             json_result,
             expected_code=code,
             case_id=fixture,
-            forbidden_codes=forbidden,
+            forbidden_prefixes=(REMOVED_WORKSPACE_IMPORT_PREFIX,),
             required_args=required_args[fixture],
         )
         assert_text_format(entry=entry, expected_code=code, diagnostic_format="human")
@@ -374,7 +359,7 @@ def check_cycle_runtime_rules(root: Path) -> None:
             json_result,
             expected_code=code,
             case_id=fixture,
-            forbidden_codes=set(LEGACY_WORKSPACE_IMPORT_CODES),
+            forbidden_prefixes=(REMOVED_WORKSPACE_IMPORT_PREFIX,),
             required_args={"cycle", "cycle_edges"},
         )
         assert_text_format(entry=entry, expected_code=code, diagnostic_format="human")
@@ -408,8 +393,7 @@ def check_package_runtime_rules(root: Path) -> None:
             json_result,
             expected_code=code,
             case_id=fixture,
-            forbidden_codes=set(LEGACY_WORKSPACE_IMPORT_CODES),
-            forbidden_prefixes=("SIFR-PACKAGE-",),
+            forbidden_prefixes=(REMOVED_WORKSPACE_IMPORT_PREFIX, "SIFR-PACKAGE-"),
             required_args=required_args[fixture],
         )
         assert_text_format(
@@ -462,7 +446,6 @@ def run_static_checks(root: Path) -> None:
     check_profile_runner_wiring(root)
     check_required_fixtures(root)
     check_registry_and_docs(root)
-    check_legacy_code_docs(root)
 
 
 def run_checks(root: Path) -> None:
@@ -495,17 +478,6 @@ def seed_minimal_repo(root: Path) -> None:
             ),
         )
         index_lines.append(f"| [`{code}`]({code}.mdx) | Error | seeded. |")
-    for legacy, replacement in LEGACY_WORKSPACE_IMPORT_CODES.items():
-        write(
-            root / f"docs/errors/{legacy}.mdx",
-            (
-                "---\n"
-                f'title: "{legacy}: Legacy alias for {replacement}."\n'
-                f'sidebarTitle: "{legacy}"\n'
-                f'description: "Legacy alias for {replacement}."\n'
-                "---\n"
-            ),
-        )
     write(root / "docs/errors/diagnostic-codes.md", "\n".join(index_lines))
     for fixture in PARSER_FIXTURES:
         write(
@@ -514,7 +486,8 @@ def seed_minimal_repo(root: Path) -> None:
         )
     for fixture in PROJECT_FIXTURES | CYCLE_FIXTURES:
         write(
-            root / f"verification/areas/project_workspace/fixtures/project/{fixture}/main.sifr",
+            root
+            / f"verification/areas/project_workspace/fixtures/project/{fixture}/src/main.sifr",
             "def main():\n    pass\n",
         )
     for fixture in PACKAGE_FIXTURES | PACKAGE_FATAL_FIXTURES:
@@ -585,12 +558,6 @@ def run_self_tests() -> None:
             registry_seed().replace("DiagnosticCode::IMPORT_CYCLE,", ""),
         ),
     )
-    expect_self_test_failure(
-        "missing legacy migration docs",
-        "docs must name legacy replacement",
-        lambda root: write(root / "docs/errors/SIFR-WORKSPACE-0104.mdx", "# legacy\n"),
-    )
-
     spanless = CommandResult(
         1,
         "",

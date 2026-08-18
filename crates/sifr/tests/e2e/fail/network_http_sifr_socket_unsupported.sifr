@@ -1,4 +1,4 @@
-# expect-error[col=1]: SIFR-IMPORT-0009
+# expect-error[col=1]: SIFR-IMPORT-0002
 from sifr.socket import socket
 
 

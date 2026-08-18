@@ -201,12 +201,28 @@ enum ResolutionFailureKind {
 }
 
 impl ResolutionError {
-    fn to_diagnostic(&self, resolver: &ModuleResolver) -> RenderedDiagnostic {
+    fn to_spanless_diagnostic(&self, resolver: &ModuleResolver) -> RenderedDiagnostic {
         match &self.kind {
-            ResolutionFailureKind::Unresolved => crate::diagnostics::diagnostic_with_code(
-                unresolved_import_message(&self.module_name, &self.tried_paths),
-                DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT,
-            ),
+            ResolutionFailureKind::Unresolved => {
+                let args = [
+                    ("module", DiagnosticArg::String(self.module_name.clone())),
+                    (
+                        "resolution_scope",
+                        DiagnosticArg::String(resolution_scope(resolver)),
+                    ),
+                    (
+                        "tried_paths",
+                        DiagnosticArg::String(display_paths(&self.tried_paths)),
+                    ),
+                ];
+                crate::diagnostics::diagnostic_without_source(
+                    DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE,
+                    "unknown import target: '{module}'",
+                    &args,
+                    &path_notes("tried", &self.tried_paths),
+                    None,
+                )
+            }
             ResolutionFailureKind::NamespaceFileCollision { parent_name } => {
                 let resolved_path = self
                     .tried_paths
@@ -218,14 +234,32 @@ impl ResolutionError {
                     .get(1)
                     .cloned()
                     .unwrap_or_else(|| resolver.module_source_path(parent_name));
-                crate::diagnostics::diagnostic_with_code(
-                    namespace_collision_message(
-                        &self.module_name,
-                        &resolved_path,
-                        parent_name,
-                        &parent_path,
+                let candidate_paths = vec![resolved_path.clone(), parent_path.clone()];
+                let args = [
+                    ("module", DiagnosticArg::String(self.module_name.clone())),
+                    (
+                        "resolution_scope",
+                        DiagnosticArg::String(resolution_scope(resolver)),
                     ),
-                    DiagnosticCode::WORKSPACE_NAMESPACE_COLLISION,
+                    (
+                        "candidate_paths",
+                        DiagnosticArg::String(display_paths(&candidate_paths)),
+                    ),
+                    (
+                        "resolved_path",
+                        DiagnosticArg::String(resolved_path.display().to_string()),
+                    ),
+                    (
+                        "parent_path",
+                        DiagnosticArg::String(parent_path.display().to_string()),
+                    ),
+                ];
+                crate::diagnostics::diagnostic_without_source(
+                    DiagnosticCode::IMPORT_NAMESPACE_COLLISION,
+                    "import target '{module}' collides with a namespace package",
+                    &args,
+                    &path_notes("candidate", &candidate_paths),
+                    None,
                 )
             }
         }
@@ -271,6 +305,17 @@ impl ResolutionError {
                     "import target '{module}' collides with a namespace package",
                     vec![
                         ("module", DiagnosticArg::String(self.module_name.clone())),
+                        (
+                            "resolution_scope",
+                            DiagnosticArg::String(resolution_scope(resolver)),
+                        ),
+                        (
+                            "candidate_paths",
+                            DiagnosticArg::String(display_paths(&[
+                                resolved_path.clone(),
+                                parent_path.clone(),
+                            ])),
+                        ),
                         (
                             "resolved_path",
                             DiagnosticArg::String(resolved_path.display().to_string()),
@@ -506,40 +551,6 @@ fn resolution_scope(resolver: &ModuleResolver) -> String {
     }
 }
 
-fn unresolved_import_message(module_name: &str, tried_paths: &[PathBuf]) -> String {
-    let entry_path = tried_paths
-        .first()
-        .map(|path| path.display().to_string())
-        .unwrap_or_default();
-    let workspace_paths: Vec<String> = tried_paths
-        .iter()
-        .skip(1)
-        .map(|path| format!("'{}'", path.display()))
-        .collect();
-    if workspace_paths.is_empty() {
-        return format!(
-            "could not resolve import '{module_name}'; tried entry-relative '{entry_path}'"
-        );
-    }
-    format!(
-        "could not resolve import '{module_name}'; tried entry-relative '{entry_path}' and workspace-relative {}",
-        workspace_paths.join(", ")
-    )
-}
-
-fn namespace_collision_message(
-    module_name: &str,
-    path: &Path,
-    parent_name: &str,
-    parent_path: &Path,
-) -> String {
-    format!(
-        "module '{module_name}' resolves to file '{}' but parent name '{parent_name}' is also a module file '{}'; package directories are not supported",
-        path.display(),
-        parent_path.display()
-    )
-}
-
 pub(super) fn discovery_label(
     module_name: &str,
     path: &Path,
@@ -627,7 +638,7 @@ pub(crate) fn parse_import_closure_source_modules(
         let path = match resolver.resolve_with_provider(&module_name, &mut provider) {
             Ok(resolved) => resolved.path,
             Err(error) if resolver.has_workspace() => {
-                return Err(vec![error.to_diagnostic(resolver)]);
+                return Err(vec![error.to_spanless_diagnostic(resolver)]);
             }
             Err(error) => error
                 .tried_paths

@@ -1,8 +1,7 @@
-//! Legacy Sifr stdlib import suggestion policy.
+//! Sifr stdlib import namespace policy.
 //!
-//! This crate owns CPython-shaped import matching and replacement metadata.
-//! It queries the stdlib manifest for source inventory facts, but the manifest
-//! does not own the diagnostic policy.
+//! This crate identifies bare CPython-shaped imports that must use Sifr's
+//! public `sifr.*` namespace.
 
 use sifr_stdlib_manifest::STDLIB_SOURCES;
 
@@ -14,15 +13,6 @@ pub struct BareStdlibMatch {
     pub matched_tail: String,
     pub suggested_module: String,
     pub exact_public_module_exists: bool,
-}
-
-/// Match data for a CPython-shaped `sifr.*` module that is no longer a public
-/// compatibility adapter.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct LegacyStdlibModule {
-    pub legacy_module: &'static str,
-    pub suggested_module: &'static str,
-    pub reason: &'static str,
 }
 
 /// Returns bare-stdlib match data when `module_name` names the tail of a
@@ -67,123 +57,6 @@ pub fn is_bare_stdlib_tail(module_name: &str) -> Option<BareStdlibMatch> {
     })
 }
 
-/// Returns legacy-module match data for CPython-shaped Sifr stdlib names that
-/// are intentionally not public adapters.
-pub fn unsupported_legacy_stdlib_module(module_name: &str) -> Option<LegacyStdlibModule> {
-    let canonical = match module_name {
-        "sifr.asyncio" => "sifr.asyncio",
-        "sifr.concurrent" | "sifr.concurrent.futures" => "sifr.concurrent",
-        "sifr.contextlib" => "sifr.contextlib",
-        "sifr.http.client" => "sifr.http.client",
-        "sifr.http.server" => "sifr.http.server",
-        "sifr.http_transport" => "sifr.http_transport",
-        "sifr.multiprocessing" => "sifr.multiprocessing",
-        "sifr.queue" => "sifr.queue",
-        "sifr.select" => "sifr.select",
-        "sifr.selectors" => "sifr.selectors",
-        "sifr.socket" => "sifr.socket",
-        "sifr.socketserver" => "sifr.socketserver",
-        "sifr.ssl" => "sifr.ssl",
-        "sifr.subprocess" => "sifr.subprocess",
-        "sifr.threading" => "sifr.threading",
-        "sifr.urllib" | "sifr.urllib.parse" | "sifr.urllib.request" => "sifr.urllib",
-        "sifr.warnings" => "sifr.warnings",
-        _ => return None,
-    };
-    legacy_stdlib_module_info(canonical)
-}
-
-fn legacy_stdlib_module_info(module_name: &str) -> Option<LegacyStdlibModule> {
-    match module_name {
-        "sifr.asyncio" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.asyncio",
-            suggested_module: "sifr.task",
-            reason: "structured tasks are exposed through the native task model",
-        }),
-        "sifr.concurrent" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.concurrent",
-            suggested_module: "sifr.runtime",
-            reason: "executor-style offload is replaced by scoped runtime and parallel work APIs",
-        }),
-        "sifr.contextlib" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.contextlib",
-            suggested_module: "sifr.resource",
-            reason: "cleanup uses deterministic Sifr resource scopes, not contextlib adapters",
-        }),
-        "sifr.http.client" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.http.client",
-            suggested_module: "sifr.http",
-            reason: "HTTP client policy belongs to a future Sifr-native client capability, not a CPython-shaped adapter",
-        }),
-        "sifr.http.server" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.http.server",
-            suggested_module: "sifr.http",
-            reason: "server framework behavior belongs to the Sifr HTTP server framework capability",
-        }),
-        "sifr.http_transport" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.http_transport",
-            suggested_module: "sifr.http",
-            reason: "HTTP transport roundtrip helpers are an internal e2e harness, not a public API",
-        }),
-        "sifr.multiprocessing" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.multiprocessing",
-            suggested_module: "sifr.ipc",
-            reason: "process workers require the typed IPC design gate",
-        }),
-        "sifr.queue" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.queue",
-            suggested_module: "sifr.sync",
-            reason: "queue-like communication uses native bounded channels and synchronization",
-        }),
-        "sifr.select" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.select",
-            suggested_module: "sifr.net",
-            reason: "manual selector readiness is internal; use async network streams",
-        }),
-        "sifr.selectors" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.selectors",
-            suggested_module: "sifr.net",
-            reason: "manual selector readiness is internal; use async network streams",
-        }),
-        "sifr.socket" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.socket",
-            suggested_module: "sifr.net",
-            reason: "descriptor-shaped sockets are replaced by typed async network streams",
-        }),
-        "sifr.socketserver" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.socketserver",
-            suggested_module: "sifr.http",
-            reason: "handler-subclass server adapters are rejected; server products build on the Sifr HTTP substrate",
-        }),
-        "sifr.ssl" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.ssl",
-            suggested_module: "sifr.tls",
-            reason: "TLS is exposed through typed Sifr TLS configuration and streams",
-        }),
-        "sifr.subprocess" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.subprocess",
-            suggested_module: "sifr.process",
-            reason: "process management is owned by the native process API",
-        }),
-        "sifr.threading" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.threading",
-            suggested_module: "sifr.runtime",
-            reason: "threads are an internal substrate for scoped offload, not a public module",
-        }),
-        "sifr.urllib" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.urllib",
-            suggested_module: "sifr.url",
-            reason: "URL parsing and building are exposed through typed Sifr URL primitives",
-        }),
-        "sifr.warnings" => Some(LegacyStdlibModule {
-            legacy_module: "sifr.warnings",
-            suggested_module: "sifr.runtime",
-            reason: "Python global warning filters are replaced by typed diagnostics and runtime observability",
-        }),
-        _ => None,
-    }
-}
-
 fn cpython_stdlib_reserved_suggestion(module_name: &str) -> Option<&'static str> {
     let root = module_name.split('.').next().unwrap_or(module_name);
     match root {
@@ -224,8 +97,7 @@ fn public_stdlib_module_exists(module_name: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{is_bare_stdlib_tail, unsupported_legacy_stdlib_module};
-    use sifr_stdlib_manifest::STDLIB_SOURCES;
+    use super::is_bare_stdlib_tail;
 
     #[test]
     fn bare_stdlib_tail_matches_exact_public_module() {
@@ -314,62 +186,6 @@ mod tests {
         assert_eq!(http_client.matched_tail, "http");
         assert_eq!(http_client.suggested_module, "sifr.http");
         assert_eq!(socketserver.suggested_module, "sifr.http");
-    }
-
-    #[test]
-    fn legacy_concurrency_runtime_modules_are_not_embedded_public_sources() {
-        let legacy_modules = [
-            ("sifr.asyncio", "sifr.task"),
-            ("sifr.queue", "sifr.sync"),
-            ("sifr.subprocess", "sifr.process"),
-            ("sifr.concurrent", "sifr.runtime"),
-            ("sifr.concurrent.futures", "sifr.runtime"),
-            ("sifr.contextlib", "sifr.resource"),
-            ("sifr.multiprocessing", "sifr.ipc"),
-            ("sifr.threading", "sifr.runtime"),
-            ("sifr.warnings", "sifr.runtime"),
-        ];
-
-        for (legacy, suggested) in legacy_modules {
-            let matched =
-                unsupported_legacy_stdlib_module(legacy).expect("legacy module should be rejected");
-            assert_eq!(matched.suggested_module, suggested);
-            assert!(
-                !STDLIB_SOURCES
-                    .iter()
-                    .any(|source| source.module == matched.legacy_module),
-                "{legacy} must not be embedded as a public stdlib source"
-            );
-        }
-    }
-
-    #[test]
-    fn legacy_network_http_modules_are_not_embedded_public_sources() {
-        let legacy_modules = [
-            ("sifr.socket", "sifr.net"),
-            ("sifr.ssl", "sifr.tls"),
-            ("sifr.select", "sifr.net"),
-            ("sifr.selectors", "sifr.net"),
-            ("sifr.urllib", "sifr.url"),
-            ("sifr.urllib.parse", "sifr.url"),
-            ("sifr.urllib.request", "sifr.url"),
-            ("sifr.http.client", "sifr.http"),
-            ("sifr.http.server", "sifr.http"),
-            ("sifr.http_transport", "sifr.http"),
-            ("sifr.socketserver", "sifr.http"),
-        ];
-
-        for (legacy, suggested) in legacy_modules {
-            let matched =
-                unsupported_legacy_stdlib_module(legacy).expect("legacy module should be rejected");
-            assert_eq!(matched.suggested_module, suggested);
-            assert!(
-                !STDLIB_SOURCES
-                    .iter()
-                    .any(|source| source.module == matched.legacy_module),
-                "{legacy} must not be embedded as a public stdlib source"
-            );
-        }
     }
 
     #[test]

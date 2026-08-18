@@ -82,54 +82,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             ["entry"]
         ),
     active_entry!(
-            "SIFR-WORKSPACE-0101",
-            "WORKSPACE",
-            "Legacy workspace import target could not be resolved; source imports use SIFR-IMPORT-0002.",
-            Severity::Error,
-            "verification/areas/project_workspace/fixtures/project/workspace_unresolved_import",
-            "could not resolve import {module}",
-            "sifr_driver::project::discovery",
-            [arg!("module"), json_arg!("searched_paths")],
-            ["module", "searched_paths"]
-        ),
-    active_entry!(
-            "SIFR-WORKSPACE-0102",
-            "WORKSPACE",
-            "Legacy workspace import target is ambiguous; source imports use SIFR-IMPORT-0005.",
-            Severity::Error,
-            "crates/sifr_diagnostics/src/codes/registry/registry_entries/project_and_backend.rs",
-            "module {module} is ambiguous in workspace {workspace}",
-            "sifr_driver::project::discovery",
-            [
-                arg!("module"),
-                arg!("workspace"),
-                json_arg!("candidate_paths")
-            ],
-            ["module", "workspace", "candidate_paths"]
-        ),
-    active_entry!(
-            "SIFR-WORKSPACE-0103",
-            "WORKSPACE",
-            "Legacy workspace namespace package collision; source imports use SIFR-IMPORT-0006.",
-            Severity::Error,
-            "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
-            "module {module} collides with namespace path {path}",
-            "sifr_driver::project::discovery",
-            [arg!("module"), arg!("path")],
-            ["module", "path"]
-        ),
-    active_entry!(
-            "SIFR-WORKSPACE-0104",
-            "WORKSPACE",
-            "Legacy workspace import graph cycle; source imports use SIFR-IMPORT-0007.",
-            Severity::Error,
-            "crates/sifr_driver/src/tests/project_graph.rs",
-            "workspace import cycle detected: {cycle}",
-            "sifr_driver::project::compile_order",
-            [arg!("cycle")],
-            ["cycle"]
-        ),
-    active_entry!(
             "SIFR-BUILD-0002",
             "BUILD",
             "Build file materialization failed.",

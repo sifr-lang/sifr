@@ -1,5 +1,7 @@
 use sifr_diagnostics::codes::registry_entry;
-use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
+use sifr_diagnostics::{
+    ChildSeverity, DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, SourceMap,
+};
 pub(crate) use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic, Severity};
 use sifr_frontend::SourceOrigin;
 use sifr_package::{PackageDiagnostic, PackageDiagnosticOrigin};
@@ -59,6 +61,42 @@ pub(crate) fn diagnostic_with_code(
         children: Vec::new(),
         help: None,
         suggestions: Vec::new(),
+    }
+}
+
+/// Builds and renders a structured diagnostic that has no source span.
+#[must_use]
+pub(crate) fn diagnostic_without_source(
+    code: DiagnosticCode,
+    message_template: &'static str,
+    args: &[(&'static str, DiagnosticArg)],
+    notes: &[String],
+    help: Option<String>,
+) -> RenderedDiagnostic {
+    let mut builder = DiagnosticBuilder::internal(code, code.declared_severity())
+        .message_template(message_template);
+    for (name, value) in args {
+        builder = builder.arg(name, value.clone());
+    }
+    for note in notes {
+        builder = builder.child(ChildSeverity::Note, note.clone());
+    }
+    if let Some(help) = help {
+        builder = builder.help(help);
+    }
+    let diagnostic = builder.build();
+    let mut sink = DiagnosticSink::new();
+    sink.emit_error(diagnostic);
+    match sifr_diagnostics::render::render_sink(&sink, &SourceMap::new()) {
+        Ok(mut envelope) if envelope.diagnostics.len() == 1 => envelope.diagnostics.remove(0),
+        Ok(_) => diagnostic_with_code(
+            "internal compiler error: span-less renderer emitted an unexpected diagnostic count",
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        ),
+        Err(error) => diagnostic_with_code(
+            format!("internal compiler error: failed to render span-less diagnostic: {error:?}"),
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        ),
     }
 }
 
@@ -342,15 +380,6 @@ fn recovery_omission_summary(
 
 fn primary_span(diagnostic: &RenderedDiagnostic) -> Option<&DiagnosticSpan> {
     diagnostic.spans.iter().find(|span| span.is_primary)
-}
-
-#[cfg(test)]
-pub(crate) fn diagnostic_legacy_display(diagnostic: &RenderedDiagnostic) -> String {
-    format!(
-        "{}: {}",
-        diagnostic_label_for_code_str(&diagnostic.code),
-        diagnostic.message
-    )
 }
 
 #[must_use]

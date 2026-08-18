@@ -33,8 +33,6 @@ impl DiagnosticCode {
     pub const IMPORT_NAMESPACE_COLLISION: Self = Self::new("SIFR-IMPORT-0006", Severity::Error);
     pub const IMPORT_CYCLE: Self = Self::new("SIFR-IMPORT-0007", Severity::Error);
     pub const IMPORT_BARE_STDLIB: Self = Self::new("SIFR-IMPORT-0008", Severity::Error);
-    pub const IMPORT_UNSUPPORTED_LEGACY_STDLIB: Self =
-        Self::new("SIFR-IMPORT-0009", Severity::Error);
 
     pub const TYPE_MISMATCH: Self = Self::new("SIFR-TYPE-0002", Severity::Error);
     pub const TYPE_IF_BRANCH_MISMATCH: Self = Self::new("SIFR-TYPE-0003", Severity::Error);
@@ -200,11 +198,6 @@ impl DiagnosticCode {
         Self::new("SIFR-WORKSPACE-0003", Severity::Error);
     pub const WORKSPACE_INVALID_SOURCE_ROOT: Self =
         Self::new("SIFR-WORKSPACE-0004", Severity::Error);
-    pub const WORKSPACE_UNRESOLVED_IMPORT: Self = Self::new("SIFR-WORKSPACE-0101", Severity::Error);
-    pub const WORKSPACE_AMBIGUOUS_IMPORT: Self = Self::new("SIFR-WORKSPACE-0102", Severity::Error);
-    pub const WORKSPACE_NAMESPACE_COLLISION: Self =
-        Self::new("SIFR-WORKSPACE-0103", Severity::Error);
-    pub const WORKSPACE_IMPORT_CYCLE: Self = Self::new("SIFR-WORKSPACE-0104", Severity::Error);
 
     pub const PACKAGE_MISSING_OR_INVALID_CARGO_METADATA: Self =
         Self::new("SIFR-PACKAGE-0001", Severity::Error);
@@ -680,7 +673,6 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::IMPORT_NAMESPACE_COLLISION,
     DiagnosticCode::IMPORT_CYCLE,
     DiagnosticCode::IMPORT_BARE_STDLIB,
-    DiagnosticCode::IMPORT_UNSUPPORTED_LEGACY_STDLIB,
     DiagnosticCode::TYPE_MISMATCH,
     DiagnosticCode::TYPE_IF_BRANCH_MISMATCH,
     DiagnosticCode::TYPE_MISSING_ANNOTATION,
@@ -827,10 +819,6 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::WORKSPACE_SOURCE_ROOT_ESCAPES,
     DiagnosticCode::WORKSPACE_SOURCE_ROOT_NOT_DIRECTORY,
     DiagnosticCode::WORKSPACE_INVALID_SOURCE_ROOT,
-    DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT,
-    DiagnosticCode::WORKSPACE_AMBIGUOUS_IMPORT,
-    DiagnosticCode::WORKSPACE_NAMESPACE_COLLISION,
-    DiagnosticCode::WORKSPACE_IMPORT_CYCLE,
     DiagnosticCode::PACKAGE_MISSING_OR_INVALID_CARGO_METADATA,
     DiagnosticCode::PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST,
     DiagnosticCode::PACKAGE_UNSUPPORTED_CARGO_SIFR_METADATA,
