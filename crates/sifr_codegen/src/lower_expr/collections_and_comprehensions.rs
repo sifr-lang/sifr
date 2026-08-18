@@ -395,7 +395,6 @@ pub(super) fn is_reserved_builtin_call_func(func: &str) -> bool {
             | "repr"
             | "dict"
             | "int"
-            | "bigint"
             | "Decimal"
             | "BigDecimal"
             | "float"

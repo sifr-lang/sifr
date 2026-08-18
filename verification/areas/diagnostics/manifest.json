@@ -713,15 +713,6 @@
           ]
         },
         {
-          "id": "e2e_bigint_int_mixed_arithmetic",
-          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_bigint_int_mixed_arithmetic/main.sifr",
-          "command": "check",
-          "expect_exit_code": 1,
-          "diagnostic_formats": [
-            "compact"
-          ]
-        },
-        {
           "id": "e2e_blocking_io_direct_call_in_async_rejected",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_blocking_io_direct_call_in_async_rejected/main.sifr",
           "command": "check",
@@ -1390,15 +1381,6 @@
         {
           "id": "meta_specialization_warning",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_warning/main.sifr",
-          "command": "check",
-          "expect_exit_code": 0,
-          "diagnostic_formats": [
-            "compact"
-          ]
-        },
-        {
-          "id": "semantic_bigint_transition_alias",
-          "entry": "verification/areas/diagnostics/fixtures/diagnostics/semantic_bigint_transition_alias/main.sifr",
           "command": "check",
           "expect_exit_code": 0,
           "diagnostic_formats": [

@@ -246,7 +246,6 @@
                   "errors/SIFR-TYPE-0003",
                   "errors/SIFR-TYPE-0004",
                   "errors/SIFR-TYPE-0005",
-                  "errors/SIFR-TYPE-0006",
                   "errors/SIFR-TYPE-0007",
                   "errors/SIFR-TYPE-0008",
                   "errors/SIFR-TYPE-0009",
@@ -439,8 +438,7 @@
                   "errors/SIFR-INT-0005",
                   "errors/SIFR-INT-0006",
                   "errors/SIFR-INT-0007",
-                  "errors/SIFR-INT-0009",
-                  "errors/SIFR-INT-0011"
+                  "errors/SIFR-INT-0009"
                 ]
               },
               {

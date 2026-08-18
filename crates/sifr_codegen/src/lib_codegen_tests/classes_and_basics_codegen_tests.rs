@@ -697,7 +697,7 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
                     mutable_arg_places: Vec::new(),
                     func: "helper".to_string(),
                     args: vec![],
-                    ty: Type::BigInt,
+                    ty: Type::Int,
                 },
             }],
             is_async: false,
@@ -724,14 +724,9 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
         functions: vec![HirFunction {
             name: "helper".to_string(),
             params: vec![],
-            return_type: Type::BigInt,
+            return_type: Type::Int,
             body: vec![HirStmt::Return {
-                value: Some(HirExpr::Call {
-                    mutable_arg_places: Vec::new(),
-                    func: "bigint".to_string(),
-                    args: vec![HirExpr::IntLiteral(1)],
-                    ty: Type::BigInt,
-                }),
+                value: Some(HirExpr::IntLiteral(1)),
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
@@ -768,12 +763,6 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
     assert!(result.rust_files.contains_key("helper"));
     assert!(result.used_stdlib_modules.contains("sifr.statistics"));
     assert!(result.used_stdlib_modules.contains("sifr.math"));
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::NumBigint));
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::NumTraits));
 }
 
 #[test]

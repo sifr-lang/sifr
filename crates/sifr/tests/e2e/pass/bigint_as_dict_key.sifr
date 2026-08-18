@@ -1,6 +1,0 @@
-# TEMPORARY TRANSITION FIXTURE: exercises the public bigint alias until alias removal.
-def main():
-    d: dict[bigint, str] = {bigint(1): "one", bigint(2): "two", bigint(3): "three"}
-    assert str(len(d)) == '3'
-    assert str(d[bigint(1)]) == 'one'
-    assert str(d[bigint(3)]) == 'three'

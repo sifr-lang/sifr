@@ -319,17 +319,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             ["operator", "operand_types"]
         ),
     active_entry!(
-            "SIFR-TYPE-0006",
-            "TYPE",
-            "Int and bigint are mixed without an explicit conversion.",
-            Severity::Error,
-            "crates/sifr/tests/e2e/fail/bigint_int_mixed_arithmetic.sifr",
-            "cannot mix int and bigint with operator {operator}",
-            "sifr_type_system",
-            [arg!("operator")],
-            ["operator"]
-        ),
-    active_entry!(
             "SIFR-TYPE-0007",
             "TYPE",
             "Invalid type annotation shape.",
@@ -669,16 +658,5 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
                 json_arg!("suggested_policy")
             ],
             ["path", "boundary", "profile", "static_range"]
-        ),
-    active_entry!(
-            "SIFR-INT-0011",
-            "INT",
-            "Temporary bigint transition alias used.",
-            Severity::Warning,
-            "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_bigint_transition_warning",
-            "bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values",
-            "sifr_lowering::lower::typing_and_functions",
-            [],
-            []
         ),
 ];

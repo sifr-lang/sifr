@@ -176,16 +176,6 @@ pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Opt
                 expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
                 ty: RustType::I64,
             }),
-            Type::BigInt => Some(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "BigInt".to_string(),
-                    "from".to_string(),
-                ])),
-                args: vec![RustExpr::Cast {
-                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
-                    ty: RustType::I64,
-                }],
-            }),
             Type::Float => Some(RustExpr::Cast {
                 expr: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
                 ty: RustType::F64,

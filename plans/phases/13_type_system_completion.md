@@ -431,7 +431,7 @@ Sifr intentionally does NOT support enums with associated data (algebraic data t
 
 status: done
 
-**Goal:** Resolve the integer overflow contradiction with Sifr's "if it compiles, it works" guarantee. This milestone originally experimented with a public `bigint` surface, but the canonical integer model now supersedes that bootstrap design: source-level `int` is exact arbitrary precision, fixed-width integer families are explicit representation choices, and `bigint` is only a temporary transition alias. See `internal_docs/integer_model.md` for the authoritative current contract.
+**Goal:** Resolve the integer overflow contradiction with Sifr's "if it compiles, it works" guarantee. This milestone originally experimented with a second public arbitrary-precision integer surface, but the canonical integer model supersedes that bootstrap design: source-level `int` is exact arbitrary precision and fixed-width integer families are explicit representation choices. See `internal_docs/integer_model.md` for the authoritative current contract.
 
 **Depends on:** milestone_enums (the full type system feature set should be in place before changing arithmetic semantics)
 
@@ -448,7 +448,7 @@ port: uint16 = 443
 - Fixed-width types (`int8`, `int16`, `int32`, `int64`, `uint8`, `uint16`, `uint32`, `uint64`, `isize`, `usize`) are explicit for storage, schemas, dtypes, binary formats, and FFI.
 - Ordinary fixed-width scalar arithmetic promotes to exact `int`; representation-preserving behavior is exposed through explicit checked/wrapping/saturating/overflowing APIs.
 - Narrowing from exact `int` to fixed-width types is explicit and fallible unless the compiler proves a constant fits.
-- The temporary public `bigint` alias is covered by `SIFR-INT-0011` during migration and is not the long-term arbitrary-precision spelling.
+- The temporary second public integer alias and its migration diagnostic have been removed.
 
 #### Type system integration
 
@@ -470,7 +470,7 @@ port: uint16 = 443
 - Fixed-width integer annotations and constructors require fitting constants or explicit fallible narrowing.
 - Fixed-width scalar arithmetic widens to `int` unless an explicit representation-preserving API is used.
 - Public docs and demos use `int` for arbitrary precision and fixed-width types for representation-sensitive values.
-- Transition `bigint` fixtures are quarantined until the alias is removed.
+- Exact-integer fixtures use canonical `int`, including values beyond fixed-width ranges.
 - All existing E2E tests still pass
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
 - Milestone demo in `./demos/integer_safety/main.sifr`
@@ -599,7 +599,7 @@ All existing E2E tests that use the monomorphic stdlib functions must be updated
 - `test.assert_eq` is generic
 - All existing E2E tests still pass (with migration where needed)
 - `cargo test` passes, `cargo clippy -- -D warnings` passes, no new `unsafe` without justification
-- New E2E pass tests: `generic_chain_str`, `generic_chain_float`, `generic_counter_int`, `generic_counter_custom_class`, `generic_deque_str`, `generic_deque_float`, `generic_heapq_float`, `generic_reduce_str`, `generic_accumulate_float`, `generic_dropwhile_predicate`, `generic_shuffle_str`, plus quarantined transition-alias fixtures while `bigint` remains available.
+- New E2E pass tests: `generic_chain_str`, `generic_chain_float`, `generic_counter_int`, `generic_counter_custom_class`, `generic_deque_str`, `generic_deque_float`, `generic_heapq_float`, `generic_reduce_str`, `generic_accumulate_float`, `generic_dropwhile_predicate`, `generic_shuffle_str`, plus canonical exact-`int` coverage.
 - New E2E fail tests: `generic_counter_unhashable` (float as Counter key), `generic_heapq_uncomparable` (type without Comparable)
 - API naming divergences table in `architecture.md` updated: remove `chain_str`, `accumulate_float`, and any other deleted type-specific entries; update `itertools.count_from` if its rationale changes
 - Milestone demo in `./demos/generic_stdlib/main.sifr`

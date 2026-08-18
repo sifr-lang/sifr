@@ -20,7 +20,7 @@ fn is_decimal_family_type(ty: &Type) -> bool {
 }
 
 fn is_integral_numeric_type(ty: &Type) -> bool {
-    matches!(ty, Type::Int | Type::LiteralInt(_) | Type::BigInt)
+    matches!(ty, Type::Int | Type::LiteralInt(_))
 }
 
 fn is_exact_or_fixed_integer_type(ty: &Type) -> bool {
@@ -35,14 +35,14 @@ fn is_bool_type(ty: &Type) -> bool {
 fn is_integer_type(ty: &Type) -> bool {
     matches!(
         ty.resolve_alias(),
-        Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::FixedInt(_)
+        Type::Int | Type::LiteralInt(_) | Type::FixedInt(_)
     )
 }
 
 fn is_exact_to_float_integer_type(ty: &Type) -> bool {
     matches!(
         ty.resolve_alias(),
-        Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::FixedInt(_)
+        Type::Int | Type::LiteralInt(_) | Type::FixedInt(_)
     )
 }
 
@@ -70,19 +70,6 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             DiagnosticCode::DECIMAL_FLOAT_MIXED,
             "cannot mix 'float' with decimal numeric types in arithmetic".to_string(),
         ));
-    }
-
-    // Mixed int/bigint arithmetic is a compile error (except bigint ** int which is allowed)
-    let is_bigint_pow_int = left == &Type::BigInt && right == &Type::Int && op == "**";
-    if !is_bigint_pow_int {
-        if (left == &Type::Int && right == &Type::BigInt)
-            || (left == &Type::BigInt && right == &Type::Int)
-        {
-            return Err((
-                DiagnosticCode::TYPE_INT_BIGINT_MIXED,
-                "cannot mix 'int' and 'bigint' in arithmetic; use bigint() or int() to convert explicitly".to_string(),
-            ));
-        }
     }
 
     // TypeVar arithmetic: T op T -> T (generic code assumes the concrete type supports the operation)
@@ -114,10 +101,6 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
                 || (is_bigdecimal_type(right) && is_integral_numeric_type(left))
             {
                 return Ok(Type::BigDecimal);
-            }
-            // BigInt arithmetic
-            if left == &Type::BigInt && right == &Type::BigInt {
-                return Ok(Type::BigInt);
             }
             // Numeric addition
             if left == &Type::Int && right == &Type::Int {
@@ -184,10 +167,6 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             {
                 return Ok(Type::BigDecimal);
             }
-            // BigInt arithmetic
-            if left == &Type::BigInt && right == &Type::BigInt {
-                return Ok(Type::BigInt);
-            }
             if left == &Type::Int && right == &Type::Int {
                 return Ok(Type::Int);
             }
@@ -251,10 +230,6 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             {
                 return Ok(Type::BigDecimal);
             }
-            // BigInt division returns BigInt (floor division semantics for bigint)
-            if left == &Type::BigInt && right == &Type::BigInt {
-                return Ok(Type::BigInt);
-            }
             // Division always returns float in Sifr (like Python 3)
             if left.is_numeric() && right.is_numeric() {
                 return Ok(Type::Float);
@@ -286,10 +261,6 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             {
                 return Ok(Type::BigDecimal);
             }
-            // BigInt floor division and modulo
-            if left == &Type::BigInt && right == &Type::BigInt {
-                return Ok(Type::BigInt);
-            }
             // Floor division and modulo
             if left == &Type::Int && right == &Type::Int {
                 return Ok(Type::Int);
@@ -313,10 +284,6 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             }
             if is_bigdecimal_type(left) && is_integral_numeric_type(right) {
                 return Ok(Type::BigDecimal);
-            }
-            // BigInt power: bigint ** bigint -> bigint, bigint ** int -> bigint
-            if left == &Type::BigInt && (right == &Type::BigInt || right == &Type::Int) {
-                return Ok(Type::BigInt);
             }
             // Power: int ** int -> int, otherwise float
             if left == &Type::Int && right == &Type::Int {
@@ -417,15 +384,6 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> TypeCheckRe
                         .to_string(),
                 ));
             }
-            // Block mixed int/bigint equality comparisons
-            if (left == &Type::Int && right == &Type::BigInt)
-                || (left == &Type::BigInt && right == &Type::Int)
-            {
-                return Err((
-                    DiagnosticCode::TYPE_INT_BIGINT_MIXED,
-                    "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
-                ));
-            }
             // Equality comparison works on same types and on structurally matching
             // containers when one side still carries Any/Unknown element shape.
             if equality_comparable(left, right) {
@@ -470,15 +428,6 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> TypeCheckRe
                     DiagnosticCode::INT_BOOL_INTEGER_COMPARISON,
                     "cannot compare bool and integer values without explicit conversion"
                         .to_string(),
-                ));
-            }
-            // Block mixed int/bigint comparisons
-            if (left == &Type::Int && right == &Type::BigInt)
-                || (left == &Type::BigInt && right == &Type::Int)
-            {
-                return Err((
-                    DiagnosticCode::TYPE_INT_BIGINT_MIXED,
-                    "cannot compare 'int' and 'bigint'; use bigint() or int() to convert explicitly".to_string(),
                 ));
             }
             // Ordering comparison works on numeric types and strings
@@ -621,7 +570,6 @@ pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> TypeCheckResul
             ty,
             Type::Bool
                 | Type::Int
-                | Type::BigInt
                 | Type::Float
                 | Type::List(_)
                 | Type::Dict(_, _)
@@ -690,7 +638,6 @@ mod tests {
             (Type::Int, Type::Int),
             (Type::LiteralInt(10), Type::LiteralInt(2)),
             (Type::FixedInt(crate::FixedIntType::I32), Type::Int),
-            (Type::BigInt, Type::BigInt),
         ] {
             let err = type_check_binary_op(&left, "/", &right).unwrap_err();
             assert_eq!(err.0, DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING);
@@ -821,24 +768,11 @@ mod tests {
     }
 
     #[test]
-    fn test_mixed_int_bigint_comparison_blocked() {
-        let int_bigint_eq = type_check_comparison(&Type::Int, "==", &Type::BigInt).unwrap_err();
-        assert_eq!(int_bigint_eq.0, DiagnosticCode::TYPE_INT_BIGINT_MIXED);
-        assert!(type_check_comparison(&Type::BigInt, "==", &Type::Int).is_err());
-        assert!(type_check_comparison(&Type::Int, "<", &Type::BigInt).is_err());
-        assert!(type_check_comparison(&Type::BigInt, ">", &Type::Int).is_err());
-        // Same-type comparisons should still work
-        assert!(type_check_comparison(&Type::BigInt, "==", &Type::BigInt).is_ok());
-        assert!(type_check_comparison(&Type::BigInt, "<", &Type::BigInt).is_ok());
-    }
-
-    #[test]
     fn test_bool_integer_comparison_blocked_with_int_diagnostic() {
         for (left, op, right) in [
             (Type::Bool, "==", Type::Int),
             (Type::LiteralBool(true), "!=", Type::LiteralInt(1)),
             (Type::FixedInt(crate::FixedIntType::U8), "<", Type::Bool),
-            (Type::BigInt, ">=", Type::LiteralBool(false)),
         ] {
             let err = type_check_comparison(&left, op, &right).unwrap_err();
             assert_eq!(err.0, DiagnosticCode::INT_BOOL_INTEGER_COMPARISON);
@@ -862,10 +796,6 @@ mod tests {
         );
         assert_eq!(
             type_check_bool_op(&Type::Int, "and", &Type::Int).unwrap(),
-            Type::Bool
-        );
-        assert_eq!(
-            type_check_bool_op(&Type::BigInt, "and", &Type::Bool).unwrap(),
             Type::Bool
         );
         assert_eq!(

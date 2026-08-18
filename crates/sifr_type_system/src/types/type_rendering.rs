@@ -92,12 +92,7 @@ impl Type {
     pub fn is_numeric(&self) -> bool {
         matches!(
             self,
-            Self::Int
-                | Self::Float
-                | Self::LiteralInt(_)
-                | Self::BigInt
-                | Self::Decimal
-                | Self::BigDecimal
+            Self::Int | Self::Float | Self::LiteralInt(_) | Self::Decimal | Self::BigDecimal
         )
     }
 
@@ -759,8 +754,6 @@ impl Type {
                     ..
                 },
             ) => a_identity.as_deref().unwrap_or(a) == b_identity.as_deref().unwrap_or(b),
-            // BigInt: only assignable to BigInt
-            (Self::BigInt, Self::BigInt) => true,
             _ => false,
         }
     }

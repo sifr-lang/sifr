@@ -467,139 +467,29 @@ fn test_type_check_source_surfaces_unreachable_statement_as_structured_warning()
 }
 
 #[test]
-fn test_type_check_source_surfaces_bigint_transition_warning() {
-    let diagnostics = type_check_source("def main():\n    value: bigint = 1\n");
+fn test_type_check_source_rejects_removed_bigint_surface() {
+    let cases = [
+        ("annotation", "def main():\n    value: bigint = 1\n"),
+        ("constructor", "def main():\n    value = bigint(1)\n"),
+        (
+            "generic bound",
+            "def identity[T: bigint](value: T) -> T:\n    return value\n",
+        ),
+        (
+            "runtime type object",
+            "def main():\n    value: int = 1\n    if isinstance(value, bigint):\n        print(\"legacy\")\n",
+        ),
+    ];
 
-    assert_eq!(diagnostics.len(), 1);
-    let diagnostic = &diagnostics[0];
-    assert_eq!(
-        diagnostic.code,
-        DiagnosticCode::INT_BIGINT_TRANSITION_ALIAS.code()
-    );
-    assert_eq!(diagnostic.severity, sifr_diagnostics::Severity::Warning);
-    assert_eq!(
-        diagnostic.message_template,
-        "bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values"
-    );
-    assert_eq!(
-        diagnostic.message,
-        "bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values"
-    );
-    assert!(diagnostic.args.is_empty());
-    let primary_span = diagnostic
-        .spans
-        .iter()
-        .find(|span| span.is_primary)
-        .expect("bigint transition warning should carry a primary span");
-    assert_eq!(primary_span.file.as_deref(), Some("main"));
-    assert_eq!(primary_span.line, Some(2));
-    assert!(primary_span.byte_end > primary_span.byte_start);
-}
-
-#[test]
-fn test_type_check_source_warns_for_bigint_constructor_call() {
-    assert_single_bigint_transition_warning(
-        "def main():\n    value = bigint(1)\n",
-        2,
-        "bigint constructor",
-    );
-}
-
-fn assert_single_bigint_transition_warning(source: &str, line: u32, context: &str) {
-    let diagnostics = type_check_source(source);
-
-    assert_eq!(diagnostics.len(), 1, "{context}");
-    let diagnostic = &diagnostics[0];
-    assert_eq!(
-        diagnostic.code,
-        DiagnosticCode::INT_BIGINT_TRANSITION_ALIAS.code(),
-        "{context}"
-    );
-    assert_eq!(
-        diagnostic.severity,
-        sifr_diagnostics::Severity::Warning,
-        "{context}"
-    );
-    let primary_span = diagnostic
-        .spans
-        .iter()
-        .find(|span| span.is_primary)
-        .unwrap_or_else(|| panic!("{context} should carry a primary span"));
-    assert_eq!(primary_span.file.as_deref(), Some("main"), "{context}");
-    assert_eq!(primary_span.line, Some(line), "{context}");
-    assert!(primary_span.byte_end > primary_span.byte_start, "{context}");
-}
-
-#[test]
-fn test_type_check_source_warns_for_bigint_typevar_constraint() {
-    assert_single_bigint_transition_warning(
-        "from typing import TypeVar\n\nT = TypeVar(\"T\", bigint)\n",
-        3,
-        "positional TypeVar constraint",
-    );
-}
-
-#[test]
-fn test_type_check_source_warns_for_bigint_typevar_bound_keyword() {
-    assert_single_bigint_transition_warning(
-        "from typing import TypeVar\n\nT = TypeVar(\"T\", bound=bigint)\n",
-        3,
-        "TypeVar bound keyword",
-    );
-}
-
-#[test]
-fn test_type_check_source_warns_for_bigint_typevar_constraints_tuple_keyword() {
-    assert_single_bigint_transition_warning(
-        "from typing import TypeVar\n\nT = TypeVar(\"T\", constraints=(bigint, str))\n",
-        3,
-        "TypeVar constraints tuple keyword",
-    );
-}
-
-#[test]
-fn test_type_check_source_warns_for_bigint_typevar_constraints_name_keyword() {
-    assert_single_bigint_transition_warning(
-        "from typing import TypeVar\n\nT = TypeVar(\"T\", constraints=bigint)\n",
-        3,
-        "TypeVar constraints name keyword",
-    );
-}
-
-#[test]
-fn test_type_check_source_warns_for_bigint_pep695_bound() {
-    assert_single_bigint_transition_warning(
-        "def identity[T: bigint](value: T) -> T:\n    return value\n",
-        1,
-        "PEP 695 bound",
-    );
-}
-
-#[test]
-fn test_type_check_source_warns_for_bigint_pep695_tuple_constraint() {
-    assert_single_bigint_transition_warning(
-        "def identity[T: (bigint, str)](value: T) -> T:\n    return value\n",
-        1,
-        "PEP 695 tuple constraint",
-    );
-}
-
-#[test]
-fn test_type_check_source_warns_once_for_bigint_class_pep695_bound() {
-    assert_single_bigint_transition_warning(
-        "class Box[T: bigint]:\n    value: T\n",
-        1,
-        "class PEP 695 bound",
-    );
-}
-
-#[test]
-fn test_type_check_source_warns_for_bigint_isinstance_target() {
-    assert_single_bigint_transition_warning(
-        "def main():\n    value: int = 1\n    if isinstance(value, bigint):\n        print(\"legacy\")\n",
-        3,
-        "isinstance target",
-    );
+    for (context, source) in cases {
+        let diagnostics = type_check_source(source);
+        assert!(
+            diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.severity == sifr_diagnostics::Severity::Error),
+            "removed bigint {context} must be rejected: {diagnostics:?}"
+        );
+    }
 }
 
 #[test]

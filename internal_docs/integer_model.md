@@ -68,7 +68,7 @@ Reserve `int128` and `uint128` as future fixed-width type names. Rust supports `
 
 The reserved-width diagnostic is reached after ordinary annotation name resolution. Existing Sifr type names are shadowable, so a user-defined type variable, type alias, or class named `int128` or `uint128` resolves to that user definition instead of emitting `SIFR-INT-0003`. INT-2B should keep this general shadowing behavior rather than create a special anti-shadowing rule only for future integer widths. A later language-wide reserved-identifier policy may tighten this consistently across all builtin and reserved names.
 
-`bigint` should not remain a separate user-facing numeric type. If implementation staging needs a local transition, `bigint` may exist only as a temporary parser/type alias with deprecation diagnostics and no public documentation.
+There is no separate user-facing arbitrary-precision integer type. The former transition spelling is an unknown type or callable and follows the ordinary name-resolution diagnostics.
 
 ## Literal and Conversion Rules
 
@@ -488,7 +488,6 @@ Reserve the `SIFR-INT-*` family for integer-model diagnostics:
 | `SIFR-INT-0008` | fixed-width array/tensor/dataframe arithmetic missing overflow policy |
 | `SIFR-INT-0009` | JSON/web-safe integer serialization policy failure |
 | `SIFR-INT-0010` | bytearray/bytes construction or mutation requires fitting `uint8` |
-| `SIFR-INT-0011` | temporary `bigint` transition alias or stale public `bigint` usage |
 
 `SIFR-INT-0009` is active. The compiler-owned package-neutral
 `JsonIntegerBoundaryDescriptor` verifier and its source declaration surface are documented in
@@ -530,7 +529,7 @@ The existing implementation assumes source-level `int` has a Rust signed-64-bit 
 1. Replace source-level `int` codegen from the legacy signed-64-bit representation to canonical `SifrInt`.
 2. Add `Type::Int8`, `Type::Int16`, `Type::Int32`, `Type::Int64`, `Type::UInt8`, `Type::UInt16`, `Type::UInt32`, and `Type::UInt64`.
 3. Change `LiteralInt` from `i64` to an arbitrary-precision literal representation, preferably a normalized decimal string or `num_bigint::BigInt` in type-system internals.
-4. Remove the user-facing need for `Type::BigInt`; keep only a temporary compatibility alias if implementation staging needs it.
+4. Keep arbitrary precision behind `Type::Int`; do not add a second public integer type variant.
 5. Update numeric operator type checking so ordinary fixed-width arithmetic promotes to `int`.
 6. Add explicit fallible narrowing constructors and fixed-width checked/wrapping/saturating/overflowing APIs.
 7. Add array/tensor/dataframe dtype arithmetic rules so scalar promotion does not infect fixed-width columnar kernels.

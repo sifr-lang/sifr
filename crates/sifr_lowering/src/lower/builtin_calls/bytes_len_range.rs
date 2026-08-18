@@ -5,6 +5,7 @@ use super::{
     reject_wrong_positional_count, str, value_error_type, DiagnosticCode, Expr, ExprAttribute,
     ExprCall, HirExpr, IterationCapability, LowerCtx, Ranged, RevealTypeDiagnostic, Type,
 };
+use crate::lower::typing_and_functions::resolve_annotation_expr;
 use sifr_ir::CompilerIntrinsicId;
 pub(in crate::lower) fn lower_bytes_type_factory_call(
     attr: &ExprAttribute,
@@ -182,13 +183,9 @@ pub(in crate::lower) fn lower_isinstance_call(
         return None;
     }
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
+    resolve_annotation_expr(&call.arguments.args[1], ctx);
     let type_name = match &call.arguments.args[1] {
-        Expr::Name(n) => {
-            if n.id.as_str() == "bigint" {
-                ctx.warn_bigint_transition_alias(n.range());
-            }
-            n.id.to_string()
-        }
+        Expr::Name(n) => n.id.to_string(),
         _ => "unknown".to_string(),
     };
     Some(HirExpr::Call {

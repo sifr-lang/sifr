@@ -67,7 +67,7 @@ The initial audit found these Sifr-owned compatibility surfaces:
 
 Primary evidence files:
 
-- `verification/areas/core_language/data/integer_model/bigint_transition_quarantine.md`
+- `verification/areas/core_language/data/integer_model/implementation_inventory.md`
 - `plans/phases/07_stdlib_parity.md`
 - `plans/issues/archive/ad-hoc-first-class-bytes-and-binary-surface-foundation.md`
 - `plans/issues/archive/milestone_stdlib_classes.md`

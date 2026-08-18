@@ -11,7 +11,6 @@ fn lookup_named_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
         "bool" => Some(Type::Bool),
         "str" => Some(Type::Str),
         "None" => Some(Type::None),
-        "bigint" => Some(Type::BigInt),
         _ => ctx
             .scope
             .lookup_type_alias(name)
@@ -105,7 +104,7 @@ fn typevar_satisfies_spec(tv_name: &str, target_spec: &str, ctx: &LowerCtx) -> b
 
 fn type_satisfies_comparable_bound(ty: &Type, ctx: &LowerCtx) -> bool {
     match ty.resolve_alias() {
-        Type::Int | Type::Float | Type::Str | Type::Bool | Type::BigInt => true,
+        Type::Int | Type::Float | Type::Str | Type::Bool => true,
         Type::Tuple(elements) => elements
             .iter()
             .all(|element| type_satisfies_bound(element, "Comparable", ctx)),
@@ -329,7 +328,6 @@ fn supports_total_order(ty: &Type) -> bool {
         | Type::LiteralInt(_)
         | Type::LiteralStr(_)
         | Type::LiteralBool(_)
-        | Type::BigInt
         | Type::Decimal
         | Type::BigDecimal => true,
         Type::List(element) => supports_total_order(element),
@@ -449,7 +447,7 @@ pub(in crate::lower) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &Lower
     }
     match bound {
         "Comparable" => type_satisfies_comparable_bound(ty, ctx),
-        "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str | Type::BigInt),
+        "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str),
         "Hashable" => supports_hash_key_in_context(ty, ctx),
         "Structural" => supports_structural_bridge_type(ty, ctx),
         "StaticProgram" => supports_static_program_type(ty, ctx),

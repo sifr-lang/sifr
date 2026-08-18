@@ -26,10 +26,6 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                 reserved_integer_width_name(ctx, &name.id, name.range());
                 return Type::Any;
             }
-            if name.id.as_str() == "bigint" {
-                ctx.warn_bigint_transition_alias(name.range());
-                return Type::BigInt;
-            }
             resolve_type_annotation(&name.id).unwrap_or_else(|| {
                 unknown_type(ctx, &name.id, name.range());
                 Type::Any

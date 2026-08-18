@@ -174,7 +174,7 @@ impl RustEmitter {
                 receiver, method, ..
             } if matches!(
                 method.as_str(),
-                "floor_div_known_nonzero" | "floor_mod_known_nonzero"
+                "floor_div_known_nonzero" | "floor_mod_known_nonzero" | "pow"
             ) =>
             {
                 self.is_sifr_int_expr(receiver)

@@ -73,30 +73,6 @@ fn lowers_simple_while_with_int_truthiness_name_condition() {
 }
 
 #[test]
-fn lowers_simple_while_with_bigint_truthiness_name_condition() {
-    let while_stmt = HirStmt::While {
-        condition: HirExpr::Name {
-            name: "count".to_string(),
-            binding_id: None,
-            ty: Type::BigInt,
-        },
-        body: vec![HirStmt::Pass],
-        else_body: None,
-    };
-
-    let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
-        .expect("while with bigint truthiness condition lowered");
-    assert_eq!(lowered.len(), 1);
-    assert!(matches!(
-        lowered[0],
-        RustStmt::While {
-            cond: RustExpr::BinOp { ref op, .. },
-            ..
-        } if op == "!="
-    ));
-}
-
-#[test]
 fn lowers_simple_while_with_not_bool_name_condition() {
     let while_stmt = HirStmt::While {
         condition: HirExpr::UnaryOp {
@@ -145,34 +121,6 @@ fn lowers_simple_while_with_not_int_truthiness_name_condition() {
 
     let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
         .expect("while with not-int truthiness condition lowered");
-    assert_eq!(lowered.len(), 1);
-    assert!(matches!(
-        lowered[0],
-        RustStmt::While {
-            cond: RustExpr::BinOp { ref op, .. },
-            ..
-        } if op == "=="
-    ));
-}
-
-#[test]
-fn lowers_simple_while_with_not_bigint_truthiness_name_condition() {
-    let while_stmt = HirStmt::While {
-        condition: HirExpr::UnaryOp {
-            op: "not".to_string(),
-            operand: Box::new(HirExpr::Name {
-                name: "count".to_string(),
-                binding_id: None,
-                ty: Type::BigInt,
-            }),
-            ty: Type::Bool,
-        },
-        body: vec![HirStmt::Pass],
-        else_body: None,
-    };
-
-    let lowered = try_lower_simple_stmt(&while_stmt, false, &HashSet::new(), &HashSet::new())
-        .expect("while with not-bigint truthiness condition lowered");
     assert_eq!(lowered.len(), 1);
     assert!(matches!(
         lowered[0],

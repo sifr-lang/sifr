@@ -754,7 +754,7 @@ mod tests {
         std::fs::write(
             dir.join("helper.sifr"),
             "from sifr.statistics import mean\n\n\
-def helper() -> bigint:\n    return bigint(1)\n",
+def helper() -> int:\n    return 1\n",
         )
         .expect("helper should be written");
 

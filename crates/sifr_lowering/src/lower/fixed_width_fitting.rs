@@ -60,8 +60,7 @@ pub(in crate::lower) fn validate_annotated_constant_initializer(
     }
 
     let value_ty = value.ty();
-    let is_int_to_bigint = value_ty == &Type::Int && declared_type == &Type::BigInt;
-    if !is_int_to_bigint && !value_ty.is_assignable_to(declared_type) {
+    if !value_ty.is_assignable_to(declared_type) {
         ctx.error_with_code_at(
             DiagnosticCode::TYPE_MISMATCH,
             format!(

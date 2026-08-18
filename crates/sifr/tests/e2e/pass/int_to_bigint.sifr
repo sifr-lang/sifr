@@ -1,6 +1,0 @@
-# TEMPORARY TRANSITION FIXTURE: exercises the public bigint alias until alias removal.
-def main():
-    n: int = 42
-    b: bigint = bigint(n)
-    assert str(b) == '42'
-    assert str(b + bigint(8)) == '50'

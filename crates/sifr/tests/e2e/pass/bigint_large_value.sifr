@@ -1,9 +1,0 @@
-# TEMPORARY TRANSITION FIXTURE: exercises the public bigint alias until alias removal.
-def main():
-    # 10^20 is larger than i64::MAX (9.2 * 10^18)
-    x: bigint = bigint(10) ** 20
-    assert str(x) == '100000000000000000000'
-    
-    # 2^100
-    y: bigint = bigint(2) ** 100
-    assert str(y) == '1267650600228229401496703205376'

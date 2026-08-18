@@ -208,7 +208,7 @@ fn test_check_project_preserves_imported_generic_function_bounds() {
     let dir = mktemp_dir("generic_function_bounds");
     std::fs::write(
         dir.join("helper.sifr"),
-        "def identity[T: bigint](value: T) -> T:\n    return value\n",
+        "def identity[T: Hashable](value: T) -> T:\n    return value\n",
     )
     .expect("helper should be written");
     std::fs::write(
@@ -218,7 +218,7 @@ fn test_check_project_preserves_imported_generic_function_bounds() {
     .expect("facade should be written");
     std::fs::write(
         dir.join("main.sifr"),
-        "from facade import public_identity as identity\n\ndef main():\n    identity(\"wrong\")\n",
+        "from facade import public_identity as identity\n\ndef main():\n    identity([1, 2, 3])\n",
     )
     .expect("main should be written");
 
@@ -229,7 +229,7 @@ fn test_check_project_preserves_imported_generic_function_bounds() {
                 || error.message.contains("does not satisfy constraint")
                 || error
                     .message
-                    .contains("does not implement protocol 'bigint'")
+                    .contains("does not implement protocol 'Hashable'")
         }),
         "generic import bounds should reject invalid specialization: {errors:?}"
     );

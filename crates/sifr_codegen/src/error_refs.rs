@@ -147,7 +147,6 @@ fn collect_type_error_refs(
         | Type::TypeVar(_)
         | Type::PythonArrow(_)
         | Type::PythonDlpackStream
-        | Type::BigInt
         | Type::Decimal
         | Type::BigDecimal => {}
     }

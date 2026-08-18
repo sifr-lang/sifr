@@ -629,15 +629,16 @@ pub(super) fn test_protocol_bound_forwarding_accepts_conforming_typevar() {
 }
 
 #[test]
-pub(super) fn test_protocol_bound_forwarding_rejects_unknown_bound() {
+pub(super) fn test_generic_declaration_rejects_unknown_bound() {
     let result = lower_source(
         "def take_missing[T: MissingBound](x: T) -> T:\n    return x\n\ndef relay_missing[U: MissingBound](x: U) -> U:\n    return take_missing(x)\n\ndef main():\n    print(1)\n",
     );
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("does not implement protocol 'MissingBound'")));
+    assert!(errors.iter().any(|e| {
+        e.code == Some(DiagnosticCode::NAME_UNKNOWN_TYPE)
+            && e.message == "unknown type: 'MissingBound'"
+    }));
 }
 
 #[test]

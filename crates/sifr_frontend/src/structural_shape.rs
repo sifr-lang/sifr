@@ -133,7 +133,6 @@ fn describe_node(
     match ty {
         Type::Int => primitive("int"),
         Type::FixedInt(kind) => ShapeNode::FixedInteger(kind.source_name().to_string()),
-        Type::BigInt => primitive("bigint"),
         Type::Float => primitive("float"),
         Type::Bool => primitive("bool"),
         Type::Str => primitive("str"),

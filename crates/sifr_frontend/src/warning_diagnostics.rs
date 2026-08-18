@@ -51,13 +51,6 @@ fn warning_diagnostic(
             Vec::new(),
             *primary_range,
         ),
-        LoweringWarningDiagnostic::BigIntTransitionAlias { primary_range } => (
-            DiagnosticCode::INT_BIGINT_TRANSITION_ALIAS,
-            "bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values".to_string(),
-            "bigint is a temporary transition alias; use int for exact integers or an explicit fixed-width type for representation-sensitive values",
-            Vec::new(),
-            *primary_range,
-        ),
         LoweringWarningDiagnostic::MetaPackageIssue {
             package,
             reason_code,

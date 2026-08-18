@@ -534,26 +534,3 @@ pub(super) fn resolve_enum_method_type(
         }
     }
 }
-
-pub(super) fn resolve_bigint_method_type(
-    method: &str,
-    args: &[HirExpr],
-    arg_ranges: &[TextRange],
-    method_range: TextRange,
-    ctx: &mut LowerCtx,
-) -> Option<Type> {
-    if method == "clone" {
-        if !args.is_empty() {
-            reject_no_method_args(ctx, "bigint.clone", arg_ranges, method_range);
-            return None;
-        }
-        Some(Type::BigInt)
-    } else {
-        ctx.error_with_code_at(
-            DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE,
-            format!("type 'bigint' has no method '{method}'"),
-            method_range,
-        );
-        None
-    }
-}

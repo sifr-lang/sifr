@@ -79,7 +79,7 @@ impl RustEmitter {
             }
             if matches!(
                 crate::resolve_alias_type_for_plain_call(&option_inner_ty),
-                Type::Int | Type::LiteralInt(_) | Type::BigInt | Type::Float
+                Type::Int | Type::LiteralInt(_) | Type::Float
             ) {
                 let Some(zero_literal) =
                     Self::zero_literal_for_numeric_truthiness_type_for_ir(&option_inner_ty)
@@ -272,16 +272,6 @@ impl RustEmitter {
             Type::Int | Type::LiteralInt(_) => Some(crate::RustExpr::Cast {
                 expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
                 ty: crate::RustType::I64,
-            }),
-            Type::BigInt => Some(crate::RustExpr::FnCall {
-                func: Box::new(crate::RustExpr::Path(vec![
-                    "BigInt".to_string(),
-                    "from".to_string(),
-                ])),
-                args: vec![crate::RustExpr::Cast {
-                    expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                    ty: crate::RustType::I64,
-                }],
             }),
             Type::Float => Some(crate::RustExpr::Cast {
                 expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Float(0.0))),

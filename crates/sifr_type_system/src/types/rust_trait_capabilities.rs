@@ -25,7 +25,6 @@ impl Type {
             | Self::LiteralStr(_)
             | Self::LiteralBool(_)
             | Self::Enum { .. }
-            | Self::BigInt
             | Self::Decimal => true,
             Self::Tuple(elements) | Self::Union(elements) => elements
                 .iter()
@@ -169,7 +168,6 @@ impl Type {
             | Self::LiteralStr(_)
             | Self::LiteralBool(_)
             | Self::Enum { .. }
-            | Self::BigInt
             | Self::Decimal
             | Self::BigDecimal => true,
             Self::Union(elements) => {

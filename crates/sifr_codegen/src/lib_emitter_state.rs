@@ -1,7 +1,7 @@
 use super::{
     body_contains_await, collect_locally_defined_vars, collect_mutated_vars_with_sigs,
     collect_referenced_vars_with_types, default_param_convention, hir_analysis,
-    is_simple_stmt_candidate, module_uses_bigint, resolve_alias_type_for_plain_call,
+    is_simple_stmt_candidate, resolve_alias_type_for_plain_call,
     try_lower_simple_stmt_with_scope_result_and_bindings, Cell, ClassScope, HashMap, HashSet,
     HirExpr, HirFunction, HirModule, HirStmt, LoweringStats, NestedFnCapture, ParamConvention,
     RefCell, RustExpr, RustItem, RustLiteral, RustStmt, ScopeContext, Type,
@@ -194,7 +194,6 @@ pub(crate) struct RuntimeNeeds {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) enum RuntimeNeed {
     FileHandles,
-    BigInt,
 }
 
 impl RuntimeNeeds {
@@ -208,10 +207,6 @@ impl RuntimeNeeds {
 
     pub(crate) fn file_handles(&self) -> bool {
         self.contains(RuntimeNeed::FileHandles)
-    }
-
-    pub(crate) fn bigint(&self) -> bool {
-        self.contains(RuntimeNeed::BigInt)
     }
 }
 
@@ -364,11 +359,6 @@ impl RustEmitter {
     ) {
         let saved_module_name = self.current_module_name.clone();
         self.current_module_name = module_name.map(str::to_string);
-
-        // Pre-scan: detect bigint usage
-        if module_uses_bigint(module) {
-            self.runtime_needs.require(RuntimeNeed::BigInt);
-        }
 
         self.prescan_module_metadata(module);
 

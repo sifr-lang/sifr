@@ -1,0 +1,11 @@
+def main():
+    beyond_i64: int = 10 ** 20
+    much_larger: int = 10 ** 30
+    assert str(beyond_i64) == "100000000000000000000"
+    assert str(much_larger) == "1000000000000000000000000000000"
+    assert str(beyond_i64 + much_larger) == "1000000000100000000000000000000"
+    assert much_larger > beyond_i64
+
+    labels: dict[int, str] = {1: "one", 2: "two"}
+    assert labels[1] == "one"
+    assert labels[2] == "two"
