@@ -13,6 +13,8 @@ def adapt_contract(
     issues: list[PlannedIssue[ContractDescriptor]] = []
     validation_alias: str | ContractAlias | None = None
     threshold: int | float | None = None
+    direct_alias: str | ContractAlias | None = ContractAlias(["direct"])
+    direct_alias = "literal"
     for item in declaration.declaration.items:
         if item.kind == "field":
             declared_type: str | None = item.declared_type
@@ -73,7 +75,9 @@ class Contract:
 
 @class_descriptor("fixture.contract", "adapt_contract")
 def contract_config(enabled: bool) -> ContractDescriptor:
-    return ContractDescriptor("class", enabled, "required", None, None)
+    return ContractDescriptor(
+        "class", enabled, "required", None, None, None, None, 1
+    )
 
 
 @field_descriptor("fixture.contract", "adapt_contract")
@@ -86,6 +90,11 @@ def contract_field(
     if default is not None:
         return ContractDescriptor("field", False, "const", default, None)
     return ContractDescriptor("field", False, "required", None, None)
+
+
+@const_eval
+def no_contract_alias() -> str | ContractAlias | None:
+    return None
 
 
 @const_eval
