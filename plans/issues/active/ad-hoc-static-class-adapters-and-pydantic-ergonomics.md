@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-18. M0-M5 are complete; M6 is next.
+Status: active on 2026-08-18. M0-M6 are complete; M7 is next.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -768,7 +768,6 @@ class identity rather than a bare name; and make slot identity explicitly
 self-describing for fallibility. These were non-blocking Opus suggestions.
 The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
 outside this phase.
-Next action: implement M6 structural public values and output mappings.
 
 ### M6: Structural Public Values and Output Mappings
 
@@ -797,6 +796,48 @@ Acceptance criteria:
 
 Exit gate: an external package can expose safe specialized public values and
 structural model output through package-neutral bridge contracts.
+
+State: complete
+PR: [`sifr-lang/sifr#3262`](https://github.com/sifr-lang/sifr/pull/3262)
+Base SHA: `9dd1b07b7b5820f3805e49cde3b2b8cfe7951618`
+Candidate SHA: `a12b2bbf63eb9b31abfa3210352753442c38ec2e`
+Merge SHA: `f25054c6b833d9654994cca84f3a81912cac1a08`
+Changed paths: the runtime `StructuralMapping<T>` and `MappedValue<T, M>`
+substrate; opaque-class mapping declarations, validation, probing, imports,
+and re-exports; mapped bridge storage and dynamic identity code generation;
+late canonical stdlib structural implementations; structural architecture
+documentation; focused runtime, lowering, codegen, frontend, and driver tests;
+and the synthetic source-and-installed structural mapping fixture.
+Validation: workspace clippy; formatting and diff checks; runtime tests (77
+passed); structural codegen tests (28 passed); structural driver probe and
+clone-policy tests; the ignored generated source-and-installed runtime test;
+all 989 lowering tests other than the pre-existing stale unknown-parent
+diagnostic assertion; the 900-line file-size guardrail (`PASS`, 3158 files);
+and HIR maintainability all passed. M6's rust-interop matrix,
+compatibility-matrix, and stable-candidate checks passed; the aggregate area
+command separately reported the out-of-scope pre-v1 method-slot placeholder.
+The exact-SHA Opus review returned `SATISFIED` with no blocking finding and no
+remediation round
+([evidence](https://github.com/sifr-lang/sifr/pull/3262#issuecomment-5331127082)).
+The create-PR and merge gates were each attempted exactly once on the unchanged
+candidate. Both stopped at the out-of-scope pre-v1 verification-taxonomy
+mechanism, which broadly flagged its own inventory plus already-merged
+phase/contract terminology; neither gate was repeated
+([evidence](https://github.com/sifr-lang/sifr/pull/3262#issuecomment-5331151225)).
+The specialized-public-value substrate from
+[`pydantic-sifr#27`](https://github.com/sifr-lang/pydantic-sifr/issues/27) was
+transferred here and that issue was closed. Pydantic-specific URL,
+multi-host-URL, and compiled-pattern policy remains with the later package
+milestone.
+Deferred follow-up: M12 must add multi-module coverage for late stdlib
+structural implementations; make same-path mapping probe failures structured;
+make local malformed-mapping marking match exported marking; replace the
+stdlib identity-prefix heuristic with explicit origin; document or encode the
+mapped-value `Send`/`Sync` backstop; and preserve file-size headroom in the
+three 899-line modules. These were non-blocking Opus suggestions.
+The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
+outside this phase.
+Next action: implement M7 attached package APIs and owner types.
 
 ### M7: Attached Package APIs and Owner Types
 
