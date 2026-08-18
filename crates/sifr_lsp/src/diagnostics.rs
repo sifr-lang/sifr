@@ -134,7 +134,7 @@ pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResul
             .load_diagnostics(uri)
             .iter()
             .cloned()
-            .map(|diagnostic| conversion::diagnostic(diagnostic, &source, position_encoding))
+            .map(|diagnostic| conversion::diagnostic(diagnostic, uri, &source, position_encoding))
             .collect::<LspResult<Vec<_>>>();
     }
     let mut diagnostics = session.with_document_analysis(uri, |snapshot, host, file, source| {
@@ -144,7 +144,7 @@ pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResul
             .into_value();
         diagnostics
             .into_iter()
-            .map(|diagnostic| conversion::diagnostic(diagnostic, source, position_encoding))
+            .map(|diagnostic| conversion::diagnostic(diagnostic, uri, source, position_encoding))
             .collect::<LspResult<Vec<_>>>()
     })?;
     match session.python_declaration_snapshot(uri) {
@@ -152,7 +152,9 @@ pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResul
             python
                 .diagnostics
                 .into_iter()
-                .map(|diagnostic| conversion::diagnostic(diagnostic, &source, position_encoding))
+                .map(|diagnostic| {
+                    conversion::diagnostic(diagnostic, uri, &source, position_encoding)
+                })
                 .collect::<LspResult<Vec<_>>>()?,
         ),
         Err(error) => session.trace(

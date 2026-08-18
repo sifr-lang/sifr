@@ -7,6 +7,8 @@
 
 mod cache_keys;
 mod callable_exports;
+mod class_declarations;
+pub use class_declarations::SourceOriginId;
 mod const_specialization;
 pub use const_specialization::*;
 mod const_evaluator;
@@ -32,9 +34,11 @@ pub use graph_cache_and_queries::*;
 mod hir_views;
 mod module_export_storage;
 mod module_signatures;
+mod package_issues;
 mod query_diagnostic_rendering;
 pub(crate) use query_diagnostic_rendering::{
     diagnostic_with_code, diagnostic_with_source_range, diagnostic_with_source_range_args_help,
+    diagnostic_with_source_ranges_args_help,
 };
 mod warning_diagnostics;
 pub use warning_diagnostics::{reveal_type_diagnostics, warning_diagnostics};

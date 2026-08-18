@@ -27,11 +27,57 @@ class ConstIssueTemplate:
     argument_names: list[str]
 
 
+class SourceOrigin:
+    pass
+
+
+class ClassDecoratorDeclaration:
+    name: str
+    origin: SourceOrigin
+    argument_origins: list[SourceOrigin]
+
+
+class ClassParameterDeclaration:
+    name: str
+    origin: SourceOrigin
+    annotation_origin: SourceOrigin | None
+
+
+class ClassDeclarationItem:
+    order: int
+    kind: str
+    name: str
+    origin: SourceOrigin
+    annotation_origin: SourceOrigin | None
+    value_origin: SourceOrigin | None
+    return_origin: SourceOrigin | None
+    declared_type: str | None
+    signature: str | None
+    value_argument_origins: list[SourceOrigin]
+    decorators: list[ClassDecoratorDeclaration]
+    parameters: list[ClassParameterDeclaration]
+
+
+class ClassDeclaration:
+    identity: str
+    name: str
+    origin: SourceOrigin
+    decorators: list[ClassDecoratorDeclaration]
+    items: list[ClassDeclarationItem]
+
+
+class ConstIssueLabel:
+    origin: SourceOrigin
+    message: str
+
+
 class ConstPackageIssue[A]:
     package: str
     reason_code: str
     severity: str
     arguments: A
+    primary_origin: SourceOrigin
+    labels: list[ConstIssueLabel]
     notes: list[str]
 
 

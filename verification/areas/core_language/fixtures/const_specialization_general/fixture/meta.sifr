@@ -1,24 +1,28 @@
-from sifr.meta import ConstPackageIssue, ConstSpecializationOutcome
+from sifr.meta import ClassDeclaration, ConstIssueLabel, ConstPackageIssue, ConstSpecializationOutcome
 
 
 class ShapeArguments:
     identity: str
 
 
+class ShapeInput:
+    canonical_identity: str
+    declaration: ClassDeclaration
+
+
 @const_eval
 @metadata("sifr.meta.issue_template", ("shape_derived", ["identity"]))
-def describe(shape: dict[str, str]) -> ConstSpecializationOutcome[str, ShapeArguments]:
-    identity: str | None = shape["canonical_identity"]
-    if identity is not None:
-        arguments: ShapeArguments = ShapeArguments("concrete shape")
-        warning: ConstPackageIssue[ShapeArguments] = ConstPackageIssue(
-            "fixture.meta",
-            "shape_derived",
-            "warning",
-            arguments,
-            ["static description derived from the concrete structural shape"],
-        )
-        warnings: list[ConstPackageIssue[ShapeArguments]] = [warning]
-        return ConstSpecializationOutcome("produced", identity, warnings)
-    failures: list[ConstPackageIssue[ShapeArguments]] = []
-    return ConstSpecializationOutcome("failed", None, failures)
+def describe(shape: ShapeInput) -> ConstSpecializationOutcome[str, ShapeArguments]:
+    arguments: ShapeArguments = ShapeArguments("concrete shape")
+    labels: list[ConstIssueLabel] = []
+    warning: ConstPackageIssue[ShapeArguments] = ConstPackageIssue(
+        "fixture.meta",
+        "shape_derived",
+        "warning",
+        arguments,
+        shape.declaration.origin,
+        labels,
+        ["static description derived from the concrete structural shape"],
+    )
+    warnings: list[ConstPackageIssue[ShapeArguments]] = [warning]
+    return ConstSpecializationOutcome("produced", shape.canonical_identity, warnings)

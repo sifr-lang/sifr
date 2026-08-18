@@ -1,24 +1,28 @@
+use crate::package_issues::{
+    evaluation_error, issue_templates, replace_unknown_package, SpecializationDiagnostic,
+    SpecializationDiagnostics,
+};
 use crate::specialization_support::{malformed, method_slot_diagnostic, static_program_value};
 use crate::{
-    decode_const_specialization_outcome, describe_type_with_externals,
-    verify_json_integer_boundary, ConstEvalError, ConstIssueTemplate, DeterministicConstEvaluator,
+    decode_const_specialization_outcome, describe_type_with_externals, package_note,
+    verify_json_integer_boundary, ConstIssueSeverity, DeterministicConstEvaluator,
     JsonIntegerBoundaryDescriptor, JsonIntegerKind, JsonIntegerProfile, JsonIntegerRepresentation,
 };
-use ruff_text_size::TextRange;
-use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_lowering::{
     ExternalDefs, HirDiagnostic, HirModule, LoweringResult, LoweringWarningDiagnostic,
     StaticSpecializationOutput,
 };
 use sifr_type_system::Type;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 
 pub(crate) fn run_specializations(
     module_name: &str,
     result: &mut LoweringResult,
     external_defs: &ExternalDefs,
-) -> Result<(), Vec<HirDiagnostic>> {
-    let mut errors = verify_integer_boundaries(module_name, result);
+    class_declarations: &crate::class_declarations::ClassDeclarationSet,
+) -> Result<(), Vec<SpecializationDiagnostic>> {
+    let mut errors =
+        SpecializationDiagnostics::from_hir(verify_integer_boundaries(module_name, result));
     for request in result.specialization_requests.clone() {
         let Some(class) = result
             .module
@@ -58,8 +62,18 @@ pub(crate) fn run_specializations(
         }
         let described_shape =
             describe_type_with_externals(module_name, &target_type, result, external_defs);
-        let shape = described_shape.to_const_value();
+        let mut shape = described_shape.to_const_value();
         let canonical_shape = crate::structural_shape::canonical_value(&shape);
+        let Some(declaration) = class_declarations.get(&request.owner) else {
+            errors.push(malformed(
+                &request.package_module,
+                "class_declaration",
+                "specialization target has no pre-finalization declaration",
+                request.range,
+            ));
+            continue;
+        };
+        declaration.attach_to_shape(&mut shape, result);
         let Some(functions) = external_defs.const_functions.get(&request.package_module) else {
             errors.push(malformed(
                 &request.package_module,
@@ -104,7 +118,11 @@ pub(crate) fn run_specializations(
                 continue;
             }
         };
-        let outcome = match decode_const_specialization_outcome(evaluated, request.range) {
+        let outcome = match decode_const_specialization_outcome(
+            evaluated,
+            request.range,
+            declaration.origins(),
+        ) {
             Ok(outcome) => outcome,
             Err(mut diagnostics) => {
                 for diagnostic in &mut diagnostics {
@@ -134,8 +152,19 @@ pub(crate) fn run_specializations(
                                 continue;
                             }
                         };
+                    let static_value = match static_program_value(value) {
+                        Ok(value) => value,
+                        Err(problem) => {
+                            errors.push(malformed(
+                                &request.package_module,
+                                "static_program_value",
+                                problem,
+                                request.range,
+                            ));
+                            continue;
+                        }
+                    };
                     let canonical_value = crate::structural_shape::canonical_value(value);
-                    let static_value = static_program_value(value);
                     let structural_contract_version = sifr_structural_identity::ALGORITHM_VERSION;
                     let program_identity = sifr_structural_identity::static_program_identity(
                         structural_contract_version,
@@ -162,25 +191,25 @@ pub(crate) fn run_specializations(
                             method_slot_context,
                         });
                 }
-                for diagnostic in validated.diagnostics {
-                    match diagnostic.code {
-                        Some(DiagnosticCode::META_SPECIALIZATION_WARNING) => {
+                for issue in validated.issues {
+                    match issue.severity {
+                        ConstIssueSeverity::Warning => {
+                            let related_ranges = issue
+                                .labels
+                                .iter()
+                                .map(|label| (label.span, label.message.clone()))
+                                .collect();
                             result
                                 .warnings
                                 .push(LoweringWarningDiagnostic::MetaPackageIssue {
-                                    package: diagnostic_arg(&diagnostic, "package"),
-                                    reason_code: diagnostic_arg(&diagnostic, "reason_code"),
-                                    help: diagnostic.help,
-                                    primary_range: diagnostic.primary_range,
+                                    package: issue.package.clone(),
+                                    reason_code: issue.reason_code.clone(),
+                                    help: package_note(&issue),
+                                    primary_range: Some(issue.primary_span),
+                                    related_ranges,
                                 });
                         }
-                        Some(DiagnosticCode::META_SPECIALIZATION_FATAL) => errors.push(diagnostic),
-                        _ => errors.push(malformed(
-                            &request.package_module,
-                            "diagnostic_mapping",
-                            "specialization produced a non-metaprogramming diagnostic",
-                            request.range,
-                        )),
+                        ConstIssueSeverity::Fatal => errors.push_package(issue),
                     }
                 }
             }
@@ -189,7 +218,7 @@ pub(crate) fn run_specializations(
     if errors.is_empty() {
         Ok(())
     } else {
-        Err(errors)
+        Err(errors.into_vec())
     }
 }
 
@@ -290,77 +319,6 @@ fn verify_integer_boundaries(module_name: &str, result: &LoweringResult) -> Vec<
     errors
 }
 
-fn issue_templates(
-    external_defs: &ExternalDefs,
-    package: &str,
-    function: &str,
-) -> Vec<ConstIssueTemplate> {
-    external_defs
-        .declaration_metadata
-        .get(package)
-        .into_iter()
-        .flatten()
-        .filter(|metadata| metadata.owner == function && metadata.key == "sifr.meta.issue_template")
-        .filter_map(|metadata| {
-            let value = crate::structural_shape::const_value_from_hir(&metadata.value)?;
-            let crate::ConstValue::Tuple(mut parts) = value else {
-                return None;
-            };
-            if parts.len() != 2 {
-                return None;
-            }
-            let crate::ConstValue::List(arguments) = parts.pop()? else {
-                return None;
-            };
-            let crate::ConstValue::String(reason_code) = parts.pop()? else {
-                return None;
-            };
-            let argument_names = arguments
-                .into_iter()
-                .map(|argument| match argument {
-                    crate::ConstValue::String(argument) => Some(argument),
-                    _ => None,
-                })
-                .collect::<Option<BTreeSet<_>>>()?;
-            Some(ConstIssueTemplate {
-                package: package.to_string(),
-                reason_code,
-                argument_names,
-            })
-        })
-        .collect()
-}
-
-fn evaluation_error(package: &str, error: &ConstEvalError, range: TextRange) -> HirDiagnostic {
-    malformed(
-        package,
-        "const_evaluation",
-        format!("{:?}: {}", error.kind, error.detail),
-        range,
-    )
-}
-
-fn diagnostic_arg(diagnostic: &HirDiagnostic, name: &str) -> String {
-    match diagnostic.args.get(name) {
-        Some(DiagnosticArg::String(value)) => value.clone(),
-        _ => "unknown".to_string(),
-    }
-}
-
-fn replace_unknown_package(diagnostic: &mut HirDiagnostic, package: &str) {
-    if matches!(diagnostic.args.get("package"), Some(DiagnosticArg::String(value)) if value == "unknown")
-    {
-        diagnostic.args.insert(
-            "package".to_string(),
-            DiagnosticArg::String(package.to_string()),
-        );
-        diagnostic.message =
-            diagnostic
-                .message
-                .replacen("package unknown", &format!("package {package}"), 1);
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -368,6 +326,7 @@ mod tests {
         collect_module_exports, compile_module_hir, warning_diagnostics, FrontendDiagnosticStyle,
         FrontendSourceContext,
     };
+    use sifr_diagnostics::DiagnosticArg;
     use sifr_lowering::StaticMethodSlotContext;
     use sifr_syntax::parse_module_suite;
 
@@ -416,11 +375,27 @@ mod tests {
 class IssueArgs:
     field: str
 
+class SourceOrigin:
+    pass
+
+class SourceDeclaration:
+    origin: SourceOrigin
+
+class ShapeInput:
+    canonical_identity: str
+    declaration: SourceDeclaration
+
+class Label:
+    origin: SourceOrigin
+    message: str
+
 class Issue:
     package: str
     reason_code: str
     severity: str
     arguments: IssueArgs
+    primary_origin: SourceOrigin
+    labels: list[Label]
     notes: list[str]
 
 class Outcome:
@@ -429,14 +404,12 @@ class Outcome:
     issues: list[Issue]
 
 @const_eval
-{template}def describe(shape: dict[str, str]) -> Outcome:
-    issue: Issue = Issue("fixture.meta", "{reason}", "{severity}", IssueArgs("value"), ["package note"])
+{template}def describe(shape: ShapeInput) -> Outcome:
+    labels: list[Label] = [Label(shape.declaration.origin, "class declared here")]
+    issue: Issue = Issue("fixture.meta", "{reason}", "{severity}", IssueArgs("value"), shape.declaration.origin, labels, ["package note"])
     issues: list[Issue] = [issue]
     if "{severity}" == "warning":
-        identity: str | None = shape["canonical_identity"]
-        if identity is not None:
-            return Outcome("produced", identity, issues)
-        return Outcome("failed", None, issues)
+        return Outcome("produced", shape.canonical_identity, issues)
     return Outcome("failed", None, issues)
 "#
         )
@@ -494,6 +467,19 @@ class Model:
             target.specialization_outputs[0].program_identity,
             unrelated.specialization_outputs[0].program_identity
         );
+        let moved = compile("target", &format!("\n\n{TARGET}"), &external_defs)
+            .expect("source movement compiles");
+        assert_eq!(
+            target.specialization_outputs[0].program_identity,
+            moved.specialization_outputs[0].program_identity
+        );
+        let primary_range = |result: &LoweringResult| match result.warnings.last() {
+            Some(LoweringWarningDiagnostic::MetaPackageIssue { primary_range, .. }) => {
+                *primary_range
+            }
+            other => panic!("expected package warning, got {other:?}"),
+        };
+        assert_ne!(primary_range(&target), primary_range(&moved));
         let changed = compile(
             "target",
             &TARGET.replace("value: int", "value: str"),
@@ -541,6 +527,11 @@ class Model:
         assert_eq!(cli[0].args, editor[0].args);
         assert_eq!(cli[0].url, editor[0].url);
         assert_eq!(cli[0].message_template, editor[0].message_template);
+        assert_eq!(editor[0].spans.len(), 2);
+        assert!(editor[0]
+            .spans
+            .iter()
+            .any(|span| span.label.as_deref() == Some("class declared here")));
     }
 
     #[test]
@@ -847,6 +838,20 @@ class ImportedUse:
 
         let diagnostics = errors(compile("target", TARGET, &external_defs));
         assert_eq!(diagnostics[0].code, "SIFR-META-0003");
+    }
+
+    #[test]
+    fn package_cannot_forge_a_source_origin() {
+        let mut external_defs = ExternalDefs::default();
+        let forged = package_source("fatal", "shape_rejected", true)
+            .replace("shape.declaration.origin", "SourceOrigin()");
+        let package = compile("fixture.meta", &forged, &external_defs)
+            .expect("forging package compiles before origin validation");
+        collect_module_exports("fixture.meta", &package, &mut external_defs);
+
+        let diagnostics = errors(compile("target", TARGET, &external_defs));
+        assert_eq!(diagnostics[0].code, "SIFR-META-0003");
+        assert!(diagnostics[0].message.contains("primary_origin"));
     }
 
     #[test]

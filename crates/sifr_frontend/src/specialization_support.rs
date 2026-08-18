@@ -3,27 +3,38 @@ use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_lowering::{HirDiagnostic, StaticProgramValue};
 use std::collections::BTreeMap;
 
-pub(crate) fn static_program_value(value: &crate::ConstValue) -> StaticProgramValue {
-    match value {
+pub(crate) fn static_program_value(
+    value: &crate::ConstValue,
+) -> Result<StaticProgramValue, &'static str> {
+    Ok(match value {
         crate::ConstValue::None => StaticProgramValue::None,
         crate::ConstValue::Bool(value) => StaticProgramValue::Bool(*value),
         crate::ConstValue::Integer(value) => StaticProgramValue::Integer(value.to_string()),
         crate::ConstValue::FloatBits(value) => StaticProgramValue::FloatBits(*value),
         crate::ConstValue::String(value) => StaticProgramValue::String(value.clone()),
         crate::ConstValue::Bytes(value) => StaticProgramValue::Bytes(value.clone()),
-        crate::ConstValue::Tuple(values) => {
-            StaticProgramValue::Tuple(values.iter().map(static_program_value).collect())
-        }
-        crate::ConstValue::List(values) => {
-            StaticProgramValue::List(values.iter().map(static_program_value).collect())
-        }
+        crate::ConstValue::Tuple(values) => StaticProgramValue::Tuple(
+            values
+                .iter()
+                .map(static_program_value)
+                .collect::<Result<Vec<_>, _>>()?,
+        ),
+        crate::ConstValue::List(values) => StaticProgramValue::List(
+            values
+                .iter()
+                .map(static_program_value)
+                .collect::<Result<Vec<_>, _>>()?,
+        ),
         crate::ConstValue::Record(values) => StaticProgramValue::Record(
             values
                 .iter()
-                .map(|(name, value)| (name.clone(), static_program_value(value)))
-                .collect(),
+                .map(|(name, value)| Ok((name.clone(), static_program_value(value)?)))
+                .collect::<Result<Vec<_>, &'static str>>()?,
         ),
-    }
+        crate::ConstValue::SourceOrigin(_) => {
+            return Err("source origins cannot be retained in a static program")
+        }
+    })
 }
 
 pub(crate) fn malformed(

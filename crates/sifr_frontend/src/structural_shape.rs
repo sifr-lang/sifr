@@ -837,6 +837,9 @@ pub(crate) fn canonical_value(value: &ConstValue) -> String {
                 .collect::<Vec<_>>()
                 .join(",")
         ),
+        // Origin identity is diagnostic-only. A package result containing an
+        // origin is rejected before static-program canonicalization.
+        ConstValue::SourceOrigin(_) => "source-origin:opaque".to_string(),
     }
 }
 

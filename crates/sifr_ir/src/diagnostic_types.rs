@@ -47,5 +47,6 @@ pub enum LoweringWarningDiagnostic {
         reason_code: String,
         help: Option<String>,
         primary_range: Option<TextRange>,
+        related_ranges: Vec<(TextRange, String)>,
     },
 }
