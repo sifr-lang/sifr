@@ -384,6 +384,7 @@ pub(in crate::lower) fn collect_class_type(
 
     let mut field_defaults: Vec<(usize, HirExpr)> = Vec::new();
     let mut own_fields: Vec<(String, ruff_text_size::TextRange)> = Vec::new();
+    let mut own_field_index_by_field_index = std::collections::HashMap::new();
     let mut own_field_default_indices = std::collections::HashSet::new();
 
     for stmt in &class_def.body {
@@ -420,6 +421,7 @@ pub(in crate::lower) fn collect_class_type(
                         fields.push((name.id.to_string(), ty));
                     }
                     own_fields.push((name.id.to_string(), name.range()));
+                    own_field_index_by_field_index.insert(field_idx, own_field_idx);
                     // Collect default value if present (for auto-init default params)
                     if let Some(ref default_expr) = ann.value {
                         if let Some(kind) =
@@ -745,7 +747,7 @@ pub(in crate::lower) fn collect_class_type(
         );
         own_field_default_indices = field_defaults
             .iter()
-            .filter_map(|(index, _)| index.checked_sub(inherited_field_count))
+            .filter_map(|(index, _)| own_field_index_by_field_index.get(index).copied())
             .collect();
     }
 

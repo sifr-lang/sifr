@@ -35,16 +35,6 @@ pub(super) fn declaration_value(
     let Some(parent_name) = selection.data_parent.as_deref() else {
         return Ok(value);
     };
-    let local_field_count = items
-        .iter()
-        .filter(|item| {
-            matches!(
-                item,
-                ConstValue::Record(fields)
-                    if matches!(fields.get("kind"), Some(ConstValue::String(kind)) if kind == "field")
-            )
-        })
-        .count();
     let (parent_identity, mut parent_fields) = if let Some(Type::Class {
         identity,
         name,
@@ -59,12 +49,12 @@ pub(super) fn declaration_value(
             fields.clone()
         };
         (identity.as_deref().unwrap_or(name).to_string(), fields)
+    } else if let Some(shape) =
+        fallback_parent_shape(module_name, result, external_defs, parent_name)
+    {
+        shape
     } else {
-        let inherited_count = class.fields.len().saturating_sub(local_field_count);
-        (
-            format!("{module_name}.{parent_name}"),
-            class.fields.iter().take(inherited_count).cloned().collect(),
-        )
+        return Err("adapted data parent shape is unavailable");
     };
     let parent_selection = parent_selection(result, external_defs, &parent_identity, parent_name);
     if let Some(parent) = parent_selection.filter(|parent| !parent.field_plans.is_empty()) {
@@ -141,6 +131,51 @@ pub(super) fn declaration_value(
         }
     }
     Ok(value)
+}
+
+fn fallback_parent_shape(
+    module_name: &str,
+    result: &LoweringResult,
+    external_defs: &ExternalDefs,
+    parent_name: &str,
+) -> Option<(String, Vec<(String, Type)>)> {
+    if let Some(parent) = result
+        .module
+        .classes
+        .iter()
+        .find(|candidate| candidate.name == parent_name)
+    {
+        return Some((
+            parent
+                .identity
+                .clone()
+                .unwrap_or_else(|| format!("{module_name}.{}", parent.name)),
+            parent.fields.clone(),
+        ));
+    }
+
+    let mut matches = external_defs
+        .classes
+        .iter()
+        .filter_map(|(module, classes)| {
+            let Type::Class {
+                identity,
+                name,
+                fields,
+                ..
+            } = classes.get(parent_name)?.resolve_alias()
+            else {
+                return None;
+            };
+            Some((
+                identity
+                    .clone()
+                    .unwrap_or_else(|| format!("{module}.{name}")),
+                fields.clone(),
+            ))
+        });
+    let shape = matches.next()?;
+    matches.next().is_none().then_some(shape)
 }
 
 fn local_parent_fields(

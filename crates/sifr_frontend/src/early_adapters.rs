@@ -110,7 +110,7 @@ fn run_one(
         return;
     };
     let canonical_input = crate::const_canonical::canonical_value(&input);
-    let canonical_provider = format!("{functions:#?}");
+    let canonical_provider = crate::adapter_program_identity::canonical_const_functions(&functions);
     let invocation_identity = sifr_structural_identity::static_program_identity(
         sifr_structural_identity::ALGORITHM_VERSION,
         [
@@ -713,6 +713,15 @@ fn normalized_field_types(
                     .iter()
                     .find(|(field, _)| field == &name)
                     .map(|(_, ty)| ty.clone())
+                    .or_else(|| {
+                        class.parent_type.as_ref().and_then(|parent| match parent {
+                            Type::Class { fields, .. } => fields
+                                .iter()
+                                .find(|(field, _)| field == &name)
+                                .map(|(_, ty)| ty.clone()),
+                            _ => None,
+                        })
+                    })
             } else {
                 parent
                     .into_iter()
@@ -767,7 +776,16 @@ fn expected_field_contracts(
                     (Some(ConstValue::String(identity)), Some(ConstValue::String(ty))) => {
                         Ok((identity.clone(), ty.clone()))
                     }
-                    _ => Err("declared field identity or type is unavailable".to_string()),
+                    _ => Err(format!(
+                        "declared field identity or type is unavailable for '{}'",
+                        fields
+                            .get("name")
+                            .and_then(|name| match name {
+                                ConstValue::String(name) => Some(name.as_str()),
+                                _ => None,
+                            })
+                            .unwrap_or("<unknown>")
+                    )),
                 },
             )
         })

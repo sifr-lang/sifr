@@ -120,8 +120,8 @@ class Model(Contract):
 
 #[test]
 fn adapter_identities_ignore_source_movement_and_distinguish_default_states() {
-    fn identities(source: &str) -> ([u8; 32], [u8; 32]) {
-        let compiled = compile(source);
+    fn identities(source: &str, contract: &str) -> ([u8; 32], [u8; 32]) {
+        let compiled = compile_with_contract(source, contract);
         let selection = compiled
             .external_defs
             .class_adapter_selections
@@ -134,13 +134,12 @@ fn adapter_identities_ignore_source_movement_and_distinguish_default_states() {
         )
     }
 
-    let constant = identities(
-        r#"
+    let constant_source = r#"
 from fixture.defaults import Contract, contract_field
 class Model(Contract):
     tags: list[str] = contract_field(default=[])
-"#,
-    );
+"#;
+    let constant = identities(constant_source, CONTRACT);
     let moved = identities(
         r#"
 
@@ -150,6 +149,7 @@ from fixture.defaults import Contract, contract_field
 class Model(Contract):
     tags: list[str] = contract_field(default=[])
 "#,
+        CONTRACT,
     );
     let factory = identities(
         r#"
@@ -157,8 +157,13 @@ from fixture.defaults import Contract, contract_field
 class Model(Contract):
     tags: list[str] = contract_field(default_factory=list)
 "#,
+        CONTRACT,
     );
     assert_eq!(constant, moved);
+    assert_eq!(
+        constant,
+        identities(constant_source, &format!("\n\n{CONTRACT}"))
+    );
     assert_ne!(constant, factory);
 }
 
@@ -287,6 +292,30 @@ class Child(Parent):
         error.code == sifr_diagnostics::DiagnosticCode::TYPE_MISMATCH.code()
             && error.message.contains("cannot be re-annotated")
     }));
+}
+
+#[test]
+fn compatible_inherited_reannotation_preserves_local_default_ordering() {
+    let compiled = compile(
+        r#"
+from fixture.defaults import Contract, contract_field
+
+class Parent(Contract):
+    value: int
+
+class Child(Parent):
+    value: int
+    enabled: bool = contract_field(default=True)
+"#,
+    );
+    let defaults = compiled
+        .external_defs
+        .function_defaults
+        .get("main")
+        .and_then(|functions| functions.get("Child"))
+        .expect("compatible override keeps the local default on enabled");
+    assert_eq!(defaults.len(), 1);
+    assert_eq!(defaults[0].0, 1);
 }
 
 #[test]

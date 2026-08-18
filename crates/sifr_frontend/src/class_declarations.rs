@@ -230,19 +230,33 @@ impl ClassDeclaration {
                     .iter()
                     .find(|class| class.name == self.name)
                 {
-                    if let Some((_, ty)) = class.fields.iter().find(|(field, _)| field == name) {
+                    let parent_fields =
+                        class.parent_type.as_ref().and_then(|parent| match parent {
+                            sifr_type_system::Type::Class { fields, .. } => Some(fields.as_slice()),
+                            _ => None,
+                        });
+                    let parent_field = parent_fields.and_then(|fields| {
+                        fields
+                            .iter()
+                            .enumerate()
+                            .find(|(_, (field, _))| field == name)
+                    });
+                    let own_field = class
+                        .fields
+                        .iter()
+                        .enumerate()
+                        .find(|(_, (field, _))| field == name);
+                    if let Some((_, (_, ty))) = parent_field.or(own_field) {
                         record.insert(
                             "declared_type".to_string(),
                             ConstValue::String(crate::canonical_types::type_identity(ty)),
                         );
                     }
-                    if let Some(index) = class
-                        .fields
-                        .iter()
-                        .enumerate()
-                        .rev()
-                        .find_map(|(index, (field, _))| (field == name).then_some(index))
-                    {
+                    let parent_field_count = parent_fields.map_or(0, <[_]>::len);
+                    let field_index = parent_field
+                        .map(|(index, _)| index)
+                        .or_else(|| own_field.map(|(index, _)| parent_field_count + index));
+                    if let Some(index) = field_index {
                         if let Some(value) = lowering
                             .class_field_defaults
                             .get(&self.name)
