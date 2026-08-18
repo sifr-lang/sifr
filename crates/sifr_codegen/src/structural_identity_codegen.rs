@@ -3,6 +3,9 @@ use sifr_structural_identity::{self as identity, NominalField, ShapeIdentity, AL
 use sifr_type_system::Type;
 use std::collections::{HashMap, HashSet};
 
+mod mapped_opaque;
+use mapped_opaque::mapped_opaque_identity_expression;
+
 const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
 
 #[derive(Debug)]
@@ -192,6 +195,9 @@ fn compile_class(
     module_name: &str,
     context: &IdentityContext<'_>,
 ) -> CompiledIdentity {
+    if let Some(expression) = mapped_opaque_identity_expression(class) {
+        return CompiledIdentity::Dynamic(expression);
+    }
     let nominal = class_nominal_identity(class, IdentityContext::wire_module_name(module_name));
     let mut stack = vec![nominal.clone()];
     let type_arguments = class
@@ -308,6 +314,9 @@ fn compile_type(
                 },
             );
             if let Some((module_name, _, class)) = candidate {
+                if let Some(expression) = mapped_opaque_identity_expression(class) {
+                    return CompiledIdentity::Dynamic(expression);
+                }
                 if class.is_enum() {
                     return compile_enum(class, IdentityContext::wire_module_name(module_name));
                 }

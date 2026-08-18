@@ -22,6 +22,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
 use sifr_package::BackendCrateMetadata;
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
@@ -232,6 +233,14 @@ fn prefixed_probe_source(prefix: &str, body: &str) -> String {
 
 fn opaque_probe_source(probe: &PendingRustBridgeProbe, rust_path: &str) -> String {
     let mut out = format!("#![allow(dead_code)]\ntype __SifrProbe = {rust_path};\n");
+    let structural_mapping =
+        opaque_target_argument(probe, "structural").filter(|mapping| mapping != rust_path);
+    if let Some(mapping) = &structural_mapping {
+        let _ = writeln!(out, "type __SifrMapping = {mapping};");
+        out.push_str(
+            "fn __sifr_assert_structural_mapping<M: sifr_runtime::interop::structural::StructuralMapping<__SifrProbe>>() {}\n",
+        );
+    }
     if opaque_bool_argument(probe, "send") {
         out.push_str("fn __sifr_assert_send<T: Send>() {}\n");
     }
@@ -242,6 +251,9 @@ fn opaque_probe_source(probe: &PendingRustBridgeProbe, rust_path: &str) -> Strin
         out.push_str("fn __sifr_assert_copy<T: Copy>() {}\n");
     }
     out.push_str("fn __sifr_probe() {\n");
+    if structural_mapping.is_some() {
+        out.push_str("    __sifr_assert_structural_mapping::<__SifrMapping>();\n");
+    }
     if opaque_bool_argument(probe, "send") {
         out.push_str("    __sifr_assert_send::<__SifrProbe>();\n");
     }
@@ -253,6 +265,19 @@ fn opaque_probe_source(probe: &PendingRustBridgeProbe, rust_path: &str) -> Strin
     }
     out.push_str("}\n");
     out
+}
+
+fn opaque_target_argument(probe: &PendingRustBridgeProbe, name: &str) -> Option<String> {
+    probe
+        .declaration
+        .declaration
+        .arguments
+        .iter()
+        .find(|argument| argument.name.as_deref() == Some(name))
+        .and_then(|argument| match &argument.value {
+            sifr_ir::RustInteropValue::TargetPath(path) => Some(path.segments.join("::")),
+            _ => None,
+        })
 }
 
 fn signature_probe_source(

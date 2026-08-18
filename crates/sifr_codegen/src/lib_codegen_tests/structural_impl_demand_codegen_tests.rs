@@ -214,6 +214,45 @@ fn named_single_file_record_keeps_unqualified_structural_identity() {
 }
 
 #[test]
+fn imported_stdlib_record_gets_one_late_canonical_structural_impl() {
+    let mut module = module(vec![structural_function()], Vec::new());
+    let import = sifr_ir::HirImport {
+        module: "sifr.json".to_string(),
+        names: vec!["JsonValue".to_string()],
+        aliases: Vec::new(),
+    };
+    module.imports = vec![import.clone(), import];
+    let mut template = payload_class();
+    template.name = "JsonValue".to_string();
+    template.identity = Some("sifr.json.JsonValue".to_string());
+    let mut stdlib = crate::StdlibCode::default();
+    stdlib.module_class_templates.insert(
+        "sifr.json".to_string(),
+        std::collections::HashMap::from([("JsonValue".to_string(), template)]),
+    );
+    stdlib.module_rust_code.insert(
+        "sifr.json".to_string(),
+        crate::StdlibRustSource {
+            module: "sifr.json".to_string(),
+            source_path: "stdlib/sifr/json.sifr".to_string(),
+            source_sha256: "fixture".to_string(),
+            nominal_types: std::collections::HashSet::from(["JsonValue".to_string()]),
+            rust: "struct JsonValue { value: i64 }".to_string(),
+        },
+    );
+
+    let generated =
+        crate::generate_rust_with_stdlib_for_module(&module, &stdlib, Some("main")).rust_source;
+    let target = "StructuralType for __SifrStdlib_sifr_x2ejson_x2eJsonValue";
+
+    assert_eq!(generated.matches(target).count(), 1, "{generated}");
+    assert!(
+        generated.contains("Some(\"sifr.json.JsonValue\")"),
+        "{generated}"
+    );
+}
+
+#[test]
 fn platform_integer_union_does_not_receive_structural_impls() {
     let union = Type::Union(vec![
         Type::Int,

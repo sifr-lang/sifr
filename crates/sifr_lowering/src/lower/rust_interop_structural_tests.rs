@@ -280,6 +280,73 @@ def use(choice: int | str, status: Status) -> None:
 }
 
 #[test]
+fn structural_bound_accepts_explicitly_mapped_rust_values() {
+    lower_ok(
+        r"
+@rust.opaque(
+    type=bridge.token.Token,
+    structural=bridge.token.TokenMapping,
+    close=none,
+)
+class Token:
+    pass
+
+def accept[T: Structural](value: T) -> None:
+    pass
+
+def use(value: Token) -> None:
+    accept(value)
+",
+    );
+}
+
+#[test]
+fn structurally_mapped_rust_values_reject_fields_parents_and_generics() {
+    for declaration in [
+        "class Token:\n    value: str",
+        "class Token[T]:\n    pass",
+        "class Base:\n    pass\n\n@rust.opaque(type=bridge.token.Token, structural=bridge.token.TokenMapping, close=none)\nclass Token(Base):\n    pass",
+    ] {
+        let source = if declaration.starts_with("class Base") {
+            declaration.to_string()
+        } else {
+            format!(
+                "@rust.opaque(type=bridge.token.Token, structural=bridge.token.TokenMapping, close=none)\n{declaration}"
+            )
+        };
+        let errors = lower_errors(&source);
+        assert!(errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR)
+                && error.message.contains("fieldless, non-generic root classes")
+        }));
+    }
+}
+
+#[test]
+fn structural_bound_rejects_unmapped_rust_values() {
+    let errors = lower_errors(
+        r"
+@rust.opaque(type=bridge.token.Token, close=none)
+class Token:
+    pass
+
+def accept[T: Structural](value: T) -> None:
+    pass
+
+def use(value: Token) -> None:
+    accept(value)
+",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'Structural'")
+    }));
+}
+
+#[test]
 fn structural_bound_rejects_enum_discriminant_overflow() {
     let errors = lower_errors(
         r"

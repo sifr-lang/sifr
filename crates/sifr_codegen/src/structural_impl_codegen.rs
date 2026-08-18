@@ -1,28 +1,73 @@
 use crate::{RustEmitter, RustItem, RustParam, RustStmt, RustType, RustTypeParam, Visibility};
 use sifr_ir::{HirClass, HirModule, RustInteropDecoratorKind};
-use sifr_type_system::Type;
+use sifr_type_system::{class_rust_name, Type};
 use std::collections::{BTreeSet, HashSet};
 
 const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
 
 impl RustEmitter {
+    pub(crate) fn emit_imported_stdlib_structural_impls(
+        &mut self,
+        module: &HirModule,
+        stdlib_code: &crate::StdlibCode,
+    ) {
+        if !self.structural_interop_enabled {
+            return;
+        }
+        let mut emitted_targets = HashSet::new();
+        for import in &module.imports {
+            let Some(templates) = stdlib_code.module_class_templates.get(&import.module) else {
+                continue;
+            };
+            let support_module = HirModule {
+                functions: Vec::new(),
+                classes: templates.values().cloned().collect(),
+                imports: Vec::new(),
+                constants: Vec::new(),
+                generic_functions: std::collections::HashMap::new(),
+                type_param_bounds: std::collections::HashMap::new(),
+            };
+            for name in &import.names {
+                let Some(class) = templates.get(name) else {
+                    continue;
+                };
+                let target = imported_stdlib_impl_target(class);
+                if !emitted_targets.insert(target.clone()) {
+                    continue;
+                }
+                self.emit_structural_record_impls_for_target(class, &support_module, &target);
+                self.emit_structural_enum_impls_for_target(class, &target);
+            }
+        }
+    }
+
     pub(crate) fn emit_structural_record_impls(&mut self, class: &HirClass, module: &HirModule) {
+        let target = Self::class_impl_target(class);
+        self.emit_structural_record_impls_for_target(class, module, &target);
+    }
+
+    fn emit_structural_record_impls_for_target(
+        &mut self,
+        class: &HirClass,
+        module: &HirModule,
+        target: &str,
+    ) {
         let supported = self
             .project_structural_record_identities
             .as_ref()
             .map_or_else(
                 || structural_record_supported(class, module),
                 |identities| {
-                    identities.contains(&structural_record_identity(
-                        class,
-                        self.current_module_name.as_deref(),
-                    ))
+                    let identity =
+                        structural_record_identity(class, self.current_module_name.as_deref());
+                    identities.contains(&identity)
+                        || (identity.starts_with("sifr.")
+                            && structural_record_supported(class, module))
                 },
             );
         if !self.structural_interop_enabled || !supported {
             return;
         }
-        let target = Self::class_impl_target(class);
         let type_params = structural_impl_type_params(class);
         let structural_module_name = self.structural_identity_module_name.as_deref();
         let nominal_identity = nominal_identity(class, structural_module_name);
@@ -41,29 +86,33 @@ impl RustEmitter {
             });
         let type_impl = structural_type_impl(
             class,
-            &target,
+            target,
             type_params.clone(),
             structural_module_name,
             shape,
         );
         let construct_impl =
-            structural_construct_impl(class, &target, type_params.clone(), &nominal_identity, self);
+            structural_construct_impl(class, target, type_params.clone(), &nominal_identity, self);
         self.body_items.push(type_impl);
         self.body_items.push(construct_impl);
         self.body_items.push(structural_project_impl(
             class,
-            &target,
+            target,
             type_params,
             &nominal_identity,
         ));
     }
 
     pub(crate) fn emit_structural_enum_impls(&mut self, class: &HirClass) {
+        let target = Self::class_impl_target(class);
+        self.emit_structural_enum_impls_for_target(class, &target);
+    }
+
+    fn emit_structural_enum_impls_for_target(&mut self, class: &HirClass, target: &str) {
         if !self.structural_interop_enabled || !class.is_enum() || !structural_enum_supported(class)
         {
             return;
         }
-        let target = Self::class_impl_target(class);
         let structural_module_name = self.structural_identity_module_name.as_deref();
         let nominal_identity = nominal_identity(class, structural_module_name);
         let identity_key = structural_record_identity(class, self.current_module_name.as_deref());
@@ -80,10 +129,19 @@ impl RustEmitter {
             });
         self.body_items.extend(structural_enum_impls(
             class,
-            &target,
+            target,
             &nominal_identity,
             &shape,
         ));
+    }
+}
+
+fn imported_stdlib_impl_target(class: &HirClass) -> String {
+    let rust_name = class_rust_name(class.identity.as_deref(), &class.name);
+    if class.type_params.is_empty() {
+        rust_name
+    } else {
+        format!("{rust_name}<{}>", class.type_params.join(", "))
     }
 }
 
@@ -134,6 +192,15 @@ fn structural_record_supported_in(class: &HirClass, modules: &[(&str, &HirModule
             .fields
             .iter()
             .all(|(_, ty)| structural_record_field_supported(ty, modules, &mut visiting))
+}
+
+pub(crate) fn structural_mapped_opaque_supported(class: &HirClass) -> bool {
+    class.parent_class.is_none()
+        && class.type_params.is_empty()
+        && class.fields.is_empty()
+        && !class.is_error_type
+        && sifr_ir::rust_opaque_type_path(&class.rust_interop).is_some()
+        && sifr_ir::rust_opaque_structural_mapping(&class.rust_interop).is_some()
 }
 
 fn structural_record_field_supported(
@@ -187,6 +254,9 @@ fn structural_type_supported(
             else {
                 return false;
             };
+            if structural_mapped_opaque_supported(candidate) {
+                return true;
+            }
             if candidate.is_enum() {
                 return structural_enum_supported(candidate);
             }

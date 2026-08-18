@@ -2,8 +2,10 @@
 # scenario-example: structural_bridge_runtime
 # execution-kind: runtime-observed
 # expected-result: structural-roundtrip-clean
+# contract: mapped native values and structural JSON output retain nominal identity
 
 from sifr.meta import Structural
+from sifr.json import JsonValue
 from enum import Enum
 from typing import Callable
 
@@ -43,6 +45,19 @@ class Status(Enum):
 class SumPayload:
     choice: int | str
     status: Status
+
+
+@rust.opaque(
+    type=bridge.structural.Token,
+    structural=bridge.structural.TokenMapping,
+    send=True,
+    sync=True,
+    clone=none,
+    close=none,
+)
+class MappedToken:
+    @rust(bridge.structural.mapped_value)
+    def value(self) -> Result[str, StructuralBridgeError | RustPanicError]: ...
 
 
 @rust.opaque(
@@ -87,6 +102,24 @@ def observe_structural[T: Structural](value: T) -> Result[str, StructuralBridgeE
 
 
 @rust.structural
+@rust(bridge.structural.construct_mapped)
+def construct_mapped[T: Structural](value: str) -> Result[T, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust.structural
+@rust(bridge.structural.structural_output)
+def structural_output[T: Structural]() -> Result[T, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust(bridge.structural.consume_mapped)
+def consume_mapped(own value: MappedToken) -> Result[str, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust(bridge.structural.token_drop_count)
+def token_drop_count() -> Result[uint32, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust.structural
 @rust(bridge.structural.transform)
 def transform_structural[T: Structural](
     own source: StructuralArena,
@@ -97,6 +130,16 @@ def transform_structural[T: Structural](
 
 def identity_nested(own value: NestedValue) -> Result[NestedValue, CallbackError]:
     return value
+
+
+def mapped_panic_is_contained() -> bool:
+    try:
+        _value: MappedToken = construct_mapped("panic")
+    except StructuralBridgeError:
+        return False
+    except RustPanicError:
+        return True
+    return False
 
 
 def verify_structural_bridge_runtime() -> Result[str, StructuralBridgeError | RustPanicError]:
@@ -149,9 +192,33 @@ def verify_structural_bridge_runtime() -> Result[str, StructuralBridgeError | Ru
         sum_value: SumPayload = structural_roundtrip(sum_source, sum_input)
         assert str(sum_value.choice) == "sum"
         assert sum_value.status == Status.WAITING
+        mapped: MappedToken = construct_mapped("stable-token-m6")
+        mapped_value: str = mapped.value()
+        assert mapped_value == "stable-token-m6"
+        mapped_projection: str = observe_structural(mapped)
+        assert mapped_projection == "records=1;sequences=0;optionals=0;strings=stable-token-m6"
+        invalid_rejected: bool = False
+        try:
+            _invalid: MappedToken = construct_mapped("invalid")
+        except StructuralBridgeError:
+            invalid_rejected = True
+        except RustPanicError:
+            invalid_rejected = False
+        assert invalid_rejected
+        assert mapped_panic_is_contained()
+        output: dict[str, JsonValue] = structural_output()
+        output_name: JsonValue | None = output.get("name")
+        assert output_name is not None
+        if output_name is not None:
+            assert output_name.as_str() == "mapped-output"
+        consumed: str = consume_mapped(mapped)
+        assert consumed == "stable-token-m6;drops=1"
+        drops: uint32 = token_drop_count()
+        expected_drops: uint32 = 1
+        assert drops == expected_drops
         cleanup_source: StructuralArena = open_structural_arena()
         closed: None = cleanup_source.close()
-        return projection + ";construction=root/a,b/boxed/tail;callback=typed;sums=sum/WAITING"
+        return projection + ";construction=root/a,b/boxed/tail;callback=typed;sums=sum/WAITING;mapped=stable-token-m6;output=mapped-output"
     except StructuralBridgeError as error:
         raise error
     except RustPanicError as error:

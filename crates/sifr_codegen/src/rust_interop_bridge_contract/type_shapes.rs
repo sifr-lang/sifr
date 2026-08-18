@@ -1,5 +1,5 @@
 use super::{
-    absolute_runtime_target, bridge_type_contract, opaque_type_definition, unsupported_type,
+    bridge_type_contract, opaque_type_definition, rust_opaque_storage_type, unsupported_type,
     BTreeMap, BridgeTypePosition, GeneratedTypeCollector, ModuleCatalog, RustBridgeTypeContract,
     RustBridgeTypeKind, Type,
 };
@@ -200,10 +200,7 @@ pub(super) fn tuple_item_rust_type(
             .ok()
             .flatten()
             .map(|target| {
-                format!(
-                    "::sifr_runtime::interop::Handle<{}>",
-                    absolute_runtime_target(&target)
-                )
+                rust_opaque_storage_type(&target.native, target.structural_mapping.as_deref())
             }),
         _ => None,
     }

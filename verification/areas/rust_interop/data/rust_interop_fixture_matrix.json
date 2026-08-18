@@ -159,7 +159,7 @@
       "capability": "monomorphized structural Rust bridge calls",
       "required_crates": [],
       "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "nested_recursive_structural_roundtrip", "status": "passing"},
+      "positive_evidence": {"id": "specialized_structural_value_and_output", "status": "passing"},
       "negative_evidence": {"id": "shape_callback_and_lifetime_mismatches_rejected", "status": "passing"}
     },
     {

@@ -388,6 +388,26 @@ fn package_rust_interop_opaque_rejects_unknown_contract_key() {
 }
 
 #[test]
+fn package_rust_interop_mapped_value_rejects_resource_clone_policy() {
+    let generated = base_project_with_contracts(
+        vec![opaque_class_declaration_entry(vec![
+            target_argument("type", "native.Tokenizer"),
+            target_argument("structural", "native.TokenizerMapping"),
+            symbol_argument("clone", "arc"),
+        ])],
+        Vec::new(),
+    );
+    let context = package_context(TrustPolicy::default(), Vec::new());
+
+    let diagnostics = interop_errors(generated, Some(context), "mapped clone policy must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CONFIG-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("resource-sharing clone policies"));
+}
+
+#[test]
 fn package_rust_interop_records_declared_transitive_bridge_native_links() {
     let declaration = declaration_entry("bridge.hash", RustInteropDecoratorKind::Function);
     let generated = base_project_with_contracts(vec![declaration], Vec::new());

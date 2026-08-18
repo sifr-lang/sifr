@@ -216,3 +216,33 @@ pub fn rust_opaque_close_method(declarations: &[RustInteropDeclaration]) -> Opti
         }
     })
 }
+
+/// Return the native value type selected by an opaque Rust declaration.
+#[must_use]
+pub fn rust_opaque_type_path(declarations: &[RustInteropDeclaration]) -> Option<&RustTargetPath> {
+    rust_opaque_named_target(declarations, "type")
+}
+
+/// Return the package-owned structural mapping selected for an opaque value.
+#[must_use]
+pub fn rust_opaque_structural_mapping(
+    declarations: &[RustInteropDeclaration],
+) -> Option<&RustTargetPath> {
+    rust_opaque_named_target(declarations, "structural")
+}
+
+fn rust_opaque_named_target<'a>(
+    declarations: &'a [RustInteropDeclaration],
+    key: &str,
+) -> Option<&'a RustTargetPath> {
+    declarations
+        .iter()
+        .find(|declaration| declaration.kind == RustInteropDecoratorKind::Opaque)?
+        .arguments
+        .iter()
+        .find(|argument| argument.name.as_deref() == Some(key))
+        .and_then(|argument| match &argument.value {
+            RustInteropValue::TargetPath(path) => Some(path),
+            _ => None,
+        })
+}

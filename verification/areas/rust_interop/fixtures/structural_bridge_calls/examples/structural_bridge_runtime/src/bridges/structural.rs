@@ -1,10 +1,12 @@
+use std::cell::Cell;
 use std::fmt;
 
 use sifr_runtime::interop::structural::{
-    primitive, structural_construct, NodeId, ShapeIdentity, StructuralConstruct,
-    StructuralContractError, StructuralEdge, StructuralEdgeKind, StructuralEnter, StructuralKind,
-    StructuralNodeEdge, StructuralNodeRef, StructuralProject, StructuralScalar,
-    StructuralScalarRef, StructuralSource, StructuralVisitor, VisitControl,
+    metadata, nominal_record, primitive, structural_construct, MappedValue, NodeId, NominalField,
+    ShapeIdentity, StructuralConstruct, StructuralContractError, StructuralEdge,
+    StructuralEdgeKind, StructuralEnter, StructuralKind, StructuralMapping, StructuralNodeEdge,
+    StructuralNodeRef, StructuralProject, StructuralScalar, StructuralScalarRef, StructuralSource,
+    StructuralVisitor, VisitControl,
 };
 use sifr_runtime::interop::{CallScopedCallbackBridge, Handle, HandleStateError};
 
@@ -13,6 +15,91 @@ const LEAF_IDENTITY: &str = "main.Leaf";
 const BOXED_IDENTITY: &str = "main.Boxed";
 const STATUS_IDENTITY: &str = "main.Status";
 const SUM_IDENTITY: &str = "main.SumPayload";
+const TOKEN_IDENTITY: &str = "main.MappedToken";
+const JSON_VALUE_IDENTITY: &str = "sifr.json.JsonValue";
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub struct Token {
+    value: String,
+}
+
+impl Drop for Token {
+    fn drop(&mut self) {
+        TOKEN_DROPS.with(|count| count.set(count.get().saturating_add(1)));
+    }
+}
+
+thread_local! {
+    static TOKEN_DROPS: Cell<u32> = const { Cell::new(0) };
+}
+
+pub struct TokenMapping;
+
+impl StructuralMapping<Token> for TokenMapping {
+    fn shape_identity() -> ShapeIdentity {
+        nominal_record(
+            TOKEN_IDENTITY,
+            &[],
+            &[NominalField {
+                name: "value",
+                identity: primitive("str"),
+                required: true,
+                default_identity: None,
+            }],
+            metadata(&[]),
+        )
+    }
+
+    fn nominal_identity() -> Option<&'static str> {
+        Some(TOKEN_IDENTITY)
+    }
+
+    fn structural_construct_at<S: StructuralSource>(
+        source: &mut S,
+        node: NodeId,
+        token: sifr_runtime::interop::structural::ConstructToken,
+    ) -> Result<Token, StructuralContractError> {
+        let description = source.node(node)?;
+        if description.kind() != StructuralKind::Record
+            || description.nominal_identity() != Some(TOKEN_IDENTITY)
+        {
+            return Err(StructuralContractError::KindMismatch);
+        }
+        let [value_edge] = description.edges() else {
+            return Err(StructuralContractError::ArityMismatch);
+        };
+        if value_edge.kind() != StructuralEdgeKind::RecordField("value") {
+            return Err(StructuralContractError::MemberMismatch);
+        }
+        let value_node = value_edge.node();
+        let value = String::structural_construct_at(source, value_node, token)?;
+        if value == "panic" {
+            panic!("deliberate mapped-value panic");
+        }
+        if value.is_empty() || value == "invalid" {
+            return Err(StructuralContractError::ScalarMismatch);
+        }
+        Ok(Token { value })
+    }
+
+    fn structural_project<'value, V: StructuralVisitor<'value>>(
+        value: &'value Token,
+        visitor: &mut V,
+    ) -> Result<(), V::Error> {
+        let control = visitor.enter(StructuralEnter::new(
+            StructuralKind::Record,
+            Some(TOKEN_IDENTITY),
+            1,
+        ))?;
+        if control == VisitControl::Continue {
+            visitor.edge(StructuralEdge::new(StructuralEdgeKind::RecordField(
+                "value",
+            )))?;
+            value.value.structural_project(visitor)?;
+        }
+        visitor.exit(StructuralKind::Record)
+    }
+}
 
 #[derive(Debug)]
 pub struct StructuralBridgeError {
@@ -238,6 +325,45 @@ fn sum_nodes() -> Vec<ArenaNode> {
     ]
 }
 
+fn token_nodes(value: &str) -> Vec<ArenaNode> {
+    vec![record(TOKEN_IDENTITY, &[("value", 1)]), string(value)]
+}
+
+fn structural_output_nodes() -> Vec<ArenaNode> {
+    vec![
+        ArenaNode {
+            kind: StructuralKind::Mapping,
+            nominal_identity: None,
+            edges: vec![
+                edge(StructuralEdgeKind::MappingKey(0), 1),
+                edge(StructuralEdgeKind::MappingValue(0), 2),
+            ],
+            scalar: None,
+        },
+        string("name"),
+        record(
+            JSON_VALUE_IDENTITY,
+            &[
+                ("kind", 3),
+                ("bool_value", 4),
+                ("int_value", 5),
+                ("float_value", 6),
+                ("str_value", 7),
+                ("array_items", 9),
+                ("object_items", 10),
+            ],
+        ),
+        string("str"),
+        optional(None),
+        optional(None),
+        optional(None),
+        optional(Some(8)),
+        string("mapped-output"),
+        sequence(&[]),
+        sequence(&[]),
+    ]
+}
+
 pub fn open() -> Result<Handle<StructuralArena>, StructuralBridgeError> {
     Ok(Handle::new(StructuralArena {
         nodes: structural_nodes(),
@@ -355,6 +481,50 @@ where
             std::any::type_name::<T>()
         ))
     })
+}
+
+pub fn construct_mapped<T>(value: &str) -> Result<T, StructuralBridgeError>
+where
+    T: StructuralConstruct + StructuralProject,
+{
+    structural_construct::<T, _>(ArenaSource {
+        shape: T::shape_identity(),
+        nodes: token_nodes(value),
+    })
+    .map_err(Into::into)
+}
+
+pub fn structural_output<T>() -> Result<T, StructuralBridgeError>
+where
+    T: StructuralConstruct + StructuralProject,
+{
+    structural_construct::<T, _>(ArenaSource {
+        shape: T::shape_identity(),
+        nodes: structural_output_nodes(),
+    })
+    .map_err(Into::into)
+}
+
+pub fn consume_mapped(
+    value: MappedValue<Token, TokenMapping>,
+) -> Result<String, StructuralBridgeError> {
+    let token = value.into_inner()?;
+    let observed = token.value.clone();
+    drop(token);
+    Ok(format!(
+        "{observed};drops={}",
+        TOKEN_DROPS.with(Cell::get)
+    ))
+}
+
+pub fn mapped_value(
+    value: &MappedValue<Token, TokenMapping>,
+) -> Result<String, StructuralBridgeError> {
+    Ok(value.inner_ref()?.value.clone())
+}
+
+pub fn token_drop_count() -> Result<u32, StructuralBridgeError> {
+    Ok(TOKEN_DROPS.with(Cell::get))
 }
 
 pub fn transform<T>(

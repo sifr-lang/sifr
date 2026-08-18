@@ -321,6 +321,7 @@ fn compile_stdlib_sources_with_sysroot(
                 generic_class_params: stdlib_code.generic_class_params.clone(),
                 generic_class_templates: stdlib_code.generic_class_templates.clone(),
                 module_class_fields: stdlib_code.module_class_fields.clone(),
+                module_class_templates: stdlib_code.module_class_templates.clone(),
             };
             let codegen_result = run_codegen_with_boundary(
                 format!(
@@ -454,6 +455,19 @@ fn compile_stdlib_sources_with_sysroot(
             stdlib_code
                 .module_class_fields
                 .insert(module_name.to_string(), class_fields);
+            let class_templates = result
+                .module
+                .classes
+                .iter()
+                .map(|class| {
+                    let mut template = class.clone();
+                    template.identity = Some(format!("{module_name}.{}", class.name));
+                    (class.name.clone(), template)
+                })
+                .collect();
+            stdlib_code
+                .module_class_templates
+                .insert(module_name.to_string(), class_templates);
         }
 
         if !transitive_deps_for_module.is_empty() {

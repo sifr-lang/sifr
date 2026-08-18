@@ -15,12 +15,13 @@ use crate::{diagnostic_with_code, diagnostic_with_source_range_args_help};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
     canonicalize_user_export_type, localize_user_import_function_type, localize_user_import_type,
-    ExternalDefs, HirClassKind, HirDiagnostic, HirModule, LoweringResult, RustInteropDecoratorKind,
+    ExternalDefs, HirClassKind, HirDiagnostic, HirModule, LoweringResult,
 };
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{BTreeMap, HashMap};
 
+mod rust_class_exports;
 pub(super) fn module_state(
     id: ModuleId,
     file: FileId,
@@ -178,6 +179,7 @@ pub fn collect_module_exports(
     let mut class_method_exports = ClassMethodExports::default();
     let mut class_type_param_exports = HashMap::new();
     let mut rust_opaque_exports = std::collections::HashSet::new();
+    let mut rust_structural_exports = std::collections::HashSet::new();
     let mut class_field_default_exports = HashMap::new();
     let mut const_exports = HashMap::new();
     let mut const_integer_value_exports = HashMap::new();
@@ -235,13 +237,11 @@ pub fn collect_module_exports(
             if class.is_error_type {
                 error_exports.insert(class.name.clone());
             }
-            if class
-                .rust_interop
-                .iter()
-                .any(|declaration| declaration.kind == RustInteropDecoratorKind::Opaque)
-            {
-                rust_opaque_exports.insert(class.name.clone());
-            }
+            rust_class_exports::record_local(
+                class,
+                &mut rust_opaque_exports,
+                &mut rust_structural_exports,
+            );
             class_method_exports.record_local(class);
             rust_callback_exports.record_class(class);
             let mut methods: Vec<(String, FunctionType)> = class
@@ -403,13 +403,14 @@ pub fn collect_module_exports(
                     if external_defs.is_error_type(&import.module, name) {
                         error_exports.insert(local_name.clone());
                     }
-                    if external_defs
-                        .rust_opaque_classes
-                        .get(&import.module)
-                        .is_some_and(|classes| classes.contains(name))
-                    {
-                        rust_opaque_exports.insert(local_name.clone());
-                    }
+                    rust_class_exports::record_imported(
+                        external_defs,
+                        &import.module,
+                        name,
+                        &local_name,
+                        &mut rust_opaque_exports,
+                        &mut rust_structural_exports,
+                    );
                     class_exports.insert(
                         local_name.clone(),
                         localize_user_import_type(class_type, &import.module, &class_aliases),
@@ -469,11 +470,12 @@ pub fn collect_module_exports(
             .error_types
             .insert(module_name.to_string(), error_exports);
     }
-    if !rust_opaque_exports.is_empty() {
-        external_defs
-            .rust_opaque_classes
-            .insert(module_name.to_string(), rust_opaque_exports);
-    }
+    rust_class_exports::replace_module(
+        external_defs,
+        module_name,
+        rust_opaque_exports,
+        rust_structural_exports,
+    );
     replace_module_entry(
         &mut external_defs.class_field_defaults,
         module_name,

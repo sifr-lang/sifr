@@ -1,5 +1,37 @@
 use super::{HirFunction, LowerCtx, MethodKind, StmtClassDef, Type};
 
+pub(super) fn validate_structurally_mapped_opaque_class(
+    class_def: &StmtClassDef,
+    class_ty: &Type,
+    ctx: &mut LowerCtx,
+) {
+    if !crate::lower::rust_interop::has_rust_opaque_structural_mapping_syntax(
+        &class_def.decorator_list,
+    ) {
+        return;
+    }
+    let regular_fieldless_root = matches!(
+        class_ty,
+        Type::Class {
+            fields,
+            parent_class,
+            ..
+        } if fields.is_empty() && parent_class.is_none()
+    );
+    let has_type_params = class_def
+        .type_params
+        .as_ref()
+        .is_some_and(|params| !params.is_empty());
+    if !regular_fieldless_root || has_type_params {
+        ctx.error_with_code_at(
+            sifr_diagnostics::DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR,
+            "structurally mapped opaque values must be fieldless, non-generic root classes"
+                .to_string(),
+            class_def.range,
+        );
+    }
+}
+
 pub(super) fn validate_rust_opaque_close_method(
     class_def: &StmtClassDef,
     methods: &[HirFunction],

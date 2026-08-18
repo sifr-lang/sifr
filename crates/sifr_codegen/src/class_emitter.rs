@@ -3,7 +3,7 @@ use crate::{
     helpers::collect_mutated_vars_with_sigs, RustEmitter, RustExpr, RustItem, RustLiteral,
     RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
-use sifr_ir::{HirClass, HirFunction, HirModule, RustInteropDecoratorKind, RustInteropValue};
+use sifr_ir::{HirClass, HirFunction, HirModule};
 use sifr_type_system::{class_rust_name, source_class_rust_name, Type};
 
 impl RustEmitter {
@@ -575,12 +575,19 @@ impl RustEmitter {
                 return;
             }
             let class_name = class_rust_name(class.identity.as_deref(), &class.name);
+            let native_type = target.replace('.', "::");
+            let ty = opaque_rust_structural_mapping_path(class).map_or_else(
+                || RustType::Named(format!("::sifr_runtime::interop::Handle<{native_type}>")),
+                |mapping| {
+                    RustType::Named(format!(
+                        "::sifr_runtime::interop::structural::MappedValue<{native_type}, {}>",
+                        mapping.replace('.', "::")
+                    ))
+                },
+            );
             self.body_items.push(RustItem::TypeAlias {
                 name: class_name.clone(),
-                ty: RustType::Named(format!(
-                    "::sifr_runtime::interop::Handle<{}>",
-                    target.replace('.', "::")
-                )),
+                ty,
             });
             self.emit_opaque_rust_method_trait(class, &class_name, module_public);
             return;
@@ -829,15 +836,10 @@ impl RustEmitter {
 }
 
 fn opaque_rust_type_path(class: &HirClass) -> Option<String> {
-    class
-        .rust_interop
-        .iter()
-        .find(|declaration| declaration.kind == RustInteropDecoratorKind::Opaque)?
-        .arguments
-        .iter()
-        .find(|argument| argument.name.as_deref() == Some("type"))
-        .and_then(|argument| match &argument.value {
-            RustInteropValue::TargetPath(path) => Some(path.dotted()),
-            _ => None,
-        })
+    sifr_ir::rust_opaque_type_path(&class.rust_interop).map(sifr_ir::RustTargetPath::dotted)
+}
+
+fn opaque_rust_structural_mapping_path(class: &HirClass) -> Option<String> {
+    sifr_ir::rust_opaque_structural_mapping(&class.rust_interop)
+        .map(sifr_ir::RustTargetPath::dotted)
 }
