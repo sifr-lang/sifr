@@ -20,13 +20,13 @@ pub(super) fn apply(ctx: &mut LowerCtx) {
     let mut imports: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
 
     for (owner, selection) in selections {
-        let (declarations, provisional) = if let Some(set) = selection.attached_api_set.as_ref() {
-            (declarations_for_set(ctx, set, &module), false)
-        } else {
-            (
+        let (declarations, provisional) = match selection.attached_api_set.as_ref() {
+            Some(set) => (declarations_for_set(ctx, set, &module), false),
+            None if ctx.attached_api_selections_finalized => continue,
+            None => (
                 provisional_declarations(ctx, &selection.provider_module),
                 true,
-            )
+            ),
         };
         if declarations.is_empty() {
             if !provisional {

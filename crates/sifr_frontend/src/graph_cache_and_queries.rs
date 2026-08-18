@@ -380,6 +380,7 @@ pub fn compile_module_hir_with_source_and_options(
                             .map(|set| (selection.owner.clone(), set))
                     })
                     .collect();
+                final_options.attached_api_selections_finalized = true;
                 final_options
                     .specialization_requests
                     .clone_from(&specialization_requests);

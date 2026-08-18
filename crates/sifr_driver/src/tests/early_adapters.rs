@@ -256,6 +256,48 @@ def main():
 }
 
 #[test]
+fn finalized_adapter_without_selected_set_exposes_no_provisional_attached_api() {
+    let contract = attached_contract().replace(
+        "return DeclarationPlan(fields, metadata, \"fixture.contract\", \"specialize\", issues, [], \"fixture.contract\", \"ContractApi\")",
+        r#"attached_module: str | None = None
+    attached_symbol: str | None = None
+    if declaration.declaration.name == "Selected":
+        attached_module = "fixture.contract"
+        attached_symbol = "ContractApi"
+    return DeclarationPlan(fields, metadata, "fixture.contract", "specialize", issues, [], attached_module, attached_symbol)"#,
+    );
+    let modules = project(
+        r#"
+from fixture.contract import Contract, contract_config
+
+class Selected(Contract):
+    _config = contract_config(True)
+    value: int
+
+class Plain(Contract):
+    _config = contract_config(True)
+    value: int
+
+def invalid():
+    assert Selected.describe() == "attached"
+    Plain.describe()
+"#,
+        &contract,
+    );
+    let errors = compile_errors(
+        &modules,
+        "a finalized adapter without a selected set must expose no provisional API",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.message.contains("describe")
+                && (error.message.contains("unknown") || error.message.contains("has no"))
+        }),
+        "expected missing attached API diagnostic: {errors:#?}"
+    );
+}
+
+#[test]
 fn attached_api_collision_reports_both_selected_declarations() {
     let contract = attached_contract();
     let modules = project(

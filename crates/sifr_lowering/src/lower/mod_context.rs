@@ -46,6 +46,7 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) synthetic_attached_imports: Vec<sifr_ir::HirImport>,
     pub(in crate::lower) final_attached_api_sets:
         std::collections::BTreeMap<String, sifr_ir::AttachedApiSetIdentity>,
+    pub(in crate::lower) attached_api_selections_finalized: bool,
     pub(in crate::lower) class_adapter_selections: Vec<sifr_ir::ClassAdapterSelection>,
     pub(in crate::lower) adapter_marker_bindings:
         HashMap<String, sifr_ir::ClassAdapterMarkerDeclaration>,
@@ -250,6 +251,7 @@ impl LowerCtx {
             attached_method_bindings: HashMap::new(),
             synthetic_attached_imports: Vec::new(),
             final_attached_api_sets: std::collections::BTreeMap::new(),
+            attached_api_selections_finalized: false,
             class_adapter_selections: Vec::new(),
             adapter_marker_bindings: HashMap::new(),
             attached_api_set_bindings: HashSet::new(),
@@ -422,6 +424,7 @@ impl LowerCtx {
         self.python_bridge_authorities = options.python_bridge_authorities;
         self.adapter_field_plans = options.adapter_field_plans;
         self.final_attached_api_sets = options.attached_api_sets;
+        self.attached_api_selections_finalized = options.attached_api_selections_finalized;
         self.specialization_requests = options.specialization_requests;
         self
     }
@@ -635,6 +638,7 @@ pub struct LoweringOptions {
     pub python_bridge_authorities: std::collections::BTreeMap<String, PythonBridgeTargetAuthority>,
     pub adapter_field_plans: std::collections::BTreeMap<String, Vec<sifr_ir::AdapterFieldPlan>>,
     pub attached_api_sets: std::collections::BTreeMap<String, sifr_ir::AttachedApiSetIdentity>,
+    pub attached_api_selections_finalized: bool,
     pub specialization_requests: Vec<sifr_ir::ConstSpecializationRequest>,
 }
 
