@@ -3,7 +3,7 @@
 # intrinsics Demo
 #
 # This demo showcases the three-tier hybrid stdlib architecture:
-# 1. sifr.test is resolved from lib/sifr/test.sifr (a .sifr stdlib file)
+# 1. sifr.test is resolved from stdlib/sifr/test.sifr (a .sifr stdlib file)
 # 2. sifr.math is resolved via intrinsic fallback (_sifr.math)
 # 3. _sifr.* imports are blocked for user code
 
@@ -11,7 +11,7 @@ from sifr.test import assert_eq, assert_true
 from sifr.math import sqrt, pi
 
 def main():
-    # sifr.test functions come from lib/sifr/test.sifr
+    # sifr.test functions come from stdlib/sifr/test.sifr
     assert_eq(1 + 1, 2)
     assert_eq("hello" + " world", "hello world")
     assert_true(True)
@@ -23,4 +23,3 @@ def main():
 
     print("intrinsics demo: all checks passed!")
     assert str("intrinsics demo: all checks passed!") == "intrinsics demo: all checks passed!"
-
