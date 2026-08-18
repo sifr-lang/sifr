@@ -8,8 +8,12 @@ This document owns the durable Native Pydantic-Sifr design and architecture.
 The archived ad hoc phase records milestone planning, delivery status, pull
 requests, validation, review evidence, blockers, and closure.
 
-Phase record:
-[`ad-hoc-native-pydantic-sifr-architecture.md`](../plans/issues/archive/ad-hoc-native-pydantic-sifr-architecture.md).
+Phase records:
+
+- The completed native engine phase is
+  [`ad-hoc-native-pydantic-sifr-architecture.md`](../plans/issues/archive/ad-hoc-native-pydantic-sifr-architecture.md).
+- The static class-adapter and ergonomic API phase is
+  [`ad-hoc-static-class-adapters-and-pydantic-ergonomics.md`](../plans/issues/active/ad-hoc-static-class-adapters-and-pydantic-ergonomics.md).
 
 ## Objective
 
@@ -23,6 +27,7 @@ Provide a complete, native, Pydantic-like data contract API for Sifr with:
 - custom validators and serializers,
 - type adapters,
 - JSON Schema generation,
+- Pydantic-style model declarations without raw specialization metadata,
 - Pydantic-familiar APIs where they fit Sifr,
 - native performance with no Python runtime, and
 - behavior grounded in the battle-tested Pydantic and Pydantic Core corpus.
@@ -177,6 +182,21 @@ issue and the compatibility matrix.
 21. The canonical Pydantic-Sifr demo is owned, tested, and released by the
     external `sifr-lang/pydantic-sifr` repository. No package-specific demo is
     added to `sifr-lang/sifr`.
+22. Sifr provides one package-neutral static class-adapter contract. The
+    contract supports declaration descriptors, adapter markers, typed handler
+    references, and attached package APIs.
+23. A class adapter cannot rewrite arbitrary syntax, add stored fields, change
+    field types, rewrite method bodies, or change ownership and layout.
+24. `BaseModel`, `Field`, `ConfigDict`, validators, serializers, computed
+    fields, and model method names remain package-owned declarations.
+25. The compiler resolves descriptors before it determines field requiredness,
+    defaults, constructor parameters, and the structural shape.
+26. Attached model APIs bind existing package functions to a concrete owner
+    type. The compiler does not generate arbitrary package method bodies.
+27. Source origins participate in diagnostics. They do not participate in
+    static schema identity or semantic cache identity.
+28. The ergonomic API replaces the package's raw metadata syntax as the normal
+    public path. It does not create a second schema or execution engine.
 
 ## Repository Ownership
 
@@ -281,20 +301,29 @@ a `cdylib`, Python extension, CPython library, or runtime plugin.
 ## High-Level Architecture
 
 ```text
-Sifr type T + package metadata
-              |
-              v
+spanned class declaration
+          |
+          v
+resolve marker, field, class, type, and method descriptors
+          |
+          v
+package-owned static class adapter
+          |
+          v
+finalized Sifr type T + typed package metadata
+          |
+          v
       pydantic-sifr frontend
-              |
-              v
+          |
+          v
       Sifr Core Schema graph
-              |
+          |
  package const canonicalize/verify
-              |
-              v
+          |
+          v
     immutable Schema Program
-              |
-              v
+          |
+          v
       pydantic_sifr_core
        /              \
       /                \
@@ -313,6 +342,338 @@ The schema graph is the architectural boundary corresponding to Pydantic's
 `CoreSchema`. The representation and node set are Sifr-owned and deliberately
 exclude Python-only behavior.
 
+## Static Class-Adapter Contract
+
+### Purpose and limit
+
+The compiler provides one static class-adapter contract for packages that add
+declarative behavior to ordinary classes. Database mappers, RPC packages, and
+command-line parsers can use the same contract.
+
+The contract is not a macro system. An adapter receives typed declarations and
+returns a bounded declaration plan. It cannot receive raw source text or an
+untyped syntax tree.
+
+An adapter can:
+
+- consume typed field, class, type, and method descriptors,
+- attach typed metadata to existing declarations,
+- select a required, constant-default, or factory-default field state,
+- request one existing package const specialization,
+- reference statically checked user methods as handlers,
+- attach declared package functions as type or instance methods, and
+- return bounded package issues at supplied source origins.
+
+An adapter cannot:
+
+- add, remove, rename, or retype stored fields,
+- rewrite expressions or method bodies,
+- change class layout, ownership, or sendability,
+- introduce runtime reflection,
+- generate arbitrary HIR or Rust code, or
+- select behavior from an unresolved package or decorator basename.
+
+### Marker bases
+
+A package can mark a field-less class as a class-adapter marker. The compiler
+resolves the marker through its canonical imported identity.
+
+An adapter marker is not a data parent. It does not add layout, constructor
+work, or a `super()` requirement. It also does not consume the one ordinary
+data-parent position.
+
+A class can select one adapter provider. Two different providers on one class
+are a compile-time error. Repeated references to the same inherited provider
+are normalized to one provider.
+
+An adapted class can have one ordinary data parent. If that parent is adapted,
+it must use the same provider. The adapter receives the complete inherited
+declaration order and exact nominal identities.
+
+### Spanned declaration input
+
+The compiler collects an adapted class before normal class finalization. The
+input contains:
+
+- the exact class and provider identities,
+- type parameters and the optional data parent,
+- fields in declaration order,
+- field annotations and right-hand-side expressions,
+- class-level descriptor assignments,
+- methods and their checked signatures,
+- descriptor values and callback identities, and
+- source-origin IDs for declarations and descriptor arguments.
+
+The input contains typed values only. A source-origin ID is an opaque compiler
+token. Package code can return that token with an issue but cannot create or
+alter a source range.
+
+Source-origin IDs are diagnostic data. Canonical shape, schema, program, and
+incremental cache identities exclude source locations.
+
+### Declaration descriptors
+
+A package can mark a const function as one descriptor kind:
+
+- field descriptor,
+- class descriptor,
+- method descriptor, or
+- type-annotation descriptor.
+
+The compiler recognizes descriptor calls through canonical imported function
+identity. It evaluates each call with the normal bounded const evaluator.
+
+A field descriptor is valid on an annotated field right-hand side. A class
+descriptor is valid in a consumed class assignment. A consumed assignment does
+not create a stored field or runtime class value.
+
+A method descriptor is valid on a checked method declaration. A type descriptor
+is valid in `Annotated[T, descriptor]`. The compiler preserves declaration
+order and descriptor source origins.
+
+Descriptor functions return package-owned structural values. The compiler does
+not define names such as `gt`, `alias`, `extra`, or `strict`.
+
+Each adapter provider declares one structural descriptor type `D`. Its
+declaration input is generic over that type:
+
+```text
+DeclarationInput[D]
+DescriptorUse[D]
+    target_kind
+    target_identity
+    value: D
+    origin
+```
+
+All descriptor functions consumed by that provider must return `D` or a union
+member assignable to `D`. Pydantic-Sifr can use one union of field,
+configuration, handler, and type descriptor records.
+
+The compiler retains each evaluated value as a typed const value. It does not
+convert values to strings or expose one untyped metadata map. A descriptor from
+another provider produces a type error before adapter evaluation.
+
+The structural shape and specialization input use the same provider type `D`:
+
+```text
+ShapeMetadata[D]
+    key
+    value: D
+
+ShapeInput[D]
+    root
+```
+
+The compiler binds `D` from the selected adapter provider. It converts each
+adapter-produced metadata value to that exact static type before it invokes the
+provider's specialization function. The package does not declare one `str`
+field that erases all metadata value types.
+
+Descriptor values can contain a compiler-owned `CallableIdentity`. This sealed
+const variant names a checked function, static method, or supported type
+constructor. Its canonical module, owner, symbol, generic arguments, and
+signature digest participate in const and static-program identity.
+
+Adding `CallableIdentity` changes the closed `ConstValue` and
+`StaticProgramValue` contracts. The implementation must update
+`internal_docs/const_specialization.md` and its cache-identity evidence in the
+same merge unit.
+
+### Finalization order
+
+The compiler uses this order for an adapted class:
+
+1. Resolve imports, bases, annotations, and declared method signatures.
+2. Collect descriptor calls and source origins.
+3. Evaluate descriptor functions.
+4. Run the selected adapter with the typed declaration input.
+5. Validate the bounded declaration plan.
+6. Determine field defaults, requiredness, and constructor parameters.
+7. Build the finalized nominal type and structural shape.
+8. Run the requested package const specialization.
+9. Resolve handler slots against user-authored methods.
+10. Attach declared package API bindings.
+
+No later step changes an input of an earlier semantic identity. Attached APIs
+do not enter the structural shape that drives schema specialization.
+
+### Declaration plan
+
+The adapter returns one bounded declaration plan. The plan can contain:
+
+- typed metadata for the class and its existing fields,
+- one default state for each field,
+- typed references to user-authored handler methods,
+- one specialization function identity, and
+- one declared attached-API set identity.
+
+A field default state is exactly one of:
+
+```text
+Required
+ConstDefault(value, validation_policy)
+FactoryDefault(callable_identity, validation_policy)
+```
+
+The callable identity can name a checked function, static method, or supported
+type constructor. The compiler checks its parameters and output against the
+field contract. The package schema remains the authority for default
+validation policy.
+
+The plan cannot contain generated stored fields or generated method bodies.
+This rule prevents a transform output from changing its own structural input
+or schema cache key.
+
+### Handler references
+
+Method descriptors produce typed references to methods in the declaration
+input. Before specialization, the compiler binds each reference to a declared
+method and checks its static signature.
+
+The package specialization selects the handler references that its static
+program uses. After specialization, the compiler resolves that selected set to
+the emitted method-slot table. The selected set contributes to the static
+program output and code-generation identity. It does not feed the earlier
+adapter-invocation key.
+
+The compiler checks:
+
+- the exact owner and method identity,
+- the receiver and ownership mode,
+- input and output types,
+- an infallible output or a typed `Result` output,
+- synchronous execution,
+- context type and borrow mode,
+- duplicate targets, and
+- constructor and attached-API exclusions.
+
+An ordinary class supports `Self` in method annotations. `Self` means the exact
+current class specialization. A declared `own self` receiver uses the ordinary
+owned parameter convention and can return `Self` or `Result[Self, E]`.
+
+The compiler resolves built-in method-kind decorators before package method
+descriptors. For the familiar validator form, the package descriptor is the
+outer decorator and `@classmethod` is directly above the method declaration.
+
+The package owns handler kinds and ordering. The compiler preserves declaration
+and inheritance order and emits a checked method-slot table.
+
+A field `before` handler declares an input type `I` independently from the
+field type. The active input profile validates the source into `I`. The handler
+then returns a typed value that the remaining field schema validates. The
+pipeline does not enter the same `before` stage again.
+
+A model `before` handler declares one concrete structural input type `I`. The
+model input must project to `I` under the active input profile. The handler
+returns a concrete structural value accepted by the remaining model field
+schema. The pipeline does not enter the same `before` stage again. Neither form
+uses `Any` or an untyped input map.
+
+An `after` model handler runs in generated package glue after
+`StructuralConstruct` creates the model. Each handler consumes the current
+model and its returned `Self` becomes the input to the next handler. The final
+returned value is the validation result.
+
+The generated glue keeps this work inside the same fallible
+validate-and-construct operation. A typed handler error becomes a validation
+detail at the model root and joins the same aggregate `ValidationError`.
+Cleanup consumes any constructed or replaced model exactly once after an
+error.
+
+Attached package methods cannot become handler targets. This rule keeps the
+schema input independent from the attached facade.
+
+### Attached package APIs
+
+A package can declare a fixed set of generic functions as an attached API. A
+binding selects a public name and one receiver form:
+
+- type receiver,
+- immutable instance receiver,
+- mutable instance receiver, or
+- owned instance receiver.
+
+The compiler substitutes the adapted owner for the declared owner type or
+`Self`. An attached function can retain other type parameters. Normal call-site
+inference resolves those parameters, and their concrete arguments participate
+in code-generation identity. The compiler then applies normal generic,
+ownership, effect, and `Result` checks.
+
+The binding refers to an existing package function. The compiler does not copy
+or synthesize its body. A collision with a user method or another attached API
+is a compile-time error.
+
+Inherited classes reuse bindings from the same provider. The concrete owner
+type selects the concrete static program. Attached API signatures participate
+in module and code-generation cache identities but not structural shape
+identity.
+
+### `Annotated` normalization
+
+`Annotated` is the package-neutral carrier for type descriptors. The compiler
+preserves the base type and ordered descriptor list.
+
+The adapter defines descriptor merge rules. Pydantic-Sifr uses these rules:
+
+- Nested `Annotated` layers flatten from inner to outer order.
+- Independent constraints compose.
+- A repeated descriptor property uses the last explicit value.
+- Two incompatible descriptor properties produce a package issue.
+- A right-hand-side `Field` descriptor applies after annotation descriptors.
+- Field defaults come only from the right-hand-side field descriptor or the
+  ordinary field default.
+- `Annotated[T, Field(...)] | None` constrains `T` only.
+- `Annotated[T | None, Field(...)]` applies metadata to the complete optional
+  field contract.
+
+### Inheritance
+
+The compiler preserves inherited and local declaration identity. The package
+adapter owns package-specific merge policy.
+
+Pydantic-Sifr uses these rules:
+
+- Base fields precede local fields.
+- A local field can override an inherited field only with the same type.
+- Local field descriptors replace conflicting inherited field properties.
+- Model configuration merges from the oldest base to the most-derived class.
+- A derived explicit configuration value wins.
+- Handler order follows the documented Pydantic-Sifr order for each handler
+  mode.
+- A derived declaration with the same handler identity replaces the inherited
+  declaration.
+- The data parent can be a concretely instantiated generic class that uses the
+  same adapter provider.
+- Schema generation requires concrete type arguments.
+
+### Identity and bounded evaluation
+
+The adapter-invocation cache input contains:
+
+- the provider package, function, and version identity,
+- the exact adapted class and parent identities,
+- resolved field and method signatures,
+- normalized descriptor values,
+- the structural and const-evaluator contract versions.
+
+The post-adapter program key is a content identity computed from completed
+adapter and specialization results. It contains the adapter-invocation key
+plus:
+
+- normalized adapter output,
+- selected handler identities, and
+- the selected attached-API set identity.
+
+The module and code-generation keys also contain resolved attached signatures
+and concrete residual generic arguments. No post-adapter output feeds the
+adapter-invocation key. The post-adapter identity never performs the lookup for
+the specialization that produces its inputs.
+
+Source ranges, file paths, and diagnostic rendering do not enter semantic
+identity. Descriptor and adapter evaluation use explicit recursion, step,
+allocation, output-size, and issue-count limits.
+
 ## Compiler Substrate
 
 ### Compiler prerequisites
@@ -321,6 +682,10 @@ The architecture depends on compiler and sysroot capabilities that are broader
 than small extensions to generics, stdlib value types, or Rust interop:
 
 - compile-time specialization of package generics for a concrete `T`,
+- package-neutral static class adapters and erased marker bases,
+- typed field, class, type, and method descriptors,
+- source-origin IDs for declaration and descriptor diagnostics,
+- checked package API attachment with owner-type substitution,
 - deterministic compile-time evaluation sufficient to derive and emit static
   data,
 - `ConstSpecializationOutcome[T]` and bounded package issues for const specialization in
@@ -462,9 +827,13 @@ Metadata values must be statically typed and compile-time evaluable. The
 compiler preserves and exposes them to specializing package code; it does not
 interpret `Field`, validator, serializer, or model configuration semantics.
 
-This mechanism is the substrate for Pydantic-familiar `Field`,
-`field_validator`, `model_validator`, `field_serializer`, `computed_field`,
-and configuration declarations without hard-coding their names.
+Raw declaration metadata is a low-level package-authoring mechanism. Static
+class adapters produce this metadata from typed descriptors before structural
+shape finalization.
+
+This mechanism supports Pydantic-familiar `Field`, `field_validator`,
+`model_validator`, `field_serializer`, `computed_field`, and configuration
+declarations without compiler knowledge of these names.
 
 ### Const-specialization diagnostics
 
@@ -477,8 +846,8 @@ Those existing types remain confined to package-manager and driver
 diagnostics.
 
 `ConstPackageIssue` carries a package-qualified stable `reason_code`, static
-package-template arguments, one primary source span supplied by the
-specialization API, additional labels, and notes. Values must be
+package-template arguments, one primary source-origin ID, additional labels,
+and notes. Values must be
 const-evaluable and bounded. Package argument names are checked against the
 package's statically declared template and cannot use compiler/LSP-reserved
 names such as `rule`.
@@ -502,7 +871,7 @@ lint rule; this classification is documented with the diagnostic code.
 
 The frontend converts the outcome into the same structured CLI/LSP diagnostic
 stream in `check`, build, tests, and editor analysis. It validates the package
-namespace, reason code, spans, and template arguments and never executes a
+namespace, reason code, origins, and template arguments and never executes a
 package renderer or accepts arbitrary terminal text. A non-Pydantic fixture
 package must prove fatal and warning emission, invalid-issue rejection,
 source/installed parity, and identical CLI/LSP identity before
@@ -598,42 +967,134 @@ internal load error before user data is processed.
 
 ## Public Package Model
 
-The public surface should be familiar to Pydantic users while respecting
-Sifr's static and fallible semantics.
+The public surface is familiar to Pydantic users and preserves Sifr's static
+and fallible semantics.
 
 Representative shape:
 
 ```sifr
-from pydantic import BaseModel, Field, ValidationError
+from pydantic_sifr import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    computed_field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 class User(BaseModel):
-    id: int = Field(gt=0)
-    name: str = Field(min_length=1, max_length=100)
-    active: bool = True
+    model_config = ConfigDict(
+        extra="forbid",
+        strict=True,
+        populate_by_name=True,
+    )
 
-def parse_user(payload: bytes) -> Result[User, ValidationError]:
+    id: int64 = Field(alias="user_id", gt=0)
+    name: str = Field(min_length=1)
+    active: bool = True
+    tags: list[str] = Field(default_factory=list)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def normalize_name(cls, value: str) -> Result[str, ValueError]:
+        ...
+
+    @model_validator(mode="after")
+    def validate_user(own self) -> Result[Self, ValueError]:
+        ...
+
+    @field_serializer("id")
+    def serialize_id(self, value: int64) -> str:
+        return str(value)
+
+    @computed_field
+    def display_name(self) -> str:
+        return self.name
+
+def load_user(payload: bytes) -> Result[User, ValidationError]:
     return User.model_validate_json(payload)
 ```
+
+The example uses the `json.exact` integer profile. The phase record uses the
+same canonical example.
 
 Sifr does not turn validation failures into exceptions. Familiar operations
 therefore return `Result` where user input or custom behavior can fail.
 
-The canonical capabilities are:
+The complete selected public surface includes:
 
-- validate a Sifr structural input as `T`,
-- validate JSON bytes/text as `T`,
-- validate a bare `str` or statically verified strings-leaf structural input
-  as `T`,
-- serialize `T` to a structural value,
-- serialize `T` to JSON,
-- obtain a reusable `TypeAdapter[T]`,
-- obtain JSON Schema for the selected serialization/validation mode, and
-- customize validation/serialization through typed declarations and optional
-  caller-owned typed contexts.
+- `BaseModel`, `RootModel[T]`, and concrete generic models,
+- `Field`, `ConfigDict`, and `Annotated` declarations,
+- required fields, constant defaults, and typed default factories,
+- explicit aliases, alias paths, alias choices, and separate validation or
+  serialization aliases,
+- deterministic const alias generators,
+- numeric, text, bytes, collection, pattern, and discriminator constraints,
+- field schema annotations such as title, description, examples, and bounded
+  `json_schema_extra`,
+- nested models, recursive models, enums, literals, optionals, and unions,
+- public URL, multi-host URL, and compiled-pattern values,
+- field validators in `before`, `after`, and `plain` modes,
+- field validators with one or more explicit field targets,
+- model validators in `before` and `after` modes,
+- field and model serializers with typed values and results,
+- serializer `when_used` policies,
+- computed fields from checked zero-argument instance methods,
+- structural, JSON, and strings-profile validation,
+- structural and JSON serialization,
+- typed include and exclude selections,
+- unconditional field serialization exclusion,
+- `exclude_defaults`, `exclude_none`, and alias output,
+- `TypeAdapter[T]`, and
+- JSON Schema in validation and serialization modes.
+
+`RootModel[T]` is a package-owned generic adapted class with one stored
+`root: T` field. The adapter does not synthesize this field. Static schema
+specialization occurs for a concrete `RootModel[Concrete]` type.
+
+A user generic model keeps its declared type variables during checking. The
+compiler instantiates the adapter plan and static program only for a concrete
+use. An unbound generic model has no runtime schema program.
+
+The common model methods are:
+
+- `Model.model_validate`,
+- `Model.model_validate_json`,
+- `Model.model_validate_strings`,
+- `model.model_dump`,
+- `model.model_dump_json`, and
+- `Model.model_json_schema`.
+
+Each fallible method returns `Result`. `Model.model_json_schema` is
+type-directed and does not require a dummy model value.
+
+`model_dump` always returns `dict[str, JsonValue]`. A separate typed adapter
+entry point can project a value to another declared structural output type.
+That typed projection does not change the `model_dump` contract.
+
+The static configuration surface covers the common model policies:
+
+- extra-field policy,
+- strict or coercing validation,
+- validation by alias or field name,
+- serialization aliases,
+- default validation,
+- enum-value representation,
+- common text normalization, and
+- deterministic alias generation.
+
+`extra="allow"` requires a declared typed extra-field destination. The
+compiler does not add hidden storage to a model.
 
 Pydantic-style methods and a smaller functional API may coexist only as thin
 views over the same Core Schema and execution engine. There is no second
 functional validator implementation underneath convenience functions.
+
+The package does not expose raw `@metadata` and `@const_specialize` declarations
+as the normal model authoring path. These declarations remain compiler
+substrate for package authors and conformance fixtures.
 
 ## Core Schema Contract
 
@@ -740,7 +1201,7 @@ processed.
 - union ranking and discriminator dispatch,
 - recursion guards,
 - default handling,
-- callback scheduling,
+- callback scheduling before structural construction,
 - aggregate errors,
 - validated value storage,
 - serializer-plan execution,
@@ -751,6 +1212,10 @@ The Sifr package owns the one semantic Core Schema canonicalizer and verifier,
 implemented as deterministic const-evaluable Sifr code. The native core never
 implements a second verifier; its envelope checks protect artifact integrity,
 not schema semantics.
+
+Generated package glue schedules `after` model handlers after structural
+construction. This is the only validation handler stage that requires a typed
+model value.
 
 It does not own Sifr syntax, class lookup, package imports, compiler type
 resolution, or user-facing declaration analysis.
@@ -1450,10 +1915,26 @@ The native core must:
 - Exact source or binary compatibility with Python Pydantic.
 - A Python runtime, PyO3 extension, or Python object bridge.
 - Supporting Pydantic plugins by executing Python.
+- Python metaclasses, runtime class mutation, or dynamic model creation.
+- Arbitrary syntax-tree transforms or package-generated method bodies.
 - Reusing Pydantic's Python-specific Core Schema nodes.
 - Making arbitrary Sifr values dynamically introspectable at runtime.
 - Making Core Schema the normal beginner-facing API.
 - Runtime model/schema construction or a runtime schema compiler.
+- `create_model`, `validate_call`, Pydantic dataclasses, or private attributes.
+- `model_construct`, dynamic `model_copy` updates, runtime `model_fields`, or
+  runtime `model_rebuild`.
+- Python `from_attributes`, ORM attribute probing, or arbitrary runtime types.
+- Multiple data inheritance or composition of different class-adapter providers.
+- Public wrap-validator and wrap-serializer continuation APIs.
+- Wildcard `field_validator("*")` targeting. Validators name one or more
+  explicit fields.
+- Python `@property` stacking for computed fields. A computed field is a checked
+  zero-argument instance method.
+- Open generic schema generation before concrete type specialization.
+- Assignment-validation hooks that intercept ordinary Sifr field mutation.
+- Python-compatible frozen-model emulation. Programs use ordinary Sifr
+  immutability contracts instead.
 - Adding JSON-specific rules to the Sifr compiler.
 - Replacing Sifr's ordinary type checker with validation schemas.
 - Implementing Pydantic Settings, web-framework integration, ORM behavior or
@@ -1468,6 +1949,16 @@ The native core must:
 
 - `sifr-lang/sifr` contains no Pydantic-specific compiler branch, type, schema
   node, decorator name or JSON validation policy.
+- Static class adapters use canonical package identities. They never use
+  unqualified decorator, class, or function names.
+- A static class adapter consumes typed declarations and returns one bounded
+  declaration plan. It cannot rewrite arbitrary syntax or stored layout.
+- Adapter execution completes before requiredness, constructor, and structural
+  shape finalization.
+- Attached APIs bind declared package functions. They do not add method bodies
+  to the schema input.
+- Source-origin IDs support package diagnostics but never change semantic
+  program identity.
 - The external
   [`sifr-lang/pydantic-sifr`](https://github.com/sifr-lang/pydantic-sifr)
   repository contains the Sifr package and native core as separately owned
@@ -1504,6 +1995,13 @@ The native core must:
 
 ### Behavior
 
+- Normal Pydantic-Sifr model declarations use `BaseModel`, `Field`,
+  `ConfigDict`, `Annotated`, typed handlers, and attached model methods.
+- Normal users do not write raw specialization or declaration metadata.
+- Field, class, type, and method descriptor errors identify the relevant
+  declaration or argument.
+- One schema program defines validation, serialization, JSON Schema, defaults,
+  aliases, handlers, and attached model operations.
 - Required Pydantic-equivalent features have neutral fixtures and provenance.
 - Every relevant upstream case is classified as same, adapted, not applicable
   or rejected.
@@ -1523,6 +2021,9 @@ The native core must:
 
 ### Maintainability
 
+- Compiler conformance uses at least one non-Pydantic class-adapter fixture.
+- The compiler API contains no validation, model, field, alias, constraint, or
+  Pydantic error vocabulary.
 - No permanent fork of Pydantic or Pydantic Core exists.
 - Mature focused Rust dependencies are reused at their natural boundary.
 - No schema behavior is implemented independently in both Sifr and Rust.
