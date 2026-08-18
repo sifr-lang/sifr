@@ -19,6 +19,7 @@ use sifr_python_ast::Stmt;
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use workload_annotations::WorkloadKind;
+
 /// The lowering context that tracks state during AST->HIR conversion.
 pub(in crate::lower) struct LowerCtx {
     /// Function signatures (name -> type)
@@ -37,9 +38,19 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) declaration_metadata: Vec<sifr_ir::TypedDeclarationMetadata>,
     pub(in crate::lower) class_adapter_providers: Vec<sifr_ir::ClassAdapterProviderDeclaration>,
     pub(in crate::lower) class_adapter_markers: Vec<sifr_ir::ClassAdapterMarkerDeclaration>,
+    pub(in crate::lower) attached_api_sets: Vec<sifr_ir::AttachedApiSetDeclaration>,
+    pub(in crate::lower) attached_apis: Vec<sifr_ir::AttachedApiDeclaration>,
+    pub(in crate::lower) attached_self_type_param: Option<String>,
+    pub(in crate::lower) attached_method_bindings:
+        HashMap<String, super::attached_api_surfaces::AttachedMethodBinding>,
+    pub(in crate::lower) synthetic_attached_imports: Vec<sifr_ir::HirImport>,
+    pub(in crate::lower) final_attached_api_sets:
+        std::collections::BTreeMap<String, sifr_ir::AttachedApiSetIdentity>,
+    pub(in crate::lower) attached_api_selections_finalized: bool,
     pub(in crate::lower) class_adapter_selections: Vec<sifr_ir::ClassAdapterSelection>,
     pub(in crate::lower) adapter_marker_bindings:
         HashMap<String, sifr_ir::ClassAdapterMarkerDeclaration>,
+    pub(in crate::lower) attached_api_set_bindings: HashSet<String>,
     pub(in crate::lower) adapted_class_bindings: HashMap<String, sifr_ir::ClassAdapterSelection>,
     pub(in crate::lower) class_data_parents: HashMap<String, Option<String>>,
     pub(in crate::lower) adapter_field_plans:
@@ -234,8 +245,16 @@ impl LowerCtx {
             declaration_metadata: Vec::new(),
             class_adapter_providers: Vec::new(),
             class_adapter_markers: Vec::new(),
+            attached_api_sets: Vec::new(),
+            attached_apis: Vec::new(),
+            attached_self_type_param: None,
+            attached_method_bindings: HashMap::new(),
+            synthetic_attached_imports: Vec::new(),
+            final_attached_api_sets: std::collections::BTreeMap::new(),
+            attached_api_selections_finalized: false,
             class_adapter_selections: Vec::new(),
             adapter_marker_bindings: HashMap::new(),
+            attached_api_set_bindings: HashSet::new(),
             adapted_class_bindings: HashMap::new(),
             class_data_parents: HashMap::new(),
             adapter_field_plans: std::collections::BTreeMap::new(),
@@ -404,6 +423,9 @@ impl LowerCtx {
         self.python_trust_policy = options.python_trust_policy;
         self.python_bridge_authorities = options.python_bridge_authorities;
         self.adapter_field_plans = options.adapter_field_plans;
+        self.final_attached_api_sets = options.attached_api_sets;
+        self.attached_api_selections_finalized = options.attached_api_selections_finalized;
+        self.specialization_requests = options.specialization_requests;
         self
     }
 
@@ -615,6 +637,9 @@ pub struct LoweringOptions {
     pub python_trust_policy: Option<PythonTrustPolicy>,
     pub python_bridge_authorities: std::collections::BTreeMap<String, PythonBridgeTargetAuthority>,
     pub adapter_field_plans: std::collections::BTreeMap<String, Vec<sifr_ir::AdapterFieldPlan>>,
+    pub attached_api_sets: std::collections::BTreeMap<String, sifr_ir::AttachedApiSetIdentity>,
+    pub attached_api_selections_finalized: bool,
+    pub specialization_requests: Vec<sifr_ir::ConstSpecializationRequest>,
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]

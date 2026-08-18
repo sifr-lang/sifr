@@ -248,11 +248,11 @@ fn validate_issues(
         ));
         return None;
     };
-    if fields.len() != 6 {
+    if fields.len() != 8 {
         diagnostics.push(malformed(
             &selection.provider_module,
             "adapter_plan",
-            "adapter plan must contain exactly these fields: fields, metadata, specialization_module, specialization_function, issues, and handlers",
+            "adapter plan must contain exactly these fields: fields, metadata, specialization_module, specialization_function, issues, handlers, attached_api_module, and attached_api_symbol",
             selection.range,
         ));
         return None;
@@ -329,6 +329,7 @@ struct ValidatedPlan {
     handlers: Vec<AdapterHandlerPlan>,
     metadata: Vec<AppliedAdapterMetadata>,
     specialization: Option<(String, String)>,
+    attached_api_set: Option<sifr_lowering::AttachedApiSetIdentity>,
 }
 
 fn validate_plan(
@@ -342,7 +343,7 @@ fn validate_plan(
     let ConstValue::Record(mut fields) = value else {
         return Err("adapter plan value must be a record".to_string());
     };
-    if fields.len() != 5 {
+    if fields.len() != 7 {
         return Err("adapter plan contains unknown output fields".to_string());
     }
     let planned_fields = take_list(&mut fields, "fields")?;
@@ -383,6 +384,8 @@ fn validate_plan(
     )?;
     let module = take_optional_string(&mut fields, "specialization_module")?;
     let function = take_optional_string(&mut fields, "specialization_function")?;
+    let attached_api_module = take_optional_string(&mut fields, "attached_api_module")?;
+    let attached_api_symbol = take_optional_string(&mut fields, "attached_api_symbol")?;
     if !fields.is_empty() {
         return Err("adapter plan contains unknown output fields".to_string());
     }
@@ -404,12 +407,47 @@ fn validate_plan(
     {
         return Err("an adapted class may request exactly one specialization".to_string());
     }
+    let attached_api_set = match (attached_api_module, attached_api_symbol) {
+        (None, None) => None,
+        (Some(module), Some(symbol)) => {
+            let identity = sifr_lowering::AttachedApiSetIdentity { module, symbol };
+            if !attached_api_set_exists(module_name, result, external_defs, &identity) {
+                return Err(
+                    "adapter plan references an unknown canonical attached-API set".to_string(),
+                );
+            }
+            Some(identity)
+        }
+        _ => {
+            return Err("attached API module and symbol must both be present or absent".to_string())
+        }
+    };
     Ok(ValidatedPlan {
         fields: planned_fields,
         handlers,
         metadata,
         specialization,
+        attached_api_set,
     })
+}
+
+fn attached_api_set_exists(
+    module_name: &str,
+    result: &LoweringResult,
+    external_defs: &ExternalDefs,
+    identity: &sifr_lowering::AttachedApiSetIdentity,
+) -> bool {
+    if identity.module == module_name {
+        result
+            .attached_api_sets
+            .iter()
+            .any(|set| set.identity == *identity)
+    } else {
+        external_defs
+            .attached_api_sets
+            .get(&identity.module)
+            .is_some_and(|sets| sets.contains_key(&identity.symbol))
+    }
 }
 
 fn validate_fields(
@@ -762,6 +800,7 @@ fn apply_plan(
     {
         applied.field_plans = plan.fields;
         applied.handler_plans = plan.handlers;
+        applied.attached_api_set = plan.attached_api_set;
         applied.adapter_invocation_identity = adapter_invocation_identity;
         applied.post_adapter_identity = post_adapter_identity;
     }

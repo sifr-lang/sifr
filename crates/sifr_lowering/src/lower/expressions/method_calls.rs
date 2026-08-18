@@ -33,6 +33,11 @@ pub(in crate::lower) fn lower_method_call(
 
     let mut object = lower_expr(&attr.value, ctx)?;
     let method_name = attr.attr.to_string();
+    if let Some(result) =
+        super::attached_api_calls::try_lower_instance_call(object.clone(), attr, call, ctx)
+    {
+        return result;
+    }
     if let Some(result) = super::blocking_executor_calls::lower_thread_pool_submit_call(
         &object,
         &method_name,

@@ -5,6 +5,7 @@ mod cargo_resolution;
 mod entrypoint;
 mod entrypoint_artifact;
 mod entrypoint_resolution;
+mod entrypoint_single_file;
 mod entrypoint_stages;
 mod materialize;
 mod project_codegen;

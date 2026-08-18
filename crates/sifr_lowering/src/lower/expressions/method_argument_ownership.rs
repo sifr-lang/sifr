@@ -125,6 +125,9 @@ pub(super) fn try_lower_class_method_call(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<Option<HirExpr>> {
+    if let Some(result) = super::attached_api_calls::try_lower_type_call(attr, call, ctx) {
+        return Some(result);
+    }
     let Expr::Name(name) = attr.value.as_ref() else {
         return None;
     };

@@ -75,6 +75,42 @@ fn compile_errors(
     }
 }
 
+fn attached_contract() -> String {
+    CONTRACT
+        .replace(
+            "from sifr.meta import ",
+            "from sifr.meta import StaticProgram, Structural, ",
+        )
+        .replace(
+            "@class_adapter_provider",
+            r#"@attached_api_set
+class ContractApi:
+    pass
+
+@attached_api("fixture.contract", "ContractApi", public_name="describe", receiver="type", owner="T")
+def describe[T: StaticProgram]() -> str:
+    return "attached"
+
+@attached_api("fixture.contract", "ContractApi", public_name="echo", receiver="type", owner="T")
+def echo[T: StaticProgram, Input: Structural](input: Input) -> Input:
+    return input
+
+@attached_api("fixture.contract", "ContractApi", public_name="touch", receiver="mutable", owner="T")
+def touch[T: StaticProgram](mut target: Self) -> int:
+    return 1
+
+@attached_api("fixture.contract", "ContractApi", public_name="finish", receiver="owned", owner="T")
+def finish[T: StaticProgram](own target: Self) -> int:
+    return 2
+
+@class_adapter_provider"#,
+        )
+        .replace(
+            "return DeclarationPlan(fields, metadata, \"fixture.contract\", \"specialize\", issues)",
+            "return DeclarationPlan(fields, metadata, \"fixture.contract\", \"specialize\", issues, [], \"fixture.contract\", \"ContractApi\")",
+        )
+}
+
 #[test]
 fn erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost() {
     let modules = project(
@@ -161,6 +197,225 @@ class Model(Contract):
         output.value,
         StaticProgramValue::String("class".to_string())
     );
+}
+
+#[test]
+fn adapter_plan_retains_selected_attached_api_set() {
+    let contract = attached_contract();
+    let modules = project(
+        r#"
+from fixture.contract import Contract, contract_config
+
+class Model(Contract):
+    _config = contract_config(True)
+    value: int
+
+def main():
+    assert Model.describe() == "attached"
+    assert Model.echo("residual") == "residual"
+"#,
+        &contract,
+    );
+    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let compiled = collect_project_hir_modules(&modules, stdlib_defs)
+        .expect("the adapter should select its attached API set");
+    let selection = compiled
+        .external_defs
+        .class_adapter_selections
+        .get("main")
+        .and_then(|classes| classes.get("Model"))
+        .expect("adapter selection is retained");
+    assert_eq!(
+        selection
+            .attached_api_set
+            .as_ref()
+            .map(|set| (set.module.as_str(), set.symbol.as_str())),
+        Some(("fixture.contract", "ContractApi"))
+    );
+    let main = compiled
+        .hir_modules
+        .get("main")
+        .expect("main module exists");
+    let debug_hir = format!("{main:?}");
+    assert!(debug_hir.contains("describe::<Model>"));
+    assert!(
+        debug_hir.contains("echo::<String, Model>"),
+        "attached residual identity missing from {debug_hir}"
+    );
+    let model = main
+        .classes
+        .iter()
+        .find(|class| class.name == "Model")
+        .expect("adapted model exists");
+    assert!(model.methods.iter().all(|method| {
+        !matches!(
+            method.name.as_str(),
+            "describe" | "echo" | "touch" | "finish"
+        )
+    }));
+}
+
+#[test]
+fn finalized_adapter_without_selected_set_exposes_no_provisional_attached_api() {
+    let contract = attached_contract().replace(
+        "return DeclarationPlan(fields, metadata, \"fixture.contract\", \"specialize\", issues, [], \"fixture.contract\", \"ContractApi\")",
+        r#"attached_module: str | None = None
+    attached_symbol: str | None = None
+    if declaration.declaration.name == "Selected":
+        attached_module = "fixture.contract"
+        attached_symbol = "ContractApi"
+    return DeclarationPlan(fields, metadata, "fixture.contract", "specialize", issues, [], attached_module, attached_symbol)"#,
+    );
+    let modules = project(
+        r#"
+from fixture.contract import Contract, contract_config
+
+class Selected(Contract):
+    _config = contract_config(True)
+    value: int
+
+class Plain(Contract):
+    _config = contract_config(True)
+    value: int
+
+def invalid():
+    assert Selected.describe() == "attached"
+    Plain.describe()
+"#,
+        &contract,
+    );
+    let errors = compile_errors(
+        &modules,
+        "a finalized adapter without a selected set must expose no provisional API",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.message.contains("describe")
+                && (error.message.contains("unknown") || error.message.contains("has no"))
+        }),
+        "expected missing attached API diagnostic: {errors:#?}"
+    );
+}
+
+#[test]
+fn attached_api_collision_reports_both_selected_declarations() {
+    let contract = attached_contract();
+    let modules = project(
+        r#"
+from fixture.contract import Contract, contract_config
+
+class Invalid(Contract):
+    _config = contract_config(True)
+    value: int
+
+    @staticmethod
+    def describe() -> str:
+        return "native"
+"#,
+        &contract,
+    );
+    let errors = compile_errors(&modules, "attached/native collision must fail");
+    let collisions = errors
+        .iter()
+        .filter(|error| error.message.contains("attached API") && error.message.contains("collid"))
+        .count();
+    assert_eq!(
+        collisions, 2,
+        "expected both declaration diagnostics: {errors:#?}"
+    );
+}
+
+#[test]
+fn attached_owned_receiver_uses_normal_move_tracking() {
+    let contract = attached_contract();
+    let modules = project(
+        r#"
+from fixture.contract import Contract, contract_config
+
+class Model(Contract):
+    _config = contract_config(True)
+    value: int
+
+def invalid():
+    model: Model = Model(1)
+    result: int = model.finish()
+    assert model.value == result
+"#,
+        &contract,
+    );
+    let errors = compile_errors(&modules, "owned attached receiver must move its owner");
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("use of moved value: 'model'")),
+        "expected move diagnostic: {errors:#?}"
+    );
+}
+
+#[test]
+fn unbound_generic_attached_owner_cannot_request_static_program() {
+    let contract = attached_contract();
+    let modules = project(
+        r#"
+from fixture.contract import Contract, contract_config
+
+class GenericModel[T](Contract):
+    _config = contract_config(True)
+    value: T
+
+def invalid():
+    GenericModel.describe()
+"#,
+        &contract,
+    );
+    let errors = compile_errors(
+        &modules,
+        "an unbound generic owner must not satisfy StaticProgram",
+    );
+    assert!(errors.iter().any(|error| {
+        error.message.contains("StaticProgram") || error.message.contains("concrete")
+    }));
+}
+
+#[test]
+fn concrete_generic_adapted_child_receives_concrete_attached_signature() {
+    let contract = attached_contract().replace(
+        "return DeclarationPlan(fields, metadata, \"fixture.contract\", \"specialize\", issues, [], \"fixture.contract\", \"ContractApi\")",
+        r#"specialization_module: str | None = "fixture.contract"
+    specialization_function: str | None = "specialize"
+    if declaration.declaration.name == "Parent":
+        specialization_module = None
+        specialization_function = None
+    return DeclarationPlan(fields, metadata, specialization_module, specialization_function, issues, [], "fixture.contract", "ContractApi")"#,
+    );
+    let modules = project(
+        r#"
+from fixture.contract import Contract, contract_config
+
+class Parent[T](Contract):
+    value: T
+
+class Concrete(Parent[int]):
+    _config = contract_config(True)
+    label: str
+
+def main():
+    value: Concrete = Concrete(1, "ready")
+    assert Concrete.echo("input") == "input"
+    assert value.touch() == 1
+"#,
+        &contract,
+    );
+    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let compiled = collect_project_hir_modules(&modules, stdlib_defs)
+        .expect("concrete generic adapted child should receive attached APIs");
+    let main = compiled
+        .hir_modules
+        .get("main")
+        .expect("main module exists");
+    let debug_hir = format!("{main:?}");
+    assert!(debug_hir.contains("echo::<String, Concrete>"));
+    assert!(debug_hir.contains("touch::<Concrete>"));
 }
 
 #[test]

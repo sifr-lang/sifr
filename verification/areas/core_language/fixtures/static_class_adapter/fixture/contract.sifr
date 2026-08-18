@@ -1,4 +1,5 @@
 from sifr.meta import CallableIdentity, ConstSpecializationOutcome, DeclarationInput, DeclarationPlan, PlannedField, PlannedIssue, PlannedMetadata, ShapeInput, StaticValue
+from fixture.api import ContractApi
 
 
 class ContractDescriptor:
@@ -47,6 +48,9 @@ def adapt_contract(
         "fixture.contract",
         "specialize",
         issues,
+        [],
+        "fixture.api",
+        "ContractApi",
     )
 
 

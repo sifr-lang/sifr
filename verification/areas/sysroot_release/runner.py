@@ -25,6 +25,7 @@ from self_update_certification import (  # noqa: E402
     write_install_receipt,
     write_self_update_metadata_fixture,
 )
+from attached_api_certification import run_attached_api_certification  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
@@ -32,6 +33,9 @@ MANIFEST_PATH = AREA_ROOT / "manifest.json"
 HEAVY_FIXTURE_PATH = AREA_ROOT / "fixtures" / "stdlib_heavy_release_smoke.sifr"
 COMPILE_FIXTURE_PATH = AREA_ROOT / "fixtures" / "stdlib_compile_release_smoke.sifr"
 BOUNDARY_FIXTURE_PATH = AREA_ROOT / "fixtures" / "stdlib_boundary_recertification.sifr"
+ATTACHED_API_FIXTURE_ROOT = (
+    REPO_ROOT / "verification" / "areas" / "core_language" / "fixtures" / "static_class_adapter"
+)
 BOUNDARY_DEPENDENCY_SNAPSHOT_PATH = (
     REPO_ROOT
     / "verification"
@@ -197,6 +201,8 @@ def run_boundary_equivalence() -> tuple[int, list[str]]:
             work_root.mkdir()
             fixture = work_root / BOUNDARY_FIXTURE_PATH.name
             fixture.write_text(BOUNDARY_FIXTURE_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+            attached_fixture = work_root / "static_class_adapter"
+            shutil.copytree(ATTACHED_API_FIXTURE_ROOT, attached_fixture)
             installed_sifr = install_root / "bin" / "sifr"
 
             for label, compiler, output, extra in (
@@ -220,6 +226,18 @@ def run_boundary_equivalence() -> tuple[int, list[str]]:
                 )
                 if "stdlib boundary recertification: pass" not in result.stdout:
                     return 1, [f"{label} boundary fixture did not execute successfully"]
+
+                attached_error = run_attached_api_certification(
+                    compiler=compiler,
+                    extra=extra,
+                    fixture=attached_fixture,
+                    output=temp_root / f"{label}-attached-output",
+                    env=env,
+                    label=label,
+                    run_checked=run_checked,
+                )
+                if attached_error is not None:
+                    return 1, [attached_error]
 
             installed_shape = cargo_dependency_shape(
                 installed_output / "sifr_output" / "Cargo.toml"

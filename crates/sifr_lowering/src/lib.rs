@@ -34,6 +34,7 @@ pub use scope::{NarrowingSnapshot, Scope};
 pub use sifr_ir::{
     rust_opaque_close_method, rust_opaque_structural_mapping, rust_opaque_type_path,
     AdapterFieldDefault, AdapterFieldPlan, AdapterHandlerPlan, AppliedAdapterMetadata,
+    AttachedApiDeclaration, AttachedApiReceiver, AttachedApiSetDeclaration, AttachedApiSetIdentity,
     CallableIdentity, ClassAdapterMarkerDeclaration, ClassAdapterProviderDeclaration,
     ClassAdapterSelection, ConstSpecializationRequest, DeclarationDescriptorFunction,
     DeclarationDescriptorKind, DeclarationMetadataTargetKind, HirDiagnostic, LoweringOutcome,

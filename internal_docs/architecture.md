@@ -872,6 +872,17 @@ free declaration input and provider HIR before evaluation. Post-adapter identity
 the invocation to the validated output and is an input to static-program identity, avoiding a
 cycle with later handler and attached-API outputs.
 
+Attached package APIs are erased compile-time declarations grouped into canonical module-and-set
+identities. Adapter output selects exactly one set. Provisional lowering may expose visible
+package candidates so class bodies can type-check before adapter execution, while final lowering
+uses only the selected set as authority. Attached signatures are added to the adapted
+`Type::Class` surface without adding HIR methods, structural members, handler slots, or synthesized
+method bodies. Calls lower directly to the declared package function through deterministic hidden
+imports. The lowering substitutes the concrete owner and `Self`, infers residual type parameters,
+and records their concrete arguments in the emitted call identity. Type, shared-borrow,
+mutable-borrow, and owned receivers use the normal call and ownership checks; type-directed calls
+do not construct or pass a dummy owner value.
+
 The Native Pydantic-Sifr consumer architecture is documented in
 [`native_pydantic_sifr_architecture.md`](native_pydantic_sifr_architecture.md).
 The architecture includes the package-neutral static class-adapter contract.

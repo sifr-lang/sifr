@@ -1,0 +1,76 @@
+from sifr.meta import StaticProgram, Structural
+
+
+@attached_api_set
+class ContractApi:
+    pass
+
+
+class ContractError(Error):
+    message: str
+
+
+@attached_api(
+    "fixture.api",
+    "ContractApi",
+    public_name="describe",
+    receiver="type",
+    owner="T",
+)
+def describe_contract[T: StaticProgram]() -> str:
+    return "attached-contract"
+
+
+@attached_api(
+    "fixture.api",
+    "ContractApi",
+    public_name="construct",
+    receiver="type",
+    owner="T",
+)
+def construct_contract[T: StaticProgram]() -> Result[T, ContractError]:
+    raise ContractError("fixture constructor is compile-only")
+
+
+@attached_api(
+    "fixture.api",
+    "ContractApi",
+    public_name="echo",
+    receiver="type",
+    owner="T",
+)
+def echo_contract[T: StaticProgram, Input: Structural](input: Input) -> Input:
+    return input
+
+
+@attached_api(
+    "fixture.api",
+    "ContractApi",
+    public_name="inspect",
+    receiver="immutable",
+    owner="T",
+)
+def inspect_contract[T: StaticProgram](target: Self) -> int:
+    return 41
+
+
+@attached_api(
+    "fixture.api",
+    "ContractApi",
+    public_name="touch",
+    receiver="mutable",
+    owner="T",
+)
+def touch_contract[T: StaticProgram](mut target: Self) -> int:
+    return 42
+
+
+@attached_api(
+    "fixture.api",
+    "ContractApi",
+    public_name="finish",
+    receiver="owned",
+    owner="T",
+)
+def finish_contract[T: StaticProgram](own target: Self) -> int:
+    return 43

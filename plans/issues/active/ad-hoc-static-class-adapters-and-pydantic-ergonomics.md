@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-18. M0-M6 are complete; M7 is next.
+Status: active on 2026-08-18. M0-M7 are complete; M7b is next.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -837,7 +837,7 @@ mapped-value `Send`/`Sync` backstop; and preserve file-size headroom in the
 three 899-line modules. These were non-blocking Opus suggestions.
 The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
 outside this phase.
-Next action: implement M7 attached package APIs and owner types.
+M7 completed below.
 
 ### M7: Attached Package APIs and Owner Types
 
@@ -876,6 +876,82 @@ Acceptance criteria:
 
 Exit gate: a package can expose type-directed and instance-directed APIs on an
 adapted class without generated HIR or runtime reflection.
+
+State: complete
+PR: [`sifr-lang/sifr#3266`](https://github.com/sifr-lang/sifr/pull/3266)
+Base SHA: `3dbc62d660783a5cf167eb781b154b56585223f2`
+Candidate SHA: `1c394fd4bfcb3b8f4b7c9eab5ad2ac0946575b38`
+Merge SHA: `9f86467f5564b15b82bcb4232892715dc7a2459b`
+Changed paths: package-neutral attached-API declaration and set metadata;
+provisional-to-final adapter plumbing; direct attached-call lowering and
+generic code-generation identity; receiver ownership integration; erased set
+exports and imports; a cross-module non-Pydantic package fixture; installed
+and source toolchain cache certification; architecture documentation; and
+focused driver coverage. A single-file frontend conversion was split by
+responsibility to keep the touched entrypoint module below 900 lines.
+Validation: all 19 early-adapter tests; workspace clippy; formatting, diff,
+Python compilation, HIR maintainability, and 900-line file-size guardrails;
+and the cross-module source fixture passed. Installed/source boundary
+certification passed with `variants=1 failures=0`: both toolchains built and
+ran the fixture, then an edit to only `fixture/api.sifr` changed the same-output
+rebuild from `attached-contract` to `attached-contract-edited`. The packaged
+toolchain compiled its self-contained `sifr_structural_identity` dependency,
+and [`sifr#3233`](https://github.com/sifr-lang/sifr/issues/3233) was confirmed
+closed. The broad unit command passed 109 CLI unit tests and 12 build-output
+tests before the unrelated existing
+`protocol_bound_unknown_forwarded_typevar.sifr` CFG/diagnostic failure.
+The exact-SHA Opus review found final lowering could retain provisional APIs
+for a local owner whose plan selected no set. The one remediation corrected
+that defining-module path with explicit finality and a selected/unselected
+regression test. The remediation review then exposed the imported-owner path
+below; under the two-review cap it is recorded as M7b rather than starting a
+third review round
+([evidence](https://github.com/sifr-lang/sifr/pull/3266#issuecomment-5332436752)).
+The create-PR and merge gates were each attempted exactly once on the final
+candidate. Both stopped at the out-of-scope pre-v1 verification taxonomy and
+its unrelated stale `bytes` coverage classification; neither was repeated
+([evidence](https://github.com/sifr-lang/sifr/pull/3266#issuecomment-5332473701)).
+Deferred follow-up: M7b owns imported-owner finality and imported attached-API
+resolution. It also audits the review's related imported alias and external
+`StaticProgram` observations. M12 retains the non-blocking suggestions for
+cross-module set-membership policy, non-method name collisions, remaining
+turbofished-call metadata lookups, genuine-data-parent structural eligibility,
+and documentation of intentionally weaker emitted generic bounds.
+The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
+outside this phase.
+Next action: implement M7b imported attached-owner finality.
+
+### M7b: Imported Attached-Owner Finality
+
+Owner: `sifr-lang/sifr`.
+
+Scope:
+
+- Treat imported adapter selections as finalized external facts, independent
+  from whether the consumer module contains a local adapted class.
+- Never expose provisional attached APIs on an imported owner whose adapter
+  selected no attached-API set.
+- Preserve the exact selected set on imported owners.
+- Resolve type and instance attached calls through imported aliases.
+- Make imported concrete adapted owners satisfy `StaticProgram` from exported
+  specialization metadata without accepting unbound generic owners.
+- Add a cross-module selected/unselected owner fixture and driver coverage.
+
+Acceptance criteria:
+
+- A consumer imports one selected adapted owner and calls its type and instance
+  attached APIs successfully.
+- The same consumer imports one unselected adapted owner, and every attached
+  public name remains unavailable.
+- Import aliases behave identically for type and instance attached calls.
+- Imported concrete owners satisfy the same owner and residual generic checks
+  as locally declared owners.
+- Imported unbound generic owners remain rejected for `StaticProgram`.
+- No consumer-only lowering pass uses provisional candidate discovery for an
+  imported adapted owner.
+
+Exit gate: imported adapted owners preserve their finalized attached-API
+selection exactly, including an explicit absence of attached APIs.
 
 ### M8: Pydantic Model, Field, and Configuration Declarations
 

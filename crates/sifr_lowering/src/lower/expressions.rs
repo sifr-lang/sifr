@@ -84,6 +84,7 @@ mod call_shadowable_builtins;
 use call_shadowable_builtins::lower_shadowable_builtin_call;
 mod regular_calls;
 use regular_calls::lower_regular_call;
+mod attached_api_calls;
 mod method_call_arguments;
 mod method_calls;
 pub(in crate::lower) use method_calls::{lower_method_call, resolve_method_type};
