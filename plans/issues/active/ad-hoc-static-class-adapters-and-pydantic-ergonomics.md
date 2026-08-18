@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-18. M0-M7d are complete; M8 is next.
+Status: active on 2026-08-19. M0-M7d are complete; M7e is active.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -1109,7 +1109,44 @@ sharing with assignment sequencing, and behavioral presence/absence fixture
 execution. These were non-blocking Opus findings.
 The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
 outside this phase.
-Next action: resume the preserved M8 package work.
+Next action: implement M7e structural construction defaults.
+
+### M7e: Structural Construction Defaults
+
+Owner: `sifr-lang/sifr`.
+
+Scope:
+
+- Preserve required, constant-default, and checked factory-default states in
+  package-neutral structural shape data.
+- Carry the exact callable identity for adapter factory defaults through HIR,
+  imported bound checking, structural identity, and cache identity.
+- Construct records from named edges while filling omitted defaulted fields
+  from their final checked class defaults.
+- Reject required omissions and unknown or duplicate field edges through typed
+  structural contract errors.
+- Extend the package-neutral static-class-adapter fixture with native partial
+  record construction.
+
+Acceptance criteria:
+
+- Adapter factory fields are not reported as required and expose their sealed
+  callable identity to specialization.
+- A factory default remains eligible for `StaticProgram` and changes the
+  structural identity when its callable identity changes.
+- Structural construction evaluates constant and factory defaults for omitted
+  fields without sharing mutable factory results.
+- Required omissions and malformed record edges fail without a generated
+  runtime panic.
+- The package-neutral static-class-adapter fixture builds and runs through its
+  native partial-construction bridge.
+
+Exit gate: a package can validate a partial structural record and rely on the
+adapted class's final checked defaults during construction.
+
+State: active
+Issue: [`sifr-lang/sifr#3278`](https://github.com/sifr-lang/sifr/issues/3278)
+Next action: complete validation and exact-SHA review.
 
 ### M8: Pydantic Model, Field, and Configuration Declarations
 

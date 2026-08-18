@@ -124,7 +124,16 @@ fn structural_identity_inputs_supported(class_name: &str, ctx: &LowerCtx) -> boo
         .get(class_name)
         .into_iter()
         .flatten()
-        .all(|(_, value)| sifr_ir::canonical_structural_identity_value(value).is_some())
+        .all(|(index, value)| {
+            sifr_ir::canonical_structural_identity_value(value).is_some()
+                || ctx
+                    .adapter_field_plans
+                    .get(class_name)
+                    .and_then(|fields| fields.get(*index))
+                    .is_some_and(|field| {
+                        matches!(field.default, sifr_ir::AdapterFieldDefault::Factory(_))
+                    })
+        })
         && ctx
             .declaration_metadata
             .iter()

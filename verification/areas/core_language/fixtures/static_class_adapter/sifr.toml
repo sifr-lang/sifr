@@ -9,3 +9,7 @@ roots = ["."]
 
 [exports]
 modules = ["fixture.contract", "fixture.contract_types"]
+
+[rust]
+bridges = ["src/bridges"]
+direct-crate-bindings = true

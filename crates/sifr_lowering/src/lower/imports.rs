@@ -444,7 +444,17 @@ fn register_imported_structural_identity_inputs(
         .and_then(|classes| classes.get(external_name))
         .into_iter()
         .flatten()
-        .all(|(_, value)| sifr_ir::canonical_structural_identity_value(value).is_some());
+        .all(|(index, value)| {
+            sifr_ir::canonical_structural_identity_value(value).is_some()
+                || externals
+                    .class_adapter_selections
+                    .get(module_name)
+                    .and_then(|classes| classes.get(external_name))
+                    .and_then(|selection| selection.field_plans.get(*index))
+                    .is_some_and(|field| {
+                        matches!(field.default, sifr_ir::AdapterFieldDefault::Factory(_))
+                    })
+        });
     let metadata_supported = externals
         .declaration_metadata
         .get(module_name)

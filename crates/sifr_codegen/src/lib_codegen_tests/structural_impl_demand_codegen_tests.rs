@@ -24,6 +24,28 @@ fn ordinary_class_codegen_skips_structural_impls() {
 }
 
 #[test]
+fn structural_construction_uses_checked_defaults_for_missing_fields() {
+    let mut payload = payload_class();
+    payload.field_defaults = vec![(0, HirExpr::IntLiteral(7))];
+    let module = module(vec![structural_function()], vec![payload]);
+
+    let generated = generate_rust(&module);
+
+    assert!(
+        generated.contains("let mut child_nodes: [Option<"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("None => 7"),
+        "missing structural fields must evaluate their checked default: {generated}"
+    );
+    assert!(
+        !generated.contains("description.edges().len() != 1"),
+        "defaulted structural fields must be omittable: {generated}"
+    );
+}
+
+#[test]
 fn ordinary_union_codegen_skips_structural_impls_without_demand() {
     let union = Type::Union(vec![Type::Int, Type::Str]);
     let module = module(vec![ordinary_function("choose", union)], Vec::new());
@@ -447,6 +469,7 @@ fn payload_class() -> HirClass {
         identity: None,
         fields: vec![("value".to_string(), Type::Int)],
         field_defaults: Vec::new(),
+        field_default_identities: Vec::new(),
         declaration_metadata: Vec::new(),
         methods: Vec::new(),
         is_hashable: false,

@@ -601,6 +601,7 @@ fn test_checked_field_mutation_is_explicit_and_non_sticky() {
                 ("label".to_string(), label_ty.clone()),
             ],
             field_defaults: Vec::new(),
+            field_default_identities: Vec::new(),
             declaration_metadata: Vec::new(),
             methods: vec![
                 HirFunction {

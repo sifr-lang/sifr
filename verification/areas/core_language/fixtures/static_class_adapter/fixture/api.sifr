@@ -28,8 +28,9 @@ def describe_contract[T: StaticProgram]() -> str:
     receiver="type",
     owner="T",
 )
-def construct_contract[T: StaticProgram]() -> Result[T, ContractError]:
-    raise ContractError("fixture constructor is compile-only")
+@rust.structural
+@rust(bridge.defaults.construct_partial)
+def construct_contract[T: StaticProgram]() -> Result[T, ContractError | RustPanicError]: ...
 
 
 @attached_api(
