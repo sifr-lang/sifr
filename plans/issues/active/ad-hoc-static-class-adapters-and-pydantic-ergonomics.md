@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-18. M0-M7b are complete; M7c is active.
+Status: active on 2026-08-18. M0-M7c are complete; M7d is next.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -1018,9 +1018,71 @@ Acceptance criteria:
 Exit gate: typed cross-module adapter descriptors with optional and wider-union
 fields generate valid Rust and unblock M8.
 
-State: active
+State: complete
 Issue: [`sifr-lang/sifr#3271`](https://github.com/sifr-lang/sifr/issues/3271)
-Next action: complete M7c, then resume M8 without changing its preserved work.
+PR: [`sifr-lang/sifr#3272`](https://github.com/sifr-lang/sifr/pull/3272)
+Base SHA: `31fb89458a4160288a57221f35f820840949cb3f`
+Candidate SHA: `6613690e954512476e95c7dfc0d3ddad3eea5c6a`
+Merge SHA: `7a90ffd5fba39f76c36df325ecf3311289dc4c97`
+Changed paths: option and enum-backed-union representation helpers; local,
+assignment, return, and call-argument coercion; project-wide relocation of
+compiler-owned stdlib nominal records and structural implementations;
+clone-aware record-field reads; focused codegen and driver coverage; and the
+cross-module package-neutral static-class-adapter fixture.
+Validation: all 1,028 codegen tests, 10 adapter-default tests, and 19
+early-adapter tests passed. A fresh debug compiler built and ran the
+package-neutral fixture with `attached-contract` and ran the preserved M8 demo
+successfully. Workspace clippy, formatting, diff, HIR maintainability, and the
+900-line file-size guardrail passed. The initial exact-SHA Opus review found a
+double union wrapper and an incorrect wider-union `None` return payload. One
+batched remediation corrected both and extended the fixture; the final
+exact-SHA review returned `SATISFIED`
+([evidence](https://github.com/sifr-lang/sifr/pull/3272#issuecomment-5333521738)).
+The create-PR and merge gates were each attempted exactly once on the final
+candidate. Both stopped in the shared coverage-matrix preflight at the stale
+`bytes` classification and verification-taxonomy findings owned by the
+explicitly out-of-scope parallel pre-v1 work; neither reached an M7c-specific
+failure and neither was repeated
+([evidence](https://github.com/sifr-lang/sifr/pull/3272#issuecomment-5333537599)).
+Deferred follow-up: M7d owns the final review's two pre-existing representation
+sequencing gaps: an owned optional argument widened into a wider-union
+parameter can still be force-unwrapped after widening, and an
+option-represented `Option<Union>` source can be matched as if its Rust storage
+were the source enum. M12 retains no new M7c suggestion-only work.
+The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
+outside this phase.
+Next action: implement M7d optional-to-wider-union representation sequencing.
+
+### M7d: Optional-to-Wider-Union Representation Sequencing
+
+Owner: `sifr-lang/sifr`.
+
+Scope:
+
+- Prevent owned optional call arguments from being cloned and force-unwrapped
+  after they have already been widened into the target union representation.
+- Lower option-represented union sources against wider-union targets through
+  their actual Rust `Option` storage rather than source-enum patterns.
+- Share one representation-aware sequencing decision across the applicable
+  call and consuming-value paths.
+- Add direct package-neutral absence and presence coverage for owned calls and
+  option-represented union widening.
+
+Acceptance criteria:
+
+- Passing owned `T | None` to `T | U | None` preserves `None` and `Some(T)`
+  without force-unwrapping an already-widened union expression.
+- An option-represented union source widened by a call or assignment is matched
+  using its actual Rust `Option` representation.
+- Generated runtime code adds no data-dependent `unwrap` or `expect`.
+- The M7c package-neutral fixture and preserved M8 demo still build and run.
+
+Exit gate: optional values use one correct representation transition when they
+enter wider-union call, assignment, and consuming-value paths.
+
+State: pending
+Issue: [`sifr-lang/sifr#3274`](https://github.com/sifr-lang/sifr/issues/3274)
+Next action: implement M7d, then resume M8 without changing its preserved work.
 
 ### M8: Pydantic Model, Field, and Configuration Declarations
 
@@ -1296,7 +1358,7 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M7b are merged and recorded; M7c is active.
+Current state: M0-M7c are merged and recorded; M7d is next.
 
-Next action: complete M7c in `sifr-lang/sifr`, then resume the preserved M8
-work in `sifr-lang/pydantic-sifr` on the merged compiler substrate.
+Next action: complete M7d in `sifr-lang/sifr`, then resume the preserved M8 work
+in `sifr-lang/pydantic-sifr` on the merged compiler substrate.
