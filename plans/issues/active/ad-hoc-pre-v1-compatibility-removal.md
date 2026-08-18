@@ -21,10 +21,12 @@ The phase is complete when all these conditions are true:
 - Each stdlib operation has one canonical public name and signature.
 - First-class types replace temporary helper modules and procedural adapters.
 - Receiver rules do not infer or reinterpret syntax for source compatibility.
+- Package manifests accept one source-root schema and one source layout.
 - The installer accepts one canonical layout.
 - Diagnostics do not retain old Sifr codes or old syntax recognizers.
 - Lowering does not recognize hidden `__compat_*` names.
 - Verification uses one profile schema and one execution model.
+- E2E pass fixtures use assertions as the only runtime expectation model.
 - Compiler services use one provider-backed source path.
 - Code generation uses structured Rust types only.
 - An executable guard rejects new Sifr-owned compatibility paths.
@@ -54,11 +56,13 @@ The initial audit found these Sifr-owned compatibility surfaces:
 | Hashing | String helpers coexist with bytes-native helpers | Keep one canonical bytes-native contract. |
 | Sorted collections | `heapq` and `bisect` keep copy-returning compatibility APIs | Keep the canonical mutating APIs. |
 | Receivers | Lowering retains inferred mutability and old `own self` interpretation | Lock explicit receiver rules, then remove compatibility inference. |
+| Package manifests | `[source].root` and `[source].roots` select different schemas and source layouts | Keep `[source].root` and the `src/` layout only. |
 | Installation | Self-update accepts toolchain-root and flat layouts | Keep one toolchain-root layout. |
 | Diagnostics | Old workspace codes and old syntax recognizers remain | Keep canonical diagnostics only. |
 | Hidden names | Two `__compat_sifr_*` recognizers remain after alias generation was removed | Remove the recognizers and their tests. |
 | Verification | Profiles require `legacy_facade` and accept schema versions 1 and 2 | Keep one schema and one selected-area execution model. |
-| Source access | Provider APIs coexist with disk-backed wrappers for pre-session callers | Keep provider-backed APIs and one disk composition root. |
+| E2E expectations | The harness accepts assertions and `# expect-stdout` directives | Keep assertion-based runtime checks only. |
+| Source access | Provider APIs coexist with disk-backed and result-collapsing wrappers | Keep provider-backed APIs and structured resolution results. |
 | Rust types | Structured `RustType` coexists with string-based `Type::rust_type()` | Complete structured conversion and remove the string path. |
 
 Primary evidence files:
@@ -70,6 +74,10 @@ Primary evidence files:
 - `plans/issues/archive/ad-hoc-class-field-mutating-receiver-place-semantics.md`
 - `plans/phases/14_codegen_architecture.md`
 - `internal_docs/distribution_pipeline.md`
+- `docs/package_management.md`
+- `crates/sifr_package/src/manifest/production.rs`
+- `crates/sifr_package/src/imports/source_map.rs`
+- `crates/sifr/tests/e2e_support/harness_model.rs`
 - `internal_docs/typescript_go_architecture_transfer_guardrails.md`
 - `verification/schemas/profile.schema.json`
 
@@ -130,6 +138,8 @@ The following surfaces are not Sifr pre-v1 compatibility debt:
 - Translation and locale fallback chains.
 - Vendored dependency compatibility code.
 - Support for documented external file formats and protocol versions.
+- Phase 40 release-channel bootstrap evidence and its `legacy-index` options.
+- The `RuleStatus::Deprecated` lint lifecycle state.
 
 The phase must not remove these contracts. Item 0 records an exact retained
 list so that later broad scans do not misclassify them.
@@ -169,7 +179,7 @@ an abandoned Sifr contract.
 ### Out of scope
 
 - New language or stdlib features.
-- CPython source compatibility.
+- New CPython source-compatibility requirements.
 - Compatibility for unpublished Sifr releases.
 - External protocol or file-format removal.
 - Changes to vendored dependencies.
@@ -177,6 +187,12 @@ an abandoned Sifr contract.
 - Unrelated performance work.
 - A migration command or source codemod.
 - Automatic repair of user projects outside this repository.
+
+CPython parity does not retain duplicate Sifr APIs. Remove a CPython-shaped
+duplicate when it exposes an operation that has a canonical Sifr name.
+
+Keep CPython parity semantics when the canonical Sifr operation requires those
+semantics. Item 0 records the classification for each surface.
 
 ## Execution Rules
 
@@ -223,6 +239,8 @@ Scope:
 - Record the receiver contract for `self`, `mut self`, `own self`, and
   `own mut self`.
 - Record the exact retained external-compatibility list.
+- Classify Phase 40 `legacy-index` options as current release contracts.
+- Classify `RuleStatus::Deprecated` as current lint lifecycle metadata.
 - Record current counts for forbidden names, wrappers, and schemas.
 - Add an inventory checker with a self-test under the verification tree.
 
@@ -243,6 +261,7 @@ Acceptance criteria:
       imports.
 - [ ] The receiver contract has no source-compatibility interpretation.
 - [ ] The retained list includes DLPack and LSP protocol requirements.
+- [ ] The retained list names the Phase 40 and lint lifecycle owners.
 - [ ] The checker fails for an unowned compatibility row.
 - [ ] The checker self-test proves each rejection class.
 
@@ -524,9 +543,43 @@ Focused validation:
 - Class and ownership e2e suites
 - Complete algorithmic compatibility lane
 
-### Item 9: Remove the Flat Installation Layout
+### Item 9: Canonicalize the Package Manifest and Source Layout
 
-ID: `pre_v1_compat_9_install_layout`
+ID: `pre_v1_compat_9_package_layout`
+
+Purpose: Keep one package manifest schema and one source layout.
+
+Scope:
+
+- Keep `[source].root` as the only source-root key.
+- Keep `src/` as the default and canonical source layout.
+- Remove `[source].roots` parsing and its `sifr/` default.
+- Remove the schema selection that depends on the presence of `roots`.
+- Reject `[exports].modules` and `[[bin]]` in all package manifests.
+- Migrate package and project-workspace fixtures to `src/__init__.sifr`.
+- Update package tests, snapshots, examples, and public documentation.
+- Remove the Layout Migration section from `docs/package_management.md`.
+- Do not add a manifest converter, source-root fallback, or warning period.
+
+Acceptance criteria:
+
+- [ ] The manifest parser accepts `[source].root` only.
+- [ ] A package without `[source]` uses `src/` only.
+- [ ] The manifest parser rejects `[source].roots`.
+- [ ] The manifest parser rejects `[exports].modules` and `[[bin]]`.
+- [ ] All repository package fixtures use the canonical source layout.
+- [ ] Public package documentation describes one schema and one layout.
+
+Focused validation:
+
+- `sifr_package` manifest and source-map tests
+- Package public-API tests
+- Project-workspace verification suites
+- Package-management documentation checks
+
+### Item 10: Remove the Flat Installation Layout
+
+ID: `pre_v1_compat_10_install_layout`
 
 Purpose: Keep one toolchain-root installation layout.
 
@@ -554,9 +607,9 @@ Focused validation:
 - Sysroot-release suites
 - Public installation documentation checks
 
-### Item 10: Remove Legacy Diagnostics and Rejection Residue
+### Item 11: Remove Legacy Diagnostics and Rejection Residue
 
-ID: `pre_v1_compat_10_diagnostics`
+ID: `pre_v1_compat_11_diagnostics`
 
 Purpose: Keep one diagnostic family for each current compiler error.
 
@@ -588,9 +641,9 @@ Focused validation:
 - CLI rendering and `--explain` tests
 - Documentation error-code link checks
 
-### Item 11: Remove Hidden Compatibility-Name Recognition
+### Item 12: Remove Hidden Compatibility-Name Recognition
 
-ID: `pre_v1_compat_11_hidden_names`
+ID: `pre_v1_compat_12_hidden_names`
 
 Purpose: Remove dead lowering acceptance for hidden alias names.
 
@@ -617,9 +670,9 @@ Focused validation:
 - Async and runtime-platform e2e suites
 - Hidden-prefix guard self-test
 
-### Item 12: Canonicalize the Verification Runner
+### Item 13: Canonicalize the Verification Runner
 
-ID: `pre_v1_compat_12_verification`
+ID: `pre_v1_compat_13_verification`
 
 Purpose: Keep one profile schema and one execution authority.
 
@@ -637,6 +690,10 @@ Scope:
 - Make structured result JSON the only report input.
 - Update workflows, release governance, docs, self-tests, and fixtures.
 - Remove legacy report-line parsers after all producers are gone.
+- Remove `extract_expect_stdout` and `# expect-stdout` recognition.
+- Convert the LeetCode audit generator to assertion-based runtime checks.
+- Remove harness self-tests for the old directive.
+- Update the e2e harness description in `internal_docs/architecture.md`.
 
 Acceptance criteria:
 
@@ -645,6 +702,8 @@ Acceptance criteria:
 - [ ] One field selects each verification area and suite.
 - [ ] Area runners emit one structured result format.
 - [ ] No report parser consumes a legacy summary line.
+- [ ] No harness code or generator produces or accepts `# expect-stdout`.
+- [ ] E2E runtime expectations use Sifr `assert` statements only.
 - [ ] Create-PR, merge, nightly, and release profiles preserve their coverage.
 - [ ] Phase 40 release qualification uses the canonical model.
 
@@ -653,14 +712,16 @@ Focused validation:
 - Verification runner self-tests
 - Profile schema and assignment checks
 - Every area adapter self-test
+- E2E harness behavior and dependency-plan tests
+- Algorithmic-compatibility LeetCode audit tests
 - Create-PR and merge profile dry plans
 - Full create-PR and merge gates
 
-### Item 13: Remove Disk-Backed Source API Wrappers
+### Item 14: Remove Obsolete Source and Package API Wrappers
 
-ID: `pre_v1_compat_13_source_provider`
+ID: `pre_v1_compat_14_source_api`
 
-Purpose: Make provider-backed source access the only compiler-service path.
+Purpose: Keep provider-backed source access and structured package results.
 
 Scope:
 
@@ -670,6 +731,10 @@ Scope:
   captured session.
 - Migrate all pre-session callers.
 - Remove paired `foo` and `foo_with_provider` APIs after caller migration.
+- Remove `PackageSourceMap::resolve_import`.
+- Migrate package tests to `resolve_import_result` and its result variants.
+- Preserve ambiguity, access, unresolved, and fatal states without collapsing.
+- Update `internal_docs/typescript_go_architecture_transfer_source_provider.md`.
 - Keep `DiskSourceProvider` as the canonical disk implementation.
 - Add a dependency-direction guard for provider construction.
 
@@ -679,6 +744,8 @@ Acceptance criteria:
 - [ ] Each source operation records dependencies through the active provider.
 - [ ] Formatter, linter, package, CLI, and LSP paths share provider semantics.
 - [ ] No compatibility wrapper remains for a pre-session caller.
+- [ ] No test-only wrapper collapses package resolution result variants.
+- [ ] Package tests use the production structured-result API.
 - [ ] Overlay and snapshot behavior remains deterministic.
 
 Focused validation:
@@ -687,12 +754,13 @@ Focused validation:
 - Frontend mode-parity suites
 - Formatter and linter path tests
 - Package source-map and offline tests
+- Package public-API tests
 - LSP snapshot and stale-result suites
 - Source-crate dependency-direction guard
 
-### Item 14: Remove String-Based Rust Type Rendering
+### Item 15: Remove String-Based Rust Type Rendering
 
-ID: `pre_v1_compat_14_rust_type`
+ID: `pre_v1_compat_15_rust_type`
 
 Purpose: Make structured `RustType` the only codegen type representation.
 
@@ -725,9 +793,9 @@ Focused validation:
 - Generated-code quality suites
 - Codegen raw-code and structured-lowering guards
 
-### Item 15: Final No-Compatibility Guard and Phase Closure
+### Item 16: Final No-Compatibility Guard and Phase Closure
 
-ID: `pre_v1_compat_15_closure`
+ID: `pre_v1_compat_16_closure`
 
 Purpose: Prove the final repository has no unowned Sifr compatibility path.
 
@@ -739,6 +807,7 @@ Scope:
 - Scan source, stdlib, verification, workflows, docs, demos, and fixtures.
 - Exclude historical archives, vendored code, generated files, and external
   protocol terms from false-positive scans.
+- Exclude the Phase 40 `legacy-index` options and lint lifecycle metadata.
 - Update `internal_docs/architecture.md` with the final canonical contracts.
 - Update public docs for all breaking pre-v1 changes.
 - Record all item PRs, SHAs, validation, and review evidence.
@@ -751,10 +820,13 @@ Required forbidden classes:
 - list-backed set compatibility helpers,
 - copy-returning heapq and bisect compatibility helpers,
 - Sifr-owned legacy schema readers,
+- legacy package manifest keys and the `sifr/` source-root layout,
 - `legacy_facade` and legacy summary lines,
+- legacy `# expect-stdout` harness expectations,
 - `__compat_sifr_*` recognition,
 - legacy workspace diagnostic codes,
 - pre-session source wrappers,
+- result-collapsing package API wrappers that only tests use,
 - string-based Rust type rendering,
 - flat installation layout support.
 
@@ -792,16 +864,17 @@ Item 0  Canonical contract and inventory
   -> Item 6  collection helpers
   -> Item 7  remaining stdlib residue
   -> Item 8  receiver semantics
-  -> Item 9  installation layout
-  -> Item 10 diagnostics and rejection residue
-  -> Item 11 hidden compatibility names
-  -> Item 12 verification runner
-  -> Item 13 source-provider wrappers
-  -> Item 14 structured Rust types
-  -> Item 15 final guard and closure
+  -> Item 9  package manifest and source layout
+  -> Item 10 installation layout
+  -> Item 11 diagnostics and rejection residue
+  -> Item 12 hidden compatibility names
+  -> Item 13 verification runner and e2e expectations
+  -> Item 14 source and package API wrappers
+  -> Item 15 structured Rust types
+  -> Item 16 final guard and closure
 ```
 
-The sequence is strict. Item 12 also needs an ownership handoff from the active
+The sequence is strict. Item 13 also needs an ownership handoff from the active
 Phase 40 work because both phases touch verification and release paths.
 
 ## Validation Ownership Matrix
@@ -811,7 +884,9 @@ Phase 40 work because both phases touch verification and release paths.
 | Parser, type system, or lowering | Core language area plus affected crate tests |
 | Code generation | `sifr_codegen`, generated-code quality, and affected e2e suites |
 | Public stdlib source | Stdlib parity, bootstrap, installed sysroot, and affected e2e suites |
+| Package manifest or source layout | `sifr_package` plus project-workspace suites |
 | Verification profiles or runner | Runner self-tests and all changed profile plans |
+| E2E runtime expectations | Harness tests plus affected corpus generators |
 | Installation or release | Distribution-release and sysroot-release areas |
 | Diagnostics | Diagnostics area, docs links, CLI rendering, and affected source fixtures |
 | Source provider | Frontend parity, tooling, package, and LSP snapshot suites |
@@ -860,7 +935,7 @@ normal product behavior. Item 0 records retained rows with exact owners.
 
 ### Active Phase 40 overlap
 
-Phase 40 currently owns release profiles and qualification paths. Item 12 does
+Phase 40 currently owns release profiles and qualification paths. Item 13 does
 not start without an ownership handoff or an approved coordination record.
 
 ### Large internal migrations
@@ -886,17 +961,18 @@ migrates its repository consumers before the old path disappears.
 | 6. Collection helpers | pending | — | — | — | — | — |
 | 7. Remaining stdlib residue | pending | — | — | — | — | — |
 | 8. Receiver semantics | pending | — | — | — | — | — |
-| 9. Installation layout | pending | — | — | — | — | — |
-| 10. Diagnostics and rejection residue | pending | — | — | — | — | — |
-| 11. Hidden compatibility names | pending | — | — | — | — | — |
-| 12. Verification runner | pending | — | — | — | — | Phase 40 handoff required. |
-| 13. Source-provider wrappers | pending | — | — | — | — | — |
-| 14. Structured Rust types | pending | — | — | — | — | — |
-| 15. Final guard and closure | pending | — | — | — | — | — |
+| 9. Package manifest and source layout | pending | — | — | — | — | — |
+| 10. Installation layout | pending | — | — | — | — | — |
+| 11. Diagnostics and rejection residue | pending | — | — | — | — | — |
+| 12. Hidden compatibility names | pending | — | — | — | — | — |
+| 13. Verification runner and e2e expectations | pending | — | — | — | — | Phase 40 handoff required. |
+| 14. Source and package API wrappers | pending | — | — | — | — | — |
+| 15. Structured Rust types | pending | — | — | — | — | — |
+| 16. Final guard and closure | pending | — | — | — | — | — |
 
 ## Phase Completion Record
 
-Complete this section after Item 15 merges:
+Complete this section after Item 16 merges:
 
 - Final status:
 - Final merge SHA:
