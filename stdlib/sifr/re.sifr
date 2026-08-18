@@ -11,51 +11,15 @@ from _sifr.regex import re_find_flags as _re_find_flags_impl
 from _sifr.regex import re_replace_flags as _re_replace_flags_impl
 from _sifr.regex import re_findall_flags as _re_findall_flags_impl
 from _sifr.regex import re_split_flags as _re_split_flags_impl
-from _sifr.regex import CompiledPattern
-from _sifr.regex import compile_pattern
-from _sifr.regex import compile_pattern_flags
+from _sifr.regex import CompiledPattern as _CompiledPattern
+from _sifr.regex import compile_pattern as _compile_pattern_impl
+from _sifr.regex import compile_pattern_flags as _compile_pattern_flags_impl
 
 # Flag constants (CPython-compatible values)
 IGNORECASE: int = 2
 MULTILINE: int = 8
 DOTALL: int = 16
 VERBOSE: int = 64
-
-def re_match(pattern: str, text: str) -> Result[bool, RegexError]:
-    return _re_match_impl(pattern, text)
-
-def re_find(pattern: str, text: str) -> Result[str | None, RegexError]:
-    return _re_find_impl(pattern, text)
-
-def re_replace(pattern: str, replacement: str, text: str) -> Result[str, RegexError]:
-    return _re_replace_impl(pattern, replacement, text)
-
-def re_findall(pattern: str, text: str) -> Result[list[str], RegexError]:
-    return _re_findall_impl(pattern, text)
-
-def re_split(pattern: str, text: str) -> Result[list[str], RegexError]:
-    return _re_split_impl(pattern, text)
-
-def re_find_start(pattern: str, text: str) -> Result[int, RegexError]:
-    return _re_find_start_impl(pattern, text)
-
-def re_find_end(pattern: str, text: str) -> Result[int, RegexError]:
-    return _re_find_end_impl(pattern, text)
-
-def re_match_flags(pattern: str, text: str, flags: int) -> Result[bool, RegexError]:
-    return _re_match_flags_impl(pattern, text, flags)
-
-def re_find_flags(pattern: str, text: str, flags: int) -> Result[str | None, RegexError]:
-    return _re_find_flags_impl(pattern, text, flags)
-
-def re_replace_flags(pattern: str, replacement: str, text: str, flags: int) -> Result[str, RegexError]:
-    return _re_replace_flags_impl(pattern, replacement, text, flags)
-
-def re_findall_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]:
-    return _re_findall_flags_impl(pattern, text, flags)
-
-def re_split_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]:
-    return _re_split_flags_impl(pattern, text, flags)
 
 class Match:
     _matched: str
@@ -83,42 +47,40 @@ class Match:
     def to_str(self) -> str:
         return self._matched + ""
 
-# CPython-compatible aliases
-# Note: match is skipped (Python keyword)
 def search(pattern: str, text: str) -> Result[str | None, RegexError]:
-    return re_find(pattern, text)
+    return _re_find_impl(pattern, text)
 
 def search_flags(pattern: str, text: str, flags: int) -> Result[str | None, RegexError]:
-    return re_find_flags(pattern, text, flags)
+    return _re_find_flags_impl(pattern, text, flags)
 
 def search_match(pattern: str, text: str) -> Result[Match | None, RegexError]:
     try:
-        found: str | None = re_find(pattern, text)
+        found: str | None = _re_find_impl(pattern, text)
         if found is not None:
-            s: int = re_find_start(pattern, text)
-            e: int = re_find_end(pattern, text)
+            s: int = _re_find_start_impl(pattern, text)
+            e: int = _re_find_end_impl(pattern, text)
             return Match(found, s, e)
         return None
     except RegexError as e:
         raise RegexError(e.message)
 
 def sub(pattern: str, replacement: str, text: str) -> Result[str, RegexError]:
-    return re_replace(pattern, replacement, text)
+    return _re_replace_impl(pattern, replacement, text)
 
 def sub_flags(pattern: str, replacement: str, text: str, flags: int) -> Result[str, RegexError]:
-    return re_replace_flags(pattern, replacement, text, flags)
+    return _re_replace_flags_impl(pattern, replacement, text, flags)
 
 def findall(pattern: str, text: str) -> Result[list[str], RegexError]:
-    return re_findall(pattern, text)
+    return _re_findall_impl(pattern, text)
 
 def findall_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]:
-    return re_findall_flags(pattern, text, flags)
+    return _re_findall_flags_impl(pattern, text, flags)
 
 def split(pattern: str, text: str) -> Result[list[str], RegexError]:
-    return re_split(pattern, text)
+    return _re_split_impl(pattern, text)
 
 def split_flags(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]:
-    return re_split_flags(pattern, text, flags)
+    return _re_split_flags_impl(pattern, text, flags)
 
 
 def _iter_matches(own matches: list[Match]) -> Iterator[Match]:
@@ -146,8 +108,8 @@ def _find_index_from(text: str, needle: str, start: int) -> int:
 
 def _findall_for_finditer(pattern: str, text: str, flags: int) -> Result[list[str], RegexError]:
     if flags != 0:
-        return re_findall_flags(pattern, text, flags)
-    return re_findall(pattern, text)
+        return _re_findall_flags_impl(pattern, text, flags)
+    return _re_findall_impl(pattern, text)
 
 
 def _finditer_from_items(found_items: list[str], text: str) -> list[Match]:
@@ -185,11 +147,11 @@ def finditer(pattern: str, text: str) -> Result[Iterator[Match], RegexError]:
 
 class Pattern:
     # A compiled regular expression pattern.
-    _compiled: CompiledPattern
+    _compiled: _CompiledPattern
     _pattern: str
     _flags: int
 
-    def __init__(self, own compiled: CompiledPattern, pattern: str, flags: int) -> None:
+    def __init__(self, own compiled: _CompiledPattern, pattern: str, flags: int) -> None:
         self._compiled = compiled
         self._pattern = pattern
         self._flags = flags
@@ -227,14 +189,14 @@ class Pattern:
 
 def compile(pattern: str) -> Result[Pattern, RegexError]:
     try:
-        compiled: CompiledPattern = compile_pattern(pattern)
+        compiled: _CompiledPattern = _compile_pattern_impl(pattern)
         return Pattern(compiled, pattern, 0)
     except RegexError as error:
         raise RegexError(error.message)
 
 def compile_flags(pattern: str, flags: int) -> Result[Pattern, RegexError]:
     try:
-        compiled: CompiledPattern = compile_pattern_flags(pattern, flags)
+        compiled: _CompiledPattern = _compile_pattern_flags_impl(pattern, flags)
         return Pattern(compiled, pattern, flags)
     except RegexError as error:
         raise RegexError(error.message)
@@ -243,8 +205,8 @@ def compile_flags(pattern: str, flags: int) -> Result[Pattern, RegexError]:
 def fullmatch(pattern: str, text: str) -> Result[bool, RegexError]:
     # Match the entire string against the pattern.
     anchored: str = "^" + pattern + "$"
-    return re_match(anchored, text)
+    return _re_match_impl(anchored, text)
 
 def fullmatch_flags(pattern: str, text: str, flags: int) -> Result[bool, RegexError]:
     anchored: str = "^" + pattern + "$"
-    return re_match_flags(anchored, text, flags)
+    return _re_match_flags_impl(anchored, text, flags)

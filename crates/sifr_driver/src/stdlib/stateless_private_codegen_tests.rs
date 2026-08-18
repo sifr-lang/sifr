@@ -259,8 +259,8 @@ fn regex_private_declarations_codegen_through_sifr_stdlib() {
         .functions
         .get("sifr.re")
         .expect("sifr.re exports should be collected");
-    assert!(exports.contains_key("re_match"));
     assert!(exports.contains_key("search"));
+    assert!(!exports.contains_key("re_match"));
     assert!(!exports.contains_key("_re_match_impl"));
 }
 
@@ -307,8 +307,9 @@ fn url_private_declarations_codegen_through_sifr_stdlib() {
         .functions
         .get("sifr.url")
         .expect("sifr.url exports should be collected");
-    assert!(exports.contains_key("parse_url"));
+    assert!(exports.contains_key("parse"));
     assert!(exports.contains_key("build_query"));
+    assert!(!exports.contains_key("parse_url"));
     assert!(!exports.contains_key("_url_parse_parts"));
     assert!(!exports.contains_key("_url_query_build_flat"));
 }
@@ -381,8 +382,9 @@ fn json_private_declarations_codegen_through_sifr_stdlib() {
         .get("sifr.json")
         .expect("sifr.json exports should be collected");
     assert!(exports.contains_key("loads"));
-    assert!(exports.contains_key("json_loads"));
-    assert!(exports.contains_key("json_dumps"));
+    assert!(exports.contains_key("dumps"));
+    assert!(!exports.contains_key("json_loads"));
+    assert!(!exports.contains_key("json_dumps"));
     assert!(!exports.contains_key("_decode_json_tokens"));
     assert!(!exports.contains_key("_decode_json_value_at"));
 }

@@ -1,9 +1,20 @@
 # Test parse safety error paths — all parse/decode intrinsics return Result
-from sifr.json import JsonValue, json_loads
-from sifr.tomllib import TomlValue, toml_loads
-from sifr.re import re_match
-from sifr.base64 import base64_decode
+from sifr.json import JsonValue, JSONDecoder
+from sifr.tomllib import TomlValue, loads
+from sifr.re import search
+from sifr.base64 import b64decode
 from sifr.bytes import decode_utf8, bytes_from_hex
+
+def _load_json(text: str) -> Result[JsonValue, JSONDecodeError]:
+    decoder: JSONDecoder = JSONDecoder()
+    return decoder.decode(text)
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 
 
 def main():
@@ -11,7 +22,7 @@ def main():
     expected_index: int = 0
     # 1. JSON: invalid input returns JSONDecodeError
     try:
-        val: JsonValue = json_loads("invalid json")
+        val: JsonValue = _load_json("invalid json")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except JSONDecodeError as e:
@@ -20,7 +31,7 @@ def main():
 
     # 2. JSON: valid input succeeds
     try:
-        data: JsonValue = json_loads("{\"ok\":true}")
+        data: JsonValue = _load_json("{\"ok\":true}")
         assert str(f"json ok: {data}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except JSONDecodeError as e:
@@ -29,7 +40,7 @@ def main():
 
     # 3. TOML: invalid input returns TOMLDecodeError
     try:
-        tval: TomlValue = toml_loads("invalid [toml")
+        tval: TomlValue = loads("invalid [toml")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except TOMLDecodeError as e:
@@ -38,7 +49,7 @@ def main():
 
     # 4. TOML: valid input succeeds
     try:
-        tdata: TomlValue = toml_loads("key = \"value\"")
+        tdata: TomlValue = loads("key = \"value\"")
         value: TomlValue | None = tdata.get("key")
         value_ok: bool = False
         if value is not None:
@@ -51,7 +62,7 @@ def main():
 
     # 5. Regex: invalid pattern returns RegexError
     try:
-        matched: bool = re_match("[invalid", "text")
+        matched: bool = has_match("[invalid", "text")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except RegexError as e:
@@ -60,7 +71,7 @@ def main():
 
     # 6. Regex: valid pattern succeeds
     try:
-        matched2: bool = re_match("[a-z]+", "hello")
+        matched2: bool = has_match("[a-z]+", "hello")
         assert str(f"regex ok: {matched2}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except RegexError as e:
@@ -69,7 +80,7 @@ def main():
 
     # 7. Base64: invalid input returns ParseError
     try:
-        decoded: str = base64_decode("not valid base64!!!")
+        decoded: str = b64decode("not valid base64!!!")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:
@@ -78,7 +89,7 @@ def main():
 
     # 8. Base64: valid input succeeds
     try:
-        decoded2: str = base64_decode("aGVsbG8=")
+        decoded2: str = b64decode("aGVsbG8=")
         assert str(f"base64 ok: {decoded2}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:

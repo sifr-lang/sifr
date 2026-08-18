@@ -39,13 +39,6 @@ def _match(name: str, mut ni: int, pattern: str, mut pi: int) -> bool:
             return False
     return ni == len(name)
 
-def fnmatch_filter(names: list[str], pattern: str) -> list[str]:
-    result: list[str] = []
-    for name in names:
-        if fnmatch(name, pattern):
-            result.append(name)
-    return result
-
 def filterfalse(names: list[str], pattern: str) -> list[str]:
     result: list[str] = []
     for name in names:
@@ -98,6 +91,9 @@ def translate(pattern: str) -> str:
         i = i + 1
     return "(?s:" + body + ")\\z"
 
-# CPython-compatible alias
 def filter(names: list[str], pattern: str) -> list[str]:
-    return fnmatch_filter(names, pattern)
+    result: list[str] = []
+    for name in names:
+        if fnmatch(name, pattern):
+            result.append(name)
+    return result

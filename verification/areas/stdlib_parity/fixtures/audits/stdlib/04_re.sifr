@@ -2,18 +2,28 @@
 # Test 4: sifr.re -- Full Coverage
 # ============================================================
 
-from sifr.re import re_match, re_find, re_replace
+from sifr.re import search, sub
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 
 def main():
-    # Match (returns bool)
-    print(re_match("[0-9]+", "hello 42 world"))
-    print(re_match("[0-9]+", "no numbers"))
+    try:
+        # Match (returns bool)
+        print(has_match("[0-9]+", "hello 42 world"))
+        print(has_match("[0-9]+", "no numbers"))
 
-    # Find (returns str | None)
-    found: str | None = re_find("[0-9]+", "hello 42 world")
-    if found is not None:
-        print(f"found: {found}")
+        # Find (returns str | None)
+        found: str | None = search("[0-9]+", "hello 42 world")
+        if found is not None:
+            print(f"found: {found}")
 
-    # Replace
-    result: str = re_replace("[0-9]+", "X", "a1b2c3")
-    print(result)
+        # Replace
+        result: str = sub("[0-9]+", "X", "a1b2c3")
+        print(result)
+    except RegexError as error:
+        print(error.message)

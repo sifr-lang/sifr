@@ -1,5 +1,7 @@
 # sifr.calendar — Calendar-related functions
-from _sifr.calendar import calendar_isleap, calendar_weekday, calendar_monthrange
+from _sifr.calendar import calendar_isleap as _calendar_isleap_impl
+from _sifr.calendar import calendar_weekday as _calendar_weekday_impl
+from _sifr.calendar import calendar_monthrange as _calendar_monthrange_impl
 
 MONDAY: int = 0
 TUESDAY: int = 1
@@ -57,15 +59,15 @@ def _month_name_lookup(month: int) -> str | None:
     return month_name[month]
 
 def isleap(year: int) -> bool:
-    return calendar_isleap(year)
+    return _calendar_isleap_impl(year)
 
 def weekday(year: int, month: int, day: int) -> int:
     # Returns the day of the week (0=Monday, 6=Sunday) for the given date.
-    return calendar_weekday(year, month, day)
+    return _calendar_weekday_impl(year, month, day)
 
 def monthrange(year: int, month: int) -> list[int]:
     # Returns [weekday_of_first_day, number_of_days_in_month].
-    return calendar_monthrange(year, month)
+    return _calendar_monthrange_impl(year, month)
 
 def leapdays(y1: int, y2: int) -> int:
     count: int = 0

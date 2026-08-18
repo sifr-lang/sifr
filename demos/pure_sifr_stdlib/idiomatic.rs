@@ -29,11 +29,11 @@ fn sha256(text: &str) -> String {
         .join("")
 }
 
-fn base64_encode(text: &str) -> String {
+fn b64encode(text: &str) -> String {
     STANDARD.encode(text.as_bytes())
 }
 
-fn base64_decode(text: &str) -> Result<String, ParseError> {
+fn b64decode(text: &str) -> Result<String, ParseError> {
     let bytes = STANDARD
         .decode(text.as_bytes())
         .map_err(|err| ParseError(err.to_string()))?;
@@ -51,8 +51,8 @@ fn main() {
     let digest = sha256("hello");
     assert_true(digest.len() == 64);
 
-    let encoded = base64_encode("Hello!");
-    match base64_decode(&encoded) {
+    let encoded = b64encode("Hello!");
+    match b64decode(&encoded) {
         Ok(decoded) => assert_eq_value(decoded, "Hello!".to_string()),
         Err(err) => {
             panic!("unexpected base64 error: {}", err.0);

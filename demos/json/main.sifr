@@ -1,5 +1,5 @@
 # Reference: json
-from sifr.json import JsonValue, loads, json_dumps
+from sifr.json import JsonValue, loads, dumps
 from sifr.test import assert_bool_vector_eq
 
 def collect_positive_actual() -> list[bool]:
@@ -10,7 +10,7 @@ def collect_positive_actual() -> list[bool]:
     try:
         parsed_obj: JsonValue = loads("{\"name\":\"sifr\"}")
         parsed_arr: JsonValue = loads("[1,2,3]")
-        parsed_roundtrip: JsonValue = loads(json_dumps(7))
+        parsed_roundtrip: JsonValue = loads(dumps(7))
         parse_obj_ok = str(parsed_obj) == "{\"name\":\"sifr\"}"
         parse_arr_ok = str(parsed_arr) == "[1,2,3]"
         roundtrip_ok = str(parsed_roundtrip) == "7"
@@ -19,8 +19,8 @@ def collect_positive_actual() -> list[bool]:
     actual.append(parse_obj_ok)
     actual.append(parse_arr_ok)
     actual.append(roundtrip_ok)
-    actual.append(json_dumps("hello") == "\"hello\"")
-    actual.append(json_dumps(False) == "false")
+    actual.append(dumps("hello") == "\"hello\"")
+    actual.append(dumps(False) == "false")
     return actual
 
 def collect_negative_actual() -> list[bool]:

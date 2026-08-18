@@ -3,7 +3,7 @@
 # ============================================================
 
 from sifr.hash import sha256, md5
-from sifr.encoding import base64_encode, base64_decode
+from sifr.base64 import b64encode, b64decode
 
 def main():
     h: str = sha256("hello")
@@ -12,8 +12,11 @@ def main():
     m: str = md5("hello")
     print(len(m))  # 32 hex chars
 
-    encoded: str = base64_encode("hello world")
+    encoded: str = b64encode("hello world")
     print(encoded)
 
-    decoded: str = base64_decode(encoded)
-    print(decoded)
+    try:
+        decoded: str = b64decode(encoded)
+        print(decoded)
+    except ParseError as error:
+        print(error.message)

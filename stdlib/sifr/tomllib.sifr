@@ -1,4 +1,4 @@
-from _sifr.toml import toml_parse_tokens
+from _sifr.toml import toml_parse_tokens as _toml_parse_tokens_impl
 from sifr.io import FileHandle, read_text
 
 
@@ -225,21 +225,17 @@ def _decode_toml_tokens(tokens: list[str]) -> Result[TomlValue, TOMLDecodeError]
         raise TOMLDecodeError(e.message)
 
 
-def toml_loads(text: str) -> Result[TomlValue, TOMLDecodeError]:
+def loads(text: str) -> Result[TomlValue, TOMLDecodeError]:
     try:
-        tokens: list[str] = toml_parse_tokens(text)
+        tokens: list[str] = _toml_parse_tokens_impl(text)
         return _decode_toml_tokens(tokens)
     except ParseError as e:
         raise TOMLDecodeError(e.message)
 
 
-def loads(text: str) -> Result[TomlValue, TOMLDecodeError]:
-    return toml_loads(text)
-
-
 def _decode_loaded_toml(content: str) -> Result[TomlValue, Error]:
     try:
-        value: TomlValue = toml_loads(content)
+        value: TomlValue = loads(content)
         return value
     except TOMLDecodeError as e:
         raise Error(e.message)

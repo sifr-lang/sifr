@@ -7,12 +7,19 @@
 from sifr.test import assert_eq, assert_true, assert_false, assert_almost_eq
 from sifr.math import sqrt, pi, sin, cos, factorial, gcd, lcm, comb, isclose
 from sifr.statistics import mean, median, stdev, StatisticsError
-from sifr.re import re_match, findall, sub, split
-from sifr.fnmatch import fnmatch, fnmatch_filter
+from sifr.re import search, findall, sub, split
+from sifr.fnmatch import fnmatch, filter
 from sifr.bisect import bisect_left, bisect_right
 from sifr.heapq import heapify, heappush, heappop
 from sifr.textwrap import wrap, fill
-from sifr.json import JsonValue, json_loads, json_dumps
+from sifr.json import JsonValue, loads, dumps
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 from sifr.string import capwords, ascii_lowercase
 from sifr.collections import new_set, set_add, set_len, Counter, from_list
 from sifr.itertools import chain, repeat, take, flatten
@@ -46,9 +53,9 @@ def main():
 
     # ===== re =====
     try:
-        match_result: bool = re_match("hello", "hello world")
+        match_result: bool = has_match("hello", "hello world")
         assert_true(match_result)
-        no_match: bool = re_match("xyz", "hello")
+        no_match: bool = has_match("xyz", "hello")
         assert_false(no_match)
         r: list[str] = findall("\\d+", "a1b2c3")
         assert_eq(len(r), 3)
@@ -62,7 +69,7 @@ def main():
     assert_true(fnmatch("test.py", "*.py"))
     assert_false(fnmatch("test.rb", "*.py"))
     names: list[str] = ["a.py", "b.txt", "c.py"]
-    filtered: list[str] = fnmatch_filter(names, "*.py")
+    filtered: list[str] = filter(names, "*.py")
     assert_eq(len(filtered), 2)
     print("fnmatch: OK")
 
@@ -92,12 +99,12 @@ def main():
 
     # ===== json =====
     try:
-        json_val: JsonValue = json_loads("42")
+        json_val: JsonValue = loads("42")
         assert_eq(str(json_val), "42")
     except JSONDecodeError as err:
         print(f"json error: {err.message}")
-    assert_eq(json_dumps("hello"), "\"hello\"")
-    assert_eq(json_dumps(True), "true")
+    assert_eq(dumps("hello"), "\"hello\"")
+    assert_eq(dumps(True), "true")
     print("json: OK")
 
     # ===== string =====

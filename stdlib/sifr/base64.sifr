@@ -15,24 +15,6 @@ from _sifr.crypto import b32hexencode as _b32hexencode_impl
 from _sifr.crypto import b32hexdecode as _b32hexdecode_impl
 from sifr.bytes import encode_utf8, decode_utf8, bytes_to_hex, bytes_from_hex
 
-def base64_encode(s: str) -> str:
-    return _base64_encode_impl(s)
-
-def base64_encode_bytes(data: bytes) -> bytes:
-    return _base64_encode_bytes_impl(data)
-
-def base64_decode(s: str) -> Result[str, ParseError]:
-    return _base64_decode_impl(s)
-
-def base64_decode_bytes(data: bytes) -> Result[bytes, ParseError]:
-    return _base64_decode_bytes_impl(data)
-
-def base64_encode_opts(s: str, altchars: str, wrapcol: int) -> Result[str, ParseError]:
-    return _base64_encode_opts_impl(s, altchars, wrapcol)
-
-def base64_decode_opts(s: str, altchars: str, validate: bool, ignorechars: str) -> Result[str, ParseError]:
-    return _base64_decode_opts_impl(s, altchars, validate, ignorechars)
-
 def urlsafe_b64encode(s: str) -> str:
     return _urlsafe_b64encode_impl(s)
 
@@ -57,48 +39,47 @@ def b32hexencode(s: str) -> str:
 def b32hexdecode(s: str) -> Result[str, ParseError]:
     return _b32hexdecode_impl(s)
 
-# CPython-compatible aliases
 def b64encode(s: str) -> str:
-    return base64_encode(s)
+    return _base64_encode_impl(s)
 
 def b64decode(s: str) -> Result[str, ParseError]:
-    return base64_decode(s)
+    return _base64_decode_impl(s)
 
 def b64encode_bytes(data: bytes) -> bytes:
-    return base64_encode_bytes(data)
+    return _base64_encode_bytes_impl(data)
 
 def b64decode_bytes(data: bytes) -> Result[bytes, ParseError]:
-    return base64_decode_bytes(data)
+    return _base64_decode_bytes_impl(data)
 
 def b64encode_opts(s: str, altchars: str = "", wrapcol: int = 0) -> Result[str, ParseError]:
-    return base64_encode_opts(s, altchars, wrapcol)
+    return _base64_encode_opts_impl(s, altchars, wrapcol)
 
 def b64decode_opts(s: str, altchars: str = "", validate: bool = False, ignorechars: str = "") -> Result[str, ParseError]:
-    return base64_decode_opts(s, altchars, validate, ignorechars)
+    return _base64_decode_opts_impl(s, altchars, validate, ignorechars)
 
 def standard_b64encode(s: str) -> str:
-    return base64_encode(s)
+    return _base64_encode_impl(s)
 
 def standard_b64decode(s: str) -> Result[str, ParseError]:
-    return base64_decode(s)
+    return _base64_decode_impl(s)
 
 def standard_b64encode_bytes(data: bytes) -> bytes:
-    return base64_encode_bytes(data)
+    return _base64_encode_bytes_impl(data)
 
 def standard_b64decode_bytes(data: bytes) -> Result[bytes, ParseError]:
-    return base64_decode_bytes(data)
+    return _base64_decode_bytes_impl(data)
 
 def encodebytes(s: str) -> str:
-    return base64_encode(s)
+    return _base64_encode_impl(s)
 
 def decodebytes(s: str) -> Result[str, ParseError]:
-    return base64_decode(s)
+    return _base64_decode_impl(s)
 
 def encodebytes_bytes(data: bytes) -> bytes:
-    return base64_encode_bytes(data)
+    return _base64_encode_bytes_impl(data)
 
 def decodebytes_bytes(data: bytes) -> Result[bytes, ParseError]:
-    return base64_decode_bytes(data)
+    return _base64_decode_bytes_impl(data)
 
 def b16encode(s: str) -> Result[str, ParseError]:
     try:

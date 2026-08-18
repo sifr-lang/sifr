@@ -16,7 +16,7 @@ Use Sifr-native imports:
 ```python
 from sifr.net import connect_tcp, listen_tcp
 from sifr.tls import client_config_from_ca_pem
-from sifr.url import parse_url
+from sifr.url import parse
 from sifr.http import request_head, headers_from_pairs
 ```
 

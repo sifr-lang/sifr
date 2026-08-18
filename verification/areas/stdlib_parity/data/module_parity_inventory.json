@@ -35,18 +35,18 @@
     },
     {
       "id": "stdlib-module-hash-encoding",
-      "module": "sifr.hash+sifr.encoding",
+      "module": "sifr.hash+sifr.base64",
       "owner": "stdlib/hash-encoding",
       "support_status": "known_gap",
       "profile": "inventory-only",
       "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/10_hash_encoding.sifr",
       "command": "check",
-      "known_gap": "Hashing APIs are present, but the legacy encoding fixture still names unsupported base64 helpers.",
+      "known_gap": "The hashing half still names the unsupported sifr.hash module; the base64 calls use the canonical sifr.base64 surface.",
       "supported_apis": [
         {"name": "sha256", "tokens": ["sha256("]},
         {"name": "md5", "tokens": ["md5("]},
-        {"name": "base64_encode", "tokens": ["base64_encode("]},
-        {"name": "base64_decode", "tokens": ["base64_decode("]}
+        {"name": "b64encode", "tokens": ["b64encode("]},
+        {"name": "b64decode", "tokens": ["b64decode("]}
       ]
     },
     {
@@ -68,14 +68,13 @@
       "id": "stdlib-module-json",
       "module": "sifr.json",
       "owner": "stdlib/json",
-      "support_status": "known_gap",
-      "profile": "inventory-only",
+      "support_status": "supported",
+      "profile": "full",
       "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/02_json.sifr",
       "command": "check",
-      "known_gap": "Legacy fixture predates Result-returning json_loads and assigns directly to str.",
       "supported_apis": [
-        {"name": "json_dumps", "tokens": ["json_dumps("]},
-        {"name": "json_loads", "tokens": ["json_loads("]}
+        {"name": "dumps", "tokens": ["dumps("]},
+        {"name": "loads", "tokens": ["loads("]}
       ]
     },
     {
@@ -117,15 +116,13 @@
       "id": "stdlib-module-re",
       "module": "sifr.re",
       "owner": "stdlib/re",
-      "support_status": "known_gap",
-      "profile": "inventory-only",
+      "support_status": "supported",
+      "profile": "full",
       "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/04_re.sifr",
       "command": "check",
-      "known_gap": "Legacy fixture predates Result-returning regex helpers.",
       "supported_apis": [
-        {"name": "re_match", "tokens": ["re_match("]},
-        {"name": "re_find", "tokens": ["re_find("]},
-        {"name": "re_replace", "tokens": ["re_replace("]}
+        {"name": "search", "tokens": ["search("]},
+        {"name": "sub", "tokens": ["sub("]}
       ]
     },
     {

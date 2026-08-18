@@ -68,7 +68,7 @@ fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
         .collect::<Vec<_>>())
 }
 
-fn json_loads(text: &str) -> Result<JsonValue, JSONDecodeError> {
+fn loads(text: &str) -> Result<JsonValue, JSONDecodeError> {
     serde_json::from_str(text)
         .map(JsonValue)
         .map_err(|error| JSONDecodeError::new(error.to_string()))
@@ -137,7 +137,7 @@ fn main() {
     }
 
     println!("=== sifr.json ===");
-    match json_loads("{\"language\":\"sifr\",\"version\":1}") {
+    match loads("{\"language\":\"sifr\",\"version\":1}") {
         Ok(data) => println!("Parsed JSON: {data}"),
         Err(error) => println!("json error: {}", error.message),
     }

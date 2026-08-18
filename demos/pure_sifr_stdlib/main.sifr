@@ -8,7 +8,7 @@
 from sifr.test import assert_eq, assert_true
 from sifr.math import sqrt, pi
 from sifr.hashlib import sha256
-from sifr.base64 import base64_encode, base64_decode
+from sifr.base64 import b64encode, b64decode
 
 def main():
     # sifr.test (pure Sifr, no intrinsics)
@@ -25,9 +25,9 @@ def main():
     assert_true(len(h) == 64)
 
     # sifr.base64 (renamed from sifr.encoding, wraps _sifr.crypto)
-    encoded: str = base64_encode("Hello!")
+    encoded: str = b64encode("Hello!")
     try:
-        decoded: str = base64_decode(encoded)
+        decoded: str = b64decode(encoded)
         assert_eq(decoded, "Hello!")
     except ParseError as err:
         print(f"base64 error: {err.message}")

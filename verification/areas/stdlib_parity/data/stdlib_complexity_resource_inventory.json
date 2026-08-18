@@ -137,7 +137,7 @@
     {
       "module": "fnmatch",
       "api_class": "linear_scan",
-      "representative_apis": ["fnmatch", "fnmatch_filter"],
+      "representative_apis": ["fnmatch", "filter"],
       "expected_asymptotic": "O(n*m)",
       "observed_asymptotic": "O(n*m)",
       "constant_factor_delta_band": "within_5x",
@@ -182,7 +182,7 @@
     {
       "module": "json",
       "api_class": "linear_scan",
-      "representative_apis": ["loads", "json_dumps"],
+      "representative_apis": ["loads", "dumps"],
       "expected_asymptotic": "O(n)",
       "observed_asymptotic": "O(n)",
       "constant_factor_delta_band": "within_5x",

@@ -3,16 +3,27 @@
 # Demo: parse_safety
 # All parse/decode intrinsics now return Result[T, E] instead of panicking.
 # Invalid input is caught via try/except with specific error types:
-#   - JSONDecodeError for json_loads
+#   - JSONDecodeError for loads
 #   - TOMLDecodeError for toml_parse / tomllib.loads
-#   - RegexError for re_match/re_find/re_replace/re_findall/re_split
-#   - ParseError for base64_decode, urlsafe_b64decode, decode_utf8, bytes_from_hex
+#   - RegexError for search/search/sub/findall/split
+#   - ParseError for b64decode, urlsafe_b64decode, decode_utf8, bytes_from_hex
 
-from sifr.json import JsonValue, json_loads, json_dumps
-from sifr.tomllib import TomlValue, toml_loads
-from sifr.re import re_match, re_find, re_replace, re_findall, re_split
-from sifr.base64 import base64_encode, base64_decode
+from sifr.json import JsonValue, JSONDecoder, dumps
+from sifr.tomllib import TomlValue, loads
+from sifr.re import search, sub, findall, split
+from sifr.base64 import b64encode, b64decode
 from sifr.bytes import encode_utf8, decode_utf8, bytes_from_hex
+
+def _load_json(text: str) -> Result[JsonValue, JSONDecodeError]:
+    decoder: JSONDecoder = JSONDecoder()
+    return decoder.decode(text)
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 
 # --- 1. JSON parse safety ---
 
@@ -21,21 +32,21 @@ def demo_json():
 
     # Success path
     try:
-        data: JsonValue = json_loads("{\"language\":\"sifr\",\"safe\":true}")
+        data: JsonValue = _load_json("{\"language\":\"sifr\",\"safe\":true}")
         print(f"parsed: {data}")
     except JSONDecodeError as e:
         print(f"error: {e.message}")
 
     # Error path — invalid JSON no longer panics!
     try:
-        bad: JsonValue = json_loads("{not valid json")
+        bad: JsonValue = _load_json("{not valid json")
         _ = bad
         print("should not reach here")
     except JSONDecodeError as e:
         print(f"caught JSONDecodeError: {e.message}")
 
-    # json_dumps still works as before (infallible for basic types)
-    dumped: str = json_dumps(42)
+    # dumps still works as before (infallible for basic types)
+    dumped: str = dumps(42)
     print(f"dumped: {dumped}")
 
 # --- 2. TOML parse safety ---
@@ -45,14 +56,14 @@ def demo_toml():
 
     # Success path
     try:
-        toml_data: TomlValue = toml_loads("name = \"sifr\"\nversion = 1")
+        toml_data: TomlValue = loads("name = \"sifr\"\nversion = 1")
         print(f"toml parsed: {len(toml_data.keys()) > 0}")
     except TOMLDecodeError as e:
         print(f"error: {e.message}")
 
     # Error path — invalid TOML
     try:
-        bad_toml: TomlValue = toml_loads("[broken toml ===")
+        bad_toml: TomlValue = loads("[broken toml ===")
         _ = bad_toml
         print("should not reach here")
     except TOMLDecodeError as e:
@@ -64,32 +75,32 @@ def demo_regex():
     print("=== Regex Safety ===")
 
     try:
-        # re_match success
-        matched: bool = re_match("\\d+", "abc123")
+        # search success
+        matched: bool = has_match("\\d+", "abc123")
         print(f"match found: {matched}")
 
-        # re_find success
-        found: str | None = re_find("\\d+", "hello 42 world")
+        # search success
+        found: str | None = search("\\d+", "hello 42 world")
         if found is not None:
             print(f"found: {found}")
 
-        # re_replace success
-        replaced: str = re_replace("\\d+", "NUM", "test 1 2 3")
+        # sub success
+        replaced: str = sub("\\d+", "NUM", "test 1 2 3")
         print(f"replaced: {replaced}")
 
-        # re_findall success
-        all_matches: list[str] = re_findall("[a-z]+", "Hello World Sifr")
+        # findall success
+        all_matches: list[str] = findall("[a-z]+", "Hello World Sifr")
         print(f"findall count: {len(all_matches)}")
 
-        # re_split success
-        parts: list[str] = re_split(",", "a,b,c")
+        # split success
+        parts: list[str] = split(",", "a,b,c")
         print(f"split count: {len(parts)}")
     except RegexError as e:
         print(f"unexpected: {e.message}")
 
     # Error path — invalid regex pattern
     try:
-        bad_match: bool = re_match("[unclosed", "text")
+        bad_match: bool = has_match("[unclosed", "text")
         print("should not reach here")
     except RegexError as e:
         print(f"caught RegexError: {e.message}")
@@ -100,16 +111,16 @@ def demo_base64():
     print("=== Base64 Safety ===")
 
     # Success path
-    encoded: str = base64_encode("safe decoding!")
+    encoded: str = b64encode("safe decoding!")
     try:
-        decoded: str = base64_decode(encoded)
+        decoded: str = b64decode(encoded)
         print(f"decoded: {decoded}")
     except ParseError as e:
         print(f"unexpected: {e.message}")
 
     # Error path — invalid base64
     try:
-        bad_decoded: str = base64_decode("!!!not-base64!!!")
+        bad_decoded: str = b64decode("!!!not-base64!!!")
         print("should not reach here")
     except ParseError as e:
         print(f"caught base64 ParseError: {e.message}")

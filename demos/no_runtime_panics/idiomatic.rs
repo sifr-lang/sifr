@@ -15,14 +15,14 @@ fn main() {
     println!("--- 2. Parse Safety ---");
     match serde_json::from_str::<JsonValue>("{ invalid json }") {
         Ok(value) => println!("Parsed JSON: {}", value),
-        Err(error) => println!("json_loads(invalid) -> JSONDecodeError: {}", error),
+        Err(error) => println!("loads(invalid) -> JSONDecodeError: {}", error),
     }
     println!();
 
     println!("--- 3. Regex Safety ---");
     match Regex::new("[invalid regex") {
         Ok(regex) => println!("Regex match result: {}", regex.is_match("test")),
-        Err(error) => println!("re_match(invalid) -> RegexError: {}", error),
+        Err(error) => println!("has_match(invalid) -> RegexError: {}", error),
     }
     println!();
 

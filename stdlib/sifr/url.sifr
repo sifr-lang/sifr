@@ -1,15 +1,13 @@
 # sifr.url - URL, query, and percent primitives
-from _sifr.url import (
-    url_build,
-    url_normalize_path,
-    url_parse,
-    url_percent_decode,
-    url_percent_decode_bytes,
-    url_percent_encode,
-    url_percent_encode_bytes,
-    url_query_build,
-    url_query_parse,
-)
+from _sifr.url import url_build as _url_build_impl
+from _sifr.url import url_normalize_path as _url_normalize_path_impl
+from _sifr.url import url_parse as _url_parse_impl
+from _sifr.url import url_percent_decode as _url_percent_decode_impl
+from _sifr.url import url_percent_decode_bytes as _url_percent_decode_bytes_impl
+from _sifr.url import url_percent_encode as _url_percent_encode_impl
+from _sifr.url import url_percent_encode_bytes as _url_percent_encode_bytes_impl
+from _sifr.url import url_query_build as _url_query_build_impl
+from _sifr.url import url_query_parse as _url_query_parse_impl
 
 
 class UrlError(Error):
@@ -171,14 +169,10 @@ def _flatten_pairs(pairs: list[tuple[str, str]]) -> list[str]:
 
 def parse(value: str) -> Result[Url, UrlError]:
     try:
-        parts: list[str] = url_parse(value)
+        parts: list[str] = _url_parse_impl(value)
         return _url_from_parts(parts)
     except ParseError as e:
         raise UrlError(e.message)
-
-
-def parse_url(value: str) -> Result[Url, UrlError]:
-    return parse(value)
 
 
 def build(
@@ -189,41 +183,31 @@ def build(
     port: int | None = None,
 ) -> Result[Url, UrlError]:
     try:
-        parts: list[str] = url_build(scheme, host, path, query, port)
+        parts: list[str] = _url_build_impl(scheme, host, path, query, port)
         return _url_from_parts(parts)
     except ParseError as e:
         raise UrlError(e.message)
 
 
-def build_url(
-    scheme: str,
-    host: str,
-    path: str = "/",
-    query: str | None = None,
-    port: int | None = None,
-) -> Result[Url, UrlError]:
-    return build(scheme, host, path, query, port)
-
-
 def percent_encode(value: str) -> str:
-    return url_percent_encode(value)
+    return _url_percent_encode_impl(value)
 
 
 def percent_decode(value: str) -> Result[str, UrlError]:
     try:
-        decoded: str = url_percent_decode(value)
+        decoded: str = _url_percent_decode_impl(value)
         return decoded
     except ParseError as e:
         raise UrlError(e.message)
 
 
 def percent_encode_bytes(value: bytes) -> str:
-    return url_percent_encode_bytes(value)
+    return _url_percent_encode_bytes_impl(value)
 
 
 def percent_decode_bytes(value: str) -> Result[bytes, UrlError]:
     try:
-        decoded: bytes = url_percent_decode_bytes(value)
+        decoded: bytes = _url_percent_decode_bytes_impl(value)
         return decoded
     except ParseError as e:
         raise UrlError(e.message)
@@ -231,7 +215,7 @@ def percent_decode_bytes(value: str) -> Result[bytes, UrlError]:
 
 def normalize_path(path: str) -> Result[str, UrlError]:
     try:
-        normalized: str = url_normalize_path(path)
+        normalized: str = _url_normalize_path_impl(path)
         return normalized
     except ParseError as e:
         raise UrlError(e.message)
@@ -239,7 +223,7 @@ def normalize_path(path: str) -> Result[str, UrlError]:
 
 def parse_query(query: str) -> Result[UrlQuery, UrlError]:
     try:
-        flat: list[str] = url_query_parse(query)
+        flat: list[str] = _url_query_parse_impl(query)
         pairs: list[tuple[str, str]] = _pairs_from_flat(flat)
         return UrlQuery(pairs)
     except ParseError as e:
@@ -248,7 +232,7 @@ def parse_query(query: str) -> Result[UrlQuery, UrlError]:
 
 def build_query(pairs: list[tuple[str, str]]) -> Result[str, UrlError]:
     try:
-        query: str = url_query_build(_flatten_pairs(pairs))
+        query: str = _url_query_build_impl(_flatten_pairs(pairs))
         return query
     except ParseError as e:
         raise UrlError(e.message)

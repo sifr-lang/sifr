@@ -1,5 +1,5 @@
 # This program exercises several sysroot features from one typed compiler plan.
-from sifr.base64 import base64_decode, base64_encode
+from sifr.base64 import b64decode, b64encode
 from sifr.hashlib import sha256
 from sifr.io import exists
 
@@ -8,9 +8,9 @@ def main() -> None:
     assert not exists("/sifr-authoritative-plan-demo-missing")
     assert sha256("") == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
-    encoded: str = base64_encode("typed dependency metadata")
+    encoded: str = b64encode("typed dependency metadata")
     try:
-        decoded: str = base64_decode(encoded)
+        decoded: str = b64decode(encoded)
         assert decoded == "typed dependency metadata"
     except ParseError:
         assert False

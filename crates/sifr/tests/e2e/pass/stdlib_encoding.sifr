@@ -1,14 +1,14 @@
 # Test sifr.base64 stdlib module
-from sifr.base64 import base64_encode, base64_decode
+from sifr.base64 import b64encode, b64decode
 
 def main():
     # Encode
-    encoded: str = base64_encode("Hello, World!")
+    encoded: str = b64encode("Hello, World!")
     assert str(encoded) == 'SGVsbG8sIFdvcmxkIQ=='
 
     # Decode
     try:
-        decoded: str = base64_decode("SGVsbG8sIFdvcmxkIQ==")
+        decoded: str = b64decode("SGVsbG8sIFdvcmxkIQ==")
         assert str(decoded) == 'Hello, World!'
     except ParseError as e:
         _ = str("unexpected error: " + e.message)

@@ -199,9 +199,9 @@ def main() -> Result[None, Error]:
 Parse and decompose URLs with `sifr.url`:
 
 ```python
-from sifr.url import parse_url
+from sifr.url import parse
 
-url = parse_url("https://example.com/search?q=sifr&page=2")
+url = parse("https://example.com/search?q=sifr&page=2")
 
 print(url.scheme())    # https
 print(url.host())      # example.com

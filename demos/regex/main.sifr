@@ -1,5 +1,12 @@
 # Reference: regex
-from sifr.re import re_match, re_find, re_replace, re_findall, re_split, search_flags, IGNORECASE
+from sifr.re import search, sub, findall, split, search_flags, IGNORECASE
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 from sifr.test import assert_bool_vector_eq
 
 def collect_primary_actual() -> list[bool]:
@@ -12,15 +19,15 @@ def collect_primary_actual() -> list[bool]:
     case_fold_ok: bool = False
 
     try:
-        m: bool = re_match("[0-9]+", "42 bottles")
+        m: bool = has_match("[0-9]+", "42 bottles")
         match_ok = m
-        found_num: str | None = re_find("[0-9]+", "id=9000")
+        found_num: str | None = search("[0-9]+", "id=9000")
         find_ok = str(found_num) == "9000"
-        replaced: str = re_replace("\\s+", "-", "hello   world")
+        replaced: str = sub("\\s+", "-", "hello   world")
         replace_ok = replaced == "hello-world"
-        all_alpha: list[str] = re_findall("[a-z]+", "ab 12 cd")
+        all_alpha: list[str] = findall("[a-z]+", "ab 12 cd")
         findall_ok = str(all_alpha) == "[\"ab\", \"cd\"]"
-        split_parts: list[str] = re_split(":+", "a:b::c")
+        split_parts: list[str] = split(":+", "a:b::c")
         split_ok = str(split_parts) == "[\"a\", \"b\", \"c\"]"
         case_fold: str | None = search_flags("hello", "HELLO", IGNORECASE)
         case_fold_ok = case_fold is not None

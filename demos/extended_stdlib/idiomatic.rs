@@ -97,17 +97,17 @@ fn compile_regex(pattern: &str) -> Result<Regex, RegexError> {
     Regex::new(pattern).map_err(|error| RegexError::new(error.to_string()))
 }
 
-fn re_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
+fn has_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
     Ok(compile_regex(pattern)?.is_match(text))
 }
 
-fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
     Ok(compile_regex(pattern)?
         .find(text)
         .map(|matched| matched.as_str().to_string()))
 }
 
-fn re_replace(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
+fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
     Ok(compile_regex(pattern)?
         .replace_all(text, replacement)
         .into_owned())
@@ -133,11 +133,11 @@ fn md5_hash(text: &str) -> String {
         .join("")
 }
 
-fn base64_encode(text: &str) -> String {
+fn b64encode(text: &str) -> String {
     base64::engine::general_purpose::STANDARD.encode(text.as_bytes())
 }
 
-fn base64_decode(text: &str) -> Result<String, ParseError> {
+fn b64decode(text: &str) -> Result<String, ParseError> {
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(text)
         .map_err(|error| ParseError::new(error.to_string()))?;
@@ -161,13 +161,13 @@ fn main() {
     println!("Random float [0,1): {f}");
 
     println!("=== sifr.re ===");
-    match re_match("[0-9]+", "hello 42") {
+    match has_match("[0-9]+", "hello 42") {
         Ok(matched) => {
             println!("Match digits in 'hello 42': {matched}");
-            if let Ok(Some(found)) = re_find("[0-9]+", "price is $42.99") {
+            if let Ok(Some(found)) = search("[0-9]+", "price is $42.99") {
                 println!("Found: {found}");
             }
-            match re_replace("[0-9]+", "N", "a1b2c3") {
+            match sub("[0-9]+", "N", "a1b2c3") {
                 Ok(replaced) => println!("Replace: {replaced}"),
                 Err(error) => println!("regex error: {}", error.message),
             }
@@ -180,9 +180,9 @@ fn main() {
     println!("MD5('sifr'): {}", md5_hash("sifr"));
 
     println!("=== sifr.base64 ===");
-    let encoded = base64_encode("Hello, Sifr!");
+    let encoded = b64encode("Hello, Sifr!");
     println!("Base64 encode: {encoded}");
-    match base64_decode(&encoded) {
+    match b64decode(&encoded) {
         Ok(decoded) => println!("Base64 decode: {decoded}"),
         Err(error) => println!("base64 error: {}", error.message),
     }

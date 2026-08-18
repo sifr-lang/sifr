@@ -12,7 +12,7 @@
 # ============================================================
 
 from sifr.io import read_text, write_text, exists, read_lines
-from sifr.json import JsonValue, json_loads
+from sifr.json import JsonValue, loads
 from sifr.env import getenv_opt, setenv
 from sifr.os import run_command
 from sifr.math import sqrt, floor, ceil, pi, e
@@ -53,7 +53,7 @@ def main():
     print("=== sifr.json ===")
 
     try:
-        data: JsonValue = json_loads("{\"language\":\"sifr\",\"version\":1}")
+        data: JsonValue = loads("{\"language\":\"sifr\",\"version\":1}")
         print(f"Parsed JSON: {data}")
     except JSONDecodeError as err:
         print(f"json error: {err.message}")

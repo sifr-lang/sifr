@@ -1,7 +1,7 @@
 from sifr.base64 import b64decode_bytes, b64encode_bytes
 from sifr.bytes import encode_utf8
 from sifr.hashlib import HashObject, new_bytes
-from sifr.json import JsonValue, json_dumps, loads
+from sifr.json import JsonValue, dumps, loads
 from sifr.test import assert_eq, assert_true
 
 
@@ -20,7 +20,7 @@ def main() -> None:
 
         parsed: JsonValue = loads("{\"release\":true,\"count\":2}")
         assert_true(str(parsed) == "{\"release\":true,\"count\":2}")
-        assert_eq(json_dumps("installed"), "\"installed\"")
+        assert_eq(dumps("installed"), "\"installed\"")
     except ValueError as e:
         assert_true(len(e.message) == 0)
     except ParseError as e:

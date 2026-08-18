@@ -1,5 +1,5 @@
 # Consolidated stdlib json coverage for structured-value parity
-from sifr.json import JsonValue, loads, json_dumps, validate_integer_digit_limits
+from sifr.json import JsonValue, loads, dumps, validate_integer_digit_limits
 
 
 def main() -> None:
@@ -11,11 +11,11 @@ def main() -> None:
     except JSONDecodeError as e:
         assert False
 
-    assert json_dumps("hello") == "\"hello\""
-    assert json_dumps(False) == "false"
+    assert dumps("hello") == "\"hello\""
+    assert dumps(False) == "false"
 
     try:
-        parsed_roundtrip: JsonValue = loads(json_dumps(7))
+        parsed_roundtrip: JsonValue = loads(dumps(7))
         assert str(parsed_roundtrip) == "7"
     except JSONDecodeError as e:
         assert False

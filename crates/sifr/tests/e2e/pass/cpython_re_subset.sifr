@@ -1,14 +1,21 @@
 # Adapted CPython re subset for sifr.re (canonical vector format)
-from sifr.re import re_match, re_find, re_replace, re_findall, re_split, search_flags, fullmatch, compile, IGNORECASE, Pattern
+from sifr.re import search, sub, findall, split, search_flags, fullmatch, compile, IGNORECASE, Pattern
 from sifr.test import assert_bool_vector_eq
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 
 def collect_match_actual() -> list[bool]:
     actual: list[bool] = []
     prefix_match: bool = False
     exact_match_fail: bool = False
     try:
-        m_prefix: bool = re_match("a+", "aaab")
-        m_exact: bool = re_match("^abc$", "abcd")
+        m_prefix: bool = has_match("a+", "aaab")
+        m_exact: bool = has_match("^abc$", "abcd")
         prefix_match = m_prefix
         exact_match_fail = not m_exact
     except RegexError as e:
@@ -22,9 +29,9 @@ def collect_find_actual() -> list[bool]:
     found_digits_ok: bool = False
     missing_digits_ok: bool = False
     try:
-        found_digits: str | None = re_find("\\d+", "abc123def")
+        found_digits: str | None = search("\\d+", "abc123def")
         found_digits_ok = str(found_digits) == "123"
-        missing_digits: str | None = re_find("\\d+", "abcdef")
+        missing_digits: str | None = search("\\d+", "abcdef")
         missing_digits_ok = missing_digits is None
     except RegexError as e:
         _ = str(e.message)
@@ -38,11 +45,11 @@ def collect_replace_findall_split_actual() -> list[bool]:
     findall_ok: bool = False
     split_ok: bool = False
     try:
-        replaced: str = re_replace("\\d+", "N", "a1b22c333")
+        replaced: str = sub("\\d+", "N", "a1b22c333")
         replace_ok = replaced == "aNbNcN"
-        all_hits: list[str] = re_findall("\\d+", "x1y22z333")
+        all_hits: list[str] = findall("\\d+", "x1y22z333")
         findall_ok = str(all_hits) == "[\"1\", \"22\", \"333\"]"
-        split_parts: list[str] = re_split(":+", "a:b::c")
+        split_parts: list[str] = split(":+", "a:b::c")
         split_ok = str(split_parts) == "[\"a\", \"b\", \"c\"]"
     except RegexError as e:
         _ = str(e.message)
@@ -99,7 +106,7 @@ def collect_invalid_pattern_actual() -> list[bool]:
     actual: list[bool] = []
     invalid_pattern_rejected: bool = False
     try:
-        _m: bool = re_match("(", "abc")
+        _m: bool = has_match("(", "abc")
         _ = _m
     except RegexError as e:
         invalid_pattern_rejected = len(e.message) > 0

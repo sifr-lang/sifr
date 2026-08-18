@@ -1,5 +1,5 @@
 # Reference: decimal_conversion_boundary_rules
-from sifr.json import json_dumps
+from sifr.json import dumps
 
 def main():
     d: decimal = Decimal("-1.9")
@@ -22,8 +22,8 @@ def main():
     except DecimalConversionError as e:
         assert False
 
-    assert json_dumps(Decimal("1.2300")) == '"1.2300"'
-    assert json_dumps(BigDecimal("1.2300")) == '"1.2300"'
+    assert dumps(Decimal("1.2300")) == '"1.2300"'
+    assert dumps(BigDecimal("1.2300")) == '"1.2300"'
 
     try:
         out_of_range: int = int(BigDecimal("999999999999999999999999999999999999"))

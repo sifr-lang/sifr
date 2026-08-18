@@ -1,5 +1,5 @@
 # Adapted CPython fnmatch subset for sifr.fnmatch (canonical vector format)
-from sifr.fnmatch import fnmatch, fnmatchcase, fnmatch_filter
+from sifr.fnmatch import fnmatch, fnmatchcase, filter
 from sifr.test import assert_bool_vector_eq
 
 def collect_fnmatch_actual() -> list[bool]:
@@ -31,12 +31,12 @@ def collect_fnmatchcase_actual() -> list[bool]:
 def collect_filter_actual() -> list[bool]:
     actual: list[bool] = []
     names: list[str] = ["Python", "Ruby", "Perl", "Tcl"]
-    actual.append(str(fnmatch_filter(names, "P*")) == "[\"Python\", \"Perl\"]")
-    actual.append(str(fnmatch_filter(names, "R*")) == "[\"Ruby\"]")
-    actual.append(str(fnmatch_filter(names, "X*")) == "[]")
+    actual.append(str(filter(names, "P*")) == "[\"Python\", \"Perl\"]")
+    actual.append(str(filter(names, "R*")) == "[\"Ruby\"]")
+    actual.append(str(filter(names, "X*")) == "[]")
 
     files: list[str] = ["a.py", "b.txt", "c.py", "d.rs"]
-    actual.append(str(fnmatch_filter(files, "*.py")) == "[\"a.py\", \"c.py\"]")
+    actual.append(str(filter(files, "*.py")) == "[\"a.py\", \"c.py\"]")
     return actual
 
 def append_all(mut target: list[bool], values: list[bool]):

@@ -1,5 +1,5 @@
 # Adapted CPython json subset for sifr.json structured values
-from sifr.json import JsonValue, loads, json_dumps
+from sifr.json import JsonValue, loads, dumps
 
 
 def main() -> None:
@@ -19,12 +19,12 @@ def main() -> None:
     except JSONDecodeError as e:
         assert False
 
-    assert json_dumps("hello") == "\"hello\""
-    assert json_dumps(42) == "42"
-    assert json_dumps(True) == "true"
+    assert dumps("hello") == "\"hello\""
+    assert dumps(42) == "42"
+    assert dumps(True) == "true"
 
     try:
-        rt: JsonValue = loads(json_dumps(42))
+        rt: JsonValue = loads(dumps(42))
         assert str(rt) == "42"
     except JSONDecodeError as e:
         assert False

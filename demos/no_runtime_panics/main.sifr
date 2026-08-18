@@ -1,8 +1,15 @@
 # Reference: zero_panic_gate
 # Reference: compiler-feature-history
 from sifr.io import read_text
-from sifr.json import JsonValue, json_loads
-from sifr.re import re_match
+from sifr.json import JsonValue, loads
+from sifr.re import search
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 from sifr.random import randint
 from sifr.textwrap import wrap
 from sifr.graphlib import topological_sort, CycleError
@@ -24,20 +31,20 @@ def main():
     # Section 2: Parse Safety
     print("--- 2. Parse Safety ---")
     try:
-        data: JsonValue = json_loads("{ invalid json }")
+        data: JsonValue = loads("{ invalid json }")
         _ = data
         print(f"Parsed JSON: {data}")
     except JSONDecodeError as e:
-        print(f"json_loads(invalid) -> JSONDecodeError: {e.message}")
+        print(f"loads(invalid) -> JSONDecodeError: {e.message}")
     print("")
 
     # Section 3: Regex Safety
     print("--- 3. Regex Safety ---")
     try:
-        matched: bool = re_match("[invalid regex", "test")
+        matched: bool = has_match("[invalid regex", "test")
         print(f"Regex match result: {matched}")
     except RegexError as e:
-        print(f"re_match(invalid) -> RegexError: {e.message}")
+        print(f"search(invalid) -> RegexError: {e.message}")
     print("")
 
     # Section 4: Collection Safety

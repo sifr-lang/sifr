@@ -414,6 +414,158 @@ fn runtime_information_modules_export_only_canonical_operation_names() {
     }
 }
 
+#[test]
+fn text_and_data_modules_export_only_canonical_operation_names() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+
+    for (module_name, canonical, removed) in [
+        (
+            "sifr.re",
+            &[
+                "search",
+                "search_flags",
+                "search_match",
+                "sub",
+                "sub_flags",
+                "findall",
+                "findall_flags",
+                "split",
+                "split_flags",
+                "finditer",
+                "compile",
+                "compile_flags",
+                "fullmatch",
+                "fullmatch_flags",
+            ][..],
+            &[
+                "re_match",
+                "re_find",
+                "re_replace",
+                "re_findall",
+                "re_split",
+                "re_find_start",
+                "re_find_end",
+                "re_match_flags",
+                "re_find_flags",
+                "re_replace_flags",
+                "re_findall_flags",
+                "re_split_flags",
+                "compile_pattern",
+                "compile_pattern_flags",
+            ][..],
+        ),
+        (
+            "sifr.json",
+            &[
+                "loads",
+                "dumps",
+                "dumps_exact",
+                "dumps_web",
+                "dumps_string_ints",
+            ][..],
+            &[
+                "json_loads",
+                "json_dumps",
+                "json_dumps_value",
+                "json_dumps_value_exact",
+                "json_dumps_value_web",
+                "json_dumps_value_string_ints",
+                "json_load_tokens",
+                "json_dump_tokens",
+            ][..],
+        ),
+        (
+            "sifr.tomllib",
+            &["loads"][..],
+            &["toml_loads", "toml_parse_tokens"][..],
+        ),
+        (
+            "sifr.base64",
+            &[
+                "b64encode",
+                "b64decode",
+                "b64encode_bytes",
+                "b64decode_bytes",
+                "b64encode_opts",
+                "b64decode_opts",
+            ][..],
+            &[
+                "base64_encode",
+                "base64_decode",
+                "base64_encode_bytes",
+                "base64_decode_bytes",
+                "base64_encode_opts",
+                "base64_decode_opts",
+            ][..],
+        ),
+        (
+            "sifr.fnmatch",
+            &["fnmatch", "fnmatchcase", "filter", "filterfalse"][..],
+            &["fnmatch_filter"][..],
+        ),
+        (
+            "sifr.html",
+            &["escape", "unescape"][..],
+            &["html_escape", "html_unescape"][..],
+        ),
+        (
+            "sifr.calendar",
+            &["isleap", "weekday", "monthrange", "leapdays"][..],
+            &["calendar_isleap", "calendar_weekday", "calendar_monthrange"][..],
+        ),
+        (
+            "sifr.url",
+            &[
+                "parse",
+                "build",
+                "percent_encode",
+                "percent_decode",
+                "percent_encode_bytes",
+                "percent_decode_bytes",
+                "normalize_path",
+                "parse_query",
+                "build_query",
+            ][..],
+            &[
+                "parse_url",
+                "build_url",
+                "url_parse",
+                "url_build",
+                "url_percent_encode",
+                "url_percent_decode",
+                "url_query_parse",
+                "url_query_build",
+            ][..],
+        ),
+    ] {
+        let functions = compiled
+            .defs
+            .functions
+            .get(module_name)
+            .unwrap_or_else(|| panic!("{module_name} functions should be exported"));
+        for name in canonical {
+            assert!(
+                functions.contains_key(*name),
+                "{module_name}.{name} should be exported"
+            );
+        }
+        for name in removed {
+            assert!(
+                !functions.contains_key(*name),
+                "{module_name}.{name} must remain private"
+            );
+        }
+    }
+
+    let regex_classes = compiled
+        .defs
+        .classes
+        .get("sifr.re")
+        .expect("sifr.re classes should be exported");
+    assert!(regex_classes.contains_key("Pattern"));
+    assert!(!regex_classes.contains_key("CompiledPattern"));
+}
+
 fn fixture_source(module: &str, source: &str, kind: LoadedStdlibSourceKind) -> LoadedStdlibSource {
     let stdlib_root =
         std::fs::canonicalize(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../stdlib"))

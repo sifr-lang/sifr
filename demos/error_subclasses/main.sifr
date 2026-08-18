@@ -8,7 +8,14 @@
 from sifr.io import read_text, write_text
 from sifr.os import listdir, mkdir, rmdir
 from sifr.json import JsonValue, loads
-from sifr.re import re_match
+from sifr.re import search
+
+def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+    try:
+        found: str | None = search(pattern, text)
+        return found is not None
+    except RegexError as error:
+        raise RegexError(error.message)
 
 def demo_specific_subclass():
     print("=== 1. Specific Subclass Handling ===")
@@ -42,7 +49,7 @@ def demo_json_fields():
 def demo_regex_fields():
     print("=== 4. RegexError with detail ===")
     try:
-        m: bool = re_match("[unclosed", "test")
+        m: bool = has_match("[unclosed", "test")
     except RegexError as e:
         print(f"RegexError: {e.message}")
         print(f"Detail: {e.detail}")
