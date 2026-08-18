@@ -1,0 +1,9 @@
+from sifr.meta import CallableIdentity
+
+
+class ContractDescriptor:
+    kind: str
+    enabled: bool
+    limit: int | None
+    tags: list[str]
+    callback: CallableIdentity | None

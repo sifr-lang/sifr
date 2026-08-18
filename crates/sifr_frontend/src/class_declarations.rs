@@ -52,6 +52,13 @@ struct DecoratorDeclaration {
     name: String,
     origin: SourceOriginId,
     argument_origins: Vec<SourceOriginId>,
+    arguments: Vec<CallArgumentDeclaration>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct CallArgumentDeclaration {
+    name: Option<String>,
+    origin: SourceOriginId,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -69,12 +76,14 @@ enum ClassDeclarationItem {
         annotation_origin: SourceOriginId,
         value_origin: Option<SourceOriginId>,
         value_argument_origins: Vec<SourceOriginId>,
+        value_arguments: Vec<CallArgumentDeclaration>,
     },
     ClassItem {
         name: String,
         origin: SourceOriginId,
         value_origin: SourceOriginId,
         value_argument_origins: Vec<SourceOriginId>,
+        value_arguments: Vec<CallArgumentDeclaration>,
     },
     Method {
         name: String,
@@ -153,6 +162,7 @@ impl ClassDeclaration {
                 "value_argument_origins".to_string(),
                 ConstValue::List(Vec::new()),
             ),
+            ("value_arguments".to_string(), ConstValue::List(Vec::new())),
             ("decorators".to_string(), ConstValue::List(Vec::new())),
             ("parameters".to_string(), ConstValue::List(Vec::new())),
         ]);
@@ -163,6 +173,7 @@ impl ClassDeclaration {
                 annotation_origin,
                 value_origin,
                 value_argument_origins,
+                value_arguments,
             } => {
                 record.insert("kind".to_string(), ConstValue::String("field".to_string()));
                 record.insert("name".to_string(), ConstValue::String(name.clone()));
@@ -178,6 +189,10 @@ impl ClassDeclaration {
                 record.insert(
                     "value_argument_origins".to_string(),
                     origin_list(value_argument_origins),
+                );
+                record.insert(
+                    "value_arguments".to_string(),
+                    call_argument_list(value_arguments),
                 );
                 if let Some(class) = lowering
                     .module
@@ -198,6 +213,7 @@ impl ClassDeclaration {
                 origin,
                 value_origin,
                 value_argument_origins,
+                value_arguments,
             } => {
                 record.insert(
                     "kind".to_string(),
@@ -212,6 +228,10 @@ impl ClassDeclaration {
                 record.insert(
                     "value_argument_origins".to_string(),
                     origin_list(value_argument_origins),
+                );
+                record.insert(
+                    "value_arguments".to_string(),
+                    call_argument_list(value_arguments),
                 );
             }
             ClassDeclarationItem::Method {
@@ -365,16 +385,18 @@ impl DeclarationCollector {
                     .value
                     .as_deref()
                     .map(|value| self.add_origin(SourceOriginKind::Value, value.range()));
-                let value_argument_origins = assign
+                let value_arguments = assign
                     .value
                     .as_deref()
                     .map_or_else(Vec::new, |value| self.call_arguments(value));
+                let value_argument_origins = argument_origins(&value_arguments);
                 Some(ClassDeclarationItem::Field {
                     name: name.id.to_string(),
                     origin,
                     annotation_origin,
                     value_origin,
                     value_argument_origins,
+                    value_arguments,
                 })
             }
             Stmt::Assign(assign) if assign.targets.len() == 1 => {
@@ -383,12 +405,14 @@ impl DeclarationCollector {
                 };
                 let origin = self.add_origin(SourceOriginKind::ClassItem, name.range());
                 let value_origin = self.add_origin(SourceOriginKind::Value, assign.value.range());
-                let value_argument_origins = self.call_arguments(&assign.value);
+                let value_arguments = self.call_arguments(&assign.value);
+                let value_argument_origins = argument_origins(&value_arguments);
                 Some(ClassDeclarationItem::ClassItem {
                     name: name.id.to_string(),
                     origin,
                     value_origin,
                     value_argument_origins,
+                    value_arguments,
                 })
             }
             Stmt::FunctionDef(function) => Some(self.method(function)),
@@ -440,25 +464,40 @@ impl DeclarationCollector {
             .map(|decorator| {
                 let origin =
                     self.add_origin(SourceOriginKind::Decorator, decorator.expression.range());
+                let arguments = self.call_arguments(&decorator.expression);
                 DecoratorDeclaration {
                     name: expression_name(&decorator.expression),
                     origin,
-                    argument_origins: self.call_arguments(&decorator.expression),
+                    argument_origins: argument_origins(&arguments),
+                    arguments,
                 }
             })
             .collect()
     }
 
-    fn call_arguments(&mut self, expression: &Expr) -> Vec<SourceOriginId> {
+    fn call_arguments(&mut self, expression: &Expr) -> Vec<CallArgumentDeclaration> {
         let Expr::Call(call) = expression else {
             return Vec::new();
         };
-        call.arguments
+        let mut arguments = call
+            .arguments
             .args
             .iter()
-            .chain(call.arguments.keywords.iter().map(|keyword| &keyword.value))
-            .map(|argument| self.add_origin(SourceOriginKind::Argument, argument.range()))
-            .collect()
+            .map(|argument| CallArgumentDeclaration {
+                name: None,
+                origin: self.add_origin(SourceOriginKind::Argument, argument.range()),
+            })
+            .collect::<Vec<_>>();
+        arguments.extend(
+            call.arguments
+                .keywords
+                .iter()
+                .map(|keyword| CallArgumentDeclaration {
+                    name: keyword.arg.as_ref().map(ToString::to_string),
+                    origin: self.add_origin(SourceOriginKind::Argument, keyword.value.range()),
+                }),
+        );
+        arguments
     }
 
     fn add_origin(&mut self, kind: SourceOriginKind, range: TextRange) -> SourceOriginId {
@@ -483,6 +522,33 @@ fn origin_list(origins: &[SourceOriginId]) -> ConstValue {
     )
 }
 
+fn argument_origins(arguments: &[CallArgumentDeclaration]) -> Vec<SourceOriginId> {
+    arguments.iter().map(|argument| argument.origin).collect()
+}
+
+fn call_argument_list(arguments: &[CallArgumentDeclaration]) -> ConstValue {
+    ConstValue::List(
+        arguments
+            .iter()
+            .map(|argument| {
+                ConstValue::Record(BTreeMap::from([
+                    (
+                        "name".to_string(),
+                        argument
+                            .name
+                            .as_ref()
+                            .map_or(ConstValue::None, |name| ConstValue::String(name.clone())),
+                    ),
+                    (
+                        "origin".to_string(),
+                        ConstValue::SourceOrigin(argument.origin),
+                    ),
+                ]))
+            })
+            .collect(),
+    )
+}
+
 fn decorator_const_value(decorator: &DecoratorDeclaration) -> ConstValue {
     ConstValue::Record(BTreeMap::from([
         (
@@ -496,6 +562,10 @@ fn decorator_const_value(decorator: &DecoratorDeclaration) -> ConstValue {
         (
             "argument_origins".to_string(),
             origin_list(&decorator.argument_origins),
+        ),
+        (
+            "arguments".to_string(),
+            call_argument_list(&decorator.arguments),
         ),
     ]))
 }
@@ -577,5 +647,37 @@ class Command:
         let b = declarations.get("B").expect("B exists");
         assert!(a.origins.resolve(a.origin).is_some());
         assert!(a.origins.resolve(b.origin).is_none());
+    }
+
+    #[test]
+    fn call_argument_origins_preserve_keyword_names_and_source_order() {
+        let parsed = parse_module_suite(
+            "@decorate(1, mode=\"strict\")\nclass Model:\n    value: int = field(2, alias=\"id\")\n",
+            None,
+        )
+        .expect("fixture parses");
+        let declarations = ClassDeclarationSet::collect("fixture", &parsed);
+        let model = declarations.get("Model").expect("Model exists");
+        assert_eq!(
+            model.decorators[0]
+                .arguments
+                .iter()
+                .map(|argument| argument.name.as_deref())
+                .collect::<Vec<_>>(),
+            vec![None, Some("mode")],
+        );
+        let ClassDeclarationItem::Field {
+            value_arguments, ..
+        } = &model.items[0]
+        else {
+            panic!("field declaration should be retained");
+        };
+        assert_eq!(
+            value_arguments
+                .iter()
+                .map(|argument| argument.name.as_deref())
+                .collect::<Vec<_>>(),
+            vec![None, Some("alias")],
+        );
     }
 }

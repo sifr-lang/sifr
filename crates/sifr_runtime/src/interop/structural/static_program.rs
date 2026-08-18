@@ -5,7 +5,7 @@ use super::{ShapeIdentity, SlotTableIdentity, StaticProgramIdentity};
 use crate::interop::GeneratedGlueToken;
 
 pub const STATIC_PROGRAM_ENVELOPE_VERSION: u32 = 1;
-pub const STATIC_PROGRAM_FORMAT_VERSION: u32 = 1;
+pub const STATIC_PROGRAM_FORMAT_VERSION: u32 = 2;
 pub const STRUCTURAL_BRIDGE_CONTRACT_VERSION: u32 = 1;
 
 /// Borrowed compiler-emitted value produced by package const specialization.
@@ -24,6 +24,13 @@ pub enum StaticProgramValue {
     Tuple(&'static [Self]),
     List(&'static [Self]),
     Record(&'static [(&'static str, Self)]),
+    CallableIdentity {
+        module: &'static str,
+        owner: Option<&'static str>,
+        symbol: &'static str,
+        generic_arguments: &'static [&'static str],
+        signature: &'static str,
+    },
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

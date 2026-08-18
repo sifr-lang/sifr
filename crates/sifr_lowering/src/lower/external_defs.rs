@@ -20,6 +20,9 @@ type StructuralMethodModules = std::collections::HashMap<String, StructuralMetho
 pub struct ModuleSpecializationMetadata {
     pub class_field_defaults: std::collections::HashMap<String, Vec<(usize, HirExpr)>>,
     pub declaration_metadata: Vec<sifr_ir::TypedDeclarationMetadata>,
+    pub declaration_descriptors: Vec<sifr_ir::TypedDeclarationDescriptor>,
+    pub class_adapter_providers: Vec<sifr_ir::ClassAdapterProviderDeclaration>,
+    pub descriptor_functions: Vec<sifr_ir::DeclarationDescriptorFunction>,
     pub specialization_requests: Vec<sifr_ir::ConstSpecializationRequest>,
     pub specialization_outputs: Vec<sifr_ir::StaticSpecializationOutput>,
     pub json_integer_boundary_requests: Vec<sifr_ir::JsonIntegerBoundaryRequest>,
@@ -65,6 +68,19 @@ pub struct ExternalDefs {
     /// Map of module name to typed package-owned declaration metadata.
     pub declaration_metadata:
         std::collections::HashMap<String, Vec<sifr_ir::TypedDeclarationMetadata>>,
+    /// Canonical class-adapter provider declarations keyed by module and function.
+    pub class_adapter_providers: std::collections::HashMap<
+        String,
+        std::collections::HashMap<String, sifr_ir::ClassAdapterProviderDeclaration>,
+    >,
+    /// Canonical descriptor function declarations keyed by module and function.
+    pub descriptor_functions: std::collections::HashMap<
+        String,
+        std::collections::HashMap<String, sifr_ir::DeclarationDescriptorFunction>,
+    >,
+    /// Evaluated descriptor uses keyed by the declaring module.
+    pub declaration_descriptors:
+        std::collections::HashMap<String, Vec<sifr_ir::TypedDeclarationDescriptor>>,
     /// Const-evaluable package function bodies keyed by module and function name.
     pub const_functions:
         std::collections::HashMap<String, std::collections::HashMap<String, sifr_ir::HirFunction>>,
@@ -160,6 +176,20 @@ impl ExternalDefs {
         &mut self,
         module_name: &str,
     ) -> ModuleSpecializationMetadata {
+        let mut class_adapter_providers = self
+            .class_adapter_providers
+            .remove(module_name)
+            .unwrap_or_default()
+            .into_values()
+            .collect::<Vec<_>>();
+        class_adapter_providers.sort_by(|left, right| left.function.cmp(&right.function));
+        let mut descriptor_functions = self
+            .descriptor_functions
+            .remove(module_name)
+            .unwrap_or_default()
+            .into_values()
+            .collect::<Vec<_>>();
+        descriptor_functions.sort_by(|left, right| left.function.cmp(&right.function));
         ModuleSpecializationMetadata {
             class_field_defaults: self
                 .class_field_defaults
@@ -169,6 +199,12 @@ impl ExternalDefs {
                 .declaration_metadata
                 .remove(module_name)
                 .unwrap_or_default(),
+            declaration_descriptors: self
+                .declaration_descriptors
+                .remove(module_name)
+                .unwrap_or_default(),
+            class_adapter_providers,
+            descriptor_functions,
             specialization_requests: self
                 .specialization_requests
                 .remove(module_name)

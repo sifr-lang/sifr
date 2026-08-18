@@ -63,7 +63,7 @@ pub(crate) fn run_specializations(
         let described_shape =
             describe_type_with_externals(module_name, &target_type, result, external_defs);
         let mut shape = described_shape.to_const_value();
-        let canonical_shape = crate::structural_shape::canonical_value(&shape);
+        let canonical_shape = crate::const_canonical::canonical_value(&shape);
         let Some(declaration) = class_declarations.get(&request.owner) else {
             errors.push(malformed(
                 &request.package_module,
@@ -164,7 +164,7 @@ pub(crate) fn run_specializations(
                             continue;
                         }
                     };
-                    let canonical_value = crate::structural_shape::canonical_value(value);
+                    let canonical_value = crate::const_canonical::canonical_value(value);
                     let structural_contract_version = sifr_structural_identity::ALGORITHM_VERSION;
                     let program_identity = sifr_structural_identity::static_program_identity(
                         structural_contract_version,

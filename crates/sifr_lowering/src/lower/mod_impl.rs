@@ -68,6 +68,7 @@ pub(in crate::lower) fn lower_module_impl(
     // This must happen before function signature extraction so that imported error classes
     // (e.g., StatisticsError from sifr.statistics) can be used in Result[T, E] annotations.
     resolve_imports_early(stmts, externals, &mut ctx);
+    super::descriptor_declarations::prepare(stmts, &mut ctx);
     let imported_class_aliases = imports::class_aliases_by_module(stmts, externals, &ctx);
     python_interop::collect_python_opaque_classes(stmts, &mut ctx);
     rust_interop::collect_rust_opaque_close_methods(stmts, &mut ctx);
@@ -258,6 +259,7 @@ pub(in crate::lower) fn lower_module_impl(
         }
     }
     ctx.async_suspension_summaries = async_effects::collect_async_suspension_summaries(stmts);
+    super::descriptor_declarations::finalize(&mut ctx);
     // Collect import statements and resolve imported names
     let mut imports = Vec::new();
     for stmt in stmts {
@@ -828,6 +830,18 @@ pub(in crate::lower) fn lower_module_impl(
             generic_functions: ctx.generic_functions.clone(),
             type_param_bounds: ctx.type_param_bounds.clone(),
         };
+        for function in &mut module.functions {
+            if ctx.descriptor_functions.iter().any(|declaration| {
+                declaration.module == ctx.current_module_name.as_deref().unwrap_or_default()
+                    && declaration.function == function.name
+            }) && !function
+                .decorators
+                .iter()
+                .any(|decorator| decorator == "const_eval")
+            {
+                function.decorators.push("const_eval".to_string());
+            }
+        }
         for violation in super::method_call_verifier::verify_module_method_calls(
             &mut module,
             &ctx.class_types,
@@ -848,6 +862,10 @@ pub(in crate::lower) fn lower_module_impl(
             flow_graph,
             class_field_defaults: ctx.class_field_defaults.clone(),
             declaration_metadata: ctx.declaration_metadata.clone(),
+            class_adapter_providers: ctx.class_adapter_providers.clone(),
+            descriptor_functions: ctx.descriptor_functions.clone(),
+            declaration_descriptors: Vec::new(),
+            type_aliases: ctx.scope.type_aliases().clone(),
             specialization_requests: ctx.specialization_requests.clone(),
             specialization_outputs: Vec::new(),
             json_integer_boundary_requests: ctx.json_integer_boundary_requests.clone(),

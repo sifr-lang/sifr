@@ -1,0 +1,38 @@
+from sifr.meta import CallableIdentity, DeclarationInput, DeclarationPlan
+from fixture.contract_types import ContractDescriptor
+
+
+@class_adapter_provider("fixture.contract_types", "ContractDescriptor")
+@const_eval
+def adapt_contract(
+    declaration: DeclarationInput[ContractDescriptor],
+) -> DeclarationPlan[ContractDescriptor]:
+    return DeclarationPlan()
+
+
+@field_descriptor("fixture.contract", "adapt_contract")
+def option(
+    enabled: bool,
+    limit: int | None,
+    tags: list[str],
+    callback: CallableIdentity | None,
+) -> ContractDescriptor:
+    return ContractDescriptor("field", enabled, limit, tags, callback)
+
+
+@class_descriptor("fixture.contract", "adapt_contract")
+def contract_config(enabled: bool) -> ContractDescriptor:
+    tags: list[str] = []
+    return ContractDescriptor("class", enabled, None, tags, None)
+
+
+@method_descriptor("fixture.contract", "adapt_contract")
+def before_call(tag: str) -> ContractDescriptor:
+    tags: list[str] = [tag]
+    return ContractDescriptor("method", True, None, tags, None)
+
+
+@type_descriptor("fixture.contract", "adapt_contract")
+def bounded(limit: int) -> ContractDescriptor:
+    tags: list[str] = []
+    return ContractDescriptor("type", True, limit, tags, None)

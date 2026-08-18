@@ -15,7 +15,8 @@ pub use methods::{ShapeMethod, ShapeParameter};
 mod nominal_types;
 use nominal_types::{describe_enum, describe_newtype};
 mod canonical_helpers;
-use canonical_helpers::{canonical_bytes, canonical_sequence, canonical_values};
+use crate::const_canonical::canonical_value;
+use canonical_helpers::canonical_sequence;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructuralShape {
@@ -816,30 +817,6 @@ fn canonical_metadata(metadata: &[ShapeMetadata]) -> String {
         })
         .collect::<Vec<_>>()
         .join(",")
-}
-
-pub(crate) fn canonical_value(value: &ConstValue) -> String {
-    match value {
-        ConstValue::None => "none".to_string(),
-        ConstValue::Bool(value) => format!("bool:{value}"),
-        ConstValue::Integer(value) => format!("int:{value}"),
-        ConstValue::FloatBits(value) => format!("float:{value:016x}"),
-        ConstValue::String(value) => format!("str:{}:{value}", value.len()),
-        ConstValue::Bytes(value) => format!("bytes:{}:{}", value.len(), canonical_bytes(value)),
-        ConstValue::Tuple(values) => canonical_values("tuple", values),
-        ConstValue::List(values) => canonical_values("list", values),
-        ConstValue::Record(values) => format!(
-            "record[{}]",
-            values
-                .iter()
-                .map(|(key, value)| { format!("{}:{key}={}", key.len(), canonical_value(value)) })
-                .collect::<Vec<_>>()
-                .join(",")
-        ),
-        // Origin identity is diagnostic-only. A package result containing an
-        // origin is rejected before static-program canonicalization.
-        ConstValue::SourceOrigin(_) => "source-origin:opaque".to_string(),
-    }
 }
 
 #[cfg(test)]

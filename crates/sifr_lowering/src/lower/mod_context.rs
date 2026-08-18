@@ -35,6 +35,10 @@ pub(in crate::lower) struct LowerCtx {
     /// Class declaration defaults, independent of constructor signatures.
     pub(in crate::lower) class_field_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
     pub(in crate::lower) declaration_metadata: Vec<sifr_ir::TypedDeclarationMetadata>,
+    pub(in crate::lower) class_adapter_providers: Vec<sifr_ir::ClassAdapterProviderDeclaration>,
+    pub(in crate::lower) descriptor_functions: Vec<sifr_ir::DeclarationDescriptorFunction>,
+    pub(in crate::lower) descriptor_bindings:
+        HashMap<String, sifr_ir::DeclarationDescriptorFunction>,
     /// Whether each imported class can preserve all defaults and metadata in a
     /// compiler-owned structural identity.
     pub(in crate::lower) imported_structural_identity_inputs: HashMap<String, bool>,
@@ -217,6 +221,9 @@ impl LowerCtx {
             function_defaults: HashMap::new(),
             class_field_defaults: HashMap::new(),
             declaration_metadata: Vec::new(),
+            class_adapter_providers: Vec::new(),
+            descriptor_functions: Vec::new(),
+            descriptor_bindings: HashMap::new(),
             imported_structural_identity_inputs: HashMap::new(),
             specialization_requests: Vec::new(),
             json_integer_boundary_requests: Vec::new(),

@@ -87,6 +87,22 @@ fn static_value_expression(value: &StaticProgramValue) -> String {
                 .collect::<Vec<_>>()
                 .join(", ")
         ),
+        StaticProgramValue::CallableIdentity(identity) => {
+            let owner = identity
+                .owner
+                .as_ref()
+                .map_or_else(|| "None".to_string(), |owner| format!("Some({owner:?})"));
+            let generic_arguments = identity
+                .generic_arguments
+                .iter()
+                .map(|argument| format!("{argument:?}"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!(
+                "{path}::CallableIdentity {{ module: {:?}, owner: {owner}, symbol: {:?}, generic_arguments: &[{generic_arguments}], signature: {:?} }}",
+                identity.module, identity.symbol, identity.signature
+            )
+        }
     }
 }
 
@@ -199,7 +215,9 @@ fn hex(bytes: &[u8; 32]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sifr_ir::{MethodKind, StaticMethodParam, StaticMethodSlot, StaticMethodSlotContext};
+    use sifr_ir::{
+        CallableIdentity, MethodKind, StaticMethodParam, StaticMethodSlot, StaticMethodSlotContext,
+    };
     use sifr_type_system::{ParamConvention, Type};
 
     fn output(identity: u8) -> StaticSpecializationOutput {
@@ -230,6 +248,23 @@ mod tests {
         assert!(emitted.contains("StaticProgramIdentity::from_bytes([7, 7"));
         assert!(emitted.contains("StaticProgramValue::Record"));
         assert!(emitted.contains("StaticProgramValue::Integer(\"7\")"));
+    }
+
+    #[test]
+    fn callable_identity_emission_preserves_the_exact_checked_target() {
+        let emitted =
+            static_value_expression(&StaticProgramValue::CallableIdentity(CallableIdentity {
+                module: "fixture.callbacks".to_string(),
+                owner: Some("fixture.callbacks.Handler".to_string()),
+                symbol: "accept".to_string(),
+                generic_arguments: vec!["str".to_string()],
+                signature: "FunctionType([str], bool)".to_string(),
+            }));
+        assert!(emitted.contains("StaticProgramValue::CallableIdentity"));
+        assert!(emitted.contains("module: \"fixture.callbacks\""));
+        assert!(emitted.contains("owner: Some(\"fixture.callbacks.Handler\")"));
+        assert!(emitted.contains("generic_arguments: &[\"str\"]"));
+        assert!(emitted.contains("signature: \"FunctionType([str], bool)\""));
     }
 
     #[test]

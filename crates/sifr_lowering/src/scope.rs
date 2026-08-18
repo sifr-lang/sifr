@@ -654,6 +654,10 @@ impl Scope {
         self.type_aliases.get(name)
     }
 
+    pub(crate) fn type_aliases(&self) -> &HashMap<String, Type> {
+        &self.type_aliases
+    }
+
     /// Register a generic type alias (e.g., `type Pair[T] = tuple[T, T]`).
     pub fn define_generic_type_alias(&mut self, name: String, type_params: Vec<String>, ty: Type) {
         self.generic_type_aliases.insert(name, (type_params, ty));

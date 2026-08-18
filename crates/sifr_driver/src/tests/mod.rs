@@ -11,3 +11,4 @@ mod single_file_frontend;
 mod stdlib_exports;
 mod support;
 mod test_runner;
+mod typed_descriptors;

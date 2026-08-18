@@ -694,6 +694,7 @@ fn truthy(value: &ConstValue) -> bool {
         ConstValue::Bytes(value) => !value.is_empty(),
         ConstValue::Tuple(values) | ConstValue::List(values) => !values.is_empty(),
         ConstValue::Record(values) => !values.is_empty(),
+        ConstValue::CallableIdentity(_) => true,
         ConstValue::SourceOrigin(_) => true,
     }
 }
