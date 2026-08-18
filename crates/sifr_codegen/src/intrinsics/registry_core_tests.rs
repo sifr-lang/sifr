@@ -352,14 +352,7 @@ pub(crate) fn collections_bridge_helpers_are_not_intrinsics() {
 }
 
 #[test]
-pub(crate) fn lowers_bytes_intrinsics_via_registry() {
-    for retired in ["encode_utf8", "bytes_to_hex"] {
-        assert!(
-            lower_intrinsic(retired, &["value".to_string()]).is_none(),
-            "{retired} should lower through _sifr.bytes private Rust interop declarations"
-        );
-    }
-
+pub(crate) fn lowers_encoding_intrinsics_via_registry() {
     let enc_result = lower_intrinsic("str_encode_utf8_result", &["s".to_string()])
         .expect("str_encode_utf8_result");
     assert!(render_expr(&enc_result.expr).contains("::sifr_runtime::encoding::encode_bytes"));

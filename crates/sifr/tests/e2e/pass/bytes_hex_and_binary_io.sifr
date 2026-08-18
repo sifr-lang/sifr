@@ -1,5 +1,4 @@
 # Reference: stdlib_parity_bytes_4_raw_backend_and_lowering_separation
-from sifr.bytes import bytes_from_hex, bytes_to_hex
 from sifr.io import exists
 from sifr.os import remove_file
 
@@ -34,12 +33,12 @@ def main():
     contains_ok = payload.contains(67) and (not payload.contains(300))
     count_ok = payload.count(65) == 1 and payload.count(300) == 0
 
-    missing_idx: int | None = payload.index(300)
+    missing_idx: int | None = payload.find(300)
     index_miss_ok = missing_idx is None
 
     try:
-        hexed: str = bytes_to_hex(payload)
-        roundtrip: bytes = bytes_from_hex(hexed)
+        hexed: str = payload.hex()
+        roundtrip: bytes = bytes.from_hex(hexed)
         codec_ok = roundtrip == payload
     except ParseError as e:
         _ = str(e.message)

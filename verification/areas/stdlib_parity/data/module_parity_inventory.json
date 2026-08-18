@@ -35,13 +35,12 @@
     },
     {
       "id": "stdlib-module-hash-encoding",
-      "module": "sifr.hash+sifr.base64",
+      "module": "sifr.hashlib+sifr.base64",
       "owner": "stdlib/hash-encoding",
-      "support_status": "known_gap",
-      "profile": "inventory-only",
+      "support_status": "supported",
+      "profile": "full",
       "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/10_hash_encoding.sifr",
       "command": "check",
-      "known_gap": "The hashing half still names the unsupported sifr.hash module; the base64 calls use the canonical sifr.base64 surface.",
       "supported_apis": [
         {"name": "sha256", "tokens": ["sha256("]},
         {"name": "md5", "tokens": ["md5("]},

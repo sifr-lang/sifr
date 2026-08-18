@@ -276,17 +276,12 @@ fn planned_sysroot_stdlib_features_are_minimal_for_representative_modules() {
         ),
         (
             "sifr.hashlib",
-            &["bytes", "hash"][..],
+            &["hash"][..],
             &["json", "regex", "http", "python"][..],
         ),
         (
             "sifr.base64",
-            &["base64", "bytes"][..],
-            &["json", "regex", "http", "python"][..],
-        ),
-        (
-            "sifr.bytes",
-            &["bytes"][..],
+            &["base64"][..],
             &["json", "regex", "http", "python"][..],
         ),
         (
@@ -338,10 +333,8 @@ fn stateless_sysroot_leaves_do_not_emit_direct_third_party_dependencies() {
         ("_sifr.uuid", &["uuid"][..]),
         ("sifr.math", &["math"][..]),
         ("_sifr.math", &["math"][..]),
-        ("sifr.hashlib", &["bytes", "hash"][..]),
-        ("sifr.base64", &["base64", "bytes"][..]),
-        ("sifr.bytes", &["bytes"][..]),
-        ("_sifr.bytes", &["bytes"][..]),
+        ("sifr.hashlib", &["hash"][..]),
+        ("sifr.base64", &["base64"][..]),
         ("sifr.collections", &["collections"][..]),
         ("_sifr.collections", &["collections"][..]),
         ("sifr.re", &["regex"][..]),

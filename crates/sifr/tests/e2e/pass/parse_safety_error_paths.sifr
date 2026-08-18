@@ -3,7 +3,6 @@ from sifr.json import JsonValue, JSONDecoder
 from sifr.tomllib import TomlValue, loads
 from sifr.re import search
 from sifr.base64 import b64decode
-from sifr.bytes import decode_utf8, bytes_from_hex
 
 def _load_json(text: str) -> Result[JsonValue, JSONDecodeError]:
     decoder: JSONDecoder = JSONDecoder()
@@ -99,7 +98,7 @@ def main():
     # 9. UTF-8: invalid bytes returns ParseError
     try:
         bad_bytes: bytes = b"\xff\xfe\xfd"
-        text: str = decode_utf8(bad_bytes)
+        text: str = bad_bytes.decode()
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:
@@ -109,25 +108,25 @@ def main():
     # 10. UTF-8: valid bytes succeeds
     try:
         good_bytes: bytes = b"hi"
-        text2: str = decode_utf8(good_bytes)
+        text2: str = good_bytes.decode()
         assert str(f"utf8 ok: {text2}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:
         assert str("unexpected: " + e.message) == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
 
-    # 11. bytes_from_hex: invalid hex returns ParseError
+    # 11. bytes.from_hex: invalid hex returns ParseError
     try:
-        bad_hex: bytes = bytes_from_hex("ZZZZ")
+        bad_hex: bytes = bytes.from_hex("ZZZZ")
         assert str("should not reach here") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:
         assert str("caught hex ParseError") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
 
-    # 12. bytes_from_hex: valid hex succeeds
+    # 12. bytes.from_hex: valid hex succeeds
     try:
-        good_hex: bytes = bytes_from_hex("48")
+        good_hex: bytes = bytes.from_hex("48")
         assert str(f"hex ok: {good_hex[0]}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:

@@ -182,11 +182,11 @@ fn public_sysroot_stdlib_source_resolves_compiled_private_constants() {
 #[test]
 fn public_sysroot_stdlib_source_rejects_uncompiled_private_import_name() {
     let source =
-        "from _sifr.bytes import bytes_to_hex_strict\n\ndef main(data: bytes) -> str:\n    return bytes_to_hex_strict(data)\n";
+        "from _sifr.hidden import missing_name\n\ndef main(data: bytes) -> bytes:\n    return missing_name(data)\n";
     let parsed = parse_module(source).expect("parse failed");
     let mut externals = ExternalDefs::default();
     externals.constants.insert(
-        "_sifr.bytes".to_string(),
+        "_sifr.hidden".to_string(),
         HashMap::from([("__compiled_marker".to_string(), Type::Bool)]),
     );
 
@@ -198,8 +198,8 @@ fn public_sysroot_stdlib_source_rejects_uncompiled_private_import_name() {
 
     assert!(errors.iter().any(|error| {
         error.code == Some(DiagnosticCode::NAME_MISSING_MODULE_MEMBER)
-            && error.message == "module '_sifr.bytes' has no member 'bytes_to_hex_strict'"
-            && error.primary_range == Some(range_for(source, "bytes_to_hex_strict"))
+            && error.message == "module '_sifr.hidden' has no member 'missing_name'"
+            && error.primary_range == Some(range_for(source, "missing_name"))
     }));
 }
 

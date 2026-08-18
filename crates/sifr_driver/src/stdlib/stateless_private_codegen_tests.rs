@@ -161,49 +161,6 @@ fn uuid_private_declarations_codegen_through_sifr_stdlib() {
 }
 
 #[test]
-fn bytes_private_declarations_codegen_through_sifr_stdlib() {
-    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
-    let private_code = compiled
-        .code
-        .module_rust_code
-        .get("_sifr.bytes")
-        .expect("_sifr.bytes should generate private Rust code");
-
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::bytes::encode_utf8(s)"));
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::bytes::bytes_to_hex(bytes)"));
-    assert!(private_code.rust.contains(
-        "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
-    ));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.bytes")
-        .is_some_and(|deps| deps.contains("_sifr.bytes")));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.hashlib")
-        .is_some_and(|deps| deps.contains("_sifr.bytes")));
-
-    let public_code = compiled
-        .code
-        .module_rust_code
-        .get("sifr.bytes")
-        .expect("sifr.bytes should generate checked public wrapper code");
-    assert!(public_code
-        .rust
-        .contains("u8::from_str_radix(pair_str, 16)"));
-    assert!(public_code.rust.contains("byte out of range at index"));
-    assert!(public_code
-        .rust
-        .contains("bytes(size) requires a non-negative size"));
-}
-
-#[test]
 fn regex_private_declarations_codegen_through_sifr_stdlib() {
     let compiled = compile_stdlib_uncached().expect("stdlib should compile");
     let private_code = compiled

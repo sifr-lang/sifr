@@ -43,6 +43,7 @@ REQUIRED_SURFACE_STATES = {
 PLANNED_REARCHITECTURE_DELETIONS = {
     "_sifr.runtime::observability_glue",
     "_sifr.bytes::first_class_constructors",
+    "sifr.bytes::primitive_constructors",
     "_sifr.collections::counter_defaultdict",
     "retained-fallback-signature-glue",
 }

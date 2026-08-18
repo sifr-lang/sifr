@@ -1,13 +1,4 @@
-# sifr.hashlib — Hashing functions and hash object model
-from _sifr.bytes import encode_utf8, bytes_to_hex_strict
-from _sifr.crypto import sha256 as _sha256_impl
-from _sifr.crypto import md5 as _md5_impl
-from _sifr.crypto import sha1 as _sha1_impl
-from _sifr.crypto import sha512 as _sha512_impl
-from _sifr.crypto import sha224 as _sha224_impl
-from _sifr.crypto import sha384 as _sha384_impl
-from _sifr.crypto import blake2b as _blake2b_impl
-from _sifr.crypto import blake2s as _blake2s_impl
+# sifr.hashlib — Bytes-native hashing functions and hash object model
 from _sifr.crypto import sha256_bytes as _sha256_bytes_impl
 from _sifr.crypto import md5_bytes as _md5_bytes_impl
 from _sifr.crypto import sha1_bytes as _sha1_bytes_impl
@@ -16,7 +7,10 @@ from _sifr.crypto import sha224_bytes as _sha224_bytes_impl
 from _sifr.crypto import sha384_bytes as _sha384_bytes_impl
 from _sifr.crypto import blake2b_bytes as _blake2b_bytes_impl
 from _sifr.crypto import blake2s_bytes as _blake2s_bytes_impl
-from _sifr.fs import read_text
+from _sifr.fs import NativeFileHandle as _NativeFileHandle
+from _sifr.fs import open_file as _open_file_impl
+from _sifr.fs import file_read_bytes as _file_read_bytes_impl
+from _sifr.fs import file_close as _file_close_impl
 
 
 class HashlibError(Error):
@@ -37,11 +31,7 @@ class HashObject:
         self.digest_size = digest_size
         self.block_size = block_size
 
-    # Compatibility helper for string callers.
-    def update(self, data: str) -> None:
-        self._data = self._data + encode_utf8(data)
-
-    def update_bytes(self, data: bytes) -> None:
+    def update(self, data: bytes) -> None:
         self._data = self._data + data
 
     def hexdigest(self) -> str:
@@ -49,74 +39,6 @@ class HashObject:
 
     def digest(self) -> bytes:
         return _hash_bytes(self._algorithm, self._data)
-
-    def digest_bytes(self) -> bytes:
-        return self.digest()
-
-
-def sha256(s: str) -> str:
-    return _sha256_impl(s)
-
-
-def sha256_bytes(data: bytes) -> bytes:
-    return _sha256_bytes_impl(data)
-
-
-def md5(s: str) -> str:
-    return _md5_impl(s)
-
-
-def md5_bytes(data: bytes) -> bytes:
-    return _md5_bytes_impl(data)
-
-
-def sha1(s: str) -> str:
-    return _sha1_impl(s)
-
-
-def sha1_bytes(data: bytes) -> bytes:
-    return _sha1_bytes_impl(data)
-
-
-def sha224(s: str) -> str:
-    return _sha224_impl(s)
-
-
-def sha224_bytes(data: bytes) -> bytes:
-    return _sha224_bytes_impl(data)
-
-
-def sha384(s: str) -> str:
-    return _sha384_impl(s)
-
-
-def sha384_bytes(data: bytes) -> bytes:
-    return _sha384_bytes_impl(data)
-
-
-def sha512(s: str) -> str:
-    return _sha512_impl(s)
-
-
-def sha512_bytes(data: bytes) -> bytes:
-    return _sha512_bytes_impl(data)
-
-
-def blake2b(s: str) -> str:
-    return _blake2b_impl(s)
-
-
-def blake2b_bytes(data: bytes) -> bytes:
-    return _blake2b_bytes_impl(data)
-
-
-def blake2s(s: str) -> str:
-    return _blake2s_impl(s)
-
-
-def blake2s_bytes(data: bytes) -> bytes:
-    return _blake2s_bytes_impl(data)
-
 
 def _build_hash(algorithm: str, data: bytes) -> HashObject:
     alg: str = algorithm.lower()
@@ -160,34 +82,30 @@ def _is_supported_algorithm(name: str) -> bool:
 
 def _hash_bytes(algorithm: str, data: bytes) -> bytes:
     if algorithm == "md5":
-        return md5_bytes(data)
+        return _md5_bytes_impl(data)
     elif algorithm == "sha1":
-        return sha1_bytes(data)
+        return _sha1_bytes_impl(data)
     elif algorithm == "sha224":
-        return sha224_bytes(data)
+        return _sha224_bytes_impl(data)
     elif algorithm == "sha256":
-        return sha256_bytes(data)
+        return _sha256_bytes_impl(data)
     elif algorithm == "sha384":
-        return sha384_bytes(data)
+        return _sha384_bytes_impl(data)
     elif algorithm == "sha512":
-        return sha512_bytes(data)
+        return _sha512_bytes_impl(data)
     elif algorithm == "blake2b":
-        return blake2b_bytes(data)
+        return _blake2b_bytes_impl(data)
     elif algorithm == "blake2s":
-        return blake2s_bytes(data)
+        return _blake2s_bytes_impl(data)
     return b""
 
 
 def _hash_hex(algorithm: str, data: bytes) -> str:
-    return bytes_to_hex_strict(_hash_bytes(algorithm, data))
+    return _hash_bytes(algorithm, data).hex()
 
 
-# CPython-like constructor helpers (adapted to Sifr typed error boundaries).
-def new(name: str, data: str = "") -> Result[HashObject, ValueError]:
-    return new_bytes(name, encode_utf8(data))
-
-
-def new_bytes(name: str, data: bytes = b"") -> Result[HashObject, ValueError]:
+# CPython-like constructor helper with a bytes-only data boundary.
+def new(name: str, data: bytes = b"") -> Result[HashObject, ValueError]:
     if not _is_supported_algorithm(name):
         raise ValueError("unsupported hash algorithm: " + name)
     return _build_hash(name, data)
@@ -204,7 +122,9 @@ def algorithms_available() -> list[str]:
 
 def file_digest(path: str, name: str) -> Result[str, HashlibError]:
     try:
-        data: str = read_text(path)
+        handle: _NativeFileHandle = _open_file_impl(path, "rb")
+        data: bytes = _file_read_bytes_impl(handle)
+        _file_close_impl(handle)
         h: HashObject = new(name, data)
         return h.hexdigest()
     except IOError as e:
@@ -214,49 +134,49 @@ def file_digest(path: str, name: str) -> Result[str, HashlibError]:
 
 
 # SHA3/SHAKE constructor placeholders for dependency-audit gating.
-def sha3_256_obj(data: str = "") -> Result[HashObject, ValueError]:
+def sha3_256_obj(data: bytes = b"") -> Result[HashObject, ValueError]:
     raise ValueError("sha3_256 is not yet supported")
 
 
-def sha3_512_obj(data: str = "") -> Result[HashObject, ValueError]:
+def sha3_512_obj(data: bytes = b"") -> Result[HashObject, ValueError]:
     raise ValueError("sha3_512 is not yet supported")
 
 
-def shake_128_obj(data: str = "") -> Result[HashObject, ValueError]:
+def shake_128_obj(data: bytes = b"") -> Result[HashObject, ValueError]:
     raise ValueError("shake_128 is not yet supported")
 
 
-def shake_256_obj(data: str = "") -> Result[HashObject, ValueError]:
+def shake_256_obj(data: bytes = b"") -> Result[HashObject, ValueError]:
     raise ValueError("shake_256 is not yet supported")
 
 
-def md5_obj(data: str = "") -> HashObject:
-    return _build_hash("md5", encode_utf8(data))
+def md5(data: bytes = b"") -> HashObject:
+    return _build_hash("md5", data)
 
 
-def sha1_obj(data: str = "") -> HashObject:
-    return _build_hash("sha1", encode_utf8(data))
+def sha1(data: bytes = b"") -> HashObject:
+    return _build_hash("sha1", data)
 
 
-def sha224_obj(data: str = "") -> HashObject:
-    return _build_hash("sha224", encode_utf8(data))
+def sha224(data: bytes = b"") -> HashObject:
+    return _build_hash("sha224", data)
 
 
-def sha256_obj(data: str = "") -> HashObject:
-    return _build_hash("sha256", encode_utf8(data))
+def sha256(data: bytes = b"") -> HashObject:
+    return _build_hash("sha256", data)
 
 
-def sha384_obj(data: str = "") -> HashObject:
-    return _build_hash("sha384", encode_utf8(data))
+def sha384(data: bytes = b"") -> HashObject:
+    return _build_hash("sha384", data)
 
 
-def sha512_obj(data: str = "") -> HashObject:
-    return _build_hash("sha512", encode_utf8(data))
+def sha512(data: bytes = b"") -> HashObject:
+    return _build_hash("sha512", data)
 
 
-def blake2b_obj(data: str = "") -> HashObject:
-    return _build_hash("blake2b", encode_utf8(data))
+def blake2b(data: bytes = b"") -> HashObject:
+    return _build_hash("blake2b", data)
 
 
-def blake2s_obj(data: str = "") -> HashObject:
-    return _build_hash("blake2s", encode_utf8(data))
+def blake2s(data: bytes = b"") -> HashObject:
+    return _build_hash("blake2s", data)

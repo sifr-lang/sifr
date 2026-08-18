@@ -1,6 +1,5 @@
 # Reference: bytes_binary_storage
 # Reference: first-class-bytes-and-binary-surface-foundation
-from sifr.bytes import bytes_from_hex, bytes_to_hex
 from sifr.io import exists
 from sifr.os import remove_file
 
@@ -28,8 +27,8 @@ def main():
 
     hex_ok: bool = False
     try:
-        hexed: str = bytes_to_hex(payload)
-        roundtrip: bytes = bytes_from_hex(hexed)
+        hexed: str = payload.hex()
+        roundtrip: bytes = bytes.from_hex(hexed)
         hex_ok = roundtrip == payload
     except ParseError as e:
         _ = str(e.message)

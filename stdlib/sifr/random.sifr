@@ -1,7 +1,6 @@
 from _sifr.crypto import random_float as _random_float_impl, random_gauss as _random_gauss_impl, random_int as _random_int_impl, random_randrange as _random_randrange_impl, random_uniform as _random_uniform_impl
 from _sifr.crypto import random_module_state_words as _module_state_words_impl, random_module_state_index as _module_state_index_impl, random_module_state_gauss_next as _module_state_gauss_next_impl, random_module_set_state as _module_set_state_impl
 from _sifr.time import time_now as _time_impl
-from sifr.bytes import bytes_from_ints
 from sifr.math import cos, log, pi, sin, sqrt
 
 T = TypeVar("T")
@@ -206,7 +205,7 @@ class Random:
             byte_value: int = self._next_u32() & 255
             values.append(byte_value)
             i = i + 1
-        return bytes_from_ints(values)
+        return bytes.from_ints(values)
 
     def gauss(self, mu: float, sigma: float) -> float:
         cached: float | None = self._gauss_next
@@ -311,7 +310,7 @@ class SystemRandom:
                 value = 255
             values.append(value)
             i = i + 1
-        return bytes_from_ints(values)
+        return bytes.from_ints(values)
 
 
 def _module_random() -> Random:

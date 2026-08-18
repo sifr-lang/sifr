@@ -3,7 +3,7 @@ from sifr.gzip import compress, decompress
 
 def main():
     data: str = "Hello, World!"
-    compressed: list[int] = compress(data)
+    compressed: bytes = compress(data)
     assert str("compressed len > 0 = " + str(len(compressed) > 0)) == 'compressed len > 0 = true'
 
     try:

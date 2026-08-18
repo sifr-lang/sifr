@@ -3607,21 +3607,6 @@ fn dumps(
     }
 }
 
-// --- stdlib: _sifr.bytes ---
-fn encode_utf8(s: &String) -> Vec<u8> {
-    ::sifr_stdlib::bytes::encode_utf8(s)
-}
-fn bytes_to_hex(bytes: &Vec<u8>) -> Result<String, ParseError> {
-    ::sifr_stdlib::bytes::bytes_to_hex(bytes)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn bytes_to_hex_strict(bytes: &Vec<u8>) -> String {
-    ::sifr_stdlib::bytes::bytes_to_hex_strict(bytes)
-}
-
 // --- stdlib: _sifr.crypto ---
 fn random_int(min: i64, max: i64) -> i64 {
     ::sifr_stdlib::random::random_int(
@@ -3768,50 +3753,26 @@ fn b32hexdecode(s: &String) -> Result<String, ParseError> {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn sha256(s: &String) -> String {
-    ::sifr_stdlib::hash::sha256(s)
-}
 fn sha256_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::sha256_bytes(data)
-}
-fn md5(s: &String) -> String {
-    ::sifr_stdlib::hash::md5(s)
 }
 fn md5_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::md5_bytes(data)
 }
-fn sha1(s: &String) -> String {
-    ::sifr_stdlib::hash::sha1(s)
-}
 fn sha1_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::sha1_bytes(data)
-}
-fn sha224(s: &String) -> String {
-    ::sifr_stdlib::hash::sha224(s)
 }
 fn sha224_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::sha224_bytes(data)
 }
-fn sha384(s: &String) -> String {
-    ::sifr_stdlib::hash::sha384(s)
-}
 fn sha384_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::sha384_bytes(data)
-}
-fn sha512(s: &String) -> String {
-    ::sifr_stdlib::hash::sha512(s)
 }
 fn sha512_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::sha512_bytes(data)
 }
-fn blake2b(s: &String) -> String {
-    ::sifr_stdlib::hash::blake2b(s)
-}
 fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2b_bytes(data)
-}
-fn blake2s(s: &String) -> String {
-    ::sifr_stdlib::hash::blake2s(s)
 }
 fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
@@ -4067,155 +4028,6 @@ fn time_localtime() -> Vec<i64> {
         .into_iter()
         .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
         .collect()
-}
-
-// --- stdlib: sifr.bytes ---
-fn decode_utf8(data: &Vec<u8>) -> Result<String, ParseError> {
-    ::sifr_runtime::encoding::decode_text(
-            &data,
-            &"utf-8".to_string(),
-            &"strict".to_string(),
-        )
-        .map_err(|__message| ParseError { message: __message })
-}
-fn bytes_from_hex(s: &String) -> Result<Vec<u8>, ParseError> {
-    {
-        let s: String = s.to_string();
-        let mut cleaned = String::new();
-        for ch in s.chars() {
-            if ch.is_ascii_whitespace() {
-                continue;
-            }
-            if !ch.is_ascii_hexdigit() {
-                return Err(ParseError {
-                    message: format!("invalid hex character: {}", ch),
-                });
-            }
-            cleaned.push(ch);
-        }
-        if (cleaned.len() % 2) != 0 {
-            return Err(ParseError {
-                message: "fromhex() arg must contain an even number of hexadecimal digits"
-                    .to_string()
-                    .to_string(),
-            });
-        }
-        let mut result = Vec::new();
-        for pair in cleaned.as_bytes().chunks(2) {
-            let pair_str = ::std::str::from_utf8(pair)
-                .map_err(|e| ParseError {
-                    message: e.to_string(),
-                })?;
-            result
-                .push(
-                    u8::from_str_radix(pair_str, 16)
-                        .map_err(|e| ParseError {
-                            message: e.to_string(),
-                        })?,
-                );
-        }
-        Ok::<Vec<u8>, ParseError>(result)
-    }
-}
-fn bytes_from_ints(values: &Vec<i64>) -> Result<Vec<u8>, ValueError> {
-    {
-        let __vals = values;
-        let mut __out = Vec::new();
-        for __pair in __vals.iter().enumerate() {
-            if (*__pair.1 < 0) || (*__pair.1 > 255) {
-                return Err(ValueError {
-                    message: format!(
-                        "byte out of range at index {}: {}", __pair.0, * __pair.1
-                    ),
-                });
-            }
-            __out.push(*__pair.1 as u8);
-        }
-        Ok::<Vec<u8>, ValueError>(__out)
-    }
-}
-fn bytes_with_size(size: i64) -> Result<Vec<u8>, ValueError> {
-    {
-        let __size = size;
-        if __size < 0 {
-            return Err(ValueError {
-                message: "bytes(size) requires a non-negative size"
-                    .to_string()
-                    .to_string(),
-            });
-        }
-        Ok::<Vec<u8>, ValueError>((0..__size).map(|_| 0_u8).collect::<Vec<u8>>())
-    }
-}
-fn encode_utf8_result(s: &String) -> Result<Vec<u8>, ParseError> {
-    ::sifr_runtime::encoding::encode_bytes(
-            &s,
-            &"utf-8".to_string(),
-            &"strict".to_string(),
-        )
-        .map_err(|__message| ParseError { message: __message })
-}
-fn count_byte(data: &Vec<u8>, value: i64) -> i64 {
-    let mut count: i64 = 0_i64;
-    for b in data.iter().map(|__byte| *__byte as u8) {
-        if ((b as i64) == value) {
-            count += 1_i64;
-        }
-    }
-    count
-}
-fn find_byte(data: &Vec<u8>, value: i64) -> Option<i64> {
-    let mut idx: i64 = 0_i64;
-    for b in data.iter().map(|__byte| *__byte as u8) {
-        if ((b as i64) == value) {
-            return Some(idx);
-        }
-        idx += 1_i64;
-    }
-    None
-}
-fn starts_with(data: &Vec<u8>, prefix: &Vec<u8>) -> bool {
-    if (prefix.len() as i64) > (data.len() as i64) {
-        return false;
-    }
-    let mut i: i64 = 0_i64;
-    while (i < (prefix.len() as i64)) {
-        let a: Option<u8> = data.get(i as usize).map(|__byte| *__byte as u8);
-        let b: Option<u8> = Some(prefix[i as usize] as u8);
-        let Some(a) = a else {
-            return false;
-        };
-        let Some(b) = b else {
-            return false;
-        };
-        if (a != b) {
-            return false;
-        }
-        i += 1_i64;
-    }
-    true
-}
-fn ends_with(data: &Vec<u8>, suffix: &Vec<u8>) -> bool {
-    if (suffix.len() as i64) > (data.len() as i64) {
-        return false;
-    }
-    let offset: i64 = (data.len() as i64) - (suffix.len() as i64);
-    let mut i: i64 = 0_i64;
-    while (i < (suffix.len() as i64)) {
-        let a: Option<u8> = data.get((offset + i) as usize).map(|__byte| *__byte as u8);
-        let b: Option<u8> = Some(suffix[i as usize] as u8);
-        let Some(a) = a else {
-            return false;
-        };
-        let Some(b) = b else {
-            return false;
-        };
-        if (a != b) {
-            return false;
-        }
-        i += 1_i64;
-    }
-    true
 }
 
 // --- stdlib: sifr.math ---
@@ -4647,7 +4459,21 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
             values.push(byte_value);
             i += 1_i64;
         }
-        bytes_from_ints(&values)
+        {
+            let __vals = values;
+            let mut __out = Vec::new();
+            for __pair in __vals.iter().enumerate() {
+                if (*__pair.1 < 0) || (*__pair.1 > 255) {
+                    return Err(ValueError {
+                        message: format!(
+                            "byte out of range at index {}: {}", __pair.0, * __pair.1
+                        ),
+                    });
+                }
+                __out.push(*__pair.1 as u8);
+            }
+            Ok::<Vec<u8>, ValueError>(__out)
+        }
     }
 }
 impl __SifrStdlib_sifr_x2erandom_x2eRandom {

@@ -208,11 +208,11 @@ pub(in crate::lower) fn resolve_bytes_method_type(
             }
             Some(Type::Bool)
         }
-        "index" => {
+        "find" => {
             if args.is_empty() || args.len() > 3 {
                 reject_wrong_count(
                     ctx,
-                    format!("bytes.index() takes 1 to 3 arguments, got {}", args.len()),
+                    format!("bytes.find() takes 1 to 3 arguments, got {}", args.len()),
                     arity_range(arg_ranges, method_range),
                 );
                 return None;
@@ -221,7 +221,7 @@ pub(in crate::lower) fn resolve_bytes_method_type(
                 reject_type_mismatch(
                     ctx,
                     format!(
-                        "bytes.index() first argument must be 'int', got '{}'",
+                        "bytes.find() first argument must be 'int', got '{}'",
                         args[0].ty().display_name()
                     ),
                     arg_range(arg_ranges, 0, method_range),
@@ -232,7 +232,7 @@ pub(in crate::lower) fn resolve_bytes_method_type(
                     reject_type_mismatch(
                         ctx,
                         format!(
-                            "bytes.index() bounds must be 'int', got '{}'",
+                            "bytes.find() bounds must be 'int', got '{}'",
                             bound.ty().display_name()
                         ),
                         arg_range(arg_ranges, index, method_range),
@@ -240,6 +240,41 @@ pub(in crate::lower) fn resolve_bytes_method_type(
                 }
             }
             Some(Type::Union(vec![Type::Int, Type::None]))
+        }
+        "startswith" | "endswith" => {
+            if args.len() != 1 {
+                reject_wrong_count(
+                    ctx,
+                    format!(
+                        "bytes.{method}() takes exactly 1 argument, got {}",
+                        args.len()
+                    ),
+                    arity_range(arg_ranges, method_range),
+                );
+                return None;
+            }
+            if args[0].ty() != &Type::Bytes {
+                reject_type_mismatch(
+                    ctx,
+                    format!(
+                        "bytes.{method}() argument must be 'bytes', got '{}'",
+                        args[0].ty().display_name()
+                    ),
+                    arg_range(arg_ranges, 0, method_range),
+                );
+            }
+            Some(Type::Bool)
+        }
+        "hex" => {
+            if !args.is_empty() {
+                reject_wrong_count(
+                    ctx,
+                    "bytes.hex() takes no arguments".to_string(),
+                    arity_range(arg_ranges, method_range),
+                );
+                return None;
+            }
+            Some(Type::Str)
         }
         "to_ints" => {
             if !args.is_empty() {
@@ -292,7 +327,7 @@ pub(in crate::lower) fn resolve_bytes_method_type(
             reject_unsupported_surface(
                 ctx,
                 format!(
-                    "bytes has no method '{method}' (supported: len, count, contains, index, to_ints, decode)"
+                    "bytes has no method '{method}' (supported: len, count, contains, find, startswith, endswith, hex, to_ints, decode)"
                 ),
                 method_range,
             );

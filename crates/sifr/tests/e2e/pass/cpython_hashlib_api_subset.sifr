@@ -18,7 +18,7 @@ def collect_positive_actual(tmp_path: str) -> list[str]:
     actual.append(str(len(guaranteed) == len(available)))
 
     try:
-        h: HashObject = new("sha256", "abc")
+        h: HashObject = new("sha256", b"abc")
         actual.append(h.hexdigest())
     except ValueError as e:
         actual.append("ERR")
@@ -33,7 +33,7 @@ def collect_positive_actual(tmp_path: str) -> list[str]:
 def collect_negative_actual_ok(tmp_path: str) -> list[bool]:
     actual_ok: list[bool] = []
     try:
-        bad_new: HashObject = new("sha3_256", "")
+        bad_new: HashObject = new("sha3_256", b"")
         _ = str(bad_new.name)
         actual_ok.append(True)
     except ValueError as e:
@@ -68,4 +68,4 @@ def main():
     expected_ok: list[bool] = [False, False]
     actual_ok: list[bool] = collect_negative_actual_ok(tmp_path)
     assert_bool_vector_eq(actual_ok, expected_ok)
-    assert str(sha256("abc")) == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    assert sha256(b"abc").hexdigest() == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"

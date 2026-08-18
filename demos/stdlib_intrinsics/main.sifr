@@ -46,11 +46,11 @@ def demo_os() -> None:
 
 def demo_hashlib() -> None:
     print("=== hashlib new intrinsics ===")
-    s: str = "hello"
-    print("sha224 len = " + str(len(sha224(s))))
-    print("sha384 len = " + str(len(sha384(s))))
-    print("blake2b len = " + str(len(blake2b(s))))
-    print("blake2s len = " + str(len(blake2s(s))))
+    data: bytes = b"hello"
+    print("sha224 len = " + str(len(sha224(data).hexdigest())))
+    print("sha384 len = " + str(len(sha384(data).hexdigest())))
+    print("blake2b len = " + str(len(blake2b(data).hexdigest())))
+    print("blake2s len = " + str(len(blake2s(data).hexdigest())))
 
 def demo_platform() -> None:
     print("=== platform new intrinsics ===")

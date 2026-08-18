@@ -1,5 +1,5 @@
 # Additional CPython-derived parity coverage for RNG/crypto/polish surface.
-from sifr.hashlib import HashObject, copy_hash, new, new_bytes, sha1_obj, sha512_obj
+from sifr.hashlib import HashObject, copy_hash, new, sha1, sha256, sha512
 from sifr.html import escape, unescape
 from sifr.random import Random, RandomState, choices, getstate, seed, setstate
 from sifr.base64 import b32decode
@@ -9,7 +9,6 @@ from sifr.test import (
     assert_eq,
     assert_true,
 )
-from sifr.hashlib import sha256_obj
 from sifr.textwrap import TextWrapper
 
 
@@ -47,9 +46,9 @@ def with_bad_first_word(words: list[int]) -> list[int]:
     return mutated
 
 
-def repeated_block(count: int) -> str:
-    block: str = "abcXYZ123"
-    out: str = ""
+def repeated_block(count: int) -> bytes:
+    block: bytes = b"abcXYZ123"
+    out: bytes = b""
     i: int = 0
     while i < count:
         out = out + block
@@ -194,9 +193,9 @@ def check_random_choices_and_gauss_model() -> None:
 
 
 def check_hashlib_vectors_and_case() -> None:
-    upper: HashObject = sha1_obj("")
+    upper: HashObject = sha1(b"")
     try:
-        parsed_upper: HashObject = new("SHA256", "abc")
+        parsed_upper: HashObject = new("SHA256", b"abc")
         upper = parsed_upper
     except ValueError as e:
         _ = e.message
@@ -206,10 +205,10 @@ def check_hashlib_vectors_and_case() -> None:
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
     )
 
-    sha1_hash: HashObject = sha1_obj("abc")
+    sha1_hash: HashObject = sha1(b"abc")
     assert_eq(sha1_hash.hexdigest(), "a9993e364706816aba3e25717850c26c9cd0d89d")
 
-    sha512_hash: HashObject = sha512_obj("abc")
+    sha512_hash: HashObject = sha512(b"abc")
     assert_eq(
         sha512_hash.hexdigest(),
         "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a"
@@ -217,7 +216,7 @@ def check_hashlib_vectors_and_case() -> None:
     )
 
     copied: HashObject = copy_hash(upper)
-    copied.update("x")
+    copied.update(b"x")
     assert_eq(
         upper.hexdigest(),
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
@@ -243,7 +242,7 @@ def check_hashlib_vectors_and_case() -> None:
 
     unknown_rejected: bool = False
     try:
-        _unknown: HashObject = new_bytes("no_such_hash", b"")
+        _unknown: HashObject = new("no_such_hash", b"")
         _ = _unknown.name
     except ValueError as e:
         _ = e.message
@@ -252,12 +251,12 @@ def check_hashlib_vectors_and_case() -> None:
 
 
 def check_hashlib_large_incremental_update() -> None:
-    payload: str = repeated_block(3000)
-    whole: HashObject = sha256_obj(payload)
-    chunked: HashObject = sha256_obj("")
+    payload: bytes = repeated_block(3000)
+    whole: HashObject = sha256(payload)
+    chunked: HashObject = sha256(b"")
     i: int = 0
     while i < 3000:
-        chunked.update("abcXYZ123")
+        chunked.update(b"abcXYZ123")
         i = i + 1
     assert_eq(whole.hexdigest(), chunked.hexdigest())
 

@@ -66,8 +66,8 @@ def main():
     # 4. sifr.hashlib — Cryptographic hashing
     # ----------------------------------------------------------
     print("=== sifr.hashlib ===")
-    print(f"SHA-256('sifr'): {sha256('sifr')}")
-    print(f"MD5('sifr'): {md5('sifr')}")
+    print(f"SHA-256('sifr'): {sha256(b'sifr').hexdigest()}")
+    print(f"MD5('sifr'): {md5(b'sifr').hexdigest()}")
 
     # ----------------------------------------------------------
     # 5. sifr.base64 — Base64

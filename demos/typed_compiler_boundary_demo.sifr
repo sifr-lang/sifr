@@ -21,6 +21,6 @@ def main() -> None:
     except ParseError:
         assert False
 
-    # hashlib formatting reaches the published _sifr.bytes Rust bridge.
-    verify_equal(len(sha224("typed boundary")), 56)
+    # Hash formatting is a first-class bytes operation.
+    verify_equal(len(sha224(b"typed boundary").hexdigest()), 56)
     print("typed compiler boundary: ok")

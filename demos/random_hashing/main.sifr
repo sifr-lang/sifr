@@ -1,7 +1,7 @@
 # Reference: rng_random_hashing
 # Reference: stateful-rng-crypto-and-polish-parity-expansion
 from sifr.random import randint
-from sifr.hashlib import sha256_obj
+from sifr.hashlib import sha256
 from sifr.base64 import b64encode, b64decode
 
 
@@ -24,7 +24,7 @@ def main() -> None:
         _ = str(e.message)
     assert decode_ok
 
-    h = sha256_obj(payload)
+    h = sha256(b"random_hashing_seed")
     digest: str = h.hexdigest()
     assert len(digest) == 64
 

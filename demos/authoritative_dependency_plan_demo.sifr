@@ -6,7 +6,7 @@ from sifr.io import exists
 
 def main() -> None:
     assert not exists("/sifr-authoritative-plan-demo-missing")
-    assert sha256("") == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    assert sha256(b"").hexdigest() == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
     encoded: str = b64encode("typed dependency metadata")
     try:

@@ -593,6 +593,100 @@ fn fixture_diagnostics(sources: &[LoadedStdlibSource]) -> Vec<RenderedDiagnostic
 }
 
 #[test]
+fn binary_and_hashing_exports_use_only_first_class_bytes_contracts() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+
+    assert!(
+        !compiled.defs.functions.contains_key("sifr.bytes")
+            && !compiled.defs.classes.contains_key("sifr.bytes"),
+        "the transitional sifr.bytes module must not be exported"
+    );
+
+    let functions = compiled
+        .defs
+        .functions
+        .get("sifr.hashlib")
+        .expect("sifr.hashlib functions should be exported");
+    for name in [
+        "new", "md5", "sha1", "sha224", "sha256", "sha384", "sha512", "blake2b", "blake2s",
+    ] {
+        assert!(
+            functions.contains_key(name),
+            "sifr.hashlib.{name} should exist"
+        );
+    }
+    for removed in [
+        "new_bytes",
+        "md5_obj",
+        "sha1_obj",
+        "sha224_obj",
+        "sha256_obj",
+        "sha384_obj",
+        "sha512_obj",
+        "blake2b_obj",
+        "blake2s_obj",
+        "md5_bytes",
+        "sha1_bytes",
+        "sha224_bytes",
+        "sha256_bytes",
+        "sha384_bytes",
+        "sha512_bytes",
+        "blake2b_bytes",
+        "blake2s_bytes",
+    ] {
+        assert!(
+            !functions.contains_key(removed),
+            "sifr.hashlib.{removed} must not be exported"
+        );
+    }
+
+    let new_signature = functions.get("new").expect("hashlib.new signature");
+    assert_eq!(new_signature.params[1].1, Type::Bytes);
+    for name in [
+        "md5", "sha1", "sha224", "sha256", "sha384", "sha512", "blake2b", "blake2s",
+    ] {
+        let signature = functions
+            .get(name)
+            .unwrap_or_else(|| panic!("hashlib.{name} signature"));
+        assert_eq!(signature.params[0].1, Type::Bytes);
+    }
+
+    let hash_object = compiled
+        .defs
+        .classes
+        .get("sifr.hashlib")
+        .and_then(|classes| classes.get("HashObject"))
+        .expect("sifr.hashlib.HashObject should be exported");
+    let Type::Class { methods, .. } = hash_object else {
+        panic!("HashObject should be a class");
+    };
+    for name in ["update", "digest", "hexdigest"] {
+        assert!(
+            methods.iter().any(|(method, _)| method == name),
+            "HashObject.{name} should exist"
+        );
+    }
+    for removed in ["update_bytes", "digest_bytes"] {
+        assert!(
+            methods.iter().all(|(method, _)| method != removed),
+            "HashObject.{removed} must not be exported"
+        );
+    }
+    let update = methods
+        .iter()
+        .find(|(method, _)| method == "update")
+        .map(|(_, signature)| signature)
+        .expect("HashObject.update signature");
+    assert_eq!(update.params[0].1, Type::Bytes);
+    let digest = methods
+        .iter()
+        .find(|(method, _)| method == "digest")
+        .map(|(_, signature)| signature)
+        .expect("HashObject.digest signature");
+    assert_eq!(*digest.return_type, Type::Bytes);
+}
+
+#[test]
 fn private_stdlib_imports_resolve_only_from_compiled_source_exports() {
     let sources = [
         fixture_source(

@@ -1,14 +1,13 @@
 # Reference: rng_binary_hashing
 # Reference: stateful-rng-crypto-and-polish-parity-expansion
 from sifr.base64 import b64decode_bytes, b64encode_bytes
-from sifr.bytes import encode_utf8
-from sifr.hashlib import HashObject, new_bytes
+from sifr.hashlib import HashObject, new
 
 
 def main() -> None:
     try:
-        data: bytes = encode_utf8("binary_hashing-bytes-demo")
-        h: HashObject = new_bytes("sha256", data)
+        data: bytes = b"binary_hashing-bytes-demo"
+        h: HashObject = new("sha256", data)
         assert len(h.digest()) == 32
         assert len(h.hexdigest()) == 64
 

@@ -1,13 +1,12 @@
 # Reference: bytes_text_and_bytes
 # Reference: first-class-bytes-and-binary-surface-foundation
-from sifr.bytes import encode_utf8, decode_utf8, bytes_from_hex
 
 
 def main() -> None:
-    encoded: bytes = encode_utf8("sifr-bytes")
+    encoded: bytes = b"sifr-bytes"
     decode_ok: bool = False
     try:
-        decoded: str = decode_utf8(encoded)
+        decoded: str = encoded.decode()
         decode_ok = decoded == "sifr-bytes"
     except ParseError as e:
         _ = str(e.message)
@@ -15,8 +14,8 @@ def main() -> None:
 
     hex_ok: bool = False
     try:
-        parsed_hex: bytes = bytes_from_hex("73696672")
-        decoded_hex: str = decode_utf8(parsed_hex)
+        parsed_hex: bytes = bytes.from_hex("73696672")
+        decoded_hex: str = parsed_hex.decode()
         hex_ok = decoded_hex == "sifr"
     except ParseError as e:
         _ = str(e.message)

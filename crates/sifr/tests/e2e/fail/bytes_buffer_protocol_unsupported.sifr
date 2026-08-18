@@ -1,5 +1,4 @@
 # Reference: stdlib_parity_bytes_0_buffer_protocol_unsupported
-from sifr.bytes import decode_utf8
 
 
 class ByteLike:
@@ -11,4 +10,4 @@ class ByteLike:
 
 def main() -> None:
     payload: ByteLike = ByteLike([65, 66, 67])
-    _ = decode_utf8(payload)
+    _ = payload.decode()

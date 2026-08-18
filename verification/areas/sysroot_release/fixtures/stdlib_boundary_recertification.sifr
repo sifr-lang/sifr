@@ -1,11 +1,10 @@
-from sifr.bytes import bytes_from_hex, bytes_to_hex
 from sifr.test import assert_eq, assert_true
 
 
 def main() -> None:
     try:
-        payload: bytes = bytes_from_hex("73696672")
-        encoded: str = bytes_to_hex(payload)
+        payload: bytes = bytes.from_hex("73696672")
+        encoded: str = payload.hex()
         assert_eq(encoded, "73696672")
         assert_true(len(payload) == 4)
     except ParseError as e:

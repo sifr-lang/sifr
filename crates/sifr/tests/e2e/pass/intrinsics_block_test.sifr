@@ -12,7 +12,7 @@ def main():
     assert str(result) == 'false'
 
     # sifr.hashlib wraps _sifr.crypto intrinsics
-    hash_val: str = sha256("test")
+    hash_val: str = sha256(b"test").hexdigest()
     assert str(len(hash_val) > 0) == 'true'
 
     # sifr.base64 wraps _sifr.crypto intrinsics

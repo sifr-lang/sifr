@@ -1,12 +1,11 @@
-# Safety-focused checks for sifr.bytes
-from sifr.bytes import decode_utf8, bytes_to_hex, bytes_from_hex
+# Safety-focused checks for first-class bytes
 
 
 def main():
     expected: list[str] = ["Hello", "caught unicode hex parse", "4869", "00ff", "caught decode invalid continuation", "caught decode invalid leading"]
     expected_index: int = 0
     try:
-        bad_hi: str = decode_utf8(b"\xff")
+        bad_hi: str = b"\xff".decode()
         assert str("should not reach") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:
@@ -14,7 +13,7 @@ def main():
         expected_index = expected_index + 1
 
     try:
-        bad_lo: str = decode_utf8(b"\x80")
+        bad_lo: str = b"\x80".decode()
         assert str("should not reach") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:
@@ -22,7 +21,7 @@ def main():
         expected_index = expected_index + 1
 
     try:
-        h1: str = bytes_to_hex(b"\x00\xff")
+        h1: str = b"\x00\xff".hex()
         assert str(h1) == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:
@@ -30,7 +29,7 @@ def main():
         expected_index = expected_index + 1
 
     try:
-        h2: str = bytes_to_hex(b"Hi")
+        h2: str = b"Hi".hex()
         assert str(h2) == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:
@@ -39,7 +38,7 @@ def main():
 
     # Previously this path could panic due to byte-index slicing on UTF-8.
     try:
-        bad_hex: bytes = bytes_from_hex("€")
+        bad_hex: bytes = bytes.from_hex("€")
         assert str(len(bad_hex)) == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:
@@ -48,8 +47,8 @@ def main():
 
     # Whitespace-tolerant hex parsing remains supported.
     try:
-        ok_hex: bytes = bytes_from_hex("48 65 6c 6c 6f")
-        ok_text: str = decode_utf8(ok_hex)
+        ok_hex: bytes = bytes.from_hex("48 65 6c 6c 6f")
+        ok_text: str = ok_hex.decode()
         assert str(ok_text) == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
     except ParseError as e:

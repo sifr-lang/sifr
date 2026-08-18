@@ -140,7 +140,7 @@ pub(super) fn lower_contains(object: &RustExpr, args: &[RustExpr]) -> Option<Rus
     ))
 }
 
-pub(super) fn lower_index(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+pub(super) fn lower_find(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if args.is_empty() || args.len() > 3 {
         return None;
     }
@@ -248,6 +248,81 @@ pub(super) fn lower_index(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
         },
         RustExpr::Path(vec!["None".to_string()]),
     ))
+}
+
+fn lower_prefix_method(object: &RustExpr, args: &[RustExpr], method: &str) -> Option<RustExpr> {
+    if args.len() != 1 {
+        return None;
+    }
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(object.clone()),
+        method: method.to_string(),
+        args: vec![RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(args[0].clone()),
+        }],
+    })
+}
+
+pub(super) fn lower_startswith(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    lower_prefix_method(object, args, "starts_with")
+}
+
+pub(super) fn lower_endswith(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    lower_prefix_method(object, args, "ends_with")
+}
+
+pub(super) fn lower_hex(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "__hex".to_string(),
+                ty: None,
+                value: RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "String".to_string(),
+                        "with_capacity".to_string(),
+                    ])),
+                    args: vec![RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(object.clone()),
+                            method: "len".to_string(),
+                            args: vec![],
+                        }),
+                        method: "saturating_mul".to_string(),
+                        args: vec![int(2)],
+                    }],
+                },
+            },
+            RustStmt::For {
+                var: "__byte".to_string(),
+                iter: RustExpr::MethodCall {
+                    receiver: Box::new(object.clone()),
+                    method: "iter".to_string(),
+                    args: vec![],
+                },
+                body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__hex".to_string())),
+                    method: "push_str".to_string(),
+                    args: vec![RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::FormatMacro {
+                            name: "format".to_string(),
+                            format_str: "{:02x}".to_string(),
+                            args: vec![RustExpr::Deref(Box::new(RustExpr::Ident(
+                                "__byte".to_string(),
+                            )))],
+                        }),
+                    }],
+                })],
+            },
+        ],
+        expr: Some(Box::new(RustExpr::Ident("__hex".to_string()))),
+    })
 }
 
 pub(super) fn lower_to_ints(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {

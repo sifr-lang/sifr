@@ -1,7 +1,7 @@
 # Adapted CPython hashlib object-model subset for sifr.hashlib
 from sifr.hashlib import (
     sha256, md5,
-    sha256_obj, md5_obj, copy_hash,
+    copy_hash,
     sha3_256_obj, sha3_512_obj, shake_128_obj, shake_256_obj,
     HashObject
 )
@@ -10,22 +10,21 @@ from sifr.test import assert_vector_eq, assert_bool_vector_eq
 def collect_positive_actual() -> list[str]:
     actual: list[str] = []
 
-    h = sha256_obj("")
-    h.update("a")
-    h.update("bc")
-    actual.append(str(h.hexdigest() == sha256("abc")))
+    h = sha256(b"")
+    h.update(b"a")
+    h.update(b"bc")
+    actual.append(str(h.hexdigest() == sha256(b"abc").hexdigest()))
     actual.append(str(len(h.digest()) == 32))
-    actual.append(str(h.digest_bytes() == h.digest()))
     actual.append(str(h.name == "sha256"))
     actual.append(str(h.digest_size))
     actual.append(str(h.block_size))
 
     c = copy_hash(h)
-    c.update("x")
-    actual.append(str(h.hexdigest() == sha256("abc")))
-    actual.append(str(c.hexdigest() == sha256("abcx")))
+    c.update(b"x")
+    actual.append(str(h.hexdigest() == sha256(b"abc").hexdigest()))
+    actual.append(str(c.hexdigest() == sha256(b"abcx").hexdigest()))
 
-    m = md5_obj("hello")
+    m = md5(b"hello")
     actual.append(m.hexdigest())
     actual.append(str(m.digest_size))
     actual.append(str(m.block_size))
@@ -34,25 +33,25 @@ def collect_positive_actual() -> list[str]:
 def collect_negative_actual_ok() -> list[bool]:
     actual_ok: list[bool] = []
     try:
-        bad1: HashObject = sha3_256_obj("")
+        bad1: HashObject = sha3_256_obj(b"")
         _ = str(bad1.digest_size)
         actual_ok.append(True)
     except ValueError as e:
         actual_ok.append(False)
     try:
-        bad2: HashObject = sha3_512_obj("")
+        bad2: HashObject = sha3_512_obj(b"")
         _ = str(bad2.digest_size)
         actual_ok.append(True)
     except ValueError as e:
         actual_ok.append(False)
     try:
-        bad3: HashObject = shake_128_obj("")
+        bad3: HashObject = shake_128_obj(b"")
         _ = str(bad3.digest_size)
         actual_ok.append(True)
     except ValueError as e:
         actual_ok.append(False)
     try:
-        bad4: HashObject = shake_256_obj("")
+        bad4: HashObject = shake_256_obj(b"")
         _ = str(bad4.digest_size)
         actual_ok.append(True)
     except ValueError as e:
@@ -61,7 +60,6 @@ def collect_negative_actual_ok() -> list[bool]:
 
 def main():
     expected: list[str] = [
-        "true",
         "true",
         "true",
         "true",
@@ -79,4 +77,4 @@ def main():
     expected_ok: list[bool] = [False, False, False, False]
     actual_ok: list[bool] = collect_negative_actual_ok()
     assert_bool_vector_eq(actual_ok, expected_ok)
-    assert str(md5("hello")) == "5d41402abc4b2a76b9719d911017c592"
+    assert md5(b"hello").hexdigest() == "5d41402abc4b2a76b9719d911017c592"

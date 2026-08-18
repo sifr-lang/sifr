@@ -125,7 +125,10 @@ pub(crate) fn lower_method_with_context(
         (Type::List(_), "index") => list::lower_index(object, args),
         (Type::Bytes, "count") => bytes::lower_count(object, args),
         (Type::Bytes, "contains") => bytes::lower_contains(object, args),
-        (Type::Bytes, "index") => bytes::lower_index(object, args),
+        (Type::Bytes, "find") => bytes::lower_find(object, args),
+        (Type::Bytes, "startswith") => bytes::lower_startswith(object, args),
+        (Type::Bytes, "endswith") => bytes::lower_endswith(object, args),
+        (Type::Bytes, "hex") => bytes::lower_hex(object, args),
         (Type::Bytes, "to_ints") => bytes::lower_to_ints(object, args),
         (Type::FixedInt(_), "checked_add") => fixed_width::lower_checked_add(object, args),
         (Type::FixedInt(_), "checked_sub") => fixed_width::lower_checked_sub(object, args),
@@ -792,16 +795,37 @@ mod tests {
         assert!(contains_rendered.contains("__needle > 255"));
         assert!(contains_rendered.contains("payload.contains(&(__needle as u8))"));
 
-        let index = lower_method(
+        let find = lower_method(
             &Type::Bytes,
-            "index",
+            "find",
             "payload",
             &["needle".to_string(), "0".to_string(), "5".to_string()],
         )
-        .expect("bytes index lowers");
-        let index_rendered = render_expr(&index.expr);
-        assert!(index_rendered.contains("__needle as u8"));
-        assert!(index_rendered.contains("None"));
+        .expect("bytes find lowers");
+        let find_rendered = render_expr(&find.expr);
+        assert!(find_rendered.contains("__needle as u8"));
+        assert!(find_rendered.contains("None"));
+
+        let startswith = lower_method(
+            &Type::Bytes,
+            "startswith",
+            "payload",
+            &["prefix".to_string()],
+        )
+        .expect("bytes startswith lowers");
+        assert_eq!(
+            render_expr(&startswith.expr),
+            "payload.starts_with(&prefix)"
+        );
+
+        let endswith = lower_method(&Type::Bytes, "endswith", "payload", &["suffix".to_string()])
+            .expect("bytes endswith lowers");
+        assert_eq!(render_expr(&endswith.expr), "payload.ends_with(&suffix)");
+
+        let hex = lower_method(&Type::Bytes, "hex", "payload", &[]).expect("bytes hex lowers");
+        let hex_rendered = render_expr(&hex.expr);
+        assert!(hex_rendered.contains("String::with_capacity(payload.len().saturating_mul(2))"));
+        assert!(hex_rendered.contains("format!(\"{:02x}\", *__byte)"));
 
         let to_ints =
             lower_method(&Type::Bytes, "to_ints", "payload", &[]).expect("bytes to_ints lowers");
