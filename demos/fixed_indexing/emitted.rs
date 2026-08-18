@@ -12,7 +12,7 @@ fn neighbor_min_cost(cost: &mut Vec<i64>) -> i64 {
     }
     for i in (-(1_i64) + (1_i64)..((cost.len() as i64) - (3_i64)) + (1_i64)).rev() {
         {
-            let __assign_value = cost[i as usize] + std::cmp::min({
+            let __assign_value = cost[i as usize] + ::std::cmp::min({
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &cost;
     let __sifr_index_i = i + (1_i64);
@@ -44,7 +44,7 @@ fn neighbor_min_cost(cost: &mut Vec<i64>) -> i64 {
             }
         }
     }
-    std::cmp::min({
+    ::std::cmp::min({
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &cost;
     let __sifr_index_i = 0_i64;

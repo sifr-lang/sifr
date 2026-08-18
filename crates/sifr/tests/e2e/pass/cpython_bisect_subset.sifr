@@ -1,4 +1,4 @@
-# Adapted CPython bisect subset for sifr.bisect (canonical vector format)
+# Adapted CPython bisect_right subset for sifr.bisect (canonical vector format)
 from sifr.bisect import (
     bisect_left, bisect_right,
     insort_left, insort_right

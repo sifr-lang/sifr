@@ -59,9 +59,6 @@ def bisect_right[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = 
 
 # ── In-place API (mut parameters) ────────────────────────────────────────────
 
-def bisect[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = None) -> int:
-    return bisect_right(a, x, lo, hi)
-
 def insort_left[T: Comparable](mut a: list[T], x: T, lo: int = 0, hi: int | None = None) -> None:
     # Insert x into sorted list a in-place (left/stable position). O(n) time.
     pos: int = bisect_left(a, x, lo, hi)
@@ -71,6 +68,3 @@ def insort_right[T: Comparable](mut a: list[T], x: T, lo: int = 0, hi: int | Non
     # Insert x into sorted list a in-place (right position). O(n) time.
     pos: int = bisect_right(a, x, lo, hi)
     a.insert(pos, x)
-
-def insort[T: Comparable](mut a: list[T], x: T, lo: int = 0, hi: int | None = None) -> None:
-    insort_right(a, x, lo, hi)

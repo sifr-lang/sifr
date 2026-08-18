@@ -85,8 +85,9 @@ fn randint(low: i64, high: i64) -> Result<i64, ValueError> {
     if low > high {
         return Err(ValueError::new("randint: min must be <= max"));
     }
-    let span = (high - low + 1) as u64;
-    Ok(low + (next_random_u64() % span) as i64)
+    let span = (high as i128 - low as i128 + 1) as u128;
+    let offset = next_random_u64() as u128 % span;
+    Ok((low as i128 + offset as i128) as i64)
 }
 
 fn random() -> f64 {

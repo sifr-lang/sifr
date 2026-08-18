@@ -73,11 +73,11 @@ def main():
     assert_eq(len(filtered), 2)
     print("fnmatch: OK")
 
-    # ===== bisect =====
+    # ===== bisect_right =====
     sorted_list: list[int] = [1, 3, 5, 7, 9]
     assert_eq(bisect_left(sorted_list, 5), 2)
     assert_eq(bisect_right(sorted_list, 5), 3)
-    print("bisect: OK")
+    print("bisect_right: OK")
 
     # ===== heapq =====
     h: list[int] = [5, 3, 1, 4, 2]

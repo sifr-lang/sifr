@@ -1,5 +1,5 @@
 // src/main.rs
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct TreeNode {
     val: i64,
     left: Option<Box<TreeNode>>,
@@ -8,8 +8,14 @@ struct TreeNode {
 
 impl TreeNode {
     fn new(val: i64, left: Option<Box<TreeNode>>, right: Option<Box<TreeNode>>) -> Self {
-        Self { val, left, right }
+        let __sifr_field_init_0: i64 = val;
+        let __sifr_field_init_1: Option<Box<TreeNode>> = left;
+        let __sifr_field_init_2: Option<Box<TreeNode>> = right;
+        Self { val: __sifr_field_init_0, left: __sifr_field_init_1, right: __sifr_field_init_2 }
     }
+}
+
+impl TreeNode {
 }
 
 fn tree_value_sum(node: &Option<TreeNode>) -> i64 {

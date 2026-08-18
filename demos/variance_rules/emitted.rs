@@ -1,3 +1,4 @@
+// src/main.rs
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Entity {
     id: i64,
@@ -5,13 +6,17 @@ struct Entity {
 
 impl Entity {
     fn new(id: i64) -> Self {
-        return Self { id: id };
+        let __sifr_field_init_0: i64 = id;
+        Self { id: __sifr_field_init_0 }
     }
 }
 
-impl std::fmt::Display for Entity {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Entity(id={})", self.id);
+impl Entity {
+}
+
+impl ::std::fmt::Display for Entity {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Entity(id={})", self.id)
     }
 }
 
@@ -21,15 +26,39 @@ struct Person {
     name: String,
 }
 
-impl Person {
-    fn new(id: i64, name: String) -> Self {
-        return Self { entity: Entity::new(id), name: name };
+impl ::std::ops::Deref for Person {
+    type Target = Entity;
+    fn deref(&self) -> &Self::Target {
+        &self.entity
     }
 }
 
-impl std::fmt::Display for Person {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Person(name={})", self.name);
+impl ::std::ops::DerefMut for Person {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.entity
+    }
+}
+
+impl ::std::convert::From<Person> for Entity {
+    fn from(value: Person) -> Self {
+        value.entity
+    }
+}
+
+impl Person {
+    fn new(id: i64, name: String) -> Self {
+        let __sifr_parent = Entity::new(id);
+        let __sifr_field_init_0: String = name;
+        Self { entity: __sifr_parent, name: __sifr_field_init_0 }
+    }
+}
+
+impl Person {
+}
+
+impl ::std::fmt::Display for Person {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Person(entity={}, name={})", self.entity, self.name)
     }
 }
 
@@ -39,29 +68,53 @@ struct Employee {
     level: i64,
 }
 
-impl Employee {
-    fn new(id: i64, name: String, level: i64) -> Self {
-        return Self { person: Person::new(id, name), level: level };
+impl ::std::ops::Deref for Employee {
+    type Target = Person;
+    fn deref(&self) -> &Self::Target {
+        &self.person
     }
 }
 
-impl std::fmt::Display for Employee {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Employee(level={})", self.level);
+impl ::std::ops::DerefMut for Employee {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.person
+    }
+}
+
+impl ::std::convert::From<Employee> for Person {
+    fn from(value: Employee) -> Self {
+        value.person
+    }
+}
+
+impl Employee {
+    fn new(id: i64, name: String, level: i64) -> Self {
+        let __sifr_parent = Person::new(id, name);
+        let __sifr_field_init_0: i64 = level;
+        Self { person: __sifr_parent, level: __sifr_field_init_0 }
+    }
+}
+
+impl Employee {
+}
+
+impl ::std::fmt::Display for Employee {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Employee(person={}, level={})", self.person, self.level)
     }
 }
 
 fn sum_items(values: &Vec<i64>) -> i64 {
-    let mut total: i64 = 0 as i64;
+    let mut total: i64 = 0_i64;
     for value in values.iter().copied() {
-        total = total + value;
+        total += value;
     }
-    return total;
+    total
 }
 
 fn main() {
     println!("variance_rules inheritance and variance corrections demo:");
-    let emp: Employee = Employee::new(11 as i64, "Lin".to_string(), 4 as i64);
+    let emp: Employee = Employee::new(11_i64, "Lin".to_string(), 4_i64);
     println!("{}", emp.person.name);
-    println!("{}", sum_items(&vec![1 as i64, 2 as i64, 3 as i64]));
+    println!("{}", sum_items(&vec![1_i64, 2_i64, 3_i64]));
 }

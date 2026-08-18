@@ -22,9 +22,9 @@ def exercise() -> Result[str, PythonError]:
         upper: Object = label_object.call_method("upper", [], [])
         upper_text: str = to_value(upper)
 
-        math: Object = import_module("math")
+        python_math: Object = import_module("math")
         eighty_one: Object = from_value(81.0)
-        root_object: Object = math.call_method("sqrt", [eighty_one], [])
+        root_object: Object = python_math.call_method("sqrt", [eighty_one], [])
         root: float = to_value(root_object)
         assert root == 9.0
 

@@ -15,7 +15,7 @@ Scope: typed conversion surfaces and compatibility delegation on first-class `by
 | --- | --- | --- | --- |
 | constructor and conversion families (`bytes(size)`, `bytes.from_ints`, `bytes.from_hex`) | explicit typed conversion APIs returning `Result` with safe failure semantics | `adapted` (closed for capability-set-2 scope) | `crates/sifr/tests/e2e/pass/bytes_constructors.sifr`<br>`crates/sifr/tests/e2e/pass/bytes_conversion_errors.sifr` |
 | text/binary boundary (`str.encode`, `bytes.decode`) | explicit UTF-8-only typed boundary with `Result` errors | `adapted` | `demos/bytes_constructors/main.sifr`<br>`demos/bytes_errors/main.sifr` |
-| `lib/sifr/bytes.sifr` compatibility exports | delegate legacy helper entrypoints to first-class `bytes` conversion implementation | `adapted` (closed for compatibility migration scope) | `crates/sifr/tests/e2e/pass/stdlib_bytes.sifr`<br>`crates/sifr/tests/e2e/pass/stdlib_bytes_safety.sifr` |
+| public conversion ownership | first-class `bytes` constructors and methods are canonical; no compatibility module remains | `adapted` (shipped) | `crates/sifr/tests/e2e/pass/bytes_constructors.sifr`<br>`crates/sifr/tests/e2e/pass/bytes_helpers.sifr` |
 
 ## Classified waivers carried from Unicode core capability
 

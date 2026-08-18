@@ -386,8 +386,10 @@ fn encoding_private_declarations_codegen_through_sifr_stdlib() {
         .functions
         .get("sifr.encoding")
         .expect("sifr.encoding exports should be collected");
-    assert!(exports.contains_key("encoding_decode_outcome"));
-    assert!(exports.contains_key("encoding_encode_outcome"));
+    assert!(exports.contains_key("decode_outcome"));
+    assert!(exports.contains_key("encode_outcome"));
+    assert!(!exports.contains_key("encoding_decode_outcome"));
+    assert!(!exports.contains_key("encoding_encode_outcome"));
     assert!(!exports.contains_key("_encoding_decode_text_impl"));
     assert!(!exports.contains_key("_encoding_encode_bytes_impl"));
 }
@@ -513,7 +515,16 @@ fn compression_private_declarations_codegen_through_sifr_stdlib() {
         .get("sifr.zipfile")
         .expect("sifr.zipfile exports should be collected");
     assert!(zip_exports.contains_key("is_zipfile"));
-    assert!(zip_exports.contains_key("zip_namelist"));
+    for implementation_name in [
+        "zip_create",
+        "zip_add_file",
+        "zip_add_file_bytes",
+        "zip_read_file",
+        "zip_read_file_bytes",
+        "zip_namelist",
+    ] {
+        assert!(!zip_exports.contains_key(implementation_name));
+    }
 }
 
 #[test]
@@ -553,7 +564,13 @@ fn datetime_private_declarations_codegen_through_sifr_stdlib() {
         .expect("sifr.datetime exports should be collected");
     assert!(exports.contains_key("now"));
     assert!(exports.contains_key("from_timestamp"));
-    assert!(exports.contains_key("datetime_now_struct"));
+    for implementation_name in [
+        "datetime_now_struct",
+        "datetime_format",
+        "datetime_from_timestamp",
+    ] {
+        assert!(!exports.contains_key(implementation_name));
+    }
 }
 
 #[test]
@@ -608,7 +625,7 @@ fn i18n_private_declarations_codegen_through_sifr_stdlib() {
         .get("sifr.i18n")
         .expect("sifr.i18n exports should be collected");
     assert!(exports.contains_key("canonicalize_locale"));
-    assert!(exports.contains_key("i18n_format_number"));
+    assert!(!exports.contains_key("i18n_format_number"));
     assert!(!exports.contains_key("_i18n_format_number_impl"));
     assert!(!exports.contains_key("_i18n_mo_lookup_context_plural_impl"));
 }

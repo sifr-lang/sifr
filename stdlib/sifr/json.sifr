@@ -162,7 +162,7 @@ class JSONDecoder:
         pass
 
     def decode(self, s: str) -> Result[JsonValue, JSONDecodeError]:
-        return _loads_impl(s)
+        return _decode_json(s)
 
     def load(self, path: str) -> Result[JsonValue, Error]:
         return load(path)
@@ -365,16 +365,12 @@ def _json_bridge_tokens(value: JsonValue) -> list[str]:
     return _json_append_tokens(tokens, value)
 
 
-def _loads_impl(s: str) -> Result[JsonValue, JSONDecodeError]:
+def _decode_json(s: str) -> Result[JsonValue, JSONDecodeError]:
     try:
         tokens: list[str] = _json_load_tokens_impl(s)
         return _json_decode_tokens(tokens)
     except JSONDecodeError as e:
         raise e
-
-
-def loads(s: str) -> Result[JsonValue, JSONDecodeError]:
-    return _loads_impl(s)
 
 
 def validate_integer_digit_limits(s: str) -> Result[None, JsonLimitError]:
@@ -383,7 +379,7 @@ def validate_integer_digit_limits(s: str) -> Result[None, JsonLimitError]:
 
 def _decode_loaded_json(content: str) -> Result[JsonValue, Error]:
     try:
-        value: JsonValue = _loads_impl(content)
+        value: JsonValue = _decode_json(content)
         return value
     except JSONDecodeError as e:
         raise Error(e.message)
@@ -396,6 +392,10 @@ def load_handle(fh: FileHandle) -> Result[JsonValue, Error]:
         return _decode_loaded_json(content)
     except IOError as e:
         raise Error(e.message)
+
+
+def loads(s: str) -> Result[JsonValue, JSONDecodeError]:
+    return _decode_json(s)
 
 
 def load(path: str) -> Result[JsonValue, Error]:

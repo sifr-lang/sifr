@@ -8,7 +8,7 @@ from sifr.os import listdir, rmdir, remove_file, rename
 from sifr.shutil import copy
 from sifr.json import JsonValue, JSONDecoder
 from sifr.tomllib import TomlValue, loads
-from sifr.re import search, findall, split, sub
+from sifr.re import search, findall, split, sub, compile, Pattern
 from sifr.base64 import b64decode
 from sifr.random import randint
 from sifr.secrets import randbelow
@@ -22,13 +22,6 @@ from sifr.datetime import from_timestamp, datetime
 def _load_json(text: str) -> Result[JsonValue, JSONDecodeError]:
     decoder: JSONDecoder = JSONDecoder()
     return decoder.decode(text)
-
-def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
-    try:
-        found: str | None = search(pattern, text)
-        return found is not None
-    except RegexError as error:
-        raise RegexError(error.message)
 
 def main():
     io_errors: int = 0
@@ -90,7 +83,8 @@ def main():
         parse_errors = parse_errors + 1
 
     try:
-        m1: bool = has_match("[invalid", "text")
+        invalid_pattern: Pattern = compile("[invalid")
+        m1: bool = invalid_pattern.is_match("text")
     except RegexError as e:
         parse_errors = parse_errors + 1
 

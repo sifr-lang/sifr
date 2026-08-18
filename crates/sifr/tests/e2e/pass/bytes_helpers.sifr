@@ -28,6 +28,10 @@ def main() -> None:
     assert factory.calls == 1
     assert factory.make().find(114) == 6
     assert factory.calls == 2
+    assert factory.make().count(101) == 2
+    assert factory.calls == 3
+    assert factory.make().contains(45)
+    assert factory.calls == 4
 
     conversion_ok: bool = False
     try:

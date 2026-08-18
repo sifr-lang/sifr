@@ -33,6 +33,21 @@ pub mod narrow;
 pub use literal::{widen as widen_literal, LiteralValue};
 pub use narrow::{narrow_type, NarrowingCondition};
 pub use safe_optional::safe_optional_result;
+
+/// Returns whether a declaration belongs to a public stdlib module's compiled
+/// export surface. Underscore-prefixed declarations are private except for the
+/// three CPython-compatible max-heap operations whose leading underscore is
+/// their architecture-approved public name.
+pub fn should_export_stdlib_declaration(module_name: &str, declaration_name: &str) -> bool {
+    !declaration_name.starts_with('_')
+        || matches!(
+            (module_name, declaration_name),
+            (
+                "sifr.heapq",
+                "_heapify_max" | "_heappop_max" | "_heapreplace_max"
+            )
+        )
+}
 pub use union::{
     intersect_with_union, make_union, remove_none_from_union, subtract_from_union, union_contains,
     union_contains_none,

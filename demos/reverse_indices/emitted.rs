@@ -1,6 +1,7 @@
+// src/main.rs
 fn reversed_values(values: &Vec<i64>) -> Vec<i64> {
     let mut out: Vec<i64> = vec![];
-    for i in (-(1 as i64) + (1 as i64)..((values.len() as i64) - (1 as i64)) + (1 as i64)).rev() {
+    for i in (-(1_i64) + (1_i64)..((values.len() as i64) - (1_i64)) + (1_i64)).rev() {
         out.push({
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &values;
@@ -13,11 +14,11 @@ fn reversed_values(values: &Vec<i64>) -> Vec<i64> {
     __sifr_index_value
 });
     }
-    return out;
+    out
 }
 
 fn main() {
-    assert!(format!("{:?}", reversed_values(&vec![4 as i64, 5 as i64, 6 as i64])) == "[6, 5, 4]".to_string());
-    assert!(format!("{:?}", reversed_values(&vec![])) == "[]".to_string());
+    assert!((format!("{:?}", reversed_values(&vec![4_i64, 5_i64, 6_i64])) == "[6, 5, 4]"));
+    assert!((format!("{:?}", reversed_values(&vec![])) == "[]"));
     println!("reverse_indices: ok");
 }

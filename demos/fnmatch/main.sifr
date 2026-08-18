@@ -1,5 +1,5 @@
 # Reference: fnmatch
-from sifr.fnmatch import fnmatch, fnmatchcase, filter
+from sifr.fnmatch import fnmatch, filter
 from sifr.test import assert_bool_vector_eq
 
 def collect_match_actual() -> list[bool]:
@@ -8,7 +8,7 @@ def collect_match_actual() -> list[bool]:
     no_txt_match: bool = not fnmatch("hello.py", "*.txt")
     actual.append(no_txt_match)
     actual.append(fnmatch("abc", "a?c"))
-    case_sensitive_miss: bool = not fnmatchcase("AbC", "abc")
+    case_sensitive_miss: bool = not fnmatch("AbC", "abc")
     actual.append(case_sensitive_miss)
     return actual
 

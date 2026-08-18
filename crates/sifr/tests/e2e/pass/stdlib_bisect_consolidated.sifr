@@ -1,4 +1,4 @@
-# Consolidated stdlib bisect coverage for stdlib_consolidation structure rules
+# Consolidated stdlib bisect_right coverage for stdlib_consolidation structure rules
 from sifr.bisect import bisect_left, bisect_right, insort_left, insort_right
 from sifr.test import assert_bool_vector_eq
 

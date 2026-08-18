@@ -1,3 +1,4 @@
+// src/main.rs
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Node {
     value: i64,
@@ -5,13 +6,16 @@ struct Node {
 
 impl Node {
     fn new(value: i64) -> Self {
-        return Self { value: value };
+        Self { value }
     }
 }
 
-impl std::fmt::Display for Node {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Node(value={})", self.value);
+impl Node {
+}
+
+impl ::std::fmt::Display for Node {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Node(value={})", self.value)
     }
 }
 
@@ -23,13 +27,16 @@ struct Person {
 
 impl Person {
     fn new(name: String, age: i64) -> Self {
-        return Self { name: name, age: age };
+        Self { name, age }
     }
 }
 
-impl std::fmt::Display for Person {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Person(name={}, age={})", self.name, self.age);
+impl Person {
+}
+
+impl ::std::fmt::Display for Person {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Person(name={}, age={})", self.name, self.age)
     }
 }
 
@@ -41,34 +48,37 @@ struct Item {
 
 impl Item {
     fn new(priority: i64, label: String) -> Self {
-        return Self { priority: priority, label: label };
+        Self { priority, label }
     }
 }
 
-impl std::fmt::Display for Item {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Item(priority={}, label={})", self.priority, self.label);
+impl Item {
+}
+
+impl ::std::fmt::Display for Item {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Item(priority={}, label={})", self.priority, self.label)
     }
 }
 
 fn get_node_val(node: &Node) -> i64 {
-    return node.value;
+    node.value
 }
 
 fn describe_person(p: Person) -> String {
-    return p.name;
+    p.name
 }
 
 fn process(item: &Item) -> i64 {
-    return item.priority;
+    item.priority
 }
 
 fn main() {
-    let n: Node = Node::new(42 as i64);
-    assert!(get_node_val(&n) == (42 as i64));
-    let p: Person = Person::new("Alice".to_string(), 30 as i64);
-    assert!(describe_person(p) == "Alice".to_string());
-    let it: Item = Item::new(5 as i64, "urgent".to_string());
-    assert!(process(&it) == (5 as i64));
+    let n: Node = Node::new(42_i64);
+    assert!((get_node_val(&n) == (42_i64)));
+    let p: Person = Person::new("Alice".to_string(), 30_i64);
+    assert!((describe_person(p) == "Alice"));
+    let it: Item = Item::new(5_i64, "urgent".to_string());
+    assert!((process(&it) == (5_i64)));
     println!("forward_refs: ok");
 }

@@ -1,4 +1,5 @@
 use super::*;
+use sifr_ir::HirIteratorOp;
 #[test]
 pub(super) fn lowers_contains_for_range_collection() {
     let expr = HirExpr::ContainsOp {
@@ -233,9 +234,9 @@ pub(super) fn lowers_divmod_builtin_call_with_leaf_args() {
 
 #[test]
 pub(super) fn lowers_map_builtin_call_with_typed_lambda() {
-    let expr = HirExpr::Call {
+    let expr = HirExpr::IteratorCall {
+        op: HirIteratorOp::Map,
         mutable_arg_places: Vec::new(),
-        func: "map".to_string(),
         args: vec![
             HirExpr::Lambda {
                 params: vec![HirParam {
@@ -283,9 +284,9 @@ pub(super) fn lowers_map_named_callable_with_optional_widening_closure() {
         parent_class: None,
     };
     let optional_node_ty = Type::Union(vec![node_ty.clone(), Type::None]);
-    let expr = HirExpr::Call {
+    let expr = HirExpr::IteratorCall {
+        op: HirIteratorOp::Map,
         mutable_arg_places: Vec::new(),
-        func: "map".to_string(),
         args: vec![
             HirExpr::Name {
                 name: "format_node".to_string(),

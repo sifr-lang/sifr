@@ -19,7 +19,6 @@ impl RustEmitter {
         func.type_params
             .iter()
             .map(|type_param| {
-                let extra = Self::extra_bounds_for_type_param(type_param, &func.body);
                 let structural = func.rust_interop.iter().any(|declaration| {
                     declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
                 });
@@ -62,6 +61,14 @@ impl RustEmitter {
                 } else {
                     base
                 };
+                let extra = Self::extra_bound_items_for_type_param(type_param, &func.body)
+                    .into_iter()
+                    .filter(|bound| !base.split(" + ").any(|existing| existing == bound))
+                    .fold(String::new(), |mut rendered, bound| {
+                        use std::fmt::Write as _;
+                        let _ = write!(rendered, " + {bound}");
+                        rendered
+                    });
                 RustTypeParam {
                     name: type_param.clone(),
                     bounds: vec![format!("{base}{extra}")],

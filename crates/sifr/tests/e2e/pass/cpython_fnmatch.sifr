@@ -2,7 +2,7 @@
 # Note: filter is used instead of the CPython alias 'filter' because
 # 'filter' conflicts with the built-in filter(func, iterable) function
 from sifr.test import assert_bool_vector_eq
-from sifr.fnmatch import fnmatch, filter, fnmatchcase
+from sifr.fnmatch import fnmatch, filter
 
 def collect_fnmatch_core_actual() -> list[bool]:
     actual: list[bool] = []
@@ -33,14 +33,14 @@ def collect_fnmatch_core_actual() -> list[bool]:
     actual.append(no_empty_qmark)
     return actual
 
-def collect_fnmatchcase_actual() -> list[bool]:
+def collect_case_sensitive_actual() -> list[bool]:
     actual: list[bool] = []
-    case_exact: bool = fnmatchcase("abc", "abc")
-    no_case_fold_ab: bool = not fnmatchcase("AbC", "abc")
-    no_case_fold_ba: bool = not fnmatchcase("abc", "AbC")
-    case_exact_mixed: bool = fnmatchcase("AbC", "AbC")
-    case_star_lower: bool = fnmatchcase("abc", "a*")
-    no_case_star_upper: bool = not fnmatchcase("ABC", "a*")
+    case_exact: bool = fnmatch("abc", "abc")
+    no_case_fold_ab: bool = not fnmatch("AbC", "abc")
+    no_case_fold_ba: bool = not fnmatch("abc", "AbC")
+    case_exact_mixed: bool = fnmatch("AbC", "AbC")
+    case_star_lower: bool = fnmatch("abc", "a*")
+    no_case_star_upper: bool = not fnmatch("ABC", "a*")
 
     actual.append(case_exact)
     actual.append(no_case_fold_ab)
@@ -121,7 +121,7 @@ def main():
     ]
     actual: list[bool] = []
     append_all(actual, collect_fnmatch_core_actual())
-    append_all(actual, collect_fnmatchcase_actual())
+    append_all(actual, collect_case_sensitive_actual())
     append_all(actual, collect_filter_primary_actual())
     append_all(actual, collect_more_patterns_actual())
     append_all(actual, collect_filter_secondary_actual())

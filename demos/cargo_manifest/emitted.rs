@@ -9,9 +9,9 @@ fn main() {
 
 // src/helper.rs
 pub fn render() -> String {
-    let value: i64 = 42 as i64;
-    if (format!("{}", value) == "42".to_string()) {
+    let value: i64 = 42_i64;
+    if (format!("{}", value) == "42") {
         return "manifest unification demo: pass".to_string();
     }
-    return "manifest unification demo: fail".to_string();
+    "manifest unification demo: fail".to_string()
 }

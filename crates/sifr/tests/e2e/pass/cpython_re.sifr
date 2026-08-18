@@ -1,36 +1,33 @@
-# CPython test_re.py — ported assertions for sifr.re (helper-structured)
-# Uses CPython-compatible names: search, sub, findall, split (new aliases)
-# search has no alias (match is a Python keyword), so it stays as search
+# CPython test_re.py assertions adapted to the canonical sifr.re surface.
 from sifr.test import assert_bool_vector_eq
-from sifr.re import search, sub, findall, split
+from sifr.re import search, sub, findall, split, compile, Pattern
 
-def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
+def pattern_matches(pattern_text: str, text: str) -> Result[bool, RegexError]:
     try:
-        found: str | None = search(pattern, text)
-        return found is not None
+        pattern: Pattern = compile(pattern_text)
+        return pattern.is_match(text)
     except RegexError as error:
         raise RegexError(error.message)
 
 def collect_match_actual() -> list[bool]:
     actual: list[bool] = []
     try:
-        m1: bool = has_match("a", "a")
-        m2: bool = has_match("a", "abc")
-        m3: bool = has_match("b", "a")
-        m4: bool = has_match("ab", "abc")
-        m5: bool = has_match("a*", "aaa")
-        m6: bool = has_match("a*", "")
-        m7: bool = has_match("x*", "xxxa")
-        m8: bool = has_match(".", "a")
-        m9: bool = has_match("^abc$", "abc")
-        m10: bool = has_match("^abc$", "abcd")
-        m11: bool = has_match("[0-9]+", "123")
-        m12: bool = has_match("[0-9]+", "abc")
-        m13: bool = has_match("[a-z]+", "hello")
-        m14: bool = has_match("(a|b)", "a")
-        m15: bool = has_match("(a|b)", "b")
-        m16: bool = has_match("(a|b)", "c")
-
+        m1: bool = pattern_matches("a", "a")
+        m2: bool = pattern_matches("a", "abc")
+        m3: bool = pattern_matches("b", "a")
+        m4: bool = pattern_matches("ab", "abc")
+        m5: bool = pattern_matches("a*", "aaa")
+        m6: bool = pattern_matches("a*", "")
+        m7: bool = pattern_matches("x*", "xxxa")
+        m8: bool = pattern_matches(".", "a")
+        m9: bool = pattern_matches("^abc$", "abc")
+        m10: bool = pattern_matches("^abc$", "abcd")
+        m11: bool = pattern_matches("[0-9]+", "123")
+        m12: bool = pattern_matches("[0-9]+", "abc")
+        m13: bool = pattern_matches("[a-z]+", "hello")
+        m14: bool = pattern_matches("(a|b)", "a")
+        m15: bool = pattern_matches("(a|b)", "b")
+        m16: bool = pattern_matches("(a|b)", "c")
         actual.append(m1)
         actual.append(m2)
         actual.append(not m3)

@@ -59,11 +59,11 @@ def demo_heapq() -> None:
     print(len(items))
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Section 2: bisect -- in-place sorted insert with mut parameters
+# Section 2: bisect_right -- in-place sorted insert with mut parameters
 # ─────────────────────────────────────────────────────────────────────────────
 
 def demo_bisect() -> None:
-    print("=== Section 2: bisect insort with mut params ===")
+    print("=== Section 2: bisect_right insort_right with mut params ===")
 
     sorted_ints: list[int] = [1, 3, 5, 7, 9]
 

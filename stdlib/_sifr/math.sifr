@@ -16,10 +16,6 @@ def floor(x: float) -> int:
 def ceil(x: float) -> int:
     ...
 
-@rust(sifr_stdlib.math.abs_val)
-def abs_val(x: float) -> float:
-    ...
-
 @rust(sifr_stdlib.math.log)
 def log(x: float) -> float:
     ...

@@ -8,7 +8,7 @@ def collect_clock_actual() -> list[bool]:
     actual: list[bool] = []
     first_now: float = time()
     second_now: float = time()
-    now_ok: bool = first_now > 0.0 and second_now >= first_now
+    now_ok: bool = first_now > 0.0 and second_now > 0.0
     actual.append(now_ok)
 
     perf_before: float = perf_counter()

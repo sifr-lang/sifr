@@ -15,6 +15,8 @@ from sifr.pathlib import join_path
 This page is an orientation map. The deeper reference pages cover the modules most developers reach for first, and the compiler rejects bare CPython imports with [`SIFR-IMPORT-0008`](/errors/SIFR-IMPORT-0008).
 </Note>
 
+For the exact symbol inventory, see the [compiled public API](/stdlib/public-api).
+
 ## Choosing a Module
 
 <CardGroup cols={2}>
@@ -53,7 +55,7 @@ This page is an orientation map. The deeper reference pages cover the modules mo
 
 | Module | Purpose |
 | --- | --- |
-| `sifr.collections` | Counters, deques, default dictionaries, and set helpers. |
+| `sifr.collections` | Counters, deques, and immutable `frozenset` values. |
 | `sifr.itertools` | Iterator construction and combinator helpers. |
 | `sifr.functools` | Higher-order function helpers such as `reduce`. |
 | `sifr.operator` | Named operator functions. |

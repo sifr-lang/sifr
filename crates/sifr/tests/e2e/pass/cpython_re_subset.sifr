@@ -2,20 +2,15 @@
 from sifr.re import search, sub, findall, split, search_flags, fullmatch, compile, IGNORECASE, Pattern
 from sifr.test import assert_bool_vector_eq
 
-def has_match(pattern: str, text: str) -> Result[bool, RegexError]:
-    try:
-        found: str | None = search(pattern, text)
-        return found is not None
-    except RegexError as error:
-        raise RegexError(error.message)
-
 def collect_match_actual() -> list[bool]:
     actual: list[bool] = []
     prefix_match: bool = False
     exact_match_fail: bool = False
     try:
-        m_prefix: bool = has_match("a+", "aaab")
-        m_exact: bool = has_match("^abc$", "abcd")
+        prefix_pattern: Pattern = compile("a+")
+        exact_pattern: Pattern = compile("^abc$")
+        m_prefix: bool = prefix_pattern.is_match("aaab")
+        m_exact: bool = exact_pattern.is_match("abcd")
         prefix_match = m_prefix
         exact_match_fail = not m_exact
     except RegexError as e:
@@ -106,7 +101,8 @@ def collect_invalid_pattern_actual() -> list[bool]:
     actual: list[bool] = []
     invalid_pattern_rejected: bool = False
     try:
-        _m: bool = has_match("(", "abc")
+        invalid: Pattern = compile("(")
+        _m: bool = invalid.is_match("abc")
         _ = _m
     except RegexError as e:
         invalid_pattern_rejected = len(e.message) > 0

@@ -1,3 +1,4 @@
+// src/main.rs
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Pair {
     x: i64,
@@ -6,13 +7,18 @@ struct Pair {
 
 impl Pair {
     fn new(x: i64, y: i64) -> Self {
-        return Self { x: x, y: y };
+        let __sifr_field_init_0: i64 = x;
+        let __sifr_field_init_1: i64 = y;
+        Self { x: __sifr_field_init_0, y: __sifr_field_init_1 }
     }
 }
 
-impl std::fmt::Display for Pair {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Pair(x={}, y={})", self.x, self.y);
+impl Pair {
+}
+
+impl ::std::fmt::Display for Pair {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Pair(x={}, y={})", self.x, self.y)
     }
 }
 
@@ -24,21 +30,37 @@ struct RunningBounds {
 
 impl RunningBounds {
     fn new(left: i64, right: i64) -> Self {
-        return Self { left: left, right: right };
+        let __sifr_field_init_0: i64 = left;
+        let __sifr_field_init_1: i64 = right;
+        Self { left: __sifr_field_init_0, right: __sifr_field_init_1 }
     }
-    fn rotate(&self, next_value: i64) {
+}
+
+impl RunningBounds {
+    fn rotate(&mut self, next_value: i64) {
         let (__sifr_tuple_unpack_0, __sifr_tuple_unpack_1) = (self.right, next_value);
         self.left = __sifr_tuple_unpack_0;
         self.right = __sifr_tuple_unpack_1;
     }
+}
+
+impl RunningBounds {
     fn as_text(&self) -> String {
-        return format!("{}{}{}{}{}", "(".to_string(), format!("{}", self.left), ", ".to_string(), format!("{}", self.right), ")".to_string());
+        {
+    let mut __sifr_concat: String = String::with_capacity((((1usize + 0usize) + 2usize) + 0usize) + 1usize);
+    __sifr_concat.push('(');
+    __sifr_concat.push_str((format!("{}", self.left)).as_str());
+    __sifr_concat.push_str(", ");
+    __sifr_concat.push_str((format!("{}", self.right)).as_str());
+    __sifr_concat.push(')');
+    __sifr_concat
+}
     }
 }
 
-impl std::fmt::Display for RunningBounds {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "RunningBounds(left={}, right={})", self.left, self.right);
+impl ::std::fmt::Display for RunningBounds {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "RunningBounds(left={}, right={})", self.left, self.right)
     }
 }
 
@@ -49,23 +71,23 @@ fn swap_pair(pair: &mut Pair) {
 }
 
 fn add_points(points: &Vec<(i64, i64)>) -> i64 {
-    let mut total: i64 = 0 as i64;
+    let mut total: i64 = 0_i64;
     for point in points.iter().copied() {
         total += (point).0 + (point).1;
     }
-    return total;
+    total
 }
 
 fn main() {
-    let mut pair: Pair = Pair::new(2 as i64, 5 as i64);
+    let mut pair: Pair = Pair::new(2_i64, 5_i64);
     swap_pair(&mut pair);
-    assert!(pair.x == (5 as i64));
-    assert!(pair.y == (2 as i64));
-    assert!(add_points(&vec![(1 as i64, 2 as i64), (3 as i64, 4 as i64), (5 as i64, 6 as i64)]) == (21 as i64));
-    let mut bounds: RunningBounds = RunningBounds::new(10 as i64, 20 as i64);
-    bounds.rotate(30 as i64);
-    assert!(bounds.left == (20 as i64));
-    assert!(bounds.right == (30 as i64));
-    assert!(bounds.as_text() == "(20, 30)".to_string());
+    assert!((pair.x == (5_i64)));
+    assert!((pair.y == (2_i64)));
+    assert!((add_points(&vec![(1_i64, 2_i64), (3_i64, 4_i64), (5_i64, 6_i64)]) == (21_i64)));
+    let mut bounds: RunningBounds = RunningBounds::new(10_i64, 20_i64);
+    bounds.rotate(30_i64);
+    assert!((bounds.left == (20_i64)));
+    assert!((bounds.right == (30_i64)));
+    assert!((bounds.as_text() == "(20, 30)"));
     println!("tuple_assignment: ok");
 }

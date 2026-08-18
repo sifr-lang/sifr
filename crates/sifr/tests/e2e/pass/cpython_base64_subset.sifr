@@ -1,20 +1,15 @@
 # Adapted CPython base64 subset for sifr.base64
 from sifr.base64 import (
     b64encode, b64decode,
-    standard_b64encode, standard_b64decode,
     urlsafe_b64encode, urlsafe_b64decode,
     b32encode, b32decode,
     b32hexencode, b32hexdecode,
-    b16encode, b16decode,
-    encodebytes, decodebytes
+    b16encode, b16decode
 )
 from sifr.test import assert_vector_eq, assert_bool_vector_eq
 
 def encode_b64_or_err(payload: str) -> str:
     return b64encode(payload)
-
-def encode_standard_b64_or_err(payload: str) -> str:
-    return standard_b64encode(payload)
 
 def encode_urlsafe_b64_or_err(payload: str) -> str:
     return urlsafe_b64encode(payload)
@@ -25,19 +20,9 @@ def encode_b32_or_err(payload: str) -> str:
 def encode_b32hex_or_err(payload: str) -> str:
     return b32hexencode(payload)
 
-def encode_bytes_or_err(payload: str) -> str:
-    return encodebytes(payload)
-
 def decode_b64_or_err(payload: str) -> str:
     try:
         decoded: str = b64decode(payload)
-        return decoded
-    except ParseError as e:
-        return "ERR"
-
-def decode_standard_b64_or_err(payload: str) -> str:
-    try:
-        decoded: str = standard_b64decode(payload)
         return decoded
     except ParseError as e:
         return "ERR"
@@ -81,20 +66,10 @@ def b16_decode_or_err(payload: str) -> str:
         _ = str(e.message)
     return decoded
 
-def decode_bytes_or_err(payload: str) -> str:
-    try:
-        decoded: str = decodebytes(payload)
-        return decoded
-    except ParseError as e:
-        return "ERR"
-
 def collect_positive_actual() -> list[str]:
     actual: list[str] = []
     actual.append(encode_b64_or_err("foo"))
     actual.append(decode_b64_or_err("Zm9v"))
-    actual.append(encode_standard_b64_or_err("foo"))
-    actual.append(decode_standard_b64_or_err("Zm9v"))
-
     urlsafe_encoded: str = encode_urlsafe_b64_or_err("hello")
     actual.append(str(len(urlsafe_encoded) > 0))
     actual.append(decode_urlsafe_b64_or_err(urlsafe_encoded))
@@ -112,8 +87,6 @@ def collect_positive_actual() -> list[str]:
     actual.append(b16_encoded)
     actual.append(b16_decode_or_err(b16_encoded_for_decode))
 
-    actual.append(encode_bytes_or_err("bar"))
-    actual.append(decode_bytes_or_err("YmFy"))
     return actual
 
 def collect_decode_actual_ok(inputs: list[str]) -> list[bool]:
@@ -130,12 +103,10 @@ def collect_decode_actual_ok(inputs: list[str]) -> list[bool]:
 def main():
     expected: list[str] = [
         "Zm9v", "foo",
-        "Zm9v", "foo",
         "true", "hello",
         "true", "hello",
         "true", "hello",
         "4869", "Hi",
-        "YmFy", "bar",
     ]
     actual: list[str] = collect_positive_actual()
     assert_vector_eq(actual, expected)

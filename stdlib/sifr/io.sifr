@@ -511,6 +511,10 @@ class BytesIO:
     def write_bytes(self, data: bytes) -> Result[None, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
+        if self._cursor == len(self._buffer):
+            self._buffer = self._buffer + data
+            self._cursor = self._cursor + len(data)
+            return None
         left: bytes = self._buffer[:self._cursor]
         tail_start: int = self._cursor + len(data)
         right: bytes = b""
@@ -520,7 +524,7 @@ class BytesIO:
         self._cursor = self._cursor + len(data)
         return None
 
-    def getvalue(self) -> Result[bytes, IOError]:
+    def getvalue(self) -> bytes:
         return self._buffer
 
     def seek(self, offset: int, whence: int = 0) -> Result[int, IOError]:

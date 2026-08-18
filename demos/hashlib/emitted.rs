@@ -390,36 +390,6 @@ fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError>
 }
 
 // --- stdlib: sifr.hashlib ---
-#[derive(Debug, Clone)]
-enum __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0 {
-    __SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(IOError),
-    __SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(ValueError),
-}
-impl From<IOError>
-for __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0 {
-    fn from(value: IOError) -> Self {
-        __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(
-            value,
-        )
-    }
-}
-impl ::std::fmt::Display
-for __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0 {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match self {
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(
-                v,
-            ) => {
-                return write!(f, "{}", v);
-            }
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
-                v,
-            ) => {
-                return write!(f, "{}", v);
-            }
-        }
-    }
-}
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct __SifrStdlib_sifr_x2ehashlib_x2eHashlibError {
     message: String,
@@ -665,23 +635,29 @@ fn file_digest(
     path: &String,
     name: &String,
 ) -> Result<String, __SifrStdlib_sifr_x2ehashlib_x2eHashlibError> {
+    let __sifr_try_res: Result<(), IOError> = (|| {
+        let handle: __SifrIoNativeFileHandle = open_file(path, &"rb".to_string())?;
+        Ok(())
+    })();
+    if let Err(__sifr_try_err) = __sifr_try_res {
+        let e = __sifr_try_err.clone();
+        return Err(__SifrStdlib_sifr_x2ehashlib_x2eHashlibError::new(e.message));
+    }
+    let __sifr_try_res: Result<(), IOError> = (|| {
+        let data: Vec<u8> = file_read_bytes(&handle)?;
+        Ok(())
+    })();
+    if let Err(__sifr_try_err) = __sifr_try_res {
+        let e = __sifr_try_err.clone();
+        file_close(&handle);
+        return Err(__SifrStdlib_sifr_x2ehashlib_x2eHashlibError::new(e.message));
+    }
+    file_close(&handle);
     let __sifr_try_res: Result<
         Result<String, __SifrStdlib_sifr_x2ehashlib_x2eHashlibError>,
-        __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0,
+        ValueError,
     > = (|| {
-        let handle: __SifrIoNativeFileHandle = (open_file(path, &"rb".to_string()))
-            .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(
-                __e,
-            ))?;
-        let data: Vec<u8> = (file_read_bytes(&handle))
-            .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(
-                __e,
-            ))?;
-        file_close(&handle);
-        let h: __SifrStdlib_sifr_x2ehashlib_x2eHashObject = (new(name, &data))
-            .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
-                __e,
-            ))?;
+        let h: __SifrStdlib_sifr_x2ehashlib_x2eHashObject = new(name, &data)?;
         return Ok(Ok(h.hexdigest()));
         unreachable!("sifr try/except return capture fell through");
     })();
@@ -690,24 +666,8 @@ fn file_digest(
             return __sifr_ret_val;
         }
         Err(__sifr_try_err) => {
-            match __sifr_try_err {
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(
-                    __sifr_try_variant_error,
-                ) => {
-                    let e = __sifr_try_variant_error.clone();
-                    return Err(
-                        __SifrStdlib_sifr_x2ehashlib_x2eHashlibError::new(e.message),
-                    );
-                }
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
-                    __sifr_try_variant_error,
-                ) => {
-                    let e = __sifr_try_variant_error.clone();
-                    return Err(
-                        __SifrStdlib_sifr_x2ehashlib_x2eHashlibError::new(e.message),
-                    );
-                }
-            }
+            let e = __sifr_try_err.clone();
+            return Err(__SifrStdlib_sifr_x2ehashlib_x2eHashlibError::new(e.message));
         }
     }
 }
@@ -966,12 +926,12 @@ impl __SifrStdlib_sifr_x2eencoding_x2eEncoding {
     fn canonical_label(
         &self,
     ) -> Result<String, __SifrStdlib_sifr_x2eencoding_x2eDecodeError> {
-        encoding_canonical_label(&self.label)
+        _encoding_canonical_label(&self.label)
     }
 }
 impl __SifrStdlib_sifr_x2eencoding_x2eEncoding {
     fn is_supported(&self) -> bool {
-        encoding_is_supported(&self.label)
+        _encoding_is_supported(&self.label)
     }
 }
 impl ::std::fmt::Display for __SifrStdlib_sifr_x2eencoding_x2eEncoding {
@@ -1130,14 +1090,14 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             >,
             __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
         > = (|| {
-            let outcome: __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome = encoding_decode_incremental_outcome(
+            let outcome: __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome = _encoding_decode_incremental_outcome(
                 data,
                 &self._pending,
                 &self._encoding.clone().label,
                 &self._errors.clone().name,
                 r#final,
             )?;
-            let next_pending: Vec<u8> = encoding_decode_incremental_pending(
+            let next_pending: Vec<u8> = _encoding_decode_incremental_pending(
                 data,
                 &self._pending,
                 &self._encoding.clone().label,
@@ -1238,10 +1198,10 @@ impl ::std::fmt::Display for __SifrStdlib_sifr_x2eencoding_x2eEncoder {
         )
     }
 }
-fn encoding_is_supported(label: &String) -> bool {
+fn _encoding_is_supported(label: &String) -> bool {
     _encoding_is_supported_impl(label)
 }
-fn encoding_canonical_label(
+fn _encoding_canonical_label(
     label: &String,
 ) -> Result<String, __SifrStdlib_sifr_x2eencoding_x2eDecodeError> {
     let __sifr_try_res: Result<
@@ -1262,7 +1222,7 @@ fn encoding_canonical_label(
         }
     }
 }
-fn encoding_decode_text(
+fn _encoding_decode_text(
     data: &Vec<u8>,
     encoding: &String,
     errors: &String,
@@ -1285,7 +1245,7 @@ fn encoding_decode_text(
         }
     }
 }
-fn encoding_decode_recoveries(
+fn _encoding_decode_recoveries(
     data: &Vec<u8>,
     encoding: &String,
     errors: &String,
@@ -1312,7 +1272,7 @@ fn encoding_decode_recoveries(
         }
     }
 }
-fn encoding_decode_outcome(
+fn _encoding_decode_outcome(
     data: &Vec<u8>,
     encoding: &String,
     errors: &String,
@@ -1348,7 +1308,7 @@ fn encoding_decode_outcome(
         }
     }
 }
-fn encoding_decode_incremental_outcome(
+fn _encoding_decode_incremental_outcome(
     data: &Vec<u8>,
     pending: &Vec<u8>,
     encoding: &String,
@@ -1394,7 +1354,7 @@ fn encoding_decode_incremental_outcome(
         }
     }
 }
-fn encoding_decode_incremental_pending(
+fn _encoding_decode_incremental_pending(
     data: &Vec<u8>,
     pending: &Vec<u8>,
     encoding: &String,
@@ -1423,7 +1383,7 @@ fn encoding_decode_incremental_pending(
         }
     }
 }
-fn encoding_encode_bytes(
+fn _encoding_encode_bytes(
     text: &String,
     encoding: &String,
     errors: &String,
@@ -1446,7 +1406,7 @@ fn encoding_encode_bytes(
         }
     }
 }
-fn encoding_encode_recoveries(
+fn _encoding_encode_recoveries(
     text: &String,
     encoding: &String,
     errors: &String,
@@ -1473,7 +1433,7 @@ fn encoding_encode_recoveries(
         }
     }
 }
-fn encoding_encode_outcome(
+fn _encoding_encode_outcome(
     text: &String,
     encoding: &String,
     errors: &String,
@@ -1645,7 +1605,7 @@ fn decode_outcome(
         >,
         __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
     > = (|| {
-        return Ok(encoding_decode_outcome(data, &enc.label.clone(), &handler_name));
+        return Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name));
         unreachable!("sifr try/except return capture fell through");
     })();
     match __sifr_try_res {
@@ -1701,7 +1661,7 @@ fn encode_outcome(
         >,
         __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
     > = (|| {
-        return Ok(encoding_encode_outcome(text, &enc.label.clone(), &handler_name));
+        return Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name));
         unreachable!("sifr try/except return capture fell through");
     })();
     match __sifr_try_res {

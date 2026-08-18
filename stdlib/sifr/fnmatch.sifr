@@ -46,9 +46,6 @@ def filterfalse(names: list[str], pattern: str) -> list[str]:
             result.append(name)
     return result
 
-def fnmatchcase(name: str, pattern: str) -> bool:
-    return _match(name, 0, pattern, 0)
-
 def _translate_literal(ch: str) -> str:
     if ch == ".":
         return "\\."

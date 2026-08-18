@@ -1,5 +1,6 @@
+// src/main.rs
 // --- stdlib: sifr.heapq ---
-fn _sift_down<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &mut Vec<T>,
     mut pos: i64,
     n: i64,
@@ -7,8 +8,8 @@ fn _sift_down<T: Clone + std::fmt::Display + PartialOrd + 'static>(
     let mut done: bool = false;
     while !done {
         let mut smallest: i64 = pos;
-        let left: i64 = ((2 as i64) * pos) + (1 as i64);
-        let right: i64 = ((2 as i64) * pos) + (2 as i64);
+        let left: i64 = ((2_i64) * pos) + (1_i64);
+        let right: i64 = ((2_i64) * pos) + (2_i64);
         if left < n {
             let s_val: Option<T> = {
                 let __sifr_index_list = &data;
@@ -101,7 +102,7 @@ fn _sift_down<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                         };
                         if __idx_norm >= 0 {
                             if let Some(__elem) = data.get_mut(__idx_norm as usize) {
-                                *__elem = tmp_sm;
+                                *__elem = tmp_sm.clone();
                             }
                         }
                     }
@@ -114,7 +115,7 @@ fn _sift_down<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                         };
                         if __idx_norm >= 0 {
                             if let Some(__elem) = data.get_mut(__idx_norm as usize) {
-                                *__elem = tmp_pos;
+                                *__elem = tmp_pos.clone();
                             }
                         }
                     }
@@ -124,16 +125,16 @@ fn _sift_down<T: Clone + std::fmt::Display + PartialOrd + 'static>(
         }
     }
 }
-fn _sift_up<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     heap: &mut Vec<T>,
     mut pos: i64,
 ) {
     let mut done: bool = false;
     while !done {
-        if pos <= (0 as i64) {
+        if pos <= (0_i64) {
             done = true;
         } else {
-            let parent: i64 = (pos - (1 as i64)) / (2 as i64);
+            let parent: i64 = (pos - (1_i64)) / (2_i64);
             let p_val: Option<T> = {
                 let __sifr_index_list = &heap;
                 let __sifr_index_i = parent;
@@ -166,7 +167,7 @@ fn _sift_up<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                             };
                             if __idx_norm >= 0 {
                                 if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                                    *__elem = c_val;
+                                    *__elem = c_val.clone();
                                 }
                             }
                         }
@@ -179,7 +180,7 @@ fn _sift_up<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                             };
                             if __idx_norm >= 0 {
                                 if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                                    *__elem = p_val;
+                                    *__elem = p_val.clone();
                                 }
                             }
                         }
@@ -196,37 +197,28 @@ fn _sift_up<T: Clone + std::fmt::Display + PartialOrd + 'static>(
         }
     }
 }
-fn heappush<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn heappush<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     heap: &mut Vec<T>,
     item: &T,
 ) {
     "Push item onto the heap in-place. O(log n) time.".to_string();
-    heap.push(item.clone());
-    let pos: i64 = (heap.len() as i64) - (1 as i64);
+    heap.push(item.clone().clone());
+    let pos: i64 = (heap.len() as i64) - (1_i64);
     _sift_up(heap, pos);
 }
-fn heappop<T: Clone + std::fmt::Display + PartialOrd + 'static>(
+fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     heap: &mut Vec<T>,
 ) -> Option<T> {
     "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
         .to_string();
     let n: i64 = heap.len() as i64;
-    if n == (0 as i64) {
+    if n == (0_i64) {
         return None;
     }
-    let top: Option<T> = {
-        let __sifr_index_list = &heap;
-        let __sifr_index_i = 0 as i64;
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
-        __sifr_index_list.get(__sifr_index_norm).cloned()
-    };
+    let top: Option<T> = Some(heap[(0_i64) as usize].clone());
     let last: Option<T> = {
         let __sifr_index_list = &heap;
-        let __sifr_index_i = n - (1 as i64);
+        let __sifr_index_i = n - (1_i64);
         let __sifr_index_norm = if __sifr_index_i < 0 {
             ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
         } else {
@@ -234,12 +226,17 @@ fn heappop<T: Clone + std::fmt::Display + PartialOrd + 'static>(
         };
         __sifr_index_list.get(__sifr_index_norm).cloned()
     };
-    heap.pop();
+    {
+        let Some(__sifr_nonempty_pop_value) = heap.pop() else {
+            unreachable!("compiler-verified non-empty pop should return Some");
+        };
+        __sifr_nonempty_pop_value
+    };
     let n2: i64 = heap.len() as i64;
-    if n2 > (0 as i64) {
+    if n2 > (0_i64) {
         if let Some(last) = last {
             {
-                let __idx_raw = 0 as i64;
+                let __idx_raw = 0_i64;
                 let __idx_norm = if __idx_raw < 0 {
                     (heap.len() as i64) + __idx_raw
                 } else {
@@ -247,15 +244,16 @@ fn heappop<T: Clone + std::fmt::Display + PartialOrd + 'static>(
                 };
                 if __idx_norm >= 0 {
                     if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                        *__elem = last;
+                        *__elem = last.clone();
                     }
                 }
             }
         }
-        _sift_down(heap, 0 as i64, n2);
+        _sift_down(heap, 0_i64, n2);
     }
-    return top;
+    top
 }
+// --- end stdlib ---
 
 fn drain_sorted(values: &Vec<i64>) -> Vec<i64> {
     let mut heap: Vec<i64> = vec![];
@@ -269,14 +267,14 @@ fn drain_sorted(values: &Vec<i64>) -> Vec<i64> {
             order.push(item);
         }
     }
-    return order;
+    order
 }
 
 fn main() {
-    assert!(format!("{:?}", drain_sorted(&vec![5 as i64, 1 as i64, 3 as i64])) == "[1, 3, 5]".to_string());
+    assert!((format!("{:?}", drain_sorted(&vec![5_i64, 1_i64, 3_i64])) == "[1, 3, 5]"));
     let mut heap: Vec<i64> = vec![];
-    heappush(&mut heap, &(7 as i64));
-    assert!(heappop(&mut heap) == Some(7 as i64));
-    assert!(heappop(&mut heap) == None);
+    heappush(&mut heap, &(7_i64));
+    assert!((heappop(&mut heap) == Some(7_i64)));
+    assert!((heappop(&mut heap) == None));
     println!("heap_option_drain: ok");
 }

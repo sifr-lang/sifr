@@ -1,8 +1,9 @@
-use std::collections::HashMap;
+// src/main.rs
+use ::std::collections::HashMap;
 
 // --- stdlib: sifr.argparse ---
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ArgumentSpec {
+struct __SifrStdlib_sifr_x2eargparse_x2eArgumentSpec {
     name: String,
     dest: String,
     kind: String,
@@ -10,7 +11,7 @@ struct ArgumentSpec {
     nargs: String,
     type_name: String,
 }
-impl ArgumentSpec {
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentSpec {
     fn new(
         name: String,
         dest: String,
@@ -19,103 +20,158 @@ impl ArgumentSpec {
         nargs: String,
         type_name: String,
     ) -> Self {
-        return Self {
-            name: format!("{}{}", name, "".to_string()),
-            dest: format!("{}{}", dest, "".to_string()),
-            kind: format!("{}{}", kind, "".to_string()),
-            default_value: format!("{}{}", default_value, "".to_string()),
-            nargs: _normalize_nargs(&nargs),
-            type_name: format!("{}{}", type_name, "".to_string()),
+        let __sifr_field_init_0: String = {
+            let mut __sifr_concat: String = String::with_capacity(name.len() + 0usize);
+            __sifr_concat.push_str((name).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
         };
+        let __sifr_field_init_1: String = {
+            let mut __sifr_concat: String = String::with_capacity(dest.len() + 0usize);
+            __sifr_concat.push_str((dest).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
+        let __sifr_field_init_2: String = {
+            let mut __sifr_concat: String = String::with_capacity(kind.len() + 0usize);
+            __sifr_concat.push_str((kind).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
+        let __sifr_field_init_3: String = {
+            let mut __sifr_concat: String = String::with_capacity(
+                default_value.len() + 0usize,
+            );
+            __sifr_concat.push_str((default_value).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
+        let __sifr_field_init_4: String = _normalize_nargs(&nargs);
+        let __sifr_field_init_5: String = {
+            let mut __sifr_concat: String = String::with_capacity(
+                type_name.len() + 0usize,
+            );
+            __sifr_concat.push_str((type_name).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
+        Self {
+            name: __sifr_field_init_0,
+            dest: __sifr_field_init_1,
+            kind: __sifr_field_init_2,
+            default_value: __sifr_field_init_3,
+            nargs: __sifr_field_init_4,
+            type_name: __sifr_field_init_5,
+        }
     }
 }
-impl std::fmt::Display for ArgumentSpec {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentSpec {}
+impl ::std::fmt::Display for __SifrStdlib_sifr_x2eargparse_x2eArgumentSpec {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(
             f,
             "ArgumentSpec(name={}, dest={}, kind={}, default_value={}, nargs={}, type_name={})",
             self.name, self.dest, self.kind, self.default_value, self.nargs, self
             .type_name
-        );
+        )
     }
 }
 #[derive(Debug, Clone, PartialEq)]
-struct Namespace {
+struct __SifrStdlib_sifr_x2eargparse_x2eNamespace {
     _str_values: Vec<(String, String)>,
     _bool_values: Vec<(String, bool)>,
     _list_values: Vec<(String, Vec<String>)>,
 }
-impl Namespace {
+impl __SifrStdlib_sifr_x2eargparse_x2eNamespace {
     fn new() -> Self {
-        return Self {
-            _str_values: vec![],
-            _bool_values: vec![],
-            _list_values: vec![],
-        };
+        let __sifr_field_init_0: Vec<(String, String)> = vec![];
+        let __sifr_field_init_1: Vec<(String, bool)> = vec![];
+        let __sifr_field_init_2: Vec<(String, Vec<String>)> = vec![];
+        Self {
+            _str_values: __sifr_field_init_0,
+            _bool_values: __sifr_field_init_1,
+            _list_values: __sifr_field_init_2,
+        }
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eNamespace {
     fn set(&mut self, name: &String, value: &String) {
         let mut updated: Vec<(String, String)> = vec![];
         let mut replaced: bool = false;
         for (key, current) in self._str_values.clone().iter().cloned() {
             if key == *name {
-                updated
-                    .push((
-                        format!("{}{}", name, "".to_string()),
-                        format!("{}{}", value, "".to_string()),
-                    ));
+                updated.push((format!("{}{}", name, ""), format!("{}{}", value, "")));
                 replaced = true;
             } else {
-                updated.push((key, current));
+                updated.push(((key).clone(), (current).clone()));
             }
         }
         if !replaced {
-            updated
-                .push((
-                    format!("{}{}", name, "".to_string()),
-                    format!("{}{}", value, "".to_string()),
-                ));
+            updated.push((format!("{}{}", name, ""), format!("{}{}", value, "")));
         }
         self._str_values = updated;
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eNamespace {
     fn set_bool(&mut self, name: &String, value: bool) {
         let mut updated: Vec<(String, bool)> = vec![];
         let mut replaced: bool = false;
         for (key, current) in self._bool_values.clone().iter().cloned() {
             if key == *name {
-                updated.push((format!("{}{}", name, "".to_string()), value));
+                updated.push((format!("{}{}", name, ""), value));
                 replaced = true;
             } else {
-                updated.push((key, current));
+                updated.push(((key).clone(), current));
             }
         }
         if !replaced {
-            updated.push((format!("{}{}", name, "".to_string()), value));
+            updated.push((format!("{}{}", name, ""), value));
         }
         self._bool_values = updated;
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eNamespace {
     fn set_list(&mut self, name: &String, values: &Vec<String>) {
         let mut copied: Vec<String> = vec![];
         for value in values.iter().cloned() {
-            copied.push(format!("{}{}", value, "".to_string()));
+            copied.push(format!("{}{}", value, ""));
         }
         let mut updated: Vec<(String, Vec<String>)> = vec![];
         for (key, current) in self._list_values.clone().iter().cloned() {
             if key == *name {
                 continue;
             }
-            updated.push((key, current));
+            updated.push(((key).clone(), (current).clone()));
         }
-        updated.push((format!("{}{}", name, "".to_string()), copied));
+        updated.push((format!("{}{}", name, ""), (copied).clone()));
         self._list_values = updated;
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eNamespace {
     fn get(&self, name: &String, default: &String) -> String {
         for (key, value) in self._str_values.clone().iter().cloned() {
             if key == *name {
-                return format!("{}{}", value, "".to_string());
+                return {
+                    let mut __sifr_concat: String = String::with_capacity(
+                        value.len() + 0usize,
+                    );
+                    __sifr_concat.push_str((value).as_str());
+                    __sifr_concat.push_str("");
+                    __sifr_concat
+                };
             }
         }
-        return format!("{}{}", default, "".to_string());
+        {
+            let mut __sifr_concat: String = String::with_capacity(
+                default.len() + 0usize,
+            );
+            __sifr_concat.push_str((default).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        }
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eNamespace {
     fn get_bool(&self, name: &String, default: bool) -> bool {
         for (key, value) in self._bool_values.clone().iter().cloned() {
             if key == *name {
@@ -127,19 +183,21 @@ impl Namespace {
                 continue;
             }
             let normalized: String = value2.to_lowercase();
-            if (((normalized == "1".to_string()) || (normalized == "true".to_string()))
-                || (normalized == "yes".to_string())) || (normalized == "on".to_string())
+            if (((normalized == "1") || (normalized == "true")) || (normalized == "yes"))
+                || (normalized == "on")
             {
                 return true;
             }
-            if (((normalized == "0".to_string()) || (normalized == "false".to_string()))
-                || (normalized == "no".to_string())) || (normalized == "off".to_string())
+            if (((normalized == "0") || (normalized == "false")) || (normalized == "no"))
+                || (normalized == "off")
             {
                 return false;
             }
         }
-        return default;
+        default
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eNamespace {
     fn get_list(&self, name: &String) -> Vec<String> {
         for (key, values) in self._list_values.clone().iter().cloned() {
             if key != *name {
@@ -147,60 +205,99 @@ impl Namespace {
             }
             let mut copied: Vec<String> = vec![];
             for value in values.iter().cloned() {
-                copied.push(format!("{}{}", value, "".to_string()));
+                copied.push(format!("{}{}", value, ""));
             }
             return copied;
         }
-        return vec![];
+        vec![]
     }
-    fn merge_from(&mut self, other: &Namespace) {
-        for (key, value) in other._str_values.iter().cloned() {
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eNamespace {
+    fn merge_from(&mut self, other: &__SifrStdlib_sifr_x2eargparse_x2eNamespace) {
+        for (key, value) in other._str_values.clone().iter().cloned() {
             self.set(&key, &value);
         }
-        for (key2, value2) in other._bool_values.iter().cloned() {
+        for (key2, value2) in other._bool_values.clone().iter().cloned() {
             self.set_bool(&key2, value2);
         }
-        for (key3, values3) in other._list_values.iter().cloned() {
+        for (key3, values3) in other._list_values.clone().iter().cloned() {
             self.set_list(&key3, &values3);
         }
     }
-    fn copy(&self) -> Namespace {
-        let mut copied: Namespace = Namespace::new();
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eNamespace {
+    fn copy(&self) -> __SifrStdlib_sifr_x2eargparse_x2eNamespace {
+        let mut copied: __SifrStdlib_sifr_x2eargparse_x2eNamespace = __SifrStdlib_sifr_x2eargparse_x2eNamespace::new();
         copied.merge_from(&self);
-        return copied;
+        copied
     }
 }
 #[derive(Debug, Clone, PartialEq)]
-struct ArgumentParser {
+struct __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
     _prog: String,
-    _specs: Vec<ArgumentSpec>,
+    _specs: Vec<__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec>,
     _subparsers_dest: String,
-    _subparsers: Vec<(String, Vec<ArgumentSpec>)>,
+    _subparsers: Vec<(String, Vec<__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec>)>,
 }
-impl ArgumentParser {
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
     fn new(prog: String) -> Self {
-        return Self {
-            _prog: format!("{}{}", prog, "".to_string()),
-            _specs: vec![],
-            _subparsers_dest: "command".to_string(),
-            _subparsers: vec![],
+        let __sifr_field_init_0: String = {
+            let mut __sifr_concat: String = String::with_capacity(prog.len() + 0usize);
+            __sifr_concat.push_str((prog).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
         };
+        let __sifr_field_init_1: Vec<__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec> = vec![];
+        let __sifr_field_init_2: String = "command".to_string();
+        let __sifr_field_init_3: Vec<
+            (String, Vec<__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec>),
+        > = vec![];
+        Self {
+            _prog: __sifr_field_init_0,
+            _specs: __sifr_field_init_1,
+            _subparsers_dest: __sifr_field_init_2,
+            _subparsers: __sifr_field_init_3,
+        }
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
     fn prog(&self) -> String {
-        return format!("{}{}", self._prog.clone(), "".to_string());
+        {
+            let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
+            __sifr_concat.push_str((self._prog.clone()).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        }
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
     fn add_subparsers(&mut self, dest: &String) {
-        if dest.clone() != "".to_string() {
-            self._subparsers_dest = format!("{}{}", dest, "".to_string());
+        if (dest).as_str() != "" {
+            self._subparsers_dest = {
+                let mut __sifr_concat: String = String::with_capacity(
+                    dest.len() + 0usize,
+                );
+                __sifr_concat.push_str((dest).as_str());
+                __sifr_concat.push_str("");
+                __sifr_concat
+            };
         }
     }
-    fn add_parser(&mut self, name: &String, parser: &ArgumentParser) {
-        let mut specs_copy: Vec<ArgumentSpec> = vec![];
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
+    fn add_parser(
+        &mut self,
+        name: &String,
+        parser: __SifrStdlib_sifr_x2eargparse_x2eArgumentParser,
+    ) {
+        let mut specs_copy: Vec<__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec> = vec![];
         for spec in parser._specs.iter().cloned() {
-            specs_copy.push(spec);
+            specs_copy.push(spec.clone());
         }
-        self._subparsers.push((format!("{}{}", name, "".to_string()), specs_copy));
+        self._subparsers.push((format!("{}{}", name, ""), (specs_copy).clone()));
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
     fn _append_spec(
         &mut self,
         name: &String,
@@ -210,19 +307,24 @@ impl ArgumentParser {
         nargs: &String,
         type_name: &String,
     ) {
-        let mut resolved_dest: String = format!("{}{}", dest, "".to_string());
-        if resolved_dest == "".to_string() {
+        let mut resolved_dest: String = {
+            let mut __sifr_concat: String = String::with_capacity(dest.len() + 0usize);
+            __sifr_concat.push_str((dest).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
+        if resolved_dest == "" {
             resolved_dest = _derive_dest(name);
         }
         let mut kind: String = "positional".to_string();
-        if name.starts_with(&"-".to_string()) {
-            if action.clone() == "store_true".to_string() {
+        if name.starts_with("-") {
+            if (action).as_str() == "store_true" {
                 kind = "flag".to_string();
             } else {
                 kind = "option".to_string();
             }
         }
-        let spec: ArgumentSpec = ArgumentSpec::new(
+        let spec: __SifrStdlib_sifr_x2eargparse_x2eArgumentSpec = __SifrStdlib_sifr_x2eargparse_x2eArgumentSpec::new(
             (name).clone(),
             resolved_dest,
             kind,
@@ -230,8 +332,10 @@ impl ArgumentParser {
             (nargs).clone(),
             (type_name).clone(),
         );
-        self._specs.push(spec);
+        self._specs.push(spec.clone());
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
     fn add_argument(
         &mut self,
         name: &String,
@@ -248,6 +352,8 @@ impl ArgumentParser {
             &"str".to_string(),
         );
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
     fn add_argument_typed(
         &mut self,
         name: &String,
@@ -257,26 +363,42 @@ impl ArgumentParser {
         nargs: &String,
         type_name: &String,
     ) {
-        let mut normalized_type: String = format!("{}{}", type_name, "".to_string());
-        if (((normalized_type != "int".to_string())
-            && (normalized_type != "float".to_string()))
-            && (normalized_type != "bool".to_string()))
-            && (normalized_type != "str".to_string())
+        let mut normalized_type: String = {
+            let mut __sifr_concat: String = String::with_capacity(
+                type_name.len() + 0usize,
+            );
+            __sifr_concat.push_str((type_name).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
+        if (((normalized_type != "int") && (normalized_type != "float"))
+            && (normalized_type != "bool")) && (normalized_type != "str")
         {
             normalized_type = "str".to_string();
         }
         self._append_spec(name, dest, action, default, nargs, &normalized_type);
     }
-    fn _find_subparser(&self, name: &String) -> Option<Vec<ArgumentSpec>> {
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
+    fn _find_subparser(
+        &self,
+        name: &String,
+    ) -> Option<Vec<__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec>> {
         for (parser_name, parser_specs) in self._subparsers.clone().iter().cloned() {
             if parser_name == *name {
                 return Some(parser_specs);
             }
         }
-        return None;
+        None
     }
-    fn _coerce_token(&self, spec: &ArgumentSpec, token: &String) -> Option<String> {
-        if spec.type_name == "int".to_string() {
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
+    fn _coerce_token(
+        &self,
+        spec: &__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec,
+        token: &String,
+    ) -> Option<String> {
+        if (spec.type_name.clone() == "int") {
             let __sifr_try_res: Result<Option<String>, ParseError> = (|| {
                 let parsed_int: i64 = (token)
                     .parse::<i64>()
@@ -296,7 +418,7 @@ impl ArgumentParser {
                 }
             }
         }
-        if spec.type_name == "float".to_string() {
+        if (spec.type_name.clone() == "float") {
             let __sifr_try_res: Result<Option<String>, ParseError> = (|| {
                 let parsed_float: f64 = (token)
                     .parse::<f64>()
@@ -316,172 +438,178 @@ impl ArgumentParser {
                 }
             }
         }
-        if spec.type_name == "bool".to_string() {
+        if (spec.type_name.clone() == "bool") {
             return _coerce_bool(token);
         }
-        return Some(format!("{}{}", token, "".to_string()));
+        Some({
+            let mut __sifr_concat: String = String::with_capacity(token.len() + 0usize);
+            __sifr_concat.push_str((token).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        })
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
     fn _collect_option_values(
         &self,
         args: &Vec<String>,
         start: i64,
-        spec: &ArgumentSpec,
+        spec: &__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec,
         force_positional: bool,
     ) -> (Vec<String>, i64) {
         let mut values: Vec<String> = vec![];
         let mut i: i64 = start;
-        if spec.nargs == "?".to_string() {
-            if i >= (args.len() as i64) {
-                return (values, i);
+        if (spec.nargs.clone() == "?") {
+            if (i >= (args.len() as i64)) {
+                return (values.clone(), i);
             }
             let token_opt: Option<String> = Some(args[i as usize].clone());
             let Some(token_opt) = token_opt else {
-                return (values, i + (1 as i64));
+                return (values.clone(), i + (1_i64));
             };
-            let token_one: String = _copy_token(&Some(token_opt));
-            if ((!(force_positional))
-                && (_is_option_like_token(&self._specs.clone(), &token_one)))
-            {
-                return (values, i);
+            let token_one: String = _copy_token(&Some((token_opt).clone()));
+            if !force_positional && _is_option_like_token(&self._specs, &token_one) {
+                return (values.clone(), i);
             }
-            values.push(token_one);
-            return (values, i + (1 as i64));
+            values.push(token_one.clone());
+            return (values.clone(), i + (1_i64));
         }
-        if ((spec.nargs == "*".to_string()) || (spec.nargs == "+".to_string())) {
-            while i < (args.len() as i64) {
+        if (spec.nargs.clone() == "*") || (spec.nargs.clone() == "+") {
+            while (i < (args.len() as i64)) {
                 let token_opt2: Option<String> = Some(args[i as usize].clone());
-                if token_opt2.is_none() {
-                    i = i + (1 as i64);
+                let Some(token_opt2) = token_opt2 else {
+                    i += 1_i64;
                     continue;
-                }
-                let token_many: String = _copy_token(&token_opt2);
-                if ((!(force_positional))
-                    && (_is_option_like_token(&self._specs.clone(), &token_many)))
+                };
+                let token_many: String = _copy_token(&Some((token_opt2).clone()));
+                if !force_positional && _is_option_like_token(&self._specs, &token_many)
                 {
                     break;
                 }
-                values.push(token_many);
-                i = i + (1 as i64);
+                values.push(token_many.clone());
+                i += 1_i64;
             }
-            return (values, i);
+            return (values.clone(), i);
         }
-        let mut exact: i64 = 1 as i64;
-        if _is_digit_string(&spec.nargs) {
+        let mut exact: i64 = 1_i64;
+        if _is_digit_string(&spec.nargs.clone()) {
             let __sifr_try_res: Result<(), ParseError> = (|| {
-                let parsed_count: i64 = (spec.nargs)
+                let parsed_count: i64 = (spec.nargs.clone())
                     .parse::<i64>()
                     .map_err(|e| ParseError {
                         message: e.to_string(),
                     })?;
-                if parsed_count > (0 as i64) {
+                if parsed_count > (0_i64) {
                     exact = parsed_count;
                 }
-                return Ok(());
+                Ok(())
             })();
             if let Err(__sifr_try_err) = __sifr_try_res {
                 let _e = __sifr_try_err.clone();
-                exact = 1 as i64;
+                exact = 1_i64;
             }
         }
-        let mut count: i64 = 0 as i64;
-        while ((count < exact) && (i < (args.len() as i64))) {
+        let mut count: i64 = 0_i64;
+        while (count < exact) && (i < (args.len() as i64)) {
             let token_opt3: Option<String> = Some(args[i as usize].clone());
-            if token_opt3.is_none() {
-                i = i + (1 as i64);
+            let Some(token_opt3) = token_opt3 else {
+                i += 1_i64;
                 continue;
-            }
-            let token_exact: String = _copy_token(&token_opt3);
-            if ((!(force_positional))
-                && (_is_option_like_token(&self._specs.clone(), &token_exact)))
-            {
+            };
+            let token_exact: String = _copy_token(&Some((token_opt3).clone()));
+            if !force_positional && _is_option_like_token(&self._specs, &token_exact) {
                 break;
             }
-            values.push(token_exact);
-            i = i + (1 as i64);
-            count = count + (1 as i64);
+            values.push(token_exact.clone());
+            i += 1_i64;
+            count += 1_i64;
         }
-        return (values, i);
+        (values.clone(), i)
     }
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
     fn _collect_positional_values(
         &self,
         args: &Vec<String>,
         start: i64,
-        spec: &ArgumentSpec,
+        spec: &__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec,
         force_positional: bool,
     ) -> (Vec<String>, i64) {
         let mut values: Vec<String> = vec![];
         let mut i: i64 = start;
-        if i >= (args.len() as i64) {
-            return (values, i);
+        if (i >= (args.len() as i64)) {
+            return (values.clone(), i);
         }
-        if spec.nargs == "?".to_string() {
+        if (spec.nargs.clone() == "?") {
             let token_opt: Option<String> = Some(args[i as usize].clone());
             if let Some(token_opt) = token_opt {
-                let token_one: String = _copy_token(&Some(token_opt));
-                if ((!(force_positional))
-                    && (_is_option_like_token(&self._specs.clone(), &token_one)))
-                {
-                    return (values, i);
+                let token_one: String = _copy_token(&Some((token_opt).clone()));
+                if !force_positional && _is_option_like_token(&self._specs, &token_one) {
+                    return (values.clone(), i);
                 }
-                values.push(token_one);
+                values.push(token_one.clone());
             }
-            return (values, i + (1 as i64));
+            return (values.clone(), i + (1_i64));
         }
-        if ((spec.nargs == "*".to_string()) || (spec.nargs == "+".to_string())) {
-            while i < (args.len() as i64) {
+        if (spec.nargs.clone() == "*") || (spec.nargs.clone() == "+") {
+            while (i < (args.len() as i64)) {
                 let token_opt2: Option<String> = Some(args[i as usize].clone());
-                if token_opt2.is_none() {
-                    i = i + (1 as i64);
+                let Some(token_opt2) = token_opt2 else {
+                    i += 1_i64;
                     continue;
-                }
-                let token_many: String = _copy_token(&token_opt2);
-                if ((!(force_positional))
-                    && (_is_option_like_token(&self._specs.clone(), &token_many)))
+                };
+                let token_many: String = _copy_token(&Some((token_opt2).clone()));
+                if !force_positional && _is_option_like_token(&self._specs, &token_many)
                 {
                     break;
                 }
-                values.push(token_many);
-                i = i + (1 as i64);
+                values.push(token_many.clone());
+                i += 1_i64;
             }
-            return (values, i);
+            return (values.clone(), i);
         }
-        let mut exact: i64 = 1 as i64;
-        if _is_digit_string(&spec.nargs) {
+        let mut exact: i64 = 1_i64;
+        if _is_digit_string(&spec.nargs.clone()) {
             let __sifr_try_res: Result<(), ParseError> = (|| {
-                let parsed_count: i64 = (spec.nargs)
+                let parsed_count: i64 = (spec.nargs.clone())
                     .parse::<i64>()
                     .map_err(|e| ParseError {
                         message: e.to_string(),
                     })?;
-                if parsed_count > (0 as i64) {
+                if parsed_count > (0_i64) {
                     exact = parsed_count;
                 }
-                return Ok(());
+                Ok(())
             })();
             if let Err(__sifr_try_err) = __sifr_try_res {
                 let _e = __sifr_try_err.clone();
-                exact = 1 as i64;
+                exact = 1_i64;
             }
         }
-        let mut count: i64 = 0 as i64;
-        while ((count < exact) && (i < (args.len() as i64))) {
+        let mut count: i64 = 0_i64;
+        while (count < exact) && (i < (args.len() as i64)) {
             let token_opt3: Option<String> = Some(args[i as usize].clone());
             if let Some(token_opt3) = token_opt3 {
-                values.push(_copy_token(&Some(token_opt3)));
-                count = count + (1 as i64);
+                values.push(_copy_token(&Some((token_opt3).clone())));
+                count += 1_i64;
             }
-            i = i + (1 as i64);
+            i += 1_i64;
         }
-        return (values, i);
+        (values.clone(), i)
     }
-    fn parse_args(&mut self, args: &Vec<String>) -> Namespace {
-        let mut ns: Namespace = Namespace::new();
+}
+impl __SifrStdlib_sifr_x2eargparse_x2eArgumentParser {
+    fn parse_args(
+        &self,
+        args: &Vec<String>,
+    ) -> __SifrStdlib_sifr_x2eargparse_x2eNamespace {
+        let mut ns: __SifrStdlib_sifr_x2eargparse_x2eNamespace = __SifrStdlib_sifr_x2eargparse_x2eNamespace::new();
         for spec in self._specs.clone().iter().cloned() {
-            if spec.kind == "flag".to_string() {
+            if (spec.kind == "flag") {
                 ns.set_bool(&spec.dest, false);
             } else {
-                if (((_nargs_is_multi(&spec.nargs)) || (spec.nargs == "*".to_string()))
-                    || (spec.nargs == "+".to_string()))
+                if (_nargs_is_multi(&spec.nargs) || (spec.nargs == "*"))
+                    || (spec.nargs == "+")
                 {
                     ns.set_list(&spec.dest, &vec![]);
                 } else {
@@ -489,129 +617,158 @@ impl ArgumentParser {
                 }
             }
         }
-        if (((self._subparsers.clone().len() as i64) > (0 as i64))
-            && ((args.len() as i64) > (0 as i64)))
+        if ((self._subparsers.len() as i64) > (0_i64)) && ((args.len() as i64) > (0_i64))
         {
-            let first_token: Option<String> = Some(args[(0 as i64) as usize].clone());
+            let first_token: Option<String> = Some(args[(0_i64) as usize].clone());
             if let Some(first_token) = first_token {
-                let command_name: String = _copy_token(&Some(first_token));
-                let subparser_specs: Option<Vec<ArgumentSpec>> = self
-                    ._find_subparser(&command_name);
+                let command_name: String = _copy_token(&Some((first_token).clone()));
+                let subparser_specs: Option<
+                    Vec<__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec>,
+                > = self._find_subparser(&command_name);
                 if let Some(subparser_specs) = subparser_specs {
                     ns.set(&self._subparsers_dest.clone(), &command_name);
-                    let mut subparser: ArgumentParser = ArgumentParser::new(
+                    let mut subparser: __SifrStdlib_sifr_x2eargparse_x2eArgumentParser = __SifrStdlib_sifr_x2eargparse_x2eArgumentParser::new(
                         command_name,
                     );
                     subparser._specs = subparser_specs;
-                    let child_ns: Namespace = subparser
+                    let child_ns: __SifrStdlib_sifr_x2eargparse_x2eNamespace = subparser
                         .parse_args(
-                            &Vec::from_iter(
-                                (args)
-                                    .iter()
-                                    .skip((1 as i64).max(0) as usize)
-                                    .take(
-                                        ((args.len() as i64).max(0) - (1 as i64).max(0)).max(0)
-                                            as usize,
-                                    )
-                                    .cloned(),
-                            ),
+                            &({
+                                let _slice_src = &args;
+                                let _slice_len_i64 = _slice_src.len() as i64;
+                                let _slice_start_i64 = if (1_i64) < 0 {
+                                    (_slice_len_i64 + (1_i64)).max(0)
+                                } else {
+                                    (1_i64).min(_slice_len_i64)
+                                };
+                                let _slice_stop_i64 = if (args.len() as i64) < 0 {
+                                    (_slice_len_i64 + (args.len() as i64)).max(0)
+                                } else {
+                                    (args.len() as i64).min(_slice_len_i64)
+                                };
+                                Vec::from_iter(
+                                    _slice_src
+                                        .iter()
+                                        .skip(_slice_start_i64 as usize)
+                                        .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                                        .cloned(),
+                                )
+                            }),
                         );
                     ns.merge_from(&child_ns);
                     return ns;
                 }
             }
         }
-        let mut positional_specs: Vec<ArgumentSpec> = vec![];
+        let mut positional_specs: Vec<__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec> = vec![];
         for spec2 in self._specs.clone().iter().cloned() {
-            if spec2.kind == "positional".to_string() {
-                positional_specs.push(spec2);
+            if (spec2.kind == "positional") {
+                positional_specs.push(spec2.clone());
             }
         }
-        let mut i: i64 = 0 as i64;
-        let mut positional_index: i64 = 0 as i64;
+        let mut i: i64 = 0_i64;
+        let mut positional_index: i64 = 0_i64;
         let mut force_positional: bool = false;
-        while i < (args.len() as i64) {
+        while (i < (args.len() as i64)) {
             let token_opt: Option<String> = Some(args[i as usize].clone());
-            if token_opt.is_none() {
-                i = i + (1 as i64);
+            let Some(token_opt) = token_opt else {
+                i += 1_i64;
                 continue;
-            }
-            let token: String = _copy_token(&token_opt);
-            if (token == "--".to_string()) && !force_positional {
+            };
+            let token: String = _copy_token(&Some((token_opt).clone()));
+            if (token == "--") && !force_positional {
                 force_positional = true;
-                i = i + (1 as i64);
+                i += 1_i64;
                 continue;
             }
-            if ((token.starts_with(&"-".to_string())) && (!(force_positional))) {
+            if token.starts_with("-") && !force_positional {
                 let (inline_has_value, inline_name, inline_value) = _split_inline_option(
                     &token,
                 );
-                let mut lookup_name: String = format!("{}{}", token, "".to_string());
+                let __sifr_chars_inline_name: Vec<char> = inline_name
+                    .chars()
+                    .collect::<Vec<char>>();
+                let __sifr_chars_inline_value: Vec<char> = inline_value
+                    .chars()
+                    .collect::<Vec<char>>();
+                let mut lookup_name: String = {
+                    let mut __sifr_concat: String = String::with_capacity(
+                        token.len() + 0usize,
+                    );
+                    __sifr_concat.push_str((token).as_str());
+                    __sifr_concat.push_str("");
+                    __sifr_concat
+                };
                 if inline_has_value {
-                    lookup_name = format!("{}{}", inline_name, "".to_string());
+                    lookup_name = {
+                        let mut __sifr_concat: String = String::with_capacity(
+                            inline_name.len() + 0usize,
+                        );
+                        __sifr_concat.push_str((inline_name).as_str());
+                        __sifr_concat.push_str("");
+                        __sifr_concat
+                    };
                 }
                 let mut handled_option: bool = false;
                 for option_spec in self._specs.clone().iter().cloned() {
-                    if option_spec.kind == "positional".to_string() {
+                    if (option_spec.kind == "positional") {
                         continue;
                     }
-                    if option_spec.name != lookup_name {
+                    if (option_spec.name != lookup_name) {
                         continue;
                     }
                     handled_option = true;
-                    if option_spec.kind == "flag".to_string() {
+                    if (option_spec.kind == "flag") {
                         ns.set_bool(&option_spec.dest, true);
-                        i = i + (1 as i64);
+                        i += 1_i64;
                         break;
                     }
                     let mut values: Vec<String> = vec![];
                     if inline_has_value {
-                        values = vec![inline_value];
-                        i = i + (1 as i64);
+                        values = vec![inline_value.clone()];
+                        i += 1_i64;
                     } else {
                         let (__sifr_tuple_unpack_0, __sifr_tuple_unpack_1) = self
                             ._collect_option_values(
                                 args,
-                                i + (1 as i64),
+                                i + (1_i64),
                                 &option_spec,
                                 force_positional,
                             );
                         values = __sifr_tuple_unpack_0;
                         i = __sifr_tuple_unpack_1;
                     }
-                    if (((_nargs_is_multi(&option_spec.nargs))
-                        || (option_spec.nargs == "*".to_string()))
-                        || (option_spec.nargs == "+".to_string()))
+                    if (_nargs_is_multi(&option_spec.nargs)
+                        || (option_spec.nargs == "*")) || (option_spec.nargs == "+")
                     {
                         let mut converted_values: Vec<String> = vec![];
                         for raw in values.iter().cloned() {
                             let coerced: Option<String> = self
                                 ._coerce_token(&option_spec, &raw);
-                            if coerced.is_none() {
+                            let Some(coerced) = coerced else {
                                 continue;
-                            }
-                            converted_values.push(_copy_token(&coerced));
+                            };
+                            converted_values.push(_copy_token(&Some((coerced).clone())));
                         }
                         ns.set_list(&option_spec.dest, &converted_values);
                     } else {
-                        if (values.len() as i64) > (0 as i64) {
+                        if ((values.len() as i64) > (0_i64)) {
                             let first_value: Option<String> = Some(
-                                values[(0 as i64) as usize].clone(),
+                                values[(0_i64) as usize].clone(),
                             );
                             if let Some(first_value) = first_value {
-                                let token_value: String = _copy_token(&Some(first_value));
+                                let token_value: String = _copy_token(
+                                    &Some((first_value).clone()),
+                                );
                                 let coerced_first: Option<String> = self
                                     ._coerce_token(&option_spec, &token_value);
                                 if let Some(coerced_first) = coerced_first {
                                     let coerced_value: String = _copy_token(
-                                        &Some(coerced_first),
+                                        &Some((coerced_first).clone()),
                                     );
                                     ns.set(&option_spec.dest, &coerced_value);
-                                    if option_spec.type_name == "bool".to_string() {
-                                        ns.set_bool(
-                                            &option_spec.dest,
-                                            coerced_value == "true".to_string(),
-                                        );
+                                    if (option_spec.type_name == "bool") {
+                                        ns.set_bool(&option_spec.dest, (coerced_value == "true"));
                                     }
                                 }
                             }
@@ -623,10 +780,10 @@ impl ArgumentParser {
                     continue;
                 }
             }
-            if positional_index < (positional_specs.len() as i64) {
-                let positional_spec: Option<ArgumentSpec> = Some(
-                    positional_specs[positional_index as usize].clone(),
-                );
+            if (positional_index < (positional_specs.len() as i64)) {
+                let positional_spec: Option<
+                    __SifrStdlib_sifr_x2eargparse_x2eArgumentSpec,
+                > = Some(positional_specs[positional_index as usize].clone());
                 if let Some(positional_spec) = positional_spec {
                     let (values2, next_i2) = self
                         ._collect_positional_values(
@@ -635,38 +792,41 @@ impl ArgumentParser {
                             &positional_spec,
                             force_positional,
                         );
-                    if (((_nargs_is_multi(&positional_spec.nargs))
-                        || (positional_spec.nargs == "*".to_string()))
-                        || (positional_spec.nargs == "+".to_string()))
+                    if (_nargs_is_multi(&positional_spec.nargs)
+                        || (positional_spec.nargs == "*"))
+                        || (positional_spec.nargs == "+")
                     {
                         let mut converted_values2: Vec<String> = vec![];
                         for raw2 in values2.iter().cloned() {
                             let coerced2: Option<String> = self
                                 ._coerce_token(&positional_spec, &raw2);
-                            if coerced2.is_none() {
+                            let Some(coerced2) = coerced2 else {
                                 continue;
-                            }
-                            converted_values2.push(_copy_token(&coerced2));
+                            };
+                            converted_values2
+                                .push(_copy_token(&Some((coerced2).clone())));
                         }
                         ns.set_list(&positional_spec.dest, &converted_values2);
                     } else {
-                        if (values2.len() as i64) > (0 as i64) {
+                        if ((values2.len() as i64) > (0_i64)) {
                             let first_value2: Option<String> = Some(
-                                values2[(0 as i64) as usize].clone(),
+                                values2[(0_i64) as usize].clone(),
                             );
                             if let Some(first_value2) = first_value2 {
-                                let token_value2: String = _copy_token(&Some(first_value2));
+                                let token_value2: String = _copy_token(
+                                    &Some((first_value2).clone()),
+                                );
                                 let coerced_first2: Option<String> = self
                                     ._coerce_token(&positional_spec, &token_value2);
                                 if let Some(coerced_first2) = coerced_first2 {
                                     let coerced_value2: String = _copy_token(
-                                        &Some(coerced_first2),
+                                        &Some((coerced_first2).clone()),
                                     );
                                     ns.set(&positional_spec.dest, &coerced_value2);
-                                    if positional_spec.type_name == "bool".to_string() {
+                                    if (positional_spec.type_name == "bool") {
                                         ns.set_bool(
                                             &positional_spec.dest,
-                                            coerced_value2 == "true".to_string(),
+                                            (coerced_value2 == "true"),
                                         );
                                     }
                                 }
@@ -674,53 +834,67 @@ impl ArgumentParser {
                         }
                     }
                     i = next_i2;
-                    positional_index = positional_index + (1 as i64);
+                    positional_index += 1_i64;
                     continue;
                 }
             }
-            i = i + (1 as i64);
+            i += 1_i64;
         }
-        return ns;
+        ns
     }
 }
 fn _split_inline_option(token: &String) -> (bool, String, String) {
+    let __sifr_chars_token: Vec<char> = token.chars().collect::<Vec<char>>();
     let mut key: String = "".to_string();
-    let mut i: i64 = 0 as i64;
-    while i < (token.chars().count() as i64) {
+    let mut i: i64 = 0_i64;
+    while (i < (__sifr_chars_token.len() as i64)) {
         let ch: Option<String> = Some({
-            let Some(__indexed_char) = token.chars().nth(i as usize) else {
+            let Some(__indexed_char) = __sifr_chars_token
+                .get(i as usize)
+                .map(|c| c.to_string()) else {
                 unreachable!("compiler-verified string index should be in range");
             };
-            __indexed_char.to_string()
+            __indexed_char
         });
-        if ((ch != None) && (ch == Some("=".to_string()))) {
+        if ch.is_some() && (ch == Some("=".to_string())) {
             let mut value: String = "".to_string();
-            let mut j: i64 = i + (1 as i64);
-            while j < (token.chars().count() as i64) {
+            let mut j: i64 = i + (1_i64);
+            while (j < (__sifr_chars_token.len() as i64)) {
                 let part: Option<String> = Some({
-                    let Some(__indexed_char) = token.chars().nth(j as usize) else {
+                    let Some(__indexed_char) = __sifr_chars_token
+                        .get(j as usize)
+                        .map(|c| c.to_string()) else {
                         unreachable!(
                             "compiler-verified string index should be in range"
                         );
                     };
-                    __indexed_char.to_string()
+                    __indexed_char
                 });
                 if let Some(part) = part {
-                    value = format!("{}{}", value, part);
+                    value.push_str((part).as_str());
                 }
-                j = j + (1 as i64);
+                j += 1_i64;
             }
             return (true, key, value);
         }
         if let Some(ch) = ch {
-            key = format!("{}{}", key, ch);
+            key.push_str((ch).as_str());
         }
-        i = i + (1 as i64);
+        i += 1_i64;
     }
-    return (false, format!("{}{}", token, "".to_string()), "".to_string());
+    (
+        false,
+        {
+            let mut __sifr_concat: String = String::with_capacity(token.len() + 0usize);
+            __sifr_concat.push_str((token).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        },
+        "".to_string(),
+    )
 }
 fn _is_digit_string(value: &String) -> bool {
-    if value.clone() == "".to_string() {
+    if (value).as_str() == "" {
         return false;
     }
     for ch in value.chars().map(|c| c.to_string()) {
@@ -728,16 +902,21 @@ fn _is_digit_string(value: &String) -> bool {
             return false;
         }
     }
-    return true;
+    true
 }
 fn _normalize_nargs(nargs: &String) -> String {
-    if nargs.clone() == "".to_string() {
+    if (nargs).as_str() == "" {
         return "1".to_string();
     }
-    if (((nargs.clone() == "?".to_string()) || (nargs.clone() == "*".to_string()))
-        || (nargs.clone() == "+".to_string()))
+    if (((nargs).as_str() == "?") || ((nargs).as_str() == "*"))
+        || ((nargs).as_str() == "+")
     {
-        return format!("{}{}", nargs, "".to_string());
+        return {
+            let mut __sifr_concat: String = String::with_capacity(nargs.len() + 0usize);
+            __sifr_concat.push_str((nargs).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
     }
     if _is_digit_string(nargs) {
         let __sifr_try_res: Result<Option<String>, ParseError> = (|| {
@@ -746,10 +925,10 @@ fn _normalize_nargs(nargs: &String) -> String {
                 .map_err(|e| ParseError {
                     message: e.to_string(),
                 })?;
-            if parsed > (0 as i64) {
+            if parsed > (0_i64) {
                 return Ok(Some(format!("{}", parsed)));
             }
-            return Ok(None);
+            Ok(None)
         })();
         match __sifr_try_res {
             Ok(Some(__sifr_ret_val)) => {
@@ -762,11 +941,11 @@ fn _normalize_nargs(nargs: &String) -> String {
             }
         }
     }
-    return "1".to_string();
+    "1".to_string()
 }
 fn _nargs_is_multi(nargs: &String) -> bool {
     let normalized: String = _normalize_nargs(nargs);
-    if (normalized == "*".to_string()) || (normalized == "+".to_string()) {
+    if (normalized == "*") || (normalized == "+") {
         return true;
     }
     if _is_digit_string(&normalized) {
@@ -776,7 +955,7 @@ fn _nargs_is_multi(nargs: &String) -> bool {
                 .map_err(|e| ParseError {
                     message: e.to_string(),
                 })?;
-            return Ok(parsed > (1 as i64));
+            return Ok(parsed > (1_i64));
             unreachable!("sifr try/except return capture fell through");
         })();
         match __sifr_try_res {
@@ -789,84 +968,114 @@ fn _nargs_is_multi(nargs: &String) -> bool {
             }
         }
     }
-    return false;
+    false
 }
 fn _coerce_bool(raw: &String) -> Option<String> {
     let normalized: String = raw.to_lowercase();
-    if (((normalized == "1".to_string()) || (normalized == "true".to_string()))
-        || (normalized == "yes".to_string())) || (normalized == "on".to_string())
+    if (((normalized == "1") || (normalized == "true")) || (normalized == "yes"))
+        || (normalized == "on")
     {
         return Some("true".to_string());
     }
-    if (((normalized == "0".to_string()) || (normalized == "false".to_string()))
-        || (normalized == "no".to_string())) || (normalized == "off".to_string())
+    if (((normalized == "0") || (normalized == "false")) || (normalized == "no"))
+        || (normalized == "off")
     {
         return Some("false".to_string());
     }
-    return None;
+    None
 }
 fn _copy_token(value: &Option<String>) -> String {
     let Some(value) = value else {
         return "".to_string();
     };
-    return format!("{}{}", value, "".to_string());
+    {
+        let mut __sifr_concat: String = String::with_capacity(value.len() + 0usize);
+        __sifr_concat.push_str((value).as_str());
+        __sifr_concat.push_str("");
+        __sifr_concat
+    }
 }
 fn _derive_dest(name: &String) -> String {
-    if name.starts_with(&"--".to_string()) {
+    let __sifr_chars_name: Vec<char> = name.chars().collect::<Vec<char>>();
+    if name.starts_with("--") {
         return name
             .chars()
-            .skip((2 as i64) as usize)
-            .take(((name.chars().count() as i64) as usize) - ((2 as i64) as usize))
+            .skip((2_i64) as usize)
+            .take(((name.chars().count() as i64) as usize) - ((2_i64) as usize))
             .collect::<String>()
-            .replace(&"-".to_string(), &"_".to_string());
+            .replace('-', "_");
     }
-    if name.starts_with(&"-".to_string()) {
+    if name.starts_with("-") {
         return name
             .chars()
-            .skip((1 as i64) as usize)
-            .take(((name.chars().count() as i64) as usize) - ((1 as i64) as usize))
+            .skip((1_i64) as usize)
+            .take(((name.chars().count() as i64) as usize) - ((1_i64) as usize))
             .collect::<String>()
-            .replace(&"-".to_string(), &"_".to_string());
+            .replace('-', "_");
     }
-    return format!("{}{}", name, "".to_string());
+    {
+        let mut __sifr_concat: String = String::with_capacity(name.len() + 0usize);
+        __sifr_concat.push_str((name).as_str());
+        __sifr_concat.push_str("");
+        __sifr_concat
+    }
 }
-fn _is_option_like_token(specs: &Vec<ArgumentSpec>, token: &String) -> bool {
-    if token.clone() == "--".to_string() {
+fn _is_option_like_token(
+    specs: &Vec<__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec>,
+    token: &String,
+) -> bool {
+    if (token).as_str() == "--" {
         return true;
     }
-    if token.starts_with(&"--".to_string()) {
+    if token.starts_with("--") {
         return true;
     }
     let (inline_has_value, inline_name, inline_value) = _split_inline_option(token);
-    let _: String = inline_value;
-    let mut lookup_name: String = format!("{}{}", token, "".to_string());
+    let __sifr_chars_inline_name: Vec<char> = inline_name.chars().collect::<Vec<char>>();
+    let __sifr_chars_inline_value: Vec<char> = inline_value
+        .chars()
+        .collect::<Vec<char>>();
+    let _ = inline_value;
+    let mut lookup_name: String = {
+        let mut __sifr_concat: String = String::with_capacity(token.len() + 0usize);
+        __sifr_concat.push_str((token).as_str());
+        __sifr_concat.push_str("");
+        __sifr_concat
+    };
     if inline_has_value {
-        lookup_name = format!("{}{}", inline_name, "".to_string());
+        lookup_name = {
+            let mut __sifr_concat: String = String::with_capacity(
+                inline_name.len() + 0usize,
+            );
+            __sifr_concat.push_str((inline_name).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
     }
     for spec in specs.iter().cloned() {
-        if spec.kind == "positional".to_string() {
+        if (spec.kind == "positional") {
             continue;
         }
-        if spec.name == lookup_name {
+        if (spec.name == lookup_name) {
             return true;
         }
     }
-    return false;
+    false
 }
 
 // --- stdlib: sifr.collections ---
 #[derive(Debug, Clone, PartialEq)]
-struct Counter<T: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq> {
+struct __SifrStdlib_sifr_x2ecollections_x2eCounter<T: std::hash::Hash + Eq> {
     counts: HashMap<T, i64>,
 }
-impl<T: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq> Counter<T> {
+impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     fn new(source: Option<HashMap<T, i64>>, iterable: Option<Vec<T>>) -> Self {
         let mut counts: HashMap<T, i64> = HashMap::from([]);
         if let Some(source) = source {
             for key in source.keys().cloned().collect::<Vec<_>>() {
                 let value: Option<i64> = source.get(&key).copied();
                 if let Some(value) = value {
-                    counts.insert(key, value);
+                    counts.insert(key.clone(), value);
                 }
             }
         }
@@ -874,73 +1083,81 @@ impl<T: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq> Counter<T
             for item in iterable.iter().cloned() {
                 let value2: Option<i64> = counts.get(&item).copied();
                 if let Some(value2) = value2 {
-                    counts.insert(item, value2 + (1 as i64));
+                    counts.insert(item.clone(), value2 + (1_i64));
                 } else {
-                    counts.insert(item, 1 as i64);
+                    counts.insert(item.clone(), 1_i64);
                 }
             }
         }
-        return Self { counts: counts };
+        let __sifr_field_init_0: HashMap<T, i64> = counts;
+        Self {
+            counts: __sifr_field_init_0,
+        }
     }
+}
+impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+    fn __iter__(&self) -> Vec<T> {
+        Box::new((self.counts.keys().cloned().collect::<Vec<_>>()).into_iter())
+            .collect::<Vec<_>>()
+    }
+}
+impl<T: ::std::hash::Hash + Eq> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+    fn __getitem__(&self, key: &T) -> i64 {
+        let val: Option<i64> = self.counts.get(&key).copied();
+        if let Some(val) = val {
+            return val;
+        }
+        0_i64
+    }
+}
+impl<T: ::std::hash::Hash + Eq> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     fn get(&self, key: &T, default: i64) -> i64 {
         let val: Option<i64> = self.counts.get(&key).copied();
         if let Some(val) = val {
             return val;
         }
-        return default;
+        default
     }
+}
+impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     fn increment(&mut self, key: &T) {
         let val: Option<i64> = self.counts.get(&key).copied();
         if let Some(val) = val {
-            self.counts.insert(key.clone(), val + (1 as i64));
+            self.counts.insert(key.clone(), val + (1_i64));
         } else {
-            self.counts.insert(key.clone(), 1 as i64);
+            self.counts.insert(key.clone(), 1_i64);
         }
     }
+}
+impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     fn total(&self) -> i64 {
-        let mut total: i64 = 0 as i64;
-        for count in self.counts.clone().values().cloned().collect::<Vec<_>>() {
-            total = total + count;
+        let mut total: i64 = 0_i64;
+        for count in self.counts.values().cloned().collect::<Vec<_>>() {
+            total += count;
         }
-        return total;
+        total
     }
+}
+impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     fn most_common(&self, n: Option<i64>) -> Vec<(T, i64)> {
         let mut result: Vec<(T, i64)> = vec![];
-        for key in self.counts.clone().keys().cloned().collect::<Vec<_>>() {
+        for key in self.counts.keys().cloned().collect::<Vec<_>>() {
             let count: Option<i64> = self.counts.get(&key).copied();
             if let Some(count) = count {
-                let entry: (T, i64) = (key, count);
-                result.push(entry);
+                let entry: (T, i64) = (key.clone(), count);
+                result.push(entry.clone());
             }
         }
         let sz: i64 = result.len() as i64;
-        let mut i: i64 = 0 as i64;
+        let mut i: i64 = 0_i64;
         while i < sz {
-            let mut j: i64 = i + (1 as i64);
+            let mut j: i64 = i + (1_i64);
             while j < sz {
-                let left: Option<(T, i64)> = {
-                    let __sifr_index_list = &result;
-                    let __sifr_index_i = i;
-                    let __sifr_index_norm = if __sifr_index_i < 0 {
-                        ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                    } else {
-                        __sifr_index_i as usize
-                    };
-                    __sifr_index_list.get(__sifr_index_norm).cloned()
-                };
-                let right: Option<(T, i64)> = {
-                    let __sifr_index_list = &result;
-                    let __sifr_index_i = j;
-                    let __sifr_index_norm = if __sifr_index_i < 0 {
-                        ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                    } else {
-                        __sifr_index_i as usize
-                    };
-                    __sifr_index_list.get(__sifr_index_norm).cloned()
-                };
+                let left: Option<(T, i64)> = Some(result[i as usize].clone());
+                let right: Option<(T, i64)> = Some(result[j as usize].clone());
                 if let Some(left) = left {
                     if let Some(right) = right {
-                        if (right).1 > (left).1 {
+                        if ((right).1 > (left).1) {
                             {
                                 let __idx_raw = i;
                                 let __idx_norm = if __idx_raw < 0 {
@@ -950,7 +1167,7 @@ impl<T: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq> Counter<T
                                 };
                                 if __idx_norm >= 0 {
                                     if let Some(__elem) = result.get_mut(__idx_norm as usize) {
-                                        *__elem = right;
+                                        *__elem = right.clone();
                                     }
                                 }
                             }
@@ -963,61 +1180,119 @@ impl<T: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq> Counter<T
                                 };
                                 if __idx_norm >= 0 {
                                     if let Some(__elem) = result.get_mut(__idx_norm as usize) {
-                                        *__elem = left;
+                                        *__elem = left.clone();
                                     }
                                 }
                             }
                         }
                     }
                 }
-                j = j + (1 as i64);
+                j += 1_i64;
             }
-            i = i + (1 as i64);
+            i += 1_i64;
         }
         let Some(n) = n else {
             return result;
         };
-        if n <= (0 as i64) {
+        if n <= (0_i64) {
             return vec![];
         }
         let mut top: Vec<(T, i64)> = vec![];
-        let mut index: i64 = 0 as i64;
+        let mut index: i64 = 0_i64;
         while index < n {
-            if index >= (result.len() as i64) {
+            if (index >= (result.len() as i64)) {
                 return top;
             }
             let value: Option<(T, i64)> = Some(result[index as usize].clone());
             if let Some(value) = value {
-                top.push(value);
+                top.push(value.clone());
             }
-            index = index + (1 as i64);
+            index += 1_i64;
         }
-        return top;
+        top
     }
+}
+impl<
+    T: ::std::hash::Hash + Eq + Clone + PartialOrd,
+> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     fn keys(&self) -> Vec<T> {
-        return self.counts.clone().keys().cloned().collect::<Vec<_>>();
+        let mut result: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
+        let sz: i64 = result.len() as i64;
+        let mut i: i64 = 0_i64;
+        while i < sz {
+            let mut j: i64 = i + (1_i64);
+            while j < sz {
+                let left: Option<T> = Some(result[i as usize].clone());
+                let right: Option<T> = Some(result[j as usize].clone());
+                if let Some(left) = left {
+                    if let Some(right) = right {
+                        if right < left {
+                            {
+                                let __idx_raw = i;
+                                let __idx_norm = if __idx_raw < 0 {
+                                    (result.len() as i64) + __idx_raw
+                                } else {
+                                    __idx_raw
+                                };
+                                if __idx_norm >= 0 {
+                                    if let Some(__elem) = result.get_mut(__idx_norm as usize) {
+                                        *__elem = right.clone();
+                                    }
+                                }
+                            }
+                            {
+                                let __idx_raw = j;
+                                let __idx_norm = if __idx_raw < 0 {
+                                    (result.len() as i64) + __idx_raw
+                                } else {
+                                    __idx_raw
+                                };
+                                if __idx_norm >= 0 {
+                                    if let Some(__elem) = result.get_mut(__idx_norm as usize) {
+                                        *__elem = left.clone();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                j += 1_i64;
+            }
+            i += 1_i64;
+        }
+        result
     }
+}
+impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     fn items(&self) -> Vec<(T, i64)> {
         let mut result: Vec<(T, i64)> = vec![];
-        for key in self.counts.clone().keys().cloned().collect::<Vec<_>>() {
+        for key in self.counts.keys().cloned().collect::<Vec<_>>() {
             let value: Option<i64> = self.counts.get(&key).copied();
             if let Some(value) = value {
-                let entry: (T, i64) = (key, value);
-                result.push(entry);
+                let entry: (T, i64) = (key.clone(), value);
+                result.push(entry.clone());
             }
         }
-        return result;
+        result
     }
+}
+impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     fn values(&self) -> Vec<i64> {
-        return self.counts.clone().values().cloned().collect::<Vec<_>>();
+        self.counts.values().cloned().collect::<Vec<_>>()
     }
-    fn copy(&self) -> Counter<T> {
-        return Counter::new(Some(self.counts.clone()), None);
+}
+impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+    fn copy(&self) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(self.counts.clone()), None)
     }
+}
+impl<T: ::std::hash::Hash + Eq> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     fn clear(&mut self) {
         self.counts = HashMap::from([]);
     }
-    fn update(&mut self, other: &Counter<T>) {
+}
+impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+    fn update(&mut self, other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>) {
         for key in other.counts.keys().cloned().collect::<Vec<_>>() {
             let other_val: Option<i64> = other.counts.get(&key).copied();
             if let Some(other_val) = other_val {
@@ -1030,7 +1305,9 @@ impl<T: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq> Counter<T
             }
         }
     }
-    fn subtract(&mut self, other: &Counter<T>) {
+}
+impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+    fn subtract(&mut self, other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>) {
         for key in other.counts.keys().cloned().collect::<Vec<_>>() {
             let other_val: Option<i64> = other.counts.get(&key).copied();
             if let Some(other_val) = other_val {
@@ -1038,54 +1315,60 @@ impl<T: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq> Counter<T
                 if let Some(existing) = existing {
                     self.counts.insert(key, existing - other_val);
                 } else {
-                    self.counts.insert(key, (0 as i64) - other_val);
+                    self.counts.insert(key, (0_i64) - other_val);
                 }
             }
         }
     }
+}
+impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     fn elements(&self) -> Vec<T> {
         let mut result: Vec<T> = vec![];
-        let all_keys: Vec<T> = self.counts.clone().keys().cloned().collect::<Vec<_>>();
-        let mut ki: i64 = 0 as i64;
-        while ki < (all_keys.len() as i64) {
+        let all_keys: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
+        let mut ki: i64 = 0_i64;
+        while (ki < (all_keys.len() as i64)) {
             let key_opt: Option<T> = Some(all_keys[ki as usize].clone());
             if let Some(key_opt) = key_opt {
                 let cnt: Option<i64> = self.counts.get(&key_opt).copied();
                 if let Some(cnt) = cnt {
-                    let mut i: i64 = 0 as i64;
+                    let mut i: i64 = 0_i64;
                     while i < cnt {
                         let key_copy: Option<T> = Some(all_keys[ki as usize].clone());
                         if let Some(key_copy) = key_copy {
-                            result.push(key_copy.clone());
+                            result.push(key_copy.clone().clone());
                         }
-                        i = i + (1 as i64);
+                        i += 1_i64;
                     }
                 }
             }
-            ki = ki + (1 as i64);
+            ki += 1_i64;
         }
-        return result;
+        result
     }
 }
 impl<
-    T: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq,
-> std::ops::Add<&Counter<T>> for &Counter<T> {
-    type Output = Counter<T>;
-    fn add(self, other: &Counter<T>) -> Self::Output {
+    T: ::std::hash::Hash + Eq + Clone,
+> ::std::ops::Add<&__SifrStdlib_sifr_x2ecollections_x2eCounter<T>>
+for &__SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+    type Output = __SifrStdlib_sifr_x2ecollections_x2eCounter<T>;
+    fn add(
+        self,
+        other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>,
+    ) -> Self::Output {
         let mut new_counts: HashMap<T, i64> = HashMap::from([]);
         for key in Box::new(
-            (self.counts.clone().keys().cloned().collect::<Vec<_>>()).into_iter(),
+            (self.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
         ) {
             let a_val: Option<i64> = self.counts.get(&key).copied();
             if let Some(a_val) = a_val {
                 let b_val: Option<i64> = other.counts.get(&key).copied();
-                let mut b_count: i64 = 0 as i64;
+                let mut b_count: i64 = 0_i64;
                 if let Some(b_val) = b_val {
                     b_count = b_val;
                 }
                 let total: i64 = a_val + b_count;
-                if total > (0 as i64) {
-                    new_counts.insert(key, total);
+                if total > (0_i64) {
+                    new_counts.insert(key.clone(), total);
                 }
             }
         }
@@ -1093,155 +1376,90 @@ impl<
             (other.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
         ) {
             let already: Option<i64> = new_counts.get(&key2).copied();
-            if already == None {
+            if already.is_none() {
                 let b_val2: Option<i64> = other.counts.get(&key2).copied();
                 if let Some(b_val2) = b_val2 {
-                    if b_val2 > (0 as i64) {
-                        new_counts.insert(key2, b_val2);
+                    if b_val2 > (0_i64) {
+                        new_counts.insert(key2.clone(), b_val2);
                     }
                 }
             }
         }
-        return Counter::new(Some(new_counts), None);
+        __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(new_counts), None)
     }
 }
 impl<
-    T: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq,
-> std::ops::Sub<&Counter<T>> for &Counter<T> {
-    type Output = Counter<T>;
-    fn sub(self, other: &Counter<T>) -> Self::Output {
+    T: ::std::hash::Hash + Eq + Clone,
+> ::std::ops::Sub<&__SifrStdlib_sifr_x2ecollections_x2eCounter<T>>
+for &__SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+    type Output = __SifrStdlib_sifr_x2ecollections_x2eCounter<T>;
+    fn sub(
+        self,
+        other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>,
+    ) -> Self::Output {
         let mut new_counts: HashMap<T, i64> = HashMap::from([]);
         for key in Box::new(
-            (self.counts.clone().keys().cloned().collect::<Vec<_>>()).into_iter(),
+            (self.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
         ) {
             let a_val: Option<i64> = self.counts.get(&key).copied();
             if let Some(a_val) = a_val {
                 let b_val: Option<i64> = other.counts.get(&key).copied();
-                let mut b_count: i64 = 0 as i64;
+                let mut b_count: i64 = 0_i64;
                 if let Some(b_val) = b_val {
                     b_count = b_val;
                 }
                 let diff: i64 = a_val - b_count;
-                if diff > (0 as i64) {
-                    new_counts.insert(key, diff);
+                if diff > (0_i64) {
+                    new_counts.insert(key.clone(), diff);
                 }
             }
         }
-        return Counter::new(Some(new_counts), None);
+        __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(new_counts), None)
     }
 }
-#[derive(Debug, Clone, PartialEq)]
-struct defaultdict<K: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq> {
-    default_factory: i64,
-    _values: HashMap<K, i64>,
-}
-impl<K: Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq> defaultdict<K> {
-    fn new(default_factory: i64, initial: Option<HashMap<K, i64>>) -> Self {
-        let mut values: HashMap<K, i64> = HashMap::from([]);
-        if let Some(initial) = initial {
-            for (key, value) in initial
-                .iter()
-                .map(|__kv| (__kv.0.clone(), __kv.1.clone()))
-                .collect::<Vec<_>>()
-            {
-                values.insert(key, value);
-            }
-        }
-        return Self {
-            default_factory: default_factory,
-            _values: values,
-        };
-    }
-    fn ensure(&mut self, key: &K) -> i64 {
-        let current: Option<i64> = self._values.get(&key).copied();
-        if let Some(current) = current {
-            return current;
-        }
-        self._values.insert(key.clone(), self.default_factory);
-        let created: Option<i64> = self._values.get(&key).copied();
-        if let Some(created) = created {
-            return created;
-        }
-        return self.default_factory;
-    }
-    fn set(&mut self, key: &K, value: i64) {
-        self._values.insert(key.clone(), value);
-    }
-    fn has(&self, key: &K) -> bool {
-        return (self._values.clone()).contains_key(key);
-    }
-    fn pop(&mut self, key: &K) -> Option<i64> {
-        if (self._values.clone()).contains_key(key) {
-            return self._values.remove(&key);
-        }
-        return None;
-    }
-    fn clear(&mut self) {
-        self._values = HashMap::from([]);
-    }
-    fn keys(&self) -> Vec<K> {
-        return self._values.clone().keys().cloned().collect::<Vec<_>>();
-    }
-    fn values(&self) -> Vec<i64> {
-        return self._values.clone().values().cloned().collect::<Vec<_>>();
-    }
-    fn items(&self) -> Vec<(K, i64)> {
-        let mut values: Vec<(K, i64)> = vec![];
-        for (key, value) in self
-            ._values
-            .clone()
-            .iter()
-            .map(|__kv| (__kv.0.clone(), __kv.1.clone()))
-            .collect::<Vec<_>>()
-        {
-            values.push((key, value));
-        }
-        return values;
-    }
-    fn len(&self) -> i64 {
-        return self._values.clone().len() as i64;
-    }
-}
+// --- end stdlib ---
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
 
 impl ParseError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+impl ::std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
     }
 }
 
-impl std::error::Error for ParseError {
+impl ::std::error::Error for ParseError {
 }
 
 fn main() {
-    let mut counter = Counter::new(None, Some(vec!["parse".to_string(), "parse".to_string(), "emit".to_string()]));
-    assert!(counter.get(&"parse".to_string(), 0 as i64) == (2 as i64));
-    let mut attempts = defaultdict::new(0 as i64, None);
-    let current_attempts: i64 = attempts.ensure(&"collections_and_argparse".to_string());
-    attempts.set(&"collections_and_argparse".to_string(), current_attempts + (1 as i64));
-    assert!(attempts.ensure(&"collections_and_argparse".to_string()) == (1 as i64));
-    let mut parser: ArgumentParser = ArgumentParser::new("sifr".to_string());
+    let counter: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = __SifrStdlib_sifr_x2ecollections_x2eCounter::new(None, Some(vec!["parse".to_string(), "parse".to_string(), "emit".to_string()]));
+    assert!((counter.get(&"parse".to_string(), 0_i64) == (2_i64)));
+    let mut attempts: HashMap<String, i64> = HashMap::new();
+    {
+        let __elem = attempts.entry("collections_and_argparse".to_string()).or_insert(0);
+        *__elem += 1_i64;
+    }
+    assert!(*attempts.entry("collections_and_argparse".to_string()).or_insert(0) == (1_i64));
+    let mut parser: __SifrStdlib_sifr_x2eargparse_x2eArgumentParser = __SifrStdlib_sifr_x2eargparse_x2eArgumentParser::new("sifr".to_string());
     parser.add_subparsers(&"cmd".to_string());
-    let mut run_parser: ArgumentParser = ArgumentParser::new("run".to_string());
+    let mut run_parser: __SifrStdlib_sifr_x2eargparse_x2eArgumentParser = __SifrStdlib_sifr_x2eargparse_x2eArgumentParser::new("run".to_string());
     run_parser.add_argument_typed(&"--strict".to_string(), &"strict".to_string(), &"store_true".to_string(), &"".to_string(), &"1".to_string(), &"str".to_string());
     run_parser.add_argument_typed(&"--level".to_string(), &"level".to_string(), &"store".to_string(), &"0".to_string(), &"1".to_string(), &"int".to_string());
     run_parser.add_argument_typed(&"--custom-level".to_string(), &"custom_level".to_string(), &"store".to_string(), &"0".to_string(), &"1".to_string(), &"int".to_string());
     run_parser.add_argument_typed(&"targets".to_string(), &"targets".to_string(), &"store".to_string(), &"".to_string(), &"+".to_string(), &"str".to_string());
-    parser.add_parser(&"run".to_string(), &run_parser);
-    let mut parsed: Namespace = parser.parse_args(&vec!["run".to_string(), "--strict".to_string(), "--level".to_string(), "2".to_string(), "--custom-level".to_string(), "3".to_string(), "main.sifr".to_string()]);
-    assert!(parsed.get(&"cmd".to_string(), &"".to_string()) == "run".to_string());
+    parser.add_parser(&"run".to_string(), run_parser);
+    let parsed: __SifrStdlib_sifr_x2eargparse_x2eNamespace = parser.parse_args(&vec!["run".to_string(), "--strict".to_string(), "--level".to_string(), "2".to_string(), "--custom-level".to_string(), "3".to_string(), "main.sifr".to_string()]);
+    assert!((parsed.get(&"cmd".to_string(), &"".to_string()) == "run"));
     assert!(parsed.get_bool(&"strict".to_string(), false));
-    assert!(parsed.get(&"level".to_string(), &"".to_string()) == "2".to_string());
-    assert!(parsed.get(&"custom_level".to_string(), &"".to_string()) == "3".to_string());
-    assert!(format!("{:?}", parsed.get_list(&"targets".to_string())) == "[\"main.sifr\"]".to_string());
+    assert!((parsed.get(&"level".to_string(), &"".to_string()) == "2"));
+    assert!((parsed.get(&"custom_level".to_string(), &"".to_string()) == "3"));
+    assert!((format!("{:?}", parsed.get_list(&"targets".to_string())) == "[\"main.sifr\"]"));
 }

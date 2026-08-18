@@ -55,30 +55,6 @@ def b64encode_opts(s: str, altchars: str = "", wrapcol: int = 0) -> Result[str, 
 def b64decode_opts(s: str, altchars: str = "", validate: bool = False, ignorechars: str = "") -> Result[str, ParseError]:
     return _base64_decode_opts_impl(s, altchars, validate, ignorechars)
 
-def standard_b64encode(s: str) -> str:
-    return _base64_encode_impl(s)
-
-def standard_b64decode(s: str) -> Result[str, ParseError]:
-    return _base64_decode_impl(s)
-
-def standard_b64encode_bytes(data: bytes) -> bytes:
-    return _base64_encode_bytes_impl(data)
-
-def standard_b64decode_bytes(data: bytes) -> Result[bytes, ParseError]:
-    return _base64_decode_bytes_impl(data)
-
-def encodebytes(s: str) -> str:
-    return _base64_encode_impl(s)
-
-def decodebytes(s: str) -> Result[str, ParseError]:
-    return _base64_decode_impl(s)
-
-def encodebytes_bytes(data: bytes) -> bytes:
-    return _base64_encode_bytes_impl(data)
-
-def decodebytes_bytes(data: bytes) -> Result[bytes, ParseError]:
-    return _base64_decode_bytes_impl(data)
-
 def b16encode(s: str) -> Result[str, ParseError]:
     try:
         data: bytes = s.encode()

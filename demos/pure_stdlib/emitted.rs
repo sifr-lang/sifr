@@ -651,9 +651,6 @@ fn floor(x: f64) -> i64 {
 fn ceil(x: f64) -> i64 {
     ::sifr_stdlib::math::ceil(x).to_i64_saturating()
 }
-fn abs_val(x: f64) -> f64 {
-    ::sifr_stdlib::math::abs_val(x)
-}
 fn log(x: f64) -> f64 {
     ::sifr_stdlib::math::log(x)
 }

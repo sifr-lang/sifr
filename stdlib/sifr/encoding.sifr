@@ -53,10 +53,10 @@ class Encoding:
         self.label = label + ""
 
     def canonical_label(self) -> Result[str, DecodeError]:
-        return encoding_canonical_label(self.label)
+        return _encoding_canonical_label(self.label)
 
     def is_supported(self) -> bool:
-        return encoding_is_supported(self.label)
+        return _encoding_is_supported(self.label)
 
 
 class DecodeErrorHandler:
@@ -103,11 +103,11 @@ class EncodeOutcome:
         return self.recoveries
 
 
-def encoding_is_supported(label: str) -> bool:
+def _encoding_is_supported(label: str) -> bool:
     return _encoding_is_supported_impl(label)
 
 
-def encoding_canonical_label(label: str) -> Result[str, DecodeError]:
+def _encoding_canonical_label(label: str) -> Result[str, DecodeError]:
     try:
         value: str = _encoding_canonical_label_impl(label)
         return value
@@ -115,7 +115,7 @@ def encoding_canonical_label(label: str) -> Result[str, DecodeError]:
         raise DecodeError(e.message)
 
 
-def encoding_decode_text(data: bytes, encoding: str, errors: str) -> Result[str, DecodeError]:
+def _encoding_decode_text(data: bytes, encoding: str, errors: str) -> Result[str, DecodeError]:
     try:
         text: str = _encoding_decode_text_impl(data, encoding, errors)
         return text
@@ -123,7 +123,7 @@ def encoding_decode_text(data: bytes, encoding: str, errors: str) -> Result[str,
         raise DecodeError(e.message)
 
 
-def encoding_decode_recoveries(data: bytes, encoding: str, errors: str) -> Result[list[str], DecodeError]:
+def _encoding_decode_recoveries(data: bytes, encoding: str, errors: str) -> Result[list[str], DecodeError]:
     try:
         recoveries: list[str] = _encoding_decode_recoveries_impl(data, encoding, errors)
         return recoveries
@@ -131,7 +131,7 @@ def encoding_decode_recoveries(data: bytes, encoding: str, errors: str) -> Resul
         raise DecodeError(e.message)
 
 
-def encoding_decode_outcome(data: bytes, encoding: str, errors: str) -> Result[DecodeOutcome, DecodeError]:
+def _encoding_decode_outcome(data: bytes, encoding: str, errors: str) -> Result[DecodeOutcome, DecodeError]:
     try:
         text: str = _encoding_decode_text_impl(data, encoding, errors)
         recoveries: list[str] = _encoding_decode_recoveries_impl(data, encoding, errors)
@@ -140,7 +140,7 @@ def encoding_decode_outcome(data: bytes, encoding: str, errors: str) -> Result[D
         raise DecodeError(e.message)
 
 
-def encoding_decode_incremental_outcome(
+def _encoding_decode_incremental_outcome(
     data: bytes,
     pending: bytes,
     encoding: str,
@@ -155,7 +155,7 @@ def encoding_decode_incremental_outcome(
         raise DecodeError(e.message)
 
 
-def encoding_decode_incremental_pending(data: bytes, pending: bytes, encoding: str, final: bool) -> Result[bytes, DecodeError]:
+def _encoding_decode_incremental_pending(data: bytes, pending: bytes, encoding: str, final: bool) -> Result[bytes, DecodeError]:
     try:
         next_pending: bytes = _encoding_decode_incremental_pending_impl(data, pending, encoding, final)
         return next_pending
@@ -163,7 +163,7 @@ def encoding_decode_incremental_pending(data: bytes, pending: bytes, encoding: s
         raise DecodeError(e.message)
 
 
-def encoding_encode_bytes(text: str, encoding: str, errors: str) -> Result[bytes, EncodeError]:
+def _encoding_encode_bytes(text: str, encoding: str, errors: str) -> Result[bytes, EncodeError]:
     try:
         data: bytes = _encoding_encode_bytes_impl(text, encoding, errors)
         return data
@@ -171,7 +171,7 @@ def encoding_encode_bytes(text: str, encoding: str, errors: str) -> Result[bytes
         raise EncodeError(e.message)
 
 
-def encoding_encode_recoveries(text: str, encoding: str, errors: str) -> Result[list[str], EncodeError]:
+def _encoding_encode_recoveries(text: str, encoding: str, errors: str) -> Result[list[str], EncodeError]:
     try:
         recoveries: list[str] = _encoding_encode_recoveries_impl(text, encoding, errors)
         return recoveries
@@ -179,7 +179,7 @@ def encoding_encode_recoveries(text: str, encoding: str, errors: str) -> Result[
         raise EncodeError(e.message)
 
 
-def encoding_encode_outcome(text: str, encoding: str, errors: str) -> Result[EncodeOutcome, EncodeError]:
+def _encoding_encode_outcome(text: str, encoding: str, errors: str) -> Result[EncodeOutcome, EncodeError]:
     try:
         data: bytes = _encoding_encode_bytes_impl(text, encoding, errors)
         recoveries: list[str] = _encoding_encode_recoveries_impl(text, encoding, errors)
@@ -287,7 +287,7 @@ def _encode_handler_or_strict(errors: EncodeErrorHandler | None) -> EncodeErrorH
 def decode_outcome(data: bytes, enc: Encoding, errors: DecodeErrorHandler | None = None) -> Result[DecodeOutcome, DecodeError]:
     handler_name: str = _decode_handler_name(errors)
     try:
-        return encoding_decode_outcome(data, enc.label, handler_name)
+        return _encoding_decode_outcome(data, enc.label, handler_name)
     except DecodeError as e:
         raise DecodeError(e.message)
 
@@ -303,7 +303,7 @@ def decode(data: bytes, enc: Encoding, errors: DecodeErrorHandler | None = None)
 def encode_outcome(text: str, enc: Encoding, errors: EncodeErrorHandler | None = None) -> Result[EncodeOutcome, EncodeError]:
     handler_name: str = _encode_handler_name(errors)
     try:
-        return encoding_encode_outcome(text, enc.label, handler_name)
+        return _encoding_encode_outcome(text, enc.label, handler_name)
     except EncodeError as e:
         raise EncodeError(e.message)
 
@@ -332,8 +332,8 @@ class Decoder:
         if self._exhausted:
             raise DecodeError("decoder is exhausted")
         try:
-            outcome: DecodeOutcome = encoding_decode_incremental_outcome(data, self._pending, self._encoding.label, self._errors.name, final)
-            next_pending: bytes = encoding_decode_incremental_pending(data, self._pending, self._encoding.label, final)
+            outcome: DecodeOutcome = _encoding_decode_incremental_outcome(data, self._pending, self._encoding.label, self._errors.name, final)
+            next_pending: bytes = _encoding_decode_incremental_pending(data, self._pending, self._encoding.label, final)
             self._pending = next_pending
             if final:
                 self._pending = b""

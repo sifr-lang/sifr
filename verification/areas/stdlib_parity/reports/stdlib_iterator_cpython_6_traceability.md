@@ -8,7 +8,7 @@ Capability: `stdlib_parity_iter_fix_6` (`sifr.itertools` + iterator-returning st
 This implementation pass closes list-only assumptions in iterator-focused `sifr.itertools` helpers by allowing
 `Iterable[T]` inputs where semantics are naturally iterable-driven.
 
-Implemented iterable-first surfaces in `lib/sifr/itertools.sifr`:
+Implemented iterable-first surfaces in `stdlib/sifr/itertools.sifr`:
 
 - `islice`
 - `accumulate`

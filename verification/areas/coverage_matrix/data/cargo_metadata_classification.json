@@ -193,7 +193,6 @@
       "features": [
         {"name": "default", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "base64", "profile_assignment": "merge", "classification": "first_party_runtime"},
-        {"name": "bytes", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "calendar", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "encoding", "profile_assignment": "merge", "classification": "first_party_runtime"},
         {"name": "fs", "profile_assignment": "merge", "classification": "first_party_runtime"},

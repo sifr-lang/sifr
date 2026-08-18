@@ -1,0 +1,367 @@
+---
+title: "Compiled Standard Library Exports"
+sidebarTitle: "Public API"
+description: "The exact public symbols compiled for every sifr.* standard-library module."
+---
+
+# Compiled Standard Library Exports
+
+This reference is generated from compiler metadata. Imported `_sifr.*` implementation names are excluded unless the compiler's explicit private re-export policy approves the canonical symbol. The three `sifr.heapq` max-heap helpers are retained separately for CPython-compatible max-heap semantics.
+
+## `sifr.argparse`
+
+Functions: `parse_flag`, `parse_option`, `parse_positional`.
+
+Classes: `ArgumentParser`, `ArgumentSpec`, `Namespace`.
+
+## `sifr.base64`
+
+Functions: `b16decode`, `b16encode`, `b32decode`, `b32encode`, `b32hexdecode`, `b32hexencode`, `b64decode`, `b64decode_bytes`, `b64decode_opts`, `b64encode`, `b64encode_bytes`, `b64encode_opts`, `urlsafe_b64decode`, `urlsafe_b64decode_bytes`, `urlsafe_b64encode`, `urlsafe_b64encode_bytes`.
+
+## `sifr.bisect`
+
+Functions: `bisect_left`, `bisect_right`, `insort_left`, `insort_right`.
+
+## `sifr.calendar`
+
+Functions: `isleap`, `leapdays`, `monthrange`, `weekday`.
+
+Classes: `Calendar`, `HTMLCalendar`, `TextCalendar`.
+
+Constants: `FRIDAY`, `MONDAY`, `SATURDAY`, `SUNDAY`, `THURSDAY`, `TUESDAY`, `WEDNESDAY`, `day_abbr`, `day_name`, `month_abbr`, `month_name`.
+
+## `sifr.collections`
+
+Functions: `from_list`.
+
+Classes: `Counter`, `deque`, `frozenset`.
+
+## `sifr.configparser`
+
+Classes: `ConfigParser`, `DuplicateSectionError`, `Error`, `NoOptionError`, `NoSectionError`, `ParsingError`, `RawConfigParser`, `SectionProxy`.
+
+Constants: `DEFAULTSECT`.
+
+## `sifr.csv`
+
+Functions: `dialect_registry`, `excel`, `excel_tab`, `format_csv`, `format_row`, `parse_csv`, `parse_row`, `reader_from_handle`, `reader_from_path`, `unix_dialect`, `writer_to_handle`, `writer_to_path`.
+
+Classes: `Dialect`, `DialectRegistry`, `DictReader`, `DictWriter`, `Error`, `reader`, `writer`.
+
+Constants: `QUOTE_ALL`, `QUOTE_MINIMAL`, `QUOTE_NONE`, `QUOTE_NONNUMERIC`, `QUOTE_NOTNULL`, `QUOTE_STRINGS`.
+
+## `sifr.datetime`
+
+Functions: `UTC`, `format_datetime`, `from_timestamp`, `now`, `today`.
+
+Classes: `date`, `datetime`, `time`, `timedelta`, `timezone`.
+
+## `sifr.difflib`
+
+Functions: `get_close_matches`, `unified_diff`.
+
+Classes: `SequenceMatcher`.
+
+## `sifr.encoding`
+
+Functions: `ascii`, `backslash_replace_decode_handler`, `backslash_replace_encode_handler`, `decode`, `decode_outcome`, `encode`, `encode_outcome`, `encoding`, `ignore_decode_handler`, `ignore_encode_handler`, `latin1`, `name_replace_encode_handler`, `replace_decode_handler`, `replace_encode_handler`, `strict_decode_handler`, `strict_encode_handler`, `utf16_be`, `utf16_le`, `utf8`, `utf8_sig`, `windows1252`, `xmlcharref_replace_encode_handler`.
+
+Classes: `DecodeError`, `DecodeErrorHandler`, `DecodeOutcome`, `Decoder`, `EncodeError`, `EncodeErrorHandler`, `EncodeOutcome`, `Encoder`, `Encoding`.
+
+Constants: `DECODE_ERRORS_BACKSLASH_REPLACE`, `DECODE_ERRORS_IGNORE`, `DECODE_ERRORS_REPLACE`, `DECODE_ERRORS_STRICT`, `ENCODE_ERRORS_BACKSLASH_REPLACE`, `ENCODE_ERRORS_IGNORE`, `ENCODE_ERRORS_NAME_REPLACE`, `ENCODE_ERRORS_REPLACE`, `ENCODE_ERRORS_STRICT`, `ENCODE_ERRORS_XMLCHARREF_REPLACE`, `ENCODING_ASCII`, `ENCODING_LATIN1`, `ENCODING_UTF16_BE`, `ENCODING_UTF16_LE`, `ENCODING_UTF8`, `ENCODING_UTF8_SIG`, `ENCODING_WINDOWS_1250`, `ENCODING_WINDOWS_1251`, `ENCODING_WINDOWS_1252`, `ENCODING_WINDOWS_1253`, `ENCODING_WINDOWS_1254`, `ENCODING_WINDOWS_1255`, `ENCODING_WINDOWS_1256`, `ENCODING_WINDOWS_1257`, `ENCODING_WINDOWS_1258`.
+
+## `sifr.env`
+
+Functions: `getenv`, `getenv_opt`, `items`, `keys`, `setenv`, `unsetenv`, `values`.
+
+## `sifr.fnmatch`
+
+Functions: `filter`, `filterfalse`, `fnmatch`, `translate`.
+
+## `sifr.functools`
+
+Functions: `reduce`.
+
+## `sifr.glob`
+
+Functions: `glob`, `iglob`.
+
+## `sifr.graphlib`
+
+Functions: `topological_sort`.
+
+Classes: `CycleError`, `TopologicalSorter`.
+
+## `sifr.gzip`
+
+Functions: `compress`, `decompress`.
+
+## `sifr.hashlib`
+
+Functions: `algorithms_available`, `algorithms_guaranteed`, `blake2b`, `blake2s`, `copy_hash`, `file_digest`, `md5`, `new`, `sha1`, `sha224`, `sha256`, `sha384`, `sha3_256_obj`, `sha3_512_obj`, `sha512`, `shake_128_obj`, `shake_256_obj`.
+
+Classes: `HashObject`, `HashlibError`.
+
+## `sifr.heapq`
+
+Functions: `_heapify_max`, `_heappop_max`, `_heapreplace_max`, `heapify`, `heappop`, `heappush`, `heappushpop`, `heapreplace`, `merge`, `nlargest`, `nsmallest`.
+
+## `sifr.html`
+
+Functions: `escape`, `unescape`.
+
+## `sifr.http`
+
+Functions: `body_from_bytes`, `body_from_chunks`, `build_cookie_header`, `header_name`, `header_value`, `headers_from_pairs`, `method`, `parse_cookie_header`, `request_head`, `response_head`, `status`, `version`.
+
+Classes: `BodyError`, `BodyStream`, `HeaderError`, `HeaderMap`, `HeaderName`, `HeaderValue`, `HttpError`, `HttpRequest`, `HttpResponse`, `Method`, `ProtocolError`, `RequestHead`, `ResponseHead`, `Status`, `Version`.
+
+## `sifr.i18n`
+
+Functions: `bundle_from_mo_bytes`, `canonicalize_locale`, `collator`, `context_message`, `context_plural_message`, `datetime_formatter`, `host_locale`, `load_mo_file`, `maximize_locale`, `message`, `minimize_locale`, `number_formatter`, `parse_locale`, `plural_message`, `plural_rules`, `translator`.
+
+Classes: `Bundle`, `CatalogError`, `Collator`, `DateTimeFormatter`, `FormatError`, `LocaleId`, `LocaleIdError`, `Message`, `NumberFormatter`, `PluralRules`, `PluralRulesError`, `TranslationError`, `Translator`.
+
+Constants: `COLLATION_DEFAULT`, `COLLATION_PRIMARY`, `COLLATION_SECONDARY`, `COLLATION_TERTIARY`, `DATETIME_LONG`, `DATETIME_MEDIUM`, `DATETIME_SHORT`, `PLURAL_CARDINAL`, `PLURAL_ORDINAL`.
+
+## `sifr.io`
+
+Functions: `append_text`, `exists`, `open`, `open_binary`, `open_text`, `read_lines`, `read_text`, `write_text`.
+
+Classes: `BinaryFileHandle`, `BinaryIOBase`, `BytesIO`, `FileHandle`, `IOBase`, `StringIO`, `TextFileHandle`, `TextIOBase`, `TextReader`, `TextWriter`.
+
+## `sifr.ipaddress`
+
+Functions: `int_to_ip`, `ip_address`, `ip_to_int`, `ipv4_address`, `is_global`, `is_link_local`, `is_loopback`, `is_multicast`, `is_private`, `is_reserved`, `is_valid_ipv4`.
+
+Classes: `AddressValueError`, `IPv4Address`.
+
+## `sifr.ipc`
+
+Functions: `default_backpressure`, `protocol_version`, `require_serializable`, `schema_id`, `schemas_match`.
+
+Classes: `BackpressurePolicy`, `FrameKind`, `IpcError`, `ProtocolVersion`, `SchemaId`.
+
+Constants: `CANCEL`, `COMPLETED`, `FAILED`, `HEARTBEAT`, `HELLO`, `MALFORMED_FRAME`, `READY`, `REJECT`, `RUN`, `SHUTDOWN`, `STARTED`, `TERMINATING`, `UNSUPPORTED_PAYLOAD`, `UNSUPPORTED_SCHEMA`, `UNSUPPORTED_VERSION`, `WORKER_STATUS`.
+
+## `sifr.itertools`
+
+Functions: `accumulate`, `batched`, `chain`, `combinations`, `combinations_with_replacement`, `compress`, `count`, `count_from`, `cycle`, `dropwhile`, `filterfalse`, `flatten`, `islice`, `pairwise`, `permutations`, `product`, `repeat`, `starmap`, `take`, `takewhile`, `zip_longest`.
+
+## `sifr.json`
+
+Functions: `dump`, `dump_handle`, `dumps`, `dumps_exact`, `dumps_string_ints`, `dumps_web`, `from_array`, `from_bool`, `from_float`, `from_int`, `from_object`, `from_str`, `load`, `load_handle`, `loads`, `null`, `validate_integer_digit_limits`.
+
+Classes: `JSONDecoder`, `JSONEncoder`, `JsonValue`.
+
+## `sifr.logging`
+
+Functions: `basicConfig`, `getLogger`, `log_debug`, `log_error`, `log_info`, `log_warn`.
+
+Classes: `FileHandler`, `Formatter`, `Handler`, `Logger`, `NullHandler`, `StreamHandler`.
+
+Constants: `CRITICAL`, `DEBUG`, `ERROR`, `INFO`, `NOTSET`, `WARNING`.
+
+## `sifr.math`
+
+Functions: `acos`, `acosh`, `asin`, `asinh`, `atan`, `atan2`, `atanh`, `cbrt`, `ceil`, `comb`, `copysign`, `cos`, `cosh`, `degrees`, `dist`, `erf`, `erfc`, `exp`, `exp2`, `expm1`, `fabs`, `factorial`, `floor`, `fma`, `fmax`, `fmin`, `fmod`, `frexp`, `frexp_exponent`, `frexp_mantissa`, `fsum`, `gamma`, `gcd`, `hypot`, `isclose`, `isfinite`, `isinf`, `isnan`, `isnormal`, `isqrt`, `issubnormal`, `lcm`, `ldexp`, `lgamma`, `log`, `log10`, `log1p`, `log2`, `log_base`, `modf`, `modf_fractional`, `modf_integral`, `nextafter`, `perm`, `pow`, `prod`, `radians`, `remainder`, `signbit`, `sin`, `sinh`, `sqrt`, `sumprod`, `tan`, `tanh`, `trunc`, `ulp`.
+
+Constants: `e`, `inf`, `nan`, `pi`, `tau`.
+
+## `sifr.meta`
+
+Classes: `CallArgumentDeclaration`, `CallableIdentity`, `ClassDeclaration`, `ClassDeclarationItem`, `ClassDecoratorDeclaration`, `ClassParameterDeclaration`, `ConstIssueLabel`, `ConstIssueTemplate`, `ConstPackageIssue`, `ConstSpecializationOutcome`, `Context`, `DeclarationInput`, `DeclarationPlan`, `DescriptorUse`, `JsonIntegerBoundaryDescriptor`, `MethodSlots`, `NoContext`, `PlannedField`, `PlannedHandler`, `PlannedIssue`, `PlannedIssueLabel`, `PlannedMetadata`, `ShapeInput`, `ShapeMetadata`, `ShapeMethod`, `ShapeRoot`, `SourceOrigin`, `StaticProgram`, `StaticValue`, `Structural`.
+
+## `sifr.net`
+
+Functions: `connect_tcp`, `listen_tcp`, `resolve_host`.
+
+Classes: `NetError`, `SocketAddr`, `TcpListener`, `TcpReadHalf`, `TcpStream`, `TcpWriteHalf`.
+
+## `sifr.operator`
+
+Functions: `add`, `and_`, `contains`, `eq`, `floordiv`, `ge`, `getitem`, `gt`, `itemgetter`, `le`, `lt`, `mod_val`, `mul`, `ne`, `neg`, `not_`, `or_`, `sub`, `truth`.
+
+## `sifr.os`
+
+Functions: `chdir`, `cpu_count`, `disk_usage`, `getcwd`, `getpid`, `is_dir`, `is_file`, `listdir`, `mkdir`, `remove_file`, `rename`, `rmdir`, `run_command`, `stat`, `which`.
+
+## `sifr.parallel`
+
+Functions: `map`, `try_map`.
+
+Classes: `Pool`, `PoolConfig`, `WorkerError`, `WorkerRuntimeError`.
+
+## `sifr.pathlib`
+
+Functions: `basename`, `dirname`, `exists`, `extension`, `is_absolute`, `join_path`, `read_text`, `stem`, `write_text`.
+
+Classes: `Path`.
+
+## `sifr.platform`
+
+Functions: `machine`, `node`, `processor`, `release`, `system`, `version`.
+
+## `sifr.process`
+
+Functions: `async_kill`, `async_output`, `async_output_shell`, `async_output_shell_timeout`, `async_output_timeout`, `async_run`, `async_run_shell`, `async_run_timeout`, `async_spawn`, `async_terminate`, `async_wait`, `kill`, `output`, `output_shell`, `output_shell_text`, `output_shell_timeout`, `output_text`, `output_timeout`, `run`, `run_shell`, `run_timeout`, `spawn`, `terminate`, `wait`.
+
+Classes: `AsyncChild`, `AsyncPipeReader`, `AsyncPipeWriter`, `Child`, `Command`, `Output`, `PipeReader`, `PipeWriter`, `ProcessError`, `ProcessHandle`, `Status`, `Stdio`, `TextOutput`.
+
+Constants: `INHERIT`, `NULL`, `PIPE`.
+
+## `sifr.python`
+
+Functions: `call`, `call_attr`, `close`, `close_local_callback`, `close_threadsafe_callback`, `copy_as_bytes`, `copy_buffer_bytes`, `copy_dict_str_bool`, `copy_dict_str_bytes`, `copy_dict_str_float`, `copy_dict_str_i32`, `copy_dict_str_int`, `copy_dict_str_str`, `copy_dict_str_u8`, `copy_list_bool`, `copy_list_bytes`, `copy_list_float`, `copy_list_i32`, `copy_list_int`, `copy_list_str`, `copy_list_u8`, `copy_record_fields`, `copy_tuple_bool`, `copy_tuple_bytes`, `copy_tuple_float`, `copy_tuple_i32`, `copy_tuple_int`, `copy_tuple_str`, `copy_tuple_u8`, `enter_context`, `exit_context`, `export_arrow_array`, `export_arrow_schema`, `export_arrow_stream`, `from_bool`, `from_bytes`, `from_dict_str`, `from_float`, `from_int`, `from_list`, `from_none`, `from_record`, `from_str`, `from_tuple`, `from_value`, `get_attr`, `get_item`, `import_module`, `kwarg`, `local_callback`, `local_callback_echo`, `release_arrow`, `release_buffer`, `release_dlpack`, `resource_diagnostics`, `run_coroutine_blocking`, `threadsafe_callback`, `threadsafe_callback_echo`, `to_bool`, `to_bytes`, `to_float`, `to_i16`, `to_i32`, `to_i64`, `to_i8`, `to_int`, `to_isize`, `to_none`, `to_str`, `to_u16`, `to_u32`, `to_u64`, `to_u8`, `to_usize`, `to_value`, `with_context`, `zero_copy_arrow_array`, `zero_copy_arrow_schema`, `zero_copy_arrow_stream`, `zero_copy_as_u8`, `zero_copy_as_writable_u8`, `zero_copy_dlpack_tensor`.
+
+Classes: `ArrowCapsule`, `BufferView`, `DlpackTensor`, `ExitCause`, `ExitCauseKind`, `ExitDecision`, `LocalCallback`, `Object`, `PythonError`, `ResourceDiagnostics`, `ThreadsafeCallback`.
+
+## `sifr.python_core`
+
+Functions: `close_local_callback`, `close_threadsafe_callback`, `local_callback`, `local_callback_echo`, `threadsafe_callback`, `threadsafe_callback_echo`.
+
+Classes: `ExitCause`, `ExitCauseKind`, `ExitDecision`, `LocalCallback`, `Object`, `PythonError`, `ResourceDiagnostics`, `ThreadsafeCallback`.
+
+## `sifr.random`
+
+Functions: `choice`, `choices`, `gauss`, `getrandbits`, `getstate`, `randbytes`, `randint`, `random`, `randrange`, `sample`, `seed`, `setstate`, `shuffle`, `uniform`.
+
+Classes: `Random`, `RandomState`, `SystemRandom`.
+
+## `sifr.re`
+
+Functions: `compile`, `compile_flags`, `findall`, `findall_flags`, `finditer`, `fullmatch`, `fullmatch_flags`, `search`, `search_flags`, `search_match`, `split`, `split_flags`, `sub`, `sub_flags`.
+
+Classes: `Match`, `Pattern`.
+
+Constants: `DOTALL`, `IGNORECASE`, `MULTILINE`, `VERBOSE`.
+
+## `sifr.resource`
+
+Functions: `nullcontext`.
+
+Classes: `NullContext`.
+
+## `sifr.runtime`
+
+Functions: `diagnostic_event`, `emit_diagnostic`.
+
+Classes: `DiagnosticError`, `DiagnosticEvent`, `DiagnosticLevel`.
+
+Constants: `DEBUG`, `ERROR`, `INFO`, `TRACE`, `WARN`.
+
+## `sifr.secrets`
+
+Functions: `choice`, `compare_digest`, `randbelow`, `randbits`, `token_hex`.
+
+## `sifr.shutil`
+
+Functions: `copy`, `disk_usage`, `move_file`, `rmtree`, `which`.
+
+## `sifr.signal`
+
+Functions: `ctrl_c`, `shutdown_stream`, `sigint`, `sigterm`, `strsignal`, `terminate`.
+
+Classes: `ShutdownStream`, `Signal`, `SignalError`.
+
+Constants: `SIGINT`, `SIGTERM`.
+
+## `sifr.statistics`
+
+Functions: `correlation`, `covariance`, `geometric_mean`, `harmonic_mean`, `linear_regression`, `mean`, `median`, `median_grouped`, `median_high`, `median_low`, `mode`, `multimode`, `pstdev`, `pvariance`, `quantiles`, `stdev`, `variance`.
+
+Classes: `StatisticsError`.
+
+## `sifr.string`
+
+Functions: `capwords`.
+
+Classes: `Formatter`, `Template`.
+
+Constants: `ascii_letters`, `ascii_lowercase`, `ascii_uppercase`, `digits`, `hexdigits`, `octdigits`, `printable`, `punctuation`, `whitespace`.
+
+## `sifr.sync`
+
+Functions: `bounded_channel`, `channel`.
+
+Classes: `Channel`, `ChannelReceiver`, `ChannelSender`, `ClosedError`, `Lock`, `LockGuard`, `Notify`, `RwLock`, `RwLockReadGuard`, `RwLockWriteGuard`, `Semaphore`, `SemaphorePermit`, `Shared`, `WouldBlockError`.
+
+## `sifr.sys`
+
+Functions: `argv`, `exit`, `maxsize`, `platform`, `version`.
+
+## `sifr.task`
+
+Functions: `current_context`, `empty_context`.
+
+Classes: `Context`, `ContextKey`.
+
+## `sifr.tempfile`
+
+Functions: `exists`, `gettempdir`, `mkdtemp`, `mkstemp`, `mktemp_path`, `write_text`.
+
+Classes: `NamedTemporaryFile`, `TemporaryDirectory`.
+
+## `sifr.test`
+
+Functions: `assert_almost_eq`, `assert_bool_vector_eq`, `assert_eq`, `assert_err`, `assert_false`, `assert_ge`, `assert_gt`, `assert_le`, `assert_lt`, `assert_ne`, `assert_none`, `assert_not_almost_eq`, `assert_ok`, `assert_some`, `assert_true`, `assert_vector_eq`.
+
+## `sifr.textwrap`
+
+Functions: `dedent`, `fill`, `indent`, `shorten`, `wrap`.
+
+Classes: `TextWrapper`.
+
+## `sifr.time`
+
+Functions: `gmtime`, `gmtime_struct`, `localtime`, `localtime_struct`, `mktime`, `monotonic`, `perf_counter`, `sleep`, `strftime`, `strptime`, `time`.
+
+Classes: `struct_time`.
+
+Constants: `ALTZONE`, `DAYLIGHT`, `TIMEZONE`, `TZNAME`.
+
+## `sifr.timeit`
+
+Functions: `default_timer`, `repeat`, `timeit`.
+
+Classes: `Timer`.
+
+## `sifr.tls`
+
+Functions: `accept_tls`, `client_config_default`, `client_config_from_ca_pem`, `client_config_platform`, `client_config_with_client_auth`, `client_config_with_roots`, `client_config_with_roots_and_client_auth`, `connect_tls`, `server_config`, `server_config_from_pem`, `server_config_require_client_auth`.
+
+Classes: `CertificateError`, `TlsClientConfig`, `TlsError`, `TlsReadHalf`, `TlsServerConfig`, `TlsStream`, `TlsWriteHalf`.
+
+## `sifr.tomllib`
+
+Functions: `load`, `load_handle`, `loads`.
+
+Classes: `TomlValue`.
+
+## `sifr.unicode`
+
+Functions: `bidirectional`, `case_fold`, `category`, `combining`, `data_version`, `decimal`, `decomposition`, `digit`, `east_asian_width`, `grapheme_indices`, `graphemes`, `is_normalized`, `lookup`, `mirrored`, `name`, `normalize`, `numeric_value`, `word_boundaries`, `words`.
+
+Classes: `UnicodeDataError`.
+
+Constants: `NFC`, `NFD`, `NFKC`, `NFKD`.
+
+## `sifr.url`
+
+Functions: `build`, `build_query`, `normalize_path`, `parse`, `parse_query`, `percent_decode`, `percent_decode_bytes`, `percent_encode`, `percent_encode_bytes`.
+
+Classes: `Url`, `UrlError`, `UrlQuery`.
+
+## `sifr.uuid`
+
+Functions: `NAMESPACE_DNS`, `NAMESPACE_OID`, `NAMESPACE_URL`, `NAMESPACE_X500`, `uuid3`, `uuid4`, `uuid4_obj`, `uuid5`, `uuid_from_hex`.
+
+Classes: `UUID`.
+
+## `sifr.zipfile`
+
+Functions: `is_zipfile`.
+
+Classes: `ZipFile`, `ZipInfo`, `ZipReadHandle`.
+
+Constants: `ZIP_DEFLATED`, `ZIP_STORED`.

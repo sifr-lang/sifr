@@ -16,7 +16,7 @@ legacy-subprocess rejection capability removes CPython-shaped runtime/concurrenc
 
 Implementation evidence:
 
-- `lib/sifr/asyncio.sifr`, `lib/sifr/concurrent.sifr`, `lib/sifr/subprocess.sifr`, and `lib/sifr/threading.sifr` were removed.
+- `stdlib/sifr/asyncio.sifr`, `stdlib/sifr/concurrent.sifr`, `stdlib/sifr/subprocess.sifr`, and `stdlib/sifr/threading.sifr` were removed.
 - `crates/sifr_stdlib_manifest/src/sources.rs` no longer embeds those legacy modules.
 - `sifr_stdlib_imports::unsupported_legacy_stdlib_module` records native replacement namespaces.
 - `SIFR-IMPORT-0009` distinguishes removed legacy Sifr modules from unknown modules.

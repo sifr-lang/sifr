@@ -5,10 +5,10 @@ fn apply_twice(f: impl Fn(i64) -> i64, value: i64) -> i64 {
 
 fn score(base: i64) -> i64 {
     let offset: i64 = 3_i64;
-    let add_offset = |x| {
+    let add_offset = |x: i64| {
     x + offset
 };
-    let amplify = |x| {
+    let amplify = |x: i64| {
     x * (2_i64)
 };
     let adjusted: i64 = apply_twice(add_offset, base);

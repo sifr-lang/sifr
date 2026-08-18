@@ -13,7 +13,7 @@ Lock one canonical binary carrier (`bytes`), one explicit text/binary boundary, 
 | --- | --- |
 | `bytes` (language type) | Promote to first-class immutable value type with explicit construction/conversion and no implicit text/binary coercion. |
 | `str.encode` / `bytes.decode` | Explicit UTF-8-only boundary in this capability (`Result`-based failure semantics). |
-| `lib/sifr/bytes.sifr` | Keep as temporary compatibility layer, delegating to first-class bytes implementation once Unicode core capability lands. |
+| Public binary API | The temporary `sifr.bytes` module is removed; first-class `bytes` constructors and methods are the only public owner. |
 | `io`/runtime binary surfaces | Target `bytes` as canonical binary carrier; remove `list[int]` as long-term parity target wording in downstream planning during locale-formatting capability. |
 
 ## Permanent Sifr-Safe Diffs (Locked for This Capability)

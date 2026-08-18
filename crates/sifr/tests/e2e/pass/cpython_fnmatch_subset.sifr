@@ -1,5 +1,5 @@
 # Adapted CPython fnmatch subset for sifr.fnmatch (canonical vector format)
-from sifr.fnmatch import fnmatch, fnmatchcase, filter
+from sifr.fnmatch import fnmatch, filter
 from sifr.test import assert_bool_vector_eq
 
 def collect_fnmatch_actual() -> list[bool]:
@@ -18,11 +18,11 @@ def collect_fnmatch_actual() -> list[bool]:
     actual.append(empty_qmark_match)
     return actual
 
-def collect_fnmatchcase_actual() -> list[bool]:
+def collect_case_sensitive_actual() -> list[bool]:
     actual: list[bool] = []
-    case_exact: bool = fnmatchcase("AbC", "AbC")
-    no_case_fold_match: bool = not fnmatchcase("AbC", "abc")
-    uppercase_pattern_miss: bool = not fnmatchcase("ABC", "a*")
+    case_exact: bool = fnmatch("AbC", "AbC")
+    no_case_fold_match: bool = not fnmatch("AbC", "abc")
+    uppercase_pattern_miss: bool = not fnmatch("ABC", "a*")
     actual.append(case_exact)
     actual.append(no_case_fold_match)
     actual.append(uppercase_pattern_miss)
@@ -51,7 +51,7 @@ def main():
     ]
     actual: list[bool] = []
     append_all(actual, collect_fnmatch_actual())
-    append_all(actual, collect_fnmatchcase_actual())
+    append_all(actual, collect_case_sensitive_actual())
     append_all(actual, collect_filter_actual())
 
     assert_bool_vector_eq(actual, expected)

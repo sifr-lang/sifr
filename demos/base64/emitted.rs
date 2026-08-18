@@ -177,12 +177,6 @@ fn b64encode(s: &String) -> String {
 fn b64decode(s: &String) -> Result<String, ParseError> {
     base64_decode(s)
 }
-fn standard_b64encode(s: &String) -> String {
-    base64_encode(s)
-}
-fn standard_b64decode(s: &String) -> Result<String, ParseError> {
-    base64_decode(s)
-}
 fn b16encode(s: &String) -> Result<String, ParseError> {
     let __sifr_try_res: Result<Result<String, ParseError>, ParseError> = (|| {
         let data: Vec<u8> = ::sifr_runtime::encoding::encode_bytes(
@@ -341,10 +335,6 @@ fn encode_b64_or_empty(payload: &String) -> String {
     b64encode(payload)
 }
 
-fn encode_standard_b64_or_empty(payload: &String) -> String {
-    standard_b64encode(payload)
-}
-
 fn encode_urlsafe_b64_or_empty(payload: &String) -> String {
     urlsafe_b64encode(payload)
 }
@@ -352,24 +342,6 @@ fn encode_urlsafe_b64_or_empty(payload: &String) -> String {
 fn decode_b64_or_empty(payload: &String) -> String {
     let __sifr_try_res: Result<String, ParseError> = (|| {
     let decoded: String = b64decode(payload)?;
-    return Ok(decoded);
-    unreachable!("sifr try/except return capture fell through");
-})();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        },
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            let _ = format!("{}", format!("{}{}", "unexpected: ", e.message));
-            return "".to_string();
-        },
-    }
-}
-
-fn decode_standard_b64_or_empty(payload: &String) -> String {
-    let __sifr_try_res: Result<String, ParseError> = (|| {
-    let decoded: String = standard_b64decode(payload)?;
     return Ok(decoded);
     unreachable!("sifr try/except return capture fell through");
 })();
@@ -435,8 +407,6 @@ fn collect_positive_actual() -> Vec<String> {
     let mut actual: Vec<String> = vec![];
     actual.push(encode_b64_or_empty(&"foo".to_string()));
     actual.push(decode_b64_or_empty(&"Zm9v".to_string()));
-    actual.push(encode_standard_b64_or_empty(&"foo".to_string()));
-    actual.push(decode_standard_b64_or_empty(&"Zm9v".to_string()));
     let urlsafe_encoded: String = encode_urlsafe_b64_or_empty(&"hello".to_string());
     let urlsafe_encoded_for_decode: String = {
     let mut __sifr_concat: String = String::with_capacity(urlsafe_encoded.len() + 0usize);
@@ -476,7 +446,7 @@ fn collect_decode_actual_ok(inputs: &Vec<String>) -> Vec<bool> {
 }
 
 fn main() {
-    let expected: Vec<String> = vec!["Zm9v".to_string(), "foo".to_string(), "Zm9v".to_string(), "foo".to_string(), "aGVsbG8=".to_string(), "hello".to_string(), "4869".to_string(), "Hi".to_string()];
+    let expected: Vec<String> = vec!["Zm9v".to_string(), "foo".to_string(), "aGVsbG8=".to_string(), "hello".to_string(), "4869".to_string(), "Hi".to_string()];
     let actual: Vec<String> = collect_positive_actual();
     assert_vector_eq(&actual, &expected);
     let decode_inputs: Vec<String> = vec!["not base64!!!".to_string(), "Zm9v".to_string()];

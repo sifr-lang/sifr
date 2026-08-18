@@ -1,9 +1,10 @@
-const PI: f64 = 3.14159 as f64;
+// src/main.rs
+const PI: f64 = 3.14159_f64;
 
-const MAX_RETRIES: i64 = 3 as i64;
+const MAX_RETRIES: i64 = 3_i64;
 
 fn __const_APP_NAME() -> String {
-    return "sifr".to_string().to_string();
+    "sifr".to_string().to_string()
 }
 
 const DEBUG: bool = true;
@@ -15,34 +16,38 @@ struct Temperature {
 
 impl Temperature {
     fn new(celsius: f64) -> Self {
-        return Self { celsius: celsius };
-    }
-    fn from_fahrenheit(f: f64) -> Temperature {
-        return Temperature::new(((f - (32.0 as f64)) * (5.0 as f64)) / (9.0 as f64));
+        let __sifr_field_init_0: f64 = celsius;
+        Self { celsius: __sifr_field_init_0 }
     }
 }
 
-impl std::fmt::Display for Temperature {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Temperature(celsius={})", self.celsius);
+impl Temperature {
+    fn from_fahrenheit(f: f64) -> Temperature {
+        Temperature::new(((f - (32.0_f64)) * (5.0_f64)) / (9.0_f64))
+    }
+}
+
+impl ::std::fmt::Display for Temperature {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Temperature(celsius={})", self.celsius)
     }
 }
 
 fn circle_area(r: f64) -> f64 {
-    return (PI * r) * r;
+    (PI * r) * r
 }
 
 fn get_config() -> String {
-    return format!("{} (debug={}, retries={})", __const_APP_NAME(), DEBUG, MAX_RETRIES);
+    format!("{} (debug={}, retries={})", __const_APP_NAME(), DEBUG, MAX_RETRIES)
 }
 
 fn main() {
-    println!("{}", circle_area(5.0 as f64));
+    println!("{}", circle_area(5.0_f64));
     println!("{}", get_config());
     println!("{}", PI);
     println!("{}", MAX_RETRIES);
-    let t: Temperature = Temperature::new(100.0 as f64);
+    let t: Temperature = Temperature::new(100.0_f64);
     println!("{}", t.celsius);
-    let t2: Temperature = Temperature::from_fahrenheit(212.0 as f64);
+    let t2: Temperature = Temperature::from_fahrenheit(212.0_f64);
     println!("{}", t2.celsius);
 }

@@ -123,12 +123,17 @@ def algorithms_available() -> list[str]:
 def file_digest(path: str, name: str) -> Result[str, HashlibError]:
     try:
         handle: _NativeFileHandle = _open_file_impl(path, "rb")
-        data: bytes = _file_read_bytes_impl(handle)
-        _file_close_impl(handle)
-        h: HashObject = new(name, data)
-        return h.hexdigest()
     except IOError as e:
         raise HashlibError(e.message)
+    try:
+        data: bytes = _file_read_bytes_impl(handle)
+    except IOError as e:
+        _file_close_impl(handle)
+        raise HashlibError(e.message)
+    _file_close_impl(handle)
+    try:
+        h: HashObject = new(name, data)
+        return h.hexdigest()
     except ValueError as e:
         raise HashlibError(e.message)
 

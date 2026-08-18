@@ -10,13 +10,12 @@ fn main() {
 
 // src/formatter.rs
 pub fn render_value() -> String {
-    let value: i64 = 42 as i64;
-    return format!("{}", value);
+    let value: i64 = 42_i64;
+    format!("{}", value)
 }
 
 // src/helper.rs
-use crate::formatter::render_value;
-
+pub use crate::formatter::render_value;
 pub fn render() -> String {
-    return render_value();
+    render_value()
 }

@@ -3,11 +3,11 @@ from sifr.test import assert_eq, assert_almost_eq, assert_true
 
 from sifr.statistics import (
     mean, median, variance, pvariance, stdev, pstdev,
-    fmean, harmonic_mean, geometric_mean, median_low, median_high, mode,
+    harmonic_mean, geometric_mean, median_low, median_high, mode,
     StatisticsError
 )
 
-def assert_mean_and_fmean():
+def assert_mean():
     try:
         data1: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0]
         m1: float = mean(data1)
@@ -25,8 +25,6 @@ def assert_mean_and_fmean():
         ms: float = mean(single)
         assert_almost_eq(ms, 42.0, 0.0001)
 
-        fm1: float = fmean(data1)
-        assert_almost_eq(fm1, 3.0, 0.0001)
     except StatisticsError as e:
         _ = str("unexpected error: " + e.message)
         assert False
@@ -140,7 +138,7 @@ def assert_small_and_uniform_sets():
         assert False
 
 def main():
-    assert_mean_and_fmean()
+    assert_mean()
     assert_median_family()
     assert_variance_family()
     assert_mode_and_means()

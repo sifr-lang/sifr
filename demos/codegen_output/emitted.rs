@@ -1,3 +1,4 @@
+// src/main.rs
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Timer {
     label: String,
@@ -5,23 +6,29 @@ struct Timer {
 
 impl Timer {
     fn new(label: String) -> Self {
-        return Self { label: label };
+        let __sifr_field_init_0: String = label;
+        Self { label: __sifr_field_init_0 }
     }
+}
+
+impl Timer {
     fn __enter__(&self) -> Timer {
-        return self.clone();
+        self.clone()
     }
+}
+
+impl Timer {
     fn __exit__(&self) {
-        return;
     }
 }
 
-impl std::fmt::Display for Timer {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Timer(label={})", self.label);
+impl ::std::fmt::Display for Timer {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Timer(label={})", self.label)
     }
 }
 
-trait Describable {
+pub trait Describable {
     fn describe(&self) -> String;
 }
 
@@ -32,27 +39,36 @@ struct Item {
 
 impl Item {
     fn new(name: String) -> Self {
-        return Self { name: name };
-    }
-    fn describe(&self) -> String {
-        return format!("{}{}", "Item: ".to_string(), self.name.clone());
+        let __sifr_field_init_0: String = name;
+        Self { name: __sifr_field_init_0 }
     }
 }
 
-impl std::fmt::Display for Item {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "Item(name={})", self.name);
+impl Item {
+    fn describe(&self) -> String {
+        {
+    let mut __sifr_concat: String = String::with_capacity(6usize + 0usize);
+    __sifr_concat.push_str("Item: ");
+    __sifr_concat.push_str((self.name.clone()).as_str());
+    __sifr_concat
+}
+    }
+}
+
+impl ::std::fmt::Display for Item {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "Item(name={})", self.name)
     }
 }
 
 impl Describable for Item {
     fn describe(&self) -> String {
-        return Item::describe(self);
+        Item::describe(self)
     }
 }
 
 fn main() {
-    let nums: Vec<i64> = vec![5 as i64, 3 as i64, 1 as i64, 4 as i64, 2 as i64];
+    let nums: Vec<i64> = vec![5_i64, 3_i64, 1_i64, 4_i64, 2_i64];
     let lo: Option<i64> = (nums).iter().copied().min();
     let hi: Option<i64> = (nums).iter().copied().max();
     if let Some(lo) = lo {
@@ -63,16 +79,16 @@ fn main() {
     }
     let evens: Vec<i64> = Box::new(nums.iter().copied().filter(|__filter_item| {
     let __filter_value = *__filter_item;
-    return {
+    {
     let x = __filter_value;
-    (x % (2 as i64)) == (0 as i64)
-};
+    (x % (2_i64)) == (0_i64)
+}
 })).collect::<Vec<_>>();
     println!("{:?}", evens);
     let big: Vec<i64> = {
     let mut __sifr_list_comp = vec![];
     for x in nums.iter().copied() {
-        if x > (2 as i64) {
+        if x > (2_i64) {
             __sifr_list_comp.push(x);
         }
     }
@@ -80,7 +96,13 @@ fn main() {
 };
     println!("{:?}", big);
     let name: String = "World".to_string();
-    let greeting: String = format!("{}{}{}", "Hello, ".to_string(), name, "!".to_string());
+    let greeting: String = {
+    let mut __sifr_concat: String = String::with_capacity((7usize + name.len()) + 1usize);
+    __sifr_concat.push_str("Hello, ");
+    __sifr_concat.push_str((name).as_str());
+    __sifr_concat.push('!');
+    __sifr_concat
+};
     println!("{}", greeting);
     {
         let mut __ctx_0 = Timer::new("work".to_string());
@@ -92,7 +114,7 @@ fn main() {
         let _t = __guard_0.ctx.__enter__();
         println!("doing work inside with block");
     }
-    let mut item: Item = Item::new("Widget".to_string());
+    let item: Item = Item::new("Widget".to_string());
     println!("{}", item.describe());
     println!("All codegen quality v2 improvements verified!");
 }

@@ -627,7 +627,7 @@ fn reduce<
 }
 
 // --- stdlib: sifr.heapq ---
-fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd>(
+fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &mut Vec<T>,
     mut pos: i64,
     n: i64,
@@ -752,78 +752,6 @@ fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd
         }
     }
 }
-fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd>(
-    heap: &mut Vec<T>,
-    mut pos: i64,
-) {
-    let mut done: bool = false;
-    while !done {
-        if pos <= (0_i64) {
-            done = true;
-        } else {
-            let parent: i64 = (pos - (1_i64)) / (2_i64);
-            let p_val: Option<T> = {
-                let __sifr_index_list = &heap;
-                let __sifr_index_i = parent;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
-                __sifr_index_list.get(__sifr_index_norm).cloned()
-            };
-            let c_val: Option<T> = {
-                let __sifr_index_list = &heap;
-                let __sifr_index_i = pos;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
-                __sifr_index_list.get(__sifr_index_norm).cloned()
-            };
-            if let Some(p_val) = p_val {
-                if let Some(c_val) = c_val {
-                    if c_val < p_val {
-                        {
-                            let __idx_raw = parent;
-                            let __idx_norm = if __idx_raw < 0 {
-                                (heap.len() as i64) + __idx_raw
-                            } else {
-                                __idx_raw
-                            };
-                            if __idx_norm >= 0 {
-                                if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                                    *__elem = c_val.clone();
-                                }
-                            }
-                        }
-                        {
-                            let __idx_raw = pos;
-                            let __idx_norm = if __idx_raw < 0 {
-                                (heap.len() as i64) + __idx_raw
-                            } else {
-                                __idx_raw
-                            };
-                            if __idx_norm >= 0 {
-                                if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                                    *__elem = p_val.clone();
-                                }
-                            }
-                        }
-                        pos = parent;
-                    } else {
-                        done = true;
-                    }
-                } else {
-                    done = true;
-                }
-            } else {
-                done = true;
-            }
-        }
-    }
-}
 fn heapify<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(data: &mut Vec<T>) {
     "Convert list to a min-heap in-place. O(n) time.".to_string();
     let n: i64 = data.len() as i64;
@@ -832,15 +760,6 @@ fn heapify<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(data: &mut Vec
         _sift_down(data, i, n);
         i -= 1_i64;
     }
-}
-fn heappush<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-    item: &T,
-) {
-    "Push item onto the heap in-place. O(log n) time.".to_string();
-    heap.push(item.clone().clone());
-    let pos: i64 = (heap.len() as i64) - (1_i64);
-    _sift_up(heap, pos);
 }
 fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     heap: &mut Vec<T>,
@@ -1528,9 +1447,6 @@ fn floor(x: f64) -> i64 {
 }
 fn ceil(x: f64) -> i64 {
     ::sifr_stdlib::math::ceil(x).to_i64_saturating()
-}
-fn abs_val(x: f64) -> f64 {
-    ::sifr_stdlib::math::abs_val(x)
 }
 fn log(x: f64) -> f64 {
     ::sifr_stdlib::math::log(x)

@@ -1,205 +1,345 @@
-use std::collections::HashMap;
+// src/main.rs
+use ::std::collections::HashMap;
 
-// --- stdlib: sifr.test ---
-fn assert_eq<T: Clone + std::fmt::Display + PartialOrd + 'static>(
-    actual: &T,
-    expected: &T,
-) {
-    assert!(* actual == * expected);
+// --- stdlib: _sifr.math ---
+const PI: f64 = 3.141592653589793_f64;
+const E: f64 = 2.718281828459045_f64;
+const TAU: f64 = 6.283185307179586_f64;
+const INF: f64 = f64::INFINITY;
+const NAN: f64 = f64::NAN;
+fn sqrt(x: f64) -> f64 {
+    ::sifr_stdlib::math::sqrt(x)
 }
-fn assert_vector_eq(actual: &Vec<String>, expected: &Vec<String>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0 as i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize].clone()) == expected.get(i as usize).cloned());
-        i = i + (1 as i64);
-    }
+fn floor(x: f64) -> i64 {
+    ::sifr_stdlib::math::floor(x).to_i64_saturating()
 }
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0 as i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i = i + (1 as i64);
-    }
+fn ceil(x: f64) -> i64 {
+    ::sifr_stdlib::math::ceil(x).to_i64_saturating()
+}
+fn log(x: f64) -> f64 {
+    ::sifr_stdlib::math::log(x)
+}
+fn cbrt(x: f64) -> f64 {
+    ::sifr_stdlib::math::cbrt(x)
+}
+fn sin(x: f64) -> f64 {
+    ::sifr_stdlib::math::sin(x)
+}
+fn cos(x: f64) -> f64 {
+    ::sifr_stdlib::math::cos(x)
+}
+fn tan(x: f64) -> f64 {
+    ::sifr_stdlib::math::tan(x)
+}
+fn pow_val(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::pow_val(x, y)
+}
+fn min_val(a: f64, b: f64) -> f64 {
+    ::sifr_stdlib::math::min_val(a, b)
+}
+fn max_val(a: f64, b: f64) -> f64 {
+    ::sifr_stdlib::math::max_val(a, b)
+}
+fn round_val(x: f64) -> i64 {
+    ::sifr_stdlib::math::round_val(x).to_i64_saturating()
+}
+fn asin(x: f64) -> f64 {
+    ::sifr_stdlib::math::asin(x)
+}
+fn acos(x: f64) -> f64 {
+    ::sifr_stdlib::math::acos(x)
+}
+fn atan(x: f64) -> f64 {
+    ::sifr_stdlib::math::atan(x)
+}
+fn atan2(y: f64, x: f64) -> f64 {
+    ::sifr_stdlib::math::atan2(y, x)
+}
+fn sinh(x: f64) -> f64 {
+    ::sifr_stdlib::math::sinh(x)
+}
+fn cosh(x: f64) -> f64 {
+    ::sifr_stdlib::math::cosh(x)
+}
+fn tanh(x: f64) -> f64 {
+    ::sifr_stdlib::math::tanh(x)
+}
+fn log10(x: f64) -> f64 {
+    ::sifr_stdlib::math::log10(x)
+}
+fn log2(x: f64) -> f64 {
+    ::sifr_stdlib::math::log2(x)
+}
+fn exp2(x: f64) -> f64 {
+    ::sifr_stdlib::math::exp2(x)
+}
+fn degrees(x: f64) -> f64 {
+    ::sifr_stdlib::math::degrees(x)
+}
+fn radians(x: f64) -> f64 {
+    ::sifr_stdlib::math::radians(x)
+}
+fn isnan(x: f64) -> bool {
+    ::sifr_stdlib::math::isnan(x)
+}
+fn isinf(x: f64) -> bool {
+    ::sifr_stdlib::math::isinf(x)
+}
+fn trunc(x: f64) -> i64 {
+    ::sifr_stdlib::math::trunc(x).to_i64_saturating()
+}
+fn copysign(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::copysign(x, y)
+}
+fn signbit(x: f64) -> bool {
+    ::sifr_stdlib::math::signbit(x)
+}
+fn fmod(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::fmod(x, y)
+}
+fn remainder(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::remainder(x, y)
+}
+fn hypot(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::hypot(x, y)
+}
+fn fma(x: f64, y: f64, z: f64) -> f64 {
+    ::sifr_stdlib::math::fma(x, y, z)
+}
+fn fmax(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::fmax(x, y)
+}
+fn fmin(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::fmin(x, y)
+}
+fn exp(x: f64) -> f64 {
+    ::sifr_stdlib::math::exp(x)
+}
+fn expm1(x: f64) -> f64 {
+    ::sifr_stdlib::math::expm1(x)
+}
+fn log1p(x: f64) -> f64 {
+    ::sifr_stdlib::math::log1p(x)
+}
+fn fabs(x: f64) -> f64 {
+    ::sifr_stdlib::math::fabs(x)
+}
+fn isfinite(x: f64) -> bool {
+    ::sifr_stdlib::math::isfinite(x)
+}
+fn isnormal(x: f64) -> bool {
+    ::sifr_stdlib::math::isnormal(x)
+}
+fn issubnormal(x: f64) -> bool {
+    ::sifr_stdlib::math::issubnormal(x)
+}
+fn acosh(x: f64) -> f64 {
+    ::sifr_stdlib::math::acosh(x)
+}
+fn asinh(x: f64) -> f64 {
+    ::sifr_stdlib::math::asinh(x)
+}
+fn atanh(x: f64) -> f64 {
+    ::sifr_stdlib::math::atanh(x)
+}
+fn isqrt(n: i64) -> i64 {
+    ::sifr_stdlib::math::isqrt(::sifr_runtime::interop::SifrIntBridge::from(n))
+        .to_i64_saturating()
+}
+fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
+    ::sifr_stdlib::math::dist(p, q)
+}
+fn fsum_impl(data: Vec<f64>) -> f64 {
+    ::sifr_stdlib::math::fsum(data)
+}
+fn sumprod_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
+    ::sifr_stdlib::math::sumprod(p, q)
+}
+fn erf(x: f64) -> f64 {
+    ::sifr_stdlib::math::erf(x)
+}
+fn erfc(x: f64) -> f64 {
+    ::sifr_stdlib::math::erfc(x)
+}
+fn gamma(x: f64) -> f64 {
+    ::sifr_stdlib::math::gamma(x)
+}
+fn lgamma(x: f64) -> f64 {
+    ::sifr_stdlib::math::lgamma(x)
+}
+fn frexp(x: f64) -> Vec<f64> {
+    ::sifr_stdlib::math::frexp(x)
+}
+fn ldexp(m: f64, e: i64) -> f64 {
+    ::sifr_stdlib::math::ldexp(m, ::sifr_runtime::interop::SifrIntBridge::from(e))
+}
+fn modf(x: f64) -> Vec<f64> {
+    ::sifr_stdlib::math::modf(x)
+}
+fn nextafter(x: f64, y: f64) -> f64 {
+    ::sifr_stdlib::math::nextafter(x, y)
+}
+fn ulp(x: f64) -> f64 {
+    ::sifr_stdlib::math::ulp(x)
 }
 
 // --- stdlib: sifr.math ---
 fn factorial(n: i64) -> i64 {
-    if n < (0 as i64) {
-        return 0 as i64;
+    if n < (0_i64) {
+        return 0_i64;
     }
-    let mut result: i64 = 1 as i64;
-    let mut i: i64 = 2 as i64;
+    let mut result: i64 = 1_i64;
+    let mut i: i64 = 2_i64;
     while i <= n {
-        result = result * i;
-        i = i + (1 as i64);
+        result *= i;
+        i += 1_i64;
     }
-    return result;
+    result
 }
 fn gcd(a: i64, b: i64) -> i64 {
     let mut x: i64 = a;
     let mut y: i64 = b;
-    if x < (0 as i64) {
-        x = (0 as i64) - x;
+    if x < (0_i64) {
+        x = (0_i64) - x;
     }
-    if y < (0 as i64) {
-        y = (0 as i64) - y;
+    if y < (0_i64) {
+        y = (0_i64) - y;
     }
-    while y != (0 as i64) {
+    while y != (0_i64) {
         let temp: i64 = y;
         y = x % y;
         x = temp;
     }
-    return x;
+    x
 }
 fn lcm(a: i64, b: i64) -> i64 {
-    if a == (0 as i64) {
-        return 0 as i64;
+    if a == (0_i64) {
+        return 0_i64;
     }
-    if b == (0 as i64) {
-        return 0 as i64;
+    if b == (0_i64) {
+        return 0_i64;
     }
     let g: i64 = gcd(a, b);
     let mut x: i64 = a;
-    if x < (0 as i64) {
-        x = (0 as i64) - x;
+    if x < (0_i64) {
+        x = (0_i64) - x;
     }
     let mut y: i64 = b;
-    if y < (0 as i64) {
-        y = (0 as i64) - y;
+    if y < (0_i64) {
+        y = (0_i64) - y;
     }
-    return (x / g) * y;
+    (x / g) * y
 }
 fn comb(n: i64, k: i64) -> i64 {
-    if k < (0 as i64) {
-        return 0 as i64;
+    if k < (0_i64) {
+        return 0_i64;
     }
     if k > n {
-        return 0 as i64;
+        return 0_i64;
     }
-    if k == (0 as i64) {
-        return 1 as i64;
+    if k == (0_i64) {
+        return 1_i64;
     }
     if k == n {
-        return 1 as i64;
+        return 1_i64;
     }
     let mut r: i64 = k;
     if r > (n - k) {
         r = n - k;
     }
-    let mut result: i64 = 1 as i64;
-    let mut i: i64 = 0 as i64;
+    let mut result: i64 = 1_i64;
+    let mut i: i64 = 0_i64;
     while i < r {
-        result = result * (n - i);
-        result = result / (i + (1 as i64));
-        i = i + (1 as i64);
+        result *= n - i;
+        result /= i + (1_i64);
+        i += 1_i64;
     }
-    return result;
+    result
 }
 fn perm(n: i64, k: i64) -> i64 {
-    if k < (0 as i64) {
-        return 0 as i64;
+    if k < (0_i64) {
+        return 0_i64;
     }
     if k > n {
-        return 0 as i64;
+        return 0_i64;
     }
-    let mut result: i64 = 1 as i64;
-    let mut i: i64 = 0 as i64;
+    let mut result: i64 = 1_i64;
+    let mut i: i64 = 0_i64;
     while i < k {
-        result = result * (n - i);
-        i = i + (1 as i64);
+        result *= n - i;
+        i += 1_i64;
     }
-    return result;
+    result
 }
 fn log_base(x: f64, base: f64) -> f64 {
-    return (x).ln() / (base).ln();
+    log(x) / log(base)
 }
 fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
-    if rel_tol < (0.0 as f64) {
+    if rel_tol < (0.0_f64) {
         return false;
     }
-    if abs_tol < (0.0 as f64) {
+    if abs_tol < (0.0_f64) {
         return false;
     }
     if a == b {
         return true;
     }
-    if (((a).is_nan()) || ((b).is_nan())) {
+    if isnan(a) || isnan(b) {
         return false;
     }
-    if (((a).is_infinite()) || ((b).is_infinite())) {
+    if isinf(a) || isinf(b) {
         return false;
     }
     let mut diff: f64 = a - b;
-    if diff < (0.0 as f64) {
-        diff = (0.0 as f64) - diff;
+    if diff < (0.0_f64) {
+        diff = (0.0_f64) - diff;
     }
     let mut a_abs: f64 = a;
-    if a_abs < (0.0 as f64) {
-        a_abs = (0.0 as f64) - a_abs;
+    if a_abs < (0.0_f64) {
+        a_abs = (0.0_f64) - a_abs;
     }
     let mut b_abs: f64 = b;
-    if b_abs < (0.0 as f64) {
-        b_abs = (0.0 as f64) - b_abs;
+    if b_abs < (0.0_f64) {
+        b_abs = (0.0_f64) - b_abs;
     }
-    let mut rel_bound: f64 = rel_tol * (a_abs).max(b_abs);
+    let mut larger_abs: f64 = a_abs;
+    if b_abs > larger_abs {
+        larger_abs = b_abs;
+    }
+    let mut rel_bound: f64 = rel_tol * larger_abs;
     if abs_tol > rel_bound {
         rel_bound = abs_tol;
     }
-    return diff <= rel_bound;
+    diff <= rel_bound
 }
 fn prod(data: &Vec<i64>) -> i64 {
-    let mut result: i64 = 1 as i64;
+    let mut result: i64 = 1_i64;
     for val in data.iter().copied() {
-        result = result * val;
+        result *= val;
     }
-    return result;
+    result
+}
+fn _copy_float_list(data: &Vec<f64>) -> Vec<f64> {
+    let mut out: Vec<f64> = vec![];
+    for value in data.iter().copied() {
+        out.push(value);
+    }
+    out
+}
+fn dist(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+    dist_impl(_copy_float_list(p), _copy_float_list(q))
+}
+fn fsum(data: &Vec<f64>) -> f64 {
+    fsum_impl(_copy_float_list(data))
+}
+fn sumprod(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+    sumprod_impl(_copy_float_list(p), _copy_float_list(q))
 }
 fn frexp_mantissa(x: f64) -> f64 {
-    let parts: Vec<f64> = {
-        let __x: f64 = x as f64;
-        if __x == 0.0 {
-            vec![__x, 0.0]
-        } else {
-            if !__x.is_finite() {
-                vec![__x, 0.0]
-            } else {
-                {
-                    let __bits: u64 = __x.to_bits();
-                    let __sign_mask: u64 = (1 as u64) << 63;
-                    let __frac_mask: u64 = ((1 as u64) << 52) - (1 as u64);
-                    let __sign: u64 = __bits & __sign_mask;
-                    let __exp: i32 = ((__bits >> 52) & (2047 as u64)) as i32;
-                    let __frac: u64 = __bits & __frac_mask;
-                    if __exp == 0 {
-                        {
-                            let __scaled: f64 = __x * (2.0 as f64).powi(54);
-                            let __sbits: u64 = __scaled.to_bits();
-                            let __sexp: i32 = ((__sbits >> 52) & (2047 as u64)) as i32;
-                            let __sfrac: u64 = __sbits & __frac_mask;
-                            let __mant: f64 = f64::from_bits(
-                                (__sign | ((1022 as u64) << 52)) | __sfrac,
-                            );
-                            let __e: i32 = (__sexp - 1022) - 54;
-                            vec![__mant, __e as f64]
-                        }
-                    } else {
-                        {
-                            let __mant: f64 = f64::from_bits(
-                                (__sign | ((1022 as u64) << 52)) | __frac,
-                            );
-                            let __e: i32 = __exp - 1022;
-                            vec![__mant, __e as f64]
-                        }
-                    }
-                }
-            }
-        }
-    };
+    let parts: Vec<f64> = frexp(x);
     let m: Option<f64> = {
         let __sifr_index_list = &parts;
-        let __sifr_index_i = 0 as i64;
+        let __sifr_index_i = 0_i64;
         let __sifr_index_norm = if __sifr_index_i < 0 {
             ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
         } else {
@@ -208,54 +348,15 @@ fn frexp_mantissa(x: f64) -> f64 {
         __sifr_index_list.get(__sifr_index_norm).copied()
     };
     let Some(m) = m else {
-        return f64::NAN;
+        return NAN;
     };
-    return m;
+    m
 }
 fn frexp_exponent(x: f64) -> i64 {
-    let parts: Vec<f64> = {
-        let __x: f64 = x as f64;
-        if __x == 0.0 {
-            vec![__x, 0.0]
-        } else {
-            if !__x.is_finite() {
-                vec![__x, 0.0]
-            } else {
-                {
-                    let __bits: u64 = __x.to_bits();
-                    let __sign_mask: u64 = (1 as u64) << 63;
-                    let __frac_mask: u64 = ((1 as u64) << 52) - (1 as u64);
-                    let __sign: u64 = __bits & __sign_mask;
-                    let __exp: i32 = ((__bits >> 52) & (2047 as u64)) as i32;
-                    let __frac: u64 = __bits & __frac_mask;
-                    if __exp == 0 {
-                        {
-                            let __scaled: f64 = __x * (2.0 as f64).powi(54);
-                            let __sbits: u64 = __scaled.to_bits();
-                            let __sexp: i32 = ((__sbits >> 52) & (2047 as u64)) as i32;
-                            let __sfrac: u64 = __sbits & __frac_mask;
-                            let __mant: f64 = f64::from_bits(
-                                (__sign | ((1022 as u64) << 52)) | __sfrac,
-                            );
-                            let __e: i32 = (__sexp - 1022) - 54;
-                            vec![__mant, __e as f64]
-                        }
-                    } else {
-                        {
-                            let __mant: f64 = f64::from_bits(
-                                (__sign | ((1022 as u64) << 52)) | __frac,
-                            );
-                            let __e: i32 = __exp - 1022;
-                            vec![__mant, __e as f64]
-                        }
-                    }
-                }
-            }
-        }
-    };
+    let parts: Vec<f64> = frexp(x);
     let exp_val: Option<f64> = {
         let __sifr_index_list = &parts;
-        let __sifr_index_i = 1 as i64;
+        let __sifr_index_i = 1_i64;
         let __sifr_index_norm = if __sifr_index_i < 0 {
             ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
         } else {
@@ -264,33 +365,15 @@ fn frexp_exponent(x: f64) -> i64 {
         __sifr_index_list.get(__sifr_index_norm).copied()
     };
     let Some(exp_val) = exp_val else {
-        return 0 as i64;
+        return 0_i64;
     };
-    return (exp_val).trunc() as i64;
+    trunc(exp_val)
 }
 fn modf_fractional(x: f64) -> f64 {
-    let parts: Vec<f64> = {
-        let __x: f64 = x as f64;
-        if __x.is_nan() {
-            vec![f64::NAN, f64::NAN]
-        } else {
-            if __x.is_infinite() {
-                vec![(0.0 as f64).copysign(__x), __x]
-            } else {
-                {
-                    let __int = __x.trunc();
-                    let mut __frac = __x - __int;
-                    if __frac == 0.0 {
-                        __frac = (0.0 as f64).copysign(__x);
-                    }
-                    vec![__frac, __int]
-                }
-            }
-        }
-    };
+    let parts: Vec<f64> = modf(x);
     let f: Option<f64> = {
         let __sifr_index_list = &parts;
-        let __sifr_index_i = 0 as i64;
+        let __sifr_index_i = 0_i64;
         let __sifr_index_norm = if __sifr_index_i < 0 {
             ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
         } else {
@@ -299,33 +382,15 @@ fn modf_fractional(x: f64) -> f64 {
         __sifr_index_list.get(__sifr_index_norm).copied()
     };
     let Some(f) = f else {
-        return f64::NAN;
+        return NAN;
     };
-    return f;
+    f
 }
 fn modf_integral(x: f64) -> f64 {
-    let parts: Vec<f64> = {
-        let __x: f64 = x as f64;
-        if __x.is_nan() {
-            vec![f64::NAN, f64::NAN]
-        } else {
-            if __x.is_infinite() {
-                vec![(0.0 as f64).copysign(__x), __x]
-            } else {
-                {
-                    let __int = __x.trunc();
-                    let mut __frac = __x - __int;
-                    if __frac == 0.0 {
-                        __frac = (0.0 as f64).copysign(__x);
-                    }
-                    vec![__frac, __int]
-                }
-            }
-        }
-    };
+    let parts: Vec<f64> = modf(x);
     let i: Option<f64> = {
         let __sifr_index_list = &parts;
-        let __sifr_index_i = 1 as i64;
+        let __sifr_index_i = 1_i64;
         let __sifr_index_norm = if __sifr_index_i < 0 {
             ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
         } else {
@@ -334,52 +399,66 @@ fn modf_integral(x: f64) -> f64 {
         __sifr_index_list.get(__sifr_index_norm).copied()
     };
     let Some(i) = i else {
-        return f64::NAN;
+        return NAN;
     };
-    return i;
+    i
 }
 fn pow(x: f64, y: f64) -> f64 {
-    return (x).powf(y);
+    pow_val(x, y)
 }
 
 // --- stdlib: sifr.statistics ---
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct StatisticsError {
+#[derive(Clone, PartialEq, Eq, Hash)]
+struct __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {
     message: String,
 }
-impl StatisticsError {
+impl __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
-impl std::fmt::Display for StatisticsError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return write!(f, "{}", self.message);
+impl __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {}
+impl ::std::fmt::Debug for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        f.debug_struct("StatisticsError").field("message", &self.message).finish()
     }
 }
-impl std::error::Error for StatisticsError {}
+impl ::std::fmt::Display for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+impl ::std::error::Error for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {}
 fn _sum(data: &Vec<f64>) -> f64 {
-    let mut total: f64 = 0.0 as f64;
+    let mut total: f64 = 0.0_f64;
     for val in data.iter().copied() {
-        total = total + val;
+        total += val;
     }
-    return total;
+    total
 }
-fn mean(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn mean(
+    data: &Vec<f64>,
+) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let count: i64 = data.len() as i64;
-    if count == (0 as i64) {
+    if count == (0_i64) {
         return Err(
-            StatisticsError::new("mean requires at least one data point".to_string()),
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+                "mean requires at least one data point".to_string(),
+            ),
         );
     }
     let total: f64 = _sum(data);
-    return Ok(total / (count as f64));
+    Ok(total / (count as f64))
 }
-fn median(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn median(
+    data: &Vec<f64>,
+) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: i64 = data.len() as i64;
-    if n == (0 as i64) {
+    if n == (0_i64) {
         return Err(
-            StatisticsError::new("median requires at least one data point".to_string()),
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+                "median requires at least one data point".to_string(),
+            ),
         );
     }
     let sorted_data: Vec<f64> = {
@@ -387,11 +466,11 @@ fn median(data: &Vec<f64>) -> Result<f64, StatisticsError> {
         __sifr_sorted_v.sort_by(f64::total_cmp);
         __sifr_sorted_v
     };
-    let mid: i64 = n / (2 as i64);
-    if (n % (2 as i64)) == (0 as i64) {
+    let mid: i64 = n / (2_i64);
+    if (n % (2_i64)) == (0_i64) {
         let a: Option<f64> = {
             let __sifr_index_list = &sorted_data;
-            let __sifr_index_i = mid - (1 as i64);
+            let __sifr_index_i = mid - (1_i64);
             let __sifr_index_norm = if __sifr_index_i < 0 {
                 ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
             } else {
@@ -411,10 +490,14 @@ fn median(data: &Vec<f64>) -> Result<f64, StatisticsError> {
         };
         if let Some(a) = a {
             if let Some(b) = b {
-                return Ok((a + b) / (2.0 as f64));
+                return Ok((a + b) / (2.0_f64));
             }
         }
-        return Err(StatisticsError::new("median: index error".to_string()));
+        return Err(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+                "median: index error".to_string(),
+            ),
+        );
     } else {
         let val: Option<f64> = {
             let __sifr_index_list = &sorted_data;
@@ -429,107 +512,125 @@ fn median(data: &Vec<f64>) -> Result<f64, StatisticsError> {
         if let Some(val) = val {
             return Ok(val);
         }
-        return Err(StatisticsError::new("median: index error".to_string()));
+        return Err(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+                "median: index error".to_string(),
+            ),
+        );
     }
 }
-fn variance(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn variance(
+    data: &Vec<f64>,
+) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: i64 = data.len() as i64;
-    if n < (2 as i64) {
+    if n < (2_i64) {
         return Err(
-            StatisticsError::new(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "variance requires at least two data points".to_string(),
             ),
         );
     }
     let avg: f64 = _sum(data) / (n as f64);
-    let mut total: f64 = 0.0 as f64;
+    let mut total: f64 = 0.0_f64;
     for val in data.iter().copied() {
         let diff: f64 = val - avg;
-        total = total + (diff * diff);
+        total += diff * diff;
     }
-    return Ok(total / ((n - (1 as i64)) as f64));
+    Ok(total / ((n - (1_i64)) as f64))
 }
-fn stdev(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn stdev(
+    data: &Vec<f64>,
+) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: i64 = data.len() as i64;
-    if n < (2 as i64) {
+    if n < (2_i64) {
         return Err(
-            StatisticsError::new("stdev requires at least two data points".to_string()),
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+                "stdev requires at least two data points".to_string(),
+            ),
         );
     }
     let avg: f64 = _sum(data) / (n as f64);
-    let mut total: f64 = 0.0 as f64;
+    let mut total: f64 = 0.0_f64;
     for val in data.iter().copied() {
         let diff: f64 = val - avg;
-        total = total + (diff * diff);
+        total += diff * diff;
     }
-    let v: f64 = total / ((n - (1 as i64)) as f64);
-    return Ok((v).sqrt());
+    let v: f64 = total / ((n - (1_i64)) as f64);
+    Ok(sqrt(v))
 }
-fn harmonic_mean(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn harmonic_mean(
+    data: &Vec<f64>,
+) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: i64 = data.len() as i64;
-    if n == (0 as i64) {
+    if n == (0_i64) {
         return Err(
-            StatisticsError::new(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "harmonic_mean requires at least one data point".to_string(),
             ),
         );
     }
-    let mut total: f64 = 0.0 as f64;
+    let mut total: f64 = 0.0_f64;
     for val in data.iter().copied() {
-        if val <= (0.0 as f64) {
+        if val <= (0.0_f64) {
             return Err(
-                StatisticsError::new(
+                __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                     "harmonic_mean requires positive values".to_string(),
                 ),
             );
         }
-        total = total + ((1.0 as f64) / val);
+        total += (1.0_f64) / val;
     }
-    return Ok((n as f64) / total);
+    Ok((n as f64) / total)
 }
-fn geometric_mean(data: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn geometric_mean(
+    data: &Vec<f64>,
+) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: i64 = data.len() as i64;
-    if n == (0 as i64) {
+    if n == (0_i64) {
         return Err(
-            StatisticsError::new(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "geometric_mean requires at least one data point".to_string(),
             ),
         );
     }
-    let mut log_sum: f64 = 0.0 as f64;
+    let mut log_sum: f64 = 0.0_f64;
     for val in data.iter().copied() {
-        if val <= (0.0 as f64) {
+        if val <= (0.0_f64) {
             return Err(
-                StatisticsError::new(
+                __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                     "geometric_mean requires positive values".to_string(),
                 ),
             );
         }
-        log_sum = log_sum + (val).ln();
+        log_sum += log(val);
     }
-    return Ok((log_sum / (n as f64)).exp());
+    Ok(exp(log_sum / (n as f64)))
 }
-fn mode(data: &Vec<i64>) -> Result<i64, StatisticsError> {
-    if (data.len() as i64) == (0 as i64) {
+fn mode(
+    data: &Vec<i64>,
+) -> Result<i64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
+    if ((data.len() as i64) == (0_i64)) {
         return Err(
-            StatisticsError::new("mode requires at least one data point".to_string()),
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+                "mode requires at least one data point".to_string(),
+            ),
         );
     }
     let mut counts: HashMap<i64, i64> = HashMap::from([]);
     for val in data.iter().copied() {
         let existing: Option<i64> = counts.get(&val).copied();
         if let Some(existing) = existing {
-            counts.insert(val, existing + (1 as i64));
+            counts.insert(val, existing + (1_i64));
         } else {
-            counts.insert(val, 1 as i64);
+            counts.insert(val, 1_i64);
         }
     }
-    let mut best: i64 = 0 as i64;
+    let mut best: i64 = 0_i64;
     let mut best_set: bool = false;
-    let mut best_count: i64 = 0 as i64;
+    let mut best_count: i64 = 0_i64;
     for val2 in data.iter().copied() {
         let count2: Option<i64> = counts.get(&val2).copied();
-        let mut count2_val: i64 = 0 as i64;
+        let mut count2_val: i64 = 0_i64;
         if let Some(count2) = count2 {
             count2_val = count2;
         }
@@ -542,12 +643,18 @@ fn mode(data: &Vec<i64>) -> Result<i64, StatisticsError> {
     if best_set {
         return Ok(best);
     }
-    return Err(StatisticsError::new("mode: no mode found".to_string()));
+    Err(
+        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+            "mode: no mode found".to_string(),
+        ),
+    )
 }
-fn multimode(data: &Vec<i64>) -> Result<Vec<i64>, StatisticsError> {
-    if (data.len() as i64) == (0 as i64) {
+fn multimode(
+    data: &Vec<i64>,
+) -> Result<Vec<i64>, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
+    if ((data.len() as i64) == (0_i64)) {
         return Err(
-            StatisticsError::new(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "multimode requires at least one data point".to_string(),
             ),
         );
@@ -556,15 +663,15 @@ fn multimode(data: &Vec<i64>) -> Result<Vec<i64>, StatisticsError> {
     for val in data.iter().copied() {
         let existing: Option<i64> = counts.get(&val).copied();
         if let Some(existing) = existing {
-            counts.insert(val, existing + (1 as i64));
+            counts.insert(val, existing + (1_i64));
         } else {
-            counts.insert(val, 1 as i64);
+            counts.insert(val, 1_i64);
         }
     }
-    let mut max_count: i64 = 0 as i64;
+    let mut max_count: i64 = 0_i64;
     for val2 in data.iter().copied() {
         let count2: Option<i64> = counts.get(&val2).copied();
-        let mut count2_val: i64 = 0 as i64;
+        let mut count2_val: i64 = 0_i64;
         if let Some(count2) = count2 {
             count2_val = count2;
         }
@@ -582,7 +689,7 @@ fn multimode(data: &Vec<i64>) -> Result<Vec<i64>, StatisticsError> {
         }
         if !already {
             let count3: Option<i64> = counts.get(&val3).copied();
-            let mut count3_val: i64 = 0 as i64;
+            let mut count3_val: i64 = 0_i64;
             if let Some(count3) = count3 {
                 count3_val = count3;
             }
@@ -592,18 +699,25 @@ fn multimode(data: &Vec<i64>) -> Result<Vec<i64>, StatisticsError> {
             seen.insert(val3, true);
         }
     }
-    return Ok(result);
+    Ok(result)
 }
-fn quantiles(data: &Vec<f64>, n: i64) -> Result<Vec<f64>, StatisticsError> {
-    if (data.len() as i64) < (2 as i64) {
+fn quantiles(
+    data: &Vec<f64>,
+    n: i64,
+) -> Result<Vec<f64>, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
+    if ((data.len() as i64) < (2_i64)) {
         return Err(
-            StatisticsError::new(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "quantiles requires at least two data points".to_string(),
             ),
         );
     }
-    if n < (1 as i64) {
-        return Err(StatisticsError::new("quantiles: n must be at least 1".to_string()));
+    if n < (1_i64) {
+        return Err(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+                "quantiles: n must be at least 1".to_string(),
+            ),
+        );
     }
     let sorted_data: Vec<f64> = {
         let mut __sifr_sorted_v = (data).iter().copied().collect::<Vec<_>>();
@@ -612,16 +726,16 @@ fn quantiles(data: &Vec<f64>, n: i64) -> Result<Vec<f64>, StatisticsError> {
     };
     let m: i64 = sorted_data.len() as i64;
     let mut result: Vec<f64> = vec![];
-    let mut i: i64 = 1 as i64;
+    let mut i: i64 = 1_i64;
     while i < n {
         let idx_f: f64 = ((i as f64) * (m as f64)) / (n as f64);
         let mut idx: i64 = idx_f as i64;
         let frac: f64 = idx_f - (idx as f64);
         if idx >= m {
-            idx = m - (1 as i64);
+            idx = m - (1_i64);
         }
-        if idx < (0 as i64) {
-            idx = 0 as i64;
+        if idx < (0_i64) {
+            idx = 0_i64;
         }
         let lo: Option<f64> = {
             let __sifr_index_list = &sorted_data;
@@ -633,64 +747,49 @@ fn quantiles(data: &Vec<f64>, n: i64) -> Result<Vec<f64>, StatisticsError> {
             };
             __sifr_index_list.get(__sifr_index_norm).copied()
         };
-        let mut lo_val: f64 = 0.0 as f64;
+        let mut lo_val: f64 = 0.0_f64;
         if let Some(lo) = lo {
             lo_val = lo;
         }
-        if frac > (0.0 as f64) {
-            let hi_idx: i64 = idx + (1 as i64);
+        if frac > (0.0_f64) {
+            let hi_idx: i64 = idx + (1_i64);
             if hi_idx < m {
-                let hi: Option<f64> = {
-                    let __sifr_index_list = &sorted_data;
-                    let __sifr_index_i = hi_idx;
-                    let __sifr_index_norm = if __sifr_index_i < 0 {
-                        ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                    } else {
-                        __sifr_index_i as usize
-                    };
-                    __sifr_index_list.get(__sifr_index_norm).copied()
-                };
+                let hi: Option<f64> = Some(sorted_data[hi_idx as usize]);
                 if let Some(hi) = hi {
-                    lo_val = lo_val + (frac * (hi - lo_val));
+                    lo_val += frac * (hi - lo_val);
                 }
             }
         }
         result.push(lo_val);
-        i = i + (1 as i64);
+        i += 1_i64;
     }
-    return Ok(result);
+    Ok(result)
 }
-fn covariance(x: &Vec<f64>, y: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn covariance(
+    x: &Vec<f64>,
+    y: &Vec<f64>,
+) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: i64 = x.len() as i64;
-    if n < (2 as i64) {
+    if n < (2_i64) {
         return Err(
-            StatisticsError::new(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "covariance requires at least two data points".to_string(),
             ),
         );
     }
-    if (y.len() as i64) != n {
+    if ((y.len() as i64) != n) {
         return Err(
-            StatisticsError::new(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "covariance: x and y must have the same length".to_string(),
             ),
         );
     }
     let mx: f64 = _sum(x) / (n as f64);
     let my: f64 = _sum(y) / (n as f64);
-    let mut total: f64 = 0.0 as f64;
-    let mut i: i64 = 0 as i64;
+    let mut total: f64 = 0.0_f64;
+    let mut i: i64 = 0_i64;
     while i < n {
-        let xi: Option<f64> = {
-            let __sifr_index_list = &x;
-            let __sifr_index_i = i;
-            let __sifr_index_norm = if __sifr_index_i < 0 {
-                ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-            } else {
-                __sifr_index_i as usize
-            };
-            __sifr_index_list.get(__sifr_index_norm).copied()
-        };
+        let xi: Option<f64> = Some(x[i as usize]);
         let yi: Option<f64> = {
             let __sifr_index_list = &y;
             let __sifr_index_i = i;
@@ -703,46 +802,40 @@ fn covariance(x: &Vec<f64>, y: &Vec<f64>) -> Result<f64, StatisticsError> {
         };
         if let Some(xi) = xi {
             if let Some(yi) = yi {
-                total = total + ((xi - mx) * (yi - my));
+                total += (xi - mx) * (yi - my);
             }
         }
-        i = i + (1 as i64);
+        i += 1_i64;
     }
-    return Ok(total / ((n - (1 as i64)) as f64));
+    Ok(total / ((n - (1_i64)) as f64))
 }
-fn correlation(x: &Vec<f64>, y: &Vec<f64>) -> Result<f64, StatisticsError> {
+fn correlation(
+    x: &Vec<f64>,
+    y: &Vec<f64>,
+) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: i64 = x.len() as i64;
-    if n < (2 as i64) {
+    if n < (2_i64) {
         return Err(
-            StatisticsError::new(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "correlation requires at least two data points".to_string(),
             ),
         );
     }
-    if (y.len() as i64) != n {
+    if ((y.len() as i64) != n) {
         return Err(
-            StatisticsError::new(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "correlation: x and y must have the same length".to_string(),
             ),
         );
     }
     let mx: f64 = _sum(x) / (n as f64);
     let my: f64 = _sum(y) / (n as f64);
-    let mut cov_num: f64 = 0.0 as f64;
-    let mut sx_num: f64 = 0.0 as f64;
-    let mut sy_num: f64 = 0.0 as f64;
-    let mut i: i64 = 0 as i64;
+    let mut cov_num: f64 = 0.0_f64;
+    let mut sx_num: f64 = 0.0_f64;
+    let mut sy_num: f64 = 0.0_f64;
+    let mut i: i64 = 0_i64;
     while i < n {
-        let xi: Option<f64> = {
-            let __sifr_index_list = &x;
-            let __sifr_index_i = i;
-            let __sifr_index_norm = if __sifr_index_i < 0 {
-                ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-            } else {
-                __sifr_index_i as usize
-            };
-            __sifr_index_list.get(__sifr_index_norm).copied()
-        };
+        let xi: Option<f64> = Some(x[i as usize]);
         let yi: Option<f64> = {
             let __sifr_index_list = &y;
             let __sifr_index_i = i;
@@ -755,55 +848,57 @@ fn correlation(x: &Vec<f64>, y: &Vec<f64>) -> Result<f64, StatisticsError> {
         };
         if let Some(xi) = xi {
             if let Some(yi) = yi {
-                cov_num = cov_num + ((xi - mx) * (yi - my));
-                sx_num = sx_num + ((xi - mx) * (xi - mx));
-                sy_num = sy_num + ((yi - my) * (yi - my));
+                cov_num += (xi - mx) * (yi - my);
+                sx_num += (xi - mx) * (xi - mx);
+                sy_num += (yi - my) * (yi - my);
             }
         }
-        i = i + (1 as i64);
+        i += 1_i64;
     }
-    let sx: f64 = (sx_num / ((n - (1 as i64)) as f64)).sqrt();
-    let sy: f64 = (sy_num / ((n - (1 as i64)) as f64)).sqrt();
-    if sx == (0.0 as f64) {
-        return Err(StatisticsError::new("correlation: x has zero variance".to_string()));
-    }
-    if sy == (0.0 as f64) {
-        return Err(StatisticsError::new("correlation: y has zero variance".to_string()));
-    }
-    return Ok((cov_num / ((n - (1 as i64)) as f64)) / (sx * sy));
-}
-fn linear_regression(x: &Vec<f64>, y: &Vec<f64>) -> Result<Vec<f64>, StatisticsError> {
-    let n: i64 = x.len() as i64;
-    if n < (2 as i64) {
+    let sx: f64 = sqrt(sx_num / ((n - (1_i64)) as f64));
+    let sy: f64 = sqrt(sy_num / ((n - (1_i64)) as f64));
+    if sx == (0.0_f64) {
         return Err(
-            StatisticsError::new(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+                "correlation: x has zero variance".to_string(),
+            ),
+        );
+    }
+    if sy == (0.0_f64) {
+        return Err(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+                "correlation: y has zero variance".to_string(),
+            ),
+        );
+    }
+    Ok((cov_num / ((n - (1_i64)) as f64)) / (sx * sy))
+}
+fn linear_regression(
+    x: &Vec<f64>,
+    y: &Vec<f64>,
+) -> Result<Vec<f64>, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
+    let n: i64 = x.len() as i64;
+    if n < (2_i64) {
+        return Err(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "linear_regression requires at least two data points".to_string(),
             ),
         );
     }
-    if (y.len() as i64) != n {
+    if ((y.len() as i64) != n) {
         return Err(
-            StatisticsError::new(
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "linear_regression: x and y must have the same length".to_string(),
             ),
         );
     }
     let mx: f64 = _sum(x) / (n as f64);
     let my: f64 = _sum(y) / (n as f64);
-    let mut num: f64 = 0.0 as f64;
-    let mut den: f64 = 0.0 as f64;
-    let mut i: i64 = 0 as i64;
+    let mut num: f64 = 0.0_f64;
+    let mut den: f64 = 0.0_f64;
+    let mut i: i64 = 0_i64;
     while i < n {
-        let xi: Option<f64> = {
-            let __sifr_index_list = &x;
-            let __sifr_index_i = i;
-            let __sifr_index_norm = if __sifr_index_i < 0 {
-                ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-            } else {
-                __sifr_index_i as usize
-            };
-            __sifr_index_list.get(__sifr_index_norm).copied()
-        };
+        let xi: Option<f64> = Some(x[i as usize]);
         let yi: Option<f64> = {
             let __sifr_index_list = &y;
             let __sifr_index_i = i;
@@ -816,15 +911,17 @@ fn linear_regression(x: &Vec<f64>, y: &Vec<f64>) -> Result<Vec<f64>, StatisticsE
         };
         if let Some(xi) = xi {
             if let Some(yi) = yi {
-                num = num + ((xi - mx) * (yi - my));
-                den = den + ((xi - mx) * (xi - mx));
+                num += (xi - mx) * (yi - my);
+                den += (xi - mx) * (xi - mx);
             }
         }
-        i = i + (1 as i64);
+        i += 1_i64;
     }
-    if den == (0.0 as f64) {
+    if den == (0.0_f64) {
         return Err(
-            StatisticsError::new("linear_regression: x has zero variance".to_string()),
+            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+                "linear_regression: x has zero variance".to_string(),
+            ),
         );
     }
     let slope: f64 = num / den;
@@ -832,27 +929,46 @@ fn linear_regression(x: &Vec<f64>, y: &Vec<f64>) -> Result<Vec<f64>, StatisticsE
     let mut result: Vec<f64> = vec![];
     result.push(slope);
     result.push(intercept);
-    return Ok(result);
+    Ok(result)
 }
 
-#[derive(Debug, Clone)]
+// --- stdlib: sifr.test ---
+fn assert_vector_eq(actual: &Vec<String>, expected: &Vec<String>) {
+    assert_eq!(actual.len() as i64, expected.len() as i64);
+    let mut i: i64 = 0_i64;
+    while i < (actual.len() as i64) {
+        assert!(Some(actual[i as usize].clone()) == expected.get(i as usize).cloned());
+        i += 1_i64;
+    }
+}
+fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+    assert_eq!(actual.len() as i64, expected.len() as i64);
+    let mut i: i64 = 0_i64;
+    while i < (actual.len() as i64) {
+        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
+        i += 1_i64;
+    }
+}
+// --- end stdlib ---
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
 
 impl Error {
     fn new(message: String) -> Self {
-        return Self { message: message };
+        Self { message }
     }
 }
 
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        return std::fmt::Display::fmt(&self.message, f);
+impl ::std::fmt::Display for Error {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
     }
 }
 
-impl std::error::Error for Error {
+impl ::std::error::Error for Error {
 }
 
 fn near(v: f64, target: f64, tol: f64) -> bool {
@@ -862,128 +978,128 @@ fn near(v: f64, target: f64, tol: f64) -> bool {
     if v > (target + tol) {
         return false;
     }
-    return true;
+    true
 }
 
 fn collect_positive_actual() -> Vec<String> {
     let mut actual: Vec<String> = vec![];
-    let data: Vec<f64> = vec![1.0 as f64, 2.0 as f64, 3.0 as f64, 4.0 as f64, 5.0 as f64];
+    let data: Vec<f64> = vec![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64];
     let mut mean_ok: bool = true;
-    let mut mean_v: f64 = 0.0 as f64;
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
+    let mut mean_v: f64 = 0.0_f64;
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
     let out_mean: f64 = mean(&data)?;
     mean_v = out_mean;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         mean_ok = false;
     }
-    actual.push(format!("{}", mean_ok && near(mean_v, 3.0 as f64, 0.0001 as f64)));
+    actual.push(format!("{}", mean_ok && near(mean_v, 3.0_f64, 0.0001_f64)));
     let mut median_ok: bool = true;
-    let mut median_v: f64 = 0.0 as f64;
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
+    let mut median_v: f64 = 0.0_f64;
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
     let out_median: f64 = median(&data)?;
     median_v = out_median;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         median_ok = false;
     }
-    actual.push(format!("{}", median_ok && near(median_v, 3.0 as f64, 0.0001 as f64)));
+    actual.push(format!("{}", median_ok && near(median_v, 3.0_f64, 0.0001_f64)));
     let mut variance_ok: bool = true;
-    let mut variance_v: f64 = 0.0 as f64;
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
+    let mut variance_v: f64 = 0.0_f64;
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
     let out_variance: f64 = variance(&data)?;
     variance_v = out_variance;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         variance_ok = false;
     }
-    actual.push(format!("{}", variance_ok && near(variance_v, 2.5 as f64, 0.0001 as f64)));
+    actual.push(format!("{}", variance_ok && near(variance_v, 2.5_f64, 0.0001_f64)));
     let mut stdev_ok: bool = true;
-    let mut stdev_v: f64 = 0.0 as f64;
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
+    let mut stdev_v: f64 = 0.0_f64;
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
     let out_stdev: f64 = stdev(&data)?;
     stdev_v = out_stdev;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         stdev_ok = false;
     }
-    actual.push(format!("{}", stdev_ok && near(stdev_v, 1.5811 as f64, 0.001 as f64)));
+    actual.push(format!("{}", stdev_ok && near(stdev_v, 1.5811_f64, 0.001_f64)));
     let mut mode_ok: bool = true;
-    let mut mode_v: i64 = 0 as i64;
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
-    let out_mode: i64 = mode(&vec![1 as i64, 2 as i64, 2 as i64, 3 as i64, 3 as i64, 3 as i64])?;
+    let mut mode_v: i64 = 0_i64;
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
+    let out_mode: i64 = mode(&vec![1_i64, 2_i64, 2_i64, 3_i64, 3_i64, 3_i64])?;
     mode_v = out_mode;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         mode_ok = false;
     }
-    actual.push(format!("{}", mode_ok && (mode_v == (3 as i64))));
+    actual.push(format!("{}", mode_ok && (mode_v == (3_i64))));
     let mut mm_ok: bool = true;
     let mut mm_v: Vec<i64> = vec![];
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
-    let out_mm: Vec<i64> = multimode(&vec![1 as i64, 2 as i64, 2 as i64, 3 as i64, 3 as i64])?;
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
+    let out_mm: Vec<i64> = multimode(&vec![1_i64, 2_i64, 2_i64, 3_i64, 3_i64])?;
     mm_v = out_mm;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         mm_ok = false;
     }
-    actual.push(format!("{}", mm_ok && ((mm_v.len() as i64) == (2 as i64))));
+    actual.push(format!("{}", mm_ok && ((mm_v.len() as i64) == (2_i64))));
     let mut q_ok: bool = true;
     let mut q_v: Vec<f64> = vec![];
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
-    let out_q: Vec<f64> = quantiles(&vec![1.0 as f64, 2.0 as f64, 3.0 as f64, 4.0 as f64, 5.0 as f64, 6.0 as f64, 7.0 as f64, 8.0 as f64], 4 as i64)?;
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
+    let out_q: Vec<f64> = quantiles(&vec![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64, 6.0_f64, 7.0_f64, 8.0_f64], 4_i64)?;
     q_v = out_q;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         q_ok = false;
     }
-    actual.push(format!("{}", q_ok && ((q_v.len() as i64) == (3 as i64))));
-    let x: Vec<f64> = vec![1.0 as f64, 2.0 as f64, 3.0 as f64, 4.0 as f64, 5.0 as f64];
-    let y: Vec<f64> = vec![2.0 as f64, 4.0 as f64, 6.0 as f64, 8.0 as f64, 10.0 as f64];
+    actual.push(format!("{}", q_ok && ((q_v.len() as i64) == (3_i64))));
+    let x: Vec<f64> = vec![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64];
+    let y: Vec<f64> = vec![2.0_f64, 4.0_f64, 6.0_f64, 8.0_f64, 10.0_f64];
     let mut cov_ok: bool = true;
-    let mut cov_v: f64 = 0.0 as f64;
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
+    let mut cov_v: f64 = 0.0_f64;
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
     let out_cov: f64 = covariance(&x, &y)?;
     cov_v = out_cov;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         cov_ok = false;
     }
-    actual.push(format!("{}", cov_ok && near(cov_v, 5.0 as f64, 0.0001 as f64)));
+    actual.push(format!("{}", cov_ok && near(cov_v, 5.0_f64, 0.0001_f64)));
     let mut corr_ok: bool = true;
-    let mut corr_v: f64 = 0.0 as f64;
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
+    let mut corr_v: f64 = 0.0_f64;
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
     let out_corr: f64 = correlation(&x, &y)?;
     corr_v = out_corr;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         corr_ok = false;
     }
-    actual.push(format!("{}", corr_ok && near(corr_v, 1.0 as f64, 0.0001 as f64)));
+    actual.push(format!("{}", corr_ok && near(corr_v, 1.0_f64, 0.0001_f64)));
     let mut lr_ok: bool = true;
     let mut lr_v: Vec<f64> = vec![];
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
     let out_lr: Vec<f64> = linear_regression(&x, &y)?;
     lr_v = out_lr;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
@@ -994,74 +1110,74 @@ fn collect_positive_actual() -> Vec<String> {
     if lr_ok {
         let lr_slope: Option<f64> = {
     let __sifr_index_list = &lr_v;
-    let __sifr_index_i = 0 as i64;
+    let __sifr_index_i = 0_i64;
     let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
     __sifr_index_list.get(__sifr_index_norm).copied()
 };
         let lr_intercept: Option<f64> = {
     let __sifr_index_list = &lr_v;
-    let __sifr_index_i = 1 as i64;
+    let __sifr_index_i = 1_i64;
     let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
     __sifr_index_list.get(__sifr_index_norm).copied()
 };
         if let Some(lr_slope) = lr_slope {
-            lr_slope_ok = near(lr_slope, 2.0 as f64, 0.0001 as f64);
+            lr_slope_ok = near(lr_slope, 2.0_f64, 0.0001_f64);
         }
         if let Some(lr_intercept) = lr_intercept {
-            lr_intercept_ok = near(lr_intercept, 0.0 as f64, 0.0001 as f64);
+            lr_intercept_ok = near(lr_intercept, 0.0_f64, 0.0001_f64);
         }
     }
-    actual.push(format!("{}", ((lr_ok && ((lr_v.len() as i64) == (2 as i64))) && lr_slope_ok) && lr_intercept_ok));
+    actual.push(format!("{}", ((lr_ok && ((lr_v.len() as i64) == (2_i64))) && lr_slope_ok) && lr_intercept_ok));
     let mut hmean_ok: bool = true;
-    let mut hmean_v: f64 = 0.0 as f64;
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
-    let out_hmean: f64 = harmonic_mean(&vec![2.0 as f64, 4.0 as f64, 4.0 as f64, 8.0 as f64])?;
+    let mut hmean_v: f64 = 0.0_f64;
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
+    let out_hmean: f64 = harmonic_mean(&vec![2.0_f64, 4.0_f64, 4.0_f64, 8.0_f64])?;
     hmean_v = out_hmean;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         hmean_ok = false;
     }
-    actual.push(format!("{}", hmean_ok && near(hmean_v, 3.5555555556 as f64, 0.0001 as f64)));
+    actual.push(format!("{}", hmean_ok && near(hmean_v, 3.5555555556_f64, 0.0001_f64)));
     let mut gmean_ok: bool = true;
-    let mut gmean_v: f64 = 0.0 as f64;
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
-    let out_gmean: f64 = geometric_mean(&vec![4.0 as f64, 9.0 as f64])?;
+    let mut gmean_v: f64 = 0.0_f64;
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
+    let out_gmean: f64 = geometric_mean(&vec![4.0_f64, 9.0_f64])?;
     gmean_v = out_gmean;
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         gmean_ok = false;
     }
-    actual.push(format!("{}", gmean_ok && near(gmean_v, 6.0 as f64, 0.0001 as f64)));
-    return actual;
+    actual.push(format!("{}", gmean_ok && near(gmean_v, 6.0_f64, 0.0001_f64)));
+    actual
 }
 
 fn collect_error_actual_ok() -> Vec<bool> {
     let mut actual_ok: Vec<bool> = vec![];
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
     let bad_mean: f64 = mean(&vec![])?;
-    let _: String = format!("{}", bad_mean);
+    let _ = format!("{}", bad_mean);
     actual_ok.push(true);
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         actual_ok.push(false);
     }
-    let __sifr_try_res: Result<(), StatisticsError> = (|| {
-    let bad_hmean: f64 = harmonic_mean(&vec![0.0 as f64, 1.0 as f64])?;
-    let _: String = format!("{}", bad_hmean);
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
+    let bad_hmean: f64 = harmonic_mean(&vec![0.0_f64, 1.0_f64])?;
+    let _ = format!("{}", bad_hmean);
     actual_ok.push(true);
-    return Ok(());
+    Ok(())
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         actual_ok.push(false);
     }
-    return actual_ok;
+    actual_ok
 }
 
 fn main() {

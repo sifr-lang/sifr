@@ -1,12 +1,12 @@
 // src/main.rs
-use std::collections::HashMap;
+use ::std::collections::HashMap;
 
-use std::collections::HashSet;
+use ::std::collections::HashSet;
 
-static __SIFR_HOISTED_DICT_0: std::sync::LazyLock<HashMap<String, Vec<String>>> = std::sync::LazyLock::new(|| HashMap::from([("L".to_string(), vec!["a".to_string(), "b".to_string(), "c".to_string()]), ("R".to_string(), vec!["d".to_string(), "e".to_string(), "f".to_string()])]));
+static __SIFR_HOISTED_DICT_0: ::std::sync::LazyLock<HashMap<String, Vec<String>>> = ::std::sync::LazyLock::new(|| HashMap::from([("L".to_string(), vec!["a".to_string(), "b".to_string(), "c".to_string()]), ("R".to_string(), vec!["d".to_string(), "e".to_string(), "f".to_string()])]));
 
 fn expand_keyed_strings(keys: &String) -> Vec<String> {
-    let mut __sifr_chars_keys: Vec<char> = keys.chars().collect::<Vec<char>>();
+    let __sifr_chars_keys: Vec<char> = keys.chars().collect::<Vec<char>>();
     let mut res: Vec<String> = vec![];
     let key_to_suffixes = &*__SIFR_HOISTED_DICT_0;
     fn backtrack(i: i64, cur: &String, key_to_suffixes: &HashMap<String, Vec<String>>, keys: &String, res: &mut Vec<String>) {
@@ -25,7 +25,7 @@ fn expand_keyed_strings(keys: &String) -> Vec<String> {
         }
         for suffix in {
     let Some(__sifr_dict_iter_source) = key_to_suffixes.get(&key) else {
-        std::process::abort();
+        ::std::process::abort();
     };
     __sifr_dict_iter_source.iter().cloned()
 } {

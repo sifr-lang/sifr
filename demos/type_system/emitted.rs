@@ -1,39 +1,46 @@
-#[derive(Debug, Clone)]
-enum IntOrStr {
-    Int(i64),
-    Str(String),
-}
-
-impl std::fmt::Display for IntOrStr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            IntOrStr::Int(v) => {
-                return write!(f, "{}", v);
-            },
-            IntOrStr::Str(v) => {
-                return write!(f, "{}", v);
-            },
+// src/main.rs
+mod __sifr_project_unions {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr {
+        __SifrUnionVariant_4_x3aatom3_x3aint(i64),
+        __SifrUnionVariant_4_x3aatom3_x3astr(String),
+    }
+    impl ::std::fmt::Display
+    for __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match self {
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+            }
         }
     }
 }
-
+pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr;
 fn create_user(id: i64, name: &String) -> i64 {
-    return id;
+    id
 }
 
 fn handle_command(cmd: &String) -> String {
-    if cmd.clone() == "start".to_string() {
+    if (cmd).as_str() == "start" {
         return "Starting...".to_string();
     } else {
         return "Unknown command".to_string();
     }
 }
 
-fn describe(x: &IntOrStr) -> String {
-    if let IntOrStr::Int(x) = x {
-        return format!("number: {}", x + (1 as i64));
+fn describe(x: &__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr) -> String {
+    if let __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(x) = x {
+        return format!("number: {}", x + (1_i64));
     } else {
-        if let IntOrStr::Str(x) = x {
+        if let __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr(x) = x {
             return format!("text: {}", x);
         } else {
             unreachable!("sifr union narrowing fell through exhaustive branch chain");
@@ -42,19 +49,19 @@ fn describe(x: &IntOrStr) -> String {
 }
 
 fn find_user(name: &String) -> Option<String> {
-    if name.clone() == "alice".to_string() {
+    if (name).as_str() == "alice" {
         return Some("Alice Smith".to_string());
     }
-    return None;
+    None
 }
 
 fn main() {
-    let uid: i64 = create_user(42 as i64, &"alice".to_string());
+    let uid: i64 = create_user(42_i64, &"alice".to_string());
     println!("{}", uid);
     println!("{}", handle_command(&"start".to_string()));
     println!("{}", handle_command(&"stop".to_string()));
-    println!("{}", describe(&IntOrStr::Int(42 as i64)));
-    println!("{}", describe(&IntOrStr::Str("hello".to_string())));
+    println!("{}", describe(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(42_i64)));
+    println!("{}", describe(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr(("hello".to_string()).clone())));
     let user: Option<String> = find_user(&"alice".to_string());
     if let Some(user) = user {
         println!("{}", user);

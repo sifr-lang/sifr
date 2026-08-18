@@ -602,9 +602,6 @@ fn floor(x: f64) -> i64 {
 fn ceil(x: f64) -> i64 {
     ::sifr_stdlib::math::ceil(x).to_i64_saturating()
 }
-fn abs_val(x: f64) -> f64 {
-    ::sifr_stdlib::math::abs_val(x)
-}
 fn log(x: f64) -> f64 {
     ::sifr_stdlib::math::log(x)
 }
@@ -1534,6 +1531,154 @@ impl ::std::fmt::Display for ValueError {
 impl ::std::error::Error for ValueError {
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct JSONDecodeError {
+    message: String,
+    line: i64,
+    column: i64,
+}
+
+impl JSONDecodeError {
+    fn new(message: String) -> Self {
+        Self { message, line: 0, column: 0 }
+    }
+}
+
+impl ::std::fmt::Display for JSONDecodeError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for JSONDecodeError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct JsonIntegerRangeError {
+    message: String,
+    path: String,
+    profile: String,
+}
+
+impl JsonIntegerRangeError {
+    fn new(message: String) -> Self {
+        Self { message, path: String::new(), profile: String::new() }
+    }
+}
+
+impl ::std::fmt::Display for JsonIntegerRangeError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for JsonIntegerRangeError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct JsonLimitError {
+    message: String,
+    limit: i64,
+}
+
+impl JsonLimitError {
+    fn new(message: String) -> Self {
+        Self { message, limit: 0 }
+    }
+}
+
+impl ::std::fmt::Display for JsonLimitError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for JsonLimitError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct TOMLDecodeError {
+    message: String,
+    line: i64,
+    column: i64,
+}
+
+impl TOMLDecodeError {
+    fn new(message: String) -> Self {
+        Self { message, line: 0, column: 0 }
+    }
+}
+
+impl ::std::fmt::Display for TOMLDecodeError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for TOMLDecodeError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct RegexError {
+    message: String,
+    detail: String,
+}
+
+impl RegexError {
+    fn new(message: String) -> Self {
+        Self { message, detail: String::new() }
+    }
+}
+
+impl ::std::fmt::Display for RegexError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for RegexError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct TimeoutError {
+    message: String,
+}
+
+impl TimeoutError {
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+}
+
+impl ::std::fmt::Display for TimeoutError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for TimeoutError {
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct ScopeFailure {
+    message: String,
+}
+
+impl ScopeFailure {
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+}
+
+impl ::std::fmt::Display for ScopeFailure {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl ::std::error::Error for ScopeFailure {
+}
+
 fn main() {
     let mut range_ok: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
@@ -1559,9 +1704,17 @@ fn main() {
         let _ = format!("{}", e.message);
     }
     assert!(decode_ok);
-    let h: __SifrStdlib_sifr_x2ehashlib_x2eHashObject = sha256(&vec![(114_i64) as u8, (97_i64) as u8, (110_i64) as u8, (100_i64) as u8, (111_i64) as u8, (109_i64) as u8, (95_i64) as u8, (104_i64) as u8, (97_i64) as u8, (115_i64) as u8, (104_i64) as u8, (105_i64) as u8, (110_i64) as u8, (103_i64) as u8, (95_i64) as u8, (115_i64) as u8, (101_i64) as u8, (101_i64) as u8, (100_i64) as u8]);
-    let digest: String = h.hexdigest();
-    let __sifr_chars_digest: Vec<char> = digest.chars().collect::<Vec<char>>();
-    assert!(((__sifr_chars_digest.len() as i64) == (64_i64)));
+    let mut digest: String = "".to_string();
+    let __sifr_try_res: Result<(), ParseError> = (|| {
+    let hash_payload: Vec<u8> = ::sifr_runtime::encoding::encode_bytes(&payload, &"utf-8".to_string(), &"strict".to_string()).map_err(|__message| ParseError { message: __message })?;
+    let h: __SifrStdlib_sifr_x2ehashlib_x2eHashObject = sha256(&hash_payload);
+    digest = h.hexdigest();
+    Ok(())
+})();
+    if let Err(__sifr_try_err) = __sifr_try_res {
+        let e = __sifr_try_err.clone();
+        let _ = format!("{}", e.message);
+    }
+    assert!(((digest.chars().count() as i64) == (64_i64)));
     println!("rng_random_hashing_lock_demo: pass");
 }

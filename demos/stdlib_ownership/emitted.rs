@@ -2,7 +2,7 @@
 use ::std::collections::HashMap;
 
 // --- stdlib: sifr.bisect ---
-fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd>(
+fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     a: &Vec<T>,
     x: &T,
     lo: i64,
@@ -52,7 +52,7 @@ fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOr
     }
     left
 }
-fn bisect_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd>(
+fn bisect_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     a: &Vec<T>,
     x: &T,
     lo: i64,
@@ -491,7 +491,7 @@ fn from_list<
 }
 
 // --- stdlib: sifr.heapq ---
-fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd>(
+fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &mut Vec<T>,
     mut pos: i64,
     n: i64,
@@ -616,7 +616,7 @@ fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd
         }
     }
 }
-fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static + PartialOrd>(
+fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     heap: &mut Vec<T>,
     mut pos: i64,
 ) {
@@ -891,7 +891,7 @@ fn demo_heapq() {
 }
 
 fn demo_bisect() {
-    println!("=== Section 2: bisect insort with mut params ===");
+    println!("=== Section 2: bisect_right insort_right with mut params ===");
     let mut sorted_ints: Vec<i64> = vec![1_i64, 3_i64, 5_i64, 7_i64, 9_i64];
     let pos_left: i64 = bisect_left(&sorted_ints, &(6_i64), 0_i64, None);
     let pos_right: i64 = bisect_right(&sorted_ints, &(5_i64), 0_i64, None);

@@ -1,10 +1,11 @@
+// src/main.rs
 fn inc(x: i64) -> i64 {
-    return x + (1 as i64);
+    x + (1_i64)
 }
 
 fn main() {
-    let nums: Vec<i64> = vec![1 as i64, 2 as i64, 3 as i64, 4 as i64];
-    println!("{:?}", Box::new(nums.iter().copied().map(inc)).collect::<Vec<_>>());
+    let nums: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64];
+    println!("{:?}", Box::new(nums.iter().copied().map(|__sifr_map_item| inc(__sifr_map_item))).collect::<Vec<_>>());
     println!("{:?}", Box::new((nums).iter().copied().rev()).collect::<Vec<_>>());
     let list_comp: Vec<i64> = {
     let mut __sifr_list_comp = vec![];

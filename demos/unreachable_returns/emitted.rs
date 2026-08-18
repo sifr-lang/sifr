@@ -1,12 +1,13 @@
+// src/main.rs
 fn inferred(flag: bool) -> i64 {
     if flag {
-        return 1 as i64;
+        return 1_i64;
     }
-    return 2 as i64;
+    2_i64
 }
 
 fn consume(n: i64) -> i64 {
-    return n + (1 as i64);
+    n + (1_i64)
 }
 
 fn main() {

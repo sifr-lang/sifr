@@ -37,10 +37,6 @@ fn fnmatch(name: &str, pattern: &str) -> bool {
     wildcard_match(name, pattern)
 }
 
-fn fnmatchcase(name: &str, pattern: &str) -> bool {
-    wildcard_match(name, pattern)
-}
-
 fn filter(names: &[String], pattern: &str) -> Vec<String> {
     names
         .iter()
@@ -54,7 +50,7 @@ fn collect_match_actual() -> Vec<bool> {
         fnmatch("hello.txt", "*.txt"),
         !fnmatch("hello.py", "*.txt"),
         fnmatch("abc", "a?c"),
-        !fnmatchcase("AbC", "abc"),
+        !fnmatch("AbC", "abc"),
     ]
 }
 
