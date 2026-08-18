@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Compatibility Removal
 
-Status: proposed and ready for Item 0 on 2026-08-18
+Status: in progress; Item 0 merged and ready for Item 1 on 2026-08-18
 
 ## Objective
 
@@ -257,16 +257,16 @@ Required stdlib classifications:
 
 Acceptance criteria:
 
-- [ ] Every audited surface has one classification.
-- [ ] Every removal row names exactly one implementation item.
-- [ ] No row uses `unknown`, `later`, or an unowned follow-up.
-- [ ] The inventory distinguishes public exports from private implementation
+- [x] Every audited surface has one classification.
+- [x] Every removal row names exactly one implementation item.
+- [x] No row uses `unknown`, `later`, or an unowned follow-up.
+- [x] The inventory distinguishes public exports from private implementation
       imports.
-- [ ] The receiver contract has no source-compatibility interpretation.
-- [ ] The retained list includes DLPack and LSP protocol requirements.
-- [ ] The retained list names the Phase 40 and lint lifecycle owners.
-- [ ] The checker fails for an unowned compatibility row.
-- [ ] The checker self-test proves each rejection class.
+- [x] The receiver contract has no source-compatibility interpretation.
+- [x] The retained list includes DLPack and LSP protocol requirements.
+- [x] The retained list names the Phase 40 and lint lifecycle owners.
+- [x] The checker fails for an unowned compatibility row.
+- [x] The checker self-test proves each rejection class.
 
 Validation:
 
@@ -989,7 +989,7 @@ migrates its repository consumers before the old path disappears.
 
 | Item | Status | PR | Merge SHA | Validation | Review | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| 0. Canonical contract and inventory | pending | — | — | — | — | — |
+| 0. Canonical contract and inventory | merged | [#3237](https://github.com/sifr-lang/sifr/pull/3237) | `4234ced2d405809b8523315b619ceff48c23132e` | Candidate `b518c4cfabbf1b7c5dd2bd8772cdb8aa52228f69`: inventory checker and mutation self-test, documentation structure, file-size and HIR guardrails, Python compile, and diff hygiene passed; no compiler files changed, so Sifr gates were omitted. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3237#issuecomment-5325904790): SATISFIED, no blocking findings. | 61 classified surfaces, 42 owned removals, 13 explicitly retained external/current contracts, and 12 reproducible baseline counts locked. |
 | 1. Public `bigint` transition | pending | — | — | — | — | — |
 | 2. Numeric and random names | pending | — | — | — | — | — |
 | 3. Runtime-information names | pending | — | — | — | — | — |
@@ -1006,6 +1006,14 @@ migrates its repository consumers before the old path disappears.
 | 14. Source and package API wrappers | pending | — | — | — | — | — |
 | 15. Structured Rust types | pending | — | — | — | — | — |
 | 16. Final guard and closure | pending | — | — | — | — | — |
+
+### Deferred reviewer follow-up
+
+| Source item | Finding | Owner | Disposition |
+| --- | --- | --- | --- |
+| Item 0 | Strengthen exact owner-token, placeholder, private-import classification, and narrow-path enforcement when the temporary inventory becomes the final no-compatibility guard. | `pre_v1_compat_16_closure` | Non-blocking checker hardening; do not alter the approved Item 0 candidate. |
+| Item 0 | Align the internal `Owned` receiver vocabulary with the source-level `own self` / `own mut self` distinction during receiver implementation. | `pre_v1_compat_8_receivers` | Non-blocking terminology follow-up. |
+| Item 0 | Wire the final compatibility guard into governed verification profiles. | `pre_v1_compat_16_closure` | Non-blocking CI integration follow-up. |
 
 ## Phase Completion Record
 
