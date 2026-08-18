@@ -1,6 +1,6 @@
 # sifr.math — Math functions and constants
-from _sifr.math import sqrt, floor, ceil, abs_val, log, cbrt, sin, cos, tan, pow_val, min_val, max_val, round_val, pi, e, asin, acos, atan, atan2, sinh, cosh, tanh, log10, log2, exp2, degrees, radians, isnan, isinf, trunc, copysign, signbit, fmod, remainder, hypot, fma, fmax, fmin, tau, inf, nan, exp, expm1, log1p, fabs, isfinite, isnormal, issubnormal, acosh, asinh, atanh, isqrt, erf, erfc, gamma, lgamma, frexp, ldexp, modf, nextafter, ulp
-from _sifr.math import dist_impl, fsum_impl, sumprod_impl
+from _sifr.math import sqrt, floor, ceil, log, cbrt, sin, cos, tan, pow_val as _pow_impl, pi, e, asin, acos, atan, atan2, sinh, cosh, tanh, log10, log2, exp2, degrees, radians, isnan, isinf, trunc, copysign, signbit, fmod, remainder, hypot, fma, fmax, fmin, tau, inf, nan, exp, expm1, log1p, fabs, isfinite, isnormal, issubnormal, acosh, asinh, atanh, isqrt, erf, erfc, gamma, lgamma, frexp, ldexp, modf, nextafter, ulp
+from _sifr.math import dist_impl as _dist_impl, fsum_impl as _fsum_impl, sumprod_impl as _sumprod_impl
 
 def factorial(n: int) -> int:
     if n < 0:
@@ -94,7 +94,10 @@ def isclose(a: float, b: float, rel_tol: float, abs_tol: float) -> bool:
     b_abs: float = b
     if b_abs < 0.0:
         b_abs = 0.0 - b_abs
-    rel_bound: float = rel_tol * max_val(a_abs, b_abs)
+    larger_abs: float = a_abs
+    if b_abs > larger_abs:
+        larger_abs = b_abs
+    rel_bound: float = rel_tol * larger_abs
     if abs_tol > rel_bound:
         rel_bound = abs_tol
     return diff <= rel_bound
@@ -112,13 +115,13 @@ def _copy_float_list(data: list[float]) -> list[float]:
     return out
 
 def dist(p: list[float], q: list[float]) -> float:
-    return dist_impl(_copy_float_list(p), _copy_float_list(q))
+    return _dist_impl(_copy_float_list(p), _copy_float_list(q))
 
 def fsum(data: list[float]) -> float:
-    return fsum_impl(_copy_float_list(data))
+    return _fsum_impl(_copy_float_list(data))
 
 def sumprod(p: list[float], q: list[float]) -> float:
-    return sumprod_impl(_copy_float_list(p), _copy_float_list(q))
+    return _sumprod_impl(_copy_float_list(p), _copy_float_list(q))
 
 # Tuple-style adapters for pair-returning math intrinsics.
 # Sifr currently models these as list pairs.
@@ -150,7 +153,5 @@ def modf_integral(x: float) -> float:
         return nan
     return i
 
-# CPython-compatible aliases
-# Note: fabs is already imported from _sifr.math, so it's already available
 def pow(x: float, y: float) -> float:
-    return pow_val(x, y)
+    return _pow_impl(x, y)

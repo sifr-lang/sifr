@@ -1,5 +1,5 @@
-from _sifr.crypto import random_float, random_gauss, random_int, random_randrange, random_uniform
-from _sifr.crypto import random_module_state_words, random_module_state_index, random_module_state_gauss_next, random_module_set_state
+from _sifr.crypto import random_float as _random_float_impl, random_gauss as _random_gauss_impl, random_int as _random_int_impl, random_randrange as _random_randrange_impl, random_uniform as _random_uniform_impl
+from _sifr.crypto import random_module_state_words as _module_state_words_impl, random_module_state_index as _module_state_index_impl, random_module_state_gauss_next as _module_state_gauss_next_impl, random_module_set_state as _module_set_state_impl
 from _sifr.time import time_now
 from sifr.bytes import bytes_from_ints
 from sifr.math import cos, log, pi, sin, sqrt
@@ -52,14 +52,14 @@ def _seed_words_from_seed(seed_value: int) -> list[int]:
 def _build_state_from_module_storage() -> RandomState:
     return RandomState(
         3,
-        random_module_state_words(),
-        random_module_state_index(),
-        random_module_state_gauss_next(),
+        _module_state_words_impl(),
+        _module_state_index_impl(),
+        _module_state_gauss_next_impl(),
     )
 
 
 def _store_state_into_module_storage(state: RandomState) -> None:
-    _set_result: Result[None, ValueError] = random_module_set_state(
+    _set_result: Result[None, ValueError] = _module_set_state_impl(
         _clone_words(state.state_words),
         state.index,
         state.gauss_next,
@@ -68,7 +68,7 @@ def _store_state_into_module_storage(state: RandomState) -> None:
 
 
 def _ensure_module_state_initialized() -> None:
-    words: list[int] = random_module_state_words()
+    words: list[int] = _module_state_words_impl()
     if len(words) == _MT_N:
         return
     bootstrap: Random = Random(5489)
@@ -264,10 +264,10 @@ class SystemRandom:
         raise ValueError("SystemRandom does not support setstate")
 
     def random(self) -> float:
-        return random_float()
+        return _random_float_impl()
 
     def uniform(self, minimum: float, maximum: float) -> float:
-        return random_uniform(minimum, maximum)
+        return _random_uniform_impl(minimum, maximum)
 
     def randrange(self, start: int, stop: int | None = None, step: int = 1) -> Result[int, ValueError]:
         actual_start: int = start
@@ -276,12 +276,12 @@ class SystemRandom:
             actual_start = 0
         else:
             actual_stop = stop
-        return random_randrange(actual_start, actual_stop, step)
+        return _random_randrange_impl(actual_start, actual_stop, step)
 
     def randint(self, minimum: int, maximum: int) -> Result[int, ValueError]:
         if minimum > maximum:
             raise ValueError("randint: min must be <= max")
-        return random_int(minimum, maximum)
+        return _random_int_impl(minimum, maximum)
 
     def getrandbits(self, k: int) -> Result[int, ValueError]:
         if k < 0:
@@ -291,14 +291,14 @@ class SystemRandom:
         i: int = 0
         while i < k:
             bit: int = 0
-            if random_float() >= 0.5:
+            if _random_float_impl() >= 0.5:
                 bit = 1
             result = result * 2 + bit
             i = i + 1
         return result
 
     def gauss(self, mu: float, sigma: float) -> float:
-        return random_gauss(mu, sigma)
+        return _random_gauss_impl(mu, sigma)
 
     def randbytes(self, n: int) -> Result[bytes, ValueError]:
         if n < 0:
@@ -306,7 +306,7 @@ class SystemRandom:
         values: list[int] = []
         i: int = 0
         while i < n:
-            value: int = int(random_float() * 256.0)
+            value: int = int(_random_float_impl() * 256.0)
             if value > 255:
                 value = 255
             values.append(value)

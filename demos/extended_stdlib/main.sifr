@@ -12,7 +12,7 @@
 # ============================================================
 
 from sifr.time import time_now, sleep
-from sifr.random import random_int, random_float
+from sifr.random import randint, random
 from sifr.re import re_match, re_find, re_replace
 from sifr.hashlib import sha256, md5
 from sifr.base64 import base64_encode, base64_decode
@@ -32,9 +32,12 @@ def main():
     # 2. sifr.random — Random numbers
     # ----------------------------------------------------------
     print("=== sifr.random ===")
-    r: int = random_int(1, 100)
-    print(f"Random int [1,100]: {r}")
-    f: float = random_float()
+    try:
+        r: int = randint(1, 100)
+        print(f"Random int [1,100]: {r}")
+    except ValueError as err:
+        print(f"Random integer error: {err.message}")
+    f: float = random()
     print(f"Random float [0,1): {f}")
 
     # ----------------------------------------------------------

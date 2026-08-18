@@ -179,13 +179,13 @@ Two CPython names collide with Rust strict keywords: `match` (`sifr.re`) and `mo
 
 ### Strategy
 
-Renames happen at the Sifr stdlib layer only — `_sifr.*` intrinsic names stay unchanged. Each `.sifr` file re-exports with the new name via wrapper functions. Old names kept as aliases. Deprecation schedule: aliases kept in Phase 7, compiler warnings in Phase 8, removal in Phase 9.
+Renames happen at the Sifr stdlib layer only — `_sifr.*` intrinsic names stay unchanged. Each `.sifr` file exposes the canonical name through a wrapper or a same-named private import. The temporary aliases retained by this milestone were removed before v1.
 
 ### Definition of Done
 
 - All renamed functions work with CPython-compatible names
 - All E2E tests updated and passing
-- Old names still work as aliases
+- Canonical names cover the behavior that the temporary aliases originally exposed
 - `cargo test` passes (zero regressions)
 
 ---

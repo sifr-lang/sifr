@@ -3,8 +3,8 @@
 const PI: f64 = 3.141592653589793_f64;
 const E: f64 = 2.718281828459045_f64;
 const TAU: f64 = 6.283185307179586_f64;
-const INF: f64 = (1.0_f64) / (0.0_f64);
-const NAN: f64 = (0.0_f64) / (0.0_f64);
+const INF: f64 = f64::INFINITY;
+const NAN: f64 = f64::NAN;
 fn sqrt(x: f64) -> f64 {
     ::sifr_stdlib::math::sqrt(x)
 }
