@@ -1,6 +1,6 @@
 use sifr_diagnostics::{
-    DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, RenderedDiagnostic, Severity,
-    SourceMap, SourceSpan,
+    DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, RelatedKind,
+    RenderedDiagnostic, Severity, SourceMap, SourceSpan,
 };
 use std::collections::BTreeMap;
 
@@ -47,6 +47,29 @@ pub(crate) fn diagnostic_with_source_range_args_help(
     source_context: FrontendSourceContext<'_>,
     range: TextRange,
     message_template: &'static str,
+    args: BTreeMap<String, DiagnosticArg>,
+    extra_args: BTreeMap<String, DiagnosticArg>,
+    help: Option<String>,
+) -> RenderedDiagnostic {
+    diagnostic_with_source_ranges_args_help(
+        code,
+        source_context,
+        range,
+        &[],
+        message_template,
+        args,
+        extra_args,
+        help,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn diagnostic_with_source_ranges_args_help(
+    code: DiagnosticCode,
+    source_context: FrontendSourceContext<'_>,
+    range: TextRange,
+    related_ranges: &[(TextRange, String)],
+    message_template: &'static str,
     mut args: BTreeMap<String, DiagnosticArg>,
     extra_args: BTreeMap<String, DiagnosticArg>,
     help: Option<String>,
@@ -59,6 +82,13 @@ pub(crate) fn diagnostic_with_source_range_args_help(
         .message_template(message_template);
     for (name, value) in args {
         builder = builder.arg_owned(&name, value);
+    }
+    for (range, label) in related_ranges {
+        builder = builder.related(
+            SourceSpan::new(source_id, *range),
+            RelatedKind::Note,
+            Some(label.clone()),
+        );
     }
     if let Some(help) = help {
         builder = builder.help(help);

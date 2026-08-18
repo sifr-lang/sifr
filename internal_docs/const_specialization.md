@@ -22,10 +22,20 @@ their specialization functions and the meaning of the static values they produce
   package-neutral integer JSON boundary. `profile` is `exact`, `web`, `string_ints`, or `None`;
   representation is `default`, `number`, or `decimal_string`.
 
-The public `sifr.meta` module contains `ConstIssueTemplate`, generic `ConstPackageIssue[A]`,
-generic `ConstSpecializationOutcome[T, A]`, and `JsonIntegerBoundaryDescriptor` value types.
-Package argument records remain statically typed package code; the compiler converts them to a
-closed const record only at the specialization boundary.
+The public `sifr.meta` module contains `SourceOrigin`, `ClassDeclaration`,
+`ClassDecoratorDeclaration`, `ClassParameterDeclaration`, `ClassDeclarationItem`,
+`ConstIssueLabel`, `ConstIssueTemplate`, generic `ConstPackageIssue[A]`, generic
+`ConstSpecializationOutcome[T, A]`, and `JsonIntegerBoundaryDescriptor` value types. Package
+argument records remain statically typed package code; the compiler converts them to a closed
+const record only at the specialization boundary.
+
+Every specialization input also contains one `declaration: ClassDeclaration`. The compiler
+collects this declaration before class lowering finalizes storage. It preserves class decorators,
+fields, annotated values, class items, methods, method decorators and parameters, and source
+order. Declaration and decorator-argument locations are represented only by `SourceOrigin`.
+`SourceOrigin` is an opaque compiler value: package code can forward an origin supplied in the
+current declaration, but cannot construct, inspect, serialize, return, or select an origin from a
+different class declaration.
 
 ## Structural shape
 
@@ -45,10 +55,13 @@ static derivation and rejects runtime effects, unsupported expressions, missing 
 budget exhaustion, and escaping loop control.
 
 A package result is a closed record with exactly `status`, `value`, and `issues`. Each issue has
-exactly `package`, `reason_code`, `severity`, `arguments`, and `notes`; the compiler supplies the
-source span. Produced values may carry only warnings. Failed outcomes contain at least one fatal
-issue and no value. Package/reason namespaces, template arguments, text, issue counts, nesting,
-labels, and notes are bounded and validated before rendering.
+exactly `package`, `reason_code`, `severity`, `arguments`, `primary_origin`, `labels`, and `notes`.
+Each label has exactly `origin` and `message`. The compiler resolves the primary and related
+origins against the current declaration and owns the resulting source spans. Produced values may
+carry only warnings. Failed outcomes contain at least one fatal issue and no value.
+Package/reason namespaces, template arguments, text, issue counts, nesting, labels, and notes are
+bounded and validated before rendering. A missing, forged, or unrelated origin fails closed with
+`SIFR-META-0003` at the specialization request.
 
 The frontend maps fatal, warning, and malformed results to `SIFR-META-0001`,
 `SIFR-META-0002`, and `SIFR-META-0003`. Package text never becomes a top-level compiler code or
@@ -66,6 +79,9 @@ concrete owner, package module, specializer function, canonical structural shape
 and structural-contract identity. Check and editor analysis retain this identity. Build and run emit
 the canonical bytes. For a structural static program, they also emit an allocation-free borrowed
 view of the same closed value. The generated-project cache key includes the same identity.
+Source origins and byte locations are excluded from both the canonical structural shape and the
+retained static value. Moving an otherwise unchanged declaration therefore updates diagnostic
+locations without changing the static-program identity.
 
 For a structural Rust call with the compiler-owned `sifr.meta.StaticProgram` bound, the compiler
 also emits a sealed typed `StaticProgram[T]` envelope and implements `StaticProgramType` for the

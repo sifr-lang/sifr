@@ -1,6 +1,8 @@
 //! Rendering for non-fatal lowering diagnostics shared by CLI and editor analysis.
 
-use crate::{diagnostic_with_source_range, FrontendSourceContext};
+use crate::{
+    diagnostic_with_source_range, diagnostic_with_source_ranges_args_help, FrontendSourceContext,
+};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{LoweringWarningDiagnostic, RevealTypeDiagnostic};
 use std::collections::BTreeMap;
@@ -56,6 +58,7 @@ fn warning_diagnostic(
             reason_code,
             help: _,
             primary_range,
+            related_ranges: _,
         } => (
             DiagnosticCode::META_SPECIALIZATION_WARNING,
             format!("package {package} specialization warning: {reason_code}"),
@@ -67,11 +70,29 @@ fn warning_diagnostic(
             *primary_range,
         ),
     };
-    let mut rendered = if let (Some(context), Some(range)) = (source_context, primary_range) {
-        diagnostic_with_source_range(code, context, range, message_template, &args)
-    } else {
-        rendered_spanless_diagnostic(code, message, message_template, &args)
+    let related_ranges = match diagnostic {
+        LoweringWarningDiagnostic::MetaPackageIssue { related_ranges, .. } => {
+            related_ranges.as_slice()
+        }
+        _ => &[],
     };
+    if let (Some(context), Some(range)) = (source_context, primary_range) {
+        let args = args
+            .iter()
+            .map(|(name, value)| ((*name).to_string(), value.clone()))
+            .collect();
+        return diagnostic_with_source_ranges_args_help(
+            code,
+            context,
+            range,
+            related_ranges,
+            message_template,
+            args,
+            BTreeMap::new(),
+            structured_help,
+        );
+    }
+    let mut rendered = rendered_spanless_diagnostic(code, message, message_template, &args);
     rendered.help = structured_help;
     rendered
 }

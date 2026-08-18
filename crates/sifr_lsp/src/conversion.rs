@@ -402,6 +402,7 @@ pub(crate) fn text_edits(
 
 pub(crate) fn diagnostic(
     diagnostic: RenderedDiagnostic,
+    uri: &str,
     source: &str,
     encoding: PositionEncoding,
 ) -> LspResult<Value> {
@@ -412,6 +413,20 @@ pub(crate) fn diagnostic(
         .or_else(|| diagnostic.spans.first());
     let class = diagnostic_class(&diagnostic);
     let rule_id = diagnostic_rule_id(&diagnostic);
+    let related_information = diagnostic
+        .spans
+        .iter()
+        .filter(|span| !span.is_primary)
+        .map(|span| {
+            Ok(json!({
+                "location": {
+                    "uri": uri,
+                    "range": diagnostic_span_range(span, source, encoding)?,
+                },
+                "message": span.label.as_deref().unwrap_or("related declaration"),
+            }))
+        })
+        .collect::<LspResult<Vec<_>>>()?;
     Ok(json!({
         "range": primary.map_or_else(|| Ok(default_range()), |span| diagnostic_span_range(span, source, encoding))?,
         "severity": diagnostic_severity(diagnostic.severity),
@@ -419,6 +434,7 @@ pub(crate) fn diagnostic(
         "codeDescription": { "href": diagnostic.url },
         "source": "sifr",
         "message": diagnostic.message,
+        "relatedInformation": related_information,
         "data": {
             "code": diagnostic.code,
             "diagnosticClass": class,
@@ -569,12 +585,15 @@ fn token_modifier_bits(modifiers: &[String]) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::{
-        completion_item, lsp_range_with_encoding, signature_help, text_range_with_encoding,
+        completion_item, diagnostic, lsp_range_with_encoding, signature_help,
+        text_range_with_encoding,
     };
     use ruff_text_size::{TextRange, TextSize};
     use serde_json::json;
     use sifr_analysis::{CompletionItem, SignatureHelp};
+    use sifr_diagnostics::{DiagnosticSpan, RenderedDiagnostic, Severity};
     use sifr_source::PositionEncoding;
+    use std::collections::BTreeMap;
 
     #[test]
     fn utf16_ranges_round_trip_through_conversion_layer() {
@@ -632,5 +651,50 @@ mod tests {
         assert_eq!(signature["parameters"][0]["label"], "left: int");
         assert_eq!(signature["parameters"][1]["label"], "right: int");
         assert_eq!(help["activeParameter"], 1);
+    }
+
+    #[test]
+    fn diagnostic_conversion_preserves_related_source_locations() {
+        let span = |byte_start, byte_end, is_primary, label| DiagnosticSpan {
+            file: Some("model.sifr".to_string()),
+            byte_start,
+            byte_end,
+            line: None,
+            column: None,
+            end_line: None,
+            end_column: None,
+            is_primary,
+            label,
+            lines: Vec::new(),
+        };
+        let rendered = RenderedDiagnostic {
+            code: "SIFR-META-0001".to_string(),
+            severity: Severity::Error,
+            message: "package fixture.meta specialization failed: rejected".to_string(),
+            message_template: "{message}".to_string(),
+            args: BTreeMap::new(),
+            url: "https://docs.sifr.sh/errors/SIFR-META-0001".to_string(),
+            spans: vec![
+                span(0, 5, true, None),
+                span(6, 11, false, Some("declared here".to_string())),
+            ],
+            children: Vec::new(),
+            help: Some("note: retained".to_string()),
+            suggestions: Vec::new(),
+        };
+        let value = diagnostic(
+            rendered,
+            "file:///workspace/model.sifr",
+            "class field\n",
+            PositionEncoding::Utf16,
+        )
+        .unwrap();
+        assert_eq!(value["code"], "SIFR-META-0001");
+        assert_eq!(value["data"]["help"], "note: retained");
+        assert_eq!(
+            value["relatedInformation"][0]["location"]["uri"],
+            "file:///workspace/model.sifr"
+        );
+        assert_eq!(value["relatedInformation"][0]["message"], "declared here");
     }
 }

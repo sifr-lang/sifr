@@ -26,6 +26,9 @@ pub enum ConstValue {
     Tuple(Vec<Self>),
     List(Vec<Self>),
     Record(BTreeMap<String, Self>),
+    /// Compiler-issued diagnostic token. Package const code can carry this
+    /// value but cannot construct it or retain it in a static program.
+    SourceOrigin(crate::class_declarations::SourceOriginId),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -72,13 +75,14 @@ pub enum ConstSpecializationOutcome<T> {
 /// Decode the closed record returned by a package-owned `@const_eval` specializer.
 ///
 /// The record has exactly `status`, `value`, and `issues`. Issue records have exactly
-/// `package`, `reason_code`, `severity`, `arguments`, and `notes`; the compiler supplies the
-/// primary source span and never executes package rendering code.
-pub fn decode_const_specialization_outcome(
+/// `package`, `reason_code`, `severity`, `arguments`, `primary_origin`, `labels`, and `notes`;
+/// the compiler resolves origins and never executes package rendering code.
+pub(crate) fn decode_const_specialization_outcome(
     value: ConstValue,
     primary_span: TextRange,
+    origins: &crate::class_declarations::SourceOriginTable,
 ) -> Result<ConstSpecializationOutcome<ConstValue>, Vec<HirDiagnostic>> {
-    decode_outcome_record(value, primary_span).map_err(|problem| {
+    decode_outcome_record(value, origins).map_err(|problem| {
         vec![malformed_diagnostic(
             "unknown",
             "outcome_shape",
@@ -90,7 +94,7 @@ pub fn decode_const_specialization_outcome(
 
 fn decode_outcome_record(
     value: ConstValue,
-    primary_span: TextRange,
+    origins: &crate::class_declarations::SourceOriginTable,
 ) -> Result<ConstSpecializationOutcome<ConstValue>, String> {
     let ConstValue::Record(mut fields) = value else {
         return Err("const specialization outcome must be a record".to_string());
@@ -107,7 +111,7 @@ fn decode_outcome_record(
         .ok_or_else(|| "const specialization outcome is missing value".to_string())?;
     let issues = take_list(&mut fields, "issues")?
         .into_iter()
-        .map(|issue| decode_issue(issue, primary_span))
+        .map(|issue| decode_issue(issue, origins))
         .collect::<Result<Vec<_>, _>>()?;
     if !fields.is_empty() {
         return Err("const specialization outcome contains unknown fields".to_string());
@@ -132,13 +136,16 @@ fn decode_outcome_record(
     }
 }
 
-fn decode_issue(value: ConstValue, primary_span: TextRange) -> Result<ConstPackageIssue, String> {
+fn decode_issue(
+    value: ConstValue,
+    origins: &crate::class_declarations::SourceOriginTable,
+) -> Result<ConstPackageIssue, String> {
     let ConstValue::Record(mut fields) = value else {
         return Err("const package issue must be a record".to_string());
     };
-    if fields.len() != 5 {
+    if fields.len() != 7 {
         return Err(
-            "const package issue must contain exactly package, reason_code, severity, arguments, and notes"
+            "const package issue must contain exactly package, reason_code, severity, arguments, primary_origin, labels, and notes"
                 .to_string(),
         );
     }
@@ -154,6 +161,17 @@ fn decode_issue(value: ConstValue, primary_span: TextRange) -> Result<ConstPacka
         Some(_) => return Err("const package issue arguments must be a record".to_string()),
         None => return Err("const package issue is missing arguments".to_string()),
     };
+    let primary_origin = take_source_origin(&mut fields, "primary_origin")?;
+    let primary_span = origins
+        .resolve(primary_origin)
+        .map(|origin| origin.range)
+        .ok_or_else(|| {
+            "const package issue primary_origin is not part of the adapted declaration".to_string()
+        })?;
+    let labels = take_list(&mut fields, "labels")?
+        .into_iter()
+        .map(|label| decode_label(label, origins))
+        .collect::<Result<Vec<_>, _>>()?;
     let notes = take_list(&mut fields, "notes")?
         .into_iter()
         .map(|note| match note {
@@ -167,9 +185,45 @@ fn decode_issue(value: ConstValue, primary_span: TextRange) -> Result<ConstPacka
         severity,
         arguments,
         primary_span,
-        labels: Vec::new(),
+        labels,
         notes,
     })
+}
+
+fn decode_label(
+    value: ConstValue,
+    origins: &crate::class_declarations::SourceOriginTable,
+) -> Result<ConstIssueLabel, String> {
+    let ConstValue::Record(mut fields) = value else {
+        return Err("const package issue label must be a record".to_string());
+    };
+    if fields.len() != 2 {
+        return Err(
+            "const package issue label must contain exactly origin and message".to_string(),
+        );
+    }
+    let origin = take_source_origin(&mut fields, "origin")?;
+    let span = origins
+        .resolve(origin)
+        .map(|origin| origin.range)
+        .ok_or_else(|| {
+            "const package issue label origin is not part of the adapted declaration".to_string()
+        })?;
+    let message = take_string(&mut fields, "message")?;
+    Ok(ConstIssueLabel { span, message })
+}
+
+fn take_source_origin(
+    fields: &mut BTreeMap<String, ConstValue>,
+    name: &str,
+) -> Result<crate::SourceOriginId, String> {
+    match fields.remove(name) {
+        Some(ConstValue::SourceOrigin(value)) => Ok(value),
+        Some(_) => Err(format!(
+            "const field '{name}' must be a compiler-issued source origin"
+        )),
+        None => Err(format!("const record is missing field '{name}'")),
+    }
 }
 
 fn take_string(fields: &mut BTreeMap<String, ConstValue>, name: &str) -> Result<String, String> {
@@ -194,7 +248,7 @@ fn take_list(
 #[derive(Debug, Clone)]
 pub struct ValidatedConstSpecialization<T> {
     pub value: Option<T>,
-    pub diagnostics: Vec<HirDiagnostic>,
+    pub issues: Vec<ConstPackageIssue>,
 }
 
 impl<T> ConstSpecializationOutcome<T> {
@@ -207,6 +261,7 @@ impl<T> ConstSpecializationOutcome<T> {
             Self::Failed { issues } => issues,
         };
         let mut diagnostics = Vec::new();
+        let mut validated_issues = Vec::new();
         if issues.len() > MAX_ISSUES {
             diagnostics.push(malformed_diagnostic(
                 "unknown",
@@ -229,7 +284,7 @@ impl<T> ConstSpecializationOutcome<T> {
             match (&self, issue.severity) {
                 (Self::Produced { .. }, ConstIssueSeverity::Warning)
                 | (Self::Failed { .. }, ConstIssueSeverity::Fatal) => {
-                    diagnostics.push(issue_diagnostic(issue));
+                    validated_issues.push(issue.clone());
                 }
                 (Self::Produced { .. }, ConstIssueSeverity::Fatal) => {
                     diagnostics.push(malformed_diagnostic(
@@ -259,7 +314,10 @@ impl<T> ConstSpecializationOutcome<T> {
                 Self::Produced { value, .. } => Some(value),
                 Self::Failed { .. } => None,
             };
-            Ok(ValidatedConstSpecialization { value, diagnostics })
+            Ok(ValidatedConstSpecialization {
+                value,
+                issues: validated_issues,
+            })
         }
     }
 }
@@ -356,6 +414,9 @@ fn validate_const_value(value: &ConstValue, depth: usize) -> Result<(), String> 
         ConstValue::Bytes(value) if value.len() > 128 => {
             Err("template bytes are limited to 128 values".to_string())
         }
+        ConstValue::SourceOrigin(_) => {
+            Err("source origins cannot be package template arguments".to_string())
+        }
         ConstValue::None
         | ConstValue::Bool(_)
         | ConstValue::Integer(_)
@@ -392,40 +453,8 @@ fn valid_argument_name(value: &str) -> bool {
         && bytes.all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
 }
 
-fn issue_diagnostic(issue: &ConstPackageIssue) -> HirDiagnostic {
-    let code = match issue.severity {
-        ConstIssueSeverity::Fatal => DiagnosticCode::META_SPECIALIZATION_FATAL,
-        ConstIssueSeverity::Warning => DiagnosticCode::META_SPECIALIZATION_WARNING,
-    };
-    let kind = match issue.severity {
-        ConstIssueSeverity::Fatal => "failed",
-        ConstIssueSeverity::Warning => "warning",
-    };
-    HirDiagnostic {
-        code: Some(code),
-        message: format!(
-            "package {} specialization {kind}: {}",
-            issue.package, issue.reason_code
-        ),
-        args: BTreeMap::from([
-            (
-                "package".to_string(),
-                DiagnosticArg::String(issue.package.clone()),
-            ),
-            (
-                "reason_code".to_string(),
-                DiagnosticArg::String(issue.reason_code.clone()),
-            ),
-        ]),
-        help: package_note(issue),
-        primary_range: Some(issue.primary_span),
-        line: None,
-        col: None,
-    }
-}
-
-fn package_note(issue: &ConstPackageIssue) -> Option<String> {
-    if issue.arguments.is_empty() && issue.notes.is_empty() && issue.labels.is_empty() {
+pub(crate) fn package_note(issue: &ConstPackageIssue) -> Option<String> {
+    if issue.arguments.is_empty() && issue.notes.is_empty() {
         return None;
     }
     let mut parts = Vec::new();
@@ -439,12 +468,6 @@ fn package_note(issue: &ConstPackageIssue) -> Option<String> {
         parts.push(format!("package arguments: {arguments}"));
     }
     parts.extend(issue.notes.iter().map(|note| format!("note: {note}")));
-    parts.extend(
-        issue
-            .labels
-            .iter()
-            .map(|label| format!("label {:?}: {}", label.span, label.message)),
-    );
     Some(parts.join("; "))
 }
 

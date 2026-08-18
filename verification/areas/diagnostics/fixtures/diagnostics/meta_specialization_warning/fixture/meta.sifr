@@ -1,20 +1,43 @@
-from sifr.meta import ConstPackageIssue, ConstSpecializationOutcome
+from sifr.meta import ClassDeclaration, ConstIssueLabel, ConstPackageIssue, ConstSpecializationOutcome, SourceOrigin
 
 
 class ShapeArguments:
     identity: str
 
 
+class ShapeInput:
+    canonical_identity: str
+    declaration: ClassDeclaration
+
+
 @const_eval
 @metadata("sifr.meta.issue_template", ("shape_derived", ["identity"]))
-def describe(shape: dict[str, str]) -> ConstSpecializationOutcome[str, ShapeArguments]:
-    identity: str | None = shape["canonical_identity"]
-    if identity is not None:
-        arguments: ShapeArguments = ShapeArguments("concrete shape")
-        issue: ConstPackageIssue[ShapeArguments] = ConstPackageIssue(
-            "fixture.meta", "shape_derived", "warning", arguments, ["shape retained"]
-        )
-        issues: list[ConstPackageIssue[ShapeArguments]] = [issue]
-        return ConstSpecializationOutcome("produced", identity, issues)
-    issues: list[ConstPackageIssue[ShapeArguments]] = []
-    return ConstSpecializationOutcome("failed", None, issues)
+def describe(shape: ShapeInput) -> ConstSpecializationOutcome[str, ShapeArguments]:
+    primary_origin: SourceOrigin | None = None
+    for decorator in shape.declaration.decorators:
+        if decorator.name == "metadata":
+            primary_origin = decorator.argument_origins[1]
+    if primary_origin is None:
+        issues: list[ConstPackageIssue[ShapeArguments]] = []
+        return ConstSpecializationOutcome("failed", None, issues)
+
+    arguments: ShapeArguments = ShapeArguments("concrete shape")
+    labels: list[ConstIssueLabel] = [
+        ConstIssueLabel(shape.declaration.origin, "adapted class declared here")
+    ]
+    for item in shape.declaration.items:
+        if item.kind == "field":
+            labels.append(ConstIssueLabel(item.origin, "field declared here"))
+        if item.kind == "method":
+            labels.append(ConstIssueLabel(item.origin, "method declared here"))
+    issue: ConstPackageIssue[ShapeArguments] = ConstPackageIssue(
+        "fixture.meta",
+        "shape_derived",
+        "warning",
+        arguments,
+        primary_origin,
+        labels,
+        ["shape retained"],
+    )
+    issues: list[ConstPackageIssue[ShapeArguments]] = [issue]
+    return ConstSpecializationOutcome("produced", shape.canonical_identity, issues)

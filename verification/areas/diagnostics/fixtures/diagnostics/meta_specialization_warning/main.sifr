@@ -2,5 +2,9 @@ from fixture.meta import describe
 
 
 @const_specialize("fixture.meta", "describe")
+@metadata("fixture.adapter", "rejected")
 class Model:
     value: int
+
+    def normalize(self, value: int) -> int:
+        return value

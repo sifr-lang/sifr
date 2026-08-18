@@ -300,6 +300,10 @@ pub fn compile_module_hir_with_source_and_options(
     source_context: Option<FrontendSourceContext<'_>>,
     lowering_options: LoweringOptions,
 ) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
+    // Collect source declarations before lowering finalizes class storage and
+    // constructor shape. Later adapter stages consume this same representation.
+    let class_declarations =
+        crate::class_declarations::ClassDeclarationSet::collect(module_name, stmts);
     match lower_module_with_externals_name_and_options(
         module_name,
         stmts,
@@ -310,12 +314,28 @@ pub fn compile_module_hir_with_source_and_options(
             module_name,
             &mut result,
             external_defs,
+            &class_declarations,
         ) {
             Ok(()) => Ok(result),
             Err(errors) => Err(errors
                 .into_iter()
-                .map(|error| {
-                    hir_diagnostic_to_rendered(module_name, diagnostic_style, source_context, error)
+                .map(|error| match error {
+                    crate::package_issues::SpecializationDiagnostic::Hir(error) => {
+                        hir_diagnostic_to_rendered(
+                            module_name,
+                            diagnostic_style,
+                            source_context,
+                            error,
+                        )
+                    }
+                    crate::package_issues::SpecializationDiagnostic::Package(issue) => {
+                        crate::package_issues::render_package_issue(
+                            module_name,
+                            diagnostic_style,
+                            source_context,
+                            &issue,
+                        )
+                    }
                 })
                 .collect()),
         },

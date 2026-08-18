@@ -1,20 +1,28 @@
-from sifr.meta import ConstPackageIssue, ConstSpecializationOutcome
+from sifr.meta import ClassDeclaration, ConstIssueLabel, ConstPackageIssue, ConstSpecializationOutcome
 
 
 class ShapeArguments:
     identity: str
 
 
+class ShapeInput:
+    canonical_identity: str
+    declaration: ClassDeclaration
+
+
 @const_eval
 @metadata("sifr.meta.issue_template", ("shape_rejected", ["identity"]))
-def reject(shape: dict[str, str]) -> ConstSpecializationOutcome[str, ShapeArguments]:
-    identity: str | None = shape["canonical_identity"]
-    if identity is not None:
-        arguments: ShapeArguments = ShapeArguments("concrete shape")
-        issue: ConstPackageIssue[ShapeArguments] = ConstPackageIssue(
-            "fixture.meta", "shape_rejected", "fatal", arguments, ["shape rejected"]
-        )
-        issues: list[ConstPackageIssue[ShapeArguments]] = [issue]
-        return ConstSpecializationOutcome("failed", None, issues)
-    issues: list[ConstPackageIssue[ShapeArguments]] = []
+def reject(shape: ShapeInput) -> ConstSpecializationOutcome[str, ShapeArguments]:
+    arguments: ShapeArguments = ShapeArguments("concrete shape")
+    labels: list[ConstIssueLabel] = []
+    issue: ConstPackageIssue[ShapeArguments] = ConstPackageIssue(
+        "fixture.meta",
+        "shape_rejected",
+        "fatal",
+        arguments,
+        shape.declaration.origin,
+        labels,
+        ["shape rejected"],
+    )
+    issues: list[ConstPackageIssue[ShapeArguments]] = [issue]
     return ConstSpecializationOutcome("failed", None, issues)
