@@ -632,6 +632,7 @@ mod tests {
             identity: None,
             fields: vec![("err".to_string(), error_type("ParseError"))],
             field_defaults: Vec::new(),
+            field_default_identities: Vec::new(),
             declaration_metadata: Vec::new(),
             methods: vec![HirFunction {
                 name: "check".to_string(),

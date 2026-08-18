@@ -407,6 +407,80 @@ class Model(Contract):
     assert!(fields
         .iter()
         .all(|field| matches!(field.default, AdapterFieldDefault::Factory(_))));
+    let model = compiled
+        .hir_modules
+        .get("main")
+        .and_then(|module| module.classes.iter().find(|class| class.name == "Model"))
+        .expect("adapted model HIR exists");
+    assert_eq!(model.field_default_identities.len(), 3);
+    assert!(model
+        .field_default_identities
+        .iter()
+        .all(|(_, identity)| identity.starts_with("callable[")));
+}
+
+#[test]
+fn adapted_factory_defaults_retain_static_specialization_output() {
+    let modules = HashMap::from([
+        (
+            "fixture.api".to_string(),
+            parse_suite(include_str!(
+                "../../../../verification/areas/core_language/fixtures/static_class_adapter/fixture/api.sifr"
+            )),
+        ),
+        (
+            "fixture.contract_types".to_string(),
+            parse_suite(include_str!(
+                "../../../../verification/areas/core_language/fixtures/static_class_adapter/fixture/contract_types.sifr"
+            )),
+        ),
+        (
+            "fixture.contract".to_string(),
+            parse_suite(include_str!(
+                "../../../../verification/areas/core_language/fixtures/static_class_adapter/fixture/contract.sifr"
+            )),
+        ),
+        (
+            "models".to_string(),
+            parse_suite(
+                r#"
+from fixture.contract import Contract, contract_field
+
+class Model(Contract):
+    value: int64
+    tags: list[str] = contract_field(default_factory=list)
+"#,
+            ),
+        ),
+        (
+            "main".to_string(),
+            parse_suite(
+                r#"
+from fixture.api import ContractError
+from models import Model
+
+def build() -> Result[Model, ContractError | RustPanicError]:
+    return Model.construct()
+"#,
+            ),
+        ),
+    ]);
+    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let compiled = collect_project_hir_modules(&modules, stdlib_defs)
+        .expect("adapted factory model should specialize");
+    let outputs = compiled
+        .external_defs
+        .specialization_outputs
+        .get("models")
+        .expect("model specializations are exported");
+    assert!(outputs.iter().any(|output| output.owner == "Model"));
+    let owners = sifr_codegen::structural_static_program_owners(
+        compiled
+            .hir_modules
+            .get("models")
+            .expect("models HIR exists"),
+    );
+    assert!(owners.contains("Model"), "structural owners: {owners:?}");
 }
 
 #[test]

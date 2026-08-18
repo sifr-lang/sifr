@@ -23,6 +23,7 @@ fn interop_build_plan_collects_function_class_and_method_declarations() {
             identity: None,
             fields: Vec::new(),
             field_defaults: Vec::new(),
+            field_default_identities: Vec::new(),
             declaration_metadata: Vec::new(),
             methods: vec![function_with_declaration(
                 "poll",
@@ -775,6 +776,7 @@ pub(super) fn class(name: &str, kind: HirClassKind, fields: Vec<(String, Type)>)
         identity: None,
         fields,
         field_defaults: Vec::new(),
+        field_default_identities: Vec::new(),
         declaration_metadata: Vec::new(),
         methods: Vec::new(),
         is_hashable: false,

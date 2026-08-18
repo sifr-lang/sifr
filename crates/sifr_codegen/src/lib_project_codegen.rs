@@ -540,6 +540,7 @@ mod tests {
             identity: Some(format!("errors.{name}")),
             fields: vec![("message".to_string(), sifr_type_system::Type::Str)],
             field_defaults: Vec::new(),
+            field_default_identities: Vec::new(),
             declaration_metadata: Vec::new(),
             methods: Vec::new(),
             is_hashable: true,
@@ -809,6 +810,7 @@ mod tests {
                 identity: None,
                 fields: Vec::new(),
                 field_defaults: Vec::new(),
+                field_default_identities: Vec::new(),
                 declaration_metadata: Vec::new(),
                 methods: vec![HirFunction {
                     name: "close".to_string(),

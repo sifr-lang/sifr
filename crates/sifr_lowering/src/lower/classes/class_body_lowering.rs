@@ -1,4 +1,4 @@
-use super::class_shape_metadata::{declaration_metadata, field_defaults};
+use super::class_shape_metadata::{declaration_metadata, field_default_identities, field_defaults};
 use super::is_hashable_type;
 use super::parameter_conventions::{
     class_method_param_convention, class_method_param_default, declared_receiver_convention,
@@ -25,7 +25,6 @@ use crate::lower::rust_interop::{
 };
 use sifr_type_system::ReceiverConvention;
 
-/// Second pass: lower class method bodies into `HirClass`.
 pub(in crate::lower) fn lower_class(
     class_def: &StmtClassDef,
     ctx: &mut LowerCtx,
@@ -36,13 +35,11 @@ pub(in crate::lower) fn lower_class(
     let is_protocol = is_protocol_class(class_def);
     let newtype_inner = get_newtype_inner(class_def);
     opaque::validate_structurally_mapped_opaque_class(class_def, &class_ty, ctx);
-    // For protocol definitions, emit a HirClass with is_protocol=true
     if is_protocol {
         let methods_sigs = match &class_ty {
             Type::Protocol { methods, .. } => methods.clone(),
             _ => return None,
         };
-        // Protocols have no fields, no body to lower -- just method signatures
         let hir_methods: Vec<HirFunction> = methods_sigs
             .iter()
             .map(|(name, ft)| {
@@ -78,6 +75,7 @@ pub(in crate::lower) fn lower_class(
             identity: None,
             fields: vec![],
             field_defaults: Vec::new(),
+            field_default_identities: Vec::new(),
             declaration_metadata: Vec::new(),
             methods: hir_methods,
             is_hashable: false,
@@ -101,10 +99,8 @@ pub(in crate::lower) fn lower_class(
         });
     }
 
-    // For enum declarations, emit a HirClass with is_enum=true
     if is_enum_class(class_def) {
         let variants = collect_enum_variants(class_def);
-        // Lower any methods defined in the enum body
         let mut hir_methods = Vec::new();
         ctx.current_class = Some(class_name.clone());
         for stmt in &class_def.body {
@@ -213,6 +209,7 @@ pub(in crate::lower) fn lower_class(
             identity: None,
             fields: vec![],
             field_defaults: Vec::new(),
+            field_default_identities: Vec::new(),
             declaration_metadata: declaration_metadata(ctx, &class_name),
             methods: hir_methods,
             is_hashable: true,
@@ -355,6 +352,7 @@ pub(in crate::lower) fn lower_class(
             identity: None,
             fields: vec![("0".to_string(), inner.clone())], // Single wrapped field
             field_defaults: Vec::new(),
+            field_default_identities: Vec::new(),
             declaration_metadata: declaration_metadata(ctx, &class_name),
             methods: hir_methods,
             is_hashable: is_hashable_type(inner),
@@ -882,6 +880,7 @@ pub(in crate::lower) fn lower_class(
         identity: None,
         fields: own_fields,
         field_defaults: field_defaults(ctx, &class_name),
+        field_default_identities: field_default_identities(ctx, &class_name),
         declaration_metadata: declaration_metadata(ctx, &class_name),
         methods: hir_methods,
         is_hashable,

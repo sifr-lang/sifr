@@ -3,8 +3,8 @@
 use crate::ConstValue;
 use num_bigint::BigInt;
 use sifr_lowering::{
-    DeclarationMetadataTargetKind, ExternalDefs, HirClassKind, HirExpr, LoweringResult,
-    TypedDeclarationMetadata,
+    CallableIdentity, DeclarationMetadataTargetKind, ExternalDefs, HirClassKind, HirExpr,
+    LoweringResult, TypedDeclarationMetadata,
 };
 use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet};
@@ -17,6 +17,8 @@ use nominal_types::{describe_enum, describe_newtype};
 mod canonical_helpers;
 use crate::const_canonical::canonical_value;
 use canonical_helpers::canonical_sequence;
+mod defaults;
+use defaults::shape_field_default;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructuralShape {
@@ -42,8 +44,16 @@ impl StructuralShape {
 pub struct ShapeField {
     pub name: String,
     pub declared_type: ShapeNode,
-    pub default: Option<ConstValue>,
+    pub default: ShapeFieldDefault,
     pub metadata: Vec<ShapeMetadata>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ShapeFieldDefault {
+    Required,
+    Const(ConstValue),
+    Factory(CallableIdentity),
+    Runtime,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -317,13 +327,18 @@ fn describe_class(
         }
     }
 
-    let (declaration_metadata, adapter_metadata, metadata_owner, defaults) =
+    let (declaration_metadata, adapter_metadata, metadata_owner, defaults, field_plans) =
         if local_class.is_some() {
             (
                 lowering.declaration_metadata.as_slice(),
                 lowering.applied_adapter_metadata.as_slice(),
                 local_name,
                 lowering.class_field_defaults.get(local_name),
+                lowering
+                    .class_adapter_selections
+                    .iter()
+                    .find(|selection| selection.owner == local_name)
+                    .map(|selection| selection.field_plans.as_slice()),
             )
         } else {
             (
@@ -340,6 +355,11 @@ fn describe_class(
                     .class_field_defaults
                     .get(source_module)
                     .and_then(|classes| classes.get(source_name)),
+                external_defs
+                    .class_adapter_selections
+                    .get(source_module)
+                    .and_then(|classes| classes.get(source_name))
+                    .map(|selection| selection.field_plans.as_slice()),
             )
         };
     let described_fields = fields
@@ -348,9 +368,7 @@ fn describe_class(
         .map(|(index, (name, ty))| ShapeField {
             name: name.clone(),
             declared_type: describe_node(module_name, ty, lowering, external_defs, visiting),
-            default: defaults
-                .and_then(|values| values.iter().find(|(field, _)| *field == index))
-                .and_then(|(_, value)| const_value_from_hir(value)),
+            default: shape_field_default(index, defaults, field_plans),
             metadata: combined_metadata_for(
                 declaration_metadata,
                 adapter_metadata,
@@ -440,7 +458,7 @@ fn combined_metadata_for(
 }
 
 #[allow(clippy::expect_used)]
-fn validated_adapter_value(value: &sifr_lowering::StaticProgramValue) -> ConstValue {
+pub(super) fn validated_adapter_value(value: &sifr_lowering::StaticProgramValue) -> ConstValue {
     // Adapter metadata reaches this point only through static_program_value(),
     // which canonicalizes integer text while validating the plan.
     crate::specialization_support::const_value(value)
@@ -525,10 +543,17 @@ fn canonical_node(node: &ShapeNode) -> String {
             let fields = fields
                 .iter()
                 .map(|field| {
-                    let default = field.default.as_ref().map_or_else(
-                        || "required".to_string(),
-                        |value| format!("default={}", canonical_value(value)),
-                    );
+                    let default = match &field.default {
+                        ShapeFieldDefault::Required => "required".to_string(),
+                        ShapeFieldDefault::Const(value) => {
+                            format!("default={}", canonical_value(value))
+                        }
+                        ShapeFieldDefault::Factory(factory) => format!(
+                            "factory={}",
+                            canonical_value(&ConstValue::CallableIdentity(factory.clone()))
+                        ),
+                        ShapeFieldDefault::Runtime => "runtime-default".to_string(),
+                    };
                     format!(
                         "{}:{}:{default}:{}",
                         field.name,
@@ -695,17 +720,38 @@ pub(super) fn node_const_value(node: &ShapeNode) -> ConstValue {
                     fields
                         .iter()
                         .map(|field| {
+                            let (default_kind, default, default_factory) = match &field.default {
+                                ShapeFieldDefault::Required => {
+                                    ("required", ConstValue::None, ConstValue::None)
+                                }
+                                ShapeFieldDefault::Const(value) => {
+                                    ("const", value.clone(), ConstValue::None)
+                                }
+                                ShapeFieldDefault::Factory(factory) => (
+                                    "factory",
+                                    ConstValue::None,
+                                    ConstValue::CallableIdentity(factory.clone()),
+                                ),
+                                ShapeFieldDefault::Runtime => {
+                                    ("runtime", ConstValue::None, ConstValue::None)
+                                }
+                            };
                             ConstValue::Record(BTreeMap::from([
                                 ("name".to_string(), ConstValue::String(field.name.clone())),
                                 ("type".to_string(), node_const_value(&field.declared_type)),
                                 (
                                     "required".to_string(),
-                                    ConstValue::Bool(field.default.is_none()),
+                                    ConstValue::Bool(matches!(
+                                        field.default,
+                                        ShapeFieldDefault::Required
+                                    )),
                                 ),
                                 (
-                                    "default".to_string(),
-                                    field.default.clone().unwrap_or(ConstValue::None),
+                                    "default_kind".to_string(),
+                                    ConstValue::String(default_kind.to_string()),
                                 ),
+                                ("default".to_string(), default),
+                                ("default_factory".to_string(), default_factory),
                                 (
                                     "metadata".to_string(),
                                     metadata_const_value(&field.metadata),

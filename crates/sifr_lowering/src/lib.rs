@@ -32,14 +32,14 @@ pub use lower::{
 };
 pub use scope::{NarrowingSnapshot, Scope};
 pub use sifr_ir::{
-    rust_opaque_close_method, rust_opaque_structural_mapping, rust_opaque_type_path,
-    AdapterFieldDefault, AdapterFieldPlan, AdapterHandlerPlan, AppliedAdapterMetadata,
-    AttachedApiDeclaration, AttachedApiReceiver, AttachedApiSetDeclaration, AttachedApiSetIdentity,
-    CallableIdentity, ClassAdapterMarkerDeclaration, ClassAdapterProviderDeclaration,
-    ClassAdapterSelection, ConstSpecializationRequest, DeclarationDescriptorFunction,
-    DeclarationDescriptorKind, DeclarationMetadataTargetKind, HirDiagnostic, LoweringOutcome,
-    LoweringResult, LoweringWarningDiagnostic, RevealTypeDiagnostic, RustInteropDecoratorKind,
-    SourceOriginId, StaticMethodParam, StaticMethodSlot, StaticMethodSlotContext,
-    StaticProgramValue, StaticSpecializationOutput, TypedDeclarationDescriptor,
-    TypedDeclarationMetadata,
+    canonical_callable_identity, rust_opaque_close_method, rust_opaque_structural_mapping,
+    rust_opaque_type_path, AdapterFieldDefault, AdapterFieldPlan, AdapterHandlerPlan,
+    AppliedAdapterMetadata, AttachedApiDeclaration, AttachedApiReceiver, AttachedApiSetDeclaration,
+    AttachedApiSetIdentity, CallableIdentity, ClassAdapterMarkerDeclaration,
+    ClassAdapterProviderDeclaration, ClassAdapterSelection, ConstSpecializationRequest,
+    DeclarationDescriptorFunction, DeclarationDescriptorKind, DeclarationMetadataTargetKind,
+    HirDiagnostic, LoweringOutcome, LoweringResult, LoweringWarningDiagnostic,
+    RevealTypeDiagnostic, RustInteropDecoratorKind, SourceOriginId, StaticMethodParam,
+    StaticMethodSlot, StaticMethodSlotContext, StaticProgramValue, StaticSpecializationOutput,
+    TypedDeclarationDescriptor, TypedDeclarationMetadata,
 };

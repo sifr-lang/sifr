@@ -421,36 +421,46 @@ fn structural_construct_impl(
     nominal_identity: &str,
     emitter: &mut RustEmitter,
 ) -> RustItem {
-    let edge_checks = class
+    let edge_cases = class
         .fields
         .iter()
         .enumerate()
         .map(|(index, (name, _))| {
-            format!(
-                "if description.edges()[{index}].kind() != {STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\") {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}"
-            )
+            format!("{STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\") => {index},")
         })
         .collect::<Vec<_>>()
         .join("\n");
-    let field_values = class
-        .fields
-        .iter()
-        .enumerate()
-        .map(|(index, (name, ty))| {
-            let rust_name = crate::Renderer::render_identifier(name);
-            if matches!(ty.resolve_alias(), Type::Bytes) {
-                return format!(
-                    "let {rust_name} = {STRUCTURAL}::construct_bytes_at(source, child_nodes[{index}], token)?;"
-                );
-            }
+    let mut field_values = Vec::with_capacity(class.fields.len());
+    for (index, (name, ty)) in class.fields.iter().enumerate() {
+        let rust_name = crate::Renderer::render_identifier(name);
+        let present = if matches!(ty.resolve_alias(), Type::Bytes) {
+            format!(
+                "{STRUCTURAL}::construct_bytes_at(__sifr_source, child, __sifr_construct_token)?"
+            )
+        } else {
             let rust_type = emitter.class_struct_field_rust_type(class, name, ty);
             let rust_type = crate::Renderer::render_type_string(&rust_type);
             format!(
-                "let {rust_name} = <{rust_type} as {STRUCTURAL}::StructuralConstruct>::structural_construct_at(source, child_nodes[{index}], token)?;"
+                "<{rust_type} as {STRUCTURAL}::StructuralConstruct>::structural_construct_at(__sifr_source, child, __sifr_construct_token)?"
             )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+        };
+        let missing = class
+            .field_defaults
+            .iter()
+            .find(|(field, _)| *field == index)
+            .map_or_else(
+                || format!("return Err({STRUCTURAL}::StructuralContractError::ArityMismatch)"),
+                |(_, value)| {
+                    let value = emitter
+                        .lower_class_expr_strict(value, "structural field default construction");
+                    crate::render::render_expr(&value)
+                },
+            );
+        field_values.push(format!(
+            "let {rust_name} = match child_nodes[{index}] {{ Some(child) => {present}, None => {missing}, }};"
+        ));
+    }
+    let field_values = field_values.join("\n");
     let mut initializers = class
         .fields
         .iter()
@@ -459,10 +469,20 @@ fn structural_construct_impl(
     if RustEmitter::class_needs_phantom_marker(class) {
         initializers.push("__sifr_type_marker: std::marker::PhantomData".to_string());
     }
+    let collect_children = if class.fields.is_empty() {
+        format!(
+            "if !description.edges().is_empty() {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}"
+        )
+    } else {
+        format!(
+            "let mut child_nodes: [Option<{STRUCTURAL}::NodeId>; {}] = [None; {}];\nfor edge in description.edges() {{\nlet field_index: usize = match edge.kind() {{\n{edge_cases}\n_ => return Err({STRUCTURAL}::StructuralContractError::MemberMismatch),\n}};\nif child_nodes[field_index].replace(edge.node()).is_some() {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}\n}}",
+            class.fields.len(),
+            class.fields.len()
+        )
+    };
     let body = format!(
-        "let description = source.node(node)?;\nif description.kind() != {STRUCTURAL}::StructuralKind::Record {{ return Err({STRUCTURAL}::StructuralContractError::KindMismatch); }}\nif description.nominal_identity() != Some({}) {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}\nif description.edges().len() != {} {{ return Err({STRUCTURAL}::StructuralContractError::ArityMismatch); }}\n{edge_checks}\nlet child_nodes = description.edges().iter().map({STRUCTURAL}::StructuralNodeEdge::node).collect::<Vec<_>>();\n{field_values}\nOk(Self {{ {} }})",
+        "let description = __sifr_source.node(__sifr_node)?;\nif description.kind() != {STRUCTURAL}::StructuralKind::Record {{ return Err({STRUCTURAL}::StructuralContractError::KindMismatch); }}\nif description.nominal_identity() != Some({}) {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}\n{collect_children}\n{field_values}\nOk(Self {{ {} }})",
         nominal_identity,
-        class.fields.len(),
         initializers.join(", ")
     );
     RustItem::Impl {
@@ -478,18 +498,18 @@ fn structural_construct_impl(
             }],
             params: vec![
                 RustParam::Named {
-                    name: "source".to_string(),
+                    name: "__sifr_source".to_string(),
                     ty: RustType::Ref {
                         mutable: true,
                         inner: Box::new(RustType::Named("S".to_string())),
                     },
                 },
                 RustParam::Named {
-                    name: "node".to_string(),
+                    name: "__sifr_node".to_string(),
                     ty: RustType::Named(format!("{STRUCTURAL}::NodeId")),
                 },
                 RustParam::Named {
-                    name: "token".to_string(),
+                    name: "__sifr_construct_token".to_string(),
                     ty: RustType::Named(format!("{STRUCTURAL}::ConstructToken")),
                 },
             ],
@@ -579,14 +599,14 @@ fn structural_enum_impls(
         .enumerate()
     {
         construct_arms.push(format!(
-            "{STRUCTURAL}::StructuralEdgeKind::ActiveMember {{ name: \"{name}\", index: {index} }} => match <i64 as {STRUCTURAL}::StructuralConstruct>::structural_construct_at(source, child, token) {{ Ok({value}) => Ok(Self::{name}), Ok(_) => Err({STRUCTURAL}::StructuralContractError::MemberMismatch), Err(error) => Err(error), }},"
+            "{STRUCTURAL}::StructuralEdgeKind::ActiveMember {{ name: \"{name}\", index: {index} }} => match <i64 as {STRUCTURAL}::StructuralConstruct>::structural_construct_at(__sifr_source, child, __sifr_construct_token) {{ Ok({value}) => Ok(Self::{name}), Ok(_) => Err({STRUCTURAL}::StructuralContractError::MemberMismatch), Err(error) => Err(error), }},"
         ));
         project_arms.push(format!(
             "Self::{name} => {{ visitor.edge({STRUCTURAL}::StructuralEdge::new({STRUCTURAL}::StructuralEdgeKind::ActiveMember {{ name: \"{name}\", index: {index} }}))?; visitor.scalar({STRUCTURAL}::StructuralScalarRef::SignedInteger {{ value: i128::from({value}_i64), width: 64 }})?; }}"
         ));
     }
     let construct_body = format!(
-        "let description = source.node(node)?;\nif description.kind() != {STRUCTURAL}::StructuralKind::Enum {{ return Err({STRUCTURAL}::StructuralContractError::KindMismatch); }}\nif description.nominal_identity() != Some({nominal_identity}) {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}\nlet [edge] = description.edges() else {{ return Err({STRUCTURAL}::StructuralContractError::ArityMismatch); }};\nlet edge_kind = edge.kind();\nlet child = edge.node();\nmatch edge_kind {{\n{}\n_ => Err({STRUCTURAL}::StructuralContractError::MemberMismatch),\n}}",
+        "let description = __sifr_source.node(__sifr_node)?;\nif description.kind() != {STRUCTURAL}::StructuralKind::Enum {{ return Err({STRUCTURAL}::StructuralContractError::KindMismatch); }}\nif description.nominal_identity() != Some({nominal_identity}) {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}\nlet [edge] = description.edges() else {{ return Err({STRUCTURAL}::StructuralContractError::ArityMismatch); }};\nlet edge_kind = edge.kind();\nlet child = edge.node();\nmatch edge_kind {{\n{}\n_ => Err({STRUCTURAL}::StructuralContractError::MemberMismatch),\n}}",
         construct_arms.join("\n")
     );
     let project_body = format!(
@@ -632,18 +652,18 @@ fn structural_enum_impls(
                 }],
                 params: vec![
                     RustParam::Named {
-                        name: "source".to_string(),
+                        name: "__sifr_source".to_string(),
                         ty: RustType::Ref {
                             mutable: true,
                             inner: Box::new(RustType::Named("S".to_string())),
                         },
                     },
                     RustParam::Named {
-                        name: "node".to_string(),
+                        name: "__sifr_node".to_string(),
                         ty: RustType::Named(format!("{STRUCTURAL}::NodeId")),
                     },
                     RustParam::Named {
-                        name: "token".to_string(),
+                        name: "__sifr_construct_token".to_string(),
                         ty: RustType::Named(format!("{STRUCTURAL}::ConstructToken")),
                     },
                 ],

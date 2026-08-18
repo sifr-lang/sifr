@@ -180,14 +180,16 @@ pub(crate) const fn algorithm_version() -> u32 {
 }
 
 pub(crate) fn class_identity_inputs_supported(class: &HirClass) -> bool {
-    class
-        .field_defaults
-        .iter()
-        .all(|(_, value)| canonical_structural_identity_value(value).is_some())
-        && class
-            .declaration_metadata
+    class.field_defaults.iter().all(|(index, value)| {
+        class
+            .field_default_identities
             .iter()
-            .all(|metadata| canonical_structural_identity_value(&metadata.value).is_some())
+            .any(|(candidate, _)| candidate == index)
+            || canonical_structural_identity_value(value).is_some()
+    }) && class
+        .declaration_metadata
+        .iter()
+        .all(|metadata| canonical_structural_identity_value(&metadata.value).is_some())
 }
 
 fn compile_class(
@@ -556,6 +558,13 @@ fn optional_member(values: &[Type]) -> Option<&Type> {
 }
 
 fn field_default_identity(class: &HirClass, field_index: usize) -> Option<ShapeIdentity> {
+    if let Some((_, canonical)) = class
+        .field_default_identities
+        .iter()
+        .find(|(index, _)| *index == field_index)
+    {
+        return Some(identity::default_value(canonical));
+    }
     class
         .field_defaults
         .iter()
@@ -625,6 +634,7 @@ mod tests {
             identity: None,
             fields,
             field_defaults: Vec::new(),
+            field_default_identities: Vec::new(),
             declaration_metadata: Vec::new(),
             methods: Vec::new(),
             is_hashable: false,

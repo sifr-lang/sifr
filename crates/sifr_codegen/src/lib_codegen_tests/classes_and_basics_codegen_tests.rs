@@ -95,6 +95,7 @@ fn process_child_resource_derives_are_module_scoped() {
                 ("_waited".to_string(), Type::Bool),
             ],
             field_defaults: Vec::new(),
+            field_default_identities: Vec::new(),
             declaration_metadata: Vec::new(),
             methods: vec![],
             is_error_type: false,
@@ -137,6 +138,7 @@ fn test_class_to_string_method_does_not_emit_generated_allow() {
             identity: None,
             fields: vec![("value".to_string(), Type::Str)],
             field_defaults: Vec::new(),
+            field_default_identities: Vec::new(),
             declaration_metadata: Vec::new(),
             methods: vec![HirFunction {
                 name: "to_string".to_string(),
@@ -560,6 +562,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
             identity: None,
             fields: vec![("value".to_string(), Type::Int)],
             field_defaults: Vec::new(),
+            field_default_identities: Vec::new(),
             declaration_metadata: Vec::new(),
             methods: vec![],
             is_hashable: false,

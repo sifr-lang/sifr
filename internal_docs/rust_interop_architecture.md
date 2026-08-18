@@ -478,6 +478,14 @@ call that requires retained const-specialization data. A concrete type satisfies
 this bound only when `@const_specialize` produced a verified value. There is no
 empty program, runtime compilation path, or fallback to `Structural`.
 
+Record construction is field-name based. A source can omit a field only when the
+final checked class declaration supplies a constant or zero-argument factory
+default. Generated construction evaluates that default at the omission site;
+required omissions return `ArityMismatch`, and unknown or duplicate field edges
+return `MemberMismatch`. Adapter factory defaults retain their sealed callable
+identity through lowering so bound checking, shape hashing, and generated
+construction use the same package-neutral fact.
+
 The frontend hashes the declaring module, concrete owner, package module,
 specializer function, canonical structural shape, canonical program value, and
 structural-contract identity. Check and editor analysis retain this identity.

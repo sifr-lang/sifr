@@ -34,7 +34,14 @@ class AttachedModel(Contract):
     value: int
 
 
-def main():
+class StructuralDefaults(Contract):
+    value: int64
+    enabled: bool = contract_field(default=True)
+    tags: list[str] = contract_field(default_factory=list)
+    names: list[str] = contract_field(default_factory=make_names)
+
+
+def main() -> Result[None, ContractError | RustPanicError]:
     first: Model = Model(7)
     second: Model = Model(8)
     first.tags.append("one")
@@ -59,7 +66,22 @@ def main():
     assert imported.inspect() == 41
     assert imported.touch() == 42
     assert plain.value == 12
+    try:
+        defaulted: StructuralDefaults = StructuralDefaults.construct()
+        expected_value: int64 = 17
+        assert defaulted.value == expected_value
+        assert defaulted.enabled
+        assert defaulted.tags == []
+        assert defaulted.names == []
+        another: StructuralDefaults = StructuralDefaults.construct()
+        defaulted.tags.append("one")
+        assert another.tags == []
+    except ContractError as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+    return None
 
 
-def compile_result_construction() -> Result[AttachedModel, ContractError]:
+def compile_result_construction() -> Result[AttachedModel, ContractError | RustPanicError]:
     return AttachedModel.construct()

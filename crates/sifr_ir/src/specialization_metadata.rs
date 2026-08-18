@@ -262,6 +262,28 @@ pub struct CallableIdentity {
     pub signature: String,
 }
 
+/// Canonical spelling for one compiler-sealed callable identity.
+#[must_use]
+pub fn canonical_callable_identity(identity: &CallableIdentity) -> String {
+    format!(
+        "callable[module={}:{};owner={}:{};symbol={}:{};generics=[{}];signature={}:{}]",
+        identity.module.len(),
+        identity.module,
+        identity.owner.as_deref().unwrap_or("").len(),
+        identity.owner.as_deref().unwrap_or(""),
+        identity.symbol.len(),
+        identity.symbol,
+        identity
+            .generic_arguments
+            .iter()
+            .map(|argument| format!("{}:{argument}", argument.len()))
+            .collect::<Vec<_>>()
+            .join(","),
+        identity.signature.len(),
+        identity.signature,
+    )
+}
+
 /// One evaluated descriptor attached to an existing declaration target.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypedDeclarationDescriptor {

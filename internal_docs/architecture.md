@@ -871,6 +871,13 @@ free declaration input and provider HIR before evaluation. Post-adapter identity
 the invocation to the validated output and is an input to static-program identity, avoiding a
 cycle with later handler and attached-API outputs.
 
+The same final field state governs structural construction. Structural records match incoming
+edges by field name, reject unknown and duplicate names, and fill omitted defaulted fields from
+their checked HIR defaults. Factory defaults retain a canonical callable-identity side channel in
+HIR because their executable call expression is not a constant literal; bound checking, shape
+identity, and code generation all consume that same identity. Required omissions remain typed
+structural contract errors rather than generated panics.
+
 Attached package APIs are erased compile-time declarations grouped into canonical module-and-set
 identities. Adapter output selects exactly one set. Provisional lowering may expose visible
 package candidates so class bodies can type-check before adapter execution, while final lowering
