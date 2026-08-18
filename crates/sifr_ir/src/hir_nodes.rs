@@ -48,6 +48,8 @@ pub struct HirClass {
     pub fields: Vec<(String, Type)>,
     /// Declaration-order defaults keyed by field index.
     pub field_defaults: Vec<(usize, HirExpr)>,
+    /// Canonical identities for checked defaults that cannot be recovered from HIR literals.
+    pub field_default_identities: Vec<(usize, String)>,
     /// Typed declaration metadata owned by this class and its fields/variants.
     pub declaration_metadata: Vec<TypedDeclarationMetadata>,
     pub methods: Vec<HirFunction>,

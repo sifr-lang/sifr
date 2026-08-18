@@ -76,6 +76,79 @@ fn explicit_initializer_does_not_erase_field_default_metadata() {
 }
 
 #[test]
+fn adapted_factory_default_is_not_reported_as_required() {
+    let source = r#"
+class Model:
+    tags: list[str]
+"#;
+    let parsed = parse_module_suite(source, None).expect("fixture parses");
+    let mut lowered = lower_module(&parsed).expect("fixture lowers");
+    let factory = sifr_lowering::CallableIdentity {
+        module: "fixture.runtime_defaults".to_string(),
+        owner: None,
+        symbol: "make_tags".to_string(),
+        generic_arguments: Vec::new(),
+        signature: "()->list[str]".to_string(),
+    };
+    lowered
+        .class_adapter_selections
+        .push(sifr_lowering::ClassAdapterSelection {
+            owner: "Model".to_string(),
+            provider_module: "fixture.adapter".to_string(),
+            provider_function: "adapt".to_string(),
+            descriptor_type: Type::None,
+            marker_identities: Vec::new(),
+            data_parent: None,
+            field_plans: vec![sifr_lowering::AdapterFieldPlan {
+                identity: "fixture.runtime_defaults.Model.tags".to_string(),
+                name: "tags".to_string(),
+                declared_type: Type::List(Box::new(Type::Str)),
+                default: sifr_lowering::AdapterFieldDefault::Factory(factory.clone()),
+                validation_policy: None,
+            }],
+            handler_plans: Vec::new(),
+            attached_api_set: None,
+            adapter_invocation_identity: [0; 32],
+            post_adapter_identity: [0; 32],
+            range: ruff_text_size::TextRange::default(),
+        });
+    let class = lowered.module.classes.first().expect("class exists");
+    let shape = describe_type(
+        "fixture.runtime_defaults",
+        &class_type(class, Vec::new()),
+        &lowered,
+    );
+    let ShapeNode::Nominal { fields, .. } = &shape.root else {
+        panic!("model shape should be nominal");
+    };
+    assert!(matches!(
+        &fields[0].default,
+        ShapeFieldDefault::Factory(value) if value == &factory
+    ));
+    let ConstValue::Record(shape) = shape.to_const_value() else {
+        panic!("shape input should be a record");
+    };
+    let Some(ConstValue::Record(root)) = shape.get("root") else {
+        panic!("shape root should be a record");
+    };
+    let Some(ConstValue::List(fields)) = root.get("fields") else {
+        panic!("shape fields should be a list");
+    };
+    let ConstValue::Record(field) = &fields[0] else {
+        panic!("shape field should be a record");
+    };
+    assert_eq!(field.get("required"), Some(&ConstValue::Bool(false)));
+    assert_eq!(
+        field.get("default_kind"),
+        Some(&ConstValue::String("factory".to_string()))
+    );
+    assert!(matches!(
+        field.get("default_factory"),
+        Some(ConstValue::CallableIdentity(value)) if value == &factory
+    ));
+}
+
+#[test]
 fn enum_and_newtype_shapes_preserve_metadata_and_nominal_identity() {
     let source = r#"
 from enum import Enum

@@ -20,23 +20,9 @@ pub(crate) fn canonical_value(value: &ConstValue) -> String {
                 .collect::<Vec<_>>()
                 .join(",")
         ),
-        ConstValue::CallableIdentity(identity) => format!(
-            "callable[module={}:{};owner={}:{};symbol={}:{};generics=[{}];signature={}:{}]",
-            identity.module.len(),
-            identity.module,
-            identity.owner.as_deref().unwrap_or("").len(),
-            identity.owner.as_deref().unwrap_or(""),
-            identity.symbol.len(),
-            identity.symbol,
-            identity
-                .generic_arguments
-                .iter()
-                .map(|argument| format!("{}:{argument}", argument.len()))
-                .collect::<Vec<_>>()
-                .join(","),
-            identity.signature.len(),
-            identity.signature,
-        ),
+        ConstValue::CallableIdentity(identity) => {
+            sifr_lowering::canonical_callable_identity(identity)
+        }
         // Origin identity is diagnostic-only. A package result containing an
         // origin is rejected before static-program canonicalization.
         ConstValue::SourceOrigin(_) => "source-origin:opaque".to_string(),

@@ -249,6 +249,7 @@ fn method_only_async_python_declaration_requires_owned_loop() {
         identity: None,
         fields: Vec::new(),
         field_defaults: Vec::new(),
+        field_default_identities: Vec::new(),
         declaration_metadata: Vec::new(),
         methods: vec![method],
         is_hashable: false,

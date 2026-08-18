@@ -107,6 +107,15 @@ Source origins and byte locations are excluded from both the canonical structura
 retained static value. Moving an otherwise unchanged declaration therefore updates diagnostic
 locations without changing the static-program identity.
 
+An adapted shape field records one of four default states: `required`, `const`, `factory`, or
+`runtime`. Constant defaults carry their closed value. Factory defaults carry the compiler-sealed
+`CallableIdentity`; the callable's canonical identity participates in the structural shape and
+static-program identity. `runtime` identifies an ordinary non-constant class default that cannot
+participate in a static program. Structural construction accepts named record edges in any order,
+rejects unknown or duplicate names, and evaluates the checked class default for each omitted field.
+Omitting a required field returns `ArityMismatch`. A factory therefore runs once per constructed
+value and mutable factory results are not shared.
+
 For a structural Rust call with the compiler-owned `sifr.meta.StaticProgram` bound, the compiler
 also emits a sealed typed `StaticProgram[T]` envelope and implements `StaticProgramType` for the
 concrete specialized type. This bound requires a produced specialization result. It has no empty

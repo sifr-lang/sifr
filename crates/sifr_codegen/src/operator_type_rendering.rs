@@ -53,6 +53,7 @@ mod tests {
             identity: None,
             fields: Vec::new(),
             field_defaults: Vec::new(),
+            field_default_identities: Vec::new(),
             declaration_metadata: Vec::new(),
             methods: Vec::new(),
             is_hashable: false,
