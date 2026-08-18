@@ -45,6 +45,20 @@ pub(crate) fn resolve(
     }
 }
 
+pub(crate) fn contract_for_identity(
+    module_name: &str,
+    result: &LoweringResult,
+    external_defs: &ExternalDefs,
+    identity: &CallableIdentity,
+) -> Option<FunctionType> {
+    Resolver {
+        module_name,
+        result,
+        external_defs,
+    }
+    .contract(identity)
+}
+
 struct Resolver<'a> {
     module_name: &'a str,
     result: &'a LoweringResult,
@@ -110,7 +124,137 @@ impl Resolver<'_> {
                 }
             }
         }
-        None
+        builtin_factory_type(local).map(|function| CallableIdentity {
+            module: "sifr.builtins".to_string(),
+            owner: None,
+            symbol: local.to_string(),
+            generic_arguments,
+            signature: signature(&function),
+        })
+    }
+
+    fn contract(&self, identity: &CallableIdentity) -> Option<FunctionType> {
+        if identity.module == "sifr.builtins" && identity.owner.is_none() {
+            return builtin_factory_type(&identity.symbol)
+                .filter(|function| signature(function) == identity.signature);
+        }
+        if identity.module == self.module_name {
+            if let Some(owner) = &identity.owner {
+                let owner_name = owner
+                    .rsplit_once('.')
+                    .map_or(owner.as_str(), |(_, name)| name);
+                let class = self
+                    .result
+                    .module
+                    .classes
+                    .iter()
+                    .find(|class| class.name == owner_name)?;
+                let function = if identity.symbol == "__init__" {
+                    let return_type = class_type(self.module_name, class);
+                    class
+                        .methods
+                        .iter()
+                        .find(|method| method.name == "new")
+                        .map_or_else(
+                            || constructor_type(&class.fields, return_type.clone()),
+                            |method| {
+                                let mut function = self.canonical_local_function_type(method);
+                                function.return_type = Box::new(return_type.clone());
+                                function
+                            },
+                        )
+                } else {
+                    let method = class
+                        .methods
+                        .iter()
+                        .find(|method| method.name == identity.symbol)?;
+                    if method.method_kind == MethodKind::Regular {
+                        return None;
+                    }
+                    self.canonical_local_function_type(method)
+                };
+                return (signature(&function) == identity.signature).then_some(function);
+            }
+            let function = self
+                .result
+                .module
+                .functions
+                .iter()
+                .find(|function| function.name == identity.symbol)
+                .map(|function| self.canonical_local_function_type(function))?;
+            return (signature(&function) == identity.signature).then_some(function);
+        }
+        if let Some(owner) = &identity.owner {
+            let owner_name = owner
+                .rsplit_once('.')
+                .map_or(owner.as_str(), |(_, name)| name);
+            if identity.symbol == "__init__" {
+                let ty = self
+                    .external_defs
+                    .classes
+                    .get(&identity.module)?
+                    .get(owner_name)?;
+                let Type::Class { fields, .. } = ty.resolve_alias() else {
+                    return None;
+                };
+                let function = self
+                    .external_defs
+                    .structural_methods_for(&identity.module)
+                    .and_then(|classes| classes.get(owner_name))
+                    .and_then(|methods| methods.iter().find(|method| method.name == "__init__"))
+                    .map_or_else(
+                        || constructor_type(fields, ty.clone()),
+                        |method| FunctionType {
+                            receiver: method.receiver,
+                            params: method
+                                .params
+                                .iter()
+                                .map(|parameter| {
+                                    (
+                                        parameter.name.clone(),
+                                        parameter.ty.clone(),
+                                        parameter.convention,
+                                    )
+                                })
+                                .collect(),
+                            return_type: Box::new(ty.clone()),
+                        },
+                    );
+                return (signature(&function) == identity.signature).then_some(function);
+            }
+            let method = self
+                .external_defs
+                .structural_methods_for(&identity.module)?
+                .get(owner_name)?
+                .iter()
+                .find(|method| method.name == identity.symbol)?;
+            if method.method_kind == MethodKind::Regular {
+                return None;
+            }
+            let function = FunctionType {
+                receiver: method.receiver,
+                params: method
+                    .params
+                    .iter()
+                    .map(|parameter| {
+                        (
+                            parameter.name.clone(),
+                            parameter.ty.clone(),
+                            parameter.convention,
+                        )
+                    })
+                    .collect(),
+                return_type: Box::new(method.return_type.clone()),
+            };
+            return (signature(&function) == identity.signature).then_some(function);
+        }
+        let function = self
+            .external_defs
+            .functions
+            .get(&identity.module)?
+            .get(&identity.symbol)?
+            .clone();
+        (signature(&function) == identity.signature).then_some(function)
     }
 
     fn method(&self, owner: &str, method_name: &str) -> Option<CallableIdentity> {
@@ -365,6 +509,21 @@ fn constructor_type(fields: &[(String, Type)], return_type: Type) -> FunctionTyp
             .collect(),
         return_type: Box::new(return_type),
     }
+}
+
+fn builtin_factory_type(name: &str) -> Option<FunctionType> {
+    let return_type = match name {
+        "list" => Type::List(Box::new(Type::Any)),
+        "set" => Type::Set(Box::new(Type::Any)),
+        "dict" => Type::Dict(Box::new(Type::Any), Box::new(Type::Any)),
+        "str" => Type::Str,
+        "bytes" => Type::Bytes,
+        "int" => Type::Int,
+        "float" => Type::Float,
+        "bool" => Type::Bool,
+        _ => return None,
+    };
+    Some(FunctionType::new(Vec::new(), return_type))
 }
 
 fn function_type(function: &HirFunction) -> FunctionType {

@@ -35,6 +35,10 @@ class CallableIdentity:
     pass
 
 
+class StaticValue:
+    pass
+
+
 class CallArgumentDeclaration:
     name: str | None
     origin: SourceOrigin
@@ -57,11 +61,14 @@ class ClassDeclarationItem:
     order: int
     kind: str
     name: str
+    identity: str
     origin: SourceOrigin
     annotation_origin: SourceOrigin | None
     value_origin: SourceOrigin | None
     return_origin: SourceOrigin | None
     declared_type: str | None
+    default_kind: str
+    default_value: StaticValue | None
     signature: str | None
     value_argument_origins: list[SourceOrigin]
     value_arguments: list[CallArgumentDeclaration]
@@ -95,6 +102,10 @@ class DeclarationInput[D]:
 class PlannedField:
     identity: str
     declared_type: str
+    default_kind: str = "required"
+    default_value: StaticValue | None = None
+    default_factory: CallableIdentity | None = None
+    validation_policy: str | None = None
 
 
 class PlannedMetadata[D]:

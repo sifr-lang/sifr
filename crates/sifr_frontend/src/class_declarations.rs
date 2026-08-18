@@ -158,39 +158,35 @@ impl ClassDeclaration {
             .map(|entry| entry.id)
     }
 
-    #[must_use]
-    pub(crate) fn field_contracts(&self, lowering: &LoweringResult) -> Vec<(String, String)> {
-        lowering
-            .module
-            .classes
-            .iter()
-            .find(|class| class.name == self.name)
-            .into_iter()
-            .flat_map(|class| &class.fields)
-            .map(|(name, ty)| {
-                (
-                    format!("{}.{}.{name}", self.module, self.name),
-                    crate::canonical_types::type_identity(ty),
-                )
-            })
-            .collect()
-    }
-
     fn item_const_value(
         &self,
         order: usize,
         item: &ClassDeclarationItem,
         lowering: &LoweringResult,
     ) -> ConstValue {
+        let item_name = match item {
+            ClassDeclarationItem::Field { name, .. }
+            | ClassDeclarationItem::ClassItem { name, .. }
+            | ClassDeclarationItem::Method { name, .. } => name,
+        };
         let mut record = BTreeMap::from([
             (
                 "order".to_string(),
                 ConstValue::Integer(num_bigint::BigInt::from(order)),
             ),
+            (
+                "identity".to_string(),
+                ConstValue::String(format!("{}.{}.{}", self.module, self.name, item_name)),
+            ),
             ("annotation_origin".to_string(), ConstValue::None),
             ("value_origin".to_string(), ConstValue::None),
             ("return_origin".to_string(), ConstValue::None),
             ("declared_type".to_string(), ConstValue::None),
+            (
+                "default_kind".to_string(),
+                ConstValue::String("required".to_string()),
+            ),
+            ("default_value".to_string(), ConstValue::None),
             ("signature".to_string(), ConstValue::None),
             (
                 "value_argument_origins".to_string(),
@@ -234,11 +230,49 @@ impl ClassDeclaration {
                     .iter()
                     .find(|class| class.name == self.name)
                 {
-                    if let Some((_, ty)) = class.fields.iter().find(|(field, _)| field == name) {
+                    let parent_fields =
+                        class.parent_type.as_ref().and_then(|parent| match parent {
+                            sifr_type_system::Type::Class { fields, .. } => Some(fields.as_slice()),
+                            _ => None,
+                        });
+                    let parent_field = parent_fields.and_then(|fields| {
+                        fields
+                            .iter()
+                            .enumerate()
+                            .find(|(_, (field, _))| field == name)
+                    });
+                    let own_field = class
+                        .fields
+                        .iter()
+                        .enumerate()
+                        .find(|(_, (field, _))| field == name);
+                    if let Some((_, (_, ty))) = parent_field.or(own_field) {
                         record.insert(
                             "declared_type".to_string(),
                             ConstValue::String(crate::canonical_types::type_identity(ty)),
                         );
+                    }
+                    let parent_field_count = parent_fields.map_or(0, <[_]>::len);
+                    let field_index = parent_field
+                        .map(|(index, _)| index)
+                        .or_else(|| own_field.map(|(index, _)| parent_field_count + index));
+                    if let Some(index) = field_index {
+                        if let Some(value) = lowering
+                            .class_field_defaults
+                            .get(&self.name)
+                            .into_iter()
+                            .flatten()
+                            .find(|(field, _)| *field == index)
+                            .and_then(|(_, value)| {
+                                crate::structural_shape::const_value_from_hir(value)
+                            })
+                        {
+                            record.insert(
+                                "default_kind".to_string(),
+                                ConstValue::String("const".to_string()),
+                            );
+                            record.insert("default_value".to_string(), value);
+                        }
                     }
                 }
             }

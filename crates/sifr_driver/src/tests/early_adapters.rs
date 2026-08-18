@@ -26,7 +26,7 @@ def adapt_contract(declaration: DeclarationInput[ContractDescriptor]) -> Declara
         if item.kind == "field":
             declared_type: str | None = item.declared_type
             if declared_type is not None:
-                fields.append(PlannedField(declaration.declaration.identity + "." + item.name, declared_type))
+                fields.append(PlannedField(item.identity, declared_type))
         if item.kind == "method" and item.name == "parse":
             signature: str | None = item.signature
             if signature is None:
@@ -228,7 +228,7 @@ class Invalid(Contract):
 
 #[test]
 fn adapter_plan_cannot_remove_or_retype_fields() {
-    let field_append = "fields.append(PlannedField(declaration.declaration.identity + \".\" + item.name, declared_type))";
+    let field_append = "fields.append(PlannedField(item.identity, declared_type))";
     for contract in [
         CONTRACT.replace(
             field_append,
@@ -437,4 +437,85 @@ class Invalid(Contract):
         error.code == sifr_diagnostics::DiagnosticCode::META_MALFORMED_DECLARATION.code()
             && error.message.contains("at most 32 issues")
     }));
+}
+
+#[test]
+fn marker_is_rejected_in_annotation_position() {
+    let modules = project(
+        r#"
+from fixture.contract import Contract
+
+class Invalid:
+    value: Contract
+"#,
+        CONTRACT,
+    );
+    let errors = compile_errors(&modules, "marker annotations must fail locally");
+    assert!(errors.iter().any(|error| {
+        error.code == sifr_diagnostics::DiagnosticCode::META_MALFORMED_DECLARATION.code()
+            && error.message.contains("base-only declarations")
+    }));
+}
+
+#[test]
+fn private_markers_are_not_exported() {
+    let contract = CONTRACT.replace("class Contract:", "class _Contract:");
+    let modules = project(
+        r#"
+from fixture.contract import _Contract
+
+class Invalid(_Contract):
+    value: int
+"#,
+        &contract,
+    );
+    let errors = compile_errors(&modules, "private markers must not cross module exports");
+    assert!(
+        errors.iter().any(|error| {
+            error.message.contains("_Contract")
+                && (error.message.contains("cannot import private")
+                    || error.message.contains("unknown type"))
+        }),
+        "{errors:#?}"
+    );
+}
+
+#[test]
+fn adapter_edits_but_not_consumer_source_movement_invalidate_program_identity() {
+    fn identities(main: &str, contract: &str) -> ([u8; 32], [u8; 32]) {
+        let modules = project(main, contract);
+        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+        let compiled = collect_project_hir_modules(&modules, stdlib_defs)
+            .expect("adapter identity project should compile");
+        let invocation = compiled
+            .external_defs
+            .class_adapter_selections
+            .get("main")
+            .and_then(|classes| classes.get("Model"))
+            .expect("adapter selection exists")
+            .adapter_invocation_identity;
+        let program = compiled
+            .external_defs
+            .specialization_outputs
+            .get("main")
+            .and_then(|outputs| outputs.first())
+            .expect("adapter-requested program exists")
+            .program_identity;
+        (invocation, program)
+    }
+
+    let source = r#"
+from fixture.contract import Contract, contract_config
+class Model(Contract):
+    _config = contract_config(True)
+    value: int
+"#;
+    let moved = format!("\n\n{source}");
+    let edited = CONTRACT.replace(
+        "    fields: list[PlannedField] = []",
+        "    adapter_revision: int = 2\n    fields: list[PlannedField] = []",
+    );
+    let base = identities(source, CONTRACT);
+    assert_eq!(base, identities(&moved, CONTRACT));
+    assert_ne!(base, identities(source, &edited));
 }

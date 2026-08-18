@@ -387,22 +387,22 @@ pub(in crate::lower) fn lower_class(
 
     let parent_class_name =
         crate::lower::descriptor_declarations::data_parent_name(&class_name, ctx);
-    let parent_type = parent_class_name
-        .as_ref()
-        .and_then(|parent_name| ctx.class_types.get(parent_name))
-        .cloned();
+    let parent_type = crate::lower::descriptor_declarations::data_parent_type(class_def, ctx)
+        .or_else(|| {
+            parent_class_name
+                .as_ref()
+                .and_then(|parent_name| ctx.class_types.get(parent_name))
+                .cloned()
+        });
 
     // Separate own fields from inherited fields
     // For struct codegen, we only want the child's own fields (parent is embedded)
-    let parent_field_names: Vec<String> = if let Some(Type::Class { fields: pf, .. }) =
-        parent_class_name
-            .as_ref()
-            .and_then(|parent_name| ctx.class_types.get(parent_name))
-    {
-        pf.iter().map(|(n, _)| n.clone()).collect()
-    } else {
-        vec![]
-    };
+    let parent_field_names: Vec<String> =
+        if let Some(Type::Class { fields: pf, .. }) = parent_type.as_ref() {
+            pf.iter().map(|(n, _)| n.clone()).collect()
+        } else {
+            vec![]
+        };
 
     let own_fields: Vec<(String, Type)> = all_fields
         .iter()

@@ -1,8 +1,15 @@
-from sifr.meta import ConstSpecializationOutcome, DeclarationInput, DeclarationPlan, PlannedField, PlannedIssue, PlannedMetadata, ShapeInput
-from fixture.contract_types import ContractDescriptor
+from sifr.meta import CallableIdentity, ConstSpecializationOutcome, DeclarationInput, DeclarationPlan, PlannedField, PlannedIssue, PlannedMetadata, ShapeInput, StaticValue
 
 
-@class_adapter_provider("fixture.contract_types", "ContractDescriptor")
+class ContractDescriptor:
+    kind: str
+    enabled: bool
+    default_kind: str
+    default_value: StaticValue | None
+    default_factory: CallableIdentity | None
+
+
+@class_adapter_provider("fixture.contract", "ContractDescriptor")
 @const_eval
 def adapt_contract(
     declaration: DeclarationInput[ContractDescriptor],
@@ -14,8 +21,16 @@ def adapt_contract(
         if item.kind == "field":
             declared_type: str | None = item.declared_type
             if declared_type is not None:
-                identity: str = declaration.declaration.identity + "." + item.name
-                fields.append(PlannedField(identity, declared_type))
+                identity: str = item.identity
+                default_kind: str = item.default_kind
+                default_value: StaticValue | None = item.default_value
+                default_factory: CallableIdentity | None = None
+                for descriptor in declaration.descriptors:
+                    if descriptor.target_kind == "field" and descriptor.target_identity == identity:
+                        default_kind = descriptor.value.default_kind
+                        default_value = descriptor.value.default_value
+                        default_factory = descriptor.value.default_factory
+                fields.append(PlannedField(identity, declared_type, default_kind, default_value, default_factory, None))
     for descriptor in declaration.descriptors:
         if descriptor.target_kind == "class":
             metadata.append(
@@ -42,7 +57,19 @@ class Contract:
 
 @class_descriptor("fixture.contract", "adapt_contract")
 def contract_config(enabled: bool) -> ContractDescriptor:
-    return ContractDescriptor("class", enabled)
+    return ContractDescriptor("class", enabled, "required", None, None)
+
+
+@field_descriptor("fixture.contract", "adapt_contract")
+def contract_field(
+    default: StaticValue | None = None,
+    default_factory: CallableIdentity | None = None,
+) -> ContractDescriptor:
+    if default_factory is not None:
+        return ContractDescriptor("field", False, "factory", None, default_factory)
+    if default is not None:
+        return ContractDescriptor("field", False, "const", default, None)
+    return ContractDescriptor("field", False, "required", None, None)
 
 
 @const_eval

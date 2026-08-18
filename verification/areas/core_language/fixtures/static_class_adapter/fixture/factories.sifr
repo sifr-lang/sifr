@@ -1,0 +1,12 @@
+def make_names() -> list[str]:
+    return []
+
+
+class Factory:
+    @staticmethod
+    def make_names() -> list[str]:
+        return []
+
+
+class Token:
+    pass

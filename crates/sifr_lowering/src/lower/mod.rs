@@ -2,6 +2,7 @@ use crate::hir_nodes::{HirExpr, HirImport, HirModule};
 
 mod mod_context;
 pub use mod_context::*;
+mod adapter_field_plans;
 mod append_growth_shapes;
 mod arithmetic_warnings;
 mod assignment_widening;

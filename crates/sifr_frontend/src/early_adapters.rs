@@ -1,5 +1,7 @@
 //! Erased marker selection and bounded early class-adapter execution.
 
+mod inheritance;
+
 use crate::package_issues::{
     evaluation_error, issue_templates, replace_unknown_package, SpecializationDiagnostic,
     SpecializationDiagnostics,
@@ -10,11 +12,12 @@ use crate::{
     ConstValue, DeterministicConstEvaluator,
 };
 use sifr_lowering::{
-    AppliedAdapterMetadata, ClassAdapterSelection, ConstSpecializationRequest,
-    DeclarationDescriptorKind, DeclarationMetadataTargetKind, LoweringWarningDiagnostic,
-    TypedDeclarationDescriptor,
+    AdapterFieldDefault, AdapterFieldPlan, AppliedAdapterMetadata, ClassAdapterSelection,
+    ConstSpecializationRequest, DeclarationDescriptorKind, DeclarationMetadataTargetKind,
+    LoweringWarningDiagnostic, TypedDeclarationDescriptor,
 };
 use sifr_lowering::{ExternalDefs, HirModule, LoweringResult};
+use sifr_type_system::Type;
 use std::collections::{BTreeMap, HashMap};
 
 const MAX_PLAN_METADATA: usize = 1024;
@@ -78,7 +81,14 @@ fn run_one(
         ));
         return;
     }
-    let input = match adapter_input(module_name, result, declaration, selection, &descriptors) {
+    let input = match adapter_input(
+        module_name,
+        result,
+        external_defs,
+        declaration,
+        selection,
+        &descriptors,
+    ) {
         Ok(input) => input,
         Err(problem) => {
             diagnostics.push(malformed(
@@ -99,6 +109,18 @@ fn run_one(
         ));
         return;
     };
+    let canonical_input = crate::const_canonical::canonical_value(&input);
+    let canonical_provider = crate::adapter_program_identity::canonical_const_functions(&functions);
+    let invocation_identity = sifr_structural_identity::static_program_identity(
+        sifr_structural_identity::ALGORITHM_VERSION,
+        [
+            ("contract", b"class-adapter-invocation-v1".as_slice()),
+            ("provider_module", selection.provider_module.as_bytes()),
+            ("provider_function", selection.provider_function.as_bytes()),
+            ("provider_hir", canonical_provider.as_bytes()),
+            ("input", canonical_input.as_bytes()),
+        ],
+    );
     let evaluated = DeterministicConstEvaluator::new(&functions)
         .evaluate_function(&selection.provider_function, vec![input]);
     let plan = match evaluated {
@@ -112,6 +134,15 @@ fn run_one(
             return;
         }
     };
+    let canonical_output = crate::const_canonical::canonical_value(&plan);
+    let post_adapter_identity = sifr_structural_identity::static_program_identity(
+        sifr_structural_identity::ALGORITHM_VERSION,
+        [
+            ("contract", b"class-adapter-post-v1".as_slice()),
+            ("invocation", invocation_identity.as_bytes().as_slice()),
+            ("output", canonical_output.as_bytes()),
+        ],
+    );
     let (plan, issues) =
         match validate_issues(plan, declaration, external_defs, selection, diagnostics) {
             Some(plan) => plan,
@@ -134,8 +165,21 @@ fn run_one(
                 });
         }
     }
-    match validate_plan(module_name, result, declaration, selection, plan) {
-        Ok(validated) => apply_plan(result, selection, validated),
+    match validate_plan(
+        module_name,
+        result,
+        external_defs,
+        declaration,
+        selection,
+        plan,
+    ) {
+        Ok(validated) => apply_plan(
+            result,
+            selection,
+            validated,
+            *invocation_identity.as_bytes(),
+            *post_adapter_identity.as_bytes(),
+        ),
         Err(problem) => diagnostics.push(malformed(
             &selection.provider_module,
             "adapter_plan",
@@ -148,6 +192,7 @@ fn run_one(
 fn adapter_input(
     module_name: &str,
     result: &LoweringResult,
+    external_defs: &ExternalDefs,
     declaration: &crate::class_declarations::ClassDeclaration,
     selection: &ClassAdapterSelection,
     descriptors: &[&TypedDeclarationDescriptor],
@@ -186,11 +231,10 @@ fn adapter_input(
         .map_or(ConstValue::None, |parent| {
             ConstValue::String(crate::canonical_types::type_identity(parent))
         });
+    let declaration =
+        inheritance::declaration_value(module_name, result, external_defs, declaration, selection)?;
     Ok(ConstValue::Record(BTreeMap::from([
-        (
-            "declaration".to_string(),
-            declaration.to_const_value(result),
-        ),
+        ("declaration".to_string(), declaration),
         ("descriptors".to_string(), ConstValue::List(descriptors)),
         (
             "provider_module".to_string(),
@@ -262,7 +306,7 @@ fn validate_issues(
         diagnostics.push(malformed(
             &selection.provider_module,
             "adapter_plan",
-            "adapter plan must contain exactly fields, metadata, specialization_module, specialization_function, and issues",
+            "adapter plan must contain exactly these fields: fields, metadata, specialization_module, specialization_function, and issues",
             selection.range,
         ));
         return None;
@@ -335,6 +379,7 @@ fn validate_issues(
 }
 
 struct ValidatedPlan {
+    fields: Vec<AdapterFieldPlan>,
     metadata: Vec<AppliedAdapterMetadata>,
     specialization: Option<(String, String)>,
 }
@@ -342,6 +387,7 @@ struct ValidatedPlan {
 fn validate_plan(
     module_name: &str,
     result: &LoweringResult,
+    external_defs: &ExternalDefs,
     declaration: &crate::class_declarations::ClassDeclaration,
     selection: &ClassAdapterSelection,
     value: ConstValue,
@@ -353,7 +399,14 @@ fn validate_plan(
         return Err("adapter plan contains unknown output fields".to_string());
     }
     let planned_fields = take_list(&mut fields, "fields")?;
-    validate_fields(declaration, result, planned_fields)?;
+    let planned_fields = validate_fields(
+        module_name,
+        selection,
+        declaration,
+        result,
+        external_defs,
+        planned_fields,
+    )?;
     let metadata = take_list(&mut fields, "metadata")?;
     if metadata.len() > MAX_PLAN_METADATA {
         return Err(format!(
@@ -362,7 +415,16 @@ fn validate_plan(
     }
     let metadata = metadata
         .into_iter()
-        .map(|value| parse_metadata(module_name, declaration, result, selection, value))
+        .map(|value| {
+            parse_metadata(
+                module_name,
+                declaration,
+                result,
+                external_defs,
+                selection,
+                value,
+            )
+        })
         .collect::<Result<Vec<_>, _>>()?;
     let module = take_optional_string(&mut fields, "specialization_module")?;
     let function = take_optional_string(&mut fields, "specialization_function")?;
@@ -388,46 +450,151 @@ fn validate_plan(
         return Err("an adapted class may request exactly one specialization".to_string());
     }
     Ok(ValidatedPlan {
+        fields: planned_fields,
         metadata,
         specialization,
     })
 }
 
 fn validate_fields(
+    module_name: &str,
+    selection: &ClassAdapterSelection,
     declaration: &crate::class_declarations::ClassDeclaration,
     result: &LoweringResult,
+    external_defs: &ExternalDefs,
     values: Vec<ConstValue>,
-) -> Result<(), String> {
+) -> Result<Vec<AdapterFieldPlan>, String> {
     let actual = values
         .into_iter()
         .map(|value| {
             let ConstValue::Record(mut fields) = value else {
                 return Err("planned field must be a record".to_string());
             };
-            if fields.len() != 2 {
-                return Err(
-                    "planned field must contain exactly identity and declared_type".to_string(),
-                );
+            if fields.len() != 6 {
+                return Err("planned field must contain exactly identity, declared_type, default_kind, default_value, default_factory, and validation_policy".to_string());
             }
             let identity = take_string(&mut fields, "identity")?;
             let declared_type = take_string(&mut fields, "declared_type")?;
-            Ok((identity, declared_type))
+            let default_kind = take_string(&mut fields, "default_kind")?;
+            let default_value = fields
+                .remove("default_value")
+                .ok_or_else(|| "planned field is missing default_value".to_string())?;
+            let default_factory = fields
+                .remove("default_factory")
+                .ok_or_else(|| "planned field is missing default_factory".to_string())?;
+            let validation_policy = fields
+                .remove("validation_policy")
+                .ok_or_else(|| "planned field is missing validation_policy".to_string())?;
+            Ok((
+                identity,
+                declared_type,
+                default_kind,
+                default_value,
+                default_factory,
+                validation_policy,
+            ))
         })
         .collect::<Result<Vec<_>, _>>()?;
-    let expected = declaration.field_contracts(result);
-    if actual != expected {
+    let expected =
+        expected_field_contracts(module_name, result, external_defs, declaration, selection)?;
+    if actual.len() != expected.len()
+        || actual
+            .iter()
+            .zip(&expected)
+            .any(|(actual, expected)| (&actual.0, &actual.1) != (&expected.0, &expected.1))
+    {
         return Err(
             "adapter plan fields must preserve every declared field identity, order, and type"
                 .to_string(),
         );
     }
-    Ok(())
+    let class = result
+        .module
+        .classes
+        .iter()
+        .find(|class| class.name == selection.owner)
+        .ok_or_else(|| "adapted class fields are unavailable".to_string())?;
+    let normalized_types = normalized_field_types(
+        module_name,
+        result,
+        external_defs,
+        selection,
+        class,
+        &expected,
+    )?;
+    actual
+        .into_iter()
+        .zip(normalized_types)
+        .map(
+            |((identity, _, kind, value, factory, policy), (name, ty))| {
+                let default = match (kind.as_str(), value, factory) {
+                    ("required", ConstValue::None, ConstValue::None) => {
+                        AdapterFieldDefault::Required
+                    }
+                    ("const", value, ConstValue::None) => {
+                        if !crate::typed_descriptors::const_value_assignable(&value, &ty) {
+                            return Err(format!(
+                                "planned constant default for field '{name}' is not assignable to its declared type"
+                            ));
+                        }
+                        AdapterFieldDefault::Const(
+                            static_program_value(&value).map_err(str::to_string)?,
+                        )
+                    }
+                    ("factory", ConstValue::None, ConstValue::CallableIdentity(factory)) => {
+                        let contract = crate::callable_identities::contract_for_identity(
+                            module_name,
+                            result,
+                            external_defs,
+                            &factory,
+                        )
+                        .ok_or_else(|| {
+                            format!(
+                                "planned default factory for field '{name}' is not a checked callable"
+                            )
+                        })?;
+                        if !contract.params.is_empty() {
+                            return Err(format!(
+                                "planned default factory for field '{name}' must accept no arguments"
+                            ));
+                        }
+                        if !contract.return_type.is_assignable_to(&ty) {
+                            return Err(format!(
+                                "planned default factory for field '{name}' does not return its declared type"
+                            ));
+                        }
+                        AdapterFieldDefault::Factory(factory)
+                    }
+                    _ => {
+                        return Err(format!(
+                            "planned field '{name}' must use a valid required, const, or factory default state"
+                        ));
+                    }
+                };
+                let validation_policy = match policy {
+                    ConstValue::None => None,
+                    ConstValue::String(value) => Some(sifr_lowering::StaticProgramValue::String(value)),
+                    _ => return Err(format!(
+                        "planned default validation policy for field '{name}' must be a string or None"
+                    )),
+                };
+                Ok(AdapterFieldPlan {
+                    identity,
+                    name: name.clone(),
+                    declared_type: ty,
+                    default,
+                    validation_policy,
+                })
+            },
+        )
+        .collect()
 }
 
 fn parse_metadata(
     module_name: &str,
     declaration: &crate::class_declarations::ClassDeclaration,
     result: &LoweringResult,
+    external_defs: &ExternalDefs,
     selection: &ClassAdapterSelection,
     value: ConstValue,
 ) -> Result<AppliedAdapterMetadata, String> {
@@ -460,7 +627,13 @@ fn parse_metadata(
     let (target_kind, target_name) = match target_kind.as_str() {
         "class" if target_identity == owner_identity => (DeclarationMetadataTargetKind::Type, None),
         "field" => {
-            let fields = declaration.field_contracts(result);
+            let fields = expected_field_contracts(
+                module_name,
+                result,
+                external_defs,
+                declaration,
+                selection,
+            )?;
             let Some((identity, _)) = fields
                 .iter()
                 .find(|(identity, _)| identity == &target_identity)
@@ -486,7 +659,155 @@ fn parse_metadata(
     })
 }
 
-fn apply_plan(result: &mut LoweringResult, selection: &ClassAdapterSelection, plan: ValidatedPlan) {
+fn normalized_field_types(
+    module_name: &str,
+    result: &LoweringResult,
+    external_defs: &ExternalDefs,
+    selection: &ClassAdapterSelection,
+    class: &sifr_lowering::HirClass,
+    expected: &[(String, String)],
+) -> Result<Vec<(String, Type)>, String> {
+    let local_prefix = format!("{module_name}.{}.", selection.owner);
+    let parent_name = selection.data_parent.as_deref();
+    let parent_identity = class
+        .parent_type
+        .as_ref()
+        .and_then(|parent| match parent {
+            Type::Class { identity, name, .. } => {
+                Some(identity.as_deref().unwrap_or(name).to_string())
+            }
+            _ => None,
+        })
+        .or_else(|| parent_name.map(|name| format!("{module_name}.{name}")));
+    let parent = parent_name.and_then(|name| {
+        inheritance::parent_selection(
+            result,
+            external_defs,
+            parent_identity.as_deref().unwrap_or(""),
+            name,
+        )
+    });
+    let type_args = match class.parent_type.as_ref() {
+        Some(Type::Class { type_args, .. }) => type_args.as_slice(),
+        _ => &[],
+    };
+    let bindings = parent_name.map_or_else(HashMap::new, |name| {
+        inheritance::parent_bindings(
+            result,
+            external_defs,
+            parent_identity.as_deref().unwrap_or(""),
+            name,
+            type_args,
+        )
+    });
+    expected
+        .iter()
+        .map(|(identity, _)| {
+            let name = identity
+                .rsplit_once('.')
+                .map(|(_, name)| name.to_string())
+                .ok_or_else(|| "planned field identity is malformed".to_string())?;
+            let ty = if identity.starts_with(&local_prefix) {
+                class
+                    .fields
+                    .iter()
+                    .find(|(field, _)| field == &name)
+                    .map(|(_, ty)| ty.clone())
+                    .or_else(|| {
+                        class.parent_type.as_ref().and_then(|parent| match parent {
+                            Type::Class { fields, .. } => fields
+                                .iter()
+                                .find(|(field, _)| field == &name)
+                                .map(|(_, ty)| ty.clone()),
+                            _ => None,
+                        })
+                    })
+            } else {
+                parent
+                    .into_iter()
+                    .flat_map(|parent| parent.field_plans.iter())
+                    .find(|field| field.identity == *identity)
+                    .map(|field| {
+                        sifr_lowering::substitute_type_vars(&field.declared_type, &bindings)
+                    })
+                    .or_else(|| {
+                        class.parent_type.as_ref().and_then(|parent| match parent {
+                            Type::Class { fields, .. } => fields
+                                .iter()
+                                .find(|(field, _)| field == &name)
+                                .map(|(_, ty)| ty.clone()),
+                            _ => None,
+                        })
+                    })
+            }
+            .ok_or_else(|| format!("normalized type for field '{name}' is unavailable"))?;
+            Ok((name, ty))
+        })
+        .collect()
+}
+
+fn expected_field_contracts(
+    module_name: &str,
+    result: &LoweringResult,
+    external_defs: &ExternalDefs,
+    declaration: &crate::class_declarations::ClassDeclaration,
+    selection: &ClassAdapterSelection,
+) -> Result<Vec<(String, String)>, String> {
+    let value =
+        inheritance::declaration_value(module_name, result, external_defs, declaration, selection)
+            .map_err(str::to_string)?;
+    let ConstValue::Record(fields) = value else {
+        return Err("class declaration is not structural".to_string());
+    };
+    let Some(ConstValue::List(items)) = fields.get("items") else {
+        return Err("class declaration items are unavailable".to_string());
+    };
+    items
+        .iter()
+        .filter_map(|item| {
+            let ConstValue::Record(fields) = item else {
+                return None;
+            };
+            if !matches!(fields.get("kind"), Some(ConstValue::String(kind)) if kind == "field") {
+                return None;
+            }
+            Some(
+                match (fields.get("identity"), fields.get("declared_type")) {
+                    (Some(ConstValue::String(identity)), Some(ConstValue::String(ty))) => {
+                        Ok((identity.clone(), ty.clone()))
+                    }
+                    _ => Err(format!(
+                        "declared field identity or type is unavailable for '{}'",
+                        fields
+                            .get("name")
+                            .and_then(|name| match name {
+                                ConstValue::String(name) => Some(name.as_str()),
+                                _ => None,
+                            })
+                            .unwrap_or("<unknown>")
+                    )),
+                },
+            )
+        })
+        .collect()
+}
+
+fn apply_plan(
+    result: &mut LoweringResult,
+    selection: &ClassAdapterSelection,
+    plan: ValidatedPlan,
+    adapter_invocation_identity: [u8; 32],
+    post_adapter_identity: [u8; 32],
+) {
+    if let Some(applied) = result
+        .class_adapter_selections
+        .iter_mut()
+        .find(|candidate| candidate.owner == selection.owner)
+    {
+        applied.field_plans = plan.fields;
+        applied.adapter_invocation_identity = adapter_invocation_identity;
+        applied.post_adapter_identity = post_adapter_identity;
+    }
     result.applied_adapter_metadata.extend(plan.metadata);
     if let Some((package_module, function)) = plan.specialization {
         result

@@ -1,1 +1,1 @@
-from fixture.contract import Contract, contract_config
+from fixture.contract import Contract, contract_config, contract_field

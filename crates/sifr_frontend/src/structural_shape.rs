@@ -556,10 +556,13 @@ fn canonical_node(node: &ShapeNode) -> String {
             let variants = variants
                 .iter()
                 .map(|variant| {
+                    let value = variant
+                        .value
+                        .map_or_else(|| "none".to_string(), |value| format!("i64:{value}"));
                     format!(
-                        "{}={:?}:{}",
+                        "{}={}:{}",
                         variant.name,
-                        variant.value,
+                        value,
                         canonical_metadata(&variant.metadata)
                     )
                 })

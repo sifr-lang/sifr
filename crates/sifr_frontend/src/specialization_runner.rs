@@ -166,6 +166,8 @@ pub(crate) fn run_specializations(
                     };
                     let canonical_value = crate::const_canonical::canonical_value(value);
                     let structural_contract_version = sifr_structural_identity::ALGORITHM_VERSION;
+                    let adapter_identity =
+                        crate::adapter_program_identity::post_adapter_hex(result, &request.owner);
                     let program_identity = sifr_structural_identity::static_program_identity(
                         structural_contract_version,
                         [
@@ -174,6 +176,7 @@ pub(crate) fn run_specializations(
                             ("package", request.package_module.as_bytes()),
                             ("function", request.function.as_bytes()),
                             ("shape", canonical_shape.as_bytes()),
+                            ("adapter", adapter_identity.as_bytes()),
                             ("value", canonical_value.as_bytes()),
                         ],
                     );
