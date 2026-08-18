@@ -90,3 +90,5 @@ mod structured_intrinsic_codegen_tests;
 mod structured_lowering_codegen_tests;
 #[cfg(test)]
 mod structured_path_codegen_tests;
+#[cfg(test)]
+mod union_representation_codegen_tests;

@@ -705,3 +705,20 @@ fn optional_member_widens_into_larger_union_without_source_enum() {
     assert!(rendered.contains(&target.union_enum_name()), "{rendered}");
     assert!(!rendered.contains(&source.union_enum_name()), "{rendered}");
 }
+
+#[test]
+fn option_represented_union_payload_widens_through_its_inner_enum() {
+    let payload = sifr_type_system::make_union(vec![Type::Int, Type::Str]);
+    let source = sifr_type_system::safe_optional_result(payload.clone());
+    let target = sifr_type_system::make_union(vec![Type::Bool, Type::Int, Type::Str, Type::None]);
+    let widened =
+        widen_option_value_for_union_target(&target, &source, RustExpr::Ident("value".to_string()))
+            .expect("option-represented union should widen into the target union");
+    let rendered = crate::render_expr(&widened);
+
+    assert!(rendered.contains(".map("), "{rendered}");
+    assert!(rendered.contains(".unwrap_or("), "{rendered}");
+    assert!(rendered.contains(&payload.union_enum_name()), "{rendered}");
+    assert!(rendered.contains(&target.union_enum_name()), "{rendered}");
+    assert!(!rendered.contains(&source.union_enum_name()), "{rendered}");
+}

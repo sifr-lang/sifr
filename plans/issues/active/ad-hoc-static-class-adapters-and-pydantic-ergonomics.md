@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-18. M0-M7c are complete; M7d is next.
+Status: active on 2026-08-18. M0-M7c are complete; M7d is active.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -1080,9 +1080,9 @@ Acceptance criteria:
 Exit gate: optional values use one correct representation transition when they
 enter wider-union call, assignment, and consuming-value paths.
 
-State: pending
+State: active
 Issue: [`sifr-lang/sifr#3274`](https://github.com/sifr-lang/sifr/issues/3274)
-Next action: implement M7d, then resume M8 without changing its preserved work.
+Next action: complete M7d, then resume M8 without changing its preserved work.
 
 ### M8: Pydantic Model, Field, and Configuration Declarations
 
@@ -1358,7 +1358,7 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M7c are merged and recorded; M7d is next.
+Current state: M0-M7c are merged and recorded; M7d is active.
 
 Next action: complete M7d in `sifr-lang/sifr`, then resume the preserved M8 work
 in `sifr-lang/pydantic-sifr` on the merged compiler substrate.

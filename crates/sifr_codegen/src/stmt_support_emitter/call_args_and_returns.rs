@@ -67,35 +67,43 @@ impl RustEmitter {
                     || ty.rust_type().starts_with('&'));
 
             let unadapted_option_arg = lowered_arg.clone();
-            lowered_arg = Self::flatten_option_argument_for_ir(
-                hir_arg,
-                param_ty,
-                &effective_arg_ty,
-                *convention,
-                lowered_arg,
-            );
-            let option_value_adapted = lowered_arg != unadapted_option_arg;
-
             if matches!(hir_arg, HirExpr::NoneLiteral)
                 && matches!(resolved_param, Type::None | Type::TypeVar(_))
             {
                 lowered_arg = crate::RustExpr::Literal(crate::RustLiteral::Unit);
             }
 
+            let mut consuming_value_adapted = false;
             if convention.is_owned() {
-                lowered_arg =
-                    self.consuming_value_upcast_for_ir(param_ty, &effective_arg_ty, lowered_arg);
-            } else if let Some(wrapped) = crate::helpers::wrap_union_member_expr(
-                param_ty,
-                if matches!(hir_arg, HirExpr::NoneLiteral) {
-                    &Type::None
-                } else {
-                    &effective_arg_ty
-                },
-                lowered_arg.clone(),
-            ) {
-                lowered_arg = wrapped;
+                (lowered_arg, consuming_value_adapted) = self.adapt_consuming_call_argument_for_ir(
+                    hir_arg,
+                    param_ty,
+                    &effective_arg_ty,
+                    *convention,
+                    lowered_arg,
+                    borrowed_name_arg,
+                );
+            } else {
+                lowered_arg = Self::flatten_option_argument_for_ir(
+                    hir_arg,
+                    param_ty,
+                    &effective_arg_ty,
+                    *convention,
+                    lowered_arg,
+                );
+                if let Some(wrapped) = crate::helpers::wrap_union_member_expr(
+                    param_ty,
+                    if matches!(hir_arg, HirExpr::NoneLiteral) {
+                        &Type::None
+                    } else {
+                        &effective_arg_ty
+                    },
+                    lowered_arg.clone(),
+                ) {
+                    lowered_arg = wrapped;
+                }
             }
+            let option_value_adapted = lowered_arg != unadapted_option_arg;
 
             let mut recursive_option_adapted = false;
             if crate::helpers::is_option_type(resolved_param) {
@@ -169,7 +177,11 @@ impl RustEmitter {
                 };
             }
 
-            if convention.is_owned() && borrowed_name_arg && !recursive_option_adapted {
+            if convention.is_owned()
+                && borrowed_name_arg
+                && !recursive_option_adapted
+                && !consuming_value_adapted
+            {
                 lowered_arg = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
                     method: "clone".to_string(),
