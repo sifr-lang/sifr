@@ -346,10 +346,9 @@ The generated installer embeds:
 
 The generated installer honors `SIFR_ARTIFACT_BASE_URL`, `SIFR_TARGET`,
 `SIFR_INSTALL_DIR`, `SIFR_SYSROOT_INSTALL_DIR`, and `SIFR_NO_MODIFY_PATH` for
-local validation. `SIFR_INSTALL_DIR` remains the binary directory; when it ends
-in `/bin`, the default sysroot root is its parent. Otherwise the binary
-directory itself is the flat sysroot root for compatibility with older custom
-install examples.
+local validation. `SIFR_INSTALL_DIR` is the toolchain `bin` directory and must
+end in `/bin`. `SIFR_SYSROOT_INSTALL_DIR` is its parent. The installer rejects
+any other relationship.
 
 ## Self-Update Receipt Rules
 
@@ -382,9 +381,8 @@ The authoritative field enumeration lives at `verification/areas/distribution_re
 `modify_path` records the actual installer request, including
 `SIFR_NO_MODIFY_PATH=1` and `--no-modify-path`. `binary_path` and
 `sysroot_path` record canonical installed paths when the platform can resolve
-them. `sifr self update` validates that `binary_path` is paired with either
-`sysroot_path/bin/sifr` for toolchain-root installs or `sysroot_path/sifr` for
-legacy flat custom installs, and delegates to the immutable installer with both
+them. `sifr self update` requires `binary_path` to equal
+`sysroot_path/bin/sifr`. It delegates to the immutable installer with both
 paths under the same install lock.
 
 ## Self-Update TLS And Delegation Policy
