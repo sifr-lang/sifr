@@ -157,7 +157,7 @@
       "fixture": "verification/areas/stdlib_parity/fixtures/audits/stdlib/07_time.sifr",
       "command": "check",
       "supported_apis": [
-        {"name": "time", "tokens": ["first_now: float = time()"]},
+        {"name": "time", "tokens": ["t: float = time()"]},
         {"name": "sleep", "tokens": ["sleep("]}
       ]
     }
