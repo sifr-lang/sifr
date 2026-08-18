@@ -284,13 +284,6 @@ pub(crate) fn widen_option_value_for_union_target(
         return None;
     }
     let source_payload = source.optional_member_type()?;
-    if matches!(
-        crate::resolve_alias_type_for_plain_call(&source_payload),
-        Type::Union(_)
-    ) {
-        return None;
-    }
-    let payload_member = find_union_member(target_members, &source_payload)?;
     if !target_members
         .iter()
         .any(|member| matches!(member.resolve_alias(), Type::None))
@@ -298,12 +291,41 @@ pub(crate) fn widen_option_value_for_union_target(
         return None;
     }
     let target_name = target.union_enum_name();
-    let present = RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            target_name.clone(),
-            payload_member.union_variant_name(),
-        ])),
-        args: vec![RustExpr::Ident("__sifr_union_value".to_string())],
+    let payload_value = RustExpr::Ident("__sifr_union_value".to_string());
+    let present = if let Type::Union(source_members) =
+        crate::resolve_alias_type_for_plain_call(&source_payload)
+    {
+        let mut arms = Vec::with_capacity(source_members.len());
+        for source_member in source_members {
+            let wrapped = wrap_union_member_expr(
+                target,
+                source_member,
+                RustExpr::Ident("__sifr_union_member".to_string()),
+            )?;
+            arms.push(crate::RustMatchArm {
+                pattern: format!(
+                    "{}::{}(__sifr_union_member)",
+                    source_payload.union_enum_name(),
+                    source_member.union_variant_name()
+                ),
+                bindings: Vec::new(),
+                guard: None,
+                body: vec![crate::RustStmt::TailExpr(wrapped)],
+            });
+        }
+        RustExpr::Match {
+            expr: Box::new(payload_value),
+            arms,
+        }
+    } else {
+        let payload_member = find_union_member(target_members, &source_payload)?;
+        RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                target_name.clone(),
+                payload_member.union_variant_name(),
+            ])),
+            args: vec![payload_value],
+        }
     };
     let mapped = RustExpr::MethodCall {
         receiver: Box::new(value),

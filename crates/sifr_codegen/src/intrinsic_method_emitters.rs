@@ -14,3 +14,4 @@ mod narrowing_helpers;
 mod plain_call_args;
 mod recursive_exprs;
 mod recursive_method_calls;
+mod registry_method_arg_conventions;

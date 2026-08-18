@@ -1,6 +1,45 @@
-use super::{RustEmitter, Type};
+use super::{HirExpr, RustEmitter, Type};
+use crate::ParamConvention;
 
 impl RustEmitter {
+    pub(crate) fn adapt_consuming_call_argument_for_ir(
+        &self,
+        arg: &HirExpr,
+        target_ty: &Type,
+        source_ty: &Type,
+        convention: ParamConvention,
+        lowered: crate::RustExpr,
+        borrowed_source: bool,
+    ) -> (crate::RustExpr, bool) {
+        let flattened = Self::flatten_option_argument_for_ir(
+            arg,
+            target_ty,
+            source_ty,
+            convention,
+            lowered.clone(),
+        );
+        if flattened != lowered {
+            return (flattened, true);
+        }
+        let probe = crate::RustExpr::Ident("__sifr_consuming_upcast_probe".to_string());
+        if self.consuming_value_upcast_for_ir(target_ty, source_ty, probe.clone()) == probe {
+            return (lowered, false);
+        }
+        let lowered = if borrowed_source && !crate::helpers::is_copy_type_for_codegen(source_ty) {
+            crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                method: "clone".to_string(),
+                args: Vec::new(),
+            }
+        } else {
+            lowered
+        };
+        (
+            self.consuming_value_upcast_for_ir(target_ty, source_ty, lowered),
+            true,
+        )
+    }
+
     pub(crate) fn consuming_value_upcast_for_ir(
         &self,
         target_ty: &Type,

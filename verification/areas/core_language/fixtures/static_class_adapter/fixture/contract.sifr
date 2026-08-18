@@ -97,6 +97,29 @@ def no_contract_alias() -> str | ContractAlias | None:
     return None
 
 
+def consume_contract_union(
+    own value: bool | str | ContractAlias | None,
+) -> bool:
+    return value is None
+
+
+def widen_contract_optional(value: str | None) -> bool:
+    return consume_contract_union(value)
+
+
+def widen_contract_optional_union(
+    values: dict[str, str | ContractAlias],
+) -> bool:
+    widened: bool | str | ContractAlias | None = values.get("contract")
+    return consume_contract_union(widened)
+
+
+def flatten_contract_optional_union(
+    values: dict[str, bool | str | ContractAlias | None],
+) -> bool:
+    return consume_contract_union(values.get("contract"))
+
+
 @const_eval
 def specialize(
     shape: ShapeInput[ContractDescriptor],
