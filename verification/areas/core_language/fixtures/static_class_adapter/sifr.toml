@@ -8,4 +8,4 @@ sifr-version = ">=0.3,<0.4"
 roots = ["."]
 
 [exports]
-modules = ["fixture.contract"]
+modules = ["fixture.contract", "fixture.contract_types"]

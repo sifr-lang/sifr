@@ -13,6 +13,14 @@ impl RustEmitter {
             return lowered;
         }
 
+        if let Some(widened) = crate::helpers::widen_option_value_for_union_target(
+            target_ty,
+            source_ty,
+            lowered.clone(),
+        ) {
+            return widened;
+        }
+
         if let Some(target_inner) = Self::option_inner_type_for_ir(target_ty) {
             if let Some(source_inner) = Self::option_inner_type_for_ir(source_ty) {
                 let value = crate::RustExpr::Ident("__sifr_option_value".to_string());
@@ -92,6 +100,11 @@ impl RustEmitter {
             {
                 let converted =
                     self.consuming_value_upcast_for_ir(target_member, source_ty, lowered);
+                let converted = if matches!(target_member.resolve_alias(), Type::None) {
+                    crate::RustExpr::Literal(crate::RustLiteral::Unit)
+                } else {
+                    converted
+                };
                 return crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec![
                         target.union_enum_name(),

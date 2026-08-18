@@ -137,6 +137,7 @@ impl RustEmitter {
                         )?;
                         if !crate::helpers::is_option_type(&target_ty)
                             && crate::helpers::is_option_type(value.ty())
+                            && !value.ty().is_assignable_to(&target_ty)
                         {
                             let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
                                 crate::RustExpr::Ident(name.clone())

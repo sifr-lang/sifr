@@ -108,7 +108,8 @@ impl RustEmitter {
                 if self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)
         );
 
-        let needs_clone = (is_self_access || is_borrowed_parameter) && needs_clone_for_type(ty);
+        let needs_clone = needs_clone_for_type(ty)
+            && (is_self_access || is_borrowed_parameter || ty.supports_derived_clone());
 
         let lowered_field = self.lower_field_storage_access_for_class(
             class_name_for_parent.as_deref(),

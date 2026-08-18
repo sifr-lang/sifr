@@ -166,6 +166,16 @@ impl RustEmitter {
         let lowered_value = self.consuming_value_upcast_for_ir(target_ty, value_ty, lowered_value);
         let lowered_value =
             crate::helpers::flatten_option_value_for_target(target_ty, value_ty, lowered_value);
+        let wrapped_member = if matches!(value, HirExpr::NoneLiteral) {
+            &Type::None
+        } else {
+            value_ty
+        };
+        if let Some(wrapped) =
+            crate::helpers::wrap_union_member_expr(target_ty, wrapped_member, lowered_value.clone())
+        {
+            return Ok(wrapped);
+        }
         let lowered_value =
             crate::helpers::adapt_collection_storage_for_target(target_ty, value_ty, lowered_value);
         let lowered_value =

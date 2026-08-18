@@ -333,8 +333,12 @@ pub fn generate_rust_multi_with_metadata(
     } else {
         HashSet::new()
     };
-    let stdlib_nominal_plan =
-        project_stdlib_nominal_plan(&union_usage.unions, stdlib_code, modules);
+    let stdlib_nominal_plan = project_stdlib_nominal_plan(
+        &union_usage.unions,
+        stdlib_code,
+        modules,
+        structural_interop_enabled,
+    );
     let crate_root_modules = HashSet::from(["main"]);
     let structural_identity_expressions = if structural_interop_enabled {
         crate::structural_identity_codegen::class_identity_expressions_for_project(
