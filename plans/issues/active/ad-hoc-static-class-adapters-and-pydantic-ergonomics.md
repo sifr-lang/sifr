@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-18. M0-M7c are complete; M7d is active.
+Status: active on 2026-08-18. M0-M7d are complete; M8 is next.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -1080,9 +1080,36 @@ Acceptance criteria:
 Exit gate: optional values use one correct representation transition when they
 enter wider-union call, assignment, and consuming-value paths.
 
-State: active
+State: complete
 Issue: [`sifr-lang/sifr#3274`](https://github.com/sifr-lang/sifr/issues/3274)
-Next action: complete M7d, then resume M8 without changing its preserved work.
+PR: [`sifr-lang/sifr#3276`](https://github.com/sifr-lang/sifr/pull/3276)
+Base SHA: `27ff6df5f45c6512ddf331f19a682239e08392bf`
+Candidate SHA: `f15e3c34177e409af1719080ec284329fffc48f8`
+Merge SHA: `1b31430ce56195054fce140cf1d6aa8ca753f2f3`
+Changed paths: option-to-union representation helpers; shared consuming-call
+adaptation across plain, registry, and method calls; a focused registry-method
+argument-convention module split; exact and wider `Option<Union>` codegen
+coverage; and the package-neutral static-adapter fixture.
+Validation: all 1,035 codegen tests, 10 adapter-default tests, and 19
+early-adapter tests passed. A fresh debug compiler built the extended
+package-neutral fixture through rustc and ran the preserved M8
+fields-and-configuration demo. Workspace clippy, formatting, diff, HIR
+maintainability, and the unified 900-line file-size guardrail passed. The
+exact-SHA Opus review returned `SATISFIED` with no blocker
+([evidence](https://github.com/sifr-lang/sifr/pull/3276#issuecomment-5333858907)).
+The create-PR and merge gates were each attempted exactly once on the final
+candidate. Coverage readiness passed, but both stopped before compiler tests
+in the shared verification-taxonomy preflight owned by the explicitly
+out-of-scope parallel pre-v1 work; neither was repeated
+([evidence](https://github.com/sifr-lang/sifr/pull/3276#issuecomment-5333871604)).
+Deferred follow-up: M12 owns nested option-represented union-payload hardening,
+per-member assignable conversions, warning-clean `None` bindings, the
+pre-existing `registry_call_callable_with_owned_args` widening gap, structural
+sharing with assignment sequencing, and behavioral presence/absence fixture
+execution. These were non-blocking Opus findings.
+The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
+outside this phase.
+Next action: resume the preserved M8 package work.
 
 ### M8: Pydantic Model, Field, and Configuration Declarations
 
@@ -1270,6 +1297,7 @@ Scope:
 - Run compiler, package, differential, property, fuzz, and resource tests.
 - Run source-package and installed-package certification.
 - Publish representative validation and serialization benchmarks.
+- Close the deferred compiler and fixture hardening recorded by M0-M7d.
 - Obtain independent implementation and whole-phase review.
 
 Acceptance criteria:
@@ -1358,7 +1386,7 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M7c are merged and recorded; M7d is active.
+Current state: M0-M7d are merged and recorded; M8 is next.
 
-Next action: complete M7d in `sifr-lang/sifr`, then resume the preserved M8 work
-in `sifr-lang/pydantic-sifr` on the merged compiler substrate.
+Next action: resume the preserved M8 work in `sifr-lang/pydantic-sifr` on the
+merged compiler substrate.
