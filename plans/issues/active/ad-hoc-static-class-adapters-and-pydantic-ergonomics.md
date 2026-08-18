@@ -421,6 +421,48 @@ Acceptance criteria:
 Exit gate: a non-Pydantic fixture emits precise field, class, and method
 declaration diagnostics without changing static-program identity.
 
+State: complete
+PR: [`sifr-lang/sifr#3243`](https://github.com/sifr-lang/sifr/pull/3243)
+Base SHA: `b80a7059a6f15171803b9f32a38aa5eed2ada6ac`
+Candidate SHA: `613464a9229981459b32bbd61a9f93c6ee9d69b6`
+Merge SHA: `991323596c40a8def31dd3868764eec096e0e01c`
+Changed paths: `crates/sifr_frontend/src/{class_declarations.rs,
+package_issues.rs,const_evaluator.rs,const_specialization.rs,
+graph_cache_and_queries.rs,lib.rs,query_diagnostic_rendering.rs,
+specialization_runner.rs,specialization_support.rs,structural_shape.rs,
+warning_diagnostics.rs}`; `crates/sifr_ir/src/diagnostic_types.rs`;
+`crates/sifr_lsp/src/{conversion.rs,diagnostics.rs}`;
+`stdlib/sifr/meta.sifr`; `internal_docs/const_specialization.md`; and the
+const-specialization and meta-diagnostic fixtures and compact baselines.
+Validation: `cargo check -p sifr_frontend -p sifr_lsp`; all 9 focused
+specialization-runner tests; both class-declaration origin tests; all 5 LSP
+conversion tests; `cargo clippy -p sifr_frontend -p sifr_lsp -- -D warnings`;
+`cargo fmt --check`; HIR maintainability and file-size guardrails (`PASS`,
+3151 files, 900-line limit). Direct human CLI reproduction selected the
+metadata argument as primary and rendered class, field, and method related
+spans plus the package note. The diagnostics-area attempt reached both M1
+fixtures, while 142 unrelated cases were replaced by `SIFR-WORKSPACE-0003`
+because the separately owned LeetCode corpus was not initialized in this
+worktree.
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3243#issuecomment-5326628275)).
+The create-PR and merge gates were each run once on the unchanged candidate.
+Both stopped in the same inherited global verification-taxonomy check before
+M1-specific lanes; the separately running pre-v1 compatibility phase replayed
+that failure at its own base and owns the offending inventory/checker paths.
+The exact merge-gate evidence is recorded on the PR
+([evidence](https://github.com/sifr-lang/sifr/pull/3243#issuecomment-5326716293)).
+Deferred follow-up: M2 must carry keyword names with argument origins when it
+adds typed descriptor arguments, rather than exposing only positional origin
+order. M12 certification should add human/JSON fixture baselines for related
+spans and re-evaluate the eight-label bound, lazy origin collection, origin
+kind enforcement, and spanless label degradation. Cross-file LSP span URI
+handling is pre-existing and separately owned; M1 origins are same-file.
+The canonical public declaration-input name is now `ClassDeclaration`, closing
+M0's naming follow-up.
+Next action: implement M2 typed declaration descriptors.
+
 ### M2: Typed Declaration Descriptors
 
 Owner: `sifr-lang/sifr`.
