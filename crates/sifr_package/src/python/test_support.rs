@@ -4,8 +4,8 @@ use crate::graph::derive::{
     PackageClassification, SifrPackageGraph, SifrPackageId, SifrPackageMetadata,
 };
 use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, RustInteropConfig,
-    SifrEdition, SifrManifest, SifrPackageName, TrustPolicy,
+    CompilerRequirement, PackageSourceRoot, PythonConfig, RustInteropConfig, SifrEdition,
+    SifrManifest, SifrPackageName, TrustPolicy,
 };
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -50,8 +50,7 @@ pub(super) fn package(name: &str, python: PythonConfig, trust: TrustPolicy) -> S
             edition: SifrEdition("2026".to_string()),
             compiler_requirement: CompilerRequirement(">=0.3,<0.4".to_string()),
             default_run: None,
-            source_roots: vec![PackageSourceRoot(PathBuf::from("sifr"))],
-            exports: vec![ImportRoot(name.to_string())],
+            source_root: PackageSourceRoot(PathBuf::from("src")),
             source_features: BTreeMap::new(),
             scripts: BTreeMap::new(),
             dependencies: BTreeMap::new(),
@@ -59,7 +58,6 @@ pub(super) fn package(name: &str, python: PythonConfig, trust: TrustPolicy) -> S
             trust,
             python,
             rust: RustInteropConfig::default(),
-            production_schema: false,
         },
         aliases: BTreeMap::new(),
     }

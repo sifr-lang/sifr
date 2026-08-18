@@ -174,11 +174,11 @@ pub(crate) fn family_docs(family: &str) -> FamilyDocs {
         },
         "WORKSPACE" => FamilyDocs {
             display_name: "Workspace metadata",
-            why_it_happens: "Workspace metadata does not describe a valid Sifr source layout. Keep source roots inside the workspace and use valid member/source-root shapes.",
+            why_it_happens: "Workspace metadata does not describe a valid Sifr source layout. Keep the source root inside the workspace and use valid member and source-root shapes.",
         },
         "PACKAGE" => FamilyDocs {
             display_name: "Package management",
-            why_it_happens: "Sifr package or workspace metadata violates the package model. Inspect `sifr.toml`, Cargo metadata, source roots, trust policy, archive contents, package selectors, or projection files as named by the diagnostic.",
+            why_it_happens: "Sifr package or workspace metadata violates the package model. Inspect `sifr.toml`, Cargo metadata, the source root, trust policy, archive contents, package selectors, or projection files as named by the diagnostic.",
         },
         "CODEGEN" => FamilyDocs {
             display_name: "Code generation",

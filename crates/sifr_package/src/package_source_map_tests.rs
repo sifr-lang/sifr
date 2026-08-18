@@ -18,7 +18,7 @@ fn package_source_map_resolves_own_and_direct_dependency_modules() {
         "1.0.0",
         "math",
         None,
-        &["math.vector"],
+        &["vector"],
     );
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math", &math)]);
     let source_map = PackageSourceMap::build(&graph).expect("source map builds");
@@ -46,15 +46,7 @@ fn package_source_map_resolves_own_and_direct_dependency_modules() {
 fn transitive_dependency_import_reports_0202() {
     let temp = TestWorkspace::new("source_map_transitive");
     let app = app_package(&temp);
-    let image = package(
-        &temp,
-        "image",
-        "sifr-image",
-        "0.1.0",
-        "image",
-        None,
-        &["image"],
-    );
+    let image = package(&temp, "image", "sifr-image", "0.1.0", "image", None, &[]);
     let math = package(
         &temp,
         "math",
@@ -62,7 +54,7 @@ fn transitive_dependency_import_reports_0202() {
         "1.0.0",
         "math",
         None,
-        &["math.vector"],
+        &["vector"],
     );
     let graph = graph(
         &temp,
@@ -95,7 +87,7 @@ fn alias_import_root_remaps_to_dependency_export_root() {
         "0.1.0",
         "app",
         Some(r#""aliases":{"legacy_math":{"dependency":"math1","import":"math_v1"}}"#),
-        &["app.main"],
+        &["main"],
     );
     let math = package(
         &temp,
@@ -104,7 +96,7 @@ fn alias_import_root_remaps_to_dependency_export_root() {
         "1.0.0",
         "math",
         None,
-        &["math.vector"],
+        &["vector"],
     );
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math1", &math)]);
     let source_map = PackageSourceMap::build(&graph).expect("source map builds");
@@ -142,7 +134,7 @@ fn dotted_dependency_export_root_resolves_by_longest_scope_prefix() {
         "1.0.0",
         "math.core",
         None,
-        &["math.core.vector"],
+        &["vector"],
     );
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math", &math)]);
     let source_map = PackageSourceMap::build(&graph).expect("source map builds");
@@ -169,7 +161,7 @@ fn private_dependency_module_reports_0203() {
         "1.0.0",
         "math",
         None,
-        &["math._internal"],
+        &["_internal"],
     );
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math", &math)]);
     let source_map = PackageSourceMap::build(&graph).expect("source map builds");
@@ -218,7 +210,7 @@ fn package(
 }
 
 fn app_package(temp: &TestWorkspace) -> TestPackage {
-    package(temp, "app", "sifr-app", "0.1.0", "app", None, &["app.main"])
+    package(temp, "app", "sifr-app", "0.1.0", "app", None, &["main"])
 }
 
 fn write_pure_package(
@@ -231,7 +223,7 @@ fn write_pure_package(
     fs::create_dir_all(package_root.join("src")).expect("create src");
     fs::write(
         package_root.join("src/lib.rs"),
-        "// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.\n",
+        "// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.\n",
     )
     .expect("write marker");
     fs::write(
@@ -244,18 +236,27 @@ fn write_pure_package(
     fs::write(
         package_root.join("sifr.toml"),
         format!(
-            "[package]\nname = \"{export}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroots = [\"sifr\"]\n\n[exports]\nmodules = [\"{export}\"]\n"
+            "[package]\nname = \"{export}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n"
         ),
     )
     .expect("write sifr.toml");
-    write_module(package_root, export);
+    write_module(package_root, "__init__");
     for module in modules {
         write_module(package_root, module);
     }
 }
 
 fn write_module(package_root: &Path, module: &str) {
-    write_module_under(package_root, "sifr", module);
+    if module == "__init__" || module == "main" || module.starts_with('_') {
+        write_module_under(package_root, "src", module);
+        return;
+    }
+    let mut path = package_root.join("src");
+    for part in module.split('.') {
+        path.push(part);
+    }
+    fs::create_dir_all(&path).expect("create public namespace");
+    fs::write(path.join("__init__.sifr"), "").expect("write public namespace");
 }
 
 fn write_module_under(package_root: &Path, source_root: &str, module: &str) {

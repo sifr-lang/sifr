@@ -420,13 +420,11 @@ fn package_import_targets_known_external_package(
 ) -> bool {
     graph.packages.values().any(|package| {
         &package.package_id != importing_package_id
-            && package.manifest.exports.iter().any(|export| {
-                import_path.0 == export.0
-                    || import_path
-                        .0
-                        .strip_prefix(&format!("{}.", export.0))
-                        .is_some()
-            })
+            && (import_path.0 == package.sifr_name.0
+                || import_path
+                    .0
+                    .strip_prefix(&format!("{}.", package.sifr_name.0))
+                    .is_some())
     })
 }
 

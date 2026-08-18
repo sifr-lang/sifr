@@ -77,26 +77,22 @@ pub(crate) fn derive_direct_dependency_scopes(
                 continue;
             };
             let aliases = aliases_for_dependency(package, &dependency.dependency_name);
+            let target_root = ImportRoot(target.sifr_name.0.clone());
             if aliases.is_empty() {
-                for export in &target.manifest.exports {
-                    insert_scoped_import(
-                        package,
-                        &mut scope,
-                        ScopedImport {
-                            import_root: export.clone(),
-                            target_export_root: export.clone(),
-                            package_id: target.package_id.clone(),
-                            cargo_package_id: target.cargo_package_id.clone(),
-                            dependency_name: dependency.dependency_name.clone(),
-                            source: ScopedImportSource::Export,
-                        },
-                        &mut diagnostics,
-                    );
-                }
+                insert_scoped_import(
+                    package,
+                    &mut scope,
+                    ScopedImport {
+                        import_root: target_root.clone(),
+                        target_export_root: target_root,
+                        package_id: target.package_id.clone(),
+                        cargo_package_id: target.cargo_package_id.clone(),
+                        dependency_name: dependency.dependency_name.clone(),
+                        source: ScopedImportSource::Export,
+                    },
+                    &mut diagnostics,
+                );
             } else {
-                let Some(target_export_root) = target.manifest.exports.first().cloned() else {
-                    continue;
-                };
                 for alias in aliases {
                     let Some(import_root) = parse_alias_import_root(
                         package,
@@ -111,7 +107,7 @@ pub(crate) fn derive_direct_dependency_scopes(
                         &mut scope,
                         ScopedImport {
                             import_root,
-                            target_export_root: target_export_root.clone(),
+                            target_export_root: target_root.clone(),
                             package_id: target.package_id.clone(),
                             cargo_package_id: target.cargo_package_id.clone(),
                             dependency_name: dependency.dependency_name.clone(),

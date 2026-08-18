@@ -256,8 +256,6 @@ impl DiagnosticCode {
         Self::new("SIFR-PACKAGE-0606", Severity::Error);
     pub const PACKAGE_DUPLICATE_WORKSPACE_SIFR_NAME: Self =
         Self::new("SIFR-PACKAGE-0607", Severity::Error);
-    pub const PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION: Self =
-        Self::new("SIFR-PACKAGE-0701", Severity::Error);
     pub const PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT: Self =
         Self::new("SIFR-PACKAGE-0703", Severity::Error);
     pub const PACKAGE_PROJECTION_INCLUDE_DRIFT: Self =
@@ -266,8 +264,6 @@ impl DiagnosticCode {
         Self::new("SIFR-PACKAGE-0709", Severity::Error);
     pub const PACKAGE_EXPLICIT_FILE_OUTSIDE_SOURCE_ROOT: Self =
         Self::new("SIFR-PACKAGE-0710", Severity::Error);
-    pub const PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION: Self =
-        Self::new("SIFR-PACKAGE-0711", Severity::Error);
     pub const PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL: Self =
         Self::new("SIFR-PACKAGE-0713", Severity::Error);
     pub const PACKAGE_SCRIPT_RECURSION: Self = Self::new("SIFR-PACKAGE-0714", Severity::Error);
@@ -861,12 +857,10 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PACKAGE_RUN_TARGET_AMBIGUOUS,
     DiagnosticCode::PACKAGE_INVALID_APP_TARGET_NAME,
     DiagnosticCode::PACKAGE_DUPLICATE_WORKSPACE_SIFR_NAME,
-    DiagnosticCode::PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION,
     DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT,
     DiagnosticCode::PACKAGE_PROJECTION_INCLUDE_DRIFT,
     DiagnosticCode::PACKAGE_PROJECTION_PURE_MARKER_MISSING,
     DiagnosticCode::PACKAGE_EXPLICIT_FILE_OUTSIDE_SOURCE_ROOT,
-    DiagnosticCode::PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION,
     DiagnosticCode::PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL,
     DiagnosticCode::PACKAGE_SCRIPT_RECURSION,
     DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,

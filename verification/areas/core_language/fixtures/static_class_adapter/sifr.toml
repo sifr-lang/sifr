@@ -5,7 +5,4 @@ edition = "2026"
 sifr-version = ">=0.3,<0.4"
 
 [source]
-roots = ["."]
-
-[exports]
-modules = ["fixture.contract", "fixture.contract_types"]
+root = "src"

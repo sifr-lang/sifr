@@ -1,2 +1,0 @@
-1 error, 0 warnings, 0 notes
-E SIFR-IMPORT-0005 verification/areas/diagnostics/fixtures/diagnostics/source_import_ambiguous_module/main.sifr:1:6 ambiguous import target: 'helper'

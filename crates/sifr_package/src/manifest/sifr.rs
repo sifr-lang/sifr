@@ -3,12 +3,10 @@ use crate::diag::PackageDiagnostic;
 use crate::manifest::package_sections::{
     parse_dependencies, parse_scripts, SifrDependency, SifrScript,
 };
-use crate::manifest::production::{
-    parse_source_config, reject_production_manifest_bins, reject_production_manifest_exports,
-};
+use crate::manifest::production::{parse_source_config, reject_unsupported_layout_fields};
 use crate::manifest::sifr_fields::{
-    parse_exports, parse_python_config, parse_rust_interop_config, parse_trust,
-    validate_compiler_requirement, validate_edition,
+    parse_python_config, parse_rust_interop_config, parse_trust, validate_compiler_requirement,
+    validate_edition,
 };
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
@@ -77,8 +75,7 @@ pub struct SifrManifest {
     pub edition: SifrEdition,
     pub compiler_requirement: CompilerRequirement,
     pub default_run: Option<String>,
-    pub source_roots: Vec<PackageSourceRoot>,
-    pub exports: Vec<ImportRoot>,
+    pub source_root: PackageSourceRoot,
     pub source_features: BTreeMap<String, String>,
     pub scripts: BTreeMap<String, SifrScript>,
     pub dependencies: BTreeMap<String, SifrDependency>,
@@ -86,7 +83,6 @@ pub struct SifrManifest {
     pub trust: TrustPolicy,
     pub python: PythonConfig,
     pub rust: RustInteropConfig,
-    pub production_schema: bool,
 }
 
 impl SifrManifest {
@@ -131,20 +127,8 @@ impl SifrManifest {
             .map(str::to_string);
 
         let source_table = table(&value, "source");
-        let source_roots = parse_source_config(cargo_package_id, manifest_path, source_table)?;
-        let production_schema = source_table
-            .map(|source| !source.contains_key("roots"))
-            .unwrap_or(true);
-        if production_schema {
-            reject_production_manifest_exports(cargo_package_id, manifest_path, &value)?;
-            reject_production_manifest_bins(cargo_package_id, manifest_path, &value)?;
-        }
-
-        let exports = table(&value, "exports")
-            .and_then(|exports| exports.get("modules"))
-            .map(|modules| parse_exports(cargo_package_id, manifest_path, modules))
-            .transpose()?
-            .unwrap_or_else(|| vec![ImportRoot(package_name.0.clone())]);
+        let source_root = parse_source_config(cargo_package_id, manifest_path, source_table)?;
+        reject_unsupported_layout_fields(cargo_package_id, manifest_path, &value)?;
 
         let source_features = table(&value, "features")
             .map(|features| {
@@ -184,8 +168,7 @@ impl SifrManifest {
             edition,
             compiler_requirement,
             default_run,
-            source_roots,
-            exports,
+            source_root,
             source_features,
             scripts,
             dependencies,
@@ -193,7 +176,6 @@ impl SifrManifest {
             trust,
             python,
             rust,
-            production_schema,
         })
     }
 
@@ -276,37 +258,6 @@ fn required_string(
                 "expected a non-empty string",
             )
         })
-}
-
-pub(super) fn parse_source_roots(
-    cargo_package_id: &CargoPackageId,
-    manifest_path: &Path,
-    value: &toml::Value,
-) -> Result<Vec<PackageSourceRoot>, PackageDiagnostic> {
-    let Some(entries) = value.as_array() else {
-        return Err(PackageDiagnostic::invalid_sifr_manifest(
-            cargo_package_id,
-            manifest_path.to_path_buf(),
-            "source.roots",
-            "expected a list of relative paths",
-        ));
-    };
-
-    entries
-        .iter()
-        .map(|entry| {
-            let Some(source_root) = entry.as_str() else {
-                return Err(PackageDiagnostic::invalid_sifr_manifest(
-                    cargo_package_id,
-                    manifest_path.to_path_buf(),
-                    "source.roots",
-                    "expected every source root to be a string",
-                ));
-            };
-            validate_relative_path(cargo_package_id, manifest_path, "source.roots", source_root)
-                .map(PackageSourceRoot)
-        })
-        .collect()
 }
 
 pub(crate) fn validate_relative_path(

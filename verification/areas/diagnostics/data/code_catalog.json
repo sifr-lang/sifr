@@ -763,7 +763,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import_canonical",
+      "representative_fixture": "verification/areas/package_management/fixtures/package/package_ambiguous_import_canonical",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1921,22 +1921,6 @@
       "suggestion_applicability": "none"
     },
     {
-      "code": "SIFR-PACKAGE-0701",
-      "constant": "PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0701.mdx",
-      "machine_applicable": false,
-      "owner": "compiler/frontend",
-      "renderer_support": [
-        "human",
-        "json",
-        "compact"
-      ],
-      "representative_fixture": "crates/sifr_package/src/package_public_api_tests.rs::production_manifest_exports_report_0701",
-      "severity": "Error",
-      "stability": "stable",
-      "suggestion_applicability": "none"
-    },
-    {
       "code": "SIFR-PACKAGE-0703",
       "constant": "PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT",
       "docs_link": "docs/errors/SIFR-PACKAGE-0703.mdx",
@@ -1996,22 +1980,6 @@
         "compact"
       ],
       "representative_fixture": "crates/sifr_package/src/package_session_tests.rs::package_session_rejects_explicit_file_outside_source_root",
-      "severity": "Error",
-      "stability": "stable",
-      "suggestion_applicability": "none"
-    },
-    {
-      "code": "SIFR-PACKAGE-0711",
-      "constant": "PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0711.mdx",
-      "machine_applicable": false,
-      "owner": "compiler/frontend",
-      "renderer_support": [
-        "human",
-        "json",
-        "compact"
-      ],
-      "representative_fixture": "crates/sifr_package/src/package_public_api_tests.rs::production_manifest_bin_tables_report_0711",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -3315,7 +3283,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import",
+      "representative_fixture": "crates/sifr_diagnostics/src/codes/registry/registry_entries/project_and_backend.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -3379,7 +3347,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_fatal/main.sifr",
+      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_fatal/src/main.sifr",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -3395,7 +3363,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_warning/main.sifr",
+      "representative_fixture": "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_warning/src/main.sifr",
       "severity": "Warning",
       "stability": "stable",
       "suggestion_applicability": "none"

@@ -22,8 +22,8 @@ Notes:
 
 - A discovered malformed workspace manifest is a hard diagnostic. Commands do
   not fall back to single-file mode.
-- Workspace `[source].roots` configure user-module lookup after project mode is
-  selected. They do not participate in command-mode selection. Package-session
+- Workspace `[source].root` configures user-module lookup after project mode is
+  selected. It does not participate in command-mode selection. Package-session
   source-root validation is a separate preflight subject to the known issue
   below.
 - Mode selection never depends on the entrypoint filename, source contents,
@@ -31,12 +31,6 @@ Notes:
 - A manifest-less local import receives the ordinary single-file import
   diagnostic. Add `sifr.toml` when multiple local modules must compile
   together.
-- Known issue [#3128](https://github.com/sifr-lang/sifr/issues/3128) affects the
-  package-session preflight. If the current directory contains a source-only
-  manifest without package metadata, this preflight can fail before these
-  rules run. Until the issue is fixed, invoke explicit-file `check`, `run`, and
-  `build` from outside that directory. Alternatively, use a complete package
-  manifest. `emit` and `trace` do not use this preflight.
 
 ## Command Behavior Matrix
 
@@ -49,7 +43,7 @@ Notes:
 | `sifr trace <file>` | trace the isolated frontend session | trace the workspace frontend session |
 | `sifr test <dir>` | discover tests and resolve imports against stdlib + local modules in `<dir>` | same |
 
-Package-management commands use Cargo-backed package coordination as documented in [`package_management.md`](./package_management.md). Cargo owns external dependency resolution, lockfiles, registry/Git/path sources, publishing, and vendoring; Sifr validates package metadata, source roots, exports, trust policy, archive contents, and diagnostics before delegating Cargo-owned behavior.
+Package-management commands use Cargo-backed package coordination as documented in [`package_management.md`](./package_management.md). Cargo owns external dependency resolution, lockfiles, registry/Git/path sources, publishing, and vendoring; Sifr validates package metadata, the source root, source-declared exports, trust policy, archive contents, and diagnostics before delegating Cargo-owned behavior.
 
 Standalone self-update commands are documented in [`self_update.md`](./self_update.md).
 `sifr self update` is available only for official standalone installs with a

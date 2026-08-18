@@ -7,8 +7,8 @@ use crate::imports::source_map::{
     DottedModulePath, PackageModuleKey, PackageModuleSource, PackageSourceMap,
 };
 use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, RustInteropConfig, SifrEdition,
-    SifrManifest, SifrPackageName, TrustPolicy,
+    CompilerRequirement, PackageSourceRoot, RustInteropConfig, SifrEdition, SifrManifest,
+    SifrPackageName, TrustPolicy,
 };
 use sifr_diagnostics::DiagnosticCode;
 use std::collections::BTreeMap;
@@ -141,8 +141,7 @@ fn manifest() -> SifrManifest {
         edition: SifrEdition("2026".to_string()),
         compiler_requirement: CompilerRequirement(">=0.3,<0.4".to_string()),
         default_run: None,
-        source_roots: vec![PackageSourceRoot(PathBuf::from("src"))],
-        exports: vec![ImportRoot("demo_json".to_string())],
+        source_root: PackageSourceRoot(PathBuf::from("src")),
         source_features: BTreeMap::new(),
         scripts: BTreeMap::new(),
         dependencies: BTreeMap::new(),
@@ -153,7 +152,6 @@ fn manifest() -> SifrManifest {
             bridges: vec![PathBuf::from("src/bridges")],
             direct_crate_bindings: false,
         },
-        production_schema: true,
     }
 }
 

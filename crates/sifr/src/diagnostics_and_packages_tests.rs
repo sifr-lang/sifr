@@ -48,7 +48,7 @@ pub(super) fn test_compile_entrypoint_error_consistency_for_project_mode() {
     let dir = mktemp_dir("entrypoint_consistency");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \".\"\n")
         .expect("workspace manifest should be written");
     std::fs::write(
         &main,
@@ -153,7 +153,7 @@ pub(super) fn test_check_entrypoint_project_mode_resolves_local_imports() {
     let dir = mktemp_dir("check_entrypoint_project_imports");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \".\"\n")
         .expect("workspace manifest should be written");
     std::fs::write(
         &main,
@@ -401,7 +401,7 @@ pub(super) fn test_check_entrypoint_project_mode_error_parity_with_compile_entry
     let dir = mktemp_dir("check_entrypoint_error_parity");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \".\"\n")
         .expect("workspace manifest should be written");
     std::fs::write(
         &main,
@@ -474,7 +474,7 @@ pub(super) fn test_emit_entrypoint_uses_project_mode_inside_workspace() {
     let dir = mktemp_dir("emit_project_boundary");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \".\"\n")
         .expect("workspace manifest should be written");
     std::fs::write(
         &main,
@@ -508,7 +508,7 @@ pub(super) fn test_frontend_error_messages_match_across_check_build_and_run_path
     let dir = mktemp_dir("frontend_error_mode_parity");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \".\"\n")
         .expect("workspace manifest should be written");
     std::fs::write(
         &main,

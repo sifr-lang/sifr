@@ -7,9 +7,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 mod discovery;
-use discovery::{
-    discover_namespace_apis, discover_package_modules, package_source_roots, root_for,
-};
+use discovery::{discover_namespace_apis, discover_package_modules, package_source_root, root_for};
 mod resolution;
 use resolution::{is_private_dependency_module, matching_scoped_import, remap_import_path};
 
@@ -92,38 +90,37 @@ impl PackageSourceMap {
         let mut diagnostics = Vec::new();
 
         for package in graph.packages.values() {
-            for source_root in package_source_roots(package) {
-                source_map.roots.insert(
-                    (package.package_id.clone(), root_for(package)),
-                    source_root.clone(),
-                );
-                match discover_package_modules(package, &source_root, provider) {
-                    Ok(modules) => {
-                        for module in modules {
-                            source_map.insert_module(module);
-                        }
+            let source_root = package_source_root(package);
+            source_map.roots.insert(
+                (package.package_id.clone(), root_for(package)),
+                source_root.clone(),
+            );
+            match discover_package_modules(package, &source_root, provider) {
+                Ok(modules) => {
+                    for module in modules {
+                        source_map.insert_module(module);
                     }
-                    Err(error) => diagnostics.push(PackageDiagnostic::invalid_sifr_manifest(
-                        &package.cargo_package_id,
-                        package.sifr_manifest.clone(),
-                        "source.roots",
-                        error,
-                    )),
                 }
-                match discover_namespace_apis(package, &source_root, provider) {
-                    Ok(apis) => {
-                        for api in apis {
-                            source_map.public_apis.insert(
-                                PackageModuleKey {
-                                    package_id: package.package_id.clone(),
-                                    module_path: api.namespace.clone(),
-                                },
-                                api,
-                            );
-                        }
+                Err(error) => diagnostics.push(PackageDiagnostic::invalid_sifr_manifest(
+                    &package.cargo_package_id,
+                    package.sifr_manifest.clone(),
+                    "source.root",
+                    error,
+                )),
+            }
+            match discover_namespace_apis(package, &source_root, provider) {
+                Ok(apis) => {
+                    for api in apis {
+                        source_map.public_apis.insert(
+                            PackageModuleKey {
+                                package_id: package.package_id.clone(),
+                                module_path: api.namespace.clone(),
+                            },
+                            api,
+                        );
                     }
-                    Err(errors) => diagnostics.extend(errors),
                 }
+                Err(errors) => diagnostics.extend(errors),
             }
         }
 
@@ -282,7 +279,7 @@ impl PackageSourceMap {
             }
         };
 
-        if is_private_dependency_module(self, graph, module, &target_path) {
+        if is_private_dependency_module(self, module, &target_path) {
             return PackageImportResolutionResult::PrivateAccess(
                 PackageDiagnostic::private_module_access(
                     &importer.cargo_package_id,

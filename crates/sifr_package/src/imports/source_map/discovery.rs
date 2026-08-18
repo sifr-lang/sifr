@@ -6,22 +6,12 @@ use crate::manifest::sifr::ImportRoot;
 use sifr_frontend::SourceProvider;
 use std::path::{Path, PathBuf};
 
-pub(super) fn package_source_roots(package: &SifrPackageMetadata) -> Vec<PathBuf> {
-    package
-        .manifest
-        .source_roots
-        .iter()
-        .map(|root| package.package_root.join(&root.0))
-        .collect()
+pub(super) fn package_source_root(package: &SifrPackageMetadata) -> PathBuf {
+    package.package_root.join(&package.manifest.source_root.0)
 }
 
 pub(super) fn root_for(package: &SifrPackageMetadata) -> ImportRoot {
-    package
-        .manifest
-        .exports
-        .first()
-        .cloned()
-        .unwrap_or_else(|| ImportRoot(package.sifr_name.0.clone()))
+    ImportRoot(package.sifr_name.0.clone())
 }
 
 pub(super) fn discover_package_modules(
@@ -80,11 +70,7 @@ pub(super) fn discover_namespace_apis(
         vec![PackageDiagnostic::invalid_sifr_manifest(
             &package.cargo_package_id,
             package.sifr_manifest.clone(),
-            if package.manifest.production_schema {
-                "source.root"
-            } else {
-                "source.roots"
-            },
+            "source.root",
             error,
         )]
     })?;
@@ -132,9 +118,7 @@ fn module_path_from_file(
     if !parts.iter().all(|part| valid_identifier(part)) {
         return None;
     }
-    if package.manifest.production_schema {
-        parts.insert(0, package.sifr_name.0.clone());
-    }
+    parts.insert(0, package.sifr_name.0.clone());
     if parts.is_empty() {
         return None;
     }

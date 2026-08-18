@@ -1026,36 +1026,6 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Compact diagnostic baseline coverage for production manifest exports diagnostics.",
-      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2596",
-      "fixture_id": "package_manifest_exports_not_production",
-      "normalizers": [
-        "workspace-path",
-        "tmp-path",
-        "crlf",
-        "artifact-cache-lines"
-      ],
-      "owner": "compiler/frontend",
-      "renderer": "compact",
-      "source_hash": "sha256:b24dac3c83506d4a22491b9896561b75f62e6d3454e07f0f973f955ed47998d3",
-      "suite": "baselines"
-    },
-    {
-      "bless_reason": "Compact diagnostic baseline coverage for production manifest bin table diagnostics.",
-      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2596",
-      "fixture_id": "package_manifest_bin_tables_not_production",
-      "normalizers": [
-        "workspace-path",
-        "tmp-path",
-        "crlf",
-        "artifact-cache-lines"
-      ],
-      "owner": "compiler/frontend",
-      "renderer": "compact",
-      "source_hash": "sha256:abf8bd06629ab0d28caa83a938631e60055a2168a7f5f21a7a387a969c47da39",
-      "suite": "baselines"
-    },
-    {
       "bless_reason": "Compact diagnostic baseline coverage for package script recursion diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2594",
       "fixture_id": "package_script_recursion",
@@ -2162,7 +2132,7 @@
       ],
       "owner": "compiler/frontend",
       "renderer": "compact",
-      "source_hash": "sha256:16a15c2908801c728acef50fb9c07adae953f1e3dccaa9fe7b95a3ce3152c929",
+      "source_hash": "sha256:0a289af2a1778548141ba10054778fa43a8c2bafb42f479e76438a90b79cd49e",
       "suite": "baselines"
     },
     {
@@ -2792,7 +2762,7 @@
       ],
       "owner": "compiler/frontend",
       "renderer": "compact",
-      "source_hash": "sha256:c7f75cb2eba2e3af4bb1cc274f19cc6cc6105e4d2a97280f5eedd19c46b99b46",
+      "source_hash": "sha256:3007bb5315d0ad56fc994a8215ffa8cc0136b55a0dbad532567faa1f551c6f59",
       "suite": "baselines"
     }
   ],

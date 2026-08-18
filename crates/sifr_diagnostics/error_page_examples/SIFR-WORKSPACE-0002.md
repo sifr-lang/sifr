@@ -1,17 +1,17 @@
 ## Erroneous Code
 
 ```toml
-[workspace]
-members = [123]
+[source]
+root = "../shared"
 ```
 
 ## How To Fix It
 
-Fix workspace metadata so source roots stay inside the workspace and each entry has the expected string/path shape.
+Set `root` to a relative directory inside the workspace.
 
 ## Fixed Code
 
 ```toml
-[workspace]
-members = ["crates/app"]
+[source]
+root = "src"
 ```

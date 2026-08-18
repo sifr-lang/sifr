@@ -407,10 +407,10 @@ large-file check and a representative project check.
   The nearest ancestor `sifr.toml` selects this shape for every valid entry
   filename below the manifest directory. Outside a workspace, every explicit
   file uses `RootedEntrypointShape::SingleFile`; mode selection never parses
-  imports or probes sibling modules. Workspace `[source].roots` configure
-  user-module lookup after this selection; they do not select the shape.
-- Native `sifr.toml` workspace discovery lives in `sifr_driver::workspace`. `[source].roots` define workspace user-module search roots, defaulting to `["."]`; malformed workspace config is a hard build diagnostic rather than a single-file fallback.
-- User module resolution keeps embedded `sifr.*` / `_sifr.*` stdlib registry precedence separate from filesystem lookup, then searches the entry parent first and configured workspace source roots second. Dotted module IDs such as `helpers.nodes` map to `helpers/nodes.sifr`.
+  imports or probes sibling modules. Workspace `[source].root` configures
+  user-module lookup after this selection; it does not select the shape.
+- Native `sifr.toml` workspace discovery lives in `sifr_driver::workspace`. `[source].root` defines one workspace user-module search root and defaults to `src`; malformed workspace config is a hard build diagnostic rather than a single-file fallback.
+- User module resolution keeps embedded `sifr.*` / `_sifr.*` stdlib registry precedence separate from filesystem lookup. It then searches the entry parent first and the configured workspace source root second. Dotted module IDs such as `helpers.nodes` map to `helpers/nodes.sifr`.
 - Generated Rust preserves canonical dotted module IDs through HIR/codegen and materializes them as nested Rust files, for example `helpers.nodes` -> `src/helpers/nodes.rs` plus `src/helpers/mod.rs`.
 - Both shapes materialize through the same generated-binary-project path and the same Cargo manifest generation helper.
 - Native binary builds return a `BuildReport` at the driver boundary. The
@@ -837,7 +837,7 @@ Management).
 **Rules (package-management work -- package management, package-management architecture):**
 
 - **Cargo-backed package substrate:** `Cargo.toml` and `Cargo.lock` own external dependency resolution, lockfile behavior, registries, Git/path sources, workspaces, publishing, vendoring, and backend Rust/native dependencies.
-- **Sifr compiler metadata:** `sifr.toml` owns Sifr package name, edition, compiler requirement, source roots, exports, privacy, aliases, and native trust policy. It does not own external dependency resolution or registry credentials.
+- **Sifr compiler metadata:** `sifr.toml` owns the Sifr package name, edition, compiler requirement, one source root, privacy, aliases, and native trust policy. Source `__init__.sifr` files own public exports. The manifest does not own external dependency resolution or registry credentials.
 - **Package graph:** `crates/sifr_package` consumes `cargo metadata --format-version 1`, normalizes Cargo packages and resolved dependency edges, and derives `SifrPackageGraph` plus `PackageSourceMap` for the normal frontend/lowering/codegen pipeline. Package source-map construction uses the SourceProvider boundary for source-root traversal and `__init__.sifr` API reads, and preserves otherwise legal ambiguous module candidates for import-site `SIFR-IMPORT-0005` diagnostics instead of failing construction as `SIFR-PACKAGE-*`.
 - **Package identity:** package instance identity includes Cargo package id, version, and source identity. Multiple Cargo-selected versions are allowed when each package's direct dependency scope remains unambiguous.
 - **Distribution:** a Sifr package is a valid Cargo package carrying `.sifr` source and `[package.metadata.sifr] manifest = "sifr.toml"`. Pure Sifr packages include only the canonical Rust marker target; Rust-backed packages must declare and pass backend trust validation.

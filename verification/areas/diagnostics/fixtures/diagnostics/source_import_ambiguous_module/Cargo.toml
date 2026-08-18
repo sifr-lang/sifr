@@ -1,0 +1,9 @@
+[package]
+name = "source-import-ambiguous-module"
+version = "0.1.0"
+edition = "2021"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[workspace]

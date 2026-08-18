@@ -1,60 +1,52 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
-use crate::manifest::sifr::{parse_source_roots, validate_relative_path, PackageSourceRoot};
+use crate::manifest::sifr::{validate_relative_path, PackageSourceRoot};
 use std::path::{Path, PathBuf};
 
 pub(super) fn parse_source_config(
     cargo_package_id: &CargoPackageId,
     manifest_path: &Path,
     source_table: Option<&toml::Table>,
-) -> Result<Vec<PackageSourceRoot>, PackageDiagnostic> {
-    match source_table {
-        Some(source) if source.contains_key("root") => source
-            .get("root")
-            .map(|root| parse_source_root(cargo_package_id, manifest_path, root))
-            .transpose()
-            .map(|root| {
-                vec![PackageSourceRoot(
-                    root.unwrap_or_else(|| PathBuf::from("src")),
-                )]
-            }),
-        Some(source) if source.contains_key("roots") => source
-            .get("roots")
-            .map(|roots| parse_source_roots(cargo_package_id, manifest_path, roots))
-            .transpose()
-            .map(|roots| roots.unwrap_or_else(|| vec![PackageSourceRoot(PathBuf::from("sifr"))])),
-        _ => Ok(vec![PackageSourceRoot(PathBuf::from("src"))]),
+) -> Result<PackageSourceRoot, PackageDiagnostic> {
+    match source_table.and_then(|source| source.get("root")) {
+        Some(root) => {
+            parse_source_root(cargo_package_id, manifest_path, root).map(PackageSourceRoot)
+        }
+        None => Ok(PackageSourceRoot(PathBuf::from("src"))),
     }
 }
 
-pub(super) fn reject_production_manifest_exports(
+pub(super) fn reject_unsupported_layout_fields(
     cargo_package_id: &CargoPackageId,
     manifest_path: &Path,
     value: &toml::Table,
 ) -> Result<(), PackageDiagnostic> {
-    if value
-        .get("exports")
-        .and_then(toml::Value::as_table)
-        .and_then(|exports| exports.get("modules"))
-        .is_some()
-    {
-        return Err(PackageDiagnostic::manifest_exports_not_production(
+    if value.get("exports").is_some() {
+        return Err(PackageDiagnostic::invalid_sifr_manifest(
             cargo_package_id,
-            manifest_path,
+            manifest_path.to_path_buf(),
+            "exports",
+            "unsupported field",
         ));
     }
-    Ok(())
-}
-
-pub(super) fn reject_production_manifest_bins(
-    cargo_package_id: &CargoPackageId,
-    manifest_path: &Path,
-    value: &toml::Table,
-) -> Result<(), PackageDiagnostic> {
     if value.get("bin").is_some() {
-        return Err(PackageDiagnostic::manifest_bins_not_production(
+        return Err(PackageDiagnostic::invalid_sifr_manifest(
             cargo_package_id,
-            manifest_path,
+            manifest_path.to_path_buf(),
+            "bin",
+            "unsupported field",
+        ));
+    }
+    if value
+        .get("source")
+        .and_then(toml::Value::as_table)
+        .is_some_and(|source| source.contains_key("roots"))
+    {
+        return Err(PackageDiagnostic::invalid_sifr_manifest(
+            cargo_package_id,
+            manifest_path.to_path_buf(),
+            "source.roots",
+            "unsupported field; use source.root",
         ));
     }
     Ok(())

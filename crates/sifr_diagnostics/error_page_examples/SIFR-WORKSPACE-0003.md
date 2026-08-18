@@ -1,17 +1,17 @@
 ## Erroneous Code
 
 ```toml
-[workspace]
-members = [123]
+[source]
+root = "missing"
 ```
 
 ## How To Fix It
 
-Fix workspace metadata so source roots stay inside the workspace and each entry has the expected string/path shape.
+Set `root` to an existing directory.
 
 ## Fixed Code
 
 ```toml
-[workspace]
-members = ["crates/app"]
+[source]
+root = "src"
 ```

@@ -365,7 +365,7 @@ The `STDLIB` family covers errors related to Sifr's embedded standard library. T
 
 <Accordion title="WORKSPACE — Workspace manifest and project discovery">
 
-The `WORKSPACE` family covers errors in workspace configuration: malformed manifests, source roots that escape the workspace boundary, and invalid source root entries. It also includes legacy import resolution errors that mirror the `IMPORT` family for workspaces not yet migrated to the current module system.
+The `WORKSPACE` family covers errors in workspace configuration: malformed manifests, a source root that escapes the workspace boundary, and an invalid source root value. It also includes import resolution codes that the current `IMPORT` family replaces.
 
 | Code | Severity | Description |
 |------|----------|-------------|
@@ -412,12 +412,10 @@ The `PACKAGE` family is the largest family and covers the full lifecycle of Sifr
 | [`SIFR-PACKAGE-0605`](/errors/SIFR-PACKAGE-0605) | Error | Runnable package target or script selection is missing or ambiguous. |
 | [`SIFR-PACKAGE-0606`](/errors/SIFR-PACKAGE-0606) | Error | Discovered app target name is invalid. |
 | [`SIFR-PACKAGE-0607`](/errors/SIFR-PACKAGE-0607) | Error | Selected workspace members use the same Sifr package name. |
-| [`SIFR-PACKAGE-0701`](/errors/SIFR-PACKAGE-0701) | Error | Production `sifr.toml` uses manifest-level exports. |
 | [`SIFR-PACKAGE-0703`](/errors/SIFR-PACKAGE-0703) | Error | Sifr-managed Cargo projection manifest pointer drift. |
 | [`SIFR-PACKAGE-0704`](/errors/SIFR-PACKAGE-0704) | Error | Sifr-managed Cargo projection include rules omit required package files. |
 | [`SIFR-PACKAGE-0709`](/errors/SIFR-PACKAGE-0709) | Error | Pure package marker is missing from Sifr-managed projection. |
 | [`SIFR-PACKAGE-0710`](/errors/SIFR-PACKAGE-0710) | Error | Explicit Sifr file target is outside the package source root. |
-| [`SIFR-PACKAGE-0711`](/errors/SIFR-PACKAGE-0711) | Error | Production `sifr.toml` uses manifest binary target tables. |
 | [`SIFR-PACKAGE-0713`](/errors/SIFR-PACKAGE-0713) | Error | Public API symbol is exported more than once. |
 | [`SIFR-PACKAGE-0714`](/errors/SIFR-PACKAGE-0714) | Error | Package script expansion attempted to invoke another script. |
 

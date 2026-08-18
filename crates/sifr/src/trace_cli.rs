@@ -114,7 +114,7 @@ mod tests {
     fn trace_entrypoint_uses_project_mode_inside_workspace() {
         let dir = temp_dir("trace_cli_workspace");
         let main = dir.join("main.sifr");
-        fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+        fs::write(dir.join("sifr.toml"), "[source]\nroot = \".\"\n")
             .expect("write workspace manifest");
         fs::write(
             &main,

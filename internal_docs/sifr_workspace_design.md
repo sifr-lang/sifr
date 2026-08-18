@@ -22,11 +22,7 @@ members = ["verification/areas/algorithmic_compatibility/corpora/leetcode/src"]
 exclude = ["tmp", "target"]
 
 [source]
-roots = ["verification/areas/algorithmic_compatibility/corpora/leetcode/src", "."]
-
-[[bin]]
-name = "merge-two-sorted-lists"
-path = "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0021_merge_two_sorted_lists.sifr"
+root = "src"
 
 [dependencies]
 # Reserved for a future package manager.
@@ -37,23 +33,27 @@ path = "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0021_m
 
 Implemented semantics in this capability:
 
-- Missing `[source]` or `[source].roots` defaults to `roots = ["."]`.
+- Missing `[source]` or `[source].root` defaults to `root = "src"`.
 - Missing `[package]` is valid.
 - `[package].name`, when present, must be a string.
-- `[source].roots`, when present, must be a list of strings.
-- Unknown top-level tables and unknown nested keys are accepted and ignored for forward compatibility.
-- Source roots must be relative, non-empty, must not escape via `..`, and must resolve to existing directories.
+- `[source].root`, when present, must be one string.
+- `[source].roots`, `[exports]`, and `[[bin]]` are unsupported.
+- The source root must be relative and non-empty. It must not escape via `..`,
+  and it must resolve to an existing directory.
 
 ## Resolution
 
 The resolver keeps embedded stdlib resolution separate and highest priority. For user modules it searches:
 
 1. the entry file's parent directory;
-2. each configured workspace source root in declaration order.
+2. the configured workspace source root.
 
-The entry parent is an unconditional winner. Workspace-root matches are checked for ambiguity, and ambiguous modules fail with `SIFR-WORKSPACE-0102`. Unresolved workspace imports fail with `SIFR-WORKSPACE-0101` and list every attempted path. Dotted modules such as `helpers.nodes` map to `helpers/nodes.sifr`.
+The entry parent is an unconditional winner. The workspace source root can hold
+flat modules and package directories. Dotted modules such as `helpers.nodes`
+map to `helpers/nodes.sifr` or `helpers/nodes/__init__.sifr`.
 
-Package directories are not implemented in this capability. A graph containing both `helpers.sifr` and `helpers/nodes.sifr` fails with `SIFR-WORKSPACE-0103`.
+A flat module and a package directory cannot define the same module. Sifr
+reports the collision before it compiles the project.
 
 ## Rust Layout
 
@@ -65,8 +65,9 @@ Canonical module IDs remain dotted. The build materializer maps them into nested
 
 This keeps HIR and codegen keyed by the canonical dotted module name while producing valid Rust module trees.
 
-## Deferred Work
+## Package Boundary
 
-- `sifr test` workspace discovery remains out of scope.
-- Package directories, `__init__.sifr`, re-exports, wildcard imports, package members, dependency fetching, lockfiles, and build profiles remain reserved for future capabilities.
-- No CLI workspace override flag is implemented in this capability.
+Package manifests use the same single-root rule. The canonical import root is
+the normalized `[package].name`. A root `__init__.sifr` declares the public
+package API. The manifest does not contain an export list or binary target
+tables.

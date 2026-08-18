@@ -1,2 +1,2 @@
 1 error, 0 warnings, 0 notes
-E SIFR-WORKSPACE-0004 <unknown> [source].roots entry '' must be a relative non-empty path under the workspace root
+E SIFR-WORKSPACE-0004 <unknown> [source].root '' must be a relative non-empty path under the workspace root

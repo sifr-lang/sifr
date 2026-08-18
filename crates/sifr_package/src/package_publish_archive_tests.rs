@@ -14,8 +14,8 @@ use crate::imports::source_map::{
     DottedModulePath, PackageModuleKey, PackageModuleSource, PackageSourceMap,
 };
 use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, RustInteropConfig,
-    SifrEdition, SifrManifest, SifrPackageName, TrustPolicy,
+    CompilerRequirement, PackageSourceRoot, PythonConfig, RustInteropConfig, SifrEdition,
+    SifrManifest, SifrPackageName, TrustPolicy,
 };
 use crate::ops::plan::PackageOperation;
 use crate::ops::publish::{publish_plan, vendor_plan};
@@ -262,7 +262,6 @@ fn package_publish_vendor_session_plans_route_through_package_session() {
         workspace_root: PathBuf::from("/ws"),
         manifest_path: Some(PathBuf::from("/ws/sifr.toml")),
         source_root: Some(PathBuf::from("/ws/src")),
-        source_roots: vec![PathBuf::from("/ws/src")],
         manifest_less_mode: false,
         lock_mode: CargoLockMode::Locked,
         manifest: None,
@@ -326,8 +325,7 @@ fn package(trust: TrustPolicy) -> SifrPackageMetadata {
             edition: SifrEdition("2026".to_string()),
             compiler_requirement: CompilerRequirement(">=0.3,<0.4".to_string()),
             default_run: None,
-            source_roots: vec![PackageSourceRoot(PathBuf::from("src"))],
-            exports: vec![ImportRoot("app".to_string())],
+            source_root: PackageSourceRoot(PathBuf::from("src")),
             source_features: BTreeMap::new(),
             scripts: BTreeMap::new(),
             dependencies: BTreeMap::new(),
@@ -335,7 +333,6 @@ fn package(trust: TrustPolicy) -> SifrPackageMetadata {
             trust,
             python: PythonConfig::default(),
             rust: RustInteropConfig::default(),
-            production_schema: false,
         },
         aliases: BTreeMap::new(),
     }

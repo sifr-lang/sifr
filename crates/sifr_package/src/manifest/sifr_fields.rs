@@ -1,48 +1,10 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::manifest::sifr::{
-    validate_relative_path, CompilerRequirement, ImportRoot, PythonConfig, RustInteropConfig,
-    SifrEdition, TrustPolicy,
+    validate_relative_path, CompilerRequirement, PythonConfig, RustInteropConfig, SifrEdition,
+    TrustPolicy,
 };
 use std::path::Path;
-
-pub(super) fn parse_exports(
-    cargo_package_id: &CargoPackageId,
-    manifest_path: &Path,
-    value: &toml::Value,
-) -> Result<Vec<ImportRoot>, PackageDiagnostic> {
-    let Some(entries) = value.as_array() else {
-        return Err(PackageDiagnostic::invalid_sifr_manifest(
-            cargo_package_id,
-            manifest_path.to_path_buf(),
-            "exports.modules",
-            "expected a list of import roots",
-        ));
-    };
-
-    entries
-        .iter()
-        .map(|entry| {
-            let Some(export) = entry.as_str().filter(|value| !value.is_empty()) else {
-                return Err(PackageDiagnostic::invalid_sifr_manifest(
-                    cargo_package_id,
-                    manifest_path.to_path_buf(),
-                    "exports.modules",
-                    "expected every export to be a non-empty string",
-                ));
-            };
-            if !export.split('.').all(valid_identifier) {
-                return Err(PackageDiagnostic::invalid_sifr_manifest(
-                    cargo_package_id,
-                    manifest_path.to_path_buf(),
-                    "exports.modules",
-                    format!("`{export}` is not a valid dotted import root"),
-                ));
-            }
-            Ok(ImportRoot(export.to_string()))
-        })
-        .collect()
-}
 
 pub(super) fn parse_trust(
     cargo_package_id: &CargoPackageId,

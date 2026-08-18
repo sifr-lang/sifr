@@ -323,17 +323,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             ["package", "members"]
         ),
     active_entry!(
-            "SIFR-PACKAGE-0701",
-            "PACKAGE",
-            "Production sifr.toml uses manifest-level exports.",
-            Severity::Error,
-            "crates/sifr_package/src/package_public_api_tests.rs::production_manifest_exports_report_0701",
-            "production sifr.toml uses [exports].modules",
-            "sifr_package::manifest::sifr",
-            [json_arg!("cargo_package_id"), json_arg!("manifest_path")],
-            ["cargo_package_id", "manifest_path"]
-        ),
-    active_entry!(
             "SIFR-PACKAGE-0703",
             "PACKAGE",
             "Sifr-managed Cargo projection manifest pointer drift.",
@@ -384,17 +373,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "sifr_package::ops::session",
             [arg!("file"), arg!("source_root")],
             ["file", "source_root"]
-        ),
-    active_entry!(
-            "SIFR-PACKAGE-0711",
-            "PACKAGE",
-            "Production sifr.toml uses manifest binary target tables.",
-            Severity::Error,
-            "crates/sifr_package/src/package_public_api_tests.rs::production_manifest_bin_tables_report_0711",
-            "production sifr.toml uses [[bin]]",
-            "sifr_package::manifest::sifr",
-            [json_arg!("cargo_package_id"), json_arg!("manifest_path")],
-            ["cargo_package_id", "manifest_path"]
         ),
     active_entry!(
             "SIFR-PACKAGE-0713",

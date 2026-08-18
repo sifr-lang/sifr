@@ -46,11 +46,6 @@ const PROJECT_FIXTURES: &[(&str, &str, &[&str])] = &[
         ],
     ),
     (
-        "workspace_ambiguous_import_canonical",
-        "SIFR-IMPORT-0005",
-        &["resolution_scope", "candidate_paths"],
-    ),
-    (
         "workspace_namespace_collision_canonical",
         "SIFR-IMPORT-0006",
         &["resolved_path", "parent_path"],

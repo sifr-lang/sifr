@@ -7,52 +7,6 @@ use std::path::Path;
 
 impl PackageDiagnostic {
     #[must_use]
-    pub fn manifest_exports_not_production(
-        cargo_package_id: &CargoPackageId,
-        manifest_path: &Path,
-    ) -> Self {
-        Self {
-            code: DiagnosticCode::PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION,
-            message: format!(
-                "production sifr.toml at '{}' uses [exports].modules",
-                manifest_path.display()
-            ),
-            origin: Box::new(PackageDiagnosticOrigin::SifrManifest {
-                cargo_package_id: cargo_package_id.clone(),
-                path: manifest_path.to_path_buf(),
-                key: Some("exports.modules".to_string()),
-            }),
-            help: Some(
-                "declare public package APIs in src/__init__.sifr instead of [exports].modules"
-                    .to_string(),
-            ),
-        }
-    }
-
-    #[must_use]
-    pub fn manifest_bins_not_production(
-        cargo_package_id: &CargoPackageId,
-        manifest_path: &Path,
-    ) -> Self {
-        Self {
-            code: DiagnosticCode::PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION,
-            message: format!(
-                "production sifr.toml at '{}' uses [[bin]] target tables",
-                manifest_path.display()
-            ),
-            origin: Box::new(PackageDiagnosticOrigin::SifrManifest {
-                cargo_package_id: cargo_package_id.clone(),
-                path: manifest_path.to_path_buf(),
-                key: Some("bin".to_string()),
-            }),
-            help: Some(
-                "use src/main.sifr, src/bin/*.sifr, [package].default-run, [scripts], or sifr run --bin <name>"
-                    .to_string(),
-            ),
-        }
-    }
-
-    #[must_use]
     pub fn duplicate_public_api_symbol(
         cargo_package_id: &CargoPackageId,
         manifest_path: &Path,
@@ -357,7 +311,7 @@ impl PackageDiagnostic {
                 cargo_package_id: Some(cargo_package_id.clone()),
             }),
             help: Some(
-                "include sifr.toml and the configured Sifr source roots in Cargo package metadata"
+                "include sifr.toml and the configured Sifr source root in Cargo package metadata"
                     .to_string(),
             ),
         }

@@ -1215,16 +1215,6 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "package_manifest_exports_not_production",
-      "code": "SIFR-PACKAGE-0701",
-      "deferral": null,
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [
-        "compact"
-      ],
-      "suggestion_rendering_fixture": null
-    },
-    {
       "baseline_fixture_id": "package_projection_manifest_pointer_drift",
       "code": "SIFR-PACKAGE-0703",
       "deferral": null,
@@ -1257,16 +1247,6 @@
     {
       "baseline_fixture_id": "package_explicit_file_outside_source_root",
       "code": "SIFR-PACKAGE-0710",
-      "deferral": null,
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [
-        "compact"
-      ],
-      "suggestion_rendering_fixture": null
-    },
-    {
-      "baseline_fixture_id": "package_manifest_bin_tables_not_production",
-      "code": "SIFR-PACKAGE-0711",
       "deferral": null,
       "multi_error_recovery_fixture": null,
       "renderer_formats": [

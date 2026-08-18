@@ -122,8 +122,8 @@ Current public-code mechanisms to remove:
 Workspace code review for `diagnostic registry population`:
 
 - Keep `SIFR-WORKSPACE-0001` for malformed `sifr.toml` parsing.
-- Keep `SIFR-WORKSPACE-0002` for `[source].roots` path escaping workspace root.
-- Keep `SIFR-WORKSPACE-0003` for `[source].roots` path not resolving to a directory.
+- Keep `SIFR-WORKSPACE-0002` for a `[source].root` path that escapes the workspace root.
+- Keep `SIFR-WORKSPACE-0003` for a `[source].root` path that does not resolve to a directory.
 - Keep `SIFR-WORKSPACE-0004` for invalid source-root entry shape/path.
 - Keep `SIFR-WORKSPACE-0101` for unresolved import after workspace search path enumeration.
 - Keep `SIFR-WORKSPACE-0102` for ambiguous module resolution across workspace roots.

@@ -228,12 +228,10 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0605`](SIFR-PACKAGE-0605.mdx) | Error | Runnable package target or script selection is missing or ambiguous. |
 | [`SIFR-PACKAGE-0606`](SIFR-PACKAGE-0606.mdx) | Error | Discovered app target name is invalid. |
 | [`SIFR-PACKAGE-0607`](SIFR-PACKAGE-0607.mdx) | Error | Selected workspace members use the same Sifr package name. |
-| [`SIFR-PACKAGE-0701`](SIFR-PACKAGE-0701.mdx) | Error | Production sifr.toml uses manifest-level exports. |
 | [`SIFR-PACKAGE-0703`](SIFR-PACKAGE-0703.mdx) | Error | Sifr-managed Cargo projection manifest pointer drift. |
 | [`SIFR-PACKAGE-0704`](SIFR-PACKAGE-0704.mdx) | Error | Sifr-managed Cargo projection include rules omit required package files. |
 | [`SIFR-PACKAGE-0709`](SIFR-PACKAGE-0709.mdx) | Error | Pure package marker is missing from Sifr-managed projection. |
 | [`SIFR-PACKAGE-0710`](SIFR-PACKAGE-0710.mdx) | Error | Explicit Sifr file target is outside the package source root. |
-| [`SIFR-PACKAGE-0711`](SIFR-PACKAGE-0711.mdx) | Error | Production sifr.toml uses manifest binary target tables. |
 | [`SIFR-PACKAGE-0713`](SIFR-PACKAGE-0713.mdx) | Error | Public API symbol is exported more than once. |
 | [`SIFR-PACKAGE-0714`](SIFR-PACKAGE-0714.mdx) | Error | Package script expansion attempted to invoke another script. |
 | [`SIFR-PYENV-0001`](SIFR-PYENV-0001.mdx) | Error | Python environment configuration is malformed. |

@@ -10,8 +10,8 @@ use crate::graph::derive::{
 use crate::graph::digest::{digest_package_build_cache_inputs, PackageBuildCacheInputs};
 use crate::manifest::metadata::CargoSifrMetadata;
 use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, RustInteropConfig,
-    SifrEdition, SifrManifest, SifrPackageName, TrustPolicy,
+    CompilerRequirement, PackageSourceRoot, PythonConfig, RustInteropConfig, SifrEdition,
+    SifrManifest, SifrPackageName, TrustPolicy,
 };
 use sifr_diagnostics::DiagnosticCode;
 use std::collections::{BTreeMap, BTreeSet};
@@ -169,7 +169,7 @@ edition = "2026"
 sifr-version = ">=0.3,<0.4"
 
 [source]
-roots = ["sifr"]
+root = "src"
 
 [rust]
 bridges = ["src/bridges", "rust/interop"]
@@ -317,8 +317,7 @@ fn package_graph(
             edition: SifrEdition("2026".to_string()),
             compiler_requirement: CompilerRequirement(">=0.3,<0.4".to_string()),
             default_run: None,
-            source_roots: vec![PackageSourceRoot(PathBuf::from("sifr"))],
-            exports: vec![ImportRoot("app".to_string())],
+            source_root: PackageSourceRoot(PathBuf::from("src")),
             source_features: BTreeMap::new(),
             scripts: BTreeMap::new(),
             dependencies: BTreeMap::new(),
@@ -326,7 +325,6 @@ fn package_graph(
             trust,
             python: PythonConfig::default(),
             rust: RustInteropConfig::default(),
-            production_schema: false,
         },
         aliases: BTreeMap::new(),
     };
