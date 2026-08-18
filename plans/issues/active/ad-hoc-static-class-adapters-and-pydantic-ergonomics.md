@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: proposed on 2026-08-18. No milestone is complete.
+Status: active on 2026-08-18. M0 is complete; M1 is next.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -365,6 +365,34 @@ Acceptance criteria:
 
 Exit gate: the reviewed contract is sufficient to implement all later
 milestones without a new language mechanism.
+
+State: complete
+PR: [`sifr-lang/sifr#3240`](https://github.com/sifr-lang/sifr/pull/3240),
+building on the design foundation merged by
+[`sifr-lang/sifr#3239`](https://github.com/sifr-lang/sifr/pull/3239)
+Base SHA: `afc87ef9dbe669ced9eca1b2fa57a9eeef809ffb`
+Candidate SHA: `89b9f226371e14aa12d66a14503e8c97117e22a0`
+Merge SHA: `2a7b7d68438d9410650a432dd2c0859c70152d07`
+Changed paths: `internal_docs/native_pydantic_sifr_architecture.md`;
+`plans/issues/active/ad-hoc-static-class-adapters-and-pydantic-ergonomics.md`
+Validation: `git diff --check`; `python3
+scripts/check_docs_error_code_links.py`; `python3
+scripts/check_file_size_guardrails.py` (`PASS`, 3149 files, 900-line limit).
+Documentation-only item, so Sifr create-PR and merge gates were not run.
+Review evidence: initial exact-SHA Opus review of
+`b3c757e8bdd22917501a1bf485522c96f9e41464` reported two blocking omissions
+([evidence](https://github.com/sifr-lang/sifr/pull/3239#issuecomment-5326156228));
+the one remediation review of final candidate
+`89b9f226371e14aa12d66a14503e8c97117e22a0` returned `SATISFIED` with no
+blocking finding
+([evidence](https://github.com/sifr-lang/sifr/pull/3240#issuecomment-5326151512)).
+Deferred follow-up: M1 must use one canonical name for the provider declaration
+input (`ClassDeclaration[D]` or `DeclarationInput[D]`); M2 must update
+`internal_docs/const_specialization.md` and cache-identity evidence with
+`CallableIdentity`; M9-M11 must classify public structured-error accessors when
+their signatures are fixed. Existing issue transfers remain governed by the
+reconciliation table above.
+Next action: implement M1 spanned class declarations and package issues.
 
 ### M1: Spanned Class Declarations and Package Issues
 
@@ -882,7 +910,7 @@ Next action:
 
 ## Current Handoff
 
-Current state: proposed design and phase plan.
+Current state: M0 contract lock and coverage inventory merged and recorded.
 
-Next action: complete M0. Review the contract, fix blocking design findings,
-and record the accepted contract before compiler implementation starts.
+Next action: complete M1. Add spanned pre-finalization declarations and
+source-origin package issues through one CLI/LSP diagnostic path.
