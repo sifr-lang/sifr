@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Compatibility Removal
 
-Status: in progress; Item 2 merged and ready for Item 3 on 2026-08-18
+Status: in progress; Item 3 merged and ready for Item 4 on 2026-08-18
 
 ## Objective
 
@@ -362,11 +362,11 @@ Scope:
 
 Acceptance criteria:
 
-- [ ] Each operation has one public name.
-- [ ] Private intrinsic names are not importable from public modules.
-- [ ] Environment default behavior remains explicit and typed.
-- [ ] Date and timezone APIs expose one UTC value.
-- [ ] Repository Sifr sources use only canonical names.
+- [x] Each operation has one public name.
+- [x] Private intrinsic names are not importable from public modules.
+- [x] Environment default behavior remains explicit and typed.
+- [x] Date and timezone APIs expose one UTC value.
+- [x] Repository Sifr sources use only canonical names.
 
 Focused validation:
 
@@ -992,7 +992,7 @@ migrates its repository consumers before the old path disappears.
 | 0. Canonical contract and inventory | merged | [#3237](https://github.com/sifr-lang/sifr/pull/3237) | `4234ced2d405809b8523315b619ceff48c23132e` | Candidate `b518c4cfabbf1b7c5dd2bd8772cdb8aa52228f69`: inventory checker and mutation self-test, documentation structure, file-size and HIR guardrails, Python compile, and diff hygiene passed; no compiler files changed, so Sifr gates were omitted. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3237#issuecomment-5325904790): SATISFIED, no blocking findings. | 61 classified surfaces, 42 owned removals, 13 explicitly retained external/current contracts, and 12 reproducible baseline counts locked. |
 | 1. Public `bigint` transition | merged | [#3242](https://github.com/sifr-lang/sifr/pull/3242) | `54a1af60896ec216a5ce1838b50bf1cdd3ebb607` | Candidate `87b9e0ea7ee7ccb49a6a064c07491c1a425e94da`: type-system, lowering, codegen, runtime-int, driver, exact-int, heapq, fixed-width, diagnostics, generated-code panic, formatting, file-size, HIR, and residue checks passed. The one create-PR and one merge gate both stopped on the same verification-taxonomy failure reproduced at base `5285d7cb6d8df3338d2964f5af4308c94b9a3f48`; Item 1 changed none of the reported files. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3242#issuecomment-5326605073): SATISFIED, no blocking findings. | Removed the public transition type and diagnostics while preserving arbitrary-precision `int`; recorded inherited integer-model and verification follow-ups below. |
 | 2. Numeric and random names | merged | [#3246](https://github.com/sifr-lang/sifr/pull/3246) | `b5c90b9c56a3fc5e0dfd067d1b4d356fbc4db8a0` | Initial candidate `3008253603e2d68fbbe806b990d8daeebb51749f`: driver stdlib (71 passed, 2 ignored), lowering (986 passed, 1 ignored), codegen (1021 passed), stdlib, canonical export, stateful random, math/random e2e, parity, demo, inventory, formatting, file-size, HIR, and residue checks passed. The pass suite completed 684 of 685 fixtures; its host-timing cleanup failure passed in immediate isolation. A separate pre-existing protocol diagnostic/CFG fail fixture remained out of scope. The one create-PR gate stopped at inherited verification-taxonomy failures. After demo-only remediation, four emitted artifacts byte-matched live emission, all affected Sifr and idiomatic demos ran, and the one merge gate on final candidate `bbeee29689ddf4f5ed2c3c0f84955992c1e8f46e` stopped at the same inherited taxonomy failure; neither gate was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3246#issuecomment-5327168534): NOT SATISFIED for stale demo companions; [one remediation review](https://github.com/sifr-lang/sifr/pull/3246#issuecomment-5327211679): SATISFIED, no blocking findings. | Removed duplicate numeric/random public names, preserved stateful canonical random behavior, taught bootstrap/lowering/codegen to honor private function aliases, migrated consumers, and deleted the alias demo. |
-| 3. Runtime-information names | pending | — | — | — | — | — |
+| 3. Runtime-information names | merged | [#3250](https://github.com/sifr-lang/sifr/pull/3250) | `c96d0b5048cd4f9916a2bc6995f6fd356ddbdbf0` | Candidate `b15f3b443ae3252a8ed7c505eff789672d57e372`: focused compiled-export coverage, 11 affected e2e fixtures, sys/process runtime checks, six regenerated Sifr demos, eight idiomatic companions, full stdlib parity and self-test, driver stdlib (72 passed, 2 ignored), `sifr_stdlib` (56 passed), `sifr_sysroot` (11 passed), stdlib manifest (39 passed), installed/source sysroot equivalence, broad CLI tests, formatting, file-size, HIR, inventory, and residue checks passed. The one create-PR and one merge gate stopped at the inherited verification-taxonomy failure assigned to Item 16; neither gate was repeated. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3250#issuecomment-5327677808): SATISFIED, no blocking findings. | Removed intrinsic-shaped runtime-information exports, kept private aliases behind canonical wrappers, preserved typed environment defaults, migrated consumers, and removed the duplicate UTC constructor. |
 | 4. Text and structured-data names | pending | — | — | — | — | — |
 | 5. Binary and hashing helpers | pending | — | — | — | — | — |
 | 6. Collection helpers | pending | — | — | — | — | — |
@@ -1023,6 +1023,11 @@ migrates its repository consumers before the old path disappears.
 | Item 2 | Registering original private callable signatures can overwrite a same-named signature from another `_sifr.*` module. | `pre_v1_compat_7_stdlib_residue` | Use collision-safe registration and add a conflicting-name test during stdlib residue closure. |
 | Item 2 | The intrinsic registry still lists non-live `random_choice`, and private `abs_val` is dead after canonicalization. | `pre_v1_compat_7_stdlib_residue` | Remove dead intrinsic residue under the item already assigned to the final stdlib sweep. |
 | Item 2 | Canonical `pow` currently leaves an unused emitted wrapper because intrinsic routing inlines `powf`; the extended-stdlib idiomatic demo's compact RNG arithmetic does not cover extreme `i64` bounds. | `pre_v1_compat_7_stdlib_residue` | Reconcile wrapper/intrinsic ownership and decide whether the hand-authored demo should model full-range arithmetic during the stdlib residue sweep. |
+| Item 3 | The migrated time subset compares two wall-clock samples monotonically even though the system clock can move backward. | `pre_v1_compat_7_stdlib_residue` | Replace the theoretical flaky assertion with positive-sample coverage during the final stdlib sweep. |
+| Item 3 | The stdlib parity inventory token `time(` is also a substring of several other calls. | `pre_v1_compat_7_stdlib_residue` | Tighten the canonical `time()` evidence token when reconciling the complete export inventory. |
+| Item 3 | Public underscore privacy relies on export retention; `sifr.heapq` exceptions and the duplicate frontend policy need explicit reconciliation. | `pre_v1_compat_7_stdlib_residue` | Consolidate and directly test the approved private-export policy in the final stdlib sweep. |
+| Item 3 | Current stdlib architecture and parity records still name the obsolete `lib/sifr/*.sifr` source path. | `pre_v1_compat_7_stdlib_residue` | Correct current documentation paths while making public docs match the final compiled export inventory. |
+| Item 3 | Regenerated demo companions contained substantial pre-existing emission drift beyond the public-name edits. | `pre_v1_compat_7_stdlib_residue` | Reconcile remaining stdlib demo artifacts during the final stdlib sweep without reopening Item 3. |
 
 ## Phase Completion Record
 
