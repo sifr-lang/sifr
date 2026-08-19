@@ -63,7 +63,7 @@ fn record_python_error_contract(
         }
         class @ Type::Class { .. } if class.is_python_error_contract() => {
             rust_types
-                .entry(class.rust_type())
+                .entry(crate::render_type(&crate::sifr_type_to_rust_type(class)))
                 .or_insert_with(|| class.clone());
         }
         _ => {}

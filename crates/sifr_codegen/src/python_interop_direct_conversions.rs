@@ -210,7 +210,7 @@ fn output_value_expr_with(
             );
             return Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
-                    class.rust_type(),
+                    crate::render_type(&crate::sifr_type_to_rust_type(class)),
                     "__sifr_from_python_object".to_string(),
                 ])),
                 args: vec![checked],
@@ -377,7 +377,7 @@ fn output_value_expr_with(
             return Some(RustExpr::Block {
                 stmts: statements,
                 expr: Some(Box::new(RustExpr::StructInit {
-                    name: class.rust_type(),
+                    name: crate::render_type(&crate::sifr_type_to_rust_type(class)),
                     fields: converted_fields,
                 })),
             });

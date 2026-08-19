@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Compatibility Removal
 
-Status: in progress; Item 14 merged and ready for Item 15 on 2026-08-19
+Status: in progress; Item 15 merged and ready for Item 16 on 2026-08-19
 
 ## Objective
 
@@ -813,12 +813,12 @@ Scope:
 
 Acceptance criteria:
 
-- [ ] Production code contains no `.rust_type()` call.
-- [ ] Codegen has a total structured mapping for supported types.
-- [ ] Unsupported types produce one structured compiler error.
-- [ ] Rust imports and generic nesting come from structured nodes.
-- [ ] Generated Rust snapshots preserve required output semantics.
-- [ ] The guard detects direct and indirect string-renderer restoration.
+- [x] Production code contains no `.rust_type()` call.
+- [x] Codegen has a total structured mapping for supported types.
+- [x] Unsupported types produce one structured compiler error.
+- [x] Rust imports and generic nesting come from structured nodes.
+- [x] Generated Rust snapshots preserve required output semantics.
+- [x] The guard detects direct and indirect string-renderer restoration.
 
 Focused validation:
 
@@ -1011,7 +1011,7 @@ migrates its repository consumers before the old path disappears.
 | 12. Hidden compatibility names | merged | [#3289](https://github.com/sifr-lang/sifr/pull/3289) | `e3d4bf656a6992cc712911723c215d409c26e175` | Candidate `a3f75bbf4a9a5a1705da392dcbeda9f84a0b9524`: 25 focused task, blocking, sendability, and IPC lowering tests; all 140 create-PR e2e fixtures; 11 runtime-platform golden cases with one capability-gated skip; all 14 developer-tooling static variants; Clippy, formatting, file-size, HIR, inventory, residue, and diff checks passed. The full lowering crate had only one inherited class-diagnostic assertion failure in an untouched path. The one create-PR and one merge gate stopped at the inherited verification-taxonomy conflict assigned to Item 16; neither gate was repeated. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3289#issuecomment-5336012950): SATISFIED, no blocking findings. | Removed both hidden-prefix stripping mechanisms, made task, synchronization, IPC, and blocking checks use canonical names directly, and registered a production/fixture residue guard with a mutation self-test. |
 | 13. Verification runner and e2e expectations | merged | [#3294](https://github.com/sifr-lang/sifr/pull/3294) | `0841486b09e14d701b142db02dd7d38b8cadf0fb` | Final candidate `ddc6e3590c99fd775d5d98a6fbb3f34bdff28e17`: verification runner self-tests passed all 14 groups; profile schema, coverage, assignment, dry-plan, area CLI, E2E harness, dependency-plan, fixture, LeetCode audit, Phase 40 governance, diagnostic-rules, ecosystem-broader, evidence-custody, formatting, file-size, HIR, JSON, and diff checks passed. The one create-PR and one merge gate stopped at the same 98 stale demo companions introduced by base compiler merge `6152fc50984395a640c42f31e9e270cd3a9e09c8`; Item 13 changed no compiler implementation or demo output, and neither gate was repeated. | [Initial and remediation exact-SHA Opus evidence](https://github.com/sifr-lang/sifr/pull/3294#issuecomment-5336571091): the initial review found four integration blockers; the one remediation review was SATISFIED with no blockers. | Kept only schema-v2 canonical selections, structured area evidence, assertion-based runtime expectations, and canonical Phase 40 critical steps. Removed legacy execution, report, hardening-summary, and stdout-directive paths. |
 | 14. Source and package API wrappers | merged | [#3297](https://github.com/sifr-lang/sifr/pull/3297) | `2b764b8bfd5d62e9f8da86ebd2e12abd330e1267` | Candidate `e87fbcf4ec3e818dda49ef78b29b63998b68bd26`: workspace test compilation, Clippy, formatting, driver (530 passed, 76 ignored), package (141 passed with the unavailable external demo checkout excluded), frontend, formatter, linter, LSP stale-result and overlay tests, provider tracking, structured package results, dependency-direction guard and mutation self-tests, file-size, HIR, and diff checks passed. The absent Python-interoperability virtual environment caused the same focused LSP failure at the Item 14 base. The one create-PR and one merge gate stopped at the same inherited 98 stale demo companions; neither gate was repeated. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3297#issuecomment-5336991498): SATISFIED, no blocking findings. | Removed disk-backed and result-collapsing wrappers, made provider requirements explicit through the compiler-service stack, captured package target discovery results, kept all structured import outcomes, removed the assigned string diagnostic-label wrapper, and added the provider-construction guard. |
-| 15. Structured Rust types | active | — | — | — | — | — |
+| 15. Structured Rust types | merged | [#3301](https://github.com/sifr-lang/sifr/pull/3301) | `0d1ef5f22bd464b0e4e972172356125fc8dc32a3` | Final candidate `fdfbc82c49aca299985a12e41e131eca6dec8cfb`: type-system, IR, codegen (1,047 passed), lowering, E2E pass, generated-code quality, channel-group, Clippy, formatting, file-size, HIR, structured-type, raw-code, and diff checks passed. The full E2E sweep exposed inherited nullable-union, sequential-try, and project-splitting defects. The one create-PR and one merge gate stopped at the same inherited 98 stale demo companions. Neither gate was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3301#issuecomment-5337668218) found two blockers. [One remediation review](https://github.com/sifr-lang/sifr/pull/3301#issuecomment-5337668553) confirmed both fixes and found new mechanisms assigned to Item 16. No third review ran. | Removed string type renderers and production calls, added a total structured type model, preserved nested generic context, added structured generic-call HIR, validated module type shapes before emission, and installed a mutation-tested guard. |
 | 16. Final guard and closure | pending | — | — | — | — | — |
 
 ### Deferred reviewer follow-up
@@ -1079,6 +1079,14 @@ migrates its repository consumers before the old path disappears.
 | Item 14 review | Two current architecture documents still name removed `FrontendContext::load_project_with_provider`. | `pre_v1_compat_16_closure` | Update the current architecture references during final documentation closure. |
 | Item 14 review | The provider-construction guard ignores all text after a trailing inline test module and could miss production code appended below that module. | `pre_v1_compat_16_closure` | Make the final guard scope test modules by syntax or brace depth, then add a mutation case for production text after an inline test module. |
 | Item 14 validation | The TypeScript-Go transfer guard has stale line-based direct-filesystem inventory entries and lacks its required editor diagnostic non-duplication fixture tokens. | `pre_v1_compat_16_closure` | Reconcile this current guard with the final source tree and make its self-test and positive path pass during closure. |
+| Item 15 initial review | `union_enum_name` returns a synthetic name for collapsed and non-union inputs even though no matching enum is emitted. | `pre_v1_compat_16_closure` | Restore a self-consistent structured projection and correct the contradictory regression name during final closure. |
+| Item 15 initial review | Error-channel payload collision checks can miss a user class and builtin that share the same emitted Rust name. | `pre_v1_compat_16_closure` | Compare canonical emitted Rust names and add a class-versus-builtin collision case during final closure. |
+| Item 15 remediation review | Constructor arguments that lower to `Option<Box<...>>` lost structural boxing unless the field is directly recursive. | `pre_v1_compat_16_closure` | Restore the structural option-box condition and add an optional-protocol constructor regression. This was a new mechanism defect in the second review, so Item 15 received no third review. |
+| Item 15 remediation review | Generic class types were rendered with bare angle brackets in pattern and path-name positions. | `pre_v1_compat_16_closure` | Use a base-name projection or valid turbofish syntax and add generic-parent and generic-match regressions. This was a new mechanism defect in the second review, so Item 15 received no third review. |
+| Item 15 remediation review | The fallible type-conversion wrapper remains test-only because production validation calls the validator directly. | `pre_v1_compat_16_closure` | Route production through the wrapper or remove the redundant wrapper during final structured-type closure. |
+| Item 15 remediation review | The structured-type guard uses a fragile text window and can silently lose indirect-fallback checks after a helper move. | `pre_v1_compat_16_closure` | Replace the window anchor with syntax-aware or explicit file-scope checks and add a mutation case. |
+| Item 15 remediation review | Invalid types in two emitted modules can generate duplicate fixed helper names next to the intended compiler errors. | `pre_v1_compat_16_closure` | Emit a collision-free error item or omit the helper name and add a two-module invalid-type test. |
+| Item 15 validation | Nullable-union safe operations, sequential `try` scoping, and structured-concurrency project splitting fail through pre-existing mechanisms. | Their static-adapter and Phase 21 owners | Keep these failures outside structured type conversion. Preserve the isolated evidence in PR #3301. |
 
 ## Phase Completion Record
 

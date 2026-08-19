@@ -7,7 +7,7 @@ impl RustEmitter {
         if class.is_self_type(ty) {
             Self::class_impl_target(class)
         } else {
-            self.rust_type_with_generics(ty)
+            self.render_rust_type_with_generics(ty)
         }
     }
 
@@ -23,7 +23,7 @@ impl RustEmitter {
         let rendered = if class.is_self_type(&param.ty) {
             class_target.to_string()
         } else {
-            self.rust_type_with_generics(&param.ty)
+            self.render_rust_type_with_generics(&param.ty)
         };
         if param.convention.is_borrowed() {
             format!("&{rendered}")

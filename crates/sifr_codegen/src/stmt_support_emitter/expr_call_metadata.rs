@@ -2,7 +2,16 @@ use super::{HirExpr, HirIteratorOp, RustExpr, RustStmt, Type};
 
 pub(crate) fn canonical_constructor_class_name(class_name: &str, ty: &Type) -> String {
     match ty.resolve_alias() {
-        class @ Type::Class { .. } => class.rust_type(),
+        class @ Type::Class { .. } => {
+            let rust_type = crate::sifr_type_to_rust_type(class);
+            match rust_type {
+                // Constructor calls rely on Rust inference for nominal type parameters. Emitting
+                // the HIR's fallback `Any` arguments here can add bounds that the constructor did
+                // not require and rejects otherwise valid calls such as `Channel()`.
+                crate::RustType::Generic { base, .. } => base,
+                other => crate::render_type(&other),
+            }
+        }
         _ => sifr_type_system::source_class_rust_name(class_name),
     }
 }
@@ -19,6 +28,15 @@ pub(crate) fn plain_call_target_for_ir(func: &str) -> RustExpr {
     }
 }
 
+pub(crate) fn generic_call_target_for_ir(func: &str, type_args: &[Type]) -> RustExpr {
+    let type_args = type_args
+        .iter()
+        .map(|ty| crate::render_type(&crate::sifr_type_to_rust_type(ty)))
+        .collect::<Vec<_>>()
+        .join(", ");
+    RustExpr::Verbatim(format!("{func}::<{type_args}>"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -33,6 +51,20 @@ mod tests {
             plain_call_target_for_ir("compute"),
             RustExpr::Ident(name) if name == "compute"
         ));
+    }
+
+    #[test]
+    fn constructor_names_leave_nominal_type_arguments_to_rust_inference() {
+        let ty = Type::Class {
+            identity: None,
+            name: "Channel".to_string(),
+            type_args: vec![Type::Any],
+            fields: Default::default(),
+            methods: Default::default(),
+            parent_class: None,
+        };
+
+        assert_eq!(canonical_constructor_class_name("Channel", &ty), "Channel");
     }
 }
 
@@ -106,9 +138,9 @@ pub(crate) fn iterator_call_func_name(op: &HirIteratorOp) -> &'static str {
 
 pub(crate) fn call_expr_parts(expr: &HirExpr) -> Option<(&str, &[HirExpr])> {
     match expr {
-        HirExpr::Call { func, args, .. } | HirExpr::PythonCall { func, args, .. } => {
-            Some((func.as_str(), args.as_slice()))
-        }
+        HirExpr::Call { func, args, .. }
+        | HirExpr::GenericCall { func, args, .. }
+        | HirExpr::PythonCall { func, args, .. } => Some((func.as_str(), args.as_slice())),
         HirExpr::IteratorCall { op, args, .. } => {
             Some((iterator_call_func_name(op), args.as_slice()))
         }

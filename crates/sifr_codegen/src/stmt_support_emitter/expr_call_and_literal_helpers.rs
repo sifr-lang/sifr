@@ -630,6 +630,9 @@ macro_rules! stmt_expr_literals_and_calls {
                 HirExpr::Call {
                     mutable_arg_places, ..
                 }
+                | HirExpr::GenericCall {
+                    mutable_arg_places, ..
+                }
                 | HirExpr::IteratorCall {
                     mutable_arg_places, ..
                 } => mutable_arg_places.as_slice(),
@@ -643,9 +646,17 @@ macro_rules! stmt_expr_literals_and_calls {
             ) {
                 return Ok(Some(lowered_builtin));
             }
-            if let Some(lowered_plain) =
+            if let Some(mut lowered_plain) =
                 $emitter.try_lower_registry_plain_call_with_places(func, args, mutable_arg_places)
             {
+                if let HirExpr::GenericCall {
+                    func, type_args, ..
+                } = $expr
+                {
+                    if let crate::RustExpr::FnCall { func: target, .. } = &mut lowered_plain {
+                        **target = generic_call_target_for_ir(func, type_args);
+                    }
+                }
                 return Ok(Some(lowered_plain));
             }
             if func == "iter" && args.len() == 1 {
@@ -776,13 +787,19 @@ macro_rules! stmt_expr_literals_and_calls {
                     lowered_args.push($emitter.lower_recursive_capture_arg_for_ir(&capture));
                 }
             }
-            return Ok(Some(crate::RustExpr::FnCall {
-                func: Box::new(crate::RustExpr::Path(
+            let call_target = match $expr {
+                HirExpr::GenericCall {
+                    func, type_args, ..
+                } => generic_call_target_for_ir(func, type_args),
+                _ => crate::RustExpr::Path(
                     canonical_func
                         .split("::")
                         .map(ToString::to_string)
                         .collect(),
-                )),
+                ),
+            };
+            return Ok(Some(crate::RustExpr::FnCall {
+                func: Box::new(call_target),
                 args: lowered_args,
             }));
         }

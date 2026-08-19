@@ -59,6 +59,18 @@ pub(super) fn project_expr(expr: &HirExpr) -> Value {
             "func": func,
             "args": args.iter().map(project_expr).collect::<Vec<_>>(),
         }),
+        HirExpr::GenericCall {
+            func,
+            type_args,
+            args,
+            ..
+        } => json!({
+            "kind": "GenericCall",
+            "ty": expr_type_name(expr),
+            "func": func,
+            "type_args": type_args.iter().map(Type::display_name).collect::<Vec<_>>(),
+            "args": args.iter().map(project_expr).collect::<Vec<_>>(),
+        }),
         HirExpr::PythonCall {
             func,
             args,

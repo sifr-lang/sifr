@@ -278,6 +278,12 @@ fn expr_effects(expr: &HirExpr, effects: &mut Vec<FlowEffect>) {
             args,
             mutable_arg_places,
             ..
+        }
+        | HirExpr::GenericCall {
+            func,
+            args,
+            mutable_arg_places,
+            ..
         } => {
             effects.push(FlowEffect::Call {
                 callee: func.clone(),

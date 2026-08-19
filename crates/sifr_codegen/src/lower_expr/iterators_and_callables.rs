@@ -267,17 +267,12 @@ pub(super) fn adapt_simple_map_callable_arg(
         };
     }
 
-    let expects_shared_ref_type =
-        param_ty.rust_type().starts_with('&') && !param_ty.rust_type().starts_with("&mut ");
-    let expects_mut_ref_type = param_ty.rust_type().starts_with("&mut ");
-    let requires_shared_borrow = expects_shared_ref_type
-        || (convention.is_shared_borrow()
-            && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
-                || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
-    let requires_mut_borrow = expects_mut_ref_type
-        || (convention.is_mut_borrow()
-            && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
-                || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
+    let requires_shared_borrow = convention.is_shared_borrow()
+        && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            || matches!(resolved_param, Type::TypeVar(_) | Type::Any));
+    let requires_mut_borrow = convention.is_mut_borrow()
+        && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            || matches!(resolved_param, Type::TypeVar(_) | Type::Any));
 
     if requires_shared_borrow {
         RustExpr::Ref {

@@ -52,10 +52,10 @@ impl RustEmitter {
                 fields.extend(errors.iter().enumerate().map(|(index, error)| {
                     (
                         format!("__sifr_python_callback_failure_{index}"),
-                        RustType::Named(format!(
-                            "::sifr_runtime::python::CallbackFailureSlot<{}>",
-                            self.rust_type_with_generics(error)
-                        )),
+                        RustType::Generic {
+                            base: "::sifr_runtime::python::CallbackFailureSlot".to_string(),
+                            params: vec![self.rust_ir_type_with_generics(error)],
+                        },
                     )
                 }));
             }
@@ -70,10 +70,10 @@ impl RustEmitter {
                     parent.to_lowercase()
                 };
                 let parent_rust_type = class.parent_type.as_ref().map_or_else(
-                    || source_class_rust_name(parent),
-                    sifr_type_system::Type::rust_type,
+                    || RustType::Named(source_class_rust_name(parent)),
+                    crate::sifr_type_to_rust_type,
                 );
-                fields.push((field_name, RustType::Named(parent_rust_type)));
+                fields.push((field_name, parent_rust_type));
             }
         }
 
@@ -121,23 +121,19 @@ impl RustEmitter {
             .recursive_fields
             .contains(&(class.name.clone(), field_name.to_string()))
         {
-            return RustType::Named(
-                self.recursive_field_rust_types
-                    .get(&(class.name.clone(), field_name.to_string()))
-                    .cloned()
-                    .unwrap_or_else(|| field_ty.rust_type()),
-            );
+            return self
+                .recursive_field_rust_types
+                .get(&(class.name.clone(), field_name.to_string()))
+                .cloned()
+                .unwrap_or_else(|| self.rust_ir_type_with_generics(field_ty));
         }
         if class.name == "deque" && field_name == "_data" {
             self.collection_needs.needs_vecdeque = true;
             if let Type::List(elem) = field_ty {
-                return RustType::Named(format!(
-                    "VecDeque<{}>",
-                    self.rust_type_with_generics(elem)
-                ));
+                return RustType::VecDeque(Box::new(self.rust_ir_type_with_generics(elem)));
             }
         }
-        RustType::Named(self.rust_struct_field_type_with_generics(field_ty))
+        self.rust_ir_struct_field_type_with_generics(field_ty)
     }
 
     fn class_phantom_tuple(class: &HirClass) -> String {

@@ -31,25 +31,6 @@ mod tests {
     }
 
     #[test]
-    fn test_rust_type_mapping() {
-        assert_eq!(Type::Int.rust_type(), "i64");
-        assert_eq!(Type::FixedInt(FixedIntType::I8).rust_type(), "i8");
-        assert_eq!(Type::FixedInt(FixedIntType::I16).rust_type(), "i16");
-        assert_eq!(Type::FixedInt(FixedIntType::I32).rust_type(), "i32");
-        assert_eq!(Type::FixedInt(FixedIntType::I64).rust_type(), "i64");
-        assert_eq!(Type::FixedInt(FixedIntType::U8).rust_type(), "u8");
-        assert_eq!(Type::FixedInt(FixedIntType::U16).rust_type(), "u16");
-        assert_eq!(Type::FixedInt(FixedIntType::U32).rust_type(), "u32");
-        assert_eq!(Type::FixedInt(FixedIntType::U64).rust_type(), "u64");
-        assert_eq!(Type::FixedInt(FixedIntType::ISize).rust_type(), "isize");
-        assert_eq!(Type::FixedInt(FixedIntType::USize).rust_type(), "usize");
-        assert_eq!(Type::Float.rust_type(), "f64");
-        assert_eq!(Type::Bool.rust_type(), "bool");
-        assert_eq!(Type::Str.rust_type(), "String");
-        assert_eq!(Type::None.rust_type(), "()");
-    }
-
-    #[test]
     fn test_fixed_width_type_names_and_union_variants() {
         let fixed = Type::FixedInt(FixedIntType::U32);
         assert_eq!(fixed.display_name(), "uint32");
@@ -133,7 +114,6 @@ mod tests {
         let list_int = Type::List(Box::new(Type::Int));
         assert_eq!(list_int.ownership(), OwnershipKind::Move);
         assert_eq!(list_int.display_name(), "list[int]");
-        assert_eq!(list_int.rust_type(), "Vec<i64>");
         assert_eq!(list_int.iterable_element_type(), Some(Type::Int));
     }
 
@@ -276,7 +256,6 @@ mod tests {
         let dict_str_int = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
         assert_eq!(dict_str_int.ownership(), OwnershipKind::Move);
         assert_eq!(dict_str_int.display_name(), "dict[str, int]");
-        assert_eq!(dict_str_int.rust_type(), "HashMap<String, i64>");
     }
 
     #[test]
@@ -284,7 +263,6 @@ mod tests {
         let tuple = Type::Tuple(vec![Type::Int, Type::Str]);
         assert_eq!(tuple.ownership(), OwnershipKind::Move);
         assert_eq!(tuple.display_name(), "tuple[int, str]");
-        assert_eq!(tuple.rust_type(), "(i64, String)");
     }
 
     #[test]
@@ -709,13 +687,12 @@ mod tests {
     }
 
     #[test]
-    fn test_union_rust_type_option() {
+    fn test_union_optional_member_type() {
         let optional_str = Type::Union(vec![Type::None, Type::Str]);
-        assert_eq!(optional_str.rust_type(), "Option<String>");
+        assert_eq!(optional_str.optional_member_type(), Some(Type::Str));
 
         let nested_optional = Type::Union(vec![Type::None, optional_str.clone()]);
         assert_eq!(nested_optional.optional_member_type(), Some(optional_str));
-        assert_eq!(nested_optional.rust_type(), "Option<Option<String>>");
 
         let inner_union = Type::Union(vec![Type::Int, Type::Str]);
         let nested_general = Type::Union(vec![Type::None, inner_union.clone()]);
@@ -723,16 +700,6 @@ mod tests {
             nested_general.optional_member_type(),
             Some(inner_union.clone())
         );
-        assert_eq!(
-            nested_general.rust_type(),
-            format!("Option<{}>", inner_union.rust_type())
-        );
-    }
-
-    #[test]
-    fn test_union_rust_type_enum() {
-        let u = Type::Union(vec![Type::Int, Type::Str]);
-        assert!(u.rust_type().starts_with("__SifrUnion_"));
     }
 
     #[test]
@@ -753,7 +720,6 @@ mod tests {
             body: Box::new(Type::Int),
         };
         assert_eq!(alias.display_name(), "UserId");
-        assert_eq!(alias.rust_type(), "i64");
         assert!(alias.is_assignable_to(&Type::Int));
     }
 
@@ -799,9 +765,6 @@ mod tests {
         assert!(async_function.is_assignable_to(&async_callable));
         assert!(!sync_callable.is_assignable_to(&async_callable));
         assert!(!async_callable.is_assignable_to(&sync_callable));
-        assert!(async_callable
-            .rust_type()
-            .contains("AsyncFn(i64) -> String"));
     }
 
     #[test]

@@ -237,8 +237,8 @@ fn result_closure(
     body.push(RustStmt::Return(Some(RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![format!(
             "Ok::<{}, {}>",
-            ok_type.rust_type(),
-            error_type.rust_type()
+            crate::render_type(&crate::sifr_type_to_rust_type(ok_type)),
+            crate::render_type(&crate::sifr_type_to_rust_type(error_type))
         )])),
         args: vec![value],
     })));

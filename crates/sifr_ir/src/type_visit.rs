@@ -201,6 +201,18 @@ where
             transform_exprs(comparators, transform, visit);
             transform_type(ty, transform);
         }
+        HirExpr::GenericCall {
+            type_args,
+            args,
+            ty,
+            ..
+        } => {
+            for type_arg in type_args {
+                transform_type(type_arg, transform);
+            }
+            transform_exprs(args, transform, visit);
+            transform_type(ty, transform);
+        }
         HirExpr::BoolOp { values, ty, .. }
         | HirExpr::IntrinsicCall {
             args: values, ty, ..

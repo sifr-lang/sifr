@@ -7,12 +7,12 @@ impl RustEmitter {
     pub(crate) fn recursive_target_rust_type_for_field(
         &self,
         ty: &sifr_type_system::Type,
-    ) -> String {
+    ) -> crate::RustType {
         match ty {
             sifr_type_system::Type::Alias { body, .. } => {
                 self.recursive_target_rust_type_for_field(body)
             }
-            _ => self.rust_type_with_generics(ty),
+            _ => self.rust_ir_type_with_generics(ty),
         }
     }
 
@@ -20,26 +20,25 @@ impl RustEmitter {
         &self,
         ty: &sifr_type_system::Type,
         same_scc_classes: &HashSet<String>,
-    ) -> String {
+    ) -> crate::RustType {
         match ty {
             sifr_type_system::Type::Union(_) => {
                 if let Some(member) = ty.optional_member_type() {
                     if type_references_any_class(&member, same_scc_classes) {
-                        format!(
-                            "Option<Box<{}>>",
-                            self.recursive_target_rust_type_for_field(&member)
-                        )
+                        crate::RustType::Option(Box::new(crate::RustType::Boxed(Box::new(
+                            self.recursive_target_rust_type_for_field(&member),
+                        ))))
                     } else {
-                        self.rust_type_with_generics(ty)
+                        self.rust_ir_type_with_generics(ty)
                     }
                 } else {
-                    format!("Box<{}>", self.rust_type_with_generics(ty))
+                    crate::RustType::Boxed(Box::new(self.rust_ir_type_with_generics(ty)))
                 }
             }
             sifr_type_system::Type::Class { .. } => {
-                format!("Box<{}>", self.recursive_target_rust_type_for_field(ty))
+                crate::RustType::Boxed(Box::new(self.recursive_target_rust_type_for_field(ty)))
             }
-            _ => format!("Box<{}>", self.rust_type_with_generics(ty)),
+            _ => crate::RustType::Boxed(Box::new(self.rust_ir_type_with_generics(ty))),
         }
     }
 

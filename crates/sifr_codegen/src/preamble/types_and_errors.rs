@@ -1,11 +1,18 @@
 use crate::{
-    homogeneous_large_tuple_backing_array, RustExpr, RustItem, RustParam, RustStmt, RustType, Type,
-    Visibility,
+    homogeneous_large_tuple_backing_array, RustExpr, RustItem, RustParam, RustStmt, RustTrait,
+    RustType, Type, Visibility,
 };
+use sifr_type_system::{class_rust_name, source_class_rust_name, OwnershipKind};
+
+pub fn try_sifr_type_to_rust_type(ty: &Type) -> Result<RustType, crate::CodegenError> {
+    super::type_validation::validate_codegen_type(ty)?;
+    Ok(sifr_type_to_rust_type(ty))
+}
 
 pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     match ty {
         Type::Int | Type::LiteralInt(_) => RustType::I64,
+        Type::FixedInt(fixed) => RustType::Named(fixed.rust_name().to_string()),
         Type::Float => RustType::F64,
         Type::Bool | Type::LiteralBool(_) => RustType::Bool,
         Type::Str | Type::LiteralStr(_) => RustType::String_,
@@ -19,15 +26,46 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
         Type::Set(inner) => RustType::HashSet(Box::new(sifr_type_to_rust_type(inner))),
         Type::Tuple(items) => {
             if let Some((elem, len)) = homogeneous_large_tuple_backing_array(ty) {
-                RustType::Named(format!(
-                    "[{}; {}]",
-                    crate::Renderer::render_type_string(&sifr_type_to_rust_type(elem)),
-                    len
-                ))
+                RustType::Array {
+                    element: Box::new(sifr_type_to_rust_type(elem)),
+                    len,
+                }
             } else {
                 RustType::Tuple(items.iter().map(sifr_type_to_rust_type).collect())
             }
         }
+        Type::Range => RustType::Generic {
+            base: "std::ops::Range".to_string(),
+            params: vec![RustType::I64],
+        },
+        Type::Iterable(inner) => RustType::Vec(Box::new(sifr_type_to_rust_type(inner))),
+        Type::Iterator(inner) => RustType::Boxed(Box::new(RustType::DynTrait {
+            trait_: RustTrait::Named {
+                name: "Iterator".to_string(),
+                params: Vec::new(),
+                associated_types: vec![("Item".to_string(), sifr_type_to_rust_type(inner))],
+            },
+            auto_traits: Vec::new(),
+        })),
+        Type::Any | Type::Unknown | Type::Intersection(_) => {
+            RustType::Boxed(Box::new(RustType::DynTrait {
+                trait_: RustTrait::Named {
+                    name: "std::any::Any".to_string(),
+                    params: Vec::new(),
+                    associated_types: Vec::new(),
+                },
+                auto_traits: Vec::new(),
+            }))
+        }
+        Type::Never => RustType::Never,
+        Type::Function(function) | Type::AsyncFunction(function) => RustType::Fn {
+            params: function
+                .params
+                .iter()
+                .map(|(_, ty, _)| sifr_type_to_rust_type(ty))
+                .collect(),
+            ret: Box::new(sifr_type_to_rust_type(&function.return_type)),
+        },
         Type::Result(ok, err) => RustType::Result(
             Box::new(sifr_type_to_rust_type(ok)),
             Box::new(sifr_type_to_rust_type(err)),
@@ -82,14 +120,206 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
                 task_error_type_to_rust_type(err),
             ],
         },
+        Type::Coroutine(ok, err) => future_type(RustType::Result(
+            Box::new(sifr_type_to_rust_type(ok)),
+            Box::new(sifr_type_to_rust_type(err)),
+        )),
+        Type::Awaitable(result) => future_type(sifr_type_to_rust_type(result)),
+        Type::AsyncIterator(item, err) => RustType::Generic {
+            base: "AsyncIterator".to_string(),
+            params: vec![
+                sifr_type_to_rust_type(item),
+                task_error_type_to_rust_type(err),
+            ],
+        },
+        Type::PythonBuffer(element) => RustType::Generic {
+            base: "::sifr_stdlib::python::PythonBuffer".to_string(),
+            params: vec![sifr_type_to_rust_type(element)],
+        },
+        Type::PythonArrow(kind) => {
+            RustType::Named(format!("::sifr_stdlib::python::{}", kind.rust_name()))
+        }
+        Type::PythonDlpackTensor(element) => RustType::Generic {
+            base: "::sifr_stdlib::python::PythonDlpackTensor".to_string(),
+            params: vec![sifr_type_to_rust_type(element)],
+        },
+        Type::PythonDlpackStream => {
+            RustType::Named("::sifr_stdlib::python::PythonDlpackStream".to_string())
+        }
         Type::Union(_) => {
             if let Some(member) = ty.optional_member_type() {
                 RustType::Option(Box::new(sifr_type_to_rust_type(&member)))
             } else {
-                RustType::Named(ty.rust_type())
+                RustType::Named(ty.union_enum_name())
             }
         }
-        _ => RustType::Named(ty.rust_type()),
+        Type::Alias { body, .. } => sifr_type_to_rust_type(body),
+        class @ Type::Class {
+            identity,
+            type_args,
+            name,
+            ..
+        } => {
+            if identity.as_deref() == Some("sifr.meta.NoContext") {
+                return RustType::Named(
+                    "::sifr_runtime::interop::structural::NoContext".to_string(),
+                );
+            } else if class.is_python_object_contract() {
+                return RustType::Generic {
+                    base: "::sifr_runtime::interop::Handle".to_string(),
+                    params: vec![RustType::Named(
+                        "::sifr_runtime::python::ForeignObject".to_string(),
+                    )],
+                };
+            } else if class.is_python_resource_identity_contract() {
+                return RustType::Generic {
+                    base: "::sifr_runtime::interop::Handle".to_string(),
+                    params: vec![RustType::Named(
+                        "::sifr_runtime::python::PythonResourceIdentity".to_string(),
+                    )],
+                };
+            }
+            let base = class_rust_name(identity.as_deref(), name);
+            if type_args.is_empty() {
+                RustType::Named(base)
+            } else {
+                RustType::Generic {
+                    base,
+                    params: type_args.iter().map(sifr_type_to_rust_type).collect(),
+                }
+            }
+        }
+        Type::Protocol { name, .. } => RustType::Boxed(Box::new(RustType::DynTrait {
+            trait_: RustTrait::Named {
+                name: source_class_rust_name(name),
+                params: Vec::new(),
+                associated_types: Vec::new(),
+            },
+            auto_traits: Vec::new(),
+        })),
+        Type::Newtype { name, .. } | Type::Enum { name, .. } => {
+            RustType::Named(source_class_rust_name(name))
+        }
+        Type::TypeVar(name) => RustType::Named(name.clone()),
+        Type::Callable(params, conventions, ret) => callable_type(params, conventions, ret, false),
+        Type::AsyncCallable(params, conventions, ret) => {
+            callable_type(params, conventions, ret, true)
+        }
+        Type::Decimal => RustType::Named("Decimal".to_string()),
+        Type::BigDecimal => RustType::Named("BigDecimal".to_string()),
+    }
+}
+
+pub fn sifr_type_to_rust_field_type(ty: &Type) -> RustType {
+    match ty {
+        Type::Callable(params, conventions, ret) => RustType::Boxed(Box::new(callable_trait_type(
+            params,
+            conventions,
+            ret,
+            false,
+        ))),
+        Type::AsyncCallable(params, conventions, ret) => {
+            let future = future_type(sifr_type_to_rust_type(ret));
+            RustType::Boxed(Box::new(RustType::DynTrait {
+                trait_: RustTrait::Callable {
+                    name: "Fn".to_string(),
+                    params: callable_param_types(params, conventions),
+                    ret: Some(Box::new(future)),
+                },
+                auto_traits: vec!["Send".to_string(), "Sync".to_string()],
+            }))
+        }
+        _ => sifr_type_to_rust_type(ty),
+    }
+}
+
+fn callable_type(
+    params: &[Type],
+    conventions: &[sifr_type_system::ParamConvention],
+    ret: &Type,
+    is_async: bool,
+) -> RustType {
+    if is_async {
+        RustType::ImplTrait {
+            trait_: RustTrait::Callable {
+                name: "Fn".to_string(),
+                params: callable_param_types(params, conventions),
+                ret: Some(Box::new(future_type(sifr_type_to_rust_type(ret)))),
+            },
+            auto_traits: vec!["Send".to_string(), "Sync".to_string()],
+        }
+    } else {
+        callable_trait_type(params, conventions, ret, true)
+    }
+}
+
+fn callable_trait_type(
+    params: &[Type],
+    conventions: &[sifr_type_system::ParamConvention],
+    ret: &Type,
+    impl_trait: bool,
+) -> RustType {
+    let trait_ = RustTrait::Callable {
+        name: "Fn".to_string(),
+        params: callable_param_types(params, conventions),
+        ret: (ret != &Type::None).then(|| Box::new(sifr_type_to_rust_type(ret))),
+    };
+    if impl_trait {
+        RustType::ImplTrait {
+            trait_,
+            auto_traits: Vec::new(),
+        }
+    } else {
+        RustType::DynTrait {
+            trait_,
+            auto_traits: Vec::new(),
+        }
+    }
+}
+
+fn callable_param_types(
+    params: &[Type],
+    conventions: &[sifr_type_system::ParamConvention],
+) -> Vec<RustType> {
+    params
+        .iter()
+        .enumerate()
+        .map(|(index, ty)| {
+            let converted = sifr_type_to_rust_type(ty);
+            match conventions.get(index) {
+                Some(convention)
+                    if convention.is_shared_borrow() && ty.ownership() == OwnershipKind::Move =>
+                {
+                    RustType::Ref {
+                        mutable: false,
+                        inner: Box::new(converted),
+                    }
+                }
+                Some(convention)
+                    if convention.is_mut_borrow() && ty.ownership() == OwnershipKind::Move =>
+                {
+                    RustType::Ref {
+                        mutable: true,
+                        inner: Box::new(converted),
+                    }
+                }
+                _ => converted,
+            }
+        })
+        .collect()
+}
+
+fn future_type(output: RustType) -> RustType {
+    RustType::Generic {
+        base: "std::pin::Pin".to_string(),
+        params: vec![RustType::Boxed(Box::new(RustType::DynTrait {
+            trait_: RustTrait::Named {
+                name: "std::future::Future".to_string(),
+                params: Vec::new(),
+                associated_types: vec![("Output".to_string(), output)],
+            },
+            auto_traits: vec!["Send".to_string()],
+        }))],
     }
 }
 

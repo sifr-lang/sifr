@@ -195,6 +195,7 @@ fn strip_expr_locations(expression: &mut HirExpr) {
             elements: values, ..
         } => strip_expr_list_locations(values),
         HirExpr::Call { args, .. }
+        | HirExpr::GenericCall { args, .. }
         | HirExpr::IteratorCall { args, .. }
         | HirExpr::ConstructorCall { args, .. }
         | HirExpr::SuperCall { args, .. } => strip_expr_list_locations(args),

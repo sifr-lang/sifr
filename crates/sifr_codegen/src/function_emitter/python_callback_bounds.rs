@@ -197,6 +197,7 @@ fn collect_python_callback_bound_names_expr(
             }
         }
         HirExpr::Call { args, .. }
+        | HirExpr::GenericCall { args, .. }
         | HirExpr::PythonCall { args, .. }
         | HirExpr::IntrinsicCall { args, .. }
         | HirExpr::IteratorCall { args, .. }
@@ -378,6 +379,7 @@ fn collect_callable_param_name_refs(
             names.insert(name.clone());
         }
         HirExpr::Call { args, .. }
+        | HirExpr::GenericCall { args, .. }
         | HirExpr::PythonCall { args, .. }
         | HirExpr::IntrinsicCall { args, .. }
         | HirExpr::IteratorCall { args, .. }

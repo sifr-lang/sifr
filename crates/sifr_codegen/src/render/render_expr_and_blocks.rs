@@ -115,6 +115,11 @@ impl Renderer {
                     format!("({rendered})")
                 }
             }
+            RustType::Array { element, len } => {
+                format!("[{}; {len}]", Self::render_type_string(element))
+            }
+            RustType::Boxed(inner) => format!("Box<{}>", Self::render_type_string(inner)),
+            RustType::Never => "!".to_string(),
             RustType::Ref { mutable, inner } => {
                 if *mutable {
                     format!("&mut {}", Self::render_type_string(inner))
@@ -141,13 +146,62 @@ impl Renderer {
                     .join(", "),
                 Self::render_type_string(ret)
             ),
-            RustType::DynTrait(name) => {
-                format!("dyn {}", Self::render_compiler_path_string(name))
-            }
-            RustType::Impl(name) => {
-                format!("impl {}", Self::render_compiler_path_string(name))
-            }
+            RustType::DynTrait {
+                trait_,
+                auto_traits,
+            } => Self::render_trait_type("dyn", trait_, auto_traits),
+            RustType::ImplTrait {
+                trait_,
+                auto_traits,
+            } => Self::render_trait_type("impl", trait_, auto_traits),
         }
+    }
+
+    fn render_trait_type(
+        prefix: &str,
+        trait_: &crate::RustTrait,
+        auto_traits: &[String],
+    ) -> String {
+        let base = match trait_ {
+            crate::RustTrait::Named {
+                name,
+                params,
+                associated_types,
+            } => {
+                let mut arguments = params
+                    .iter()
+                    .map(Self::render_type_string)
+                    .collect::<Vec<_>>();
+                arguments.extend(
+                    associated_types
+                        .iter()
+                        .map(|(name, ty)| format!("{name} = {}", Self::render_type_string(ty))),
+                );
+                let name = Self::render_compiler_path_string(name);
+                if arguments.is_empty() {
+                    name
+                } else {
+                    format!("{name}<{}>", arguments.join(", "))
+                }
+            }
+            crate::RustTrait::Callable { name, params, ret } => {
+                let params = params
+                    .iter()
+                    .map(Self::render_type_string)
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let name = Self::render_compiler_path_string(name);
+                match ret {
+                    Some(ret) => format!("{name}({params}) -> {}", Self::render_type_string(ret)),
+                    None => format!("{name}({params})"),
+                }
+            }
+        };
+        let suffix = auto_traits.iter().fold(String::new(), |mut suffix, bound| {
+            let _ = write!(suffix, " + {bound}");
+            suffix
+        });
+        format!("{prefix} {base}{suffix}")
     }
 
     pub(crate) fn render_expr_string(expr: &RustExpr) -> String {

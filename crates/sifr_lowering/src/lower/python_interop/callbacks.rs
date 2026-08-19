@@ -595,7 +595,12 @@ pub(super) fn error_channel_codegen_payload_collision(channel: &Type) -> Option<
     };
     let mut names = std::collections::HashSet::new();
     members.iter().find_map(|member| {
-        let name = member.rust_type();
+        let name = match member.resolve_alias() {
+            Type::Class { identity, name, .. } => {
+                sifr_type_system::class_rust_name(identity.as_deref(), name)
+            }
+            resolved => resolved.display_name(),
+        };
         (!names.insert(name.clone())).then_some(name)
     })
 }

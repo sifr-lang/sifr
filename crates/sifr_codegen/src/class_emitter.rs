@@ -343,21 +343,18 @@ impl RustEmitter {
                     .recursive_fields
                     .contains(&(class.name.clone(), field_name.clone()))
                 {
-                    RustType::Named(
-                        self.recursive_field_rust_types
-                            .get(&(class.name.clone(), field_name.clone()))
-                            .cloned()
-                            .unwrap_or_else(|| self.rust_type_with_generics(field_ty)),
-                    )
+                    self.recursive_field_rust_types
+                        .get(&(class.name.clone(), field_name.clone()))
+                        .cloned()
+                        .unwrap_or_else(|| self.rust_ir_type_with_generics(field_ty))
                 } else {
-                    let rendered = self.rust_type_with_generics(field_ty);
                     if matches!(
                         field_ty.resolve_alias(),
                         Type::Callable(..) | Type::AsyncCallable(..)
                     ) {
-                        RustType::Named(format!("{rendered} + 'static"))
+                        self.rust_ir_type_with_static_bound(field_ty)
                     } else {
-                        RustType::Named(rendered)
+                        self.rust_ir_type_with_generics(field_ty)
                     }
                 };
                 RustParam::Named {
@@ -577,12 +574,16 @@ impl RustEmitter {
             let class_name = class_rust_name(class.identity.as_deref(), &class.name);
             let native_type = target.replace('.', "::");
             let ty = opaque_rust_structural_mapping_path(class).map_or_else(
-                || RustType::Named(format!("::sifr_runtime::interop::Handle<{native_type}>")),
-                |mapping| {
-                    RustType::Named(format!(
-                        "::sifr_runtime::interop::structural::MappedValue<{native_type}, {}>",
-                        mapping.replace('.', "::")
-                    ))
+                || RustType::Generic {
+                    base: "::sifr_runtime::interop::Handle".to_string(),
+                    params: vec![RustType::Named(native_type.clone())],
+                },
+                |mapping| RustType::Generic {
+                    base: "::sifr_runtime::interop::structural::MappedValue".to_string(),
+                    params: vec![
+                        RustType::Named(native_type.clone()),
+                        RustType::Named(mapping.replace('.', "::")),
+                    ],
                 },
             );
             self.body_items.push(RustItem::TypeAlias {

@@ -75,7 +75,7 @@ pub(crate) fn stored_rust_panic_error_value(
     };
     let panic_error = RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![
-            panic_type.rust_type(),
+            crate::render_type(&crate::sifr_type_to_rust_type(panic_type)),
             "new".to_string(),
         ])),
         args: vec![message],
@@ -84,7 +84,7 @@ pub(crate) fn stored_rust_panic_error_value(
         wrap_union_member_expr(error_type, panic_type, panic_error).unwrap_or_else(|| {
             RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
-                    panic_type.rust_type(),
+                    crate::render_type(&crate::sifr_type_to_rust_type(panic_type)),
                     "new".to_string(),
                 ])),
                 args: vec![RustExpr::Verbatim(
@@ -174,7 +174,7 @@ fn rust_panic_result(error_type: &Type, panic_type: &Type) -> RustExpr {
     };
     let panic_error = RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![
-            panic_type.rust_type(),
+            crate::render_type(&crate::sifr_type_to_rust_type(panic_type)),
             "new".to_string(),
         ])),
         args: vec![message],
@@ -183,7 +183,7 @@ fn rust_panic_result(error_type: &Type, panic_type: &Type) -> RustExpr {
         wrap_union_member_expr(error_type, panic_type, panic_error).unwrap_or_else(|| {
             RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
-                    panic_type.rust_type(),
+                    crate::render_type(&crate::sifr_type_to_rust_type(panic_type)),
                     "new".to_string(),
                 ])),
                 args: vec![RustExpr::Verbatim(
