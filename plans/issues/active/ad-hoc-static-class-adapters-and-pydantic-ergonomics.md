@@ -1397,6 +1397,37 @@ Acceptance criteria:
 Exit gate: the selected field and model validator API works through the single
 schema engine for structural and JSON input.
 
+Compiler prerequisite state: complete
+PR: [`sifr-lang/sifr#3299`](https://github.com/sifr-lang/sifr/pull/3299)
+Base SHA: `a5eac05a3bdee5de8df823de59f6fae7c18d035f`
+Candidate SHA: `2f4eceb110a84e98f6ed24dfb303df4ac51dae99`
+Merge SHA: `0ab08c47605b694e396a4c30c621fd1ae79b07e1`
+Changed paths: `crates/sifr_frontend/src/structural_shape.rs`;
+`crates/sifr_frontend/src/structural_shape/{methods.rs,tests.rs}`;
+`crates/sifr_frontend/src/structural_shape_import_tests.rs`; and
+`internal_docs/const_specialization.md`.
+Validation: all 18 structural-shape and import tests; focused frontend clippy;
+formatting; HIR maintainability; the 900-line guardrail; `git diff --check`;
+and the dependent M9 package demo with structural and JSON input. The one
+create-PR gate and one merge gate ran on the unchanged candidate. Both stopped
+at the shared `guardrail_demo_emitted_freshness` failure owned by the parallel
+pre-v1 session after their preceding guardrails passed. No gate was rerun.
+Review evidence: the initial exact-SHA review found missing generic bindings
+for an imported direct parent
+([evidence](https://github.com/sifr-lang/sifr/pull/3299#issuecomment-5337162999)).
+The remediation adds the bindings and a focused imported-parent test. The one
+permitted remediation review found a new generic field-plan mechanism defect
+([evidence](https://github.com/sifr-lang/sifr/pull/3299#issuecomment-5337163256)).
+Under the phase review rule, that defect is deferred to M12 and no third review
+was run.
+Deferred follow-up: M12 must substitute concrete type arguments into finalized
+adapter field plans for local and imported generic adapted classes. It must
+also cover transitive generic ancestor handlers and fully imported adapted
+class handler plans. Imported handler metadata symmetry and the documented
+inherited-handler diagnostic origin remain hardening work in the same item.
+Next action: complete the M9 package validator facade on compiler merge
+`0ab08c47605b694e396a4c30c621fd1ae79b07e1`.
+
 ### M10: Pydantic Serializer and Computed-Field Facade
 
 Owner: `sifr-lang/pydantic-sifr`.
@@ -1589,6 +1620,6 @@ gates both stopped at `guardrail_demo_emitted_freshness`. Item 13 changed no
 compiler implementation or demo output, so it did not absorb or rerun this
 failure. Refresh or retire the companions under this phase's emission owner.
 
-Next action: implement M9 validators on package merge
+Next action: complete M9 validators on package merge
 `cb23ac5ffde668b9c8cfce5362c5149d01463742` and compiler merge
-`6152fc50984395a640c42f31e9e270cd3a9e09c8`.
+`0ab08c47605b694e396a4c30c621fd1ae79b07e1`.
