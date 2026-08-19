@@ -166,12 +166,8 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "crates/sifr/tests/e2e/fail/stdlib_intrinsic_direct_import.sifr",
             "cannot import from '{module}' — private sysroot declarations can only be imported by public sysroot stdlib source",
             "sifr_lowering::lower",
-            [
-                arg!("module"),
-                json_arg!("resolution_scope"),
-                json_arg!("tried_paths")
-            ],
-            ["module", "resolution_scope", "tried_paths"]
+            [arg!("module")],
+            ["module"]
         ),
     active_entry!(
             "SIFR-IMPORT-0002",
@@ -181,8 +177,12 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr",
             "unknown import target: '{module}'",
             "sifr_lowering::lower",
-            [arg!("module")],
-            ["module"]
+            [
+                arg!("module"),
+                json_arg!("resolution_scope"),
+                json_arg!("tried_paths")
+            ],
+            ["module", "resolution_scope", "tried_paths"]
         ),
     active_entry!(
             "SIFR-IMPORT-0003",

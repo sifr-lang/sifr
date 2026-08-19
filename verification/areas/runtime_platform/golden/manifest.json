@@ -171,12 +171,10 @@
       "expected_stdout_contains": [],
       "expected_diagnostic_contains": [
         "SIFR-IMPORT-0002",
-        "sifr.task",
-        "sifr.process",
-        "sifr.runtime",
-        "sifr.sync",
-        "sifr.ipc",
-        "sifr.resource"
+        "sifr.asyncio",
+        "sifr.subprocess",
+        "sifr.concurrent",
+        "sifr.queue"
       ],
       "depends_on": [
         "concurrency_runtime_legacy_surface"
@@ -188,7 +186,7 @@
       ],
       "blocked_until_capabilities": [],
       "checks": [
-        "legacy CPython-shaped Sifr runtime surfaces removed or diagnosed before structured-tasks capability"
+        "removed CPython-shaped Sifr runtime namespaces report generic unknown imports"
       ]
     },
     {
