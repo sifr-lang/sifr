@@ -116,10 +116,10 @@ pub(super) fn inherited_handler_plans(
     external_defs: &ExternalDefs,
     selection: &ClassAdapterSelection,
 ) -> Vec<AdapterHandlerPlan> {
-    let Some(parent_name) = selection.data_parent.as_deref() else {
+    if selection.data_parent.is_none() {
         return Vec::new();
-    };
-    let parent_identity = result
+    }
+    let Some(parent_identity) = result
         .module
         .classes
         .iter()
@@ -133,7 +133,9 @@ pub(super) fn inherited_handler_plans(
             )),
             _ => None,
         })
-        .unwrap_or_else(|| format!("{module_name}.{parent_name}"));
+    else {
+        return Vec::new();
+    };
     inheritance::parent_selection(module_name, result, external_defs, &parent_identity)
         .map(|parent| parent.handler_plans.clone())
         .unwrap_or_default()

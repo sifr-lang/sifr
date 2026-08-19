@@ -33,6 +33,17 @@ fn test_forward_type_alias_resolves_independent_of_declaration_order() {
 }
 
 #[test]
+fn test_class_alias_cannot_supply_parent_identity() {
+    let source = "class Parent:\n    value: int\n\ntype ParentAlias = Parent\n\nclass Child(ParentAlias):\n    pass\n";
+    let errors = lower_source(source).expect_err("class alias base must fail before inheritance");
+    assert!(errors.iter().any(|error| {
+        error.message == "invalid base class for 'Child': parent type 'ParentAlias' is not a class"
+            && error.code == Some(DiagnosticCode::CLASS_INVALID_BASE)
+            && error.primary_range == Some(range_for_after(source, "class Child(", "ParentAlias"))
+    }));
+}
+
+#[test]
 fn test_recursive_type_alias_name_resolves_without_unknown_type_error() {
     let result = lower_source(
         "type Json = None | bool | int | float | str | list[Json] | dict[str, Json]\n\ndef main():\n    print(\"ok\")\n",

@@ -896,7 +896,8 @@ avoiding a cycle with later handler and attached-API outputs.
 Adapter inheritance selects parent plans and type-parameter bindings by canonical class identity. A
 colliding local bare name cannot redirect an imported parent. Duplicate local aliases prefer a
 requested matching key, then use deterministic key order. Declaration reconstruction stops when a
-data parent has no canonical class type.
+data parent has no canonical class type. Class-base lowering rejects a type alias as data-parent
+identity authority.
 
 Generic alias instances specialize their arguments and bodies before structural substitution.
 Generic ancestor walks require exact parameter and argument arity. Unspecialized exports pass
