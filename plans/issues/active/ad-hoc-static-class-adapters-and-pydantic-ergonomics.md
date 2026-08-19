@@ -2296,6 +2296,32 @@ generic ancestor arguments and generic alias scope remain later work.
 Next action: review and harden unspecialized generic ancestor and generic alias
 scope.
 
+Compiler hardening item 11 state: complete
+PR: [`sifr-lang/sifr#3352`](https://github.com/sifr-lang/sifr/pull/3352)
+Base SHA: `e756df47e09fe7eb6646290a46f7591452f5332f`
+Candidate SHA: `e4e458766e26b03a6fcb99f29c82c4b535ebe206`
+Merge SHA: `caaf494587a7c0b8ca7e6244f56973ec11001f1e`
+Changed paths: exact generic handler-ancestor bindings, symbolic
+unspecialized export coverage, generic alias specialization evidence, and the
+durable compiler contract.
+Validation: all 139 type-system tests and 109 frontend tests passed. The driver
+suite passed 540 tests and ignored 76 tests. Workspace Clippy passed with
+warnings denied. Rust formatting, both maintainability guards, the 900-line
+guard, and diff hygiene passed. The create-PR and merge gates each ran once on
+the exact candidate. Both passed generated-demo freshness and every preceding
+guard. Both then stopped at the same two separately owned Rust-interop matrix
+inputs. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3352#issuecomment-5346515841),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3352#issuecomment-5346543851)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3352#issuecomment-5346515908)).
+Deferred follow-up: item 12 must remove the silent empty-binding fallback when
+structural method ancestry cannot resolve. It must also add direct imported
+ancestor arity-mismatch coverage. No remediation review ran.
+Next action: fail closed on unresolved structural method ancestry and pin the
+imported arity boundary.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2383,11 +2409,11 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 10 merged in Sifr PRs #3332, #3334, #3336, #3338, #3340, #3342,
-#3344, #3346, #3348, and #3350. The seven M11 compiler prerequisites merged
-in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327, and #3329. The M11
-package surface merged in Pydantic-Sifr PR #47. M12 is in progress. The
-current compiler merge is `98e71e5387754fde7a2e28a4b0d460f0d95de98d`, and
+through 11 merged in Sifr PRs #3332, #3334, #3336, #3338, #3340, #3342,
+#3344, #3346, #3348, #3350, and #3352. The seven M11 compiler prerequisites
+merged in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327, and #3329. The
+M11 package surface merged in Pydantic-Sifr PR #47. M12 is in progress. The
+current compiler merge is `caaf494587a7c0b8ca7e6244f56973ec11001f1e`, and
 the current package merge is `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
@@ -2396,6 +2422,6 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: review and harden unspecialized generic ancestor and generic alias
-scope. Then continue compiler-owned hardening before package certification and
-final review.
+Next action: fail closed on unresolved structural method ancestry and pin the
+imported arity boundary. Then continue compiler-owned hardening before package
+certification and final review.
