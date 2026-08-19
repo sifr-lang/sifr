@@ -1,8 +1,11 @@
 use crate::{
     collect_module_exports, compile_module_hir, describe_type_with_externals,
-    FrontendDiagnosticStyle,
+    FrontendDiagnosticStyle, ShapeNode,
 };
-use sifr_lowering::{ExternalDefs, LoweringResult};
+use sifr_lowering::{
+    AdapterFieldDefault, AdapterFieldPlan, AdapterHandlerPlan, CallableIdentity,
+    ClassAdapterSelection, ExternalDefs, LoweringResult, SourceOriginId, StaticProgramValue,
+};
 use sifr_syntax::parse_module_suite;
 use sifr_type_system::Type;
 
@@ -26,6 +29,94 @@ fn field_type<'a>(result: &'a LoweringResult, class_name: &str, field: &str) -> 
         .and_then(|class| class.fields.iter().find(|(name, _)| name == field))
         .map(|(_, ty)| ty)
         .expect("field exists")
+}
+
+#[test]
+fn imported_generic_parent_handler_uses_the_concrete_child_argument() {
+    let mut external_defs = ExternalDefs::default();
+    let models = compile(
+        "models",
+        r#"
+class Parent[T]:
+    value: T
+
+    @classmethod
+    @metadata("fixture.callback", "after")
+    def normalize(cls, own value: T) -> T:
+        return value
+"#,
+        &external_defs,
+    );
+    collect_module_exports("models", &models, &mut external_defs);
+
+    let mut consumer = compile(
+        "consumer",
+        r#"
+from models import Parent
+
+class Child(Parent[int]):
+    pass
+
+class Use:
+    value: Child
+"#,
+        &external_defs,
+    );
+    let callable = CallableIdentity {
+        module: "models".to_string(),
+        owner: Some("models.Parent".to_string()),
+        symbol: "normalize".to_string(),
+        generic_arguments: Vec::new(),
+        signature: "checked".to_string(),
+    };
+    consumer
+        .class_adapter_selections
+        .push(ClassAdapterSelection {
+            owner: "Child".to_string(),
+            provider_module: "fixture.adapter".to_string(),
+            provider_function: "adapt".to_string(),
+            descriptor_type: Type::Str,
+            marker_identities: Vec::new(),
+            data_parent: Some("models.Parent".to_string()),
+            field_plans: vec![AdapterFieldPlan {
+                identity: "consumer.Child.value".to_string(),
+                name: "value".to_string(),
+                declared_type: Type::Int,
+                default: AdapterFieldDefault::Required,
+                validation_policy: None,
+            }],
+            handler_plans: vec![AdapterHandlerPlan {
+                callable: callable.clone(),
+                descriptor_type: Type::Str,
+                descriptor_value: StaticProgramValue::String("after".to_string()),
+                descriptor_origin: SourceOriginId::new([9; 32], 1),
+                descriptor_range: ruff_text_size::TextRange::default(),
+                declaration_order: 0,
+            }],
+            attached_api_set: None,
+            adapter_invocation_identity: [0; 32],
+            post_adapter_identity: [0; 32],
+            range: ruff_text_size::TextRange::default(),
+        });
+
+    let shape = describe_type_with_externals(
+        "consumer",
+        field_type(&consumer, "Use", "value"),
+        &consumer,
+        &external_defs,
+    );
+    let ShapeNode::Nominal { methods, .. } = shape.root else {
+        panic!("child must have a nominal shape");
+    };
+    assert_eq!(methods.len(), 1);
+    assert_eq!(methods[0].target.as_ref(), Some(&callable));
+    assert_eq!(
+        methods[0].params[0].declared_type,
+        ShapeNode::Primitive("int".to_string())
+    );
+    assert_eq!(*methods[0].result, ShapeNode::Primitive("int".to_string()));
+    assert_eq!(*methods[0].output, ShapeNode::Primitive("int".to_string()));
+    assert!(!shape.canonical_identity.contains("param:T"));
 }
 
 #[test]
