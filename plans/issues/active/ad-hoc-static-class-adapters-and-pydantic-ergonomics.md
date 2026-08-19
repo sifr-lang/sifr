@@ -2402,6 +2402,34 @@ coverage for empty parent methods.
 Next action: fail closed on the last identityless parent-shape fallback and
 pin empty-method collision behavior.
 
+Compiler hardening item 15 state: complete
+PR: [`sifr-lang/sifr#3360`](https://github.com/sifr-lang/sifr/pull/3360)
+Base SHA: `143add3b4027d103aa6d74bc88c28f370bde145e`
+Candidate SHA: `c98a882108961e6fa83a7e9875fe1bb3c87eee34`
+Merge SHA: `0d5d3896ce3a2f1e663a48861939901650efb834`
+Changed paths: fail-closed adapter parent reconstruction, shared canonical
+identity use, direct empty-method collision coverage, and the durable compiler
+contract.
+Validation: all 116 frontend tests passed. The driver suite passed 540 tests
+and ignored 76 tests. Workspace Clippy passed with warnings denied. Rust
+formatting, both maintainability guards, the 900-line guard, and diff hygiene
+passed. The lowering implementation did not change, so the prior full lowering
+evidence remained valid. The create-PR and merge gates each ran once on the
+exact candidate. Both passed generated-demo freshness and every preceding
+guard. Both then stopped at the same two separately owned Rust-interop matrix
+inputs. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3360#issuecomment-5347165733),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3360#issuecomment-5347214214)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3360#issuecomment-5347189144)).
+Deferred follow-up: item 16 must remove the two unreachable synthetic parent
+identities for non-class parents. It must verify whether an adapted data parent
+can reach declaration reconstruction through a class alias, then resolve or
+reject that state explicitly.
+Next action: make non-class parent handling uniformly fail closed and settle
+class-alias parent authority.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
