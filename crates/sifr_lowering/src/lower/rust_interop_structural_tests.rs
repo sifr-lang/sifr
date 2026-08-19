@@ -404,6 +404,36 @@ def use(value: Token) -> None:
 }
 
 #[test]
+fn string_structural_bound_rejects_mapped_rust_values_without_visible_leaf_types() {
+    let errors = lower_errors(
+        r"
+from sifr.meta import StringStructural
+
+@rust.opaque(
+    type=bridge.token.Token,
+    structural=bridge.token.TokenMapping,
+    close=none,
+)
+class Token:
+    pass
+
+def accept[T: StringStructural](value: T) -> None:
+    pass
+
+def use(value: Token) -> None:
+    accept(value)
+",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'StringStructural'")
+    }));
+}
+
+#[test]
 fn structurally_mapped_rust_values_reject_fields_parents_and_generics() {
     for declaration in [
         "class Token:\n    value: str",

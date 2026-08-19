@@ -1362,7 +1362,8 @@ is a compile-time subset of `Structural`. It emits the same structural Rust
 projection contract and adds no runtime trait or value tree. A bare `str` uses
 the normal scalar projection. The compiler-generated projection for `S` is
 therefore the input type—there is no `Any` or package-owned recursive value
-tree. The profile reuses the native structural adapter with a leaf-kind
+tree. Rust-opaque package values do not satisfy this bound because the compiler
+cannot inspect their mapped leaf types. The profile reuses the native structural adapter with a leaf-kind
 restriction and different conversion rules; it is not a third schema compiler,
 value representation, or validation engine.
 

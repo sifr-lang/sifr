@@ -157,6 +157,9 @@ fn supports_string_structural_type_inner(
             fields,
             ..
         } => {
+            if ctx.rust_opaque_classes.contains(name) {
+                return false;
+            }
             let key = (
                 identity.clone().unwrap_or_else(|| name.clone()),
                 type_args.clone(),
