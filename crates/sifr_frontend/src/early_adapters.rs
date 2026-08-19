@@ -805,15 +805,23 @@ fn apply_plan(
         applied.post_adapter_identity = post_adapter_identity;
     }
     result.applied_adapter_metadata.extend(plan.metadata);
-    if let Some((package_module, function)) = plan.specialization {
-        result
-            .specialization_requests
-            .push(ConstSpecializationRequest {
-                owner: selection.owner.clone(),
-                package_module,
-                function,
-                range: selection.range,
-            });
+    let owner_is_unbound_generic = result
+        .module
+        .classes
+        .iter()
+        .find(|class| class.name == selection.owner)
+        .is_some_and(|class| !class.type_params.is_empty());
+    if !owner_is_unbound_generic {
+        if let Some((package_module, function)) = plan.specialization {
+            result
+                .specialization_requests
+                .push(ConstSpecializationRequest {
+                    owner: selection.owner.clone(),
+                    package_module,
+                    function,
+                    range: selection.range,
+                });
+        }
     }
 }
 

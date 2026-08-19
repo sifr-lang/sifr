@@ -135,7 +135,9 @@ pub(super) fn generated_project_binary_project(
         let structural_owners = if structural_programs {
             hir_modules
                 .get(module_name)
-                .map(sifr_codegen::structural_static_program_owners)
+                .map(|module| {
+                    sifr_codegen::structural_static_program_owners_for_project(module, &module_refs)
+                })
                 .unwrap_or_default()
         } else {
             Default::default()

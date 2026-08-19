@@ -15,6 +15,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 type DescriptorResult<T> = Result<T, Box<HirDiagnostic>>;
 
+mod nested_const_calls;
+
 pub(crate) fn collect(
     module_name: &str,
     statements: &[Stmt],
@@ -528,6 +530,19 @@ impl DescriptorCollector<'_> {
             })?;
             return Ok(ConstValue::CallableIdentity(identity));
         }
+        if let Some(item) = list_item_type(expected) {
+            if let Expr::List(list) = expression {
+                return list
+                    .elts
+                    .iter()
+                    .map(|element| self.argument_value(element, item))
+                    .collect::<DescriptorResult<Vec<_>>>()
+                    .map(ConstValue::List);
+            }
+        }
+        if let Expr::Call(call) = expression {
+            return self.nested_const_call(call, expected);
+        }
         let value = literal_const_value(expression).ok_or_else(|| {
             boxed_malformed(
                 "descriptor argument is not a bounded const value",
@@ -546,6 +561,68 @@ impl DescriptorCollector<'_> {
                 expression.range(),
             )))
         }
+    }
+
+    fn const_call_target(&self, local_name: &str) -> Option<(String, HirFunction, HirModule)> {
+        if let Some(function) = self.result.module.functions.iter().find(|function| {
+            function.name == local_name
+                && function.decorators.iter().any(|item| item == "const_eval")
+        }) {
+            let mut functions = self
+                .result
+                .module
+                .functions
+                .iter()
+                .filter(|function| function.decorators.iter().any(|item| item == "const_eval"))
+                .cloned()
+                .collect::<Vec<_>>();
+            functions.sort_by(|left, right| left.name.cmp(&right.name));
+            return Some((
+                self.module_name.to_string(),
+                function.clone(),
+                HirModule {
+                    functions,
+                    classes: Vec::new(),
+                    imports: Vec::new(),
+                    constants: Vec::new(),
+                    generic_functions: HashMap::new(),
+                    type_param_bounds: HashMap::new(),
+                },
+            ));
+        }
+        for import in &self.result.module.imports {
+            for original in &import.names {
+                let local = import
+                    .aliases
+                    .iter()
+                    .find(|(name, _)| name == original)
+                    .map_or(original.as_str(), |(_, alias)| alias.as_str());
+                if local != local_name {
+                    continue;
+                }
+                let exported = self.external_defs.const_functions.get(&import.module)?;
+                let function = exported.get(original)?.clone();
+                let mut names = exported.keys().collect::<Vec<_>>();
+                names.sort();
+                let functions = names
+                    .into_iter()
+                    .filter_map(|name| exported.get(name).cloned())
+                    .collect();
+                return Some((
+                    import.module.clone(),
+                    function,
+                    HirModule {
+                        functions,
+                        classes: Vec::new(),
+                        imports: Vec::new(),
+                        constants: Vec::new(),
+                        generic_functions: HashMap::new(),
+                        type_param_bounds: HashMap::new(),
+                    },
+                ));
+            }
+        }
+        None
     }
 
     fn function_defaults(
@@ -746,6 +823,14 @@ fn callable_expected(expected: &Type) -> bool {
         }
         Type::Union(members) => members.iter().any(callable_expected),
         _ => false,
+    }
+}
+
+fn list_item_type(expected: &Type) -> Option<&Type> {
+    match expected.resolve_alias() {
+        Type::List(item) => Some(item),
+        Type::Union(members) => members.iter().find_map(list_item_type),
+        _ => None,
     }
 }
 

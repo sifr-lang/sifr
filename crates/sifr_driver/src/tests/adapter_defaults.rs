@@ -13,6 +13,9 @@ class DefaultDescriptor:
     default_value: StaticValue | None
     default_factory: CallableIdentity | None
 
+class NestedDescriptorValue:
+    value: str
+
 @class_adapter_provider("fixture.defaults", "DefaultDescriptor")
 @const_eval
 def adapt_defaults(declaration: DeclarationInput[DefaultDescriptor]) -> DeclarationPlan[DefaultDescriptor]:
@@ -51,6 +54,18 @@ def contract_field(
         return DefaultDescriptor("factory", None, default_factory)
     if default is not None:
         return DefaultDescriptor("const", default, None)
+    return DefaultDescriptor("required", None, None)
+
+@const_eval
+def nested_value(value: str) -> NestedDescriptorValue:
+    return NestedDescriptorValue(value)
+
+@field_descriptor("fixture.defaults", "adapt_defaults")
+def nested_contract_field(
+    values: list[str | NestedDescriptorValue],
+) -> DefaultDescriptor:
+    if len(values) == 0:
+        raise ValueError("nested descriptor values are required")
     return DefaultDescriptor("required", None, None)
 "#;
 
@@ -116,6 +131,90 @@ class Model(Contract):
     ));
     assert_ne!(selection.adapter_invocation_identity, [0; 32]);
     assert_ne!(selection.post_adapter_identity, [0; 32]);
+}
+
+#[test]
+fn provisional_descriptor_defaults_do_not_reject_later_required_fields() {
+    let compiled = compile(
+        r#"
+from fixture.defaults import Contract, contract_field
+
+class Model(Contract):
+    descriptor_required: int = contract_field()
+    plain_required: str
+"#,
+    );
+    let selection = compiled
+        .external_defs
+        .class_adapter_selections
+        .get("main")
+        .and_then(|classes| classes.get("Model"))
+        .expect("adapted model is finalized");
+    assert!(selection
+        .field_plans
+        .iter()
+        .all(|field| matches!(field.default, AdapterFieldDefault::Required)));
+}
+
+#[test]
+fn descriptor_arguments_evaluate_nested_imported_const_calls() {
+    let compiled = compile(
+        r#"
+from fixture.defaults import Contract, nested_contract_field, nested_value
+
+class Model(Contract):
+    value: int = nested_contract_field([nested_value("primary"), "fallback"])
+"#,
+    );
+    let selection = compiled
+        .external_defs
+        .class_adapter_selections
+        .get("main")
+        .and_then(|classes| classes.get("Model"))
+        .expect("nested const descriptor is applied");
+    assert!(matches!(
+        selection.field_plans[0].default,
+        AdapterFieldDefault::Required
+    ));
+}
+
+#[test]
+fn descriptor_arguments_evaluate_reexported_const_calls() {
+    let modules = HashMap::from([
+        ("fixture.defaults".to_string(), parse_suite(CONTRACT)),
+        (
+            "fixture.facade".to_string(),
+            parse_suite(
+                r#"
+from fixture.defaults import Contract, nested_contract_field, nested_value
+"#,
+            ),
+        ),
+        (
+            "main".to_string(),
+            parse_suite(
+                r#"
+from fixture.facade import Contract, nested_contract_field, nested_value
+
+class Model(Contract):
+    value: int = nested_contract_field([nested_value("primary"), "fallback"])
+"#,
+            ),
+        ),
+    ]);
+    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let compiled = collect_project_hir_modules(&modules, stdlib_defs)
+        .expect("re-exported const descriptor arguments should compile");
+    let selection = compiled
+        .external_defs
+        .class_adapter_selections
+        .get("main")
+        .and_then(|classes| classes.get("Model"))
+        .expect("re-exported nested const descriptor is applied");
+    assert!(matches!(
+        selection.field_plans[0].default,
+        AdapterFieldDefault::Required
+    ));
 }
 
 #[test]

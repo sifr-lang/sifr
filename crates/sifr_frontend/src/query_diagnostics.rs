@@ -21,6 +21,7 @@ use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{BTreeMap, HashMap};
 
+mod const_reexports;
 mod rust_class_exports;
 pub(super) fn module_state(
     id: ModuleId,
@@ -196,13 +197,7 @@ pub fn collect_module_exports(
 
     for func in &module.functions {
         if should_export_callable(module_name, &func.name) {
-            if func
-                .decorators
-                .iter()
-                .any(|decorator| decorator == "const_eval")
-            {
-                const_fn_exports.insert(func.name.clone(), func.clone());
-            }
+            const_reexports::record_local_const_function(func, &mut const_fn_exports);
             fn_exports.insert(
                 func.name.clone(),
                 exported_function_type(func, &local_classes),
@@ -359,13 +354,14 @@ pub fn collect_module_exports(
                             &class_aliases,
                         ),
                     );
-                    if let Some(defaults) = external_defs
-                        .function_defaults
-                        .get(&import.module)
-                        .and_then(|module_defaults| module_defaults.get(name))
-                    {
-                        default_exports.insert(local_name.clone(), defaults.clone());
-                    }
+                    const_reexports::copy_const_function_and_defaults(
+                        external_defs,
+                        &import.module,
+                        name,
+                        &local_name,
+                        &mut const_fn_exports,
+                        &mut default_exports,
+                    );
                     if let Some(vararg_index) = external_defs
                         .function_varargs
                         .get(&import.module)

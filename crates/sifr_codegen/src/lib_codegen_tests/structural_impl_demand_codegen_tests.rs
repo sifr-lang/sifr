@@ -452,6 +452,69 @@ fn static_program_owners_use_structural_implementation_eligibility() {
     assert!(!owners.contains("NestedBytes"));
 }
 
+#[test]
+fn plain_static_program_generic_emits_the_sealed_runtime_bound() {
+    let mut retain = ordinary_function("retain", Type::TypeVar("T".to_string()));
+    retain.return_type = Type::TypeVar("T".to_string());
+    retain.type_params = vec!["T".to_string()];
+    retain.body = vec![sifr_ir::HirStmt::Return {
+        value: Some(HirExpr::Name {
+            name: "value".to_string(),
+            binding_id: None,
+            ty: Type::TypeVar("T".to_string()),
+        }),
+    }];
+    let mut module = module(vec![retain], Vec::new());
+    module.type_param_bounds.insert(
+        "retain".to_string(),
+        std::collections::HashMap::from([("T".to_string(), vec!["StaticProgram".to_string()])]),
+    );
+
+    let rust_code = generate_rust(&module);
+
+    assert!(
+        rust_code.contains("T: ::sifr_runtime::interop::structural::StaticProgramType + Clone"),
+        "{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("T: Clone + std::fmt::Display"),
+        "{rust_code}"
+    );
+}
+
+#[test]
+fn project_static_program_owners_include_supported_imported_fields() {
+    let imported = HirClass {
+        name: "ImportedPayload".to_string(),
+        identity: Some("support.ImportedPayload".to_string()),
+        ..payload_class()
+    };
+    let owner = HirClass {
+        name: "Owner".to_string(),
+        fields: vec![(
+            "payload".to_string(),
+            Type::Class {
+                identity: Some("support.ImportedPayload".to_string()),
+                name: "ImportedPayload".to_string(),
+                fields: vec![("value".to_string(), Type::Int)],
+                methods: Vec::new(),
+                parent_class: None,
+                type_args: Vec::new(),
+            },
+        )],
+        ..payload_class()
+    };
+    let main = module(Vec::new(), vec![owner]);
+    let support = module(Vec::new(), vec![imported]);
+    let modules = [("main", &main), ("support", &support)];
+
+    let local = crate::structural_static_program_owners(&main);
+    let project = crate::structural_static_program_owners_for_project(&main, &modules);
+
+    assert!(!local.contains("Owner"));
+    assert!(project.contains("Owner"));
+}
+
 fn module(functions: Vec<HirFunction>, classes: Vec<HirClass>) -> HirModule {
     HirModule {
         functions,

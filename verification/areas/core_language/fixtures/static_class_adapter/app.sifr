@@ -1,3 +1,4 @@
+from fixture.contract import retain_static_program
 from fixture.facade import Contract, ContractError, contract_config, contract_field
 from fixture.factories import Token as ExternalToken, make_names as external_names
 from fixture.models import ImportedAttached as ImportedAlias, ImportedPlain as PlainAlias
@@ -44,11 +45,13 @@ class StructuralDefaults(Contract):
 def main() -> Result[None, ContractError | RustPanicError]:
     first: Model = Model(7)
     second: Model = Model(8)
+    retained: Model = retain_static_program(Model(9))
     first.tags.append("one")
     assert first.value == 7
     assert first.enabled
     assert first.tags == ["one"]
     assert second.tags == []
+    assert retained.value == 9
     assert first.free_names == []
     assert first.static_names == []
     assert first.external_free == []
