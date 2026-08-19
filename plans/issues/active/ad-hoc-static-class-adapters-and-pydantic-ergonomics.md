@@ -1531,8 +1531,28 @@ Deferred follow-up: M12 should make the owned receiver-value rule explicit in
 the frontend, record the composite-input role on `StaticMethodSlot` instead of
 inferring it from a two-element tuple, remove the unreachable mutable-value
 binding branch, and add direct code-generation and arity-diagnostic tests.
+
+Ordered-map structural-output prerequisite state: complete
+PR: [`sifr-lang/sifr#3306`](https://github.com/sifr-lang/sifr/pull/3306)
+Base SHA: `d3b689c1130401766379804d7d2b25b6c44c2a8f`
+Candidate SHA: `572bf0f9db225f249cc97346f8b8d875965a0c48`
+Merge SHA: `72abec78703dfb55cbdaad929b1475b2000c56ea`
+Changed path:
+`crates/sifr_runtime/src/interop/structural/implementations.rs`.
+Validation: the focused ordered-`IndexMap` construction test passed; runtime
+Clippy passed with warnings denied; formatting, HIR maintainability, the
+900-line file-size guardrail, and `git diff --check` passed. The one create-PR
+gate and one merge gate ran on the unchanged candidate. Both passed their
+preceding guards and stopped at the shared stale generated-demo freshness
+boundary. Neither gate was rerun.
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3306#issuecomment-5338064577)).
+Deferred follow-up: M12 should add a direct ordered-projection regression test
+and can deduplicate the `HashMap` and `IndexMap` mapping bridge bodies. Existing
+duplicate-key and custom-hasher behavior matches the prior `HashMap` scope.
 Next action: implement the M10 package facade on compiler merge
-`6fa16c48b78a6059f70de607944a7f461c618a77` and package merge
+`72abec78703dfb55cbdaad929b1475b2000c56ea` and package merge
 `8af4a1f4d598829ac427f96c34b76289e13eedd9`.
 
 ### M11: Complete Model Operations and Schema Surface
@@ -1689,5 +1709,5 @@ compiler implementation or demo output, so it did not absorb or rerun this
 failure. Refresh or retire the companions under this phase's emission owner.
 
 Next action: implement M10 serializers, computed fields, and attached dump
-methods on compiler merge `6fa16c48b78a6059f70de607944a7f461c618a77`
+methods on compiler merge `72abec78703dfb55cbdaad929b1475b2000c56ea`
 and package merge `8af4a1f4d598829ac427f96c34b76289e13eedd9`.
