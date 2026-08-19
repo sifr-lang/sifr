@@ -112,6 +112,40 @@ def finish[T: StaticProgram](own target: Self) -> int:
 }
 
 #[test]
+fn attached_api_owner_accepts_method_slots_bound() {
+    let contract = attached_contract()
+        .replace(
+            "from sifr.meta import StaticProgram, Structural, ",
+            "from sifr.meta import MethodSlots, StaticProgram, Structural, ",
+        )
+        .replace(
+            "@class_adapter_provider",
+            r#"@attached_api("fixture.contract", "ContractApi", public_name="serialize", receiver="immutable", owner="T")
+def serialize[T: MethodSlots](target: Self) -> int:
+    return 3
+
+@class_adapter_provider"#,
+        );
+    let modules = project(
+        r#"
+from fixture.contract import Contract, contract_config
+
+class Model(Contract):
+    _config = contract_config(True)
+    value: int
+
+def main():
+    model: Model = Model(1)
+    assert model.serialize() == 3
+"#,
+        &contract,
+    );
+    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    collect_project_hir_modules(&modules, stdlib_defs)
+        .expect("a MethodSlots-bound attached API owner should lower");
+}
+
+#[test]
 fn erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost() {
     let modules = project(
         r#"
