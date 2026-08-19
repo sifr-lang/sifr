@@ -1,5 +1,26 @@
 // src/main.rs
-// --- stdlib: _sifr.regex ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct RegexError {
+        pub message: String,
+        pub detail: String,
+    }
+    impl RegexError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                detail: String::new(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for RegexError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for RegexError {}
+}
+pub use __sifr_project_nominals::RegexError;
 type __SifrStdlib___sifr_x2eregex_x2eCompiledPattern = ::sifr_runtime::interop::Handle<
     ::sifr_stdlib::regex::CompiledPattern,
 >;
@@ -237,8 +258,6 @@ fn re_split_flags(
             detail: __sifr_bridge_error.to_string(),
         })
 }
-
-// --- stdlib: sifr.re ---
 const IGNORECASE: i64 = 2_i64;
 fn search(pattern: &String, text: &String) -> Result<Option<String>, RegexError> {
     re_find(pattern, text)
@@ -263,8 +282,6 @@ fn findall(pattern: &String, text: &String) -> Result<Vec<String>, RegexError> {
 fn split(pattern: &String, text: &String) -> Result<Vec<String>, RegexError> {
     re_split(pattern, text)
 }
-
-// --- stdlib: sifr.test ---
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     assert_eq!(actual.len() as i64, expected.len() as i64);
     let mut i: i64 = 0_i64;
@@ -273,46 +290,22 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
         i += 1_i64;
     }
 }
-// --- end stdlib ---
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct RegexError {
-    message: String,
-    detail: String,
-}
-
-impl RegexError {
-    fn new(message: String) -> Self {
-        Self { message, detail: String::new() }
-    }
-}
-
-impl ::std::fmt::Display for RegexError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for RegexError {
-}
-
 fn has_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
     let __sifr_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {
-    let found: Option<String> = search(pattern, text)?;
-    return Ok(Ok((found != None)));
-    unreachable!("sifr try/except return capture fell through");
-})();
+        let found: Option<String> = search(pattern, text)?;
+        return Ok(Ok((found != None)));
+        unreachable!("sifr try/except return capture fell through");
+    })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
-        },
+        }
         Err(__sifr_try_err) => {
             let error = __sifr_try_err.clone();
-            return Err(RegexError::new(error.message));
-        },
+            return Err(RegexError::new(error.message.clone()));
+        }
     }
 }
-
 fn collect_primary_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let mut match_ok: bool = false;
@@ -322,23 +315,38 @@ fn collect_primary_actual() -> Vec<bool> {
     let mut split_ok: bool = false;
     let mut case_fold_ok: bool = false;
     let __sifr_try_res: Result<(), RegexError> = (|| {
-    let m: bool = has_match(&"[0-9]+".to_string(), &"42 bottles".to_string())?;
-    match_ok = m;
-    let found_num: Option<String> = search(&"[0-9]+".to_string(), &"id=9000".to_string())?;
-    find_ok = ((found_num).map_or("None".to_string().to_string(), |__v| format!("{}", __v)) == "9000");
-    let replaced: String = sub(&"\\s+".to_string(), &"-".to_string(), &"hello   world".to_string())?;
-    replace_ok = replaced == "hello-world";
-    let all_alpha: Vec<String> = findall(&"[a-z]+".to_string(), &"ab 12 cd".to_string())?;
-    findall_ok = (format!("{:?}", all_alpha) == "[\"ab\", \"cd\"]");
-    let split_parts: Vec<String> = split(&":+".to_string(), &"a:b::c".to_string())?;
-    split_ok = (format!("{:?}", split_parts) == "[\"a\", \"b\", \"c\"]");
-    let case_fold: Option<String> = search_flags(&"hello".to_string(), &"HELLO".to_string(), IGNORECASE)?;
-    case_fold_ok = case_fold.is_some();
-    Ok(())
-})();
+        let m: bool = has_match(&"[0-9]+".to_string(), &"42 bottles".to_string())?;
+        match_ok = m;
+        let found_num: Option<String> = search(
+            &"[0-9]+".to_string(),
+            &"id=9000".to_string(),
+        )?;
+        find_ok = ((found_num)
+            .map_or("None".to_string().to_string(), |__v| format!("{}", __v)) == "9000");
+        let replaced: String = sub(
+            &"\\s+".to_string(),
+            &"-".to_string(),
+            &"hello   world".to_string(),
+        )?;
+        replace_ok = replaced == "hello-world";
+        let all_alpha: Vec<String> = findall(
+            &"[a-z]+".to_string(),
+            &"ab 12 cd".to_string(),
+        )?;
+        findall_ok = (format!("{:?}", all_alpha) == "[\"ab\", \"cd\"]");
+        let split_parts: Vec<String> = split(&":+".to_string(), &"a:b::c".to_string())?;
+        split_ok = (format!("{:?}", split_parts) == "[\"a\", \"b\", \"c\"]");
+        let case_fold: Option<String> = search_flags(
+            &"hello".to_string(),
+            &"HELLO".to_string(),
+            IGNORECASE,
+        )?;
+        case_fold_ok = case_fold.is_some();
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message);
+        let _ = format!("{}", e.message.clone());
     }
     actual.push(match_ok);
     actual.push(find_ok);
@@ -348,7 +356,6 @@ fn collect_primary_actual() -> Vec<bool> {
     actual.push(case_fold_ok);
     actual
 }
-
 fn main() {
     let expected: Vec<bool> = vec![true, true, true, true, true, true];
     let actual: Vec<bool> = collect_primary_actual();

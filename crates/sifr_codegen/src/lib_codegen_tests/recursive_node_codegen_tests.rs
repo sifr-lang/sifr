@@ -353,6 +353,32 @@ def collect(value: int | None) -> list[Record]:
 }
 
 #[test]
+fn optional_protocol_constructor_arguments_use_structural_boxing() {
+    let rust_code = generate_rust_from_source(
+        r#"from typing import Protocol
+
+class Greetable(Protocol):
+    def greet(self) -> str:
+        ...
+
+class Holder:
+    entity: Greetable | None
+
+    def __init__(self, own entity: Greetable | None):
+        self.entity = entity
+
+def make_holder(own entity: Greetable) -> Holder:
+    return Holder(entity)
+"#,
+    );
+
+    assert!(
+        rust_code.contains("Holder::new(Some(Box::new(entity)))"),
+        "optional protocol storage must box a non-optional constructor argument:\n{rust_code}"
+    );
+}
+
+#[test]
 fn test_recursive_option_let_else_binding_is_mutable_for_child_moves() {
     let rust_code = generate_rust_from_source(
         r#"class Expr:

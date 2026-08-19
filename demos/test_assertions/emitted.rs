@@ -1,5 +1,22 @@
 // src/main.rs
-// --- stdlib: _sifr.math ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ValueError {
+        pub message: String,
+    }
+    impl ValueError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ValueError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ValueError {}
+}
+pub use __sifr_project_nominals::ValueError;
 const PI: f64 = 3.141592653589793_f64;
 const E: f64 = 2.718281828459045_f64;
 const TAU: f64 = 6.283185307179586_f64;
@@ -180,8 +197,6 @@ fn nextafter(x: f64, y: f64) -> f64 {
 fn ulp(x: f64) -> f64 {
     ::sifr_stdlib::math::ulp(x)
 }
-
-// --- stdlib: sifr.test ---
 fn assert_not_almost_eq(actual: f64, expected: f64, tolerance: f64) {
     assert!(tolerance >= (0.0_f64));
     if actual == expected {
@@ -229,369 +244,313 @@ fn assert_err<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     })();
     if let Err(e) = __sifr_try_res {}
 }
-// --- end stdlib ---
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct IOError {
     message: String,
     kind: String,
 }
-
 impl IOError {
     fn new(message: String) -> Self {
-        Self { message, kind: "Other".to_string() }
+        Self {
+            message,
+            kind: "Other".to_string(),
+        }
     }
 }
-
 impl ::std::fmt::Display for IOError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for IOError {
-}
-
+impl ::std::error::Error for IOError {}
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
-    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
-    match __sifr_io_kind {
-    Some(::std::io::ErrorKind::NotFound) => {
-        "FileNotFound".to_string()
-    },
-    Some(::std::io::ErrorKind::PermissionDenied) => {
-        "PermissionDenied".to_string()
-    },
-    Some(::std::io::ErrorKind::AlreadyExists) => {
-        "FileExists".to_string()
-    },
-    Some(::std::io::ErrorKind::IsADirectory) => {
-        "IsADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::NotADirectory) => {
-        "NotADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-        "DirectoryNotEmpty".to_string()
-    },
-    _ => {
-        "Other".to_string()
-    },
-}
-};
+        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+            .downcast_ref::<std::io::Error>()
+            .map(::std::io::Error::kind);
+        match __sifr_io_kind {
+            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+            Some(::std::io::ErrorKind::PermissionDenied) => {
+                "PermissionDenied".to_string()
+            }
+            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                "DirectoryNotEmpty".to_string()
+            }
+            _ => "Other".to_string(),
+        }
+    };
     IOError { message: msg, kind }
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
-
 impl Error {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for Error {
-}
-
+impl ::std::error::Error for Error {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
-
 impl ParseError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ParseError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ValueError {
-    message: String,
-}
-
-impl ValueError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for ValueError {
-}
-
+impl ::std::error::Error for ParseError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct JSONDecodeError {
     message: String,
     line: i64,
     column: i64,
 }
-
 impl JSONDecodeError {
     fn new(message: String) -> Self {
-        Self { message, line: 0, column: 0 }
+        Self {
+            message,
+            line: 0,
+            column: 0,
+        }
     }
 }
-
 impl ::std::fmt::Display for JSONDecodeError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for JSONDecodeError {
-}
-
+impl ::std::error::Error for JSONDecodeError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct JsonIntegerRangeError {
     message: String,
     path: String,
     profile: String,
 }
-
 impl JsonIntegerRangeError {
     fn new(message: String) -> Self {
-        Self { message, path: String::new(), profile: String::new() }
+        Self {
+            message,
+            path: String::new(),
+            profile: String::new(),
+        }
     }
 }
-
 impl ::std::fmt::Display for JsonIntegerRangeError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for JsonIntegerRangeError {
-}
-
+impl ::std::error::Error for JsonIntegerRangeError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct JsonLimitError {
     message: String,
     limit: i64,
 }
-
 impl JsonLimitError {
     fn new(message: String) -> Self {
         Self { message, limit: 0 }
     }
 }
-
 impl ::std::fmt::Display for JsonLimitError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for JsonLimitError {
-}
-
+impl ::std::error::Error for JsonLimitError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct TOMLDecodeError {
     message: String,
     line: i64,
     column: i64,
 }
-
 impl TOMLDecodeError {
     fn new(message: String) -> Self {
-        Self { message, line: 0, column: 0 }
+        Self {
+            message,
+            line: 0,
+            column: 0,
+        }
     }
 }
-
 impl ::std::fmt::Display for TOMLDecodeError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for TOMLDecodeError {
-}
-
+impl ::std::error::Error for TOMLDecodeError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct RegexError {
     message: String,
     detail: String,
 }
-
 impl RegexError {
     fn new(message: String) -> Self {
-        Self { message, detail: String::new() }
+        Self {
+            message,
+            detail: String::new(),
+        }
     }
 }
-
 impl ::std::fmt::Display for RegexError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for RegexError {
-}
-
+impl ::std::error::Error for RegexError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct TimeoutError {
     message: String,
 }
-
 impl TimeoutError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for TimeoutError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for TimeoutError {
-}
-
+impl ::std::error::Error for TimeoutError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ScopeFailure {
     message: String,
 }
-
 impl ScopeFailure {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ScopeFailure {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ScopeFailure {
-}
-
+impl ::std::error::Error for ScopeFailure {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ParseError> for Error {
     fn from(err: ParseError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ValueError> for Error {
     fn from(err: ValueError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JSONDecodeError> for Error {
     fn from(err: JSONDecodeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JsonIntegerRangeError> for Error {
     fn from(err: JsonIntegerRangeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JsonLimitError> for Error {
     fn from(err: JsonLimitError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<TOMLDecodeError> for Error {
     fn from(err: TOMLDecodeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<RegexError> for Error {
     fn from(err: RegexError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<TimeoutError> for Error {
     fn from(err: TimeoutError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ScopeFailure> for Error {
     fn from(err: ScopeFailure) -> Self {
         Self::new(err.message)
     }
 }
-
 fn parse_num(s: &String) -> Result<i64, ValueError> {
     if (s).as_str() == "bad" {
         return Err(ValueError::new("parse failure".to_string()));
     }
     Ok(10_i64)
 }
-
 fn main() {
     println!("=== Core equality/truth assertions ===");
     assert_eq!("sifr", "sifr");
     assert_ne!("sifr", "rust");
     assert!((2_i64) > (1_i64));
     {
-    let __cond = (1_i64) > (2_i64);
-    assert!(!__cond)
-};
+        let __cond = (1_i64) > (2_i64);
+        assert!(! __cond)
+    };
     println!("core assertions ok");
     println!("=== Almost-equality semantics ===");
     {
-    let __lhs = (0.1_f64) + (0.2_f64);
-    let __rhs = 0.3_f64;
-    let __tol = 0.0001_f64;
-    assert!((__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol), "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol)
-};
+        let __lhs = (0.1_f64) + (0.2_f64);
+        let __rhs = 0.3_f64;
+        let __tol = 0.0001_f64;
+        assert!(
+            (__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol),
+            "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol
+        )
+    };
     {
-    let __lhs = INF;
-    let __rhs = INF;
-    let __tol = 0.0_f64;
-    assert!((__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol), "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol)
-};
+        let __lhs = INF;
+        let __rhs = INF;
+        let __tol = 0.0_f64;
+        assert!(
+            (__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol),
+            "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol
+        )
+    };
     assert_not_almost_eq(1.1_f64, 1.0_f64, 0.05_f64);
     println!("almost assertions ok");
     println!("=== Comparable assertions ===");
     assert!((5_i64) > (4_i64), "assert_gt failed: {} is not > {}", 5_i64, 4_i64);
     assert_ge(&(5_i64), &(5_i64));
-    assert!("a".to_string() < "b".to_string(), "assert_lt failed: {} is not < {}", "a", "b");
+    assert!(
+        "a".to_string() < "b".to_string(), "assert_lt failed: {} is not < {}", "a", "b"
+    );
     assert_le(&"b".to_string(), &"b".to_string());
     println!("comparison assertions ok");
     println!("=== Result/Option adapted assertions ===");
-    assert_ok((parse_num(&"ok".to_string())).map_err(|__sifr_error_value| ::std::convert::Into::<Error>::into(__sifr_error_value)));
-    assert_err((parse_num(&"bad".to_string())).map_err(|__sifr_error_value| ::std::convert::Into::<Error>::into(__sifr_error_value)));
+    assert_ok(
+        (parse_num(&"ok".to_string()))
+            .map_err(|__sifr_error_value| ::std::convert::Into::<
+                Error,
+            >::into(__sifr_error_value)),
+    );
+    assert_err(
+        (parse_num(&"bad".to_string()))
+            .map_err(|__sifr_error_value| ::std::convert::Into::<
+                Error,
+            >::into(__sifr_error_value)),
+    );
     let maybe_name: Option<String> = Some("sifr".to_string());
     let maybe_missing: Option<String> = None;
     assert_some(maybe_name);

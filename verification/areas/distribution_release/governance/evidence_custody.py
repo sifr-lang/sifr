@@ -48,13 +48,18 @@ def run_evidence_custody_checks() -> int:
 
 def validate_changed_evidence_scope() -> None:
     base = comparison_base()
-    validate_changed_path_sets(committed_changed_path_sets(base))
-    validate_changed_path_set(working_changed_paths())
+    changed_sets = committed_changed_path_sets(base)
+    changed_sets.append(working_changed_paths())
+    validate_changed_path_sets(changed_sets)
 
 
 def validate_changed_path_sets(changed_sets: list[set[str]]) -> None:
     for changed in changed_sets:
         validate_changed_path_set(changed)
+    aggregate: set[str] = set()
+    for changed in changed_sets:
+        aggregate.update(changed)
+    validate_changed_path_set(aggregate)
 
 
 def validate_changed_path_set(changed: set[str]) -> None:

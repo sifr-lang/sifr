@@ -3,7 +3,7 @@ use crate::diag::PackageDiagnostic;
 use crate::manifest::package_sections::{
     parse_dependencies, parse_scripts, SifrDependency, SifrScript,
 };
-use crate::manifest::production::{parse_source_config, reject_unsupported_layout_fields};
+use crate::manifest::production::{parse_source_config, validate_manifest_shape};
 use crate::manifest::sifr_fields::{
     parse_python_config, parse_rust_interop_config, parse_trust, validate_compiler_requirement,
     validate_edition,
@@ -128,7 +128,7 @@ impl SifrManifest {
 
         let source_table = table(&value, "source");
         let source_root = parse_source_config(cargo_package_id, manifest_path, source_table)?;
-        reject_unsupported_layout_fields(cargo_package_id, manifest_path, &value)?;
+        validate_manifest_shape(cargo_package_id, manifest_path, &value)?;
 
         let source_features = table(&value, "features")
             .map(|features| {

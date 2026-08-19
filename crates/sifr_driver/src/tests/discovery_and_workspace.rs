@@ -517,5 +517,28 @@ fn test_workspace_resolver_rejects_namespace_file_collision() {
         .iter()
         .any(|child| child.message.contains("helpers.sifr")));
 
+    let spanless = parse_import_closure_modules(
+        &resolver,
+        &BTreeSet::from(["helpers.nodes".to_string()]),
+        DiscoveryDiagnosticStyle::ModuleName,
+        &mut DiskSourceProvider::new(),
+    )
+    .expect_err("root namespace collision should fail without an import span");
+    assert_eq!(
+        spanless[0].code,
+        DiagnosticCode::IMPORT_NAMESPACE_COLLISION.code()
+    );
+    assert!(spanless[0].spans.is_empty());
+    assert_eq!(
+        spanless[0].args.get("module"),
+        Some(&sifr_diagnostics::DiagnosticArg::String(
+            "helpers.nodes".to_string()
+        ))
+    );
+    assert!(spanless[0]
+        .children
+        .iter()
+        .any(|child| child.message.contains("helpers.sifr")));
+
     let _ = std::fs::remove_dir_all(&dir);
 }

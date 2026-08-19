@@ -1,5 +1,357 @@
 // src/main.rs
-// --- stdlib: _sifr.encoding ---
+mod __sifr_project_nominals {
+    pub fn _gzip_compress_bytes_impl(data: &String) -> Vec<u8> {
+        ::sifr_stdlib::gzip::gzip_compress_bytes(data)
+    }
+    pub fn _gzip_decompress_bytes_impl(data: &Vec<u8>) -> Result<String, IOError> {
+        ::sifr_stdlib::gzip::gzip_decompress_bytes(data)
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    pub fn zip_create(path: &String) -> Result<(), IOError> {
+        ::sifr_stdlib::zipfile::zip_create(path)
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    pub fn zip_add_file(
+        zip_path: &String,
+        name: &String,
+        content: &String,
+    ) -> Result<(), IOError> {
+        ::sifr_stdlib::zipfile::zip_add_file(zip_path, name, content)
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    pub fn zip_add_file_bytes(
+        zip_path: &String,
+        name: &String,
+        content: &Vec<u8>,
+    ) -> Result<(), IOError> {
+        ::sifr_stdlib::zipfile::zip_add_file_bytes(zip_path, name, content)
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    pub fn zip_read_file(zip_path: &String, name: &String) -> Result<String, IOError> {
+        ::sifr_stdlib::zipfile::zip_read_file(zip_path, name)
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    pub fn zip_read_file_bytes(
+        zip_path: &String,
+        name: &String,
+    ) -> Result<Vec<u8>, IOError> {
+        ::sifr_stdlib::zipfile::zip_read_file_bytes(zip_path, name)
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    pub fn zip_namelist(zip_path: &String) -> Result<Vec<String>, IOError> {
+        ::sifr_stdlib::zipfile::zip_namelist(zip_path)
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct __SifrStdlib_sifr_x2ezipfile_x2eZipInfo {
+        pub filename: String,
+        pub file_size: i64,
+        pub compress_type: i64,
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipInfo {
+        pub fn new(filename: String, file_size: i64, compress_type: i64) -> Self {
+            let __sifr_field_init_0: String = {
+                let mut __sifr_concat: String = String::with_capacity(
+                    filename.len() + 0usize,
+                );
+                __sifr_concat.push_str((filename).as_str());
+                __sifr_concat.push_str("");
+                __sifr_concat
+            };
+            let __sifr_field_init_1: i64 = file_size;
+            let __sifr_field_init_2: i64 = compress_type;
+            Self {
+                filename: __sifr_field_init_0,
+                file_size: __sifr_field_init_1,
+                compress_type: __sifr_field_init_2,
+            }
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipInfo {}
+    impl ::std::fmt::Display for __SifrStdlib_sifr_x2ezipfile_x2eZipInfo {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            write!(
+                f, "ZipInfo(filename={}, file_size={}, compress_type={})", self.filename,
+                self.file_size, self.compress_type
+            )
+        }
+    }
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct __SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle {
+        pub _data: Vec<u8>,
+        pub _cursor: i64,
+        pub _closed: bool,
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle {
+        pub fn new(data: Vec<u8>) -> Self {
+            let __sifr_field_init_0: Vec<u8> = data;
+            let __sifr_field_init_1: i64 = 0_i64;
+            let __sifr_field_init_2: bool = false;
+            Self {
+                _data: __sifr_field_init_0,
+                _cursor: __sifr_field_init_1,
+                _closed: __sifr_field_init_2,
+            }
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle {
+        pub fn close(&mut self) {
+            self._closed = true;
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle {
+        pub fn closed(&self) -> bool {
+            self._closed
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle {
+        pub fn read_bytes(&mut self, size: Option<i64>) -> Result<Vec<u8>, IOError> {
+            if self._closed {
+                return Err(IOError::new(_closed_stream_error()));
+            }
+            let mut end: i64 = self._data.len() as i64;
+            if let Some(size) = size {
+                let requested_size: i64 = size;
+                if requested_size < (0_i64) {
+                    end = self._data.len() as i64;
+                } else {
+                    let requested_end: i64 = self._cursor + requested_size;
+                    if requested_end < end {
+                        end = requested_end;
+                    }
+                }
+            }
+            let out: Vec<u8> = {
+                let _slice_src = &self._data.clone();
+                let _slice_len_i64 = _slice_src.len() as i64;
+                let _slice_start_i64 = if self._cursor < 0 {
+                    (_slice_len_i64 + self._cursor).max(0)
+                } else {
+                    self._cursor.min(_slice_len_i64)
+                };
+                let _slice_stop_i64 = if end < 0 {
+                    (_slice_len_i64 + end).max(0)
+                } else {
+                    end.min(_slice_len_i64)
+                };
+                Vec::from_iter(
+                    _slice_src
+                        .iter()
+                        .skip(_slice_start_i64 as usize)
+                        .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                        .cloned(),
+                )
+            };
+            self._cursor = end;
+            Ok(out)
+        }
+    }
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub path: String,
+        pub mode: String,
+        pub compression: i64,
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn new(path: String, mode: String, compression: i64) -> Self {
+            let __sifr_field_init_0: String = {
+                let mut __sifr_concat: String = String::with_capacity(path.len() + 0usize);
+                __sifr_concat.push_str((path).as_str());
+                __sifr_concat.push_str("");
+                __sifr_concat
+            };
+            let __sifr_field_init_1: String = {
+                let mut __sifr_concat: String = String::with_capacity(mode.len() + 0usize);
+                __sifr_concat.push_str((mode).as_str());
+                __sifr_concat.push_str("");
+                __sifr_concat
+            };
+            let __sifr_field_init_2: i64 = compression;
+            Self {
+                path: __sifr_field_init_0,
+                mode: __sifr_field_init_1,
+                compression: __sifr_field_init_2,
+            }
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn _writable_mode(&self) -> bool {
+            (((((self.mode.clone() == "w")) || ((self.mode.clone() == "a")))
+                || ((self.mode.clone() == "wb"))) || ((self.mode.clone() == "ab")))
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn create(&self) -> Result<(), IOError> {
+            zip_create(&self.path)
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn write(&self, name: &String, content: &String) -> Result<(), IOError> {
+            if !(self._writable_mode()) {
+                return Err(IOError::new(_zip_read_only_error()));
+            }
+            zip_add_file(&self.path, name, content)
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn write_bytes(&self, name: &String, content: &Vec<u8>) -> Result<(), IOError> {
+            if !(self._writable_mode()) {
+                return Err(IOError::new(_zip_read_only_error()));
+            }
+            zip_add_file_bytes(&self.path, name, content)
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn read(&self, name: &String) -> Result<String, IOError> {
+            zip_read_file(&self.path, name)
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn read_bytes(&self, name: &String) -> Result<Vec<u8>, IOError> {
+            zip_read_file_bytes(&self.path, name)
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn namelist(&self) -> Result<Vec<String>, IOError> {
+            zip_namelist(&self.path)
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn infolist(
+            &self,
+        ) -> Result<Vec<__SifrStdlib_sifr_x2ezipfile_x2eZipInfo>, IOError> {
+            Err(IOError::new(_zip_unimplemented_error(&"infolist".to_string())))
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn getinfo(
+            &self,
+            name: &String,
+        ) -> Result<__SifrStdlib_sifr_x2ezipfile_x2eZipInfo, IOError> {
+            let _ = (name).clone();
+            Err(IOError::new(_zip_unimplemented_error(&"getinfo".to_string())))
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn open(
+            &self,
+            name: &String,
+            mode: &String,
+        ) -> Result<__SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle, IOError> {
+            let _ = (name).clone();
+            if ((mode).as_str() != "r") && ((mode).as_str() != "rb") {
+                return Err(IOError::new(_zip_open_mode_error(mode)));
+            }
+            Err(IOError::new(_zip_unimplemented_error(&"open".to_string())))
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn extract(&self, name: &String, path: &String) -> Result<String, IOError> {
+            let _ = (name).clone();
+            let _ = (path).clone();
+            Err(IOError::new(_zip_unimplemented_error(&"extract".to_string())))
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn extractall(&self, path: &String) -> Result<Vec<String>, IOError> {
+            let _ = (path).clone();
+            Err(IOError::new(_zip_unimplemented_error(&"extractall".to_string())))
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn __enter__(&self) -> __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+            self.clone()
+        }
+    }
+    impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        pub fn __exit__(&self) {}
+    }
+    impl ::std::fmt::Display for __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            write!(
+                f, "ZipFile(path={}, mode={}, compression={})", self.path, self.mode, self
+                .compression
+            )
+        }
+    }
+    pub fn _zip_read_only_error() -> String {
+        "zipfile operation requires write or append mode".to_string()
+    }
+    pub fn _zip_open_mode_error(mode: &String) -> String {
+        {
+            let mut __sifr_concat: String = String::with_capacity(48usize + mode.len());
+            __sifr_concat.push_str("zipfile open supports read-only mode only, got: ");
+            __sifr_concat.push_str((mode).as_str());
+            __sifr_concat
+        }
+    }
+    pub fn _closed_stream_error() -> String {
+        "I/O operation on closed stream".to_string()
+    }
+    pub fn _zip_unimplemented_error(feature: &String) -> String {
+        {
+            let mut __sifr_concat: String = String::with_capacity(
+                (8usize + feature.len()) + 49usize,
+            );
+            __sifr_concat.push_str("zipfile ");
+            __sifr_concat.push_str((feature).as_str());
+            __sifr_concat.push_str(" is not implemented in this compatibility surface");
+            __sifr_concat
+        }
+    }
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct IOError {
+        pub message: String,
+        pub kind: String,
+    }
+    impl IOError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                kind: "Other".to_string(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for IOError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for IOError {}
+    pub fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match __sifr_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => {
+                    "PermissionDenied".to_string()
+                }
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                    "DirectoryNotEmpty".to_string()
+                }
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+}
+pub use __sifr_project_nominals::IOError;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ezipfile_x2eZipFile;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ezipfile_x2eZipInfo;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle;
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
 }
@@ -109,8 +461,6 @@ fn _encoding_encode_recoveries_impl(
             message: __sifr_bridge_error.to_string(),
         })
 }
-
-// --- stdlib: _sifr.fs ---
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrIoNativeFileHandle {
     _id: String,
@@ -200,7 +550,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
+            return Err(IOError::new(e.message.clone()));
         }
     }
 }
@@ -328,8 +678,6 @@ fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError>
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-
-// --- stdlib: sifr.encoding ---
 fn __const_ENCODING_UTF8() -> String {
     "utf-8".to_string().to_string()
 }
@@ -633,14 +981,14 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             let outcome: __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome = _encoding_decode_incremental_outcome(
                 data,
                 &self._pending,
-                &self._encoding.clone().label,
-                &self._errors.clone().name,
+                &self._encoding.clone().label.clone(),
+                &self._errors.clone().name.clone(),
                 r#final,
             )?;
             let next_pending: Vec<u8> = _encoding_decode_incremental_pending(
                 data,
                 &self._pending,
-                &self._encoding.clone().label,
+                &self._encoding.clone().label.clone(),
                 r#final,
             )?;
             self._pending = next_pending;
@@ -657,7 +1005,9 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             }
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
-                return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+                return Err(
+                    __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+                );
             }
         }
     }
@@ -725,7 +1075,9 @@ impl __SifrStdlib_sifr_x2eencoding_x2eEncoder {
             }
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
-                return Err(__SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message));
+                return Err(
+                    __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
+                );
             }
         }
     }
@@ -758,7 +1110,9 @@ fn _encoding_canonical_label(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -781,7 +1135,9 @@ fn _encoding_decode_text(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -808,7 +1164,9 @@ fn _encoding_decode_recoveries(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -844,7 +1202,9 @@ fn _encoding_decode_outcome(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -890,7 +1250,9 @@ fn _encoding_decode_incremental_outcome(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -919,7 +1281,9 @@ fn _encoding_decode_incremental_pending(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -942,7 +1306,9 @@ fn _encoding_encode_bytes(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -969,7 +1335,9 @@ fn _encoding_encode_recoveries(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -1005,7 +1373,9 @@ fn _encoding_encode_outcome(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -1154,7 +1524,9 @@ fn decode_outcome(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -1181,7 +1553,9 @@ fn decode(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -1210,7 +1584,9 @@ fn encode_outcome(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -1237,12 +1613,12 @@ fn encode(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
+            );
         }
     }
 }
-
-// --- stdlib: _sifr.sys ---
 fn run_command(cmd: &String) -> Result<String, IOError> {
     ::sifr_stdlib::sys::run_command(cmd)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -1299,8 +1675,6 @@ fn os_linesep() -> String {
 fn os_name() -> String {
     ::sifr_stdlib::sys::os_name()
 }
-
-// --- stdlib: _sifr.crypto ---
 fn random_int(min: i64, max: i64) -> i64 {
     ::sifr_stdlib::random::random_int(
             ::sifr_runtime::interop::SifrIntBridge::from(min),
@@ -1470,8 +1844,6 @@ fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
 fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
 }
-
-// --- stdlib: sifr.tempfile ---
 fn _random_suffix() -> String {
     let n: i64 = random_int(100000_i64, 999999_i64);
     format!("{}", n)
@@ -1558,7 +1930,7 @@ fn mkstemp(prefix: &String) -> Result<String, IOError> {
                     attempts += 1_i64;
                     continue;
                 }
-                return Err(IOError::new(e.message));
+                return Err(IOError::new(e.message.clone()));
             }
         }
     }
@@ -1594,14 +1966,12 @@ fn mkdtemp(prefix: &String) -> Result<String, IOError> {
                     attempts += 1_i64;
                     continue;
                 }
-                return Err(IOError::new(e.message));
+                return Err(IOError::new(e.message.clone()));
             }
         }
     }
     Err(IOError::new(_collision_message(&"mkdtemp".to_string(), max_attempts)))
 }
-
-// --- stdlib: _sifr.compress ---
 fn _gzip_compress_bytes_impl(data: &String) -> Vec<u8> {
     ::sifr_stdlib::gzip::gzip_compress_bytes(data)
 }
@@ -1648,238 +2018,6 @@ fn zip_namelist(zip_path: &String) -> Result<Vec<String>, IOError> {
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-
-// --- stdlib: sifr.zipfile ---
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2ezipfile_x2eZipInfo {
-    filename: String,
-    file_size: i64,
-    compress_type: i64,
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipInfo {
-    fn new(filename: String, file_size: i64, compress_type: i64) -> Self {
-        let __sifr_field_init_0: String = {
-            let mut __sifr_concat: String = String::with_capacity(
-                filename.len() + 0usize,
-            );
-            __sifr_concat.push_str((filename).as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
-        };
-        let __sifr_field_init_1: i64 = file_size;
-        let __sifr_field_init_2: i64 = compress_type;
-        Self {
-            filename: __sifr_field_init_0,
-            file_size: __sifr_field_init_1,
-            compress_type: __sifr_field_init_2,
-        }
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipInfo {}
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2ezipfile_x2eZipInfo {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(
-            f, "ZipInfo(filename={}, file_size={}, compress_type={})", self.filename,
-            self.file_size, self.compress_type
-        )
-    }
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle {
-    _data: Vec<u8>,
-    _cursor: i64,
-    _closed: bool,
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle {
-    fn new(data: Vec<u8>) -> Self {
-        let __sifr_field_init_0: Vec<u8> = data;
-        let __sifr_field_init_1: i64 = 0_i64;
-        let __sifr_field_init_2: bool = false;
-        Self {
-            _data: __sifr_field_init_0,
-            _cursor: __sifr_field_init_1,
-            _closed: __sifr_field_init_2,
-        }
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle {
-    fn close(&mut self) {
-        self._closed = true;
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle {
-    fn closed(&self) -> bool {
-        self._closed
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle {
-    fn read_bytes(&mut self, size: Option<i64>) -> Result<Vec<u8>, IOError> {
-        if self._closed {
-            return Err(IOError::new(_closed_stream_error()));
-        }
-        let mut end: i64 = self._data.len() as i64;
-        if let Some(size) = size {
-            let requested_size: i64 = size;
-            if requested_size < (0_i64) {
-                end = self._data.len() as i64;
-            } else {
-                let requested_end: i64 = self._cursor + requested_size;
-                if requested_end < end {
-                    end = requested_end;
-                }
-            }
-        }
-        let out: Vec<u8> = {
-            let _slice_src = &self._data.clone();
-            let _slice_len_i64 = _slice_src.len() as i64;
-            let _slice_start_i64 = if self._cursor < 0 {
-                (_slice_len_i64 + self._cursor).max(0)
-            } else {
-                self._cursor.min(_slice_len_i64)
-            };
-            let _slice_stop_i64 = if end < 0 {
-                (_slice_len_i64 + end).max(0)
-            } else {
-                end.min(_slice_len_i64)
-            };
-            Vec::from_iter(
-                _slice_src
-                    .iter()
-                    .skip(_slice_start_i64 as usize)
-                    .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
-                    .cloned(),
-            )
-        };
-        self._cursor = end;
-        Ok(out)
-    }
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    path: String,
-    mode: String,
-    compression: i64,
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn new(path: String, mode: String, compression: i64) -> Self {
-        let __sifr_field_init_0: String = {
-            let mut __sifr_concat: String = String::with_capacity(path.len() + 0usize);
-            __sifr_concat.push_str((path).as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
-        };
-        let __sifr_field_init_1: String = {
-            let mut __sifr_concat: String = String::with_capacity(mode.len() + 0usize);
-            __sifr_concat.push_str((mode).as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
-        };
-        let __sifr_field_init_2: i64 = compression;
-        Self {
-            path: __sifr_field_init_0,
-            mode: __sifr_field_init_1,
-            compression: __sifr_field_init_2,
-        }
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn _writable_mode(&self) -> bool {
-        (((((self.mode.clone() == "w")) || ((self.mode.clone() == "a")))
-            || ((self.mode.clone() == "wb"))) || ((self.mode.clone() == "ab")))
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn create(&self) -> Result<(), IOError> {
-        zip_create(&self.path)
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn write(&self, name: &String, content: &String) -> Result<(), IOError> {
-        if !(self._writable_mode()) {
-            return Err(IOError::new(_zip_read_only_error()));
-        }
-        zip_add_file(&self.path, name, content)
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn write_bytes(&self, name: &String, content: &Vec<u8>) -> Result<(), IOError> {
-        if !(self._writable_mode()) {
-            return Err(IOError::new(_zip_read_only_error()));
-        }
-        zip_add_file_bytes(&self.path, name, content)
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn read(&self, name: &String) -> Result<String, IOError> {
-        zip_read_file(&self.path, name)
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn read_bytes(&self, name: &String) -> Result<Vec<u8>, IOError> {
-        zip_read_file_bytes(&self.path, name)
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn namelist(&self) -> Result<Vec<String>, IOError> {
-        zip_namelist(&self.path)
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn infolist(&self) -> Result<Vec<__SifrStdlib_sifr_x2ezipfile_x2eZipInfo>, IOError> {
-        Err(IOError::new(_zip_unimplemented_error(&"infolist".to_string())))
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn getinfo(
-        &self,
-        name: &String,
-    ) -> Result<__SifrStdlib_sifr_x2ezipfile_x2eZipInfo, IOError> {
-        let _ = (name).clone();
-        Err(IOError::new(_zip_unimplemented_error(&"getinfo".to_string())))
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn open(
-        &self,
-        name: &String,
-        mode: &String,
-    ) -> Result<__SifrStdlib_sifr_x2ezipfile_x2eZipReadHandle, IOError> {
-        let _ = (name).clone();
-        if ((mode).as_str() != "r") && ((mode).as_str() != "rb") {
-            return Err(IOError::new(_zip_open_mode_error(mode)));
-        }
-        Err(IOError::new(_zip_unimplemented_error(&"open".to_string())))
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn extract(&self, name: &String, path: &String) -> Result<String, IOError> {
-        let _ = (name).clone();
-        let _ = (path).clone();
-        Err(IOError::new(_zip_unimplemented_error(&"extract".to_string())))
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn extractall(&self, path: &String) -> Result<Vec<String>, IOError> {
-        let _ = (path).clone();
-        Err(IOError::new(_zip_unimplemented_error(&"extractall".to_string())))
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn __enter__(&self) -> __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-        self.clone()
-    }
-}
-impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn __exit__(&self) {}
-}
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(
-            f, "ZipFile(path={}, mode={}, compression={})", self.path, self.mode, self
-            .compression
-        )
-    }
-}
 fn _zip_read_only_error() -> String {
     "zipfile operation requires write or append mode".to_string()
 }
@@ -1905,138 +2043,88 @@ fn _zip_unimplemented_error(feature: &String) -> String {
         __sifr_concat
     }
 }
-// --- end stdlib ---
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct IOError {
-    message: String,
-    kind: String,
-}
-
-impl IOError {
-    fn new(message: String) -> Self {
-        Self { message, kind: "Other".to_string() }
-    }
-}
-
-impl ::std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for IOError {
-}
-
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
-    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
-    match __sifr_io_kind {
-    Some(::std::io::ErrorKind::NotFound) => {
-        "FileNotFound".to_string()
-    },
-    Some(::std::io::ErrorKind::PermissionDenied) => {
-        "PermissionDenied".to_string()
-    },
-    Some(::std::io::ErrorKind::AlreadyExists) => {
-        "FileExists".to_string()
-    },
-    Some(::std::io::ErrorKind::IsADirectory) => {
-        "IsADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::NotADirectory) => {
-        "NotADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-        "DirectoryNotEmpty".to_string()
-    },
-    _ => {
-        "Other".to_string()
-    },
-}
-};
+        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+            .downcast_ref::<std::io::Error>()
+            .map(::std::io::Error::kind);
+        match __sifr_io_kind {
+            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+            Some(::std::io::ErrorKind::PermissionDenied) => {
+                "PermissionDenied".to_string()
+            }
+            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                "DirectoryNotEmpty".to_string()
+            }
+            _ => "Other".to_string(),
+        }
+    };
     IOError { message: msg, kind }
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
-
 impl Error {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for Error {
-}
-
+impl ::std::error::Error for Error {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
-
 impl ParseError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ParseError {
-}
-
+impl ::std::error::Error for ParseError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
-
 impl ValueError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ValueError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ValueError {
-}
-
+impl ::std::error::Error for ValueError {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ParseError> for Error {
     fn from(err: ParseError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ValueError> for Error {
     fn from(err: ValueError) -> Self {
         Self::new(err.message)
     }
 }
-
 fn main() {
     let mut temp_file: String = "".to_string();
     let mut temp_dir: String = "".to_string();
@@ -2045,56 +2133,75 @@ fn main() {
     let mut zip_ok: bool = false;
     let mut cleanup_ok: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let temp_file_created: String = mkstemp(&"sifr_runtime_tempfiles_and_zip_".to_string())?;
-    let temp_dir_created: String = mkdtemp(&"sifr_runtime_tempfiles_and_zip_".to_string())?;
-    temp_file = {
-    let mut __sifr_concat: String = String::with_capacity(temp_file_created.len() + 0usize);
-    __sifr_concat.push_str((temp_file_created).as_str());
-    __sifr_concat.push_str("");
-    __sifr_concat
-};
-    temp_dir = {
-    let mut __sifr_concat: String = String::with_capacity(temp_dir_created.len() + 0usize);
-    __sifr_concat.push_str((temp_dir_created).as_str());
-    __sifr_concat.push_str("");
-    __sifr_concat
-};
-    tempfile_ok = ((exists(&temp_file)) && (exists(&temp_dir)));
-    let _w: () = write_text(&temp_file, &"payload".to_string())?;
-    zip_path = {
-    let mut __sifr_concat: String = String::with_capacity(temp_file.len() + 4usize);
-    __sifr_concat.push_str((temp_file).as_str());
-    __sifr_concat.push_str(".zip");
-    __sifr_concat
-};
-    let archive: __SifrStdlib_sifr_x2ezipfile_x2eZipFile = __SifrStdlib_sifr_x2ezipfile_x2eZipFile::new(format!("{}{}", zip_path, ""), "a".to_string(), 0_i64);
-    let _create: () = archive.create()?;
-    let _add: () = archive.write(&"entry.txt".to_string(), &"payload".to_string())?;
-    let names: Vec<String> = archive.namelist()?;
-    let content: String = archive.read(&"entry.txt".to_string())?;
-    zip_ok = (((((names.len() as i64) == (1_i64))) && ((names[(0_i64) as usize].clone() == "entry.txt"))) && (content == "payload"));
-    Ok(())
-})();
+        let temp_file_created: String = mkstemp(
+            &"sifr_runtime_tempfiles_and_zip_".to_string(),
+        )?;
+        let temp_dir_created: String = mkdtemp(
+            &"sifr_runtime_tempfiles_and_zip_".to_string(),
+        )?;
+        temp_file = {
+            let mut __sifr_concat: String = String::with_capacity(
+                temp_file_created.len() + 0usize,
+            );
+            __sifr_concat.push_str((temp_file_created).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
+        temp_dir = {
+            let mut __sifr_concat: String = String::with_capacity(
+                temp_dir_created.len() + 0usize,
+            );
+            __sifr_concat.push_str((temp_dir_created).as_str());
+            __sifr_concat.push_str("");
+            __sifr_concat
+        };
+        tempfile_ok = ((exists(&temp_file)) && (exists(&temp_dir)));
+        let _w: () = write_text(&temp_file, &"payload".to_string())?;
+        zip_path = {
+            let mut __sifr_concat: String = String::with_capacity(
+                temp_file.len() + 4usize,
+            );
+            __sifr_concat.push_str((temp_file).as_str());
+            __sifr_concat.push_str(".zip");
+            __sifr_concat
+        };
+        let archive: __SifrStdlib_sifr_x2ezipfile_x2eZipFile = __SifrStdlib_sifr_x2ezipfile_x2eZipFile::new(
+            format!("{}{}", zip_path, ""),
+            "a".to_string(),
+            0_i64,
+        );
+        let _create: () = archive.create()?;
+        let _add: () = archive.write(&"entry.txt".to_string(), &"payload".to_string())?;
+        let names: Vec<String> = archive.namelist()?;
+        let content: String = archive.read(&"entry.txt".to_string())?;
+        zip_ok = (((((names.len() as i64) == (1_i64)))
+            && ((names[(0_i64) as usize].clone() == "entry.txt")))
+            && (content == "payload"));
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message);
+        let _ = format!("{}", e.message.clone());
     }
     let __sifr_try_res: Result<(), IOError> = (|| {
-    if ((zip_path.chars().count() as i64) > (0_i64)) && exists(&zip_path) {
-        let _rm_zip: () = remove_file(&zip_path)?;
-    }
-    if ((temp_file.chars().count() as i64) > (0_i64)) && exists(&temp_file) {
-        let _rm_file: () = remove_file(&temp_file)?;
-    }
-    if ((temp_dir.chars().count() as i64) > (0_i64)) && exists(&temp_dir) {
-        let _rm_dir: () = rmdir(&temp_dir)?;
-    }
-    cleanup_ok = (((((temp_file.chars().count() as i64) == (0_i64)) || !(exists(&temp_file))) && (((temp_dir.chars().count() as i64) == (0_i64)) || !(exists(&temp_dir)))) && (((zip_path.chars().count() as i64) == (0_i64)) || !(exists(&zip_path))));
-    Ok(())
-})();
+        if ((zip_path.chars().count() as i64) > (0_i64)) && exists(&zip_path) {
+            let _rm_zip: () = remove_file(&zip_path)?;
+        }
+        if ((temp_file.chars().count() as i64) > (0_i64)) && exists(&temp_file) {
+            let _rm_file: () = remove_file(&temp_file)?;
+        }
+        if ((temp_dir.chars().count() as i64) > (0_i64)) && exists(&temp_dir) {
+            let _rm_dir: () = rmdir(&temp_dir)?;
+        }
+        cleanup_ok = (((((temp_file.chars().count() as i64) == (0_i64))
+            || !(exists(&temp_file)))
+            && (((temp_dir.chars().count() as i64) == (0_i64)) || !(exists(&temp_dir))))
+            && (((zip_path.chars().count() as i64) == (0_i64)) || !(exists(&zip_path))));
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message);
+        let _ = format!("{}", e.message.clone());
     }
     assert!(tempfile_ok);
     assert!(zip_ok);

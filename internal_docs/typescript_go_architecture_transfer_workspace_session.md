@@ -21,7 +21,8 @@ into an inspectable `WorkspaceSnapshot`.
 
 Project reload builds an `OverlaySourceProvider<DiskSourceProvider>` from the
 session overlay table, wraps it in `TrackingSourceProvider`, and loads the
-project through `FrontendContext::load_project_with_provider`. The resulting
+project through `FrontendContext::load_project_with_external_defs_and_auxiliary_sources`.
+The resulting
 dependency records become session-owned state instead of one-off provider output.
 `upsert_overlay` and `remove_overlay` mutate session state and bump the workspace
 revision, but callers still invoke `reload` before they expect `source_map` or

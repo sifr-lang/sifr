@@ -268,7 +268,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
+            return Err(IOError::new(e.message.clone()));
         }
     }
 }
@@ -1027,8 +1027,8 @@ fn main() {
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let err = __sifr_try_err.clone();
-        println!("base64 error: {}", err.message);
-        assert!((format!("{}", format!("base64 error: {}", err.message)) == "stdlib_migration demo: all checks passed!"));
+        println!("base64 error: {}", err.message.clone());
+        assert!((format!("{}", format!("base64 error: {}", err.message.clone())) == "stdlib_migration demo: all checks passed!"));
     }
     println!("stdlib_migration demo: all checks passed!");
 }

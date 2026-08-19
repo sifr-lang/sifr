@@ -603,7 +603,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
+            return Err(IOError::new(e.message.clone()));
         }
     }
 }
@@ -1216,7 +1216,7 @@ fn main() {
         println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(18usize + 0usize);
     __sifr_concat.push_str("statistics error: ");
-    __sifr_concat.push_str((se.message).as_str());
+    __sifr_concat.push_str((se.message.clone()).as_str());
     __sifr_concat
 });
     }
@@ -1269,7 +1269,7 @@ fn main() {
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("error: {}", e.message);
+        println!("error: {}", e.message.clone());
     }
     println!("Done!");
 }

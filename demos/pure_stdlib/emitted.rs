@@ -1,360 +1,362 @@
 // src/main.rs
-use ::std::collections::HashMap;
-
-// --- stdlib: sifr.collections ---
-#[derive(Debug, Clone, PartialEq)]
-struct __SifrStdlib_sifr_x2ecollections_x2eCounter<T: std::hash::Hash + Eq> {
-    counts: HashMap<T, i64>,
-}
-impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn new(source: Option<HashMap<T, i64>>, iterable: Option<Vec<T>>) -> Self {
-        let mut counts: HashMap<T, i64> = HashMap::from([]);
-        if let Some(source) = source {
-            for key in source.keys().cloned().collect::<Vec<_>>() {
-                let value: Option<i64> = source.get(&key).copied();
+mod __sifr_project_nominals {
+    pub use ::std::collections::HashMap;
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct __SifrStdlib_sifr_x2ecollections_x2eCounter<T: std::hash::Hash + Eq> {
+        pub counts: HashMap<T, i64>,
+    }
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn new(source: Option<HashMap<T, i64>>, iterable: Option<Vec<T>>) -> Self {
+            let mut counts: HashMap<T, i64> = HashMap::from([]);
+            if let Some(source) = source {
+                for key in source.keys().cloned().collect::<Vec<_>>() {
+                    let value: Option<i64> = source.get(&key).copied();
+                    if let Some(value) = value {
+                        counts.insert(key.clone(), value);
+                    }
+                }
+            }
+            if let Some(iterable) = iterable {
+                for item in iterable.iter().cloned() {
+                    let value2: Option<i64> = counts.get(&item).copied();
+                    if let Some(value2) = value2 {
+                        counts.insert(item.clone(), value2 + (1_i64));
+                    } else {
+                        counts.insert(item.clone(), 1_i64);
+                    }
+                }
+            }
+            let __sifr_field_init_0: HashMap<T, i64> = counts;
+            Self {
+                counts: __sifr_field_init_0,
+            }
+        }
+    }
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn __iter__(&self) -> Vec<T> {
+            Box::new((self.counts.keys().cloned().collect::<Vec<_>>()).into_iter())
+                .collect::<Vec<_>>()
+        }
+    }
+    impl<T: ::std::hash::Hash + Eq> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn __getitem__(&self, key: &T) -> i64 {
+            let val: Option<i64> = self.counts.get(&key).copied();
+            if let Some(val) = val {
+                return val;
+            }
+            0_i64
+        }
+    }
+    impl<T: ::std::hash::Hash + Eq> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn get(&self, key: &T, default: i64) -> i64 {
+            let val: Option<i64> = self.counts.get(&key).copied();
+            if let Some(val) = val {
+                return val;
+            }
+            default
+        }
+    }
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn increment(&mut self, key: &T) {
+            let val: Option<i64> = self.counts.get(&key).copied();
+            if let Some(val) = val {
+                self.counts.insert(key.clone(), val + (1_i64));
+            } else {
+                self.counts.insert(key.clone(), 1_i64);
+            }
+        }
+    }
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn total(&self) -> i64 {
+            let mut total: i64 = 0_i64;
+            for count in self.counts.values().cloned().collect::<Vec<_>>() {
+                total += count;
+            }
+            total
+        }
+    }
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn most_common(&self, n: Option<i64>) -> Vec<(T, i64)> {
+            let mut result: Vec<(T, i64)> = vec![];
+            for key in self.counts.keys().cloned().collect::<Vec<_>>() {
+                let count: Option<i64> = self.counts.get(&key).copied();
+                if let Some(count) = count {
+                    let entry: (T, i64) = (key.clone(), count);
+                    result.push(entry.clone());
+                }
+            }
+            let sz: i64 = result.len() as i64;
+            let mut i: i64 = 0_i64;
+            while i < sz {
+                let mut j: i64 = i + (1_i64);
+                while j < sz {
+                    let left: Option<(T, i64)> = Some(result[i as usize].clone());
+                    let right: Option<(T, i64)> = Some(result[j as usize].clone());
+                    if let Some(left) = left {
+                        if let Some(right) = right {
+                            if ((right).1 > (left).1) {
+                                {
+                                    let __idx_raw = i;
+                                    let __idx_norm = if __idx_raw < 0 {
+                                        (result.len() as i64) + __idx_raw
+                                    } else {
+                                        __idx_raw
+                                    };
+                                    if __idx_norm >= 0 {
+                                        if let Some(__elem) = result.get_mut(__idx_norm as usize) {
+                                            *__elem = right.clone();
+                                        }
+                                    }
+                                }
+                                {
+                                    let __idx_raw = j;
+                                    let __idx_norm = if __idx_raw < 0 {
+                                        (result.len() as i64) + __idx_raw
+                                    } else {
+                                        __idx_raw
+                                    };
+                                    if __idx_norm >= 0 {
+                                        if let Some(__elem) = result.get_mut(__idx_norm as usize) {
+                                            *__elem = left.clone();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    j += 1_i64;
+                }
+                i += 1_i64;
+            }
+            let Some(n) = n else {
+                return result;
+            };
+            if n <= (0_i64) {
+                return vec![];
+            }
+            let mut top: Vec<(T, i64)> = vec![];
+            let mut index: i64 = 0_i64;
+            while index < n {
+                if (index >= (result.len() as i64)) {
+                    return top;
+                }
+                let value: Option<(T, i64)> = Some(result[index as usize].clone());
                 if let Some(value) = value {
-                    counts.insert(key.clone(), value);
+                    top.push(value.clone());
                 }
+                index += 1_i64;
             }
-        }
-        if let Some(iterable) = iterable {
-            for item in iterable.iter().cloned() {
-                let value2: Option<i64> = counts.get(&item).copied();
-                if let Some(value2) = value2 {
-                    counts.insert(item.clone(), value2 + (1_i64));
-                } else {
-                    counts.insert(item.clone(), 1_i64);
-                }
-            }
-        }
-        let __sifr_field_init_0: HashMap<T, i64> = counts;
-        Self {
-            counts: __sifr_field_init_0,
+            top
         }
     }
-}
-impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn __iter__(&self) -> Vec<T> {
-        Box::new((self.counts.keys().cloned().collect::<Vec<_>>()).into_iter())
-            .collect::<Vec<_>>()
-    }
-}
-impl<T: ::std::hash::Hash + Eq> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn __getitem__(&self, key: &T) -> i64 {
-        let val: Option<i64> = self.counts.get(&key).copied();
-        if let Some(val) = val {
-            return val;
-        }
-        0_i64
-    }
-}
-impl<T: ::std::hash::Hash + Eq> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn get(&self, key: &T, default: i64) -> i64 {
-        let val: Option<i64> = self.counts.get(&key).copied();
-        if let Some(val) = val {
-            return val;
-        }
-        default
-    }
-}
-impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn increment(&mut self, key: &T) {
-        let val: Option<i64> = self.counts.get(&key).copied();
-        if let Some(val) = val {
-            self.counts.insert(key.clone(), val + (1_i64));
-        } else {
-            self.counts.insert(key.clone(), 1_i64);
-        }
-    }
-}
-impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn total(&self) -> i64 {
-        let mut total: i64 = 0_i64;
-        for count in self.counts.values().cloned().collect::<Vec<_>>() {
-            total += count;
-        }
-        total
-    }
-}
-impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn most_common(&self, n: Option<i64>) -> Vec<(T, i64)> {
-        let mut result: Vec<(T, i64)> = vec![];
-        for key in self.counts.keys().cloned().collect::<Vec<_>>() {
-            let count: Option<i64> = self.counts.get(&key).copied();
-            if let Some(count) = count {
-                let entry: (T, i64) = (key.clone(), count);
-                result.push(entry.clone());
-            }
-        }
-        let sz: i64 = result.len() as i64;
-        let mut i: i64 = 0_i64;
-        while i < sz {
-            let mut j: i64 = i + (1_i64);
-            while j < sz {
-                let left: Option<(T, i64)> = Some(result[i as usize].clone());
-                let right: Option<(T, i64)> = Some(result[j as usize].clone());
-                if let Some(left) = left {
-                    if let Some(right) = right {
-                        if ((right).1 > (left).1) {
-                            {
-                                let __idx_raw = i;
-                                let __idx_norm = if __idx_raw < 0 {
-                                    (result.len() as i64) + __idx_raw
-                                } else {
-                                    __idx_raw
-                                };
-                                if __idx_norm >= 0 {
-                                    if let Some(__elem) = result.get_mut(__idx_norm as usize) {
-                                        *__elem = right.clone();
+    impl<
+        T: ::std::hash::Hash + Eq + Clone + PartialOrd,
+    > __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn keys(&self) -> Vec<T> {
+            let mut result: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
+            let sz: i64 = result.len() as i64;
+            let mut i: i64 = 0_i64;
+            while i < sz {
+                let mut j: i64 = i + (1_i64);
+                while j < sz {
+                    let left: Option<T> = Some(result[i as usize].clone());
+                    let right: Option<T> = Some(result[j as usize].clone());
+                    if let Some(left) = left {
+                        if let Some(right) = right {
+                            if right < left {
+                                {
+                                    let __idx_raw = i;
+                                    let __idx_norm = if __idx_raw < 0 {
+                                        (result.len() as i64) + __idx_raw
+                                    } else {
+                                        __idx_raw
+                                    };
+                                    if __idx_norm >= 0 {
+                                        if let Some(__elem) = result.get_mut(__idx_norm as usize) {
+                                            *__elem = right.clone();
+                                        }
                                     }
                                 }
-                            }
-                            {
-                                let __idx_raw = j;
-                                let __idx_norm = if __idx_raw < 0 {
-                                    (result.len() as i64) + __idx_raw
-                                } else {
-                                    __idx_raw
-                                };
-                                if __idx_norm >= 0 {
-                                    if let Some(__elem) = result.get_mut(__idx_norm as usize) {
-                                        *__elem = left.clone();
+                                {
+                                    let __idx_raw = j;
+                                    let __idx_norm = if __idx_raw < 0 {
+                                        (result.len() as i64) + __idx_raw
+                                    } else {
+                                        __idx_raw
+                                    };
+                                    if __idx_norm >= 0 {
+                                        if let Some(__elem) = result.get_mut(__idx_norm as usize) {
+                                            *__elem = left.clone();
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    j += 1_i64;
                 }
-                j += 1_i64;
+                i += 1_i64;
             }
-            i += 1_i64;
+            result
         }
-        let Some(n) = n else {
-            return result;
-        };
-        if n <= (0_i64) {
-            return vec![];
-        }
-        let mut top: Vec<(T, i64)> = vec![];
-        let mut index: i64 = 0_i64;
-        while index < n {
-            if (index >= (result.len() as i64)) {
-                return top;
-            }
-            let value: Option<(T, i64)> = Some(result[index as usize].clone());
-            if let Some(value) = value {
-                top.push(value.clone());
-            }
-            index += 1_i64;
-        }
-        top
     }
-}
-impl<
-    T: ::std::hash::Hash + Eq + Clone + PartialOrd,
-> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn keys(&self) -> Vec<T> {
-        let mut result: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
-        let sz: i64 = result.len() as i64;
-        let mut i: i64 = 0_i64;
-        while i < sz {
-            let mut j: i64 = i + (1_i64);
-            while j < sz {
-                let left: Option<T> = Some(result[i as usize].clone());
-                let right: Option<T> = Some(result[j as usize].clone());
-                if let Some(left) = left {
-                    if let Some(right) = right {
-                        if right < left {
-                            {
-                                let __idx_raw = i;
-                                let __idx_norm = if __idx_raw < 0 {
-                                    (result.len() as i64) + __idx_raw
-                                } else {
-                                    __idx_raw
-                                };
-                                if __idx_norm >= 0 {
-                                    if let Some(__elem) = result.get_mut(__idx_norm as usize) {
-                                        *__elem = right.clone();
-                                    }
-                                }
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn items(&self) -> Vec<(T, i64)> {
+            let mut result: Vec<(T, i64)> = vec![];
+            for key in self.counts.keys().cloned().collect::<Vec<_>>() {
+                let value: Option<i64> = self.counts.get(&key).copied();
+                if let Some(value) = value {
+                    let entry: (T, i64) = (key.clone(), value);
+                    result.push(entry.clone());
+                }
+            }
+            result
+        }
+    }
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn values(&self) -> Vec<i64> {
+            self.counts.values().cloned().collect::<Vec<_>>()
+        }
+    }
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn copy(&self) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+            __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(self.counts.clone()), None)
+        }
+    }
+    impl<T: ::std::hash::Hash + Eq> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn clear(&mut self) {
+            self.counts = HashMap::from([]);
+        }
+    }
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn update(&mut self, other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>) {
+            for key in other.counts.keys().cloned().collect::<Vec<_>>() {
+                let other_val: Option<i64> = other.counts.get(&key).copied();
+                if let Some(other_val) = other_val {
+                    let existing: Option<i64> = self.counts.get(&key).copied();
+                    if let Some(existing) = existing {
+                        self.counts.insert(key, existing + other_val);
+                    } else {
+                        self.counts.insert(key, other_val);
+                    }
+                }
+            }
+        }
+    }
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn subtract(&mut self, other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>) {
+            for key in other.counts.keys().cloned().collect::<Vec<_>>() {
+                let other_val: Option<i64> = other.counts.get(&key).copied();
+                if let Some(other_val) = other_val {
+                    let existing: Option<i64> = self.counts.get(&key).copied();
+                    if let Some(existing) = existing {
+                        self.counts.insert(key, existing - other_val);
+                    } else {
+                        self.counts.insert(key, (0_i64) - other_val);
+                    }
+                }
+            }
+        }
+    }
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn elements(&self) -> Vec<T> {
+            let mut result: Vec<T> = vec![];
+            let all_keys: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
+            let mut ki: i64 = 0_i64;
+            while (ki < (all_keys.len() as i64)) {
+                let key_opt: Option<T> = Some(all_keys[ki as usize].clone());
+                if let Some(key_opt) = key_opt {
+                    let cnt: Option<i64> = self.counts.get(&key_opt).copied();
+                    if let Some(cnt) = cnt {
+                        let mut i: i64 = 0_i64;
+                        while i < cnt {
+                            let key_copy: Option<T> = Some(all_keys[ki as usize].clone());
+                            if let Some(key_copy) = key_copy {
+                                result.push(key_copy.clone().clone());
                             }
-                            {
-                                let __idx_raw = j;
-                                let __idx_norm = if __idx_raw < 0 {
-                                    (result.len() as i64) + __idx_raw
-                                } else {
-                                    __idx_raw
-                                };
-                                if __idx_norm >= 0 {
-                                    if let Some(__elem) = result.get_mut(__idx_norm as usize) {
-                                        *__elem = left.clone();
-                                    }
-                                }
-                            }
+                            i += 1_i64;
                         }
                     }
                 }
-                j += 1_i64;
+                ki += 1_i64;
             }
-            i += 1_i64;
+            result
         }
-        result
     }
-}
-impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn items(&self) -> Vec<(T, i64)> {
-        let mut result: Vec<(T, i64)> = vec![];
-        for key in self.counts.keys().cloned().collect::<Vec<_>>() {
-            let value: Option<i64> = self.counts.get(&key).copied();
-            if let Some(value) = value {
-                let entry: (T, i64) = (key.clone(), value);
-                result.push(entry.clone());
-            }
-        }
-        result
-    }
-}
-impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn values(&self) -> Vec<i64> {
-        self.counts.values().cloned().collect::<Vec<_>>()
-    }
-}
-impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn copy(&self) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(self.counts.clone()), None)
-    }
-}
-impl<T: ::std::hash::Hash + Eq> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn clear(&mut self) {
-        self.counts = HashMap::from([]);
-    }
-}
-impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn update(&mut self, other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>) {
-        for key in other.counts.keys().cloned().collect::<Vec<_>>() {
-            let other_val: Option<i64> = other.counts.get(&key).copied();
-            if let Some(other_val) = other_val {
-                let existing: Option<i64> = self.counts.get(&key).copied();
-                if let Some(existing) = existing {
-                    self.counts.insert(key, existing + other_val);
-                } else {
-                    self.counts.insert(key, other_val);
+    impl<
+        T: ::std::hash::Hash + Eq + Clone,
+    > ::std::ops::Add<&__SifrStdlib_sifr_x2ecollections_x2eCounter<T>>
+    for &__SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        type Output = __SifrStdlib_sifr_x2ecollections_x2eCounter<T>;
+        fn add(
+            self,
+            other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>,
+        ) -> Self::Output {
+            let mut new_counts: HashMap<T, i64> = HashMap::from([]);
+            for key in Box::new(
+                (self.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
+            ) {
+                let a_val: Option<i64> = self.counts.get(&key).copied();
+                if let Some(a_val) = a_val {
+                    let b_val: Option<i64> = other.counts.get(&key).copied();
+                    let mut b_count: i64 = 0_i64;
+                    if let Some(b_val) = b_val {
+                        b_count = b_val;
+                    }
+                    let total: i64 = a_val + b_count;
+                    if total > (0_i64) {
+                        new_counts.insert(key.clone(), total);
+                    }
                 }
             }
-        }
-    }
-}
-impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn subtract(&mut self, other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>) {
-        for key in other.counts.keys().cloned().collect::<Vec<_>>() {
-            let other_val: Option<i64> = other.counts.get(&key).copied();
-            if let Some(other_val) = other_val {
-                let existing: Option<i64> = self.counts.get(&key).copied();
-                if let Some(existing) = existing {
-                    self.counts.insert(key, existing - other_val);
-                } else {
-                    self.counts.insert(key, (0_i64) - other_val);
-                }
-            }
-        }
-    }
-}
-impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    fn elements(&self) -> Vec<T> {
-        let mut result: Vec<T> = vec![];
-        let all_keys: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
-        let mut ki: i64 = 0_i64;
-        while (ki < (all_keys.len() as i64)) {
-            let key_opt: Option<T> = Some(all_keys[ki as usize].clone());
-            if let Some(key_opt) = key_opt {
-                let cnt: Option<i64> = self.counts.get(&key_opt).copied();
-                if let Some(cnt) = cnt {
-                    let mut i: i64 = 0_i64;
-                    while i < cnt {
-                        let key_copy: Option<T> = Some(all_keys[ki as usize].clone());
-                        if let Some(key_copy) = key_copy {
-                            result.push(key_copy.clone().clone());
+            for key2 in Box::new(
+                (other.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
+            ) {
+                let already: Option<i64> = new_counts.get(&key2).copied();
+                if already.is_none() {
+                    let b_val2: Option<i64> = other.counts.get(&key2).copied();
+                    if let Some(b_val2) = b_val2 {
+                        if b_val2 > (0_i64) {
+                            new_counts.insert(key2.clone(), b_val2);
                         }
-                        i += 1_i64;
                     }
                 }
             }
-            ki += 1_i64;
+            __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(new_counts), None)
         }
-        result
     }
-}
-impl<
-    T: ::std::hash::Hash + Eq + Clone,
-> ::std::ops::Add<&__SifrStdlib_sifr_x2ecollections_x2eCounter<T>>
-for &__SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    type Output = __SifrStdlib_sifr_x2ecollections_x2eCounter<T>;
-    fn add(
-        self,
-        other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>,
-    ) -> Self::Output {
-        let mut new_counts: HashMap<T, i64> = HashMap::from([]);
-        for key in Box::new(
-            (self.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
-        ) {
-            let a_val: Option<i64> = self.counts.get(&key).copied();
-            if let Some(a_val) = a_val {
-                let b_val: Option<i64> = other.counts.get(&key).copied();
-                let mut b_count: i64 = 0_i64;
-                if let Some(b_val) = b_val {
-                    b_count = b_val;
-                }
-                let total: i64 = a_val + b_count;
-                if total > (0_i64) {
-                    new_counts.insert(key.clone(), total);
-                }
-            }
-        }
-        for key2 in Box::new(
-            (other.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
-        ) {
-            let already: Option<i64> = new_counts.get(&key2).copied();
-            if already.is_none() {
-                let b_val2: Option<i64> = other.counts.get(&key2).copied();
-                if let Some(b_val2) = b_val2 {
-                    if b_val2 > (0_i64) {
-                        new_counts.insert(key2.clone(), b_val2);
+    impl<
+        T: ::std::hash::Hash + Eq + Clone,
+    > ::std::ops::Sub<&__SifrStdlib_sifr_x2ecollections_x2eCounter<T>>
+    for &__SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        type Output = __SifrStdlib_sifr_x2ecollections_x2eCounter<T>;
+        fn sub(
+            self,
+            other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>,
+        ) -> Self::Output {
+            let mut new_counts: HashMap<T, i64> = HashMap::from([]);
+            for key in Box::new(
+                (self.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
+            ) {
+                let a_val: Option<i64> = self.counts.get(&key).copied();
+                if let Some(a_val) = a_val {
+                    let b_val: Option<i64> = other.counts.get(&key).copied();
+                    let mut b_count: i64 = 0_i64;
+                    if let Some(b_val) = b_val {
+                        b_count = b_val;
+                    }
+                    let diff: i64 = a_val - b_count;
+                    if diff > (0_i64) {
+                        new_counts.insert(key.clone(), diff);
                     }
                 }
             }
+            __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(new_counts), None)
         }
-        __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(new_counts), None)
     }
 }
-impl<
-    T: ::std::hash::Hash + Eq + Clone,
-> ::std::ops::Sub<&__SifrStdlib_sifr_x2ecollections_x2eCounter<T>>
-for &__SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    type Output = __SifrStdlib_sifr_x2ecollections_x2eCounter<T>;
-    fn sub(
-        self,
-        other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>,
-    ) -> Self::Output {
-        let mut new_counts: HashMap<T, i64> = HashMap::from([]);
-        for key in Box::new(
-            (self.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
-        ) {
-            let a_val: Option<i64> = self.counts.get(&key).copied();
-            if let Some(a_val) = a_val {
-                let b_val: Option<i64> = other.counts.get(&key).copied();
-                let mut b_count: i64 = 0_i64;
-                if let Some(b_val) = b_val {
-                    b_count = b_val;
-                }
-                let diff: i64 = a_val - b_count;
-                if diff > (0_i64) {
-                    new_counts.insert(key.clone(), diff);
-                }
-            }
-        }
-        __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(new_counts), None)
-    }
-}
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ecollections_x2eCounter;
+use ::std::collections::HashMap;
 fn from_list<
     T: Clone + ::std::fmt::Display + PartialOrd + ::std::hash::Hash + Eq + 'static,
 >(items: &Vec<T>) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
@@ -369,8 +371,6 @@ fn from_list<
     }
     __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(counts), None)
 }
-
-// --- stdlib: sifr.functools ---
 fn reduce<
     T: Clone + ::std::fmt::Display + PartialOrd + 'static,
     U: Clone + ::std::fmt::Display + PartialOrd + 'static,
@@ -381,8 +381,6 @@ fn reduce<
     }
     result
 }
-
-// --- stdlib: sifr.itertools ---
 fn _compress_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &Vec<T>,
     selectors: &Vec<bool>,
@@ -635,8 +633,6 @@ fn cycle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     Box::new(result.into_iter())
 }
-
-// --- stdlib: _sifr.math ---
 const PI: f64 = 3.141592653589793_f64;
 const E: f64 = 2.718281828459045_f64;
 const TAU: f64 = 6.283185307179586_f64;
@@ -817,8 +813,6 @@ fn nextafter(x: f64, y: f64) -> f64 {
 fn ulp(x: f64) -> f64 {
     ::sifr_stdlib::math::ulp(x)
 }
-
-// --- stdlib: sifr.math ---
 fn factorial(n: i64) -> i64 {
     if n < (0_i64) {
         return 0_i64;
@@ -1041,8 +1035,6 @@ fn modf_integral(x: f64) -> f64 {
 fn pow(x: f64, y: f64) -> f64 {
     pow_val(x, y)
 }
-
-// --- stdlib: _sifr.crypto ---
 fn random_int(min: i64, max: i64) -> i64 {
     ::sifr_stdlib::random::random_int(
             ::sifr_runtime::interop::SifrIntBridge::from(min),
@@ -1212,8 +1204,6 @@ fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
 fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
 }
-
-// --- stdlib: _sifr.time ---
 fn time_now() -> f64 {
     ::sifr_stdlib::time::time_now()
 }
@@ -1279,8 +1269,6 @@ fn time_localtime() -> Vec<i64> {
         .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
         .collect()
 }
-
-// --- stdlib: sifr.random ---
 const _MT_N: i64 = 624_i64;
 const _MT_M: i64 = 397_i64;
 const _MT_MATRIX_A: i64 = 2567483615_i64;
@@ -1644,7 +1632,7 @@ fn _module_random() -> __SifrStdlib_sifr_x2erandom_x2eRandom {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = e.message;
+        let _ = e.message.clone();
     }
     r
 }
@@ -1780,8 +1768,6 @@ fn shuffle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(items: &mut Ve
     }
     _sync_module_random(&mut generator);
 }
-
-// --- stdlib: sifr.statistics ---
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {
     message: String,
@@ -2257,438 +2243,439 @@ fn linear_regression(
     result.push(intercept);
     Ok(result)
 }
-// --- end stdlib ---
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
-
 impl Error {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for Error {
-}
-
+impl ::std::error::Error for Error {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
-
 impl ParseError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ParseError {
-}
-
+impl ::std::error::Error for ParseError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
-
 impl ValueError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ValueError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ValueError {
-}
-
+impl ::std::error::Error for ValueError {}
 impl From<ParseError> for Error {
     fn from(err: ParseError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ValueError> for Error {
     fn from(err: ValueError) -> Self {
         Self::new(err.message)
     }
 }
-
 fn add(a: i64, b: i64) -> i64 {
     a + b
 }
-
 fn mul(a: i64, b: i64) -> i64 {
     a * b
 }
-
 fn less_than_three(x: i64) -> bool {
     x < (3_i64)
 }
-
 fn main() {
     println!("=== math additions ===");
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
-    __sifr_concat.push_str("acosh(1.0) = ");
-    __sifr_concat.push_str((format!("{}", acosh(1.0_f64))).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
-    __sifr_concat.push_str("asinh(0.0) = ");
-    __sifr_concat.push_str((format!("{}", asinh(0.0_f64))).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
-    __sifr_concat.push_str("atanh(0.0) = ");
-    __sifr_concat.push_str((format!("{}", atanh(0.0_f64))).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(12usize + 0usize);
-    __sifr_concat.push_str("isqrt(17) = ");
-    __sifr_concat.push_str((format!("{}", isqrt(17_i64))).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(13usize + 0usize);
+        __sifr_concat.push_str("acosh(1.0) = "); __sifr_concat.push_str((format!("{}",
+        acosh(1.0_f64))).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(13usize + 0usize);
+        __sifr_concat.push_str("asinh(0.0) = "); __sifr_concat.push_str((format!("{}",
+        asinh(0.0_f64))).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(13usize + 0usize);
+        __sifr_concat.push_str("atanh(0.0) = "); __sifr_concat.push_str((format!("{}",
+        atanh(0.0_f64))).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(12usize + 0usize);
+        __sifr_concat.push_str("isqrt(17) = "); __sifr_concat.push_str((format!("{}",
+        isqrt(17_i64))).as_str()); __sifr_concat }
+    );
     let p: Vec<f64> = vec![0.0_f64, 0.0_f64];
     let q: Vec<f64> = vec![3.0_f64, 4.0_f64];
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(20usize + 0usize);
-    __sifr_concat.push_str("dist([0,0],[3,4]) = ");
-    __sifr_concat.push_str((format!("{}", dist(&p, &q))).as_str());
-    __sifr_concat
-});
-    let data_fsum: Vec<f64> = vec![0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64];
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(15usize + 0usize);
-    __sifr_concat.push_str("fsum(10x0.1) = ");
-    __sifr_concat.push_str((format!("{}", fsum(&data_fsum))).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(20usize + 0usize);
+        __sifr_concat.push_str("dist([0,0],[3,4]) = "); __sifr_concat
+        .push_str((format!("{}", dist(& p, & q))).as_str()); __sifr_concat }
+    );
+    let data_fsum: Vec<f64> = vec![
+        0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64,
+        0.1_f64
+    ];
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(15usize + 0usize);
+        __sifr_concat.push_str("fsum(10x0.1) = "); __sifr_concat.push_str((format!("{}",
+        fsum(& data_fsum))).as_str()); __sifr_concat }
+    );
     println!("=== statistics (Result[float, StatisticsError]) ===");
     let data: Vec<f64> = vec![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64];
-    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
-    let m: f64 = mean(&data)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(7usize + 0usize);
-    __sifr_concat.push_str("mean = ");
-    __sifr_concat.push_str((format!("{}", m)).as_str());
-    __sifr_concat
-});
-    let med: f64 = median(&data)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(9usize + 0usize);
-    __sifr_concat.push_str("median = ");
-    __sifr_concat.push_str((format!("{}", med)).as_str());
-    __sifr_concat
-});
-    let v: f64 = variance(&data)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(11usize + 0usize);
-    __sifr_concat.push_str("variance = ");
-    __sifr_concat.push_str((format!("{}", v)).as_str());
-    __sifr_concat
-});
-    let s: f64 = stdev(&data)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(8usize + 0usize);
-    __sifr_concat.push_str("stdev = ");
-    __sifr_concat.push_str((format!("{}", s)).as_str());
-    __sifr_concat
-});
-    let idata: Vec<i64> = vec![1_i64, 2_i64, 2_i64, 3_i64, 3_i64, 3_i64];
-    let mo: i64 = mode(&idata)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(7usize + 0usize);
-    __sifr_concat.push_str("mode = ");
-    __sifr_concat.push_str((format!("{}", mo)).as_str());
-    __sifr_concat
-});
-    let mm: Vec<i64> = multimode(&vec![1_i64, 2_i64, 2_i64, 3_i64, 3_i64])?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
-    __sifr_concat.push_str("multimode len = ");
-    __sifr_concat.push_str((format!("{}", mm.len() as i64)).as_str());
-    __sifr_concat
-});
-    let qs: Vec<f64> = quantiles(&data, 4_i64)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(18usize + 0usize);
-    __sifr_concat.push_str("quartiles count = ");
-    __sifr_concat.push_str((format!("{}", qs.len() as i64)).as_str());
-    __sifr_concat
-});
-    let x: Vec<f64> = vec![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64];
-    let y: Vec<f64> = vec![2.0_f64, 4.0_f64, 6.0_f64, 8.0_f64, 10.0_f64];
-    let cov: f64 = covariance(&x, &y)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
-    __sifr_concat.push_str("covariance = ");
-    __sifr_concat.push_str((format!("{}", cov)).as_str());
-    __sifr_concat
-});
-    let r: f64 = correlation(&x, &y)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
-    __sifr_concat.push_str("correlation = ");
-    __sifr_concat.push_str((format!("{}", r)).as_str());
-    __sifr_concat
-});
-    let lr: Vec<f64> = linear_regression(&x, &y)?;
-    let slope: Option<f64> = {
-    let __sifr_index_list = &lr;
-    let __sifr_index_i = 0_i64;
-    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
-    __sifr_index_list.get(__sifr_index_norm).copied()
-};
-    let intercept: Option<f64> = {
-    let __sifr_index_list = &lr;
-    let __sifr_index_i = 1_i64;
-    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
-    __sifr_index_list.get(__sifr_index_norm).copied()
-};
-    if let Some(slope) = slope {
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(8usize + 0usize);
-    __sifr_concat.push_str("slope = ");
-    __sifr_concat.push_str((format!("{}", slope)).as_str());
-    __sifr_concat
-});
-    }
-    if let Some(intercept) = intercept {
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(12usize + 0usize);
-    __sifr_concat.push_str("intercept = ");
-    __sifr_concat.push_str((format!("{}", intercept)).as_str());
-    __sifr_concat
-});
-    }
-    Ok(())
-})();
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (||
+    {
+        let m: f64 = mean(&data)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(7usize +
+            0usize); __sifr_concat.push_str("mean = "); __sifr_concat
+            .push_str((format!("{}", m)).as_str()); __sifr_concat }
+        );
+        let med: f64 = median(&data)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(9usize +
+            0usize); __sifr_concat.push_str("median = "); __sifr_concat
+            .push_str((format!("{}", med)).as_str()); __sifr_concat }
+        );
+        let v: f64 = variance(&data)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(11usize +
+            0usize); __sifr_concat.push_str("variance = "); __sifr_concat
+            .push_str((format!("{}", v)).as_str()); __sifr_concat }
+        );
+        let s: f64 = stdev(&data)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(8usize +
+            0usize); __sifr_concat.push_str("stdev = "); __sifr_concat
+            .push_str((format!("{}", s)).as_str()); __sifr_concat }
+        );
+        let idata: Vec<i64> = vec![1_i64, 2_i64, 2_i64, 3_i64, 3_i64, 3_i64];
+        let mo: i64 = mode(&idata)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(7usize +
+            0usize); __sifr_concat.push_str("mode = "); __sifr_concat
+            .push_str((format!("{}", mo)).as_str()); __sifr_concat }
+        );
+        let mm: Vec<i64> = multimode(&vec![1_i64, 2_i64, 2_i64, 3_i64, 3_i64])?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(16usize +
+            0usize); __sifr_concat.push_str("multimode len = "); __sifr_concat
+            .push_str((format!("{}", mm.len() as i64)).as_str()); __sifr_concat }
+        );
+        let qs: Vec<f64> = quantiles(&data, 4_i64)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
+            0usize); __sifr_concat.push_str("quartiles count = "); __sifr_concat
+            .push_str((format!("{}", qs.len() as i64)).as_str()); __sifr_concat }
+        );
+        let x: Vec<f64> = vec![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64];
+        let y: Vec<f64> = vec![2.0_f64, 4.0_f64, 6.0_f64, 8.0_f64, 10.0_f64];
+        let cov: f64 = covariance(&x, &y)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(13usize +
+            0usize); __sifr_concat.push_str("covariance = "); __sifr_concat
+            .push_str((format!("{}", cov)).as_str()); __sifr_concat }
+        );
+        let r: f64 = correlation(&x, &y)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(14usize +
+            0usize); __sifr_concat.push_str("correlation = "); __sifr_concat
+            .push_str((format!("{}", r)).as_str()); __sifr_concat }
+        );
+        let lr: Vec<f64> = linear_regression(&x, &y)?;
+        let slope: Option<f64> = {
+            let __sifr_index_list = &lr;
+            let __sifr_index_i = 0_i64;
+            let __sifr_index_norm = if __sifr_index_i < 0 {
+                ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
+            } else {
+                __sifr_index_i as usize
+            };
+            __sifr_index_list.get(__sifr_index_norm).copied()
+        };
+        let intercept: Option<f64> = {
+            let __sifr_index_list = &lr;
+            let __sifr_index_i = 1_i64;
+            let __sifr_index_norm = if __sifr_index_i < 0 {
+                ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
+            } else {
+                __sifr_index_i as usize
+            };
+            __sifr_index_list.get(__sifr_index_norm).copied()
+        };
+        if let Some(slope) = slope {
+            println!(
+                "{}", { let mut __sifr_concat : String = String::with_capacity(8usize +
+                0usize); __sifr_concat.push_str("slope = "); __sifr_concat
+                .push_str((format!("{}", slope)).as_str()); __sifr_concat }
+            );
+        }
+        if let Some(intercept) = intercept {
+            println!(
+                "{}", { let mut __sifr_concat : String = String::with_capacity(12usize +
+                0usize); __sifr_concat.push_str("intercept = "); __sifr_concat
+                .push_str((format!("{}", intercept)).as_str()); __sifr_concat }
+            );
+        }
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(7usize + 0usize);
-    __sifr_concat.push_str("error: ");
-    __sifr_concat.push_str((e.message).as_str());
-    __sifr_concat
-});
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(7usize +
+            0usize); __sifr_concat.push_str("error: "); __sifr_concat.push_str((e.message
+            .clone()).as_str()); __sifr_concat }
+        );
     }
-    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
-    let empty: Vec<f64> = vec![];
-    let bad: f64 = mean(&empty)?;
-    Ok(())
-})();
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (||
+    {
+        let empty: Vec<f64> = vec![];
+        let bad: f64 = mean(&empty)?;
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(18usize + 0usize);
-    __sifr_concat.push_str("empty mean error: ");
-    __sifr_concat.push_str((e.message).as_str());
-    __sifr_concat
-});
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
+            0usize); __sifr_concat.push_str("empty mean error: "); __sifr_concat
+            .push_str((e.message.clone()).as_str()); __sifr_concat }
+        );
     }
     println!("=== random additions ===");
     let mut items: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64];
     shuffle(&mut items);
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
-    __sifr_concat.push_str("shuffle len = ");
-    __sifr_concat.push_str((format!("{}", items.len() as i64)).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(14usize + 0usize);
+        __sifr_concat.push_str("shuffle len = "); __sifr_concat.push_str((format!("{}",
+        items.len() as i64)).as_str()); __sifr_concat }
+    );
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let s3: Vec<i64> = sample(&items, 3_i64)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
-    __sifr_concat.push_str("sample(3) len = ");
-    __sifr_concat.push_str((format!("{}", s3.len() as i64)).as_str());
-    __sifr_concat
-});
-    Ok(())
-})();
+        let s3: Vec<i64> = sample(&items, 3_i64)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(16usize +
+            0usize); __sifr_concat.push_str("sample(3) len = "); __sifr_concat
+            .push_str((format!("{}", s3.len() as i64)).as_str()); __sifr_concat }
+        );
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
-    __sifr_concat.push_str("sample error: ");
-    __sifr_concat.push_str((e.message).as_str());
-    __sifr_concat
-});
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(14usize +
+            0usize); __sifr_concat.push_str("sample error: "); __sifr_concat.push_str((e
+            .message.clone()).as_str()); __sifr_concat }
+        );
     }
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let rr: i64 = randrange(0_i64, Some(100_i64), 5_i64)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(21usize + 0usize);
-    __sifr_concat.push_str("randrange in range = ");
-    __sifr_concat.push_str((format!("{}", rr >= (0_i64))).as_str());
-    __sifr_concat
-});
-    Ok(())
-})();
+        let rr: i64 = randrange(0_i64, Some(100_i64), 5_i64)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(21usize +
+            0usize); __sifr_concat.push_str("randrange in range = "); __sifr_concat
+            .push_str((format!("{}", rr >= (0_i64))).as_str()); __sifr_concat }
+        );
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(17usize + 0usize);
-    __sifr_concat.push_str("randrange error: ");
-    __sifr_concat.push_str((e.message).as_str());
-    __sifr_concat
-});
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(17usize +
+            0usize); __sifr_concat.push_str("randrange error: "); __sifr_concat
+            .push_str((e.message.clone()).as_str()); __sifr_concat }
+        );
     }
     let g: f64 = gauss(0.0_f64, 1.0_f64);
     println!("gauss sample is float = True");
     println!("=== functools.reduce ===");
     let nums: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64];
-    let total: i64 = reduce(|__arg0, __arg1| add((__arg0).clone(), (__arg1).clone()), &nums, &(0_i64));
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
-    __sifr_concat.push_str("reduce(add) = ");
-    __sifr_concat.push_str((format!("{}", total)).as_str());
-    __sifr_concat
-});
-    let product: i64 = reduce(|__arg0, __arg1| mul((__arg0).clone(), (__arg1).clone()), &nums, &(1_i64));
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
-    __sifr_concat.push_str("reduce(mul) = ");
-    __sifr_concat.push_str((format!("{}", product)).as_str());
-    __sifr_concat
-});
+    let total: i64 = reduce(
+        |__arg0, __arg1| add((__arg0).clone(), (__arg1).clone()),
+        &nums,
+        &(0_i64),
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(14usize + 0usize);
+        __sifr_concat.push_str("reduce(add) = "); __sifr_concat.push_str((format!("{}",
+        total)).as_str()); __sifr_concat }
+    );
+    let product: i64 = reduce(
+        |__arg0, __arg1| mul((__arg0).clone(), (__arg1).clone()),
+        &nums,
+        &(1_i64),
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(14usize + 0usize);
+        __sifr_concat.push_str("reduce(mul) = "); __sifr_concat.push_str((format!("{}",
+        product)).as_str()); __sifr_concat }
+    );
     println!("=== itertools additions ===");
     let idata2: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64];
-    let acc: Vec<i64> = accumulate(&(idata2).iter().copied().collect::<Vec<_>>(), None).collect::<Vec<_>>();
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
-    __sifr_concat.push_str("accumulate = ");
-    __sifr_concat.push_str((format!("{:?}", acc)).as_str());
-    __sifr_concat
-});
+    let acc: Vec<i64> = accumulate(&(idata2).iter().copied().collect::<Vec<_>>(), None)
+        .collect::<Vec<_>>();
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(13usize + 0usize);
+        __sifr_concat.push_str("accumulate = "); __sifr_concat.push_str((format!("{:?}",
+        acc)).as_str()); __sifr_concat }
+    );
     let sel: Vec<bool> = vec![true, false, true, false, true];
-    let comp: Vec<i64> = compress(&(idata2).iter().copied().collect::<Vec<_>>(), &(sel).iter().copied().collect::<Vec<_>>()).collect::<Vec<_>>();
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(11usize + 0usize);
-    __sifr_concat.push_str("compress = ");
-    __sifr_concat.push_str((format!("{:?}", comp)).as_str());
-    __sifr_concat
-});
-    let dw: Vec<i64> = dropwhile(|__arg0| less_than_three((__arg0).clone()), &(idata2).iter().copied().collect::<Vec<_>>()).collect::<Vec<_>>();
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
-    __sifr_concat.push_str("dropwhile(<3) = ");
-    __sifr_concat.push_str((format!("{:?}", dw)).as_str());
-    __sifr_concat
-});
-    let tw: Vec<i64> = takewhile(|__arg0| less_than_three((__arg0).clone()), &(idata2).iter().copied().collect::<Vec<_>>()).collect::<Vec<_>>();
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
-    __sifr_concat.push_str("takewhile(<3) = ");
-    __sifr_concat.push_str((format!("{:?}", tw)).as_str());
-    __sifr_concat
-});
-    let ff: Vec<i64> = filterfalse(|__arg0| less_than_three((__arg0).clone()), &(idata2).iter().copied().collect::<Vec<_>>()).collect::<Vec<_>>();
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(18usize + 0usize);
-    __sifr_concat.push_str("filterfalse(<3) = ");
-    __sifr_concat.push_str((format!("{:?}", ff)).as_str());
-    __sifr_concat
-});
+    let comp: Vec<i64> = compress(
+            &(idata2).iter().copied().collect::<Vec<_>>(),
+            &(sel).iter().copied().collect::<Vec<_>>(),
+        )
+        .collect::<Vec<_>>();
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(11usize + 0usize);
+        __sifr_concat.push_str("compress = "); __sifr_concat.push_str((format!("{:?}",
+        comp)).as_str()); __sifr_concat }
+    );
+    let dw: Vec<i64> = dropwhile(
+            |__arg0| less_than_three((__arg0).clone()),
+            &(idata2).iter().copied().collect::<Vec<_>>(),
+        )
+        .collect::<Vec<_>>();
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(16usize + 0usize);
+        __sifr_concat.push_str("dropwhile(<3) = "); __sifr_concat
+        .push_str((format!("{:?}", dw)).as_str()); __sifr_concat }
+    );
+    let tw: Vec<i64> = takewhile(
+            |__arg0| less_than_three((__arg0).clone()),
+            &(idata2).iter().copied().collect::<Vec<_>>(),
+        )
+        .collect::<Vec<_>>();
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(16usize + 0usize);
+        __sifr_concat.push_str("takewhile(<3) = "); __sifr_concat
+        .push_str((format!("{:?}", tw)).as_str()); __sifr_concat }
+    );
+    let ff: Vec<i64> = filterfalse(
+            |__arg0| less_than_three((__arg0).clone()),
+            &(idata2).iter().copied().collect::<Vec<_>>(),
+        )
+        .collect::<Vec<_>>();
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(18usize + 0usize);
+        __sifr_concat.push_str("filterfalse(<3) = "); __sifr_concat
+        .push_str((format!("{:?}", ff)).as_str()); __sifr_concat }
+    );
     let a: Vec<i64> = vec![1_i64, 2_i64, 3_i64];
     let b: Vec<i64> = vec![4_i64, 5_i64];
-    let zl: Vec<Vec<i64>> = zip_longest(&(a).iter().copied().collect::<Vec<_>>(), &(b).iter().copied().collect::<Vec<_>>(), &(0_i64)).collect::<Vec<_>>();
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(18usize + 0usize);
-    __sifr_concat.push_str("zip_longest len = ");
-    __sifr_concat.push_str((format!("{}", zl.len() as i64)).as_str());
-    __sifr_concat
-});
+    let zl: Vec<Vec<i64>> = zip_longest(
+            &(a).iter().copied().collect::<Vec<_>>(),
+            &(b).iter().copied().collect::<Vec<_>>(),
+            &(0_i64),
+        )
+        .collect::<Vec<_>>();
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(18usize + 0usize);
+        __sifr_concat.push_str("zip_longest len = "); __sifr_concat
+        .push_str((format!("{}", zl.len() as i64)).as_str()); __sifr_concat }
+    );
     let cf: Vec<i64> = count_from(0_i64, 2_i64, 5_i64).collect::<Vec<_>>();
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(20usize + 0usize);
-    __sifr_concat.push_str("count_from(0,2,5) = ");
-    __sifr_concat.push_str((format!("{:?}", cf)).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(20usize + 0usize);
+        __sifr_concat.push_str("count_from(0,2,5) = "); __sifr_concat
+        .push_str((format!("{:?}", cf)).as_str()); __sifr_concat }
+    );
     let mut ctr: Box<dyn Iterator<Item = i64>> = count(0_i64, 2_i64);
     let count0: Option<i64> = ctr.next();
     let count1: Option<i64> = ctr.next();
     let count2: Option<i64> = ctr.next();
     let count3: Option<i64> = ctr.next();
     let count4: Option<i64> = ctr.next();
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(21usize + 0usize);
-    __sifr_concat.push_str("count(0,2) first 5 = ");
-    __sifr_concat.push_str((format!("{:?}", vec![count0, count1, count2, count3, count4])).as_str());
-    __sifr_concat
-});
-    let cyc: Vec<i64> = cycle(&(vec![1_i64, 2_i64, 3_i64]).into_iter().collect::<Vec<_>>(), 7_i64).collect::<Vec<_>>();
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(20usize + 0usize);
-    __sifr_concat.push_str("cycle([1,2,3], 7) = ");
-    __sifr_concat.push_str((format!("{:?}", cyc)).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(21usize + 0usize);
+        __sifr_concat.push_str("count(0,2) first 5 = "); __sifr_concat
+        .push_str((format!("{:?}", vec![count0, count1, count2, count3, count4]))
+        .as_str()); __sifr_concat }
+    );
+    let cyc: Vec<i64> = cycle(
+            &(vec![1_i64, 2_i64, 3_i64]).into_iter().collect::<Vec<_>>(),
+            7_i64,
+        )
+        .collect::<Vec<_>>();
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(20usize + 0usize);
+        __sifr_concat.push_str("cycle([1,2,3], 7) = "); __sifr_concat
+        .push_str((format!("{:?}", cyc)).as_str()); __sifr_concat }
+    );
     println!("=== Counter enhancements ===");
-    let mut c1: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(&vec!["a".to_string(), "b".to_string(), "a".to_string(), "c".to_string()]);
-    let c2: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(&vec!["b".to_string(), "c".to_string(), "d".to_string()]);
+    let mut c1: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
+        &vec!["a".to_string(), "b".to_string(), "a".to_string(), "c".to_string()],
+    );
+    let c2: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
+        &vec!["b".to_string(), "c".to_string(), "d".to_string()],
+    );
     c1.update(&c2);
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(((16usize + 0usize) + 3usize) + 0usize);
-    __sifr_concat.push_str("after update: a=");
-    __sifr_concat.push_str((format!("{}", c1.get(&"a".to_string(), 0_i64))).as_str());
-    __sifr_concat.push_str(" b=");
-    __sifr_concat.push_str((format!("{}", c1.get(&"b".to_string(), 0_i64))).as_str());
-    __sifr_concat
-});
-    let mut c3: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(&vec!["x".to_string(), "x".to_string(), "y".to_string()]);
-    let c4: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(&vec!["x".to_string()]);
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(((16usize +
+        0usize) + 3usize) + 0usize); __sifr_concat.push_str("after update: a=");
+        __sifr_concat.push_str((format!("{}", c1.get(& "a".to_string(), 0_i64)))
+        .as_str()); __sifr_concat.push_str(" b="); __sifr_concat.push_str((format!("{}",
+        c1.get(& "b".to_string(), 0_i64))).as_str()); __sifr_concat }
+    );
+    let mut c3: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
+        &vec!["x".to_string(), "x".to_string(), "y".to_string()],
+    );
+    let c4: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
+        &vec!["x".to_string()],
+    );
     c3.subtract(&c4);
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(18usize + 0usize);
-    __sifr_concat.push_str("after subtract: x=");
-    __sifr_concat.push_str((format!("{}", c3.get(&"x".to_string(), 0_i64))).as_str());
-    __sifr_concat
-});
-    let c5: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(&vec!["a".to_string(), "a".to_string(), "b".to_string()]);
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(18usize + 0usize);
+        __sifr_concat.push_str("after subtract: x="); __sifr_concat
+        .push_str((format!("{}", c3.get(& "x".to_string(), 0_i64))).as_str());
+        __sifr_concat }
+    );
+    let c5: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
+        &vec!["a".to_string(), "a".to_string(), "b".to_string()],
+    );
     let elems: Vec<String> = c5.elements();
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(15usize + 0usize);
-    __sifr_concat.push_str("elements len = ");
-    __sifr_concat.push_str((format!("{}", elems.len() as i64)).as_str());
-    __sifr_concat
-});
-    let mut cc: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(&vec!["a".to_string(), "b".to_string()]);
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(15usize + 0usize);
+        __sifr_concat.push_str("elements len = "); __sifr_concat.push_str((format!("{}",
+        elems.len() as i64)).as_str()); __sifr_concat }
+    );
+    let mut cc: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
+        &vec!["a".to_string(), "b".to_string()],
+    );
     cc.update(&from_list(&vec!["b".to_string(), "c".to_string()]));
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
-    __sifr_concat.push_str("counter_add b = ");
-    __sifr_concat.push_str((format!("{}", cc.get(&"b".to_string(), 0_i64))).as_str());
-    __sifr_concat
-});
-    let mut cd: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(&vec!["a".to_string(), "a".to_string(), "b".to_string()]);
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(16usize + 0usize);
+        __sifr_concat.push_str("counter_add b = "); __sifr_concat.push_str((format!("{}",
+        cc.get(& "b".to_string(), 0_i64))).as_str()); __sifr_concat }
+    );
+    let mut cd: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
+        &vec!["a".to_string(), "a".to_string(), "b".to_string()],
+    );
     cd.subtract(&from_list(&vec!["a".to_string()]));
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
-    __sifr_concat.push_str("counter_sub a = ");
-    __sifr_concat.push_str((format!("{}", cd.get(&"a".to_string(), 0_i64))).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(16usize + 0usize);
+        __sifr_concat.push_str("counter_sub a = "); __sifr_concat.push_str((format!("{}",
+        cd.get(& "a".to_string(), 0_i64))).as_str()); __sifr_concat }
+    );
     println!("=== stdlib_pure_expansion: all features demonstrated ===");
 }

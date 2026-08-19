@@ -184,7 +184,7 @@ fn test_source_roots_is_rejected() {
         &mut DiskSourceProvider::new(),
     );
 
-    assert!(message.contains("source.roots is unsupported; use source.root"));
+    assert!(message.contains("source contains an unsupported field"));
 }
 
 #[test]
@@ -210,13 +210,13 @@ fn test_omitted_source_root_defaults_to_src() {
 }
 
 #[test]
-fn test_unknown_tables_and_keys_are_ignored() {
+fn test_unknown_top_level_tables_and_keys_are_ignored() {
     let tmp = TempWorkspace::new("unknown");
     tmp.mkdir("src");
     tmp.write(
-            "sifr.toml",
-            "[workspace]\nresolver = \"1\"\n[dependencies]\nfoo = \"0.1\"\n[source]\nroot = \"src\"\nextra = true\n",
-        );
+        "sifr.toml",
+        "[workspace]\nresolver = \"1\"\n[dependencies]\nfoo = \"0.1\"\n[source]\nroot = \"src\"\n",
+    );
     tmp.write("src/main.sifr", "");
 
     let root = discovered(

@@ -206,7 +206,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
+            return Err(IOError::new(e.message.clone()));
         }
     }
 }
@@ -676,14 +676,14 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             let outcome: __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome = _encoding_decode_incremental_outcome(
                 data,
                 &self._pending,
-                &self._encoding.clone().label,
-                &self._errors.clone().name,
+                &self._encoding.clone().label.clone(),
+                &self._errors.clone().name.clone(),
                 r#final,
             )?;
             let next_pending: Vec<u8> = _encoding_decode_incremental_pending(
                 data,
                 &self._pending,
-                &self._encoding.clone().label,
+                &self._encoding.clone().label.clone(),
                 r#final,
             )?;
             self._pending = next_pending;
@@ -700,7 +700,9 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             }
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
-                return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+                return Err(
+                    __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+                );
             }
         }
     }
@@ -768,7 +770,9 @@ impl __SifrStdlib_sifr_x2eencoding_x2eEncoder {
             }
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
-                return Err(__SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message));
+                return Err(
+                    __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
+                );
             }
         }
     }
@@ -801,7 +805,9 @@ fn _encoding_canonical_label(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -824,7 +830,9 @@ fn _encoding_decode_text(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -851,7 +859,9 @@ fn _encoding_decode_recoveries(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -887,7 +897,9 @@ fn _encoding_decode_outcome(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -933,7 +945,9 @@ fn _encoding_decode_incremental_outcome(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -962,7 +976,9 @@ fn _encoding_decode_incremental_pending(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -985,7 +1001,9 @@ fn _encoding_encode_bytes(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -1012,7 +1030,9 @@ fn _encoding_encode_recoveries(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -1048,7 +1068,9 @@ fn _encoding_encode_outcome(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -1197,7 +1219,9 @@ fn decode_outcome(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -1224,7 +1248,9 @@ fn decode(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -1253,7 +1279,9 @@ fn encode_outcome(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -1280,7 +1308,9 @@ fn encode(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(__SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message));
+            return Err(
+                __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
+            );
         }
     }
 }
@@ -1791,7 +1821,7 @@ impl __SifrIoTextFileHandle {
                         __sifr_try_variant_error,
                     ) => {
                         let e = __sifr_try_variant_error.clone();
-                        return Err(IOError::new(e.message));
+                        return Err(IOError::new(e.message.clone()));
                     }
                     __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a0(
                         __sifr_try_variant_error,
@@ -1803,7 +1833,7 @@ impl __SifrIoTextFileHandle {
                                     20usize + 0usize,
                                 );
                                 __sifr_concat.push_str("text decode failed: ");
-                                __sifr_concat.push_str((e.message).as_str());
+                                __sifr_concat.push_str((e.message.clone()).as_str());
                                 __sifr_concat
                             }),
                         );
@@ -1844,7 +1874,7 @@ impl __SifrIoTextFileHandle {
                         __sifr_try_variant_error,
                     ) => {
                         let e = __sifr_try_variant_error.clone();
-                        return Err(IOError::new(e.message));
+                        return Err(IOError::new(e.message.clone()));
                     }
                     __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eEncodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass25_x3asifr_x2eencoding_x2eEncodeError1_x3a0(
                         __sifr_try_variant_error,
@@ -1856,7 +1886,7 @@ impl __SifrIoTextFileHandle {
                                     20usize + 0usize,
                                 );
                                 __sifr_concat.push_str("text encode failed: ");
-                                __sifr_concat.push_str((e.message).as_str());
+                                __sifr_concat.push_str((e.message.clone()).as_str());
                                 __sifr_concat
                             }),
                         );
@@ -2501,7 +2531,7 @@ fn open(path: &String, mode: &String) -> Result<__SifrIoFileHandle, IOError> {
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
+            return Err(IOError::new(e.message.clone()));
         }
     }
 }
@@ -2523,7 +2553,7 @@ fn open_binary(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
+            return Err(IOError::new(e.message.clone()));
         }
     }
 }
@@ -2563,7 +2593,7 @@ fn open_text(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
+            return Err(IOError::new(e.message.clone()));
         }
     }
 }
@@ -3221,7 +3251,7 @@ fn main() {
         println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(31usize + 0usize);
     __sifr_concat.push_str("unexpected conversion failure: ");
-    __sifr_concat.push_str((e.message).as_str());
+    __sifr_concat.push_str((e.message.clone()).as_str());
     __sifr_concat
 });
     }
@@ -3237,7 +3267,7 @@ fn main() {
         println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(39usize + 0usize);
     __sifr_concat.push_str("unexpected decimal conversion failure: ");
-    __sifr_concat.push_str((e.message).as_str());
+    __sifr_concat.push_str((e.message.clone()).as_str());
     __sifr_concat
 });
     }
@@ -3256,7 +3286,7 @@ fn main() {
         println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(25usize + 0usize);
     __sifr_concat.push_str("caught conversion error: ");
-    __sifr_concat.push_str((e.message).as_str());
+    __sifr_concat.push_str((e.message.clone()).as_str());
     __sifr_concat
 });
     }

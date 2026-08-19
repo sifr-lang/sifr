@@ -1,4 +1,4 @@
-Execution error full diff, verified the SIFR-IMPORT-0009 code path, checked all remaining `http_transport` / `http1_*` / `http2_*` references, and confirmed the runtime fixture setup. Findings below.
+Execution error full diff, verified the current unknown-import rejection path, checked all remaining `http_transport` / `http1_*` / `http2_*` references, and confirmed the runtime fixture setup. Findings below.
 
 ## Findings
 
@@ -19,7 +19,7 @@ Traced end-to-end and confirmed the transport source path is genuinely severed:
 
 - **No stdlib source imports `sifr.http_transport`** or any transport symbol (grep-clean outside archived plans and the intentional negative fail fixture).
 - **Bootstrap seeder deleted**: `HTTP_TRANSPORT_HARNESS_ALIASES`, `seed_http_transport_harness_aliases`, `HTTP_TRANSPORT_HARNESS_RUST` all gone from `crates/sifr_driver/src/stdlib/bootstrap.rs`.
-- **Lowering escape hatch deleted**: `LoweringOptions.allow_http_transport_harness_imports` gone; the `sifr.http_transport` special-case in `mod_impl.rs:309` is gone; ordinary import now falls through to `imports::report_unknown_stdlib_module` → `unsupported_legacy_stdlib_module("sifr.http_transport")` → SIFR-IMPORT-0009. Fail fixture `crates/sifr/tests/e2e/fail/network_http_sifr_http_transport_internal.sifr:2` still exercises exactly this path via `sifr_driver::compile` in `test_e2e_fail` (which calls `compile_source`, not `compile_source_for_e2e`).
+- **Lowering escape hatch deleted**: `LoweringOptions.allow_http_transport_harness_imports` is gone. The `sifr.http_transport` special case is also gone. The current fixture reaches the ordinary unknown-import diagnostic (`SIFR-IMPORT-0002`) through `imports::report_unknown_stdlib_module`.
 - **Driver frontend API surface deleted**: `compile_with_metadata_allowing_http_transport_harness` removed from `frontend/api.rs`, `frontend/mod.rs`, `lib.rs`; also from `build/mod.rs` re-exports.
 - **E2E directive scan deleted**: `HTTP_TRANSPORT_HARNESS_DIRECTIVE` and the scan in `fixture_compilation.rs` are gone; no `.sifr` file contains the directive.
 - **Retained transport signatures deleted**: `crates/sifr_retained_intrinsics/src/http.rs` no longer registers `http[12]_client_roundtrip_{tcp,tls}` or `http[12]_server_respond_{tcp,tls}` in `_sifr.http`.

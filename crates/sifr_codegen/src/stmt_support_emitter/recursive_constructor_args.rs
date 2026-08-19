@@ -34,7 +34,12 @@ impl RustEmitter {
                     })
             })
             .unwrap_or(false);
-        if !is_recursive_ctor_param {
+        let is_structural_option_box = matches!(
+            crate::sifr_type_to_rust_type(context.param_ty),
+            crate::RustType::Option(inner)
+                if matches!(inner.as_ref(), crate::RustType::Boxed(_))
+        );
+        if !is_recursive_ctor_param && !is_structural_option_box {
             return None;
         }
         if matches!(context.arg, HirExpr::NoneLiteral) {

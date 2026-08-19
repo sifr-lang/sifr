@@ -296,10 +296,11 @@ impl RustEmitter {
                 let Some(parent_name) = inheritance_parent else {
                     continue;
                 };
-                let parent_rust_type = class.parent_type.as_ref().map_or_else(
-                    || sifr_type_system::source_class_rust_name(parent_name),
-                    |ty| crate::render_type(&crate::sifr_type_to_rust_type(ty)),
-                );
+                let parent_rust_type = class
+                    .parent_type
+                    .as_ref()
+                    .and_then(crate::rust_type_base_name)
+                    .unwrap_or_else(|| sifr_type_system::source_class_rust_name(parent_name));
                 let parent_args = args
                     .iter()
                     .map(|arg| {

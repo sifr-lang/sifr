@@ -188,7 +188,7 @@ fn collect_core_actual() -> Vec<bool> {
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message);
+        let _ = format!("{}", e.message.clone());
     }
     actual.push(batched_ok);
     actual.push((format!("{:?}", accumulate(&(vec![1_i64, 2_i64, 3_i64]).into_iter().collect::<Vec<_>>(), None).collect::<Vec<_>>())).as_str() == ("[1, 3, 6]".to_string()).as_str());

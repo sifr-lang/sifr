@@ -25,14 +25,6 @@ pub(in crate::lower) fn declared_receiver_convention(
     }
 }
 
-pub(in crate::lower) fn interop_owned_receiver(
-    declared: Option<ReceiverConvention>,
-) -> ReceiverConvention {
-    declared
-        .filter(|receiver| receiver.is_owned())
-        .unwrap_or(ReceiverConvention::Owned)
-}
-
 pub(in crate::lower) fn fixed_trait_receiver_convention(
     method: &str,
 ) -> Option<ReceiverConvention> {

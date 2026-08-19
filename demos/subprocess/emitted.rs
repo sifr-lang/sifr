@@ -89,7 +89,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
+            return Err(IOError::new(e.message.clone()));
         }
     }
 }
@@ -338,7 +338,7 @@ fn main() {
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = e.message;
+        let _ = e.message.clone();
     }
     assert!(demo_ok);
     println!("runtime_subprocess_subprocess_removed_demo: ok");

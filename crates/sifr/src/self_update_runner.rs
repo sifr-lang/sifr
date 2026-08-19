@@ -21,14 +21,12 @@ pub(crate) struct RunnerError {
 #[derive(Debug, Clone)]
 pub(crate) struct SelfUpdateRunner {
     curl_program: PathBuf,
-    home_dir: Option<PathBuf>,
 }
 
 impl SelfUpdateRunner {
     pub(crate) fn production() -> Self {
         Self {
             curl_program: PathBuf::from("curl"),
-            home_dir: std::env::var_os("HOME").map(PathBuf::from),
         }
     }
 
@@ -48,7 +46,7 @@ impl SelfUpdateRunner {
 
         let install_dir = Path::new(&discovered.receipt.install_dir);
         let lock = InstallLock::acquire(install_dir)?;
-        let status = self.run_installer(plan, discovered, &installer_path)?;
+        let status = Self::run_installer(plan, discovered, &installer_path)?;
         drop(lock);
 
         if status.success() {
@@ -110,7 +108,6 @@ impl SelfUpdateRunner {
     }
 
     fn run_installer(
-        &self,
         plan: &UpdatePlan,
         discovered: &DiscoveredReceipt,
         installer_path: &Path,
@@ -125,7 +122,7 @@ impl SelfUpdateRunner {
         if !discovered.receipt.modify_path {
             command.env("SIFR_NO_MODIFY_PATH", "1");
         }
-        if let Some(manifest_dir) = self.manifest_dir_override(discovered)? {
+        if let Some(manifest_dir) = Self::manifest_dir_override(discovered)? {
             command.env("SIFR_INSTALL_MANIFEST_DIR", manifest_dir);
         }
         command.status().map_err(|error| {
@@ -137,11 +134,10 @@ impl SelfUpdateRunner {
     }
 
     fn manifest_dir_override(
-        &self,
         discovered: &DiscoveredReceipt,
     ) -> Result<Option<PathBuf>, RunnerError> {
         let receipt_path = canonicalize_existing_path(&discovered.receipt_path, "receipt path")?;
-        let default_path = self.default_manifest_path(&discovered.receipt.install_dir);
+        let default_path = Path::new(&discovered.receipt.sysroot_path).join("install.json");
         if paths_equivalent(&receipt_path, &default_path) {
             return Ok(None);
         }
@@ -152,22 +148,6 @@ impl SelfUpdateRunner {
             ))
         })?;
         Ok(Some(manifest_dir.to_path_buf()))
-    }
-
-    fn default_manifest_path(&self, install_dir: &str) -> PathBuf {
-        if let Some(home_dir) = &self.home_dir {
-            let default_install_dir = home_dir.join(".sifr/bin");
-            if paths_equivalent(Path::new(install_dir), &default_install_dir) {
-                return home_dir.join(".sifr/install.json");
-            }
-        }
-        let install_dir = Path::new(install_dir);
-        if install_dir.file_name().is_some_and(|name| name == "bin") {
-            if let Some(sysroot_root) = install_dir.parent() {
-                return sysroot_root.join("install.json");
-            }
-        }
-        install_dir.join("install.json")
     }
 }
 
@@ -397,10 +377,9 @@ mod tests {
         }
     }
 
-    fn runner(root: &Path, curl: &Path) -> SelfUpdateRunner {
+    fn runner(curl: &Path) -> SelfUpdateRunner {
         SelfUpdateRunner {
             curl_program: curl.to_path_buf(),
-            home_dir: Some(root.join("home")),
         }
     }
 
@@ -524,7 +503,7 @@ cp "{}" "$out"
         let curl = write_fake_curl(root.path(), &installer);
         let discovered = discovered(root.path(), false, false);
 
-        let exit = runner(root.path(), &curl)
+        let exit = runner(&curl)
             .run(&plan_for_installer(true, &installer), &discovered)
             .expect("runner succeeds");
 
@@ -558,7 +537,7 @@ cp "{}" "$out"
         let curl = write_fake_curl(root.path(), &installer);
         let discovered = discovered(root.path(), true, true);
 
-        runner(root.path(), &curl)
+        runner(&curl)
             .run(&plan_for_installer(false, &installer), &discovered)
             .expect("runner succeeds");
 
@@ -572,7 +551,7 @@ cp "{}" "$out"
         let tiny = root.path().join("tiny.sh");
         fs::write(&tiny, "#!/bin/sh\n").expect("write tiny installer");
         let curl = write_fake_curl(root.path(), &tiny);
-        let error = runner(root.path(), &curl)
+        let error = runner(&curl)
             .run(
                 &plan_for_installer(false, &tiny),
                 &discovered(root.path(), true, true),
@@ -587,7 +566,7 @@ cp "{}" "$out"
         let bad = root.path().join("bad.sh");
         fs::write(&bad, format!("{}\n", "x".repeat(1100))).expect("write bad installer");
         let curl = write_fake_curl(root.path(), &bad);
-        let error = runner(root.path(), &curl)
+        let error = runner(&curl)
             .run(
                 &plan_for_installer(false, &bad),
                 &discovered(root.path(), true, true),
@@ -605,7 +584,7 @@ cp "{}" "$out"
             &format!("printf executed > \"{}\"", record.display()),
         );
         let curl = write_fake_curl(root.path(), &installer);
-        let error = runner(root.path(), &curl)
+        let error = runner(&curl)
             .run(&plan(false), &discovered(root.path(), true, true))
             .expect_err("digest mismatch is rejected");
         assert!(error.diagnostic.message.contains("SHA-256 mismatch"));
@@ -617,7 +596,7 @@ cp "{}" "$out"
         let root = TestDir::new("failure");
         let installer = write_installer(root.path(), "exit 7");
         let curl = write_fake_curl(root.path(), &installer);
-        let error = runner(root.path(), &curl)
+        let error = runner(&curl)
             .run(
                 &plan_for_installer(false, &installer),
                 &discovered(root.path(), true, true),
@@ -642,7 +621,7 @@ printf '%s\n' "$SIFR_INSTALL_DIR" >> "{}"
         );
         let curl = write_fake_curl(root.path(), &installer);
         let discovered = discovered(root.path(), true, true);
-        let first_runner = runner(root.path(), &curl);
+        let first_runner = runner(&curl);
         let second_runner = first_runner.clone();
         let first_discovered = discovered.clone();
         let second_discovered = discovered.clone();
@@ -674,7 +653,7 @@ printf '%s\n' "$SIFR_INSTALL_DIR" >> "{}"
         let missing_curl = root.path().join("missing-curl");
         let discovered = discovered(root.path(), true, true);
 
-        let exit = runner(root.path(), &missing_curl)
+        let exit = runner(&missing_curl)
             .run(&no_op_plan, &discovered)
             .expect("no-op skips network");
 

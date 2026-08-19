@@ -80,7 +80,7 @@ curl -fsSL https://sifr.sh/install | sh
 For custom install directories, rerun the installer with the same environment:
 
 ```bash
-curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/bin" sh
+curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/.sifr/bin" sh
 ```
 
 If the diagnostic says the receipt belongs to a different executable, your

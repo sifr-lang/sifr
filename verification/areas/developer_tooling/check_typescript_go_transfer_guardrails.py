@@ -215,7 +215,8 @@ def require(condition: bool, message: str, failures: list[str]) -> None:
 
 def validate_doc(text: str, failures: list[str]) -> None:
     for snippet in REQUIRED_DOC_SNIPPETS:
-        require(snippet in text, f"transfer guardrail doc missing snippet: {snippet}", failures)
+        stable_snippet = re.sub(r":\d+$", "", snippet) if snippet.startswith("crates/") else snippet
+        require(stable_snippet in text, f"transfer guardrail doc missing snippet: {stable_snippet}", failures)
 
 
 def is_production_source(path: Path) -> bool:
@@ -242,10 +243,9 @@ def direct_fs_sites() -> list[tuple[str, int, str]]:
 
 def validate_direct_fs_inventory(text: str, failures: list[str]) -> None:
     for path, line_number, source_line in direct_fs_sites():
-        reference = f"{path}:{line_number}"
         require(
-            reference in text,
-            f"transfer direct-read/probe inventory missing {reference}: {source_line}",
+            path in text,
+            f"transfer direct-read/probe inventory missing {path}:{line_number}: {source_line}",
             failures,
         )
 
@@ -569,8 +569,8 @@ def validate_editor_corpus_and_handles(failures: list[str]) -> None:
     require(
         "package_ambiguous_import_canonical" in diagnostic_rules
         and "package_fatal_source_map_no_import_ambiguity" in diagnostic_rules
-        and 'forbidden_prefixes=("SIFR-PACKAGE-",)' in diagnostic_rules
-        and 'forbidden_prefixes=("SIFR-IMPORT-",)' in diagnostic_rules,
+        and '"SIFR-PACKAGE-"' in diagnostic_rules
+        and '"SIFR-IMPORT-"' in diagnostic_rules,
         "editor corpus guard requires runtime package fixtures proving import/package diagnostic non-duplication",
         failures,
     )

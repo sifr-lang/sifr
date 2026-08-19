@@ -2,7 +2,7 @@ use super::class_shape_metadata::{declaration_metadata, field_default_identities
 use super::is_hashable_type;
 use super::parameter_conventions::{
     class_method_param_convention, class_method_param_default, declared_receiver_convention,
-    interop_owned_receiver, prepare_method_param_ownership,
+    prepare_method_param_ownership,
 };
 use super::rust_opaque_validation as opaque;
 use super::{
@@ -553,13 +553,9 @@ pub(in crate::lower) fn lower_class(
                 func.is_async,
                 ctx,
             );
-            if consumes_rust_receiver
-                || python_interop
-                    .iter()
-                    .any(|declaration| declaration.consumes_receiver)
-            {
-                method_ft.receiver = Some(interop_owned_receiver(method_ft.receiver));
-            }
+            // Interop metadata must preserve the source receiver convention.
+            // The Rust and Python declaration validators diagnose a consuming
+            // policy whose source declaration does not use `own self`.
             if !python_interop.is_empty() && !is_python_opaque {
                 ctx.error_with_code_at(
                     sifr_diagnostics::DiagnosticCode::PYIMP_INVALID_TARGET,
@@ -724,19 +720,20 @@ pub(in crate::lower) fn lower_class(
     let semantic_close_methods = hir_methods
         .iter()
         .filter(|method| {
-            method.python_interop.first().is_some_and(|declaration| {
-                declaration.consumes_receiver
-                    && declaration.kind == sifr_ir::PythonInteropDecoratorKind::Function
-                    && declaration
-                        .target
-                        .as_ref()
-                        .is_some_and(|target| target.segments.as_slice() == ["Self", "close"])
-                    && method.params.is_empty()
-                    && matches!(
-                        method.return_type.resolve_alias(),
-                        Type::Result(ok, _) if ok.resolve_alias() == &Type::None
-                    )
-            })
+            method.receiver == Some(ReceiverConvention::Owned)
+                && method.python_interop.first().is_some_and(|declaration| {
+                    declaration.consumes_receiver
+                        && declaration.kind == sifr_ir::PythonInteropDecoratorKind::Function
+                        && declaration
+                            .target
+                            .as_ref()
+                            .is_some_and(|target| target.segments.as_slice() == ["Self", "close"])
+                        && method.params.is_empty()
+                        && matches!(
+                            method.return_type.resolve_alias(),
+                            Type::Result(ok, _) if ok.resolve_alias() == &Type::None
+                        )
+                })
         })
         .count();
     let cleanup = ctx
@@ -754,19 +751,20 @@ pub(in crate::lower) fn lower_class(
     let semantic_async_close_methods = hir_methods
         .iter()
         .filter(|method| {
-            method.python_interop.first().is_some_and(|declaration| {
-                declaration.consumes_receiver
-                    && declaration.kind == sifr_ir::PythonInteropDecoratorKind::Coroutine
-                    && declaration
-                        .target
-                        .as_ref()
-                        .is_some_and(|target| target.segments.as_slice() == ["Self", "aclose"])
-                    && method.params.is_empty()
-                    && matches!(
-                        method.return_type.resolve_alias(),
-                        Type::Result(ok, _) if ok.resolve_alias() == &Type::None
-                    )
-            })
+            method.receiver == Some(ReceiverConvention::Owned)
+                && method.python_interop.first().is_some_and(|declaration| {
+                    declaration.consumes_receiver
+                        && declaration.kind == sifr_ir::PythonInteropDecoratorKind::Coroutine
+                        && declaration
+                            .target
+                            .as_ref()
+                            .is_some_and(|target| target.segments.as_slice() == ["Self", "aclose"])
+                        && method.params.is_empty()
+                        && matches!(
+                            method.return_type.resolve_alias(),
+                            Type::Result(ok, _) if ok.resolve_alias() == &Type::None
+                        )
+                })
         })
         .count();
     if cleanup == Some(sifr_ir::PythonCleanupPolicy::AsyncClose)

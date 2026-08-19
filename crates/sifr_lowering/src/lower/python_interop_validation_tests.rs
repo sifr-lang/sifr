@@ -31,6 +31,29 @@ def compute(values: set[int]) -> Result[int, PythonError]: ...
 }
 
 #[test]
+fn python_close_rejects_non_owned_source_receiver() {
+    let errors = lower_errors(
+        r"
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+@python.opaque(type=pkg.Client, cleanup=close)
+class Client:
+    @python(Self.close)
+    def close(self) -> Result[None, PythonError]: ...
+",
+    );
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE)
+            && error.message.contains("own self")
+    }));
+}
+
+#[test]
 fn python_declaration_rejects_shadow_python_error_contract() {
     let errors = lower_errors(
         r"

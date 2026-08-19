@@ -62,13 +62,10 @@ SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
         ),
         ("completion-quality", [sys.executable, str(AREA_ROOT / "check_completion_quality.py")]),
         ("completion-quality-self-test", [sys.executable, str(AREA_ROOT / "check_completion_quality.py"), "--self-test"]),
+        ("no-pre-v1-compatibility", [sys.executable, str(AREA_ROOT / "check_no_pre_v1_compatibility.py")]),
         (
-            "hidden-compatibility-prefixes",
-            [sys.executable, str(AREA_ROOT / "check_hidden_compatibility_prefixes.py")],
-        ),
-        (
-            "hidden-compatibility-prefixes-self-test",
-            [sys.executable, str(AREA_ROOT / "check_hidden_compatibility_prefixes.py"), "--self-test"],
+            "no-pre-v1-compatibility-self-test",
+            [sys.executable, str(AREA_ROOT / "check_no_pre_v1_compatibility.py"), "--self-test"],
         ),
     ],
     "formatter": [

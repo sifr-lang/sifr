@@ -1455,7 +1455,7 @@ fn _module_random() -> __SifrStdlib_sifr_x2erandom_x2eRandom {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = e.message;
+        let _ = e.message.clone();
     }
     r
 }
@@ -1884,7 +1884,7 @@ fn main() {
         println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
     __sifr_concat.push_str("random error: ");
-    __sifr_concat.push_str((e.message).as_str());
+    __sifr_concat.push_str((e.message.clone()).as_str());
     __sifr_concat
 });
     }
@@ -1915,7 +1915,7 @@ fn main() {
         println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(15usize + 0usize);
     __sifr_concat.push_str("secrets error: ");
-    __sifr_concat.push_str((e.message).as_str());
+    __sifr_concat.push_str((e.message.clone()).as_str());
     __sifr_concat
 });
     }

@@ -16,22 +16,34 @@ pub(in crate::lower) fn forbidden_intrinsic(ctx: &mut LowerCtx, module: &str, ra
 }
 
 pub(in crate::lower) fn unknown_import_target(ctx: &mut LowerCtx, module: &str, range: TextRange) {
-    ctx.error_with_code_at(
+    let args = BTreeMap::from([(
+        "module".to_string(),
+        DiagnosticArg::String(module.to_string()),
+    )]);
+    ctx.error_with_code_args_help_at(
         DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE,
         format!("unknown import target: '{module}'"),
+        args,
+        None,
         range,
     );
 }
 
-pub(in crate::lower) fn deferred_compat_module(
+pub(in crate::lower) fn deferred_module(
     ctx: &mut LowerCtx,
     module: &str,
     reason: &str,
     range: TextRange,
 ) {
-    ctx.error_with_code_at(
+    let args = BTreeMap::from([(
+        "module".to_string(),
+        DiagnosticArg::String(module.to_string()),
+    )]);
+    ctx.error_with_code_args_help_at(
         DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE,
         format!("module '{module}' is intentionally deferred: {reason}"),
+        args,
+        None,
         range,
     );
 }

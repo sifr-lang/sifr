@@ -444,7 +444,7 @@ fn try_lower_typed_match_pattern(
                 rendered_fields.push(format!("{field_name}: {field_rendered}"));
                 bindings.extend(field_bindings);
             }
-            let rust_name = crate::render_type(&crate::sifr_type_to_rust_type(class_ty));
+            let rust_name = crate::rust_type_base_name(class_ty)?;
             if rendered_fields.is_empty() {
                 Some((format!("{rust_name} {{ .. }}"), bindings))
             } else {
@@ -505,7 +505,7 @@ pub(super) fn try_lower_union_class_match_pattern(
         rendered_fields.push(format!("{field_name}: {field_pat}"));
         bindings.extend(field_binds);
     }
-    let target_rust_name = crate::render_type(&crate::sifr_type_to_rust_type(&target_ty));
+    let target_rust_name = crate::rust_type_base_name(&target_ty)?;
     Some((
         format!(
             "{enum_name}::{variant_name}({target_rust_name} {{ {}, .. }})",

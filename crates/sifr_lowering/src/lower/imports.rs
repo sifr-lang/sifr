@@ -141,7 +141,7 @@ pub(in crate::lower) fn report_unknown_stdlib_module(
     range: TextRange,
 ) {
     if let Some(reason) = deferred_module_reason(module) {
-        import_diagnostics::deferred_compat_module(ctx, module, reason, range);
+        import_diagnostics::deferred_module(ctx, module, reason, range);
     } else {
         import_diagnostics::unknown_import_target(ctx, module, range);
     }

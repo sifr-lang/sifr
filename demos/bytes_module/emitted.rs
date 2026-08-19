@@ -320,7 +320,7 @@ fn bytes_to_hex_or_empty(payload: &Vec<u8>) -> String {
         },
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            let _ = format!("{}", e.message);
+            let _ = format!("{}", e.message.clone());
             return "".to_string();
         },
     }
@@ -360,7 +360,7 @@ fn bytes_from_hex_to_text_or_empty(payload: &String) -> String {
         },
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            let _ = format!("{}", e.message);
+            let _ = format!("{}", e.message.clone());
             return "".to_string();
         },
     }

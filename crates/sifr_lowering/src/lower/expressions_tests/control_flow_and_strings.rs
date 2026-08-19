@@ -576,11 +576,15 @@ pub(super) fn test_unknown_parent_class_has_class_code() {
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| {
-        e.message == "invalid base class for 'Child': parent class 'MissingParent' not defined"
-            && e.code == Some(DiagnosticCode::CLASS_INVALID_BASE)
-            && e.primary_range == Some(range_for_after(source, "class Child(", "MissingParent"))
-    }));
+    assert!(
+        errors.iter().any(|e| {
+            e.message
+                == "invalid base class for 'Child': parent type 'MissingParent' is not a class"
+                && e.code == Some(DiagnosticCode::CLASS_INVALID_BASE)
+                && e.primary_range == Some(range_for_after(source, "class Child(", "MissingParent"))
+        }),
+        "{errors:#?}"
+    );
 }
 
 #[test]

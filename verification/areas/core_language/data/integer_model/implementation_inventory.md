@@ -54,8 +54,8 @@ Generated Rust must not expose user-triggerable integer panics.
 ## Validation
 
 ```bash
-rg -n 'Type::BigInt|Self::BigInt' crates --glob '*.rs'
+python3 verification/areas/developer_tooling/check_no_pre_v1_compatibility.py
 cargo run -q -p sifr -- run crates/sifr/tests/e2e/pass/exact_int_arbitrary_precision.sifr
 ```
 
-The search command must return no production or test-code matches.
+The compatibility guard must report no removed public integer support.

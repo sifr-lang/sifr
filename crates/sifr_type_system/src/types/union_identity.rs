@@ -13,9 +13,12 @@ impl Type {
                 canonical @ Self::Union(_) => {
                     compiler_identifier("__SifrUnion_", &canonical.union_identity_key())
                 }
-                collapsed => compiler_identifier("__SifrUnion_", &collapsed.union_identity_key()),
+                collapsed => nominal_rust_name(&collapsed).unwrap_or_else(|| {
+                    compiler_identifier("__SifrUnion_", &collapsed.union_identity_key())
+                }),
             },
-            _ => compiler_identifier("__SifrUnion_", &self.union_identity_key()),
+            _ => nominal_rust_name(self)
+                .unwrap_or_else(|| compiler_identifier("__SifrUnion_", &self.union_identity_key())),
         }
     }
 
@@ -110,6 +113,20 @@ impl Type {
             Self::Decimal => atom("decimal"),
             Self::BigDecimal => atom("bigdecimal"),
         }
+    }
+}
+
+fn nominal_rust_name(ty: &Type) -> Option<String> {
+    match ty.resolve_alias() {
+        Type::Class { identity, name, .. }
+        | Type::Enum { identity, name, .. }
+        | Type::Protocol { identity, name, .. } => {
+            Some(super::class_rust_name(identity.as_deref(), name))
+        }
+        Type::Newtype { identity, name, .. } => {
+            Some(super::class_rust_name(identity.as_deref(), name))
+        }
+        _ => None,
     }
 }
 
@@ -391,8 +408,9 @@ mod tests {
         };
         assert_eq!(
             Type::Union(vec![class.clone(), snapshot]).union_enum_name(),
-            compiler_identifier("__SifrUnion_", &class.union_identity_key())
+            "Item"
         );
+        assert_eq!(class.union_enum_name(), "Item");
         assert_eq!(
             Type::Union(vec![class.clone(), class.clone()]).union_identity_key(),
             class.union_identity_key()

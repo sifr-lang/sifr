@@ -1,5 +1,26 @@
 // src/main.rs
 mod __sifr_project_nominals {
+    #[derive(Clone, PartialEq, Eq, Hash)]
+    pub struct __SifrStdlib_sifr_x2egraphlib_x2eCycleError {
+        pub message: String,
+    }
+    impl __SifrStdlib_sifr_x2egraphlib_x2eCycleError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl __SifrStdlib_sifr_x2egraphlib_x2eCycleError {}
+    impl ::std::fmt::Debug for __SifrStdlib_sifr_x2egraphlib_x2eCycleError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            f.debug_struct("CycleError").field("message", &self.message).finish()
+        }
+    }
+    impl ::std::fmt::Display for __SifrStdlib_sifr_x2egraphlib_x2eCycleError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            write!(f, "{}", self.message)
+        }
+    }
+    impl ::std::error::Error for __SifrStdlib_sifr_x2egraphlib_x2eCycleError {}
     pub const PI: f64 = 3.141592653589793_f64;
     pub const E: f64 = 2.718281828459045_f64;
     pub const TAU: f64 = 6.283185307179586_f64;
@@ -460,6 +481,7 @@ mod __sifr_project_nominals {
     }
 }
 pub use __sifr_project_nominals::ParseError;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2egraphlib_x2eCycleError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2estatistics_x2eStatisticsError;
 
 mod __sifr_project_unions {
@@ -505,27 +527,6 @@ mod __sifr_project_unions {
     }
 }
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a044_x3a5_x3aclass31_x3asifr_x2estatistics_x2eStatisticsError1_x3a0;
-#[derive(Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2egraphlib_x2eCycleError {
-    message: String,
-}
-impl __SifrStdlib_sifr_x2egraphlib_x2eCycleError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl __SifrStdlib_sifr_x2egraphlib_x2eCycleError {}
-impl ::std::fmt::Debug for __SifrStdlib_sifr_x2egraphlib_x2eCycleError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        f.debug_struct("CycleError").field("message", &self.message).finish()
-    }
-}
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2egraphlib_x2eCycleError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-impl ::std::error::Error for __SifrStdlib_sifr_x2egraphlib_x2eCycleError {}
 const PI: f64 = 3.141592653589793_f64;
 const E: f64 = 2.718281828459045_f64;
 const TAU: f64 = 6.283185307179586_f64;
@@ -985,7 +986,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("stats error: {}", e.message);
+        println!("stats error: {}", e.message.clone());
     }
     let empty: Vec<f64> = vec![];
     let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (||
@@ -995,7 +996,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("caught StatisticsError: {}", e.message);
+        println!("caught StatisticsError: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2egraphlib_x2eCycleError> = (|| {
         let order: i64 = topo_sort(false)?;
@@ -1004,7 +1005,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("cycle error: {}", e.message);
+        println!("cycle error: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2egraphlib_x2eCycleError> = (|| {
         let order2: i64 = topo_sort(true)?;
@@ -1012,7 +1013,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("caught CycleError: {}", e.message);
+        println!("caught CycleError: {}", e.message.clone());
     }
     let __sifr_try_res: Result<
         (),
@@ -1038,13 +1039,13 @@ fn main() {
                 __sifr_try_variant_error,
             ) => {
                 let e = __sifr_try_variant_error.clone();
-                println!("caught ParseError: {}", e.message);
+                println!("caught ParseError: {}", e.message.clone());
             }
             __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a044_x3a5_x3aclass31_x3asifr_x2estatistics_x2eStatisticsError1_x3a0::__SifrUnionVariant_5_x3aclass31_x3asifr_x2estatistics_x2eStatisticsError1_x3a0(
                 __sifr_try_variant_error,
             ) => {
                 let e = __sifr_try_variant_error.clone();
-                println!("caught StatisticsError: {}", e.message);
+                println!("caught StatisticsError: {}", e.message.clone());
             }
         }
     }

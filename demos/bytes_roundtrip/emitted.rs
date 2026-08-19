@@ -281,7 +281,7 @@ fn main() {
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message);
+        let _ = format!("{}", e.message.clone());
     }
     assert!(conversion_ok);
 }

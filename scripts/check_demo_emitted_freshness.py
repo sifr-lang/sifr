@@ -11,18 +11,28 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
+
+from sifr_binary import resolve_sifr_binary  # noqa: E402
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sifr", type=Path, default=REPO_ROOT / "target/debug/sifr")
+    parser.add_argument("--sifr", type=Path)
     parser.add_argument("--update", action="store_true")
     parser.add_argument("--jobs", type=int, default=8)
     args = parser.parse_args()
 
-    compiler = args.sifr.resolve()
-    if not compiler.is_file():
-        parser.error(f"Sifr compiler does not exist: {compiler}")
+    if args.sifr is not None:
+        compiler = args.sifr.resolve()
+        if not compiler.is_file():
+            parser.error(f"Sifr compiler does not exist: {compiler}")
+    else:
+        compiler = resolve_sifr_binary(
+            REPO_ROOT,
+            explicit_env_var="SIFR_GCQ_BIN",
+            default_binary=REPO_ROOT / "target/debug/sifr",
+        ).resolve()
 
     if args.jobs < 1:
         parser.error("--jobs must be positive")

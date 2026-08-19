@@ -351,7 +351,7 @@ fn decode_b64_or_empty(payload: &String) -> String {
         },
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            let _ = format!("{}", format!("{}{}", "unexpected: ", e.message));
+            let _ = format!("{}", format!("{}{}", "unexpected: ", e.message.clone()));
             return "".to_string();
         },
     }
@@ -369,7 +369,7 @@ fn decode_urlsafe_b64_or_empty(payload: &String) -> String {
         },
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            let _ = format!("{}", format!("{}{}", "unexpected: ", e.message));
+            let _ = format!("{}", format!("{}{}", "unexpected: ", e.message.clone()));
             return "".to_string();
         },
     }
@@ -384,7 +384,7 @@ fn b16_encode_or_empty(payload: &String) -> String {
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = format!("{}", format!("{}{}", "unexpected: ", e.message));
+        let _ = format!("{}", format!("{}{}", "unexpected: ", e.message.clone()));
     }
     encoded
 }
@@ -398,7 +398,7 @@ fn b16_decode_or_empty(payload: &String) -> String {
 })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = format!("{}", format!("{}{}", "unexpected: ", e.message));
+        let _ = format!("{}", format!("{}{}", "unexpected: ", e.message.clone()));
     }
     decoded
 }

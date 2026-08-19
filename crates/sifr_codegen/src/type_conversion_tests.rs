@@ -1,6 +1,5 @@
 use crate::{
-    render_type, sifr_type_to_rust_field_type, sifr_type_to_rust_type, try_sifr_type_to_rust_type,
-    RustTrait, RustType,
+    render_type, sifr_type_to_rust_field_type, sifr_type_to_rust_type, RustTrait, RustType,
 };
 use sifr_type_system::{FixedIntType, FunctionType, ParamConvention, PythonArrowKind, Type};
 use std::collections::HashMap;
@@ -162,7 +161,7 @@ fn every_type_variant_uses_structured_conversion() {
     ];
 
     for ty in types {
-        let rust_ty = try_sifr_type_to_rust_type(&ty).expect("variant must be supported");
+        let rust_ty = sifr_type_to_rust_type(&ty);
         assert_named_nodes_are_leaf_paths(&rust_ty);
         syn::parse_str::<syn::Type>(&render_type(&rust_ty))
             .expect("structured type must render as Rust syntax");
@@ -184,16 +183,6 @@ fn callable_fields_use_boxed_trait_objects() {
         sifr_type_to_rust_type(&callable),
         RustType::ImplTrait { .. }
     ));
-}
-
-#[test]
-fn malformed_callable_returns_one_structured_error() {
-    let malformed = Type::Callable(vec![Type::Int], Vec::new(), Box::new(Type::Str));
-    let error = try_sifr_type_to_rust_type(&malformed).expect_err("shape must fail");
-    assert_eq!(
-        error.message,
-        "unsupported callable type: 1 parameters but 0 conventions"
-    );
 }
 
 #[test]
@@ -234,4 +223,22 @@ fn malformed_signature_emits_one_production_codegen_error() {
         "{generated}"
     );
     assert!(generated.contains("unsupported callable type: 1 parameters but 0 conventions"));
+
+    let mut emitter = crate::RustEmitter::new();
+    emitter.emit_named_module(&module, true, false, Some("first"));
+    emitter.emit_named_module(&module, true, false, Some("second"));
+    let error_item_names = emitter
+        .body_items
+        .iter()
+        .filter_map(|item| match item {
+            crate::RustItem::Fn { name, .. } if name.starts_with("__sifr_codegen_type_error_") => {
+                Some(name.as_str())
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        error_item_names,
+        ["__sifr_codegen_type_error_1", "__sifr_codegen_type_error_2"]
+    );
 }

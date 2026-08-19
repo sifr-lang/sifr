@@ -42,14 +42,6 @@ def rust_sources() -> dict[str, str]:
     }
 
 
-def converter_body(source: str) -> str:
-    start = source.find("pub fn sifr_type_to_rust_type")
-    end = source.find("pub fn build_error_type_items")
-    if start < 0 or end < 0 or end <= start:
-        return ""
-    return source[start:end]
-
-
 def violations(sources: dict[str, str]) -> list[str]:
     problems: list[str] = []
     for path, source in sources.items():
@@ -58,12 +50,12 @@ def violations(sources: dict[str, str]) -> list[str]:
                 problems.append(f"{path}: {label}")
 
     converter_path = "crates/sifr_codegen/src/preamble/types_and_errors.rs"
-    converter = converter_body(sources.get(converter_path, ""))
-    if not converter:
+    converter_source = sources.get(converter_path, "")
+    if not re.search(r"\bpub\s+fn\s+sifr_type_to_rust_type\s*\(", converter_source):
         problems.append(f"{converter_path}: canonical converter is missing")
     else:
         for label, pattern in CONVERTER_PATTERNS.items():
-            if pattern.search(converter):
+            if pattern.search(converter_source):
                 problems.append(f"{converter_path}: {label}")
     return problems
 
@@ -75,7 +67,6 @@ def run_self_test() -> None:
 pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     match ty { Type::Int => RustType::I64 }
 }
-pub fn build_error_type_items() {}
 """,
         "crates/sifr_type_system/src/types/type_queries.rs": "impl Type {}",
     }
@@ -88,13 +79,11 @@ pub fn build_error_type_items() {}
 pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     RustType::Named(ty.display_name())
 }
-pub fn build_error_type_items() {}
 """,
         "wildcard fallback": """
 pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     match ty { _ => RustType::Named(String::new()) }
 }
-pub fn build_error_type_items() {}
 """,
     }
     for label, mutation in mutations.items():
