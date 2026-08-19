@@ -1,6 +1,6 @@
 //! Type-variable substitution across nested nominal declaration scopes.
 
-use sifr_type_system::{make_union, FunctionType, Type};
+use crate::{make_union, FunctionType, Type};
 use std::collections::HashMap;
 
 /// Substitute type variables without declaration-scope metadata.
@@ -143,7 +143,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::substitute_type_vars_with_class_scopes;
-    use sifr_type_system::Type;
+    use crate::Type;
     use std::collections::HashMap;
 
     #[test]

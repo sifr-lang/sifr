@@ -11,6 +11,7 @@ mod collection_capabilities;
 pub mod infer;
 pub mod literal;
 mod safe_optional;
+mod substitution;
 #[cfg(test)]
 mod type_capability_identity_tests;
 mod types;
@@ -33,6 +34,7 @@ pub mod narrow;
 pub use literal::{widen as widen_literal, LiteralValue};
 pub use narrow::{narrow_type, NarrowingCondition};
 pub use safe_optional::safe_optional_result;
+pub use substitution::{substitute_type_vars, substitute_type_vars_with_class_scopes};
 
 /// Returns whether a declaration belongs to a public stdlib module's compiled
 /// export surface. Underscore-prefixed declarations are private except for the
