@@ -418,4 +418,27 @@ mod tests {
 
         assert!(!preserved);
     }
+
+    #[test]
+    fn generic_alias_arguments_and_body_use_the_same_outer_binding() {
+        let alias = Type::Alias {
+            name: "Boxed".to_string(),
+            type_args: vec![Type::TypeVar("T".to_string())],
+            body: Box::new(Type::List(Box::new(Type::TypeVar("T".to_string())))),
+        };
+        let substituted = substitute_type_vars_with_class_scopes(
+            &alias,
+            &HashMap::from([("T".to_string(), Type::Int)]),
+            &|_, _| None,
+        );
+
+        assert_eq!(
+            substituted,
+            Type::Alias {
+                name: "Boxed".to_string(),
+                type_args: vec![Type::Int],
+                body: Box::new(Type::List(Box::new(Type::Int))),
+            }
+        );
+    }
 }

@@ -21,12 +21,7 @@ pub(crate) fn resolve(
     lowering: &LoweringResult,
     external_defs: &ExternalDefs,
 ) -> Option<HandlerAncestry> {
-    let bindings = root
-        .type_params
-        .iter()
-        .cloned()
-        .zip(root_type_args.iter().cloned())
-        .collect();
+    let bindings = bind_exact(&root.type_params, root_type_args.iter().cloned())?;
     walk_local(
         module_name,
         root,
@@ -80,12 +75,7 @@ fn walk_local(
                 && parent_identity == format!("{module_name}.{}", candidate.name))
     });
     if let Some(parent) = local_parent {
-        let parent_bindings = parent
-            .type_params
-            .iter()
-            .cloned()
-            .zip(parent_args)
-            .collect();
+        let parent_bindings = bind_exact(&parent.type_params, parent_args)?;
         return walk_local(
             module_name,
             parent,
@@ -101,7 +91,7 @@ fn walk_local(
         .class_type_params
         .get(source_module)
         .and_then(|classes| classes.get(source_name))?;
-    let parent_bindings = type_params.iter().cloned().zip(parent_args).collect();
+    let parent_bindings = bind_exact(type_params, parent_args)?;
     if parent_identity == owner_identity {
         Some(HandlerAncestry::Owner(parent_bindings))
     } else {
@@ -110,5 +100,66 @@ fn walk_local(
             name: source_name.to_string(),
             bindings: parent_bindings,
         })
+    }
+}
+
+fn bind_exact(
+    type_params: &[String],
+    type_args: impl IntoIterator<Item = Type>,
+) -> Option<HashMap<String, Type>> {
+    let type_args = type_args.into_iter().collect::<Vec<_>>();
+    (type_params.len() == type_args.len())
+        .then(|| type_params.iter().cloned().zip(type_args).collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{resolve, HandlerAncestry};
+    use sifr_lowering::{lower_module, ExternalDefs};
+    use sifr_syntax::parse_module_suite;
+    use sifr_type_system::Type;
+
+    fn generic_chain() -> sifr_lowering::LoweringResult {
+        let parsed = parse_module_suite(
+            "class Base[T]:\n    value: T\n\nclass Child[U](Base[U]):\n    pass\n",
+            None,
+        )
+        .expect("fixture parses");
+        lower_module(&parsed).expect("fixture lowers")
+    }
+
+    #[test]
+    fn unspecialized_generic_ancestor_keeps_its_symbolic_argument() {
+        let lowered = generic_chain();
+        let child = &lowered.module.classes[1];
+        let ancestry = resolve(
+            "fixture",
+            child,
+            &[Type::TypeVar("U".to_string())],
+            "fixture.Base",
+            &lowered,
+            &ExternalDefs::default(),
+        );
+
+        let Some(HandlerAncestry::Owner(bindings)) = ancestry else {
+            panic!("local base must resolve")
+        };
+        assert_eq!(bindings.get("T"), Some(&Type::TypeVar("U".to_string())));
+    }
+
+    #[test]
+    fn unspecialized_generic_ancestor_rejects_missing_root_arguments() {
+        let lowered = generic_chain();
+        let child = &lowered.module.classes[1];
+
+        assert!(resolve(
+            "fixture",
+            child,
+            &[],
+            "fixture.Base",
+            &lowered,
+            &ExternalDefs::default(),
+        )
+        .is_none());
     }
 }

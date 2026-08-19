@@ -893,6 +893,10 @@ normalizes diagnostic ranges while retaining checked interop declarations. Post-
 separately binds the invocation to the validated output and is an input to static-program identity,
 avoiding a cycle with later handler and attached-API outputs.
 
+Generic alias instances specialize their arguments and bodies before structural substitution.
+Generic ancestor walks require exact parameter and argument arity. Unspecialized exports pass
+their declaration parameters as explicit symbolic arguments instead of leaving bindings absent.
+
 Structural shape derivation specializes finalized adapter field-plan types with the concrete
 owner arguments before package specialization. Local and imported adapted generic classes use the
 same substitution rule, so nested concrete uses do not expose unbound declaration parameters to a
