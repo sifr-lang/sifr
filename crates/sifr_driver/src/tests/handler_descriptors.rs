@@ -203,6 +203,29 @@ class Invalid(HandlerContract):
 }
 
 #[test]
+fn staticmethod_descriptor_must_be_the_inner_adjacent_decorator() {
+    let errors = compile_errors(
+        r#"
+from fixture.handlers import HandlerContract, handler
+
+class Invalid(HandlerContract):
+    value: str
+
+    @handler("wrong-order")
+    @staticmethod
+    def parse(own value: str) -> str:
+        return value
+"#,
+    );
+    assert!(errors.iter().any(|error| {
+        error.code == sifr_diagnostics::DiagnosticCode::META_MALFORMED_DECLARATION.code()
+            && error
+                .message
+                .contains("directly above the method with @staticmethod as the outer decorator")
+    }));
+}
+
+#[test]
 fn owned_handler_requires_exact_self_output_at_the_descriptor() {
     let errors = compile_errors(
         r#"
@@ -473,4 +496,30 @@ class Box[T]:
         &[sifr_type_system::Type::TypeVar("T".to_string())]
     );
     assert_eq!(method.receiver, Some(ReceiverConvention::Owned));
+}
+
+#[test]
+fn self_annotation_is_rejected_in_static_and_class_methods() {
+    let errors = compile_errors(
+        r#"
+class Invalid:
+    @staticmethod
+    def static_value(value: Self) -> Self:
+        return value
+
+    @classmethod
+    def class_value(cls, value: Self) -> Self:
+        return value
+"#,
+    );
+    let invalid_self_count = errors
+        .iter()
+        .filter(|error| {
+            error.code == sifr_diagnostics::DiagnosticCode::TYPE_INVALID_ANNOTATION.code()
+                && error
+                    .message
+                    .contains("Self is valid only in an ordinary class method annotation")
+        })
+        .count();
+    assert!(invalid_self_count >= 4, "errors: {errors:#?}");
 }

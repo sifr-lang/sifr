@@ -16,8 +16,7 @@ use super::{is_derivably_hashable_type, is_hashable_type};
 use crate::lower::ownership_diagnostics;
 use crate::lower::python_interop::{
     classify_python_interop_stub_body, collect_python_method_declarations,
-    has_python_interop_decorator_syntax, receiver_is_owned, validate_context_class_methods,
-    validate_python_interop_signature,
+    has_python_interop_decorator_syntax, receiver_is_owned, validate_python_interop_signature,
 };
 use crate::lower::rust_interop::{
     classify_rust_interop_stub_body, collect_rust_interop_declarations,
@@ -103,6 +102,7 @@ pub(in crate::lower) fn lower_class(
         let variants = collect_enum_variants(class_def);
         let mut hir_methods = Vec::new();
         ctx.current_class = Some(class_name.clone());
+        ctx.self_annotation_available = true;
         for stmt in &class_def.body {
             if let Stmt::FunctionDef(func) = stmt {
                 let method_name = func.name.to_string();
@@ -203,6 +203,7 @@ pub(in crate::lower) fn lower_class(
                 });
             }
         }
+        ctx.self_annotation_available = false;
         ctx.current_class = None;
         return Some(HirClass {
             name: class_name.clone(),
@@ -247,6 +248,7 @@ pub(in crate::lower) fn lower_class(
                     continue;
                 } // Skip __init__ for newtypes
                 ctx.current_class = Some(class_name.clone());
+                ctx.self_annotation_available = true;
                 ctx.scope.push();
                 let receiver = declared_receiver_convention(&func.parameters);
                 let receiver_id =
@@ -329,6 +331,7 @@ pub(in crate::lower) fn lower_class(
                 ctx.current_method = previous_method;
                 ctx.current_owner = previous_owner;
                 ctx.scope.pop();
+                ctx.self_annotation_available = false;
                 ctx.current_class = None;
                 hir_methods.push(HirFunction {
                     name: method_name,
@@ -437,6 +440,7 @@ pub(in crate::lower) fn lower_class(
 
             // Set current class context for `self` resolution
             ctx.current_class = Some(class_name.clone());
+            ctx.self_annotation_available = method_kind == MethodKind::Regular;
             ctx.current_parent_class.clone_from(&parent_class_name);
             ctx.current_parent_type.clone_from(&parent_type);
 
@@ -657,6 +661,7 @@ pub(in crate::lower) fn lower_class(
             ctx.current_owner = previous_owner;
 
             ctx.scope.pop();
+            ctx.self_annotation_available = false;
             ctx.current_class = None;
             ctx.current_parent_class = None;
             ctx.current_parent_type = None;
@@ -719,102 +724,7 @@ pub(in crate::lower) fn lower_class(
     );
     opaque::validate_rust_opaque_close_method(class_def, &hir_methods, &rust_interop, ctx);
 
-    let semantic_close_methods = hir_methods
-        .iter()
-        .filter(|method| {
-            method.receiver == Some(ReceiverConvention::Owned)
-                && method.python_interop.first().is_some_and(|declaration| {
-                    declaration.consumes_receiver
-                        && declaration.kind == sifr_ir::PythonInteropDecoratorKind::Function
-                        && declaration
-                            .target
-                            .as_ref()
-                            .is_some_and(|target| target.segments.as_slice() == ["Self", "close"])
-                        && method.params.is_empty()
-                        && matches!(
-                            method.return_type.resolve_alias(),
-                            Type::Result(ok, _) if ok.resolve_alias() == &Type::None
-                        )
-                })
-        })
-        .count();
-    let cleanup = ctx
-        .python_opaque_classes
-        .get(&class_name)
-        .and_then(|declaration| declaration.cleanup);
-    validate_context_class_methods(&class_name, &hir_methods, cleanup, ctx, class_def.range);
-    if cleanup == Some(sifr_ir::PythonCleanupPolicy::Close) && semantic_close_methods != 1 {
-        ctx.error_with_code_at(
-            sifr_diagnostics::DiagnosticCode::PYCALL_INVALID_SHAPE,
-            "`cleanup=close` requires exactly one `@python(Self.close)` method declared as `def close(own self) -> Result[None, PythonError]`".to_string(),
-            class_def.range,
-        );
-    }
-    let semantic_async_close_methods = hir_methods
-        .iter()
-        .filter(|method| {
-            method.receiver == Some(ReceiverConvention::Owned)
-                && method.python_interop.first().is_some_and(|declaration| {
-                    declaration.consumes_receiver
-                        && declaration.kind == sifr_ir::PythonInteropDecoratorKind::Coroutine
-                        && declaration
-                            .target
-                            .as_ref()
-                            .is_some_and(|target| target.segments.as_slice() == ["Self", "aclose"])
-                        && method.params.is_empty()
-                        && matches!(
-                            method.return_type.resolve_alias(),
-                            Type::Result(ok, _) if ok.resolve_alias() == &Type::None
-                        )
-                })
-        })
-        .count();
-    if cleanup == Some(sifr_ir::PythonCleanupPolicy::AsyncClose)
-        && semantic_async_close_methods != 1
-    {
-        ctx.error_with_code_at(
-            sifr_diagnostics::DiagnosticCode::PYCALL_INVALID_SHAPE,
-            "`cleanup=async_close` requires exactly one `@python.coroutine(Self.aclose)` method declared as `async def aclose(own self) -> Result[None, PythonError]`".to_string(),
-            class_def.range,
-        );
-    }
-    let has_unmatched_consuming_method =
-        hir_methods.iter().any(|method| {
-            method.python_interop.first().is_some_and(|declaration| {
-                if !declaration.consumes_receiver {
-                    return false;
-                }
-                match cleanup {
-                    Some(sifr_ir::PythonCleanupPolicy::Close) => {
-                        declaration.kind != sifr_ir::PythonInteropDecoratorKind::Function
-                            || declaration.target.as_ref().is_none_or(|target| {
-                                target.segments.as_slice() != ["Self", "close"]
-                            })
-                    }
-                    Some(sifr_ir::PythonCleanupPolicy::AsyncClose) => {
-                        declaration.kind != sifr_ir::PythonInteropDecoratorKind::Coroutine
-                            || declaration.target.as_ref().is_none_or(|target| {
-                                target.segments.as_slice() != ["Self", "aclose"]
-                            })
-                    }
-                    Some(sifr_ir::PythonCleanupPolicy::Context) => {
-                        declaration.kind != sifr_ir::PythonInteropDecoratorKind::ContextExit
-                    }
-                    Some(sifr_ir::PythonCleanupPolicy::AsyncContext) => {
-                        declaration.kind != sifr_ir::PythonInteropDecoratorKind::ContextAsyncExit
-                    }
-                    _ => true,
-                }
-            })
-        });
-    if has_unmatched_consuming_method {
-        ctx.error_with_code_at(
-            sifr_diagnostics::DiagnosticCode::PYCALL_INVALID_SHAPE,
-            "a consuming Python method is reserved for the declared semantic cleanup operation"
-                .to_string(),
-            class_def.range,
-        );
-    }
+    super::python_cleanup_validation::validate(class_def, &hir_methods, ctx);
 
     let is_error = ctx.error_types.contains(&class_name);
     if is_error

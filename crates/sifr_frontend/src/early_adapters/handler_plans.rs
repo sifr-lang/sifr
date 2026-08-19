@@ -18,7 +18,7 @@ pub(super) fn validate_handlers(
     selection: &ClassAdapterSelection,
     values: Vec<ConstValue>,
 ) -> Result<Vec<AdapterHandlerPlan>, String> {
-    let mut eligible = inherited_handler_plans(module_name, result, external_defs, selection);
+    let mut eligible = inherited_handler_plans(module_name, result, external_defs, selection)?;
     let inherited_count = eligible.len();
     eligible.extend(
         result
@@ -115,9 +115,9 @@ pub(super) fn inherited_handler_plans(
     result: &LoweringResult,
     external_defs: &ExternalDefs,
     selection: &ClassAdapterSelection,
-) -> Vec<AdapterHandlerPlan> {
+) -> Result<Vec<AdapterHandlerPlan>, &'static str> {
     if selection.data_parent.is_none() {
-        return Vec::new();
+        return Ok(Vec::new());
     }
     let Some(parent_identity) = result
         .module
@@ -134,9 +134,43 @@ pub(super) fn inherited_handler_plans(
             _ => None,
         })
     else {
-        return Vec::new();
+        return Err("adapted data parent shape is unavailable");
     };
-    inheritance::parent_selection(module_name, result, external_defs, &parent_identity)
-        .map(|parent| parent.handler_plans.clone())
-        .unwrap_or_default()
+    Ok(
+        inheritance::parent_selection(module_name, result, external_defs, &parent_identity)
+            .map(|parent| parent.handler_plans.clone())
+            .unwrap_or_default(),
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::inherited_handler_plans;
+    use sifr_lowering::{lower_module, ClassAdapterSelection, ExternalDefs};
+    use sifr_syntax::parse_module_suite;
+
+    #[test]
+    fn inherited_handlers_require_the_declared_data_parent_shape_locally() {
+        let parsed = parse_module_suite("class Child:\n    pass\n", None).expect("fixture parses");
+        let result = lower_module(&parsed).expect("fixture lowers");
+        let selection = ClassAdapterSelection {
+            owner: "Child".to_string(),
+            provider_module: "fixture.provider".to_string(),
+            provider_function: "adapt".to_string(),
+            descriptor_type: sifr_type_system::Type::None,
+            marker_identities: Vec::new(),
+            data_parent: Some("Parent".to_string()),
+            field_plans: Vec::new(),
+            handler_plans: Vec::new(),
+            attached_api_set: None,
+            adapter_invocation_identity: [0; 32],
+            post_adapter_identity: [0; 32],
+            range: ruff_text_size::TextRange::default(),
+        };
+
+        assert_eq!(
+            inherited_handler_plans("main", &result, &ExternalDefs::default(), &selection),
+            Err("adapted data parent shape is unavailable")
+        );
+    }
 }

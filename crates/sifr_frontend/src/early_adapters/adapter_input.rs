@@ -59,7 +59,7 @@ fn inherited_values(
     external_defs: &ExternalDefs,
     selection: &ClassAdapterSelection,
 ) -> Result<Vec<ConstValue>, &'static str> {
-    inherited_handler_plans(module_name, result, external_defs, selection)
+    inherited_handler_plans(module_name, result, external_defs, selection)?
         .into_iter()
         .map(|handler| {
             Ok(ConstValue::Record(BTreeMap::from([
