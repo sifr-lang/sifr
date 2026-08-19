@@ -620,7 +620,7 @@ fn finish_method_slot(
         }
     }
     let receiver_input = slot.receiver.is_some();
-    let maximum_params = if receiver_input { 1 } else { 2 };
+    let maximum_params = 2;
     let minimum_params = usize::from(!receiver_input);
     if slot.params.len() < minimum_params || slot.params.len() > maximum_params {
         return Err(MethodSlotError::new(
@@ -632,8 +632,25 @@ fn finish_method_slot(
         ));
     }
     let context = if receiver_input {
-        slot.input_type = slot.owner_type.clone();
-        slot.params.first()
+        match slot.params.as_slice() {
+            [] => {
+                slot.input_type = slot.owner_type.clone();
+                None
+            }
+            [parameter] if parameter.convention.is_borrowed() => {
+                slot.input_type = slot.owner_type.clone();
+                Some(parameter)
+            }
+            [value] => {
+                slot.input_type = Type::Tuple(vec![slot.owner_type.clone(), value.ty.clone()]);
+                None
+            }
+            [value, context] => {
+                slot.input_type = Type::Tuple(vec![slot.owner_type.clone(), value.ty.clone()]);
+                Some(context)
+            }
+            _ => unreachable!("receiver slot parameter count was checked"),
+        }
     } else {
         let input = slot.params.first().ok_or_else(|| {
             MethodSlotError::new(

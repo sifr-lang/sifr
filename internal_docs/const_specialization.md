@@ -163,6 +163,9 @@ handler signatures during specialization. They do not parse a displayed type nam
 
 The compiler accepts synchronous static, class, shared-instance, mutable-instance, and owned
 receiver handlers. A checked handler can return an infallible structural value or a typed `Result`.
+An instance handler can also declare one owned structural value before its optional borrowed
+context. The slot input is then the structural tuple `(receiver, value)`, and generated dispatch
+reconstructs both values before the checked method call.
 An owned receiver must return the exact current `Self` specialization, directly or as the successful
 `Result` value. Duplicate, unqualified, missing, constructor, asynchronous, invalid-context, and
 nonstructural contracts fail with `SIFR-RUST-SLOT-####` at the method descriptor when one exists.
