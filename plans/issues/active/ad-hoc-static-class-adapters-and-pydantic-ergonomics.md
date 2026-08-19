@@ -2071,6 +2071,32 @@ types against colliding consumer-local names. No third review ran.
 Next action: remove declaration-order and binding-name instability from adapter
 and specialization identity.
 
+Compiler hardening item 3 state: complete
+PR: [`sifr-lang/sifr#3336`](https://github.com/sifr-lang/sifr/pull/3336)
+Base SHA: `04f85d7f59ff267578164c1be56e81bdc6c12d16`
+Candidate SHA: `7805c1a246a32978e4cd22037c930bf5a6133500`
+Merge SHA: `9b2952765b0aab23a98da5c684fd10c7ded8fd90`
+Changed paths: adapter provider identity normalization, lowering exports for
+semantic interop declarations, direct identity tests, project-level adapter
+regressions, and the static-program architecture contract.
+Validation: all 105 frontend tests and all 15 adapter-default driver tests
+passed. Workspace Clippy passed with warnings denied. Rust formatting, HIR
+maintainability, the 900-line guard, and diff hygiene passed. The create-PR and
+merge gates each ran once on the exact candidate. Both gates passed generated
+demo freshness and every preceding guard. Both gates then stopped at the same
+two separately owned Rust-interop matrix inputs. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3336#issuecomment-5344928941),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3336#issuecomment-5344956193)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3336#issuecomment-5344928638)).
+Deferred follow-up: M12 can document that provider canonicalization repeats
+the const-function sort as a defensive invariant. It can also narrow the
+identity documentation from unrelated declarations to unrelated non-const
+declarations. These suggestions do not identify a mechanism defect.
+Next action: make finalized generic field substitution scope-aware so an inner
+type parameter cannot capture an outer type argument.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2158,11 +2184,11 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-and 2 merged in Sifr PRs #3332 and #3334. The seven M11 compiler
+through 3 merged in Sifr PRs #3332, #3334, and #3336. The seven M11 compiler
 prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327,
 and #3329. The M11 package surface merged in Pydantic-Sifr PR #47. M12 is in
 progress. The current compiler merge is
-`0e16cc73b2d1ba20a59db7f168193eb01a618ab5`, and the current package merge is
+`9b2952765b0aab23a98da5c684fd10c7ded8fd90`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
@@ -2171,6 +2197,6 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: remove declaration-order and binding-name instability from
-adapter and specialization identity, then continue compiler-owned hardening
-before package certification and final whole-phase review.
+Next action: make finalized generic field substitution scope-aware. Then
+continue compiler-owned hardening before package certification and the final
+whole-phase review.
