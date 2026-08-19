@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import copy
 import importlib.util
 import io
 import json
@@ -11,8 +12,14 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from typing import Any
 
+from verification.json_schema_202012 import lint_schema
+
 from .areas import discover_areas
 from .cargo_setup import cargo_setup_command
+from .errors import SchemaError
+from .profile_area_steps import run_selected_area
+from .profile_results import AreaResultError, validate_area_result
+from .profile_runner import timed_step
 from .profiles import (
     ProfileError,
     canonical_step_names,
@@ -24,14 +31,11 @@ from .profiles import (
     validate_crate_test_membership,
     validate_selected_area_suites,
 )
-from .profile_runner import timed_step
-from .profile_area_steps import run_selected_area
-from .profile_results import AreaResultError, validate_area_result
-from .reports import parse_log
 from .release_evidence_selftest import (
     release_report_precondition_self_test,
     release_report_production_self_test,
 )
+from .reports import parse_log
 from .results import build_result
 from .schemas import (
     load_schema,
@@ -40,7 +44,6 @@ from .schemas import (
     validate_schema_requirement,
 )
 from .step_budgets import run_self_test as step_budget_self_test
-from verification.json_schema_202012 import lint_schema
 
 
 def run_all() -> list[str]:
@@ -118,6 +121,15 @@ def _schema_self_test() -> None:
 
 def _profile_schema_self_test() -> None:
     profiles = load_all_profiles()
+    profile_schema = load_schema("profile.schema.json")
+
+    def require_schema_rejection(payload: dict[str, Any], description: str) -> None:
+        try:
+            validate_data(payload, profile_schema, source=f"{description} self-test")
+        except SchemaError:
+            return
+        raise AssertionError(f"{description} was accepted")
+
     expected = {"create-pr", "merge", "nightly", "python-interop-live", "release"}
     if set(profiles) != expected:
         raise AssertionError(f"unexpected profiles: {sorted(profiles)}")
@@ -128,12 +140,21 @@ def _profile_schema_self_test() -> None:
             raise AssertionError(f"{profile_name} contains removed profile fields")
     live = profiles["python-interop-live"]
     invalid_v1 = {**live, "schema_version": 1}
-    try:
-        validate_data(invalid_v1, load_schema("profile.schema.json"), source="profile-v1 self-test")
-    except Exception:
-        pass
-    else:
-        raise AssertionError("profile schema version 1 was accepted")
+    require_schema_rejection(invalid_v1, "profile schema version 1")
+
+    invalid_mutations = []
+    empty_suites = copy.deepcopy(live)
+    empty_suites["selected_areas"][0]["suites"] = []
+    invalid_mutations.append(("empty selected-area suites", empty_suites))
+    duplicate_suites = copy.deepcopy(live)
+    duplicate_suites["selected_areas"][0]["suites"].append("live-policy")
+    invalid_mutations.append(("duplicate selected-area suite", duplicate_suites))
+    for field in ("toolchain_steps", "guardrail_steps"):
+        duplicate_step = copy.deepcopy(profiles["create-pr"])
+        duplicate_step[field].append(duplicate_step[field][0])
+        invalid_mutations.append((f"duplicate {field}", duplicate_step))
+    for description, payload in invalid_mutations:
+        require_schema_rejection(payload, description)
     if live["selected_areas"] != [
         {
             "area": "python_interop",
@@ -513,6 +534,14 @@ def _rust_interop_profile_self_test() -> None:
         result_path.write_text(json.dumps(valid_payload), encoding="utf-8")
         validate_area_result(result_path, area="rust_interop", expected_suites=sorted(required_suites))
 
+        nonblocking_payload = copy.deepcopy(valid_payload)
+        nonblocking_payload["suites"][0]["blocking"] = False
+        nonblocking_payload["suites"][0]["total_failures"] = 1
+        nonblocking_payload["summary"]["total_failures"] = 1
+        nonblocking_payload["summary"]["non_blocking_failures"] = 1
+        result_path.write_text(json.dumps(nonblocking_payload), encoding="utf-8")
+        validate_area_result(result_path, area="rust_interop", expected_suites=sorted(required_suites))
+
         invalid_payloads = [
             {**valid_payload, "schema_version": 2},
             {**valid_payload, "area": "python_interop"},
@@ -529,7 +558,7 @@ def _rust_interop_profile_self_test() -> None:
             {
                 **valid_payload,
                 "suites": [
-                    {**valid_payload["suites"][0], "blocking": False},
+                    {**valid_payload["suites"][0], "blocking": "false"},
                     *valid_payload["suites"][1:],
                 ],
             },
@@ -561,6 +590,10 @@ def _rust_interop_profile_self_test() -> None:
             {
                 **valid_payload,
                 "summary": {"blocking_failures": 0, "total_variants": True},
+            },
+            {
+                **valid_payload,
+                "suites": [*valid_payload["suites"], valid_payload["suites"][0]],
             },
         ]
         for index, payload in enumerate(invalid_payloads):

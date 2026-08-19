@@ -17,6 +17,8 @@ SUPPORTED_SCHEMA_KEYS = {
     "required",
     "properties",
     "items",
+    "minItems",
+    "uniqueItems",
     "enum",
     "additionalProperties",
     "format",
@@ -74,6 +76,12 @@ def _validate_schema_node(node: Any, path: Path, location: str) -> None:
                 _validate_schema_node(child, path, f"{location}.properties.{prop}")
         elif key == "items":
             _validate_schema_node(value, path, f"{location}.items")
+        elif key == "minItems":
+            if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                raise SchemaError(f"{path}:{location}: minItems must be a nonnegative integer")
+        elif key == "uniqueItems":
+            if not isinstance(value, bool):
+                raise SchemaError(f"{path}:{location}: uniqueItems must be boolean")
         elif key == "enum":
             if not isinstance(value, list) or not value:
                 raise SchemaError(f"{path}:{location}: enum must be a non-empty array")
@@ -115,6 +123,15 @@ def _validate_data_node(data: Any, schema: dict[str, Any], source: str, location
     elif expected_type == "array":
         if not isinstance(data, list):
             raise SchemaError(f"{source}:{location}: expected array")
+        min_items = schema.get("minItems")
+        if isinstance(min_items, int) and len(data) < min_items:
+            raise SchemaError(f"{source}:{location}: expected at least {min_items} item(s)")
+        if schema.get("uniqueItems") is True:
+            canonical_items = [
+                json.dumps(item, sort_keys=True, separators=(",", ":")) for item in data
+            ]
+            if len(set(canonical_items)) != len(canonical_items):
+                raise SchemaError(f"{source}:{location}: expected unique items")
         item_schema = schema.get("items")
         if isinstance(item_schema, dict):
             for index, item in enumerate(data):

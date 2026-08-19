@@ -1689,7 +1689,7 @@ resumes from the merged Item 13 result.
   budget, 674/674 E2E fixtures, the complete crate surface, generated-code
   release checks, and 290 hardening variants. Canonical report
   `release-c9d611fb7c7c-fa3d95c04f8a` has SHA-256
-  `e5200229dfdacb2503190d4c3784cdfb3085088f7ad687e49659f54f3a11de98`;
+  `9414915dcc474b9be2b27ab484bd8e76f75faf36b25a8c1461d72c8bf62cdc4d`;
   its exact canonical release-run Rust result has SHA-256
   `95176b5937b4ed0e1c9843ef6c3896969f6336431bc8a0d08350cc2db9b9555e`.
   The 7,976.92-second wall time produced the same two nonblocking advisories:
@@ -1703,7 +1703,7 @@ resumes from the merged Item 13 result.
   and
   `plans/reviews/archive/phase-40-candidate-release-notes-review-pass-2-satisfied.md`.
 - The canonical candidate plan has SHA-256
-  `3e4c7b7c50691eb360b031cebec734ae89bdef253f1a138e706038962b7ded27`.
+  `3ae2d0af46e3a0352a13f70f8287b20adf433e099c61f67985c7bdf0c6274c38`.
   Focused qualification plus evidence custody passed 2/2; the unfiltered
   distribution area passed 125/125; canonical plan, release-report, and
   qualification-index validation passed; and the source checkout remained

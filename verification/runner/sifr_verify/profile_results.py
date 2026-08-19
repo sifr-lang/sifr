@@ -35,21 +35,27 @@ def validate_area_result(
     raw_suites = payload.get("suites")
     if not isinstance(raw_suites, list) or not raw_suites:
         raise AreaResultError(f"{area} result JSON has no suite results: {result_path}")
+    suite_names: list[str] = []
     for suite in raw_suites:
+        name = suite.get("name") if isinstance(suite, dict) else None
+        blocking = suite.get("blocking") if isinstance(suite, dict) else None
+        failures = suite.get("total_failures") if isinstance(suite, dict) else None
         if (
             not isinstance(suite, dict)
-            or suite.get("blocking") is not True
+            or not isinstance(name, str)
+            or not name
+            or not isinstance(blocking, bool)
             or not _is_positive_int(suite.get("total_variants"))
-            or not _is_zero_int(suite.get("total_failures"))
+            or not _is_nonnegative_int(failures)
+            or (blocking and failures != 0)
         ):
             raise AreaResultError(
                 f"{area} result JSON contains invalid suite evidence: {result_path}"
             )
-    actual_suites = {
-        str(suite.get("name"))
-        for suite in raw_suites
-        if isinstance(suite, dict) and isinstance(suite.get("name"), str)
-    }
+        suite_names.append(name)
+    actual_suites = set(suite_names)
+    if len(actual_suites) != len(suite_names):
+        raise AreaResultError(f"{area} result JSON contains duplicate suite evidence: {result_path}")
     if actual_suites != set(expected_suites):
         raise AreaResultError(
             f"{area} result JSON suite mismatch: "
@@ -73,3 +79,7 @@ def _is_positive_int(value: object) -> bool:
 
 def _is_zero_int(value: object) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and value == 0
+
+
+def _is_nonnegative_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0

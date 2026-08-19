@@ -15,6 +15,7 @@ from .evidence_custody import (
     require_comparison_base,
     validate_candidate_directory,
     validate_changed_path_set,
+    validate_changed_path_sets,
 )
 from .planner import stage_stable_support_claims, validate_staged_support_claims
 from .qualification_fixture import stable_claims
@@ -221,6 +222,13 @@ def _test_changed_paths() -> None:
     candidate = "plans/releases/candidates/0.1.0/stable-release-plan.json"
     validate_changed_path_set({candidate})
     validate_changed_path_set({candidate, "plans/releases/README.md"})
+    validate_changed_path_set({"verification/runner/sifr_verify/profiles.py"})
+    validate_changed_path_sets(
+        [
+            {"verification/runner/sifr_verify/profiles.py"},
+            {candidate},
+        ]
+    )
     for paths in (
         {candidate, "crates/sifr/src/main.rs"},
         {candidate, "plans/releases/candidates/0.1.1/stable-release-plan.json"},

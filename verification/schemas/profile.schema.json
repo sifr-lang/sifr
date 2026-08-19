@@ -211,6 +211,8 @@
     },
     "selected_areas": {
       "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
       "items": {
         "type": "object",
         "required": ["area", "suites", "resource_classes"],
@@ -221,6 +223,8 @@
           },
           "suites": {
             "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
             "items": {
               "type": "string"
             }
@@ -245,6 +249,7 @@
     },
     "toolchain_steps": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "type": "string",
         "enum": [
@@ -262,6 +267,7 @@
     },
     "guardrail_steps": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "type": "string",
         "enum": [

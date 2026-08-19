@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+PROFILE_NAMES = ("create-pr", "merge", "nightly", "release")
 
 NEW_IMPORT_CODES = {
     "SIFR-IMPORT-0005": "IMPORT_AMBIGUOUS_SOURCE_MODULE",
@@ -96,10 +97,22 @@ def require(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
-def check_profile_runner_wiring(root: Path) -> None:
-    text = read_text(root, "verification/runner/sifr_verify/profile_runner.py")
-    require('"developer_tooling"' in text, "profile_runner.py missing developer_tooling area route")
-    require('"diagnostic-rules"' in text, "profile_runner.py missing diagnostic rules suite route")
+def check_profile_selection(root: Path) -> None:
+    for profile_name in PROFILE_NAMES:
+        profile = json.loads(read_text(root, f"verification/profiles/{profile_name}.json"))
+        selections = [
+            selection
+            for selection in profile.get("selected_areas", [])
+            if isinstance(selection, dict) and selection.get("area") == "developer_tooling"
+        ]
+        require(
+            len(selections) == 1,
+            f"{profile_name} profile must select developer_tooling exactly once",
+        )
+        require(
+            "diagnostic-rules" in selections[0].get("suites", []),
+            f"{profile_name} profile missing diagnostic rules suite route",
+        )
 
 
 def check_required_fixtures(root: Path) -> None:
@@ -443,7 +456,7 @@ def check_package_help_rules(root: Path) -> None:
 
 
 def run_static_checks(root: Path) -> None:
-    check_profile_runner_wiring(root)
+    check_profile_selection(root)
     check_required_fixtures(root)
     check_registry_and_docs(root)
 
@@ -455,10 +468,17 @@ def run_checks(root: Path) -> None:
 
 
 def seed_minimal_repo(root: Path) -> None:
-    write(
-        root / "verification/runner/sifr_verify/profile_runner.py",
-        'run_command(uv_area_command("--area", "developer_tooling", "--suite", "diagnostic-rules"))\n',
-    )
+    for profile_name in PROFILE_NAMES:
+        write(
+            root / f"verification/profiles/{profile_name}.json",
+            json.dumps(
+                {
+                    "selected_areas": [
+                        {"area": "developer_tooling", "suites": ["diagnostic-rules"]}
+                    ]
+                }
+            ),
+        )
     write(root / "crates/sifr_diagnostics/src/codes/registry.rs", registry_seed())
     write(
         root
@@ -543,6 +563,20 @@ def run_self_tests() -> None:
         seed_minimal_repo(root)
         run_static_checks(root)
 
+    expect_self_test_failure(
+        "missing profile suite",
+        "missing diagnostic rules suite route",
+        lambda root: write(
+            root / "verification/profiles/release.json",
+            json.dumps(
+                {
+                    "selected_areas": [
+                        {"area": "developer_tooling", "suites": []}
+                    ]
+                }
+            ),
+        ),
+    )
     expect_self_test_failure(
         "missing parser fixture",
         "required parser fixture missing",
