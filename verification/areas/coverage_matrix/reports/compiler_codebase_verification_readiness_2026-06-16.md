@@ -75,8 +75,8 @@ python3 scripts/check_file_size_guardrails.py
 git diff --check
 cargo test -p sifr_lsp
 python3 -m py_compile verification/areas/developer_tooling/lsp_protocol_stress.py
-uv run --project verification --locked python -m sifr_verify areas run --area developer_tooling --suite editor-release --suite lsp-stress --hardening-summary
-uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite full --hardening-summary
+uv run --project verification --locked python -m sifr_verify areas run --area developer_tooling --suite editor-release --suite lsp-stress
+uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite full
 cargo test -p sifr_frontend query_diagnostics_equivalence_tests
 ```
 

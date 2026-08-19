@@ -231,7 +231,8 @@ def minimal_profile() -> dict[str, Any]:
         "network_policy": {"mode": "offline", "live_network_allowed": False},
         "cargo_policy": {"locked": True, "offline": True},
         "selected_areas": [{"area": "coverage_matrix", "suites": ["readiness"]}],
-        "profile_plan": {"emit_command": "scripts/run_all_tests.sh --profile create-pr --emit-plan"},
+        "toolchain_steps": [],
+        "guardrail_steps": [],
     }
 
 
@@ -242,9 +243,11 @@ def ci_plan_omits_local_merge_suite() -> list[str]:
         local = root / "local.json"
         ci = root / "ci.json"
         base_plan = {
+            "schema_version": 2,
             "profile": "merge",
             "selected_areas": [{"area": "coverage_matrix", "suites": ["readiness"]}],
-            "legacy_facade": {},
+            "toolchain_steps": [],
+            "guardrail_steps": [],
             "crate_test_membership": {},
             "e2e": {},
             "network_policy": {"mode": "offline"},

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .paths import REPO_ROOT
-from .profiles import legacy_facade, load_profile
+from .profiles import load_profile
 
 ARTIFACT_CACHE_ROOT = Path(tempfile.gettempdir()) / "sifr_generated_artifact_cache"
 BSD_TIME_COMBINED_RE = re.compile(r"^\s*([0-9.]+)\s+real\s+([0-9.]+)\s+user\s+([0-9.]+)\s+sys$")
@@ -19,8 +19,6 @@ TIME_USER_RE = re.compile(r"^\s*([0-9.]+)\s+user$")
 TIME_SYS_RE = re.compile(r"^\s*([0-9.]+)\s+sys$")
 TIME_MAX_RSS_RE = re.compile(r"^\s*(\d+)\s+maximum resident set size$")
 TIME_SWAPS_RE = re.compile(r"^\s*(\d+)\s+swaps$")
-VALIDATION_SUITE_RE = re.compile(r"^\s*-\s+([a-z0-9_-]+):\s+(\d+)\s+rows,\s+(\d+)ms$")
-VALIDATION_TOTAL_RE = re.compile(r"^\[validation-suite\]\s+total_rows=(\d+)\s+total_ms=(\d+)$")
 E2E_TIMING_RE = re.compile(
     r"^\[sifr-e2e\]\s+timing:\s+compile=(\d+)ms\s+plan=(\d+)ms\s+build=(\d+)ms\s+build-sum=(\d+)ms\s+run=(\d+)ms\s+cache_hits=(\d+)/(\d+)$"
 )
@@ -29,10 +27,6 @@ E2E_GROUP_RE = re.compile(
 )
 ARTIFACT_CACHE_RE = re.compile(
     r"^\[sifr-artifact-cache\]\s+namespace=([a-z0-9_-]+)\s+key=([0-9a-f]+)\s+cache_hit=(true|false)\s+workspace=([^\s]+)(?:\s+miss_reason=([a-z0-9_-]+))?$"
-)
-HARDENING_OK_RE = re.compile(
-    r"^verification ok:\s+variants=(\d+),\s+failures=(\d+),\s+blocking_failures=(\d+),"
-    r"\s+non_blocking_failures=(\d+)(?:,\s+skipped=(\d+))?$"
 )
 CACHE_DIR_RE = re.compile(r"^\s*cache_dir=(.+)$")
 LANE_STEP_RE = re.compile(r"^\[sifr-lane-step\]\s+name=([A-Za-z0-9_.-]+)\s+elapsed_ms=(\d+)\s+status=(pass|fail)$")
@@ -79,14 +73,16 @@ def load_json(path: Path) -> dict[str, Any]:
 
 def resolve_profile(profile: str) -> tuple[str, dict[str, Any]]:
     payload = load_profile(profile)
-    legacy = legacy_facade(payload)
     budgets = payload["budgets"]
+    resource_policy = payload["resource_policy"]
     lane = {
         "name": payload["name"],
         "description": payload.get("description", ""),
         "warm_wall_time_target_minutes": budgets["warm_wall_time_minutes"],
         "cold_wall_time_target_minutes": budgets["cold_wall_time_minutes"],
-        **legacy,
+        "thermal_policy": resource_policy["thermal_policy"],
+        "memory_policy": resource_policy["memory_policy"],
+        "e2e": payload["e2e"],
         "step_budgets": payload.get("step_budgets", {}),
     }
     return str(payload["name"]), lane
@@ -188,13 +184,11 @@ def directory_stats(path: Path) -> dict[str, int | str]:
 
 
 def parse_log(path: Path) -> dict[str, Any]:
-    suite_filters: list[dict[str, int | str]] = []
     lane_steps: list[dict[str, int | str]] = []
     lane_step_budgets: dict[str, dict[str, int | str]] = {}
     lane_step_cache: dict[str, dict[str, str]] = {}
     case_timings: list[dict[str, int | str]] = []
     artifact_cache: dict[str, dict[str, Any]] = {}
-    hardening_summary: dict[str, int] | None = None
     e2e_metrics: dict[str, int] | None = None
     cache_dir: str | None = None
 
@@ -236,24 +230,6 @@ def parse_log(path: Path) -> dict[str, Any]:
                 }
             )
             continue
-        if match := VALIDATION_SUITE_RE.match(line):
-            suite_filters.append(
-                {
-                    "suite": match.group(1),
-                    "rows": int(match.group(2)),
-                    "elapsed_ms": int(match.group(3)),
-                }
-            )
-            continue
-        if match := VALIDATION_TOTAL_RE.match(line):
-            suite_filters.append(
-                {
-                    "suite": "__total__",
-                    "rows": int(match.group(1)),
-                    "elapsed_ms": int(match.group(2)),
-                }
-            )
-            continue
         if match := E2E_TIMING_RE.match(line):
             e2e_metrics = {
                 "compile_ms": int(match.group(1)),
@@ -288,20 +264,6 @@ def parse_log(path: Path) -> dict[str, Any]:
                     assert isinstance(miss_reasons, dict)
                     miss_reasons[miss_reason] = int(miss_reasons.get(miss_reason, 0)) + 1
             continue
-        if match := HARDENING_OK_RE.match(line):
-            entry = {
-                "variants": int(match.group(1)),
-                "failures": int(match.group(2)),
-                "blocking_failures": int(match.group(3)),
-                "non_blocking_failures": int(match.group(4)),
-                "skipped": int(match.group(5) or 0),
-            }
-            if hardening_summary is None:
-                hardening_summary = entry
-            else:
-                for key, value in entry.items():
-                    hardening_summary[key] += value
-            continue
         if match := CACHE_DIR_RE.match(line):
             cache_dir = match.group(1).strip()
 
@@ -310,9 +272,7 @@ def parse_log(path: Path) -> dict[str, Any]:
         "lane_step_budgets": lane_step_budgets,
         "lane_step_cache": lane_step_cache,
         "case_timings": case_timings,
-        "suite_filters": suite_filters,
         "artifact_cache": artifact_cache,
-        "hardening_summary": hardening_summary,
         "e2e_metrics": e2e_metrics,
         "e2e_cache_dir": cache_dir,
     }
@@ -409,9 +369,7 @@ def summarize(args: argparse.Namespace) -> int:
         "lane_step_budgets": lane_step_budgets,
         "lane_step_cache": lane_step_cache,
         "case_timings": case_timings,
-        "suite_filters": parsed_log["suite_filters"],
         "artifact_cache": parsed_log["artifact_cache"],
-        "hardening_summary": parsed_log["hardening_summary"],
         "cache_footprint": {
             "e2e": e2e_cache_stats,
             "generated_artifacts": artifact_cache_stats,
@@ -519,14 +477,6 @@ def summarize(args: argparse.Namespace) -> int:
             "  cache_footprint="
             f"e2e={format_bytes(int(e2e_cache_stats['bytes']))}/{e2e_cache_stats['files']}files "
             f"generated={format_bytes(int(artifact_cache_stats['bytes']))}/{artifact_cache_stats['files']}files"
-        )
-    if isinstance(parsed_log["hardening_summary"], dict):
-        hardening = parsed_log["hardening_summary"]
-        print(
-            "  hardening="
-            f"variants={hardening['variants']} "
-            f"failures={hardening['failures']} "
-            f"blocking_failures={hardening['blocking_failures']}"
         )
     if advisories:
         print("  advisories=" + "; ".join(advisories))

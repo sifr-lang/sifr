@@ -1381,6 +1381,13 @@ that exact protected-main commit through
 `sifr-release-site-stable-distribution`; active ruleset `19791667` prohibits
 updating or deleting that exact tag with no bypass actors.
 
+Coordination record (2026-08-19): Phase 40 releases the shared verification
+profiles, runner, workflows, and release-governance paths from base
+`9caed42242d017ed4ebff84332df0c201f6b403b` to compatibility-removal Item 13.
+Item 13 owns their canonical profile-v2 migration and must preserve the Phase
+40 release suites, evidence custody, and publication contracts. Phase 40
+resumes from the merged Item 13 result.
+
 - Site review passes 1–5 found and closed immutable-action pinning, credential
   persistence, metadata-shadow output, deployed-byte custody, stale-CDN index
   checks, site-base attribution, terminal failure recording, protected-main

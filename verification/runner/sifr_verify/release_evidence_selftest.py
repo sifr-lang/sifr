@@ -122,10 +122,10 @@ def release_report_production_self_test() -> None:
             "".join(
                 f"[sifr-lane-step] name={name} elapsed_ms=1 status=pass\n"
                 for name in (
-                    "rust_interop_checks",
-                    "developer_tooling_checks",
-                    "documentation_checks",
-                    "distribution_validation",
+                    "area_rust_interop",
+                    "area_developer_tooling",
+                    "area_documentation",
+                    "area_distribution_release",
                 )
             ),
             encoding="utf-8",

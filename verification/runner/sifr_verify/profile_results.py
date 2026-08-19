@@ -1,4 +1,4 @@
-"""Strict area-result checks used by legacy-facade profile steps."""
+"""Strict result checks for canonical selected-area profile steps."""
 
 from __future__ import annotations
 

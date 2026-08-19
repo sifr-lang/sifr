@@ -82,7 +82,6 @@ fn case_with_plan(
             path: PathBuf::from(format!("{name}.sifr")),
             source: String::new(),
             source_hash: deterministic_hash(name),
-            expected_stdout: None,
             _expected_stderr: Vec::new(),
         },
         rust_source: rust_source.to_string(),
@@ -179,7 +178,6 @@ fn compiled_fixture_plan_matches_production_build_report() {
         path: path.to_path_buf(),
         source: source.clone(),
         source_hash: deterministic_hash(&source),
-        expected_stdout: extract_expect_stdout(&source),
         _expected_stderr: extract_expect_stderr(&source),
     };
     let compiled = compile_fixture(&fixture).expect("fixture should compile");

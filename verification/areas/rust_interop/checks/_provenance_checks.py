@@ -204,8 +204,11 @@ def _suite_by_id(profile: Any, suite_id: str) -> dict[str, Any] | None:
 
 
 def _selected_mode(profile: dict[str, Any]) -> Any:
-    facade = profile.get("legacy_facade")
-    return facade.get("crate_tests") if isinstance(facade, dict) else None
+    steps = profile.get("toolchain_steps")
+    if not isinstance(steps, list):
+        return None
+    modes = (("cargo-test-sifr-smoke", "smoke"), ("cargo-test-sifr-full", "full"))
+    return next((mode for step, mode in modes if step in steps), None)
 
 
 def _validate_suite_selection(
@@ -496,7 +499,7 @@ def run_self_test() -> tuple[int, str | None]:
         missing_suite["validation"]["suite_id"] = "missing"
         cases.append(("missing suite", missing_suite, profiles, "is missing from profile"))
         wrong_mode_profiles = copy.deepcopy(profiles)
-        wrong_mode_profiles["create-pr"]["legacy_facade"]["crate_tests"] = "full"
+        wrong_mode_profiles["create-pr"]["toolchain_steps"] = ["cargo-test-sifr-full"]
         wrong_mode_profiles["create-pr"]["crate_test_membership"]["suites"][0]["modes"] = ["smoke"]
         cases.append(("wrong profile mode", base, wrong_mode_profiles, "is not enabled"))
         nonblocking_profiles = copy.deepcopy(profiles)
@@ -525,7 +528,7 @@ def run_self_test() -> tuple[int, str | None]:
             )
         )
         wrong_step = copy.deepcopy(base)
-        wrong_step["validation"]["step"] = "rust_interop_checks"
+        wrong_step["validation"]["step"] = "not_crate_tests"
         cases.append(("wrong step", wrong_step, profiles, "step must be crate_tests"))
         extra_field = copy.deepcopy(base)
         extra_field["validation"]["command"] = "cargo test"
@@ -866,7 +869,7 @@ def _self_test_profiles() -> dict[str, dict[str, Any]]:
     for profile_name in PROFILE_ORDER:
         mode = "smoke" if profile_name == "create-pr" else "full"
         profiles[profile_name] = {
-            "legacy_facade": {"crate_tests": mode},
+            "toolchain_steps": [f"cargo-test-sifr-{mode}"],
             "crate_test_membership": {
                 "suites": [
                     {

@@ -72,11 +72,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=str(RESULT_JSON.relative_to(REPO_ROOT)),
         help="Path for machine-readable generated-code quality result summary.",
     )
-    parser.add_argument(
-        "--hardening-summary",
-        action="store_true",
-        help="Emit the legacy validation summary line consumed by reports.",
-    )
     return parser.parse_args(argv)
 
 
@@ -125,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    prefix = "verification ok" if args.hardening_summary else "generated-code quality verification ok"
+    prefix = "generated-code quality verification ok"
     print(
         f"{prefix}: variants={total_variants}, failures={total_failures}, "
         f"blocking_failures={blocking_failures}, non_blocking_failures=0",

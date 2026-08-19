@@ -89,7 +89,7 @@ verification counterpart. Low-level negative and protocol-mechanics fixtures
 remain certification inputs rather than user-facing ecosystem examples.
 
 Live dependency examples are intentionally opt-in. The `python-interop-live`
-profile uses selected-areas-only execution and runs both:
+profile selects only the Python interop area and runs both:
 
 - `live-policy`: verifies the container-runtime/testcontainers policy without
   starting containers.

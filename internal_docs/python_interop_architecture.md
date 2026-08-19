@@ -163,7 +163,7 @@ Important selectors:
 - `--self-test`: runner positive/negative tests, certification-policy invariants, fixture JSON validation, and env-probe smoke.
 
 The explicit live dependency lane is `scripts/run_all_tests.sh --profile
-python-interop-live`. It uses selected-areas-only execution and requires the
+python-interop-live`. It selects only the live Python interop area and requires the
 `container-runtime`, `network`, and `platform-specific` resource classes. Offline
 profiles must not select live Python interop suites.
 

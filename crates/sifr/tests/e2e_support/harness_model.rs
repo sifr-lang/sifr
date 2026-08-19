@@ -37,7 +37,6 @@ pub(crate) struct FixtureCase {
     pub(crate) path: PathBuf,
     pub(crate) source: String,
     pub(crate) source_hash: String,
-    pub(crate) expected_stdout: Option<String>,
     pub(crate) _expected_stderr: Vec<String>,
 }
 
@@ -310,23 +309,6 @@ pub(crate) fn deterministic_hash(value: &str) -> String {
         hash = hash.wrapping_mul(0x100000001b3);
     }
     format!("{hash:016x}")
-}
-
-/// Collect all `# expect-stdout: <value>` lines into a multi-line expected output.
-pub(crate) fn extract_expect_stdout(source: &str) -> Option<String> {
-    let lines: Vec<&str> = source
-        .lines()
-        .filter_map(|line| {
-            line.strip_prefix("# expect-stdout:")
-                .map(|rest| rest.trim())
-        })
-        .collect();
-
-    if lines.is_empty() {
-        None
-    } else {
-        Some(lines.join("\n"))
-    }
 }
 
 /// Collect all `# expect-stderr: <value>` lines.

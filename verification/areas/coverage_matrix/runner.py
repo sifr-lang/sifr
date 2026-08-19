@@ -30,11 +30,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=str(RESULT_JSON.relative_to(REPO_ROOT)),
         help="Path for machine-readable coverage matrix area result summary.",
     )
-    parser.add_argument(
-        "--hardening-summary",
-        action="store_true",
-        help="Emit the legacy hardening summary line consumed by validation reports.",
-    )
     return parser.parse_args(argv)
 
 
@@ -46,7 +41,6 @@ def main(argv: list[str] | None = None) -> int:
             suite_filters=set(args.suite),
             bless=args.bless,
             result_json=Path(args.result_json),
-            hardening_summary=args.hardening_summary,
         ),
     )
 

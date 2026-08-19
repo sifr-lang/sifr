@@ -35,10 +35,10 @@ CRITICAL_RESULTS = {
     "distribution_release": "distribution-release-release-results.json",
 }
 AREA_TO_STEP = {
-    "rust_interop": "rust_interop_checks",
-    "developer_tooling": "developer_tooling_checks",
-    "documentation": "documentation_checks",
-    "distribution_release": "distribution_validation",
+    "rust_interop": "area_rust_interop",
+    "developer_tooling": "area_developer_tooling",
+    "documentation": "area_documentation",
+    "distribution_release": "area_distribution_release",
 }
 
 

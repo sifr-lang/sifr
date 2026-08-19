@@ -230,8 +230,8 @@ def _validate_service_runner_source(source: str) -> None:
 
 
 def _validate_live_profile(profile: dict[str, Any], policy: dict[str, Any]) -> None:
-    if profile.get("execution_mode") != "selected-areas-only":
-        raise SystemExit("python-interop-live profile must use selected-areas-only execution")
+    if profile.get("toolchain_steps") != [] or profile.get("guardrail_steps") != []:
+        raise SystemExit("python-interop-live profile must select no toolchain or guardrail steps")
     resource_policy = profile.get("resource_policy", {})
     classes = set(resource_policy.get("classes", [])) if isinstance(resource_policy, dict) else set()
     required_classes = _string_set(policy, "required_resource_classes")
@@ -245,7 +245,10 @@ def _validate_live_profile(profile: dict[str, Any], policy: dict[str, Any]) -> N
         raise SystemExit("python-interop-live profile must explicitly allow live network")
     selected_live_suites: set[str] = set()
     live_suites = _string_set(policy, "live_suites")
-    for selection in profile.get("selected_areas", []):
+    selections = profile.get("selected_areas", [])
+    if not isinstance(selections, list) or len(selections) != 1:
+        raise SystemExit("python-interop-live profile must select only the python_interop area")
+    for selection in selections:
         if not isinstance(selection, dict) or selection.get("area") != "python_interop":
             continue
         suites = set(selection.get("suites", []))

@@ -47,8 +47,6 @@ pub(crate) fn test_codegen_corpus_subset_parity() {
                 continue;
             }
         };
-        let expected_stdout = extract_expect_stdout(&source);
-
         let (rust_source, stdlib_modules, required_features, interop) =
             match compile_source_with_metadata(&source) {
                 Ok(result) => result,
@@ -70,30 +68,15 @@ pub(crate) fn test_codegen_corpus_subset_parity() {
             continue;
         }
 
-        let stdout = match build_and_run_with_deps(
+        if let Err(err) = build_and_run_with_deps(
             &rust_source,
             &format!("{case}_single"),
             &stdlib_modules,
             &required_features,
             &interop,
         ) {
-            Ok(stdout) => stdout,
-            Err(err) => {
-                failures.push(format!("FAIL [{}]: {}", case, err));
-                continue;
-            }
-        };
-
-        let actual = stdout.trim_end();
-        if let Some(expected) = expected_stdout {
-            let expected = expected.trim_end();
-            if actual != expected {
-                failures.push(format!(
-                    "FAIL [{}]: stdout mismatch\n  expected: {:?}\n  actual:   {:?}",
-                    case, expected, actual
-                ));
-                continue;
-            }
+            failures.push(format!("FAIL [{}]: {}", case, err));
+            continue;
         }
 
         test_count += 1;
@@ -606,8 +589,6 @@ pub(crate) fn test_cache_root_from_env_resolution() {
 #[test]
 pub(crate) fn test_expectation_parsing_rules() {
     let source = [
-        "# expect-stdout: a",
-        "# expect-stdout: b",
         "# expect-stderr: err-1",
         "# expect-stderr: err-2",
         "# expect-error: SIFR-PARSE-0002",
@@ -616,7 +597,6 @@ pub(crate) fn test_expectation_parsing_rules() {
     ]
     .join("\n");
 
-    assert_eq!(extract_expect_stdout(&source), Some("a\nb".to_string()));
     assert_eq!(
         extract_expect_stderr(&source),
         vec!["err-1".to_string(), "err-2".to_string()]

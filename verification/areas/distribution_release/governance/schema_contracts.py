@@ -621,7 +621,7 @@ def release_plan() -> dict[str, Any]:
 
 def release_report() -> dict[str, Any]:
     suites = {
-        "rust_interop_checks": [
+        "area_rust_interop": [
             ("rust_interop", name)
             for name in (
                 "matrix",
@@ -631,15 +631,15 @@ def release_report() -> dict[str, Any]:
                 "stable-candidate",
             )
         ],
-        "developer_tooling_checks": [
+        "area_developer_tooling": [
             ("developer_tooling", "full"),
             ("developer_tooling", "editor-release"),
         ],
-        "documentation_checks": [
+        "area_documentation": [
             ("documentation", "structure"),
             ("documentation", "ga-release"),
         ],
-        "distribution_validation": [
+        "area_distribution_release": [
             ("distribution_release", "full"),
             ("distribution_release", "qualification"),
             ("distribution_release", "evidence-custody"),

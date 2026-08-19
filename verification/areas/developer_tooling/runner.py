@@ -168,11 +168,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=str(RESULT_JSON.relative_to(REPO_ROOT)),
         help="Path for machine-readable developer tooling result summary.",
     )
-    parser.add_argument(
-        "--hardening-summary",
-        action="store_true",
-        help="Emit a legacy verification summary line for direct area invocations.",
-    )
     return parser.parse_args(argv)
 
 
@@ -216,7 +211,7 @@ def main(argv: list[str] | None = None) -> int:
             flush=True,
         )
         return 1
-    prefix = "verification ok" if args.hardening_summary else "developer tooling verification ok"
+    prefix = "developer tooling verification ok"
     print(
         f"{prefix}: variants={total_variants}, failures={total_failures}, "
         "blocking_failures=0, non_blocking_failures=0",

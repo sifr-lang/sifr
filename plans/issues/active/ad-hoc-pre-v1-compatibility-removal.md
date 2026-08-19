@@ -975,6 +975,13 @@ normal product behavior. Item 0 records retained rows with exact owners.
 Phase 40 currently owns release profiles and qualification paths. Item 13 does
 not start without an ownership handoff or an approved coordination record.
 
+Coordination record (2026-08-19): Phase 40 releases the shared verification
+profiles, runner, workflows, and release-governance paths from base
+`9caed42242d017ed4ebff84332df0c201f6b403b` to Item 13. Item 13 must preserve
+the Phase 40 release suites, evidence custody, and publication contracts while
+it moves them to the canonical profile-v2 execution model. Phase 40 resumes
+from the merged Item 13 result.
+
 ### Large internal migrations
 
 Source-provider and Rust-type migrations touch many callers. Each item keeps

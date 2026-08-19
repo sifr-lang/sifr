@@ -3,36 +3,31 @@
 from __future__ import annotations
 
 import contextlib
+import importlib.util
 import io
 import json
 import tempfile
 from contextlib import redirect_stdout
 from pathlib import Path
-from typing import Callable
+from typing import Any
 
 from .areas import discover_areas
 from .cargo_setup import cargo_setup_command
 from .profiles import (
     ProfileError,
+    canonical_step_names,
     crate_test_suites_for_mode,
     failure_reproduction_command,
-    legacy_facade,
     load_all_profiles,
     required_rust_interop_suites,
     selected_resource_classes,
     validate_crate_test_membership,
     validate_selected_area_suites,
 )
-from .profile_runner import (
-    ProfileRunner,
-    ProfileRunnerError,
-    StepResult,
-    legacy_facade_step_names,
-    timed_step,
-    validate_rust_interop_result,
-)
+from .profile_runner import timed_step
 from .profile_area_steps import run_selected_area
 from .profile_results import AreaResultError, validate_area_result
+from .reports import parse_log
 from .release_evidence_selftest import (
     release_report_precondition_self_test,
     release_report_production_self_test,
@@ -63,6 +58,8 @@ def run_all() -> list[str]:
         ("release report production self-test", release_report_production_self_test),
         ("e2e profile self-test", _e2e_profile_self_test),
         ("runner discovery self-test", _discovery_self_test),
+        ("area runner CLI self-test", _area_runner_cli_self_test),
+        ("canonical report input self-test", _canonical_report_input_self_test),
         ("resource class selection self-test", _resource_class_self_test),
         ("resume/failure-reproduction self-test", _failure_reproduction_self_test),
     ]
@@ -124,8 +121,29 @@ def _profile_schema_self_test() -> None:
     expected = {"create-pr", "merge", "nightly", "python-interop-live", "release"}
     if set(profiles) != expected:
         raise AssertionError(f"unexpected profiles: {sorted(profiles)}")
-    if profiles["python-interop-live"].get("execution_mode") != "selected-areas-only":
-        raise AssertionError("python-interop-live must use selected-areas-only execution")
+    for profile_name, profile in profiles.items():
+        if profile.get("schema_version") != 2:
+            raise AssertionError(f"{profile_name} must use profile schema v2")
+        if "legacy_facade" in profile or "execution_mode" in profile:
+            raise AssertionError(f"{profile_name} contains removed profile fields")
+    live = profiles["python-interop-live"]
+    invalid_v1 = {**live, "schema_version": 1}
+    try:
+        validate_data(invalid_v1, load_schema("profile.schema.json"), source="profile-v1 self-test")
+    except Exception:
+        pass
+    else:
+        raise AssertionError("profile schema version 1 was accepted")
+    if live["selected_areas"] != [
+        {
+            "area": "python_interop",
+            "suites": ["live-policy", "live-examples"],
+            "resource_classes": ["container-runtime", "network", "platform-specific"],
+        }
+    ]:
+        raise AssertionError("python-interop-live must select only the two live Python interop suites")
+    if live["toolchain_steps"] or live["guardrail_steps"]:
+        raise AssertionError("python-interop-live must not select toolchain or guardrail steps")
     if cargo_setup_command(profiles["python-interop-live"]) != [
         "cargo",
         "fetch",
@@ -140,7 +158,7 @@ def _profile_schema_self_test() -> None:
         }:
             raise AssertionError(f"{profile_name} has a noncanonical Cargo setup budget: {setup_budget}")
     create_pr_step_budgets = profiles["create-pr"].get("step_budgets", {})
-    python_interop_budget = create_pr_step_budgets.get("python_interop")
+    python_interop_budget = create_pr_step_budgets.get("area_python_interop")
     if python_interop_budget != {
         "warm_budget_ms": 600_000,
         "cold_budget_ms": 1_200_000,
@@ -148,18 +166,18 @@ def _profile_schema_self_test() -> None:
         "enforcement": "blocking",
     }:
         raise AssertionError(f"create-pr Python interop cache budget drifted: {python_interop_budget}")
-    rust_interop_budget = create_pr_step_budgets.get("rust_interop_checks")
+    rust_interop_budget = create_pr_step_budgets.get("area_rust_interop")
     if rust_interop_budget != {
         "budget_ms": 20_000,
         "enforcement": "blocking",
     }:
         raise AssertionError(f"create-pr Rust interop budget drifted: {rust_interop_budget}")
     required_blocking_steps = {
-        "generated_code_quality_checks",
-        "rust_interop_checks",
-        "crate_tests",
-        "runtime_platform_suites",
-        "e2e_pass_suite",
+        "area_generated_code_quality",
+        "area_rust_interop",
+        "toolchain_cargo_test_sifr_smoke",
+        "area_runtime_platform",
+        "toolchain_e2e_pass",
     }
     missing_step_budgets = sorted(required_blocking_steps.difference(create_pr_step_budgets))
     if missing_step_budgets:
@@ -168,6 +186,60 @@ def _profile_schema_self_test() -> None:
         budget = create_pr_step_budgets[step]
         if budget.get("enforcement") != "blocking" or int(budget.get("budget_ms", 0)) <= 0:
             raise AssertionError(f"create-pr step budget is not blocking/positive: {step}={budget}")
+    _profile_coverage_self_test(profiles)
+
+
+def _profile_coverage_self_test(profiles: dict[str, dict[str, Any]]) -> None:
+    required_guardrails = {
+        "hir-maintainability",
+        "file-size",
+        "demo-emitted-freshness",
+        "source-crate-dependency-direction",
+        "submodule-ownership",
+        "sysroot-resource-certification",
+        "stdlib-native-intrinsic-allowlist",
+        "stdlib-native-adapter-reachability",
+        "stdlib-manifest-schema",
+        "stdlib-bootstrap-ordering",
+        "driver-maintainability",
+        "verification-hardening-self-test",
+        "verification-runner-foundation",
+    }
+    required_area_suites = {
+        "core_language": {"audit-fixtures"},
+        "project_workspace": {"audit-fixtures"},
+        "stdlib_parity": {
+            "module-merge-check",
+            "audit-fixtures",
+            "complexity-resource",
+            "module-inventory",
+        },
+        "developer_tooling": {"typescript-go-transfer", "diagnostic-rules"},
+        "package_management": {"guardrails", "offline-merge-smoke"},
+        "performance": {"frontend-syntax-guardrails"},
+    }
+    for profile_name in ("create-pr", "merge", "nightly", "release"):
+        profile = profiles[profile_name]
+        selected = {
+            str(selection["area"]): {str(suite) for suite in selection["suites"]}
+            for selection in profile["selected_areas"]
+            if isinstance(selection, dict)
+        }
+        for area, suites in required_area_suites.items():
+            missing = sorted(suites.difference(selected.get(area, set())))
+            if missing:
+                raise AssertionError(f"{profile_name} lost canonical {area} coverage: {missing}")
+        guardrails = set(profile["guardrail_steps"])
+        if not required_guardrails.issubset(guardrails):
+            raise AssertionError(f"{profile_name} lost canonical guardrail coverage")
+        toolchain = set(profile["toolchain_steps"])
+        if "e2e-pass" not in toolchain or not any(
+            str(step).startswith("cargo-test-sifr-") for step in toolchain
+        ):
+            raise AssertionError(f"{profile_name} lost crate-test or e2e coverage")
+    for profile_name in ("nightly", "release"):
+        if "hardening-determinism-scale" not in profiles[profile_name]["guardrail_steps"]:
+            raise AssertionError(f"{profile_name} lost determinism-scale coverage")
 
 
 def _crate_membership_self_test() -> None:
@@ -354,50 +426,9 @@ def _rust_interop_profile_self_test() -> None:
                 f"{profile_name} Rust interop plan mismatch: "
                 f"expected={sorted(required_suites)} actual={sorted(selected)}"
             )
-        step_names = legacy_facade_step_names(profile)
-        if "rust_interop_checks" not in step_names:
+        step_names = canonical_step_names(profile)
+        if "area_rust_interop" not in step_names:
             raise AssertionError(f"{profile_name} omits the executable Rust interop step")
-
-    class RecordingProfileRunner(ProfileRunner):
-        def __init__(self) -> None:
-            self.profile = {
-                "execution_mode": "selected-areas-only",
-                "cargo_policy": {"offline": True},
-            }
-            self.events: list[str] = []
-
-        def print_header(self) -> None:
-            self.events.append("header")
-
-        def prepare_cargo_cache(self) -> None:
-            self.events.append("cargo-cache-setup")
-
-        def run_timed_step(self, name: str, callback: Callable[[], None]) -> StepResult:
-            self.events.append(f"timed:{name}")
-            callback()
-            return StepResult(status=0, elapsed_ms=0)
-
-        def enable_offline_cargo(self) -> None:
-            self.events.append("offline")
-
-        def run_selected_areas_only(self) -> int:
-            self.events.append("selected-areas")
-            return 0
-
-    recording_runner = RecordingProfileRunner()
-    if recording_runner.run() != 0:
-        raise AssertionError("recording profile runner failed")
-    expected_events = [
-        "header",
-        "timed:cargo_cache_setup",
-        "cargo-cache-setup",
-        "offline",
-        "selected-areas",
-    ]
-    if recording_runner.events != expected_events:
-        raise AssertionError(
-            f"profile runner did not execute cache setup before offline steps: {recording_runner.events}"
-        )
     timing_output = io.StringIO()
     with redirect_stdout(timing_output):
         timing_result = timed_step("cargo_cache_setup", lambda: None)
@@ -454,8 +485,8 @@ def _rust_interop_profile_self_test() -> None:
     with tempfile.TemporaryDirectory(prefix="sifr-rust-interop-result-self-test-") as temp_dir:
         result_path = Path(temp_dir) / "result.json"
         try:
-            validate_rust_interop_result(result_path, sorted(required_suites))
-        except ProfileRunnerError as exc:
+            validate_area_result(result_path, area="rust_interop", expected_suites=sorted(required_suites))
+        except AreaResultError as exc:
             if "emitted no result JSON" not in str(exc):
                 raise
         else:
@@ -480,7 +511,7 @@ def _rust_interop_profile_self_test() -> None:
             },
         }
         result_path.write_text(json.dumps(valid_payload), encoding="utf-8")
-        validate_rust_interop_result(result_path, sorted(required_suites))
+        validate_area_result(result_path, area="rust_interop", expected_suites=sorted(required_suites))
 
         invalid_payloads = [
             {**valid_payload, "schema_version": 2},
@@ -535,15 +566,15 @@ def _rust_interop_profile_self_test() -> None:
         for index, payload in enumerate(invalid_payloads):
             result_path.write_text(json.dumps(payload), encoding="utf-8")
             try:
-                validate_rust_interop_result(result_path, sorted(required_suites))
-            except ProfileRunnerError:
+                validate_area_result(result_path, area="rust_interop", expected_suites=sorted(required_suites))
+            except AreaResultError:
                 pass
             else:
                 raise AssertionError(f"invalid Rust interop result JSON mutation {index} was accepted")
         result_path.write_text("{not-json", encoding="utf-8")
         try:
-            validate_rust_interop_result(result_path, sorted(required_suites))
-        except ProfileRunnerError:
+            validate_area_result(result_path, area="rust_interop", expected_suites=sorted(required_suites))
+        except AreaResultError:
             pass
         else:
             raise AssertionError("malformed Rust interop result JSON was accepted")
@@ -556,10 +587,8 @@ def _documentation_profile_self_test() -> None:
     expected_suites = ["structure", "ga-release"]
     if len(selected) != 1 or selected[0].get("suites") != expected_suites:
         raise AssertionError("release profile must select documentation:structure and ga-release exactly once")
-    if "documentation_suites" in legacy_facade(release):
-        raise AssertionError("documentation suites must have selected_areas as their sole authority")
-    if "documentation_checks" not in legacy_facade_step_names(release):
-        raise AssertionError("release profile omitted executable documentation_checks step")
+    if "area_documentation" not in canonical_step_names(release):
+        raise AssertionError("release profile omitted the executable documentation area")
 
     result_path = (
         Path(__file__).resolve().parents[3]
@@ -602,7 +631,7 @@ def _documentation_profile_self_test() -> None:
     output = io.StringIO()
     with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
         result = timed_step(
-            "documentation_checks",
+            "area_documentation",
             lambda: run_selected_area(
                 area="documentation",
                 suites=expected_suites,
@@ -614,7 +643,7 @@ def _documentation_profile_self_test() -> None:
         )
     if result.status != 0:
         raise AssertionError(f"documentation step failed:\n{output.getvalue()}")
-    if "[sifr-lane-step] name=documentation_checks" not in output.getvalue() or "status=pass" not in output.getvalue():
+    if "[sifr-lane-step] name=area_documentation" not in output.getvalue() or "status=pass" not in output.getvalue():
         raise AssertionError("documentation step did not emit visible passing lane evidence")
 
     validate_area_result(
@@ -639,12 +668,12 @@ def _documentation_profile_self_test() -> None:
 
 def _e2e_profile_self_test() -> None:
     profiles = load_all_profiles()
-    create_pr_manifest = legacy_facade(profiles["create-pr"])["e2e"].get("fixture_manifest")
+    create_pr_manifest = profiles["create-pr"]["e2e"].get("fixture_manifest")
     if create_pr_manifest != "verification/areas/core_language/data/create_pr_e2e_manifest.json":
         raise AssertionError(f"create-pr e2e must remain representative, got: {create_pr_manifest}")
 
     for profile_name in ("merge", "nightly", "release"):
-        fixture_manifest = legacy_facade(profiles[profile_name])["e2e"].get("fixture_manifest")
+        fixture_manifest = profiles[profile_name]["e2e"].get("fixture_manifest")
         if fixture_manifest:
             raise AssertionError(
                 f"{profile_name} e2e must use the full pass corpus, got fixture manifest: {fixture_manifest}",
@@ -698,6 +727,56 @@ def _discovery_self_test() -> None:
         areas = discover_areas(areas_dir)
     if [area.name for area in areas] != ["core_language"]:
         raise AssertionError(f"unexpected discovery result: {areas}")
+
+
+def _area_runner_cli_self_test() -> None:
+    for area in discover_areas():
+        runner_path = area.manifest_path.with_name("runner.py")
+        spec = importlib.util.spec_from_file_location(
+            f"sifr_verify_runner_cli_self_test_{area.name}",
+            runner_path,
+        )
+        if spec is None or spec.loader is None:
+            raise AssertionError(f"could not load {area.name} runner")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        parse_args = getattr(module, "parse_args", None)
+        if not callable(parse_args):
+            raise AssertionError(f"{area.name} runner has no argument parser")
+        result_path = f"target/verification/areas/{area.name}-cli-self-test.json"
+        parsed = parse_args(["--result-json", result_path])
+        if getattr(parsed, "result_json", None) != result_path:
+            raise AssertionError(f"{area.name} runner rejected its structured result path")
+        with redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            try:
+                parse_args(["--hardening-summary"])
+            except SystemExit as exc:
+                if exc.code != 2:
+                    raise AssertionError(
+                        f"{area.name} runner returned an unexpected removed-flag status: {exc.code}"
+                    ) from exc
+            else:
+                raise AssertionError(f"{area.name} runner accepted --hardening-summary")
+
+
+def _canonical_report_input_self_test() -> None:
+    with tempfile.TemporaryDirectory(prefix="sifr-report-input-self-test-") as temp_dir:
+        log_path = Path(temp_dir) / "profile.log"
+        log_path.write_text(
+            "[sifr-lane-step] name=area_core_language elapsed_ms=7 status=pass\n"
+            "verification ok: variants=4, failures=0, blocking_failures=0, "
+            "non_blocking_failures=0\n"
+            "  - old-suite: 4 rows, 7ms\n"
+            "[validation-suite] total_rows=4 total_ms=7\n",
+            encoding="utf-8",
+        )
+        parsed = parse_log(log_path)
+    if parsed["lane_steps"] != [
+        {"name": "area_core_language", "elapsed_ms": 7, "status": "pass"}
+    ]:
+        raise AssertionError("canonical lane-step report input was not preserved")
+    if "hardening_summary" in parsed or "suite_filters" in parsed:
+        raise AssertionError("legacy summary-line report input remains active")
 
 
 def _resource_class_self_test() -> None:

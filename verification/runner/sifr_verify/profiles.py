@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -21,31 +20,6 @@ class ProfileError(VerificationError):
 
 _WORKSPACE_PACKAGE_NAMES: set[str] | None = None
 E2E_PASS_FIXTURE_DIR = REPO_ROOT / "crates" / "sifr" / "tests" / "e2e" / "pass"
-PROFILE_STEP_NAMES = {
-    "cargo_cache_setup",
-    "coverage_matrix_checks",
-    "core_guardrails",
-    "diagnostic_rules",
-    "cpython_differential",
-    "python_interop",
-    "rust_interop_checks",
-    "frontend_syntax_guardrails",
-    "developer_tooling_checks",
-    "documentation_checks",
-    "performance_budget_checks",
-    "verification_hardening_self_tests",
-    "verification_runner_foundation",
-    "fuzz_property_checks",
-    "algorithmic_compatibility_checks",
-    "distribution_validation",
-    "generated_code_quality_checks",
-    "crate_tests",
-    "validation_suite_matrix",
-    "runtime_platform_suites",
-    "e2e_pass_suite",
-    "verification_hardening_suites",
-    "extra_e2e_checks",
-}
 PYTHON_INTEROP_CAPABILITY_MATRIX = (
     REPO_ROOT / "verification" / "areas" / "python_interop" / "declaration_capabilities.json"
 )
@@ -76,6 +50,7 @@ def load_profile(profile: str, profiles_dir: Path = PROFILES_DIR) -> dict[str, A
     if payload.get("name") != profile:
         raise ProfileError(f"profile name '{payload.get('name')}' must match file stem '{profile}'")
     validate_selected_area_suites(payload)
+    validate_toolchain_steps(payload)
     validate_crate_test_membership(payload)
     validate_step_budgets(payload)
     return payload
@@ -108,10 +83,6 @@ def failure_reproduction_command(profile_name: str, case_id: str) -> str:
     return f"uv run --project verification python -m sifr_verify --profile {profile_name} --case {case_id}"
 
 
-def shell_quote(value: Any) -> str:
-    return shlex.quote("" if value is None else str(value))
-
-
 def fixture_count(path: Path) -> int:
     payload = load_json(path)
     fixture_names = payload.get("fixture_names")
@@ -131,13 +102,6 @@ def resolve_fixture_manifest(raw_path: str) -> Path | None:
     if not path.is_file():
         raise ProfileError(f"fixture manifest not found: {path}")
     return path
-
-
-def legacy_facade(profile: dict[str, Any]) -> dict[str, Any]:
-    legacy = profile.get("legacy_facade")
-    if not isinstance(legacy, dict):
-        raise ProfileError(f"profile {profile.get('name')} is missing legacy_facade")
-    return legacy
 
 
 def selected_suites_for_area(profile: dict[str, Any], area_name: str) -> list[str]:
@@ -165,15 +129,21 @@ def validate_selected_area_suites(profile: dict[str, Any]) -> None:
                 for suite in suites
                 if isinstance(suite, dict) and isinstance(suite.get("name"), str)
             }
+    seen_areas: set[str] = set()
     for selection in profile.get("selected_areas", []):
         area = selection.get("area") if isinstance(selection, dict) else None
         if not isinstance(area, str) or area not in area_suites:
             raise ProfileError(f"profile {profile.get('name')} selects unknown area: {area}")
+        if area in seen_areas:
+            raise ProfileError(f"profile {profile.get('name')} selects area {area} more than once")
+        seen_areas.add(area)
         selected_suites = selection.get("suites", [])
+        if len(selected_suites) != len(set(selected_suites)):
+            raise ProfileError(f"profile {profile.get('name')} selects duplicate suites for {area}")
         for suite in selected_suites:
             if suite not in area_suites[area]:
                 raise ProfileError(f"profile {profile.get('name')} selects unknown suite {area}:{suite}")
-        if area == "python_interop" and profile.get("execution_mode") != "selected-areas-only":
+        if area == "python_interop" and profile.get("name") != "python-interop-live":
             required_suites = _compiled_evidence_suites()
             missing = sorted(required_suites.difference(selected_suites))
             if missing:
@@ -181,7 +151,7 @@ def validate_selected_area_suites(profile: dict[str, Any]) -> None:
                     f"profile {profile.get('name')} omits required Python interop "
                     f"certification suites: {', '.join(missing)}"
                 )
-        if area == "rust_interop" and profile.get("execution_mode") != "selected-areas-only":
+        if area == "rust_interop":
             required_suites = required_rust_interop_suites()
             missing = sorted(required_suites.difference(selected_suites))
             if missing:
@@ -189,12 +159,8 @@ def validate_selected_area_suites(profile: dict[str, Any]) -> None:
                     f"profile {profile.get('name')} omits required Rust interop "
                     f"verification suites: {', '.join(missing)}"
                 )
-    if profile.get("execution_mode") != "selected-areas-only":
-        selected_area_names = {
-            selection.get("area") for selection in profile.get("selected_areas", []) if isinstance(selection, dict)
-        }
-        if "rust_interop" not in selected_area_names:
-            raise ProfileError(f"profile {profile.get('name')} omits the required Rust interop area")
+    if profile.get("name") != "python-interop-live" and "rust_interop" not in seen_areas:
+        raise ProfileError(f"profile {profile.get('name')} omits the required Rust interop area")
 
 
 def required_rust_interop_suites() -> set[str]:
@@ -206,6 +172,18 @@ def required_rust_interop_suites() -> set[str]:
     if len(names) != len(suites):
         raise ProfileError("Rust interop area manifest has invalid or duplicate suites")
     return names
+
+
+def validate_toolchain_steps(profile: dict[str, Any]) -> None:
+    steps = profile.get("toolchain_steps", [])
+    if len(steps) != len(set(steps)):
+        raise ProfileError(f"profile {profile.get('name')} has duplicate toolchain steps")
+    crate_modes = [step for step in steps if str(step).startswith("cargo-test-sifr-")]
+    if len(crate_modes) > 1:
+        raise ProfileError(f"profile {profile.get('name')} selects more than one crate-test mode")
+    if "e2e-report-determinism" in steps or "e2e-sequential-parallel-equivalence" in steps:
+        if "e2e-pass" not in steps:
+            raise ProfileError(f"profile {profile.get('name')} selects an e2e check without e2e-pass")
 
 
 def _compiled_evidence_suites() -> set[str]:
@@ -287,8 +265,9 @@ def validate_step_budgets(profile: dict[str, Any]) -> None:
         return
     if not isinstance(raw_budgets, dict):
         raise ProfileError(f"profile {profile.get('name')} step_budgets must be an object")
+    allowed_step_names = canonical_step_names(profile)
     for step_name, budget in raw_budgets.items():
-        if step_name not in PROFILE_STEP_NAMES:
+        if step_name not in allowed_step_names:
             raise ProfileError(f"profile {profile.get('name')} step_budgets has unknown step {step_name}")
         if not isinstance(budget, dict):
             raise ProfileError(f"profile {profile.get('name')} step budget {step_name} must be an object")
@@ -329,6 +308,24 @@ def validate_step_budgets(profile: dict[str, Any]) -> None:
         enforcement = budget.get("enforcement")
         if enforcement not in {"advisory", "blocking"}:
             raise ProfileError(f"profile {profile.get('name')} step budget {step_name} has invalid enforcement")
+
+
+def canonical_step_names(profile: dict[str, Any]) -> set[str]:
+    names = {"cargo_cache_setup"}
+    names.update(
+        f"guardrail_{str(step).replace('-', '_')}"
+        for step in profile.get("guardrail_steps", [])
+    )
+    names.update(
+        f"area_{selection['area']}"
+        for selection in profile.get("selected_areas", [])
+        if isinstance(selection, dict) and isinstance(selection.get("area"), str)
+    )
+    names.update(
+        f"toolchain_{str(step).replace('-', '_')}"
+        for step in profile.get("toolchain_steps", [])
+    )
+    return names
 
 
 def workspace_package_names() -> set[str]:
@@ -376,58 +373,20 @@ def crate_test_suites_for_mode(profile: dict[str, Any], mode: str) -> list[dict[
     return [suite for suite in suites if isinstance(suite, dict) and mode in suite.get("modes", [])]
 
 
-def shell_exports(profile: dict[str, Any]) -> dict[str, Any]:
-    name = str(profile["name"])
-    budgets = profile["budgets"]
-    legacy = legacy_facade(profile)
-    e2e = legacy["e2e"]
-    matrix_suites = legacy["matrix_suites"]
-    hardening_suites = legacy["hardening_suites"]
-    tooling_suites = legacy["tooling_suites"]
-    documentation_suites = selected_suites_for_area(profile, "documentation")
-    extra_checks = legacy["extra_checks"]
-    fixture_manifest = resolve_fixture_manifest(str(e2e.get("fixture_manifest", "")))
-    return {
-        "RESOLVED_PROFILE": name,
-        "LANE_NAME": name,
-        "LANE_DESCRIPTION": profile.get("description", ""),
-        "WARM_TARGET_MINUTES": budgets["warm_wall_time_minutes"],
-        "COLD_TARGET_MINUTES": budgets["cold_wall_time_minutes"],
-        "THERMAL_POLICY": legacy["thermal_policy"],
-        "MEMORY_POLICY": legacy["memory_policy"],
-        "VALIDATION_SUITES": ",".join(matrix_suites),
-        "TOOLING_SUITES": ",".join(tooling_suites),
-        "DOCUMENTATION_SUITES": ",".join(documentation_suites),
-        "DISTRIBUTION_MODE": legacy["distribution"],
-        "GENERATED_CODE_QUALITY_MODE": legacy["generated_code_quality"],
-        "PERFORMANCE_BUDGET_MODE": legacy["performance_budget"],
-        "CRATE_TEST_MODE": legacy["crate_tests"],
-        "RUN_HARDENING": "1" if hardening_suites else "0",
-        "HARDENING_SUITES": ",".join(hardening_suites),
-        "RUN_E2E_REPORT_DETERMINISM": "1" if "e2e_report_determinism" in extra_checks else "0",
-        "RUN_E2E_SEQUENTIAL_PARALLEL_EQUIVALENCE": (
-            "1" if "e2e_sequential_parallel_equivalence" in extra_checks else "0"
-        ),
-        "E2E_PROFILE": name,
-        "E2E_FIXTURE_MANIFEST": "" if fixture_manifest is None else str(fixture_manifest),
-        "E2E_SIFR_JOBS": e2e["sifr_jobs"],
-        "E2E_RUST_JOBS": e2e["rust_jobs"],
-        "E2E_RUN_JOBS": e2e["run_jobs"],
-        "E2E_CARGO_BUILD_JOBS": e2e["cargo_build_jobs"],
-        "E2E_MAX_GROUP_FIXTURES": e2e["max_group_fixtures"],
-        "E2E_DISABLE_CACHE": "1" if e2e["disable_cache"] else "0",
+def crate_test_mode(profile: dict[str, Any]) -> str | None:
+    modes = {
+        "cargo-test-sifr-smoke": "smoke",
+        "cargo-test-sifr-full": "full",
     }
-
-
-def print_shell(profile_name: str) -> None:
-    for key, value in shell_exports(load_profile(profile_name)).items():
-        print(f"{key}={shell_quote(value)}")
+    selected = [modes[step] for step in profile.get("toolchain_steps", []) if step in modes]
+    if len(selected) > 1:
+        raise ProfileError(f"profile {profile.get('name')} selects more than one crate-test mode")
+    return selected[0] if selected else None
 
 
 def print_summary(requested_profile: str) -> None:
     profile = load_profile(requested_profile)
-    legacy = legacy_facade(profile)
-    e2e = legacy["e2e"]
+    e2e = profile["e2e"]
     fixture_manifest = resolve_fixture_manifest(str(e2e.get("fixture_manifest", "")))
     fixture_count_display = f"full-corpus ({full_pass_fixture_count()})"
     fixture_manifest_display = "none"
@@ -439,36 +398,27 @@ def print_summary(requested_profile: str) -> None:
     print(f"  requested_profile={requested_profile}")
     print(f"  resolved_profile={profile['name']}")
     print(f"  description={profile.get('description', '')}")
-    print(f"  execution_mode={profile.get('execution_mode', 'legacy-facade')}")
     print(
         "  budgets="
         f"warm<={profile['budgets']['warm_wall_time_minutes']}m "
         f"cold<={profile['budgets']['cold_wall_time_minutes']}m"
     )
     print("  resource_classes=" + ", ".join(profile["resource_policy"]["classes"]))
-    print("  matrix_suites=" + (", ".join(legacy["matrix_suites"]) if legacy["matrix_suites"] else "none"))
-    print(f"  e2e={fixture_count_display} fixtures (manifest={fixture_manifest_display})")
-    print("  hardening_suites=" + (", ".join(legacy["hardening_suites"]) if legacy["hardening_suites"] else "none"))
-    print("  tooling_suites=" + (", ".join(legacy["tooling_suites"]) if legacy["tooling_suites"] else "none"))
     print(
-        "  documentation_suites="
-        + (
-            ", ".join(selected_suites_for_area(profile, "documentation"))
-            if selected_suites_for_area(profile, "documentation")
-            else "none"
+        "  selected_areas="
+        + ", ".join(
+            f"{selection['area']}:{'+'.join(selection['suites'])}"
+            for selection in profile["selected_areas"]
         )
     )
-    print(f"  distribution={legacy['distribution']}")
-    print(f"  generated_code_quality={legacy['generated_code_quality']}")
-    print(f"  performance_budget={legacy['performance_budget']}")
-    print(f"  crate_tests={legacy['crate_tests']}")
-    print("  extra_checks=" + (", ".join(legacy["extra_checks"]) if legacy["extra_checks"] else "none"))
+    print(f"  e2e={fixture_count_display} fixtures (manifest={fixture_manifest_display})")
+    print("  toolchain_steps=" + (", ".join(profile["toolchain_steps"]) or "none"))
+    print("  guardrail_steps=" + (", ".join(profile["guardrail_steps"]) or "none"))
     print(f"  manifest={profile_path(str(profile['name'])).relative_to(REPO_ROOT)}")
 
 
 def build_profile_plan(profile_name: str) -> dict[str, Any]:
     profile = load_profile(profile_name)
-    legacy = legacy_facade(profile)
     selected_areas = [
         {
             "area": selection["area"],
@@ -477,15 +427,14 @@ def build_profile_plan(profile_name: str) -> dict[str, Any]:
         }
         for selection in profile["selected_areas"]
     ]
-    e2e = legacy["e2e"]
+    e2e = profile["e2e"]
     fixture_manifest = resolve_fixture_manifest(str(e2e.get("fixture_manifest", "")))
     fixture_selection = "full-corpus" if fixture_manifest is None else "manifest"
     selected_fixture_count = full_pass_fixture_count() if fixture_manifest is None else fixture_count(fixture_manifest)
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "profile": profile["name"],
         "description": profile.get("description", ""),
-        "execution_mode": profile.get("execution_mode", "legacy-facade"),
         "network_policy": profile.get("network_policy", {}),
         "cargo_policy": profile.get("cargo_policy", {}),
         "reference_host": profile.get("reference_host", {}),
@@ -493,17 +442,8 @@ def build_profile_plan(profile_name: str) -> dict[str, Any]:
         "budgets": profile["budgets"],
         "step_budgets": profile.get("step_budgets", {}),
         "selected_areas": selected_areas,
-        "legacy_facade": {
-            "matrix_suites": list(legacy["matrix_suites"]),
-            "tooling_suites": list(legacy["tooling_suites"]),
-            "documentation_suites": selected_suites_for_area(profile, "documentation"),
-            "distribution": legacy["distribution"],
-            "generated_code_quality": legacy["generated_code_quality"],
-            "performance_budget": legacy["performance_budget"],
-            "crate_tests": legacy["crate_tests"],
-            "hardening_suites": list(legacy["hardening_suites"]),
-            "extra_checks": list(legacy["extra_checks"]),
-        },
+        "toolchain_steps": list(profile["toolchain_steps"]),
+        "guardrail_steps": list(profile["guardrail_steps"]),
         "crate_test_membership": profile.get("crate_test_membership", {}),
         "e2e": {
             "fixture_manifest": "" if fixture_manifest is None else str(fixture_manifest.relative_to(REPO_ROOT)),
@@ -527,10 +467,11 @@ def compare_plans(local_path: str, ci_path: str) -> int:
     local = load_json(Path(local_path))
     ci = load_json(Path(ci_path))
     keys = [
+        "schema_version",
         "profile",
-        "execution_mode",
         "selected_areas",
-        "legacy_facade",
+        "toolchain_steps",
+        "guardrail_steps",
         "crate_test_membership",
         "e2e",
         "network_policy",
@@ -550,18 +491,15 @@ def compare_plans(local_path: str, ci_path: str) -> int:
 def run_command(argv: list[str]) -> int:
     if not argv:
         print(
-            "profiles command requires one of: profile, shell, summary, check, plan, compare-plans, run",
+            "profiles command requires one of: profile, summary, check, plan, compare-plans, run",
             file=sys.stderr,
         )
         return 2
     command = argv[0]
-    profile_name = _profile_arg(argv[1:]) if command in {"profile", "shell", "summary", "plan", "run"} else ""
+    profile_name = _profile_arg(argv[1:]) if command in {"profile", "summary", "plan", "run"} else ""
     if command == "profile":
         profile = load_profile(profile_name)
         print(profile["name"])
-        return 0
-    if command == "shell":
-        print_shell(profile_name)
         return 0
     if command == "summary":
         print_summary(profile_name)

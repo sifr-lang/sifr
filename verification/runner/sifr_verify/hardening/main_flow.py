@@ -248,8 +248,4 @@ def main() -> int:
         print("actual outputs written under target/verification/actual", file=sys.stderr)
         return 1
 
-    print(
-        f"verification ok: variants={total_variants}, failures={total_failures}, "
-        f"blocking_failures={blocking_failures}, non_blocking_failures={non_blocking_failures}"
-    )
     return 0

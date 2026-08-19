@@ -36,7 +36,7 @@ Profiles at schema version 2 carry local-first execution policy:
 - generated binaries and external programs run under the execution sandbox
   rules: tempdir-only writes, no external network, declared loopback-only
   networking, subprocess cleanup, and bounded captured output.
-- `profile_plan.emit_command` is the local source of truth for CI parity checks.
+- `sifr_verify profiles plan` emits the canonical local plan for CI parity checks.
 - `uv run --project verification --locked python -m sifr_verify doctor`
   diagnoses local prerequisites. Cargo cache population is owned by the
   profile runner's reported setup prelude.
