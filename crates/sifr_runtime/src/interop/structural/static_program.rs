@@ -107,8 +107,10 @@ pub struct StaticProgram<T> {
     _type: PhantomData<fn() -> T>,
 }
 
-/// Implemented only by compiler-emitted concrete types with retained static data.
-pub trait StaticProgramType: super::StructuralType + Sized + 'static {
+/// Implemented only by compiler-emitted concrete structural types with retained static data.
+pub trait StaticProgramType:
+    super::StructuralType + super::StructuralConstruct + super::StructuralProject + Sized + 'static
+{
     fn static_program() -> &'static StaticProgram<Self>;
 }
 
@@ -211,7 +213,18 @@ mod tests {
     use crate::interop::__generated_glue;
     use crate::interop::structural::{
         primitive, slot_table_identity, static_program_identity, SlotContextModeIdentity,
+        StructuralConstruct, StructuralProject,
     };
+
+    #[test]
+    fn static_program_types_are_structurally_constructible_and_projectable() {
+        #[allow(dead_code)]
+        fn require_structural<T: StructuralConstruct + StructuralProject>() {}
+        #[allow(dead_code)]
+        fn require_static<T: StaticProgramType>() {
+            require_structural::<T>();
+        }
+    }
 
     #[test]
     fn sealed_program_verifies_complete_envelope() {
