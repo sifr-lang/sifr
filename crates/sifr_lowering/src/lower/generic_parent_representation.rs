@@ -5,18 +5,16 @@ use std::collections::HashMap;
 
 pub(super) fn preserves_union_structure(
     class_types: &HashMap<String, Type>,
+    class_type_params: &HashMap<String, Vec<String>>,
     parent_name: &str,
     concrete: &Type,
 ) -> bool {
-    let Some(template) = class_template(class_types, concrete, parent_name) else {
+    let Some((template_name, template)) = class_template(class_types, concrete, parent_name) else {
         return true;
     };
     let (
         Type::Class {
-            type_args: template_args,
-            fields,
-            methods,
-            ..
+            fields, methods, ..
         },
         Type::Class {
             type_args: concrete_args,
@@ -26,16 +24,28 @@ pub(super) fn preserves_union_structure(
     else {
         return true;
     };
-    let bindings = template_args
+    let declared_params = class_type_params
+        .get(template_name)
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    if declared_params.len() != concrete_args.len() {
+        return false;
+    }
+    let bindings = declared_params
         .iter()
         .zip(concrete_args)
-        .filter_map(|(template, concrete)| match template.resolve_alias() {
-            Type::TypeVar(name) => Some((name.clone(), concrete.clone())),
-            _ => None,
-        })
+        .map(|(param, concrete)| (param.clone(), concrete.clone()))
         .collect::<HashMap<_, _>>();
     let class_scope = |identity: Option<&str>, name: &str| {
-        class_candidate(class_types, identity, name).and_then(class_union_scope)
+        class_candidate(class_types, identity, name).and_then(|(candidate_name, candidate)| {
+            class_union_scope(
+                candidate,
+                class_type_params
+                    .get(candidate_name)
+                    .map(Vec::as_slice)
+                    .unwrap_or_default(),
+            )
+        })
     };
     fields.iter().all(|(_, ty)| {
         substitution_preserves_union_structure_with_class_scopes(ty, &bindings, &class_scope)
@@ -54,7 +64,7 @@ fn class_template<'a>(
     class_types: &'a HashMap<String, Type>,
     concrete: &Type,
     fallback_name: &str,
-) -> Option<&'a Type> {
+) -> Option<(&'a str, &'a Type)> {
     let Type::Class { identity, .. } = concrete.resolve_alias() else {
         return None;
     };
@@ -65,39 +75,32 @@ fn class_candidate<'a>(
     class_types: &'a HashMap<String, Type>,
     identity: Option<&str>,
     name: &str,
-) -> Option<&'a Type> {
+) -> Option<(&'a str, &'a Type)> {
     if let Some(identity) = identity {
-        return class_types.values().find(|candidate| {
+        return class_types.iter().find_map(|(candidate_name, candidate)| {
             matches!(candidate.resolve_alias(), Type::Class { identity: Some(candidate), .. } if candidate == identity)
+                .then_some((candidate_name.as_str(), candidate))
         });
     }
-    class_types.get(name)
+    class_types
+        .get_key_value(name)
+        .map(|(candidate_name, candidate)| (candidate_name.as_str(), candidate))
 }
 
-fn class_union_scope(ty: &Type) -> Option<UnionStructureClassScope> {
+fn class_union_scope(ty: &Type, declared_params: &[String]) -> Option<UnionStructureClassScope> {
     let Type::Class {
-        type_args,
-        fields,
-        methods,
-        ..
+        fields, methods, ..
     } = ty.resolve_alias()
     else {
         return None;
     };
-    let type_params = type_args
-        .iter()
-        .filter_map(|argument| match argument.resolve_alias() {
-            Type::TypeVar(name) => Some(name.clone()),
-            _ => None,
-        })
-        .collect();
     let mut member_types = fields.iter().map(|(_, ty)| ty.clone()).collect::<Vec<_>>();
     for (_, method) in methods {
         member_types.extend(method.params.iter().map(|(_, ty, _)| ty.clone()));
         member_types.push(method.return_type.as_ref().clone());
     }
     Some(UnionStructureClassScope {
-        type_params,
+        type_params: declared_params.to_vec(),
         member_types,
     })
 }
@@ -129,12 +132,38 @@ mod tests {
         let unsafe_arg = sifr_type_system::make_union(vec![Type::None, Type::Str]);
         let unsafe_parent = parent(unsafe_arg, Type::Union(vec![Type::None, Type::Str]));
         let classes = HashMap::from([("Parent".to_string(), template)]);
+        let type_params = HashMap::from([("Parent".to_string(), vec!["T".to_string()])]);
 
-        assert!(preserves_union_structure(&classes, "Parent", &safe));
+        assert!(preserves_union_structure(
+            &classes,
+            &type_params,
+            "Parent",
+            &safe
+        ));
         assert!(!preserves_union_structure(
             &classes,
+            &type_params,
             "Parent",
             &unsafe_parent
+        ));
+    }
+
+    #[test]
+    fn declared_parameters_are_the_parent_binding_authority() {
+        let template = parent(
+            Type::Str,
+            Type::Union(vec![Type::None, Type::TypeVar("T".to_string())]),
+        );
+        let unsafe_arg = sifr_type_system::make_union(vec![Type::None, Type::Str]);
+        let concrete = parent(unsafe_arg, Type::Unknown);
+        let classes = HashMap::from([("Parent".to_string(), template)]);
+        let type_params = HashMap::from([("Parent".to_string(), vec!["T".to_string()])]);
+
+        assert!(!preserves_union_structure(
+            &classes,
+            &type_params,
+            "Parent",
+            &concrete
         ));
     }
 
@@ -177,7 +206,17 @@ mod tests {
             ("ImportedParent".to_string(), imported_parent),
             ("Inner".to_string(), inner),
         ]);
+        let type_params = HashMap::from([
+            ("Parent".to_string(), vec!["V".to_string()]),
+            ("ImportedParent".to_string(), vec!["T".to_string()]),
+            ("Inner".to_string(), vec!["U".to_string()]),
+        ]);
 
-        assert!(!preserves_union_structure(&classes, "Parent", &concrete));
+        assert!(!preserves_union_structure(
+            &classes,
+            &type_params,
+            "Parent",
+            &concrete
+        ));
     }
 }

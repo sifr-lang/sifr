@@ -254,6 +254,10 @@ where
                 .iter()
                 .map(|argument| substitute_type_vars(argument, bindings))
                 .collect::<Vec<_>>();
+            if scope.type_params.len() != concrete_args.len() {
+                visiting.remove(&key);
+                return false;
+            }
             let nested_bindings = scope
                 .type_params
                 .into_iter()
@@ -384,6 +388,30 @@ mod tests {
                         Type::None,
                         Type::TypeVar("U".to_string()),
                     ])],
+                })
+            },
+        );
+
+        assert!(!preserved);
+    }
+
+    #[test]
+    fn scoped_union_structure_rejects_parameter_arity_mismatch() {
+        let nested = Type::Class {
+            identity: Some("models.Inner".to_string()),
+            type_args: vec![Type::Str],
+            name: "Inner".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let preserved = substitution_preserves_union_structure_with_class_scopes(
+            &nested,
+            &HashMap::new(),
+            &|_, _| {
+                Some(UnionStructureClassScope {
+                    type_params: vec!["T".to_string(), "U".to_string()],
+                    member_types: Vec::new(),
                 })
             },
         );
