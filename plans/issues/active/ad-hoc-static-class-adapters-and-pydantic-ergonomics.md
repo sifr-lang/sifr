@@ -2322,6 +2322,32 @@ ancestor arity-mismatch coverage. No remediation review ran.
 Next action: fail closed on unresolved structural method ancestry and pin the
 imported arity boundary.
 
+Compiler hardening item 12 state: complete
+PR: [`sifr-lang/sifr#3354`](https://github.com/sifr-lang/sifr/pull/3354)
+Base SHA: `76d295f7626b8372de78eef109766ab1d45d155c`
+Candidate SHA: `15d8bda3c50d664c37881864ff8535484c787052`
+Merge SHA: `6e2587ed81a5dfd3737c58e7c0f9bc2e6b64bef7`
+Changed paths: fail-closed structural handler ancestry, direct imported arity
+coverage, an opaque checked-handler regression, a responsibility-based test
+split, and the durable compiler contract.
+Validation: all 111 frontend tests passed. The driver suite passed 540 tests
+and ignored 76 tests. Workspace Clippy passed with warnings denied. Rust
+formatting, both maintainability guards, the 900-line guard, and diff hygiene
+passed. The create-PR and merge gates each ran once on the exact candidate.
+Both passed generated-demo freshness and every preceding guard. Both then
+stopped at the same two separately owned Rust-interop matrix inputs. Neither
+gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3354#issuecomment-5346671698),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3354#issuecomment-5346694759)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3354#issuecomment-5346671737)).
+Deferred follow-up: a later cleanup can avoid repeating a failed ancestry
+walk. It can also assert the preserved opaque descriptor directly. These are
+not mechanism defects.
+Next action: audit every remaining compiler-owned M12 deferral and implement
+the next bounded mechanism item.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2409,12 +2435,13 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 11 merged in Sifr PRs #3332, #3334, #3336, #3338, #3340, #3342,
-#3344, #3346, #3348, #3350, and #3352. The seven M11 compiler prerequisites
-merged in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327, and #3329. The
-M11 package surface merged in Pydantic-Sifr PR #47. M12 is in progress. The
-current compiler merge is `caaf494587a7c0b8ca7e6244f56973ec11001f1e`, and
-the current package merge is `a44116e188cc6b45cffb297d57b9084467a39e8f`.
+through 12 merged in Sifr PRs #3332, #3334, #3336, #3338, #3340, #3342,
+#3344, #3346, #3348, #3350, #3352, and #3354. The seven M11 compiler
+prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327,
+and #3329. The M11 package surface merged in Pydantic-Sifr PR #47. M12 is in
+progress. The current compiler merge is
+`6e2587ed81a5dfd3737c58e7c0f9bc2e6b64bef7`, and the current package merge is
+`a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
 prerequisites stopped at the Rust-interop matrix. The matrix reported one
@@ -2422,6 +2449,6 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: fail closed on unresolved structural method ancestry and pin the
-imported arity boundary. Then continue compiler-owned hardening before package
-certification and final review.
+Next action: audit every remaining compiler-owned M12 deferral and implement
+the next bounded mechanism item. Then continue compiler-owned hardening before
+package certification and final review.
