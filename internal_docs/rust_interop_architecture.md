@@ -457,6 +457,8 @@ accepts `str` and structural values whose terminal scalar leaves and mapping
 keys are all `str`. Records, mappings, sequences, and tuples can be nested. The
 bound emits the same `StructuralConstruct` and `StructuralProject` Rust traits.
 It adds no runtime trait, reflection path, or second structural representation.
+Ordinary and attached function emission also keeps the owned-value `Clone` and
+`'static` bounds required by generated bodies.
 Rust-opaque values with package mappings do not satisfy this bound because the
 compiler cannot inspect the mapping's leaf types.
 

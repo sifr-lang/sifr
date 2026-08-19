@@ -1,0 +1,12 @@
+# expected-diagnostic: SIFR-PROTO-0001
+
+from fixture.contract import Contract, contract_config
+
+
+class Model(Contract):
+    _config = contract_config(True)
+    value: int
+
+
+def main():
+    Model.echo_strings({"invalid": [1]})

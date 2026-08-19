@@ -191,6 +191,33 @@ def use(value: {invalid_type}) -> None:
 }
 
 #[test]
+fn string_structural_bound_checks_generic_type_arguments() {
+    let source = r#"
+from sifr.meta import StringStructural
+
+class Phantom[T]:
+    pass
+
+def accept[T: StringStructural](value: T) -> None:
+    pass
+
+def use(value: Phantom[int]) -> None:
+    accept(value)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module_with_externals(parsed.suite(), &structural_externals()) {
+        Ok(_) => panic!("non-string generic type arguments must fail"),
+        Err(errors) => errors,
+    };
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+            && error
+                .message
+                .contains("does not implement protocol 'StringStructural'")
+    }));
+}
+
+#[test]
 fn rust_interop_accepts_the_canonical_string_structural_marker() {
     let source = r"
 from sifr.meta import StringStructural

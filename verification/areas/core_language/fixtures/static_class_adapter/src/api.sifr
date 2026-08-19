@@ -1,4 +1,4 @@
-from sifr.meta import StaticProgram, Structural
+from sifr.meta import StaticProgram, StringStructural, Structural
 
 
 @attached_api_set
@@ -30,7 +30,9 @@ def describe_contract[T: StaticProgram]() -> str:
 )
 @rust.structural
 @rust(bridge.defaults.construct_partial)
-def construct_contract[T: StaticProgram]() -> Result[T, ContractError | RustPanicError]: ...
+def construct_contract[T: StaticProgram]() -> Result[
+    T, ContractError | RustPanicError
+]: ...
 
 
 @attached_api(
@@ -41,6 +43,19 @@ def construct_contract[T: StaticProgram]() -> Result[T, ContractError | RustPani
     owner="T",
 )
 def echo_contract[T: StaticProgram, Input: Structural](input: Input) -> Input:
+    return input
+
+
+@attached_api(
+    "fixture.api",
+    "ContractApi",
+    public_name="echo_strings",
+    receiver="type",
+    owner="T",
+)
+def echo_strings_contract[T: StaticProgram, Input: StringStructural](
+    input: Input,
+) -> Input:
     return input
 
 
