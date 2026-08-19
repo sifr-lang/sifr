@@ -14,6 +14,20 @@ impl RustEmitter {
             .filter_map(|(owner, bounds)| {
                 let params = bounds
                     .iter()
+                    .filter(|(_, values)| {
+                        matches!(values.as_slice(), [bound] if bound == "Structural" || bound == "StringStructural")
+                    })
+                    .map(|(name, _)| name.clone())
+                    .collect::<HashSet<_>>();
+                (!params.is_empty()).then(|| (owner.clone(), params))
+            })
+            .collect();
+        self.string_structural_type_params = module
+            .type_param_bounds
+            .iter()
+            .filter_map(|(owner, bounds)| {
+                let params = bounds
+                    .iter()
                     .filter(|(_, values)| values.as_slice() == ["StringStructural"])
                     .map(|(name, _)| name.clone())
                     .collect::<HashSet<_>>();
