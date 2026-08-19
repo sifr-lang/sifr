@@ -20,10 +20,13 @@ impl RustEmitter {
             .iter()
             .map(|type_param| {
                 let string_structural = self
-                    .structural_type_params
+                    .string_structural_type_params
                     .get(&func.name)
                     .is_some_and(|params| params.contains(type_param));
-                let structural = string_structural
+                let structural = self
+                    .structural_type_params
+                    .get(&func.name)
+                    .is_some_and(|params| params.contains(type_param))
                     || func.rust_interop.iter().any(|declaration| {
                         declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
                     });

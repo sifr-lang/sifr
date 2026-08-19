@@ -515,7 +515,36 @@ fn plain_string_structural_generic_emits_projection_bounds() {
 }
 
 #[test]
-fn attached_structural_generic_preserves_attached_api_bounds() {
+fn plain_structural_generic_emits_projection_bounds() {
+    let mut retain = ordinary_function("retain", Type::TypeVar("T".to_string()));
+    retain.return_type = Type::TypeVar("T".to_string());
+    retain.type_params = vec!["T".to_string()];
+    retain.body = vec![sifr_ir::HirStmt::Return {
+        value: Some(HirExpr::Name {
+            name: "value".to_string(),
+            binding_id: None,
+            ty: Type::TypeVar("T".to_string()),
+        }),
+    }];
+    let mut module = module(vec![retain], Vec::new());
+    module.type_param_bounds.insert(
+        "retain".to_string(),
+        std::collections::HashMap::from([("T".to_string(), vec!["Structural".to_string()])]),
+    );
+
+    let rust_code = generate_rust(&module);
+
+    assert!(
+        rust_code.contains(
+            "T: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject"
+        ),
+        "{rust_code}"
+    );
+    assert!(!rust_code.contains("T: Clone + 'static"), "{rust_code}");
+}
+
+#[test]
+fn attached_structural_generic_emits_projection_bounds() {
     let mut retain = ordinary_function("retain", Type::TypeVar("T".to_string()));
     retain.return_type = Type::TypeVar("T".to_string());
     retain.type_params = vec!["T".to_string()];
@@ -535,11 +564,13 @@ fn attached_structural_generic_preserves_attached_api_bounds() {
 
     let rust_code = generate_rust(&module);
 
-    assert!(rust_code.contains("T: Clone + 'static"), "{rust_code}");
     assert!(
-        !rust_code.contains("T: ::sifr_runtime::interop::structural::StructuralConstruct"),
+        rust_code.contains(
+            "T: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject"
+        ),
         "{rust_code}"
     );
+    assert!(!rust_code.contains("T: Clone + 'static"), "{rust_code}");
 }
 
 #[test]
