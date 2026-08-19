@@ -2155,6 +2155,35 @@ Generic ancestor and alias scope remain later items.
 Next action: consolidate structural record codegen substitution and preserve
 canonical union plus nested-scope behavior.
 
+Compiler hardening item 6 state: complete
+PR: [`sifr-lang/sifr#3342`](https://github.com/sifr-lang/sifr/pull/3342)
+Base SHA: `b311d49fbf5b4cc73e64fe9c5580c4cccf9bde50`
+Candidate SHA: `3d4eb41f33344ddab749a63874e87dd4a9ce5fe0`
+Merge SHA: `9484beb03c577a8f7a5e58e20abd78645eac168f`
+Changed paths: the shared type-system substitution visitor, project-aware
+structural identity substitution, canonical union rebuilding, focused codegen
+regressions, and the durable compiler contract.
+Validation: all 134 type-system tests passed. The lowering suite passed 1,003
+tests and ignored one test. All 1,054 codegen tests and 107 frontend tests
+passed. The driver suite passed 536 tests and ignored 76 tests. Workspace
+Clippy passed with warnings denied. Rust formatting, both maintainability
+guards, the 900-line guard, and diff hygiene passed. The create-PR and merge
+gates each ran once on the exact candidate. Both gates passed generated demo
+freshness and every preceding guard. Both then stopped at the same two
+separately owned Rust-interop matrix inputs. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3342#issuecomment-5345575655),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3342#issuecomment-5345600301)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3342#issuecomment-5345575435)).
+Deferred follow-up: M12 can pass the declaring module to the codegen resolver
+fallback for explicit scope alignment. It can pin agreement between static
+and generic symbolic identities for nested unions and optionals. It can also
+make the type-system ownership boundary literal at lowering imports. Generic
+ancestor and alias scope remain later items.
+Next action: align the structural codegen resolver scope and pin static versus
+symbolic identity agreement for nested unions and optionals.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2242,11 +2271,11 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 5 merged in Sifr PRs #3332, #3334, #3336, #3338, and #3340. The seven
-M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
-#3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
-#47. M12 is in progress. The current compiler merge is
-`85377cd4b2a1e28360c96ec3208f7da7cab8f92e`, and the current package merge is
+through 6 merged in Sifr PRs #3332, #3334, #3336, #3338, #3340, and #3342.
+The seven M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321,
+#3323, #3325, #3327, and #3329. The M11 package surface merged in
+Pydantic-Sifr PR #47. M12 is in progress. The current compiler merge is
+`9484beb03c577a8f7a5e58e20abd78645eac168f`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
@@ -2255,6 +2284,6 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: consolidate structural record codegen substitution. Then
-continue compiler-owned hardening before package certification and the final
-whole-phase review.
+Next action: align structural codegen resolver scope and pin static versus
+symbolic nested-union identity agreement. Then continue compiler-owned
+hardening before package certification and the final whole-phase review.
