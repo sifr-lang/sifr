@@ -1,11 +1,13 @@
 use sifr_ir::{canonical_structural_identity_value, HirClass, HirModule};
 use sifr_structural_identity::{self as identity, NominalField, ShapeIdentity, ALGORITHM_VERSION};
-use sifr_type_system::Type;
+use sifr_type_system::{substitute_type_vars_with_class_scopes, Type};
 use std::collections::{HashMap, HashSet};
 
 mod mapped_opaque;
 mod render;
-use crate::structural_record_fields::{concrete_record_fields, substitute_structural_type};
+#[cfg(test)]
+mod substitution_tests;
+use crate::structural_record_fields::concrete_record_fields;
 use mapped_opaque::{
     mapped_opaque_identity_expression, mapped_opaque_identity_expression_for_imported_type,
 };
@@ -70,6 +72,19 @@ impl<'a> IdentityContext<'a> {
         let candidate = candidates.next()?;
         candidates.next().is_none().then_some(candidate)
     }
+}
+
+fn substitute_structural_type(
+    ty: &Type,
+    bindings: &HashMap<String, Type>,
+    scope_module_name: &str,
+    context: &IdentityContext<'_>,
+) -> Type {
+    substitute_type_vars_with_class_scopes(ty, bindings, &|identity, name| {
+        context
+            .class_candidate(identity, name, scope_module_name)
+            .map(|(_, _, class)| class.type_params.clone())
+    })
 }
 
 impl CompiledIdentity {
@@ -359,7 +374,17 @@ fn compile_type(
                     class
                         .fields
                         .iter()
-                        .map(|(name, ty)| (name.clone(), substitute_structural_type(ty, &bindings)))
+                        .map(|(name, ty)| {
+                            (
+                                name.clone(),
+                                substitute_structural_type(
+                                    ty,
+                                    &bindings,
+                                    scope_module_name,
+                                    context,
+                                ),
+                            )
+                        })
                         .collect()
                 },
             );
@@ -603,88 +628,6 @@ mod tests {
             methods: Vec::new(),
             parent_class: None,
         }
-    }
-
-    #[test]
-    fn structural_substitution_preserves_generic_union_grouping() {
-        let template =
-            sifr_type_system::make_union(vec![Type::Int, Type::TypeVar("T".to_string())]);
-        let bindings = HashMap::from([("T".to_string(), Type::Bool)]);
-        let actual = substitute_structural_type(&template, &bindings);
-
-        assert_eq!(actual, Type::Union(vec![Type::Int, Type::Bool]));
-    }
-
-    #[test]
-    fn generic_union_identity_matches_reordered_collapsed_and_nested_substitutions() {
-        let modules = Vec::new();
-        let context = IdentityContext { modules: &modules };
-        let template =
-            sifr_type_system::make_union(vec![Type::Str, Type::TypeVar("T".to_string())]);
-        assert_eq!(
-            compile_type(&template, "main", &context, &mut Vec::new()).expression(),
-            format!(
-                "{STRUCTURAL}::union(&[{STRUCTURAL}::ShapeIdentity::from_bytes({:?}), <T as {STRUCTURAL}::StructuralType>::shape_identity()])",
-                identity::primitive("str").as_bytes()
-            )
-        );
-
-        let reordered =
-            substitute_structural_type(&template, &HashMap::from([("T".to_string(), Type::Int)]));
-        let reordered_identity =
-            compile_type(&reordered, "main", &context, &mut Vec::new()).static_value();
-        assert_eq!(
-            reordered_identity,
-            Some(identity::union(&[
-                identity::primitive("str"),
-                identity::primitive("int"),
-            ]))
-        );
-
-        let collapsed =
-            substitute_structural_type(&template, &HashMap::from([("T".to_string(), Type::Str)]));
-        let collapsed_identity =
-            compile_type(&collapsed, "main", &context, &mut Vec::new()).static_value();
-        assert_eq!(collapsed, Type::Union(vec![Type::Str, Type::Str]));
-        assert_eq!(collapsed_identity, Some(identity::primitive("str")));
-
-        let nested_argument = sifr_type_system::make_union(vec![Type::Int, Type::Bool]);
-        let nested = substitute_structural_type(
-            &template,
-            &HashMap::from([("T".to_string(), nested_argument)]),
-        );
-        let nested_identity =
-            compile_type(&nested, "main", &context, &mut Vec::new()).static_value();
-        assert_eq!(
-            nested_identity,
-            Some(identity::union(&[
-                identity::primitive("str"),
-                identity::union(&[identity::primitive("bool"), identity::primitive("int"),]),
-            ]))
-        );
-
-        let optional_template =
-            sifr_type_system::make_union(vec![Type::None, Type::TypeVar("T".to_string())]);
-        assert_eq!(
-            compile_type(&optional_template, "main", &context, &mut Vec::new()).expression(),
-            format!(
-                "{STRUCTURAL}::unary_container(\"optional\", <T as {STRUCTURAL}::StructuralType>::shape_identity())"
-            )
-        );
-        let optional_argument = sifr_type_system::make_union(vec![Type::None, Type::Str]);
-        let nested_optional = substitute_structural_type(
-            &optional_template,
-            &HashMap::from([("T".to_string(), optional_argument)]),
-        );
-        let nested_optional_identity =
-            compile_type(&nested_optional, "main", &context, &mut Vec::new()).static_value();
-        assert_eq!(
-            nested_optional_identity,
-            Some(identity::unary_container(
-                "optional",
-                identity::unary_container("optional", identity::primitive("str")),
-            ))
-        );
     }
 
     #[test]

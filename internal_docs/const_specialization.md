@@ -154,6 +154,9 @@ Substitution respects nested nominal scopes. A nested class binds its own type p
 the compiler substitutes its fields and methods, even when an outer class uses the same names.
 The compiler uses local declaration identity or exported parameter metadata for this binding. If
 that authority is unavailable, nested parameters stay unresolved and cannot capture outer values.
+The type system owns the shared substitution visitor. Lowering and project code generation give
+that visitor their declaration resolvers. The visitor canonicalizes unions after substitution.
+Reordered, duplicate, and nested union members therefore produce one concrete structural identity.
 
 An unbound generic adapted declaration does not request a schema program.
 A concrete owner must supply all type arguments before static program generation.

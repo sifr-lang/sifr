@@ -900,6 +900,10 @@ package specializer. Nested nominal declarations rebind their own type parameter
 method substitution. An outer parameter with the same name cannot capture the nested parameter.
 Local declaration identity and exported parameter metadata are the only binding authorities. An
 unresolved nested scope stays symbolic and does not use a consumer-local class with the same name.
+The type system owns this substitution visitor. Lowering and structural code generation supply
+their declaration resolvers to the same visitor. Substitution also rebuilds unions through the
+canonical union constructor. Therefore, structural identity uses normalized concrete types after
+generic substitution.
 
 Checked adapted-handler exports retain the callable target with a signature specialized relative
 to the selected owner's type parameters. Generic substitution follows the full local ancestor
