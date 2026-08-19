@@ -77,6 +77,12 @@ An imported or re-exported function keeps its canonical body and package identit
 Lists evaluate each item against the declared item type.
 Nested calls use the same deterministic limits as adapter and specialization evaluation.
 
+Adapter provider identity uses the semantic, name-sorted `@const_eval` function set. It excludes
+lowering-assigned binding and ownership-place IDs and all diagnostic byte ranges. It retains
+checked types, function bodies, decorators, intrinsic selection, and Rust and Python interop
+declarations. Moving or reordering unrelated declarations cannot change the identity. Changing a
+semantic provider declaration must change it.
+
 ## Evaluation and outcomes
 
 Const evaluation is deterministic and fails closed. Default limits are 100,000 evaluation steps,
