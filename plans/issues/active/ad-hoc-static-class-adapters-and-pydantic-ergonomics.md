@@ -1757,8 +1757,42 @@ scan, add a direct code-generation assertion for concrete owner retention,
 and revisit the existing structural probe's broad construction/projection
 bounds. It should split `rust_interop_structural_tests.rs` before that file
 reaches 900 lines.
-Next action: implement the M11 package surface on compiler merge
-`ae29ceba22a877c4cd561d1e16d5b75db88eaab6`.
+Next action: completed by compiler prerequisite 4 below.
+
+Compiler prerequisite 4 state: complete
+PR: [`sifr-lang/sifr#3323`](https://github.com/sifr-lang/sifr/pull/3323)
+Base SHA: `20f7b42fc08511d176e176e5e125cb68bf349cc0`
+Initial candidate SHA: `8c5025a687413a4ed091ed8f1cea05155b8ea6c7`
+Final candidate SHA: `65c86446e434a86768ec71903e1a6d0776aafac2`
+Merge SHA: `7a922ea7218254cafe6b65850ca0a089e16e4167`
+Changed paths: attached-API default metadata and call lowering; generic type
+alias export, import, and type-receiver forwarding; compile-time alias erasure
+before Rust code generation; focused HIR and native-build tests; and durable
+architecture documentation.
+Validation: affected compiler crates passed checking. Two focused alias tests,
+22 early-adapter tests, and four imported attached-API tests passed. The native
+alias test built generated Rust and proved that an imported generic alias does
+not become a Rust import. The in-progress M11 package passed source checking.
+Formatting, HIR maintainability, file-size, and diff guards passed. The exact
+candidate's create-PR and merge gates each ran once. Both passed every earlier
+guard and stopped at the same two external Rust-interop matrix inputs recorded
+above. Neither gate was rerun
+([evidence](https://github.com/sifr-lang/sifr/pull/3323#issuecomment-5341731661)).
+Review evidence: the initial exact-SHA Opus review returned `SATISFIED` and
+identified the imported-alias Rust-codegen risk as follow-up work
+([evidence](https://github.com/sifr-lang/sifr/pull/3323#issuecomment-5341731673)).
+A focused native build confirmed that risk. One remediation erased generic
+aliases from runtime imports and added native-build coverage. The final
+exact-SHA review returned `SATISFIED` with no blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3323#issuecomment-5341731646)).
+Deferred follow-up: compiler prerequisite 5 must generate a static program for
+a concrete adapted subclass of a generic adapted parent. Native M11 evidence
+showed missing `StaticProgramType` implementations for `ConcreteEnvelope` and
+`IntRoot`, plus inherited generic-parent layout trait failures for `IntRoot`.
+M12 must localize provider-module references in nonliteral attached defaults.
+The second review found that separate mechanism defect, so no third review ran.
+Next action: implement compiler prerequisite 5 before resuming the M11 package
+surface.
 
 Scope:
 
@@ -1900,9 +1934,10 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M10 are merged and recorded. M11 is in progress. Its two
-compiler prerequisites merged in Sifr PRs #3317 and #3319. The current
-compiler merge is `240852f15423bac125db7debfd168b47f29aba6a`.
+Current state: M0-M10 are merged and recorded. M11 is in progress. Its first
+four compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, and #3323.
+The current compiler merge is
+`7a922ea7218254cafe6b65850ca0a089e16e4167`.
 
 External gate record (2026-08-19): both one-time gates for PR #3317 stopped at
 the Rust-interop matrix. The matrix reported one missing negative evidence
@@ -1910,5 +1945,5 @@ source and one existing empty placeholder class. The item did not own or alter
 those inputs. Both gates passed all earlier guards, and neither gate was
 rerun.
 
-Next action: implement the M11 package surface in `pydantic-sifr` on compiler
-merge `240852f15423bac125db7debfd168b47f29aba6a`.
+Next action: implement M11 compiler prerequisite 5 for concrete subclasses of
+adapted generic parents. Then resume the `pydantic-sifr` package surface.
