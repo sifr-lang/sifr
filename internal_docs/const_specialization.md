@@ -157,6 +157,8 @@ that authority is unavailable, nested parameters stay unresolved and cannot capt
 The type system owns the shared substitution visitor. Lowering and project code generation give
 that visitor their declaration resolvers. The visitor canonicalizes unions after substitution.
 Reordered, duplicate, and nested union members therefore produce one concrete structural identity.
+Project code generation uses the selected outer declaration's module for nested scope resolution.
+It does not use the consumer module for identityless nested fields.
 
 An unbound generic adapted declaration does not request a schema program.
 A concrete owner must supply all type arguments before static program generation.

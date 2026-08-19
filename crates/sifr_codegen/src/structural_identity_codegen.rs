@@ -362,6 +362,8 @@ fn compile_type(
                 .iter()
                 .map(|argument| compile_type(argument, scope_module_name, context, stack))
                 .collect::<Vec<_>>();
+            let declaration_module_name =
+                candidate.map_or(scope_module_name, |(module_name, _, _)| module_name);
             let concrete_fields = candidate.map_or_else(
                 || fields.clone(),
                 |(_, _, class)| {
@@ -380,7 +382,7 @@ fn compile_type(
                                 substitute_structural_type(
                                     ty,
                                     &bindings,
-                                    scope_module_name,
+                                    declaration_module_name,
                                     context,
                                 ),
                             )
@@ -393,7 +395,7 @@ fn compile_type(
                 &arguments,
                 &concrete_fields,
                 candidate.map(|(_, _, class)| class),
-                candidate.map_or(scope_module_name, |(module_name, _, _)| module_name),
+                declaration_module_name,
                 context,
                 stack,
             );

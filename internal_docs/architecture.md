@@ -903,7 +903,8 @@ unresolved nested scope stays symbolic and does not use a consumer-local class w
 The type system owns this substitution visitor. Lowering and structural code generation supply
 their declaration resolvers to the same visitor. Substitution also rebuilds unions through the
 canonical union constructor. Therefore, structural identity uses normalized concrete types after
-generic substitution.
+generic substitution. Code generation resolves nested scopes from the selected outer declaration's
+module. A consumer module cannot redirect an identityless nested field to a same-named class.
 
 Checked adapted-handler exports retain the callable target with a signature specialized relative
 to the selected owner's type parameters. Generic substitution follows the full local ancestor
