@@ -242,4 +242,17 @@ mod tests {
             .expect("canonical candidate exists");
         assert_eq!(selected, "AliasA");
     }
+
+    #[test]
+    fn requested_canonical_candidate_wins_over_key_order() {
+        let candidate = parent(Type::TypeVar("T".to_string()), Type::Str);
+        let classes = HashMap::from([
+            ("AliasA".to_string(), candidate.clone()),
+            ("Requested".to_string(), candidate),
+        ]);
+
+        let (selected, _) = class_candidate(&classes, Some("models.Parent"), "Requested")
+            .expect("requested canonical candidate exists");
+        assert_eq!(selected, "Requested");
+    }
 }

@@ -43,12 +43,13 @@ pub(super) fn declaration_value(
         ..
     }) = class.parent_type.as_ref()
     {
+        let parent_identity = canonical_parent_identity(module_name, identity.as_deref(), name);
         let fields = if fields.is_empty() {
-            local_parent_fields(result, parent_name, type_args)
+            local_parent_fields(module_name, result, &parent_identity, type_args)
         } else {
             fields.clone()
         };
-        (identity.as_deref().unwrap_or(name).to_string(), fields)
+        (parent_identity, fields)
     } else if let Some(shape) =
         fallback_parent_shape(module_name, result, external_defs, parent_name)
     {
@@ -63,10 +64,10 @@ pub(super) fn declaration_value(
             _ => &[],
         };
         let bindings = parent_bindings(
+            module_name,
             result,
             external_defs,
             &parent_identity,
-            parent_name,
             type_args,
         );
         parent_fields = parent
@@ -117,7 +118,7 @@ pub(super) fn declaration_value(
         })
         .collect::<Vec<_>>();
     inherited.extend(
-        parent_method_contracts(class, result, parent_name)
+        parent_method_contracts(module_name, class, result, &parent_identity)
             .into_iter()
             .filter(|(name, _)| !local_methods.contains(name))
             .map(|(name, signature)| {
@@ -179,25 +180,21 @@ fn fallback_parent_shape(
 }
 
 fn local_parent_fields(
+    module_name: &str,
     result: &LoweringResult,
-    parent_name: &str,
+    parent_identity: &str,
     type_args: &[Type],
 ) -> Vec<(String, Type)> {
-    let bindings = result
-        .module
-        .classes
-        .iter()
-        .find(|candidate| candidate.name == parent_name)
+    let parent = result.module.classes.iter().find(|candidate| {
+        canonical_parent_identity(module_name, candidate.identity.as_deref(), &candidate.name)
+            == parent_identity
+    });
+    let bindings = parent
         .into_iter()
-        .flat_map(|candidate| candidate.type_params.iter())
-        .cloned()
+        .flat_map(|candidate| candidate.type_params.iter().cloned())
         .zip(type_args.iter().cloned())
         .collect::<HashMap<_, _>>();
-    result
-        .module
-        .classes
-        .iter()
-        .find(|parent| parent.name == parent_name)
+    parent
         .into_iter()
         .flat_map(|parent| parent.fields.iter())
         .map(|(name, ty)| {
@@ -210,38 +207,53 @@ fn local_parent_fields(
 }
 
 pub(super) fn parent_bindings(
+    module_name: &str,
     result: &LoweringResult,
     external_defs: &ExternalDefs,
     parent_identity: &str,
-    parent_name: &str,
     type_args: &[Type],
 ) -> HashMap<String, Type> {
-    let mut params = result
+    let params = result
         .module
         .classes
         .iter()
-        .find(|candidate| candidate.name == parent_name)
+        .find(|candidate| {
+            canonical_parent_identity(module_name, candidate.identity.as_deref(), &candidate.name)
+                == parent_identity
+        })
         .into_iter()
         .flat_map(|candidate| candidate.type_params.iter())
         .cloned()
         .collect::<Vec<_>>();
-    if params.is_empty() {
-        if let Some((module, owner)) = parent_identity.rsplit_once('.') {
-            params = external_defs
+    let params = (!params.is_empty())
+        .then_some(params)
+        .or_else(|| {
+            let (module, owner) = parent_identity.rsplit_once('.')?;
+            external_defs
                 .class_type_params
                 .get(module)
                 .and_then(|classes| classes.get(owner))
                 .cloned()
-                .unwrap_or_default();
-        }
-    }
+        })
+        .unwrap_or_default();
     params.into_iter().zip(type_args.iter().cloned()).collect()
 }
 
+pub(super) fn canonical_parent_identity(
+    module_name: &str,
+    identity: Option<&str>,
+    name: &str,
+) -> String {
+    identity
+        .map(str::to_string)
+        .unwrap_or_else(|| format!("{module_name}.{name}"))
+}
+
 fn parent_method_contracts(
+    module_name: &str,
     class: &HirClass,
     result: &LoweringResult,
-    parent_name: &str,
+    parent_identity: &str,
 ) -> Vec<(String, FunctionType)> {
     if let Some(Type::Class { methods, .. }) = class.parent_type.as_ref() {
         if !methods.is_empty() {
@@ -252,7 +264,10 @@ fn parent_method_contracts(
         .module
         .classes
         .iter()
-        .find(|parent| parent.name == parent_name)
+        .find(|parent| {
+            canonical_parent_identity(module_name, parent.identity.as_deref(), &parent.name)
+                == parent_identity
+        })
         .into_iter()
         .flat_map(|parent| parent.methods.iter())
         .map(|method| {
@@ -393,7 +408,7 @@ fn inherited_field_item(
 
 #[cfg(test)]
 mod parent_selection_tests {
-    use super::parent_selection;
+    use super::{canonical_parent_identity, parent_bindings, parent_selection};
     use sifr_lowering::{lower_module, ClassAdapterSelection, ExternalDefs, LoweringResult};
     use sifr_syntax::parse_module_suite;
 
@@ -445,5 +460,36 @@ mod parent_selection_tests {
         let selected = parent_selection("consumer", &result, &external_defs, "consumer.Parent")
             .expect("local selection exists");
         assert_eq!(selected.provider_module, "local.provider");
+    }
+
+    #[test]
+    fn imported_parent_bindings_ignore_a_colliding_local_class() {
+        let parsed =
+            parse_module_suite("class Parent[LocalT]:\n    pass\n", None).expect("fixture parses");
+        let result = lower_module(&parsed).expect("fixture lowers");
+        let mut external_defs = ExternalDefs::default();
+        external_defs
+            .class_type_params
+            .entry("models".to_string())
+            .or_default()
+            .insert("Parent".to_string(), vec!["RemoteT".to_string()]);
+
+        let bindings = parent_bindings(
+            "consumer",
+            &result,
+            &external_defs,
+            "models.Parent",
+            &[sifr_type_system::Type::Str],
+        );
+        assert_eq!(bindings.get("RemoteT"), Some(&sifr_type_system::Type::Str));
+        assert!(!bindings.contains_key("LocalT"));
+    }
+
+    #[test]
+    fn missing_parent_identity_is_canonicalized_to_the_current_module() {
+        assert_eq!(
+            canonical_parent_identity("consumer", None, "Parent"),
+            "consumer.Parent"
+        );
     }
 }
