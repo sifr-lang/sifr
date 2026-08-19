@@ -891,6 +891,11 @@ free declaration input and provider HIR before evaluation. Post-adapter identity
 the invocation to the validated output and is an input to static-program identity, avoiding a
 cycle with later handler and attached-API outputs.
 
+Structural shape derivation specializes finalized adapter field-plan types with the concrete
+owner arguments before package specialization. Local and imported adapted generic classes use the
+same substitution rule, so nested concrete uses do not expose unbound declaration parameters to a
+package specializer.
+
 The same final field state governs structural construction. Structural records match incoming
 edges by field name, reject unknown and duplicate names, and fill omitted defaulted fields from
 their checked HIR defaults. Factory defaults retain a canonical callable-identity side channel in

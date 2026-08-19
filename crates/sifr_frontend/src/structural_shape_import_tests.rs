@@ -120,6 +120,60 @@ class Use:
 }
 
 #[test]
+fn imported_adapted_generic_field_plan_uses_the_concrete_argument() {
+    let mut external_defs = ExternalDefs::default();
+    let mut models = compile(
+        "models",
+        r#"
+class Box[T]:
+    value: T
+"#,
+        &external_defs,
+    );
+    models.class_adapter_selections.push(ClassAdapterSelection {
+        owner: "Box".to_string(),
+        provider_module: "fixture.adapter".to_string(),
+        provider_function: "adapt".to_string(),
+        descriptor_type: Type::None,
+        marker_identities: Vec::new(),
+        data_parent: None,
+        field_plans: vec![AdapterFieldPlan {
+            identity: "models.Box.value".to_string(),
+            name: "value".to_string(),
+            declared_type: Type::TypeVar("T".to_string()),
+            default: AdapterFieldDefault::Required,
+            validation_policy: None,
+        }],
+        handler_plans: Vec::new(),
+        attached_api_set: None,
+        adapter_invocation_identity: [0; 32],
+        post_adapter_identity: [0; 32],
+        range: ruff_text_size::TextRange::default(),
+    });
+    collect_module_exports("models", &models, &mut external_defs);
+
+    let consumer = compile(
+        "consumer",
+        "from models import Box\n\nclass Container:\n    item: Box[int]\n",
+        &external_defs,
+    );
+    let shape = describe_type_with_externals(
+        "consumer",
+        field_type(&consumer, "Container", "item"),
+        &consumer,
+        &external_defs,
+    );
+    let ShapeNode::Nominal { fields, .. } = shape.root else {
+        panic!("box must have a nominal shape");
+    };
+    assert_eq!(
+        fields[0].declared_type,
+        ShapeNode::Primitive("int".to_string())
+    );
+    assert!(!shape.canonical_identity.contains("param:T"));
+}
+
+#[test]
 fn recollection_removes_stale_structural_shape_exports() {
     let mut external_defs = ExternalDefs::default();
     let annotated = compile(

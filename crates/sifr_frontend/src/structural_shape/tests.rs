@@ -345,6 +345,63 @@ class Container:
 }
 
 #[test]
+fn adapted_generic_field_plan_uses_concrete_class_arguments() {
+    use sifr_lowering::{AdapterFieldDefault, AdapterFieldPlan, ClassAdapterSelection};
+
+    let source = r#"
+class Box[T]:
+    value: T
+
+class Container:
+    item: Box[int]
+"#;
+    let parsed = parse_module_suite(source, None).expect("fixture parses");
+    let mut lowered = lower_module(&parsed).expect("fixture lowers");
+    lowered
+        .class_adapter_selections
+        .push(ClassAdapterSelection {
+            owner: "Box".to_string(),
+            provider_module: "fixture.adapter".to_string(),
+            provider_function: "adapt".to_string(),
+            descriptor_type: Type::None,
+            marker_identities: Vec::new(),
+            data_parent: None,
+            field_plans: vec![AdapterFieldPlan {
+                identity: "fixture.generic_fields.Box.value".to_string(),
+                name: "value".to_string(),
+                declared_type: Type::TypeVar("T".to_string()),
+                default: AdapterFieldDefault::Required,
+                validation_policy: None,
+            }],
+            handler_plans: Vec::new(),
+            attached_api_set: None,
+            adapter_invocation_identity: [0; 32],
+            post_adapter_identity: [0; 32],
+            range: ruff_text_size::TextRange::default(),
+        });
+    let container = &lowered.module.classes[1];
+    let shape = describe_type(
+        "fixture.generic_fields",
+        &class_type(container, Vec::new()),
+        &lowered,
+    );
+    let ShapeNode::Nominal { fields, .. } = shape.root else {
+        panic!("container must have a nominal shape");
+    };
+    let ShapeNode::Nominal {
+        fields: box_fields, ..
+    } = &fields[0].declared_type
+    else {
+        panic!("container item must preserve its concrete box shape");
+    };
+    assert_eq!(
+        box_fields[0].declared_type,
+        ShapeNode::Primitive("int".to_string())
+    );
+    assert!(!shape.canonical_identity.contains("param:T"));
+}
+
+#[test]
 fn inherited_handler_preserves_checked_signature_and_uses_child_diagnostic_origin() {
     use sifr_lowering::{
         AdapterFieldDefault, AdapterFieldPlan, AdapterHandlerPlan, CallableIdentity,

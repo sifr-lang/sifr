@@ -19,6 +19,7 @@ use crate::const_canonical::canonical_value;
 use canonical_helpers::canonical_sequence;
 mod defaults;
 use defaults::shape_field_default;
+mod generic_fields;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructuralShape {
@@ -362,13 +363,15 @@ fn describe_class(
                     .map(|selection| selection.field_plans.as_slice()),
             )
         };
-    let planned_fields = field_plans.map(|plans| {
-        plans
-            .iter()
-            .map(|field| (field.name.clone(), field.declared_type.clone()))
-            .collect::<Vec<_>>()
-    });
-    let effective_fields = planned_fields.as_deref().unwrap_or(fields);
+    let effective_fields = generic_fields::effective_fields(
+        local_class,
+        source_module,
+        source_name,
+        type_args,
+        fields,
+        field_plans,
+        external_defs,
+    );
     let described_fields = effective_fields
         .iter()
         .enumerate()
