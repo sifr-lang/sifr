@@ -1,5 +1,4 @@
 use super::{DottedModulePath, PackageModuleKey, PackageModuleSource, PackageSourceMap};
-use crate::graph::derive::SifrPackageGraph;
 use crate::manifest::sifr::ImportRoot;
 use std::collections::BTreeMap;
 
@@ -39,21 +38,9 @@ pub(super) fn remap_import_path(
 
 pub(super) fn is_private_dependency_module(
     source_map: &PackageSourceMap,
-    graph: &SifrPackageGraph,
     module: &PackageModuleSource,
     module_path: &DottedModulePath,
 ) -> bool {
-    let Some(package) = graph.packages.get(&module.package_id) else {
-        return false;
-    };
-    if !package.manifest.production_schema
-        && package.manifest.exports.iter().any(|export| {
-            import_root_matches(export, module_path)
-                && !module_path.0.split('.').any(|part| part.starts_with('_'))
-        })
-    {
-        return false;
-    }
     if source_map.public_apis.contains_key(&PackageModuleKey {
         package_id: module.package_id.clone(),
         module_path: module_path.clone(),

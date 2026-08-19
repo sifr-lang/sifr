@@ -177,8 +177,12 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr",
             "unknown import target: '{module}'",
             "sifr_lowering::lower",
-            [arg!("module")],
-            ["module"]
+            [
+                arg!("module"),
+                json_arg!("resolution_scope"),
+                json_arg!("tried_paths")
+            ],
+            ["module", "resolution_scope", "tried_paths"]
         ),
     active_entry!(
             "SIFR-IMPORT-0003",
@@ -207,9 +211,9 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "IMPORT",
             "Ambiguous source module import target.",
             Severity::Error,
-            "verification/areas/project_workspace/fixtures/project/workspace_ambiguous_import_canonical",
+            "verification/areas/package_management/fixtures/package/package_ambiguous_import_canonical",
             "ambiguous import target: '{module}'",
-            "sifr_driver::project::discovery",
+            "sifr_package::imports::source_map",
             [
                 arg!("module"),
                 json_arg!("candidate_paths"),
@@ -227,10 +231,18 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "sifr_driver::project::discovery",
             [
                 arg!("module"),
+                json_arg!("resolution_scope"),
+                json_arg!("candidate_paths"),
                 json_arg!("resolved_path"),
                 json_arg!("parent_path")
             ],
-            ["module", "resolved_path", "parent_path"]
+            [
+                "module",
+                "resolution_scope",
+                "candidate_paths",
+                "resolved_path",
+                "parent_path"
+            ]
         ),
     active_entry!(
             "SIFR-IMPORT-0007",
@@ -257,22 +269,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
                 json_arg!("imported_names")
             ],
             ["bare_module", "suggested_module", "imported_names"]
-        ),
-    active_entry!(
-            "SIFR-IMPORT-0009",
-            "IMPORT",
-            "Unsupported legacy Sifr stdlib module import.",
-            Severity::Error,
-            "crates/sifr/tests/e2e/fail/legacy_sifr_asyncio_removed.sifr",
-            "legacy stdlib module '{legacy_module}' is unsupported; use '{suggested_module}'",
-            "sifr_lowering::lower",
-            [
-                arg!("legacy_module"),
-                arg!("suggested_module"),
-                json_arg!("imported_names"),
-                json_arg!("reason")
-            ],
-            ["legacy_module", "suggested_module", "imported_names", "reason"]
         ),
     active_entry!(
             "SIFR-TYPE-0002",

@@ -1,0 +1,55 @@
+[
+  {
+    "code": "SIFR-IMPORT-0002",
+    "severity": "Error",
+    "message": "unknown import target: 'missing_math_utils'",
+    "message_template": "unknown import target: '{module}'",
+    "args": {
+      "module": {
+        "kind": "string",
+        "value": "missing_math_utils"
+      },
+      "resolution_scope": {
+        "kind": "string",
+        "value": "workspace"
+      },
+      "tried_paths": {
+        "kind": "string",
+        "value": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/src/missing_math_utils.sifr;<WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/src/missing_math_utils.sifr"
+      }
+    },
+    "url": "https://docs.sifr.sh/errors/SIFR-IMPORT-0002",
+    "spans": [
+      {
+        "file": "<WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/src/main.sifr",
+        "byte_start": 5,
+        "byte_end": 23,
+        "line": 1,
+        "column": 6,
+        "end_line": 1,
+        "end_column": 24,
+        "is_primary": true,
+        "label": null,
+        "lines": [
+          {
+            "text": "from missing_math_utils import add",
+            "highlight_start": 6,
+            "highlight_end": 24
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "severity": "Note",
+        "message": "tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/src/missing_math_utils.sifr"
+      },
+      {
+        "severity": "Note",
+        "message": "tried path: <WORKSPACE>/verification/areas/project_workspace/fixtures/project/missing_import_reports_error/src/missing_math_utils.sifr"
+      }
+    ],
+    "help": null,
+    "suggestions": []
+  }
+]

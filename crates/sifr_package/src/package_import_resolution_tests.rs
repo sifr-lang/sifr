@@ -10,21 +10,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 #[test]
 fn import_resolution_result_preserves_ambiguous_candidates() {
     let temp = TestWorkspace::new("source_map_ambiguous_result");
-    let app = package(&temp, "app", "sifr-app", "0.1.0", "app", &["app.main"]);
-    let math = package(
-        &temp,
-        "math",
-        "sifr-math",
-        "1.0.0",
-        "math",
-        &["math.vector"],
-    );
-    fs::write(
-        math.root.join("sifr.toml"),
-        "[package]\nname = \"math\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroots = [\"sifr\", \"alt\"]\n\n[exports]\nmodules = [\"math\"]\n",
-    )
-    .expect("rewrite roots");
-    write_module_under(&math.root, "alt", "math.vector");
+    let app = package(&temp, "app", "sifr-app", "0.1.0", "app", &["main"]);
+    let math = package(&temp, "math", "sifr-math", "1.0.0", "math", &["vector"]);
+    write_module_under(&math.root, "src/vector", "__init__");
 
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math", &math)]);
     let source_map = PackageSourceMap::build(&graph).expect("ambiguous map is queryable");
@@ -47,15 +35,8 @@ fn import_resolution_result_preserves_ambiguous_candidates() {
 #[test]
 fn import_resolution_result_distinguishes_unresolved_private_and_fatal_states() {
     let temp = TestWorkspace::new("source_map_resolution_states");
-    let app = package(&temp, "app", "sifr-app", "0.1.0", "app", &["app.main"]);
-    let math = package(
-        &temp,
-        "math",
-        "sifr-math",
-        "1.0.0",
-        "math",
-        &["math._internal"],
-    );
+    let app = package(&temp, "app", "sifr-app", "0.1.0", "app", &["main"]);
+    let math = package(&temp, "math", "sifr-math", "1.0.0", "math", &["_internal"]);
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math", &math)]);
     let source_map = PackageSourceMap::build(&graph).expect("source map builds");
 
@@ -111,7 +92,7 @@ fn package(
     fs::create_dir_all(root.join("src")).expect("create src");
     fs::write(
         root.join("src/lib.rs"),
-        "// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.\n",
+        "// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.\n",
     )
     .expect("write marker");
     fs::write(
@@ -124,13 +105,13 @@ fn package(
     fs::write(
         root.join("sifr.toml"),
         format!(
-            "[package]\nname = \"{export}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroots = [\"sifr\"]\n\n[exports]\nmodules = [\"{export}\"]\n"
+            "[package]\nname = \"{export}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n"
         ),
     )
     .expect("write sifr.toml");
-    write_module_under(&root, "sifr", export);
+    write_module_under(&root, "src", "__init__");
     for module in modules {
-        write_module_under(&root, "sifr", module);
+        write_module_under(&root, "src", module);
     }
     TestPackage {
         root,

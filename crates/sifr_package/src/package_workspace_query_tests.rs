@@ -8,8 +8,8 @@ use crate::graph::derive::{
 use crate::graph::filters::{apply_package_filters, parse_package_filter};
 use crate::graph::workspace::{explicit_package_selection, select_sifr_workspace_members};
 use crate::manifest::sifr::{
-    CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, RustInteropConfig,
-    SifrEdition, SifrManifest, SifrPackageName, TrustPolicy,
+    CompilerRequirement, PackageSourceRoot, PythonConfig, RustInteropConfig, SifrEdition,
+    SifrManifest, SifrPackageName, TrustPolicy,
 };
 use crate::ops::read::{outdated_query_report, OutdatedPackageSource};
 use sifr_diagnostics::DiagnosticCode;
@@ -46,17 +46,10 @@ fn filters_select_dependency_and_dependent_closures_with_negation() {
 #[test]
 fn ambiguous_filter_reports_0601() {
     let (mut graph, _) = graph_and_metadata();
-    let duplicate = package(
-        "other-app",
-        "sifr-other-app",
-        "app",
-        "/ws/other",
-        "other_app",
-        None,
-    );
+    let duplicate = package("other-app", "sifr-other-app", "app", "/ws/other", None);
     graph
         .packages
-        .insert(duplicate.package_id.clone(), duplicate);
+        .insert(duplicate.package_id.clone(), duplicate.clone());
 
     let diagnostics = apply_package_filters(
         &graph,
@@ -113,27 +106,28 @@ fn rust_only_member_depending_on_sifr_reports_0106() {
 #[test]
 fn workspace_duplicate_import_roots_report_0602() {
     let (mut graph, mut metadata) = graph_and_metadata_without_rust_violation();
-    let duplicate = package(
-        "duplicate",
-        "sifr-duplicate",
-        "duplicate",
-        "/ws/dup",
-        "lib",
-        None,
-    );
+    let duplicate = package("duplicate", "sifr-duplicate", "lib", "/ws/dup", None);
     graph.classifications.insert(
         duplicate.cargo_package_id.clone(),
         PackageClassification::SifrSource(duplicate.package_id.clone()),
     );
     graph
         .packages
-        .insert(duplicate.package_id.clone(), duplicate);
+        .insert(duplicate.package_id.clone(), duplicate.clone());
     metadata
         .workspace_members
         .insert(cargo_id("sifr-duplicate"));
 
-    let diagnostics =
-        select_sifr_workspace_members(&metadata, &graph).expect_err("duplicate exports fail");
+    metadata.packages.insert(
+        duplicate.cargo_package_id.clone(),
+        cargo_package(&duplicate),
+    );
+    let diagnostics = explicit_package_selection(
+        &metadata,
+        &graph,
+        &["sifr-lib".to_string(), "sifr-duplicate".to_string()],
+    )
+    .expect_err("duplicate import roots fail");
 
     assert_eq!(
         diagnostics[0].code,
@@ -149,7 +143,6 @@ fn workspace_duplicate_sifr_names_report_0607() {
         "sifr-duplicate-name",
         "lib",
         "/ws/duplicate-name",
-        "duplicate_lib",
         None,
     );
     graph.classifications.insert(
@@ -226,13 +219,12 @@ fn graph_and_metadata() -> (SifrPackageGraph, NormalizedCargoMetadata) {
 }
 
 fn graph_and_metadata_without_rust_violation() -> (SifrPackageGraph, NormalizedCargoMetadata) {
-    let app = package("app", "sifr-app", "app", "/ws/app", "app", None);
+    let app = package("app", "sifr-app", "app", "/ws/app", None);
     let lib = package(
         "lib",
         "sifr-lib",
         "lib",
         "/ws/lib",
-        "lib",
         Some("registry+https://example.invalid".to_string()),
     );
     let shared = package(
@@ -240,7 +232,6 @@ fn graph_and_metadata_without_rust_violation() -> (SifrPackageGraph, NormalizedC
         "sifr-shared",
         "shared",
         "/ws/shared",
-        "shared",
         Some("git+https://example.invalid/shared".to_string()),
     );
     let rust_id = cargo_id("rust-helper");
@@ -305,7 +296,6 @@ fn package(
     cargo_name: &str,
     sifr_name: &str,
     root: &str,
-    export: &str,
     source: Option<String>,
 ) -> SifrPackageMetadata {
     SifrPackageMetadata {
@@ -322,8 +312,7 @@ fn package(
             edition: SifrEdition("2026".to_string()),
             compiler_requirement: CompilerRequirement(">=0.3,<0.4".to_string()),
             default_run: None,
-            source_roots: vec![PackageSourceRoot(PathBuf::from("sifr"))],
-            exports: vec![ImportRoot(export.to_string())],
+            source_root: PackageSourceRoot(PathBuf::from("src")),
             source_features: BTreeMap::new(),
             scripts: BTreeMap::new(),
             dependencies: BTreeMap::new(),
@@ -331,7 +320,6 @@ fn package(
             trust: TrustPolicy::default(),
             python: PythonConfig::default(),
             rust: RustInteropConfig::default(),
-            production_schema: false,
         },
         aliases: BTreeMap::new(),
     }

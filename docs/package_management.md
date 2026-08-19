@@ -104,7 +104,7 @@ Sifr reads this from `cargo metadata --format-version 1`, resolves `sifr.toml` r
 Pure Sifr packages include a minimal Rust library target because Cargo requires a target:
 
 ```rust
-// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.
+// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.
 ```
 
 Sifr rejects non-trivial Rust marker contents for packages that do not declare Rust-backed behavior.
@@ -185,17 +185,6 @@ sifr publish --dry-run --allow-dirty --no-verify
 cd ../sifr-demo-app
 sifr vendor vendor --versioned-dirs
 ```
-
-## Layout Migration
-
-Internal legacy fixtures using `sifr/<package>/` are migrated manually:
-
-1. Move `sifr/<package>/__init__.sifr` to `src/__init__.sifr`.
-2. Move sibling `.sifr` implementation files to `src/`.
-3. Remove `[source].roots` and `[exports].modules` from `sifr.toml` unless the fixture is explicitly a legacy parser/backfill regression.
-4. Rewrite `Cargo.toml` include patterns from `sifr/**/*.sifr` to `src/**/*.sifr`.
-5. Preserve `# sifr-managed` markers around Sifr-owned Cargo metadata.
-6. Run `sifr check`, `sifr package --list`, and the package-manager guardrail after the move.
 
 ## Lock Modes
 

@@ -154,10 +154,9 @@ Options:
 Environment:
   SIFR_INSTALL_DIR        Install directory (default: \$HOME/.sifr/bin)
   SIFR_SYSROOT_INSTALL_DIR
-                          Sysroot/toolchain root (default: parent of SIFR_INSTALL_DIR when it ends in /bin)
+                          Sysroot/toolchain root (default: parent of SIFR_INSTALL_DIR)
   SIFR_INSTALL_MANIFEST_DIR
-                          Install manifest directory (default: \$HOME/.sifr for the default install dir,
-                          otherwise SIFR_INSTALL_DIR)
+                          Install manifest directory (default: the sysroot/toolchain root)
   SIFR_NO_MODIFY_PATH=1   Do not update shell profiles
   SIFR_INSTALL_LOCK_HELD=1
                           Internal self-update handoff; caller already holds the install lock
@@ -570,25 +569,20 @@ if [ -z "\${install_dir}" ]; then
   [ -n "\${HOME:-}" ] || fail "HOME or SIFR_INSTALL_DIR is required"
   install_dir="\${HOME}/.sifr/bin"
 fi
+if [ "\$(basename "\${install_dir}")" != "bin" ]; then
+  fail "SIFR_INSTALL_DIR must name the toolchain bin directory"
+fi
 
-manifest_dir="\${SIFR_INSTALL_MANIFEST_DIR:-}"
-default_sysroot_dir=""
-if [ "\$(basename "\${install_dir}")" = "bin" ]; then
-  default_sysroot_dir="\$(dirname "\${install_dir}")"
-else
-  default_sysroot_dir="\${install_dir}"
-fi
-if [ -z "\${manifest_dir}" ]; then
-  if [ -n "\${HOME:-}" ] && [ "\${install_dir}" = "\${HOME}/.sifr/bin" ]; then
-    manifest_dir="\${HOME}/.sifr"
-  elif [ "\$(basename "\${install_dir}")" = "bin" ]; then
-    manifest_dir="\$(dirname "\${install_dir}")"
-  else
-    manifest_dir="\${install_dir}"
-  fi
-fi
-manifest_path="\${manifest_dir}/install.json"
+default_sysroot_dir="\$(dirname "\${install_dir}")"
 sysroot_dir="\${SIFR_SYSROOT_INSTALL_DIR:-\${default_sysroot_dir}}"
+mkdir -p "\${install_dir}" "\${sysroot_dir}"
+canonical_install_dir="\$(cd "\${install_dir}" && pwd -P)"
+canonical_sysroot_dir="\$(cd "\${sysroot_dir}" && pwd -P)"
+if [ "\${canonical_install_dir}" != "\${canonical_sysroot_dir}/bin" ]; then
+  fail "SIFR_INSTALL_DIR must equal SIFR_SYSROOT_INSTALL_DIR/bin"
+fi
+manifest_dir="\${SIFR_INSTALL_MANIFEST_DIR:-\${sysroot_dir}}"
+manifest_path="\${manifest_dir}/install.json"
 installed_binary="\${install_dir}/sifr"
 install_lock_path=""
 manifest_tmp=""

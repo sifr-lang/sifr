@@ -1,2 +1,2 @@
 1 error, 0 warnings, 0 notes
-E SIFR-WORKSPACE-0003 <unknown> [source].roots entry 'missing' is not a directory under the workspace root
+E SIFR-WORKSPACE-0003 <unknown> [source].root 'missing' is not a directory under the workspace root

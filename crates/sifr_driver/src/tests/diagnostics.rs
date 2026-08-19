@@ -43,17 +43,19 @@ fn primary_test_span(file: &str, line: u32, column: u32) -> DiagnosticSpan {
 }
 
 #[test]
-fn test_render_package_diagnostic_preserves_manifest_origin_and_help() {
-    let diagnostic = PackageDiagnostic::manifest_exports_not_production(
+fn test_render_package_diagnostic_preserves_manifest_origin() {
+    let diagnostic = PackageDiagnostic::invalid_sifr_manifest(
         &CargoPackageId("path+file:///demo#pkg@0.1.0".to_string()),
-        Path::new("/demo/sifr.toml"),
+        Path::new("/demo/sifr.toml").to_path_buf(),
+        "exports",
+        "unsupported field",
     );
 
     let rendered = render_package_diagnostic(diagnostic);
 
     assert_eq!(
         rendered.code,
-        DiagnosticCode::PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION.code()
+        DiagnosticCode::PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST.code()
     );
     assert_eq!(
         rendered.args.get("origin_kind"),
@@ -65,9 +67,9 @@ fn test_render_package_diagnostic_preserves_manifest_origin_and_help() {
     );
     assert_eq!(
         rendered.args.get("manifest_key"),
-        Some(&DiagnosticArg::String("exports.modules".to_string()))
+        Some(&DiagnosticArg::String("exports".to_string()))
     );
-    assert!(rendered.help.is_some());
+    assert!(rendered.help.is_none());
 }
 
 #[test]
@@ -165,8 +167,8 @@ fn test_diagnostic_labels_are_derived_from_diagnostic_codes() {
         (DiagnosticCode::STDLIB_CACHE_FAILURE, "build error"),
         (DiagnosticCode::STDLIB_UNSUPPORTED_SURFACE, "type error"),
         (DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST, "build error"),
-        (DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT, "build error"),
-        (DiagnosticCode::WORKSPACE_IMPORT_CYCLE, "build error"),
+        (DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE, "type error"),
+        (DiagnosticCode::IMPORT_CYCLE, "type error"),
         (
             DiagnosticCode::PARSE_EXPECTED_TOKEN_OR_RECOVERY,
             "parse error",
@@ -183,12 +185,6 @@ fn test_diagnostic_labels_are_derived_from_diagnostic_codes() {
 
     for (code, label) in cases {
         assert_eq!(diagnostic_label_for_code(code), label);
-        assert_eq!(
-            crate::diagnostics::diagnostic_legacy_display(
-                &crate::diagnostics::diagnostic_with_code("message", code)
-            ),
-            format!("{label}: message")
-        );
     }
 }
 
@@ -206,33 +202,6 @@ fn test_compiler_diagnostics_preserve_order() {
     assert_eq!(diagnostics[1].message, "second");
     assert_eq!(diagnostics[0].code, "SIFR-TYPE-0002");
     assert_eq!(diagnostics[1].code, "SIFR-BUILD-0002");
-}
-
-#[test]
-fn test_workspace_resolution_errors_have_stable_codes_and_urls() {
-    let cases = [
-        (
-            "could not resolve import 'helper'; tried entry-relative '/tmp/helper.sifr' and workspace-relative '/tmp/lib/helper.sifr'",
-            DiagnosticCode::WORKSPACE_UNRESOLVED_IMPORT,
-        ),
-        (
-            "module 'helper' is ambiguous in workspace '/tmp/ws': matches '/tmp/a/helper.sifr' and '/tmp/b/helper.sifr'; reorder [source].roots or rename one module to disambiguate",
-            DiagnosticCode::WORKSPACE_AMBIGUOUS_IMPORT,
-        ),
-        (
-            "module 'helpers.nodes' resolves to file '/tmp/ws/lib/helpers/nodes.sifr' but parent name 'helpers' is also a module file '/tmp/ws/lib/helpers.sifr'; package directories are not supported",
-            DiagnosticCode::WORKSPACE_NAMESPACE_COLLISION,
-        ),
-    ];
-
-    for (message, code) in cases {
-        let diagnostic = crate::diagnostics::diagnostic_with_code(message, code);
-        assert_eq!(diagnostic.code, code.code());
-        assert_eq!(
-            diagnostic.url,
-            format!("https://docs.sifr.sh/errors/{}", code.code())
-        );
-    }
 }
 
 #[test]

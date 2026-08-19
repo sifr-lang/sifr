@@ -133,11 +133,8 @@ fn build_output_project_mode_reports_import_closure_counts() {
         "project",
         "from helper import message\n\ndef main():\n    print(message())\n",
     );
-    std::fs::write(
-        project.root.join("sifr.toml"),
-        "[source]\nroots = [\".\"]\n",
-    )
-    .expect("workspace manifest should be written");
+    std::fs::write(project.root.join("sifr.toml"), "[source]\nroot = \".\"\n")
+        .expect("workspace manifest should be written");
     std::fs::write(
         project.root.join("helper.sifr"),
         "def message() -> str:\n    return \"ok\"\n",

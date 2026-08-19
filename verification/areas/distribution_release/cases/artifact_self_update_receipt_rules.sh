@@ -102,31 +102,29 @@ if [[ -e "${install_dir}/.sifr-update.lock" ]]; then
   exit 1
 fi
 
-flat_install_dir="${tmp_dir}/flat-managed"
-SIFR_TARGET="${target}" \
-  SIFR_ARTIFACT_BASE_URL="file://${artifact_dir}" \
-  SIFR_INSTALL_DIR="${flat_install_dir}" \
-  SIFR_NO_MODIFY_PATH=1 \
-  sh "${installer}" --no-modify-path >/dev/null
+non_bin_install_dir="${tmp_dir}/non-bin-managed"
+require_failure_contains \
+  "SIFR_INSTALL_DIR must name the toolchain bin directory" \
+  env SIFR_TARGET="${target}" \
+    SIFR_ARTIFACT_BASE_URL="file://${artifact_dir}" \
+    SIFR_INSTALL_DIR="${non_bin_install_dir}" \
+    SIFR_NO_MODIFY_PATH=1 \
+    sh "${installer}" --no-modify-path
 
-python3 - "${flat_install_dir}/install.json" "${flat_install_dir}" <<'PY'
-import json
-import pathlib
-import sys
+if [[ -e "${non_bin_install_dir}/install.json" ]]; then
+  echo "installer wrote a receipt for a non-canonical binary directory" >&2
+  exit 1
+fi
 
-receipt = json.loads(pathlib.Path(sys.argv[1]).read_text())
-install_dir_text = sys.argv[2]
-install_dir = pathlib.Path(install_dir_text)
-install_dir_resolved = install_dir.resolve()
-if receipt["install_dir"] != install_dir_text:
-    raise SystemExit("flat install_dir drifted")
-if receipt["binary_path"] != str((install_dir / "sifr").resolve()):
-    raise SystemExit("flat binary_path drifted")
-if receipt["sysroot_path"] != str(install_dir_resolved):
-    raise SystemExit("flat sysroot_path must equal install_dir")
-if not (install_dir / "sysroot.toml").is_file():
-    raise SystemExit("flat install did not install sysroot.toml")
-PY
+mismatched_install_dir="${tmp_dir}/mismatched/bin"
+require_failure_contains \
+  "SIFR_INSTALL_DIR must equal SIFR_SYSROOT_INSTALL_DIR/bin" \
+  env SIFR_TARGET="${target}" \
+    SIFR_ARTIFACT_BASE_URL="file://${artifact_dir}" \
+    SIFR_INSTALL_DIR="${mismatched_install_dir}" \
+    SIFR_SYSROOT_INSTALL_DIR="${tmp_dir}/another-sysroot" \
+    SIFR_NO_MODIFY_PATH=1 \
+    sh "${installer}" --no-modify-path
 
 external_lock_install_dir="${tmp_dir}/external-lock/bin"
 mkdir -p "${external_lock_install_dir}"

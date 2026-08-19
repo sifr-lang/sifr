@@ -1,5 +1,5 @@
 use crate::{build_cached_project, build_project, check_project, emit_project, CompileResult};
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{render_compact_diagnostics, DiagnosticCode};
 
 pub(super) fn mktemp_dir(name: &str) -> std::path::PathBuf {
     let unique = format!(
@@ -81,7 +81,7 @@ fn test_check_project_resolves_workspace_source_import_for_non_main_entry() {
     let dir = mktemp_dir("workspace_check_non_main");
     std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
     std::fs::create_dir_all(dir.join("lib")).expect("lib dir should be created");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \"lib\"\n")
         .expect("manifest should be written");
     std::fs::write(
         dir.join("cases/app.sifr"),
@@ -112,7 +112,7 @@ fn test_build_project_materializes_dotted_workspace_modules() {
     let build_out = dir.join("build_out");
     std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
     std::fs::create_dir_all(dir.join("lib/helpers")).expect("helpers dir should be created");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \"lib\"\n")
         .expect("manifest should be written");
     std::fs::write(
         &main_file,
@@ -148,7 +148,7 @@ fn test_build_project_preserves_imported_class_constructors_and_signatures() {
     let build_out = dir.join("build_out");
     std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
     std::fs::create_dir_all(dir.join("lib/helpers")).expect("helpers dir should be created");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \"lib\"\n")
         .expect("manifest should be written");
     std::fs::write(
         &main_file,
@@ -206,7 +206,7 @@ fn test_build_project_keeps_aliased_same_name_generic_classes_distinct() {
     let build_out = dir.join("build_out");
     std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
     std::fs::create_dir_all(dir.join("lib/helpers")).expect("helpers dir should be created");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \"lib\"\n")
         .expect("manifest should be written");
     std::fs::write(
         &main_file,
@@ -465,7 +465,7 @@ fn test_emit_project_includes_workspace_support_modules() {
     let main_file = dir.join("cases/app.sifr");
     std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
     std::fs::create_dir_all(dir.join("lib/helpers")).expect("helpers dir should be created");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \"lib\"\n")
         .expect("manifest should be written");
     std::fs::write(
         &main_file,
@@ -498,7 +498,7 @@ fn test_cached_project_invalidates_when_workspace_helper_changes() {
     let helper_file = dir.join("lib/helpers/value.sifr");
     std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
     std::fs::create_dir_all(dir.join("lib/helpers")).expect("helpers dir should be created");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \"lib\"\n")
         .expect("manifest should be written");
     std::fs::write(
         &main_file,
@@ -603,18 +603,10 @@ def broken() -> int:
         .err()
         .expect("build_project should fail with same frontend error");
 
-    let check_messages: Vec<String> = check_errors
-        .iter()
-        .map(crate::diagnostics::diagnostic_legacy_display)
-        .collect();
-    let build_messages: Vec<String> = build_errors
-        .iter()
-        .map(crate::diagnostics::diagnostic_legacy_display)
-        .collect();
+    let check_messages = render_compact_diagnostics(&check_errors);
+    let build_messages = render_compact_diagnostics(&build_errors);
     assert_eq!(check_messages, build_messages);
-    assert!(build_messages
-        .iter()
-        .any(|m| m.contains("[helper] return type mismatch")));
+    assert!(build_messages.contains("return type mismatch"));
 
     let _ = std::fs::remove_dir_all(&dir);
 }

@@ -367,18 +367,15 @@ edition = "2026"
 sifr-version = ">=0.3,<0.4"
 
 [source]
-roots = ["."]
+root = "."
 """,
         encoding="utf-8",
     )
 
 
 def write_cargo_backed_sifr_package(root: Path) -> None:
-    # Synthetic package-app layout: this fixture intentionally includes
-    # manifest bin/export tables so LSP stdlib resolution is exercised in a
-    # Cargo-backed folder, not only in loose source directories. LSP workspace
-    # discovery keys off sifr.toml; Cargo.toml verifies the same path in a
-    # realistic package directory shape.
+    # The package fixture uses the canonical source layout. This makes LSP
+    # stdlib resolution run in a Cargo-backed folder and in loose workspaces.
     (root / "sifr.toml").write_text(
         """\
 [package]
@@ -387,20 +384,13 @@ edition = "2026"
 sifr-version = ">=0.3,<0.4"
 
 [source]
-roots = ["."]
-
-[exports]
-modules = []
-
-[[bin]]
-name = "lsp-stdlib-smoke"
-path = "main.sifr"
+root = "src"
 """,
         encoding="utf-8",
     )
     (root / "src").mkdir()
     (root / "src" / "lib.rs").write_text(
-        "// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.\n",
+        "// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.\n",
         encoding="utf-8",
     )
     (root / "Cargo.toml").write_text(
@@ -409,7 +399,7 @@ path = "main.sifr"
 name = "lsp-stdlib-smoke"
 version = "0.1.0"
 edition = "2021"
-include = ["Cargo.toml", "sifr.toml", "*.sifr", "src/lib.rs"]
+include = ["Cargo.toml", "sifr.toml", "src/*.sifr", "src/lib.rs"]
 
 [package.metadata.sifr]
 manifest = "sifr.toml"
@@ -431,7 +421,7 @@ def run_stdlib_import_context_checks() -> None:
     with tempfile.TemporaryDirectory(prefix="sifr-lsp-stdlib-package-") as raw:
         root = Path(raw)
         write_cargo_backed_sifr_package(root)
-        run_stdlib_import_check(root, root / "main.sifr")
+        run_stdlib_import_check(root, root / "src" / "main.sifr")
 
 
 def run_smoke() -> None:

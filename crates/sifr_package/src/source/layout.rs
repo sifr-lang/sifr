@@ -2,7 +2,7 @@ use sifr_frontend::{DiskSourceProvider, SourceProvider, SourceProviderError};
 use std::path::Path;
 
 const CANONICAL_PURE_MARKER: &str =
-    "// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.";
+    "// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum MarkerValidation {
@@ -105,7 +105,7 @@ mod tests {
     fn comment_only_marker_is_pure() {
         assert_eq!(
             validate_pure_marker_source(
-                "// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.\n"
+                "// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.\n"
             ),
             MarkerValidation::PureMarker
         );

@@ -633,7 +633,7 @@
       "synthetic": true
     },
     {
-      "bless_reason": "Synthetic compact diagnostic baseline coverage for active frontend build, stdlib, and legacy workspace diagnostics that require internal fault injection or retired public renderer paths.",
+      "bless_reason": "Synthetic compact diagnostic baseline coverage for active frontend build and stdlib diagnostics that require internal fault injection.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2619",
       "fixture_id": "frontend_internal_diagnostic_rules_cases",
       "normalizers": [
@@ -857,7 +857,7 @@
       ],
       "owner": "compiler/core-language",
       "renderer": "compact",
-      "source_hash": "sha256:31d4779b57991c5b5171111d64dad8acbae984f6d736de29177828e7a26cecc1",
+      "source_hash": "sha256:6d23da45b9fadb25534e63cf170ce5ffdbdd903bfdf2b6198ce3dc45fae9669b",
       "suite": "baselines"
     },
     {
@@ -1023,36 +1023,6 @@
       "owner": "compiler/frontend",
       "renderer": "compact",
       "source_hash": "sha256:a3fb7b3cffb339470dfdda8d35eff9571a42fe1a086b2b1194aba66d8a24ff0d",
-      "suite": "baselines"
-    },
-    {
-      "bless_reason": "Compact diagnostic baseline coverage for production manifest exports diagnostics.",
-      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2596",
-      "fixture_id": "package_manifest_exports_not_production",
-      "normalizers": [
-        "workspace-path",
-        "tmp-path",
-        "crlf",
-        "artifact-cache-lines"
-      ],
-      "owner": "compiler/frontend",
-      "renderer": "compact",
-      "source_hash": "sha256:b24dac3c83506d4a22491b9896561b75f62e6d3454e07f0f973f955ed47998d3",
-      "suite": "baselines"
-    },
-    {
-      "bless_reason": "Compact diagnostic baseline coverage for production manifest bin table diagnostics.",
-      "bless_reference": "https://github.com/sifr-lang/sifr/pull/2596",
-      "fixture_id": "package_manifest_bin_tables_not_production",
-      "normalizers": [
-        "workspace-path",
-        "tmp-path",
-        "crlf",
-        "artifact-cache-lines"
-      ],
-      "owner": "compiler/frontend",
-      "renderer": "compact",
-      "source_hash": "sha256:abf8bd06629ab0d28caa83a938631e60055a2168a7f5f21a7a387a969c47da39",
       "suite": "baselines"
     },
     {
@@ -2162,7 +2132,7 @@
       ],
       "owner": "compiler/frontend",
       "renderer": "compact",
-      "source_hash": "sha256:16a15c2908801c728acef50fb9c07adae953f1e3dccaa9fe7b95a3ce3152c929",
+      "source_hash": "sha256:0a289af2a1778548141ba10054778fa43a8c2bafb42f479e76438a90b79cd49e",
       "suite": "baselines"
     },
     {
@@ -2792,7 +2762,7 @@
       ],
       "owner": "compiler/frontend",
       "renderer": "compact",
-      "source_hash": "sha256:c7f75cb2eba2e3af4bb1cc274f19cc6cc6105e4d2a97280f5eedd19c46b99b46",
+      "source_hash": "sha256:3007bb5315d0ad56fc994a8215ffa8cc0136b55a0dbad532567faa1f551c6f59",
       "suite": "baselines"
     }
   ],

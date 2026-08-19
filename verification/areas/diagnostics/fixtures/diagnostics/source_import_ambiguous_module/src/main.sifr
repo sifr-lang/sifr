@@ -1,0 +1,4 @@
+from source_import_ambiguous_module.helper import value
+
+def main():
+    print(value)

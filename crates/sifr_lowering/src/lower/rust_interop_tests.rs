@@ -802,7 +802,7 @@ def digest(input: bytes) -> bytes:
     assert_malformed(&errors);
 }
 #[test]
-fn rust_interop_rejects_prior_draft_keyword_syntax() {
+fn rust_interop_requires_the_canonical_positional_target() {
     let errors = lower_errors(
         r"
 @rust(crate=crc32fast, path=hash)

@@ -9,13 +9,11 @@ use std::path::{Component, Path, PathBuf};
 pub(super) fn misplaced_root_diagnostics(
     package_root: &Path,
     cargo_package_id: &CargoPackageId,
-    source_roots: &[PackageSourceRoot],
+    source_root: &PackageSourceRoot,
     canonical_root: &Path,
 ) -> Vec<PackageDiagnostic> {
     let mut candidates = BTreeSet::from([package_root.join("python_bridges")]);
-    for source_root in source_roots {
-        candidates.insert(package_root.join(&source_root.0).join("python_bridges"));
-    }
+    candidates.insert(package_root.join(&source_root.0).join("python_bridges"));
     candidates
         .into_iter()
         .filter(|candidate| candidate != canonical_root && candidate.exists())

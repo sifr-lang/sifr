@@ -21,18 +21,11 @@ impl PackageSession {
         package: &SifrPackageMetadata,
         lock_mode: CargoLockMode,
     ) -> Self {
-        let source_roots = package
-            .manifest
-            .source_roots
-            .iter()
-            .map(|root| package.package_root.join(&root.0))
-            .collect::<Vec<_>>();
-        let source_root = source_roots.first().cloned();
+        let source_root = Some(package.package_root.join(&package.manifest.source_root.0));
         Self {
             workspace_root,
             manifest_path: Some(package.sifr_manifest.clone()),
             source_root,
-            source_roots,
             manifest_less_mode: false,
             lock_mode,
             manifest: Some(package.manifest.clone()),

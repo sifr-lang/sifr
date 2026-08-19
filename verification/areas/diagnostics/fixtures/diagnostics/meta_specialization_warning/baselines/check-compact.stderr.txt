@@ -1,2 +1,0 @@
-0 errors, 1 warning, 0 notes
-W SIFR-META-0002 verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_warning/main.sifr:5:30 package fixture.meta specialization warning: shape_derived

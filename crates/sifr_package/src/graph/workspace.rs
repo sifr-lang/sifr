@@ -135,9 +135,10 @@ fn duplicate_workspace_import_roots(
         let Some(package) = graph.packages.get(package_id) else {
             continue;
         };
-        for root in &package.manifest.exports {
-            by_root.entry(root.clone()).or_default().push(package_id);
-        }
+        by_root
+            .entry(ImportRoot(package.sifr_name.0.clone()))
+            .or_default()
+            .push(package_id);
     }
 
     by_root

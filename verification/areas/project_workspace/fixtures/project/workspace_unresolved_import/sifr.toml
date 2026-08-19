@@ -1,2 +1,2 @@
 [source]
-roots = ["lib", "."]
+root = "src"

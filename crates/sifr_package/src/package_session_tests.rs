@@ -213,21 +213,21 @@ fn package_session_rejects_explicit_file_outside_source_root() {
 }
 
 #[test]
-fn package_session_accepts_explicit_file_under_any_legacy_source_root() {
-    let temp = TestPackage::new("session_legacy_roots_file");
+fn package_session_accepts_explicit_file_under_source_root() {
+    let temp = TestPackage::new("session_source_root_file");
     temp.write_package_manifest(
-        "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroots = [\"examples/workloads/src\", \".\"]\n",
+        "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
     );
-    temp.write("demos/app.sifr", "def main():\n    pass\n");
+    temp.write("src/app.sifr", "def main():\n    pass\n");
     let session = session(temp.path(), CargoLockMode::Normal);
 
     let plan = session
         .plan_check(
-            Some(&temp.path().join("demos/app.sifr")),
+            Some(&temp.path().join("src/app.sifr")),
             &CargoFeatureSelection::default(),
             &CargoPackageSelection::default(),
         )
-        .expect("file under second source root should be accepted");
+        .expect("file under source root should be accepted");
 
     assert_eq!(plan.operation.operation, PackageOperation::Check);
 }

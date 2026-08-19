@@ -1,3 +1,4 @@
-2 errors, 0 warnings, 0 notes
+3 errors, 0 warnings, 0 notes
 E SIFR-CLASS-0001 verification/areas/diagnostics/fixtures/diagnostics/e2e_class_unknown_parent/main.sifr:4:7 class 'Child' has fields but no __init__; parent fields will not be initialized. Define an explicit __init__ with super().__init__(...)
-E SIFR-CLASS-0005 verification/areas/diagnostics/fixtures/diagnostics/e2e_class_unknown_parent/main.sifr:4:13 invalid base class for 'Child': parent class 'MissingParent' not defined
+E SIFR-CLASS-0005 verification/areas/diagnostics/fixtures/diagnostics/e2e_class_unknown_parent/main.sifr:4:13 invalid base class for 'Child': parent type 'MissingParent' is not a class
+E SIFR-NAME-0003 verification/areas/diagnostics/fixtures/diagnostics/e2e_class_unknown_parent/main.sifr:4:13 unknown type: 'MissingParent'

@@ -96,17 +96,17 @@ fn test_find_workspace_root_returns_nearest_manifest() {
 
     assert_eq!(root.dir, tmp.path().join("outer/inner"));
     assert_eq!(root.config.package_name.as_deref(), Some("inner"));
-    assert_eq!(root.config.source_roots, vec![PathBuf::from(".")]);
+    assert_eq!(root.config.source_root, PathBuf::from("src"));
 }
 
 #[test]
 fn test_find_workspace_root_normalizes_relative_root_manifest_to_curdir() {
     let tmp = TempWorkspace::new("relative_root");
     tmp.write("sifr.toml", "[package]\nname = \"relative\"\n");
-    tmp.write("main.sifr", "");
+    tmp.write("src/main.sifr", "");
     let _cwd = enter_test_cwd(tmp.path());
 
-    let root = discovered(Path::new("main.sifr"));
+    let root = discovered(Path::new("src/main.sifr"));
 
     assert_eq!(root.dir, PathBuf::from("."));
     assert_eq!(root.config.package_name.as_deref(), Some("relative"));
@@ -146,40 +146,40 @@ fn test_package_name_must_be_string() {
 }
 
 #[test]
-fn test_source_roots_must_be_list_of_strings() {
-    let tmp = TempWorkspace::new("roots_type");
-    tmp.write("sifr.toml", "[source]\nroots = \"src\"\n");
+fn test_source_root_must_be_a_string() {
+    let tmp = TempWorkspace::new("root_type");
+    tmp.write("sifr.toml", "[source]\nroot = [\"src\"]\n");
     tmp.write("main.sifr", "");
 
     let message = discovery_error(&tmp.path().join("main.sifr"));
 
-    assert!(message.contains("source.roots must be a list of strings"));
+    assert!(message.contains("source.root must be a string"));
 }
 
 #[test]
-fn test_source_root_entries_must_be_strings() {
-    let tmp = TempWorkspace::new("root_entry_type");
-    tmp.write("sifr.toml", "[source]\nroots = [1]\n");
+fn test_source_roots_is_rejected() {
+    let tmp = TempWorkspace::new("roots_rejected");
+    tmp.write("sifr.toml", "[source]\nroots = [\"src\"]\n");
     tmp.write("main.sifr", "");
 
     let message = discovery_error(&tmp.path().join("main.sifr"));
 
-    assert!(message.contains("source.roots must be a list of strings"));
+    assert!(message.contains("source.roots is unsupported; use source.root"));
 }
 
 #[test]
-fn test_omitted_roots_missing_package_and_empty_manifest_are_valid() {
+fn test_omitted_source_root_defaults_to_src() {
     let tmp = TempWorkspace::new("defaults");
     tmp.write("src/main.sifr", "");
 
     tmp.write("sifr.toml", "");
     let empty = discovered(&tmp.path().join("src/main.sifr"));
-    assert_eq!(empty.config.source_roots, vec![PathBuf::from(".")]);
+    assert_eq!(empty.config.source_root, PathBuf::from("src"));
     assert_eq!(empty.config.package_name, None);
 
     tmp.write("sifr.toml", "[source]\n");
     let omitted = discovered(&tmp.path().join("src/main.sifr"));
-    assert_eq!(omitted.config.source_roots, vec![PathBuf::from(".")]);
+    assert_eq!(omitted.config.source_root, PathBuf::from("src"));
     assert_eq!(omitted.config.package_name, None);
 }
 
@@ -189,36 +189,36 @@ fn test_unknown_tables_and_keys_are_ignored() {
     tmp.mkdir("src");
     tmp.write(
             "sifr.toml",
-            "[workspace]\nresolver = \"1\"\n[dependencies]\nfoo = \"0.1\"\n[source]\nroots = [\"src\"]\nextra = true\n",
+            "[workspace]\nresolver = \"1\"\n[dependencies]\nfoo = \"0.1\"\n[source]\nroot = \"src\"\nextra = true\n",
         );
     tmp.write("src/main.sifr", "");
 
     let root = discovered(&tmp.path().join("src/main.sifr"));
 
-    assert_eq!(root.config.source_roots, vec![PathBuf::from("src")]);
+    assert_eq!(root.config.source_root, PathBuf::from("src"));
 }
 
 #[test]
-fn test_source_roots_reject_escape_absolute_empty_missing_and_file_paths() {
+fn test_source_root_rejects_escape_absolute_empty_missing_and_file_paths() {
     let tmp = TempWorkspace::new("invalid_roots");
     tmp.write("main.sifr", "");
     tmp.write("not_dir", "");
 
     for (manifest, expected) in [
         (
-            "[source]\nroots = [\"../outside\"]\n",
+            "[source]\nroot = \"../outside\"\n",
             "escapes the workspace root",
         ),
         (
-            "[source]\nroots = [\"/tmp\"]\n",
+            "[source]\nroot = \"/tmp\"\n",
             "must be a relative non-empty path",
         ),
         (
-            "[source]\nroots = [\"\"]\n",
+            "[source]\nroot = \"\"\n",
             "must be a relative non-empty path",
         ),
-        ("[source]\nroots = [\"missing\"]\n", "is not a directory"),
-        ("[source]\nroots = [\"not_dir\"]\n", "is not a directory"),
+        ("[source]\nroot = \"missing\"\n", "is not a directory"),
+        ("[source]\nroot = \"not_dir\"\n", "is not a directory"),
     ] {
         tmp.write("sifr.toml", manifest);
         let message = discovery_error(&tmp.path().join("main.sifr"));
@@ -233,15 +233,12 @@ fn test_source_roots_reject_escape_absolute_empty_missing_and_file_paths() {
 fn test_leading_curdir_source_root_is_normalized() {
     let tmp = TempWorkspace::new("curdir");
     tmp.mkdir("src");
-    tmp.write("sifr.toml", "[source]\nroots = [\"./src\", \".\"]\n");
+    tmp.write("sifr.toml", "[source]\nroot = \"./src\"\n");
     tmp.write("src/main.sifr", "");
 
     let root = discovered(&tmp.path().join("src/main.sifr"));
 
-    assert_eq!(
-        root.config.source_roots,
-        vec![PathBuf::from("src"), PathBuf::from(".")]
-    );
+    assert_eq!(root.config.source_root, PathBuf::from("src"));
 }
 
 #[test]
@@ -252,7 +249,7 @@ fn test_path_separator_source_root_uses_platform_components() {
     tmp.write(
         "sifr.toml",
         &format!(
-            "[source]\nroots = [\"{}\"]\n",
+            "[source]\nroot = \"{}\"\n",
             nested.to_string_lossy().replace('\\', "\\\\")
         ),
     );
@@ -260,18 +257,18 @@ fn test_path_separator_source_root_uses_platform_components() {
 
     let root = discovered(&tmp.path().join("src/nested/main.sifr"));
 
-    assert_eq!(root.config.source_roots, vec![nested]);
+    assert_eq!(root.config.source_root, nested);
 }
 
 #[test]
 fn test_closer_valid_manifest_ignores_farther_malformed_manifest() {
     let tmp = TempWorkspace::new("nearest_wins");
-    tmp.mkdir("outer/inner");
+    tmp.mkdir("outer/inner/src");
     tmp.write("sifr.toml", "[package\nname = \"bad\"\n");
     tmp.write("outer/inner/sifr.toml", "[package]\nname = \"ok\"\n");
-    tmp.write("outer/inner/main.sifr", "");
+    tmp.write("outer/inner/src/main.sifr", "");
 
-    let root = discovered(&tmp.path().join("outer/inner/main.sifr"));
+    let root = discovered(&tmp.path().join("outer/inner/src/main.sifr"));
 
     assert_eq!(root.dir, tmp.path().join("outer/inner"));
     assert_eq!(root.config.package_name.as_deref(), Some("ok"));

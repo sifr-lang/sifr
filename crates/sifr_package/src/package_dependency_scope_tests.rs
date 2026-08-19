@@ -10,27 +10,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 #[test]
 fn same_import_root_can_resolve_to_different_versions_in_different_scopes() {
     let temp = TestWorkspace::new("scoped_versions");
-    let app = package(&temp, "app", "sifr-app", "0.1.0", "app", "app", None);
-    let image = package(
-        &temp,
-        "image",
-        "sifr-image",
-        "0.1.0",
-        "image",
-        "image",
-        None,
-    );
-    let physics = package(
-        &temp,
-        "physics",
-        "sifr-physics",
-        "0.1.0",
-        "physics",
-        "physics",
-        None,
-    );
-    let math_v1 = package(&temp, "math-v1", "sifr-math", "1.0.0", "math", "math", None);
-    let math_v2 = package(&temp, "math-v2", "sifr-math", "2.0.0", "math", "math", None);
+    let app = package(&temp, "app", "sifr-app", "0.1.0", "app", None);
+    let image = package(&temp, "image", "sifr-image", "0.1.0", "image", None);
+    let physics = package(&temp, "physics", "sifr-physics", "0.1.0", "physics", None);
+    let math_v1 = package(&temp, "math-v1", "sifr-math", "1.0.0", "math", None);
+    let math_v2 = package(&temp, "math-v2", "sifr-math", "2.0.0", "math", None);
 
     let metadata = parse_metadata_json(&metadata_json(
         &temp.root,
@@ -61,9 +45,9 @@ fn same_import_root_can_resolve_to_different_versions_in_different_scopes() {
 #[test]
 fn duplicate_direct_import_root_in_one_scope_reports_0201() {
     let temp = TestWorkspace::new("ambiguous_scope");
-    let app = package(&temp, "app", "sifr-app", "0.1.0", "app", "app", None);
-    let math_v1 = package(&temp, "math-v1", "sifr-math", "1.0.0", "math", "math", None);
-    let math_v2 = package(&temp, "math-v2", "sifr-math", "2.0.0", "math", "math", None);
+    let app = package(&temp, "app", "sifr-app", "0.1.0", "app", None);
+    let math_v1 = package(&temp, "math-v1", "sifr-math", "1.0.0", "math", None);
+    let math_v2 = package(&temp, "math-v2", "sifr-math", "2.0.0", "math", None);
 
     let metadata = parse_metadata_json(&metadata_json(
         &temp.root,
@@ -89,7 +73,6 @@ fn direct_dependency_aliases_allow_same_export_root_in_one_scope() {
         "sifr-app",
         "0.1.0",
         "app",
-        "app",
         Some(
             r#""aliases":{
                 "legacy_math":{"dependency":"math1","import":"math_v1"},
@@ -97,8 +80,8 @@ fn direct_dependency_aliases_allow_same_export_root_in_one_scope() {
             }"#,
         ),
     );
-    let math_v1 = package(&temp, "math-v1", "sifr-math", "1.0.0", "math", "math", None);
-    let math_v2 = package(&temp, "math-v2", "sifr-math", "2.0.0", "math", "math", None);
+    let math_v1 = package(&temp, "math-v1", "sifr-math", "1.0.0", "math", None);
+    let math_v2 = package(&temp, "math-v2", "sifr-math", "2.0.0", "math", None);
 
     let metadata = parse_metadata_json(&metadata_json(
         &temp.root,
@@ -161,11 +144,10 @@ fn package(
     cargo_name: &str,
     version: &str,
     sifr_name: &str,
-    export: &str,
     extra_metadata: Option<&str>,
 ) -> TestPackage {
     let root = temp.package(dir);
-    write_pure_package(&root, cargo_name, version, sifr_name, export);
+    write_pure_package(&root, cargo_name, version, sifr_name);
     TestPackage {
         root,
         cargo_name: cargo_name.to_string(),
@@ -174,18 +156,11 @@ fn package(
     }
 }
 
-fn write_pure_package(
-    package_root: &Path,
-    cargo_name: &str,
-    version: &str,
-    sifr_name: &str,
-    export: &str,
-) {
+fn write_pure_package(package_root: &Path, cargo_name: &str, version: &str, sifr_name: &str) {
     fs::create_dir_all(package_root.join("src")).expect("create src");
-    fs::create_dir_all(package_root.join(format!("sifr/{export}"))).expect("create sifr");
     fs::write(
         package_root.join("src/lib.rs"),
-        "// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.\n",
+        "// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.\n",
     )
     .expect("write marker");
     fs::write(
@@ -198,15 +173,11 @@ fn write_pure_package(
     fs::write(
         package_root.join("sifr.toml"),
         format!(
-            "[package]\nname = \"{sifr_name}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroots = [\"sifr\"]\n\n[exports]\nmodules = [\"{export}\"]\n"
+            "[package]\nname = \"{sifr_name}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n"
         ),
     )
     .expect("write sifr.toml");
-    fs::write(
-        package_root.join(format!("sifr/{export}/__init__.sifr")),
-        "",
-    )
-    .expect("write init");
+    fs::write(package_root.join("src/__init__.sifr"), "").expect("write init");
 }
 
 fn metadata_json(

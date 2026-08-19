@@ -236,8 +236,7 @@
                   "errors/SIFR-IMPORT-0005",
                   "errors/SIFR-IMPORT-0006",
                   "errors/SIFR-IMPORT-0007",
-                  "errors/SIFR-IMPORT-0008",
-                  "errors/SIFR-IMPORT-0009"
+                  "errors/SIFR-IMPORT-0008"
                 ]
               },
               {
@@ -573,11 +572,7 @@
                   "errors/SIFR-WORKSPACE-0001",
                   "errors/SIFR-WORKSPACE-0002",
                   "errors/SIFR-WORKSPACE-0003",
-                  "errors/SIFR-WORKSPACE-0004",
-                  "errors/SIFR-WORKSPACE-0101",
-                  "errors/SIFR-WORKSPACE-0102",
-                  "errors/SIFR-WORKSPACE-0103",
-                  "errors/SIFR-WORKSPACE-0104"
+                  "errors/SIFR-WORKSPACE-0004"
                 ]
               },
               {
@@ -609,12 +604,10 @@
                   "errors/SIFR-PACKAGE-0605",
                   "errors/SIFR-PACKAGE-0606",
                   "errors/SIFR-PACKAGE-0607",
-                  "errors/SIFR-PACKAGE-0701",
                   "errors/SIFR-PACKAGE-0703",
                   "errors/SIFR-PACKAGE-0704",
                   "errors/SIFR-PACKAGE-0709",
                   "errors/SIFR-PACKAGE-0710",
-                  "errors/SIFR-PACKAGE-0711",
                   "errors/SIFR-PACKAGE-0713",
                   "errors/SIFR-PACKAGE-0714"
                 ]

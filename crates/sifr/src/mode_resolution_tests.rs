@@ -238,7 +238,7 @@ pub(super) fn test_resolve_compilation_mode_project_for_non_main_entry_in_worksp
     let project = TestProject::new("workspace_non_main");
     project.write(
         "sifr.toml",
-        "[source]\nroots = [\"src\"]\n",
+        "[source]\nroot = \"src\"\n",
         "manifest should be written",
     );
     project.write(
@@ -260,7 +260,7 @@ pub(super) fn test_resolve_compilation_mode_project_for_import_free_main_in_work
     let project = TestProject::new("workspace_import_free_main");
     project.write(
         "sifr.toml",
-        "[source]\nroots = [\"src\"]\n",
+        "[source]\nroot = \"src\"\n",
         "manifest should be written",
     );
     let main = project.write(
@@ -286,7 +286,7 @@ pub(super) fn test_resolve_compilation_mode_reports_malformed_workspace_manifest
     let project = TestProject::new("workspace_malformed");
     project.write(
         "sifr.toml",
-        "[source\nroots = [\".\"]\n",
+        "[source\nroot = \".\"\n",
         "manifest should be written",
     );
     let app = project.write(
@@ -306,7 +306,7 @@ pub(super) fn test_manifest_less_mode_does_not_ignore_malformed_package_manifest
     let project = TestProject::new("manifest_less_malformed_manifest");
     project.write(
         "sifr.toml",
-        "[source\nroots = [\".\"]\n",
+        "[source\nroot = \".\"\n",
         "manifest should be written",
     );
     let app = project.write(
@@ -535,53 +535,6 @@ def main():\n    assert parse_json() == 1\n",
     };
     assert_eq!(exit, EXIT_SUCCESS);
     let _ = std::fs::remove_dir_all(dir);
-}
-
-#[test]
-pub(super) fn test_package_cli_check_explicit_file_falls_back_for_legacy_workspace_manifest() {
-    let project = TestProject::new("package_cli_check_legacy_workspace_manifest");
-    project.write(
-        "Cargo.toml",
-        "[workspace]\nmembers = [\"rust_member\"]\nresolver = \"2\"\n",
-        "workspace manifest should be written",
-    );
-    project.write(
-        "rust_member/Cargo.toml",
-        "[package]\nname = \"rust-member\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
-        "rust member manifest should be written",
-    );
-    project.write(
-        "rust_member/src/lib.rs",
-        "pub fn value() -> i32 { 1 }\n",
-        "rust member source should be written",
-    );
-    project.write(
-            "sifr.toml",
-            "[package]\nname = \"legacy-workspace\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroots = [\".\"]\n",
-            "legacy workspace manifest should be written",
-        );
-    project.write(
-        "helper.sifr",
-        "def value() -> int:\n    return 1\n",
-        "helper source should be written",
-    );
-    project.write(
-        "main.sifr",
-        "from helper import value\n\n\
-def main():\n    assert value() == 1\n",
-        "main source should be written",
-    );
-    let exit = {
-        let _cwd = enter_test_cwd(&project.dir);
-        cmd_check(
-            Some(Path::new("main.sifr")),
-            None,
-            &sifr_package::CargoPackageSelection::default(),
-            sifr_package::CargoLockMode::Normal,
-            DiagnosticFormat::Compact,
-        )
-    };
-    assert_eq!(exit, EXIT_SUCCESS);
 }
 
 #[test]

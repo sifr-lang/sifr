@@ -1,0 +1,4 @@
+from package_ambiguous_import_canonical.helper import value
+
+def main():
+    print(value)

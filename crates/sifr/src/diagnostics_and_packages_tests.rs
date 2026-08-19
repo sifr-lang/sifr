@@ -1,8 +1,8 @@
 use crate::check_and_package_commands::{check_entrypoint, compile_entrypoint, emit_entrypoint};
 use crate::cli_model_and_entrypoint::{
-    diagnostic_exit_code, diagnostic_with_code, legacy_diagnostic_display, run_with_panic_boundary,
-    Cli, CompilationMode, DiagnosticFormat, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS,
-    EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
+    diagnostic_exit_code, diagnostic_with_code, run_with_panic_boundary, Cli, CompilationMode,
+    DiagnosticFormat, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
+    EXIT_USER_DIAGNOSTIC,
 };
 use crate::diagnostic_rendering_and_run::{canonical_diagnostic_stream, render_diagnostic_output};
 use crate::mode_resolution_tests::{mktemp_dir, resolved_mode, TestProject};
@@ -48,7 +48,7 @@ pub(super) fn test_compile_entrypoint_error_consistency_for_project_mode() {
     let dir = mktemp_dir("entrypoint_consistency");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \".\"\n")
         .expect("workspace manifest should be written");
     std::fs::write(
         &main,
@@ -61,8 +61,8 @@ pub(super) fn test_compile_entrypoint_error_consistency_for_project_mode() {
     let build_out = mktemp_dir("build_path");
     let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
     let build_err = compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
-    let run_messages: Vec<String> = run_err.iter().map(legacy_diagnostic_display).collect();
-    let build_messages: Vec<String> = build_err.iter().map(legacy_diagnostic_display).collect();
+    let run_messages = render_compact_diagnostics(&run_err);
+    let build_messages = render_compact_diagnostics(&build_err);
     assert_eq!(run_messages, build_messages);
 
     let _ = std::fs::remove_dir_all(run_out);
@@ -84,12 +84,10 @@ pub(super) fn test_compile_entrypoint_error_consistency_for_import_statement() {
     let build_out = mktemp_dir("build_path_import_statement");
     let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
     let build_err = compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
-    let run_messages: Vec<String> = run_err.iter().map(legacy_diagnostic_display).collect();
-    let build_messages: Vec<String> = build_err.iter().map(legacy_diagnostic_display).collect();
+    let run_messages = render_compact_diagnostics(&run_err);
+    let build_messages = render_compact_diagnostics(&build_err);
     assert_eq!(run_messages, build_messages);
-    assert!(run_messages
-        .iter()
-        .any(|m| m.contains("unsupported import form: import helper")));
+    assert!(run_messages.contains("unsupported import form: import helper"));
 
     let _ = std::fs::remove_dir_all(run_out);
     let _ = std::fs::remove_dir_all(build_out);
@@ -110,12 +108,10 @@ pub(super) fn test_compile_entrypoint_error_consistency_for_bare_relative_import
     let build_out = mktemp_dir("build_path_bare_relative");
     let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
     let build_err = compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
-    let run_messages: Vec<String> = run_err.iter().map(legacy_diagnostic_display).collect();
-    let build_messages: Vec<String> = build_err.iter().map(legacy_diagnostic_display).collect();
+    let run_messages = render_compact_diagnostics(&run_err);
+    let build_messages = render_compact_diagnostics(&build_err);
     assert_eq!(run_messages, build_messages);
-    assert!(run_messages
-        .iter()
-        .any(|m| m.contains("unsupported import form: bare relative import")));
+    assert!(run_messages.contains("unsupported import form: bare relative import"));
 
     let _ = std::fs::remove_dir_all(run_out);
     let _ = std::fs::remove_dir_all(build_out);
@@ -136,12 +132,10 @@ pub(super) fn test_compile_entrypoint_error_consistency_for_multi_level_relative
     let build_out = mktemp_dir("build_path_multi_level_relative");
     let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
     let build_err = compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
-    let run_messages: Vec<String> = run_err.iter().map(legacy_diagnostic_display).collect();
-    let build_messages: Vec<String> = build_err.iter().map(legacy_diagnostic_display).collect();
+    let run_messages = render_compact_diagnostics(&run_err);
+    let build_messages = render_compact_diagnostics(&build_err);
     assert_eq!(run_messages, build_messages);
-    assert!(run_messages
-        .iter()
-        .any(|m| m.contains("unsupported import form: relative import level 2")));
+    assert!(run_messages.contains("unsupported import form: relative import level 2"));
 
     let _ = std::fs::remove_dir_all(run_out);
     let _ = std::fs::remove_dir_all(build_out);
@@ -153,7 +147,7 @@ pub(super) fn test_check_entrypoint_project_mode_resolves_local_imports() {
     let dir = mktemp_dir("check_entrypoint_project_imports");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \".\"\n")
         .expect("workspace manifest should be written");
     std::fs::write(
         &main,
@@ -198,11 +192,9 @@ pub(super) fn test_compile_entrypoint_manifestless_local_import_uses_single_file
         CompileResult::Errors { errors } => errors,
         CompileResult::Success { .. } => panic!("emit should reject the manifestless local import"),
     };
+    let main_path = main.display().to_string();
     let messages = |errors: &[RenderedDiagnostic]| {
-        errors
-            .iter()
-            .map(legacy_diagnostic_display)
-            .collect::<Vec<_>>()
+        render_compact_diagnostics(errors).replace(&main_path, "main")
     };
     let expected = messages(&check_errors);
     assert_eq!(messages(&run_errors), expected);
@@ -401,7 +393,7 @@ pub(super) fn test_check_entrypoint_project_mode_error_parity_with_compile_entry
     let dir = mktemp_dir("check_entrypoint_error_parity");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \".\"\n")
         .expect("workspace manifest should be written");
     std::fs::write(
         &main,
@@ -417,12 +409,10 @@ pub(super) fn test_check_entrypoint_project_mode_error_parity_with_compile_entry
         .err()
         .expect("build path should fail for helper type mismatch");
 
-    let check_messages: Vec<String> = check_errors.iter().map(legacy_diagnostic_display).collect();
-    let build_messages: Vec<String> = build_errors.iter().map(legacy_diagnostic_display).collect();
+    let check_messages = render_compact_diagnostics(&check_errors);
+    let build_messages = render_compact_diagnostics(&build_errors);
     assert_eq!(check_messages, build_messages);
-    assert!(check_messages
-        .iter()
-        .any(|m| m.contains("[helper] return type mismatch")));
+    assert!(check_messages.contains("return type mismatch"));
 
     let _ = std::fs::remove_dir_all(build_out);
     let _ = std::fs::remove_dir_all(dir);
@@ -474,7 +464,7 @@ pub(super) fn test_emit_entrypoint_uses_project_mode_inside_workspace() {
     let dir = mktemp_dir("emit_project_boundary");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \".\"\n")
         .expect("workspace manifest should be written");
     std::fs::write(
         &main,
@@ -508,7 +498,7 @@ pub(super) fn test_frontend_error_messages_match_across_check_build_and_run_path
     let dir = mktemp_dir("frontend_error_mode_parity");
     let main = dir.join("main.sifr");
     let helper = dir.join("helper.sifr");
-    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\".\"]\n")
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \".\"\n")
         .expect("workspace manifest should be written");
     std::fs::write(
         &main,
@@ -528,9 +518,9 @@ pub(super) fn test_frontend_error_messages_match_across_check_build_and_run_path
         .err()
         .expect("build path should fail on helper type error");
 
-    let check_messages: Vec<String> = check_errors.iter().map(legacy_diagnostic_display).collect();
-    let run_messages: Vec<String> = run_errors.iter().map(legacy_diagnostic_display).collect();
-    let build_messages: Vec<String> = build_errors.iter().map(legacy_diagnostic_display).collect();
+    let check_messages = render_compact_diagnostics(&check_errors);
+    let run_messages = render_compact_diagnostics(&run_errors);
+    let build_messages = render_compact_diagnostics(&build_errors);
     assert_eq!(check_messages, run_messages);
     assert_eq!(run_messages, build_messages);
 

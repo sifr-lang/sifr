@@ -2,7 +2,7 @@ use crate::{
     create_invocation_workspace, discover_test_root_modules, parse_import_closure_modules,
     DiscoveryDiagnosticStyle, ModuleResolver, SifrWorkspaceConfig, WorkspaceRoot,
 };
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{render_compact_diagnostics, DiagnosticArg, DiagnosticCode};
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
@@ -174,14 +174,14 @@ fn test_project_and_test_discovery_parity_reports_reachable_parse_errors() {
 fn workspace_resolver(
     entry_parent: &std::path::Path,
     workspace_root: &std::path::Path,
-    source_roots: Vec<&str>,
+    source_root: &str,
 ) -> ModuleResolver {
     ModuleResolver::with_workspace(
         entry_parent,
         WorkspaceRoot {
             dir: workspace_root.to_path_buf(),
             config: SifrWorkspaceConfig {
-                source_roots: source_roots.into_iter().map(PathBuf::from).collect(),
+                source_root: PathBuf::from(source_root),
                 package_name: None,
             },
         },
@@ -210,7 +210,7 @@ fn test_workspace_resolver_prefers_entry_parent_over_workspace_sources() {
     std::fs::write(source_dir.join("helper.sifr"), "WORKSPACE: int = 2\n")
         .expect("workspace helper should be written");
 
-    let resolver = workspace_resolver(&entry_dir, &dir, vec!["lib"]);
+    let resolver = workspace_resolver(&entry_dir, &dir, "lib");
     let resolved = resolver
         .resolve("helper")
         .expect("entry helper should resolve first");
@@ -221,7 +221,7 @@ fn test_workspace_resolver_prefers_entry_parent_over_workspace_sources() {
 }
 
 #[test]
-fn test_workspace_resolver_finds_declared_source_roots_and_dotted_paths() {
+fn test_workspace_resolver_finds_declared_source_root_and_dotted_paths() {
     let unique = format!(
         "sifr_workspace_dotted_{}_{}",
         std::process::id(),
@@ -246,68 +246,12 @@ fn test_workspace_resolver_finds_declared_source_roots_and_dotted_paths() {
     )
     .expect("helper should be written");
 
-    let resolver = workspace_resolver(&entry_dir, &dir, vec!["lib"]);
+    let resolver = workspace_resolver(&entry_dir, &dir, "lib");
     let resolved = resolver
         .resolve("helpers.nodes")
         .expect("dotted helper should resolve");
 
     assert_eq!(resolved.path, helper_dir.join("nodes.sifr"));
-
-    let _ = std::fs::remove_dir_all(&dir);
-}
-
-#[test]
-fn test_workspace_resolver_reports_ambiguous_source_roots() {
-    let unique = format!(
-        "sifr_workspace_ambiguous_{}_{}",
-        std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .expect("time should move forward")
-            .as_nanos()
-    );
-    let dir = std::env::temp_dir().join(unique);
-    let entry_dir = dir.join("cases");
-    std::fs::create_dir_all(&entry_dir).expect("entry dir should be created");
-    std::fs::create_dir_all(dir.join("lib_a")).expect("lib_a should be created");
-    std::fs::create_dir_all(dir.join("lib_b")).expect("lib_b should be created");
-    std::fs::write(entry_dir.join("main.sifr"), "from helper import value\n")
-        .expect("main should be written");
-    std::fs::write(
-        dir.join("lib_a/helper.sifr"),
-        "def value() -> int:\n    return 1\n",
-    )
-    .expect("lib_a helper should be written");
-    std::fs::write(
-        dir.join("lib_b/helper.sifr"),
-        "def value() -> int:\n    return 2\n",
-    )
-    .expect("lib_b helper should be written");
-
-    let resolver = workspace_resolver(&entry_dir, &dir, vec!["lib_a", "lib_b"]);
-    let errors = parse_import_closure_modules(
-        &resolver,
-        &BTreeSet::from(["main".to_string()]),
-        DiscoveryDiagnosticStyle::ModuleName,
-    )
-    .expect_err("ambiguous workspace helper should fail");
-
-    assert_eq!(
-        errors[0].code,
-        DiagnosticCode::IMPORT_AMBIGUOUS_SOURCE_MODULE.code()
-    );
-    assert!(errors[0]
-        .message
-        .contains("ambiguous import target: 'helper'"));
-    assert!(errors[0].spans.iter().any(|span| span.is_primary));
-    assert!(errors[0]
-        .children
-        .iter()
-        .any(|child| child.message.contains("lib_a/helper.sifr")));
-    assert!(errors[0]
-        .children
-        .iter()
-        .any(|child| child.message.contains("lib_b/helper.sifr")));
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -329,7 +273,7 @@ fn test_workspace_resolver_reports_unresolved_tried_paths() {
     std::fs::write(entry_dir.join("main.sifr"), "from missing import value\n")
         .expect("main should be written");
 
-    let resolver = workspace_resolver(&entry_dir, &dir, vec!["lib", "."]);
+    let resolver = workspace_resolver(&entry_dir, &dir, "lib");
     let errors = parse_import_closure_modules(
         &resolver,
         &BTreeSet::from(["main".to_string()]),
@@ -353,10 +297,48 @@ fn test_workspace_resolver_reports_unresolved_tried_paths() {
         .children
         .iter()
         .any(|child| child.message.contains("lib/missing.sifr")));
-    assert!(errors[0]
-        .children
-        .iter()
-        .any(|child| child.message.contains("missing.sifr")));
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn test_workspace_resolver_renders_missing_root_with_unknown_location() {
+    let unique = format!(
+        "sifr_workspace_missing_root_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    );
+    let dir = std::env::temp_dir().join(unique);
+    let entry_dir = dir.join("cases");
+    std::fs::create_dir_all(&entry_dir).expect("entry dir should be created");
+    std::fs::create_dir_all(dir.join("lib")).expect("lib should be created");
+
+    let resolver = workspace_resolver(&entry_dir, &dir, "lib");
+    let errors = parse_import_closure_modules(
+        &resolver,
+        &BTreeSet::from(["missing".to_string()]),
+        DiscoveryDiagnosticStyle::ModuleName,
+    )
+    .expect_err("missing root module should fail");
+
+    let diagnostic = &errors[0];
+    assert_eq!(
+        diagnostic.code,
+        DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE.code()
+    );
+    assert_eq!(diagnostic.message, "unknown import target: 'missing'");
+    assert_eq!(
+        diagnostic.args.get("resolution_scope"),
+        Some(&DiagnosticArg::String("workspace".to_string()))
+    );
+    assert!(diagnostic.args.contains_key("tried_paths"));
+    assert_eq!(diagnostic.children.len(), 2);
+    assert!(diagnostic.spans.is_empty());
+    assert!(render_compact_diagnostics(&errors)
+        .contains("E SIFR-IMPORT-0002 <unknown> unknown import target: 'missing'"));
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -378,7 +360,7 @@ fn test_workspace_resolver_reclassifies_unresolved_bare_stdlib_import() {
     std::fs::write(entry_dir.join("main.sifr"), "from math import sqrt\n")
         .expect("main should be written");
 
-    let resolver = workspace_resolver(&entry_dir, &dir, vec!["lib", "."]);
+    let resolver = workspace_resolver(&entry_dir, &dir, "lib");
     let errors = parse_import_closure_modules(
         &resolver,
         &BTreeSet::from(["main".to_string()]),
@@ -424,7 +406,7 @@ fn test_workspace_resolver_prefers_real_user_module_over_bare_stdlib_match() {
     )
     .expect("math module should be written");
 
-    let resolver = workspace_resolver(&entry_dir, &dir, vec!["lib", "."]);
+    let resolver = workspace_resolver(&entry_dir, &dir, "lib");
     let parsed = parse_import_closure_modules(
         &resolver,
         &BTreeSet::from(["main".to_string()]),
@@ -456,7 +438,7 @@ fn test_workspace_resolver_keeps_stdlib_imports_out_of_filesystem_resolution() {
     )
     .expect("main should be written");
 
-    let resolver = workspace_resolver(&entry_dir, &dir, vec!["lib"]);
+    let resolver = workspace_resolver(&entry_dir, &dir, "lib");
     let parsed = parse_import_closure_modules(
         &resolver,
         &BTreeSet::from(["main".to_string()]),
@@ -497,7 +479,7 @@ fn test_workspace_resolver_rejects_namespace_file_collision() {
     )
     .expect("dotted helper should be written");
 
-    let resolver = workspace_resolver(&entry_dir, &dir, vec!["lib"]);
+    let resolver = workspace_resolver(&entry_dir, &dir, "lib");
     let errors = parse_import_closure_modules(
         &resolver,
         &BTreeSet::from(["main".to_string()]),

@@ -51,18 +51,18 @@ pub fn discover_python_bridge_inventory(
     discover_python_bridge_inventory_at(
         &package.package_root,
         &package.cargo_package_id,
-        &package.manifest.source_roots,
+        &package.manifest.source_root,
     )
 }
 
 fn discover_python_bridge_inventory_at(
     package_root: &Path,
     cargo_package_id: &CargoPackageId,
-    source_roots: &[PackageSourceRoot],
+    source_root: &PackageSourceRoot,
 ) -> Result<PythonBridgeInventory, Vec<PackageDiagnostic>> {
     let root = package_root.join(PYTHON_BRIDGE_ROOT);
     let mut diagnostics =
-        misplaced_root_diagnostics(package_root, cargo_package_id, source_roots, &root);
+        misplaced_root_diagnostics(package_root, cargo_package_id, source_root, &root);
     let source_paths =
         discover_source_paths(package_root, cargo_package_id, &root, &mut diagnostics);
     let mut parsed_modules = Vec::new();
@@ -221,11 +221,8 @@ pub(crate) fn python_bridge_projection_diagnostics(
     manifest: &SifrManifest,
     cargo_package_id: &CargoPackageId,
 ) -> Vec<PackageDiagnostic> {
-    match discover_python_bridge_inventory_at(
-        package_root,
-        cargo_package_id,
-        &manifest.source_roots,
-    ) {
+    match discover_python_bridge_inventory_at(package_root, cargo_package_id, &manifest.source_root)
+    {
         Ok(inventory) => {
             validate_python_bridge_inventory_manifest_at(package_root, cargo_package_id, &inventory)
                 .err()
@@ -241,11 +238,8 @@ pub(crate) fn repair_python_bridge_inventory(
     manifest: &SifrManifest,
     cargo_package_id: &CargoPackageId,
 ) -> Result<Option<PathBuf>, Vec<PackageDiagnostic>> {
-    let inventory = discover_python_bridge_inventory_at(
-        package_root,
-        cargo_package_id,
-        &manifest.source_roots,
-    )?;
+    let inventory =
+        discover_python_bridge_inventory_at(package_root, cargo_package_id, &manifest.source_root)?;
     write_python_bridge_inventory_at(package_root, cargo_package_id, &inventory)
         .map_err(|error| vec![error])
 }

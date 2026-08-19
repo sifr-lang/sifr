@@ -85,7 +85,6 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-IMPORT-0006`](/errors/SIFR-IMPORT-0006) | Error | Source module namespace and file import collision. |
 | [`SIFR-IMPORT-0007`](/errors/SIFR-IMPORT-0007) | Error | Circular source module import graph. |
 | [`SIFR-IMPORT-0008`](/errors/SIFR-IMPORT-0008) | Error | Bare CPython-style stdlib import attempt. |
-| [`SIFR-IMPORT-0009`](/errors/SIFR-IMPORT-0009) | Error | Unsupported legacy Sifr stdlib module import. |
 | [`SIFR-TYPE-0002`](/errors/SIFR-TYPE-0002) | Error | Expected and actual types are incompatible. |
 | [`SIFR-TYPE-0003`](/errors/SIFR-TYPE-0003) | Error | If-expression or conditional branches have incompatible types. |
 | [`SIFR-TYPE-0004`](/errors/SIFR-TYPE-0004) | Error | A required type annotation is missing. |
@@ -183,10 +182,6 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-WORKSPACE-0002`](/errors/SIFR-WORKSPACE-0002) | Error | Workspace source root escapes the workspace root. |
 | [`SIFR-WORKSPACE-0003`](/errors/SIFR-WORKSPACE-0003) | Error | Workspace source root is not a directory. |
 | [`SIFR-WORKSPACE-0004`](/errors/SIFR-WORKSPACE-0004) | Error | Workspace source root entry has an invalid shape or path. |
-| [`SIFR-WORKSPACE-0101`](/errors/SIFR-WORKSPACE-0101) | Error | Legacy workspace import target could not be resolved; source imports use [`SIFR-IMPORT-0002`](/errors/SIFR-IMPORT-0002). |
-| [`SIFR-WORKSPACE-0102`](/errors/SIFR-WORKSPACE-0102) | Error | Legacy workspace import target is ambiguous; source imports use [`SIFR-IMPORT-0005`](/errors/SIFR-IMPORT-0005). |
-| [`SIFR-WORKSPACE-0103`](/errors/SIFR-WORKSPACE-0103) | Error | Legacy workspace namespace package collision; source imports use [`SIFR-IMPORT-0006`](/errors/SIFR-IMPORT-0006). |
-| [`SIFR-WORKSPACE-0104`](/errors/SIFR-WORKSPACE-0104) | Error | Legacy workspace import graph cycle; source imports use [`SIFR-IMPORT-0007`](/errors/SIFR-IMPORT-0007). |
 | [`SIFR-BUILD-0002`](/errors/SIFR-BUILD-0002) | Error | Build file materialization failed. |
 | [`SIFR-BUILD-0003`](/errors/SIFR-BUILD-0003) | Error | Temporary build workspace creation failed. |
 | [`SIFR-BUILD-0004`](/errors/SIFR-BUILD-0004) | Error | Cargo manifest generation failed. |
@@ -230,12 +225,10 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PACKAGE-0605`](/errors/SIFR-PACKAGE-0605) | Error | Runnable package target or script selection is missing or ambiguous. |
 | [`SIFR-PACKAGE-0606`](/errors/SIFR-PACKAGE-0606) | Error | Discovered app target name is invalid. |
 | [`SIFR-PACKAGE-0607`](/errors/SIFR-PACKAGE-0607) | Error | Selected workspace members use the same Sifr package name. |
-| [`SIFR-PACKAGE-0701`](/errors/SIFR-PACKAGE-0701) | Error | Production sifr.toml uses manifest-level exports. |
 | [`SIFR-PACKAGE-0703`](/errors/SIFR-PACKAGE-0703) | Error | Sifr-managed Cargo projection manifest pointer drift. |
 | [`SIFR-PACKAGE-0704`](/errors/SIFR-PACKAGE-0704) | Error | Sifr-managed Cargo projection include rules omit required package files. |
 | [`SIFR-PACKAGE-0709`](/errors/SIFR-PACKAGE-0709) | Error | Pure package marker is missing from Sifr-managed projection. |
 | [`SIFR-PACKAGE-0710`](/errors/SIFR-PACKAGE-0710) | Error | Explicit Sifr file target is outside the package source root. |
-| [`SIFR-PACKAGE-0711`](/errors/SIFR-PACKAGE-0711) | Error | Production sifr.toml uses manifest binary target tables. |
 | [`SIFR-PACKAGE-0713`](/errors/SIFR-PACKAGE-0713) | Error | Public API symbol is exported more than once. |
 | [`SIFR-PACKAGE-0714`](/errors/SIFR-PACKAGE-0714) | Error | Package script expansion attempted to invoke another script. |
 | [`SIFR-PYENV-0001`](/errors/SIFR-PYENV-0001) | Error | Python environment configuration is malformed. |

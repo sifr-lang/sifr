@@ -82,7 +82,7 @@ sifr tree --locked
 A pure Sifr package contains no non-trivial Rust code — all behavior is expressed in `.sifr` files. Because Cargo requires at least one build target, Sifr generates a minimal marker file at `src/lib.rs`:
 
 ```rust
-// Pure Sifr package marker. Sifr source lives in sifr.toml source roots.
+// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.
 ```
 
 Sifr validates this marker and rejects any package that contains non-trivial Rust in `src/lib.rs` but does not declare Rust-backed behavior. Do not add Rust logic to `lib.rs` in a pure Sifr package.

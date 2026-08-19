@@ -16,7 +16,7 @@ edition = "2026"
 sifr-version = ">=0.3,<0.4"
 
 [source]
-roots = ["src"]
+root = "src"
 
 [format]
 line-length = 88
@@ -55,19 +55,23 @@ edition = "2026"
 sifr-version = ">=0.3,<0.4"
 ```
 
-## `[source]` — source roots
+## `[source]` — source root
 
 The `[source]` section tells Sifr where to find your `.sifr` source files.
 
 ```toml
 [source]
-roots = ["src"]
+root = "src"
 ```
 
-`roots` defaults to `["src"]` for production packages — you can omit the section entirely in a standard layout. You only need to specify `roots` explicitly when your source files live outside `src/`, which is an uncommon scenario reserved for legacy migration or non-standard project shapes.
+`root` is one relative directory. It defaults to `src`, so you can omit the
+section for the standard layout. Set `root` only when the package uses another
+source directory.
 
 <Warning>
-New production packages should not use `[exports].modules` or Sifr manifest `[[bin]]` target tables. These are preserved only for legacy layout migration. Use `src/__init__.sifr` for library public APIs and `src/bin/*.sifr` for additional app targets instead.
+`[exports]`, `[exports].modules`, and Sifr manifest `[[bin]]` tables are not
+supported. Use `src/__init__.sifr` for a library API. Use `src/main.sifr` and
+`src/bin/*.sifr` for app targets.
 </Warning>
 
 ## `[format]` — formatter settings
@@ -125,7 +129,7 @@ Knowing where to put configuration prevents confusion and keeps Sifr's tooling w
 
 **Put in `sifr.toml`:**
 - Package name, edition, `sifr-version`
-- Source root (`[source].roots`)
+- Source root (`[source].root`)
 - Formatter and lint configuration
 - Named scripts
 - Rust interop bridge metadata and native trust policy

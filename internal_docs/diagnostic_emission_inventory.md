@@ -87,8 +87,8 @@ The public `CompileError` abstraction and the transitional `CompilerDiagnostic` 
 | `crates/sifr_driver/src/diagnostics.rs` | 1 | `diagnostic_with_code` constructs the panic-boundary diagnostic as a canonical rendered diagnostic with active `SIFR-INTERNAL-0001` identity | Route already-structured diagnostics through shared renderer once `DiagnosticSink` is authoritative. |
 | `crates/sifr_driver/src/frontend/api.rs` | 1 | public driver frontend facade delegates parser/lowering/type-check diagnostics to `sifr_frontend` and codegen errors to the panic boundary | Keep semantics-bearing parse/lower/type-check diagnostic construction in `sifr_frontend`/`sifr_lowering`; driver remains a facade plus codegen boundary. |
 | `crates/sifr_frontend/src/lib.rs` | 1 | frontend HIR diagnostics preserve the HIR-provided active code; uncoded lowering diagnostics are surfaced as internal compiler diagnostics | Preserve module/source span and direct HIR diagnostic identity. |
-| `crates/sifr_driver/src/project/discovery.rs` | 6 | workspace discovery and reachable parse failures | Keep workspace discovery in `WORKSPACE-*`; reachable source parse failures are `PARSE-*`. |
-| `crates/sifr_driver/src/project/compile_order.rs` | 1 | dependency cycle carries `SIFR-WORKSPACE-0104` | Keep workspace graph cycle diagnostics in the `WORKSPACE-*` family. |
+| `crates/sifr_driver/src/project/discovery.rs` | 6 | import discovery and reachable parse failures | Use `IMPORT-*` for source resolution and `PARSE-*` for reachable parse failures. Root-module errors use the span-less renderer. |
+| `crates/sifr_driver/src/project/compile_order.rs` | 1 | dependency-cycle diagnostics | Use `SIFR-IMPORT-0007` for both source-backed and span-less project cycles. |
 | `crates/sifr_driver/src/project/frontend.rs` | 1 | project frontend setup carries `SIFR-INTERNAL-0001` for invariant-only failures | Use `WORKSPACE-*` for recoverable project assembly failures. |
 | `crates/sifr_driver/src/build/entrypoint.rs` | 3 | build planning/materialization failures | `BUILD-*` for tool/build actions; `WORKSPACE-*` for project graph inputs. |
 | `crates/sifr_driver/src/build/materialize.rs` | 1 | file materialization failure | `SIFR-BUILD-0002`. |
@@ -122,13 +122,13 @@ Current public-code mechanisms to remove:
 Workspace code review for `diagnostic registry population`:
 
 - Keep `SIFR-WORKSPACE-0001` for malformed `sifr.toml` parsing.
-- Keep `SIFR-WORKSPACE-0002` for `[source].roots` path escaping workspace root.
-- Keep `SIFR-WORKSPACE-0003` for `[source].roots` path not resolving to a directory.
+- Keep `SIFR-WORKSPACE-0002` for a `[source].root` path that escapes the workspace root.
+- Keep `SIFR-WORKSPACE-0003` for a `[source].root` path that does not resolve to a directory.
 - Keep `SIFR-WORKSPACE-0004` for invalid source-root entry shape/path.
-- Keep `SIFR-WORKSPACE-0101` for unresolved import after workspace search path enumeration.
-- Keep `SIFR-WORKSPACE-0102` for ambiguous module resolution across workspace roots.
-- Keep `SIFR-WORKSPACE-0103` for namespace package directory collision.
-- Add `SIFR-WORKSPACE-0104` if project import-cycle diagnostics remain driver-owned.
+- Use `SIFR-IMPORT-0002` for unresolved imports after search-path enumeration.
+- Use `SIFR-IMPORT-0005` for ambiguous source-module resolution.
+- Use `SIFR-IMPORT-0006` for namespace package directory collisions.
+- Use `SIFR-IMPORT-0007` for project import cycles.
 
 ## E2E Expectation And Baseline Surface
 
@@ -256,9 +256,9 @@ Checked-in verification baselines are area-owned under `verification/areas/diagn
 | Verification case | Current baseline markers | Target / owner |
 | --- | --- | --- |
 | `diagnostics/decimal_invalid_literal` | `SIFR-DECIMAL-0001` in compact/json/human output with no message-embedded pseudo-code | Done in `decimal diagnostic cleanup` behavior group 1; keep as decimal renderer regression coverage |
-| `project/missing_import_reports_error` | `SIFR-WORKSPACE-0101` in compact/json output | keep `SIFR-WORKSPACE-0101`; renderer integration regenerates schema shape only |
-| `project/workspace_unresolved_import` | `SIFR-WORKSPACE-0101` in compact/json output | keep `SIFR-WORKSPACE-0101`; add related searched paths |
-| `project/workspace_ambiguous_import` | `SIFR-WORKSPACE-0102` in compact/json output | keep `SIFR-WORKSPACE-0102`; add related candidate paths |
+| `project/missing_import_reports_error` | `SIFR-IMPORT-0002` in compact/json output | keep canonical import identity and tried-path notes |
+| `project/workspace_unresolved_import` | `SIFR-IMPORT-0002` in compact/json output | keep canonical import identity and tried-path notes |
+| `package/package_ambiguous_import_canonical` | `SIFR-IMPORT-0005` in compact/json output | keep canonical import identity and candidate-path notes |
 | `project/workspace_malformed_manifest` | `SIFR-WORKSPACE-0001` in compact/json output | keep `SIFR-WORKSPACE-0001`; add manifest span/path metadata where available |
 | `project/multi_module_run`, `project/workspace_dotted_helper_run` | no diagnostic marker; pass baselines exercise project mode stability | no diagnostic migration, but rerun with renderer tests |
 | `regression/crashes/CR-0001_cfg_invariant_minimized`, `regression/crashes/CR-0002_parser_invariant_minimized` | crash minimization inputs, no checked renderer baseline | panic-boundary/internal diagnostic validation, likely `SIFR-INTERNAL-0001` if surfaced through user path |

@@ -1,2 +1,2 @@
 [source]
-roots = ["../outside"]
+root = "../outside"

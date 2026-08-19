@@ -423,25 +423,25 @@ fn reexported_default_descriptors_finalize_constructor_parameters() {
         (
             "fixture.api".to_string(),
             parse_suite(include_str!(
-                "../../../../verification/areas/core_language/fixtures/static_class_adapter/fixture/api.sifr"
+                "../../../../verification/areas/core_language/fixtures/static_class_adapter/src/api.sifr"
             )),
         ),
         (
             "fixture.contract_types".to_string(),
             parse_suite(include_str!(
-                "../../../../verification/areas/core_language/fixtures/static_class_adapter/fixture/contract_types.sifr"
+                "../../../../verification/areas/core_language/fixtures/static_class_adapter/src/contract_types.sifr"
             )),
         ),
         (
             "fixture.contract".to_string(),
             parse_suite(include_str!(
-                "../../../../verification/areas/core_language/fixtures/static_class_adapter/fixture/contract.sifr"
+                "../../../../verification/areas/core_language/fixtures/static_class_adapter/src/contract.sifr"
             )),
         ),
         (
             "fixture.facade".to_string(),
             parse_suite(include_str!(
-                "../../../../verification/areas/core_language/fixtures/static_class_adapter/fixture/facade.sifr"
+                "../../../../verification/areas/core_language/fixtures/static_class_adapter/src/facade.sifr"
             )),
         ),
         (
@@ -524,19 +524,19 @@ fn adapted_factory_defaults_retain_static_specialization_output() {
         (
             "fixture.api".to_string(),
             parse_suite(include_str!(
-                "../../../../verification/areas/core_language/fixtures/static_class_adapter/fixture/api.sifr"
+                "../../../../verification/areas/core_language/fixtures/static_class_adapter/src/api.sifr"
             )),
         ),
         (
             "fixture.contract_types".to_string(),
             parse_suite(include_str!(
-                "../../../../verification/areas/core_language/fixtures/static_class_adapter/fixture/contract_types.sifr"
+                "../../../../verification/areas/core_language/fixtures/static_class_adapter/src/contract_types.sifr"
             )),
         ),
         (
             "fixture.contract".to_string(),
             parse_suite(include_str!(
-                "../../../../verification/areas/core_language/fixtures/static_class_adapter/fixture/contract.sifr"
+                "../../../../verification/areas/core_language/fixtures/static_class_adapter/src/contract.sifr"
             )),
         ),
         (

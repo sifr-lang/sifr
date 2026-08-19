@@ -10,7 +10,7 @@ description: "Workspace source root escapes the workspace root."
 
 ## Why It Happens
 
-Workspace metadata does not describe a valid Sifr source layout. Keep source roots inside the workspace and use valid member/source-root shapes.
+Workspace metadata does not describe a valid Sifr source layout. Keep the source root inside the workspace and use valid member and source-root shapes.
 
 <Info>
 Use `sifr --explain SIFR-WORKSPACE-0002` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.
@@ -19,19 +19,19 @@ Use `sifr --explain SIFR-WORKSPACE-0002` locally to see the renderer's exact mes
 ## Erroneous Code
 
 ```toml
-[workspace]
-members = [123]
+[source]
+root = "../shared"
 ```
 
 ## How To Fix It
 
-Fix workspace metadata so source roots stay inside the workspace and each entry has the expected string/path shape.
+Set `root` to a relative directory inside the workspace.
 
 ## Fixed Code
 
 ```toml
-[workspace]
-members = ["crates/app"]
+[source]
+root = "src"
 ```
 
 ## Details
