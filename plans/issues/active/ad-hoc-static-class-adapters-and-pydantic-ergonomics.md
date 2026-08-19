@@ -2430,6 +2430,32 @@ reject that state explicitly.
 Next action: make non-class parent handling uniformly fail closed and settle
 class-alias parent authority.
 
+Compiler hardening item 16 state: complete
+PR: [`sifr-lang/sifr#3362`](https://github.com/sifr-lang/sifr/pull/3362)
+Base SHA: `412f24d343e64428ed100205f5c6dba062972dc0`
+Candidate SHA: `bc4a92c5eba3e9150a7cd9a4f506929d456f41f7`
+Merge SHA: `c6b4839eafda2a9eb19d9240e29ed48ff29e2d10`
+Changed paths: uniform class-only parent identity handling, exact class-alias
+base rejection coverage, and the durable compiler contract.
+Validation: the lowering suite passed 1,009 tests and ignored one test. All
+116 frontend tests passed. The driver suite passed 540 tests and ignored 76
+tests. Workspace Clippy passed with warnings denied. Rust formatting, both
+maintainability guards, the 900-line guard, and diff hygiene passed. The
+create-PR and merge gates each ran once on the exact candidate. Both passed
+generated-demo freshness and every preceding guard. Both then stopped at the
+same two separately owned Rust-interop matrix inputs. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3362#issuecomment-5347289960),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3362#issuecomment-5347346220)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3362#issuecomment-5347319539)).
+Deferred follow-up: the remaining compiler audit should make the handler-plan
+ordering dependency local if it remains relevant. It must also classify every
+older M12 compiler deferral as complete, terminal, or a bounded implementation
+item.
+Next action: audit every remaining compiler-owned M12 deferral and select the
+next mechanism item.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
