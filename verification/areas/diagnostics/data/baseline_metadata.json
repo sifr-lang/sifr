@@ -633,7 +633,7 @@
       "synthetic": true
     },
     {
-      "bless_reason": "Synthetic compact diagnostic baseline coverage for active frontend build, stdlib, and legacy workspace diagnostics that require internal fault injection or retired public renderer paths.",
+      "bless_reason": "Synthetic compact diagnostic baseline coverage for active frontend build and stdlib diagnostics that require internal fault injection.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2619",
       "fixture_id": "frontend_internal_diagnostic_rules_cases",
       "normalizers": [
@@ -857,7 +857,7 @@
       ],
       "owner": "compiler/core-language",
       "renderer": "compact",
-      "source_hash": "sha256:31d4779b57991c5b5171111d64dad8acbae984f6d736de29177828e7a26cecc1",
+      "source_hash": "sha256:6d23da45b9fadb25534e63cf170ce5ffdbdd903bfdf2b6198ce3dc45fae9669b",
       "suite": "baselines"
     },
     {

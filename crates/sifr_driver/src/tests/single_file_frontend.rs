@@ -27,16 +27,7 @@ fn assert_check_compile_error_parity(source: &str, expected_code: DiagnosticCode
     else {
         panic!("invalid source must not reach code generation");
     };
-    assert_eq!(
-        check_errors
-            .iter()
-            .map(crate::diagnostics::diagnostic_legacy_display)
-            .collect::<Vec<_>>(),
-        compile_errors
-            .iter()
-            .map(crate::diagnostics::diagnostic_legacy_display)
-            .collect::<Vec<_>>()
-    );
+    assert_eq!(check_errors, compile_errors);
 }
 
 #[test]
@@ -191,16 +182,7 @@ fn test_lower_source_and_type_check_source_surface_type_errors() {
 
     let check_errors = type_check_source("def main():\n    x: int = \"bad\"\n");
     assert_eq!(errors.len(), check_errors.len());
-    assert_eq!(
-        errors
-            .iter()
-            .map(crate::diagnostics::diagnostic_legacy_display)
-            .collect::<Vec<_>>(),
-        check_errors
-            .iter()
-            .map(crate::diagnostics::diagnostic_legacy_display)
-            .collect::<Vec<_>>()
-    );
+    assert_eq!(errors, check_errors);
 }
 
 #[test]
@@ -231,16 +213,7 @@ def view(size: int) -> Result[python.Buffer[uint8], PythonError]: ...
     else {
         panic!("duplicate PythonError fields must not reach code generation");
     };
-    assert_eq!(
-        check_errors
-            .iter()
-            .map(crate::diagnostics::diagnostic_legacy_display)
-            .collect::<Vec<_>>(),
-        compile_errors
-            .iter()
-            .map(crate::diagnostics::diagnostic_legacy_display)
-            .collect::<Vec<_>>()
-    );
+    assert_eq!(check_errors, compile_errors);
 }
 
 #[test]

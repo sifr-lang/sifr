@@ -14,8 +14,6 @@ use super::sysroot_cli::{cmd_doctor, cmd_print, PrintKind};
 use super::trace_cli::cmd_trace;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severity};
-#[cfg(test)]
-use sifr_driver::diagnostic_label_for_code_str;
 use sifr_driver::find_workspace_root;
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::collections::BTreeMap;
@@ -823,22 +821,5 @@ pub(super) fn diagnostic_exit_code(errors: &[RenderedDiagnostic]) -> i32 {
         EXIT_USER_DIAGNOSTIC
     } else {
         EXIT_SUCCESS
-    }
-}
-
-#[cfg(test)]
-pub(super) fn legacy_diagnostic_display(diagnostic: &RenderedDiagnostic) -> String {
-    format!("{}: {}", human_label(diagnostic), diagnostic.message)
-}
-
-#[cfg(test)]
-pub(super) fn human_label(diagnostic: &RenderedDiagnostic) -> &'static str {
-    match diagnostic.severity {
-        Severity::Error if diagnostic.code.starts_with("SIFR-") => {
-            diagnostic_label_for_code_str(&diagnostic.code)
-        }
-        Severity::Error => "error",
-        Severity::Warning => "warning",
-        Severity::Note => "note",
     }
 }

@@ -627,10 +627,11 @@ def value_b() -> int:
     let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .err()
         .expect("project lowering should fail when there is a dependency cycle");
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("module dependency cycle detected")));
-    assert!(errors.iter().any(|e| e.message.contains("a -> b -> a")));
+    assert!(errors.iter().any(|error| {
+        error.code == DiagnosticCode::IMPORT_CYCLE.code()
+            && error.message == "circular import detected: a -> b -> a"
+            && error.spans.is_empty()
+    }));
 }
 
 #[test]
@@ -737,8 +738,16 @@ def value_a() -> int:
     let message_a = &error_a[0].message;
     let message_b = &error_b[0].message;
     assert_eq!(message_a, message_b);
-    assert!(message_a.contains("module dependency cycle detected: a -> b -> c -> a"));
-    assert!(message_a.contains("import chain: a imports b, b imports c, c imports a"));
+    assert_eq!(message_a, "circular import detected: a -> b -> c -> a");
+    assert_eq!(error_a[0].code, DiagnosticCode::IMPORT_CYCLE.code());
+    assert_eq!(error_a[0].args, error_b[0].args);
+    assert_eq!(
+        error_a[0].args.get("cycle_edges"),
+        Some(&sifr_diagnostics::DiagnosticArg::String(
+            "a imports b, b imports c, c imports a".to_string()
+        ))
+    );
+    assert!(error_a[0].spans.is_empty());
 }
 
 #[test]

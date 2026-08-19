@@ -517,16 +517,6 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "e2e_async_popen_unsupported",
-      "code": "SIFR-IMPORT-0009",
-      "deferral": null,
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [
-        "compact"
-      ],
-      "suggestion_rendering_fixture": null
-    },
-    {
       "baseline_fixture_id": "e2e_fixed_width_const_expression_out_of_range",
       "code": "SIFR-INT-0001",
       "deferral": null,
@@ -2096,46 +2086,6 @@
     {
       "baseline_fixture_id": "workspace_invalid_source_root",
       "code": "SIFR-WORKSPACE-0004",
-      "deferral": null,
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [
-        "compact"
-      ],
-      "suggestion_rendering_fixture": null
-    },
-    {
-      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
-      "code": "SIFR-WORKSPACE-0101",
-      "deferral": null,
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [
-        "compact"
-      ],
-      "suggestion_rendering_fixture": null
-    },
-    {
-      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
-      "code": "SIFR-WORKSPACE-0102",
-      "deferral": null,
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [
-        "compact"
-      ],
-      "suggestion_rendering_fixture": null
-    },
-    {
-      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
-      "code": "SIFR-WORKSPACE-0103",
-      "deferral": null,
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [
-        "compact"
-      ],
-      "suggestion_rendering_fixture": null
-    },
-    {
-      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
-      "code": "SIFR-WORKSPACE-0104",
       "deferral": null,
       "multi_error_recovery_fixture": null,
       "renderer_formats": [

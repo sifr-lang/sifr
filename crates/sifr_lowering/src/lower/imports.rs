@@ -138,17 +138,9 @@ pub(in crate::lower) fn report_missing_stdlib_member(
 pub(in crate::lower) fn report_unknown_stdlib_module(
     ctx: &mut LowerCtx,
     module: &str,
-    imported_names: &str,
     range: TextRange,
 ) {
-    if let Some(legacy_module) = sifr_stdlib_imports::unsupported_legacy_stdlib_module(module) {
-        import_diagnostics::unsupported_legacy_stdlib_module(
-            ctx,
-            &legacy_module,
-            imported_names,
-            range,
-        );
-    } else if let Some(reason) = deferred_module_reason(module) {
+    if let Some(reason) = deferred_module_reason(module) {
         import_diagnostics::deferred_compat_module(ctx, module, reason, range);
     } else {
         import_diagnostics::unknown_import_target(ctx, module, range);
@@ -157,15 +149,6 @@ pub(in crate::lower) fn report_unknown_stdlib_module(
 
 fn deferred_module_reason(module: &str) -> Option<&'static str> {
     match module {
-        "sifr.contextlib" => Some(
-            "contextlib compatibility is rejected; use deterministic `sifr.resource` scopes instead",
-        ),
-        "sifr.warnings" => Some(
-            "Python global warning filters are rejected; use typed Sifr diagnostics and runtime observability instead",
-        ),
-        "sifr.selectors" => {
-            Some("public selectors APIs are deferred; compose tasks and channels instead")
-        }
         "sifr.contextvars" => Some("context-local state is deferred; pass task state explicitly"),
         _ => None,
     }

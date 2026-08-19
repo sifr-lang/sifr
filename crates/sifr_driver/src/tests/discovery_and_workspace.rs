@@ -2,7 +2,7 @@ use crate::{
     create_invocation_workspace, discover_test_root_modules, parse_import_closure_modules,
     DiscoveryDiagnosticStyle, ModuleResolver, SifrWorkspaceConfig, WorkspaceRoot,
 };
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{render_compact_diagnostics, DiagnosticArg, DiagnosticCode};
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
@@ -297,6 +297,48 @@ fn test_workspace_resolver_reports_unresolved_tried_paths() {
         .children
         .iter()
         .any(|child| child.message.contains("lib/missing.sifr")));
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn test_workspace_resolver_renders_missing_root_with_unknown_location() {
+    let unique = format!(
+        "sifr_workspace_missing_root_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    );
+    let dir = std::env::temp_dir().join(unique);
+    let entry_dir = dir.join("cases");
+    std::fs::create_dir_all(&entry_dir).expect("entry dir should be created");
+    std::fs::create_dir_all(dir.join("lib")).expect("lib should be created");
+
+    let resolver = workspace_resolver(&entry_dir, &dir, "lib");
+    let errors = parse_import_closure_modules(
+        &resolver,
+        &BTreeSet::from(["missing".to_string()]),
+        DiscoveryDiagnosticStyle::ModuleName,
+    )
+    .expect_err("missing root module should fail");
+
+    let diagnostic = &errors[0];
+    assert_eq!(
+        diagnostic.code,
+        DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE.code()
+    );
+    assert_eq!(diagnostic.message, "unknown import target: 'missing'");
+    assert_eq!(
+        diagnostic.args.get("resolution_scope"),
+        Some(&DiagnosticArg::String("workspace".to_string()))
+    );
+    assert!(diagnostic.args.contains_key("tried_paths"));
+    assert_eq!(diagnostic.children.len(), 2);
+    assert!(diagnostic.spans.is_empty());
+    assert!(render_compact_diagnostics(&errors)
+        .contains("E SIFR-IMPORT-0002 <unknown> unknown import target: 'missing'"));
 
     let _ = std::fs::remove_dir_all(&dir);
 }

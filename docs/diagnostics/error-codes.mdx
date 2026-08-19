@@ -52,7 +52,6 @@ The `IMPORT` family covers errors that occur when resolving `import` and `from â
 | [`SIFR-IMPORT-0006`](/errors/SIFR-IMPORT-0006) | Error | Source module namespace and file import collision. |
 | [`SIFR-IMPORT-0007`](/errors/SIFR-IMPORT-0007) | Error | Circular source module import graph. |
 | [`SIFR-IMPORT-0008`](/errors/SIFR-IMPORT-0008) | Error | Bare CPython-style stdlib import attempt. |
-| [`SIFR-IMPORT-0009`](/errors/SIFR-IMPORT-0009) | Error | Unsupported legacy Sifr stdlib module import. |
 
 <Note>
 [`SIFR-IMPORT-0008`](/errors/SIFR-IMPORT-0008) fires when you write `from math import floor` instead of `from sifr.math import floor`. Sifr's standard library lives under the `sifr.*` namespace.
@@ -373,10 +372,6 @@ The `WORKSPACE` family covers errors in workspace configuration: malformed manif
 | [`SIFR-WORKSPACE-0002`](/errors/SIFR-WORKSPACE-0002) | Error | Workspace source root escapes the workspace root. |
 | [`SIFR-WORKSPACE-0003`](/errors/SIFR-WORKSPACE-0003) | Error | Workspace source root is not a directory. |
 | [`SIFR-WORKSPACE-0004`](/errors/SIFR-WORKSPACE-0004) | Error | Workspace source root entry has an invalid shape or path. |
-| [`SIFR-WORKSPACE-0101`](/errors/SIFR-WORKSPACE-0101) | Error | Legacy workspace import target could not be resolved. |
-| [`SIFR-WORKSPACE-0102`](/errors/SIFR-WORKSPACE-0102) | Error | Legacy workspace import target is ambiguous. |
-| [`SIFR-WORKSPACE-0103`](/errors/SIFR-WORKSPACE-0103) | Error | Legacy workspace namespace package collision. |
-| [`SIFR-WORKSPACE-0104`](/errors/SIFR-WORKSPACE-0104) | Error | Legacy workspace import graph cycle. |
 
 </Accordion>
 

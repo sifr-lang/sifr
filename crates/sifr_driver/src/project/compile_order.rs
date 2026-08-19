@@ -251,12 +251,22 @@ pub(crate) fn compute_module_compile_order(
         .map(|edge| format!("{} imports {}", edge[0], edge[1]))
         .collect::<Vec<_>>()
         .join(", ");
-    let message = format!(
-        "module dependency cycle detected: {cycle_render}; import chain: {edge_render}. Break the cycle by moving shared declarations into a separate module."
-    );
-    Err(vec![crate::diagnostics::diagnostic_with_code(
-        message,
-        DiagnosticCode::WORKSPACE_IMPORT_CYCLE,
+    let args = [
+        (
+            "cycle",
+            sifr_diagnostics::DiagnosticArg::String(cycle_render),
+        ),
+        (
+            "cycle_edges",
+            sifr_diagnostics::DiagnosticArg::String(edge_render),
+        ),
+    ];
+    Err(vec![crate::diagnostics::diagnostic_without_source(
+        DiagnosticCode::IMPORT_CYCLE,
+        "circular import detected: {cycle}",
+        &args,
+        &[],
+        Some("break the cycle by moving shared declarations into a separate module".to_string()),
     )])
 }
 

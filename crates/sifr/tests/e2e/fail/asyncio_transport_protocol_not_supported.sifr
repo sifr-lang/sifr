@@ -1,2 +1,2 @@
-# expect-error: SIFR-IMPORT-0009
+# expect-error: SIFR-IMPORT-0002
 from sifr.asyncio import BaseTransport
