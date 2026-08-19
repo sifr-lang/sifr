@@ -277,6 +277,38 @@ class Model:
 }
 
 #[test]
+fn described_method_exposes_successful_result_output() {
+    let source = r#"
+class HandlerFailure(Error):
+    message: str
+
+class Model:
+    @staticmethod
+    @metadata("fixture.callback", "checked")
+    def checked(own value: str) -> Result[int, HandlerFailure]:
+        return 1
+"#;
+    let parsed = parse_module_suite(source, None).expect("fixture parses");
+    let lowered = lower_module(&parsed).expect("fixture lowers");
+    let model = &lowered.module.classes[1];
+    let shape = describe_type(
+        "fixture.successful_output",
+        &class_type(model, Vec::new()),
+        &lowered,
+    );
+    let ShapeNode::Nominal { methods, .. } = shape.root else {
+        panic!("model must have a nominal shape");
+    };
+    assert_eq!(methods.len(), 1);
+    assert!(matches!(*methods[0].result, ShapeNode::Other(_)));
+    assert_eq!(
+        methods[0].output.as_ref(),
+        &ShapeNode::Primitive("int".to_string())
+    );
+    assert!(methods[0].fallible);
+}
+
+#[test]
 fn generic_method_contract_uses_concrete_class_arguments() {
     let source = r#"
 class Box[T]:
@@ -310,6 +342,117 @@ class Container:
     );
     assert_eq!(*methods[0].result, ShapeNode::Primitive("int".to_string()));
     assert!(!shape.canonical_identity.contains("param:T"));
+}
+
+#[test]
+fn inherited_handler_preserves_checked_signature_and_uses_child_diagnostic_origin() {
+    use sifr_lowering::{
+        AdapterFieldDefault, AdapterFieldPlan, AdapterHandlerPlan, CallableIdentity,
+        ClassAdapterSelection, SourceOriginId, StaticProgramValue,
+    };
+
+    let source = r#"
+class Parent[T]:
+    value: T
+
+    @classmethod
+    def normalize(cls, own value: T) -> T:
+        return value
+
+class Child(Parent[int]):
+    @classmethod
+    def finish(cls, own value: int) -> int:
+        return value
+"#;
+    let parsed = parse_module_suite(source, None).expect("fixture parses");
+    let mut lowered = lower_module(&parsed).expect("fixture lowers");
+    let callable = CallableIdentity {
+        module: "fixture.inherited".to_string(),
+        owner: Some("fixture.inherited.Parent".to_string()),
+        symbol: "normalize".to_string(),
+        generic_arguments: Vec::new(),
+        signature: "checked".to_string(),
+    };
+    let child_callable = CallableIdentity {
+        module: "fixture.inherited".to_string(),
+        owner: Some("fixture.inherited.Child".to_string()),
+        symbol: "finish".to_string(),
+        generic_arguments: Vec::new(),
+        signature: "checked-child".to_string(),
+    };
+    lowered
+        .class_adapter_selections
+        .push(ClassAdapterSelection {
+            owner: "Child".to_string(),
+            provider_module: "fixture.adapter".to_string(),
+            provider_function: "adapt".to_string(),
+            descriptor_type: Type::Str,
+            marker_identities: Vec::new(),
+            data_parent: Some("Parent".to_string()),
+            field_plans: vec![AdapterFieldPlan {
+                identity: "fixture.inherited.Child.value".to_string(),
+                name: "value".to_string(),
+                declared_type: Type::Int,
+                default: AdapterFieldDefault::Required,
+                validation_policy: None,
+            }],
+            handler_plans: vec![
+                AdapterHandlerPlan {
+                    callable: callable.clone(),
+                    descriptor_type: Type::Str,
+                    descriptor_value: StaticProgramValue::String("after".to_string()),
+                    descriptor_origin: SourceOriginId::new([7; 32], 3),
+                    descriptor_range: ruff_text_size::TextRange::default(),
+                    declaration_order: 0,
+                },
+                AdapterHandlerPlan {
+                    callable: child_callable.clone(),
+                    descriptor_type: Type::Str,
+                    descriptor_value: StaticProgramValue::String("after".to_string()),
+                    descriptor_origin: SourceOriginId::new([7; 32], 4),
+                    descriptor_range: ruff_text_size::TextRange::default(),
+                    declaration_order: 1,
+                },
+            ],
+            attached_api_set: None,
+            adapter_invocation_identity: [0; 32],
+            post_adapter_identity: [0; 32],
+            range: ruff_text_size::TextRange::default(),
+        });
+    let child = &lowered.module.classes[1];
+    let shape = describe_type(
+        "fixture.inherited",
+        &class_type(child, Vec::new()),
+        &lowered,
+    );
+    let ShapeNode::Nominal {
+        fields, methods, ..
+    } = shape.root
+    else {
+        panic!("child must have a nominal shape");
+    };
+    assert_eq!(fields.len(), 1);
+    assert_eq!(fields[0].name, "value");
+    assert_eq!(
+        fields[0].declared_type,
+        ShapeNode::Primitive("int".to_string())
+    );
+    assert_eq!(methods.len(), 2);
+    assert_eq!(methods[0].name, "normalize");
+    assert_eq!(methods[1].name, "finish");
+    assert_eq!(methods[0].target.as_ref(), Some(&callable));
+    assert_eq!(methods[0].kind, "class");
+    assert_eq!(methods[0].receiver, None);
+    assert_eq!(
+        methods[0].params[0].declared_type,
+        ShapeNode::Primitive("int".to_string())
+    );
+    assert_eq!(*methods[0].result, ShapeNode::Primitive("int".to_string()));
+    assert_eq!(*methods[0].output, ShapeNode::Primitive("int".to_string()));
+    assert!(!methods[0].fallible);
+    assert_eq!(methods[0].origin, None);
+    assert_eq!(methods[1].target.as_ref(), Some(&child_callable));
+    assert_eq!(methods[1].origin, Some(SourceOriginId::new([7; 32], 4)));
 }
 
 #[test]

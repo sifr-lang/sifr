@@ -30,6 +30,9 @@ pub struct ShapeMethod {
     pub is_async: bool,
     pub params: Vec<ShapeParameter>,
     pub result: Box<ShapeNode>,
+    /// Successful checked output, with a `Result` carrier removed.
+    pub output: Box<ShapeNode>,
+    pub fallible: bool,
     pub metadata: Vec<ShapeMetadata>,
 }
 
@@ -110,6 +113,8 @@ pub(super) fn const_value(method: &ShapeMethod) -> ConstValue {
             ),
         ),
         ("result".to_string(), node_const_value(&method.result)),
+        ("output".to_string(), node_const_value(&method.output)),
+        ("fallible".to_string(), ConstValue::Bool(method.fallible)),
         (
             "metadata".to_string(),
             metadata_const_value(&method.metadata),
@@ -237,17 +242,33 @@ fn described_handler(
         .identity
         .clone()
         .unwrap_or_else(|| format!("{module_name}.{}", class.name));
-    let detailed = (handler.callable.owner.as_deref() == Some(local_owner.as_str()))
-        .then(|| {
-            class
-                .methods
-                .iter()
-                .chain(class.operator_impls.iter().map(|(_, method)| method))
-                .find(|method| method.name == hir_name)
-        })
-        .flatten();
-    let mut method = if let Some(method) = detailed {
-        let owner = format!("{class_name}.{declared_name}");
+    let callable_owner = handler.callable.owner.as_deref();
+    let local_detail = callable_owner.and_then(|owner| {
+        let (source_module, source_name) = owner.rsplit_once('.')?;
+        (source_module == module_name)
+            .then(|| {
+                lowering
+                    .module
+                    .classes
+                    .iter()
+                    .find(|candidate| {
+                        candidate.identity.as_deref() == Some(owner)
+                            || (candidate.identity.is_none() && candidate.name == source_name)
+                    })
+                    .and_then(|owner_class| {
+                        owner_class
+                            .methods
+                            .iter()
+                            .chain(owner_class.operator_impls.iter().map(|(_, method)| method))
+                            .find(|method| method.name == hir_name)
+                            .map(|method| (source_name, owner_class, method))
+                    })
+            })
+            .flatten()
+    });
+    let mut method = if let Some((source_name, owner_class, method)) = local_detail {
+        let owner = format!("{source_name}.{declared_name}");
+        let inherited_bindings = inherited_handler_bindings(class, owner_class, bindings);
         described_method(
             module_name,
             &owner,
@@ -257,7 +278,7 @@ fn described_handler(
             method.method_kind,
             method.receiver,
             method.is_async,
-            bindings,
+            &inherited_bindings,
             metadata_for(
                 &lowering.declaration_metadata,
                 &owner,
@@ -265,6 +286,30 @@ fn described_handler(
                 None,
             ),
             &lowering.declaration_metadata,
+            lowering,
+            external_defs,
+            visiting,
+        )
+    } else if let Some(method) = imported_handler_method(handler, external_defs) {
+        let owner_name = handler
+            .callable
+            .owner
+            .as_deref()
+            .and_then(|owner| owner.rsplit_once('.').map(|(_, name)| name))
+            .unwrap_or(class_name);
+        let inherited_bindings = imported_handler_bindings(class, handler, bindings, external_defs);
+        described_method(
+            &handler.callable.module,
+            &format!("{owner_name}.{declared_name}"),
+            declared_name,
+            &method.params,
+            &method.return_type,
+            method.method_kind,
+            method.receiver,
+            method.is_async,
+            &inherited_bindings,
+            Vec::new(),
+            &[],
             lowering,
             external_defs,
             visiting,
@@ -281,14 +326,110 @@ fn described_handler(
             is_async: false,
             params: Vec::new(),
             result: Box::new(ShapeNode::Other("checked_handler".to_string())),
+            output: Box::new(ShapeNode::Other("checked_handler".to_string())),
+            fallible: false,
             metadata: Vec::new(),
         }
     };
     method.target = Some(handler.callable.clone());
     method.descriptor = Some(validated_adapter_value(&handler.descriptor_value));
-    method.origin = Some(handler.descriptor_origin);
+    method.origin =
+        (callable_owner == Some(local_owner.as_str())).then_some(handler.descriptor_origin);
     method.declaration_order = Some(handler.declaration_order);
     method
+}
+
+fn imported_handler_bindings(
+    child: &HirClass,
+    handler: &AdapterHandlerPlan,
+    child_bindings: &HashMap<String, Type>,
+    external_defs: &sifr_lowering::ExternalDefs,
+) -> HashMap<String, Type> {
+    let Some(owner) = handler.callable.owner.as_deref() else {
+        return HashMap::new();
+    };
+    let Some((source_module, source_name)) = owner.rsplit_once('.') else {
+        return HashMap::new();
+    };
+    let Some(Type::Class {
+        identity,
+        name,
+        type_args,
+        ..
+    }) = child.parent_type.as_ref().map(Type::resolve_alias)
+    else {
+        return HashMap::new();
+    };
+    if identity
+        .as_deref()
+        .map_or(name != source_name, |value| value != owner)
+    {
+        return HashMap::new();
+    }
+    let type_params = external_defs
+        .class_type_params
+        .get(source_module)
+        .and_then(|classes| classes.get(source_name))
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    type_params
+        .iter()
+        .cloned()
+        .zip(
+            type_args
+                .iter()
+                .map(|argument| substitute_type_vars(argument, child_bindings)),
+        )
+        .collect()
+}
+
+fn inherited_handler_bindings(
+    child: &HirClass,
+    owner: &HirClass,
+    child_bindings: &HashMap<String, Type>,
+) -> HashMap<String, Type> {
+    if child.name == owner.name {
+        return child_bindings.clone();
+    }
+    let Some(Type::Class {
+        identity,
+        name,
+        type_args,
+        ..
+    }) = child.parent_type.as_ref().map(Type::resolve_alias)
+    else {
+        return HashMap::new();
+    };
+    let owner_identity = owner.identity.as_deref().unwrap_or(&owner.name);
+    if identity.as_deref().unwrap_or(name) != owner_identity && name != &owner.name {
+        return HashMap::new();
+    }
+    owner
+        .type_params
+        .iter()
+        .cloned()
+        .zip(
+            type_args
+                .iter()
+                .map(|argument| substitute_type_vars(argument, child_bindings)),
+        )
+        .collect()
+}
+
+fn imported_handler_method<'a>(
+    handler: &AdapterHandlerPlan,
+    external_defs: &'a sifr_lowering::ExternalDefs,
+) -> Option<&'a StructuralMethodExport> {
+    let owner = handler.callable.owner.as_deref()?;
+    let (source_module, source_name) = owner.rsplit_once('.')?;
+    if source_module != handler.callable.module {
+        return None;
+    }
+    external_defs
+        .structural_methods_for(source_module)?
+        .get(source_name)?
+        .iter()
+        .find(|method| method.name == handler.callable.symbol)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -354,6 +495,11 @@ fn described_method(
     external_defs: &sifr_lowering::ExternalDefs,
     visiting: &mut BTreeSet<String>,
 ) -> ShapeMethod {
+    let substituted_result = substitute_type_vars(return_type, bindings);
+    let (output_type, fallible) = match substituted_result.resolve_alias() {
+        Type::Result(output, _) => (output.as_ref(), true),
+        output => (output, false),
+    };
     ShapeMethod {
         target: None,
         descriptor: None,
@@ -386,11 +532,19 @@ fn described_method(
             .collect(),
         result: Box::new(describe_node(
             module_name,
-            &substitute_type_vars(return_type, bindings),
+            &substituted_result,
             lowering,
             external_defs,
             visiting,
         )),
+        output: Box::new(describe_node(
+            module_name,
+            output_type,
+            lowering,
+            external_defs,
+            visiting,
+        )),
+        fallible,
         metadata,
     }
 }

@@ -362,7 +362,14 @@ fn describe_class(
                     .map(|selection| selection.field_plans.as_slice()),
             )
         };
-    let described_fields = fields
+    let planned_fields = field_plans.map(|plans| {
+        plans
+            .iter()
+            .map(|field| (field.name.clone(), field.declared_type.clone()))
+            .collect::<Vec<_>>()
+    });
+    let effective_fields = planned_fields.as_deref().unwrap_or(fields);
+    let described_fields = effective_fields
         .iter()
         .enumerate()
         .map(|(index, (name, ty))| ShapeField {
@@ -641,13 +648,15 @@ fn canonical_method(method: &ShapeMethod) -> String {
         .as_ref()
         .map_or_else(|| "none".to_string(), canonical_value);
     format!(
-        "{}:{}:{}:{}:{}:target[{target}]:descriptor[{descriptor}]:params[{params}]:result[{}]:meta[{}]",
+        "{}:{}:{}:{}:{}:target[{target}]:descriptor[{descriptor}]:params[{params}]:result[{}]:output[{}]:fallible[{}]:meta[{}]",
         method.name.len(),
         method.name,
         method.kind,
         method.receiver.as_deref().unwrap_or("none"),
         method.is_async,
         canonical_node(&method.result),
+        canonical_node(&method.output),
+        method.fallible,
         canonical_metadata(&method.metadata)
     )
 }

@@ -156,6 +156,11 @@ payload cover types with and without handlers. Package method descriptors expose
 source origin, and the specializer selects those identities through `sifr_method_slots`. Legacy
 annotated slots can still use exact `module.Type::method` strings.
 
+Each described method contains its declared `result`, its successful `output`, and a `fallible`
+flag. For `Result[T, E]`, `output` describes `T` and `fallible` is true. For other results,
+`output` equals `result` and `fallible` is false. Packages use these typed facts to reject invalid
+handler signatures during specialization. They do not parse a displayed type name.
+
 The compiler accepts synchronous static, class, shared-instance, mutable-instance, and owned
 receiver handlers. A checked handler can return an infallible structural value or a typed `Result`.
 An owned receiver must return the exact current `Self` specialization, directly or as the successful
