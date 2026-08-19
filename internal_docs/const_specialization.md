@@ -141,6 +141,9 @@ The provisional adapter pass accepts `StaticProgram` bounds before attached API 
 The final pass still requires a produced program and complete structural support.
 Descriptor-shaped field defaults do not affect required-field ordering during the provisional pass.
 The finalized adapter field plan supplies the required and default states for the final check.
+When a concrete generic adapted type is described, the compiler substitutes its concrete type
+arguments into every finalized field-plan type. The same rule applies to local and imported
+adapted classes. A concrete static-program shape cannot retain the declaration's type parameters.
 
 An unbound generic adapted declaration does not request a schema program.
 A concrete owner must supply all type arguments before static program generation.
