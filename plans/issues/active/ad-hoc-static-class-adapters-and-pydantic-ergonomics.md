@@ -1834,7 +1834,39 @@ generic hash predicates. It must decide inherited parent-default behavior in
 flattened child contracts. It must also gate or support recursive boxed parent
 fields and add direct plain-parent structural coverage. These were non-blocking
 review findings. No third review ran.
-Next action: resume the M11 package surface.
+Next action: completed by compiler prerequisite 6 below.
+
+Compiler prerequisite 6 state: complete
+PR: [`sifr-lang/sifr#3327`](https://github.com/sifr-lang/sifr/pull/3327)
+Base SHA: `2630d2c24051f713cfe27225293cb1a8596376ab`
+Candidate SHA: `d4615cf9bd072349e9ee75b1059bc2e5f8195c0c`
+Merge SHA: `1f947fa0b3a33d38e9240b7e6857736199f59aee`
+Changed paths: compiler-owned generic-bound classification, Rust generic-bound
+emission, emitter state, and focused code-generation tests.
+Validation: the code-generation suite passed 1053 tests. Affected-crate Clippy
+passed with warnings denied. Formatting, HIR maintainability, repository and
+touched-file size, and diff guards passed. A release compiler regenerated the
+M11 package wrappers. All three affected attached functions now emit
+`StructuralConstruct + StructuralProject`, and the previous six Rust bound
+errors are absent. The package build then stopped at its separate authoritative
+dependency check for the registry package `arrayvec`.
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3327#issuecomment-5342683181)).
+Gate evidence: the create-PR and merge gates each ran once on the exact
+candidate. Both passed generated-demo freshness and all preceding guards. Both
+then stopped at the separately owned Rust-interop fixture matrix. The two
+inputs were the missing generated-type-import negative source and the empty
+method-slot schema placeholder. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3327#issuecomment-5342711386),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3327#issuecomment-5342735160)).
+Deferred follow-up: M12 should consolidate the two structural-bound prescan
+passes and tighten the bound assertions. It should also assess the pre-existing
+free-function clone-inference edge for structural generics. These findings did
+not block this prerequisite.
+Next action: resume M11 in `pydantic-sifr`. First, resolve the package-owned
+authoritative-dependency failure for `arrayvec`, then complete the native
+model-operation evidence.
 
 Scope:
 
@@ -1976,16 +2008,17 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M10 are merged and recorded. M11 is in progress. Its first
-four compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, and #3323.
-The current compiler merge is
-`7a922ea7218254cafe6b65850ca0a089e16e4167`.
+Current state: M0-M10 are merged and recorded. M11 is in progress. Its six
+compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325,
+and #3327. The current compiler merge is
+`1f947fa0b3a33d38e9240b7e6857736199f59aee`.
 
-External gate record (2026-08-19): both one-time gates for PR #3317 stopped at
-the Rust-interop matrix. The matrix reported one missing negative evidence
-source and one existing empty placeholder class. The item did not own or alter
-those inputs. Both gates passed all earlier guards, and neither gate was
-rerun.
+External gate record (2026-08-19): the one-time gates for the M11 compiler
+prerequisites stopped at the Rust-interop matrix. The matrix reported one
+missing negative evidence source and one existing empty placeholder class.
+The items did not own or alter those inputs. The gates passed all earlier
+guards, and no gate was rerun.
 
-Next action: implement M11 compiler prerequisite 5 for concrete subclasses of
-adapted generic parents. Then resume the `pydantic-sifr` package surface.
+Next action: resume the `pydantic-sifr` M11 package surface. Resolve its
+authoritative-dependency failure for `arrayvec`, then complete native model
+operations and schema evidence.
