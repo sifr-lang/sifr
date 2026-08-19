@@ -1,5 +1,4 @@
 use super::class_shape_metadata::{declaration_metadata, field_default_identities, field_defaults};
-use super::is_hashable_type;
 use super::parameter_conventions::{
     class_method_param_convention, class_method_param_default, declared_receiver_convention,
     prepare_method_param_ownership,
@@ -13,6 +12,7 @@ use super::{
     HirClassKind, HirFunction, HirParam, LowerCtx, MethodKind, ParamConvention, Ranged, Stmt,
     StmtClassDef, Type,
 };
+use super::{is_derivably_hashable_type, is_hashable_type};
 use crate::lower::ownership_diagnostics;
 use crate::lower::python_interop::{
     classify_python_interop_stub_body, collect_python_method_declarations,
@@ -409,7 +409,9 @@ pub(in crate::lower) fn lower_class(
         .collect();
 
     // Determine if all fields are hashable (primitives: int, float, bool, str)
-    let is_hashable = all_fields.iter().all(|(_, ty)| is_hashable_type(ty));
+    let is_hashable = all_fields
+        .iter()
+        .all(|(_, ty)| is_derivably_hashable_type(ty));
 
     let mut hir_methods = Vec::new();
     let mut operator_impls = Vec::new();

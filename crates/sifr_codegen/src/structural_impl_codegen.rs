@@ -3,6 +3,8 @@ use sifr_ir::{HirClass, HirModule, RustInteropDecoratorKind};
 use sifr_type_system::{class_rust_name, Type};
 use std::collections::{BTreeSet, HashSet};
 
+use crate::structural_record_fields::structural_record_fields;
+
 const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
 
 impl RustEmitter {
@@ -184,8 +186,17 @@ fn structural_record_identity(class: &HirClass, module_name: Option<&str>) -> St
 }
 
 fn structural_record_supported_in(class: &HirClass, modules: &[(&str, &HirModule)]) -> bool {
-    let mut visiting = BTreeSet::from([class.name.clone()]);
-    class.parent_class.is_none()
+    let mut visiting =
+        BTreeSet::from([class.identity.clone().unwrap_or_else(|| class.name.clone())]);
+    structural_record_supported_with_visiting(class, modules, &mut visiting)
+}
+
+fn structural_record_supported_with_visiting(
+    class: &HirClass,
+    modules: &[(&str, &HirModule)],
+    visiting: &mut BTreeSet<String>,
+) -> bool {
+    structural_parent_supported(class, modules, visiting)
         && !class.is_error_type
         && class.newtype_inner.is_none()
         && crate::structural_identity_codegen::class_identity_inputs_supported(class)
@@ -198,7 +209,42 @@ fn structural_record_supported_in(class: &HirClass, modules: &[(&str, &HirModule
         && class
             .fields
             .iter()
-            .all(|(_, ty)| structural_record_field_supported(ty, modules, &mut visiting))
+            .all(|(_, ty)| structural_record_field_supported(ty, modules, visiting))
+}
+
+fn structural_parent_supported(
+    class: &HirClass,
+    modules: &[(&str, &HirModule)],
+    visiting: &mut BTreeSet<String>,
+) -> bool {
+    let Some(parent_type) = class.parent_type.as_ref() else {
+        return class.parent_class.is_none();
+    };
+    let Type::Class {
+        identity,
+        name,
+        fields,
+        ..
+    } = parent_type.resolve_alias()
+    else {
+        return false;
+    };
+    let Some(parent) = structural_class_candidate(identity.as_deref(), name, modules) else {
+        return false;
+    };
+    parent.parent_class.is_none()
+        && !parent.methods.iter().any(|method| method.name == "new")
+        && !parent.is_error_type
+        && parent.newtype_inner.is_none()
+        && crate::structural_identity_codegen::class_identity_inputs_supported(parent)
+        && parent.python_opaque_declaration().is_none()
+        && !parent
+            .rust_interop
+            .iter()
+            .any(|declaration| declaration.kind == RustInteropDecoratorKind::Opaque)
+        && fields
+            .iter()
+            .all(|(_, ty)| structural_record_field_supported(ty, modules, visiting))
 }
 
 pub(crate) fn structural_mapped_opaque_supported(class: &HirClass) -> bool {
@@ -267,23 +313,8 @@ fn structural_type_supported(
             if candidate.is_enum() {
                 return structural_enum_supported(candidate);
             }
-            if candidate.parent_class.is_some()
-                || candidate.is_error_type
-                || candidate.newtype_inner.is_some()
-                || !crate::structural_identity_codegen::class_identity_inputs_supported(candidate)
-                || candidate.python_opaque_declaration().is_some()
-                || candidate
-                    .rust_interop
-                    .iter()
-                    .any(|declaration| declaration.kind == RustInteropDecoratorKind::Opaque)
-            {
-                return false;
-            }
             visiting.insert(key.to_string());
-            let supported = candidate
-                .fields
-                .iter()
-                .all(|(_, field)| structural_record_field_supported(field, modules, visiting));
+            let supported = structural_record_supported_with_visiting(candidate, modules, visiting);
             visiting.remove(key);
             supported
         }
@@ -428,17 +459,20 @@ fn structural_construct_impl(
     nominal_identity: &str,
     emitter: &mut RustEmitter,
 ) -> RustItem {
-    let edge_cases = class
-        .fields
+    let fields = structural_record_fields(class);
+    let edge_cases = fields
         .iter()
         .enumerate()
-        .map(|(index, (name, _))| {
+        .map(|(index, field)| {
+            let name = field.name;
             format!("{STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\") => {index},")
         })
         .collect::<Vec<_>>()
         .join("\n");
-    let mut field_values = Vec::with_capacity(class.fields.len());
-    for (index, (name, ty)) in class.fields.iter().enumerate() {
+    let mut field_values = Vec::with_capacity(fields.len());
+    for (index, field) in fields.iter().enumerate() {
+        let name = field.name;
+        let ty = field.ty;
         let rust_name = crate::Renderer::render_identifier(name);
         let present = if matches!(ty.resolve_alias(), Type::Bytes) {
             format!(
@@ -468,23 +502,39 @@ fn structural_construct_impl(
         ));
     }
     let field_values = field_values.join("\n");
-    let mut initializers = class
-        .fields
+    let inherited_names = fields
         .iter()
-        .map(|(name, _)| crate::Renderer::render_identifier(name))
+        .filter(|field| field.inherited)
+        .map(|field| crate::Renderer::render_identifier(field.name))
         .collect::<Vec<_>>();
+    let mut initializers = Vec::new();
+    if let (Some(parent_name), Some(parent_type)) = (&class.parent_class, &class.parent_type) {
+        let parent_rust_type =
+            crate::Renderer::render_type_string(&crate::sifr_type_to_rust_type(parent_type));
+        initializers.push(format!(
+            "{}: <{parent_rust_type}>::new({})",
+            parent_name.to_lowercase(),
+            inherited_names.join(", ")
+        ));
+    }
+    initializers.extend(
+        fields
+            .iter()
+            .filter(|field| !field.inherited)
+            .map(|field| crate::Renderer::render_identifier(field.name)),
+    );
     if RustEmitter::class_needs_phantom_marker(class) {
         initializers.push("__sifr_type_marker: std::marker::PhantomData".to_string());
     }
-    let collect_children = if class.fields.is_empty() {
+    let collect_children = if fields.is_empty() {
         format!(
             "if !description.edges().is_empty() {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}"
         )
     } else {
         format!(
             "let mut child_nodes: [Option<{STRUCTURAL}::NodeId>; {}] = [None; {}];\nfor edge in description.edges() {{\nlet field_index: usize = match edge.kind() {{\n{edge_cases}\n_ => return Err({STRUCTURAL}::StructuralContractError::MemberMismatch),\n}};\nif child_nodes[field_index].replace(edge.node()).is_some() {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}\n}}",
-            class.fields.len(),
-            class.fields.len()
+            fields.len(),
+            fields.len()
         )
     };
     let body = format!(
@@ -535,18 +585,32 @@ fn structural_project_impl(
     type_params: Vec<RustTypeParam>,
     nominal_identity: &str,
 ) -> RustItem {
-    let visits = class
-        .fields
+    let fields = structural_record_fields(class);
+    let visits = fields
         .iter()
-        .map(|(name, ty)| {
+        .map(|field| {
+            let name = field.name;
+            let ty = field.ty;
             let rust_name = crate::Renderer::render_identifier(name);
+            let access = if field.inherited {
+                format!(
+                    "self.{}.{rust_name}",
+                    class
+                        .parent_class
+                        .as_deref()
+                        .unwrap_or_default()
+                        .to_lowercase()
+                )
+            } else {
+                format!("self.{rust_name}")
+            };
             if matches!(ty.resolve_alias(), Type::Bytes) {
                 return format!(
-                    "visitor.edge({STRUCTURAL}::StructuralEdge::new({STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\")))?;\n{STRUCTURAL}::project_bytes(&self.{rust_name}, visitor)?;"
+                    "visitor.edge({STRUCTURAL}::StructuralEdge::new({STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\")))?;\n{STRUCTURAL}::project_bytes(&{access}, visitor)?;"
                 );
             }
             format!(
-                "visitor.edge({STRUCTURAL}::StructuralEdge::new({STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\")))?;\n{STRUCTURAL}::StructuralProject::structural_project(&self.{rust_name}, visitor)?;"
+                "visitor.edge({STRUCTURAL}::StructuralEdge::new({STRUCTURAL}::StructuralEdgeKind::RecordField(\"{name}\")))?;\n{STRUCTURAL}::StructuralProject::structural_project(&{access}, visitor)?;"
             )
         })
         .collect::<Vec<_>>()
@@ -554,7 +618,7 @@ fn structural_project_impl(
     let body = format!(
         "let control = visitor.enter({STRUCTURAL}::StructuralEnter::new({STRUCTURAL}::StructuralKind::Record, Some({}), {}))?;\nif control == {STRUCTURAL}::VisitControl::Continue {{\n{visits}\n}}\nvisitor.exit({STRUCTURAL}::StructuralKind::Record)",
         nominal_identity,
-        class.fields.len()
+        fields.len()
     );
     RustItem::Impl {
         target: target.to_string(),

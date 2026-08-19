@@ -6,6 +6,9 @@ fn generic_and_inherited_class_formatting_matches_emitted_traits() {
         r#"class Box[T]:
     value: T
 
+class Items[T]:
+    values: list[T]
+
 class Parent:
     value: int
 
@@ -25,7 +28,11 @@ def show_child(value: Child) -> str:
 
     assert!(rust_code.contains("struct Box<T>"), "{rust_code}");
     assert!(
-        rust_code.contains("#[derive(Debug, Clone, PartialEq)]\nstruct Box<T>"),
+        rust_code.contains("#[derive(Debug, Clone, PartialEq, Eq, Hash)]\nstruct Box<T>"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code.contains("#[derive(Debug, Clone, PartialEq)]\nstruct Items<T>"),
         "{rust_code}"
     );
     assert!(!rust_code.contains("__sifr_type_marker"));

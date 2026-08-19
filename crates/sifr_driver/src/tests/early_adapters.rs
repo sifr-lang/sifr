@@ -1,6 +1,7 @@
 use super::support::parse_suite;
 use crate::{collect_project_hir_modules, compile_stdlib};
 use sifr_ir::{DeclarationMetadataTargetKind, StaticProgramValue};
+use sifr_type_system::Type;
 use std::collections::HashMap;
 
 pub(super) const TYPES: &str = r#"
@@ -493,6 +494,29 @@ def main():
     let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
     let compiled = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("concrete generic adapted child should receive attached APIs");
+    let output = compiled
+        .external_defs
+        .specialization_outputs
+        .get("main")
+        .and_then(|outputs| outputs.iter().find(|output| output.owner == "Concrete"))
+        .expect("concrete generic adapted child should own a static program");
+    assert_eq!(output.package_module, "fixture.contract");
+    let exported = compiled
+        .external_defs
+        .classes
+        .get("main")
+        .and_then(|classes| classes.get("Concrete"))
+        .expect("concrete generic child should be exported");
+    let Type::Class { fields, .. } = exported.resolve_alias() else {
+        panic!("concrete generic child should retain its class type");
+    };
+    assert_eq!(
+        fields,
+        &vec![
+            ("value".to_string(), Type::Int),
+            ("label".to_string(), Type::Str),
+        ]
+    );
     let main = compiled
         .hir_modules
         .get("main")

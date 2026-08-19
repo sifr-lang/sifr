@@ -6,6 +6,35 @@ pub(in crate::lower) fn is_hashable_type(ty: &Type) -> bool {
     ty.supports_hash_key()
 }
 
+/// Check whether Rust can derive conditional `Eq` and `Hash` implementations.
+///
+/// A type variable is valid here because Rust adds the required bounds to the
+/// generated trait implementation. Containers that are never hashable remain
+/// excluded even when they contain a type variable.
+pub(in crate::lower) fn is_derivably_hashable_type(ty: &Type) -> bool {
+    match ty.resolve_alias() {
+        Type::TypeVar(_) => true,
+        Type::Tuple(values) | Type::Union(values) => values.iter().all(is_derivably_hashable_type),
+        Type::Result(left, right) => {
+            is_derivably_hashable_type(left) && is_derivably_hashable_type(right)
+        }
+        Type::Newtype { inner, .. } => is_derivably_hashable_type(inner),
+        Type::Class {
+            fields,
+            methods,
+            parent_class,
+            ..
+        } => {
+            parent_class.as_deref() != Some("NonSend")
+                && !methods.iter().any(|(name, _)| name == "__eq__")
+                && fields
+                    .iter()
+                    .all(|(_, field)| is_derivably_hashable_type(field))
+        }
+        _ => ty.supports_hash_key(),
+    }
+}
+
 /// Check if a method body directly mutates receiver-owned storage.
 pub(in crate::lower) fn body_contains_receiver_mutation(stmts: &[HirStmt]) -> bool {
     fn stmt_contains_receiver_mutation(stmt: &HirStmt) -> bool {

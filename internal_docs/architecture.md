@@ -898,6 +898,13 @@ HIR because their executable call expression is not a constant literal; bound ch
 identity, and code generation all consume that same identity. Required omissions remain typed
 structural contract errors rather than generated panics.
 
+Structural support includes a class with one direct data parent when that parent uses the
+compiler-generated constructor. The parent cannot have another data parent. The wire record lists
+concrete inherited fields before local fields. Rust storage keeps the parent embedded. Structural
+construction builds that embedded parent, and projection reads inherited fields through it. A
+supported inherited record can also appear inside another structural record. Module exports keep
+the same flattened field list, so imported code retains inherited field access.
+
 Attached package APIs are erased compile-time declarations grouped into canonical module-and-set
 identities. Adapter output selects exactly one set. Provisional lowering may expose visible
 package candidates so class bodies can type-check before adapter execution, while final lowering
@@ -1116,7 +1123,10 @@ supports them. This is a language rule, not an implementation detail.
   fieldless declaration has a valid, inhabited Rust representation without
   inheriting the argument's Rust auto traits. Concrete Clone, Debug, equality,
   and hash capability checks still include every type argument because Rust's
-  generated derives impose those bounds.
+  generated derives impose those bounds. A generic field can therefore receive
+  conditional `Eq` and `Hash` derives. Rust applies the required bounds to each
+  concrete type argument. A container that is never hashable does not receive
+  those derives.
 - **Codegen:** the compiler emits only the derives supported by the complete
   generated struct, newtype, or union representation.
 - **Enum types (enum type-system work):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.

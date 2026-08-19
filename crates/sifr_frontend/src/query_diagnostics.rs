@@ -7,7 +7,7 @@ use crate::class_method_exports::{structural_method_map, ClassMethodExports};
 pub(crate) use crate::export_type_localization::should_export_callable;
 use crate::export_type_localization::{
     copy_class_generic_metadata, copy_function_generic_metadata, declared_generic_metadata,
-    exported_parent_chain, imported_class_ancestry, reexport_class_aliases,
+    exported_class_fields, exported_parent_chain, imported_class_ancestry, reexport_class_aliases,
 };
 use crate::module_export_storage::replace_module_entry;
 use crate::module_signatures::ModuleSignature;
@@ -313,7 +313,7 @@ pub fn collect_module_exports(
                             .map(Type::TypeVar)
                             .collect(),
                         name: class.name.clone(),
-                        fields: class.fields.clone(),
+                        fields: exported_class_fields(class),
                         methods,
                         parent_class: exported_parent_chain(
                             class.parent_class.as_deref(),

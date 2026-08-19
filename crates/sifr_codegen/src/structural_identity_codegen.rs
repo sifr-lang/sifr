@@ -5,6 +5,7 @@ use std::collections::{HashMap, HashSet};
 
 mod mapped_opaque;
 mod render;
+use crate::structural_record_fields::{concrete_record_fields, substitute_structural_type};
 use mapped_opaque::{
     mapped_opaque_identity_expression, mapped_opaque_identity_expression_for_imported_type,
 };
@@ -215,10 +216,11 @@ fn compile_class(
             ))
         })
         .collect::<Vec<_>>();
+    let fields = concrete_record_fields(class);
     compile_record(
         &nominal,
         &type_arguments,
-        &class.fields,
+        &fields,
         Some(class),
         module_name,
         context,
@@ -376,64 +378,6 @@ fn compile_type(
         other => unreachable!(
             "unsupported structural type reached compiler-owned identity generation: {other:?}"
         ),
-    }
-}
-
-fn substitute_structural_type(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
-    match ty {
-        Type::TypeVar(name) => bindings.get(name).cloned().unwrap_or_else(|| ty.clone()),
-        Type::List(value) => Type::List(Box::new(substitute_structural_type(value, bindings))),
-        Type::Set(value) => Type::Set(Box::new(substitute_structural_type(value, bindings))),
-        Type::Dict(key, value) => Type::Dict(
-            Box::new(substitute_structural_type(key, bindings)),
-            Box::new(substitute_structural_type(value, bindings)),
-        ),
-        Type::Tuple(values) => Type::Tuple(
-            values
-                .iter()
-                .map(|value| substitute_structural_type(value, bindings))
-                .collect(),
-        ),
-        Type::Union(values) => Type::Union(
-            values
-                .iter()
-                .map(|value| substitute_structural_type(value, bindings))
-                .collect(),
-        ),
-        Type::Class {
-            identity,
-            type_args,
-            name,
-            fields,
-            methods,
-            parent_class,
-        } => Type::Class {
-            identity: identity.clone(),
-            type_args: type_args
-                .iter()
-                .map(|value| substitute_structural_type(value, bindings))
-                .collect(),
-            name: name.clone(),
-            fields: fields
-                .iter()
-                .map(|(name, value)| (name.clone(), substitute_structural_type(value, bindings)))
-                .collect(),
-            methods: methods.clone(),
-            parent_class: parent_class.clone(),
-        },
-        Type::Alias {
-            name,
-            type_args,
-            body,
-        } => Type::Alias {
-            name: name.clone(),
-            type_args: type_args
-                .iter()
-                .map(|value| substitute_structural_type(value, bindings))
-                .collect(),
-            body: Box::new(substitute_structural_type(body, bindings)),
-        },
-        other => other.clone(),
     }
 }
 

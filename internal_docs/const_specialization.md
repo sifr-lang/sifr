@@ -150,6 +150,13 @@ lowering also uses the package function's checked defaults for omitted public
 arguments; instance receivers shift default indexes after the hidden owner is
 removed.
 
+A concrete adapted subclass can use one direct, structurally supported generic
+data parent. Static-program identity flattens the parent's substituted fields
+before local fields. Generated Rust keeps the parent as embedded storage.
+Structural construction calls the parent's compiler-generated constructor, and
+projection reads inherited fields through that storage. This support does not
+accept a parent with another data parent or an explicit constructor.
+
 Project code generation checks structural program owners against the complete module graph.
 An imported mapped opaque field uses the generated package type's structural identity.
 It does not refer to the dependency's private Rust bridge path from the consumer module.

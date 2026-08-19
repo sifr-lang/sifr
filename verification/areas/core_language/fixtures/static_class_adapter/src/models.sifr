@@ -9,3 +9,15 @@ class ImportedAttached(Contract):
 class ImportedPlain(Contract):
     _config = contract_config(True)
     value: int
+
+
+class ImportedGeneric[T](Contract):
+    value: T
+
+
+class ImportedConcrete(ImportedGeneric[int]):
+    label: str
+
+    def __init__(self, value: int, label: str):
+        super().__init__(value)
+        self.label = label
