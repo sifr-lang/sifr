@@ -126,12 +126,7 @@ pub(in crate::lower) fn lower_thread_pool_submit_call(
 }
 
 fn is_thread_pool_executor_type(ty: &Type) -> bool {
-    matches!(ty.resolve_alias(), Type::Class { name, .. } if public_type_name(name) == "ThreadPoolExecutor")
-}
-
-fn public_type_name(name: &str) -> &str {
-    name.strip_prefix("__compat_sifr_concurrent_")
-        .unwrap_or(name)
+    matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "ThreadPoolExecutor")
 }
 
 fn first_call_keyword_range(call: &ExprCall) -> TextRange {

@@ -95,10 +95,7 @@ fn non_ipc_serializable_reason_inner(ty: &Type, visiting: &mut HashSet<String>) 
             ..
         } => {
             if let Some(label) = ipc_local_resource_type_label(name) {
-                return Some(format!(
-                    "`{}` is a process-local {label}",
-                    task_scope_calls::public_type_name(name)
-                ));
+                return Some(format!("`{name}` is a process-local {label}"));
             }
             if let Some(reason) = task_scope_calls::non_send_reason(ty) {
                 return Some(reason);
@@ -168,7 +165,7 @@ fn class_has_non_send_marker(name: &str, parent_chain: Option<&str>) -> bool {
 }
 
 fn ipc_local_resource_type_label(name: &str) -> Option<&'static str> {
-    match task_scope_calls::public_type_name(name) {
+    match name {
         "Child" | "AsyncChild" | "ProcessHandle" => Some("process handle"),
         "PipeReader" | "PipeWriter" | "AsyncPipeReader" | "AsyncPipeWriter" => {
             Some("process pipe handle")

@@ -245,7 +245,7 @@ pub(in crate::lower) fn validate_shared_constructor(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) {
-    if public_type_name(func_name) != "Shared" {
+    if func_name != "Shared" {
         return;
     }
     let Some(arg) = args.first() else {
@@ -286,7 +286,7 @@ fn channel_send_arg_label(expr: &HirExpr) -> String {
 fn is_channel_sender_type(ty: &Type) -> bool {
     matches!(
         ty.resolve_alias(),
-        Type::Class { name, .. } if public_type_name(name) == "ChannelSender"
+        Type::Class { name, .. } if name == "ChannelSender"
     )
 }
 
@@ -324,7 +324,7 @@ fn non_share_safe_reason_inner(
             ..
         } => {
             if let Some(label) = process_handle_type_label_by_name(name) {
-                return Some(format!("`{}` is a {label}", public_type_name(name)));
+                return Some(format!("`{name}` is a {label}"));
             }
             if is_share_safe_sync_wrapper(name) {
                 return None;
@@ -345,8 +345,7 @@ fn non_share_safe_reason_inner(
             visiting.remove(&key);
             field_reason.or_else(|| {
                 Some(format!(
-                    "`{}` is a mutable class without an explicit synchronization wrapper",
-                    public_type_name(name)
+                    "`{name}` is a mutable class without an explicit synchronization wrapper"
                 ))
             })
         }
@@ -389,10 +388,10 @@ fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<(String, Vec<Type>)>)
             ..
         } => {
             if let Some(label) = process_handle_type_label_by_name(name) {
-                return Some(format!("`{}` is a {label}", public_type_name(name)));
+                return Some(format!("`{name}` is a {label}"));
             }
             if let Some(label) = sync_guard_type_label_by_name(name) {
-                return Some(format!("`{}` is a {label}", public_type_name(name)));
+                return Some(format!("`{name}` is a {label}"));
             }
             if class_has_non_send_marker(name, parent_class.as_deref()) {
                 return Some(format!("`{name}` inherits the `NonSend` marker"));
@@ -453,16 +452,13 @@ pub(in crate::lower) fn sync_guard_type_label(ty: &Type) -> Option<&'static str>
 }
 
 fn sync_guard_type_label_by_name(name: &str) -> Option<&'static str> {
-    matches!(
-        public_type_name(name),
-        "LockGuard" | "RwLockReadGuard" | "RwLockWriteGuard"
-    )
-    .then_some("lock guard")
-    .or_else(|| (public_type_name(name) == "SemaphorePermit").then_some("semaphore permit"))
+    matches!(name, "LockGuard" | "RwLockReadGuard" | "RwLockWriteGuard")
+        .then_some("lock guard")
+        .or_else(|| (name == "SemaphorePermit").then_some("semaphore permit"))
 }
 
 fn process_handle_type_label_by_name(name: &str) -> Option<&'static str> {
-    match public_type_name(name) {
+    match name {
         "Child" => Some("process child handle for sync subprocesses"),
         "AsyncChild" => Some("process child handle for async subprocesses"),
         "PipeReader" => Some("process pipe reader handle"),
@@ -476,13 +472,9 @@ fn process_handle_type_label_by_name(name: &str) -> Option<&'static str> {
 
 fn is_share_safe_sync_wrapper(name: &str) -> bool {
     matches!(
-        public_type_name(name),
+        name,
         "Shared" | "Lock" | "RwLock" | "Semaphore" | "Notify" | "ChannelSender" | "ChannelReceiver"
     )
-}
-
-pub(in crate::lower) fn public_type_name(name: &str) -> &str {
-    name.strip_prefix("__compat_sifr_sync_").unwrap_or(name)
 }
 
 pub(in crate::lower) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String> {
