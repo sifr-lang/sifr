@@ -2490,6 +2490,28 @@ outside this phase.
 Next action: implement item 18, the M5 handler-descriptor ownership and
 decorator contract audit.
 
+Compiler hardening item 17 state: complete
+PR: [`sifr-lang/sifr#3364`](https://github.com/sifr-lang/sifr/pull/3364)
+Base SHA: `f117a7d47875c58f2c5eea767e01872173c3449b`
+Initial candidate SHA: `c7b0f7b8023d679d5c68ad3c8c838e82d329c88b`
+Final candidate SHA: `239f6b6bf03205f803ca2377c21a15937122c7e5`
+Merge SHA: `79cd4bb3fc3f04b945ef5c7a289401c2d3d62694`
+Changed path: the active phase record and its complete compiler-deferral
+classification.
+Validation: diff hygiene passed. Only documentation changed, so compiler
+tests and compiler gates did not apply.
+Review evidence: the initial exact-SHA Opus review found one omitted M11
+compiler defect
+([evidence](https://github.com/sifr-lang/sifr/pull/3364#issuecomment-5347468547)).
+The remediation assigned nonliteral attached-default provider localization to
+item 26 and made the smaller classifications explicit. The final exact-SHA
+review returned `SATISFIED` with no blockers
+([evidence](https://github.com/sifr-lang/sifr/pull/3364#issuecomment-5347468967)).
+Deferred follow-up: item 26 must name inline dependency-table parsing when it
+implements the retained `StdlibFeature` inventory. No third review ran.
+Next action: implement item 18, the M5 handler-descriptor ownership and
+decorator contract audit.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2577,12 +2599,13 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 12 merged in Sifr PRs #3332, #3334, #3336, #3338, #3340, #3342,
-#3344, #3346, #3348, #3350, #3352, and #3354. The seven M11 compiler
+through 17 are merged and recorded. Items 1-16 close the first compiler
+mechanism sequence. Item 17 classifies every remaining compiler deferral and
+orders items 18-26. The seven M11 compiler
 prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327,
 and #3329. The M11 package surface merged in Pydantic-Sifr PR #47. M12 is in
 progress. The current compiler merge is
-`6e2587ed81a5dfd3737c58e7c0f9bc2e6b64bef7`, and the current package merge is
+`79cd4bb3fc3f04b945ef5c7a289401c2d3d62694`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
@@ -2591,6 +2614,5 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: audit every remaining compiler-owned M12 deferral and implement
-the next bounded mechanism item. Then continue compiler-owned hardening before
-package certification and final review.
+Next action: implement item 18, then continue items 19-26 before package
+certification and final review.
