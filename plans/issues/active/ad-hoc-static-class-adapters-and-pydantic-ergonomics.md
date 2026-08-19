@@ -2033,6 +2033,44 @@ ordinary non-adapted structural-shape path if measurement justifies it.
 Next action: specialize transitive local and imported generic ancestor handler
 plans and preserve their checked metadata symmetry.
 
+Compiler hardening item 2 state: complete
+PR: [`sifr-lang/sifr#3334`](https://github.com/sifr-lang/sifr/pull/3334)
+Base SHA: `2700b807871895767bf33655fdb7aa0cbedc280b`
+Initial candidate SHA: `8e5f21e487a028bf6b4b5941269ffce4cfde66bf`
+Final candidate SHA: `4ebffb07665217e49e702c5a7e30162f2c395bd0`
+Merge SHA: `d1ee9537a0d1dff721e46a991e1c781650aed9e6`
+Changed paths: generic handler-ancestor binding; adapted handler method exports;
+fully imported structural handler reconstruction; checked target, descriptor,
+order, signature, metadata, and source-origin rules; local, imported, and
+mixed-ancestry regressions; and the durable specialization contract.
+Validation: all 103 frontend tests and 14 affected driver integration tests
+passed. Focused tests covered a local transitive generic ancestor, a fully
+imported concrete adapted class, and a deepest-local chain ending in a
+multi-hop imported generic tail. Affected Clippy passed with warnings denied.
+Rust formatting, HIR maintainability, the 900-line guard, and diff hygiene
+passed. The private target exceeded 20 GiB before the create-PR gate, was
+verified idle, and was cleaned. The create-PR gate ran once on the initial
+candidate. The merge gate ran once on the final reviewed candidate. Both
+passed generated-demo freshness and every preceding guard, then stopped at the
+same two separately owned Rust-interop matrix inputs. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3334#issuecomment-5344743969),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3334#issuecomment-5344771178)).
+Review evidence: the initial exact-SHA Opus review returned `SATISFIED` and
+identified a deeper imported-tail boundary and missing imported-handler
+metadata as non-blocking pre-existing gaps
+([evidence](https://github.com/sifr-lang/sifr/pull/3334#issuecomment-5344743367)).
+One remediation unified ancestry resolution around an explicit imported
+boundary and restored source-module method and parameter metadata. The final
+exact-SHA review returned `SATISFIED` with no blockers
+([evidence](https://github.com/sifr-lang/sifr/pull/3334#issuecomment-5344743657)).
+Deferred follow-up: M12 should assert or remove one unused parameter-metadata
+decorator in the direct imported-parent fixture. It should reject an impossible
+local handler owner outside the class ancestry instead of retaining unbound
+type parameters. It should also avoid re-canonicalizing imported boundary
+types against colliding consumer-local names. No third review ran.
+Next action: remove declaration-order and binding-name instability from adapter
+and specialization identity.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2119,8 +2157,8 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M11 are merged and recorded. M12 compiler hardening item 1
-merged in Sifr PR #3332. The seven M11 compiler
+Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
+and 2 merged in Sifr PRs #3332 and #3334. The seven M11 compiler
 prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327,
 and #3329. The M11 package surface merged in Pydantic-Sifr PR #47. M12 is in
 progress. The current compiler merge is
@@ -2133,6 +2171,6 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: complete the M12 transitive generic ancestor handler-plan item,
-then continue compiler-owned hardening before package certification and final
-whole-phase review.
+Next action: remove declaration-order and binding-name instability from
+adapter and specialization identity, then continue compiler-owned hardening
+before package certification and final whole-phase review.
