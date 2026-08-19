@@ -77,6 +77,8 @@ def main() -> Result[None, ContractError | RustPanicError]:
     assert imported.touch() == 42
     assert plain.value == 12
     try:
+        identity_is_bound: bool = AttachedModel.program_identity_is_bound()
+        assert identity_is_bound
         defaulted: StructuralDefaults = StructuralDefaults.construct()
         expected_value: int64 = 17
         assert defaulted.value == expected_value

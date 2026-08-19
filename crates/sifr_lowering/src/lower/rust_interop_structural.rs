@@ -12,6 +12,7 @@ pub(in crate::lower) struct StructuralFunctionContract<'a> {
     pub(in crate::lower) return_type: &'a Type,
     pub(in crate::lower) type_params: &'a [String],
     pub(in crate::lower) declarations: &'a [RustInteropDeclaration],
+    pub(in crate::lower) type_receiver_owner: Option<&'a str>,
     pub(in crate::lower) is_async: bool,
     pub(in crate::lower) span: TextRange,
 }
@@ -26,6 +27,7 @@ pub(in crate::lower) fn validate_structural_function_contract(
         return_type,
         type_params,
         declarations,
+        type_receiver_owner,
         is_async,
         span,
     } = contract;
@@ -202,7 +204,9 @@ pub(in crate::lower) fn validate_structural_function_contract(
             }
             _ => {}
         }
-        if !used {
+        let used_by_type_receiver = exact_bound.as_deref() == Some("StaticProgram")
+            && type_receiver_owner == Some(type_param.as_str());
+        if !used && !used_by_type_receiver {
             structural_type_error(
                 ctx,
                 format!(

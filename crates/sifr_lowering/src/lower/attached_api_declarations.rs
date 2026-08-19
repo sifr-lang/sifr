@@ -17,6 +17,20 @@ pub(super) fn owner_type_param(function: &StmtFunctionDef) -> Option<String> {
     })
 }
 
+pub(super) fn type_receiver_owner_type_param(function: &StmtFunctionDef) -> Option<String> {
+    function.decorator_list.iter().find_map(|decorator| {
+        let Expr::Call(call) = &decorator.expression else {
+            return None;
+        };
+        if !matches!(call.func.as_ref(), Expr::Name(name) if name.id.as_str() == "attached_api")
+            || keyword_string(call, "receiver").as_deref() != Some("type")
+        {
+            return None;
+        }
+        keyword_string(call, "owner")
+    })
+}
+
 pub(super) fn collect_set(class: &StmtClassDef, ctx: &mut LowerCtx) {
     let Some(range) = class.decorator_list.iter().find_map(|decorator| {
         matches!(&decorator.expression, Expr::Name(name) if name.id.as_str() == "attached_api_set")

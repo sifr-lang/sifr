@@ -114,6 +114,55 @@ def decode[T: StaticProgram]() -> Result[T, CodecError | RustPanicError]: ...
 }
 
 #[test]
+fn type_receiver_bridge_uses_its_static_program_owner_without_a_value() {
+    let source = r#"
+from sifr.meta import StaticProgram
+
+class SchemaError(Error):
+    message: str
+
+@attached_api_set
+class SchemaApi:
+    pass
+
+@attached_api("", "SchemaApi", public_name="schema", receiver="type", owner="T")
+@rust.structural
+@rust(bridge.schema.generate)
+def schema[T: StaticProgram]() -> Result[bytes, SchemaError | RustPanicError]: ...
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let module = lower_module_with_externals(parsed.suite(), &structural_externals())
+        .map(|result| result.module)
+        .expect("type receiver should supply the static-program owner");
+    assert_eq!(module.type_param_bounds["schema"]["T"], ["StaticProgram"]);
+}
+
+#[test]
+fn ordinary_bridge_still_rejects_an_unused_static_program_owner() {
+    let source = r"
+from sifr.meta import StaticProgram
+
+class SchemaError(Error):
+    message: str
+
+@rust.structural
+@rust(bridge.schema.generate)
+def schema[T: StaticProgram]() -> Result[bytes, SchemaError | RustPanicError]: ...
+";
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module_with_externals(parsed.suite(), &structural_externals()) {
+        Ok(_) => panic!("ordinary unused static-program parameters must fail"),
+        Err(errors) => errors,
+    };
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RUST_TYPE_PROBE_FAILURE)
+            && error
+                .message
+                .contains("is not used by the bridge signature")
+    }));
+}
+
+#[test]
 fn rust_interop_accepts_distinct_structural_input_and_static_output() {
     let source = r"
 from sifr.meta import StaticProgram, Structural
