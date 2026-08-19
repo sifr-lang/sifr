@@ -56,7 +56,7 @@ pub(super) fn declaration_value(
     } else {
         return Err("adapted data parent shape is unavailable");
     };
-    let parent_selection = parent_selection(result, external_defs, &parent_identity, parent_name);
+    let parent_selection = parent_selection(module_name, result, external_defs, &parent_identity);
     if let Some(parent) = parent_selection.filter(|parent| !parent.field_plans.is_empty()) {
         let type_args = match class.parent_type.as_ref() {
             Some(Type::Class { type_args, .. }) => type_args.as_slice(),
@@ -317,17 +317,22 @@ fn inherited_method_item(
 }
 
 pub(super) fn parent_selection<'a>(
+    module_name: &str,
     result: &'a LoweringResult,
     external_defs: &'a ExternalDefs,
     parent_identity: &str,
-    parent_name: &str,
 ) -> Option<&'a ClassAdapterSelection> {
-    if let Some(parent) = result
-        .class_adapter_selections
-        .iter()
-        .find(|selection| selection.owner == parent_name)
-    {
-        return Some(parent);
+    if let Some(local_name) = result.module.classes.iter().find_map(|class| {
+        let identity = class
+            .identity
+            .clone()
+            .unwrap_or_else(|| format!("{module_name}.{}", class.name));
+        (identity == parent_identity).then_some(class.name.as_str())
+    }) {
+        return result
+            .class_adapter_selections
+            .iter()
+            .find(|selection| selection.owner == local_name);
     }
     let (module, owner) = parent_identity.rsplit_once('.')?;
     external_defs
@@ -384,4 +389,61 @@ fn inherited_field_item(
         ("decorators".to_string(), ConstValue::List(Vec::new())),
         ("parameters".to_string(), ConstValue::List(Vec::new())),
     ])))
+}
+
+#[cfg(test)]
+mod parent_selection_tests {
+    use super::parent_selection;
+    use sifr_lowering::{lower_module, ClassAdapterSelection, ExternalDefs, LoweringResult};
+    use sifr_syntax::parse_module_suite;
+
+    fn selection(owner: &str, provider_module: &str) -> ClassAdapterSelection {
+        ClassAdapterSelection {
+            owner: owner.to_string(),
+            provider_module: provider_module.to_string(),
+            provider_function: "adapt".to_string(),
+            descriptor_type: sifr_type_system::Type::None,
+            marker_identities: Vec::new(),
+            data_parent: None,
+            field_plans: Vec::new(),
+            handler_plans: Vec::new(),
+            attached_api_set: None,
+            adapter_invocation_identity: [0; 32],
+            post_adapter_identity: [0; 32],
+            range: ruff_text_size::TextRange::default(),
+        }
+    }
+
+    fn local_result() -> LoweringResult {
+        let parsed = parse_module_suite("class Parent:\n    pass\n", None).expect("fixture parses");
+        let mut result = lower_module(&parsed).expect("fixture lowers");
+        result
+            .class_adapter_selections
+            .push(selection("Parent", "local.provider"));
+        result
+    }
+
+    #[test]
+    fn canonical_imported_parent_wins_over_a_colliding_local_selection() {
+        let result = local_result();
+        let mut external_defs = ExternalDefs::default();
+        external_defs
+            .class_adapter_selections
+            .entry("models".to_string())
+            .or_default()
+            .insert("Parent".to_string(), selection("Parent", "models.provider"));
+
+        let selected = parent_selection("consumer", &result, &external_defs, "models.Parent")
+            .expect("imported selection exists");
+        assert_eq!(selected.provider_module, "models.provider");
+    }
+
+    #[test]
+    fn canonical_local_parent_keeps_the_local_selection() {
+        let result = local_result();
+        let external_defs = ExternalDefs::default();
+        let selected = parent_selection("consumer", &result, &external_defs, "consumer.Parent")
+            .expect("local selection exists");
+        assert_eq!(selected.provider_module, "local.provider");
+    }
 }

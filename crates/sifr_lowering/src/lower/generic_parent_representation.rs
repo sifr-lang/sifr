@@ -77,10 +77,20 @@ fn class_candidate<'a>(
     name: &str,
 ) -> Option<(&'a str, &'a Type)> {
     if let Some(identity) = identity {
-        return class_types.iter().find_map(|(candidate_name, candidate)| {
+        if let Some((candidate_name, candidate)) =
+            class_types.get_key_value(name).filter(|(_, candidate)| {
+                matches!(candidate.resolve_alias(), Type::Class { identity: Some(candidate), .. } if candidate == identity)
+            })
+        {
+            return Some((candidate_name.as_str(), candidate));
+        }
+        return class_types
+            .iter()
+            .filter_map(|(candidate_name, candidate)| {
             matches!(candidate.resolve_alias(), Type::Class { identity: Some(candidate), .. } if candidate == identity)
                 .then_some((candidate_name.as_str(), candidate))
-        });
+            })
+            .min_by_key(|(candidate_name, _)| *candidate_name);
     }
     class_types
         .get_key_value(name)
@@ -107,7 +117,7 @@ fn class_union_scope(ty: &Type, declared_params: &[String]) -> Option<UnionStruc
 
 #[cfg(test)]
 mod tests {
-    use super::preserves_union_structure;
+    use super::{class_candidate, preserves_union_structure};
     use sifr_type_system::Type;
     use std::collections::HashMap;
 
@@ -218,5 +228,18 @@ mod tests {
             "Parent",
             &concrete
         ));
+    }
+
+    #[test]
+    fn duplicate_canonical_candidates_use_a_deterministic_key() {
+        let candidate = parent(Type::TypeVar("T".to_string()), Type::Str);
+        let classes = HashMap::from([
+            ("AliasZ".to_string(), candidate.clone()),
+            ("AliasA".to_string(), candidate),
+        ]);
+
+        let (selected, _) = class_candidate(&classes, Some("models.Parent"), "Missing")
+            .expect("canonical candidate exists");
+        assert_eq!(selected, "AliasA");
     }
 }

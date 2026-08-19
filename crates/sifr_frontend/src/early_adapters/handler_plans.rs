@@ -132,7 +132,7 @@ pub(super) fn inherited_handler_plans(
             _ => None,
         })
         .unwrap_or_else(|| format!("{module_name}.{parent_name}"));
-    inheritance::parent_selection(result, external_defs, &parent_identity, parent_name)
+    inheritance::parent_selection(module_name, result, external_defs, &parent_identity)
         .map(|parent| parent.handler_plans.clone())
         .unwrap_or_default()
 }

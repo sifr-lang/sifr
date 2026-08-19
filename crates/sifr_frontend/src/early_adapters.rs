@@ -673,12 +673,12 @@ fn normalized_field_types(
             _ => None,
         })
         .or_else(|| parent_name.map(|name| format!("{module_name}.{name}")));
-    let parent = parent_name.and_then(|name| {
+    let parent = parent_name.and_then(|_| {
         inheritance::parent_selection(
+            module_name,
             result,
             external_defs,
             parent_identity.as_deref().unwrap_or(""),
-            name,
         )
     });
     let type_args = match class.parent_type.as_ref() {
