@@ -36,6 +36,38 @@ def main():
 }
 
 #[test]
+fn transitive_nested_generic_union_parent_is_rejected_before_rust_codegen() {
+    let dir = mktemp_dir("transitive_nested_union_generic_parent");
+    let main_file = dir.join("main.sifr");
+    std::fs::write(
+        &main_file,
+        r#"
+class Inner[U]:
+    value: U | None
+
+class Parent[T]:
+    inner: Inner[T]
+
+class Concrete(Parent[str | None]):
+    def __init__(self, inner: Inner[str | None]):
+        super().__init__(inner)
+
+def main():
+    pass
+"#,
+    )
+    .expect("main module should be written");
+
+    let errors = check_project(&main_file, &mut sifr_frontend::DiskSourceProvider::new());
+    assert!(errors.iter().any(|error| {
+        error.code == DiagnosticCode::CLASS_INVALID_BASE.code()
+            && error.message.contains("union's member topology")
+    }));
+
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
 fn union_bearing_generic_parent_accepts_a_topology_preserving_argument() {
     let dir = mktemp_dir("stable_union_generic_parent");
     let main_file = dir.join("main.sifr");

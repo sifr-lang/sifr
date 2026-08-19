@@ -911,7 +911,9 @@ consumer-owned argument distinct from same-named classes in a generic declaratio
 Rust generic storage keeps the union nesting from its declaration. Therefore, a concrete generic
 parent cannot expand one union member into another union or collapse it into a sibling. Lowering
 rejects that parent specialization before code generation. Structural support applies the same
-rule when a concrete generic class is nested in another record.
+rule when a concrete generic class is nested in another record. Lowering selects an imported
+parent template by canonical identity. The shared type-system check follows nested generic class
+declarations, binds their local parameters, and rejects transitive union-topology changes.
 
 Checked adapted-handler exports retain the callable target with a signature specialized relative
 to the selected owner's type parameters. Generic substitution follows the full local ancestor

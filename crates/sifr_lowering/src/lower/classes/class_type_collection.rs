@@ -317,11 +317,11 @@ pub(in crate::lower) fn collect_class_type(
             crate::lower::descriptor_declarations::data_parent_type(class_def, ctx)
                 .or_else(|| ctx.class_types.get(parent_name).cloned())
         {
-            if ctx.class_types.get(parent_name).is_some_and(|template| {
-                !super::super::generic_parent_representation::preserves_union_structure(
-                    template, &parent_ty,
-                )
-            }) {
+            if !super::super::generic_parent_representation::preserves_union_structure(
+                &ctx.class_types,
+                parent_name,
+                &parent_ty,
+            ) {
                 invalid_class_base(
                     ctx,
                     &class_name,

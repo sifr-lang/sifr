@@ -236,7 +236,7 @@ fn structural_parent_supported(
     let Some(parent) = structural_class_candidate(identity.as_deref(), name, modules) else {
         return false;
     };
-    generic_arguments_preserve_union_structure(parent, type_args)
+    generic_arguments_preserve_union_structure(parent, type_args, modules)
         && parent.parent_class.is_none()
         && !parent.methods.iter().any(|method| method.name == "new")
         && !parent.is_error_type
@@ -310,15 +310,15 @@ fn structural_type_supported(
             ..
         } => {
             let key = identity.as_deref().unwrap_or(name);
+            if visiting.contains(key) {
+                return true;
+            }
             let Some(candidate) = structural_class_candidate(identity.as_deref(), name, modules)
             else {
                 return false;
             };
-            if !generic_arguments_preserve_union_structure(candidate, type_args) {
+            if !generic_arguments_preserve_union_structure(candidate, type_args, modules) {
                 return false;
-            }
-            if visiting.contains(key) {
-                return true;
             }
             if structural_mapped_opaque_supported(candidate) {
                 return true;
@@ -336,25 +336,55 @@ fn structural_type_supported(
     }
 }
 
-fn generic_arguments_preserve_union_structure(class: &HirClass, type_args: &[Type]) -> bool {
+fn generic_arguments_preserve_union_structure(
+    class: &HirClass,
+    type_args: &[Type],
+    modules: &[(&str, &HirModule)],
+) -> bool {
     let bindings = class
         .type_params
         .iter()
         .cloned()
         .zip(type_args.iter().cloned())
         .collect::<std::collections::HashMap<_, _>>();
-    class
+    let class_scope = |identity: Option<&str>, name: &str| {
+        structural_class_candidate(identity, name, modules).map(generic_union_scope)
+    };
+    class.fields.iter().all(|(_, ty)| {
+        sifr_type_system::substitution_preserves_union_structure_with_class_scopes(
+            ty,
+            &bindings,
+            &class_scope,
+        )
+    }) && class.methods.iter().all(|method| {
+        method.params.iter().all(|param| {
+            sifr_type_system::substitution_preserves_union_structure_with_class_scopes(
+                &param.ty,
+                &bindings,
+                &class_scope,
+            )
+        }) && sifr_type_system::substitution_preserves_union_structure_with_class_scopes(
+            &method.return_type,
+            &bindings,
+            &class_scope,
+        )
+    })
+}
+
+fn generic_union_scope(class: &HirClass) -> sifr_type_system::UnionStructureClassScope {
+    let mut member_types = class
         .fields
         .iter()
-        .all(|(_, ty)| sifr_type_system::substitution_preserves_union_structure(ty, &bindings))
-        && class.methods.iter().all(|method| {
-            method.params.iter().all(|param| {
-                sifr_type_system::substitution_preserves_union_structure(&param.ty, &bindings)
-            }) && sifr_type_system::substitution_preserves_union_structure(
-                &method.return_type,
-                &bindings,
-            )
-        })
+        .map(|(_, ty)| ty.clone())
+        .collect::<Vec<_>>();
+    for method in &class.methods {
+        member_types.extend(method.params.iter().map(|param| param.ty.clone()));
+        member_types.push(method.return_type.clone());
+    }
+    sifr_type_system::UnionStructureClassScope {
+        type_params: class.type_params.clone(),
+        member_types,
+    }
 }
 
 fn structural_class_candidate<'a>(
