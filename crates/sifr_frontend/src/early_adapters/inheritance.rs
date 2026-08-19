@@ -32,9 +32,9 @@ pub(super) fn declaration_value(
     else {
         return Ok(value);
     };
-    let Some(parent_name) = selection.data_parent.as_deref() else {
+    if selection.data_parent.is_none() {
         return Ok(value);
-    };
+    }
     let (parent_identity, mut parent_fields) = if let Some(Type::Class {
         identity,
         name,
@@ -50,10 +50,6 @@ pub(super) fn declaration_value(
             fields.clone()
         };
         (parent_identity, fields)
-    } else if let Some(shape) =
-        fallback_parent_shape(module_name, result, external_defs, parent_name)
-    {
-        shape
     } else {
         return Err("adapted data parent shape is unavailable");
     };
@@ -132,51 +128,6 @@ pub(super) fn declaration_value(
         }
     }
     Ok(value)
-}
-
-fn fallback_parent_shape(
-    module_name: &str,
-    result: &LoweringResult,
-    external_defs: &ExternalDefs,
-    parent_name: &str,
-) -> Option<(String, Vec<(String, Type)>)> {
-    if let Some(parent) = result
-        .module
-        .classes
-        .iter()
-        .find(|candidate| candidate.name == parent_name)
-    {
-        return Some((
-            parent
-                .identity
-                .clone()
-                .unwrap_or_else(|| format!("{module_name}.{}", parent.name)),
-            parent.fields.clone(),
-        ));
-    }
-
-    let mut matches = external_defs
-        .classes
-        .iter()
-        .filter_map(|(module, classes)| {
-            let Type::Class {
-                identity,
-                name,
-                fields,
-                ..
-            } = classes.get(parent_name)?.resolve_alias()
-            else {
-                return None;
-            };
-            Some((
-                identity
-                    .clone()
-                    .unwrap_or_else(|| format!("{module}.{name}")),
-                fields.clone(),
-            ))
-        });
-    let shape = matches.next()?;
-    matches.next().is_none().then_some(shape)
 }
 
 fn local_parent_fields(
@@ -338,10 +289,8 @@ pub(super) fn parent_selection<'a>(
     parent_identity: &str,
 ) -> Option<&'a ClassAdapterSelection> {
     if let Some(local_name) = result.module.classes.iter().find_map(|class| {
-        let identity = class
-            .identity
-            .clone()
-            .unwrap_or_else(|| format!("{module_name}.{}", class.name));
+        let identity =
+            canonical_parent_identity(module_name, class.identity.as_deref(), &class.name);
         (identity == parent_identity).then_some(class.name.as_str())
     }) {
         return result
@@ -408,7 +357,9 @@ fn inherited_field_item(
 
 #[cfg(test)]
 mod parent_selection_tests {
-    use super::{canonical_parent_identity, parent_bindings, parent_selection};
+    use super::{
+        canonical_parent_identity, parent_bindings, parent_method_contracts, parent_selection,
+    };
     use sifr_lowering::{lower_module, ClassAdapterSelection, ExternalDefs, LoweringResult};
     use sifr_syntax::parse_module_suite;
 
@@ -491,5 +442,32 @@ mod parent_selection_tests {
             canonical_parent_identity("consumer", None, "Parent"),
             "consumer.Parent"
         );
+    }
+
+    #[test]
+    fn empty_imported_parent_methods_ignore_a_colliding_local_class() {
+        let parsed = parse_module_suite(
+            "class Parent:\n    def local_method(self) -> int:\n        return 1\n\nclass Child(Parent):\n    pass\n",
+            None,
+        )
+        .expect("fixture parses");
+        let result = lower_module(&parsed).expect("fixture lowers");
+        let mut child = result
+            .module
+            .classes
+            .iter()
+            .find(|class| class.name == "Child")
+            .cloned()
+            .expect("child exists");
+        let Some(sifr_type_system::Type::Class {
+            identity, methods, ..
+        }) = child.parent_type.as_mut()
+        else {
+            panic!("parent class type exists");
+        };
+        *identity = Some("models.Parent".to_string());
+        methods.clear();
+
+        assert!(parent_method_contracts("consumer", &child, &result, "models.Parent").is_empty());
     }
 }
