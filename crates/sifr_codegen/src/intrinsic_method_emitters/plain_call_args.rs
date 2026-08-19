@@ -78,10 +78,9 @@ impl RustEmitter {
                 lowered_args.push(lowered_arg);
                 continue;
             }
-            let borrowed_name_arg = matches!(arg, HirExpr::Name { name, ty, .. }
+            let borrowed_name_arg = matches!(arg, HirExpr::Name { name, .. }
                 if self.borrowed_params.contains(name)
-                    || self.mut_borrowed_params.contains(name)
-                    || ty.rust_type().starts_with('&'));
+                    || self.mut_borrowed_params.contains(name));
             if let Some(aligned_callable) = self
                 .try_build_registry_callable_convention_alignment_expr(
                     arg,
@@ -182,9 +181,7 @@ impl RustEmitter {
                     lowered_arg = adapted;
                     recursive_option_adapted = true;
                 } else if !arg_is_option && !matches!(arg, HirExpr::NoneLiteral) {
-                    let param_rust_type = param_ty.rust_type();
-                    let param_is_owned_rust_value =
-                        convention.is_owned() && !param_rust_type.starts_with('&');
+                    let param_is_owned_rust_value = convention.is_owned();
                     if (!param_is_owned_rust_value || borrowed_name_arg)
                         && !needs_borrowed_structural_coercion
                         && !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty)
@@ -214,9 +211,10 @@ impl RustEmitter {
                 );
             }
 
-            let param_rust_type = param_ty.rust_type();
-            if param_rust_type.starts_with("Box<")
-                && !matches!(&lowered_arg, RustExpr::FnCall { func, .. } if registry_is_box_new_ctor(func.as_ref()))
+            if matches!(
+                crate::sifr_type_to_rust_type(param_ty),
+                crate::RustType::Boxed(_)
+            ) && !matches!(&lowered_arg, RustExpr::FnCall { func, .. } if registry_is_box_new_ctor(func.as_ref()))
             {
                 lowered_arg = crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec![
@@ -284,23 +282,15 @@ impl RustEmitter {
                 };
             }
 
-            let expects_shared_ref_type =
-                param_ty.rust_type().starts_with('&') && !param_ty.rust_type().starts_with("&mut ");
-            let expects_mut_ref_type = param_ty.rust_type().starts_with("&mut ");
-            let requires_shared_borrow = expects_shared_ref_type
-                || (convention.is_shared_borrow()
-                    && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
-                        || matches!(
-                            resolved_param,
-                            Type::TypeVar(_)
-                                | Type::Any
-                                | Type::Callable(..)
-                                | Type::AsyncCallable(..)
-                        )));
-            let requires_mut_borrow = expects_mut_ref_type
-                || (convention.is_mut_borrow()
-                    && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
-                        || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
+            let requires_shared_borrow = convention.is_shared_borrow()
+                && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                    || matches!(
+                        resolved_param,
+                        Type::TypeVar(_) | Type::Any | Type::Callable(..) | Type::AsyncCallable(..)
+                    ));
+            let requires_mut_borrow = convention.is_mut_borrow()
+                && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                    || matches!(resolved_param, Type::TypeVar(_) | Type::Any));
 
             if (requires_shared_borrow || requires_mut_borrow)
                 && !needs_borrowed_structural_coercion

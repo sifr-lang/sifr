@@ -552,7 +552,9 @@ pub(super) fn test_iterator_builtins_lower_to_canonical_iterator_call_nodes() {
             "enumerate",
         ];
         match expr {
-            HirExpr::Call { func, args, .. } | HirExpr::PythonCall { func, args, .. } => {
+            HirExpr::Call { func, args, .. }
+            | HirExpr::GenericCall { func, args, .. }
+            | HirExpr::PythonCall { func, args, .. } => {
                 legacy.contains(&func.as_str()) || args.iter().any(call_uses_legacy_iterator_builtin)
             }
             HirExpr::IteratorCall { args, .. }

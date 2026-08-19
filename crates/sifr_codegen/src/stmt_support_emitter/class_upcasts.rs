@@ -198,7 +198,7 @@ impl RustEmitter {
         };
         for (index, ancestor) in ancestors.iter().take(target_index + 1).enumerate() {
             let rendered_target = if index == target_index {
-                self.rust_type_with_generics(target_ty)
+                self.render_rust_type_with_generics(target_ty)
             } else {
                 render_ancestor_rust_type(self.current_module_name.as_deref(), ancestor)
             };

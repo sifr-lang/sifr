@@ -68,7 +68,10 @@ mod tests {
             panic!("distinct exact errors should form a union carrier");
         };
         assert_eq!(members.len(), 2);
-        assert_ne!(members[0].rust_type(), members[1].rust_type());
+        assert_ne!(
+            members[0].union_variant_name(),
+            members[1].union_variant_name()
+        );
     }
 
     #[test]

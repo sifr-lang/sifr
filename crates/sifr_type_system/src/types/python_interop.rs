@@ -132,15 +132,10 @@ mod tests {
         assert!(object(Some("_sifr.python.Object")).is_python_object_contract());
         assert!(!object(None).is_python_object_contract());
         assert!(!object(Some("local.Object")).is_python_object_contract());
-        assert_eq!(
-            object(Some("_sifr.python.Object")).rust_type(),
-            "::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>"
-        );
         let canonical = object(Some("_sifr.python.Object")).union_variant_name();
         let local = object(None).union_variant_name();
         assert!(canonical.starts_with("__SifrUnionVariant_"));
         assert_ne!(canonical, local);
-        assert_eq!(object(None).rust_type(), "Object");
     }
 
     #[test]
@@ -155,53 +150,39 @@ mod tests {
         };
         let canonical = resource(Some("_sifr.python.ResourceIdentity"));
         assert!(canonical.is_python_resource_identity_contract());
-        assert_eq!(
-            canonical.rust_type(),
-            "::sifr_runtime::interop::Handle<::sifr_runtime::python::PythonResourceIdentity>"
-        );
         assert!(!resource(None).is_python_resource_identity_contract());
         assert!(!resource(Some("local.ResourceIdentity")).is_python_resource_identity_contract());
     }
 
     #[test]
-    fn canonical_file_handles_use_compiler_owned_rust_names() {
-        let handle = |name: &str, identity: &str| Type::Class {
-            identity: Some(identity.to_string()),
-            type_args: Vec::new(),
-            name: name.to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
-            parent_class: None,
-        };
-
+    fn canonical_file_handles_use_compiler_owned_nominal_names() {
         assert_eq!(
-            handle("NativeFileHandle", "_sifr.fs.NativeFileHandle").rust_type(),
+            crate::class_rust_name(Some("_sifr.fs.NativeFileHandle"), "NativeFileHandle"),
             "__SifrIoNativeFileHandle"
         );
         assert_eq!(
-            handle("FileHandle", "sifr.io.FileHandle").rust_type(),
+            crate::class_rust_name(Some("sifr.io.FileHandle"), "FileHandle"),
             "__SifrIoFileHandle"
         );
         assert_eq!(
-            handle("BinaryFileHandle", "sifr.io.BinaryFileHandle").rust_type(),
+            crate::class_rust_name(Some("sifr.io.BinaryFileHandle"), "BinaryFileHandle"),
             "__SifrIoBinaryFileHandle"
         );
         assert_eq!(
-            handle("TextFileHandle", "sifr.io.TextFileHandle").rust_type(),
+            crate::class_rust_name(Some("sifr.io.TextFileHandle"), "TextFileHandle"),
             "__SifrIoTextFileHandle"
         );
         assert_eq!(
-            handle("FileHandle", "local.FileHandle").rust_type(),
+            crate::class_rust_name(Some("local.FileHandle"), "FileHandle"),
             "FileHandle"
         );
-        let source_internal = handle("__SifrIoFileHandle", "local.__SifrIoFileHandle");
         assert_eq!(
-            source_internal.rust_type(),
+            crate::class_rust_name(Some("local.__SifrIoFileHandle"), "__SifrIoFileHandle"),
             crate::source_class_rust_name("__SifrIoFileHandle")
         );
         assert_ne!(
-            source_internal.rust_type(),
-            handle("FileHandle", "sifr.io.FileHandle").rust_type()
+            crate::class_rust_name(Some("local.__SifrIoFileHandle"), "__SifrIoFileHandle"),
+            crate::class_rust_name(Some("sifr.io.FileHandle"), "FileHandle")
         );
     }
 }

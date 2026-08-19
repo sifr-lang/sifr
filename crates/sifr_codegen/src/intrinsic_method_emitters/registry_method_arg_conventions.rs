@@ -14,10 +14,9 @@ impl RustEmitter {
         }
         let effective_arg_ty = self.effective_registry_expr_ty(arg);
         let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
-        let borrowed_name_arg = matches!(arg, HirExpr::Name { name, ty, .. }
+        let borrowed_name_arg = matches!(arg, HirExpr::Name { name, .. }
             if self.borrowed_params.contains(name)
-                || self.mut_borrowed_params.contains(name)
-                || ty.rust_type().starts_with('&'));
+                || self.mut_borrowed_params.contains(name));
         let unadapted_option_arg = lowered_arg.clone();
         if convention.is_owned() {
             (lowered_arg, _) = self.adapt_consuming_call_argument_for_ir(

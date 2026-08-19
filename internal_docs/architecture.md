@@ -470,7 +470,11 @@ Union types, `Unknown`, and class instances all need a coherent runtime represen
 - **Generics** (generics): monomorphized at compile time (like Rust). No runtime type erasure for generic types. Under the integer-model amendment, `list[int]` generates storage over the canonical `SifrInt` representation, while fixed-width lists use the corresponding Rust primitive storage.
 - **Protocol/trait objects** (protocols): when a protocol is used as a type (not just a bound), generate `Box<dyn Trait>` with vtable dispatch. This is the only case of dynamic dispatch besides `Unknown`/`Any`.
 
-**Invariant:** Every `Type` variant must have exactly one Rust representation. The `rust_type()` method on `Type` is the single source of truth for this mapping.
+**Invariant:** Every supported `Type` variant has one structured `RustType`
+representation. `sifr_type_to_rust_type` owns the mapping. Field conversion
+uses `sifr_type_to_rust_field_type` when Rust forbids `impl Trait` storage.
+Only the Rust IR renderer converts these nodes to Rust source text. The
+structured-type guard rejects direct methods and indirect string fallbacks.
 
 ### 2. Borrow and Lifetime Strategy
 

@@ -79,8 +79,8 @@ pub(super) fn slot_table_header_expression(
 }
 
 fn slot_signature_expression(slot: &StaticMethodSlot) -> String {
-    let input = rust_type(&slot.input_type);
-    let output = rust_type(&slot.output_type);
+    let input = render_slot_type(&slot.input_type);
+    let output = render_slot_type(&slot.output_type);
     let receiver = receiver_expression(slot.receiver);
     format!(
         "{STRUCTURAL}::SlotSignature::__from_compiler({:?}, <{input} as {STRUCTURAL}::StructuralType>::shape_identity(), <{output} as {STRUCTURAL}::StructuralType>::shape_identity(), {receiver}, None, ::sifr_runtime::interop::__generated_glue::token())",
@@ -89,8 +89,8 @@ fn slot_signature_expression(slot: &StaticMethodSlot) -> String {
 }
 
 fn slot_identity_expression(slot: &StaticMethodSlot) -> String {
-    let input = rust_type(&slot.input_type);
-    let output = rust_type(&slot.output_type);
+    let input = render_slot_type(&slot.input_type);
+    let output = render_slot_type(&slot.output_type);
     let receiver = receiver_identity_expression(slot.receiver);
     format!(
         "{STRUCTURAL}::SlotIdentitySignature {{ name: {:?}, input: <{input} as {STRUCTURAL}::StructuralType>::shape_identity(), output: <{output} as {STRUCTURAL}::StructuralType>::shape_identity(), receiver: {receiver}, handler: None }}",
@@ -99,7 +99,7 @@ fn slot_identity_expression(slot: &StaticMethodSlot) -> String {
 }
 
 fn slot_arm(index: usize, slot: &StaticMethodSlot, context: &StaticMethodSlotContext) -> String {
-    let input = rust_type(&slot.input_type);
+    let input = render_slot_type(&slot.input_type);
     let mutable_input = slot.receiver == Some(ReceiverConvention::MutableBorrow)
         || (slot.receiver.is_none()
             && slot
@@ -123,7 +123,7 @@ fn slot_arm(index: usize, slot: &StaticMethodSlot, context: &StaticMethodSlotCon
 }
 
 fn slot_call_expression(slot: &StaticMethodSlot, context: &StaticMethodSlotContext) -> String {
-    let owner = rust_type(&slot.owner_type);
+    let owner = render_slot_type(&slot.owner_type);
     let method = crate::Renderer::render_identifier(&slot.hir_name);
     let context_arg = slot.context_type.as_ref().map(|_| match context {
         StaticMethodSlotContext::None => "context".to_string(),
@@ -165,16 +165,18 @@ fn context_impl_type(context: &StaticMethodSlotContext) -> String {
         StaticMethodSlotContext::None => format!("{STRUCTURAL}::NoContext"),
         StaticMethodSlotContext::Shared(ty) => format!(
             "{STRUCTURAL}::SharedContext<'__sifr_context, {}>",
-            rust_type(ty)
+            render_slot_type(ty)
         ),
-        StaticMethodSlotContext::Mutable(ty) => rust_type(ty),
+        StaticMethodSlotContext::Mutable(ty) => render_slot_type(ty),
     }
 }
 
 fn context_identity_expression(context: &StaticMethodSlotContext) -> String {
     let ty = match context {
         StaticMethodSlotContext::None => format!("{STRUCTURAL}::NoContext"),
-        StaticMethodSlotContext::Shared(ty) | StaticMethodSlotContext::Mutable(ty) => rust_type(ty),
+        StaticMethodSlotContext::Shared(ty) | StaticMethodSlotContext::Mutable(ty) => {
+            render_slot_type(ty)
+        }
     };
     format!("<{ty} as {STRUCTURAL}::StructuralType>::shape_identity()")
 }
@@ -223,6 +225,6 @@ fn receiver_identity_expression(receiver: Option<ReceiverConvention>) -> &'stati
     }
 }
 
-fn rust_type(ty: &Type) -> String {
+fn render_slot_type(ty: &Type) -> String {
     crate::render_type(&crate::sifr_type_to_rust_type(ty))
 }

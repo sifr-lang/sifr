@@ -29,17 +29,6 @@ impl RustEmitter {
             return Ok(None);
         };
         let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
-        let lowered_value = if value.ty().rust_type().starts_with('&')
-            && !target_elem_ty.rust_type().starts_with('&')
-        {
-            crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_value))),
-                method: "clone".to_string(),
-                args: vec![],
-            }
-        } else {
-            lowered_value
-        };
         let adapted_value = crate::helpers::flatten_option_value_for_target(
             target_elem_ty,
             value.ty(),
@@ -251,17 +240,6 @@ impl RustEmitter {
             Self::clone_non_copy_name_expr_for_ir(inner_index, lowered_inner_index)
         };
         let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
-        let lowered_value = if value.ty().rust_type().starts_with('&')
-            && !target_elem_ty.rust_type().starts_with('&')
-        {
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Paren(Box::new(lowered_value))),
-                method: "clone".to_string(),
-                args: vec![],
-            }
-        } else {
-            lowered_value
-        };
         let lowered_value = crate::helpers::flatten_option_value_for_target(
             target_elem_ty,
             value.ty(),
@@ -422,17 +400,6 @@ impl RustEmitter {
             return Ok(None);
         };
         let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
-        let lowered_value = if value.ty().rust_type().starts_with('&')
-            && !target_elem_ty.rust_type().starts_with('&')
-        {
-            crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_value))),
-                method: "clone".to_string(),
-                args: vec![],
-            }
-        } else {
-            lowered_value
-        };
         let adapted_value = crate::helpers::flatten_option_value_for_target(
             target_elem_ty.as_ref(),
             value.ty(),
@@ -649,17 +616,6 @@ impl RustEmitter {
             Self::clone_non_copy_name_expr_for_ir(inner_index, lowered_inner_index)
         };
         let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
-        let lowered_value = if value.ty().rust_type().starts_with('&')
-            && !target_elem_ty.rust_type().starts_with('&')
-        {
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Paren(Box::new(lowered_value))),
-                method: "clone".to_string(),
-                args: vec![],
-            }
-        } else {
-            lowered_value
-        };
         let lowered_value = crate::helpers::flatten_option_value_for_target(
             target_elem_ty,
             value.ty(),

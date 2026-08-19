@@ -47,6 +47,38 @@ fn collect_mutated_vars_marks_mutborrow_call_argument() {
 }
 
 #[test]
+fn collect_mutated_vars_marks_generic_mutborrow_call_argument() {
+    let stmts = vec![HirStmt::Expr {
+        expr: HirExpr::GenericCall {
+            mutable_arg_places: Vec::new(),
+            func: "touch".to_string(),
+            type_args: vec![Type::Int],
+            args: vec![HirExpr::Name {
+                name: "items".to_string(),
+                binding_id: None,
+                ty: Type::List(Box::new(Type::Int)),
+            }],
+            ty: Type::None,
+        },
+    }];
+    let mut sigs: ModuleFuncSignatures = HashMap::new();
+    sigs.insert(
+        "touch".to_string(),
+        (
+            vec![(
+                Type::List(Box::new(Type::Int)),
+                ParamConvention::mut_borrow(),
+            )],
+            Type::None,
+        ),
+    );
+
+    let mutated = collect_mutated_vars(&stmts, Some(&sigs));
+
+    assert!(mutated.contains("items"));
+}
+
+#[test]
 fn collect_mutated_vars_marks_method_mutborrow_argument() {
     let crate_ty = Type::Class {
         identity: None,

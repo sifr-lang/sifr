@@ -11,9 +11,9 @@ pub(super) fn try_lower_simple_try_except_stmt(
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    if crate::try_error_carrier::exact_try_error_carrier(body_error_types)
-        .is_some_and(|carrier| carrier.rust_type() != "Error")
-    {
+    if crate::try_error_carrier::exact_try_error_carrier(body_error_types).is_some_and(|carrier| {
+        crate::sifr_type_to_rust_type(&carrier) != crate::RustType::Named("Error".to_string())
+    }) {
         return None;
     }
     if handlers.len() != 1 {
@@ -154,6 +154,7 @@ pub(super) fn expr_has_result_flow(expr: &HirExpr) -> bool {
         } => expr_has_result_flow(left) || comparators.iter().any(expr_has_result_flow),
         HirExpr::BoolOp { values, .. } => values.iter().any(expr_has_result_flow),
         HirExpr::Call { args, .. }
+        | HirExpr::GenericCall { args, .. }
         | HirExpr::PythonCall { args, .. }
         | HirExpr::IntrinsicCall { args, .. }
         | HirExpr::IteratorCall { args, .. }

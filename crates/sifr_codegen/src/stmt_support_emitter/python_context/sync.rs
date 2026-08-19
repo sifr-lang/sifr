@@ -51,7 +51,7 @@ impl RustEmitter {
                             "native context-manager item does not have a class type",
                         ));
                     }
-                    Some(self.rust_type_with_generics(item.context.ty()))
+                    Some(self.render_rust_type_with_generics(item.context.ty()))
                 } else {
                     None
                 };

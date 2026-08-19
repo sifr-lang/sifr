@@ -181,3 +181,5 @@ mod union_type_helpers;
 
 #[cfg(test)]
 mod lib_codegen_tests;
+#[cfg(test)]
+mod type_conversion_tests;

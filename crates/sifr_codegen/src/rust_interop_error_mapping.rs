@@ -2,6 +2,10 @@ use sifr_type_system::Type;
 
 use crate::{RustExpr, RustType};
 
+fn rust_type_name(ty: &Type) -> String {
+    crate::render_type(&crate::sifr_type_to_rust_type(ty))
+}
+
 pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
     bridge_error_expr_with_contract(value, err_type, false)
 }
@@ -52,7 +56,7 @@ fn bridge_error_expr_with_contract(
             ..
         } if is_message_error_alias(name) && message_error_fields(fields).is_some() => {
             RustExpr::StructInit {
-                name: class.rust_type(),
+                name: rust_type_name(class),
                 fields: message_error_fields(fields)
                     .unwrap_or_default()
                     .into_iter()
@@ -61,7 +65,7 @@ fn bridge_error_expr_with_contract(
             }
         }
         class @ Type::Class { .. } if err_type.is_python_error_contract() => {
-            python_error_expr(&class.rust_type(), value)
+            python_error_expr(&rust_type_name(class), value)
         }
         Type::Class {
             name,
@@ -83,7 +87,7 @@ fn bridge_error_expr_with_contract(
             parent_class,
             ..
         } if parent_class.as_deref() == Some("Error") && name == "JSONDecodeError" => {
-            json_decode_error_expr(&class.rust_type(), value)
+            json_decode_error_expr(&rust_type_name(class), value)
         }
         class @ Type::Class {
             name,
@@ -91,7 +95,7 @@ fn bridge_error_expr_with_contract(
             parent_class,
             ..
         } if parent_class.as_deref() == Some("Error") && name == "JsonLimitError" => {
-            json_limit_error_expr(&class.rust_type(), value)
+            json_limit_error_expr(&rust_type_name(class), value)
         }
         class @ Type::Class {
             name,
@@ -99,7 +103,7 @@ fn bridge_error_expr_with_contract(
             parent_class,
             ..
         } if parent_class.as_deref() == Some("Error") && name == "JsonIntegerRangeError" => {
-            json_integer_range_error_expr(&class.rust_type(), value)
+            json_integer_range_error_expr(&rust_type_name(class), value)
         }
         class @ Type::Class {
             name: _,
@@ -109,7 +113,7 @@ fn bridge_error_expr_with_contract(
         } if declared_error_contract || parent_class.as_deref() == Some("Error") => {
             if let Some(error_fields) = message_error_fields(fields) {
                 RustExpr::StructInit {
-                    name: class.rust_type(),
+                    name: rust_type_name(class),
                     fields: error_fields
                         .into_iter()
                         .map(|field| (field, to_string_expr(value.clone())))
@@ -379,7 +383,7 @@ mod tests {
             render_expr(&mapped),
             format!(
                 "{} {{ message: __sifr_bridge_error.to_string() }}",
-                declared.rust_type()
+                super::rust_type_name(&declared)
             )
         );
     }
@@ -445,7 +449,7 @@ mod tests {
             render_expr(&mapped),
             format!(
                 "{} {{ message: __sifr_bridge_error.to_string() }}",
-                declared.rust_type()
+                super::rust_type_name(&declared)
             )
         );
     }
@@ -472,7 +476,7 @@ mod tests {
             render_expr(&mapped),
             format!(
                 "{} {{ message: __sifr_bridge_error.to_string() }}",
-                declared.rust_type()
+                super::rust_type_name(&declared)
             )
         );
     }

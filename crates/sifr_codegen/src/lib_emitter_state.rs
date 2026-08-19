@@ -4,7 +4,7 @@ use super::{
     is_simple_stmt_candidate, resolve_alias_type_for_plain_call,
     try_lower_simple_stmt_with_scope_result_and_bindings, Cell, ClassScope, HashMap, HashSet,
     HirExpr, HirFunction, HirModule, HirStmt, LoweringStats, NestedFnCapture, ParamConvention,
-    RefCell, RustExpr, RustItem, RustLiteral, RustStmt, ScopeContext, Type,
+    RefCell, RustExpr, RustItem, RustLiteral, RustStmt, RustType, ScopeContext, Type,
 };
 use crate::stmt_support_emitter::performance_lowering_gate::stmt_needs_performance_lowering;
 pub struct RustEmitter {
@@ -76,7 +76,7 @@ pub struct RustEmitter {
     /// Set of (`class_name`, `field_name`) pairs that are self-referential and need Box<T>
     pub(crate) recursive_fields: HashSet<(String, String)>,
     /// Map of (`class_name`, `field_name`) -> concrete Rust type used for recursive field storage.
-    pub(crate) recursive_field_rust_types: HashMap<(String, String), String>,
+    pub(crate) recursive_field_rust_types: HashMap<(String, String), RustType>,
     /// Map from class name -> ordered list of field names (for constructor arg mapping)
     pub(crate) class_field_order: HashMap<String, Vec<String>>,
     /// Map of (`class_name`, `field_name`) -> field type for method receiver recovery.

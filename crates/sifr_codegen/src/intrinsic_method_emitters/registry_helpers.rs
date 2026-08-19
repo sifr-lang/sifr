@@ -567,8 +567,10 @@ pub(super) fn registry_call_callable_with_owned_args(
             );
         }
 
-        if param_ty.rust_type().starts_with("Box<")
-            && !matches!(&lowered_arg, RustExpr::FnCall { func, .. } if registry_is_box_new_ctor(func.as_ref()))
+        if matches!(
+            crate::sifr_type_to_rust_type(param_ty),
+            crate::RustType::Boxed(_)
+        ) && !matches!(&lowered_arg, RustExpr::FnCall { func, .. } if registry_is_box_new_ctor(func.as_ref()))
         {
             lowered_arg = RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),

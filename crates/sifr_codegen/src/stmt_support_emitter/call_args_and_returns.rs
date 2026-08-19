@@ -61,10 +61,9 @@ impl RustEmitter {
                 lowered_arg = Self::send_async_callable_adapter(lowered_arg, params.len());
             }
             let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
-            let borrowed_name_arg = matches!(hir_arg, HirExpr::Name { name, ty, .. }
+            let borrowed_name_arg = matches!(hir_arg, HirExpr::Name { name, .. }
                 if self.borrowed_params.contains(name)
-                    || self.mut_borrowed_params.contains(name)
-                    || ty.rust_type().starts_with('&'));
+                    || self.mut_borrowed_params.contains(name));
 
             let unadapted_option_arg = lowered_arg.clone();
             if matches!(hir_arg, HirExpr::NoneLiteral)
@@ -122,9 +121,7 @@ impl RustEmitter {
                     lowered_arg = adapted;
                     recursive_option_adapted = true;
                 } else if !arg_is_option && !matches!(hir_arg, HirExpr::NoneLiteral) {
-                    let param_rust_type = param_ty.rust_type();
-                    let param_is_owned_rust_value =
-                        convention.is_owned() && !param_rust_type.starts_with('&');
+                    let param_is_owned_rust_value = convention.is_owned();
                     let wrapped_inner = if param_is_owned_rust_value && !borrowed_name_arg {
                         lowered_arg
                     } else if matches!(hir_arg, HirExpr::Name { .. })
@@ -164,9 +161,10 @@ impl RustEmitter {
                 continue;
             }
 
-            let param_rust_type = param_ty.rust_type();
-            if param_rust_type.starts_with("Box<")
-                && !Self::is_box_new_call_expr_for_ir(&lowered_arg)
+            if matches!(
+                crate::sifr_type_to_rust_type(param_ty),
+                crate::RustType::Boxed(_)
+            ) && !Self::is_box_new_call_expr_for_ir(&lowered_arg)
             {
                 lowered_arg = crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec![
@@ -189,23 +187,15 @@ impl RustEmitter {
                 };
             }
 
-            let expects_shared_ref_type =
-                param_ty.rust_type().starts_with('&') && !param_ty.rust_type().starts_with("&mut ");
-            let expects_mut_ref_type = param_ty.rust_type().starts_with("&mut ");
-            let needs_shared_borrow = expects_shared_ref_type
-                || (convention.is_shared_borrow()
-                    && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
-                        || matches!(
-                            resolved_param,
-                            Type::TypeVar(_)
-                                | Type::Any
-                                | Type::Callable(..)
-                                | Type::AsyncCallable(..)
-                        )));
-            let needs_mut_borrow = expects_mut_ref_type
-                || (convention.is_mut_borrow()
-                    && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
-                        || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
+            let needs_shared_borrow = convention.is_shared_borrow()
+                && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                    || matches!(
+                        resolved_param,
+                        Type::TypeVar(_) | Type::Any | Type::Callable(..) | Type::AsyncCallable(..)
+                    ));
+            let needs_mut_borrow = convention.is_mut_borrow()
+                && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                    || matches!(resolved_param, Type::TypeVar(_) | Type::Any));
             let already_borrowed = matches!(lowered_arg, crate::RustExpr::Ref { .. })
                 || matches!(
                     (hir_arg, &lowered_arg),

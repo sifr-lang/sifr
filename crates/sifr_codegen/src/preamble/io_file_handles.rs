@@ -65,7 +65,14 @@ fn io_error_kind_expr() -> RustExpr {
         }),
         ty: RustType::Ref {
             mutable: false,
-            inner: Box::new(RustType::DynTrait("std::any::Any".to_string())),
+            inner: Box::new(RustType::DynTrait {
+                trait_: crate::RustTrait::Named {
+                    name: "std::any::Any".to_string(),
+                    params: Vec::new(),
+                    associated_types: Vec::new(),
+                },
+                auto_traits: Vec::new(),
+            }),
         },
     };
     let error_kind = RustExpr::MethodCall {

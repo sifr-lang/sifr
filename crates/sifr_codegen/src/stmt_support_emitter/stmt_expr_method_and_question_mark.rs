@@ -1,8 +1,8 @@
 use super::{
     call_expr_parts, can_construct_error_from_message_for_ir, canonical_constructor_class_name,
-    canonical_plain_call_name_for_ir, is_result_int_division_error_type,
-    unwrap_compiler_verified_nonempty_pop_result_for_ir, HirExpr, HirFStringPart, RustEmitter,
-    Type,
+    canonical_plain_call_name_for_ir, generic_call_target_for_ir,
+    is_result_int_division_error_type, unwrap_compiler_verified_nonempty_pop_result_for_ir,
+    HirExpr, HirFStringPart, RustEmitter, Type,
 };
 macro_rules! stmt_expr_method_call {
     ($emitter:ident, $expr:ident) => {{
@@ -353,7 +353,9 @@ macro_rules! stmt_expr_question_mark {
                     {
                         let target_name = target_error_info
                             .as_ref()
-                            .map(Type::rust_type)
+                            .map(|ty| {
+                                crate::render_type(&crate::sifr_type_to_rust_type(ty))
+                            })
                             .unwrap_or_else(|| target_err_ty.clone());
                         let field = |name: &str| crate::RustExpr::Field {
                             expr: Box::new(error_ident.clone()),

@@ -520,7 +520,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             }
             Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
-                    parent_type.rust_type(),
+                    crate::render_type(&crate::sifr_type_to_rust_type(parent_type)),
                     method.clone(),
                 ])),
                 args: lowered_args,
@@ -529,6 +529,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::FString { parts, .. } => try_lower_simple_fstring_expr(parts),
         HirExpr::Lambda { params, body, .. } => try_lower_simple_lambda_expr(params, body),
         HirExpr::Call { func, args, .. } => try_lower_simple_call_expr(func, args),
+        HirExpr::GenericCall { .. } => None,
         HirExpr::PythonCall { func, args, .. } => try_lower_simple_call_expr(func, args),
         HirExpr::IteratorCall { op, args, .. } => match op {
             HirIteratorOp::Map => try_lower_simple_map_call_expr(args),

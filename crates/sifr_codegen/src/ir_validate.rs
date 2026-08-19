@@ -386,14 +386,15 @@ fn validate_type(ty: &RustType, issues: &mut Vec<IrValidationIssue>) {
         | RustType::Bool
         | RustType::String_
         | RustType::Unit
-        | RustType::Named(_)
-        | RustType::DynTrait(_)
-        | RustType::Impl(_) => {}
+        | RustType::Never
+        | RustType::Named(_) => {}
         RustType::Vec(inner)
         | RustType::HashSet(inner)
         | RustType::VecDeque(inner)
         | RustType::Option(inner)
+        | RustType::Boxed(inner)
         | RustType::Ref { inner, .. } => validate_type(inner, issues),
+        RustType::Array { element, .. } => validate_type(element, issues),
         RustType::HashMap(key, value) | RustType::Result(key, value) => {
             validate_type(key, issues);
             validate_type(value, issues);
@@ -413,6 +414,34 @@ fn validate_type(ty: &RustType, issues: &mut Vec<IrValidationIssue>) {
                 validate_type(param, issues);
             }
             validate_type(ret, issues);
+        }
+        RustType::DynTrait { trait_, .. } | RustType::ImplTrait { trait_, .. } => {
+            validate_trait(trait_, issues);
+        }
+    }
+}
+
+fn validate_trait(trait_: &crate::RustTrait, issues: &mut Vec<IrValidationIssue>) {
+    match trait_ {
+        crate::RustTrait::Named {
+            params,
+            associated_types,
+            ..
+        } => {
+            for ty in params {
+                validate_type(ty, issues);
+            }
+            for (_, ty) in associated_types {
+                validate_type(ty, issues);
+            }
+        }
+        crate::RustTrait::Callable { params, ret, .. } => {
+            for ty in params {
+                validate_type(ty, issues);
+            }
+            if let Some(ret) = ret {
+                validate_type(ret, issues);
+            }
         }
     }
 }

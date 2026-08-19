@@ -445,7 +445,7 @@ pub(crate) fn async_output_value(
         if opaque_classes.contains_key(class_name) {
             return Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
-                    class.rust_type(),
+                    crate::render_type(&crate::sifr_type_to_rust_type(class)),
                     "__sifr_from_python_object".to_string(),
                 ])),
                 args: vec![mapped_try(
@@ -593,7 +593,7 @@ pub(crate) fn async_output_value(
             Some(RustExpr::Block {
                 stmts,
                 expr: Some(Box::new(RustExpr::StructInit {
-                    name: class.rust_type(),
+                    name: crate::render_type(&crate::sifr_type_to_rust_type(class)),
                     fields: converted,
                 })),
             })
