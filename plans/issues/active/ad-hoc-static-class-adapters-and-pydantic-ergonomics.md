@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-19. M0-M10 are complete; M11 is in progress.
+Status: active on 2026-08-19. M0-M11 are complete; M12 is in progress.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -1934,6 +1934,57 @@ Acceptance criteria:
 Exit gate: the complete selected Pydantic model API is available as familiar
 type and instance methods without a second execution path.
 
+Package item state: complete
+PR: [`sifr-lang/pydantic-sifr#47`](https://github.com/sifr-lang/pydantic-sifr/pull/47)
+Base SHA: `a917a26e108c6cd47046fe7d355aadea4fd17652`
+Initial candidate SHA: `e37237fa59f69ac820f60cee955fcd2cb7ff87c7`
+Final candidate SHA: `3f7629713ea5a4bc9739b61f59c16b776283d223`
+Merge SHA: `a44116e188cc6b45cffb297d57b9084467a39e8f`
+Changed paths: attached model validation, serialization, JSON Schema, strings
+profile, `TypeAdapter`, and `RootModel` APIs; static schema payload and native
+engine support; handler-aware attached API selection; canonical, PS6, PS7, M8,
+M9, and M11 demos; negative and identity checks; exact compiler pins; and
+package documentation and tests.
+Validation: Sifr source formatting, package checking, and two source tests
+passed. Native runtime checks passed for PS6, PS7, M8, M9, M11, and the
+canonical demo. Thirteen validator-negative diagnostics, the M11 negative
+check, static-program round trip, M11 operation identity, 39 Python unit tests,
+Rust workspace tests, workspace Clippy, diff hygiene, and the 900-line guard
+passed. The M11 validation, dump, and JSON Schema routes recorded one program
+identity, and the source program matched its installed native program. The
+package create-PR gate ran once on the initial candidate. The package merge
+gate ran once on the final reviewed candidate. Both passed the local file,
+pin, unit, upstream-manifest, and core-schema exact-set audits, then stopped at
+the same external locked upstream environment because `pydantic_core` was not
+installed. Neither gate was rerun. Compiler files did not change in this item,
+so no Sifr compiler create-PR or merge gate ran.
+Review evidence: the initial exact-SHA Opus review found three stale consumers
+of the removed dummy schema function, invalid byte inputs and error expectation
+for the structural strings profile, and stale quickstart and migration text
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/47#issuecomment-5344234273)).
+One remediation migrated all mandatory consumers and documentation, fixed
+validator-only attached API selection, and strengthened the unsupported schema
+diagnostic. The final exact-SHA review returned `SATISFIED` with no blocking
+defect
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/47#issuecomment-5344212726)).
+The final gate evidence is recorded on the PR
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/47#issuecomment-5344223875)).
+Deferred follow-up: M12 must implement a working structural `model_dump()` for
+non-record `RootModel` values and add direct coverage. It must harden
+transitive `RootModel` detection and align root JSON shape verification. It
+must restore direct nested generic specialization coverage, document the
+temporary concrete-subclass form, and resolve the compiler's nested direct
+specialization result. It must correct the stale package architecture export
+list; add negative coverage for root contracts, integer profiles, and
+`TypeAdapter` misuse; make attached API selection independent of incidental
+callable resolution; and make M11 emitted-program identity evidence durable.
+M12 should also keep the structural strings negative fixture independent and
+preserve the all-string contract in every public example. The separately
+running pre-v1 task, worktree, processes, artifacts, failures, fixes, and
+union-order changes remain entirely outside this phase.
+Next action: complete M12 migration, certification, deferred hardening, and
+whole-phase closure.
+
 ### M12: Migration, Certification, and Closure
 
 Owner: both repositories.
@@ -2039,10 +2090,12 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M10 are merged and recorded. M11 is in progress. Its seven
-compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325,
-#3327, and #3329. The current compiler merge is
-`0e16cc73b2d1ba20a59db7f168193eb01a618ab5`.
+Current state: M0-M11 are merged and recorded. The seven M11 compiler
+prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327,
+and #3329. The M11 package surface merged in Pydantic-Sifr PR #47. M12 is in
+progress. The current compiler merge is
+`0e16cc73b2d1ba20a59db7f168193eb01a618ab5`, and the current package merge is
+`a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
 prerequisites stopped at the Rust-interop matrix. The matrix reported one
@@ -2050,6 +2103,5 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: resume the `pydantic-sifr` M11 package surface. Correct its
-structural model validation path, then complete native model operations and
-schema evidence.
+Next action: inventory every M12 deferred item, then complete compiler-owned
+hardening before package certification and final whole-phase review.
