@@ -187,7 +187,7 @@ fn pow(x: f64, y: f64) -> f64 {
 }
 // --- end stdlib ---
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Container<T> {
     value: T,
 }

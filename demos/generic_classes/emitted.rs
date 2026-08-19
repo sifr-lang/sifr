@@ -1,5 +1,5 @@
 // src/main.rs
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Pair<T> {
     first: T,
     second: T,
@@ -55,7 +55,7 @@ impl<T> Stack<T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Wrapper<T> {
     value: T,
 }
