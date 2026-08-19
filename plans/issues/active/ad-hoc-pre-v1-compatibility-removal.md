@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Compatibility Removal
 
-Status: in progress; Item 11 merged and ready for Item 12 on 2026-08-19
+Status: in progress; Item 14 merged and ready for Item 15 on 2026-08-19
 
 ## Objective
 
@@ -776,13 +776,13 @@ Scope:
 
 Acceptance criteria:
 
-- [ ] Lower compiler layers do not construct `DiskSourceProvider`.
-- [ ] Each source operation records dependencies through the active provider.
-- [ ] Formatter, linter, package, CLI, and LSP paths share provider semantics.
-- [ ] No compatibility wrapper remains for a pre-session caller.
-- [ ] No test-only wrapper collapses package resolution result variants.
-- [ ] Package tests use the production structured-result API.
-- [ ] Overlay and snapshot behavior remains deterministic.
+- [x] Lower compiler layers do not construct `DiskSourceProvider`.
+- [x] Each source operation records dependencies through the active provider.
+- [x] Formatter, linter, package, CLI, and LSP paths share provider semantics.
+- [x] No compatibility wrapper remains for a pre-session caller.
+- [x] No test-only wrapper collapses package resolution result variants.
+- [x] Package tests use the production structured-result API.
+- [x] Overlay and snapshot behavior remains deterministic.
 
 Focused validation:
 
@@ -1010,8 +1010,8 @@ migrates its repository consumers before the old path disappears.
 | 11. Diagnostics and rejection residue | merged | [#3287](https://github.com/sifr-lang/sifr/pull/3287) | `e71174f31587b9f84d0051c8c0a9309c66b3a59c` | Final candidate `d9ecd3c4f7cbe353d13b4e970f0f199f99082eec`: diagnostics registry/docs rules, diagnostics crate, project root and cycle tests, workspace baselines, canonicalization contract and self-test, runtime-platform golden, Rust interop declarations, stdlib import policy, CLI rendering and explain, formatting, Clippy, file-size, HIR, inventory, docs, JSON, and residue checks passed. The e2e fail suite reached only the inherited protocol diagnostic mismatch; later changed fixtures passed directly. The one create-PR gate on initial candidate `2b1b4347edc5457747cae77f9ccc65deea5ddc70` and one merge gate on the final candidate stopped at the inherited verification-taxonomy conflict; neither gate was repeated. | [Initial and remediation exact-SHA Opus evidence](https://github.com/sifr-lang/sifr/pull/3287#issuecomment-5335839622): the initial review found two blockers; the one remediation review was SATISFIED with no blockers. | Removed workspace diagnostic codes 0101–0104 and IMPORT-0009, kept canonical span-less import diagnostics, removed migration suggestion tables and old Rust-key handling, migrated fixtures and catalogs, and removed the legacy render helpers. |
 | 12. Hidden compatibility names | merged | [#3289](https://github.com/sifr-lang/sifr/pull/3289) | `e3d4bf656a6992cc712911723c215d409c26e175` | Candidate `a3f75bbf4a9a5a1705da392dcbeda9f84a0b9524`: 25 focused task, blocking, sendability, and IPC lowering tests; all 140 create-PR e2e fixtures; 11 runtime-platform golden cases with one capability-gated skip; all 14 developer-tooling static variants; Clippy, formatting, file-size, HIR, inventory, residue, and diff checks passed. The full lowering crate had only one inherited class-diagnostic assertion failure in an untouched path. The one create-PR and one merge gate stopped at the inherited verification-taxonomy conflict assigned to Item 16; neither gate was repeated. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3289#issuecomment-5336012950): SATISFIED, no blocking findings. | Removed both hidden-prefix stripping mechanisms, made task, synchronization, IPC, and blocking checks use canonical names directly, and registered a production/fixture residue guard with a mutation self-test. |
 | 13. Verification runner and e2e expectations | merged | [#3294](https://github.com/sifr-lang/sifr/pull/3294) | `0841486b09e14d701b142db02dd7d38b8cadf0fb` | Final candidate `ddc6e3590c99fd775d5d98a6fbb3f34bdff28e17`: verification runner self-tests passed all 14 groups; profile schema, coverage, assignment, dry-plan, area CLI, E2E harness, dependency-plan, fixture, LeetCode audit, Phase 40 governance, diagnostic-rules, ecosystem-broader, evidence-custody, formatting, file-size, HIR, JSON, and diff checks passed. The one create-PR and one merge gate stopped at the same 98 stale demo companions introduced by base compiler merge `6152fc50984395a640c42f31e9e270cd3a9e09c8`; Item 13 changed no compiler implementation or demo output, and neither gate was repeated. | [Initial and remediation exact-SHA Opus evidence](https://github.com/sifr-lang/sifr/pull/3294#issuecomment-5336571091): the initial review found four integration blockers; the one remediation review was SATISFIED with no blockers. | Kept only schema-v2 canonical selections, structured area evidence, assertion-based runtime expectations, and canonical Phase 40 critical steps. Removed legacy execution, report, hardening-summary, and stdout-directive paths. |
-| 14. Source and package API wrappers | active | — | — | — | — | — |
-| 15. Structured Rust types | pending | — | — | — | — | — |
+| 14. Source and package API wrappers | merged | [#3297](https://github.com/sifr-lang/sifr/pull/3297) | `2b764b8bfd5d62e9f8da86ebd2e12abd330e1267` | Candidate `e87fbcf4ec3e818dda49ef78b29b63998b68bd26`: workspace test compilation, Clippy, formatting, driver (530 passed, 76 ignored), package (141 passed with the unavailable external demo checkout excluded), frontend, formatter, linter, LSP stale-result and overlay tests, provider tracking, structured package results, dependency-direction guard and mutation self-tests, file-size, HIR, and diff checks passed. The absent Python-interoperability virtual environment caused the same focused LSP failure at the Item 14 base. The one create-PR and one merge gate stopped at the same inherited 98 stale demo companions; neither gate was repeated. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3297#issuecomment-5336991498): SATISFIED, no blocking findings. | Removed disk-backed and result-collapsing wrappers, made provider requirements explicit through the compiler-service stack, captured package target discovery results, kept all structured import outcomes, removed the assigned string diagnostic-label wrapper, and added the provider-construction guard. |
+| 15. Structured Rust types | active | — | — | — | — | — |
 | 16. Final guard and closure | pending | — | — | — | — | — |
 
 ### Deferred reviewer follow-up
@@ -1067,15 +1067,18 @@ migrates its repository consumers before the old path disappears.
 | Item 11 initial review | Span-less and source-backed cycle paths format `cycle_edges` with different separators. | `pre_v1_compat_16_closure` | Use one canonical structured-argument format during final diagnostics closure. |
 | Item 11 initial review | The span-less namespace-collision branch lacks direct coverage. | `pre_v1_compat_16_closure` | Add a focused no-span collision test with canonical args and candidate notes. |
 | Item 11 initial review | Removed-stdlib e2e fixtures retain many old-surface filenames while asserting the same generic diagnostic. | `pre_v1_compat_13_verification` | Consolidate redundant generic unsupported-import coverage while canonicalizing the e2e harness and expectations. |
-| Item 11 initial review | `diagnostic_label_for_code_str` remains exported after its legacy display consumer was removed. | `pre_v1_compat_14_source_api` | Remove the unused public wrapper during compiler API consolidation. |
+| Item 11 initial review | `diagnostic_label_for_code_str` remains exported after its legacy display consumer was removed. | `pre_v1_compat_14_source_api` | Completed in Item 14: the string wrapper and its public export are removed. |
 | Item 11 initial review | Active review records still describe `SIFR-IMPORT-0009` as the current HTTP rejection path. | `pre_v1_compat_16_closure` | Correct current review-record links and statements during final documentation closure without rewriting archives. |
 | Item 11 remediation review | Lowering-emitted `SIFR-IMPORT-0002` diagnostics omit the declared `module` arg, so recovery capping can depend on fixture order. | `pre_v1_compat_16_closure` | Populate the canonical arg and add cap-independent coverage. This was a new mechanism defect in the second review, so Item 11 received no third review. |
-| Item 11 remediation review | The canonicalization checker retains an unused `forbidden_codes` parameter after all callers moved to prefix checks. | `pre_v1_compat_13_verification` | Remove the dead checker branch during verification-runner closure. |
+| Item 11 remediation review | The canonicalization checker retains an unused `forbidden_codes` parameter after all callers moved to prefix checks. | `pre_v1_compat_16_closure` | Item 13 merged without this cleanup. Remove the dead checker branch during final guard closure. |
 | Item 12 review | The hidden-prefix guard scans `crates/` and `verification/` but not the other production and documentation roots. | `pre_v1_compat_16_closure` | Broaden the final no-compatibility guard after the temporary inventory is removed. Current residue scans prove those roots are clean. |
 | Item 12 review | The hidden-prefix self-test proves archive exclusion by placing the archive outside all scan roots, not by exercising an explicit archive rule. | `pre_v1_compat_16_closure` | Make archive exclusion explicit in the final guard and add a direct mutation case. |
 | Item 13 gates | Base compiler merge `6152fc50984395a640c42f31e9e270cd3a9e09c8` changed emission without refreshing 98 generated demo companions. | `ad-hoc-static-class-adapters-and-pydantic-ergonomics` | Refresh or retire the stale companions under the compiler-emission owner. Item 13 consumed both gates and did not rerun them. |
 | Item 13 remediation review | Commit-level evidence isolation permits one pull request to contain separate source and release-evidence commits. Squash merging would collapse that separation. | `pre_v1_compat_16_closure` | Reconcile the custody invariant and cross-candidate scope before final closure. Do not reopen Item 13 or run a third review. |
 | Item 13 remediation review | The retained Phase 40 report migrated only the four custody-bound step names. Other historical step names are not reproducible by the canonical runner. | Phase 40 release-governance owner | Regenerate the complete report during the next Phase 40 qualification. Do not patch historical timings in Item 13. |
+| Item 14 review | Two current architecture documents still name removed `FrontendContext::load_project_with_provider`. | `pre_v1_compat_16_closure` | Update the current architecture references during final documentation closure. |
+| Item 14 review | The provider-construction guard ignores all text after a trailing inline test module and could miss production code appended below that module. | `pre_v1_compat_16_closure` | Make the final guard scope test modules by syntax or brace depth, then add a mutation case for production text after an inline test module. |
+| Item 14 validation | The TypeScript-Go transfer guard has stale line-based direct-filesystem inventory entries and lacks its required editor diagnostic non-duplication fixture tokens. | `pre_v1_compat_16_closure` | Reconcile this current guard with the final source tree and make its self-test and positive path pass during closure. |
 
 ## Phase Completion Record
 
