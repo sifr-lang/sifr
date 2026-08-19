@@ -178,6 +178,91 @@ class Box[T]:
 }
 
 #[test]
+fn imported_adapted_field_substitution_respects_nested_generic_scope() {
+    let mut external_defs = ExternalDefs::default();
+    let mut models = compile(
+        "models",
+        r#"
+class Inner[T]:
+    value: T
+
+class Outer[T]:
+    nested: Inner[str]
+    direct: T
+"#,
+        &external_defs,
+    );
+    let nested = Type::Class {
+        identity: Some("models.Inner".to_string()),
+        type_args: vec![Type::Str],
+        name: "Inner".to_string(),
+        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    models.class_adapter_selections.push(ClassAdapterSelection {
+        owner: "Outer".to_string(),
+        provider_module: "fixture.adapter".to_string(),
+        provider_function: "adapt".to_string(),
+        descriptor_type: Type::None,
+        marker_identities: Vec::new(),
+        data_parent: None,
+        field_plans: vec![
+            AdapterFieldPlan {
+                identity: "models.Outer.nested".to_string(),
+                name: "nested".to_string(),
+                declared_type: nested,
+                default: AdapterFieldDefault::Required,
+                validation_policy: None,
+            },
+            AdapterFieldPlan {
+                identity: "models.Outer.direct".to_string(),
+                name: "direct".to_string(),
+                declared_type: Type::TypeVar("T".to_string()),
+                default: AdapterFieldDefault::Required,
+                validation_policy: None,
+            },
+        ],
+        handler_plans: Vec::new(),
+        attached_api_set: None,
+        adapter_invocation_identity: [0; 32],
+        post_adapter_identity: [0; 32],
+        range: ruff_text_size::TextRange::default(),
+    });
+    collect_module_exports("models", &models, &mut external_defs);
+
+    let consumer = compile(
+        "consumer",
+        "from models import Outer\n\nclass Container:\n    item: Outer[int]\n",
+        &external_defs,
+    );
+    let shape = describe_type_with_externals(
+        "consumer",
+        field_type(&consumer, "Container", "item"),
+        &consumer,
+        &external_defs,
+    );
+    let ShapeNode::Nominal { fields, .. } = shape.root else {
+        panic!("outer must have a nominal shape");
+    };
+    let ShapeNode::Nominal {
+        fields: inner_fields,
+        ..
+    } = &fields[0].declared_type
+    else {
+        panic!("outer field must preserve its concrete inner shape");
+    };
+    assert_eq!(
+        inner_fields[0].declared_type,
+        ShapeNode::Primitive("str".to_string())
+    );
+    assert_eq!(
+        fields[1].declared_type,
+        ShapeNode::Primitive("int".to_string())
+    );
+}
+
+#[test]
 fn fully_imported_adapted_handler_preserves_metadata_and_concrete_types() {
     let mut external_defs = ExternalDefs::default();
     let mut models = compile(

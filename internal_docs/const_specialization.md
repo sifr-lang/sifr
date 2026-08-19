@@ -150,6 +150,8 @@ The finalized adapter field plan supplies the required and default states for th
 When a concrete generic adapted type is described, the compiler substitutes its concrete type
 arguments into every finalized field-plan type. The same rule applies to local and imported
 adapted classes. A concrete static-program shape cannot retain the declaration's type parameters.
+Substitution respects nested nominal scopes. A nested class binds its own type parameters before
+the compiler substitutes its fields and methods, even when an outer class uses the same names.
 
 An unbound generic adapted declaration does not request a schema program.
 A concrete owner must supply all type arguments before static program generation.

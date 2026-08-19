@@ -26,8 +26,8 @@ pub use lower::{
     lower_module_sysroot_private_declaration_with_externals, lower_module_sysroot_public_stdlib,
     lower_module_sysroot_public_stdlib_with_externals, lower_module_with_externals,
     lower_module_with_externals_and_name, lower_module_with_externals_name_and_options,
-    substitute_type_vars, ExternalDefs, LoweringOptions, LoweringSourceOrigin,
-    PythonBridgeTargetAuthority, PythonTrustPolicy, StructuralMethodExport,
+    substitute_type_vars, substitute_type_vars_with_class_scopes, ExternalDefs, LoweringOptions,
+    LoweringSourceOrigin, PythonBridgeTargetAuthority, PythonTrustPolicy, StructuralMethodExport,
     StructuralMethodExports,
 };
 pub use scope::{NarrowingSnapshot, Scope};

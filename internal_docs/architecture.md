@@ -896,7 +896,8 @@ avoiding a cycle with later handler and attached-API outputs.
 Structural shape derivation specializes finalized adapter field-plan types with the concrete
 owner arguments before package specialization. Local and imported adapted generic classes use the
 same substitution rule, so nested concrete uses do not expose unbound declaration parameters to a
-package specializer.
+package specializer. Nested nominal declarations rebind their own type parameters before field and
+method substitution. An outer parameter with the same name cannot capture the nested parameter.
 
 Checked adapted-handler exports retain the callable target with a signature specialized relative
 to the selected owner's type parameters. Generic substitution follows the full local ancestor

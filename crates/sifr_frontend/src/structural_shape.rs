@@ -370,6 +370,7 @@ fn describe_class(
         type_args,
         fields,
         field_plans,
+        lowering,
         external_defs,
     );
     let described_fields = effective_fields
