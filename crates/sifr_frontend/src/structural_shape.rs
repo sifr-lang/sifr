@@ -19,6 +19,8 @@ use crate::const_canonical::canonical_value;
 use canonical_helpers::canonical_sequence;
 mod defaults;
 use defaults::shape_field_default;
+#[cfg(test)]
+mod ancestry_tests;
 mod generic_fields;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
