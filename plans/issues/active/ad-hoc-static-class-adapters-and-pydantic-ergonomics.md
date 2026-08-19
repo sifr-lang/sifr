@@ -2126,6 +2126,35 @@ can supplement the direct IR and structural-shape regressions.
 Next action: consolidate the substitution visitors and remove the remaining
 bare-name nested-scope fallback.
 
+Compiler hardening item 5 state: complete
+PR: [`sifr-lang/sifr#3340`](https://github.com/sifr-lang/sifr/pull/3340)
+Base SHA: `cdab99c927c0395617907560321d5b9a23fe50e0`
+Candidate SHA: `a1ae3080d2cd1be2aa5c923c63486080e041f561`
+Merge SHA: `85377cd4b2a1e28360c96ec3208f7da7cab8f92e`
+Changed paths: the unified lowering substitution visitor, explicit local and
+imported nested-scope authority, unresolved-scope protection, a consumer name
+collision regression, and the static-program architecture contract.
+Validation: 1,005 lowering tests passed and one test was ignored. All 107
+frontend tests and all 15 adapter-default driver tests passed. Workspace
+Clippy passed with warnings denied. Rust formatting, HIR maintainability, the
+900-line guard, and diff hygiene passed. The change removed 82 net lines. The
+create-PR and merge gates each ran once on the exact candidate. Both gates
+passed generated demo freshness and every preceding guard. Both gates then
+stopped at the same two separately owned Rust-interop matrix inputs. Neither
+gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3340#issuecomment-5345308429),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3340#issuecomment-5345337106)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3340#issuecomment-5345308120)).
+Deferred follow-up: the next M12 item must consolidate the third substitution
+visitor in structural record codegen. M12 can avoid a map clone for the legacy
+empty-scope path. It can also add a direct unresolved type-argument assertion
+and repeat the resolved sibling-field assertion in the collision fixture.
+Generic ancestor and alias scope remain later items.
+Next action: consolidate structural record codegen substitution and preserve
+canonical union plus nested-scope behavior.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2213,11 +2242,11 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 4 merged in Sifr PRs #3332, #3334, #3336, and #3338. The seven M11 compiler
-prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327,
-and #3329. The M11 package surface merged in Pydantic-Sifr PR #47. M12 is in
-progress. The current compiler merge is
-`d5d96d31cb74bcbf49cc1802af9eff6702242753`, and the current package merge is
+through 5 merged in Sifr PRs #3332, #3334, #3336, #3338, and #3340. The seven
+M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
+#3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
+#47. M12 is in progress. The current compiler merge is
+`85377cd4b2a1e28360c96ec3208f7da7cab8f92e`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
@@ -2226,6 +2255,6 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: consolidate the substitution visitors and remove the remaining
-bare-name nested-scope fallback. Then continue compiler-owned hardening before
-package certification and the final whole-phase review.
+Next action: consolidate structural record codegen substitution. Then
+continue compiler-owned hardening before package certification and the final
+whole-phase review.
