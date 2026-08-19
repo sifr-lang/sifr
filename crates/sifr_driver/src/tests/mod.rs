@@ -3,6 +3,7 @@ mod attached_api_aliases;
 mod diagnostics;
 mod discovery_and_workspace;
 mod early_adapters;
+mod generic_adapter_representation;
 mod handler_descriptors;
 mod imported_attached_apis;
 mod package_project_build_check;

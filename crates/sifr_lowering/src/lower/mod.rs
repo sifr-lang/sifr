@@ -67,6 +67,7 @@ mod function_scopes;
 mod generic_constructor_specialization;
 mod generic_inference;
 mod generic_method_requirements;
+mod generic_parent_representation;
 mod generic_receiver_specialization;
 mod guarded_index;
 mod if_branch_bindings;

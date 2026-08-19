@@ -159,6 +159,14 @@ that visitor their declaration resolvers. The visitor canonicalizes unions after
 Reordered, duplicate, and nested union members therefore produce one concrete structural identity.
 Project code generation uses the selected outer declaration's module for nested scope resolution.
 It does not use the consumer module for identityless nested fields.
+User class arguments already carry canonical module identities from lowering. Substitution keeps
+that identity when an argument moves into a declaration-owned field.
+
+A generic parent specialization must preserve each declared union's immediate member structure.
+Rust generic storage cannot flatten a union-valued argument inserted into another union. It also
+cannot remove a member that becomes equal to its sibling. Lowering rejects these specializations
+before Rust generation. Structural support rejects the same topology change in nested generic
+record fields.
 
 An unbound generic adapted declaration does not request a schema program.
 A concrete owner must supply all type arguments before static program generation.

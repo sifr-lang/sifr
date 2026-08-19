@@ -140,9 +140,63 @@ where
     }
 }
 
+/// Return whether substitution keeps every union's immediate member topology.
+///
+/// Rust generic storage retains the declaration's union nesting. A substituted
+/// union member cannot expand into another union or collapse into a sibling.
+pub fn substitution_preserves_union_structure(ty: &Type, bindings: &HashMap<String, Type>) -> bool {
+    let recurse = |ty: &Type| substitution_preserves_union_structure(ty, bindings);
+    let function_preserves = |function: &FunctionType| {
+        function.params.iter().all(|(_, ty, _)| recurse(ty)) && recurse(&function.return_type)
+    };
+
+    match ty {
+        Type::List(value)
+        | Type::Set(value)
+        | Type::Iterable(value)
+        | Type::Iterator(value)
+        | Type::PythonBuffer(value)
+        | Type::PythonDlpackTensor(value)
+        | Type::Failure(value)
+        | Type::Awaitable(value) => recurse(value),
+        Type::Dict(key, value)
+        | Type::Result(key, value)
+        | Type::Coroutine(key, value)
+        | Type::Task(key, value)
+        | Type::TaskResult(key, value)
+        | Type::Select2(key, value)
+        | Type::BlockingTask(key, value)
+        | Type::AsyncIterator(key, value)
+        | Type::AsyncGenerator(key, value)
+        | Type::JoinSet(key, value) => recurse(key) && recurse(value),
+        Type::TimeoutResult(value) => recurse(value),
+        Type::Tuple(values) => values.iter().all(recurse),
+        Type::Union(values) => {
+            let substituted = values
+                .iter()
+                .map(|value| substitute_type_vars(value, bindings))
+                .collect::<Vec<_>>();
+            !substituted
+                .iter()
+                .any(|value| matches!(value.resolve_alias(), Type::Union(_)))
+                && matches!(make_union(substituted), Type::Union(canonical) if canonical.len() == values.len())
+                && values.iter().all(recurse)
+        }
+        Type::Callable(params, _, result) | Type::AsyncCallable(params, _, result) => {
+            params.iter().all(recurse) && recurse(result)
+        }
+        Type::Alias {
+            type_args, body, ..
+        } => type_args.iter().all(recurse) && recurse(body),
+        Type::Function(function) | Type::AsyncFunction(function) => function_preserves(function),
+        Type::Class { type_args, .. } => type_args.iter().all(recurse),
+        _ => true,
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::substitute_type_vars_with_class_scopes;
+    use super::{substitute_type_vars_with_class_scopes, substitution_preserves_union_structure};
     use crate::Type;
     use std::collections::HashMap;
 
@@ -187,5 +241,47 @@ mod tests {
             panic!("nested type must stay nominal");
         };
         assert_eq!(fields[0].1, Type::TypeVar("T".to_string()));
+    }
+
+    #[test]
+    fn union_structure_rejects_expansion_and_collapse_after_substitution() {
+        let template = Type::Union(vec![Type::None, Type::TypeVar("T".to_string())]);
+
+        assert!(substitution_preserves_union_structure(
+            &template,
+            &HashMap::from([("T".to_string(), Type::Str)]),
+        ));
+        assert!(!substitution_preserves_union_structure(
+            &template,
+            &HashMap::from([(
+                "T".to_string(),
+                crate::make_union(vec![Type::None, Type::Str]),
+            )]),
+        ));
+        assert!(!substitution_preserves_union_structure(
+            &template,
+            &HashMap::from([("T".to_string(), Type::None)]),
+        ));
+    }
+
+    #[test]
+    fn union_structure_does_not_capture_nested_class_fields() {
+        let nested = Type::Class {
+            identity: Some("models.Inner".to_string()),
+            type_args: vec![Type::Str],
+            name: "Inner".to_string(),
+            fields: vec![(
+                "value".to_string(),
+                Type::Union(vec![Type::None, Type::TypeVar("T".to_string())]),
+            )],
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let outer_optional = crate::make_union(vec![Type::None, Type::Int]);
+
+        assert!(substitution_preserves_union_structure(
+            &nested,
+            &HashMap::from([("T".to_string(), outer_optional)]),
+        ));
     }
 }

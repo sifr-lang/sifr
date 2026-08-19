@@ -3,6 +3,9 @@ use sifr_ir::{HirClass, HirModule, RustInteropDecoratorKind};
 use sifr_type_system::{class_rust_name, Type};
 use std::collections::{BTreeSet, HashSet};
 
+#[cfg(test)]
+mod generic_representation_tests;
+
 use crate::structural_record_fields::structural_record_fields;
 
 const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
@@ -222,6 +225,7 @@ fn structural_parent_supported(
     };
     let Type::Class {
         identity,
+        type_args,
         name,
         fields,
         ..
@@ -232,7 +236,8 @@ fn structural_parent_supported(
     let Some(parent) = structural_class_candidate(identity.as_deref(), name, modules) else {
         return false;
     };
-    parent.parent_class.is_none()
+    generic_arguments_preserve_union_structure(parent, type_args)
+        && parent.parent_class.is_none()
         && !parent.methods.iter().any(|method| method.name == "new")
         && !parent.is_error_type
         && parent.newtype_inner.is_none()
@@ -298,15 +303,23 @@ fn structural_type_supported(
         Type::Union(values) => values
             .iter()
             .all(|value| structural_type_supported(value, modules, visiting)),
-        Type::Class { identity, name, .. } => {
+        Type::Class {
+            identity,
+            type_args,
+            name,
+            ..
+        } => {
             let key = identity.as_deref().unwrap_or(name);
-            if visiting.contains(key) {
-                return true;
-            }
             let Some(candidate) = structural_class_candidate(identity.as_deref(), name, modules)
             else {
                 return false;
             };
+            if !generic_arguments_preserve_union_structure(candidate, type_args) {
+                return false;
+            }
+            if visiting.contains(key) {
+                return true;
+            }
             if structural_mapped_opaque_supported(candidate) {
                 return true;
             }
@@ -321,6 +334,27 @@ fn structural_type_supported(
         Type::Newtype { .. } => false,
         _ => false,
     }
+}
+
+fn generic_arguments_preserve_union_structure(class: &HirClass, type_args: &[Type]) -> bool {
+    let bindings = class
+        .type_params
+        .iter()
+        .cloned()
+        .zip(type_args.iter().cloned())
+        .collect::<std::collections::HashMap<_, _>>();
+    class
+        .fields
+        .iter()
+        .all(|(_, ty)| sifr_type_system::substitution_preserves_union_structure(ty, &bindings))
+        && class.methods.iter().all(|method| {
+            method.params.iter().all(|param| {
+                sifr_type_system::substitution_preserves_union_structure(&param.ty, &bindings)
+            }) && sifr_type_system::substitution_preserves_union_structure(
+                &method.return_type,
+                &bindings,
+            )
+        })
 }
 
 fn structural_class_candidate<'a>(

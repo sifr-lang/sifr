@@ -905,6 +905,13 @@ their declaration resolvers to the same visitor. Substitution also rebuilds unio
 canonical union constructor. Therefore, structural identity uses normalized concrete types after
 generic substitution. Code generation resolves nested scopes from the selected outer declaration's
 module. A consumer module cannot redirect an identityless nested field to a same-named class.
+Lowering gives user class arguments canonical module identities before substitution. This keeps a
+consumer-owned argument distinct from same-named classes in a generic declaration's module.
+
+Rust generic storage keeps the union nesting from its declaration. Therefore, a concrete generic
+parent cannot expand one union member into another union or collapse it into a sibling. Lowering
+rejects that parent specialization before code generation. Structural support applies the same
+rule when a concrete generic class is nested in another record.
 
 Checked adapted-handler exports retain the callable target with a signature specialized relative
 to the selected owner's type parameters. Generic substitution follows the full local ancestor
