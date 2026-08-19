@@ -1864,9 +1864,40 @@ Deferred follow-up: M12 should consolidate the two structural-bound prescan
 passes and tighten the bound assertions. It should also assess the pre-existing
 free-function clone-inference edge for structural generics. These findings did
 not block this prerequisite.
-Next action: resume M11 in `pydantic-sifr`. First, resolve the package-owned
-authoritative-dependency failure for `arrayvec`, then complete the native
-model-operation evidence.
+Next action: completed by compiler prerequisite 7 below.
+
+Compiler prerequisite 7 state: complete
+PR: [`sifr-lang/sifr#3329`](https://github.com/sifr-lang/sifr/pull/3329)
+Base SHA: `3c567d2a6657ac92b69a4cf2114b1545e729b99b`
+Candidate SHA: `70fcee1338c8bba04ba8cc87f884abd458fe078f`
+Merge SHA: `0e16cc73b2d1ba20a59db7f168193eb01a618ab5`
+Changed paths: retained generated dependency specifications, their invariant
+and code-generation tests, dependency snapshots, and traceability evidence.
+Validation: the stdlib-manifest suite passed 31 unit tests and all dependency
+snapshot tests. The code-generation suite passed 1053 tests. Affected-crate
+Clippy passed with warnings denied. Formatting, HIR maintainability,
+touched-file size, diff, and direct generated-demo freshness guards passed.
+The release compiler completed the locked M11 package build through `rustc`.
+The generated lock retained the sysroot-authorized `rust_decimal 1.41.0` and
+`arrayvec 0.7.6` versions. The native binary then exposed the next package
+runtime defect: the structural model validation path reports `Input must be an
+object`.
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3329#issuecomment-5342895471)).
+Gate evidence: the create-PR and merge gates each ran once on the exact
+candidate. Both passed generated-demo freshness and all preceding guards. Both
+then stopped at the separately owned Rust-interop fixture matrix. The two
+inputs were the missing generated-type-import negative source and the empty
+method-slot schema placeholder. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3329#issuecomment-5342923328),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3329#issuecomment-5342948738)).
+Deferred follow-up: M12 should add an exhaustive `StdlibFeature` inventory for
+retained dependencies and parse the inline dependency tables in the exact-pin
+test. These review suggestions did not block this prerequisite.
+Next action: resume M11 in `pydantic-sifr`. Correct the structural model
+validation path that reports `Input must be an object`, then complete the
+native model-operation evidence.
 
 Scope:
 
@@ -2008,10 +2039,10 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M10 are merged and recorded. M11 is in progress. Its six
+Current state: M0-M10 are merged and recorded. M11 is in progress. Its seven
 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325,
-and #3327. The current compiler merge is
-`1f947fa0b3a33d38e9240b7e6857736199f59aee`.
+#3327, and #3329. The current compiler merge is
+`0e16cc73b2d1ba20a59db7f168193eb01a618ab5`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
 prerequisites stopped at the Rust-interop matrix. The matrix reported one
@@ -2019,6 +2050,6 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: resume the `pydantic-sifr` M11 package surface. Resolve its
-authoritative-dependency failure for `arrayvec`, then complete native model
-operations and schema evidence.
+Next action: resume the `pydantic-sifr` M11 package surface. Correct its
+structural model validation path, then complete native model operations and
+schema evidence.
