@@ -1,7 +1,7 @@
 //! Type-variable substitution across nested nominal declaration scopes.
 
 use crate::{make_union, FunctionType, Type};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Substitute type variables without declaration-scope metadata.
 pub fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
@@ -145,10 +145,53 @@ where
 /// Rust generic storage retains the declaration's union nesting. A substituted
 /// union member cannot expand into another union or collapse into a sibling.
 pub fn substitution_preserves_union_structure(ty: &Type, bindings: &HashMap<String, Type>) -> bool {
-    let recurse = |ty: &Type| substitution_preserves_union_structure(ty, bindings);
-    let function_preserves = |function: &FunctionType| {
-        function.params.iter().all(|(_, ty, _)| recurse(ty)) && recurse(&function.return_type)
-    };
+    substitution_preserves_union_structure_with_class_scopes(ty, bindings, &|_, _| None)
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct UnionStructureClassScope {
+    pub type_params: Vec<String>,
+    pub member_types: Vec<Type>,
+}
+
+/// Check union topology and rebind nested class declarations through one resolver.
+pub fn substitution_preserves_union_structure_with_class_scopes<F>(
+    ty: &Type,
+    bindings: &HashMap<String, Type>,
+    class_scope: &F,
+) -> bool
+where
+    F: Fn(Option<&str>, &str) -> Option<UnionStructureClassScope>,
+{
+    preserves_union_structure(ty, bindings, class_scope, &mut HashSet::new())
+}
+
+fn function_preserves_union_structure<F>(
+    function: &FunctionType,
+    bindings: &HashMap<String, Type>,
+    class_scope: &F,
+    visiting: &mut HashSet<String>,
+) -> bool
+where
+    F: Fn(Option<&str>, &str) -> Option<UnionStructureClassScope>,
+{
+    function
+        .params
+        .iter()
+        .all(|(_, ty, _)| preserves_union_structure(ty, bindings, class_scope, visiting))
+        && preserves_union_structure(&function.return_type, bindings, class_scope, visiting)
+}
+
+fn preserves_union_structure<F>(
+    ty: &Type,
+    bindings: &HashMap<String, Type>,
+    class_scope: &F,
+    visiting: &mut HashSet<String>,
+) -> bool
+where
+    F: Fn(Option<&str>, &str) -> Option<UnionStructureClassScope>,
+{
+    let mut recurse = |ty: &Type| preserves_union_structure(ty, bindings, class_scope, visiting);
 
     match ty {
         Type::List(value)
@@ -170,7 +213,7 @@ pub fn substitution_preserves_union_structure(ty: &Type, bindings: &HashMap<Stri
         | Type::AsyncGenerator(key, value)
         | Type::JoinSet(key, value) => recurse(key) && recurse(value),
         Type::TimeoutResult(value) => recurse(value),
-        Type::Tuple(values) => values.iter().all(recurse),
+        Type::Tuple(values) => values.iter().all(&mut recurse),
         Type::Union(values) => {
             let substituted = values
                 .iter()
@@ -180,23 +223,58 @@ pub fn substitution_preserves_union_structure(ty: &Type, bindings: &HashMap<Stri
                 .iter()
                 .any(|value| matches!(value.resolve_alias(), Type::Union(_)))
                 && matches!(make_union(substituted), Type::Union(canonical) if canonical.len() == values.len())
-                && values.iter().all(recurse)
+                && values.iter().all(&mut recurse)
         }
         Type::Callable(params, _, result) | Type::AsyncCallable(params, _, result) => {
-            params.iter().all(recurse) && recurse(result)
+            params.iter().all(&mut recurse) && recurse(result)
         }
         Type::Alias {
             type_args, body, ..
-        } => type_args.iter().all(recurse) && recurse(body),
-        Type::Function(function) | Type::AsyncFunction(function) => function_preserves(function),
-        Type::Class { type_args, .. } => type_args.iter().all(recurse),
+        } => type_args.iter().all(&mut recurse) && recurse(body),
+        Type::Function(function) | Type::AsyncFunction(function) => {
+            function_preserves_union_structure(function, bindings, class_scope, visiting)
+        }
+        Type::Class {
+            identity,
+            type_args,
+            name,
+            ..
+        } => {
+            if !type_args.iter().all(&mut recurse) {
+                return false;
+            }
+            let Some(scope) = class_scope(identity.as_deref(), name) else {
+                return true;
+            };
+            let key = identity.as_deref().unwrap_or(name).to_string();
+            if !visiting.insert(key.clone()) {
+                return true;
+            }
+            let concrete_args = type_args
+                .iter()
+                .map(|argument| substitute_type_vars(argument, bindings))
+                .collect::<Vec<_>>();
+            let nested_bindings = scope
+                .type_params
+                .into_iter()
+                .zip(concrete_args)
+                .collect::<HashMap<_, _>>();
+            let preserved = scope.member_types.iter().all(|member| {
+                preserves_union_structure(member, &nested_bindings, class_scope, visiting)
+            });
+            visiting.remove(&key);
+            preserved
+        }
         _ => true,
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{substitute_type_vars_with_class_scopes, substitution_preserves_union_structure};
+    use super::{
+        substitute_type_vars_with_class_scopes, substitution_preserves_union_structure,
+        substitution_preserves_union_structure_with_class_scopes, UnionStructureClassScope,
+    };
     use crate::Type;
     use std::collections::HashMap;
 
@@ -283,5 +361,33 @@ mod tests {
             &nested,
             &HashMap::from([("T".to_string(), outer_optional)]),
         ));
+    }
+
+    #[test]
+    fn scoped_union_structure_detects_a_transitive_nested_expansion() {
+        let nested = Type::Class {
+            identity: Some("models.Inner".to_string()),
+            type_args: vec![Type::TypeVar("T".to_string())],
+            name: "Inner".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let outer_optional = crate::make_union(vec![Type::None, Type::Str]);
+        let preserved = substitution_preserves_union_structure_with_class_scopes(
+            &nested,
+            &HashMap::from([("T".to_string(), outer_optional)]),
+            &|identity, _| {
+                (identity == Some("models.Inner")).then(|| UnionStructureClassScope {
+                    type_params: vec!["U".to_string()],
+                    member_types: vec![Type::Union(vec![
+                        Type::None,
+                        Type::TypeVar("U".to_string()),
+                    ])],
+                })
+            },
+        );
+
+        assert!(!preserved);
     }
 }

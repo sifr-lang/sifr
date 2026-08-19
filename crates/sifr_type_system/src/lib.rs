@@ -37,6 +37,7 @@ pub use safe_optional::safe_optional_result;
 pub use substitution::{
     substitute_type_vars, substitute_type_vars_with_class_scopes,
     substitution_preserves_union_structure,
+    substitution_preserves_union_structure_with_class_scopes, UnionStructureClassScope,
 };
 
 /// Returns whether a declaration belongs to a public stdlib module's compiled
