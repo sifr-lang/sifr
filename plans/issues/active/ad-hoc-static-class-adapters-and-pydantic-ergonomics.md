@@ -2348,6 +2348,33 @@ not mechanism defects.
 Next action: audit every remaining compiler-owned M12 deferral and implement
 the next bounded mechanism item.
 
+Compiler hardening item 13 state: complete
+PR: [`sifr-lang/sifr#3356`](https://github.com/sifr-lang/sifr/pull/3356)
+Base SHA: `3d2951849c4fcb354db6e743d75b743ca5bb5d6d`
+Candidate SHA: `a0ba94e5e2416de1cce716ca56758658218f39fc`
+Merge SHA: `37e3bd3f3a029ea9b8eb92c160bcbabe9ba100cd`
+Changed paths: canonical adapter-parent plan selection, deterministic duplicate
+generic-parent candidate selection, direct collision regressions, and the
+durable compiler contract.
+Validation: the lowering suite passed 1,007 tests and ignored one test. All
+113 frontend tests passed. The driver suite passed 540 tests and ignored 76
+tests. Workspace Clippy passed with warnings denied. Rust formatting, both
+maintainability guards, the 900-line guard, and diff hygiene passed. The
+create-PR and merge gates each ran once on the exact candidate. Both passed
+generated-demo freshness and every preceding guard. Both then stopped at the
+same two separately owned Rust-interop matrix inputs. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3356#issuecomment-5346891742),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3356#issuecomment-5346961000)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3356#issuecomment-5346935229)).
+Deferred follow-up: item 14 must select generic parent parameter bindings by
+canonical identity. It must remove or canonicalize the unreachable bare
+parent-identity branches. It should pin requested-key precedence for duplicate
+canonical candidates and state that precedence in the durable contract.
+Next action: harden canonical parent-binding authority and remove bare
+parent-identity ambiguity.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
