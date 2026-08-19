@@ -2004,6 +2004,35 @@ Scope:
 - Close the deferred compiler and fixture hardening recorded by M0-M7e.
 - Obtain independent implementation and whole-phase review.
 
+Compiler hardening item 1 state: complete
+PR: [`sifr-lang/sifr#3332`](https://github.com/sifr-lang/sifr/pull/3332)
+Base SHA: `b62c92df992afc2d92372ade128375feaf594e03`
+Candidate SHA: `1d15737a6bb89f759cd0967876495f9edd4cbadc`
+Merge SHA: `a9d29e52e3c692e0be10c82256d8a67c83234133`
+Changed paths: structural-shape specialization for finalized adapted generic
+field plans; local and imported regression coverage; a responsibility split
+for generic field handling; and the static-program architecture contract.
+Validation: all 100 frontend tests passed, including direct local and imported
+nested concrete generic-plan regressions. Frontend Clippy passed with warnings
+denied. Rust formatting, HIR maintainability, the 900-line guard, and diff
+hygiene passed. The touched structural-shape module was reduced from 902 to
+885 lines. The create-PR and merge gates each ran once on the exact candidate.
+Both passed generated-demo freshness and every preceding guard, then stopped
+at the same two separately owned Rust-interop matrix inputs: the missing
+generated-type-import negative source and the empty method-slot schema
+placeholder. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3332#issuecomment-5344383649),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3332#issuecomment-5344410355)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3332#issuecomment-5344383312)).
+Deferred follow-up: a later M12 compiler item must make generic substitution
+scope-aware so an inner declaration that reuses a type-parameter name cannot
+be captured by an outer binding. M12 can also avoid the new allocation on the
+ordinary non-adapted structural-shape path if measurement justifies it.
+Next action: specialize transitive local and imported generic ancestor handler
+plans and preserve their checked metadata symmetry.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2090,7 +2119,8 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M11 are merged and recorded. The seven M11 compiler
+Current state: M0-M11 are merged and recorded. M12 compiler hardening item 1
+merged in Sifr PR #3332. The seven M11 compiler
 prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327,
 and #3329. The M11 package surface merged in Pydantic-Sifr PR #47. M12 is in
 progress. The current compiler merge is
@@ -2103,5 +2133,6 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: inventory every M12 deferred item, then complete compiler-owned
-hardening before package certification and final whole-phase review.
+Next action: complete the M12 transitive generic ancestor handler-plan item,
+then continue compiler-owned hardening before package certification and final
+whole-phase review.
