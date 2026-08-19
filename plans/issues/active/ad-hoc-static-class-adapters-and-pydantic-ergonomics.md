@@ -2375,6 +2375,33 @@ canonical candidates and state that precedence in the durable contract.
 Next action: harden canonical parent-binding authority and remove bare
 parent-identity ambiguity.
 
+Compiler hardening item 14 state: complete
+PR: [`sifr-lang/sifr#3358`](https://github.com/sifr-lang/sifr/pull/3358)
+Base SHA: `f747ba00f1a571883e46557316e3db2085a49000`
+Candidate SHA: `76f76c81f1d9b8f9acb1c985f4fd6bb34a394dad`
+Merge SHA: `2a21ff8bcfe51d3dfc5bd0fcd71a16f2aa8b777f`
+Changed paths: canonical parent parameter bindings, canonical empty-field and
+empty-method fallback lookup, parent identity normalization, requested-key
+precedence coverage, and the durable compiler contract.
+Validation: the lowering suite passed 1,008 tests and ignored one test. All
+115 frontend tests passed. The driver suite passed 540 tests and ignored 76
+tests. Workspace Clippy passed with warnings denied. Rust formatting, both
+maintainability guards, the 900-line guard, and diff hygiene passed. The
+create-PR and merge gates each ran once on the exact candidate. Both passed
+generated-demo freshness and every preceding guard. Both then stopped at the
+same two separately owned Rust-interop matrix inputs. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3358#issuecomment-5347048051),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3358#issuecomment-5347097702)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3358#issuecomment-5347071999)).
+Deferred follow-up: item 15 must remove the last bare-name parent-shape
+fallback when a lowered parent is not a class. It should use the shared parent
+identity helper at every canonicalization site and add focused collision
+coverage for empty parent methods.
+Next action: fail closed on the last identityless parent-shape fallback and
+pin empty-method collision behavior.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
