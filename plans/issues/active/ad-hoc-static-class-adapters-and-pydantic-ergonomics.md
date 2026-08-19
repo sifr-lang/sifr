@@ -1737,6 +1737,15 @@ assertion so its validation could observe the current tree. It did not change
 the production mechanism. Restore the more specific undefined-parent
 diagnostic under this phase's compiler owner.
 
+External gate record (2026-08-19): the pre-v1 Item 16 create-PR and merge
+gates each stopped at the Rust-interop matrix because
+`verification/areas/rust_interop/fixtures/method_slot_table/examples/method_slot_runtime/src/schema_program.sifr`
+contains the empty `SlotContract` placeholder body added by M5 commit
+`ad3bf8bcde`. Item 16 changed no method-slot fixture mechanism and did not
+absorb or rerun this failure. Replace the placeholder with a meaningful
+declaration under this phase's method-descriptor owner before the matrix is
+qualified again.
+
 Next action: implement M10 serializers, computed fields, and attached dump
 methods on compiler merge `441e7f543ebe1d559f31687e2c09055935b4fc94`
 and package merge `8af4a1f4d598829ac427f96c34b76289e13eedd9`.
