@@ -4,11 +4,6 @@ use crate::{
 };
 use sifr_type_system::{class_rust_name, source_class_rust_name, OwnershipKind};
 
-pub fn try_sifr_type_to_rust_type(ty: &Type) -> Result<RustType, crate::CodegenError> {
-    super::type_validation::validate_codegen_type(ty)?;
-    Ok(sifr_type_to_rust_type(ty))
-}
-
 pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     match ty {
         Type::Int | Type::LiteralInt(_) => RustType::I64,
@@ -197,8 +192,8 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
             },
             auto_traits: Vec::new(),
         })),
-        Type::Newtype { name, .. } | Type::Enum { name, .. } => {
-            RustType::Named(source_class_rust_name(name))
+        Type::Newtype { identity, name, .. } | Type::Enum { identity, name, .. } => {
+            RustType::Named(class_rust_name(identity.as_deref(), name))
         }
         Type::TypeVar(name) => RustType::Named(name.clone()),
         Type::Callable(params, conventions, ret) => callable_type(params, conventions, ret, false),
@@ -207,6 +202,18 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
         }
         Type::Decimal => RustType::Named("Decimal".to_string()),
         Type::BigDecimal => RustType::Named("BigDecimal".to_string()),
+    }
+}
+
+pub(crate) fn rust_type_base_name(ty: &Type) -> Option<String> {
+    match ty {
+        Type::Alias { body, .. } => rust_type_base_name(body),
+        Type::Class { identity, name, .. }
+        | Type::Protocol { identity, name, .. }
+        | Type::Newtype { identity, name, .. }
+        | Type::Enum { identity, name, .. } => Some(class_rust_name(identity.as_deref(), name)),
+        Type::TypeVar(name) => Some(name.clone()),
+        _ => None,
     }
 }
 

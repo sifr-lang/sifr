@@ -148,7 +148,7 @@ fn main() {
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(22usize + 0usize);
     __sifr_concat.push_str("config name default = ");
-    __sifr_concat.push_str((c1.name).as_str());
+    __sifr_concat.push_str((c1.name.clone()).as_str());
     __sifr_concat
 });
     let c2: Config = Config::new(true, 60_i64, "production".to_string());
@@ -167,7 +167,7 @@ fn main() {
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(21usize + 0usize);
     __sifr_concat.push_str("config name custom = ");
-    __sifr_concat.push_str((c2.name).as_str());
+    __sifr_concat.push_str((c2.name.clone()).as_str());
     __sifr_concat
 });
     let person: Person = Person::new("Alice".to_string(), "Smith".to_string(), 30_i64);

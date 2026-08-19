@@ -520,7 +520,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             }
             Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
-                    crate::render_type(&crate::sifr_type_to_rust_type(parent_type)),
+                    crate::rust_type_base_name(parent_type)?,
                     method.clone(),
                 ])),
                 args: lowered_args,

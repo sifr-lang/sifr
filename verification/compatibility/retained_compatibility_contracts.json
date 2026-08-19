@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "contracts": [
+    {
+      "id": "retained-dlpack-protocol",
+      "kind": "external-protocol",
+      "owner": "contract:dlpack-protocol",
+      "contract": "DLPack legacy and versioned capsule forms, including one-shot ownership rules",
+      "evidence": ["crates/sifr_package", "crates/sifr_codegen", "internal_docs/python_interop_protocol_architecture.md"]
+    },
+    {
+      "id": "retained-lsp-utf16-default",
+      "kind": "external-protocol",
+      "owner": "contract:lsp-protocol",
+      "contract": "The LSP UTF-16 position default when a client omits positionEncodings",
+      "evidence": ["crates/sifr_lsp", "crates/sifr_source", "internal_docs/lsp_server.md"]
+    },
+    {
+      "id": "retained-cargo-metadata",
+      "kind": "external-format",
+      "owner": "contract:cargo-metadata",
+      "contract": "Normalization required by supported Cargo metadata output and dependency edges",
+      "evidence": ["crates/sifr_package/src/cargo"]
+    },
+    {
+      "id": "retained-cargo-semver",
+      "kind": "external-protocol",
+      "owner": "contract:cargo-semver",
+      "contract": "Cargo semantic-version matching for package dependencies",
+      "evidence": ["crates/sifr_package/src/cargo"]
+    },
+    {
+      "id": "retained-ipc-negotiation",
+      "kind": "external-protocol",
+      "owner": "contract:ipc-protocol",
+      "contract": "IPC version negotiation inside the documented supported range",
+      "evidence": ["crates/sifr_ipc", "internal_docs/structured_runtime_work_model.md"]
+    },
+    {
+      "id": "retained-host-portability",
+      "kind": "current-product",
+      "owner": "contract:supported-hosts",
+      "contract": "Operating-system and architecture implementations selected for supported targets",
+      "evidence": ["crates", "scripts", "verification/areas/runtime_platform"]
+    },
+    {
+      "id": "retained-cancellation-cleanup",
+      "kind": "current-product",
+      "owner": "contract:runtime-cancellation",
+      "contract": "Structured cancellation hooks that preserve cleanup and task termination",
+      "evidence": ["crates/sifr_runtime", "crates/sifr_codegen", "verification/areas/runtime_platform"]
+    },
+    {
+      "id": "retained-configuration-defaults",
+      "kind": "current-product",
+      "owner": "contract:configuration-defaults",
+      "contract": "Documented typed configuration defaults used when current values are absent",
+      "evidence": ["crates", "docs", "verification"]
+    },
+    {
+      "id": "retained-translation-fallbacks",
+      "kind": "current-product",
+      "owner": "contract:text-i18n",
+      "contract": "Documented locale lookup order and missing-translation behavior",
+      "evidence": ["stdlib/sifr/i18n.sifr", "internal_docs/text_i18n_architecture.md"]
+    },
+    {
+      "id": "retained-vendored-compatibility",
+      "kind": "external-dependency",
+      "owner": "contract:vendored-dependencies",
+      "contract": "Compatibility code owned by vendored dependencies",
+      "evidence": ["third_party", "Cargo.lock"]
+    },
+    {
+      "id": "retained-external-file-formats",
+      "kind": "external-format",
+      "owner": "contract:external-formats",
+      "contract": "Documented external file-format and protocol versions",
+      "evidence": ["stdlib", "crates/sifr_runtime", "docs/stdlib"]
+    },
+    {
+      "id": "retained-phase40-legacy-index",
+      "kind": "current-product",
+      "owner": "contract:phase40-release-governance",
+      "contract": "The governed release-channel bootstrap asset and its legacy-index digest and size inputs",
+      "evidence": ["scripts/distribution/materialize_schema_bootstrap_evidence.py", "verification/areas/distribution_release/governance/schema_bootstrap.py", "plans/phases/40_stable_channel_ga_promotion_and_release_governance.md"]
+    },
+    {
+      "id": "retained-lint-deprecated-status",
+      "kind": "current-product",
+      "owner": "contract:lint-rule-lifecycle",
+      "contract": "RuleStatus::Deprecated as current lint-rule lifecycle metadata",
+      "evidence": ["crates/sifr_lint/src/lib.rs", "verification/areas/developer_tooling"]
+    }
+  ]
+}

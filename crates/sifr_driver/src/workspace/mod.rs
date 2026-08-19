@@ -86,10 +86,10 @@ fn parse_manifest(
         .transpose()?;
 
     let source = value.get("source").and_then(toml::Value::as_table);
-    if source.is_some_and(|source| source.contains_key("roots")) {
+    if source.is_some_and(|source| source.keys().any(|field| field != "root")) {
         return Err(parse_manifest_schema_error(
             manifest_path,
-            "source.roots is unsupported; use source.root",
+            "source contains an unsupported field",
         ));
     }
     let source_root = source

@@ -131,6 +131,8 @@ def main() -> int:
 def _deleted_collection_residue_failures() -> list[str]:
     failures = []
     for root in DELETED_COLLECTION_RESIDUE_ROOTS:
+        if not root.exists():
+            continue
         paths = root.rglob("*.rs") if root.is_dir() else (root,)
         for path in paths:
             text = path.read_text(encoding="utf-8")

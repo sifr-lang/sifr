@@ -595,14 +595,68 @@ pub(super) fn error_channel_codegen_payload_collision(channel: &Type) -> Option<
     };
     let mut names = std::collections::HashSet::new();
     members.iter().find_map(|member| {
-        let name = match member.resolve_alias() {
-            Type::Class { identity, name, .. } => {
-                sifr_type_system::class_rust_name(identity.as_deref(), name)
-            }
-            resolved => resolved.display_name(),
-        };
-        (!names.insert(name.clone())).then_some(name)
+        let (identity, label) = codegen_payload_identity(member);
+        (!names.insert(identity)).then_some(label)
     })
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum CodegenPayloadIdentity {
+    Nominal(String),
+    Structural(String),
+}
+
+fn codegen_payload_identity(ty: &Type) -> (CodegenPayloadIdentity, String) {
+    let resolved = ty.resolve_alias();
+    let nominal = match resolved {
+        Type::Class { identity, name, .. }
+        | Type::Enum { identity, name, .. }
+        | Type::Protocol { identity, name, .. } => {
+            Some(sifr_type_system::class_rust_name(identity.as_deref(), name))
+        }
+        Type::Newtype { identity, name, .. } => {
+            Some(sifr_type_system::class_rust_name(identity.as_deref(), name))
+        }
+        Type::Int | Type::LiteralInt(_) => Some("i64".to_string()),
+        Type::FixedInt(fixed) => Some(fixed.rust_name().to_string()),
+        Type::Float => Some("f64".to_string()),
+        Type::Bool | Type::LiteralBool(_) => Some("bool".to_string()),
+        Type::Str | Type::LiteralStr(_) => Some("String".to_string()),
+        Type::None => Some("()".to_string()),
+        Type::Decimal => Some("Decimal".to_string()),
+        Type::BigDecimal => Some("BigDecimal".to_string()),
+        _ => None,
+    };
+    if let Some(name) = nominal {
+        return (CodegenPayloadIdentity::Nominal(name.clone()), name);
+    }
+    let identity = resolved.union_variant_name();
+    (
+        CodegenPayloadIdentity::Structural(identity),
+        resolved.display_name(),
+    )
+}
+
+#[cfg(test)]
+mod payload_identity_tests {
+    use super::*;
+
+    #[test]
+    fn class_and_builtin_with_same_emitted_name_collide() {
+        let class = Type::Class {
+            identity: None,
+            name: "String".to_string(),
+            type_args: Vec::new(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let channel = Type::Union(vec![class, Type::Str]);
+        assert_eq!(
+            error_channel_codegen_payload_collision(&channel).as_deref(),
+            Some("String")
+        );
+    }
 }
 
 pub(super) fn contains_python_identity(ty: &Type, ctx: &LowerCtx) -> bool {

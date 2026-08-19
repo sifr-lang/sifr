@@ -66,7 +66,7 @@ fn get_node_val(node: &Node) -> i64 {
 }
 
 fn describe_person(p: Person) -> String {
-    p.name
+    p.name.clone()
 }
 
 fn process(item: &Item) -> i64 {

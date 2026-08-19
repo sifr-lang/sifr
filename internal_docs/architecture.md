@@ -218,13 +218,17 @@ import collections
 
 ### Pre-v1 canonical API contracts
 
-The checked-in compatibility inventory at
-`verification/compatibility/pre_v1_compatibility_inventory.json` is the
-authority for the pre-v1 removal phase. Public stdlib modules must expose the
-canonical wrapper names from that inventory, and imports from `_sifr.*` must be
-renamed when they are implementation details. The inventory distinguishes
-public exports from private implementation imports and assigns every removal
-to one phase item.
+`verification/areas/developer_tooling/check_no_pre_v1_compatibility.py` is the
+executable authority for removed Sifr-owned syntax, names, schemas, wrappers,
+diagnostics, and layouts. The guard scans source, stdlib, verification,
+workflows, documentation, demos, fixtures, scripts, and editor integrations.
+It explicitly excludes generated, vendored, and historical files.
+
+`verification/compatibility/retained_compatibility_contracts.json` is the sole
+retained-contract registry. Every row identifies an external protocol,
+external format, dependency contract, or current product behavior. Public
+stdlib modules expose only documented names. Imports from `_sifr.*` use private
+aliases when they are implementation details.
 
 The canonical numeric spellings are `sifr.math.fabs` and `sifr.math.pow`;
 `abs_val`, `pow_val`, `min_val`, `max_val`, and `round_val` are private
@@ -253,10 +257,22 @@ borrow, `mut self` is a mutable borrow, `own self` is an immutable owned
 receiver, and `own mut self` is a mutable owned receiver. Method-body analysis
 does not change the declared convention.
 
-The same inventory locks the external and current product contracts excluded
-from broad compatibility scans, including DLPack capsule requirements, the LSP
-UTF-16 default, Phase 40 release bootstrap `legacy-index` evidence, and
-`RuleStatus::Deprecated` lint lifecycle metadata.
+Packages use one optional `[source].root`, with `src` as the only default.
+Source exports come from `__init__.sifr`; application targets come from
+`main.sifr` or `bin/*.sifr`. Compiler services receive a `SourceProvider` or a
+captured `WorkspaceSession`, and package import resolution preserves every
+structured result variant.
+
+Managed standalone installs use `<sysroot>/bin/sifr` with
+`<sysroot>/install.json`. Verification profiles use schema version 2,
+structured area results, and assertion-based runtime expectations. Codegen
+maps supported source types to structured `RustType` nodes and reports an
+error before emission for unsupported types.
+
+The retained-contract registry locks the external and current product behavior
+excluded from broad compatibility scans. It includes DLPack capsule
+requirements, the LSP UTF-16 default, Phase 40 release bootstrap `legacy-index`
+evidence, and `RuleStatus::Deprecated` lint lifecycle metadata.
 
 ### API Naming Divergences
 
@@ -901,10 +917,9 @@ The architecture includes the package-neutral static class-adapter contract.
 This contract supports typed declaration descriptors, erased marker bases,
 checked handler references, and attached package APIs.
 
-The completed engine phase remains under `plans/issues/archive/`. The active
-ergonomics phase remains under `plans/issues/active/`. These records own
-milestones and delivery evidence. The ergonomics phase is
-[`ad-hoc-static-class-adapters-and-pydantic-ergonomics.md`](../plans/issues/active/ad-hoc-static-class-adapters-and-pydantic-ergonomics.md).
+The durable native model and adapter design is authoritative here and in
+`native_pydantic_sifr_architecture.md`. Delivery records do not define compiler
+or package behavior.
 
 ### 5. CI Quality Gates
 

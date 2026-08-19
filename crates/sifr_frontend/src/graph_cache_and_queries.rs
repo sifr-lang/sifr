@@ -357,8 +357,8 @@ pub fn compile_module_hir_with_source_and_options(
             if !result.class_adapter_selections.is_empty() {
                 // The first lowering pass provides typed, provisional declarations to
                 // adapters. Rebuild adapted modules afterward so the HIR consumed by
-                // specialization/codegen is the finalized class representation. M4 can
-                // apply validated field/default plans at this explicit boundary.
+                // specialization/codegen is the finalized class representation. The
+                // adapter can apply validated field/default plans at this boundary.
                 let descriptors = std::mem::take(&mut result.declaration_descriptors);
                 let applied_metadata = std::mem::take(&mut result.applied_adapter_metadata);
                 let specialization_requests = std::mem::take(&mut result.specialization_requests);

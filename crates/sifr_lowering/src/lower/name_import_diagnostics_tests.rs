@@ -87,6 +87,7 @@ fn deferred_stdlib_module_has_import_code() {
         error.message
             == "module 'sifr.contextvars' is intentionally deferred: context-local state is deferred; pass task state explicitly"
             && error.code == Some(DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE)
+            && string_arg(error, "module") == Some("sifr.contextvars")
             && error.primary_range == Some(range_for(source, "from sifr.contextvars import ContextVar"))
     }));
 }
@@ -99,6 +100,7 @@ fn unknown_sifr_module_uses_generic_import_diagnostic() {
     assert!(errors.iter().any(|error| {
         error.message == "unknown import target: 'sifr.not_a_module'"
             && error.code == Some(DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE)
+            && string_arg(error, "module") == Some("sifr.not_a_module")
             && error.primary_range == Some(range_for(source, "from sifr.not_a_module import value"))
     }));
 }
@@ -416,6 +418,7 @@ fn unknown_module_import_has_import_code() {
     assert!(errors.iter().any(|error| {
         error.message == "unknown import target: 'missing_module'"
             && error.code == Some(DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE)
+            && string_arg(error, "module") == Some("missing_module")
             && error.primary_range == Some(range_for(source, "from missing_module import value"))
     }));
 }

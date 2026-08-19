@@ -73,6 +73,39 @@ def main() -> None:
 }
 
 #[test]
+fn generic_parent_paths_and_match_patterns_use_base_names() {
+    let rust_code = generate_rust_from_source(
+        r#"class Box[T]:
+    value: T
+
+    def __init__(self, value: T):
+        self.value = value
+
+    def label(self) -> int:
+        return 1
+
+class IntBox(Box[int]):
+    def __init__(self, value: int):
+        super().__init__(value)
+
+    def label(self) -> int:
+        return super().label()
+
+def read(box: Box[int]):
+    match box:
+        case Box(value=value):
+            return value
+"#,
+    );
+
+    assert!(rust_code.contains("Box::new(value)"), "{rust_code}");
+    assert!(rust_code.contains("Box::label(self)"), "{rust_code}");
+    assert!(rust_code.contains("Box { value:"), "{rust_code}");
+    assert!(!rust_code.contains("Box<i64>::"), "{rust_code}");
+    assert!(!rust_code.contains("Box<i64> { value:"), "{rust_code}");
+}
+
+#[test]
 fn explicit_non_affine_pow_dunder_remains_an_inherent_method() {
     let rust_code = generate_rust_from_source(
         r#"class Power:

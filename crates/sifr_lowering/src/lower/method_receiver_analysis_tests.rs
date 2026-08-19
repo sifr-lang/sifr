@@ -27,6 +27,29 @@ fn method<'a>(module: &'a HirModule, class: &str, name: &str) -> &'a HirFunction
         .expect("method should exist")
 }
 
+#[test]
+fn rust_opaque_close_rejects_non_owned_source_receiver() {
+    let source = r"
+class ResourceError(Error):
+    message: str
+
+@rust.opaque(type=bridge.resources.Resource, close=close)
+class Resource:
+    @rust(bridge.resources.close)
+    def close(self) -> Result[None, ResourceError]:
+        ...
+";
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("source should fail lowering"),
+        Err(errors) => errors,
+    };
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR)
+            && error.message.contains("own self")
+    }));
+}
+
 fn expression_method_call(function: &HirFunction) -> &HirExpr {
     function
         .body

@@ -30,12 +30,33 @@ mod __sifr_project_nominals {
         }
     }
     impl ::std::error::Error for ValueError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct DivisionError {
+        pub message: String,
+    }
+    impl DivisionError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for DivisionError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for DivisionError {}
     impl From<ValueError> for Error {
         fn from(err: ValueError) -> Self {
             Self::new(err.message)
         }
     }
+    impl From<DivisionError> for Error {
+        fn from(err: DivisionError) -> Self {
+            Self::new(err.message)
+        }
+    }
 }
+pub use __sifr_project_nominals::DivisionError;
 pub use __sifr_project_nominals::Error;
 pub use __sifr_project_nominals::ValueError;
 
@@ -95,21 +116,6 @@ impl ::std::fmt::Display for ParseError {
     }
 }
 impl ::std::error::Error for ParseError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct DivisionError {
-    message: String,
-}
-impl DivisionError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for DivisionError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for DivisionError {}
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct AppError {
     message: String,
@@ -169,7 +175,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("caught ValueError: {}", e.message);
+        println!("caught ValueError: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), DivisionError> = (|| {
         let result: i64 = safe_divide(10_i64, 0_i64)?;
@@ -177,7 +183,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("caught DivisionError: {}", e.message);
+        println!("caught DivisionError: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), ParseError> = (|| {
         let n: i64 = ("not_a_number".to_string())
@@ -189,7 +195,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("caught ParseError: {}", e.message);
+        println!("caught ParseError: {}", e.message.clone());
     }
     println!("=== Custom Error Classes ===");
     let __sifr_try_res: Result<(), AppError> = (|| {
@@ -198,7 +204,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("caught AppError: {}", e.message);
+        println!("caught AppError: {}", e.message.clone());
     }
     println!("=== Exhaustiveness: Specific Except Arms ===");
     let __sifr_try_res: Result<(), ValueError> = (|| {
@@ -207,7 +213,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("caught ValueError: {}", e.message);
+        println!("caught ValueError: {}", e.message.clone());
     }
     println!("=== Exhaustiveness: Catch-All ===");
     let __sifr_try_res: Result<
@@ -226,13 +232,13 @@ fn main() {
                 __sifr_try_variant_error,
             ) => {
                 let e = __sifr_try_variant_error.clone();
-                println!("caught: {}", e.message);
+                println!("caught: {}", e.message.clone());
             }
             __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
                 __sifr_try_variant_error,
             ) => {
                 let e = Error::new(__sifr_try_variant_error.clone().message);
-                println!("caught: {}", e.message);
+                println!("caught: {}", e.message.clone());
             }
         }
     }
@@ -243,7 +249,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("pipeline error: {}", e.message);
+        println!("pipeline error: {}", e.message.clone());
     }
     println!("=== Multiple Try/Except ===");
     let __sifr_try_res: Result<(), ParseError> = (|| {
@@ -257,7 +263,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("parse error: {}", e.message);
+        println!("parse error: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), ValueError> = (|| {
         let validated: i64 = validate_age(42_i64)?;
@@ -266,7 +272,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("validation error: {}", e.message);
+        println!("validation error: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), DivisionError> = (|| {
         let divided: i64 = safe_divide(42_i64, 6_i64)?;
@@ -275,7 +281,7 @@ fn main() {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("division error: {}", e.message);
+        println!("division error: {}", e.message.clone());
     }
     println!("demo complete!");
 }

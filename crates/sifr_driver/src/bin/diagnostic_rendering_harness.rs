@@ -207,7 +207,7 @@ fn check_parser_fixture(base: &Path, fixture: &str, code: &str) -> Result<(), St
     let source = std::fs::read_to_string(&entry)
         .map_err(|err| format!("failed to read {}: {err}", entry.display()))?;
     let diagnostics = check_single_file(&source, &entry);
-    assert_rules(&diagnostics, code, fixture, &[], &[], true, true)?;
+    assert_rules(&diagnostics, code, fixture, &[], true, true)?;
     assert_text_formats(&diagnostics, code, &entry)
 }
 
@@ -250,7 +250,7 @@ fn check_project_fixture(
     let entry = base.join(fixture).join("main.sifr");
     let mut provider = sifr_frontend::DiskSourceProvider::new();
     let diagnostics = check_project(&entry, &mut provider);
-    assert_rules(&diagnostics, code, fixture, &[], required_args, true, true)?;
+    assert_rules(&diagnostics, code, fixture, required_args, true, true)?;
     assert_no_prefix(&diagnostics, fixture, "SIFR-WORKSPACE-01")?;
     assert_text_formats(&diagnostics, code, &entry)
 }
@@ -293,7 +293,7 @@ fn check_package_runtime_rules(root: &Path) -> Result<(), String> {
     for (fixture, code, required_args) in PACKAGE_FIXTURES {
         let package = base.join(fixture);
         let diagnostics = package_diagnostics(&package)?;
-        assert_rules(&diagnostics, code, fixture, &[], required_args, true, true)?;
+        assert_rules(&diagnostics, code, fixture, required_args, true, true)?;
         assert_no_prefix(&diagnostics, fixture, "SIFR-WORKSPACE-01")?;
         assert_no_prefix(&diagnostics, fixture, "SIFR-PACKAGE-")?;
         assert_text_formats(&diagnostics, code, &package)?;
@@ -301,7 +301,7 @@ fn check_package_runtime_rules(root: &Path) -> Result<(), String> {
     for (fixture, code, required_args) in PACKAGE_FATAL_FIXTURES {
         let package = base.join(fixture);
         let diagnostics = package_diagnostics(&package)?;
-        assert_rules(&diagnostics, code, fixture, &[], required_args, false, true)?;
+        assert_rules(&diagnostics, code, fixture, required_args, false, true)?;
         assert_no_prefix(&diagnostics, fixture, "SIFR-IMPORT-")?;
     }
     Ok(())
@@ -387,7 +387,6 @@ fn assert_rules(
     diagnostics: &[RenderedDiagnostic],
     expected_code: &str,
     case_id: &str,
-    forbidden_codes: &[&str],
     required_args: &[&str],
     require_span: bool,
     render_json: bool,
@@ -403,13 +402,6 @@ fn assert_rules(
         return Err(format!(
             "{case_id}: expected {expected_code}, got {codes:?}"
         ));
-    }
-    for code in forbidden_codes {
-        if codes.contains(code) {
-            return Err(format!(
-                "{case_id}: retired workspace import code leaked: {code}"
-            ));
-        }
     }
     let diagnostic = diagnostics
         .iter()

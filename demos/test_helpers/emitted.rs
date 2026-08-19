@@ -928,10 +928,10 @@ fn main() {
         println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(18usize + 0usize);
     __sifr_concat.push_str("statistics error: ");
-    __sifr_concat.push_str((e.message).as_str());
+    __sifr_concat.push_str((e.message.clone()).as_str());
     __sifr_concat
 });
-        assert!((format!("{}", format!("{}{}", "statistics error: ", e.message)) == "All assertions passed!"));
+        assert!((format!("{}", format!("{}{}", "statistics error: ", e.message.clone())) == "All assertions passed!"));
     }
     assert!((10_i64) > (5_i64), "assert_gt failed: {} is not > {}", 10_i64, 5_i64);
     assert!((3_i64) < (7_i64), "assert_lt failed: {} is not < {}", 3_i64, 7_i64);

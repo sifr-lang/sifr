@@ -102,7 +102,7 @@ curl -fsSL https://sifr.sh/install | sh -s -- --version 0.1.0-beta.1
 Install to a custom directory:
 
 ```bash
-curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/bin" sh
+curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/.sifr/bin" sh
 ```
 
 Disable shell profile changes:

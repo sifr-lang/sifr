@@ -25,10 +25,10 @@ this surface around `WorkspaceSession` and immutable `WorkspaceSnapshot`
 handles; synchronization primitives owns moving semantic file reads behind `SourceProvider` first.
 
 TypeScript-Go architecture transfer synchronization primitives note: `sifr_frontend` now exposes the
-source-provider boundary. `FrontendContext::load_project_with_provider` accepts
-any `SourceProvider`, `load_project_tracked` returns dependency reads captured
-by `TrackingSourceProvider`, and `OverlaySourceProvider` can substitute unsaved
-buffer text for disk files without mutating disk state. The overlay record owns
+source-provider boundary. `WorkspaceSession::reload` owns project reloads and
+passes its `TrackingSourceProvider` to the provider-required frontend loader.
+`OverlaySourceProvider` can substitute unsaved buffer text for disk files
+without mutating disk state. The overlay record owns
 URI, path, document version, source hash, source text/line map, and disk-match
 state; blocking and CPU offload will move overlay lifecycle ownership into `WorkspaceSession`.
 

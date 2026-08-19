@@ -88,7 +88,7 @@ fn demo_early_return() -> Vec<String> {
         }
         let mut __guard_0 = __WithGuard0 { ctx: __ctx_0 };
         let f = __guard_0.ctx.__enter__();
-        output.push(format!("{}{}", "Reading: ", f.path));
+        output.push(format!("{}{}", "Reading: ", f.path.clone()));
     }
     output.push("Closing: data.csv".to_string());
     output.push("42".to_string());
@@ -107,7 +107,7 @@ fn main() {
         }
         let mut __guard_0 = __WithGuard0 { ctx: __ctx_0 };
         let f = __guard_0.ctx.__enter__();
-        events.push(format!("{}{}", "Using: ", f.path));
+        events.push(format!("{}{}", "Using: ", f.path.clone()));
     }
     events.push("Closing: config.json".to_string());
     events.push("=== Context Manager: Early Return ===".to_string());
@@ -131,7 +131,7 @@ fn main() {
             if i == (1_i64) {
                 should_break = true;
             } else {
-                events.push(format!("{}{}", "Query on: ", conn.name));
+                events.push(format!("{}{}", "Query on: ", conn.name.clone()));
             }
         }
         events.push("Disconnecting: db".to_string());
@@ -158,7 +158,7 @@ fn main() {
         }
         let mut __guard_1 = __WithGuard1 { ctx: __ctx_1 };
         let db = __guard_1.ctx.__enter__();
-        events.push(format!("{}{}", format!("{}{}", format!("{}{}", "Processing with: ", fin.path), " and "), db.name));
+        events.push(format!("{}{}", format!("{}{}", format!("{}{}", "Processing with: ", fin.path.clone()), " and "), db.name.clone()));
     }
     events.push("Disconnecting: postgres".to_string());
     events.push("Closing: input.txt".to_string());

@@ -1,0 +1,98 @@
+---
+title: "Pre-v1 breaking changes"
+sidebarTitle: "Pre-v1 changes"
+description: "The canonical language, library, package, tooling, and installation contracts selected before Sifr 1.0."
+---
+
+Sifr does not support source compatibility with unpublished pre-v1 builds.
+Update old projects to the contracts on this page.
+
+## Exact integers
+
+Use `int` for arbitrary-precision integer values. Use an explicit fixed-width
+integer type only when a data boundary requires that representation.
+
+The former separate `bigint` spelling and its dedicated diagnostics are not
+supported.
+
+## Standard library names
+
+Use the names in the [compiled public API](/stdlib/public-api). Important
+changes include:
+
+- Use `math.fabs`, `math.pow`, and the built-in `min`, `max`, and `round`.
+- Use `random.randint`, `random.random`, and `random.uniform`.
+- Use `platform.system`, `platform.machine`, `platform.node`, `platform.release`, `platform.version`, and `platform.processor`.
+- Use `time.time`, `time.strftime`, `sys.argv`, `sys.exit`, and the documented `sifr.env` names.
+- Use `json.loads`, `json.dumps`, `tomllib.loads`, `fnmatch.filter`, `html.escape`, and `html.unescape`.
+- Use `calendar.isleap`, `calendar.weekday`, `calendar.monthrange`, `url.parse`, and `url.build`.
+- Use first-class `bytes` methods and bytes-native hashing. Encode text before hashing it.
+- Use first-class `set[T]` operations. `heapq` and `bisect` now mutate their input collections.
+
+Each operation has one public name. Private `_sifr.*` implementation names are
+not public imports.
+
+## Method receivers
+
+Receiver spelling is explicit:
+
+| Source spelling | Meaning | Field mutation |
+| --- | --- | --- |
+| `self` | shared borrow | rejected |
+| `mut self` | mutable borrow | allowed |
+| `own self` | owned receiver | rejected |
+| `own mut self` | owned mutable receiver | allowed |
+
+The compiler does not infer receiver mutability from the method body.
+
+## Packages and source layout
+
+Use one optional `[source].root` value. It defaults to `src`. The `[source]`
+table does not accept other fields.
+
+Do not use multiple source roots, manifest export lists, or Sifr manifest
+binary tables. Declare library exports in `src/__init__.sifr`. Put applications
+in `src/main.sifr` or `src/bin/*.sifr`.
+
+Package import resolution preserves unresolved, ambiguous, access-error, and
+fatal results. Tools must not collapse these results into an optional path.
+
+## Installation layout
+
+A managed standalone installation uses one relationship:
+
+```text
+<sysroot>/bin/sifr
+<sysroot>/install.json
+<sysroot>/sysroot.toml
+```
+
+The preferred sysroot is `$HOME/.sifr`. Flat binary and receipt layouts are not
+managed installations.
+
+## Diagnostics and verification
+
+Import diagnostics use the current `SIFR-IMPORT-*` codes. Removed workspace
+codes and migration-only replacement messages are not emitted.
+
+Verification profiles use schema version 2 and structured result JSON. Passing
+end-to-end fixtures use Sifr `assert` statements for runtime expectations.
+
+## Compiler service contracts
+
+Compiler services receive a source provider or use a captured
+`WorkspaceSession`. Lower layers do not open disk-backed projects through
+paired convenience wrappers.
+
+Code generation uses structured Rust types. Unsupported source types produce a
+compiler diagnostic instead of a string-rendered Rust type fallback.
+
+## Retained compatibility
+
+External protocol and current product behavior remain supported. Examples
+include LSP UTF-16 defaults, Cargo metadata, DLPack capsules, supported IPC
+negotiation, cancellation cleanup, configuration defaults, locale fallback,
+supported external formats, and host portability.
+
+These retained contracts do not restore old Sifr syntax, names, schemas, or
+layouts.

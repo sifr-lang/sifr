@@ -223,11 +223,15 @@ def _test_changed_paths() -> None:
     validate_changed_path_set({candidate})
     validate_changed_path_set({candidate, "plans/releases/README.md"})
     validate_changed_path_set({"verification/runner/sifr_verify/profiles.py"})
-    validate_changed_path_sets(
-        [
-            {"verification/runner/sifr_verify/profiles.py"},
-            {candidate},
-        ]
+    validate_changed_path_sets([{candidate}, {"plans/releases/README.md"}])
+    _require_governance_rejection(
+        lambda: validate_changed_path_sets(
+            [
+                {"verification/runner/sifr_verify/profiles.py"},
+                {candidate},
+            ]
+        ),
+        "source and evidence changes in separate commits passed aggregate custody",
     )
     for paths in (
         {candidate, "crates/sifr/src/main.rs"},

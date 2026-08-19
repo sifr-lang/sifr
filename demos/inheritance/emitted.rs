@@ -219,10 +219,10 @@ fn main() {
     let r: Rectangle = Rectangle::new("blue".to_string(), 3.0_f64, 4.0_f64);
     println!("{}", c.describe());
     println!("{}", c.area());
-    println!("{}", c.shape.color);
+    println!("{}", c.shape.color.clone());
     println!("{}", r.describe());
     println!("{}", r.area());
-    println!("{}", r.shape.color);
+    println!("{}", r.shape.color.clone());
     let boiling: Temperature = Temperature::new(100.0_f64);
     println!("{}", boiling.to_fahrenheit());
     let body: Temperature = Temperature::from_fahrenheit(98.6_f64);

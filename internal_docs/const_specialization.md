@@ -60,7 +60,7 @@ second data parent fail at the base declaration.
 
 The frontend first builds a provisional typed declaration, evaluates its descriptor calls, and
 runs the selected adapter with `DeclarationInput[D]`. It validates the returned bounded plan
-before it rebuilds the finalized class HIR. The M3 plan must echo every stored field identity,
+before it rebuilds the finalized class HIR. The adapter plan must echo every stored field identity,
 order, and canonical type exactly. It can add typed metadata for the class or its existing fields,
 emit bounded package issues, and request at most one package specialization. Unknown plan fields,
 field additions or removals, type changes, method-body output, forged origins, and descriptor-type

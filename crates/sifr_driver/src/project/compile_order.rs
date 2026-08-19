@@ -245,12 +245,7 @@ pub(crate) fn compute_module_compile_order(
         find_dependency_cycle_path(&graph.dependencies)
             .unwrap_or_else(|| vec!["<cycle>".to_string()]),
     );
-    let cycle_render = cycle_path.join(" -> ");
-    let edge_render = cycle_path
-        .windows(2)
-        .map(|edge| format!("{} imports {}", edge[0], edge[1]))
-        .collect::<Vec<_>>()
-        .join(", ");
+    let (cycle_render, edge_render, notes) = cycle_diagnostic_parts(&cycle_path);
     let args = [
         (
             "cycle",
@@ -265,7 +260,7 @@ pub(crate) fn compute_module_compile_order(
         DiagnosticCode::IMPORT_CYCLE,
         "circular import detected: {cycle}",
         &args,
-        &[],
+        &notes,
         Some("break the cycle by moving shared declarations into a separate module".to_string()),
     )])
 }
@@ -326,12 +321,7 @@ fn cycle_source_diagnostic(
     parsed_modules: &HashMap<String, CompileOrderSourceModule<'_>>,
     cycle_path: &[String],
 ) -> RenderedDiagnostic {
-    let cycle = cycle_path.join(" -> ");
-    let cycle_edges = cycle_path
-        .windows(2)
-        .map(|edge| format!("{} imports {}", edge[0], edge[1]))
-        .collect::<Vec<_>>()
-        .join("; ");
+    let (cycle, cycle_edges, _) = cycle_diagnostic_parts(cycle_path);
     let local_modules = parsed_modules.keys().cloned().collect::<BTreeSet<_>>();
     let mut edge_spans = Vec::new();
     for edge in cycle_path.windows(2) {
@@ -347,10 +337,7 @@ fn cycle_source_diagnostic(
         }
     }
     let Some((from, to, first_module, first_range)) = edge_spans.first() else {
-        return crate::diagnostics::diagnostic_with_code(
-            format!("circular import detected: {cycle}"),
-            DiagnosticCode::IMPORT_CYCLE,
-        );
+        return cycle_without_source(cycle_path);
     };
     let mut source_map = SourceMap::new();
     let first_source_id =
@@ -402,6 +389,32 @@ fn cycle_source_diagnostic(
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
         ),
     }
+}
+
+fn cycle_diagnostic_parts(cycle_path: &[String]) -> (String, String, Vec<String>) {
+    let notes = cycle_path
+        .windows(2)
+        .map(|edge| format!("{} imports {}", edge[0], edge[1]))
+        .collect::<Vec<_>>();
+    (cycle_path.join(" -> "), notes.join("; "), notes)
+}
+
+fn cycle_without_source(cycle_path: &[String]) -> RenderedDiagnostic {
+    let (cycle, cycle_edges, notes) = cycle_diagnostic_parts(cycle_path);
+    let args = [
+        ("cycle", sifr_diagnostics::DiagnosticArg::String(cycle)),
+        (
+            "cycle_edges",
+            sifr_diagnostics::DiagnosticArg::String(cycle_edges),
+        ),
+    ];
+    crate::diagnostics::diagnostic_without_source(
+        DiagnosticCode::IMPORT_CYCLE,
+        "circular import detected: {cycle}",
+        &args,
+        &notes,
+        Some("break the cycle by moving shared declarations into a separate module".to_string()),
+    )
 }
 
 fn canonicalize_cycle_path(cycle_path: Vec<String>) -> Vec<String> {

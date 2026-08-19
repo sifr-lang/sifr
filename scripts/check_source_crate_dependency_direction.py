@@ -300,22 +300,90 @@ def provider_construction_violations(root: Path) -> list[str]:
             if rel in PROVIDER_COMPOSITION_ROOTS or "bin" in rel.parts:
                 continue
             text = path.read_text(encoding="utf-8", errors="replace")
-            lines = text.splitlines()
-            inline_test_module = INLINE_TEST_MODULE_PATTERN.search(text)
-            test_boundary = (
-                text.count("\n", 0, inline_test_module.start()) + 1
-                if inline_test_module is not None
-                else None
-            )
-            for line_number, line in enumerate(lines, start=1):
-                if PROVIDER_CONSTRUCTION_PATTERN not in line:
+            test_ranges = inline_test_module_ranges(text)
+            for match in re.finditer(re.escape(PROVIDER_CONSTRUCTION_PATTERN), text):
+                if any(start <= match.start() <= end for start, end in test_ranges):
                     continue
-                if test_boundary is not None and line_number > test_boundary:
-                    continue
+                line_number = text.count("\n", 0, match.start()) + 1
                 failures.append(
                     f"{rel}:{line_number} constructs DiskSourceProvider outside a composition root"
                 )
     return failures
+
+
+def inline_test_module_ranges(text: str) -> list[tuple[int, int]]:
+    ranges: list[tuple[int, int]] = []
+    for match in INLINE_TEST_MODULE_PATTERN.finditer(text):
+        opening = text.find("{", match.start(), match.end())
+        closing = matching_rust_brace(text, opening)
+        if closing is not None:
+            ranges.append((match.start(), closing))
+    return ranges
+
+
+def matching_rust_brace(text: str, opening: int) -> int | None:
+    if opening < 0:
+        return None
+    depth = 0
+    index = opening
+    mode = "code"
+    block_depth = 0
+    raw_hashes = 0
+    while index < len(text):
+        pair = text[index : index + 2]
+        char = text[index]
+        if mode == "line-comment":
+            if char == "\n":
+                mode = "code"
+        elif mode == "block-comment":
+            if pair == "/*":
+                block_depth += 1
+                index += 1
+            elif pair == "*/":
+                block_depth -= 1
+                index += 1
+                if block_depth == 0:
+                    mode = "code"
+        elif mode == "string":
+            if char == "\\":
+                index += 1
+            elif char == '"':
+                mode = "code"
+        elif mode == "char":
+            if char == "\\":
+                index += 1
+            elif char == "'":
+                mode = "code"
+        elif mode == "raw-string":
+            terminator = '"' + ("#" * raw_hashes)
+            if text.startswith(terminator, index):
+                index += len(terminator) - 1
+                mode = "code"
+        else:
+            raw_match = re.match(r'r(#{0,16})"', text[index:])
+            if pair == "//":
+                mode = "line-comment"
+                index += 1
+            elif pair == "/*":
+                mode = "block-comment"
+                block_depth = 1
+                index += 1
+            elif raw_match is not None:
+                raw_hashes = len(raw_match.group(1))
+                index += len(raw_match.group(0)) - 1
+                mode = "raw-string"
+            elif char == '"':
+                mode = "string"
+            elif char == "'" and "'" in text[index + 1 : index + 5]:
+                mode = "char"
+            elif char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+                if depth == 0:
+                    return index
+        index += 1
+    return None
 
 
 def validate(root: Path) -> list[str]:
@@ -523,6 +591,18 @@ def run_self_test() -> int:
             root / "crates" / "sifr_package" / "src" / "lib.rs"
         ).write_text(
             "#[cfg(test)]\nmod tests;\n"
+            "pub fn leak() { let _ = DiskSourceProvider::new(); }\n",
+            encoding="utf-8",
+        ),
+        "constructs DiskSourceProvider outside a composition root",
+        failures,
+    )
+    assert_self_test_case(
+        "lower compiler construction after inline test module",
+        lambda root: (
+            root / "crates" / "sifr_package" / "src" / "lib.rs"
+        ).write_text(
+            '#[cfg(test)]\nmod tests { const SOURCE: &str = r#"{ test }"#; }\n'
             "pub fn leak() { let _ = DiskSourceProvider::new(); }\n",
             encoding="utf-8",
         ),

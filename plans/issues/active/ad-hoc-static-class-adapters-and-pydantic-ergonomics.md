@@ -1728,6 +1728,15 @@ gates both stopped at `guardrail_demo_emitted_freshness`. Item 13 changed no
 compiler implementation or demo output, so it did not absorb or rerun this
 failure. Refresh or retire the companions under this phase's emission owner.
 
+External baseline record (2026-08-19): pre-v1 Item 16 found that the lowering
+test `test_unknown_parent_class_has_class_code` still expected the old
+undefined-parent message introduced before this phase's current compiler
+merge chain. The current compiler emits the generic unknown-type diagnostic
+and reports that the parent type is not a class. Item 16 updated only the stale
+assertion so its validation could observe the current tree. It did not change
+the production mechanism. Restore the more specific undefined-parent
+diagnostic under this phase's compiler owner.
+
 Next action: implement M10 serializers, computed fields, and attached dump
 methods on compiler merge `441e7f543ebe1d559f31687e2c09055935b4fc94`
 and package merge `8af4a1f4d598829ac427f96c34b76289e13eedd9`.

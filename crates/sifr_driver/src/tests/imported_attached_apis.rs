@@ -53,14 +53,22 @@ def main():
         .expect("main module exists");
     let debug_hir = format!("{main:?}");
     assert!(
-        debug_hir.contains("describe::<SelectedAlias>"),
+        debug_hir
+            .contains("func: \"__sifr_attached_api_fixture_contract_describe\", type_args: [Class")
+            && debug_hir.contains("name: \"SelectedAlias\""),
         "{debug_hir}"
     );
     assert!(
-        debug_hir.contains("echo::<String, SelectedAlias>"),
+        debug_hir.contains(
+            "func: \"__sifr_attached_api_fixture_contract_echo\", type_args: [Str, Class"
+        ),
         "{debug_hir}"
     );
-    assert!(debug_hir.contains("touch::<SelectedAlias>"), "{debug_hir}");
+    assert!(
+        debug_hir
+            .contains("func: \"__sifr_attached_api_fixture_contract_touch\", type_args: [Class"),
+        "{debug_hir}"
+    );
 }
 
 #[test]

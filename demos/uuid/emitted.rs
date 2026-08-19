@@ -1,5 +1,153 @@
 // src/main.rs
-// --- stdlib: sifr.test ---
+mod __sifr_project_nominals {
+    pub fn uuid4() -> String {
+        ::sifr_stdlib::uuid::uuid4()
+    }
+    pub fn uuid3_text(namespace: &String, name: &String) -> String {
+        ::sifr_stdlib::uuid::uuid3_text(namespace, name)
+    }
+    pub fn uuid5_text(namespace: &String, name: &String) -> String {
+        ::sifr_stdlib::uuid::uuid5_text(namespace, name)
+    }
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct __SifrStdlib_sifr_x2euuid_x2eUUID {
+        pub _hex: String,
+    }
+    impl __SifrStdlib_sifr_x2euuid_x2eUUID {
+        pub fn new(hex_str: String) -> Self {
+            let __sifr_field_init_0: String = {
+                let mut __sifr_concat: String = String::with_capacity(
+                    hex_str.len() + 0usize,
+                );
+                __sifr_concat.push_str((hex_str).as_str());
+                __sifr_concat.push_str("");
+                __sifr_concat
+            };
+            Self { _hex: __sifr_field_init_0 }
+        }
+    }
+    impl __SifrStdlib_sifr_x2euuid_x2eUUID {
+        pub fn hex(&self) -> String {
+            let mut result: String = "".to_string();
+            let mut i: i64 = 0_i64;
+            while (i < (self._hex.chars().count() as i64)) {
+                let ch: Option<String> = Some({
+                    let Some(__indexed_char) = self
+                        ._hex
+                        .clone()
+                        .chars()
+                        .nth(i as usize)
+                        .map(|c| c.to_string()) else {
+                        unreachable!("compiler-verified string index should be in range");
+                    };
+                    __indexed_char
+                });
+                if let Some(ch) = ch {
+                    if ch != "-" {
+                        result.push_str((ch).as_str());
+                    }
+                }
+                i += 1_i64;
+            }
+            result
+        }
+    }
+    impl __SifrStdlib_sifr_x2euuid_x2eUUID {
+        pub fn urn(&self) -> String {
+            {
+                let mut __sifr_concat: String = String::with_capacity(9usize + 0usize);
+                __sifr_concat.push_str("urn:uuid:");
+                __sifr_concat.push_str((self._hex.clone()).as_str());
+                __sifr_concat
+            }
+        }
+    }
+    impl __SifrStdlib_sifr_x2euuid_x2eUUID {
+        pub fn to_str(&self) -> String {
+            {
+                let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
+                __sifr_concat.push_str((self._hex.clone()).as_str());
+                __sifr_concat.push_str("");
+                __sifr_concat
+            }
+        }
+    }
+    impl __SifrStdlib_sifr_x2euuid_x2eUUID {
+        pub fn version(&self) -> i64 {
+            let marker: Option<String> = {
+                let __sifr_index_str = &self._hex;
+                let __sifr_index_i = 14_i64;
+                let __sifr_index_norm = if __sifr_index_i < 0 {
+                    ((__sifr_index_str.chars().count() as i64) + __sifr_index_i) as usize
+                } else {
+                    __sifr_index_i as usize
+                };
+                __sifr_index_str.chars().nth(__sifr_index_norm).map(|c| c.to_string())
+            };
+            let Some(marker) = marker else {
+                return -(1_i64);
+            };
+            _hex_digit_value(&marker)
+        }
+    }
+    impl ::std::fmt::Display for __SifrStdlib_sifr_x2euuid_x2eUUID {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            write!(f, "UUID(_hex={})", self._hex)
+        }
+    }
+    pub fn _hex_digit_value(ch: &String) -> i64 {
+        if (ch).as_str() == "0" {
+            return 0_i64;
+        }
+        if (ch).as_str() == "1" {
+            return 1_i64;
+        }
+        if (ch).as_str() == "2" {
+            return 2_i64;
+        }
+        if (ch).as_str() == "3" {
+            return 3_i64;
+        }
+        if (ch).as_str() == "4" {
+            return 4_i64;
+        }
+        if (ch).as_str() == "5" {
+            return 5_i64;
+        }
+        if (ch).as_str() == "6" {
+            return 6_i64;
+        }
+        if (ch).as_str() == "7" {
+            return 7_i64;
+        }
+        if (ch).as_str() == "8" {
+            return 8_i64;
+        }
+        if (ch).as_str() == "9" {
+            return 9_i64;
+        }
+        if ((ch).as_str() == "a") || ((ch).as_str() == "A") {
+            return 10_i64;
+        }
+        if ((ch).as_str() == "b") || ((ch).as_str() == "B") {
+            return 11_i64;
+        }
+        if ((ch).as_str() == "c") || ((ch).as_str() == "C") {
+            return 12_i64;
+        }
+        if ((ch).as_str() == "d") || ((ch).as_str() == "D") {
+            return 13_i64;
+        }
+        if ((ch).as_str() == "e") || ((ch).as_str() == "E") {
+            return 14_i64;
+        }
+        if ((ch).as_str() == "f") || ((ch).as_str() == "F") {
+            return 15_i64;
+        }
+        -(1_i64)
+    }
+}
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2euuid_x2eUUID;
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     assert_eq!(actual.len() as i64, expected.len() as i64);
     let mut i: i64 = 0_i64;
@@ -8,8 +156,6 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
         i += 1_i64;
     }
 }
-
-// --- stdlib: _sifr.uuid ---
 fn uuid4() -> String {
     ::sifr_stdlib::uuid::uuid4()
 }
@@ -18,94 +164,6 @@ fn uuid3_text(namespace: &String, name: &String) -> String {
 }
 fn uuid5_text(namespace: &String, name: &String) -> String {
     ::sifr_stdlib::uuid::uuid5_text(namespace, name)
-}
-
-// --- stdlib: sifr.uuid ---
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2euuid_x2eUUID {
-    _hex: String,
-}
-impl __SifrStdlib_sifr_x2euuid_x2eUUID {
-    fn new(hex_str: String) -> Self {
-        let __sifr_field_init_0: String = {
-            let mut __sifr_concat: String = String::with_capacity(
-                hex_str.len() + 0usize,
-            );
-            __sifr_concat.push_str((hex_str).as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
-        };
-        Self { _hex: __sifr_field_init_0 }
-    }
-}
-impl __SifrStdlib_sifr_x2euuid_x2eUUID {
-    fn hex(&self) -> String {
-        let mut result: String = "".to_string();
-        let mut i: i64 = 0_i64;
-        while (i < (self._hex.chars().count() as i64)) {
-            let ch: Option<String> = Some({
-                let Some(__indexed_char) = self
-                    ._hex
-                    .clone()
-                    .chars()
-                    .nth(i as usize)
-                    .map(|c| c.to_string()) else {
-                    unreachable!("compiler-verified string index should be in range");
-                };
-                __indexed_char
-            });
-            if let Some(ch) = ch {
-                if ch != "-" {
-                    result.push_str((ch).as_str());
-                }
-            }
-            i += 1_i64;
-        }
-        result
-    }
-}
-impl __SifrStdlib_sifr_x2euuid_x2eUUID {
-    fn urn(&self) -> String {
-        {
-            let mut __sifr_concat: String = String::with_capacity(9usize + 0usize);
-            __sifr_concat.push_str("urn:uuid:");
-            __sifr_concat.push_str((self._hex.clone()).as_str());
-            __sifr_concat
-        }
-    }
-}
-impl __SifrStdlib_sifr_x2euuid_x2eUUID {
-    fn to_str(&self) -> String {
-        {
-            let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
-            __sifr_concat.push_str((self._hex.clone()).as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
-        }
-    }
-}
-impl __SifrStdlib_sifr_x2euuid_x2eUUID {
-    fn version(&self) -> i64 {
-        let marker: Option<String> = {
-            let __sifr_index_str = &self._hex;
-            let __sifr_index_i = 14_i64;
-            let __sifr_index_norm = if __sifr_index_i < 0 {
-                ((__sifr_index_str.chars().count() as i64) + __sifr_index_i) as usize
-            } else {
-                __sifr_index_i as usize
-            };
-            __sifr_index_str.chars().nth(__sifr_index_norm).map(|c| c.to_string())
-        };
-        let Some(marker) = marker else {
-            return -(1_i64);
-        };
-        _hex_digit_value(&marker)
-    }
-}
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2euuid_x2eUUID {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "UUID(_hex={})", self._hex)
-    }
 }
 fn _to_lower_hex_char(ch: &String) -> String {
     if (ch).as_str() == "A" {
@@ -455,7 +513,7 @@ fn uuid_from_hex(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(ValueError::new(e.message));
+            return Err(ValueError::new(e.message.clone()));
         }
     }
 }
@@ -476,104 +534,121 @@ fn NAMESPACE_DNS() -> __SifrStdlib_sifr_x2euuid_x2eUUID {
         "6ba7b810-9dad-11d1-80b4-00c04fd430c8".to_string(),
     )
 }
-// --- end stdlib ---
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
-
 impl ValueError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ValueError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ValueError {
-}
-
+impl ::std::error::Error for ValueError {}
 fn is_canonical_shape(value: &String) -> bool {
     let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
     if ((__sifr_chars_value.len() as i64) != (36_i64)) {
         return false;
     }
-    let h1: Option<String> = __sifr_chars_value.get((8_i64) as usize).map(|c| c.to_string());
-    let h2: Option<String> = __sifr_chars_value.get((13_i64) as usize).map(|c| c.to_string());
-    let h3: Option<String> = __sifr_chars_value.get((18_i64) as usize).map(|c| c.to_string());
-    let h4: Option<String> = __sifr_chars_value.get((23_i64) as usize).map(|c| c.to_string());
-    (((((h1 == Some("-".to_string()))) && ((h2 == Some("-".to_string())))) && ((h3 == Some("-".to_string())))) && ((h4 == Some("-".to_string()))))
+    let h1: Option<String> = __sifr_chars_value
+        .get((8_i64) as usize)
+        .map(|c| c.to_string());
+    let h2: Option<String> = __sifr_chars_value
+        .get((13_i64) as usize)
+        .map(|c| c.to_string());
+    let h3: Option<String> = __sifr_chars_value
+        .get((18_i64) as usize)
+        .map(|c| c.to_string());
+    let h4: Option<String> = __sifr_chars_value
+        .get((23_i64) as usize)
+        .map(|c| c.to_string());
+    (((((h1 == Some("-".to_string()))) && ((h2 == Some("-".to_string()))))
+        && ((h3 == Some("-".to_string())))) && ((h4 == Some("-".to_string()))))
 }
-
 fn collect_generated_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let id_text: String = uuid4();
     let __sifr_chars_id_text: Vec<char> = id_text.chars().collect::<Vec<char>>();
     actual.push(is_canonical_shape(&id_text));
-    actual.push(__sifr_chars_id_text.get((14_i64) as usize).map(|c| c.to_string()) == Some("4".to_string()));
+    actual
+        .push(
+            __sifr_chars_id_text.get((14_i64) as usize).map(|c| c.to_string())
+                == Some("4".to_string()),
+        );
     let obj: __SifrStdlib_sifr_x2euuid_x2eUUID = uuid4_obj();
     actual.push(is_canonical_shape(&obj.to_str()) && (obj.version() == (4_i64)));
     actual
 }
-
 fn collect_parse_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let mut parsed_ok: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let parsed: __SifrStdlib_sifr_x2euuid_x2eUUID = uuid_from_hex(&"550E8400E29B41D4A716446655440000".to_string())?;
-    parsed_ok = (parsed.to_str() == "550e8400-e29b-41d4-a716-446655440000");
-    Ok(())
-})();
+        let parsed: __SifrStdlib_sifr_x2euuid_x2eUUID = uuid_from_hex(
+            &"550E8400E29B41D4A716446655440000".to_string(),
+        )?;
+        parsed_ok = (parsed.to_str() == "550e8400-e29b-41d4-a716-446655440000");
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message);
+        let _ = format!("{}", e.message.clone());
         parsed_ok = false;
     }
     actual.push(parsed_ok);
     let mut parsed_v1_ok: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let parsed_v1: __SifrStdlib_sifr_x2euuid_x2eUUID = uuid_from_hex(&"550e8400-e29b-11d4-a716-446655440000".to_string())?;
-    parsed_v1_ok = (parsed_v1.version() == (1_i64));
-    Ok(())
-})();
+        let parsed_v1: __SifrStdlib_sifr_x2euuid_x2eUUID = uuid_from_hex(
+            &"550e8400-e29b-11d4-a716-446655440000".to_string(),
+        )?;
+        parsed_v1_ok = (parsed_v1.version() == (1_i64));
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message);
+        let _ = format!("{}", e.message.clone());
         parsed_v1_ok = false;
     }
     actual.push(parsed_v1_ok);
     actual
 }
-
 fn collect_negative_and_class_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let mut invalid_rejected: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let _bad: __SifrStdlib_sifr_x2euuid_x2eUUID = uuid_from_hex(&"invalid".to_string())?;
-    Ok(())
-})();
+        let _bad: __SifrStdlib_sifr_x2euuid_x2eUUID = uuid_from_hex(
+            &"invalid".to_string(),
+        )?;
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message);
+        let _ = format!("{}", e.message.clone());
         invalid_rejected = true;
     }
     actual.push(invalid_rejected);
-    let ctor_passthrough: __SifrStdlib_sifr_x2euuid_x2eUUID = __SifrStdlib_sifr_x2euuid_x2eUUID::new("550e8400-e29b-41d4-a716-44665544000z".to_string());
-    actual.push((ctor_passthrough.to_str()).as_str() == ("550e8400-e29b-41d4-a716-44665544000z".to_string()).as_str());
+    let ctor_passthrough: __SifrStdlib_sifr_x2euuid_x2eUUID = __SifrStdlib_sifr_x2euuid_x2eUUID::new(
+        "550e8400-e29b-41d4-a716-44665544000z".to_string(),
+    );
+    actual
+        .push(
+            (ctor_passthrough.to_str()).as_str()
+                == ("550e8400-e29b-41d4-a716-44665544000z".to_string()).as_str(),
+        );
     let mut ctor_curly_ok: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let ctor_curly: __SifrStdlib_sifr_x2euuid_x2eUUID = uuid_from_hex(&"{550E8400-E29B-41D4-A716-446655440000}".to_string())?;
-    ctor_curly_ok = (ctor_curly.to_str() == "550e8400-e29b-41d4-a716-446655440000");
-    Ok(())
-})();
+        let ctor_curly: __SifrStdlib_sifr_x2euuid_x2eUUID = uuid_from_hex(
+            &"{550E8400-E29B-41D4-A716-446655440000}".to_string(),
+        )?;
+        ctor_curly_ok = (ctor_curly.to_str() == "550e8400-e29b-41d4-a716-446655440000");
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message);
+        let _ = format!("{}", e.message.clone());
         ctor_curly_ok = false;
     }
     actual.push(ctor_curly_ok);
@@ -583,15 +658,15 @@ fn collect_negative_and_class_actual() -> Vec<bool> {
     actual.push(uuid5(&NAMESPACE_DNS(), &"python.org".to_string()).version() == (5_i64));
     actual
 }
-
 fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {
     for value in values.iter().copied() {
         target.push(value);
     }
 }
-
 fn main() {
-    let expected: Vec<bool> = vec![true, true, true, true, true, true, true, true, true, true, true];
+    let expected: Vec<bool> = vec![
+        true, true, true, true, true, true, true, true, true, true, true
+    ];
     let mut actual: Vec<bool> = vec![];
     append_all(&mut actual, &collect_generated_actual());
     append_all(&mut actual, &collect_parse_actual());

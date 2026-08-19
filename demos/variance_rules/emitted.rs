@@ -115,6 +115,6 @@ fn sum_items(values: &Vec<i64>) -> i64 {
 fn main() {
     println!("variance_rules inheritance and variance corrections demo:");
     let emp: Employee = Employee::new(11_i64, "Lin".to_string(), 4_i64);
-    println!("{}", emp.person.name);
+    println!("{}", emp.person.name.clone());
     println!("{}", sum_items(&vec![1_i64, 2_i64, 3_i64]));
 }

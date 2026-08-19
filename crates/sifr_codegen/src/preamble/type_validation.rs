@@ -10,7 +10,10 @@ impl RustEmitter {
         };
         self.lowering_stats.item_lowering_errors += 1;
         self.body_items.push(RustItem::Fn {
-            name: "__sifr_codegen_type_error".to_string(),
+            name: format!(
+                "__sifr_codegen_type_error_{}",
+                self.lowering_stats.item_lowering_errors
+            ),
             visibility: Visibility::Private,
             type_params: Vec::new(),
             params: Vec::new(),

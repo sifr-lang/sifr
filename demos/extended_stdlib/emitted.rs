@@ -1,5 +1,26 @@
 // src/main.rs
-// --- stdlib: _sifr.crypto ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct RegexError {
+        pub message: String,
+        pub detail: String,
+    }
+    impl RegexError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                detail: String::new(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for RegexError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for RegexError {}
+}
+pub use __sifr_project_nominals::RegexError;
 fn random_int(min: i64, max: i64) -> i64 {
     ::sifr_stdlib::random::random_int(
             ::sifr_runtime::interop::SifrIntBridge::from(min),
@@ -169,16 +190,12 @@ fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
 fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
 }
-
-// --- stdlib: sifr.base64 ---
 fn b64encode(s: &String) -> String {
     base64_encode(s)
 }
 fn b64decode(s: &String) -> Result<String, ParseError> {
     base64_decode(s)
 }
-
-// --- stdlib: _sifr.fs ---
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrIoNativeFileHandle {
     _id: String,
@@ -268,7 +285,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message));
+            return Err(IOError::new(e.message.clone()));
         }
     }
 }
@@ -396,8 +413,6 @@ fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError>
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-
-// --- stdlib: sifr.hashlib ---
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
     _algorithm: String,
@@ -589,8 +604,6 @@ fn md5(data: &Vec<u8>) -> __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
 fn sha256(data: &Vec<u8>) -> __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
     _build_hash(&"sha256".to_string(), data)
 }
-
-// --- stdlib: _sifr.math ---
 const PI: f64 = 3.141592653589793_f64;
 const E: f64 = 2.718281828459045_f64;
 const TAU: f64 = 6.283185307179586_f64;
@@ -771,8 +784,6 @@ fn nextafter(x: f64, y: f64) -> f64 {
 fn ulp(x: f64) -> f64 {
     ::sifr_stdlib::math::ulp(x)
 }
-
-// --- stdlib: _sifr.time ---
 fn time_now() -> f64 {
     ::sifr_stdlib::time::time_now()
 }
@@ -838,8 +849,6 @@ fn time_localtime() -> Vec<i64> {
         .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
         .collect()
 }
-
-// --- stdlib: sifr.math ---
 fn factorial(n: i64) -> i64 {
     if n < (0_i64) {
         return 0_i64;
@@ -1062,8 +1071,6 @@ fn modf_integral(x: f64) -> f64 {
 fn pow(x: f64, y: f64) -> f64 {
     pow_val(x, y)
 }
-
-// --- stdlib: sifr.random ---
 const _MT_N: i64 = 624_i64;
 const _MT_M: i64 = 397_i64;
 const _MT_MATRIX_A: i64 = 2567483615_i64;
@@ -1427,7 +1434,7 @@ fn _module_random() -> __SifrStdlib_sifr_x2erandom_x2eRandom {
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        let _ = e.message;
+        let _ = e.message.clone();
     }
     r
 }
@@ -1446,8 +1453,6 @@ fn random() -> f64 {
     _sync_module_random(&mut generator);
     value
 }
-
-// --- stdlib: _sifr.regex ---
 type __SifrStdlib___sifr_x2eregex_x2eCompiledPattern = ::sifr_runtime::interop::Handle<
     ::sifr_stdlib::regex::CompiledPattern,
 >;
@@ -1685,8 +1690,6 @@ fn re_split_flags(
             detail: __sifr_bridge_error.to_string(),
         })
 }
-
-// --- stdlib: sifr.re ---
 fn search(pattern: &String, text: &String) -> Result<Option<String>, RegexError> {
     re_find(pattern, text)
 }
@@ -1697,143 +1700,96 @@ fn sub(
 ) -> Result<String, RegexError> {
     re_replace(pattern, replacement, text)
 }
-
-// --- stdlib: sifr.time ---
 fn time() -> f64 {
     time_now()
 }
-// --- end stdlib ---
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct IOError {
     message: String,
     kind: String,
 }
-
 impl IOError {
     fn new(message: String) -> Self {
-        Self { message, kind: "Other".to_string() }
+        Self {
+            message,
+            kind: "Other".to_string(),
+        }
     }
 }
-
 impl ::std::fmt::Display for IOError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for IOError {
-}
-
+impl ::std::error::Error for IOError {}
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
-    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
-    match __sifr_io_kind {
-    Some(::std::io::ErrorKind::NotFound) => {
-        "FileNotFound".to_string()
-    },
-    Some(::std::io::ErrorKind::PermissionDenied) => {
-        "PermissionDenied".to_string()
-    },
-    Some(::std::io::ErrorKind::AlreadyExists) => {
-        "FileExists".to_string()
-    },
-    Some(::std::io::ErrorKind::IsADirectory) => {
-        "IsADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::NotADirectory) => {
-        "NotADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-        "DirectoryNotEmpty".to_string()
-    },
-    _ => {
-        "Other".to_string()
-    },
-}
-};
+        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+            .downcast_ref::<std::io::Error>()
+            .map(::std::io::Error::kind);
+        match __sifr_io_kind {
+            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+            Some(::std::io::ErrorKind::PermissionDenied) => {
+                "PermissionDenied".to_string()
+            }
+            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                "DirectoryNotEmpty".to_string()
+            }
+            _ => "Other".to_string(),
+        }
+    };
     IOError { message: msg, kind }
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
-
 impl ParseError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ParseError {
-}
-
+impl ::std::error::Error for ParseError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
-
 impl ValueError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ValueError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ValueError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct RegexError {
-    message: String,
-    detail: String,
-}
-
-impl RegexError {
-    fn new(message: String) -> Self {
-        Self { message, detail: String::new() }
-    }
-}
-
-impl ::std::fmt::Display for RegexError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for RegexError {
-}
-
+impl ::std::error::Error for ValueError {}
 fn has_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
     let __sifr_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {
-    let found: Option<String> = search(pattern, text)?;
-    return Ok(Ok((found != None)));
-    unreachable!("sifr try/except return capture fell through");
-})();
+        let found: Option<String> = search(pattern, text)?;
+        return Ok(Ok((found != None)));
+        unreachable!("sifr try/except return capture fell through");
+    })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
-        },
+        }
         Err(__sifr_try_err) => {
             let error = __sifr_try_err.clone();
-            return Err(RegexError::new(error.message));
-        },
+            return Err(RegexError::new(error.message.clone()));
+        }
     }
 }
-
 fn main() {
     println!("=== sifr.time ===");
     let t1: f64 = time();
@@ -1843,46 +1799,59 @@ fn main() {
     println!("Time advanced: {}", (t2 > t1));
     println!("=== sifr.random ===");
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let r: i64 = randint(1_i64, 100_i64)?;
-    println!("Random int [1,100]: {}", r);
-    Ok(())
-})();
+        let r: i64 = randint(1_i64, 100_i64)?;
+        println!("Random int [1,100]: {}", r);
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let err = __sifr_try_err.clone();
-        println!("Random integer error: {}", err.message);
+        println!("Random integer error: {}", err.message.clone());
     }
     let f: f64 = random();
     println!("Random float [0,1): {}", f);
     println!("=== sifr.re ===");
     let __sifr_try_res: Result<(), RegexError> = (|| {
-    let matched: bool = has_match(&"[0-9]+".to_string(), &"hello 42".to_string())?;
-    println!("Match digits in \'hello 42\': {}", matched);
-    let found: Option<String> = search(&"[0-9]+".to_string(), &"price is $42.99".to_string())?;
-    if let Some(found) = found {
-        println!("Found: {}", found);
-    }
-    let replaced: String = sub(&"[0-9]+".to_string(), &"N".to_string(), &"a1b2c3".to_string())?;
-    println!("Replace: {}", replaced);
-    Ok(())
-})();
+        let matched: bool = has_match(&"[0-9]+".to_string(), &"hello 42".to_string())?;
+        println!("Match digits in \'hello 42\': {}", matched);
+        let found: Option<String> = search(
+            &"[0-9]+".to_string(),
+            &"price is $42.99".to_string(),
+        )?;
+        if let Some(found) = found {
+            println!("Found: {}", found);
+        }
+        let replaced: String = sub(
+            &"[0-9]+".to_string(),
+            &"N".to_string(),
+            &"a1b2c3".to_string(),
+        )?;
+        println!("Replace: {}", replaced);
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let err = __sifr_try_err.clone();
-        println!("regex error: {}", err.message);
+        println!("regex error: {}", err.message.clone());
     }
     println!("=== sifr.hashlib ===");
-    println!("SHA-256(\'sifr\'): {}", sha256(&vec![(115_i64) as u8, (105_i64) as u8, (102_i64) as u8, (114_i64) as u8]).hexdigest());
-    println!("MD5(\'sifr\'): {}", md5(&vec![(115_i64) as u8, (105_i64) as u8, (102_i64) as u8, (114_i64) as u8]).hexdigest());
+    println!(
+        "SHA-256(\'sifr\'): {}", sha256(& vec![(115_i64) as u8, (105_i64) as u8,
+        (102_i64) as u8, (114_i64) as u8]).hexdigest()
+    );
+    println!(
+        "MD5(\'sifr\'): {}", md5(& vec![(115_i64) as u8, (105_i64) as u8, (102_i64) as
+        u8, (114_i64) as u8]).hexdigest()
+    );
     println!("=== sifr.base64 ===");
     let encoded: String = b64encode(&"Hello, Sifr!".to_string());
     println!("Base64 encode: {}", encoded);
     let __sifr_try_res: Result<(), ParseError> = (|| {
-    let decoded_b64: String = b64decode(&encoded)?;
-    println!("Base64 decode: {}", decoded_b64);
-    Ok(())
-})();
+        let decoded_b64: String = b64decode(&encoded)?;
+        println!("Base64 decode: {}", decoded_b64);
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let err = __sifr_try_err.clone();
-        println!("base64 error: {}", err.message);
+        println!("base64 error: {}", err.message.clone());
     }
     println!("=== Demo complete ===");
 }

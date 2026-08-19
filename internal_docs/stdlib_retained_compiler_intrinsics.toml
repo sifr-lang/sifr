@@ -94,9 +94,9 @@ exact_intrinsics = [
 [[surface]]
 id = "first-class-bytes::primitive-construction"
 state = "retained-by-design"
-owner = "pre_v1_compat_5_binary_hashing"
-issue = "pre_v1_compat_5_binary_hashing"
-evidence_links = ["pre_v1_compat_5_binary_hashing"]
+owner = "first-class-bytes-language-semantics"
+issue = "permanent-language-contract"
+evidence_links = ["internal_docs/architecture.md"]
 reason = "First-class bytes.from_hex, bytes.from_ints, and bytes(size) constructors lower directly to typed compiler-language construction HIR."
 registry_files = ["bytes.rs"]
 lowering_files = [
@@ -183,7 +183,7 @@ owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 reason = "Generated Rust type conversion and error wrapper helpers are shared language/runtime glue."
-preamble_files = ["types_and_errors.rs"]
+preamble_files = ["type_validation.rs", "types_and_errors.rs"]
 direct_runtime_roots = [
   "sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS",
   "sifr_runtime::SifrInt",

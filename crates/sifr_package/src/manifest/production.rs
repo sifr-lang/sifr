@@ -16,38 +16,30 @@ pub(super) fn parse_source_config(
     }
 }
 
-pub(super) fn reject_unsupported_layout_fields(
+pub(super) fn validate_manifest_shape(
     cargo_package_id: &CargoPackageId,
     manifest_path: &Path,
     value: &toml::Table,
 ) -> Result<(), PackageDiagnostic> {
-    if value.get("exports").is_some() {
-        return Err(PackageDiagnostic::invalid_sifr_manifest(
-            cargo_package_id,
-            manifest_path.to_path_buf(),
-            "exports",
-            "unsupported field",
-        ));
+    for field in ["exports", "bin"] {
+        if value.get(field).is_some() {
+            return Err(PackageDiagnostic::invalid_sifr_manifest(
+                cargo_package_id,
+                manifest_path.to_path_buf(),
+                field,
+                "unsupported field",
+            ));
+        }
     }
-    if value.get("bin").is_some() {
-        return Err(PackageDiagnostic::invalid_sifr_manifest(
-            cargo_package_id,
-            manifest_path.to_path_buf(),
-            "bin",
-            "unsupported field",
-        ));
-    }
-    if value
-        .get("source")
-        .and_then(toml::Value::as_table)
-        .is_some_and(|source| source.contains_key("roots"))
-    {
-        return Err(PackageDiagnostic::invalid_sifr_manifest(
-            cargo_package_id,
-            manifest_path.to_path_buf(),
-            "source.roots",
-            "unsupported field; use source.root",
-        ));
+    if let Some(source) = value.get("source").and_then(toml::Value::as_table) {
+        if let Some(field) = source.keys().find(|field| field.as_str() != "root") {
+            return Err(PackageDiagnostic::invalid_sifr_manifest(
+                cargo_package_id,
+                manifest_path.to_path_buf(),
+                format!("source.{field}"),
+                "unsupported source field",
+            ));
+        }
     }
     Ok(())
 }

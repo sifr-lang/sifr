@@ -1,4 +1,5 @@
 use super::{HirFunction, LowerCtx, MethodKind, StmtClassDef, Type};
+use sifr_type_system::ReceiverConvention;
 
 pub(super) fn validate_structurally_mapped_opaque_class(
     class_def: &StmtClassDef,
@@ -137,6 +138,7 @@ pub(super) fn validate_rust_opaque_close_method(
             method.name == selected
                 && method.method_kind == MethodKind::Regular
                 && method.is_async == expects_async
+                && method.receiver == Some(ReceiverConvention::Owned)
                 && method.params.is_empty()
                 && method.rust_interop.iter().any(|declaration| {
                     declaration.kind == sifr_ir::RustInteropDecoratorKind::Function

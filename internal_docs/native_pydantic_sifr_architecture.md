@@ -5,15 +5,8 @@ Status: active design contract.
 ## Document Authority
 
 This document owns the durable Native Pydantic-Sifr design and architecture.
-The archived ad hoc phase records milestone planning, delivery status, pull
-requests, validation, review evidence, blockers, and closure.
-
-Phase records:
-
-- The completed native engine phase is
-  [`ad-hoc-native-pydantic-sifr-architecture.md`](../plans/issues/archive/ad-hoc-native-pydantic-sifr-architecture.md).
-- The static class-adapter and ergonomic API phase is
-  [`ad-hoc-static-class-adapters-and-pydantic-ergonomics.md`](../plans/issues/active/ad-hoc-static-class-adapters-and-pydantic-ergonomics.md).
+Delivery records preserve implementation history but do not define the current
+compiler or package contract.
 
 ## Objective
 
@@ -106,8 +99,8 @@ The compiler substrate also depends on the core rows tracked by
 
 This document supersedes the design in
 [`41_typed_data_model_and_validation.md`](../plans/phases/41_typed_data_model_and_validation.md).
-That file remains a redirect and history note. Phase 42 consumes the released
-`pydantic-sifr` public model and error contract, not a separate in-compiler
+That file remains a redirect and history note. Downstream work consumes the
+released `pydantic-sifr` public model and error contract, not a separate in-compiler
 validator. It must not add a fallback contract.
 
 This design does not supersede `internal_docs/integer_model.md` or its locked
@@ -116,7 +109,7 @@ behavior defers to them. The const-specialization contract owns
 `SIFR-INT-0009`, its error page, and package-neutral boundary verification. The
 schema consumer integrates with that locked boundary artifact; it does not
 redefine the code. The
-former Phase 41 `Serialize`/`Deserialize` and stdlib `dumps`/`loads` proposal is
+former `Serialize`/`Deserialize` and stdlib `dumps`/`loads` proposal is
 intentionally subsumed by the one `TypeAdapter[T]`/`BaseModel` Core Schema
 path, not retained as a second compiler or stdlib serialization authority.
 `sifr-lang/sifr` deliberately keeps only its general `JsonValue` JSON API;
@@ -830,7 +823,7 @@ sum representation.
 
 The existing bridge-compatible value table remains closed. The structural contract
 does not make tuple, set, arbitrary mapping, union payload, or specialized
-scalar values directly cross the boundary as ad hoc bridge types.
+scalar values directly cross the boundary as one-off bridge types.
 
 Instead, `sifr_runtime` owns three stable, language-general traits. Native
 producers implement `StructuralSource`; the compiler generates
@@ -1991,7 +1984,7 @@ The compatibility documentation includes a searchable API/behavior matrix.
 ### Terminal ergonomic exclusions
 
 The following exclusions are final architecture decisions, not deferred
-milestone dependencies:
+implementation dependencies:
 
 | Excluded feature | Reason |
 | --- | --- |
@@ -2016,7 +2009,7 @@ milestone dependencies:
 | Wildcard `field_validator("*")` targeting | Explicit field identities preserve static target checking, diagnostics, inheritance, and deterministic ordering. |
 | Schema generation for an unbound generic model | Program identity and field shapes exist only after concrete owner-type substitution. |
 
-No implementation milestone depends on these features. A future proposal would
+No current implementation depends on these features. A separate proposal would
 need its own architecture rather than treating one as unfinished work here.
 
 ## Safety and Resource Contract

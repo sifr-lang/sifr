@@ -237,9 +237,12 @@ def main():
         .get("main")
         .expect("main module exists");
     let debug_hir = format!("{main:?}");
-    assert!(debug_hir.contains("describe::<Model>"));
+    assert!(debug_hir
+        .contains("func: \"__sifr_attached_api_fixture_contract_describe\", type_args: [Class"));
     assert!(
-        debug_hir.contains("echo::<String, Model>"),
+        debug_hir.contains(
+            "func: \"__sifr_attached_api_fixture_contract_echo\", type_args: [Str, Class"
+        ) && debug_hir.contains("name: \"Model\""),
         "attached residual identity missing from {debug_hir}"
     );
     let model = main
@@ -435,8 +438,17 @@ def main():
         .get("main")
         .expect("main module exists");
     let debug_hir = format!("{main:?}");
-    assert!(debug_hir.contains("echo::<String, Concrete>"));
-    assert!(debug_hir.contains("touch::<Concrete>"));
+    assert!(
+        debug_hir.contains(
+            "func: \"__sifr_attached_api_fixture_contract_echo\", type_args: [Str, Class"
+        ) && debug_hir.contains("name: \"Concrete\""),
+        "concrete echo specialization missing from {debug_hir}"
+    );
+    assert!(
+        debug_hir
+            .contains("func: \"__sifr_attached_api_fixture_contract_touch\", type_args: [Class"),
+        "concrete receiver specialization missing from {debug_hir}"
+    );
 }
 
 #[test]

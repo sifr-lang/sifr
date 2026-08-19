@@ -744,10 +744,15 @@ def value_a() -> int:
     assert_eq!(
         error_a[0].args.get("cycle_edges"),
         Some(&sifr_diagnostics::DiagnosticArg::String(
-            "a imports b, b imports c, c imports a".to_string()
+            "a imports b; b imports c; c imports a".to_string()
         ))
     );
     assert!(error_a[0].spans.is_empty());
+    assert_eq!(error_a[0].children.len(), 3);
+    assert_eq!(
+        error_a[0].help.as_deref(),
+        Some("break the cycle by moving shared declarations into a separate module")
+    );
 }
 
 #[test]

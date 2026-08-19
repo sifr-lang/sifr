@@ -49,6 +49,10 @@ TEXT_EXTENSIONS = {
 }
 
 SKIP_DIR_NAMES = {".git", ".venv", "__pycache__", "node_modules", "target", "third_party"}
+EXCLUDED_FILES = {
+    REPO_ROOT / "verification" / "compatibility" / "retained_compatibility_contracts.json",
+    REPO_ROOT / "verification" / "areas" / "developer_tooling" / "check_no_pre_v1_compatibility.py",
+}
 
 FILENAME_PATTERNS = (
     re.compile(r"(^|[-_])(?:" + "|".join(DELIVERY_TERMS) + r")([-_]|$)", re.IGNORECASE),
@@ -61,6 +65,9 @@ ALLOW_TEXT_PATTERNS = (
     re.compile(r"\b(?:phase_plan|empty_phase_plan|phase_has_enabled_rules|mark_phase_readonly)\b"),
     re.compile(r"\b(?:record_compiler_phase_trace|build phase|compiler phase|trace phases|phase=)\b", re.IGNORECASE),
     re.compile(r"\b" + "exp" + r"_m1\b"),
+    re.compile(r"\bstable-token-m6\b"),
+    re.compile(r"\b(?:contract_config|contract_field|contract_types|contract_for_identity)\b"),
+    re.compile(r"\bPhase 40\b"),
     re.compile(
         r"\b(?:"
         + RULES_ALIAS
@@ -317,6 +324,8 @@ def walk_text_candidates(root: Path) -> list[Path]:
 
 
 def should_skip(path: Path) -> bool:
+    if path.resolve() in EXCLUDED_FILES:
+        return True
     parts = set(path.relative_to(REPO_ROOT).parts) if path.is_relative_to(REPO_ROOT) else set(path.parts)
     if parts & SKIP_DIR_NAMES:
         return True
