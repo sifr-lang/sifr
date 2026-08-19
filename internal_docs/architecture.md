@@ -898,6 +898,8 @@ owner arguments before package specialization. Local and imported adapted generi
 same substitution rule, so nested concrete uses do not expose unbound declaration parameters to a
 package specializer. Nested nominal declarations rebind their own type parameters before field and
 method substitution. An outer parameter with the same name cannot capture the nested parameter.
+Local declaration identity and exported parameter metadata are the only binding authorities. An
+unresolved nested scope stays symbolic and does not use a consumer-local class with the same name.
 
 Checked adapted-handler exports retain the callable target with a signature specialized relative
 to the selected owner's type parameters. Generic substitution follows the full local ancestor

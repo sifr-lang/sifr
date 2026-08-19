@@ -152,6 +152,8 @@ arguments into every finalized field-plan type. The same rule applies to local a
 adapted classes. A concrete static-program shape cannot retain the declaration's type parameters.
 Substitution respects nested nominal scopes. A nested class binds its own type parameters before
 the compiler substitutes its fields and methods, even when an outer class uses the same names.
+The compiler uses local declaration identity or exported parameter metadata for this binding. If
+that authority is unavailable, nested parameters stay unresolved and cannot capture outer values.
 
 An unbound generic adapted declaration does not request a schema program.
 A concrete owner must supply all type arguments before static program generation.

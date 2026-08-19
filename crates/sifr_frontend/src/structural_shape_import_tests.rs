@@ -260,6 +260,46 @@ class Outer[T]:
         fields[1].declared_type,
         ShapeNode::Primitive("int".to_string())
     );
+
+    external_defs
+        .class_type_params
+        .get_mut("models")
+        .expect("model type parameters are exported")
+        .remove("Inner");
+    let collision_consumer = compile(
+        "consumer",
+        r#"
+from models import Outer
+
+class Inner[Left, Right]:
+    left: Left
+    right: Right
+
+class Container:
+    item: Outer[int]
+"#,
+        &external_defs,
+    );
+    let unresolved = describe_type_with_externals(
+        "consumer",
+        field_type(&collision_consumer, "Container", "item"),
+        &collision_consumer,
+        &external_defs,
+    );
+    let ShapeNode::Nominal { fields, .. } = unresolved.root else {
+        panic!("outer must have a nominal shape");
+    };
+    let ShapeNode::Nominal {
+        fields: inner_fields,
+        ..
+    } = &fields[0].declared_type
+    else {
+        panic!("outer field must preserve its unresolved inner shape");
+    };
+    assert_eq!(
+        inner_fields[0].declared_type,
+        ShapeNode::TypeParameter("T".to_string())
+    );
 }
 
 #[test]
