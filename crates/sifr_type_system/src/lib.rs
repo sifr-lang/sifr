@@ -34,7 +34,10 @@ pub mod narrow;
 pub use literal::{widen as widen_literal, LiteralValue};
 pub use narrow::{narrow_type, NarrowingCondition};
 pub use safe_optional::safe_optional_result;
-pub use substitution::{substitute_type_vars, substitute_type_vars_with_class_scopes};
+pub use substitution::{
+    substitute_type_vars, substitute_type_vars_with_class_scopes,
+    substitution_preserves_union_structure,
+};
 
 /// Returns whether a declaration belongs to a public stdlib module's compiled
 /// export surface. Underscore-prefixed declarations are private except for the
