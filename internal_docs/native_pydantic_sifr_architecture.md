@@ -475,7 +475,11 @@ plan selects the same identity. `public_name` is a literal identifier.
 without passing a dummy value; an instance receiver requires the first
 function parameter to use that owner type with the matching default-borrow,
 `mut`, or `own` convention. Remaining type parameters stay available for
-normal call-site inference.
+normal call-site inference. Omitted public arguments use the attached package
+function's checked defaults. An instance binding maps those defaults after it
+removes the hidden owner parameter. A concrete generic alias such as
+`TypeAdapter[Model] = Model` forwards a type call to `Model`; it does not own a
+separate static program or emit a Rust import for the erased alias.
 
 A method descriptor call on a user method produces a sealed method-declaration
 identity in `ClassDeclaration[D]`. An adapter can return only that identity in
@@ -709,7 +713,9 @@ binding selects a public name and one receiver form:
 The compiler substitutes the adapted owner for the declared owner type or
 `Self`. An attached function can retain other type parameters. Normal call-site
 inference resolves those parameters, and their concrete arguments participate
-in code-generation identity. The compiler then applies normal generic,
+in code-generation identity. The compiler applies the declared checked defaults
+to omitted arguments. A concrete generic alias can forward the call surface to
+its resolved adapted owner. The compiler then applies normal generic,
 ownership, effect, and `Result` checks.
 
 The binding refers to an existing package function. The compiler does not copy

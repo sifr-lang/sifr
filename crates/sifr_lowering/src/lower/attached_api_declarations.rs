@@ -139,6 +139,7 @@ pub(super) fn declaration(
         type_params: Vec::new(),
         type_param_bounds: std::collections::BTreeMap::new(),
         function_type: sifr_type_system::FunctionType::new(Vec::new(), Type::Any),
+        defaults: Vec::new(),
         range: decorator.expression.range(),
     })
 }
@@ -231,6 +232,11 @@ pub(super) fn finalize(ctx: &mut LowerCtx, module: &str) {
         declaration.type_params = type_params;
         declaration.type_param_bounds = bounds.into_iter().collect();
         declaration.function_type = function_type;
+        declaration.defaults = ctx
+            .function_defaults
+            .get(&declaration.function)
+            .cloned()
+            .unwrap_or_default();
         ctx.attached_apis[index] = declaration;
     }
 }

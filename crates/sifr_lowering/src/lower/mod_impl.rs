@@ -741,27 +741,24 @@ pub(in crate::lower) fn lower_module_impl(
                     }
                 }
                 if !found {
-                    if let Some(module_consts) = externals.constants.get(&module_name) {
-                        if let Some(const_ty) = module_consts.get(name) {
-                            ctx.scope.define(
-                                local.clone(),
-                                imported_class_identity::type_for_import(
-                                    const_ty,
-                                    &module_name,
-                                    &class_aliases,
-                                ),
-                            );
-                            if let Some(value) = externals
-                                .constant_integer_values
-                                .get(&module_name)
-                                .and_then(|module_values| module_values.get(name))
-                            {
-                                ctx.const_integer_values
-                                    .insert(local.clone(), value.clone());
-                            }
-                            found = true;
-                        }
-                    }
+                    found = imports::import_constant(
+                        &mut ctx,
+                        externals,
+                        &module_name,
+                        name,
+                        &local,
+                        &class_aliases,
+                    );
+                }
+                if !found {
+                    found = imports::import_generic_type_alias(
+                        &mut ctx,
+                        externals,
+                        &module_name,
+                        name,
+                        &local,
+                        &class_aliases,
+                    );
                 }
                 if !found {
                     name_diagnostics::missing_member(
@@ -773,11 +770,11 @@ pub(in crate::lower) fn lower_module_impl(
                 }
             }
 
-            imports.push(HirImport {
-                module: module_name,
-                names,
-                aliases,
-            });
+            if let Some(import) =
+                imports::runtime_hir_import(module_name, names, aliases, externals)
+            {
+                imports.push(import);
+            }
         } else if let Stmt::Import(import_stmt) = stmt {
             for alias in &import_stmt.names {
                 let module_name = alias.name.to_string();
@@ -871,6 +868,16 @@ pub(in crate::lower) fn lower_module_impl(
             declaration_descriptors: Vec::new(),
             applied_adapter_metadata: Vec::new(),
             type_aliases: ctx.scope.type_aliases().clone(),
+            generic_type_aliases: alias_decls
+                .iter()
+                .filter(|decl| !decl.type_params.is_empty())
+                .filter_map(|decl| {
+                    ctx.scope
+                        .generic_type_aliases()
+                        .get(&decl.name)
+                        .map(|resolved| (decl.name.clone(), resolved.clone()))
+                })
+                .collect(),
             specialization_requests: ctx.specialization_requests.clone(),
             specialization_outputs: Vec::new(),
             json_integer_boundary_requests: ctx.json_integer_boundary_requests.clone(),

@@ -72,6 +72,37 @@ def main():
 }
 
 #[test]
+fn imported_generic_type_alias_forwards_attached_type_calls() {
+    let contract = selective_contract();
+    let mut modules = project(
+        r#"
+from fixture.facade import Adapter
+from fixture.models import Selected
+
+def main():
+    assert Adapter[Selected].describe() == "attached"
+    assert Adapter[Selected].echo("value") == "value"
+"#,
+        &contract,
+    );
+    modules.insert("fixture.models".to_string(), parse_suite(MODELS));
+    modules.insert(
+        "fixture.facade".to_string(),
+        parse_suite("type Adapter[T] = T\n"),
+    );
+    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let compiled = collect_project_hir_modules(&modules, stdlib_defs)
+        .expect("an imported generic type alias should forward attached type calls");
+    let main = compiled
+        .hir_modules
+        .get("main")
+        .expect("main module exists");
+    let debug_hir = format!("{main:?}");
+    assert!(debug_hir.contains("BoolLiteral(true)"), "{debug_hir}");
+    assert!(debug_hir.contains("name: \"Selected\""), "{debug_hir}");
+}
+
+#[test]
 fn imported_unselected_owner_exposes_no_provisional_attached_api() {
     let contract = selective_contract();
     let mut modules = project(

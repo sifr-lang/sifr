@@ -92,8 +92,10 @@ class ContractApi:
     pass
 
 @attached_api("fixture.contract", "ContractApi", public_name="describe", receiver="type", owner="T")
-def describe[T: StaticProgram]() -> str:
-    return "attached"
+def describe[T: StaticProgram](enabled: bool = True) -> str:
+    if enabled:
+        return "attached"
+    return "disabled"
 
 @attached_api("fixture.contract", "ContractApi", public_name="echo", receiver="type", owner="T")
 def echo[T: StaticProgram, Input: Structural](input: Input) -> Input:
@@ -104,8 +106,10 @@ def echo_strings[T: StaticProgram, Input: StringStructural](input: Input) -> Inp
     return input
 
 @attached_api("fixture.contract", "ContractApi", public_name="touch", receiver="mutable", owner="T")
-def touch[T: StaticProgram](mut target: Self) -> int:
-    return 1
+def touch[T: StaticProgram](mut target: Self, enabled: bool = True) -> int:
+    if enabled:
+        return 1
+    return 0
 
 @attached_api("fixture.contract", "ContractApi", public_name="finish", receiver="owned", owner="T")
 def finish[T: StaticProgram](own target: Self) -> int:

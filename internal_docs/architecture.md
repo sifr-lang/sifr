@@ -907,7 +907,11 @@ final plan selected no set. Attached signatures are added to the adapted
 `Type::Class` surface without adding HIR methods, structural members, handler slots, or synthesized
 method bodies. Calls lower directly to the declared package function through deterministic hidden
 imports. The lowering substitutes the concrete owner and `Self`, infers residual type parameters,
-and records their concrete arguments in the emitted call identity. Type, shared-borrow,
+records their concrete arguments in the emitted call identity, and applies the checked package
+function defaults to omitted public arguments. Instance bindings remove the hidden owner parameter
+before they map default indexes. A generic type alias can forward an attached type call when its
+concrete expansion resolves to an adapted class; the class remains the static-program owner, and
+the compile-time alias does not become a generated Rust import. Type, shared-borrow,
 mutable-borrow, and owned receivers use the normal call and ownership checks; type-directed calls
 do not construct or pass a dummy owner value. For a structural Rust bridge, a type receiver's
 declared owner is a valid use of its exact `StaticProgram` type parameter. The generated call keeps

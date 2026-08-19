@@ -144,6 +144,11 @@ The finalized adapter field plan supplies the required and default states for th
 
 An unbound generic adapted declaration does not request a schema program.
 A concrete owner must supply all type arguments before static program generation.
+An attached call through a concrete generic type alias uses the resolved class as
+that owner. The alias does not create a second schema program. Attached-call
+lowering also uses the package function's checked defaults for omitted public
+arguments; instance receivers shift default indexes after the hidden owner is
+removed.
 
 Project code generation checks structural program owners against the complete module graph.
 An imported mapped opaque field uses the generated package type's structural identity.

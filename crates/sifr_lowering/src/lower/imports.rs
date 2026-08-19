@@ -1,4 +1,5 @@
 use ruff_text_size::TextRange;
+use sifr_ir::HirImport;
 use sifr_python_ast::Stmt;
 
 use super::imported_defaults::{
@@ -6,6 +7,76 @@ use super::imported_defaults::{
 };
 use super::{import_diagnostics, name_diagnostics, ExternalDefs, LowerCtx};
 use std::collections::HashMap;
+
+pub(in crate::lower) fn runtime_hir_import(
+    module: String,
+    mut names: Vec<String>,
+    mut aliases: Vec<(String, String)>,
+    externals: &ExternalDefs,
+) -> Option<HirImport> {
+    if let Some(generic_aliases) = externals.generic_type_aliases.get(&module) {
+        names.retain(|name| !generic_aliases.contains_key(name));
+        aliases.retain(|(name, _)| !generic_aliases.contains_key(name));
+    }
+    (!names.is_empty()).then_some(HirImport {
+        module,
+        names,
+        aliases,
+    })
+}
+
+pub(in crate::lower) fn import_constant(
+    ctx: &mut LowerCtx,
+    externals: &ExternalDefs,
+    module: &str,
+    source_name: &str,
+    local_name: &str,
+    class_aliases: &HashMap<String, String>,
+) -> bool {
+    let Some(const_ty) = externals
+        .constants
+        .get(module)
+        .and_then(|constants| constants.get(source_name))
+    else {
+        return false;
+    };
+    ctx.scope.define(
+        local_name.to_string(),
+        super::imported_class_identity::type_for_import(const_ty, module, class_aliases),
+    );
+    if let Some(value) = externals
+        .constant_integer_values
+        .get(module)
+        .and_then(|values| values.get(source_name))
+    {
+        ctx.const_integer_values
+            .insert(local_name.to_string(), value.clone());
+    }
+    true
+}
+
+pub(in crate::lower) fn import_generic_type_alias(
+    ctx: &mut LowerCtx,
+    externals: &ExternalDefs,
+    module: &str,
+    source_name: &str,
+    local_name: &str,
+    class_aliases: &HashMap<String, String>,
+) -> bool {
+    let Some((type_params, alias)) = externals
+        .generic_type_aliases
+        .get(module)
+        .and_then(|aliases| aliases.get(source_name))
+    else {
+        return false;
+    };
+    ctx.scope.define_generic_type_alias(
+        local_name.to_string(),
+        type_params.clone(),
+        super::imported_class_identity::type_for_import(alias, module, class_aliases),
+    );
+    true
+}
 
 pub(super) fn register_imported_class_instance_methods(
     ctx: &mut LowerCtx,
@@ -395,6 +466,22 @@ pub(in crate::lower) fn resolve_imports_early(
                                 &local_name_for(name),
                             );
                         }
+                    }
+                }
+            }
+            if let Some(module_aliases) = externals.generic_type_aliases.get(&module_key) {
+                for name in &names {
+                    let local = local_name_for(name);
+                    if let Some((type_params, alias)) = module_aliases.get(name) {
+                        ctx.scope.define_generic_type_alias(
+                            local,
+                            type_params.clone(),
+                            super::imported_class_identity::type_for_import(
+                                alias,
+                                &module_key,
+                                &class_aliases,
+                            ),
+                        );
                     }
                 }
             }
