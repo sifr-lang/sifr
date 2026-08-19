@@ -1,6 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
+use indexmap::IndexMap;
+
 use super::{
     binary_container, tuple, unary_container, ConstructToken, NodeId, ShapeIdentity,
     StructuralConstruct, StructuralContractError, StructuralEdge, StructuralEdgeKind,
@@ -80,6 +82,78 @@ where
 }
 
 impl<K, V> StructuralProject for HashMap<K, V>
+where
+    K: StructuralProject + Eq + Hash,
+    V: StructuralProject,
+{
+    fn structural_project<'value, Visitor: StructuralVisitor<'value>>(
+        &'value self,
+        visitor: &mut Visitor,
+    ) -> Result<(), Visitor::Error> {
+        let control = visitor.enter(StructuralEnter::new(
+            StructuralKind::Mapping,
+            None,
+            self.len().saturating_mul(2),
+        ))?;
+        if control == VisitControl::Continue {
+            for (index, (key, value)) in self.iter().enumerate() {
+                visitor.edge(StructuralEdge::new(StructuralEdgeKind::MappingKey(index)))?;
+                key.structural_project(visitor)?;
+                visitor.edge(StructuralEdge::new(StructuralEdgeKind::MappingValue(index)))?;
+                value.structural_project(visitor)?;
+            }
+        }
+        visitor.exit(StructuralKind::Mapping)
+    }
+}
+
+impl<K: StructuralType, V: StructuralType> StructuralType for IndexMap<K, V> {
+    fn shape_identity() -> ShapeIdentity {
+        binary_container("mapping", K::shape_identity(), V::shape_identity())
+    }
+}
+
+impl<K, V> StructuralConstruct for IndexMap<K, V>
+where
+    K: StructuralConstruct + Eq + Hash,
+    V: StructuralConstruct,
+{
+    fn structural_construct_at<S: StructuralSource>(
+        source: &mut S,
+        node: NodeId,
+        token: ConstructToken,
+    ) -> Result<Self, StructuralContractError> {
+        let description = source.node(node)?;
+        if description.kind() != StructuralKind::Mapping {
+            return Err(StructuralContractError::KindMismatch);
+        }
+        if description.edges().len() % 2 != 0 {
+            return Err(StructuralContractError::ArityMismatch);
+        }
+        let pairs = description
+            .edges()
+            .chunks_exact(2)
+            .enumerate()
+            .map(|(index, pair)| {
+                if pair[0].kind() != StructuralEdgeKind::MappingKey(index)
+                    || pair[1].kind() != StructuralEdgeKind::MappingValue(index)
+                {
+                    return Err(StructuralContractError::MemberMismatch);
+                }
+                Ok((pair[0].node(), pair[1].node()))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut result = IndexMap::with_capacity(pairs.len());
+        for (key_node, value_node) in pairs {
+            let key = K::structural_construct_at(source, key_node, token)?;
+            let value = V::structural_construct_at(source, value_node, token)?;
+            result.insert(key, value);
+        }
+        Ok(result)
+    }
+}
+
+impl<K, V> StructuralProject for IndexMap<K, V>
 where
     K: StructuralProject + Eq + Hash,
     V: StructuralProject,
@@ -218,3 +292,61 @@ tuple_structural!(A:0);
 tuple_structural!(A:0, B:1);
 tuple_structural!(A:0, B:1, C:2);
 tuple_structural!(A:0, B:1, C:2, D:3);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::interop::structural::{
+        primitive, structural_construct, ArenaNode, StructuralArena, StructuralNodeEdge,
+        StructuralScalar,
+    };
+    use crate::SifrInt;
+
+    #[test]
+    fn index_map_construction_preserves_mapping_order() {
+        let root = ArenaNode::aggregate(
+            StructuralKind::Mapping,
+            None,
+            vec![
+                StructuralNodeEdge::new(StructuralEdgeKind::MappingKey(0), NodeId::new(1)),
+                StructuralNodeEdge::new(StructuralEdgeKind::MappingValue(0), NodeId::new(2)),
+                StructuralNodeEdge::new(StructuralEdgeKind::MappingKey(1), NodeId::new(3)),
+                StructuralNodeEdge::new(StructuralEdgeKind::MappingValue(1), NodeId::new(4)),
+            ],
+        );
+        let nodes = vec![
+            root,
+            string_node("first"),
+            integer_node("1"),
+            string_node("second"),
+            integer_node("2"),
+        ];
+        let shape = binary_container("mapping", primitive("str"), primitive("int"));
+        let arena = StructuralArena::seal(shape, NodeId::new(0), nodes)
+            .unwrap_or_else(|error| panic!("mapping arena should seal: {error}"));
+        let output: IndexMap<String, SifrInt> = structural_construct(arena)
+            .unwrap_or_else(|error| panic!("index map should construct: {error}"));
+
+        assert_eq!(
+            output.keys().map(String::as_str).collect::<Vec<_>>(),
+            vec!["first", "second"]
+        );
+    }
+
+    fn string_node(value: &str) -> ArenaNode {
+        ArenaNode::scalar(
+            StructuralKind::String,
+            StructuralScalar::String(value.to_owned()),
+        )
+    }
+
+    fn integer_node(value: &str) -> ArenaNode {
+        ArenaNode::scalar(
+            StructuralKind::ExactInteger,
+            StructuralScalar::ExactInteger(
+                SifrInt::parse_decimal(value, 32)
+                    .unwrap_or_else(|error| panic!("integer should parse: {error}")),
+            ),
+        )
+    }
+}
