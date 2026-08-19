@@ -1699,8 +1699,37 @@ traits for ordinary and attached `StringStructural` functions. It must add
 rustc-level attached-path evidence and preserve checked diagnostics. It should
 also traverse generic type arguments defensively and add a durable negative
 fixture. No third review runs for this prerequisite.
-Next action: implement that bounded M11 compiler follow-up before the package
-surface.
+Next action: completed by compiler prerequisite 2 below.
+
+Compiler prerequisite 2 state: complete
+PR: [`sifr-lang/sifr#3319`](https://github.com/sifr-lang/sifr/pull/3319)
+Base SHA: `c034023c6c635fb00d5508ea3cdee5b944a36e73`
+Candidate SHA: `e3179adcfdad46367ddca5b343a90a8347614a52`
+Merge SHA: `240852f15423bac125db7debfd168b47f29aba6a`
+Changed paths: `StringStructural` Rust body bounds and defensive generic-argument
+checking; focused lowering and code-generation tests; durable negative evidence;
+the package-neutral attached-API fixture; and the related architecture text.
+Validation: the lowering suite passed 1001 tests with one ignored. The
+code-generation suite passed 1051 tests. The driver suite passed 532 tests
+with 76 generated-build tests ignored by that command. Five focused lowering
+tests, the focused code-generation test, and 22 early-adapter tests passed.
+The package-neutral attached fixture compiled through `rustc` and ran nested
+and imported string-structural calls. The structural Rust-bridge native test
+also passed. Normal affected-crate Clippy passed with warnings denied. Rust and
+Sifr formatting, both maintainability guards, file-size, documentation-link,
+and diff guards passed. The exact candidate's create-PR and merge gates each
+ran once. Both passed every preceding guard and stopped at the same two
+external Rust-interop matrix inputs recorded above. Neither gate was rerun.
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3319#issuecomment-5340637186)).
+Deferred follow-up: M12 should make the negative fixture independently
+package-compilable, add a direct attached-API code-generation unit, and align
+negative metadata if core-language gains a manifest-driven harness. M12 should
+also repair the pre-existing stale source-root paths in the installed attached
+API certification helper.
+Next action: implement the M11 package surface on compiler merge
+`240852f15423bac125db7debfd168b47f29aba6a`.
 
 Scope:
 
@@ -1842,9 +1871,9 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M10 are merged and recorded. M11 is in progress. Its first
-compiler prerequisite merged in Sifr PR #3317 at
-`35fc60d61c398abc53573187dde6a38330513a25`.
+Current state: M0-M10 are merged and recorded. M11 is in progress. Its two
+compiler prerequisites merged in Sifr PRs #3317 and #3319. The current
+compiler merge is `240852f15423bac125db7debfd168b47f29aba6a`.
 
 External gate record (2026-08-19): both one-time gates for PR #3317 stopped at
 the Rust-interop matrix. The matrix reported one missing negative evidence
@@ -1852,5 +1881,5 @@ source and one existing empty placeholder class. The item did not own or alter
 those inputs. Both gates passed all earlier guards, and neither gate was
 rerun.
 
-Next action: implement the bounded M11 `StringStructural` body-bound and
-rustc-level attached-path follow-up. Then resume the M11 package surface.
+Next action: implement the M11 package surface in `pydantic-sifr` on compiler
+merge `240852f15423bac125db7debfd168b47f29aba6a`.
