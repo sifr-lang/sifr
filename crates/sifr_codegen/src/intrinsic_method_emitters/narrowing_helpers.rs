@@ -1,4 +1,19 @@
-use super::{HirExpr, Type};
+use super::{HirExpr, RustEmitter, RustExpr, Type};
+
+impl RustEmitter {
+    pub(crate) fn coerce_collection_element_for_registry(
+        &self,
+        target_ty: &Type,
+        argument: &HirExpr,
+        lowered: RustExpr,
+    ) -> RustExpr {
+        let source_ty = self.effective_registry_expr_ty(argument);
+        let lowered =
+            crate::helpers::flatten_option_value_for_target(target_ty, &source_ty, lowered);
+        self.consuming_value_upcast_for_ir(target_ty, &source_ty, lowered)
+    }
+}
+
 pub(crate) fn supports_nonempty_pop_narrowing_type_for_codegen(object_ty: &Type) -> bool {
     match crate::resolve_alias_type_for_plain_call(object_ty) {
         Type::List(_) => true,

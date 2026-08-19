@@ -40,6 +40,8 @@ impl RustEmitter {
                 } else if structural && static_program {
                     "sifr_runtime::interop::structural::StructuralConstruct + sifr_runtime::interop::structural::StructuralProject + sifr_runtime::interop::structural::StaticProgramType"
                         .to_string()
+                } else if static_program {
+                    "sifr_runtime::interop::structural::StaticProgramType + Clone".to_string()
                 } else if structural {
                     "sifr_runtime::interop::structural::StructuralConstruct + sifr_runtime::interop::structural::StructuralProject".to_string()
                 } else if attached_api || Self::is_nullcontext_value_forwarder(func) {

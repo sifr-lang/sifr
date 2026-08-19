@@ -120,6 +120,10 @@ fn structural_identity_inputs_supported(class_name: &str, ctx: &LowerCtx) -> boo
     if let Some(supported) = ctx.imported_structural_identity_inputs.get(class_name) {
         return *supported;
     }
+    if !ctx.attached_api_selections_finalized && ctx.adapted_class_bindings.contains_key(class_name)
+    {
+        return true;
+    }
     ctx.class_field_defaults
         .get(class_name)
         .into_iter()
@@ -234,6 +238,8 @@ fn supports_static_program_type(ty: &Type, ctx: &LowerCtx) -> bool {
         .specialization_requests
         .iter()
         .any(|request| request.owner == *name);
+    let provisional_adapter_request =
+        !ctx.attached_api_selections_finalized && ctx.adapted_class_bindings.contains_key(name);
     let imported_identity = identity
         .as_deref()
         .and_then(|canonical| canonical.rsplit_once('.'));
@@ -249,7 +255,8 @@ fn supports_static_program_type(ty: &Type, ctx: &LowerCtx) -> bool {
                 .iter()
                 .any(|request| request.owner == canonical_owner)
         });
-    (local_request || imported_request) && supports_structural_bridge_type(ty, ctx)
+    (local_request || imported_request || provisional_adapter_request)
+        && supports_structural_bridge_type(ty, ctx)
 }
 
 fn contains_declared_generic_class(

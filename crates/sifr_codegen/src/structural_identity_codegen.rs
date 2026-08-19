@@ -4,7 +4,11 @@ use sifr_type_system::Type;
 use std::collections::{HashMap, HashSet};
 
 mod mapped_opaque;
-use mapped_opaque::mapped_opaque_identity_expression;
+mod render;
+use mapped_opaque::{
+    mapped_opaque_identity_expression, mapped_opaque_identity_expression_for_imported_type,
+};
+use render::static_expression;
 
 const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
 
@@ -316,7 +320,12 @@ fn compile_type(
                 },
             );
             if let Some((module_name, _, class)) = candidate {
-                if let Some(expression) = mapped_opaque_identity_expression(class) {
+                let mapped_expression = if module_name == scope_module_name {
+                    mapped_opaque_identity_expression(class)
+                } else {
+                    mapped_opaque_identity_expression_for_imported_type(class, module_name)
+                };
+                if let Some(expression) = mapped_expression {
                     return CompiledIdentity::Dynamic(expression);
                 }
                 if class.is_enum() {
@@ -611,16 +620,6 @@ fn project_class_identity(class: &HirClass, module_name: &str) -> String {
             format!("{module_name}.{}", class.name)
         }
     })
-}
-
-fn static_expression(value: ShapeIdentity) -> String {
-    let bytes = value
-        .as_bytes()
-        .iter()
-        .map(u8::to_string)
-        .collect::<Vec<_>>()
-        .join(", ");
-    format!("{STRUCTURAL}::ShapeIdentity::from_bytes([{bytes}])")
 }
 
 #[cfg(test)]

@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-19. M0-M7e are complete; M8 is next.
+Status: active on 2026-08-19. M0-M7e are complete; M7f is in progress.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -397,6 +397,8 @@ Next action: implement M1 spanned class declarations and package issues.
 ### M1: Spanned Class Declarations and Package Issues
 
 Owner: `sifr-lang/sifr`.
+
+Issue: [`sifr-lang/sifr#3291`](https://github.com/sifr-lang/sifr/issues/3291)
 
 Scope:
 
@@ -1181,6 +1183,48 @@ The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
 outside this phase.
 Next action: resume the preserved M8 package work.
 
+### M7f: Package-Neutral Static Program Integration
+
+Owner: `sifr-lang/sifr`.
+
+Scope:
+
+- Accept provisional `StaticProgram` bounds for adapted classes before attached
+  API selection is final, then apply the strict final check.
+- Defer required-after-default ordering until descriptor defaults have final
+  adapter states.
+- Evaluate nested checked const calls in typed descriptor arguments, including
+  imported and re-exported functions and typed list items.
+- Add closed primitive `isinstance` evaluation and deterministic record-key
+  iteration to the const evaluator.
+- Preserve union narrowing inside nested blocks and collection insertion.
+- Do not request a static program for an unbound generic adapted declaration.
+- Use generated package types for imported mapped opaque structural identity.
+- Select static-program structural owners against the complete project graph.
+- Extend the non-Pydantic adapter fixture through a retained `StaticProgram`
+  call.
+
+Acceptance criteria:
+
+- A descriptor-shaped required field can precede an ordinary required field.
+- Nested imported and re-exported const calls retain typed descriptor values.
+- Closed primitive checks and record iteration remain deterministic.
+- Nested union branches and collection insertion compile without an invalid
+  union representation.
+- An unbound generic adapted class remains usable with concrete type arguments
+  but emits no unbound program.
+- A model with imported mapped opaque fields receives one structural program
+  whose identity uses the generated package type.
+- Project owner selection matches project structural implementation
+  eligibility.
+- The package-neutral fixture builds and runs through native code.
+
+Exit gate: a package can derive and consume one adapted static program across
+project modules without provisional-ordering, generic-owner, or mapped-identity
+leaks.
+
+State: in progress
+
 ### M8: Pydantic Model, Field, and Configuration Declarations
 
 Owner: `sifr-lang/pydantic-sifr`.
@@ -1456,7 +1500,7 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M7e are merged and recorded; M8 is next.
+Current state: M0-M7e are merged and recorded; M7f is in progress.
 
-Next action: resume the preserved M8 work in `sifr-lang/pydantic-sifr` on the
-merged compiler substrate.
+Next action: complete M7f, merge its compiler prerequisite, then resume the
+preserved M8 package work on that exact merged compiler substrate.
