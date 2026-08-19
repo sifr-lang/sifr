@@ -1504,6 +1504,37 @@ Acceptance criteria:
 Exit gate: the selected serializer and computed-field API works through the
 existing projection and serialization engine.
 
+Compiler prerequisite state: complete
+PR: [`sifr-lang/sifr#3303`](https://github.com/sifr-lang/sifr/pull/3303)
+Base SHA: `1babdde1921c5ebc20681ce72b9bb98c3329db0a`
+Candidate SHA: `576fd68023837d241701f170432ef6e5569d79b6`
+Merge SHA: `6fa16c48b78a6059f70de607944a7f461c618a77`
+Changed paths: checked slot finalization, method-slot code generation, focused
+frontend tests, the package-neutral method-slot runtime fixture, and the
+const-specialization contract.
+Validation: 98 frontend tests; 1,040 code-generation tests; the runtime fixture
+for receiver-only, static, shared-context, no-context, and new
+receiver/value/mutable-context dispatch; production-library Clippy with
+warnings denied; formatting; HIR maintainability; the 900-line guardrail; and
+`git diff --check`. Broad all-target Clippy stopped on inherited test-only
+lints outside the changed paths. The one create-PR gate and one merge gate ran
+on the unchanged candidate. Both passed their preceding guards and stopped at
+the shared stale generated-demo freshness boundary. Neither gate was rerun.
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3303#issuecomment-5337670461)).
+`main` advanced after the review and gates. Integration merge
+`8fafa57819a670e4f6b5c0d948e9949342d17469` retained the reviewed candidate as
+a parent and resolved one overlapping renderer-helper rename. Focused frontend
+and code-generation tests and formatting passed on that integration merge.
+Deferred follow-up: M12 should make the owned receiver-value rule explicit in
+the frontend, record the composite-input role on `StaticMethodSlot` instead of
+inferring it from a two-element tuple, remove the unreachable mutable-value
+binding branch, and add direct code-generation and arity-diagnostic tests.
+Next action: implement the M10 package facade on compiler merge
+`6fa16c48b78a6059f70de607944a7f461c618a77` and package merge
+`8af4a1f4d598829ac427f96c34b76289e13eedd9`.
+
 ### M11: Complete Model Operations and Schema Surface
 
 Owner: both repositories, with compiler work merged first.
@@ -1658,4 +1689,5 @@ compiler implementation or demo output, so it did not absorb or rerun this
 failure. Refresh or retire the companions under this phase's emission owner.
 
 Next action: implement M10 serializers, computed fields, and attached dump
-methods on package merge `8af4a1f4d598829ac427f96c34b76289e13eedd9`.
+methods on compiler merge `6fa16c48b78a6059f70de607944a7f461c618a77`
+and package merge `8af4a1f4d598829ac427f96c34b76289e13eedd9`.
