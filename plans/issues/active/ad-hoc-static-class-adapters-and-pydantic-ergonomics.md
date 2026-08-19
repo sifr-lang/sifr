@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-19. M0-M7f are complete; M8 is in progress.
+Status: active on 2026-08-19. M0-M8 are complete; M9 is in progress.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -1307,6 +1307,52 @@ Acceptance criteria:
 Exit gate: users can declare the selected fields, constraints, defaults,
 aliases, configuration, and specialized public values with familiar syntax.
 
+State: complete
+PR: [`sifr-lang/pydantic-sifr#44`](https://github.com/sifr-lang/pydantic-sifr/pull/44)
+Base SHA: `0c643a676d821b92ce4dfa824a8f6a5b98073d4c`
+Candidate SHA: `a9d478d8bbb1b6b34f559315f09683bb8f6c8c5e`
+Merge SHA: `cb23ac5ffde668b9c8cfce5362c5149d01463742`
+Changed paths: package declarations, descriptors, schema derivation and
+responsibility splits under `src/`; native validation, serialization, special
+value, and JSON Schema paths under `backend/`; M8 and preserved demos; package
+manifests and compiler pins; documentation; focused Sifr, Rust, Python, and
+static-program fixtures; and package validation scripts.
+Validation: the raw-metadata-free M8 demo built and ran natively; package
+format, check, and internal tests passed; 3 descriptor and 7 schema negative
+cases reported the expected diagnostics; and the dependent-package static
+program round trip passed at 2965 bytes with identity
+`50f05ea2c6694c6d7cff32e9dbc5e4db552b7ba71d377aea9d0b4eca1de863ed`.
+All 39 Python unit tests, full Rust workspace tests and targets, workspace
+clippy with warnings denied, Rust formatting, the 900-line file-size guard,
+and `git diff --check` passed. The one create-PR gate attempt passed the file
+guard, exact compiler pin, and Python tests before the missing local upstream
+checkout stopped it
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/44#issuecomment-5336494712)).
+The pinned upstream checkout was prepared before the one merge-gate attempt.
+That attempt additionally passed the 310-file/12,754-node upstream audit and
+the 53-kind Core Schema audit, then stopped because the local upstream
+`uv --no-sync` environment could not import `pydantic_core`; it was not rerun
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/44#issuecomment-5336509601)).
+Review evidence: the initial exact-SHA Opus review found blocking regressions
+in typed error overrides and exact `Constraints` diagnostic origins
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/44#issuecomment-5336517083)).
+Both were remediated together. The one permitted remediation review on the
+final candidate returned `SATISFIED` with no blocking findings
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/44#issuecomment-5336482736)).
+Deferred follow-up: M9 should strengthen the type-descriptor diagnostic fixture
+with separate source lines or a caret-column assertion, avoid duplicate
+default/factory conflict diagnostics from type descriptors, improve incomplete
+built-in error wording, and classify non-applicable descriptor and union-tag
+arguments. M10 should verify nested strictness and optional metadata placement.
+M11 should update the `RootModel` compatibility status when its operation
+facade is complete. M12 should remove or rename vacuous/dead package tests and
+helpers, assess positional descriptor-constructor drift and typed-descriptor
+identity churn, and certify the final surface. The compiler/package union-order
+mismatch belongs entirely to the parallel pre-v1 worktree and was not changed
+or investigated by M8.
+Next action: implement M9 Pydantic validator declarations and pipelines on the
+merged M8 package substrate.
+
 ### M9: Pydantic Validator Facade
 
 Owner: `sifr-lang/pydantic-sifr`.
@@ -1534,7 +1580,8 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M7f are merged and recorded; M8 is in progress.
+Current state: M0-M8 are merged and recorded; M9 is in progress.
 
-Next action: complete and merge the preserved M8 package work on compiler
-merge `6152fc50984395a640c42f31e9e270cd3a9e09c8`.
+Next action: implement M9 validators on package merge
+`cb23ac5ffde668b9c8cfce5362c5149d01463742` and compiler merge
+`6152fc50984395a640c42f31e9e270cd3a9e09c8`.
