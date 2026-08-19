@@ -1791,8 +1791,50 @@ showed missing `StaticProgramType` implementations for `ConcreteEnvelope` and
 `IntRoot`, plus inherited generic-parent layout trait failures for `IntRoot`.
 M12 must localize provider-module references in nonliteral attached defaults.
 The second review found that separate mechanism defect, so no third review ran.
-Next action: implement compiler prerequisite 5 before resuming the M11 package
-surface.
+Next action: completed by compiler prerequisite 5 below.
+
+Compiler prerequisite 5 state: complete
+PR: [`sifr-lang/sifr#3325`](https://github.com/sifr-lang/sifr/pull/3325)
+Base SHA: `240cec7731514ab30828e0e803f30e0661b06689`
+Initial candidate SHA: `b6ffb771c9c9d36e9e0127385a8b41307d109b59`
+Final candidate SHA: `c777d4dcb13ee69c08795d31fc5df34feab12d02`
+Merge SHA: `6046deb9ddadcd873b16bf0e0ae9812a9eca3006`
+Changed paths: package-neutral structural eligibility, identity, construction,
+and projection for one supported direct data parent; flattened class exports;
+conditional generic `Eq` and `Hash` derives; focused compiler tests; generated
+demo companions; the static class-adapter fixture; and architecture text.
+Validation: the lowering suite passed 1003 tests with one ignored. The frontend
+suite passed 98 tests. The code-generation suite passed 1052 tests. The driver
+suite passed 535 tests with 76 generated-build tests ignored by that profile.
+Affected compiler Clippy passed with warnings denied. Formatting, both
+maintainability guards, file-size, documentation-link, and diff guards passed.
+The release compiler built. The package-neutral adapter fixture compiled through
+`rustc` and ran local and imported concrete generic children. The M11 package
+passed source checking. Its native build no longer reports missing
+`StaticProgramType`, `Eq`, or `Hash` for `ConcreteEnvelope` and `IntRoot`.
+The remaining six Rust errors are package-owned generic wrapper bounds for the
+next M11 item.
+Review evidence: the initial exact-SHA Opus review returned `SATISFIED` with no
+blockers
+([evidence](https://github.com/sifr-lang/sifr/pull/3325#issuecomment-5342294481)).
+The create-PR gate then found two stale generated demo companions. The final
+candidate refreshed only those files, and the direct full freshness check
+passed. The one remediation review returned `SATISFIED` with no blockers or new
+mechanism defect
+([evidence](https://github.com/sifr-lang/sifr/pull/3325#issuecomment-5342468954)).
+Gate evidence: the create-PR gate ran once on the initial candidate and stopped
+at the stale generated companions. It was not rerun. The merge gate ran once
+on the final candidate. It passed generated-demo freshness and all preceding
+guards, then stopped at the separately owned Rust-interop fixture matrix. The
+two inputs were the missing generated-type-import negative source and the empty
+method-slot schema placeholder. Neither gate was rerun
+([evidence](https://github.com/sifr-lang/sifr/pull/3325#issuecomment-5342494203)).
+Deferred follow-up: M12 must consolidate the lowering and code-generation
+generic hash predicates. It must decide inherited parent-default behavior in
+flattened child contracts. It must also gate or support recursive boxed parent
+fields and add direct plain-parent structural coverage. These were non-blocking
+review findings. No third review ran.
+Next action: resume the M11 package surface.
 
 Scope:
 
