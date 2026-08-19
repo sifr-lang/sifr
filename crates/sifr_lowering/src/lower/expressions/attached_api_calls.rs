@@ -5,6 +5,7 @@ use super::{
     DiagnosticCode, Expr, ExprAttribute, ExprCall, FunctionType, HashMap, HirExpr, LowerCtx,
     Ranged, Type,
 };
+use crate::lower::typing_and_functions::resolve_annotation_expr;
 use sifr_ir::AttachedApiReceiver;
 
 pub(super) fn try_lower_type_call(
@@ -12,18 +13,50 @@ pub(super) fn try_lower_type_call(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<Option<HirExpr>> {
-    let Expr::Name(name) = attr.value.as_ref() else {
-        return None;
+    let (surface_name, owner_type) = match attr.value.as_ref() {
+        Expr::Name(name) => {
+            let class_name = name.id.to_string();
+            let owner_type = ctx.class_types.get(&class_name).cloned()?;
+            (class_name, owner_type)
+        }
+        Expr::Subscript(subscript) => {
+            let Expr::Name(name) = subscript.value.as_ref() else {
+                return None;
+            };
+            if !ctx.class_types.contains_key(name.id.as_str())
+                && ctx
+                    .scope
+                    .lookup_generic_type_alias(name.id.as_str())
+                    .is_none()
+            {
+                return None;
+            }
+            let owner_type = resolve_annotation_expr(&attr.value, ctx);
+            if matches!(owner_type, Type::Any | Type::Unknown) {
+                return Some(None);
+            }
+            let surface_name = if ctx
+                .attached_method_bindings
+                .contains_key(&format!("{}.{}", name.id, attr.attr))
+            {
+                name.id.to_string()
+            } else {
+                match owner_type.resolve_alias() {
+                    Type::Class { name, .. } => name.clone(),
+                    _ => return None,
+                }
+            };
+            (surface_name, owner_type)
+        }
+        _ => return None,
     };
-    let class_name = name.id.to_string();
     let binding = ctx
         .attached_method_bindings
-        .get(&format!("{class_name}.{}", attr.attr))?
+        .get(&format!("{surface_name}.{}", attr.attr))?
         .clone();
     if binding.declaration.receiver != AttachedApiReceiver::Type {
         return None;
     }
-    let owner_type = ctx.class_types.get(&class_name).cloned()?;
     Some(lower_call(
         binding,
         &owner_type,
@@ -72,6 +105,8 @@ fn lower_call(
     let full_type =
         super::super::attached_api_surfaces::specialize_owner(&binding.declaration, owner_type);
     let exposed_type = exposed_function_type(binding.declaration.receiver, &full_type);
+    let exposed_defaults =
+        exposed_defaults(binding.declaration.receiver, &binding.declaration.defaults);
     let mut args = lower_signature_call_args(
         call,
         &format!(
@@ -80,7 +115,7 @@ fn lower_call(
             binding.declaration.public_name
         ),
         &exposed_type,
-        None,
+        Some(&exposed_defaults),
         ctx,
     )?;
     let mut ranges = call_argument_ranges_by_param(call, &exposed_type);
@@ -153,6 +188,19 @@ fn lower_call(
         args,
         ty: substitute_type_vars(&full_type.return_type, &bindings),
     })
+}
+
+fn exposed_defaults(
+    receiver: AttachedApiReceiver,
+    defaults: &[(usize, HirExpr)],
+) -> Vec<(usize, HirExpr)> {
+    if receiver == AttachedApiReceiver::Type {
+        return defaults.to_vec();
+    }
+    defaults
+        .iter()
+        .filter_map(|(index, value)| index.checked_sub(1).map(|index| (index, value.clone())))
+        .collect()
 }
 
 fn validate_bindings(

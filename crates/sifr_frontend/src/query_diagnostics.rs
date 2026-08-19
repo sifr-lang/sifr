@@ -177,6 +177,7 @@ pub fn collect_module_exports(
     let mut fn_exports = HashMap::new();
     let mut const_fn_exports = HashMap::new();
     let mut class_exports = HashMap::new();
+    let mut generic_type_alias_exports = HashMap::new();
     let mut class_method_exports = ClassMethodExports::default();
     let mut class_type_param_exports = HashMap::new();
     let mut rust_opaque_exports = std::collections::HashSet::new();
@@ -194,6 +195,18 @@ pub fn collect_module_exports(
         declared_generic_metadata(module_name, module);
     let structural_method_exports = structural_method_map(module, &local_classes, lowering_result);
     let imported_ancestry = imported_class_ancestry(module, external_defs);
+
+    for (name, (type_params, alias)) in &lowering_result.generic_type_aliases {
+        if !name.starts_with('_') {
+            generic_type_alias_exports.insert(
+                name.clone(),
+                (
+                    type_params.clone(),
+                    canonicalize_user_export_type(alias, &local_classes),
+                ),
+            );
+        }
+    }
 
     for func in &module.functions {
         if should_export_callable(module_name, &func.name) {
@@ -429,6 +442,18 @@ pub fn collect_module_exports(
                     continue;
                 }
             }
+            if let Some(module_aliases) = external_defs.generic_type_aliases.get(&import.module) {
+                if let Some((type_params, alias)) = module_aliases.get(name) {
+                    generic_type_alias_exports.insert(
+                        local_name.clone(),
+                        (
+                            type_params.clone(),
+                            localize_user_import_type(alias, &import.module, &class_aliases),
+                        ),
+                    );
+                    continue;
+                }
+            }
             if let Some(module_consts) = external_defs.constants.get(&import.module) {
                 if let Some(const_type) = module_consts.get(name) {
                     const_exports.insert(
@@ -458,6 +483,9 @@ pub fn collect_module_exports(
     external_defs
         .classes
         .insert(module_name.to_string(), class_exports);
+    external_defs
+        .generic_type_aliases
+        .insert(module_name.to_string(), generic_type_alias_exports);
     external_defs.replace_structural_methods(module_name, structural_method_exports);
     if error_exports.is_empty() {
         external_defs.error_types.remove(module_name);

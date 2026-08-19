@@ -42,6 +42,7 @@ pub(super) fn into_frontend(
         declaration_descriptors: specialization_metadata.declaration_descriptors,
         applied_adapter_metadata: specialization_metadata.applied_adapter_metadata,
         type_aliases: std::collections::HashMap::new(),
+        generic_type_aliases: std::collections::HashMap::new(),
         specialization_requests: specialization_metadata.specialization_requests,
         specialization_outputs: specialization_metadata.specialization_outputs,
         json_integer_boundary_requests: specialization_metadata.json_integer_boundary_requests,

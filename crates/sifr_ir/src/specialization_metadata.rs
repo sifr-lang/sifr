@@ -181,7 +181,7 @@ pub enum AttachedApiReceiver {
 }
 
 /// Checked package function exported as one member of an attached-API set.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct AttachedApiDeclaration {
     pub module: String,
     pub function: String,
@@ -192,6 +192,7 @@ pub struct AttachedApiDeclaration {
     pub type_params: Vec<String>,
     pub type_param_bounds: std::collections::BTreeMap<String, Vec<String>>,
     pub function_type: sifr_type_system::FunctionType,
+    pub defaults: Vec<(usize, crate::HirExpr)>,
     pub range: TextRange,
 }
 

@@ -682,6 +682,10 @@ impl Scope {
     pub fn lookup_generic_type_alias(&self, name: &str) -> Option<&(Vec<String>, Type)> {
         self.generic_type_aliases.get(name)
     }
+
+    pub(crate) fn generic_type_aliases(&self) -> &HashMap<String, (Vec<String>, Type)> {
+        &self.generic_type_aliases
+    }
 }
 
 impl Default for Scope {

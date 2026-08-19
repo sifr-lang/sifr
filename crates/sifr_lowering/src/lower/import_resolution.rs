@@ -33,6 +33,7 @@ pub(in crate::lower) fn external_module_exists(
 ) -> bool {
     externals.functions.contains_key(module_name)
         || externals.classes.contains_key(module_name)
+        || externals.generic_type_aliases.contains_key(module_name)
         || externals.constants.contains_key(module_name)
 }
 

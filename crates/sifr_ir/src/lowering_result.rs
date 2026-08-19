@@ -38,6 +38,8 @@ pub struct LoweringResult {
     pub applied_adapter_metadata: Vec<AppliedAdapterMetadata>,
     /// Resolved non-generic module type aliases available to package declarations.
     pub type_aliases: HashMap<String, Type>,
+    /// Resolved generic module type aliases and their declared type parameters.
+    pub generic_type_aliases: HashMap<String, (Vec<String>, Type)>,
     pub specialization_requests: Vec<ConstSpecializationRequest>,
     /// Validated, deterministic outputs produced by package specializers.
     pub specialization_outputs: Vec<StaticSpecializationOutput>,
