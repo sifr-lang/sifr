@@ -24,7 +24,7 @@ fn test_method_slot_runtime() {
     );
     rebase_sifr_runtime_dependency(&package_root);
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "method_slot_runtime");
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     assert!(
         errors.is_empty(),
         "method-slot package must pass checking: {errors:#?}"
@@ -72,7 +72,8 @@ fn test_method_slot_lifetime_thread_and_shared_context_rejections() {
         .expect("negative method-slot bridge should be installed");
         let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "method_slot_runtime");
 
-        let errors = check_package_project(&entrypoint);
+        let errors =
+            check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
         assert!(
             errors.iter().any(|error| {

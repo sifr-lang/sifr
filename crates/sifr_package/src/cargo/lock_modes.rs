@@ -1,6 +1,6 @@
 use crate::cargo::metadata::NormalizedCargoMetadata;
 use crate::diag::PackageDiagnostic;
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum CargoLockMode {
@@ -71,14 +71,6 @@ pub fn cargo_lock_failure_reason(stderr: &str) -> Option<&'static str> {
 }
 
 pub fn validate_offline_source_availability(
-    metadata: &NormalizedCargoMetadata,
-    lock_mode: CargoLockMode,
-) -> Result<(), Vec<PackageDiagnostic>> {
-    let mut provider = DiskSourceProvider::new();
-    validate_offline_source_availability_with_provider(metadata, lock_mode, &mut provider)
-}
-
-pub fn validate_offline_source_availability_with_provider(
     metadata: &NormalizedCargoMetadata,
     lock_mode: CargoLockMode,
     provider: &mut impl SourceProvider,

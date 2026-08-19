@@ -40,7 +40,11 @@ fn archived_biip_bridge_builds_and_runs_without_checkout_or_extraction() {
     std::fs::remove_dir_all(&app.root).expect("source checkout should be removed before build");
 
     let graph = package_graph(&dir, &[&installed_app], &[]);
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let mut entrypoint = package_entrypoint(
         &graph,
         &source_map,
@@ -48,8 +52,9 @@ fn archived_biip_bridge_builds_and_runs_without_checkout_or_extraction() {
         installed_app.root.join("src/main.sifr"),
     );
     entrypoint.python_runtime = Some(verification_python_runtime(&["biip"]));
-    let artifact = build_cached_package_project(&entrypoint)
-        .expect("installed biip bridge binary should build from archived source");
+    let artifact =
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("installed biip bridge binary should build from archived source");
     std::fs::remove_dir_all(installed_app.root.join("src/python_bridges"))
         .expect("installed bridge sources should be removable after build");
 
@@ -125,13 +130,18 @@ fn two_packages_can_execute_the_same_bridge_module_path_without_collision() {
         &[&app, &library],
         &[package_edge(&app, "library_dep", &library)],
     );
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let mut entrypoint =
         package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
     entrypoint.python_runtime = Some(local_python_runtime(&dir));
 
     let artifact =
-        build_cached_package_project(&entrypoint).expect("two-package bridge binary should build");
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("two-package bridge binary should build");
     std::fs::remove_dir_all(app.root.join("src/python_bridges"))
         .expect("app bridge checkout should be removable");
     std::fs::remove_dir_all(library.root.join("src/python_bridges"))

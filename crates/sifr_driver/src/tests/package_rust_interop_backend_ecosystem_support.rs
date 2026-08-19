@@ -27,7 +27,7 @@ fn test_build_backend_loopback_and_sqlx_offline_metadata() {
         ),
     );
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "backend-feature-package");
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     assert!(
         errors.is_empty(),
         "bridge-safe backend package must pass compiler checking: {errors:#?}"
@@ -62,7 +62,7 @@ fn test_check_missing_and_stale_sqlx_offline_metadata_rejected_before_network() 
     let metadata =
         std::fs::read_to_string(&query_path).expect("SQLx query cache should be readable");
 
-    let control = check_package_project(&entrypoint);
+    let control = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     assert!(
         control.is_empty(),
         "checked-in SQLx offline metadata must be accepted before mutations: {control:#?}"
@@ -95,7 +95,7 @@ fn assert_sqlx_metadata_mutation_is_rejected(
         SqlxMetadataMutation::Missing => "missing",
         SqlxMetadataMutation::Stale => "stale",
     };
-    let errors = check_package_project(entrypoint);
+    let errors = check_package_project(entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     let rendered = format!("{errors:#?}");
     assert!(
         errors.iter().any(|error| {

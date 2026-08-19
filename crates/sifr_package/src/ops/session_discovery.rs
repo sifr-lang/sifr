@@ -1,9 +1,8 @@
 use crate::cargo::metadata::CargoPackageId;
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 use std::path::{Path, PathBuf};
 
-pub(super) fn find_manifest(start: &Path) -> Option<PathBuf> {
-    let mut provider = DiskSourceProvider::new();
+pub(super) fn find_manifest(start: &Path, provider: &mut impl SourceProvider) -> Option<PathBuf> {
     let mut current = if provider.is_file(start) {
         start.parent()?
     } else {
@@ -14,7 +13,7 @@ pub(super) fn find_manifest(start: &Path) -> Option<PathBuf> {
         if provider.is_file(&candidate) {
             return Some(candidate);
         }
-        if is_cargo_workspace_root(current, &mut provider) {
+        if is_cargo_workspace_root(current, provider) {
             return None;
         }
         current = current.parent()?;

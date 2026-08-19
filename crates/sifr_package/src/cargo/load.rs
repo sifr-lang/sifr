@@ -3,6 +3,7 @@ use crate::{
     CargoCommandPlan, CargoLockMode, NormalizedCargoMetadata, PackageDiagnostic, PackageSourceMap,
     SifrPackageGraph,
 };
+use sifr_frontend::SourceProvider;
 use std::path::Path;
 use std::process::Command;
 
@@ -55,6 +56,7 @@ impl PackageGraphLoadFailure {
 pub fn load_package_graph_snapshot(
     workspace_root: &Path,
     lock_mode: CargoLockMode,
+    provider: &mut impl SourceProvider,
 ) -> Result<PackageGraphSnapshot, PackageGraphLoadFailure> {
     let plan = CargoCommandPlan::metadata(workspace_root.to_path_buf(), lock_mode);
     let mut command = Command::new(&plan.program);
@@ -93,21 +95,24 @@ pub fn load_package_graph_snapshot(
             }
         })?;
     let normalized = metadata.clone().normalize();
-    let graph = derive_package_graph(metadata).map_err(|diagnostics| PackageGraphLoadFailure {
-        plan: plan.clone(),
-        kind: PackageGraphLoadFailureKind::Package {
-            diagnostics,
-            usage_error: false,
-        },
+    let graph = derive_package_graph(metadata, provider).map_err(|diagnostics| {
+        PackageGraphLoadFailure {
+            plan: plan.clone(),
+            kind: PackageGraphLoadFailureKind::Package {
+                diagnostics,
+                usage_error: false,
+            },
+        }
     })?;
-    let source_map =
-        PackageSourceMap::build(&graph).map_err(|diagnostics| PackageGraphLoadFailure {
+    let source_map = PackageSourceMap::build(&graph, provider).map_err(|diagnostics| {
+        PackageGraphLoadFailure {
             plan,
             kind: PackageGraphLoadFailureKind::Package {
                 diagnostics,
                 usage_error: false,
             },
-        })?;
+        }
+    })?;
     Ok(PackageGraphSnapshot {
         metadata: normalized,
         graph,

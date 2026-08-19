@@ -3,16 +3,16 @@ use super::cli_model_and_entrypoint::{
     diagnostic_with_code, package_diagnostic, DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
     EXIT_USER_DIAGNOSTIC,
 };
-use super::diagnostic_rendering_and_run::{
-    current_session_package_id, package_session_for_cwd, render_diagnostics,
-};
+use super::diagnostic_rendering_and_run::{current_session_package_id, render_diagnostics};
 use super::package_graph_context::load_package_graph_context;
+use super::package_session_cli::package_session_for_cwd;
 use super::python_runtime_context::{
     package_python_authoring_context, package_python_runtime_for_check,
 };
 use clap::{Args, Subcommand};
 use serde::{Deserialize, Serialize};
 use sifr_diagnostics::DiagnosticCode;
+use sifr_frontend::DiskSourceProvider;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::io::{self, Write as _};
@@ -174,11 +174,12 @@ fn cmd_python_inspect(
     doctor: bool,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let context = match python_read_only_context(diagnostic_format) {
+    let mut provider = DiskSourceProvider::new();
+    let context = match python_read_only_context(diagnostic_format, &mut provider) {
         Ok(context) => context,
         Err(code) => return code,
     };
-    let inspection = match run_python_read_only_plan(&context) {
+    let inspection = match run_python_read_only_plan(&context, &mut provider) {
         Ok(report) => report,
         Err(diagnostics) => return render_diagnostics(&diagnostics, diagnostic_format),
     };
@@ -191,9 +192,10 @@ fn cmd_python_inspect(
 
 fn python_read_only_context(
     diagnostic_format: DiagnosticFormat,
+    provider: &mut impl sifr_frontend::SourceProvider,
 ) -> Result<PythonReadOnlyContext, i32> {
     let lock_mode = sifr_package::CargoLockMode::Frozen;
-    let session = package_session_for_cwd(lock_mode).map_err(|error| {
+    let session = package_session_for_cwd(lock_mode, provider).map_err(|error| {
         render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
         EXIT_USAGE_OR_CONFIG
     })?;
@@ -209,8 +211,9 @@ fn python_read_only_context(
         EXIT_USER_DIAGNOSTIC
     })?;
     let application = !application_entrypoints.is_empty();
-    let graph_context = load_package_graph_context(&session, lock_mode, diagnostic_format)?
-        .ok_or(EXIT_USAGE_OR_CONFIG)?;
+    let graph_context =
+        load_package_graph_context(&session, lock_mode, diagnostic_format, provider)?
+            .ok_or(EXIT_USAGE_OR_CONFIG)?;
     let package_id =
         current_session_package_id(&session, &graph_context.graph).ok_or(EXIT_USAGE_OR_CONFIG)?;
     let package = graph_context
@@ -218,7 +221,8 @@ fn python_read_only_context(
         .packages
         .get(&package_id)
         .ok_or(EXIT_USAGE_OR_CONFIG)?;
-    let mut requirements = declaration_python_requirements(&graph_context.source_map, None);
+    let mut requirements =
+        declaration_python_requirements(&graph_context.source_map, None, provider);
     let bridge_graph = sifr_package::resolve_python_bridge_graph(&graph_context.graph, &package_id)
         .map_err(|errors| {
             render_diagnostics(
@@ -293,20 +297,24 @@ fn python_inspection_entrypoints(
 
 fn run_python_read_only_plan(
     context: &PythonReadOnlyContext,
+    provider: &mut impl sifr_frontend::SourceProvider,
 ) -> Result<PythonInspectionReport, Vec<sifr_diagnostics::RenderedDiagnostic>> {
     let mut declarations = BTreeSet::new();
     let mut targets = BTreeMap::new();
     let mut bridge_packages = 0;
     let mut requires_async_loop = false;
     for entrypoint in &context.entrypoints {
-        let report = sifr_driver::check_package_python_interop(&sifr_driver::PackageEntrypoint {
-            main_file: entrypoint.clone(),
-            package_id: context.package_id.clone(),
-            graph: context.graph.clone(),
-            source_map: context.source_map.clone(),
-            python_runtime: context.runtime.clone(),
-            lock_mode: sifr_package::CargoLockMode::Normal,
-        })?;
+        let report = sifr_driver::check_package_python_interop(
+            &sifr_driver::PackageEntrypoint {
+                main_file: entrypoint.clone(),
+                package_id: context.package_id.clone(),
+                graph: context.graph.clone(),
+                source_map: context.source_map.clone(),
+                python_runtime: context.runtime.clone(),
+                lock_mode: sifr_package::CargoLockMode::Normal,
+            },
+            provider,
+        )?;
         declarations.extend(report.declarations.into_iter().map(|declaration| {
             PythonDeclarationReport {
                 module: declaration.module_name,

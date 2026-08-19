@@ -1,6 +1,6 @@
 use crate::{
-    DocumentVersion, FrontendContext, FrontendInput, FrontendMode, ModuleId, ProjectRoot,
-    SourcePath, SourceText,
+    DiskSourceProvider, DocumentVersion, FrontendContext, FrontendInput, FrontendMode, ModuleId,
+    ProjectRoot, SourcePath, SourceText,
 };
 use sifr_diagnostics::RenderedDiagnostic;
 use std::collections::BTreeMap;
@@ -222,10 +222,14 @@ fn module_stem(path: &SourcePath) -> String {
 }
 
 fn load_project(dir: &Path) -> FrontendContext {
-    FrontendContext::load_project(&ProjectRoot {
-        root: SourcePath::new(dir),
-        entrypoint: SourcePath::new(dir.join("main.sifr")),
-    })
+    let mut provider = DiskSourceProvider::new();
+    FrontendContext::load_project(
+        &ProjectRoot {
+            root: SourcePath::new(dir),
+            entrypoint: SourcePath::new(dir.join("main.sifr")),
+        },
+        &mut provider,
+    )
     .expect("project context should load")
 }
 

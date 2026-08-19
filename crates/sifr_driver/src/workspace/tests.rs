@@ -1,4 +1,5 @@
 use super::*;
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
 static CWD_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -69,14 +70,14 @@ impl Drop for TempWorkspace {
     }
 }
 
-fn discovered(entry: &Path) -> WorkspaceRoot {
-    find_workspace_root(entry)
+fn discovered(entry: &Path, provider: &mut dyn SourceProvider) -> WorkspaceRoot {
+    find_workspace_root(entry, provider)
         .expect("workspace discovery should succeed")
         .expect("workspace should be found")
 }
 
-fn discovery_error(entry: &Path) -> String {
-    find_workspace_root(entry)
+fn discovery_error(entry: &Path, provider: &mut dyn SourceProvider) -> String {
+    find_workspace_root(entry, provider)
         .expect_err("workspace discovery should fail")
         .into_iter()
         .map(|error| error.message)
@@ -92,7 +93,10 @@ fn test_find_workspace_root_returns_nearest_manifest() {
     tmp.write("outer/inner/sifr.toml", "[package]\nname = \"inner\"\n");
     tmp.write("outer/inner/src/main.sifr", "");
 
-    let root = discovered(&tmp.path().join("outer/inner/src/main.sifr"));
+    let root = discovered(
+        &tmp.path().join("outer/inner/src/main.sifr"),
+        &mut DiskSourceProvider::new(),
+    );
 
     assert_eq!(root.dir, tmp.path().join("outer/inner"));
     assert_eq!(root.config.package_name.as_deref(), Some("inner"));
@@ -106,7 +110,7 @@ fn test_find_workspace_root_normalizes_relative_root_manifest_to_curdir() {
     tmp.write("src/main.sifr", "");
     let _cwd = enter_test_cwd(tmp.path());
 
-    let root = discovered(Path::new("src/main.sifr"));
+    let root = discovered(Path::new("src/main.sifr"), &mut DiskSourceProvider::new());
 
     assert_eq!(root.dir, PathBuf::from("."));
     assert_eq!(root.config.package_name.as_deref(), Some("relative"));
@@ -118,7 +122,11 @@ fn test_find_workspace_root_returns_none_without_manifest() {
     tmp.write("src/main.sifr", "");
 
     assert_eq!(
-        find_workspace_root(&tmp.path().join("src/main.sifr")).expect("discovery should succeed"),
+        find_workspace_root(
+            &tmp.path().join("src/main.sifr"),
+            &mut DiskSourceProvider::new(),
+        )
+        .expect("discovery should succeed"),
         None
     );
 }
@@ -129,7 +137,10 @@ fn test_malformed_manifest_is_hard_error() {
     tmp.write("sifr.toml", "[package\nname = \"bad\"\n");
     tmp.write("main.sifr", "");
 
-    let message = discovery_error(&tmp.path().join("main.sifr"));
+    let message = discovery_error(
+        &tmp.path().join("main.sifr"),
+        &mut DiskSourceProvider::new(),
+    );
 
     assert!(message.contains("could not parse sifr.toml"));
 }
@@ -140,7 +151,10 @@ fn test_package_name_must_be_string() {
     tmp.write("sifr.toml", "[package]\nname = 1\n");
     tmp.write("main.sifr", "");
 
-    let message = discovery_error(&tmp.path().join("main.sifr"));
+    let message = discovery_error(
+        &tmp.path().join("main.sifr"),
+        &mut DiskSourceProvider::new(),
+    );
 
     assert!(message.contains("package.name must be a string"));
 }
@@ -151,7 +165,10 @@ fn test_source_root_must_be_a_string() {
     tmp.write("sifr.toml", "[source]\nroot = [\"src\"]\n");
     tmp.write("main.sifr", "");
 
-    let message = discovery_error(&tmp.path().join("main.sifr"));
+    let message = discovery_error(
+        &tmp.path().join("main.sifr"),
+        &mut DiskSourceProvider::new(),
+    );
 
     assert!(message.contains("source.root must be a string"));
 }
@@ -162,7 +179,10 @@ fn test_source_roots_is_rejected() {
     tmp.write("sifr.toml", "[source]\nroots = [\"src\"]\n");
     tmp.write("main.sifr", "");
 
-    let message = discovery_error(&tmp.path().join("main.sifr"));
+    let message = discovery_error(
+        &tmp.path().join("main.sifr"),
+        &mut DiskSourceProvider::new(),
+    );
 
     assert!(message.contains("source.roots is unsupported; use source.root"));
 }
@@ -173,12 +193,18 @@ fn test_omitted_source_root_defaults_to_src() {
     tmp.write("src/main.sifr", "");
 
     tmp.write("sifr.toml", "");
-    let empty = discovered(&tmp.path().join("src/main.sifr"));
+    let empty = discovered(
+        &tmp.path().join("src/main.sifr"),
+        &mut DiskSourceProvider::new(),
+    );
     assert_eq!(empty.config.source_root, PathBuf::from("src"));
     assert_eq!(empty.config.package_name, None);
 
     tmp.write("sifr.toml", "[source]\n");
-    let omitted = discovered(&tmp.path().join("src/main.sifr"));
+    let omitted = discovered(
+        &tmp.path().join("src/main.sifr"),
+        &mut DiskSourceProvider::new(),
+    );
     assert_eq!(omitted.config.source_root, PathBuf::from("src"));
     assert_eq!(omitted.config.package_name, None);
 }
@@ -193,7 +219,10 @@ fn test_unknown_tables_and_keys_are_ignored() {
         );
     tmp.write("src/main.sifr", "");
 
-    let root = discovered(&tmp.path().join("src/main.sifr"));
+    let root = discovered(
+        &tmp.path().join("src/main.sifr"),
+        &mut DiskSourceProvider::new(),
+    );
 
     assert_eq!(root.config.source_root, PathBuf::from("src"));
 }
@@ -221,7 +250,10 @@ fn test_source_root_rejects_escape_absolute_empty_missing_and_file_paths() {
         ("[source]\nroot = \"not_dir\"\n", "is not a directory"),
     ] {
         tmp.write("sifr.toml", manifest);
-        let message = discovery_error(&tmp.path().join("main.sifr"));
+        let message = discovery_error(
+            &tmp.path().join("main.sifr"),
+            &mut DiskSourceProvider::new(),
+        );
         assert!(
             message.contains(expected),
             "expected '{message}' to contain '{expected}'"
@@ -236,7 +268,10 @@ fn test_leading_curdir_source_root_is_normalized() {
     tmp.write("sifr.toml", "[source]\nroot = \"./src\"\n");
     tmp.write("src/main.sifr", "");
 
-    let root = discovered(&tmp.path().join("src/main.sifr"));
+    let root = discovered(
+        &tmp.path().join("src/main.sifr"),
+        &mut DiskSourceProvider::new(),
+    );
 
     assert_eq!(root.config.source_root, PathBuf::from("src"));
 }
@@ -255,7 +290,10 @@ fn test_path_separator_source_root_uses_platform_components() {
     );
     tmp.write("src/nested/main.sifr", "");
 
-    let root = discovered(&tmp.path().join("src/nested/main.sifr"));
+    let root = discovered(
+        &tmp.path().join("src/nested/main.sifr"),
+        &mut DiskSourceProvider::new(),
+    );
 
     assert_eq!(root.config.source_root, nested);
 }
@@ -268,7 +306,10 @@ fn test_closer_valid_manifest_ignores_farther_malformed_manifest() {
     tmp.write("outer/inner/sifr.toml", "[package]\nname = \"ok\"\n");
     tmp.write("outer/inner/src/main.sifr", "");
 
-    let root = discovered(&tmp.path().join("outer/inner/src/main.sifr"));
+    let root = discovered(
+        &tmp.path().join("outer/inner/src/main.sifr"),
+        &mut DiskSourceProvider::new(),
+    );
 
     assert_eq!(root.dir, tmp.path().join("outer/inner"));
     assert_eq!(root.config.package_name.as_deref(), Some("ok"));

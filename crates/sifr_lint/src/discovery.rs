@@ -2,26 +2,19 @@ use crate::{diagnostic, LintOptions};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use ignore::WalkBuilder;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 pub fn collect_sifr_files(
     path: &Path,
     options: &LintOptions,
+    provider: &mut impl SourceProvider,
 ) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
-    collect_sifr_files_for_targets(&[path.to_path_buf()], options)
+    collect_sifr_files_for_targets(&[path.to_path_buf()], options, provider)
 }
 
 pub fn collect_sifr_files_for_targets(
-    paths: &[PathBuf],
-    options: &LintOptions,
-) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
-    let mut provider = DiskSourceProvider::new();
-    collect_sifr_files_for_targets_with_provider(paths, options, &mut provider)
-}
-
-pub(crate) fn collect_sifr_files_for_targets_with_provider(
     paths: &[PathBuf],
     options: &LintOptions,
     provider: &mut impl SourceProvider,

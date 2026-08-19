@@ -1,6 +1,6 @@
 use crate::{
-    DocumentVersion, FrontendContext, ModuleId, ProjectRoot, SourcePath, SourceText,
-    WorkspaceDirtyReason, WorkspaceDirtyScope,
+    DiskSourceProvider, DocumentVersion, FrontendContext, ModuleId, ProjectRoot, SourcePath,
+    SourceText, WorkspaceDirtyReason, WorkspaceDirtyScope,
 };
 
 #[test]
@@ -277,9 +277,13 @@ fn temp_project_dir(name: &str) -> std::path::PathBuf {
 }
 
 fn load_temp_project(dir: &std::path::Path) -> FrontendContext {
-    FrontendContext::load_project(&ProjectRoot {
-        root: SourcePath::new(dir),
-        entrypoint: SourcePath::new(dir.join("main.sifr")),
-    })
+    let mut provider = DiskSourceProvider::new();
+    FrontendContext::load_project(
+        &ProjectRoot {
+            root: SourcePath::new(dir),
+            entrypoint: SourcePath::new(dir.join("main.sifr")),
+        },
+        &mut provider,
+    )
     .expect("project should load")
 }

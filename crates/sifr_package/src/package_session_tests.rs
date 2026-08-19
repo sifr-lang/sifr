@@ -6,6 +6,7 @@ use crate::ops::session::{PackageRunRequest, PackageSession, PackageSessionOptio
 use crate::SifrManifest;
 use sifr_diagnostics::codes::{active_registry_entries, DiagnosticState};
 use sifr_diagnostics::DiagnosticCode;
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -16,7 +17,11 @@ fn package_session_plans_fetch_tree_and_package_check() {
         "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
     );
     temp.write("src/main.sifr", "def main():\n    pass\n");
-    let session = session(temp.path(), CargoLockMode::Locked);
+    let session = session(
+        temp.path(),
+        CargoLockMode::Locked,
+        &mut DiskSourceProvider::new(),
+    );
 
     let fetch = session.plan_fetch();
     assert_eq!(fetch.operation.operation, PackageOperation::Fetch);
@@ -45,7 +50,11 @@ fn package_session_plans_check_workspace_package_selection() {
     temp.write_package_manifest(
         "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
     );
-    let session = session(temp.path(), CargoLockMode::Locked);
+    let session = session(
+        temp.path(),
+        CargoLockMode::Locked,
+        &mut DiskSourceProvider::new(),
+    );
     let selection = CargoPackageSelection {
         workspace: true,
         packages: vec!["demo-app".to_string()],
@@ -90,7 +99,11 @@ fn package_session_stops_at_nested_cargo_workspace_without_root_sifr_manifest() 
     );
     let workspace_root = temp.path().join("nested");
 
-    let session = session(&workspace_root, CargoLockMode::Locked);
+    let session = session(
+        &workspace_root,
+        CargoLockMode::Locked,
+        &mut DiskSourceProvider::new(),
+    );
 
     assert!(session.manifest_less_mode);
     assert_eq!(session.workspace_root, workspace_root);
@@ -124,7 +137,11 @@ fn package_session_resolves_default_script_and_explicit_bin() {
     );
     temp.write("src/main.sifr", "def main():\n    pass\n");
     temp.write("src/bin/admin.sifr", "def main():\n    pass\n");
-    let session = session(temp.path(), CargoLockMode::Normal);
+    let session = session(
+        temp.path(),
+        CargoLockMode::Normal,
+        &mut DiskSourceProvider::new(),
+    );
 
     let default_run = session
         .plan_run(&PackageRunRequest::default())
@@ -152,7 +169,11 @@ fn package_session_reports_script_target_ambiguity() {
         "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n\n[scripts]\nadmin = { command = \"check\", args = [] }\n",
     );
     temp.write("src/bin/admin.sifr", "def main():\n    pass\n");
-    let session = session(temp.path(), CargoLockMode::Normal);
+    let session = session(
+        temp.path(),
+        CargoLockMode::Normal,
+        &mut DiskSourceProvider::new(),
+    );
 
     let diagnostic = session
         .plan_run(&PackageRunRequest {
@@ -174,7 +195,11 @@ fn package_session_rejects_invalid_nested_target_name() {
         "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
     );
     temp.write("src/bin/bad!name.sifr", "def main():\n    pass\n");
-    let session = session(temp.path(), CargoLockMode::Normal);
+    let session = session(
+        temp.path(),
+        CargoLockMode::Normal,
+        &mut DiskSourceProvider::new(),
+    );
 
     let diagnostic = session
         .plan_run(&PackageRunRequest {
@@ -196,7 +221,11 @@ fn package_session_rejects_explicit_file_outside_source_root() {
         "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
     );
     temp.write("tools/task.sifr", "def main():\n    pass\n");
-    let session = session(temp.path(), CargoLockMode::Normal);
+    let session = session(
+        temp.path(),
+        CargoLockMode::Normal,
+        &mut DiskSourceProvider::new(),
+    );
 
     let diagnostic = session
         .plan_check(
@@ -219,7 +248,11 @@ fn package_session_accepts_explicit_file_under_source_root() {
         "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
     );
     temp.write("src/app.sifr", "def main():\n    pass\n");
-    let session = session(temp.path(), CargoLockMode::Normal);
+    let session = session(
+        temp.path(),
+        CargoLockMode::Normal,
+        &mut DiskSourceProvider::new(),
+    );
 
     let plan = session
         .plan_check(
@@ -238,7 +271,11 @@ fn package_session_rejects_nested_script_expansion() {
     temp.write_package_manifest(
         "[package]\nname = \"demo_app\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n\n[scripts]\ndev = { command = \"run\", args = [\"other\"] }\nother = { command = \"check\", args = [] }\n",
     );
-    let session = session(temp.path(), CargoLockMode::Normal);
+    let session = session(
+        temp.path(),
+        CargoLockMode::Normal,
+        &mut DiskSourceProvider::new(),
+    );
 
     let diagnostic = session
         .plan_run(&PackageRunRequest {
@@ -260,6 +297,7 @@ fn manifest_parses_scripts_and_cargo_compatible_dependency_sections() {
     let manifest = SifrManifest::load(
         &crate::CargoPackageId("path+file:///tmp/demo#demo@0.1.0".to_string()),
         &temp.path().join("sifr.toml"),
+        &mut DiskSourceProvider::new(),
     )
     .expect("manifest parses");
 
@@ -290,11 +328,18 @@ fn cargo_failure_redaction_preserves_public_context_and_retires_0105() {
     }));
 }
 
-fn session(path: &Path, lock_mode: CargoLockMode) -> PackageSession {
-    PackageSession::discover(PackageSessionOptions {
-        current_dir: path.to_path_buf(),
-        lock_mode,
-    })
+fn session(
+    path: &Path,
+    lock_mode: CargoLockMode,
+    provider: &mut impl SourceProvider,
+) -> PackageSession {
+    PackageSession::discover(
+        PackageSessionOptions {
+            current_dir: path.to_path_buf(),
+            lock_mode,
+        },
+        provider,
+    )
     .expect("session discovers")
 }
 

@@ -305,10 +305,14 @@ fn load_project_context(entrypoint: &Path) -> Result<FrontendContext, String> {
     let Some(root) = entrypoint.parent() else {
         return Err("project entrypoint must have a parent directory".to_string());
     };
-    FrontendContext::load_project(&ProjectRoot {
-        root: SourcePath::new(root),
-        entrypoint: SourcePath::new(entrypoint),
-    })
+    let mut provider = sifr_frontend::DiskSourceProvider::new();
+    FrontendContext::load_project(
+        &ProjectRoot {
+            root: SourcePath::new(root),
+            entrypoint: SourcePath::new(entrypoint),
+        },
+        &mut provider,
+    )
     .map_err(render_frontend_errors)
 }
 

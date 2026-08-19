@@ -406,12 +406,12 @@ impl WorkspaceSession {
                 }
                 let mut provider = TrackingSourceProvider::new(overlay_provider);
                 let context =
-                    FrontendContext::load_project_with_provider_external_defs_and_auxiliary_sources(
-                    root,
-                    &mut provider,
-                    self.base_external_defs.clone(),
-                    self.auxiliary_sources.clone(),
-                )?;
+                    FrontendContext::load_project_with_external_defs_and_auxiliary_sources(
+                        root,
+                        &mut provider,
+                        self.base_external_defs.clone(),
+                        self.auxiliary_sources.clone(),
+                    )?;
                 let (_, dependencies) = provider.into_parts();
                 self.context = Some(context);
                 self.source_dependencies = dependencies;

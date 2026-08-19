@@ -7,6 +7,7 @@ use crate::python::{
     required_python_bridge_archive_entries,
 };
 use crate::source::layout::canonical_pure_marker_source;
+use sifr_frontend::SourceProvider;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -85,14 +86,21 @@ pub fn init_package(options: &InitPackageOptions) -> Result<Vec<PathBuf>, Packag
     Ok(written)
 }
 
-pub fn check_projection(package_root: &Path) -> ProjectionCheck {
+pub fn check_projection(
+    package_root: &Path,
+    provider: &mut impl SourceProvider,
+) -> ProjectionCheck {
     ProjectionCheck {
-        diagnostics: projection_diagnostics(package_root),
+        diagnostics: projection_diagnostics(package_root, provider),
     }
 }
 
-pub fn repair_projection(package_root: &Path, check: bool) -> ProjectionRepair {
-    let diagnostics = projection_diagnostics(package_root);
+pub fn repair_projection(
+    package_root: &Path,
+    check: bool,
+    provider: &mut impl SourceProvider,
+) -> ProjectionRepair {
+    let diagnostics = projection_diagnostics(package_root, provider);
     if check || diagnostics.is_empty() {
         return ProjectionRepair {
             diagnostics,
@@ -101,7 +109,7 @@ pub fn repair_projection(package_root: &Path, check: bool) -> ProjectionRepair {
     }
 
     let mut wrote_files = Vec::new();
-    if let Ok(manifest) = load_manifest(package_root) {
+    if let Ok(manifest) = load_manifest(package_root, provider) {
         if fs::write(
             package_root.join("Cargo.toml"),
             render_cargo_toml_for_manifest(&manifest),
@@ -133,7 +141,7 @@ pub fn repair_projection(package_root: &Path, check: bool) -> ProjectionRepair {
     }
 
     ProjectionRepair {
-        diagnostics: projection_diagnostics(package_root),
+        diagnostics: projection_diagnostics(package_root, provider),
         wrote_files,
     }
 }
@@ -188,9 +196,12 @@ fn write_new_file(
     Ok(())
 }
 
-fn projection_diagnostics(package_root: &Path) -> Vec<PackageDiagnostic> {
+fn projection_diagnostics(
+    package_root: &Path,
+    provider: &mut impl SourceProvider,
+) -> Vec<PackageDiagnostic> {
     let mut diagnostics = Vec::new();
-    let Ok(manifest) = load_manifest(package_root) else {
+    let Ok(manifest) = load_manifest(package_root, provider) else {
         diagnostics.push(PackageDiagnostic::projection_manifest_pointer_drift(
             &projection_cargo_id(package_root),
             package_root.join("sifr.toml"),
@@ -260,10 +271,14 @@ fn projection_diagnostics(package_root: &Path) -> Vec<PackageDiagnostic> {
     diagnostics
 }
 
-fn load_manifest(package_root: &Path) -> Result<SifrManifest, PackageDiagnostic> {
+fn load_manifest(
+    package_root: &Path,
+    provider: &mut impl SourceProvider,
+) -> Result<SifrManifest, PackageDiagnostic> {
     SifrManifest::load(
         &projection_cargo_id(package_root),
         &package_root.join("sifr.toml"),
+        provider,
     )
 }
 

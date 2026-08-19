@@ -9,6 +9,7 @@ use crate::manifest::sifr::SifrManifest;
 use crate::ops::plan::{OperationPlan, PackageOperation};
 use crate::ops::session_discovery::{find_manifest, session_cargo_id};
 use crate::ops::session_targets::{discover_app_targets, AppTarget};
+use sifr_frontend::SourceProvider;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -19,6 +20,7 @@ pub struct PackageSession {
     pub manifest_less_mode: bool,
     pub lock_mode: CargoLockMode,
     pub manifest: Option<SifrManifest>,
+    pub(crate) app_targets: Result<Vec<AppTarget>, PackageDiagnostic>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -58,8 +60,11 @@ pub struct ScriptOrigin {
 }
 
 impl PackageSession {
-    pub fn discover(options: PackageSessionOptions) -> Result<Self, PackageDiagnostic> {
-        let manifest_path = find_manifest(&options.current_dir);
+    pub fn discover(
+        options: PackageSessionOptions,
+        provider: &mut impl SourceProvider,
+    ) -> Result<Self, PackageDiagnostic> {
+        let manifest_path = find_manifest(&options.current_dir, provider);
         let Some(manifest_path) = manifest_path else {
             return Ok(Self {
                 workspace_root: options.current_dir,
@@ -68,6 +73,7 @@ impl PackageSession {
                 manifest_less_mode: true,
                 lock_mode: options.lock_mode,
                 manifest: None,
+                app_targets: Ok(Vec::new()),
             });
         };
         let workspace_root = manifest_path
@@ -75,15 +81,18 @@ impl PackageSession {
             .map(Path::to_path_buf)
             .unwrap_or_else(|| options.current_dir.clone());
         let cargo_id = session_cargo_id(&workspace_root);
-        let manifest = SifrManifest::load(&cargo_id, &manifest_path)?;
-        let source_root = Some(workspace_root.join(&manifest.source_root.0));
+        let manifest = SifrManifest::load(&cargo_id, &manifest_path, provider)?;
+        let source_root_path = workspace_root.join(&manifest.source_root.0);
+        let app_targets =
+            discover_app_targets(&source_root_path, &manifest.package_name.0, provider);
         Ok(Self {
             workspace_root,
             manifest_path: Some(manifest_path),
-            source_root,
+            source_root: Some(source_root_path),
             manifest_less_mode: false,
             lock_mode: options.lock_mode,
             manifest: Some(manifest),
+            app_targets,
         })
     }
 
@@ -352,16 +361,7 @@ impl PackageSession {
     }
 
     pub(super) fn discover_app_targets(&self) -> Result<Vec<AppTarget>, PackageDiagnostic> {
-        let Some(source_root) = &self.source_root else {
-            return Ok(Vec::new());
-        };
-        let package_name = self
-            .manifest
-            .as_ref()
-            .map(|manifest| manifest.package_name.0.clone())
-            .unwrap_or_else(|| "main".to_string());
-        let targets = discover_app_targets(source_root, &package_name)?;
-        Ok(targets)
+        self.app_targets.clone()
     }
 }
 

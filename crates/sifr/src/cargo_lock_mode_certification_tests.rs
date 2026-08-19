@@ -5,6 +5,7 @@ use crate::cli_model_and_entrypoint::{
 use crate::diagnostic_rendering_and_run::{cmd_build, cmd_run};
 use clap::Parser;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_frontend::DiskSourceProvider;
 use sifr_package::{CargoLockMode, PackageSession, PackageSessionOptions};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard, OnceLock};
@@ -177,10 +178,14 @@ fn test_locked_offline_sifr_commands_and_warm_cache() {
     let source_lock_before =
         std::fs::read(source_lock).expect("checked-in scenario lock should be readable");
 
-    let session = PackageSession::discover(PackageSessionOptions {
-        current_dir: scenario.root.clone(),
-        lock_mode: CargoLockMode::Frozen,
-    })
+    let mut provider = DiskSourceProvider::new();
+    let session = PackageSession::discover(
+        PackageSessionOptions {
+            current_dir: scenario.root.clone(),
+            lock_mode: CargoLockMode::Frozen,
+        },
+        &mut provider,
+    )
     .expect("frozen package session should resolve");
     let entrypoint = package_entrypoint_for_file(
         source,
@@ -188,16 +193,17 @@ fn test_locked_offline_sifr_commands_and_warm_cache() {
         CargoLockMode::Frozen,
         DiagnosticFormat::Human,
         false,
+        &mut provider,
     )
     .expect("package entrypoint resolution should not render an error")
     .expect("scenario must resolve as a package entrypoint");
     let (cold, mut cargo_invocations) = sifr_driver::capture_cargo_invocations(|| {
-        sifr_driver::build_cached_package_project(&entrypoint)
+        sifr_driver::build_cached_package_project(&entrypoint, &mut provider)
     });
     let cold = cold.expect("cold frozen prepared build should succeed");
     assert!(!cold.build_report().cache_hit());
     let (warm, warm_invocations) = sifr_driver::capture_cargo_invocations(|| {
-        sifr_driver::build_cached_package_project(&entrypoint)
+        sifr_driver::build_cached_package_project(&entrypoint, &mut provider)
     });
     let warm = warm.expect("warm frozen build should succeed");
     assert!(warm.build_report().cache_hit());

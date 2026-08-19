@@ -2,6 +2,8 @@ use crate::cargo::lock_modes::CargoLockMode;
 use crate::diag::PackageDiagnostic;
 use crate::graph::derive::SifrPackageMetadata;
 use crate::ops::session::PackageSession;
+use crate::ops::session_targets::discover_app_targets;
+use sifr_frontend::SourceProvider;
 use std::path::PathBuf;
 
 impl PackageSession {
@@ -15,20 +17,26 @@ impl PackageSession {
             .map(|package| package.package_id.clone())
     }
 
-    #[must_use]
     pub fn from_package_metadata(
         workspace_root: PathBuf,
         package: &SifrPackageMetadata,
         lock_mode: CargoLockMode,
+        provider: &mut impl SourceProvider,
     ) -> Self {
-        let source_root = Some(package.package_root.join(&package.manifest.source_root.0));
+        let source_root_path = package.package_root.join(&package.manifest.source_root.0);
+        let app_targets = discover_app_targets(
+            &source_root_path,
+            &package.manifest.package_name.0,
+            provider,
+        );
         Self {
             workspace_root,
             manifest_path: Some(package.sifr_manifest.clone()),
-            source_root,
+            source_root: Some(source_root_path),
             manifest_less_mode: false,
             lock_mode,
             manifest: Some(package.manifest.clone()),
+            app_targets,
         }
     }
 

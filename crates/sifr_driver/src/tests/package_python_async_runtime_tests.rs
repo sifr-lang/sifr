@@ -103,10 +103,15 @@ def main() -> None:
     );
 
     let graph = package_graph(&dir, &[&app], &[]);
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
-    let artifact = build_cached_package_project(&entrypoint)
-        .expect("compiler-owned nominal paths and unions should be source-disjoint");
+    let artifact =
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("compiler-owned nominal paths and unions should be source-disjoint");
 
     assert!(artifact.binary_path().exists());
     let _ignored = std::fs::remove_dir_all(dir);
@@ -159,10 +164,15 @@ def main() -> None:
     );
 
     let graph = package_graph(&dir, &[&app], &[]);
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
-    let artifact = build_cached_package_project(&entrypoint)
-        .expect("an unrelated union must not relocate the filesystem native handle");
+    let artifact =
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("an unrelated union must not relocate the filesystem native handle");
 
     assert!(artifact.binary_path().exists());
     let _ignored = std::fs::remove_dir_all(dir);
@@ -205,10 +215,15 @@ def main() -> None:
     );
 
     let graph = package_graph(&dir, &[&app], &[]);
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
-    let artifact = build_cached_package_project(&entrypoint)
-        .expect("canonical and local same-basename file handles should not collide");
+    let artifact =
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("canonical and local same-basename file handles should not collide");
 
     assert!(artifact.binary_path().exists());
     let _ignored = std::fs::remove_dir_all(dir);
@@ -271,12 +286,17 @@ def main() -> Result[None, PythonError]:
     );
 
     let graph = package_graph(&dir, &[&app], &[]);
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let mut entrypoint =
         package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
     entrypoint.python_runtime = Some(local_python_runtime(&app.root));
-    let artifact = build_cached_package_project(&entrypoint)
-        .expect("source-spellable classes and the sealed Python handle should not collide");
+    let artifact =
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("source-spellable classes and the sealed Python handle should not collide");
 
     assert!(artifact.binary_path().exists());
     let _ignored = std::fs::remove_dir_all(dir);
@@ -323,12 +343,17 @@ def main() -> Result[None, PythonError]:
     );
 
     let graph = package_graph(&dir, &[&app], &[]);
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let mut entrypoint =
         package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
     entrypoint.python_runtime = Some(local_python_runtime_with_roots(&app.root, &["asyncio"]));
-    let artifact = build_cached_package_project(&entrypoint)
-        .expect("raw coroutine package should build with the owned loop");
+    let artifact =
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("raw coroutine package should build with the owned loop");
     let output = std::process::Command::new(artifact.binary_path())
         .output()
         .expect("raw coroutine package should run");

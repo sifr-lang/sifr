@@ -69,7 +69,7 @@ fn test_build_native_build_script_trusted_artifacts() {
     );
 
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "native-trust-package");
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     assert!(
         errors.is_empty(),
         "trusted native package must pass compiler checking: {errors:#?}"
@@ -149,7 +149,7 @@ fn assert_untrusted_native_build_rejected(
     assert!(!sentinel.exists(), "sentinel must start absent");
 
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "native-trust-package");
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     let rendered = format!("{errors:#?}");
 
     assert_eq!(
@@ -243,7 +243,10 @@ fn assert_untrusted_transitive_native_link_rejected() {
     std::fs::write(&manifest_path, untrusted)
         .expect("negative transitive-link manifest should be installed");
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "native-trust-package");
-    let errors = match build_cached_package_project(&entrypoint) {
+    let errors = match build_cached_package_project(
+        &entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    ) {
         Ok(_) => panic!("undeclared transitive native link must fail the generated package build"),
         Err(errors) => errors,
     };

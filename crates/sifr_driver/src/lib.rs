@@ -33,8 +33,8 @@ pub use build::{
     PythonTargetInspection, PythonTargetParameter,
 };
 pub use diagnostics::{
-    apply_diagnostic_recovery_limits, diagnostic_label_for_code, diagnostic_label_for_code_str,
-    render_package_diagnostic, CompileResult, CompileResultFull, GeneratedSourceMapFile,
+    apply_diagnostic_recovery_limits, diagnostic_label_for_code, render_package_diagnostic,
+    CompileResult, CompileResultFull, GeneratedSourceMapFile,
 };
 pub use frontend::{
     check, compile, compile_with_metadata, lower_source, parse_source, type_check_source,

@@ -10,12 +10,14 @@ use super::cli_model_and_entrypoint::{
     EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC, SIFR_BUILD_VERSION,
 };
 use super::package_graph_context::load_package_graph_context;
+use super::package_session_cli::package_session_for_cwd;
 use super::workspace_run_selection::resolve_run_session;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build_cached_package_project, CachedBinaryArtifact,
     PackageEntrypoint,
 };
+use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::collections::BTreeSet;
 use std::io::{self, Write as _};
 use std::path::{Path, PathBuf};
@@ -79,7 +81,8 @@ pub(super) fn cmd_build(
     quiet: bool,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    match package_session_for_cwd(lock_mode) {
+    let mut provider = DiskSourceProvider::new();
+    match package_session_for_cwd(lock_mode, &mut provider) {
         Ok(session) if !session.manifest_less_mode => {
             match compile_package_entrypoint_report(
                 file,
@@ -87,6 +90,7 @@ pub(super) fn cmd_build(
                 &session,
                 lock_mode,
                 diagnostic_format,
+                &mut provider,
             ) {
                 Ok(Some(report)) => return emit_build_result(&report, quiet, diagnostic_format),
                 Ok(None) => {}
@@ -111,7 +115,7 @@ pub(super) fn cmd_build(
 
     let result = match run_with_panic_boundary(
         "internal compiler panic during build command execution",
-        || compile_entrypoint_report(file, output),
+        || compile_entrypoint_report(file, output, &mut provider),
     ) {
         Ok(result) => result,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -212,17 +216,20 @@ pub(super) fn cmd_run_with_options(options: &RunCommandOptions<'_>) -> i32 {
             return EXIT_USAGE_OR_CONFIG;
         }
     };
-    let session =
-        match sifr_package::PackageSession::discover(sifr_package::PackageSessionOptions {
+    let mut provider = DiskSourceProvider::new();
+    let session = match sifr_package::PackageSession::discover(
+        sifr_package::PackageSessionOptions {
             current_dir,
             lock_mode: options.lock_mode,
-        }) {
-            Ok(session) => session,
-            Err(error) => {
-                render_diagnostics(&[package_diagnostic(error)], options.diagnostic_format);
-                return EXIT_USAGE_OR_CONFIG;
-            }
-        };
+        },
+        &mut provider,
+    ) {
+        Ok(session) => session,
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], options.diagnostic_format);
+            return EXIT_USAGE_OR_CONFIG;
+        }
+    };
     if session.manifest_less_mode && options.lock_mode != sifr_package::CargoLockMode::Normal {
         return render_diagnostics(
             &[super::cli_lock_modes::lock_mode_requires_package(
@@ -238,21 +245,25 @@ pub(super) fn cmd_run_with_options(options: &RunCommandOptions<'_>) -> i32 {
         options.packages,
         options.lock_mode,
         options.diagnostic_format,
+        &mut provider,
     ) {
         Ok(session) => session,
         Err(exit_code) => return exit_code,
     };
-    cmd_run_with_session(&RunSessionRequest {
-        session: &session,
-        target: options.target,
-        bin: options.bin,
-        script: options.script,
-        app_args: options.app_args,
-        lock_mode: options.lock_mode,
-        quiet: options.quiet,
-        diagnostic_format: options.diagnostic_format,
-        script_depth: 0,
-    })
+    cmd_run_with_session(
+        &RunSessionRequest {
+            session: &session,
+            target: options.target,
+            bin: options.bin,
+            script: options.script,
+            app_args: options.app_args,
+            lock_mode: options.lock_mode,
+            quiet: options.quiet,
+            diagnostic_format: options.diagnostic_format,
+            script_depth: 0,
+        },
+        &mut provider,
+    )
 }
 
 struct RunSessionRequest<'a> {
@@ -267,7 +278,10 @@ struct RunSessionRequest<'a> {
     script_depth: u8,
 }
 
-fn cmd_run_with_session(request: &RunSessionRequest<'_>) -> i32 {
+fn cmd_run_with_session(
+    request: &RunSessionRequest<'_>,
+    provider: &mut impl SourceProvider,
+) -> i32 {
     let session = request.session;
     let plan = session.plan_run(&sifr_package::PackageRunRequest {
         target_or_path: request.target.map(str::to_string),
@@ -290,6 +304,7 @@ fn cmd_run_with_session(request: &RunSessionRequest<'_>) -> i32 {
             request.lock_mode,
             request.quiet,
             request.diagnostic_format,
+            provider,
         );
     }
     if let Some(
@@ -305,6 +320,7 @@ fn cmd_run_with_session(request: &RunSessionRequest<'_>) -> i32 {
                 request.app_args,
                 request.quiet,
                 request.diagnostic_format,
+                provider,
             );
         }
         return cmd_run_file(
@@ -312,6 +328,7 @@ fn cmd_run_with_session(request: &RunSessionRequest<'_>) -> i32 {
             request.app_args,
             request.quiet,
             request.diagnostic_format,
+            provider,
         );
     }
     if let Some(cargo) = plan.cargo {
@@ -326,21 +343,25 @@ pub(super) fn cmd_script(
     lock_mode: sifr_package::CargoLockMode,
     quiet: bool,
     diagnostic_format: DiagnosticFormat,
+    provider: &mut impl SourceProvider,
 ) -> i32 {
     match origin.command.as_str() {
         "run" => {
             if let Some(session) = run_session {
-                cmd_run_with_session(&RunSessionRequest {
-                    session,
-                    target: origin.args.first().map(String::as_str),
-                    bin: None,
-                    script: None,
-                    app_args: &[],
-                    lock_mode,
-                    quiet,
-                    diagnostic_format,
-                    script_depth: 1,
-                })
+                cmd_run_with_session(
+                    &RunSessionRequest {
+                        session,
+                        target: origin.args.first().map(String::as_str),
+                        bin: None,
+                        script: None,
+                        app_args: &[],
+                        lock_mode,
+                        quiet,
+                        diagnostic_format,
+                        script_depth: 1,
+                    },
+                    provider,
+                )
             } else {
                 let options = RunCommandOptions {
                     target: origin.args.first().map(String::as_str),
@@ -409,10 +430,11 @@ pub(super) fn cmd_run_file(
     app_args: &[String],
     quiet: bool,
     diagnostic_format: DiagnosticFormat,
+    provider: &mut dyn SourceProvider,
 ) -> i32 {
     let result = match run_with_panic_boundary(
         "internal compiler panic during run command compilation",
-        || build_run_artifact(file),
+        || build_run_artifact(file, provider),
     ) {
         Ok(result) => result,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -456,13 +478,20 @@ pub(super) fn cmd_run_package_file(
     app_args: &[String],
     quiet: bool,
     diagnostic_format: DiagnosticFormat,
+    provider: &mut impl SourceProvider,
 ) -> i32 {
-    let context =
-        match package_compiler_context(session, lock_mode, diagnostic_format, Some(file), false) {
-            Ok(Some(context)) => context,
-            Ok(None) => return cmd_run_file(file, app_args, quiet, diagnostic_format),
-            Err(exit_code) => return exit_code,
-        };
+    let context = match package_compiler_context(
+        session,
+        lock_mode,
+        diagnostic_format,
+        Some(file),
+        false,
+        provider,
+    ) {
+        Ok(Some(context)) => context,
+        Ok(None) => return cmd_run_file(file, app_args, quiet, diagnostic_format, provider),
+        Err(exit_code) => return exit_code,
+    };
     let entrypoint = PackageEntrypoint {
         main_file: file.to_path_buf(),
         package_id: context.package_id,
@@ -473,7 +502,7 @@ pub(super) fn cmd_run_package_file(
     };
     let result = match run_with_panic_boundary(
         "internal compiler panic during package run command compilation",
-        || build_cached_package_project(&entrypoint),
+        || build_cached_package_project(&entrypoint, provider),
     ) {
         Ok(result) => result,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -521,7 +550,8 @@ pub(super) fn cmd_fetch(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let session = match package_session_for_cwd(lock_mode) {
+    let mut provider = DiskSourceProvider::new();
+    let session = match package_session_for_cwd(lock_mode, &mut provider) {
         Ok(session) => session,
         Err(error) => {
             render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
@@ -547,7 +577,8 @@ pub(super) fn cmd_tree(
     args: &[String],
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let session = match package_session_for_cwd(lock_mode) {
+    let mut provider = DiskSourceProvider::new();
+    let session = match package_session_for_cwd(lock_mode, &mut provider) {
         Ok(session) => session,
         Err(error) => {
             render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
@@ -566,7 +597,8 @@ pub(super) fn cmd_package(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let session = match package_session_for_cwd(lock_mode) {
+    let mut provider = DiskSourceProvider::new();
+    let session = match package_session_for_cwd(lock_mode, &mut provider) {
         Ok(session) => session,
         Err(error) => {
             render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
@@ -579,6 +611,7 @@ pub(super) fn cmd_package(
         options.allow_dirty,
         lock_mode,
         diagnostic_format,
+        &mut provider,
     ) {
         return exit_code;
     }
@@ -599,7 +632,8 @@ pub(super) fn cmd_publish(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let session = match package_session_for_cwd(lock_mode) {
+    let mut provider = DiskSourceProvider::new();
+    let session = match package_session_for_cwd(lock_mode, &mut provider) {
         Ok(session) => session,
         Err(error) => {
             render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
@@ -612,6 +646,7 @@ pub(super) fn cmd_publish(
         options.allow_dirty,
         lock_mode,
         diagnostic_format,
+        &mut provider,
     ) {
         return exit_code;
     }
@@ -632,7 +667,8 @@ pub(super) fn cmd_vendor(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let session = match package_session_for_cwd(lock_mode) {
+    let mut provider = DiskSourceProvider::new();
+    let session = match package_session_for_cwd(lock_mode, &mut provider) {
         Ok(session) => session,
         Err(error) => {
             render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
@@ -646,29 +682,17 @@ pub(super) fn cmd_vendor(
     execute_cargo_plan(&cargo, lock_mode, diagnostic_format)
 }
 
-pub(super) fn package_session_for_cwd(
-    lock_mode: sifr_package::CargoLockMode,
-) -> Result<sifr_package::PackageSession, sifr_package::PackageDiagnostic> {
-    let current_dir = std::env::current_dir().map_err(|error| {
-        sifr_package::PackageDiagnostic::cargo_command_failed(
-            sifr_package::CargoAction::Metadata,
-            format!("could not read current directory: {error}"),
-        )
-    })?;
-    sifr_package::PackageSession::discover(sifr_package::PackageSessionOptions {
-        current_dir,
-        lock_mode,
-    })
-}
-
 pub(super) fn run_package_release_preflight(
     session: &sifr_package::PackageSession,
     selection: &sifr_package::CargoPackageSelection,
     allow_dirty: bool,
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
+    provider: &mut impl SourceProvider,
 ) -> Result<(), i32> {
-    let Some(context) = load_package_graph_context(session, lock_mode, diagnostic_format)? else {
+    let Some(context) =
+        load_package_graph_context(session, lock_mode, diagnostic_format, provider)?
+    else {
         return Ok(());
     };
     let package_ids = selected_release_package_ids(&context, session, selection)

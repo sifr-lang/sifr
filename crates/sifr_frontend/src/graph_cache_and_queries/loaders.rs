@@ -1,10 +1,9 @@
 use super::{
     diagnostic_with_code, module_state, AuxiliarySourceState, BTreeMap, BTreeSet, DiagnosticCode,
-    DiskSourceProvider, ExternalDefs, FileId, FrontendContext, FrontendInput, FrontendMode,
-    FrontendReuseCaches, GraphRevision, ModuleId, ProjectRoot, RenderedDiagnostic,
-    SourceDependency, SourcePath, SourceProvider, SourceRevision, TrackingSourceProvider,
-    WorkspaceAuxiliarySource, WorkspaceCompilerOptions, WorkspacePackageConfigIdentity,
-    WorkspaceSessionTarget, WorkspaceSingleFileTarget,
+    ExternalDefs, FileId, FrontendContext, FrontendInput, FrontendMode, FrontendReuseCaches,
+    GraphRevision, ModuleId, ProjectRoot, RenderedDiagnostic, SourcePath, SourceProvider,
+    SourceRevision, WorkspaceAuxiliarySource, WorkspaceCompilerOptions,
+    WorkspacePackageConfigIdentity, WorkspaceSessionTarget, WorkspaceSingleFileTarget,
 };
 
 fn auxiliary_source_states(
@@ -90,33 +89,19 @@ impl FrontendContext {
         Ok(context)
     }
 
-    pub fn load_project(root: &ProjectRoot) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let mut provider = TrackingSourceProvider::new(DiskSourceProvider::new());
-        Self::load_project_with_provider(root, &mut provider)
-    }
-
-    pub fn load_project_tracked(
-        root: &ProjectRoot,
-    ) -> Result<(Self, Vec<SourceDependency>), Vec<RenderedDiagnostic>> {
-        let mut provider = TrackingSourceProvider::new(DiskSourceProvider::new());
-        let context = Self::load_project_with_provider(root, &mut provider)?;
-        let (_, dependencies) = provider.into_parts();
-        Ok((context, dependencies))
-    }
-
-    pub fn load_project_with_provider(
+    pub fn load_project(
         root: &ProjectRoot,
         provider: &mut impl SourceProvider,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
-        Self::load_project_with_provider_and_external_defs(root, provider, ExternalDefs::default())
+        Self::load_project_with_external_defs(root, provider, ExternalDefs::default())
     }
 
-    pub fn load_project_with_provider_and_external_defs(
+    pub fn load_project_with_external_defs(
         root: &ProjectRoot,
         provider: &mut impl SourceProvider,
         external_defs: ExternalDefs,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
-        Self::load_project_with_provider_external_defs_and_auxiliary_sources(
+        Self::load_project_with_external_defs_and_auxiliary_sources(
             root,
             provider,
             external_defs,
@@ -124,7 +109,7 @@ impl FrontendContext {
         )
     }
 
-    pub fn load_project_with_provider_external_defs_and_auxiliary_sources(
+    pub fn load_project_with_external_defs_and_auxiliary_sources(
         root: &ProjectRoot,
         provider: &mut impl SourceProvider,
         external_defs: ExternalDefs,

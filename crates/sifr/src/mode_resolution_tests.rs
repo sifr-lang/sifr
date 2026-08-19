@@ -7,6 +7,7 @@ use crate::diagnostic_rendering_and_run::{cmd_run, fetch_success_message};
 use crate::explain_cli::diagnostic_explanation;
 use clap::Parser;
 use sifr_diagnostics::{DiagnosticCode, DiagnosticSpan, RenderedDiagnostic, Severity};
+use sifr_frontend::DiskSourceProvider;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard, OnceLock};
@@ -52,7 +53,8 @@ pub(super) fn mktemp_dir(name: &str) -> PathBuf {
 }
 
 pub(super) fn resolved_mode(file: &Path) -> CompilationMode {
-    resolve_compilation_mode(file).expect("compilation mode should resolve")
+    resolve_compilation_mode(file, &mut DiskSourceProvider::new())
+        .expect("compilation mode should resolve")
 }
 
 pub(super) fn test_diagnostic(
@@ -295,7 +297,7 @@ pub(super) fn test_resolve_compilation_mode_reports_malformed_workspace_manifest
         "app should be written",
     );
 
-    let errors = resolve_compilation_mode(&app)
+    let errors = resolve_compilation_mode(&app, &mut DiskSourceProvider::new())
         .expect_err("malformed manifest should prevent single-file fallback");
 
     assert!(errors[0].message.contains("could not parse sifr.toml"));
@@ -315,7 +317,7 @@ pub(super) fn test_manifest_less_mode_does_not_ignore_malformed_package_manifest
         "app should be written",
     );
 
-    let errors = resolve_compilation_mode(&app)
+    let errors = resolve_compilation_mode(&app, &mut DiskSourceProvider::new())
         .expect_err("package manifest should prevent manifest-less fallback");
 
     assert!(errors[0].message.contains("could not parse sifr.toml"));

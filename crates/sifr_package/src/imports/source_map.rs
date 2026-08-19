@@ -2,7 +2,7 @@ use crate::diag::PackageDiagnostic;
 use crate::graph::derive::{SifrPackageGraph, SifrPackageId};
 use crate::imports::namespace_api::NamespaceApi;
 use crate::manifest::sifr::ImportRoot;
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -77,12 +77,7 @@ pub enum PackageImportResolutionResult {
 }
 
 impl PackageSourceMap {
-    pub fn build(graph: &SifrPackageGraph) -> Result<Self, Vec<PackageDiagnostic>> {
-        let mut provider = DiskSourceProvider::new();
-        Self::build_with_provider(graph, &mut provider)
-    }
-
-    pub fn build_with_provider(
+    pub fn build(
         graph: &SifrPackageGraph,
         provider: &mut impl SourceProvider,
     ) -> Result<Self, Vec<PackageDiagnostic>> {
@@ -137,37 +132,6 @@ impl PackageSourceMap {
         Self {
             fatal_diagnostics: diagnostics,
             ..Self::default()
-        }
-    }
-
-    pub fn resolve_import(
-        &self,
-        graph: &SifrPackageGraph,
-        importing_package_id: &SifrPackageId,
-        import_path: &DottedModulePath,
-    ) -> Result<PackageImportResolution, PackageDiagnostic> {
-        match self.resolve_import_result(graph, importing_package_id, import_path) {
-            PackageImportResolutionResult::Resolved(resolution) => Ok(resolution),
-            PackageImportResolutionResult::Ambiguous(ambiguity) => {
-                let candidates = ambiguity
-                    .candidates
-                    .iter()
-                    .map(|candidate| candidate.file_path.display().to_string())
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                Err(PackageDiagnostic::undeclared_direct_import(
-                    &ambiguity.cargo_package_id,
-                    importing_package_id,
-                    format!("{} (ambiguous candidates: {candidates})", import_path.0),
-                ))
-            }
-            PackageImportResolutionResult::Unresolved(diagnostic)
-            | PackageImportResolutionResult::PrivateAccess(diagnostic) => Err(diagnostic),
-            PackageImportResolutionResult::FatalPackageMapFailure(diagnostics) => {
-                Err(diagnostics.into_iter().next().unwrap_or_else(|| {
-                    PackageDiagnostic::cargo_metadata_parse("package source map is invalid")
-                }))
-            }
         }
     }
 

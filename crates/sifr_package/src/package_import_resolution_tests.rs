@@ -3,6 +3,7 @@ use crate::graph::derive::{derive_package_graph, SifrPackageId};
 use crate::imports::source_map::{
     DottedModulePath, PackageImportOrigin, PackageImportResolutionResult, PackageSourceMap,
 };
+use sifr_frontend::DiskSourceProvider;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -15,7 +16,8 @@ fn import_resolution_result_preserves_ambiguous_candidates() {
     write_module_under(&math.root, "src/vector", "__init__");
 
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math", &math)]);
-    let source_map = PackageSourceMap::build(&graph).expect("ambiguous map is queryable");
+    let source_map = PackageSourceMap::build(&graph, &mut DiskSourceProvider::new())
+        .expect("ambiguous map is queryable");
 
     let PackageImportResolutionResult::Ambiguous(ambiguity) = source_map.resolve_import_result(
         &graph,
@@ -38,7 +40,8 @@ fn import_resolution_result_distinguishes_unresolved_private_and_fatal_states() 
     let app = package(&temp, "app", "sifr-app", "0.1.0", "app", &["main"]);
     let math = package(&temp, "math", "sifr-math", "1.0.0", "math", &["_internal"]);
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math", &math)]);
-    let source_map = PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map =
+        PackageSourceMap::build(&graph, &mut DiskSourceProvider::new()).expect("source map builds");
 
     assert!(matches!(
         source_map.resolve_import_result(
@@ -77,7 +80,7 @@ fn graph(
 ) -> crate::SifrPackageGraph {
     let metadata =
         parse_metadata_json(&metadata_json(&temp.root, packages, edges)).expect("metadata parses");
-    derive_package_graph(metadata).expect("graph derives")
+    derive_package_graph(metadata, &mut DiskSourceProvider::new()).expect("graph derives")
 }
 
 fn package(

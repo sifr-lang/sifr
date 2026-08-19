@@ -137,6 +137,7 @@ mod tests {
     use crate::graph::derive::{derive_package_graph, PackageClassification};
     use crate::graph::digest::digest_graph_inputs;
     use sifr_diagnostics::DiagnosticCode;
+    use sifr_frontend::DiskSourceProvider;
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -149,7 +150,8 @@ mod tests {
 
         let metadata = parse_metadata_json(&metadata_json(&temp.root, &[&package_root]))
             .expect("metadata should parse");
-        let graph = derive_package_graph(metadata).expect("graph should derive");
+        let graph = derive_package_graph(metadata, &mut DiskSourceProvider::new())
+            .expect("graph should derive");
 
         assert_eq!(graph.packages.len(), 1);
         let package = graph.packages.values().next().expect("package exists");
@@ -171,7 +173,8 @@ mod tests {
 
         let metadata = parse_metadata_json(&metadata_json(&temp.root, &[&package_root]))
             .expect("metadata should parse");
-        let diagnostics = derive_package_graph(metadata).expect_err("marker must fail");
+        let diagnostics = derive_package_graph(metadata, &mut DiskSourceProvider::new())
+            .expect_err("marker must fail");
 
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(
@@ -189,7 +192,8 @@ mod tests {
 
         let metadata = parse_metadata_json(&metadata_json(&temp.root, &[&package_root]))
             .expect("metadata should parse");
-        let diagnostics = derive_package_graph(metadata).expect_err("manifest must fail");
+        let diagnostics = derive_package_graph(metadata, &mut DiskSourceProvider::new())
+            .expect_err("manifest must fail");
 
         assert_eq!(
             diagnostics[0].code,

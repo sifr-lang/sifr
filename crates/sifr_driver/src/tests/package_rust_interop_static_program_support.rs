@@ -19,13 +19,19 @@ fn test_static_program_constructs_and_projects_arena() {
     rebase_sifr_runtime_dependency(&package_root);
     let pristine_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "static_program_runtime");
-    let pristine_errors = check_package_project(&pristine_entrypoint);
+    let pristine_errors = check_package_project(
+        &pristine_entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         pristine_errors.is_empty(),
         "source-layout static program scenario must pass checking: {pristine_errors:#?}"
     );
-    let pristine_artifact = build_cached_package_project(&pristine_entrypoint)
-        .expect("source-layout static program scenario should build");
+    let pristine_artifact = build_cached_package_project(
+        &pristine_entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source-layout static program scenario should build");
     let pristine_source = generated_main_source(pristine_artifact.binary_path());
     let pristine_identity = static_program_identity_declaration(&pristine_source);
 
@@ -37,15 +43,17 @@ fn test_static_program_constructs_and_projects_arena() {
     );
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "static_program_runtime");
     let evidence_artifact =
-        build_cached_package_project(&entrypoint).expect("installed evidence should build");
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("installed evidence should build");
     let evidence_source = generated_main_source(evidence_artifact.binary_path());
     assert_eq!(
         static_program_identity_declaration(&evidence_source),
         pristine_identity,
         "source-layout and installed evidence must retain one static-program identity"
     );
-    let repeated_artifact = build_cached_package_project(&entrypoint)
-        .expect("repeated evidence build should hit cache");
+    let repeated_artifact =
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("repeated evidence build should hit cache");
     assert_eq!(
         repeated_artifact.binary_path(),
         evidence_artifact.binary_path(),

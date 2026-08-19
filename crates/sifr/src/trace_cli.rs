@@ -4,7 +4,8 @@ use crate::cli_model_and_entrypoint::{
 };
 use crate::diagnostic_rendering_and_run::render_diagnostics;
 use sifr_frontend::{
-    FrontendInput, FrontendMode, ProjectRoot, SourcePath, SourceText, WorkspaceSession,
+    DiskSourceProvider, FrontendInput, FrontendMode, ProjectRoot, SourcePath, SourceProvider,
+    SourceText, WorkspaceSession,
 };
 use std::io::{self, Write as _};
 use std::path::{Path, PathBuf};
@@ -33,13 +34,14 @@ pub(crate) fn cmd_trace(file: &Path, diagnostic_format: DiagnosticFormat) -> i32
 }
 
 fn trace_entrypoint(file: &Path) -> Result<String, Vec<sifr_diagnostics::RenderedDiagnostic>> {
-    let mut session = match resolve_compilation_mode(file)? {
+    let mut provider = DiskSourceProvider::new();
+    let mut session = match resolve_compilation_mode(file, &mut provider)? {
         CompilationMode::Project => {
-            let root = trace_project_root(file);
+            let root = trace_project_root(file, &mut provider);
             WorkspaceSession::open_project(root)?
         }
         CompilationMode::SingleFile => {
-            let source = read_source(file);
+            let source = read_source(file, &mut provider);
             WorkspaceSession::open_single_file(FrontendInput {
                 path: SourcePath::new(file.to_path_buf()),
                 source: SourceText::new(source),
@@ -50,8 +52,8 @@ fn trace_entrypoint(file: &Path) -> Result<String, Vec<sifr_diagnostics::Rendere
     Ok(session.snapshot().debug.render_text())
 }
 
-fn trace_project_root(file: &Path) -> ProjectRoot {
-    let root = sifr_driver::find_workspace_root(file)
+fn trace_project_root(file: &Path, provider: &mut dyn SourceProvider) -> ProjectRoot {
+    let root = sifr_driver::find_workspace_root(file, provider)
         .ok()
         .flatten()
         .map(|root| root.dir)

@@ -14,6 +14,7 @@ use crate::manifest::sifr::{
     SifrManifest, SifrPackageName, TrustPolicy,
 };
 use sifr_diagnostics::DiagnosticCode;
+use sifr_frontend::DiskSourceProvider;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
@@ -83,8 +84,12 @@ fn offline_mode_reports_missing_sifr_source_package() {
         workspace_root: PathBuf::from("/ws"),
     };
 
-    let diagnostics = validate_offline_source_availability(&metadata, CargoLockMode::Offline)
-        .expect_err("offline unavailable source should fail");
+    let diagnostics = validate_offline_source_availability(
+        &metadata,
+        CargoLockMode::Offline,
+        &mut DiskSourceProvider::new(),
+    )
+    .expect_err("offline unavailable source should fail");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(

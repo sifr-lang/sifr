@@ -248,7 +248,8 @@ fn check_project_fixture(
     required_args: &[&str],
 ) -> Result<(), String> {
     let entry = base.join(fixture).join("main.sifr");
-    let diagnostics = check_project(&entry);
+    let mut provider = sifr_frontend::DiskSourceProvider::new();
+    let diagnostics = check_project(&entry, &mut provider);
     assert_rules(&diagnostics, code, fixture, &[], required_args, true, true)?;
     assert_no_prefix(&diagnostics, fixture, "SIFR-WORKSPACE-01")?;
     assert_text_formats(&diagnostics, code, &entry)
@@ -332,7 +333,8 @@ fn package_diagnostics(package: &Path) -> Result<Vec<RenderedDiagnostic>, String
             package.display()
         )
     })?;
-    let graph = match derive_package_graph(metadata) {
+    let mut provider = sifr_frontend::DiskSourceProvider::new();
+    let graph = match derive_package_graph(metadata, &mut provider) {
         Ok(graph) => graph,
         Err(errors) => {
             return Ok(errors
@@ -341,7 +343,7 @@ fn package_diagnostics(package: &Path) -> Result<Vec<RenderedDiagnostic>, String
                 .collect());
         }
     };
-    let source_map = match PackageSourceMap::build(&graph) {
+    let source_map = match PackageSourceMap::build(&graph, &mut provider) {
         Ok(source_map) => source_map,
         Err(errors) => {
             return Ok(errors
@@ -365,7 +367,7 @@ fn package_diagnostics(package: &Path) -> Result<Vec<RenderedDiagnostic>, String
         python_runtime: None,
         lock_mode: sifr_package::CargoLockMode::Normal,
     };
-    Ok(check_package_project(&entrypoint))
+    Ok(check_package_project(&entrypoint, &mut provider))
 }
 
 fn find_package_entry(package: &Path) -> Result<PathBuf, String> {

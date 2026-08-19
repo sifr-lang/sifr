@@ -13,6 +13,7 @@ pub(super) fn resolve_run_session(
     packages: &[String],
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
+    provider: &mut impl sifr_frontend::SourceProvider,
 ) -> Result<sifr_package::PackageSession, i32> {
     if packages.is_empty() && (!session.manifest_less_mode || run_target_is_explicit_path(target)) {
         return Ok(session);
@@ -21,11 +22,12 @@ pub(super) fn resolve_run_session(
         &session.workspace_root,
         lock_mode,
         diagnostic_format,
+        provider,
     )?;
     if !packages.is_empty() {
-        return selected_run_session(&context, packages, lock_mode, diagnostic_format);
+        return selected_run_session(&context, packages, lock_mode, diagnostic_format, provider);
     }
-    default_workspace_run_session(&context, lock_mode, diagnostic_format)
+    default_workspace_run_session(&context, lock_mode, diagnostic_format, provider)
 }
 
 fn selected_run_session(
@@ -33,6 +35,7 @@ fn selected_run_session(
     packages: &[String],
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
+    provider: &mut impl sifr_frontend::SourceProvider,
 ) -> Result<sifr_package::PackageSession, i32> {
     if packages.len() != 1 {
         let diagnostic = diagnostic_with_code(
@@ -59,6 +62,7 @@ fn selected_run_session(
         context.metadata.workspace_root.clone(),
         package,
         lock_mode,
+        provider,
     ))
 }
 
@@ -66,6 +70,7 @@ fn default_workspace_run_session(
     context: &PackageGraphContext,
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
+    provider: &mut impl sifr_frontend::SourceProvider,
 ) -> Result<sifr_package::PackageSession, i32> {
     let default_members = if context.metadata.workspace_default_members.is_empty() {
         &context.metadata.workspace_members
@@ -89,6 +94,7 @@ fn default_workspace_run_session(
             context.metadata.workspace_root.clone(),
             package,
             lock_mode,
+            provider,
         );
         match package_session.has_default_runnable_app() {
             Ok(true) => candidates.push((package.cargo_package_name.clone(), package_session)),

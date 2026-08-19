@@ -3,6 +3,7 @@ use crate::{
     DiscoveryDiagnosticStyle, ModuleResolver, SifrWorkspaceConfig, WorkspaceRoot,
 };
 use sifr_diagnostics::{render_compact_diagnostics, DiagnosticArg, DiagnosticCode};
+use sifr_frontend::DiskSourceProvider;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
@@ -42,7 +43,7 @@ fn test_discover_test_root_modules_is_deterministic() {
     )
     .expect("helper should be written");
 
-    let roots = discover_test_root_modules(&dir);
+    let roots = discover_test_root_modules(&dir, &mut DiskSourceProvider::new());
     let names: Vec<String> = roots.keys().cloned().collect();
     assert_eq!(names, vec!["test_a".to_string(), "z_test".to_string()]);
 
@@ -87,11 +88,16 @@ fn test_project_and_test_discovery_share_import_closure_membership() {
         &resolver,
         &project_roots,
         DiscoveryDiagnosticStyle::ModuleName,
+        &mut DiskSourceProvider::new(),
     )
     .expect("project closure discovery should succeed");
-    let test_modules =
-        parse_import_closure_modules(&resolver, &test_roots, DiscoveryDiagnosticStyle::ModuleName)
-            .expect("test closure discovery should succeed");
+    let test_modules = parse_import_closure_modules(
+        &resolver,
+        &test_roots,
+        DiscoveryDiagnosticStyle::ModuleName,
+        &mut DiskSourceProvider::new(),
+    )
+    .expect("test closure discovery should succeed");
 
     let project_support: BTreeSet<String> = project_modules
         .keys()
@@ -151,13 +157,18 @@ fn test_project_and_test_discovery_parity_reports_reachable_parse_errors() {
         &resolver,
         &project_roots,
         DiscoveryDiagnosticStyle::ModuleName,
+        &mut DiskSourceProvider::new(),
     )
     .err()
     .expect("project closure should fail on reachable parse error");
-    let test_errors =
-        parse_import_closure_modules(&resolver, &test_roots, DiscoveryDiagnosticStyle::ModuleName)
-            .err()
-            .expect("test closure should fail on reachable parse error");
+    let test_errors = parse_import_closure_modules(
+        &resolver,
+        &test_roots,
+        DiscoveryDiagnosticStyle::ModuleName,
+        &mut DiskSourceProvider::new(),
+    )
+    .err()
+    .expect("test closure should fail on reachable parse error");
 
     assert!(project_errors.iter().any(|e| e
         .children
@@ -212,7 +223,7 @@ fn test_workspace_resolver_prefers_entry_parent_over_workspace_sources() {
 
     let resolver = workspace_resolver(&entry_dir, &dir, "lib");
     let resolved = resolver
-        .resolve("helper")
+        .resolve("helper", &mut DiskSourceProvider::new())
         .expect("entry helper should resolve first");
 
     assert_eq!(resolved.path, entry_dir.join("helper.sifr"));
@@ -248,7 +259,7 @@ fn test_workspace_resolver_finds_declared_source_root_and_dotted_paths() {
 
     let resolver = workspace_resolver(&entry_dir, &dir, "lib");
     let resolved = resolver
-        .resolve("helpers.nodes")
+        .resolve("helpers.nodes", &mut DiskSourceProvider::new())
         .expect("dotted helper should resolve");
 
     assert_eq!(resolved.path, helper_dir.join("nodes.sifr"));
@@ -278,6 +289,7 @@ fn test_workspace_resolver_reports_unresolved_tried_paths() {
         &resolver,
         &BTreeSet::from(["main".to_string()]),
         DiscoveryDiagnosticStyle::ModuleName,
+        &mut DiskSourceProvider::new(),
     )
     .expect_err("missing workspace helper should fail");
 
@@ -321,6 +333,7 @@ fn test_workspace_resolver_renders_missing_root_with_unknown_location() {
         &resolver,
         &BTreeSet::from(["missing".to_string()]),
         DiscoveryDiagnosticStyle::ModuleName,
+        &mut DiskSourceProvider::new(),
     )
     .expect_err("missing root module should fail");
 
@@ -365,6 +378,7 @@ fn test_workspace_resolver_reclassifies_unresolved_bare_stdlib_import() {
         &resolver,
         &BTreeSet::from(["main".to_string()]),
         DiscoveryDiagnosticStyle::ModuleName,
+        &mut DiskSourceProvider::new(),
     )
     .expect_err("bare stdlib import should fail");
 
@@ -411,6 +425,7 @@ fn test_workspace_resolver_prefers_real_user_module_over_bare_stdlib_match() {
         &resolver,
         &BTreeSet::from(["main".to_string()]),
         DiscoveryDiagnosticStyle::ModuleName,
+        &mut DiskSourceProvider::new(),
     )
     .expect("real user module should win over bare stdlib diagnostic");
 
@@ -443,6 +458,7 @@ fn test_workspace_resolver_keeps_stdlib_imports_out_of_filesystem_resolution() {
         &resolver,
         &BTreeSet::from(["main".to_string()]),
         DiscoveryDiagnosticStyle::ModuleName,
+        &mut DiskSourceProvider::new(),
     )
     .expect("stdlib imports should not require workspace files");
 
@@ -484,6 +500,7 @@ fn test_workspace_resolver_rejects_namespace_file_collision() {
         &resolver,
         &BTreeSet::from(["main".to_string()]),
         DiscoveryDiagnosticStyle::ModuleName,
+        &mut DiskSourceProvider::new(),
     )
     .expect_err("namespace collision should fail");
 

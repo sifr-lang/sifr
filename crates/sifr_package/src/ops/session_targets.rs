@@ -1,9 +1,9 @@
 use crate::diag::PackageDiagnostic;
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct AppTarget {
+pub(crate) struct AppTarget {
     pub name: String,
     pub path: PathBuf,
 }
@@ -11,9 +11,9 @@ pub(super) struct AppTarget {
 pub(super) fn discover_app_targets(
     source_root: &Path,
     package_name: &str,
+    provider: &mut impl SourceProvider,
 ) -> Result<Vec<AppTarget>, PackageDiagnostic> {
     let mut targets = Vec::new();
-    let mut provider = DiskSourceProvider::new();
     let main = source_root.join("main.sifr");
     if provider.is_file(&main) {
         targets.push(AppTarget {
@@ -22,7 +22,7 @@ pub(super) fn discover_app_targets(
         });
     }
     let bin_root = source_root.join("bin");
-    collect_bin_targets(&bin_root, &bin_root, &mut targets, &mut provider)?;
+    collect_bin_targets(&bin_root, &bin_root, &mut targets, provider)?;
     Ok(targets)
 }
 

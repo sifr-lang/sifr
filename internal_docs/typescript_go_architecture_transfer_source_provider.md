@@ -1,93 +1,114 @@
 # TypeScript-Go Architecture Transfer: Source Provider
 
-status: source-provider layer implementation review
+status: implemented
 
-source-provider layer introduces the first compiler-service filesystem boundary before the
-workspace/session layer exists. The new boundary is intentionally small:
-callers can read files, enumerate directories, probe files/directories, and
-canonicalize paths through `sifr_frontend::SourceProvider`.
+The source-provider boundary is the only semantic source access boundary in the
+compiler. A source operation must use one active `SourceProvider`. The operation
+must not create a new disk provider in a lower compiler layer.
 
 ## Provider Model
 
-`sifr_frontend` now exposes:
+`sifr_frontend` exposes these provider types:
 
-- `SourceProvider`: typed source filesystem interface for semantic reads,
-  directory reads, path probes, and canonicalization.
-- `DiskSourceProvider`: production disk-backed implementation.
-- `OverlaySourceProvider`: read-through provider that can substitute open
-  editor buffer text for disk files without mutating disk state.
-- `TrackingSourceProvider`: wrapper that records successful reads, path probes,
-  canonicalization, and failed lookups as `SourceDependency` records.
-- `OverlayDocument`: overlay metadata with URI, path, document version, source
-  text, source hash, and disk-match state.
+- `SourceProvider` supplies file reads, directory reads, path probes, and path
+  canonicalization.
+- `DiskSourceProvider` is the canonical provider for disk access.
+- `OverlaySourceProvider` replaces selected disk files with editor text. It does
+  not change disk state.
+- `TrackingSourceProvider` records reads, probes, canonicalization, and failed
+  lookups as `SourceDependency` values.
+- `OverlayDocument` contains the URI, path, document version, source text,
+  source hash, and disk-match state.
 
-The overlay record stores `SourceText`, so the source text/line-map authority
-continues to flow through the source-provider layer `sifr_source` model instead of reintroducing a
-second line-map implementation.
+The provider returns `SourceText`. Thus, the `sifr_source` text and line-map
+model remains the single source-text authority.
 
-## Migrated Reads
+## Composition Roots
 
-The following semantic read paths now use the provider boundary:
+Only a composition root creates `DiskSourceProvider`. The approved roots are:
 
-- `FrontendContext::load_project_with_provider` reads project entrypoints,
-  project directories, and project modules through a supplied provider.
-- `FrontendContext::load_project_tracked` returns the dependency records
-  captured during project loading.
-- Driver module resolution, workspace manifest discovery, project file
-  discovery, and package import closure materialization use provider-backed
-  reads and probes.
-- Package manifest loading, source-root validation, source-map traversal, and
-  namespace API extraction accept provider-backed reads.
-- Formatter and linter source/config reads use short-lived disk providers
-  rather than separate direct source reads.
-- Package CLI/session discovery and target selection use provider-backed
-  manifest/source-root probes where those probes affect package selection.
+- a `sifr` CLI command;
+- an LSP request or LSP session operation;
+- `WorkspaceSession` construction;
+- a standalone compiler binary or benchmark.
 
-The source-provider layer does not consume dependency records for invalidation yet.
-Workspace session state, event compaction, dirty-scope classification, and precise
-invalidation own that behavior.
+The composition root passes the same provider through the full source
+operation. Frontend, driver, formatter, linter, and package APIs receive that
+provider. They do not provide a second API that creates a disk provider.
 
-## Package Import Ambiguity
+Tests create an explicit provider and call the production API. Tests do not use
+a disk-backed compatibility wrapper.
 
-`PackageSourceMap` now separates fatal source-map construction failures from
-queryable import ambiguity:
+## Provider-Backed Operations
 
-- valid duplicate module candidates are retained in `ambiguous_modules`
-  instead of turning source-map construction into a package-fatal error;
-- `PackageImportResolutionResult` distinguishes `Resolved`, `Ambiguous`,
-  `Unresolved`, `PrivateAccess`, and `FatalPackageMapFailure`;
-- package import closure diagnostics can map ambiguity back to the import site
-  with `SIFR-IMPORT-0005` and candidate paths;
-- legacy `resolve_import` remains available and maps ambiguity into a package
-  diagnostic for existing non-source-callers.
+The following operations use the active provider:
 
-End-to-end package runtime fixtures remain outside this source-provider layer.
-Package unit tests prove the provider state model and import-resolution branch
-coverage.
+- frontend project loading and overlay loading;
+- driver workspace discovery, module resolution, project discovery, package
+  discovery, and test discovery;
+- formatter configuration, file discovery, source reads, checks, and writes;
+- linter configuration, file discovery, source reads, and fix planning;
+- package manifest loading, source-root validation, graph derivation, source-map
+  construction, offline validation, projection checks, and session discovery;
+- CLI and LSP operations that compose these lower-layer operations.
 
-## Direct-Read Exceptions After source-provider layer
+`PackageSession` captures manifest and application-target discovery results.
+Later target queries use the captured session state. They do not repeat disk
+discovery through a hidden provider.
 
-The source-provider layer guardrail scanner remains active. After source-provider layer, remaining production direct
-filesystem sites are documented exceptions rather than semantic source reads:
+When the active provider is a `TrackingSourceProvider`, each semantic read or
+probe records a dependency. When it contains an overlay, all lower layers see
+the same overlay state. This rule makes overlay and snapshot results
+deterministic.
 
-- build artifact metadata/cache checks in `crates/sifr_driver/src/build`;
-- formatter artifact-cache existence probing in `crates/sifr/src`;
-- package projection and repair-state effects in `crates/sifr_package`;
-- package lock/source-layout checks that remain package-management or generated
-  output validation until package-aware snapshots promote them.
+## Package Import Results
 
-source-provider layer owns persistent build metadata and any future `.sifrbuildinfo` boundary.
+`PackageSourceMap::resolve_import_result` is the only package import query API.
+It returns one of these states:
+
+- `Resolved`;
+- `Ambiguous`;
+- `Unresolved`;
+- `PrivateAccess`;
+- `FatalPackageMapFailure`.
+
+Callers must handle the applicable states. They must not convert the result to
+`Result` or `Option` before they select the diagnostic for the source location.
+Package tests call this production API and match its variants directly.
+
+## Dependency-Direction Guard
+
+`scripts/check_source_crate_dependency_direction.py` rejects
+`DiskSourceProvider` construction in lower compiler layers. It permits the
+`WorkspaceSession` composition root and standalone binaries. It ignores test
+modules and test source files.
+
+The guard has a mutation self-test. The self-test inserts a disk-provider
+construction in `sifr_package` and requires the guard to reject it.
+
+## Direct Filesystem Access
+
+The provider boundary controls semantic source access. Direct filesystem access
+can remain for these non-semantic operations:
+
+- generated build artifacts and cache metadata;
+- Cargo execution and package archive materialization;
+- formatter writes and formatter cache artifacts;
+- package projection writes and repair-state changes;
+- temporary test and benchmark setup.
+
+A direct filesystem read must move behind `SourceProvider` if its result can
+change parsing, lowering, type checking, import resolution, formatting, linting,
+package selection, or editor analysis.
 
 ## Validation
 
-source-provider layer focused validation:
+Run these focused checks after a source-provider change:
 
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test`
-- `cargo fmt --check`
-- `python3 scripts/check_file_size_guardrails.py`
-- `cargo test -p sifr -- --skip test_e2e_pass`
-- `cargo test -p sifr_driver -p sifr_package -p sifr_frontend -p sifr_format -p sifr_lint`
-- `cargo clippy --workspace -- -D warnings`
-
-The full create-pr validation gate remains required before PR acceptance.
+- `python3 scripts/check_source_crate_dependency_direction.py`
+- `python3 scripts/check_source_crate_dependency_direction.py --self-test`
+- source-provider and frontend mode-parity tests;
+- formatter and linter path tests;
+- package source-map, offline, and public-API tests;
+- LSP snapshot and stale-result tests;
+- the repository file-size guardrail.

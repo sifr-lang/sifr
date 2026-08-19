@@ -13,6 +13,7 @@ use sifr_diagnostics::{
     Severity,
 };
 use sifr_driver::CompileResult;
+use sifr_frontend::DiskSourceProvider;
 use std::fmt::Write as _;
 #[test]
 pub(super) fn test_resolve_compilation_mode_single_file_for_multi_level_relative_import() {
@@ -59,8 +60,10 @@ pub(super) fn test_compile_entrypoint_error_consistency_for_project_mode() {
 
     let run_out = mktemp_dir("run_path");
     let build_out = mktemp_dir("build_path");
-    let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
-    let build_err = compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
+    let run_err = compile_entrypoint(&main, &run_out, &mut DiskSourceProvider::new())
+        .expect_err("run compile should fail");
+    let build_err = compile_entrypoint(&main, &build_out, &mut DiskSourceProvider::new())
+        .expect_err("build compile should fail");
     let run_messages = render_compact_diagnostics(&run_err);
     let build_messages = render_compact_diagnostics(&build_err);
     assert_eq!(run_messages, build_messages);
@@ -82,8 +85,10 @@ pub(super) fn test_compile_entrypoint_error_consistency_for_import_statement() {
 
     let run_out = mktemp_dir("run_path_import_statement");
     let build_out = mktemp_dir("build_path_import_statement");
-    let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
-    let build_err = compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
+    let run_err = compile_entrypoint(&main, &run_out, &mut DiskSourceProvider::new())
+        .expect_err("run compile should fail");
+    let build_err = compile_entrypoint(&main, &build_out, &mut DiskSourceProvider::new())
+        .expect_err("build compile should fail");
     let run_messages = render_compact_diagnostics(&run_err);
     let build_messages = render_compact_diagnostics(&build_err);
     assert_eq!(run_messages, build_messages);
@@ -106,8 +111,10 @@ pub(super) fn test_compile_entrypoint_error_consistency_for_bare_relative_import
 
     let run_out = mktemp_dir("run_path_bare_relative");
     let build_out = mktemp_dir("build_path_bare_relative");
-    let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
-    let build_err = compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
+    let run_err = compile_entrypoint(&main, &run_out, &mut DiskSourceProvider::new())
+        .expect_err("run compile should fail");
+    let build_err = compile_entrypoint(&main, &build_out, &mut DiskSourceProvider::new())
+        .expect_err("build compile should fail");
     let run_messages = render_compact_diagnostics(&run_err);
     let build_messages = render_compact_diagnostics(&build_err);
     assert_eq!(run_messages, build_messages);
@@ -130,8 +137,10 @@ pub(super) fn test_compile_entrypoint_error_consistency_for_multi_level_relative
 
     let run_out = mktemp_dir("run_path_multi_level_relative");
     let build_out = mktemp_dir("build_path_multi_level_relative");
-    let run_err = compile_entrypoint(&main, &run_out).expect_err("run compile should fail");
-    let build_err = compile_entrypoint(&main, &build_out).expect_err("build compile should fail");
+    let run_err = compile_entrypoint(&main, &run_out, &mut DiskSourceProvider::new())
+        .expect_err("run compile should fail");
+    let build_err = compile_entrypoint(&main, &build_out, &mut DiskSourceProvider::new())
+        .expect_err("build compile should fail");
     let run_messages = render_compact_diagnostics(&run_err);
     let build_messages = render_compact_diagnostics(&build_err);
     assert_eq!(run_messages, build_messages);
@@ -157,7 +166,7 @@ pub(super) fn test_check_entrypoint_project_mode_resolves_local_imports() {
     std::fs::write(&helper, "def value() -> int:\n    return 42\n")
         .expect("helper file should be written");
 
-    let errors = check_entrypoint(&main);
+    let errors = check_entrypoint(&main, &mut DiskSourceProvider::new());
     assert!(
         errors.is_empty(),
         "project-aware check should succeed for valid local imports: {errors:?}"
@@ -181,14 +190,14 @@ pub(super) fn test_compile_entrypoint_manifestless_local_import_uses_single_file
     )
     .expect("helper file should be written");
 
-    let check_errors = check_entrypoint(&main);
+    let check_errors = check_entrypoint(&main, &mut DiskSourceProvider::new());
     let run_out = mktemp_dir("manifestless_run_out");
     let build_out = mktemp_dir("manifestless_build_out");
-    let run_errors = compile_entrypoint(&main, &run_out)
+    let run_errors = compile_entrypoint(&main, &run_out, &mut DiskSourceProvider::new())
         .expect_err("run path should reject the manifestless local import");
-    let build_errors = compile_entrypoint(&main, &build_out)
+    let build_errors = compile_entrypoint(&main, &build_out, &mut DiskSourceProvider::new())
         .expect_err("build path should reject the manifestless local import");
-    let emit_errors = match emit_entrypoint(&main) {
+    let emit_errors = match emit_entrypoint(&main, &mut DiskSourceProvider::new()) {
         CompileResult::Errors { errors } => errors,
         CompileResult::Success { .. } => panic!("emit should reject the manifestless local import"),
     };
@@ -216,7 +225,7 @@ pub(super) fn test_check_entrypoint_single_file_reveal_type_is_structured_spanne
     std::fs::write(&main, "def main():\n    reveal_type(1)\n")
         .expect("main file should be written");
 
-    let diagnostics = check_entrypoint(&main);
+    let diagnostics = check_entrypoint(&main, &mut DiskSourceProvider::new());
     assert_eq!(diagnostics.len(), 1);
     let diagnostic = &diagnostics[0];
     assert_eq!(diagnostic.code, DiagnosticCode::TYPE_REVEAL_TYPE.code());
@@ -259,7 +268,7 @@ pub(super) fn test_check_entrypoint_single_file_arithmetic_warning_is_structured
         )
         .expect("main file should be written");
 
-    let diagnostics = check_entrypoint(&main);
+    let diagnostics = check_entrypoint(&main, &mut DiskSourceProvider::new());
     assert_eq!(diagnostics.len(), 1);
     let diagnostic = &diagnostics[0];
     assert_eq!(
@@ -309,7 +318,7 @@ pub(super) fn test_check_entrypoint_single_file_unreachable_statement_warning_is
     )
     .expect("main file should be written");
 
-    let diagnostics = check_entrypoint(&main);
+    let diagnostics = check_entrypoint(&main, &mut DiskSourceProvider::new());
     assert_eq!(diagnostics.len(), 1);
     let diagnostic = &diagnostics[0];
     assert_eq!(
@@ -350,7 +359,7 @@ pub(super) fn test_check_entrypoint_reveal_type_notes_obey_recovery_cap() {
     }
     std::fs::write(&main, source).expect("main file should be written");
 
-    let diagnostics = check_entrypoint(&main);
+    let diagnostics = check_entrypoint(&main, &mut DiskSourceProvider::new());
     assert_eq!(diagnostics.len(), 60);
     assert_eq!(diagnostic_exit_code(&diagnostics), EXIT_SUCCESS);
 
@@ -403,9 +412,9 @@ pub(super) fn test_check_entrypoint_project_mode_error_parity_with_compile_entry
     std::fs::write(&helper, "def value() -> int:\n    return \"bad\"\n")
         .expect("helper file should be written");
 
-    let check_errors = check_entrypoint(&main);
+    let check_errors = check_entrypoint(&main, &mut DiskSourceProvider::new());
     let build_out = mktemp_dir("check_entrypoint_build_out");
-    let build_errors = compile_entrypoint(&main, &build_out)
+    let build_errors = compile_entrypoint(&main, &build_out, &mut DiskSourceProvider::new())
         .err()
         .expect("build path should fail for helper type mismatch");
 
@@ -429,7 +438,7 @@ pub(super) fn test_compile_entrypoint_single_file_ignores_unrelated_sibling_pars
     std::fs::write(dir.join("scratch.sifr"), "def broken(:\n")
         .expect("unrelated sibling should be written");
 
-    let binary = compile_entrypoint(&main, &output)
+    let binary = compile_entrypoint(&main, &output, &mut DiskSourceProvider::new())
         .expect("single-file build should ignore unrelated sibling parse errors");
     assert!(binary.exists());
 
@@ -451,7 +460,8 @@ pub(super) fn test_compile_entrypoint_non_main_input_stays_single_file() {
     .expect("neighboring main should be written");
     std::fs::write(dir.join("helper.sifr"), "def value(:\n").expect("helper should be written");
 
-    let binary = compile_entrypoint(&app, &output).expect("non-main entry should stay single-file");
+    let binary = compile_entrypoint(&app, &output, &mut DiskSourceProvider::new())
+        .expect("non-main entry should stay single-file");
     assert!(binary.exists());
 
     let _ = std::fs::remove_dir_all(output);
@@ -474,13 +484,13 @@ pub(super) fn test_emit_entrypoint_uses_project_mode_inside_workspace() {
     std::fs::write(&helper, "def value() -> int:\n    return 42\n")
         .expect("helper should be written");
 
-    let check_errors = check_entrypoint(&main);
+    let check_errors = check_entrypoint(&main, &mut DiskSourceProvider::new());
     assert!(
         check_errors.is_empty(),
         "check should preserve project-mode behavior: {check_errors:?}"
     );
 
-    let emit_result = emit_entrypoint(&main);
+    let emit_result = emit_entrypoint(&main, &mut DiskSourceProvider::new());
     let rust_source = match emit_result {
         CompileResult::Success { rust_source } => rust_source,
         CompileResult::Errors { errors } => {
@@ -508,13 +518,13 @@ pub(super) fn test_frontend_error_messages_match_across_check_build_and_run_path
     std::fs::write(&helper, "def value() -> int:\n    return \"bad\"\n")
         .expect("helper file should be written");
 
-    let check_errors = check_entrypoint(&main);
+    let check_errors = check_entrypoint(&main, &mut DiskSourceProvider::new());
     let run_out = mktemp_dir("frontend_parity_run_out");
     let build_out = mktemp_dir("frontend_parity_build_out");
-    let run_errors = compile_entrypoint(&main, &run_out)
+    let run_errors = compile_entrypoint(&main, &run_out, &mut DiskSourceProvider::new())
         .err()
         .expect("run path should fail on helper type error");
-    let build_errors = compile_entrypoint(&main, &build_out)
+    let build_errors = compile_entrypoint(&main, &build_out, &mut DiskSourceProvider::new())
         .err()
         .expect("build path should fail on helper type error");
 

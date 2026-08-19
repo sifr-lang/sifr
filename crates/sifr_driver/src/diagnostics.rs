@@ -384,28 +384,23 @@ fn primary_span(diagnostic: &RenderedDiagnostic) -> Option<&DiagnosticSpan> {
 
 #[must_use]
 pub fn diagnostic_label_for_code(code: DiagnosticCode) -> &'static str {
-    diagnostic_label_for_code_str(code.code())
-}
-
-#[must_use]
-pub fn diagnostic_label_for_code_str(code: &str) -> &'static str {
-    if code == DiagnosticCode::INTERNAL_COMPILER_PANIC.code() {
+    if code == DiagnosticCode::INTERNAL_COMPILER_PANIC {
         "internal compiler error"
-    } else if code == DiagnosticCode::INTERNAL_RECOVERY_OMISSION_SUMMARY.code() {
+    } else if code == DiagnosticCode::INTERNAL_RECOVERY_OMISSION_SUMMARY {
         "note"
-    } else if code == DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE.code()
-        || code == DiagnosticCode::STDLIB_CACHE_FAILURE.code()
+    } else if code == DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE
+        || code == DiagnosticCode::STDLIB_CACHE_FAILURE
     {
         "build error"
-    } else if code.starts_with("SIFR-PARSE-") {
+    } else if code.code().starts_with("SIFR-PARSE-") {
         "parse error"
-    } else if code.starts_with("SIFR-CODEGEN-") {
+    } else if code.code().starts_with("SIFR-CODEGEN-") {
         "codegen error"
-    } else if code.starts_with("SIFR-FMT-") {
+    } else if code.code().starts_with("SIFR-FMT-") {
         "format error"
-    } else if code.starts_with("SIFR-LINT-") {
+    } else if code.code().starts_with("SIFR-LINT-") {
         "lint warning"
-    } else if code.starts_with("SIFR-BUILD-") || code.starts_with("SIFR-WORKSPACE-") {
+    } else if code.code().starts_with("SIFR-BUILD-") || code.code().starts_with("SIFR-WORKSPACE-") {
         "build error"
     } else {
         "type error"
