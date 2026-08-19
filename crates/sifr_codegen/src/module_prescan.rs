@@ -8,6 +8,20 @@ impl RustEmitter {
         self.collect_display_class_metadata(module);
         self.collect_parent_field_metadata(module);
         self.collect_function_signature_metadata(module);
+        self.structural_type_params = module
+            .type_param_bounds
+            .iter()
+            .filter_map(|(owner, bounds)| {
+                let params = bounds
+                    .iter()
+                    .filter(|(_, values)| {
+                        matches!(values.as_slice(), [bound] if bound == "Structural" || bound == "StringStructural")
+                    })
+                    .map(|(name, _)| name.clone())
+                    .collect::<HashSet<_>>();
+                (!params.is_empty()).then(|| (owner.clone(), params))
+            })
+            .collect();
         self.static_program_type_params = module
             .type_param_bounds
             .iter()

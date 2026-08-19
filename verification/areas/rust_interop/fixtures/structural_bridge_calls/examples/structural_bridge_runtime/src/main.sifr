@@ -4,7 +4,7 @@
 # expected-result: structural-roundtrip-clean
 # contract: mapped native values and structural JSON output retain nominal identity
 
-from sifr.meta import Structural
+from sifr.meta import StringStructural, Structural
 from sifr.json import JsonValue
 from enum import Enum
 from typing import Callable
@@ -45,6 +45,12 @@ class Status(Enum):
 class SumPayload:
     choice: int | str
     status: Status
+
+
+class StringEnvelope:
+    label: str
+    tags: list[str]
+    metadata: dict[str, str]
 
 
 @rust.opaque(
@@ -102,6 +108,13 @@ def observe_structural[T: Structural](value: T) -> Result[str, StructuralBridgeE
 
 
 @rust.structural
+@rust(bridge.structural.observe)
+def observe_string_structural[T: StringStructural](
+    value: T,
+) -> Result[str, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust.structural
 @rust(bridge.structural.construct_mapped)
 def construct_mapped[T: Structural](value: str) -> Result[T, StructuralBridgeError | RustPanicError]: ...
 
@@ -152,6 +165,13 @@ def verify_structural_bridge_runtime() -> Result[str, StructuralBridgeError | Ru
     try:
         projection: str = observe_structural(original)
         assert projection == "records=3;sequences=1;optionals=1;strings=input,x,input-box"
+        strings_projection: str = observe_string_structural(
+            StringEnvelope("packet", ["left", "right"], {"source": "checked"})
+        )
+        assert (
+            strings_projection
+            == "records=1;sequences=1;optionals=0;strings=packet,left,right,source,checked"
+        )
         nested_optional: OptionalBox[str | None] = OptionalBox(None)
         nested_optional_projection: str = observe_structural(nested_optional)
         assert nested_optional_projection == "records=1;sequences=0;optionals=1;strings="

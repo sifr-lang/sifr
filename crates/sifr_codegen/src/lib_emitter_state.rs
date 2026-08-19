@@ -63,6 +63,8 @@ pub struct RustEmitter {
     pub(crate) structural_identity_module_name: Option<String>,
     /// Static-program type parameters for each structural bridge function.
     pub(crate) static_program_type_params: HashMap<String, HashSet<String>>,
+    /// Structurally projected type parameters, including compile-time string-leaf subsets.
+    pub(crate) structural_type_params: HashMap<String, HashSet<String>>,
     /// Method-slot owners for each structural bridge function.
     pub(crate) method_slot_type_params: HashMap<String, HashSet<String>>,
     /// Caller-context type parameters for each structural bridge function.
@@ -244,6 +246,7 @@ impl RustEmitter {
             project_structural_identity_expressions: None,
             structural_identity_module_name: None,
             static_program_type_params: HashMap::new(),
+            structural_type_params: HashMap::new(),
             method_slot_type_params: HashMap::new(),
             context_type_params: HashMap::new(),
             used_stdlib_modules: HashSet::new(),

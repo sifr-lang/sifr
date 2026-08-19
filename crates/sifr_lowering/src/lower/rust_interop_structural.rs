@@ -87,7 +87,11 @@ pub(in crate::lower) fn validate_structural_function_contract(
                 [bound]
                     if matches!(
                         bound.as_str(),
-                        "Structural" | "StaticProgram" | "MethodSlots" | "Context"
+                        "Structural"
+                            | "StringStructural"
+                            | "StaticProgram"
+                            | "MethodSlots"
+                            | "Context"
                     ) =>
                 {
                     Some(bound.clone())
@@ -98,7 +102,7 @@ pub(in crate::lower) fn validate_structural_function_contract(
             structural_type_error(
                 ctx,
                 format!(
-                    "type parameter `{type_param}` must have the exact `Structural`, `StaticProgram`, `MethodSlots`, or `Context` bound"
+                    "type parameter `{type_param}` must have the exact `Structural`, `StringStructural`, `StaticProgram`, `MethodSlots`, or `Context` bound"
                 ),
                 span,
             );
@@ -110,6 +114,14 @@ pub(in crate::lower) fn validate_structural_function_contract(
                 "sifr.meta.Structural",
                 ctx.canonical_structural_marker_imported,
                 ctx.local_structural_marker_declared,
+                span,
+            ),
+            Some("StringStructural") => validate_marker(
+                ctx,
+                "StringStructural",
+                "sifr.meta.StringStructural",
+                ctx.canonical_string_structural_marker_imported,
+                ctx.local_string_structural_marker_declared,
                 span,
             ),
             Some("StaticProgram") => validate_marker(

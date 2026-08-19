@@ -79,7 +79,7 @@ pub(super) fn attached_contract() -> String {
     CONTRACT
         .replace(
             "from sifr.meta import ",
-            "from sifr.meta import StaticProgram, Structural, ",
+            "from sifr.meta import StaticProgram, StringStructural, Structural, ",
         )
         .replace(
             "@class_adapter_provider",
@@ -93,6 +93,10 @@ def describe[T: StaticProgram]() -> str:
 
 @attached_api("fixture.contract", "ContractApi", public_name="echo", receiver="type", owner="T")
 def echo[T: StaticProgram, Input: Structural](input: Input) -> Input:
+    return input
+
+@attached_api("fixture.contract", "ContractApi", public_name="echo_strings", receiver="type", owner="T")
+def echo_strings[T: StaticProgram, Input: StringStructural](input: Input) -> Input:
     return input
 
 @attached_api("fixture.contract", "ContractApi", public_name="touch", receiver="mutable", owner="T")
@@ -115,8 +119,8 @@ def finish[T: StaticProgram](own target: Self) -> int:
 fn attached_api_owner_accepts_method_slots_bound() {
     let contract = attached_contract()
         .replace(
-            "from sifr.meta import StaticProgram, Structural, ",
-            "from sifr.meta import MethodSlots, StaticProgram, Structural, ",
+            "from sifr.meta import StaticProgram, StringStructural, Structural, ",
+            "from sifr.meta import MethodSlots, StaticProgram, StringStructural, Structural, ",
         )
         .replace(
             "@class_adapter_provider",
@@ -247,6 +251,7 @@ class Model(Contract):
 def main():
     assert Model.describe() == "attached"
     assert Model.echo("residual") == "residual"
+    assert Model.echo_strings({"nested": ["left", "right"]}) == {"nested": ["left", "right"]}
 "#,
         &contract,
     );
@@ -289,6 +294,31 @@ def main():
             method.name.as_str(),
             "describe" | "echo" | "touch" | "finish"
         )
+    }));
+}
+
+#[test]
+fn attached_string_structural_api_rejects_a_non_string_leaf() {
+    let contract = attached_contract();
+    let modules = project(
+        r#"
+from fixture.contract import Contract, contract_config
+
+class Model(Contract):
+    _config = contract_config(True)
+    value: int
+
+def main():
+    Model.echo_strings({"invalid": [1]})
+"#,
+        &contract,
+    );
+    let errors = compile_errors(&modules, "non-string attached input must fail checking");
+    assert!(errors.iter().any(|error| {
+        error.code == sifr_diagnostics::DiagnosticCode::PROTO_BOUND_NOT_SATISFIED.code()
+            && error
+                .message
+                .contains("does not implement protocol 'StringStructural'")
     }));
 }
 

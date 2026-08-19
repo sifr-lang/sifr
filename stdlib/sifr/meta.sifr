@@ -5,6 +5,10 @@ class Structural:
     pass
 
 
+class StringStructural:
+    pass
+
+
 class StaticProgram:
     pass
 

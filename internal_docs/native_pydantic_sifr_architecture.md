@@ -1356,7 +1356,10 @@ Validation selects one of three input profiles over that abstraction:
 The strings-profile public entry point is generic over an input `S`.
 Compile-time shape verification accepts `S` when it is `str`, or when every
 terminal scalar in its structural projection, including mapping keys, is
-`str`; nested records, mappings, and sequences are allowed. A bare `str` uses
+`str`; nested records, mappings, and sequences are allowed. The package uses
+the compiler-owned `sifr.meta.StringStructural` bound for this check. The bound
+is a compile-time subset of `Structural`. It emits the same structural Rust
+projection contract and adds no runtime trait or value tree. A bare `str` uses
 the normal scalar projection. The compiler-generated projection for `S` is
 therefore the input type—there is no `Any` or package-owned recursive value
 tree. The profile reuses the native structural adapter with a leaf-kind

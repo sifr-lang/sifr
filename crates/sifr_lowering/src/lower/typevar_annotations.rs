@@ -14,6 +14,7 @@ fn is_known_typevar_spec(name: &str, ctx: &LowerCtx) -> bool {
             | "Addable"
             | "Hashable"
             | "Structural"
+            | "StringStructural"
             | "StaticProgram"
             | "MethodSlots"
             | "Context"

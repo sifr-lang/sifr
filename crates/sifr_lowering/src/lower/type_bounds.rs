@@ -30,6 +30,7 @@ fn is_builtin_bound(name: &str) -> bool {
             | "Addable"
             | "Hashable"
             | "Structural"
+            | "StringStructural"
             | "StaticProgram"
             | "MethodSlots"
             | "Context"
@@ -79,6 +80,9 @@ fn typevar_satisfies_spec(tv_name: &str, target_spec: &str, ctx: &LowerCtx) -> b
         if spec == target_spec {
             return true;
         }
+        if target_spec == "Structural" && spec == "StringStructural" {
+            return true;
+        }
 
         // Built-in bounds only imply themselves, which is handled by exact match above.
         if is_builtin_bound(spec) {
@@ -114,6 +118,60 @@ fn type_satisfies_comparable_bound(ty: &Type, ctx: &LowerCtx) -> bool {
 
 fn supports_structural_bridge_type(ty: &Type, ctx: &LowerCtx) -> bool {
     supports_structural_bridge_type_inner(ty, ctx, &mut std::collections::HashSet::new(), false)
+}
+
+fn supports_string_structural_type(ty: &Type, ctx: &LowerCtx) -> bool {
+    if !supports_structural_bridge_type(ty, ctx) {
+        return false;
+    }
+    supports_string_structural_type_inner(ty, ctx, &mut std::collections::HashSet::new())
+}
+
+fn supports_string_structural_type_inner(
+    ty: &Type,
+    ctx: &LowerCtx,
+    visiting: &mut std::collections::HashSet<(String, Vec<Type>)>,
+) -> bool {
+    match ty.resolve_alias() {
+        Type::Str => true,
+        Type::TypeVar(name) => typevar_satisfies_spec(name, "StringStructural", ctx),
+        Type::List(value) => supports_string_structural_type_inner(value, ctx, visiting),
+        Type::Set(value) => {
+            supports_hash_key_in_context(value, ctx)
+                && supports_string_structural_type_inner(value, ctx, visiting)
+        }
+        Type::Dict(key, value) => {
+            matches!(key.resolve_alias(), Type::Str)
+                && supports_string_structural_type_inner(value, ctx, visiting)
+        }
+        Type::Tuple(values) => values
+            .iter()
+            .all(|value| supports_string_structural_type_inner(value, ctx, visiting)),
+        Type::Union(values) => values
+            .iter()
+            .all(|value| supports_string_structural_type_inner(value, ctx, visiting)),
+        Type::Class {
+            identity,
+            type_args,
+            name,
+            fields,
+            ..
+        } => {
+            let key = (
+                identity.clone().unwrap_or_else(|| name.clone()),
+                type_args.clone(),
+            );
+            if !visiting.insert(key.clone()) {
+                return true;
+            }
+            let supported = fields
+                .iter()
+                .all(|(_, field)| supports_string_structural_type_inner(field, ctx, visiting));
+            visiting.remove(&key);
+            supported
+        }
+        _ => false,
+    }
 }
 
 fn structural_identity_inputs_supported(class_name: &str, ctx: &LowerCtx) -> bool {
@@ -491,6 +549,7 @@ pub(in crate::lower) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &Lower
         "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str),
         "Hashable" => supports_hash_key_in_context(ty, ctx),
         "Structural" => supports_structural_bridge_type(ty, ctx),
+        "StringStructural" => supports_string_structural_type(ty, ctx),
         "StaticProgram" => supports_static_program_type(ty, ctx),
         "MethodSlots" => supports_static_program_type(ty, ctx),
         "Context" => supports_structural_bridge_type(ty, ctx),

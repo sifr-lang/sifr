@@ -24,6 +24,17 @@ fn structural_externals() -> ExternalDefs {
                 },
             ),
             (
+                "StringStructural".to_string(),
+                Type::Class {
+                    identity: Some("sifr.meta.StringStructural".to_string()),
+                    type_args: Vec::new(),
+                    name: "StringStructural".to_string(),
+                    fields: Vec::new(),
+                    methods: Vec::new(),
+                    parent_class: None,
+                },
+            ),
+            (
                 "StaticProgram".to_string(),
                 Type::Class {
                     identity: Some("sifr.meta.StaticProgram".to_string()),
@@ -126,6 +137,98 @@ def convert[Output: StaticProgram, Input: Structural](
         ["StaticProgram"]
     );
     assert_eq!(module.type_param_bounds["convert"]["Input"], ["Structural"]);
+}
+
+#[test]
+fn string_structural_bound_accepts_only_recursive_string_leaves() {
+    let source = r#"
+from sifr.meta import StringStructural
+
+class Leaf:
+    value: str
+
+class Payload:
+    label: str
+    leaves: list[Leaf]
+    metadata: dict[str, str]
+
+def accept[T: StringStructural](value: T) -> None:
+    pass
+
+def use(payload: Payload) -> None:
+    accept("root")
+    accept(payload)
+    accept({"nested": ["left", "right"]})
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    lower_module_with_externals(parsed.suite(), &structural_externals())
+        .expect("bare and recursively nested string inputs should lower");
+
+    for invalid_type in ["int", "list[bool]", "dict[int, str]", "str | None"] {
+        let source = format!(
+            r#"
+from sifr.meta import StringStructural
+
+def accept[T: StringStructural](value: T) -> None:
+    pass
+
+def use(value: {invalid_type}) -> None:
+    accept(value)
+"#
+        );
+        let parsed = parse_module(&source).expect("source should parse");
+        let errors = match lower_module_with_externals(parsed.suite(), &structural_externals()) {
+            Ok(_) => panic!("non-string leaf type {invalid_type} must fail"),
+            Err(errors) => errors,
+        };
+        assert!(errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+                && error
+                    .message
+                    .contains("does not implement protocol 'StringStructural'")
+        }));
+    }
+}
+
+#[test]
+fn rust_interop_accepts_the_canonical_string_structural_marker() {
+    let source = r"
+from sifr.meta import StringStructural
+
+class CodecError(Error):
+    message: str
+
+@rust.structural
+@rust(bridge.codec.observe)
+def observe[T: StringStructural](value: T) -> Result[str, CodecError | RustPanicError]: ...
+";
+    let parsed = parse_module(source).expect("source should parse");
+    let module = lower_module_with_externals(parsed.suite(), &structural_externals())
+        .map(|result| result.module)
+        .expect("canonical string-structural bridge should lower");
+    assert_eq!(
+        module.type_param_bounds["observe"]["T"],
+        ["StringStructural"]
+    );
+}
+
+#[test]
+fn rust_interop_rejects_aliased_string_structural_marker() {
+    let source = r"
+from sifr.meta import StringStructural as Strings
+
+class CodecError(Error):
+    message: str
+
+@rust.structural
+@rust(bridge.codec.observe)
+def observe[T: StringStructural](value: T) -> Result[str, CodecError | RustPanicError]: ...
+";
+    let errors = lower_errors_without_marker_import(source);
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RUST_TYPE_PROBE_FAILURE)
+            && error.message.contains("compiler-owned")
+    }));
 }
 
 #[test]
