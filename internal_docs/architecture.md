@@ -914,6 +914,8 @@ rejects that parent specialization before code generation. Structural support ap
 rule when a concrete generic class is nested in another record. Lowering selects an imported
 parent template by canonical identity. The shared type-system check follows nested generic class
 declarations, binds their local parameters, and rejects transitive union-topology changes.
+Lowering uses declared class-parameter metadata as the binding authority. The check rejects a
+class occurrence when its concrete argument count differs from that declaration.
 
 Checked adapted-handler exports retain the callable target with a signature specialized relative
 to the selected owner's type parameters. Generic substitution follows the full local ancestor

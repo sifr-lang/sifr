@@ -319,6 +319,7 @@ pub(in crate::lower) fn collect_class_type(
         {
             if !super::super::generic_parent_representation::preserves_union_structure(
                 &ctx.class_types,
+                &ctx.class_declared_type_params,
                 parent_name,
                 &parent_ty,
             ) {
