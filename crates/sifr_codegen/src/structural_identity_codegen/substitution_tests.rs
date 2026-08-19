@@ -91,6 +91,89 @@ fn structural_substitution_uses_project_nominal_scope_authority() {
 }
 
 #[test]
+fn imported_outer_fields_resolve_nested_scopes_in_the_declaring_module() {
+    let mut model_inner = class(
+        "Inner",
+        vec![("value".to_string(), Type::TypeVar("T".to_string()))],
+    );
+    model_inner.type_params = vec!["T".to_string()];
+    let mut model_outer = class(
+        "Outer",
+        vec![(
+            "inner".to_string(),
+            Type::Class {
+                identity: None,
+                type_args: vec![Type::Str],
+                name: "Inner".to_string(),
+                fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
+                methods: Vec::new(),
+                parent_class: None,
+            },
+        )],
+    );
+    model_outer.identity = Some("models.Outer".to_string());
+    model_outer.type_params = vec!["T".to_string()];
+    let models = HirModule {
+        functions: Vec::new(),
+        classes: vec![model_inner, model_outer],
+        imports: Vec::new(),
+        constants: Vec::new(),
+        generic_functions: HashMap::new(),
+        type_param_bounds: HashMap::new(),
+    };
+
+    let mut consumer_inner = class(
+        "Inner",
+        vec![("value".to_string(), Type::TypeVar("U".to_string()))],
+    );
+    consumer_inner.type_params = vec!["U".to_string()];
+    let main = HirModule {
+        functions: Vec::new(),
+        classes: vec![consumer_inner],
+        imports: Vec::new(),
+        constants: Vec::new(),
+        generic_functions: HashMap::new(),
+        type_param_bounds: HashMap::new(),
+    };
+    let modules = [("models", &models), ("main", &main)];
+    let context = IdentityContext { modules: &modules };
+    let concrete_outer = Type::Class {
+        identity: Some("models.Outer".to_string()),
+        type_args: vec![Type::Int],
+        name: "Outer".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: None,
+    };
+
+    let actual = compile_type(&concrete_outer, "main", &context, &mut Vec::new()).static_value();
+    let inner = identity::nominal_record(
+        "models.Inner",
+        &[identity::primitive("str")],
+        &[NominalField {
+            name: "value",
+            identity: identity::primitive("str"),
+            required: true,
+            default_identity: None,
+        }],
+        identity::metadata(&[]),
+    );
+    let expected = identity::nominal_record(
+        "models.Outer",
+        &[identity::primitive("int")],
+        &[NominalField {
+            name: "inner",
+            identity: inner,
+            required: true,
+            default_identity: None,
+        }],
+        identity::metadata(&[]),
+    );
+
+    assert_eq!(actual, Some(expected));
+}
+
+#[test]
 fn generic_union_identity_matches_reordered_collapsed_and_nested_substitutions() {
     let modules = Vec::new();
     let context = IdentityContext { modules: &modules };
