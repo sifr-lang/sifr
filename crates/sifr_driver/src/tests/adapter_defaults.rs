@@ -267,6 +267,39 @@ class Model(Contract):
 }
 
 #[test]
+fn unrelated_declaration_order_does_not_change_adapter_identity() {
+    let source = r#"
+from fixture.defaults import Contract
+class Model(Contract):
+    value: int
+"#;
+    let identities = |contract: &str| {
+        let compiled = compile_with_contract(source, contract);
+        let selection = compiled
+            .external_defs
+            .class_adapter_selections
+            .get("main")
+            .and_then(|classes| classes.get("Model"))
+            .expect("adapter identity is exported");
+        (
+            selection.adapter_invocation_identity,
+            selection.post_adapter_identity,
+        )
+    };
+    let unrelated = r#"
+def unrelated(value: int) -> int:
+    shifted: int = value + 1
+    return shifted
+
+"#;
+
+    assert_eq!(
+        identities(CONTRACT),
+        identities(&format!("{unrelated}{CONTRACT}"))
+    );
+}
+
+#[test]
 fn relevant_adapter_edits_invalidate_invocation_and_post_adapter_identity() {
     let source = r#"
 from fixture.defaults import Contract

@@ -2,15 +2,18 @@
 
 use sifr_lowering::{
     HirAsyncWithKind, HirExpr, HirFunction, HirModule, HirPattern, HirStmt, LoweringResult,
+    PythonArrowSchemaMode, PythonDlpackStreamMode, PythonInteropDeclaration,
+    RustInteropDeclaration, RustInteropValue,
 };
 use std::fmt::Write;
 
 pub(crate) fn canonical_const_functions(module: &HirModule) -> String {
-    let mut canonical = module.clone();
-    for function in &mut canonical.functions {
+    let mut functions = module.functions.clone();
+    functions.sort_by(|left, right| left.name.cmp(&right.name));
+    for function in &mut functions {
         strip_function_locations(function);
     }
-    format!("{canonical:#?}")
+    format!("{functions:#?}")
 }
 
 fn strip_function_locations(function: &mut HirFunction) {
@@ -20,10 +23,62 @@ fn strip_function_locations(function: &mut HirFunction) {
         }
     }
     strip_stmt_locations(&mut function.body);
-    // Interop declarations do not participate in deterministic const evaluation,
-    // and their diagnostic spans are intentionally source-relative.
-    function.rust_interop.clear();
-    function.python_interop.clear();
+    for declaration in &mut function.rust_interop {
+        strip_rust_interop_locations(declaration);
+    }
+    for declaration in &mut function.python_interop {
+        strip_python_interop_locations(declaration);
+    }
+}
+
+fn strip_rust_interop_locations(declaration: &mut RustInteropDeclaration) {
+    declaration.span = ruff_text_size::TextRange::default();
+    if let Some(target) = &mut declaration.target {
+        target.span = ruff_text_size::TextRange::default();
+    }
+    for argument in &mut declaration.arguments {
+        argument.span = ruff_text_size::TextRange::default();
+        strip_rust_interop_value_locations(&mut argument.value);
+    }
+}
+
+fn strip_rust_interop_value_locations(value: &mut RustInteropValue) {
+    match value {
+        RustInteropValue::PolicyCall { argument, span, .. } => {
+            *span = ruff_text_size::TextRange::default();
+            strip_rust_interop_value_locations(argument);
+        }
+        RustInteropValue::TargetPath(target) => {
+            target.span = ruff_text_size::TextRange::default();
+        }
+        RustInteropValue::Boolean(_)
+        | RustInteropValue::Symbol(_)
+        | RustInteropValue::Integer(_)
+        | RustInteropValue::IntegerList(_) => {}
+    }
+}
+
+fn strip_python_interop_locations(declaration: &mut PythonInteropDeclaration) {
+    declaration.span = ruff_text_size::TextRange::default();
+    if let Some(target) = &mut declaration.target {
+        target.span = ruff_text_size::TextRange::default();
+    }
+    for parameter in &mut declaration.parameters {
+        parameter.span = ruff_text_size::TextRange::default();
+    }
+    for callback in &mut declaration.callbacks {
+        callback.span = ruff_text_size::TextRange::default();
+    }
+    if let Some(arrow) = &mut declaration.arrow {
+        if let PythonArrowSchemaMode::Parameter { span, .. } = &mut arrow.schema {
+            *span = ruff_text_size::TextRange::default();
+        }
+    }
+    if let Some(dlpack) = &mut declaration.dlpack {
+        if let PythonDlpackStreamMode::Parameter { span, .. } = &mut dlpack.stream {
+            *span = ruff_text_size::TextRange::default();
+        }
+    }
 }
 
 fn strip_stmt_locations(statements: &mut [HirStmt]) {
@@ -167,8 +222,8 @@ fn strip_expr_locations(expression: &mut HirExpr) {
         | HirExpr::StringLiteral(_)
         | HirExpr::BoolLiteral(_)
         | HirExpr::NoneLiteral
-        | HirExpr::Name { .. }
         | HirExpr::EnumVariant { .. } => {}
+        HirExpr::Name { binding_id, .. } => *binding_id = None,
         HirExpr::BinOp { left, right, .. } => {
             strip_expr_locations(left);
             strip_expr_locations(right);
@@ -194,11 +249,27 @@ fn strip_expr_locations(expression: &mut HirExpr) {
         | HirExpr::TupleLiteral {
             elements: values, ..
         } => strip_expr_list_locations(values),
-        HirExpr::Call { args, .. }
-        | HirExpr::GenericCall { args, .. }
-        | HirExpr::IteratorCall { args, .. }
-        | HirExpr::ConstructorCall { args, .. }
-        | HirExpr::SuperCall { args, .. } => strip_expr_list_locations(args),
+        HirExpr::Call {
+            args,
+            mutable_arg_places,
+            ..
+        }
+        | HirExpr::GenericCall {
+            args,
+            mutable_arg_places,
+            ..
+        }
+        | HirExpr::IteratorCall {
+            args,
+            mutable_arg_places,
+            ..
+        } => {
+            strip_expr_list_locations(args);
+            mutable_arg_places.clear();
+        }
+        HirExpr::ConstructorCall { args, .. } | HirExpr::SuperCall { args, .. } => {
+            strip_expr_list_locations(args);
+        }
         HirExpr::PythonCall {
             args,
             record_expansions,
@@ -254,11 +325,15 @@ fn strip_expr_locations(expression: &mut HirExpr) {
         HirExpr::MethodCall {
             object,
             args,
+            receiver_target,
+            mutable_arg_places,
             source,
             ..
         } => {
             strip_expr_locations(object);
             strip_expr_list_locations(args);
+            *receiver_target = None;
+            mutable_arg_places.clear();
             *source = None;
         }
         HirExpr::FString { parts, .. } => {
@@ -390,4 +465,94 @@ pub(crate) fn post_adapter_hex(result: &LoweringResult, owner: &str) -> String {
                 },
             )
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::canonical_const_functions;
+    use ruff_text_size::{TextRange, TextSize};
+    use sifr_lowering::{
+        BindingId, HirExpr, HirFunction, HirModule, HirStmt, MethodKind,
+        RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
+        RustInteropEffect, RustTargetPath,
+    };
+    use sifr_type_system::Type;
+    use std::collections::HashMap;
+
+    fn function(body: Vec<HirStmt>) -> HirFunction {
+        HirFunction {
+            name: "adapt".to_string(),
+            params: Vec::new(),
+            return_type: Type::Int,
+            body,
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            receiver: None,
+            decorators: vec!["const_eval".to_string()],
+            rust_interop: Vec::new(),
+            python_interop: Vec::new(),
+            compiler_intrinsic: None,
+            type_params: Vec::new(),
+        }
+    }
+
+    fn module(function: HirFunction) -> HirModule {
+        HirModule {
+            functions: vec![function],
+            classes: Vec::new(),
+            imports: Vec::new(),
+            constants: Vec::new(),
+            generic_functions: HashMap::new(),
+            type_param_bounds: HashMap::new(),
+        }
+    }
+
+    #[test]
+    fn provider_identity_ignores_lowering_binding_ids() {
+        let with_id = |id| {
+            module(function(vec![HirStmt::Return {
+                value: Some(HirExpr::Name {
+                    name: "value".to_string(),
+                    binding_id: Some(BindingId(id)),
+                    ty: Type::Int,
+                }),
+            }]))
+        };
+
+        assert_eq!(
+            canonical_const_functions(&with_id(4)),
+            canonical_const_functions(&with_id(91))
+        );
+    }
+
+    #[test]
+    fn provider_identity_keeps_interop_semantics_but_ignores_interop_spans() {
+        let range = |start, end| TextRange::new(TextSize::new(start), TextSize::new(end));
+        let with_target = |segments: &[&str], span| {
+            let mut provider = function(Vec::new());
+            provider.rust_interop.push(RustInteropDeclaration {
+                kind: RustInteropDecoratorKind::Function,
+                target: Some(RustTargetPath {
+                    segments: segments
+                        .iter()
+                        .map(|segment| (*segment).to_string())
+                        .collect(),
+                    span,
+                }),
+                arguments: Vec::new(),
+                span,
+                effect: RustInteropEffect::Sync,
+                abi_requirements: RustInteropAbiRequirements::default(),
+                consumes_receiver: false,
+            });
+            module(provider)
+        };
+
+        let base = canonical_const_functions(&with_target(&["bridge", "adapt"], range(1, 8)));
+        let moved = canonical_const_functions(&with_target(&["bridge", "adapt"], range(41, 48)));
+        let changed = canonical_const_functions(&with_target(&["bridge", "other"], range(41, 48)));
+
+        assert_eq!(base, moved);
+        assert_ne!(base, changed);
+    }
 }

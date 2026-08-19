@@ -887,9 +887,11 @@ canonical declaring identities, substitutes concrete generic parent arguments, a
 normalizes every field to required, constant-default, or checked zero-argument factory-default
 state; final lowering alone materializes constructor defaults, and factory expressions execute at
 each call so mutable values are not shared. Adapter invocation identity hashes the source-location-
-free declaration input and provider HIR before evaluation. Post-adapter identity separately binds
-the invocation to the validated output and is an input to static-program identity, avoiding a
-cycle with later handler and attached-API outputs.
+free declaration input and semantic provider HIR before evaluation. Provider canonicalization
+sorts the const function set, removes lowering-assigned binding and ownership-place IDs, and
+normalizes diagnostic ranges while retaining checked interop declarations. Post-adapter identity
+separately binds the invocation to the validated output and is an input to static-program identity,
+avoiding a cycle with later handler and attached-API outputs.
 
 Structural shape derivation specializes finalized adapter field-plan types with the concrete
 owner arguments before package specialization. Local and imported adapted generic classes use the
