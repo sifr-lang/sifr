@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-19. M0-M9 are complete; M10 is in progress.
+Status: active on 2026-08-19. M0-M10 are complete; M11 is in progress.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -1615,9 +1615,52 @@ blocking findings
 Deferred follow-up: M12 should strengthen generic-bound assertions to pin both
 the positive composite bound and the `StaticProgram`-only negative, and resolve
 the pre-existing nondeterministic multi-context selection.
-Next action: implement the M10 package facade on compiler merge
-`c1b41a6078cff5bb678bd94df5bbf4e8c7e0ec6c` and package merge
-`8af4a1f4d598829ac427f96c34b76289e13eedd9`.
+Package state: complete
+Issue: [`sifr-lang/pydantic-sifr#14`](https://github.com/sifr-lang/pydantic-sifr/issues/14)
+PR: [`sifr-lang/pydantic-sifr#46`](https://github.com/sifr-lang/pydantic-sifr/pull/46)
+Base SHA: `8af4a1f4d598829ac427f96c34b76289e13eedd9`
+Initial candidate SHA: `76384c45dc2a13228818d7c4152adbc5c85dd859`
+Final candidate SHA: `f4304f367864fd940df43aebeaf373d69be33ced`
+Merge SHA: `a917a26e108c6cd47046fe7d355aadea4fd17652`
+Changed paths: checked serializer and computed-field declarations; static
+serializer payloads and plans; structural and JSON callback execution;
+attached plain and serializer-aware dump APIs; the structural `JsonValue`
+bridge; serialization-mode computed-field JSON Schema; negative checks; the
+M10 native demo; package documentation; pin records; and focused tests.
+Validation: all Rust workspace tests and benches passed, including 26 core
+unit tests after remediation. Workspace and focused core Clippy passed with
+warnings denied. Rust and Sifr formatting, package source checks and tests,
+13 serializer-negative checks, 13 validator-negative checks, three
+descriptor-negative checks, 39 Python unit tests, the Python-free graph,
+supported-version and Sifr-pin checks, static-program round trip, HIR
+maintainability, `git diff --check`, and the 900-line guardrail passed. A fresh
+task-owned native demo passed on the pinned compiler merge and covered attached
+plain and serializer-aware dumps, all four `when_used` policies, typed context,
+selection and aliases, callback errors, and nested record results from field
+and computed serializers. The initial exact-SHA Opus review found that nested
+callback-output policies were rooted incorrectly. One remediation moved field
+and computed output policies below their callback target and added focused and
+native regression coverage. The final exact-SHA review returned `SATISFIED`
+with no blockers
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/46#issuecomment-5339944722)).
+The package create-PR and merge gates each ran once on the final candidate.
+Both passed their local guardrails, unit tests, pin audit, and exact-set audits,
+then stopped at the external upstream differential environment because its
+`pydantic_core` module was absent. Neither gate was rerun. Compiler files did
+not change in the package item, so no Sifr compiler create-PR or merge gate ran.
+The selected M10 corpus rows were recorded on the still-open broader corpus
+issue
+([evidence](https://github.com/sifr-lang/pydantic-sifr/issues/17#issuecomment-5339962363)).
+Deferred follow-up: M12 must separate callback-output field policies from
+declared-schema policies so same-path aliases and defaults cannot collide. It
+must also reject duplicate field-serializer targets, pin the root-relative
+model-serializer branch, add a validator-plus-serializer callback integration
+case, decide the checked model-serializer structural-output rule, and document
+the existing dump revalidation and structural `i64` bridge limits. The
+separately running pre-v1 task, worktree, processes, artifacts, failures, and
+union-order changes remain entirely outside this phase.
+Next action: implement M11 compiler prerequisites before the M11 package
+surface.
 
 ### M11: Complete Model Operations and Schema Surface
 
