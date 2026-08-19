@@ -267,7 +267,7 @@ pub(crate) fn is_result_int_type(ty: &Type) -> bool {
 
 pub(crate) fn result_int_return_type_to_sifr_int(ty: &Type) -> RustType {
     let Type::Result(_, err_ty) = crate::resolve_alias_type_for_plain_call(ty) else {
-        return RustType::Named(ty.rust_type());
+        return crate::sifr_type_to_rust_type(ty);
     };
     RustType::Result(
         Box::new(RustType::Named("SifrInt".to_string())),

@@ -31,7 +31,7 @@ pub(super) fn is_result_int_division_error_type(ty: &Type) -> bool {
 
 pub(super) fn result_int_to_sifr_int_rust_type(ty: &Type) -> crate::RustType {
     let Type::Result(_, err_ty) = ty else {
-        return crate::RustType::Named(ty.rust_type());
+        return crate::sifr_type_to_rust_type(ty);
     };
     crate::RustType::Result(
         Box::new(crate::RustType::Named("SifrInt".to_string())),

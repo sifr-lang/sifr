@@ -136,6 +136,7 @@ impl RustEmitter {
             }
             HirExpr::BoolOp { values, .. }
             | HirExpr::Call { args: values, .. }
+            | HirExpr::GenericCall { args: values, .. }
             | HirExpr::PythonCall { args: values, .. }
             | HirExpr::IntrinsicCall { args: values, .. }
             | HirExpr::IteratorCall { args: values, .. }

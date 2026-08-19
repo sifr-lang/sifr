@@ -34,7 +34,7 @@ impl RustEmitter {
                     })
             })
             .unwrap_or(false);
-        if !context.param_ty.rust_type().starts_with("Option<Box<") && !is_recursive_ctor_param {
+        if !is_recursive_ctor_param {
             return None;
         }
         if matches!(context.arg, HirExpr::NoneLiteral) {
@@ -45,9 +45,7 @@ impl RustEmitter {
         let arg_is_non_copy = !crate::helpers::is_copy_type_for_codegen(context.effective_arg_ty);
         let clone_before_adaptation = context.borrowed_name_arg
             && arg_is_non_copy
-            && (arg_is_option
-                || !context.convention.is_owned()
-                || context.param_ty.rust_type().starts_with('&'));
+            && (arg_is_option || !context.convention.is_owned());
         if clone_before_adaptation {
             lowered_arg = RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Paren(Box::new(lowered_arg))),
@@ -59,8 +57,7 @@ impl RustEmitter {
         let expr = if arg_is_option {
             Self::ensure_option_box_inner_for_ir(lowered_arg)
         } else {
-            let param_is_owned_rust_value =
-                context.convention.is_owned() && !context.param_ty.rust_type().starts_with('&');
+            let param_is_owned_rust_value = context.convention.is_owned();
             let inner = if !clone_before_adaptation
                 && (!param_is_owned_rust_value || context.borrowed_name_arg)
                 && arg_is_non_copy

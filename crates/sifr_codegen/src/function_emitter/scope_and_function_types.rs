@@ -737,24 +737,24 @@ impl RustEmitter {
         if !matches!(resolved, Type::Callable(..) | Type::AsyncCallable(..)) {
             return self.lower_function_param_type(ty, convention);
         }
-        let base = self.rust_type_with_generics(ty);
-        let send_sync = if matches!(resolved, Type::AsyncCallable(..)) {
-            base
-        } else {
-            format!("{base} + Send + Sync")
-        };
-        let bounded = if require_static {
-            format!("{send_sync} + 'static")
-        } else {
-            send_sync
-        };
+        let mut bounded = self.rust_ir_type_with_generics(ty);
+        if let RustType::ImplTrait { auto_traits, .. } | RustType::DynTrait { auto_traits, .. } =
+            &mut bounded
+        {
+            if !matches!(resolved, Type::AsyncCallable(..)) {
+                auto_traits.extend(["Send".to_string(), "Sync".to_string()]);
+            }
+            if require_static {
+                auto_traits.push("'static".to_string());
+            }
+        }
         if ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed() {
             RustType::Ref {
                 mutable: convention.is_mut_borrow(),
-                inner: Box::new(RustType::Named(bounded)),
+                inner: Box::new(bounded),
             }
         } else {
-            RustType::Named(bounded)
+            bounded
         }
     }
 

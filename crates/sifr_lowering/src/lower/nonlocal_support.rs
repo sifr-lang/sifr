@@ -234,7 +234,9 @@ fn hir_stmt_calls_function(stmt: &HirStmt, func_name: &str) -> bool {
 
 fn hir_expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
     match expr {
-        HirExpr::Call { func, args, .. } | HirExpr::PythonCall { func, args, .. } => {
+        HirExpr::Call { func, args, .. }
+        | HirExpr::GenericCall { func, args, .. }
+        | HirExpr::PythonCall { func, args, .. } => {
             func == func_name || args.iter().any(|arg| hir_expr_calls_function(arg, func_name))
         }
         HirExpr::IteratorCall { args, .. } => args

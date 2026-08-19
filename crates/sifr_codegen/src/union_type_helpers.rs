@@ -56,7 +56,16 @@ impl RustEmitter {
                 .project_nominal_path(identity.as_deref(), name)
                 .map_or_else(
                     || sifr_type_to_rust_type(resolved),
-                    |path| RustType::Named(format!("Box<dyn {path}>")),
+                    |path| {
+                        RustType::Boxed(Box::new(RustType::DynTrait {
+                            trait_: crate::RustTrait::Named {
+                                name: path.to_string(),
+                                params: Vec::new(),
+                                associated_types: Vec::new(),
+                            },
+                            auto_traits: Vec::new(),
+                        }))
+                    },
                 ),
             Type::Newtype { identity, name, .. } | Type::Enum { identity, name, .. } => self
                 .project_nominal_path(identity.as_deref(), name)
@@ -706,7 +715,10 @@ mod tests {
 
         emitter.register_union_type(&raw);
 
-        assert_eq!(raw.rust_type(), format!("Option<{expected_name}>"));
+        assert_eq!(
+            crate::render_type(&crate::sifr_type_to_rust_type(&raw)),
+            format!("Option<{expected_name}>")
+        );
         assert!(emitter.union_enums.contains_key(&expected_name));
         assert_eq!(emitter.union_enums.len(), 1);
     }

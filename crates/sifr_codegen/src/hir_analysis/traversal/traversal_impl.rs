@@ -99,6 +99,7 @@ where
             }
         }
         HirExpr::Call { args, .. }
+        | HirExpr::GenericCall { args, .. }
         | HirExpr::PythonCall { args, .. }
         | HirExpr::IteratorCall { args, .. }
         | HirExpr::ConstructorCall { args, .. }

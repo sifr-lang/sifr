@@ -41,7 +41,7 @@ impl RustEmitter {
                 if !matches!(value.ty(), Type::Class { .. }) {
                     return Ok(None);
                 }
-                Some(self.rust_type_with_generics(value.ty()))
+                Some(self.render_rust_type_with_generics(value.ty()))
             } else {
                 None
             };

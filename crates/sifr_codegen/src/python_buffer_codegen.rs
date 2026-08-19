@@ -28,7 +28,7 @@ fn acquire_python_buffer_with_method(
     error_type: &Type,
     method: &str,
 ) -> RustExpr {
-    let element = contract.element_type.rust_type();
+    let element = crate::render_type(&crate::sifr_type_to_rust_type(&contract.element_type));
     let access = match contract.access {
         PythonBufferAccess::Read => "Read",
         PythonBufferAccess::Write => "Write",

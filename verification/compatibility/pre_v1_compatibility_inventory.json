@@ -828,7 +828,7 @@
     },
     {
       "id": "production-rust-type-call-occurrences",
-      "count": 150,
+      "count": 0,
       "command": "rg -o '\\.rust_type\\(\\)' crates/sifr_codegen/src crates/sifr_lowering/src crates/sifr_type_system/src | rg -v '_tests\\.rs|/tests/' | wc -l",
       "owner": "pre_v1_compat_15_rust_type"
     },

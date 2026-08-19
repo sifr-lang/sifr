@@ -356,8 +356,15 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
 
 fn collect_type(ty: &RustType, needs: &mut IrImportNeeds) {
     match ty {
-        RustType::I64 | RustType::F64 | RustType::Bool | RustType::String_ | RustType::Unit => {}
-        RustType::Vec(inner) | RustType::Option(inner) => collect_type(inner, needs),
+        RustType::I64
+        | RustType::F64
+        | RustType::Bool
+        | RustType::String_
+        | RustType::Unit
+        | RustType::Never => {}
+        RustType::Vec(inner) | RustType::Option(inner) | RustType::Boxed(inner) => {
+            collect_type(inner, needs);
+        }
         RustType::HashSet(inner) => {
             needs.collections.needs_hashset = true;
             collect_type(inner, needs);
@@ -380,10 +387,12 @@ fn collect_type(ty: &RustType, needs: &mut IrImportNeeds) {
                 collect_type(item, needs);
             }
         }
+        RustType::Array { element, .. } => collect_type(element, needs),
         RustType::Ref { inner, .. } => collect_type(inner, needs),
         RustType::Named(name) => collect_from_type_text(name, needs),
-        RustType::DynTrait(name) => collect_from_type_text(&format!("dyn {name}"), needs),
-        RustType::Impl(name) => collect_from_type_text(&format!("impl {name}"), needs),
+        RustType::DynTrait { trait_, .. } | RustType::ImplTrait { trait_, .. } => {
+            collect_trait(trait_, needs);
+        }
         RustType::Generic { base, params } => {
             mark_symbol(base, needs);
             for param in params {
@@ -395,6 +404,33 @@ fn collect_type(ty: &RustType, needs: &mut IrImportNeeds) {
                 collect_type(param, needs);
             }
             collect_type(ret, needs);
+        }
+    }
+}
+
+fn collect_trait(trait_: &crate::RustTrait, needs: &mut IrImportNeeds) {
+    match trait_ {
+        crate::RustTrait::Named {
+            name,
+            params,
+            associated_types,
+        } => {
+            mark_symbol(name, needs);
+            for ty in params {
+                collect_type(ty, needs);
+            }
+            for (_, ty) in associated_types {
+                collect_type(ty, needs);
+            }
+        }
+        crate::RustTrait::Callable { name, params, ret } => {
+            mark_symbol(name, needs);
+            for ty in params {
+                collect_type(ty, needs);
+            }
+            if let Some(ret) = ret {
+                collect_type(ret, needs);
+            }
         }
     }
 }

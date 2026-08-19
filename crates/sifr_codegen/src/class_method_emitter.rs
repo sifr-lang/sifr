@@ -196,18 +196,14 @@ impl RustEmitter {
                 .recursive_fields
                 .contains(&(class.name.clone(), param_name.to_string()));
             if is_recursive {
-                return RustType::Named(
-                    self.recursive_field_rust_types
-                        .get(&(class.name.clone(), param_name.to_string()))
-                        .cloned()
-                        .unwrap_or_else(|| self.rust_type_with_generics(param_ty)),
-                );
+                return self
+                    .recursive_field_rust_types
+                    .get(&(class.name.clone(), param_name.to_string()))
+                    .cloned()
+                    .unwrap_or_else(|| self.rust_ir_type_with_generics(param_ty));
             }
             if matches!(param_ty, Type::Callable(..) | Type::AsyncCallable(..)) {
-                return RustType::Named(format!(
-                    "{} + 'static",
-                    self.rust_type_with_generics(param_ty)
-                ));
+                return self.rust_ir_type_with_static_bound(param_ty);
             }
             return self.rust_ir_type_with_generics(param_ty);
         }
@@ -223,15 +219,15 @@ impl RustEmitter {
             return result_int_return_type_to_sifr_int(param_ty);
         }
 
-        let rust_ty = self.rust_type_with_generics(param_ty);
+        let rust_ty = self.rust_ir_type_with_generics(param_ty);
         if param_ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed()
         {
             RustType::Ref {
                 mutable: convention.is_mut_borrow(),
-                inner: Box::new(RustType::Named(rust_ty)),
+                inner: Box::new(rust_ty),
             }
         } else {
-            RustType::Named(rust_ty)
+            rust_ty
         }
     }
 
@@ -302,7 +298,7 @@ impl RustEmitter {
                 };
                 let parent_rust_type = class.parent_type.as_ref().map_or_else(
                     || sifr_type_system::source_class_rust_name(parent_name),
-                    sifr_type_system::Type::rust_type,
+                    |ty| crate::render_type(&crate::sifr_type_to_rust_type(ty)),
                 );
                 let parent_args = args
                     .iter()

@@ -349,7 +349,9 @@ fn collect_expr_error_refs(
     collect_type_error_refs(expr.ty(), referenced, builtin_error_classes);
 
     match expr {
-        HirExpr::Call { func, args, .. } | HirExpr::PythonCall { func, args, .. } => {
+        HirExpr::Call { func, args, .. }
+        | HirExpr::GenericCall { func, args, .. }
+        | HirExpr::PythonCall { func, args, .. } => {
             if builtin_error_classes.contains(&func.as_str()) {
                 referenced.insert(func.clone());
             }

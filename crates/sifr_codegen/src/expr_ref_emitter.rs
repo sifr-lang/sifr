@@ -57,26 +57,6 @@ fn uses_debug_display_format(ty: &Type) -> bool {
     }
 }
 
-fn option_inner_from_rust_type(ty: &Type) -> Option<Type> {
-    let rust_ty = ty.rust_type();
-    if !rust_ty.starts_with("Option<") {
-        return None;
-    }
-    if rust_ty.contains("String") {
-        return Some(Type::Str);
-    }
-    if rust_ty.contains("i64") {
-        return Some(Type::Int);
-    }
-    if rust_ty.contains("f64") {
-        return Some(Type::Float);
-    }
-    if rust_ty.contains("bool") {
-        return Some(Type::Bool);
-    }
-    Some(Type::Unknown)
-}
-
 fn display_option_inner_type(expr: &HirExpr) -> Option<Type> {
     if let Some(inner) = expr.ty().optional_member_type() {
         return Some(inner);
@@ -90,7 +70,7 @@ fn display_option_inner_type(expr: &HirExpr) -> Option<Type> {
             _ => {}
         }
     }
-    option_inner_from_rust_type(expr.ty())
+    None
 }
 
 impl RustEmitter {

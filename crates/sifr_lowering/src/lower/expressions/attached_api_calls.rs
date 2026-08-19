@@ -134,22 +134,22 @@ fn lower_call(
         .type_params
         .iter()
         .filter_map(|type_param| bindings.get(type_param))
-        .map(Type::rust_type)
+        .cloned()
         .collect::<Vec<_>>();
-    let emitted_function = if concrete_type_args.len() == binding.declaration.type_params.len()
+    if concrete_type_args.len() == binding.declaration.type_params.len()
         && !concrete_type_args.is_empty()
     {
-        format!(
-            "{}::<{}>",
-            binding.emitted_function,
-            concrete_type_args.join(", ")
-        )
-    } else {
-        binding.emitted_function
-    };
+        return Some(HirExpr::GenericCall {
+            mutable_arg_places,
+            func: binding.emitted_function,
+            type_args: concrete_type_args,
+            args,
+            ty: substitute_type_vars(&full_type.return_type, &bindings),
+        });
+    }
     Some(HirExpr::Call {
         mutable_arg_places,
-        func: emitted_function,
+        func: binding.emitted_function,
         args,
         ty: substitute_type_vars(&full_type.return_type, &bindings),
     })

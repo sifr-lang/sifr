@@ -300,6 +300,12 @@ pub enum RustType {
     Option(Box<RustType>),
     Result(Box<RustType>, Box<RustType>),
     Tuple(Vec<RustType>),
+    Array {
+        element: Box<RustType>,
+        len: usize,
+    },
+    Boxed(Box<RustType>),
+    Never,
     Ref {
         mutable: bool,
         inner: Box<RustType>,
@@ -313,8 +319,28 @@ pub enum RustType {
         params: Vec<RustType>,
         ret: Box<RustType>,
     },
-    DynTrait(String),
-    Impl(String),
+    DynTrait {
+        trait_: RustTrait,
+        auto_traits: Vec<String>,
+    },
+    ImplTrait {
+        trait_: RustTrait,
+        auto_traits: Vec<String>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RustTrait {
+    Named {
+        name: String,
+        params: Vec<RustType>,
+        associated_types: Vec<(String, RustType)>,
+    },
+    Callable {
+        name: String,
+        params: Vec<RustType>,
+        ret: Option<Box<RustType>>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]

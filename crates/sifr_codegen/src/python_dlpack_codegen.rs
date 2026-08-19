@@ -106,7 +106,7 @@ pub(crate) fn acquire_from_foreign(
         Type::PythonDlpackTensor(element) => (
             format!(
                 "::sifr_stdlib::python::PythonDlpackTensor::<{}>",
-                element.rust_type()
+                crate::render_type(&crate::sifr_type_to_rust_type(element))
             ),
             "acquire_foreign",
         ),

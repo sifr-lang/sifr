@@ -305,7 +305,7 @@ fn collect_expr(expr: &HirExpr, path: &str, facts: &mut NameFacts) {
             "name": name,
             "ty": type_name(ty),
         })),
-        HirExpr::Call { func, args, ty, .. } => {
+        HirExpr::Call { func, args, ty, .. } | HirExpr::GenericCall { func, args, ty, .. } => {
             facts.calls.push(json!({
                 "kind": "Call",
                 "path": path,
@@ -545,6 +545,7 @@ fn expr_kind(expr: &HirExpr) -> &'static str {
         HirExpr::Compare { .. } => "Compare",
         HirExpr::BoolOp { .. } => "BoolOp",
         HirExpr::Call { .. } => "Call",
+        HirExpr::GenericCall { .. } => "GenericCall",
         HirExpr::PythonCall { .. } => "PythonCall",
         HirExpr::IntrinsicCall { .. } => "IntrinsicCall",
         HirExpr::Await { .. } => "Await",

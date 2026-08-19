@@ -552,6 +552,7 @@ pub(super) fn is_owned_temporary(expr: &HirExpr) -> bool {
             ..
         } => is_owned_temporary(then_expr) && is_owned_temporary(else_expr),
         HirExpr::Call { .. }
+        | HirExpr::GenericCall { .. }
         | HirExpr::PythonCall { .. }
         | HirExpr::IntrinsicCall { .. }
         | HirExpr::IteratorCall { .. }

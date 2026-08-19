@@ -477,7 +477,7 @@ pub(crate) fn collect_mutated_vars(
                 }
             }
         }
-        HirExpr::Call { func, args, .. } => {
+        HirExpr::Call { func, args, .. } | HirExpr::GenericCall { func, args, .. } => {
             let canonical_func = canonical_mutating_call_name(func);
             let param_convs = func_signatures
                 .and_then(|sigs| {

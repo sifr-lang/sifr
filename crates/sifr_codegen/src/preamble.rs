@@ -5,6 +5,7 @@ use crate::{RustExpr, RustItem, RustMatchArm, RustParam, RustStmt, RustType, Vis
 mod types_and_errors;
 pub use types_and_errors::*;
 mod task_context_runtime;
+mod type_validation;
 pub use task_context_runtime::*;
 mod task_cancellation_runtime;
 pub use task_cancellation_runtime::*;

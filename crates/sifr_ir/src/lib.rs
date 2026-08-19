@@ -7,6 +7,7 @@
 pub mod cfg;
 pub mod diagnostic_types;
 pub mod flow_graph;
+mod hir_expr;
 pub mod hir_nodes;
 pub mod lowering_outcome;
 pub mod lowering_result;

@@ -13,9 +13,9 @@ impl Type {
                 canonical @ Self::Union(_) => {
                     compiler_identifier("__SifrUnion_", &canonical.union_identity_key())
                 }
-                collapsed => collapsed.rust_type(),
+                collapsed => compiler_identifier("__SifrUnion_", &collapsed.union_identity_key()),
             },
-            _ => self.rust_type(),
+            _ => compiler_identifier("__SifrUnion_", &self.union_identity_key()),
         }
     }
 
@@ -391,7 +391,7 @@ mod tests {
         };
         assert_eq!(
             Type::Union(vec![class.clone(), snapshot]).union_enum_name(),
-            class.rust_type()
+            compiler_identifier("__SifrUnion_", &class.union_identity_key())
         );
         assert_eq!(
             Type::Union(vec![class.clone(), class.clone()]).union_identity_key(),

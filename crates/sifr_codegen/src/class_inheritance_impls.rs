@@ -1,6 +1,6 @@
 use crate::{RustEmitter, RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility};
 use sifr_ir::HirClass;
-use sifr_type_system::{source_class_rust_name, Type};
+use sifr_type_system::source_class_rust_name;
 
 impl RustEmitter {
     pub(crate) fn class_parent_deref_impls(class: &HirClass) -> Vec<RustItem> {
@@ -11,10 +11,10 @@ impl RustEmitter {
         else {
             return Vec::new();
         };
-        let parent_rust_type = class
-            .parent_type
-            .as_ref()
-            .map_or_else(|| source_class_rust_name(parent), Type::rust_type);
+        let parent_rust_type = class.parent_type.as_ref().map_or_else(
+            || source_class_rust_name(parent),
+            |ty| crate::render_type(&crate::sifr_type_to_rust_type(ty)),
+        );
         let field = parent.to_lowercase();
         let deref = RustItem::Impl {
             target: Self::class_impl_target(class),
