@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Compatibility Removal
 
-Status: in progress; Item 10 merged and ready for Item 11 on 2026-08-19
+Status: in progress; Item 11 merged and ready for Item 12 on 2026-08-19
 
 ## Objective
 
@@ -659,14 +659,14 @@ Scope:
 
 Acceptance criteria:
 
-- [ ] Each active compiler error has one diagnostic code.
-- [ ] Project root-module and cycle errors emit `SIFR-IMPORT-*` only.
-- [ ] Span-less import diagnostics use canonical codes and `<unknown>`.
-- [ ] No active diagnostic title or message describes a Sifr form as legacy.
-- [ ] Old stdlib names do not receive a migration suggestion table.
-- [ ] Old Rust decorator keys do not use a special parser branch.
-- [ ] Test helpers render diagnostics through the production renderer.
-- [ ] Diagnostic catalogs and public docs contain no removed code.
+- [x] Each active compiler error has one diagnostic code.
+- [x] Project root-module and cycle errors emit `SIFR-IMPORT-*` only.
+- [x] Span-less import diagnostics use canonical codes and `<unknown>`.
+- [x] No active diagnostic title or message describes a Sifr form as legacy.
+- [x] Old stdlib names do not receive a migration suggestion table.
+- [x] Old Rust decorator keys do not use a special parser branch.
+- [x] Test helpers render diagnostics through the production renderer.
+- [x] Diagnostic catalogs and public docs contain no removed code.
 
 Focused validation:
 
@@ -1000,8 +1000,8 @@ migrates its repository consumers before the old path disappears.
 | 8. Receiver semantics | merged | [#3279](https://github.com/sifr-lang/sifr/pull/3279) | `94c1dae1009f9419f2f2239cbe84f1438f7c85d1` | Candidate `8db8b12f24da88bb60e9178f70fefde43e631558`: parser/frontend/type-system, receiver lowering and place analysis, Rust/Python interop lowering, codegen (1,027 passed), protocol diagnostics, driver stdlib, manifest/native-adapter, sysroot, 186-fixture core-language audit, explicit owned-mutable native run, one-diagnostic shared-mutation rejection, all 411 algorithmic fixtures, generated docs, demo freshness, formatting, Clippy, file-size, HIR, inventory, and residue checks passed. Full e2e passed 685 of 686 fixtures; the sole generated-Rust scoping failure is recorded below. The one create-PR profile and one merge gate both stopped at the inherited verification-taxonomy conflict before compiler tests; neither gate was repeated. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3279#issuecomment-5334374077): SATISFIED, no blocking findings. | Made all four source receiver spellings explicit through HIR and Rust codegen, rejected body-inferred mutation and fixed-trait convention drift, migrated repository and companion corpus sources, and merged companion [leetcode #45](https://github.com/sifr-lang/leetcode/pull/45) at `ebd0f2194c0fcb950a3fad3ce1e5b41a8ac8e123`. |
 | 9. Package manifest and source layout | merged | [#3283](https://github.com/sifr-lang/sifr/pull/3283) | `22f0b2c2f25c8c517f463c44f86f62b9e7cbdab9` | Final candidate `42167ac27d7c6167aed80726a202cbaf0022533f`: package (141 passed with the unavailable external demo checkout excluded), driver (525 passed before base integration), CLI mode resolution, package public API, project-workspace parity, graph isolation, 14 baseline variants, diagnostics, LSP smoke, docs generation, formatting, Clippy, file-size, HIR, and residue checks passed. Base integration preserved the concurrent structural-default work; its native package run and 25 affected driver tests passed. The one create-PR and one merge gate stopped at the inherited verification-taxonomy conflict; neither gate was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3283#issuecomment-5335116462) found one stale documentation cross-reference; [one remediation review](https://github.com/sifr-lang/sifr/pull/3283#issuecomment-5335027285) on `c85fd4552b553db053aa721d46649775eea28a33` was SATISFIED. The later base merge was tested and received no prohibited third review. | Kept one `src/`-default source root, removed manifest exports/bin readers and multi-root resolution, derived import roots from package names, migrated repository fixtures, and removed PACKAGE-0701/0711. The external `sifr-demo-json` checkout remained unavailable. |
 | 10. Installation layout | merged | [#3285](https://github.com/sifr-lang/sifr/pull/3285) | `5c94968db425414808856ec521960da6580a538a` | Candidate `f99442a9cc5a19d4c92c4551eba9e06f28228a46`: self-update receipt (16 passed), self-update (54 passed), receipt rules, all 56 representative distribution-release variants, canonical installed-stdlib boundary, formatting, Clippy, file-size, HIR, docs, inventory, and residue checks passed. The broad CLI run had only the inherited protocol diagnostic mismatch. The sysroot boundary then hit the inherited external static-adapter dependency path. The one create-PR and one merge gate stopped at the inherited verification-taxonomy conflict; neither gate was repeated. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3285#issuecomment-5335392607): SATISFIED, no blocking findings. | Kept only `<sysroot>/bin/sifr`, removed flat receipt discovery and acceptance, rejected non-canonical installer relationships, and documented one install layout without a converter. |
-| 11. Diagnostics and rejection residue | active | — | — | — | — | — |
-| 12. Hidden compatibility names | pending | — | — | — | — | — |
+| 11. Diagnostics and rejection residue | merged | [#3287](https://github.com/sifr-lang/sifr/pull/3287) | `e71174f31587b9f84d0051c8c0a9309c66b3a59c` | Final candidate `d9ecd3c4f7cbe353d13b4e970f0f199f99082eec`: diagnostics registry/docs rules, diagnostics crate, project root and cycle tests, workspace baselines, canonicalization contract and self-test, runtime-platform golden, Rust interop declarations, stdlib import policy, CLI rendering and explain, formatting, Clippy, file-size, HIR, inventory, docs, JSON, and residue checks passed. The e2e fail suite reached only the inherited protocol diagnostic mismatch; later changed fixtures passed directly. The one create-PR gate on initial candidate `2b1b4347edc5457747cae77f9ccc65deea5ddc70` and one merge gate on the final candidate stopped at the inherited verification-taxonomy conflict; neither gate was repeated. | [Initial and remediation exact-SHA Opus evidence](https://github.com/sifr-lang/sifr/pull/3287#issuecomment-5335839622): the initial review found two blockers; the one remediation review was SATISFIED with no blockers. | Removed workspace diagnostic codes 0101–0104 and IMPORT-0009, kept canonical span-less import diagnostics, removed migration suggestion tables and old Rust-key handling, migrated fixtures and catalogs, and removed the legacy render helpers. |
+| 12. Hidden compatibility names | active | — | — | — | — | — |
 | 13. Verification runner and e2e expectations | pending | — | — | — | — | Phase 40 handoff required. |
 | 14. Source and package API wrappers | pending | — | — | — | — | — |
 | 15. Structured Rust types | pending | — | — | — | — | — |
@@ -1056,6 +1056,14 @@ migrates its repository consumers before the old path disappears.
 | Item 10 review | Existing README and self-update examples use `$HOME/bin`, which is canonical but makes `$HOME` the sysroot. | `pre_v1_compat_16_closure` | Reconcile all public installation examples with the preferred dedicated toolchain root during final documentation closure. |
 | Item 10 review | The installer creates directories before it rejects a mismatched sysroot relationship, so rejected input can leave empty directories. | distribution installer hardening owner | Preserve as non-blocking side-effect cleanup outside compatibility removal. |
 | Item 10 review | The temporary compatibility inventory still records the flat-layout row and its old baseline count. | `pre_v1_compat_16_closure` | Close the row and remove the temporary count when the final inventory becomes the permanent guard. |
+| Item 11 initial review | The production cycle fallback emits span-less `SIFR-IMPORT-0007` without the canonical cycle args, notes, or help. | `pre_v1_compat_16_closure` | Route the fallback through the canonical span-less builder during final diagnostics and guard closure. |
+| Item 11 initial review | Span-less and source-backed cycle paths format `cycle_edges` with different separators. | `pre_v1_compat_16_closure` | Use one canonical structured-argument format during final diagnostics closure. |
+| Item 11 initial review | The span-less namespace-collision branch lacks direct coverage. | `pre_v1_compat_16_closure` | Add a focused no-span collision test with canonical args and candidate notes. |
+| Item 11 initial review | Removed-stdlib e2e fixtures retain many old-surface filenames while asserting the same generic diagnostic. | `pre_v1_compat_13_verification` | Consolidate redundant generic unsupported-import coverage while canonicalizing the e2e harness and expectations. |
+| Item 11 initial review | `diagnostic_label_for_code_str` remains exported after its legacy display consumer was removed. | `pre_v1_compat_14_source_api` | Remove the unused public wrapper during compiler API consolidation. |
+| Item 11 initial review | Active review records still describe `SIFR-IMPORT-0009` as the current HTTP rejection path. | `pre_v1_compat_16_closure` | Correct current review-record links and statements during final documentation closure without rewriting archives. |
+| Item 11 remediation review | Lowering-emitted `SIFR-IMPORT-0002` diagnostics omit the declared `module` arg, so recovery capping can depend on fixture order. | `pre_v1_compat_16_closure` | Populate the canonical arg and add cap-independent coverage. This was a new mechanism defect in the second review, so Item 11 received no third review. |
+| Item 11 remediation review | The canonicalization checker retains an unused `forbidden_codes` parameter after all callers moved to prefix checks. | `pre_v1_compat_13_verification` | Remove the dead checker branch during verification-runner closure. |
 
 ## Phase Completion Record
 
