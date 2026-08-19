@@ -2471,7 +2471,7 @@ work.
 | --- | --- |
 | M0-M2 declaration names, callable identity, keyword origins, and alias boundaries | Complete. `ClassDeclaration`, `CallableIdentity`, named argument origins, local malformed diagnostics, and exact alias rejection are implemented. Human and JSON span baselines plus the four-kind runtime fixture remain certification work. Cross-module const helpers remain optional package ergonomics. Lazy origin collection and label-count tuning are terminal without measured pressure. |
 | M3-M4 adapter execution, defaults, inheritance, and identity | Complete through the milestone work and M12 items 1-16. This includes semantic provider identity, generic substitution, canonical parent selection, bindings, and fail-closed parent reconstruction. Fixture registration, an unknown-plan-output case, and the stale `contract_types.sifr` check remain certification work. Allocation and wording cleanups are terminal. |
-| M5 handler-bearing method descriptors | Item 18. Audit declared-owned field and temporary receiver movement, state `Self` availability, pin `@staticmethod` stacking, and make the handler-plan ordering invariant local. Slot fallibility is already self-describing through `is_fallible`. Canonical adapter selection is complete. |
+| M5 handler-bearing method descriptors | Complete in item 18. Declared-owned receiver storage, `Self` availability, `@staticmethod` stacking, and local handler-plan ordering are closed. Slot fallibility and canonical adapter selection were already complete. |
 | M6 structural public values and mappings | Item 19. Close structured same-path probe failures, local and exported malformed marking, explicit stdlib origin, the mapped-value `Send` and `Sync` backstop, and multi-module late-stdlib coverage. File headroom and body deduplication are terminal unless the guard or measurement requires work. |
 | M7 and M7b attached APIs | Item 20. Close cross-module set membership, non-method collisions, remaining generic-call metadata lookup, real-data-parent eligibility, canonical imported binding keys, module-less identities, and external or private filtering symmetry. Existing imported finality and unbound-generic tests are complete. Weaker emitted generic bounds only need durable documentation. |
 | M7c-M7d representation sequencing | Item 21. The two blocking optional-to-union defects are complete in M7d. Remaining work covers nested option-represented union payloads, per-member conversions, warning-clean `None` bindings, owned-argument widening, and shared assignment sequencing. Behavioral presence and absence runs belong to certification. |
@@ -2479,7 +2479,7 @@ work.
 | M7f static-program integration | Item 23. Close speculative emitter-state restoration, imported mapped-opaque paths, const-evaluator and codegen `isinstance` parity, and any real generic-bound lifetime defect. Lifetime investigation that finds no defect becomes terminal evidence. |
 | M8-M10 compiler prerequisites | Items 24 and 25. Item 24 owns method-slot receiver roles, direct codegen and arity diagnostics, ordered projection, provisional `MethodSlots` parity, and wrongly bound owners. Item 25 owns deterministic multi-context selection and exact positive and negative generic-bound assertions. Body deduplication and clone-inference ideas are terminal without a failing case. |
 | M11 compiler prerequisites | Item 26. Close independent package-compilable negatives, direct attached codegen, stale installed-helper paths, duplicate decorator scans, concrete-owner assertions, nonliteral attached-default provider localization, generic hash predicate ownership, flattened parent defaults, recursive boxed parents, direct plain-parent structural coverage, structural-bound prescans, and retained `StdlibFeature` inventory. Negative metadata alignment is conditional on a future manifest-driven core harness. The 900-line guard owns the structural-test split. Broad probe-bound and clone-inference ideas are terminal unless a focused failure proves a mechanism gap. |
-| M12 items 1-16 | Complete. Item 1 closes the compiler part of nested direct generic specialization. Items 12 and 13-15 close impossible local handler ancestry and imported-boundary name collisions. Item 18 will make the handler ordering dependency local. Other remaining notes are assertions, comments, performance ideas, or certification work. Repeated ancestry walks and identity indexes are terminal without measured cost. |
+| M12 items 1-16 | Complete. Item 1 closes the compiler part of nested direct generic specialization. Items 12 and 13-15 close impossible local handler ancestry and imported-boundary name collisions. Item 18 makes the handler ordering dependency local. Other remaining notes are assertions, comments, performance ideas, or certification work. Repeated ancestry walks and identity indexes are terminal without measured cost. |
 
 Compiler certification must include the package-neutral descriptor, adapter,
 mapping, attached-API, and static-program fixtures. It must include human and
@@ -2487,8 +2487,8 @@ JSON diagnostics, source and installed toolchains, and the registered negative
 cases. The separately owned Rust-interop inputs and all `pre_v1` work remain
 outside this phase.
 
-Next action: implement item 18, the M5 handler-descriptor ownership and
-decorator contract audit.
+Item 18 is complete. Next action: implement item 19, the M6 structural mapping
+audit.
 
 Compiler hardening item 17 state: complete
 PR: [`sifr-lang/sifr#3364`](https://github.com/sifr-lang/sifr/pull/3364)
@@ -2511,6 +2511,29 @@ Deferred follow-up: item 26 must name inline dependency-table parsing when it
 implements the retained `StdlibFeature` inventory. No third review ran.
 Next action: implement item 18, the M5 handler-descriptor ownership and
 decorator contract audit.
+
+Compiler hardening item 18 state: complete
+PR: [`sifr-lang/sifr#3366`](https://github.com/sifr-lang/sifr/pull/3366)
+Base SHA: `82ebf75f4e4aba68d013b491c7919e6fbde86973`
+Candidate SHA: `5c44c248d9a0144fb0c95151349b06061c45167b`
+Merge SHA: `accd65a49b147e37c92bf2a5267d406e0b4c20cb`
+Changed paths: declared-owned method-call lowering, `Self` annotation context,
+method-descriptor decorator ordering, inherited handler planning, focused
+tests, and responsibility-based validation modules.
+Validation: all affected lowering, frontend, and driver tests passed. Workspace
+Clippy, formatting, maintainability, the 900-line guard, and diff hygiene
+passed. The create-PR and merge gates each ran once on the exact candidate.
+Both passed every preceding guard and stopped at the same two separately owned
+Rust-interop matrix inputs. Neither gate was rerun
+([evidence](https://github.com/sifr-lang/sifr/pull/3366#issuecomment-5347722502)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no blocking
+findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3366#issuecomment-5347697151)).
+Deferred follow-up: defensive fail-soft handling for the paired `Self` context,
+duplicate malformed-stack wording, and one extra negative stack case are
+terminal suggestions without a current mechanism defect. The external gate
+inputs and all `pre_v1` work remain outside this phase.
+Next action: implement item 19, the M6 structural mapping audit.
 
 Acceptance criteria:
 
@@ -2599,13 +2622,13 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 17 are merged and recorded. Items 1-16 close the first compiler
+through 18 are merged and recorded. Items 1-16 close the first compiler
 mechanism sequence. Item 17 classifies every remaining compiler deferral and
-orders items 18-26. The seven M11 compiler
+orders items 18-26. Item 18 closes the M5 audit. The seven M11 compiler
 prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327,
 and #3329. The M11 package surface merged in Pydantic-Sifr PR #47. M12 is in
 progress. The current compiler merge is
-`79cd4bb3fc3f04b945ef5c7a289401c2d3d62694`, and the current package merge is
+`accd65a49b147e37c92bf2a5267d406e0b4c20cb`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
@@ -2614,5 +2637,5 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: implement item 18, then continue items 19-26 before package
+Next action: implement item 19, then continue items 20-26 before package
 certification and final review.
