@@ -517,7 +517,13 @@ pub(in crate::lower) fn collect_class_type(
             // Method definitions
             Stmt::FunctionDef(func) => {
                 let method_name = func.name.to_string();
+                let is_static = has_decorator(func, "staticmethod");
+                let is_class = has_decorator(func, "classmethod");
                 let previous_current_class = ctx.current_class.replace(class_name.clone());
+                let previous_self_annotation_available = std::mem::replace(
+                    &mut ctx.self_annotation_available,
+                    method_name == "__init__" || (!is_static && !is_class),
+                );
                 method_ranges.insert(method_name.clone(), func.name.range());
                 if method_name == "__init__" {
                     // Constructor: extract params (skip `self`)
@@ -582,8 +588,6 @@ pub(in crate::lower) fn collect_class_type(
                         ctx.function_defaults.insert(class_name.clone(), defaults);
                     }
                 } else {
-                    let is_static = has_decorator(func, "staticmethod");
-                    let is_class = has_decorator(func, "classmethod");
                     record_declared_class_method_metadata(
                         ctx,
                         &class_name,
@@ -725,6 +729,7 @@ pub(in crate::lower) fn collect_class_type(
                         ctx,
                     );
                 }
+                ctx.self_annotation_available = previous_self_annotation_available;
                 ctx.current_class = previous_current_class;
             }
             Stmt::Pass(_) => {} // Allow pass in class body

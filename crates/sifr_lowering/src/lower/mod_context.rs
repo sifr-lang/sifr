@@ -134,6 +134,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) warnings: Vec<LoweringWarningDiagnostic>,
     /// Whether we're currently inside a class method (tracks `self` type)
     pub(in crate::lower) current_class: Option<String>,
+    /// Whether `Self` annotations are valid in the current class method.
+    pub(in crate::lower) self_annotation_available: bool,
     /// Current function/method owner name while lowering a body.
     pub(in crate::lower) current_owner: Option<String>,
     /// Current class method name, used to retain generated Rust trait requirements per method.
@@ -304,6 +306,7 @@ impl LowerCtx {
             reveal_types: Vec::new(),
             warnings: Vec::new(),
             current_class: None,
+            self_annotation_available: false,
             current_owner: None,
             current_method: None,
             current_parent_class: None,

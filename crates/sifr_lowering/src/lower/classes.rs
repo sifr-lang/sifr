@@ -29,4 +29,5 @@ mod class_body_lowering;
 pub(in crate::lower) use class_body_lowering::*;
 mod parameter_conventions;
 pub(in crate::lower) use parameter_conventions::fixed_trait_receiver_convention;
+mod python_cleanup_validation;
 mod rust_opaque_validation;

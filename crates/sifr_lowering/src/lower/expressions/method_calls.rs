@@ -350,6 +350,11 @@ pub(in crate::lower) fn lower_method_call(
 
 fn consume_declared_owned_receiver(object: &HirExpr, range: TextRange, ctx: &mut LowerCtx) {
     let HirExpr::Name { name, .. } = object else {
+        ctx.error_with_code_at(
+            DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES,
+            "declared owned receiver must consume an owned local binding; field and temporary receivers cannot prove exclusive ownership".to_string(),
+            range,
+        );
         return;
     };
     if ctx.borrowed_params.contains(name) {

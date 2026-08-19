@@ -14,7 +14,10 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                 if let Some(type_param) = ctx.attached_self_type_param.as_ref() {
                     return Type::TypeVar(type_param.clone());
                 }
-                if let Some(current_class) = ctx.current_class.as_deref() {
+                if ctx.self_annotation_available {
+                    let Some(current_class) = ctx.current_class.as_deref() else {
+                        unreachable!("Self annotation availability requires a current class");
+                    };
                     if let Some(class_ty) = ctx.class_types.get(current_class) {
                         return class_ty.clone();
                     }

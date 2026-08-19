@@ -77,6 +77,37 @@ fn test_own_parameter_cannot_be_mutated_without_mut() {
 }
 
 #[test]
+fn declared_owned_receiver_rejects_field_and_temporary_storage() {
+    let source = r#"
+class Resource:
+    value: str
+
+    def finish(own self) -> Self:
+        return self
+
+class Holder:
+    resource: Resource
+
+def consume_field(holder: Holder) -> Resource:
+    return holder.resource.finish()
+
+def consume_temporary() -> Resource:
+    return Resource("value").finish()
+"#;
+    let errors = lower_errors(source);
+    let storage_errors = errors
+        .iter()
+        .filter(|error| {
+            error.code == Some(DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES)
+                && error.message.contains(
+                    "declared owned receiver must consume an owned local binding; field and temporary receivers cannot prove exclusive ownership",
+                )
+        })
+        .count();
+    assert_eq!(storage_errors, 2, "errors: {errors:#?}");
+}
+
+#[test]
 fn test_own_parameter_mutating_method_requires_mut() {
     let source = "def owned_immutable_append(own items: list[int] = [1]) -> list[int]:\n    items.append(5)\n    return items\n";
     let errors = lower_errors(source);

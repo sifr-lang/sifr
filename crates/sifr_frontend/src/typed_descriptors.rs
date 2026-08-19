@@ -15,6 +15,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 type DescriptorResult<T> = Result<T, Box<HirDiagnostic>>;
 
+mod method_decorator_ordering;
 mod nested_const_calls;
 
 pub(crate) fn collect(
@@ -188,34 +189,7 @@ impl DescriptorCollector<'_> {
                             sifr_lowering::MethodKind::StaticMethod => "static",
                             sifr_lowering::MethodKind::ClassMethod => "class",
                         });
-                    let classmethod_index = function.decorator_list.iter().position(|decorator| {
-                        matches!(
-                            &decorator.expression,
-                            Expr::Name(name) if name.id.as_str() == "classmethod"
-                        )
-                    });
-                    if let Some(classmethod_index) = classmethod_index {
-                        for (index, decorator) in function.decorator_list.iter().enumerate() {
-                            let Some((declaration, call)) =
-                                self.resolver.call(&decorator.expression)
-                            else {
-                                continue;
-                            };
-                            if declaration.kind == DeclarationDescriptorKind::Method
-                                && (index + 1 != classmethod_index
-                                    || classmethod_index + 1 != function.decorator_list.len())
-                            {
-                                self.errors.push(diagnostic(
-                                    DiagnosticCode::META_MALFORMED_DECLARATION,
-                                    format!(
-                                        "method descriptor '{}' must be the outer decorator with @classmethod directly above the method",
-                                        declaration.function
-                                    ),
-                                    call.range(),
-                                ));
-                            }
-                        }
-                    }
+                    method_decorator_ordering::validate(function, self.resolver, &mut self.errors);
                     for decorator in &function.decorator_list {
                         self.collect_use(
                             &decorator.expression,
