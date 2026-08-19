@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-19. M0-M7e are complete; M7f is in progress.
+Status: active on 2026-08-19. M0-M7f are complete; M8 is in progress.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -1223,7 +1223,41 @@ Exit gate: a package can derive and consume one adapted static program across
 project modules without provisional-ordering, generic-owner, or mapped-identity
 leaks.
 
-State: in progress
+State: complete
+Issue: [`sifr-lang/sifr#3291`](https://github.com/sifr-lang/sifr/issues/3291)
+PR: [`sifr-lang/sifr#3292`](https://github.com/sifr-lang/sifr/pull/3292)
+Base SHA: `afecf28cf7796c65a8908f8f40d4ef077649caba`
+Candidate SHA: `548f1d6985bae64ac8ca7975d7fe7c4d1c1f6d3d`
+Merge SHA: `6152fc50984395a640c42f31e9e270cd3a9e09c8`
+Changed paths: provisional and final `StaticProgram` bound handling; final
+descriptor field ordering; nested checked const calls across imports,
+re-exports, and lists; primitive `isinstance` and deterministic record keys;
+nested-block union narrowing and collection insertion; unbound generic
+adapter handling; imported mapped-opaque generated identity; project-wide
+structural owner selection; responsibility splits for structural rendering,
+const re-exports, and nested const calls; architecture records; and the
+package-neutral retained-program fixture.
+Validation: 1,040 `sifr_codegen` tests and 531 `sifr_driver` tests passed, with
+76 intentional ignores. Focused const-evaluator, adapter-default,
+early-adapter, structural-identity, owner-selection, union, and post-split
+tests passed. Workspace clippy with warnings denied, formatting, diff checks,
+HIR maintainability, and the unified 900-line file-size guardrail passed. The
+package-neutral static-class-adapter fixture built and ran natively and
+printed `attached-contract`.
+Review: the exact-SHA Opus review returned `SATISFIED` with no blockers
+([evidence](https://github.com/sifr-lang/sifr/pull/3292#issuecomment-5336116016)).
+The create-PR and merge gates were each attempted exactly once on the reviewed
+candidate. Both stopped in the shared verification-taxonomy preflight owned by
+the explicitly out-of-scope parallel pre-v1 work; neither was repeated
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3292#issuecomment-5336079186),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3292#issuecomment-5336127061)).
+Deferred follow-up: M12 owns speculative emitter-state restoration when an
+`if` branch does not lower, imported mapped-opaque path hardening, parity
+between const-evaluator and codegen `isinstance` target forms, and review of
+the generic-bound lifetime behavior. These were non-blocking Opus findings.
+The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
+outside this phase.
+Next action: resume M8 on the merged M7f compiler substrate.
 
 ### M8: Pydantic Model, Field, and Configuration Declarations
 
@@ -1500,7 +1534,7 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M7e are merged and recorded; M7f is in progress.
+Current state: M0-M7f are merged and recorded; M8 is in progress.
 
-Next action: complete M7f, merge its compiler prerequisite, then resume the
-preserved M8 package work on that exact merged compiler substrate.
+Next action: complete and merge the preserved M8 package work on compiler
+merge `6152fc50984395a640c42f31e9e270cd3a9e09c8`.
