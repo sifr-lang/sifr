@@ -504,7 +504,7 @@ fn plain_string_structural_generic_emits_projection_bounds() {
 
     assert!(
         rust_code.contains(
-            "T: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject"
+            "T: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject + Clone + 'static"
         ),
         "{rust_code}"
     );

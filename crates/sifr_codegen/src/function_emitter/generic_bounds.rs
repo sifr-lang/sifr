@@ -19,12 +19,14 @@ impl RustEmitter {
         func.type_params
             .iter()
             .map(|type_param| {
-                let structural = func.rust_interop.iter().any(|declaration| {
-                    declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
-                }) || self
+                let string_structural = self
                     .structural_type_params
                     .get(&func.name)
                     .is_some_and(|params| params.contains(type_param));
+                let structural = string_structural
+                    || func.rust_interop.iter().any(|declaration| {
+                        declaration.kind == sifr_ir::RustInteropDecoratorKind::Structural
+                    });
                 let static_program = self
                     .static_program_type_params
                     .get(&func.name)
@@ -45,6 +47,8 @@ impl RustEmitter {
                         .to_string()
                 } else if static_program {
                     "sifr_runtime::interop::structural::StaticProgramType + Clone".to_string()
+                } else if string_structural {
+                    "sifr_runtime::interop::structural::StructuralConstruct + sifr_runtime::interop::structural::StructuralProject + Clone + 'static".to_string()
                 } else if structural {
                     "sifr_runtime::interop::structural::StructuralConstruct + sifr_runtime::interop::structural::StructuralProject".to_string()
                 } else if attached_api || Self::is_nullcontext_value_forwarder(func) {

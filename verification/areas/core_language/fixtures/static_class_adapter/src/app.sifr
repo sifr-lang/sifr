@@ -1,7 +1,10 @@
 from fixture.contract import retain_static_program
 from fixture.facade import Contract, ContractError, contract_config, contract_field
 from fixture.factories import Token as ExternalToken, make_names as external_names
-from fixture.models import ImportedAttached as ImportedAlias, ImportedPlain as PlainAlias
+from fixture.models import (
+    ImportedAttached as ImportedAlias,
+    ImportedPlain as PlainAlias,
+)
 
 
 def make_names() -> list[str]:
@@ -59,6 +62,9 @@ def main() -> Result[None, ContractError | RustPanicError]:
     consumed: AttachedModel = AttachedModel(10)
     print(AttachedModel.describe())
     assert AttachedModel.echo("residual") == "residual"
+    assert AttachedModel.echo_strings({"nested": ["left", "right"]}) == {
+        "nested": ["left", "right"]
+    }
     assert attached.inspect() == 41
     assert attached.touch() == 42
     assert consumed.finish() == 43
@@ -66,6 +72,7 @@ def main() -> Result[None, ContractError | RustPanicError]:
     plain: PlainAlias = PlainAlias(12)
     assert ImportedAlias.describe() == "attached-contract"
     assert ImportedAlias.echo("imported") == "imported"
+    assert ImportedAlias.echo_strings("imported-strings") == "imported-strings"
     assert imported.inspect() == 41
     assert imported.touch() == 42
     assert plain.value == 12
@@ -86,5 +93,7 @@ def main() -> Result[None, ContractError | RustPanicError]:
     return None
 
 
-def compile_result_construction() -> Result[AttachedModel, ContractError | RustPanicError]:
+def compile_result_construction() -> Result[
+    AttachedModel, ContractError | RustPanicError
+]:
     return AttachedModel.construct()

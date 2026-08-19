@@ -167,9 +167,12 @@ fn supports_string_structural_type_inner(
             if !visiting.insert(key.clone()) {
                 return true;
             }
-            let supported = fields
+            let supported = type_args
                 .iter()
-                .all(|(_, field)| supports_string_structural_type_inner(field, ctx, visiting));
+                .all(|value| supports_string_structural_type_inner(value, ctx, visiting))
+                && fields
+                    .iter()
+                    .all(|(_, field)| supports_string_structural_type_inner(field, ctx, visiting));
             visiting.remove(&key);
             supported
         }
