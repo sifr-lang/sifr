@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Compatibility Removal
 
-Status: in progress; Item 16 reviewed candidate ready for one-shot gates on 2026-08-19
+Status: closed on 2026-08-19; Item 16 merged with external gate blockers recorded
 
 ## Objective
 
@@ -869,14 +869,19 @@ Required forbidden classes:
 
 Acceptance criteria:
 
-- [ ] Every removal row from Item 0 is closed.
-- [ ] Every retained row names an external or current product contract.
-- [ ] The final guard passes and its self-test rejects each forbidden class.
+- [x] Every removal row from Item 0 is closed.
+- [x] Every retained row names an external or current product contract.
+- [x] The final guard passes and its self-test rejects each forbidden class.
 - [ ] The complete create-PR profile passes.
 - [ ] The complete merge gate passes once on the final candidate.
-- [ ] Item-level exact-SHA review evidence covers all implementation changes.
-- [ ] Architecture and public docs match the final source tree.
-- [ ] This phase document records the final handoff and closure state.
+- [x] Item-level exact-SHA review evidence covers all implementation changes.
+- [x] Architecture and public docs match the final source tree.
+- [x] This phase document records the final handoff and closure state.
+
+The two full-profile criteria remain unchecked because both one-shot gates
+stopped at the same out-of-scope Rust-interop fixture-matrix failures. The
+phase-closure rules require those failures to stay with their owners and
+forbid a rerun on this unchanged candidate.
 
 Closure validation:
 
@@ -1012,7 +1017,7 @@ migrates its repository consumers before the old path disappears.
 | 13. Verification runner and e2e expectations | merged | [#3294](https://github.com/sifr-lang/sifr/pull/3294) | `0841486b09e14d701b142db02dd7d38b8cadf0fb` | Final candidate `ddc6e3590c99fd775d5d98a6fbb3f34bdff28e17`: verification runner self-tests passed all 14 groups; profile schema, coverage, assignment, dry-plan, area CLI, E2E harness, dependency-plan, fixture, LeetCode audit, Phase 40 governance, diagnostic-rules, ecosystem-broader, evidence-custody, formatting, file-size, HIR, JSON, and diff checks passed. The one create-PR and one merge gate stopped at the same 98 stale demo companions introduced by base compiler merge `6152fc50984395a640c42f31e9e270cd3a9e09c8`; Item 13 changed no compiler implementation or demo output, and neither gate was repeated. | [Initial and remediation exact-SHA Opus evidence](https://github.com/sifr-lang/sifr/pull/3294#issuecomment-5336571091): the initial review found four integration blockers; the one remediation review was SATISFIED with no blockers. | Kept only schema-v2 canonical selections, structured area evidence, assertion-based runtime expectations, and canonical Phase 40 critical steps. Removed legacy execution, report, hardening-summary, and stdout-directive paths. |
 | 14. Source and package API wrappers | merged | [#3297](https://github.com/sifr-lang/sifr/pull/3297) | `2b764b8bfd5d62e9f8da86ebd2e12abd330e1267` | Candidate `e87fbcf4ec3e818dda49ef78b29b63998b68bd26`: workspace test compilation, Clippy, formatting, driver (530 passed, 76 ignored), package (141 passed with the unavailable external demo checkout excluded), frontend, formatter, linter, LSP stale-result and overlay tests, provider tracking, structured package results, dependency-direction guard and mutation self-tests, file-size, HIR, and diff checks passed. The absent Python-interoperability virtual environment caused the same focused LSP failure at the Item 14 base. The one create-PR and one merge gate stopped at the same inherited 98 stale demo companions; neither gate was repeated. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3297#issuecomment-5336991498): SATISFIED, no blocking findings. | Removed disk-backed and result-collapsing wrappers, made provider requirements explicit through the compiler-service stack, captured package target discovery results, kept all structured import outcomes, removed the assigned string diagnostic-label wrapper, and added the provider-construction guard. |
 | 15. Structured Rust types | merged | [#3301](https://github.com/sifr-lang/sifr/pull/3301) | `0d1ef5f22bd464b0e4e972172356125fc8dc32a3` | Final candidate `fdfbc82c49aca299985a12e41e131eca6dec8cfb`: type-system, IR, codegen (1,047 passed), lowering, E2E pass, generated-code quality, channel-group, Clippy, formatting, file-size, HIR, structured-type, raw-code, and diff checks passed. The full E2E sweep exposed inherited nullable-union, sequential-try, and project-splitting defects. The one create-PR and one merge gate stopped at the same inherited 98 stale demo companions. Neither gate was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3301#issuecomment-5337668218) found two blockers. [One remediation review](https://github.com/sifr-lang/sifr/pull/3301#issuecomment-5337668553) confirmed both fixes and found new mechanisms assigned to Item 16. No third review ran. | Removed string type renderers and production calls, added a total structured type model, preserved nested generic context, added structured generic-call HIR, validated module type shapes before emission, and installed a mutation-tested guard. |
-| 16. Final guard and closure | ready for gates | [#3307](https://github.com/sifr-lang/sifr/pull/3307) | pending | Implementation/remediation candidate `767527031095a461b8608c5edd8cb11d8f78b9b4`: focused lowering, driver, package, type-system, codegen, and CLI unit coverage passed except the separately owned protocol-bound/CFG E2E-fail baseline. Clippy, formatting, file-size, HIR, docs, all 14 developer-tooling static variants, the final guard and 16 mutation classes, retained registry, taxonomy, source direction, structured types, intrinsic ownership, evidence custody, and independent freshness for all 98 regenerated demo companions passed. The one create-PR and merge gates remain unconsumed pending the final gate candidate. | [Initial whole-phase exact-SHA review](https://github.com/sifr-lang/sifr/pull/3307#issuecomment-5338254376) found three blockers. The [single remediation review](https://github.com/sifr-lang/sifr/pull/3307#issuecomment-5338357069) verified the code and guard remediations, then corrected ownership of three Item 15 HIR assertion drifts and found two new guard self-test mechanisms recorded for later work. This post-review change is record-only; no third review runs. | Replaced the temporary removal inventory with a strict retained-contract registry and governed final guard; closed receiver, install, diagnostics, provider, custody, and structured-type follow-ups; refreshed inherited demo emission drift; and published the pre-v1 migration guide. Final merge evidence and phase closure will be recorded after PR #3307 merges, as required by the Phase Completion Record. |
+| 16. Final guard and closure | merged | [#3307](https://github.com/sifr-lang/sifr/pull/3307) | `2256180742e82d52686e6eda622d05b4afdbf716` | Final gate candidate `d3ae65fadfa95d4dcc44428ea4ab8b41106466dd`: focused lowering, driver, package, type-system, codegen, and CLI unit coverage passed except the separately owned protocol-bound/CFG E2E-fail baseline. Clippy, formatting, file-size, HIR, docs, all 14 developer-tooling static variants, the final guard and 16 mutation classes, retained registry, taxonomy, source direction, structured types, intrinsic ownership, evidence custody, and independent freshness for all 98 regenerated demo companions passed. The create-PR and merge gates each ran exactly once on that SHA. Both passed every Item 16 guard reached, including demo freshness, then stopped at the same two inherited Rust-interop matrix defects recorded in their owners. Neither gate was repeated. [Gate evidence](https://github.com/sifr-lang/sifr/pull/3307#issuecomment-5338428015). | [Initial whole-phase exact-SHA review](https://github.com/sifr-lang/sifr/pull/3307#issuecomment-5338254376) found three blockers. The [single remediation review](https://github.com/sifr-lang/sifr/pull/3307#issuecomment-5338357069) verified the code and guard remediations, then corrected ownership of three Item 15 HIR assertion drifts and found two new guard self-test mechanisms recorded for later work. The final delta after reviewed SHA `f1557ec5695074f65aa0543962c66c0de2f0ec64` was record-only; no third review ran. | Replaced the temporary removal inventory with a strict retained-contract registry and governed final guard; closed receiver, install, diagnostics, provider, custody, and structured-type follow-ups; refreshed inherited demo emission drift; and published the pre-v1 migration guide. |
 
 ### Deferred reviewer follow-up
 
@@ -1096,13 +1101,13 @@ migrates its repository consumers before the old path disappears.
 
 ## Phase Completion Record
 
-Complete this section after Item 16 merges:
+This section was completed after Item 16 merged:
 
-- Final status: pending the one-shot gates and Item 16 merge.
-- Final merge SHA: pending PR #3307.
-- Final create-PR profile: unconsumed; will run once on the final reviewed SHA.
-- Final merge gate: unconsumed; will run once on the same final reviewed SHA.
-- Final guard result: PASS on implementation/remediation candidate `767527031095a461b8608c5edd8cb11d8f78b9b4`, including all 16 forbidden-class mutations and retained-contract validation.
+- Final status: closed after all 17 sequential items (Item 0 through Item 16) merged. Two external Rust-interop matrix blockers remain with their owners.
+- Final merge SHA: `2256180742e82d52686e6eda622d05b4afdbf716` from PR #3307.
+- Final create-PR profile: attempted exactly once on `d3ae65fadfa95d4dcc44428ea4ab8b41106466dd`; all preceding guards passed, then `rust_interop:matrix` stopped on the two recorded external fixture defects.
+- Final merge gate: attempted exactly once on the same SHA; it stopped on the identical two external fixture defects after the same preceding checks passed.
+- Final guard result: PASS on final gate candidate `d3ae65fadfa95d4dcc44428ea4ab8b41106466dd`, including all 16 forbidden-class mutations and retained-contract validation.
 - Retained external contracts: 13 exact external/current-product rows in `verification/compatibility/retained_compatibility_contracts.json`.
-- Deferred out-of-scope work: preserved in the deferred reviewer table. The undefined-parent drift is recorded in its active static-class-adapter owner. The sole remediation review's two new guard self-test mechanisms are assigned to a later hardening item without a third review.
-- Exact next action: run each Sifr gate once on the final record-only gate SHA, merge PR #3307, then replace these pending fields with immutable evidence in a record-only update.
+- Deferred out-of-scope work: preserved in the deferred reviewer table. The undefined-parent and method-slot placeholder defects are recorded in the active static-class-adapter owner. The shared-bridge evidence path has a queued Rust-interop fixture owner. The sole remediation review's two new guard self-test mechanisms are assigned to a later hardening issue without a third review.
+- Exact next action: start Item 0 in `plans/issues/active/ad-hoc-no-compatibility-guard-self-test-hardening.md` in a new session. Do not rerun either consumed Item 16 gate.
