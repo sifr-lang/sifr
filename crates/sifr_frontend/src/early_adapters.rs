@@ -667,33 +667,26 @@ fn normalized_field_types(
         .parent_type
         .as_ref()
         .and_then(|parent| match parent {
-            Type::Class { identity, name, .. } => {
-                Some(identity.as_deref().unwrap_or(name).to_string())
-            }
+            Type::Class { identity, name, .. } => Some(inheritance::canonical_parent_identity(
+                module_name,
+                identity.as_deref(),
+                name,
+            )),
             _ => None,
         })
         .or_else(|| parent_name.map(|name| format!("{module_name}.{name}")));
-    let parent = parent_name.and_then(|_| {
-        inheritance::parent_selection(
-            module_name,
-            result,
-            external_defs,
-            parent_identity.as_deref().unwrap_or(""),
-        )
+    let parent = parent_identity.as_deref().and_then(|identity| {
+        inheritance::parent_selection(module_name, result, external_defs, identity)
     });
     let type_args = match class.parent_type.as_ref() {
         Some(Type::Class { type_args, .. }) => type_args.as_slice(),
         _ => &[],
     };
-    let bindings = parent_name.map_or_else(HashMap::new, |name| {
-        inheritance::parent_bindings(
-            result,
-            external_defs,
-            parent_identity.as_deref().unwrap_or(""),
-            name,
-            type_args,
-        )
-    });
+    let bindings = parent_identity
+        .as_deref()
+        .map_or_else(HashMap::new, |identity| {
+            inheritance::parent_bindings(module_name, result, external_defs, identity, type_args)
+        });
     expected
         .iter()
         .map(|(identity, _)| {

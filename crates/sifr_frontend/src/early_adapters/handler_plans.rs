@@ -126,9 +126,11 @@ pub(super) fn inherited_handler_plans(
         .find(|class| class.name == selection.owner)
         .and_then(|class| class.parent_type.as_ref())
         .and_then(|parent| match parent {
-            Type::Class { identity, name, .. } => {
-                Some(identity.clone().unwrap_or_else(|| name.clone()))
-            }
+            Type::Class { identity, name, .. } => Some(inheritance::canonical_parent_identity(
+                module_name,
+                identity.as_deref(),
+                name,
+            )),
             _ => None,
         })
         .unwrap_or_else(|| format!("{module_name}.{parent_name}"));

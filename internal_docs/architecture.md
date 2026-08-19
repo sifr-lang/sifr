@@ -893,8 +893,9 @@ normalizes diagnostic ranges while retaining checked interop declarations. Post-
 separately binds the invocation to the validated output and is an input to static-program identity,
 avoiding a cycle with later handler and attached-API outputs.
 
-Adapter inheritance selects parent plans by canonical class identity. A colliding local bare name
-cannot redirect an imported parent plan. Duplicate local aliases use a deterministic key order.
+Adapter inheritance selects parent plans and type-parameter bindings by canonical class identity. A
+colliding local bare name cannot redirect an imported parent. Duplicate local aliases prefer a
+requested matching key, then use deterministic key order.
 
 Generic alias instances specialize their arguments and bodies before structural substitution.
 Generic ancestor walks require exact parameter and argument arity. Unspecialized exports pass
