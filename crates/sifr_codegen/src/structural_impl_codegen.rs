@@ -150,6 +150,13 @@ pub(crate) fn structural_record_supported(class: &HirClass, module: &HirModule) 
     structural_record_supported_in(class, &modules)
 }
 
+pub(crate) fn structural_record_supported_for_project(
+    class: &HirClass,
+    modules: &[(&str, &HirModule)],
+) -> bool {
+    structural_record_supported_in(class, modules)
+}
+
 pub(crate) fn structural_record_identities_for_project(
     modules: &[(&str, &HirModule)],
 ) -> HashSet<String> {

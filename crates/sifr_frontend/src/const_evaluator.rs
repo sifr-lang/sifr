@@ -331,6 +331,9 @@ impl<'a> DeterministicConstEvaluator<'a> {
                 Ok(ConstValue::Bool(is_and))
             }
             HirExpr::Call { func, args, .. } => {
+                if func == "isinstance" {
+                    return self.eval_isinstance(args, environment, depth);
+                }
                 let args = args
                     .iter()
                     .map(|argument| self.eval_expr(argument, environment, depth))
@@ -483,6 +486,45 @@ impl<'a> DeterministicConstEvaluator<'a> {
             .iter()
             .map(|element| self.eval_expr(element, environment, depth))
             .collect()
+    }
+
+    fn eval_isinstance(
+        &mut self,
+        arguments: &[HirExpr],
+        environment: &mut Environment,
+        depth: usize,
+    ) -> Result<ConstValue, ConstEvalError> {
+        if arguments.len() != 2 {
+            return error(
+                ConstEvalErrorKind::ArgumentCount,
+                "isinstance expects two const arguments",
+            );
+        }
+        let value = self.eval_expr(&arguments[0], environment, depth)?;
+        let HirExpr::StringLiteral(name) = &arguments[1] else {
+            return error(
+                ConstEvalErrorKind::TypeMismatch,
+                "const isinstance requires one primitive type name",
+            );
+        };
+        let matches = match (name.as_str(), &value) {
+            ("bool", ConstValue::Bool(_))
+            | ("int", ConstValue::Integer(_))
+            | ("float", ConstValue::FloatBits(_))
+            | ("str", ConstValue::String(_))
+            | ("bytes", ConstValue::Bytes(_))
+            | ("tuple", ConstValue::Tuple(_))
+            | ("list", ConstValue::List(_))
+            | ("dict", ConstValue::Record(_)) => true,
+            ("bool" | "int" | "float" | "str" | "bytes" | "tuple" | "list" | "dict", _) => false,
+            _ => {
+                return error(
+                    ConstEvalErrorKind::TypeMismatch,
+                    "const isinstance supports only closed primitive types",
+                );
+            }
+        };
+        Ok(ConstValue::Bool(matches))
     }
 
     fn step(&mut self) -> Result<(), ConstEvalError> {
@@ -677,6 +719,7 @@ fn index_value(object: ConstValue, index: ConstValue) -> Result<ConstValue, Cons
 fn sequence(value: ConstValue) -> Result<Vec<ConstValue>, ConstEvalError> {
     match value {
         ConstValue::List(values) | ConstValue::Tuple(values) => Ok(values),
+        ConstValue::Record(values) => Ok(values.into_keys().map(ConstValue::String).collect()),
         _ => error(
             ConstEvalErrorKind::TypeMismatch,
             "const for loop requires a list or tuple",
@@ -785,6 +828,44 @@ mod tests {
             .evaluate_function("payload", Vec::new())
             .expect("byte const evaluation succeeds");
         assert_eq!(value, ConstValue::Bytes(b"typed".to_vec()));
+    }
+
+    #[test]
+    fn evaluates_primitive_isinstance_for_typed_union_normalization() {
+        let lowered = lower(
+            "@const_eval\ndef kind(value: int | str) -> str:\n    if isinstance(value, str):\n        return \"text\"\n    return \"integer\"\n",
+        );
+        let text = DeterministicConstEvaluator::new(&lowered.module)
+            .evaluate_function("kind", vec![ConstValue::String("value".to_string())])
+            .expect("string branch evaluates");
+        let integer = DeterministicConstEvaluator::new(&lowered.module)
+            .evaluate_function("kind", vec![ConstValue::Integer(BigInt::from(1))])
+            .expect("integer branch evaluates");
+        assert_eq!(text, ConstValue::String("text".to_string()));
+        assert_eq!(integer, ConstValue::String("integer".to_string()));
+    }
+
+    #[test]
+    fn iterates_closed_record_keys_in_canonical_order() {
+        let lowered = lower(
+            "@const_eval\ndef keys(value: dict[str, str]) -> list[str]:\n    output: list[str] = []\n    for key in value:\n        output.append(key)\n    return output\n",
+        );
+        let value = DeterministicConstEvaluator::new(&lowered.module)
+            .evaluate_function(
+                "keys",
+                vec![ConstValue::Record(BTreeMap::from([
+                    ("zeta".to_string(), ConstValue::String("last".to_string())),
+                    ("alpha".to_string(), ConstValue::String("first".to_string())),
+                ]))],
+            )
+            .expect("record iteration succeeds");
+        assert_eq!(
+            value,
+            ConstValue::List(vec![
+                ConstValue::String("alpha".to_string()),
+                ConstValue::String("zeta".to_string()),
+            ])
+        );
     }
 
     #[test]

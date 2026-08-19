@@ -378,6 +378,27 @@ def invalid():
 }
 
 #[test]
+fn unbound_generic_adapter_declaration_does_not_request_a_static_program() {
+    let contract = attached_contract();
+    let modules = project(
+        r#"
+from fixture.contract import Contract
+
+class GenericModel[T](Contract):
+    value: T
+
+def main():
+    value: GenericModel[int] = GenericModel(1)
+    assert value.value == 1
+"#,
+        &contract,
+    );
+    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    collect_project_hir_modules(&modules, stdlib_defs)
+        .expect("an unbound generic adapter declaration should remain usable concretely");
+}
+
+#[test]
 fn concrete_generic_adapted_child_receives_concrete_attached_signature() {
     let contract = attached_contract().replace(
         "return DeclarationPlan(fields, metadata, \"fixture.contract\", \"specialize\", issues, [], \"fixture.contract\", \"ContractApi\")",

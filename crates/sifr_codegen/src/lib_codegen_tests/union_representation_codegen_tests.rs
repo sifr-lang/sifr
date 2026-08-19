@@ -83,3 +83,25 @@ def forward(values: dict[str, int | str | None]) -> bool:
         "{rust_code}"
     );
 }
+
+#[test]
+fn isinstance_narrows_union_items_inside_for_loops() {
+    let source = r#"def collect_text(values: list[int | str]) -> list[int | str]:
+    output: list[int | str] = []
+    for value in values:
+        if isinstance(value, str):
+            output.append(value)
+    return output
+"#;
+    let rust_code = generate_rust_from_source(source);
+
+    assert!(!rust_code.contains("if isinstance("), "{rust_code}");
+    assert!(rust_code.contains("if let"), "{rust_code}");
+    assert!(
+        rust_code.contains(&format!(
+            "{}(value).clone()",
+            Type::Str.union_variant_name()
+        )),
+        "{rust_code}"
+    );
+}

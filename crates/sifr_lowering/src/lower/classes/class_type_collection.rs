@@ -779,20 +779,29 @@ pub(in crate::lower) fn collect_class_type(
     } else {
         // No __init__ defined -- create a default constructor from fields
 
-        // Validate field ordering: required fields must come before defaulted fields
-        let mut seen_default = false;
-        for (i, (fname, range)) in own_fields.iter().enumerate() {
-            if own_field_default_indices.contains(&i) {
-                seen_default = true;
-            } else if seen_default {
-                let field = fname.as_str();
-                ctx.error_with_code_at(
-                    DiagnosticCode::CLASS_REQUIRED_FIELD_AFTER_DEFAULT,
-                    format!(
-                        "class '{class_name}': required field '{field}' declared after field with default value"
-                    ),
-                    *range,
-                );
+        // Descriptor calls are provisional defaults until the adapter plan is
+        // available. Validate ordering only on ordinary classes or the
+        // finalized adapted-class pass.
+        let provisional_adapter = ctx
+            .class_adapter_selections
+            .iter()
+            .any(|selection| selection.owner == class_name)
+            && !ctx.adapter_field_plans.contains_key(&class_name);
+        if !provisional_adapter {
+            let mut seen_default = false;
+            for (i, (fname, range)) in own_fields.iter().enumerate() {
+                if own_field_default_indices.contains(&i) {
+                    seen_default = true;
+                } else if seen_default {
+                    let field = fname.as_str();
+                    ctx.error_with_code_at(
+                        DiagnosticCode::CLASS_REQUIRED_FIELD_AFTER_DEFAULT,
+                        format!(
+                            "class '{class_name}': required field '{field}' declared after field with default value"
+                        ),
+                        *range,
+                    );
+                }
             }
         }
 

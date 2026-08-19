@@ -1,4 +1,4 @@
-from sifr.meta import CallableIdentity, ConstSpecializationOutcome, DeclarationInput, DeclarationPlan, PlannedField, PlannedIssue, PlannedMetadata, ShapeInput, StaticValue
+from sifr.meta import CallableIdentity, ConstSpecializationOutcome, DeclarationInput, DeclarationPlan, PlannedField, PlannedIssue, PlannedMetadata, ShapeInput, StaticProgram, StaticValue
 from fixture.api import ContractApi
 from fixture.contract_types import ContractAlias, ContractDescriptor
 
@@ -101,6 +101,10 @@ def consume_contract_union(
     own value: bool | str | ContractAlias | None,
 ) -> bool:
     return value is None
+
+
+def retain_static_program[T: StaticProgram](own value: T) -> T:
+    return value
 
 
 def widen_contract_optional(value: str | None) -> bool:

@@ -271,10 +271,9 @@ impl RustEmitter {
         if let Some((index, target_ty)) = collection_element_target {
             if let (Some(argument), Some(lowered_arg)) = (args.get(index), arg_exprs.get_mut(index))
             {
-                let source_ty = self.effective_registry_expr_ty(argument);
-                *lowered_arg = crate::helpers::flatten_option_value_for_target(
+                *lowered_arg = self.coerce_collection_element_for_registry(
                     target_ty,
-                    &source_ty,
+                    argument,
                     lowered_arg.clone(),
                 );
             }

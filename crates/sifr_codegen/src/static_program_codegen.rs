@@ -125,6 +125,22 @@ pub fn structural_static_program_owners(module: &sifr_ir::HirModule) -> BTreeSet
         .collect()
 }
 
+/// Returns specialization owners whose structural fields are supported across a project.
+#[must_use]
+pub fn structural_static_program_owners_for_project(
+    module: &sifr_ir::HirModule,
+    modules: &[(&str, &sifr_ir::HirModule)],
+) -> BTreeSet<String> {
+    module
+        .classes
+        .iter()
+        .filter(|class| {
+            crate::structural_impl_codegen::structural_record_supported_for_project(class, modules)
+        })
+        .map(|class| class.name.clone())
+        .collect()
+}
+
 #[must_use]
 pub fn static_program_cache_fragment(outputs: &[StaticSpecializationOutput]) -> String {
     let mut ordered = outputs.to_vec();

@@ -71,12 +71,22 @@ metadata therefore reaches specialization as its checked record or closed-union 
 as a string. Adapter evaluation uses the normal deterministic const evaluator limits, and its
 issues use the same package-owned templates and compiler-owned source origins as specialization.
 
+Descriptor arguments can call a checked `@const_eval` function by its direct imported name.
+The call uses the function's checked parameter types, keyword names, and defaults.
+An imported or re-exported function keeps its canonical body and package identity.
+Lists evaluate each item against the declared item type.
+Nested calls use the same deterministic limits as adapter and specialization evaluation.
+
 ## Evaluation and outcomes
 
 Const evaluation is deterministic and fails closed. Default limits are 100,000 evaluation steps,
 64 nested calls, and 10,000 values in a collection. It accepts the closed pure HIR subset used for
 static derivation and rejects runtime effects, unsupported expressions, missing `@const_eval`,
 budget exhaustion, and escaping loop control.
+
+The closed evaluator supports `isinstance` checks for primitive const values.
+Supported names are `bool`, `int`, `float`, `str`, `bytes`, `tuple`, `list`, and `dict`.
+Iteration over a closed record yields its string keys in canonical order.
 
 A package result is a closed record with exactly `status`, `value`, and `issues`. Each issue has
 exactly `package`, `reason_code`, `severity`, `arguments`, `primary_origin`, `labels`, and `notes`.
@@ -126,6 +136,18 @@ canonical module, optional owner, symbol, concrete generic arguments, and canoni
 All five components participate in the canonical result and therefore the static-program and cache
 identity. Packages can carry this value through records and collections but cannot construct it
 from strings. A new variant requires a contract and cache-identity review.
+
+The provisional adapter pass accepts `StaticProgram` bounds before attached API selection finishes.
+The final pass still requires a produced program and complete structural support.
+Descriptor-shaped field defaults do not affect required-field ordering during the provisional pass.
+The finalized adapter field plan supplies the required and default states for the final check.
+
+An unbound generic adapted declaration does not request a schema program.
+A concrete owner must supply all type arguments before static program generation.
+
+Project code generation checks structural program owners against the complete module graph.
+An imported mapped opaque field uses the generated package type's structural identity.
+It does not refer to the dependency's private Rust bridge path from the consumer module.
 
 A produced value can request a method-slot table through the reserved `sifr_method_slots` field.
 The field is ordered. An empty list emits no slot table, which lets one typed specialization
