@@ -1,6 +1,9 @@
 //! Concrete field types selected by finalized adapted generic declarations.
 
-use sifr_lowering::{substitute_type_vars, AdapterFieldPlan, ExternalDefs, HirClass};
+use sifr_lowering::{
+    substitute_type_vars_with_class_scopes, AdapterFieldPlan, ExternalDefs, HirClass,
+    LoweringResult,
+};
 use sifr_type_system::Type;
 use std::collections::HashMap;
 
@@ -12,6 +15,7 @@ pub(super) fn effective_fields(
     type_args: &[Type],
     declared_fields: &[(String, Type)],
     field_plans: Option<&[AdapterFieldPlan]>,
+    lowering: &LoweringResult,
     external_defs: &ExternalDefs,
 ) -> Vec<(String, Type)> {
     let Some(field_plans) = field_plans else {
@@ -37,8 +41,53 @@ pub(super) fn effective_fields(
         .map(|field| {
             (
                 field.name.clone(),
-                substitute_type_vars(&field.declared_type, &bindings),
+                substitute_type_vars_with_class_scopes(
+                    &field.declared_type,
+                    &bindings,
+                    &|identity, name| {
+                        class_type_params(identity, name, source_module, lowering, external_defs)
+                    },
+                ),
             )
         })
         .collect()
+}
+
+fn class_type_params(
+    identity: Option<&str>,
+    name: &str,
+    module_name: &str,
+    lowering: &LoweringResult,
+    external_defs: &ExternalDefs,
+) -> Vec<String> {
+    let (source_module, source_name) = identity
+        .and_then(|identity| identity.rsplit_once('.'))
+        .unwrap_or((module_name, name));
+    let canonical_identity = format!("{source_module}.{source_name}");
+    if let Some(class) = lowering
+        .module
+        .classes
+        .iter()
+        .find(|class| class.identity.as_deref() == Some(&canonical_identity))
+    {
+        return class.type_params.clone();
+    }
+    if let Some(type_params) = external_defs
+        .class_type_params
+        .get(source_module)
+        .and_then(|classes| classes.get(source_name))
+        .cloned()
+    {
+        return type_params;
+    }
+    if source_module == module_name {
+        return lowering
+            .module
+            .classes
+            .iter()
+            .find(|class| class.name == source_name)
+            .map(|class| class.type_params.clone())
+            .unwrap_or_default();
+    }
+    Vec::new()
 }

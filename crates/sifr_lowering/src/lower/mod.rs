@@ -169,6 +169,8 @@ mod rust_interop_tests;
 #[cfg(test)]
 mod rust_opaque_constructor_tests;
 mod scope_helpers;
+mod scoped_type_substitution;
+pub use scoped_type_substitution::substitute_type_vars_with_class_scopes;
 mod sequence_guard_detection;
 mod sequence_guard_updates;
 mod sequence_guards;
