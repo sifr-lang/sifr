@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-19. M0-M8 are complete; M9 is in progress.
+Status: active on 2026-08-19. M0-M9 are complete; M10 is in progress.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -1397,6 +1397,7 @@ Acceptance criteria:
 Exit gate: the selected field and model validator API works through the single
 schema engine for structural and JSON input.
 
+State: complete
 Compiler prerequisite state: complete
 PR: [`sifr-lang/sifr#3299`](https://github.com/sifr-lang/sifr/pull/3299)
 Base SHA: `a5eac05a3bdee5de8df823de59f6fae7c18d035f`
@@ -1425,8 +1426,44 @@ adapter field plans for local and imported generic adapted classes. It must
 also cover transitive generic ancestor handlers and fully imported adapted
 class handler plans. Imported handler metadata symmetry and the documented
 inherited-handler diagnostic origin remain hardening work in the same item.
-Next action: complete the M9 package validator facade on compiler merge
-`0ab08c47605b694e396a4c30c621fd1ae79b07e1`.
+
+Package state: complete
+PR: [`sifr-lang/pydantic-sifr#45`](https://github.com/sifr-lang/pydantic-sifr/pull/45)
+Base SHA: `cb23ac5ffde668b9c8cfce5362c5149d01463742`
+Candidate SHA: `c8e7b1f593c4bba8af0194edcfa0951b37cd49f5`
+Merge SHA: `8af4a1f4d598829ac427f96c34b76289e13eedd9`
+Changed paths: package declarations, descriptors, schema construction, model
+bridge, native validator engine, JSON Schema engine, the M9 demo, validator
+diagnostic checks, static-program fixtures, documentation, tests, and package
+manifests.
+Validation: exact-compiler Sifr formatting, check, and two Sifr tests; the M9
+structural and JSON demo; 13 negative validator diagnostics; the unchanged
+3,158-byte static-program round trip; 39 Python unit tests; all-target Rust
+tests and benches; workspace Clippy with warnings denied; the 900-line
+guardrail; and `git diff --check`. The one create-PR gate and one merge gate
+ran on the unchanged candidate. Both passed their file-size, exact-pin, Python,
+upstream-manifest, and core-schema audits, then stopped because the locked
+upstream Pydantic environment could not import `pydantic_core`. Neither gate
+was rerun.
+Review evidence: the initial exact-SHA review found nested validator slot-table
+misdispatch and missing JSON Schema support for function nodes
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/45#issuecomment-5337548530)).
+The remediation rejects validator-bearing nested field models and teaches JSON
+Schema generation to select the validator input or output child. The permitted
+remediation review found that nested slot misdispatch remains reachable through
+a validator-declared input type, and found a separate dropped plain-validator
+build error
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/45#issuecomment-5337548656)).
+Under the phase review rule, both mechanisms move to M12 and no third review
+was run.
+Deferred follow-up: M12 must build validator-declared input types without
+applying their nested validators, or reject validator-bearing nominal types at
+that boundary. It must check `current.issue` after every plain-validator wrap.
+It should also namespace before-validator input definitions and decide whether
+validator-internal definition prefixes may appear in public serialization-mode
+JSON Schema documents.
+Next action: implement M10 serializers, computed fields, and attached dump
+methods on package merge `8af4a1f4d598829ac427f96c34b76289e13eedd9`.
 
 ### M10: Pydantic Serializer and Computed-Field Facade
 
@@ -1611,7 +1648,7 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M8 are merged and recorded; M9 is in progress.
+Current state: M0-M9 are merged and recorded; M10 is in progress.
 
 External failure record (2026-08-19): compiler merge
 `6152fc50984395a640c42f31e9e270cd3a9e09c8` changed emitted Rust without
@@ -1620,6 +1657,5 @@ gates both stopped at `guardrail_demo_emitted_freshness`. Item 13 changed no
 compiler implementation or demo output, so it did not absorb or rerun this
 failure. Refresh or retire the companions under this phase's emission owner.
 
-Next action: complete M9 validators on package merge
-`cb23ac5ffde668b9c8cfce5362c5149d01463742` and compiler merge
-`0ab08c47605b694e396a4c30c621fd1ae79b07e1`.
+Next action: implement M10 serializers, computed fields, and attached dump
+methods on package merge `8af4a1f4d598829ac427f96c34b76289e13eedd9`.
