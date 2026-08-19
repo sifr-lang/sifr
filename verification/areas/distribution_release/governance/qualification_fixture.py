@@ -648,10 +648,10 @@ def build_release_report(
     report["toolchain"]["cargo"] = command_output(source_root, "cargo", "--version")
     digests = {area: sha256_file(path) for area, path in result_paths.items()}
     step_areas = {
-        "rust_interop_checks": "rust_interop",
-        "developer_tooling_checks": "developer_tooling",
-        "documentation_checks": "documentation",
-        "distribution_validation": "distribution_release",
+        "area_rust_interop": "rust_interop",
+        "area_developer_tooling": "developer_tooling",
+        "area_documentation": "documentation",
+        "area_distribution_release": "distribution_release",
     }
     for step in report["steps"]:
         digest = digests[step_areas[step["name"]]]

@@ -100,8 +100,6 @@ def run_area(args: argparse.Namespace) -> int:
         runner_args.extend(["--suite", suite])
     if args.bless:
         runner_args.append("--bless")
-    if args.hardening_summary:
-        runner_args.append("--hardening-summary")
     if args.result_json:
         runner_args.extend(["--result-json", args.result_json])
     return int(main(runner_args))
@@ -118,11 +116,6 @@ def run_command(argv: list[str]) -> int:
     run_parser.add_argument("--area", required=True, help="Area name to execute.")
     run_parser.add_argument("--suite", action="append", default=[], help="Area suite filter.")
     run_parser.add_argument("--bless", action="store_true", help="Update checked-in baselines.")
-    run_parser.add_argument(
-        "--hardening-summary",
-        action="store_true",
-        help="Emit a legacy hardening summary line for validation report parsing.",
-    )
     run_parser.add_argument("--result-json", help="Area result JSON path.")
 
     args = parser.parse_args(argv)

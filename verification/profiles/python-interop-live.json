@@ -2,7 +2,6 @@
   "schema_version": 2,
   "name": "python-interop-live",
   "description": "Explicit opt-in Python interop live dependency lane backed by container-runtime policy.",
-  "execution_mode": "selected-areas-only",
   "budgets": {
     "warm_wall_time_minutes": 10,
     "cold_wall_time_minutes": 20
@@ -20,7 +19,9 @@
       "container-runtime",
       "network"
     ],
-    "max_parallel": 1
+    "max_parallel": 1,
+    "thermal_policy": "explicit-container-runtime-opt-in",
+    "memory_policy": "single-live-suite"
   },
   "network_policy": {
     "mode": "live",
@@ -42,10 +43,6 @@
     "loopback_network": "allowed",
     "subprocess_cleanup": true,
     "stdout_stderr_byte_limit": 10485760
-  },
-  "profile_plan": {
-    "emit_command": "scripts/run_all_tests.sh --profile python-interop-live --emit-plan",
-    "compare_command": "uv run --project verification --locked python -m sifr_verify profiles compare-plans --local <local-plan.json> --ci <ci-plan.json>"
   },
   "selected_areas": [
     {
@@ -79,25 +76,13 @@
     "format": "json-v1",
     "output_dir": "target/validation_lane_reports"
   },
-  "legacy_facade": {
-    "matrix_suites": [],
-    "tooling_suites": [],
-    "distribution": "none",
-    "generated_code_quality": "none",
-    "performance_budget": "none",
-    "crate_tests": "smoke",
-    "e2e": {
-      "fixture_manifest": "",
-      "sifr_jobs": 1,
-      "rust_jobs": 1,
-      "run_jobs": 1,
-      "cargo_build_jobs": 1,
-      "max_group_fixtures": 1,
-      "disable_cache": false
-    },
-    "hardening_suites": [],
-    "extra_checks": [],
-    "thermal_policy": "explicit-container-runtime-opt-in",
-    "memory_policy": "single-live-suite"
+  "e2e": {
+    "fixture_manifest": "",
+    "sifr_jobs": 1,
+    "rust_jobs": 1,
+    "run_jobs": 1,
+    "cargo_build_jobs": 1,
+    "max_group_fixtures": 1,
+    "disable_cache": false
   }
 }

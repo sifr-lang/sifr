@@ -30,11 +30,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=str(RESULT_JSON.relative_to(REPO_ROOT)),
         help="Path for machine-readable fuzz/property area result summary.",
     )
-    parser.add_argument(
-        "--hardening-summary",
-        action="store_true",
-        help="Emit the legacy hardening summary line consumed by validation reports.",
-    )
     return parser.parse_args(argv)
 
 
@@ -82,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    summary_prefix = "verification ok" if args.hardening_summary else "fuzz/property verification ok"
+    summary_prefix = "fuzz/property verification ok"
     print(
         f"{summary_prefix}: variants={total_variants}, failures={total_failures}, "
         f"blocking_failures={blocking_failures}, non_blocking_failures=0"

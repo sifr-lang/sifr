@@ -11,27 +11,23 @@
     "selected_areas",
     "toolchain_steps",
     "guardrail_steps",
+    "e2e",
     "retry_policy",
     "shard_policy",
     "resume_policy",
-    "report",
-    "legacy_facade"
+    "report"
   ],
   "additionalProperties": false,
   "properties": {
     "schema_version": {
       "type": "integer",
-      "enum": [1, 2]
+      "enum": [2]
     },
     "name": {
       "type": "string"
     },
     "description": {
       "type": "string"
-    },
-    "execution_mode": {
-      "type": "string",
-      "enum": ["legacy-facade", "selected-areas-only"]
     },
     "budgets": {
       "type": "object",
@@ -52,7 +48,7 @@
     },
     "resource_policy": {
       "type": "object",
-      "required": ["classes", "max_parallel"],
+      "required": ["classes", "max_parallel", "thermal_policy", "memory_policy"],
       "additionalProperties": false,
       "properties": {
         "classes": {
@@ -72,6 +68,12 @@
         },
         "max_parallel": {
           "type": "integer"
+        },
+        "thermal_policy": {
+          "type": "string"
+        },
+        "memory_policy": {
+          "type": "string"
         }
       }
     },
@@ -151,19 +153,6 @@
         }
       }
     },
-    "profile_plan": {
-      "type": "object",
-      "required": ["emit_command", "compare_command"],
-      "additionalProperties": false,
-      "properties": {
-        "emit_command": {
-          "type": "string"
-        },
-        "compare_command": {
-          "type": "string"
-        }
-      }
-    },
     "crate_test_membership": {
       "type": "object",
       "required": ["suites"],
@@ -222,6 +211,8 @@
     },
     "selected_areas": {
       "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
       "items": {
         "type": "object",
         "required": ["area", "suites", "resource_classes"],
@@ -232,6 +223,8 @@
           },
           "suites": {
             "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
             "items": {
               "type": "string"
             }
@@ -256,6 +249,7 @@
     },
     "toolchain_steps": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "type": "string",
         "enum": [
@@ -264,14 +258,70 @@
           "cargo-clippy-workspace",
           "cargo-test-sifr-smoke",
           "cargo-test-sifr-full",
-          "cargo-test-workspace"
+          "cargo-test-workspace",
+          "e2e-pass",
+          "e2e-report-determinism",
+          "e2e-sequential-parallel-equivalence"
         ]
       }
     },
     "guardrail_steps": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
-        "type": "string"
+        "type": "string",
+        "enum": [
+          "hir-maintainability",
+          "file-size",
+          "demo-emitted-freshness",
+          "source-crate-dependency-direction",
+          "submodule-ownership",
+          "sysroot-resource-certification",
+          "stdlib-native-intrinsic-allowlist",
+          "stdlib-native-adapter-reachability",
+          "stdlib-manifest-schema",
+          "stdlib-bootstrap-ordering",
+          "driver-maintainability",
+          "verification-hardening-self-test",
+          "verification-runner-foundation",
+          "hardening-determinism-scale"
+        ]
+      }
+    },
+    "e2e": {
+      "type": "object",
+      "required": [
+        "fixture_manifest",
+        "sifr_jobs",
+        "rust_jobs",
+        "run_jobs",
+        "cargo_build_jobs",
+        "max_group_fixtures",
+        "disable_cache"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fixture_manifest": {
+          "type": "string"
+        },
+        "sifr_jobs": {
+          "type": "integer"
+        },
+        "rust_jobs": {
+          "type": "integer"
+        },
+        "run_jobs": {
+          "type": "integer"
+        },
+        "cargo_build_jobs": {
+          "type": "integer"
+        },
+        "max_group_fixtures": {
+          "type": "integer"
+        },
+        "disable_cache": {
+          "type": "boolean"
+        }
       }
     },
     "retry_policy": {
@@ -327,107 +377,6 @@
         "output_dir": {
           "type": "string",
           "format": "repo-relative-path"
-        }
-      }
-    },
-    "legacy_facade": {
-      "type": "object",
-      "required": [
-        "matrix_suites",
-        "tooling_suites",
-        "distribution",
-        "generated_code_quality",
-        "performance_budget",
-        "crate_tests",
-        "thermal_policy",
-        "memory_policy",
-        "e2e",
-        "hardening_suites",
-        "extra_checks"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "matrix_suites": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "tooling_suites": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "distribution": {
-          "type": "string",
-          "enum": ["none", "representative", "full"]
-        },
-        "generated_code_quality": {
-          "type": "string",
-          "enum": ["none", "smoke", "representative", "full"]
-        },
-        "performance_budget": {
-          "type": "string",
-          "enum": ["none", "smoke", "representative", "full"]
-        },
-        "crate_tests": {
-          "type": "string",
-          "enum": ["smoke", "full"]
-        },
-        "thermal_policy": {
-          "type": "string"
-        },
-        "memory_policy": {
-          "type": "string"
-        },
-        "e2e": {
-          "type": "object",
-          "required": [
-            "fixture_manifest",
-            "sifr_jobs",
-            "rust_jobs",
-            "run_jobs",
-            "cargo_build_jobs",
-            "max_group_fixtures",
-            "disable_cache"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "fixture_manifest": {
-              "type": "string"
-            },
-            "sifr_jobs": {
-              "type": "integer"
-            },
-            "rust_jobs": {
-              "type": "integer"
-            },
-            "run_jobs": {
-              "type": "integer"
-            },
-            "cargo_build_jobs": {
-              "type": "integer"
-            },
-            "max_group_fixtures": {
-              "type": "integer"
-            },
-            "disable_cache": {
-              "type": "boolean"
-            }
-          }
-        },
-        "hardening_suites": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "extra_checks": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       }
     }

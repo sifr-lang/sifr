@@ -478,7 +478,9 @@ def _self_test_profiles() -> dict[str, dict[str, Any]]:
     profiles: dict[str, dict[str, Any]] = {}
     for name in ("create-pr", "merge", "nightly", "release"):
         profiles[name] = {
-            "legacy_facade": {"crate_tests": "smoke" if name == "create-pr" else "full"},
+            "toolchain_steps": [
+                "cargo-test-sifr-smoke" if name == "create-pr" else "cargo-test-sifr-full"
+            ],
             "crate_test_membership": {
                 "suites": [
                     {

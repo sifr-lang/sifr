@@ -297,16 +297,12 @@ pub(crate) fn test_smoke_fuzz_valid_expectation_extractors_no_panic() {
     for _ in 0..512 {
         let mut sample = smoke_ascii(&mut seed, 120);
         if (smoke_rand_next(&mut seed) & 1) == 0 {
-            sample.push_str("\n# expect-stdout: ok");
-        }
-        if (smoke_rand_next(&mut seed) & 1) == 0 {
             sample.push_str("\n# expect-stderr: err");
         }
         if (smoke_rand_next(&mut seed) & 1) == 0 {
             sample.push_str("\n# expect-error: SIFR-TYPE-0002");
         }
 
-        let _ = extract_expect_stdout(&sample);
         let _ = extract_expect_stderr(&sample);
         let _ = extract_compile_failure_expectations(&sample, Path::new("smoke.sifr"));
     }
@@ -315,14 +311,13 @@ pub(crate) fn test_smoke_fuzz_valid_expectation_extractors_no_panic() {
 #[test]
 pub(crate) fn test_smoke_expectation_extractors_unicode_inputs() {
     let samples = [
-        "# expect-stdout: مرحبا\n# expect-stderr: λάθος\n# expect-error: SIFR-TYPE-0002",
-        "# expect-stdout: こんにちは世界\n# expect-error: SIFR-TYPE-0002",
+        "# expect-stderr: λάθος\n# expect-error: SIFR-TYPE-0002",
+        "# expect-error: SIFR-TYPE-0002\nこんにちは世界",
         "# expect-stderr: emoji-😀\nplain-text",
         "no-directives-🧪",
     ];
 
     for sample in samples {
-        let _ = extract_expect_stdout(sample);
         let _ = extract_expect_stderr(sample);
         let _ = extract_compile_failure_expectations(sample, Path::new("unicode.sifr"));
     }
@@ -341,9 +336,9 @@ pub(crate) fn test_fixture_discovery_is_deterministic() {
         )
     ));
     std::fs::create_dir_all(&root).unwrap();
-    std::fs::write(root.join("zeta.sifr"), "# expect-stdout: ok\n").unwrap();
-    std::fs::write(root.join("alpha.sifr"), "# expect-stdout: ok\n").unwrap();
-    std::fs::write(root.join("beta.sifr"), "# expect-stdout: ok\n").unwrap();
+    std::fs::write(root.join("zeta.sifr"), "fixture-zeta\n").unwrap();
+    std::fs::write(root.join("alpha.sifr"), "fixture-alpha\n").unwrap();
+    std::fs::write(root.join("beta.sifr"), "fixture-beta\n").unwrap();
 
     let names: Vec<_> = discover_fixtures(&root)
         .into_iter()
@@ -376,7 +371,6 @@ pub(crate) fn test_filter_fixtures_by_selection_rejects_unknown_fixture_names() 
             path: PathBuf::from("alpha.sifr"),
             source: String::new(),
             source_hash: "a".to_string(),
-            expected_stdout: None,
             _expected_stderr: Vec::new(),
         },
         FixtureCase {
@@ -384,7 +378,6 @@ pub(crate) fn test_filter_fixtures_by_selection_rejects_unknown_fixture_names() 
             path: PathBuf::from("beta.sifr"),
             source: String::new(),
             source_hash: "b".to_string(),
-            expected_stdout: None,
             _expected_stderr: Vec::new(),
         },
     ];
@@ -418,7 +411,6 @@ pub(crate) fn test_dependency_fingerprint_and_cache_key_determinism() {
         path: PathBuf::from("tests/e2e/pass/fixture-a.sifr"),
         source: "print('x')".to_string(),
         source_hash: deterministic_hash(&format!("hash-{}", now.as_nanos())),
-        expected_stdout: None,
         _expected_stderr: Vec::new(),
     };
     let compiled = compiled_case_for_test(case.clone(), "fn main() {}", HashSet::new());
@@ -438,7 +430,6 @@ pub(crate) fn test_batch_group_dispatch_uses_entry_termination_trait() {
         path: PathBuf::from("tests/e2e/pass/async_result_fixture.sifr"),
         source: "async def main() -> Result[None, ValueError]:\n    return None".to_string(),
         source_hash: "async-result".to_string(),
-        expected_stdout: None,
         _expected_stderr: Vec::new(),
     };
     let compiled = compiled_case_for_test(
@@ -520,7 +511,6 @@ pub(crate) fn test_cache_entry_invalidation_rules() {
         path: PathBuf::from("tests/e2e/pass/fixture-cache-a.sifr"),
         source: "print('x')".to_string(),
         source_hash: deterministic_hash("cache-fixture-a"),
-        expected_stdout: None,
         _expected_stderr: Vec::new(),
     };
     let compiled = compiled_case_for_test(case.clone(), "fn main() {}", HashSet::new());

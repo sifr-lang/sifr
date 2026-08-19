@@ -60,7 +60,6 @@ class AreaRunOptions:
     suite_filters: set[str]
     bless: bool
     result_json: Path
-    hardening_summary: bool
 
 
 def run_area(config: AreaAdapterConfig, options: AreaRunOptions) -> int:
@@ -110,9 +109,8 @@ def run_area(config: AreaAdapterConfig, options: AreaRunOptions) -> int:
         )
         return 1
 
-    summary_prefix = "verification ok" if options.hardening_summary else f"{config.status_label} verification ok"
     print(
-        f"{summary_prefix}: variants={total_variants}, failures={total_failures}, "
+        f"{config.status_label} verification ok: variants={total_variants}, failures={total_failures}, "
         f"blocking_failures={blocking_failures}, non_blocking_failures=0"
     )
     return 0

@@ -218,19 +218,19 @@ def valid_incident_request() -> dict[str, Any]:
 
 def valid_report() -> dict[str, Any]:
     suite_map = {
-        "rust_interop_checks": [
+        "area_rust_interop": [
             ("rust_interop", suite)
             for suite in ("matrix", "tiers", "compatibility-matrix", "stale-drafts", "stable-candidate")
         ],
-        "developer_tooling_checks": [
+        "area_developer_tooling": [
             ("developer_tooling", "full"),
             ("developer_tooling", "editor-release"),
         ],
-        "documentation_checks": [
+        "area_documentation": [
             ("documentation", "structure"),
             ("documentation", "ga-release"),
         ],
-        "distribution_validation": [
+        "area_distribution_release": [
             ("distribution_release", "full"),
             ("distribution_release", "qualification"),
             ("distribution_release", "evidence-custody"),
@@ -367,7 +367,13 @@ def test_release_tooling_expansion() -> None:
     profile = json.loads(
         (REPO_ROOT / "verification" / "profiles" / "release.json").read_text(encoding="utf-8")
     )
-    if profile["legacy_facade"]["tooling_suites"] != ["full"]:
+    selections = [
+        selection
+        for selection in profile["selected_areas"]
+        if selection.get("area") == "developer_tooling"
+    ]
+    suites = selections[0].get("suites", []) if len(selections) == 1 else []
+    if suites.count("full") != 1:
         raise AssertionError("release profile must select developer_tooling:full exactly once")
     runner_path = (
         REPO_ROOT / "verification" / "areas" / "developer_tooling" / "runner.py"

@@ -18,7 +18,9 @@
       "external-corpus",
       "long-running"
     ],
-    "max_parallel": 6
+    "max_parallel": 6,
+    "thermal_policy": "opt-in-broad",
+    "memory_policy": "opt-in-broad"
   },
   "network_policy": {
     "mode": "offline",
@@ -41,39 +43,425 @@
     "subprocess_cleanup": true,
     "stdout_stderr_byte_limit": 10485760
   },
-  "profile_plan": {
-    "emit_command": "scripts/run_all_tests.sh --profile nightly --emit-plan",
-    "compare_command": "uv run --project verification --locked python -m sifr_verify profiles compare-plans --local <local-plan.json> --ci <ci-plan.json>"
-  },
   "crate_test_membership": {
     "suites": [
-      {"id": "sifr_diagnostics", "package": "sifr_diagnostics", "command": ["test", "-p", "sifr_diagnostics"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_lowering", "package": "sifr_lowering", "command": ["test", "-p", "sifr_lowering", "--", "--skip", "test_e2e_pass"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_syntax", "package": "sifr_syntax", "command": ["test", "-p", "sifr_syntax"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_frontend", "package": "sifr_frontend", "command": ["test", "-p", "sifr_frontend"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_analysis", "package": "sifr_analysis", "command": ["test", "-p", "sifr_analysis"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_lsp", "package": "sifr_lsp", "command": ["test", "-p", "sifr_lsp"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_package", "package": "sifr_package", "command": ["test", "-p", "sifr_package"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_ipc", "package": "sifr_ipc", "command": ["test", "-p", "sifr_ipc"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_stdlib_imports", "package": "sifr_stdlib_imports", "command": ["test", "-p", "sifr_stdlib_imports"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_stdlib_manifest", "package": "sifr_stdlib_manifest", "command": ["test", "-p", "sifr_stdlib_manifest"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_stdlib", "package": "sifr_stdlib", "command": ["test", "-p", "sifr_stdlib"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_stdlib_feature_api", "package": "sifr_stdlib", "command": ["test", "-p", "sifr_stdlib", "--no-default-features", "--features", "json,unicode,i18n,http"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_stdlib_all_features", "package": "sifr_stdlib", "command": ["test", "-p", "sifr_stdlib", "--all-features"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_runtime", "package": "sifr_runtime", "command": ["test", "-p", "sifr_runtime"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_runtime_http", "package": "sifr_runtime", "command": ["test", "-p", "sifr_runtime", "--features", "http"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_type_system", "package": "sifr_type_system", "command": ["test", "-p", "sifr_type_system"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_format", "package": "sifr_format", "command": ["test", "-p", "sifr_format"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_lint", "package": "sifr_lint", "command": ["test", "-p", "sifr_lint"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_source", "package": "sifr_source", "command": ["test", "-p", "sifr_source"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_sysroot", "package": "sifr_sysroot", "command": ["test", "-p", "sifr_sysroot"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_ir", "package": "sifr_ir", "command": ["test", "-p", "sifr_ir"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_cli_bin", "package": "sifr", "command": ["test", "-p", "sifr", "--bin", "sifr"], "modes": ["smoke"], "status": "blocking", "executed_in_merge": false},
-      {"id": "sifr_cli_full", "package": "sifr", "command": ["test", "-p", "sifr", "--", "--skip", "test_e2e_pass"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_cli_generated_builds", "package": "sifr", "command": ["test", "-p", "sifr", "--bin", "sifr", "--", "--ignored", "--test-threads=1"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_driver_lib", "package": "sifr_driver", "command": ["test", "-p", "sifr_driver", "--lib"], "modes": ["smoke", "full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_driver_generated_builds", "package": "sifr_driver", "command": ["test", "-p", "sifr_driver", "--lib", "--", "--ignored", "--test-threads=1"], "modes": ["full"], "status": "blocking", "executed_in_merge": true},
-      {"id": "sifr_codegen", "package": "sifr_codegen", "command": ["test", "-p", "sifr_codegen"], "modes": ["full"], "status": "blocking", "executed_in_merge": true}
+      {
+        "id": "sifr_diagnostics",
+        "package": "sifr_diagnostics",
+        "command": [
+          "test",
+          "-p",
+          "sifr_diagnostics"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_lowering",
+        "package": "sifr_lowering",
+        "command": [
+          "test",
+          "-p",
+          "sifr_lowering",
+          "--",
+          "--skip",
+          "test_e2e_pass"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_syntax",
+        "package": "sifr_syntax",
+        "command": [
+          "test",
+          "-p",
+          "sifr_syntax"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_frontend",
+        "package": "sifr_frontend",
+        "command": [
+          "test",
+          "-p",
+          "sifr_frontend"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_analysis",
+        "package": "sifr_analysis",
+        "command": [
+          "test",
+          "-p",
+          "sifr_analysis"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_lsp",
+        "package": "sifr_lsp",
+        "command": [
+          "test",
+          "-p",
+          "sifr_lsp"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_package",
+        "package": "sifr_package",
+        "command": [
+          "test",
+          "-p",
+          "sifr_package"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_ipc",
+        "package": "sifr_ipc",
+        "command": [
+          "test",
+          "-p",
+          "sifr_ipc"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_stdlib_imports",
+        "package": "sifr_stdlib_imports",
+        "command": [
+          "test",
+          "-p",
+          "sifr_stdlib_imports"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_stdlib_manifest",
+        "package": "sifr_stdlib_manifest",
+        "command": [
+          "test",
+          "-p",
+          "sifr_stdlib_manifest"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_stdlib",
+        "package": "sifr_stdlib",
+        "command": [
+          "test",
+          "-p",
+          "sifr_stdlib"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_stdlib_feature_api",
+        "package": "sifr_stdlib",
+        "command": [
+          "test",
+          "-p",
+          "sifr_stdlib",
+          "--no-default-features",
+          "--features",
+          "json,unicode,i18n,http"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_stdlib_all_features",
+        "package": "sifr_stdlib",
+        "command": [
+          "test",
+          "-p",
+          "sifr_stdlib",
+          "--all-features"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_runtime",
+        "package": "sifr_runtime",
+        "command": [
+          "test",
+          "-p",
+          "sifr_runtime"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_runtime_http",
+        "package": "sifr_runtime",
+        "command": [
+          "test",
+          "-p",
+          "sifr_runtime",
+          "--features",
+          "http"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_type_system",
+        "package": "sifr_type_system",
+        "command": [
+          "test",
+          "-p",
+          "sifr_type_system"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_format",
+        "package": "sifr_format",
+        "command": [
+          "test",
+          "-p",
+          "sifr_format"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_lint",
+        "package": "sifr_lint",
+        "command": [
+          "test",
+          "-p",
+          "sifr_lint"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_source",
+        "package": "sifr_source",
+        "command": [
+          "test",
+          "-p",
+          "sifr_source"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_sysroot",
+        "package": "sifr_sysroot",
+        "command": [
+          "test",
+          "-p",
+          "sifr_sysroot"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_ir",
+        "package": "sifr_ir",
+        "command": [
+          "test",
+          "-p",
+          "sifr_ir"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_cli_bin",
+        "package": "sifr",
+        "command": [
+          "test",
+          "-p",
+          "sifr",
+          "--bin",
+          "sifr"
+        ],
+        "modes": [
+          "smoke"
+        ],
+        "status": "blocking",
+        "executed_in_merge": false
+      },
+      {
+        "id": "sifr_cli_full",
+        "package": "sifr",
+        "command": [
+          "test",
+          "-p",
+          "sifr",
+          "--",
+          "--skip",
+          "test_e2e_pass"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_cli_generated_builds",
+        "package": "sifr",
+        "command": [
+          "test",
+          "-p",
+          "sifr",
+          "--bin",
+          "sifr",
+          "--",
+          "--ignored",
+          "--test-threads=1"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_driver_lib",
+        "package": "sifr_driver",
+        "command": [
+          "test",
+          "-p",
+          "sifr_driver",
+          "--lib"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_driver_generated_builds",
+        "package": "sifr_driver",
+        "command": [
+          "test",
+          "-p",
+          "sifr_driver",
+          "--lib",
+          "--",
+          "--ignored",
+          "--test-threads=1"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
+        "id": "sifr_codegen",
+        "package": "sifr_codegen",
+        "command": [
+          "test",
+          "-p",
+          "sifr_codegen"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      }
     ]
   },
   "selected_areas": [
@@ -105,7 +493,8 @@
         "integer_dtype_rules",
         "hir_analysis_behaviors",
         "cfg_flow_behaviors",
-        "syntax_parser_lexer_matrix"
+        "syntax_parser_lexer_matrix",
+        "audit-fixtures"
       ],
       "resource_classes": [
         "default-local"
@@ -193,7 +582,9 @@
     {
       "area": "developer_tooling",
       "suites": [
-        "full"
+        "full",
+        "typescript-go-transfer",
+        "diagnostic-rules"
       ],
       "resource_classes": [
         "default-local"
@@ -211,7 +602,8 @@
     {
       "area": "performance",
       "suites": [
-        "full"
+        "full",
+        "frontend-syntax-guardrails"
       ],
       "resource_classes": [
         "default-local"
@@ -250,7 +642,8 @@
       "suites": [
         "frontend_mode_parity",
         "project_graph_isolation",
-        "baselines"
+        "baselines",
+        "audit-fixtures"
       ],
       "resource_classes": [
         "default-local"
@@ -259,7 +652,9 @@
     {
       "area": "package_management",
       "suites": [
-        "offline-integration"
+        "offline-integration",
+        "guardrails",
+        "offline-merge-smoke"
       ],
       "resource_classes": [
         "default-local"
@@ -268,7 +663,11 @@
     {
       "area": "stdlib_parity",
       "suites": [
-        "module-full-check"
+        "module-merge-check",
+        "module-full-check",
+        "audit-fixtures",
+        "complexity-resource",
+        "module-inventory"
       ],
       "resource_classes": [
         "default-local"
@@ -277,15 +676,7 @@
     {
       "area": "regression",
       "suites": [
-        "fixedbugs"
-      ],
-      "resource_classes": [
-        "default-local"
-      ]
-    },
-    {
-      "area": "regression",
-      "suites": [
+        "fixedbugs",
         "crashes"
       ],
       "resource_classes": [
@@ -295,15 +686,7 @@
     {
       "area": "fuzz_property",
       "suites": [
-        "property"
-      ],
-      "resource_classes": [
-        "default-local"
-      ]
-    },
-    {
-      "area": "fuzz_property",
-      "suites": [
+        "property",
         "fuzz-smoke"
       ],
       "resource_classes": [
@@ -313,15 +696,7 @@
     {
       "area": "ecosystem_compatibility",
       "suites": [
-        "oss-curated"
-      ],
-      "resource_classes": [
-        "external-corpus"
-      ]
-    },
-    {
-      "area": "ecosystem_compatibility",
-      "suites": [
+        "oss-curated",
         "ecosystem-broader"
       ],
       "resource_classes": [
@@ -330,14 +705,24 @@
     }
   ],
   "toolchain_steps": [
-    "cargo-test-sifr-full"
+    "cargo-test-sifr-full",
+    "e2e-pass"
   ],
   "guardrail_steps": [
     "hir-maintainability",
     "file-size",
+    "demo-emitted-freshness",
     "source-crate-dependency-direction",
+    "submodule-ownership",
+    "sysroot-resource-certification",
+    "stdlib-native-intrinsic-allowlist",
+    "stdlib-native-adapter-reachability",
+    "stdlib-manifest-schema",
+    "stdlib-bootstrap-ordering",
     "driver-maintainability",
-    "package-manager"
+    "verification-hardening-self-test",
+    "verification-runner-foundation",
+    "hardening-determinism-scale"
   ],
   "retry_policy": {
     "max_attempts": 1,
@@ -355,44 +740,13 @@
     "format": "json-v1",
     "output_dir": "target/validation_lane_reports"
   },
-  "legacy_facade": {
-    "matrix_suites": [
-      "frontend_mode_parity",
-      "project_graph_isolation",
-      "integer_dtype_rules",
-      "hir_analysis_behaviors",
-      "cfg_flow_behaviors",
-      "syntax_parser_lexer_matrix"
-    ],
-    "tooling_suites": [
-      "full"
-    ],
-    "distribution": "full",
-    "generated_code_quality": "full",
-    "performance_budget": "full",
-    "crate_tests": "full",
-    "e2e": {
-      "fixture_manifest": "",
-      "sifr_jobs": 6,
-      "rust_jobs": 4,
-      "run_jobs": 4,
-      "cargo_build_jobs": 1,
-      "max_group_fixtures": 16,
-      "disable_cache": false
-    },
-    "hardening_suites": [
-      "diagnostics",
-      "project",
-      "fixedbugs",
-      "crashes",
-      "property",
-      "fuzz-smoke",
-      "oss-curated",
-      "ecosystem-broader",
-      "determinism-scale"
-    ],
-    "extra_checks": [],
-    "thermal_policy": "opt-in-broad",
-    "memory_policy": "opt-in-broad"
+  "e2e": {
+    "fixture_manifest": "",
+    "sifr_jobs": 6,
+    "rust_jobs": 4,
+    "run_jobs": 4,
+    "cargo_build_jobs": 1,
+    "max_group_fixtures": 16,
+    "disable_cache": false
   }
 }

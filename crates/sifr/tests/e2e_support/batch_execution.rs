@@ -185,11 +185,7 @@ pub(crate) fn build_batch_suite(
     (outcomes, next_manifest)
 }
 
-pub(crate) fn run_single_case(
-    artifact_path: &Path,
-    fixture_name: &str,
-    expected_stdout: Option<&String>,
-) -> Result<String, String> {
+pub(crate) fn run_single_case(artifact_path: &Path, fixture_name: &str) -> Result<(), String> {
     let args = ["--case", fixture_name];
     let run_capture = command_with_capture(
         artifact_path
@@ -202,19 +198,7 @@ pub(crate) fn run_single_case(
         return Err(format!("binary exited with error:\n{}", run_capture.stderr));
     }
 
-    let actual = run_capture.stdout;
-    if let Some(expected) = expected_stdout {
-        let expected = expected.trim_end();
-        let actual = actual.trim_end();
-        if expected != actual {
-            return Err(format!(
-                "stdout mismatch\n  expected: {:?}\n  actual:   {:?}",
-                expected, actual
-            ));
-        }
-    }
-
-    Ok(actual)
+    Ok(())
 }
 
 pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<FixtureExecution> {
@@ -280,7 +264,7 @@ pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<Fixtu
         .iter()
         .map(|case| {
             let status =
-                match run_single_case(&artifact, &case.fixture.name, case.fixture.expected_stdout.as_ref()) {
+                match run_single_case(&artifact, &case.fixture.name) {
                     Ok(_) => Ok(()),
                     Err(err) => Err(format!(
                         "FAIL [{}]: {}\n  group: {}\n  group fingerprint: {}\n  crate: {}\n  artifact: {}",

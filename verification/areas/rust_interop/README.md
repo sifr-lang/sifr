@@ -135,8 +135,8 @@ uv run --project verification --locked python -m sifr_verify areas run --area ru
 ```
 
 The authoritative create-PR, merge, nightly, and release profiles select all
-five registered suites and execute them through the
-`rust_interop_checks` legacy-facade step. Execute the create-PR profile with:
+five registered suites and execute them through `area_rust_interop`. Execute
+the create-PR profile with:
 
 ```bash
 scripts/run_all_tests.sh --profile create-pr
@@ -148,7 +148,7 @@ Inspect the same profile's plan without executing it:
 scripts/run_all_tests.sh --profile create-pr --emit-plan
 ```
 
-The create-PR profile's `rust_interop_checks` step has a blocking 20,000 ms
+The create-PR profile's `area_rust_interop` step has a blocking 20,000 ms
 budget. Issue #3130 measured required first-run work at 14,067 ms, leaving
 5,933 ms of enforced headroom; lighter controls measured 6,543 ms and 7,245
 ms. The step validates repository evidence and performs a locked offline Cargo

@@ -23,10 +23,10 @@ from .common import (
 )
 
 REQUIRED_RELEASE_STEPS = {
-    "rust_interop_checks",
-    "developer_tooling_checks",
-    "documentation_checks",
-    "distribution_validation",
+    "area_rust_interop",
+    "area_developer_tooling",
+    "area_documentation",
+    "area_distribution_release",
 }
 REQUIRED_SUITES = {
     "rust_interop": {

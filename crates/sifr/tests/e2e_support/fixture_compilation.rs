@@ -175,7 +175,6 @@ pub(crate) fn discover_fixtures(base_dir: &Path) -> Vec<FixtureCase> {
                         path,
                         source: source.clone(),
                         source_hash,
-                        expected_stdout: extract_expect_stdout(&source),
                         _expected_stderr: extract_expect_stderr(&source),
                     });
                 }

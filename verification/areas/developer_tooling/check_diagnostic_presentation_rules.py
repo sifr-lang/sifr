@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+PROFILE_NAMES = ("create-pr", "merge", "nightly", "release")
 
 REQUIRED_FIELDS = [
     "code",
@@ -61,10 +62,22 @@ def require(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
-def check_profile_runner_wiring(root: Path) -> None:
-    text = read_text(root, "verification/runner/sifr_verify/profile_runner.py")
-    require('"developer_tooling"' in text, "profile_runner.py missing developer_tooling area route")
-    require('"diagnostic-rules"' in text, "profile_runner.py missing diagnostic rules suite route")
+def check_profile_selection(root: Path) -> None:
+    for profile_name in PROFILE_NAMES:
+        profile = read_json(root, f"verification/profiles/{profile_name}.json")
+        selections = [
+            selection
+            for selection in profile.get("selected_areas", [])
+            if isinstance(selection, dict) and selection.get("area") == "developer_tooling"
+        ]
+        require(
+            len(selections) == 1,
+            f"{profile_name} profile must select developer_tooling exactly once",
+        )
+        require(
+            "diagnostic-rules" in selections[0].get("suites", []),
+            f"{profile_name} profile missing diagnostic rules suite route",
+        )
 
 
 def check_schema_lock(root: Path) -> None:
@@ -249,7 +262,7 @@ def check_command_format_routing(root: Path) -> None:
 
 
 def run_checks(root: Path) -> None:
-    check_profile_runner_wiring(root)
+    check_profile_selection(root)
     check_schema_lock(root)
     check_fixture_baselines(root)
     check_manifest_cases(root)
@@ -266,10 +279,17 @@ def write(path: Path, text: str) -> None:
 
 
 def seed_minimal_repo(root: Path) -> None:
-    write(
-        root / "verification/runner/sifr_verify/profile_runner.py",
-        'run_command(uv_area_command("--area", "developer_tooling", "--suite", "diagnostic-rules"))\n',
-    )
+    for profile_name in PROFILE_NAMES:
+        write(
+            root / f"verification/profiles/{profile_name}.json",
+            json.dumps(
+                {
+                    "selected_areas": [
+                        {"area": "developer_tooling", "suites": ["diagnostic-rules"]}
+                    ]
+                }
+            ),
+        )
     write(
         root / "verification/areas/developer_tooling/diagnostic_presentation_schema_lock.json",
         json.dumps({"rendered_diagnostic_required_fields": REQUIRED_FIELDS}),
@@ -454,8 +474,14 @@ def run_self_tests() -> None:
         "missing run-all wiring",
         "missing diagnostic rules suite route",
         lambda root: write(
-            root / "verification/runner/sifr_verify/profile_runner.py",
-            'run_command(uv_area_command("--area", "developer_tooling"))\n',
+            root / "verification/profiles/create-pr.json",
+            json.dumps(
+                {
+                    "selected_areas": [
+                        {"area": "developer_tooling", "suites": []}
+                    ]
+                }
+            ),
         ),
     )
     print("diagnostic presentation rules self-test: PASS")

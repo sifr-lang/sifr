@@ -1381,6 +1381,13 @@ that exact protected-main commit through
 `sifr-release-site-stable-distribution`; active ruleset `19791667` prohibits
 updating or deleting that exact tag with no bypass actors.
 
+Coordination record (2026-08-19): Phase 40 releases the shared verification
+profiles, runner, workflows, and release-governance paths from base
+`9caed42242d017ed4ebff84332df0c201f6b403b` to compatibility-removal Item 13.
+Item 13 owns their canonical profile-v2 migration and must preserve the Phase
+40 release suites, evidence custody, and publication contracts. Phase 40
+resumes from the merged Item 13 result.
+
 - Site review passes 1–5 found and closed immutable-action pinning, credential
   persistence, metadata-shadow output, deployed-byte custody, stale-CDN index
   checks, site-base attribution, terminal failure recording, protected-main
@@ -1682,7 +1689,7 @@ updating or deleting that exact tag with no bypass actors.
   budget, 674/674 E2E fixtures, the complete crate surface, generated-code
   release checks, and 290 hardening variants. Canonical report
   `release-c9d611fb7c7c-fa3d95c04f8a` has SHA-256
-  `e5200229dfdacb2503190d4c3784cdfb3085088f7ad687e49659f54f3a11de98`;
+  `9414915dcc474b9be2b27ab484bd8e76f75faf36b25a8c1461d72c8bf62cdc4d`;
   its exact canonical release-run Rust result has SHA-256
   `95176b5937b4ed0e1c9843ef6c3896969f6336431bc8a0d08350cc2db9b9555e`.
   The 7,976.92-second wall time produced the same two nonblocking advisories:
@@ -1696,7 +1703,7 @@ updating or deleting that exact tag with no bypass actors.
   and
   `plans/reviews/archive/phase-40-candidate-release-notes-review-pass-2-satisfied.md`.
 - The canonical candidate plan has SHA-256
-  `3e4c7b7c50691eb360b031cebec734ae89bdef253f1a138e706038962b7ded27`.
+  `aeb96c3b5ddf0974539519ae2274d16d07c3bf2d66498ce31c216da4d933d4a3`.
   Focused qualification plus evidence custody passed 2/2; the unfiltered
   distribution area passed 125/125; canonical plan, release-report, and
   qualification-index validation passed; and the source checkout remained

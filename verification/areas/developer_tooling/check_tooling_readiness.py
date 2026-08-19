@@ -9,9 +9,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
-PROFILE_RUNNER = REPO_ROOT / "verification" / "runner" / "sifr_verify" / "profile_runner.py"
+PROFILES_DIR = REPO_ROOT / "verification" / "profiles"
+PROFILE_NAMES = ("create-pr", "merge", "nightly", "release")
 TOOLING_VERIFICATION_DOC = REPO_ROOT / "internal_docs" / "tooling_verification.md"
 REUSE_DOC = REPO_ROOT / "internal_docs" / "tooling_reuse_strategy.md"
 TOOLING_ROOT = REPO_ROOT / "verification" / "areas" / "developer_tooling"
@@ -56,20 +56,29 @@ class ReadinessError(Exception):
     pass
 
 
-def validate_profile_runner_wiring(runner_text: str) -> list[str]:
+def validate_profile_wiring(profiles: dict[str, dict[str, Any]]) -> list[str]:
     failures: list[str] = []
-    for suite_name in [
-        "typescript-go-transfer",
-        "diagnostic-rules",
-    ]:
-        if suite_name not in runner_text:
-            failures.append(f"developer_tooling suite {suite_name} is not wired into profile_runner.py")
-    if "tooling_suites" not in runner_text:
-        failures.append("developer_tooling profile suite dispatch is not wired into profile_runner.py")
-    if '"developer_tooling"' not in runner_text:
-        failures.append("developer_tooling area is not wired into profile_runner.py")
-    if '"performance"' not in runner_text or "performance_budget_mode" not in runner_text:
-        failures.append("performance profile suite dispatch is not wired into profile_runner.py")
+    for profile_name in PROFILE_NAMES:
+        profile = profiles.get(profile_name, {})
+        selected_areas = profile.get("selected_areas", [])
+        for area, required_suites in {
+            "developer_tooling": {"typescript-go-transfer", "diagnostic-rules"},
+            "performance": {"frontend-syntax-guardrails"},
+        }.items():
+            selections = [
+                selection
+                for selection in selected_areas
+                if isinstance(selection, dict) and selection.get("area") == area
+            ]
+            if len(selections) != 1:
+                failures.append(f"{profile_name} profile must select {area} exactly once")
+                continue
+            suites = set(selections[0].get("suites", []))
+            missing = sorted(required_suites.difference(suites))
+            for suite_name in missing:
+                failures.append(f"{profile_name} profile omits {area} suite {suite_name}")
+            if profile_name in {"nightly", "release"} and "full" not in suites:
+                failures.append(f"{profile_name} profile omits {area} suite full")
     return failures
 
 
@@ -161,7 +170,8 @@ def validate() -> list[str]:
     failures = validate_required_files()
     if failures:
         return failures
-    failures.extend(validate_profile_runner_wiring(PROFILE_RUNNER.read_text(encoding="utf-8")))
+    profiles = {name: load_json(PROFILES_DIR / f"{name}.json") for name in PROFILE_NAMES}
+    failures.extend(validate_profile_wiring(profiles))
     failures.extend(
         validate_area_suite_wiring(
             TOOLING_RUNNER.read_text(encoding="utf-8"),
@@ -174,11 +184,28 @@ def validate() -> list[str]:
 
 
 def run_self_test() -> None:
-    runner_text = PROFILE_RUNNER.read_text(encoding="utf-8")
-    bad_text = runner_text.replace('"developer_tooling"', '"missing_developer_tooling"')
-    failures = validate_profile_runner_wiring(bad_text)
-    if not any("developer_tooling area" in failure for failure in failures):
-        raise SystemExit("tooling readiness self-test failed: missing developer_tooling area wiring passed")
+    profiles = {name: load_json(PROFILES_DIR / f"{name}.json") for name in PROFILE_NAMES}
+    bad_profiles = copy.deepcopy(profiles)
+    selection = next(
+        item
+        for item in bad_profiles["create-pr"]["selected_areas"]
+        if item.get("area") == "developer_tooling"
+    )
+    selection["suites"].remove("diagnostic-rules")
+    failures = validate_profile_wiring(bad_profiles)
+    if not any("create-pr profile omits developer_tooling suite diagnostic-rules" in failure for failure in failures):
+        raise SystemExit("tooling readiness self-test failed: missing profile suite passed")
+
+    bad_profiles = copy.deepcopy(profiles)
+    selection = next(
+        item
+        for item in bad_profiles["nightly"]["selected_areas"]
+        if item.get("area") == "performance"
+    )
+    selection["suites"].remove("full")
+    failures = validate_profile_wiring(bad_profiles)
+    if not any("nightly profile omits performance suite full" in failure for failure in failures):
+        raise SystemExit("tooling readiness self-test failed: missing full suite passed")
 
     tooling_runner_text = TOOLING_RUNNER.read_text(encoding="utf-8")
     bad_tooling_runner_text = tooling_runner_text.replace("check_completion_quality.py", "missing_completion_quality.py")

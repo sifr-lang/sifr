@@ -47,7 +47,14 @@ def run_evidence_custody_checks() -> int:
 
 
 def validate_changed_evidence_scope() -> None:
-    validate_changed_path_set(changed_paths())
+    base = comparison_base()
+    validate_changed_path_sets(committed_changed_path_sets(base))
+    validate_changed_path_set(working_changed_paths())
+
+
+def validate_changed_path_sets(changed_sets: list[set[str]]) -> None:
+    for changed in changed_sets:
+        validate_changed_path_set(changed)
 
 
 def validate_changed_path_set(changed: set[str]) -> None:
@@ -78,7 +85,7 @@ def validate_changed_path_set(changed: set[str]) -> None:
     ]
     if non_evidence:
         raise GovernanceError(
-            "release evidence changes cannot mix with source changes: "
+            "release evidence changes cannot mix with source changes in one commit: "
             + ", ".join(sorted(non_evidence))
         )
     identities = {
@@ -91,14 +98,25 @@ def validate_changed_path_set(changed: set[str]) -> None:
         raise GovernanceError("an evidence change must contain exactly one candidate or incident")
 
 
-def changed_paths() -> set[str]:
-    merge_base = comparison_base()
+def committed_changed_path_sets(base: str) -> list[set[str]]:
+    commits = git_output("rev-list", "--first-parent", "--reverse", f"{base}..HEAD")
+    changed_sets: list[set[str]] = []
+    for commit in commits.splitlines():
+        parent = git_output("rev-parse", f"{commit}^1", allow_failure=True)
+        if not parent:
+            raise GovernanceError(f"cannot establish first parent for commit {commit}")
+        changed_sets.append(
+            {
+                line
+                for line in git_output("diff", "--name-only", parent, commit).splitlines()
+                if line
+            }
+        )
+    return changed_sets
+
+
+def working_changed_paths() -> set[str]:
     tracked: set[str] = set()
-    tracked.update(
-        line
-        for line in git_output("diff", "--name-only", f"{merge_base}...HEAD").splitlines()
-        if line
-    )
     tracked.update(
         line
         for line in git_output("diff", "--name-only").splitlines()

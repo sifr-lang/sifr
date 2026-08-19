@@ -448,9 +448,9 @@ def validate_profile_readiness_policy(
         for item in selected
     ):
         errors.append(f"{profile_name}: coverage_matrix readiness suite must be selected")
-    profile_plan = profile.get("profile_plan")
-    if not isinstance(profile_plan, dict) or not profile_plan.get("emit_command"):
-        errors.append(f"{profile_name}: missing profile plan emission command")
+    for key in ("selected_areas", "toolchain_steps", "guardrail_steps"):
+        if not isinstance(profile.get(key), list):
+            errors.append(f"{profile_name}: {key} must be a canonical selection list")
 
 
 def validate_readiness_area_manifest_policy(surfaces: Any, strict: bool, errors: list[str]) -> None:
