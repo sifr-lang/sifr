@@ -1666,6 +1666,42 @@ surface.
 
 Owner: both repositories, with compiler work merged first.
 
+Compiler prerequisite 1 state: complete
+PR: [`sifr-lang/sifr#3317`](https://github.com/sifr-lang/sifr/pull/3317)
+Base SHA: `b5c09a2e1b196e24ac2ee587b66b3ebb0df75026`
+Initial candidate SHA: `0b578c28198521df4cc40baaed8a8d6689303de8`
+Final candidate SHA: `039e531c105bb2badc363868f4433fb17b2c00ab`
+Merge SHA: `35fc60d61c398abc53573187dde6a38330513a25`
+Changed paths: the compiler-owned `sifr.meta.StringStructural` marker; generic
+bound checking and Rust emission; canonical marker sealing; package-neutral
+lowering, code-generation, adapter, and native runtime evidence; generated
+stdlib exports; and durable architecture documentation.
+Validation: the final lowering suite passed 1000 tests with one ignored. The
+final code-generation suite passed 1051 tests. Four focused string-structural
+tests, two code-generation regressions, 22 early-adapter tests, and the stdlib
+export test passed. Normal affected-crate Clippy passed with warnings denied.
+Formatting, HIR maintainability, file-size, documentation-link, and diff
+guards passed. The package-neutral native runtime fixture passed before the
+remediation. The remediation did not change that fixture or its ordinary
+record path. The exact candidate's create-PR and merge gates each ran once.
+Both passed their preceding guards and stopped at the same two external
+Rust-interop matrix inputs: one missing negative evidence source and one
+existing empty placeholder class. Neither gate was rerun.
+Review evidence: the initial exact-SHA Opus review found stale generated
+exports, vacuous opaque-mapping acceptance, and an unrelated `Structural`
+code-generation change
+([evidence](https://github.com/sifr-lang/sifr/pull/3317#issuecomment-5340373103)).
+One remediation closed all three findings. The final exact-SHA review returned
+`SATISFIED`
+([evidence](https://github.com/sifr-lang/sifr/pull/3317#issuecomment-5340373550)).
+Deferred follow-up: the next M11 compiler item must validate body-required
+traits for ordinary and attached `StringStructural` functions. It must add
+rustc-level attached-path evidence and preserve checked diagnostics. It should
+also traverse generic type arguments defensively and add a durable negative
+fixture. No third review runs for this prerequisite.
+Next action: implement that bounded M11 compiler follow-up before the package
+surface.
+
 Scope:
 
 - Attach `model_validate`, `model_validate_json`, and
@@ -1806,33 +1842,15 @@ Next action:
 
 ## Current Handoff
 
-Current state: M0-M9 are merged and recorded; M10 is in progress.
+Current state: M0-M10 are merged and recorded. M11 is in progress. Its first
+compiler prerequisite merged in Sifr PR #3317 at
+`35fc60d61c398abc53573187dde6a38330513a25`.
 
-External failure record (2026-08-19): compiler merge
-`6152fc50984395a640c42f31e9e270cd3a9e09c8` changed emitted Rust without
-refreshing 98 generated demo companions. The pre-v1 Item 13 create-PR and merge
-gates both stopped at `guardrail_demo_emitted_freshness`. Item 13 changed no
-compiler implementation or demo output, so it did not absorb or rerun this
-failure. Refresh or retire the companions under this phase's emission owner.
+External gate record (2026-08-19): both one-time gates for PR #3317 stopped at
+the Rust-interop matrix. The matrix reported one missing negative evidence
+source and one existing empty placeholder class. The item did not own or alter
+those inputs. Both gates passed all earlier guards, and neither gate was
+rerun.
 
-External baseline record (2026-08-19): pre-v1 Item 16 found that the lowering
-test `test_unknown_parent_class_has_class_code` still expected the old
-undefined-parent message introduced before this phase's current compiler
-merge chain. The current compiler emits the generic unknown-type diagnostic
-and reports that the parent type is not a class. Item 16 updated only the stale
-assertion so its validation could observe the current tree. It did not change
-the production mechanism. Restore the more specific undefined-parent
-diagnostic under this phase's compiler owner.
-
-External gate record (2026-08-19): the pre-v1 Item 16 create-PR and merge
-gates each stopped at the Rust-interop matrix because
-`verification/areas/rust_interop/fixtures/method_slot_table/examples/method_slot_runtime/src/schema_program.sifr`
-contains the empty `SlotContract` placeholder body added by M5 commit
-`ad3bf8bcde`. Item 16 changed no method-slot fixture mechanism and did not
-absorb or rerun this failure. Replace the placeholder with a meaningful
-declaration under this phase's method-descriptor owner before the matrix is
-qualified again.
-
-Next action: implement M10 serializers, computed fields, and attached dump
-methods on compiler merge `441e7f543ebe1d559f31687e2c09055935b4fc94`
-and package merge `8af4a1f4d598829ac427f96c34b76289e13eedd9`.
+Next action: implement the bounded M11 `StringStructural` body-bound and
+rustc-level attached-path follow-up. Then resume the M11 package surface.
