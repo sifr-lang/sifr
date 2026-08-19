@@ -170,7 +170,7 @@ mod rust_interop_tests;
 mod rust_opaque_constructor_tests;
 mod scope_helpers;
 mod scoped_type_substitution;
-pub use scoped_type_substitution::substitute_type_vars_with_class_scopes;
+pub use scoped_type_substitution::{substitute_type_vars, substitute_type_vars_with_class_scopes};
 mod sequence_guard_detection;
 mod sequence_guard_updates;
 mod sequence_guards;
@@ -247,7 +247,6 @@ pub fn canonicalize_user_export_function_type(
 }
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;
-pub use mod_context::substitute_type_vars;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Stmt};

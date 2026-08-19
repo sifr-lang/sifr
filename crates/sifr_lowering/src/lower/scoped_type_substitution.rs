@@ -3,6 +3,11 @@
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::HashMap;
 
+/// Substitute type variables without declaration-scope metadata.
+pub fn substitute_type_vars(ty: &Type, bindings: &HashMap<String, Type>) -> Type {
+    substitute_type_vars_with_class_scopes(ty, bindings, &|_, _| Some(Vec::new()))
+}
+
 /// Substitute free type variables while rebinding each nested class's declared parameters.
 pub fn substitute_type_vars_with_class_scopes<F>(
     ty: &Type,
@@ -10,7 +15,7 @@ pub fn substitute_type_vars_with_class_scopes<F>(
     class_type_params: &F,
 ) -> Type
 where
-    F: Fn(Option<&str>, &str) -> Vec<String>,
+    F: Fn(Option<&str>, &str) -> Option<Vec<String>>,
 {
     let recurse =
         |ty: &Type| substitute_type_vars_with_class_scopes(ty, bindings, class_type_params);
@@ -90,11 +95,14 @@ where
         } => {
             let type_args = type_args.iter().map(recurse).collect::<Vec<_>>();
             let mut nested_bindings = bindings.clone();
-            let declared_params = class_type_params(identity.as_deref(), name);
-            for parameter in &declared_params {
-                nested_bindings.remove(parameter);
+            if let Some(declared_params) = class_type_params(identity.as_deref(), name) {
+                for parameter in &declared_params {
+                    nested_bindings.remove(parameter);
+                }
+                nested_bindings.extend(declared_params.into_iter().zip(type_args.iter().cloned()));
+            } else {
+                nested_bindings.clear();
             }
-            nested_bindings.extend(declared_params.into_iter().zip(type_args.iter().cloned()));
             let nested = |ty: &Type| {
                 substitute_type_vars_with_class_scopes(ty, &nested_bindings, class_type_params)
             };
@@ -154,11 +162,30 @@ mod tests {
             substitute_type_vars_with_class_scopes(&nested, &bindings, &|identity, name| {
                 assert_eq!(identity, Some("fixture.Inner"));
                 assert_eq!(name, "Inner");
-                vec!["T".to_string()]
+                Some(vec!["T".to_string()])
             });
         let Type::Class { fields, .. } = substituted else {
             panic!("nested type must stay nominal");
         };
         assert_eq!(fields[0].1, Type::Str);
+    }
+
+    #[test]
+    fn unresolved_nested_scope_does_not_capture_an_outer_binding() {
+        let nested = Type::Class {
+            identity: Some("missing.Inner".to_string()),
+            type_args: Vec::new(),
+            name: "Inner".to_string(),
+            fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let bindings = HashMap::from([("T".to_string(), Type::Int)]);
+
+        let substituted = substitute_type_vars_with_class_scopes(&nested, &bindings, &|_, _| None);
+        let Type::Class { fields, .. } = substituted else {
+            panic!("nested type must stay nominal");
+        };
+        assert_eq!(fields[0].1, Type::TypeVar("T".to_string()));
     }
 }
