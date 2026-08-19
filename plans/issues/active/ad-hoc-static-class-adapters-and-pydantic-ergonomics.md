@@ -2097,6 +2097,35 @@ declarations. These suggestions do not identify a mechanism defect.
 Next action: make finalized generic field substitution scope-aware so an inner
 type parameter cannot capture an outer type argument.
 
+Compiler hardening item 4 state: complete
+PR: [`sifr-lang/sifr#3338`](https://github.com/sifr-lang/sifr/pull/3338)
+Base SHA: `a969c6c1788856d0b16284a2c6c80f448a7b028b`
+Candidate SHA: `5a370712ecac97ab34cef90409f11f3173fa3a3a`
+Merge SHA: `d5d96d31cb74bcbf49cc1802af9eff6702242753`
+Changed paths: a declaration-aware lowering helper for type substitution,
+local and imported class-parameter resolution, structural field integration,
+three same-name scope regressions, and the static-program architecture
+contract.
+Validation: 1,004 lowering tests passed and one test was ignored. All 107
+frontend tests and all 15 adapter-default driver tests passed. Workspace
+Clippy passed with warnings denied. Rust formatting, HIR maintainability, the
+900-line guard, and diff hygiene passed. The create-PR and merge gates each ran
+once on the exact candidate. Both gates passed generated demo freshness and
+every preceding guard. Both gates then stopped at the same two separately
+owned Rust-interop matrix inputs. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3338#issuecomment-5345159530),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3338#issuecomment-5345182888)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3338#issuecomment-5345159272)).
+Deferred follow-up: M12 must consolidate the legacy and scope-aware type
+visitors. It must remove the remaining bare-name class-parameter fallback and
+define unresolved nested-scope behavior. Later items must review unspecialized
+generic ancestor arguments and generic alias scope. End-to-end source evidence
+can supplement the direct IR and structural-shape regressions.
+Next action: consolidate the substitution visitors and remove the remaining
+bare-name nested-scope fallback.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2184,11 +2213,11 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 3 merged in Sifr PRs #3332, #3334, and #3336. The seven M11 compiler
+through 4 merged in Sifr PRs #3332, #3334, #3336, and #3338. The seven M11 compiler
 prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327,
 and #3329. The M11 package surface merged in Pydantic-Sifr PR #47. M12 is in
 progress. The current compiler merge is
-`9b2952765b0aab23a98da5c684fd10c7ded8fd90`, and the current package merge is
+`d5d96d31cb74bcbf49cc1802af9eff6702242753`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
@@ -2197,6 +2226,6 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: make finalized generic field substitution scope-aware. Then
-continue compiler-owned hardening before package certification and the final
-whole-phase review.
+Next action: consolidate the substitution visitors and remove the remaining
+bare-name nested-scope fallback. Then continue compiler-owned hardening before
+package certification and the final whole-phase review.
