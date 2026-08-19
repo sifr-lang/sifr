@@ -278,15 +278,17 @@ fn described_handler(
     });
     let mut method = if let Some((source_name, _owner_class, method)) = local_detail {
         let owner = format!("{source_name}.{declared_name}");
-        let inherited_bindings = crate::handler_ancestry::bindings_for_owner(
+        let inherited_bindings = match crate::handler_ancestry::resolve(
             module_name,
             class,
             &root_args,
             callable_owner.unwrap_or(&local_owner),
             lowering,
             external_defs,
-        )
-        .unwrap_or_default();
+        ) {
+            Some(crate::handler_ancestry::HandlerAncestry::Owner(bindings)) => bindings,
+            _ => HashMap::new(),
+        };
         described_method(
             module_name,
             &owner,
@@ -322,9 +324,15 @@ fn described_handler(
             .as_deref()
             .and_then(|owner| owner.rsplit_once('.').map(|(_, name)| name))
             .unwrap_or(class_name);
+        let handler_metadata = external_defs
+            .declaration_metadata
+            .get(&handler.callable.module)
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        let owner = format!("{owner_name}.{declared_name}");
         described_method(
             &handler.callable.module,
-            &format!("{owner_name}.{declared_name}"),
+            &owner,
             declared_name,
             &method.params,
             &method.return_type,
@@ -332,8 +340,13 @@ fn described_handler(
             method.receiver,
             method.is_async,
             &inherited_bindings,
-            Vec::new(),
-            &[],
+            metadata_for(
+                handler_metadata,
+                &owner,
+                DeclarationMetadataTargetKind::Method,
+                None,
+            ),
+            handler_metadata,
             lowering,
             external_defs,
             visiting,
@@ -391,52 +404,30 @@ fn imported_handler_detail<'a>(
     external_defs: &'a sifr_lowering::ExternalDefs,
 ) -> Option<(&'a StructuralMethodExport, HashMap<String, Type>)> {
     let owner = handler.callable.owner.as_deref()?;
-    if let Some(bindings) = crate::handler_ancestry::bindings_for_owner(
+    match crate::handler_ancestry::resolve(
         module_name,
         class,
         root_args,
         owner,
         lowering,
         external_defs,
-    ) {
-        return Some((imported_handler_method(handler, external_defs)?, bindings));
-    }
-    let root_bindings = class
-        .type_params
-        .iter()
-        .cloned()
-        .zip(root_args.iter().cloned())
-        .collect::<HashMap<_, _>>();
-    let Type::Class {
-        identity,
-        name,
-        type_args,
-        ..
-    } = class.parent_type.as_ref()?.resolve_alias()
-    else {
-        return None;
-    };
-    let parent_identity = identity.as_deref().unwrap_or(name);
-    let (parent_module, parent_name) = parent_identity.rsplit_once('.')?;
-    let parent_params = external_defs
-        .class_type_params
-        .get(parent_module)
-        .and_then(|classes| classes.get(parent_name))?;
-    let parent_bindings = parent_params
-        .iter()
-        .cloned()
-        .zip(
-            type_args
+    )? {
+        crate::handler_ancestry::HandlerAncestry::Owner(bindings) => {
+            Some((imported_handler_method(handler, external_defs)?, bindings))
+        }
+        crate::handler_ancestry::HandlerAncestry::ImportedBoundary {
+            module,
+            name,
+            bindings,
+        } => {
+            let method = external_defs
+                .structural_methods_for(&module)?
+                .get(&name)?
                 .iter()
-                .map(|argument| substitute_type_vars(argument, &root_bindings)),
-        )
-        .collect::<HashMap<_, _>>();
-    let method = external_defs
-        .structural_methods_for(parent_module)?
-        .get(parent_name)?
-        .iter()
-        .find(|method| method.handler_target.as_ref() == Some(&handler.callable))?;
-    Some((method, parent_bindings))
+                .find(|method| method.handler_target.as_ref() == Some(&handler.callable))?;
+            Some((method, bindings))
+        }
+    }
 }
 
 #[allow(clippy::too_many_arguments)]

@@ -42,6 +42,7 @@ class Parent[T]:
 
     @classmethod
     @metadata("fixture.callback", "after")
+    @metadata("parameter", "value", "fixture.role", "input")
     def normalize(cls, own value: T) -> T:
         return value
 "#,
@@ -54,7 +55,10 @@ class Parent[T]:
         r#"
 from models import Parent
 
-class Child(Parent[int]):
+class Mid[V](Parent[V]):
+    pass
+
+class Child(Mid[int]):
     pass
 
 class Use:
@@ -248,13 +252,13 @@ class Model[T]:
     );
     assert_eq!(methods[0].declaration_order, Some(0));
     assert_eq!(methods[0].origin, None);
+    assert_eq!(methods[0].metadata[0].key, "fixture.callback");
+    assert_eq!(methods[0].params[0].metadata[0].key, "fixture.role");
     assert_eq!(
         methods[0].params[0].declared_type,
         ShapeNode::Primitive("int".to_string())
     );
     assert_eq!(*methods[0].result, ShapeNode::Primitive("int".to_string()));
-    assert_eq!(methods[0].metadata[0].key, "fixture.callback");
-    assert_eq!(methods[0].params[0].metadata[0].key, "fixture.role");
     assert!(!shape.canonical_identity.contains("param:T"));
 }
 
@@ -269,6 +273,7 @@ class Grand[T]:
 
     @classmethod
     @metadata("fixture.callback", "after")
+    @metadata("parameter", "value", "fixture.role", "input")
     def normalize(cls, own value: T) -> T:
         return value
 
@@ -336,7 +341,10 @@ class Parent[U](Grand[list[U]]):
         r#"
 from models import Parent
 
-class Child(Parent[int]):
+class Mid[V](Parent[V]):
+    pass
+
+class Child(Mid[int]):
     pass
 
 class Use:
@@ -352,7 +360,7 @@ class Use:
             provider_function: "adapt".to_string(),
             descriptor_type: Type::Str,
             marker_identities: Vec::new(),
-            data_parent: Some("models.Parent".to_string()),
+            data_parent: Some("Mid".to_string()),
             field_plans: vec![AdapterFieldPlan {
                 identity: "models.Grand.value".to_string(),
                 name: "value".to_string(),
@@ -393,6 +401,8 @@ class Use:
         ShapeNode::List(Box::new(ShapeNode::Primitive("int".to_string())))
     );
     assert_eq!(methods[0].origin, None);
+    assert_eq!(methods[0].metadata[0].key, "fixture.callback");
+    assert_eq!(methods[0].params[0].metadata[0].key, "fixture.role");
     assert!(!shape.canonical_identity.contains("param:T"));
     assert!(!shape.canonical_identity.contains("param:U"));
 }

@@ -102,24 +102,31 @@ fn adapted_handler_method(
         .cloned()
         .map(Type::TypeVar)
         .collect::<Vec<_>>();
-    let bindings = crate::handler_ancestry::bindings_for_owner(
+    let ancestry = crate::handler_ancestry::resolve(
         module_name,
         owner,
         &root_args,
         callable_owner,
         lowering,
         external_defs,
-    );
-    if bindings.is_none() {
-        return adapted_imported_parent_method(
-            owner,
-            &root_args,
-            handler,
-            local_classes,
-            external_defs,
-        );
-    }
-    let bindings = bindings.unwrap_or_default();
+    )?;
+    let bindings = match ancestry {
+        crate::handler_ancestry::HandlerAncestry::Owner(bindings) => bindings,
+        crate::handler_ancestry::HandlerAncestry::ImportedBoundary {
+            module,
+            name,
+            bindings,
+        } => {
+            return adapted_imported_boundary_method(
+                &module,
+                &name,
+                &bindings,
+                handler,
+                local_classes,
+                external_defs,
+            );
+        }
+    };
     let (source_module, source_name) = callable_owner.rsplit_once('.')?;
     let hir_name = if handler.callable.symbol == "__init__" {
         "new"
@@ -183,57 +190,28 @@ fn adapted_handler_method(
     Some(method)
 }
 
-fn adapted_imported_parent_method(
-    owner: &HirClass,
-    root_args: &[Type],
+fn adapted_imported_boundary_method(
+    boundary_module: &str,
+    boundary_name: &str,
+    boundary_bindings: &HashMap<String, Type>,
     handler: &AdapterHandlerPlan,
     local_classes: &HashMap<String, String>,
     external_defs: &ExternalDefs,
 ) -> Option<StructuralMethodExport> {
-    let root_bindings = owner
-        .type_params
-        .iter()
-        .cloned()
-        .zip(root_args.iter().cloned())
-        .collect::<HashMap<_, _>>();
-    let Type::Class {
-        identity,
-        name,
-        type_args,
-        ..
-    } = owner.parent_type.as_ref()?.resolve_alias()
-    else {
-        return None;
-    };
-    let parent_identity = identity.as_deref().unwrap_or(name);
-    let (parent_module, parent_name) = parent_identity.rsplit_once('.')?;
-    let parent_params = external_defs
-        .class_type_params
-        .get(parent_module)
-        .and_then(|classes| classes.get(parent_name))?;
-    let parent_bindings = parent_params
-        .iter()
-        .cloned()
-        .zip(
-            type_args
-                .iter()
-                .map(|argument| substitute_type_vars(argument, &root_bindings)),
-        )
-        .collect::<HashMap<_, _>>();
     let mut method = external_defs
-        .structural_methods_for(parent_module)?
-        .get(parent_name)?
+        .structural_methods_for(boundary_module)?
+        .get(boundary_name)?
         .iter()
         .find(|method| method.handler_target.as_ref() == Some(&handler.callable))?
         .clone();
     for parameter in &mut method.params {
         parameter.ty = canonicalize_user_export_type(
-            &substitute_type_vars(&parameter.ty, &parent_bindings),
+            &substitute_type_vars(&parameter.ty, boundary_bindings),
             local_classes,
         );
     }
     method.return_type = canonicalize_user_export_type(
-        &substitute_type_vars(&method.return_type, &parent_bindings),
+        &substitute_type_vars(&method.return_type, boundary_bindings),
         local_classes,
     );
     Some(method)

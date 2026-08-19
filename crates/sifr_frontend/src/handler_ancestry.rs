@@ -4,14 +4,23 @@ use sifr_lowering::{substitute_type_vars, ExternalDefs, HirClass, LoweringResult
 use sifr_type_system::Type;
 use std::collections::{BTreeSet, HashMap};
 
-pub(crate) fn bindings_for_owner(
+pub(crate) enum HandlerAncestry {
+    Owner(HashMap<String, Type>),
+    ImportedBoundary {
+        module: String,
+        name: String,
+        bindings: HashMap<String, Type>,
+    },
+}
+
+pub(crate) fn resolve(
     module_name: &str,
     root: &HirClass,
     root_type_args: &[Type],
     owner_identity: &str,
     lowering: &LoweringResult,
     external_defs: &ExternalDefs,
-) -> Option<HashMap<String, Type>> {
+) -> Option<HandlerAncestry> {
     let bindings = root
         .type_params
         .iter()
@@ -38,13 +47,13 @@ fn walk_local(
     lowering: &LoweringResult,
     external_defs: &ExternalDefs,
     visiting: &mut BTreeSet<String>,
-) -> Option<HashMap<String, Type>> {
+) -> Option<HandlerAncestry> {
     let current_identity = current
         .identity
         .clone()
         .unwrap_or_else(|| format!("{module_name}.{}", current.name));
     if current_identity == owner_identity {
-        return Some(bindings);
+        return Some(HandlerAncestry::Owner(bindings));
     }
     if !visiting.insert(current_identity) {
         return None;
@@ -87,13 +96,19 @@ fn walk_local(
             visiting,
         );
     }
-    if parent_identity != owner_identity {
-        return None;
-    }
     let (source_module, source_name) = parent_identity.rsplit_once('.')?;
     let type_params = external_defs
         .class_type_params
         .get(source_module)
         .and_then(|classes| classes.get(source_name))?;
-    Some(type_params.iter().cloned().zip(parent_args).collect())
+    let parent_bindings = type_params.iter().cloned().zip(parent_args).collect();
+    if parent_identity == owner_identity {
+        Some(HandlerAncestry::Owner(parent_bindings))
+    } else {
+        Some(HandlerAncestry::ImportedBoundary {
+            module: source_module.to_string(),
+            name: source_name.to_string(),
+            bindings: parent_bindings,
+        })
+    }
 }
