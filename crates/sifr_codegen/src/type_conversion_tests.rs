@@ -3,6 +3,7 @@ use crate::{
     RustTrait, RustType,
 };
 use sifr_type_system::{FixedIntType, FunctionType, ParamConvention, PythonArrowKind, Type};
+use std::collections::HashMap;
 
 fn assert_named_nodes_are_leaf_paths(ty: &RustType) {
     match ty {
@@ -193,4 +194,44 @@ fn malformed_callable_returns_one_structured_error() {
         error.message,
         "unsupported callable type: 1 parameters but 0 conventions"
     );
+}
+
+#[test]
+fn malformed_signature_emits_one_production_codegen_error() {
+    let malformed = Type::Callable(vec![Type::Int], Vec::new(), Box::new(Type::Str));
+    let module = sifr_ir::HirModule {
+        functions: vec![sifr_ir::HirFunction {
+            name: "broken".to_string(),
+            params: vec![sifr_ir::HirParam {
+                name: "callback".to_string(),
+                ty: malformed,
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::own(),
+            }],
+            return_type: Type::None,
+            body: Vec::new(),
+            is_async: false,
+            method_kind: sifr_ir::MethodKind::Regular,
+            receiver: None,
+            decorators: Vec::new(),
+            rust_interop: Vec::new(),
+            python_interop: Vec::new(),
+            compiler_intrinsic: None,
+            type_params: Vec::new(),
+        }],
+        classes: Vec::new(),
+        imports: Vec::new(),
+        constants: Vec::new(),
+        generic_functions: HashMap::new(),
+        type_param_bounds: HashMap::new(),
+    };
+
+    let generated = crate::generate_rust_with_metadata(&module).rust_source;
+    assert_eq!(
+        generated.matches("compile_error!").count(),
+        1,
+        "{generated}"
+    );
+    assert!(generated.contains("unsupported callable type: 1 parameters but 0 conventions"));
 }

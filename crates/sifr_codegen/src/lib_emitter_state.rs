@@ -360,6 +360,11 @@ impl RustEmitter {
         let saved_module_name = self.current_module_name.clone();
         self.current_module_name = module_name.map(str::to_string);
 
+        if self.reject_invalid_codegen_module_types(module) {
+            self.current_module_name = saved_module_name;
+            return;
+        }
+
         self.prescan_module_metadata(module);
 
         self.emit_module_constants(module, module_public);

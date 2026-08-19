@@ -1,6 +1,6 @@
 use crate::{RustEmitter, RustItem};
 use sifr_ir::{HirClass, HirFunction, HirStmt};
-use sifr_type_system::{FunctionType, Type};
+use sifr_type_system::{FunctionType, OwnershipKind, Type};
 use std::collections::{HashMap, HashSet};
 
 impl RustEmitter {
@@ -133,45 +133,248 @@ impl RustEmitter {
     /// Convert a Sifr type to structured Rust IR, filling inferred generic
     /// arguments for classes whose HIR type does not carry explicit arguments.
     pub(crate) fn rust_ir_type_with_generics(&self, ty: &Type) -> crate::RustType {
-        if let Type::Class {
-            name, type_args, ..
-        } = ty
-        {
-            let base = crate::sifr_type_to_rust_type(ty);
-            if !self.generic_classes.contains(name) || !type_args.is_empty() {
-                return base;
+        match ty {
+            Type::Never => crate::RustType::Named("std::convert::Infallible".to_string()),
+            Type::List(inner) | Type::Iterable(inner) => {
+                crate::RustType::Vec(Box::new(self.rust_ir_type_with_generics(inner)))
             }
-            let params = self
-                .infer_generic_class_type_args(name, ty)
-                .map(|args| {
-                    args.iter()
-                        .map(|arg| self.rust_ir_type_with_generics(arg))
-                        .collect::<Vec<_>>()
-                })
-                .or_else(|| {
-                    self.generic_class_params.get(name).map(|params| {
-                        params
+            Type::Dict(key, value) => crate::RustType::HashMap(
+                Box::new(self.rust_ir_type_with_generics(key)),
+                Box::new(self.rust_ir_type_with_generics(value)),
+            ),
+            Type::Set(inner) => {
+                crate::RustType::HashSet(Box::new(self.rust_ir_type_with_generics(inner)))
+            }
+            Type::Tuple(items) => {
+                if let Some((element, len)) = crate::homogeneous_large_tuple_backing_array(ty) {
+                    crate::RustType::Array {
+                        element: Box::new(self.rust_ir_type_with_generics(element)),
+                        len,
+                    }
+                } else {
+                    crate::RustType::Tuple(
+                        items
                             .iter()
-                            .cloned()
-                            .map(crate::RustType::Named)
-                            .collect::<Vec<_>>()
-                    })
-                });
-            if let (crate::RustType::Named(name), Some(params)) = (&base, params) {
-                return crate::RustType::Generic {
-                    base: name.clone(),
-                    params,
-                };
+                            .map(|item| self.rust_ir_type_with_generics(item))
+                            .collect(),
+                    )
+                }
             }
-            return base;
+            Type::Iterator(inner) => crate::RustType::Boxed(Box::new(crate::RustType::DynTrait {
+                trait_: crate::RustTrait::Named {
+                    name: "Iterator".to_string(),
+                    params: Vec::new(),
+                    associated_types: vec![(
+                        "Item".to_string(),
+                        self.rust_ir_type_with_generics(inner),
+                    )],
+                },
+                auto_traits: Vec::new(),
+            })),
+            Type::Function(function) | Type::AsyncFunction(function) => crate::RustType::Fn {
+                params: function
+                    .params
+                    .iter()
+                    .map(|(_, param, _)| self.rust_ir_type_with_generics(param))
+                    .collect(),
+                ret: Box::new(self.rust_ir_type_with_generics(&function.return_type)),
+            },
+            Type::Result(ok, err) => crate::RustType::Result(
+                Box::new(self.rust_ir_type_with_generics(ok)),
+                Box::new(self.rust_ir_type_with_generics(err)),
+            ),
+            Type::Task(ok, err) => self.generic_runtime_type("__SifrTask", ok, err),
+            Type::BlockingTask(ok, err) => self.generic_runtime_type("__SifrBlockingTask", ok, err),
+            Type::JoinSet(ok, err) => self.generic_runtime_type("__SifrJoinSet", ok, err),
+            Type::TaskResult(ok, err) => self.generic_runtime_type("__SifrTaskResult", ok, err),
+            Type::Failure(err) => crate::RustType::Generic {
+                base: "__SifrFailure".to_string(),
+                params: vec![self.rust_ir_type_with_generics(err)],
+            },
+            Type::TimeoutResult(err) => crate::RustType::Generic {
+                base: "__SifrTimeoutResult".to_string(),
+                params: vec![self.rust_ir_type_with_generics(err)],
+            },
+            Type::Select2(first, second) => {
+                self.generic_runtime_type("__SifrSelect2", first, second)
+            }
+            Type::AsyncGenerator(item, err) => {
+                self.generic_runtime_type("AsyncGenerator", item, err)
+            }
+            Type::AsyncIterator(item, err) => self.generic_runtime_type("AsyncIterator", item, err),
+            Type::Coroutine(ok, err) => {
+                Self::future_rust_type_with_generics(crate::RustType::Result(
+                    Box::new(self.rust_ir_type_with_generics(ok)),
+                    Box::new(self.rust_ir_type_with_generics(err)),
+                ))
+            }
+            Type::Awaitable(result) => {
+                Self::future_rust_type_with_generics(self.rust_ir_type_with_generics(result))
+            }
+            Type::PythonBuffer(element) => crate::RustType::Generic {
+                base: "::sifr_stdlib::python::PythonBuffer".to_string(),
+                params: vec![self.rust_ir_type_with_generics(element)],
+            },
+            Type::PythonDlpackTensor(element) => crate::RustType::Generic {
+                base: "::sifr_stdlib::python::PythonDlpackTensor".to_string(),
+                params: vec![self.rust_ir_type_with_generics(element)],
+            },
+            Type::Union(_) => ty.optional_member_type().map_or_else(
+                || crate::sifr_type_to_rust_type(ty),
+                |member| {
+                    crate::RustType::Option(Box::new(self.rust_ir_type_with_generics(&member)))
+                },
+            ),
+            Type::Alias { body, .. } => self.rust_ir_type_with_generics(body),
+            Type::Class {
+                name, type_args, ..
+            } => self.rust_ir_class_type_with_generics(name, type_args, ty),
+            Type::Callable(params, conventions, ret) => {
+                self.rust_ir_callable_type_with_generics(params, conventions, ret, false, false)
+            }
+            Type::AsyncCallable(params, conventions, ret) => {
+                self.rust_ir_callable_type_with_generics(params, conventions, ret, true, false)
+            }
+            _ => crate::sifr_type_to_rust_type(ty),
         }
-        crate::sifr_type_to_rust_type(ty)
     }
 
     pub(crate) fn rust_ir_struct_field_type_with_generics(&self, ty: &Type) -> crate::RustType {
         match ty {
-            Type::Callable(..) | Type::AsyncCallable(..) => crate::sifr_type_to_rust_field_type(ty),
+            Type::Callable(params, conventions, ret) => {
+                self.rust_ir_callable_type_with_generics(params, conventions, ret, false, true)
+            }
+            Type::AsyncCallable(params, conventions, ret) => {
+                self.rust_ir_callable_type_with_generics(params, conventions, ret, true, true)
+            }
             _ => self.rust_ir_type_with_generics(ty),
+        }
+    }
+
+    fn rust_ir_class_type_with_generics(
+        &self,
+        name: &str,
+        type_args: &[Type],
+        ty: &Type,
+    ) -> crate::RustType {
+        let base = crate::sifr_type_to_rust_type(ty);
+        if !self.generic_classes.contains(name) {
+            return base;
+        }
+        let base_name = match base {
+            crate::RustType::Named(name) | crate::RustType::Generic { base: name, .. } => name,
+            other => return other,
+        };
+        let args = if type_args.is_empty() {
+            self.infer_generic_class_type_args(name, ty).or_else(|| {
+                self.generic_class_params.get(name).map(|params| {
+                    params
+                        .iter()
+                        .cloned()
+                        .map(Type::TypeVar)
+                        .collect::<Vec<_>>()
+                })
+            })
+        } else {
+            Some(type_args.to_vec())
+        };
+        args.map_or(crate::RustType::Named(base_name.clone()), |args| {
+            crate::RustType::Generic {
+                base: base_name,
+                params: args
+                    .iter()
+                    .map(|arg| self.rust_ir_type_with_generics(arg))
+                    .collect(),
+            }
+        })
+    }
+
+    fn generic_runtime_type(&self, base: &str, first: &Type, second: &Type) -> crate::RustType {
+        crate::RustType::Generic {
+            base: base.to_string(),
+            params: vec![
+                self.rust_ir_type_with_generics(first),
+                self.rust_ir_type_with_generics(second),
+            ],
+        }
+    }
+
+    fn future_rust_type_with_generics(output: crate::RustType) -> crate::RustType {
+        crate::RustType::Generic {
+            base: "std::pin::Pin".to_string(),
+            params: vec![crate::RustType::Boxed(Box::new(
+                crate::RustType::DynTrait {
+                    trait_: crate::RustTrait::Named {
+                        name: "std::future::Future".to_string(),
+                        params: Vec::new(),
+                        associated_types: vec![("Output".to_string(), output)],
+                    },
+                    auto_traits: vec!["Send".to_string()],
+                },
+            ))],
+        }
+    }
+
+    fn rust_ir_callable_type_with_generics(
+        &self,
+        params: &[Type],
+        conventions: &[sifr_type_system::ParamConvention],
+        ret: &Type,
+        is_async: bool,
+        boxed_field: bool,
+    ) -> crate::RustType {
+        let params = params
+            .iter()
+            .zip(conventions)
+            .map(|(param, convention)| {
+                let converted = self.rust_ir_type_with_generics(param);
+                if convention.is_shared_borrow() && param.ownership() == OwnershipKind::Move {
+                    crate::RustType::Ref {
+                        mutable: false,
+                        inner: Box::new(converted),
+                    }
+                } else if convention.is_mut_borrow() && param.ownership() == OwnershipKind::Move {
+                    crate::RustType::Ref {
+                        mutable: true,
+                        inner: Box::new(converted),
+                    }
+                } else {
+                    converted
+                }
+            })
+            .collect();
+        let ret = if is_async {
+            Some(Box::new(Self::future_rust_type_with_generics(
+                self.rust_ir_type_with_generics(ret),
+            )))
+        } else if matches!(ret.resolve_alias(), Type::None) {
+            None
+        } else {
+            Some(Box::new(self.rust_ir_type_with_generics(ret)))
+        };
+        let trait_ = crate::RustTrait::Callable {
+            name: "Fn".to_string(),
+            params,
+            ret,
+        };
+        if boxed_field {
+            crate::RustType::Boxed(Box::new(crate::RustType::DynTrait {
+                trait_,
+                auto_traits: if is_async {
+                    vec!["Send".to_string(), "Sync".to_string()]
+                } else {
+                    Vec::new()
+                },
+            }))
+        } else {
+            crate::RustType::ImplTrait {
+                trait_,
+                auto_traits: if is_async {
+                    vec!["Send".to_string(), "Sync".to_string()]
+                } else {
+                    Vec::new()
+                },
+            }
         }
     }
 
@@ -620,6 +823,35 @@ mod tests {
         assert_eq!(
             emitter.render_rust_type_with_generics(&ty),
             format!("{canonical}<i64>")
+        );
+    }
+
+    #[test]
+    fn nested_generic_classes_keep_emitter_owned_arguments() {
+        let mut emitter = RustEmitter::new();
+        emitter.generic_classes.insert("Counter".to_string());
+        emitter
+            .generic_class_params
+            .insert("Counter".to_string(), vec!["T".to_string()]);
+        let counter = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "Counter".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+
+        assert_eq!(
+            emitter.render_rust_type_with_generics(&Type::List(Box::new(counter))),
+            "Vec<Counter<T>>"
+        );
+        assert_eq!(
+            emitter.render_rust_type_with_generics(&Type::Result(
+                Box::new(Type::Int),
+                Box::new(Type::Never),
+            )),
+            "Result<i64, ::std::convert::Infallible>"
         );
     }
 }
