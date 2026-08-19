@@ -162,6 +162,9 @@ pub(in crate::lower) fn resolve_imports_early(
     ctx.local_structural_marker_declared = stmts
         .iter()
         .any(|stmt| matches!(stmt, Stmt::ClassDef(class) if class.name.as_str() == "Structural"));
+    ctx.local_string_structural_marker_declared = stmts.iter().any(
+        |stmt| matches!(stmt, Stmt::ClassDef(class) if class.name.as_str() == "StringStructural"),
+    );
     ctx.local_static_program_marker_declared = stmts.iter().any(
         |stmt| matches!(stmt, Stmt::ClassDef(class) if class.name.as_str() == "StaticProgram"),
     );
@@ -208,6 +211,13 @@ pub(in crate::lower) fn resolve_imports_early(
                     .any(|alias| alias.name.as_str() == "Structural" && alias.asname.is_none())
             {
                 ctx.canonical_structural_marker_imported = true;
+            }
+            if module_name == "sifr.meta"
+                && import_from.names.iter().any(|alias| {
+                    alias.name.as_str() == "StringStructural" && alias.asname.is_none()
+                })
+            {
+                ctx.canonical_string_structural_marker_imported = true;
             }
             if module_name == "sifr.meta"
                 && import_from

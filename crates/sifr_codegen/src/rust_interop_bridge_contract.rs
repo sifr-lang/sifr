@@ -358,7 +358,11 @@ impl ModuleCatalog {
                                     [bound]
                                         if matches!(
                                             bound.as_str(),
-                                            "Structural" | "StaticProgram" | "MethodSlots" | "Context"
+                                            "Structural"
+                                                | "StringStructural"
+                                                | "StaticProgram"
+                                                | "MethodSlots"
+                                                | "Context"
                                         )
                                 )
                             })

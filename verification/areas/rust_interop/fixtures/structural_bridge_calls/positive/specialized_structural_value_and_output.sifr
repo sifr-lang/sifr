@@ -4,12 +4,17 @@
 # execution-kind: runtime-observed
 # expected-result: pass
 
-from sifr.meta import Structural
+from sifr.meta import StringStructural, Structural
 from sifr.json import JsonValue
 
 
 class StructuralBridgeError(Error):
     message: str
+
+
+class StringEnvelope:
+    label: str
+    tags: list[str]
 
 
 @rust.opaque(
@@ -28,6 +33,13 @@ class MappedToken:
 @rust.structural
 @rust(bridge.structural.observe)
 def observe_structural[T: Structural](value: T) -> Result[str, StructuralBridgeError | RustPanicError]: ...
+
+
+@rust.structural
+@rust(bridge.structural.observe)
+def observe_string_structural[T: StringStructural](
+    value: T,
+) -> Result[str, StructuralBridgeError | RustPanicError]: ...
 
 
 @rust.structural
@@ -60,6 +72,10 @@ def mapped_panic_is_contained() -> bool:
 
 def verify_specialized_structural_value_and_output() -> Result[str, StructuralBridgeError | RustPanicError]:
     try:
+        strings_projection: str = observe_string_structural(
+            StringEnvelope("installed", ["one", "two"])
+        )
+        assert strings_projection == "records=1;sequences=1;optionals=0;strings=installed,one,two"
         mapped: MappedToken = construct_mapped("installed-token")
         mapped_value: str = mapped.value()
         assert mapped_value == "installed-token"
