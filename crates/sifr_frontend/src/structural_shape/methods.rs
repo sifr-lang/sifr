@@ -271,24 +271,28 @@ fn described_handler(
                             .iter()
                             .chain(owner_class.operator_impls.iter().map(|(_, method)| method))
                             .find(|method| method.name == hir_name)
-                            .map(|method| (source_name, owner_class, method))
+                            .map(|method| (source_name, method))
                     })
             })
             .flatten()
+            .and_then(|(source_name, method)| {
+                match crate::handler_ancestry::resolve(
+                    module_name,
+                    class,
+                    &root_args,
+                    owner,
+                    lowering,
+                    external_defs,
+                ) {
+                    Some(crate::handler_ancestry::HandlerAncestry::Owner(bindings)) => {
+                        Some((source_name, method, bindings))
+                    }
+                    _ => None,
+                }
+            })
     });
-    let mut method = if let Some((source_name, _owner_class, method)) = local_detail {
+    let mut method = if let Some((source_name, method, inherited_bindings)) = local_detail {
         let owner = format!("{source_name}.{declared_name}");
-        let inherited_bindings = match crate::handler_ancestry::resolve(
-            module_name,
-            class,
-            &root_args,
-            callable_owner.unwrap_or(&local_owner),
-            lowering,
-            external_defs,
-        ) {
-            Some(crate::handler_ancestry::HandlerAncestry::Owner(bindings)) => bindings,
-            _ => HashMap::new(),
-        };
         described_method(
             module_name,
             &owner,

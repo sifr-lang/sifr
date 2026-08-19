@@ -896,6 +896,8 @@ avoiding a cycle with later handler and attached-API outputs.
 Generic alias instances specialize their arguments and bodies before structural substitution.
 Generic ancestor walks require exact parameter and argument arity. Unspecialized exports pass
 their declaration parameters as explicit symbolic arguments instead of leaving bindings absent.
+An unresolved handler ancestry never substitutes a partial signature. Structural metadata keeps
+an opaque checked-handler contract until complete ancestry becomes available.
 
 Structural shape derivation specializes finalized adapter field-plan types with the concrete
 owner arguments before package specialization. Local and imported adapted generic classes use the

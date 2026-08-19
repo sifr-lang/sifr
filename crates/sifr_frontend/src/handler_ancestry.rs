@@ -115,7 +115,8 @@ fn bind_exact(
 #[cfg(test)]
 mod tests {
     use super::{resolve, HandlerAncestry};
-    use sifr_lowering::{lower_module, ExternalDefs};
+    use crate::{collect_module_exports, compile_module_hir, FrontendDiagnosticStyle};
+    use sifr_lowering::{lower_module, ExternalDefs, LoweringResult};
     use sifr_syntax::parse_module_suite;
     use sifr_type_system::Type;
 
@@ -126,6 +127,17 @@ mod tests {
         )
         .expect("fixture parses");
         lower_module(&parsed).expect("fixture lowers")
+    }
+
+    fn compile(module: &str, source: &str, external_defs: &ExternalDefs) -> LoweringResult {
+        let parsed = parse_module_suite(source, None).expect("fixture parses");
+        compile_module_hir(
+            module,
+            &parsed,
+            external_defs,
+            FrontendDiagnosticStyle::Bare,
+        )
+        .expect("fixture compiles")
     }
 
     #[test]
@@ -159,6 +171,35 @@ mod tests {
             "fixture.Base",
             &lowered,
             &ExternalDefs::default(),
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn imported_generic_ancestor_rejects_parameter_arity_mismatch() {
+        let mut external_defs = ExternalDefs::default();
+        let models = compile("models", "class Base[T]:\n    value: T\n", &external_defs);
+        collect_module_exports("models", &models, &mut external_defs);
+        let consumer = compile(
+            "consumer",
+            "from models import Base\n\nclass Child[U](Base[U]):\n    pass\n",
+            &external_defs,
+        );
+        external_defs
+            .class_type_params
+            .get_mut("models")
+            .and_then(|classes| classes.get_mut("Base"))
+            .expect("imported parameter metadata exists")
+            .push("V".to_string());
+        let child = &consumer.module.classes[0];
+
+        assert!(resolve(
+            "consumer",
+            child,
+            &[Type::TypeVar("U".to_string())],
+            "models.Base",
+            &consumer,
+            &external_defs,
         )
         .is_none());
     }
