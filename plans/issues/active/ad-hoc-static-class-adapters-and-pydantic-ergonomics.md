@@ -1582,6 +1582,13 @@ Next action:
 
 Current state: M0-M8 are merged and recorded; M9 is in progress.
 
+External failure record (2026-08-19): compiler merge
+`6152fc50984395a640c42f31e9e270cd3a9e09c8` changed emitted Rust without
+refreshing 98 generated demo companions. The pre-v1 Item 13 create-PR and merge
+gates both stopped at `guardrail_demo_emitted_freshness`. Item 13 changed no
+compiler implementation or demo output, so it did not absorb or rerun this
+failure. Refresh or retire the companions under this phase's emission owner.
+
 Next action: implement M9 validators on package merge
 `cb23ac5ffde668b9c8cfce5362c5149d01463742` and compiler merge
 `6152fc50984395a640c42f31e9e270cd3a9e09c8`.
