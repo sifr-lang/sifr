@@ -2456,6 +2456,40 @@ item.
 Next action: audit every remaining compiler-owned M12 deferral and select the
 next mechanism item.
 
+#### Remaining Compiler Deferral Audit
+
+Audit base: `f117a7d47875c58f2c5eea767e01872173c3449b`.
+
+The audit uses four outcomes. `Complete` means merged code or tests close the
+recorded mechanism. `Certification` means no production defect remains and the
+evidence belongs in final source and installed-package certification.
+`Terminal` means a non-blocking refactor or performance idea has no measured
+correctness need. `Item` means a bounded mechanism or contract still needs
+work.
+
+| Original record | Audit outcome |
+| --- | --- |
+| M0-M2 declaration names, callable identity, keyword origins, and alias boundaries | Complete. `ClassDeclaration`, `CallableIdentity`, named argument origins, local malformed diagnostics, and exact alias rejection are implemented. Human and JSON span baselines plus the four-kind runtime fixture remain certification work. Cross-module const helpers remain optional package ergonomics. Lazy origin collection and label-count tuning are terminal without measured pressure. |
+| M3-M4 adapter execution, defaults, inheritance, and identity | Complete through the milestone work and M12 items 1-16. This includes semantic provider identity, generic substitution, canonical parent selection, bindings, and fail-closed parent reconstruction. Fixture registration, an unknown-plan-output case, and the stale `contract_types.sifr` check remain certification work. Allocation and wording cleanups are terminal. |
+| M5 handler-bearing method descriptors | Item 18. Audit declared-owned field and temporary receiver movement, state `Self` availability, pin `@staticmethod` stacking, and make the handler-plan ordering invariant local. Slot fallibility is already self-describing through `is_fallible`. Canonical adapter selection is complete. |
+| M6 structural public values and mappings | Item 19. Close structured same-path probe failures, local and exported malformed marking, explicit stdlib origin, the mapped-value `Send` and `Sync` backstop, and multi-module late-stdlib coverage. File headroom and body deduplication are terminal unless the guard or measurement requires work. |
+| M7 and M7b attached APIs | Item 20. Close cross-module set membership, non-method collisions, remaining generic-call metadata lookup, real-data-parent eligibility, canonical imported binding keys, module-less identities, and external or private filtering symmetry. Existing imported finality and unbound-generic tests are complete. Weaker emitted generic bounds only need durable documentation. |
+| M7c-M7d representation sequencing | Item 21. The two blocking optional-to-union defects are complete in M7d. Remaining work covers nested option-represented union payloads, per-member conversions, warning-clean `None` bindings, owned-argument widening, and shared assignment sequencing. Behavioral presence and absence runs belong to certification. |
+| M7e structural construction defaults | Item 22. Close generated-local naming, factory freshness on both sides, and the ordering contract for default evaluation before later required-field rejection. Split class-body lowering only when a touched file reaches the guard. |
+| M7f static-program integration | Item 23. Close speculative emitter-state restoration, imported mapped-opaque paths, const-evaluator and codegen `isinstance` parity, and any real generic-bound lifetime defect. Lifetime investigation that finds no defect becomes terminal evidence. |
+| M8-M10 compiler prerequisites | Items 24 and 25. Item 24 owns method-slot receiver roles, direct codegen and arity diagnostics, ordered projection, provisional `MethodSlots` parity, and wrongly bound owners. Item 25 owns deterministic multi-context selection and exact positive and negative generic-bound assertions. Body deduplication and clone-inference ideas are terminal without a failing case. |
+| M11 compiler prerequisites | Item 26. Close independent package-compilable negatives, direct attached codegen, stale installed-helper paths, duplicate decorator scans, concrete-owner assertions, generic hash predicate ownership, flattened parent defaults, recursive boxed parents, structural-bound prescans, and retained `StdlibFeature` inventory. Broad probe-bound and clone-inference ideas are terminal unless a focused failure proves a mechanism gap. |
+| M12 items 1-16 | Complete. Their remaining notes are assertions, comments, performance ideas, or certification work. Item 18 will make the handler ordering dependency local. Repeated ancestry walks and identity indexes are terminal without measured cost. |
+
+Compiler certification must include the package-neutral descriptor, adapter,
+mapping, attached-API, and static-program fixtures. It must include human and
+JSON diagnostics, source and installed toolchains, and the registered negative
+cases. The separately owned Rust-interop inputs and all `pre_v1` work remain
+outside this phase.
+
+Next action: implement item 18, the M5 handler-descriptor ownership and
+decorator contract audit.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
