@@ -156,3 +156,48 @@ where
     sink.value
         .ok_or_else(|| SlotFailure::new("receiver slot emitted no string output"))
 }
+
+pub fn invoke_receiver_value<Context, T>(
+    _model: &T,
+    value: String,
+    context: &mut Context,
+) -> Result<String, SlotFailure>
+where
+    T: sifr_runtime::interop::structural::StructuralConstruct
+        + sifr_runtime::interop::structural::StructuralProject
+        + sifr_runtime::interop::structural::StaticProgramType
+        + MethodSlotTable<Context>,
+    Context: StructuralType,
+{
+    let arena = StructuralArena::seal(
+        <(T, String)>::shape_identity(),
+        NodeId::new(0),
+        vec![
+            ArenaNode::aggregate(
+                StructuralKind::Tuple,
+                None,
+                vec![
+                    StructuralNodeEdge::new(StructuralEdgeKind::Index(0), NodeId::new(1)),
+                    StructuralNodeEdge::new(StructuralEdgeKind::Index(1), NodeId::new(3)),
+                ],
+            ),
+            ArenaNode::aggregate(
+                StructuralKind::Record,
+                Some("main.Record"),
+                vec![StructuralNodeEdge::new(
+                    StructuralEdgeKind::RecordField("value"),
+                    NodeId::new(2),
+                )],
+            ),
+            ArenaNode::scalar(
+                StructuralKind::String,
+                StructuralScalar::String("input".to_string()),
+            ),
+            ArenaNode::scalar(StructuralKind::String, StructuralScalar::String(value)),
+        ],
+    )?;
+    let mut sink = StringSink::default();
+    T::invoke_slot(2, arena, context, None, &mut sink)?;
+    sink.value
+        .ok_or_else(|| SlotFailure::new("receiver-value slot emitted no string output"))
+}

@@ -168,6 +168,37 @@ class Record:
 }
 
 #[test]
+fn receiver_slot_with_owned_value_uses_composite_structural_input() {
+    let mut external_defs = ExternalDefs::default();
+    install_specializer(&mut external_defs, &["target.Record::serialize"]);
+    let result = compile(
+        "target",
+        r#"
+from fixture.slots import describe
+
+@const_specialize("fixture.slots", "describe")
+class Record:
+    value: str
+
+    @metadata("fixture.slot", "serialize")
+    def serialize(self, own value: str) -> str:
+        return self.value + value
+"#,
+        &external_defs,
+    )
+    .expect("receiver and value method slot specializes");
+    let slot = &result.specialization_outputs[0].method_slots[0];
+    assert_eq!(
+        slot.input_type,
+        sifr_type_system::Type::Tuple(vec![slot.owner_type.clone(), sifr_type_system::Type::Str,])
+    );
+    assert_eq!(
+        result.specialization_outputs[0].method_slot_context,
+        Some(StaticMethodSlotContext::None)
+    );
+}
+
+#[test]
 fn conflicting_context_borrow_modes_use_context_diagnostic() {
     let mut external_defs = ExternalDefs::default();
     install_specializer(

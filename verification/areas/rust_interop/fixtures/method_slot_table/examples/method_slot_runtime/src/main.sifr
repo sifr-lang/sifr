@@ -35,6 +35,11 @@ class Record(SlotContract):
         context.calls += 1
         return self.value + ""
 
+    @slot("serialize")
+    def serialize(self, own value: str, mut context: AppContext) -> str:
+        context.calls += 1
+        return self.value + "-" + value
+
 
 @const_specialize("method_slot_runtime.schema_program", "derive")
 class NoContextRecord(SlotContract):
@@ -77,6 +82,13 @@ def invoke_shared_slot[T: MethodSlots, C: Context](
 def invoke_receiver_slot[T: MethodSlots, C: Context](model: T, mut context: C) -> Result[str, SlotFailure | RustPanicError]: ...
 
 
+@rust.structural
+@rust(bridge.slots.invoke_receiver_value)
+def invoke_receiver_value_slot[T: MethodSlots, C: Context](
+    model: T, own value: str, mut context: C
+) -> Result[str, SlotFailure | RustPanicError]: ...
+
+
 def verify_method_slot_runtime() -> Result[str, SlotFailure | RustPanicError]:
     try:
         model: Record = Record("input")
@@ -98,6 +110,12 @@ def verify_method_slot_runtime() -> Result[str, SlotFailure | RustPanicError]:
         assert receiver_output == "input-receiver"
         assert context.calls == 2
         print(receiver_output)
+        receiver_value_output: str = invoke_receiver_value_slot(
+            model, "serialized", context
+        )
+        assert receiver_value_output == "input-serialized"
+        assert context.calls == 3
+        print(receiver_value_output)
         empty: NoContext = NoContext()
         no_context_model: NoContextRecord = NoContextRecord("input")
         no_context_output: str = invoke_slot(
@@ -109,7 +127,7 @@ def verify_method_slot_runtime() -> Result[str, SlotFailure | RustPanicError]:
         shared_output: str = invoke_shared_slot(
             shared_model, "value", context
         )
-        assert shared_output == "value-shared-2"
+        assert shared_output == "value-shared-3"
         print(shared_output)
         return "method-slot-dispatch-ok"
     except SlotFailure as error:
