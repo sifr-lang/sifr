@@ -266,16 +266,16 @@ fn retained_direct_dependencies(required_features: &HashSet<StdlibFeature>) -> V
 fn retained_dependency_specs(feature: StdlibFeature) -> &'static [&'static str] {
     match feature {
         StdlibFeature::BigDecimal => {
-            &["bigdecimal = { version = \"0.4.10\", features = [\"serde\"] }"]
+            &["bigdecimal = { version = \"=0.4.10\", features = [\"serde\"] }"]
         }
-        StdlibFeature::NumBigint => &["num-bigint = \"0.4.6\""],
-        StdlibFeature::NumTraits => &["num-traits = \"0.2.19\""],
-        StdlibFeature::Rayon => &["rayon = \"1.12.0\""],
+        StdlibFeature::NumBigint => &["num-bigint = \"=0.4.6\""],
+        StdlibFeature::NumTraits => &["num-traits = \"=0.2.19\""],
+        StdlibFeature::Rayon => &["rayon = \"=1.12.0\""],
         StdlibFeature::RustDecimal => {
-            &["rust_decimal = { version = \"1.41.0\", features = [\"maths\", \"serde-with-str\"] }"]
+            &["rust_decimal = { version = \"=1.41.0\", features = [\"maths\", \"serde-with-str\"] }"]
         }
         StdlibFeature::Tokio => {
-            &["tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"]
+            &["tokio = { version = \"=1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"]
         }
         _ => &[],
     }
@@ -318,7 +318,7 @@ fn push_unicode_escape(output: &mut String, value: u32) {
 
 #[cfg(test)]
 mod tests {
-    use super::{SysrootCrate, SysrootCrateDependency};
+    use super::{retained_dependency_specs, StdlibFeature, SysrootCrate, SysrootCrateDependency};
     use std::collections::BTreeSet;
     use std::path::PathBuf;
 
@@ -334,5 +334,28 @@ mod tests {
             dependency.cargo_line(),
             "sifr_stdlib = { path = \"/opt/sifr\\nsysroot/crates/sifr_stdlib\", default-features = false, features = [\"json\"] }"
         );
+    }
+
+    #[test]
+    fn retained_registry_dependencies_pin_authoritative_versions() {
+        for feature in [
+            StdlibFeature::BigDecimal,
+            StdlibFeature::NumBigint,
+            StdlibFeature::NumTraits,
+            StdlibFeature::Rayon,
+            StdlibFeature::RustDecimal,
+            StdlibFeature::Tokio,
+        ] {
+            for dependency in retained_dependency_specs(feature) {
+                let Some((_package, specification)) = dependency.split_once('=') else {
+                    panic!("retained dependency must contain an assignment: {dependency}");
+                };
+                let specification = specification.trim_start();
+                assert!(
+                    specification.starts_with("\"=") || specification.contains("version = \"="),
+                    "retained dependency must use an exact version: {dependency}"
+                );
+            }
+        }
     }
 }

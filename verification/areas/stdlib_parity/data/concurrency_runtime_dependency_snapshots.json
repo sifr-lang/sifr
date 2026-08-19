@@ -14,7 +14,7 @@
       "stdlib_modules": [],
       "required_features": ["tokio"],
       "dependencies": [
-        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
+        "tokio = { version = \"=1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
       ]
     },
     {
@@ -24,7 +24,7 @@
       "stdlib_modules": [],
       "required_features": ["tokio"],
       "dependencies": [
-        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
+        "tokio = { version = \"=1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
       ]
     },
     {
@@ -45,7 +45,7 @@
       "required_features": ["rayon"],
       "dependencies": [
         "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"numeric\"] }",
-        "rayon = \"1.12.0\""
+        "rayon = \"=1.12.0\""
       ]
     },
     {
@@ -69,7 +69,7 @@
       "required_features": ["sifr_runtime", "tokio"],
       "dependencies": [
         "sifr_runtime = { path = \"<sifr_runtime_path>\", default-features = false }",
-        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
+        "tokio = { version = \"=1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
       ]
     },
     {
@@ -79,7 +79,7 @@
       "stdlib_modules": [],
       "required_features": ["tokio"],
       "dependencies": [
-        "tokio = { version = \"1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
+        "tokio = { version = \"=1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
       ]
     }
   ]
