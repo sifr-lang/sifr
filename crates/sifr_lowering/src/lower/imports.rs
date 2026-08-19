@@ -1,4 +1,5 @@
 use ruff_text_size::TextRange;
+use sifr_ir::HirImport;
 use sifr_python_ast::Stmt;
 
 use super::imported_defaults::{
@@ -6,6 +7,23 @@ use super::imported_defaults::{
 };
 use super::{import_diagnostics, name_diagnostics, ExternalDefs, LowerCtx};
 use std::collections::HashMap;
+
+pub(in crate::lower) fn runtime_hir_import(
+    module: String,
+    mut names: Vec<String>,
+    mut aliases: Vec<(String, String)>,
+    externals: &ExternalDefs,
+) -> Option<HirImport> {
+    if let Some(generic_aliases) = externals.generic_type_aliases.get(&module) {
+        names.retain(|name| !generic_aliases.contains_key(name));
+        aliases.retain(|(name, _)| !generic_aliases.contains_key(name));
+    }
+    (!names.is_empty()).then_some(HirImport {
+        module,
+        names,
+        aliases,
+    })
+}
 
 pub(in crate::lower) fn import_constant(
     ctx: &mut LowerCtx,

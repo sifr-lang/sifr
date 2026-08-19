@@ -910,7 +910,8 @@ imports. The lowering substitutes the concrete owner and `Self`, infers residual
 records their concrete arguments in the emitted call identity, and applies the checked package
 function defaults to omitted public arguments. Instance bindings remove the hidden owner parameter
 before they map default indexes. A generic type alias can forward an attached type call when its
-concrete expansion resolves to an adapted class; the class remains the static-program owner. Type, shared-borrow,
+concrete expansion resolves to an adapted class; the class remains the static-program owner, and
+the compile-time alias does not become a generated Rust import. Type, shared-borrow,
 mutable-borrow, and owned receivers use the normal call and ownership checks; type-directed calls
 do not construct or pass a dummy owner value. For a structural Rust bridge, a type receiver's
 declared owner is a valid use of its exact `StaticProgram` type parameter. The generated call keeps

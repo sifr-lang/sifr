@@ -770,11 +770,11 @@ pub(in crate::lower) fn lower_module_impl(
                 }
             }
 
-            imports.push(HirImport {
-                module: module_name,
-                names,
-                aliases,
-            });
+            if let Some(import) =
+                imports::runtime_hir_import(module_name, names, aliases, externals)
+            {
+                imports.push(import);
+            }
         } else if let Stmt::Import(import_stmt) = stmt {
             for alias in &import_stmt.names {
                 let module_name = alias.name.to_string();

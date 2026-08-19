@@ -479,7 +479,7 @@ normal call-site inference. Omitted public arguments use the attached package
 function's checked defaults. An instance binding maps those defaults after it
 removes the hidden owner parameter. A concrete generic alias such as
 `TypeAdapter[Model] = Model` forwards a type call to `Model`; it does not own a
-separate static program.
+separate static program or emit a Rust import for the erased alias.
 
 A method descriptor call on a user method produces a sealed method-declaration
 identity in `ClassDeclaration[D]`. An adapter can return only that identity in
