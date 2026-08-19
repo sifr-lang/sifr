@@ -171,6 +171,7 @@ mod string_char_cache;
 mod string_char_cache_scan;
 mod structural_identity_codegen;
 mod structural_impl_codegen;
+mod structural_record_fields;
 pub use static_program_codegen::{
     emit_static_specialization_programs, method_slot_cache_fragment, static_program_cache_fragment,
     structural_static_program_owners, structural_static_program_owners_for_project,

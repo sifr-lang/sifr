@@ -1,4 +1,4 @@
-use sifr_lowering::{ExternalDefs, HirModule};
+use sifr_lowering::{ExternalDefs, HirClass, HirModule};
 use sifr_type_system::Type;
 use std::collections::HashMap;
 
@@ -9,6 +9,21 @@ pub(crate) fn should_export_callable(module_name: &str, callable_name: &str) -> 
 pub(crate) type GenericExports = HashMap<String, Vec<String>>;
 pub(crate) type BoundExports = HashMap<String, HashMap<String, Vec<String>>>;
 pub(crate) type ImportedClassAncestry = HashMap<String, (String, Option<String>)>;
+
+pub(crate) fn exported_class_fields(class: &HirClass) -> Vec<(String, Type)> {
+    class
+        .parent_type
+        .as_ref()
+        .and_then(|parent| match parent.resolve_alias() {
+            Type::Class { fields, .. } => Some(fields.as_slice()),
+            _ => None,
+        })
+        .into_iter()
+        .flatten()
+        .chain(class.fields.iter())
+        .cloned()
+        .collect()
+}
 
 pub(crate) fn imported_class_ancestry(
     module: &HirModule,

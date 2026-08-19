@@ -3,6 +3,7 @@ from fixture.facade import Contract, ContractError, contract_config, contract_fi
 from fixture.factories import Token as ExternalToken, make_names as external_names
 from fixture.models import (
     ImportedAttached as ImportedAlias,
+    ImportedConcrete,
     ImportedPlain as PlainAlias,
 )
 
@@ -45,6 +46,18 @@ class StructuralDefaults(Contract):
     names: list[str] = contract_field(default_factory=make_names)
 
 
+class GenericAttached[T](Contract):
+    value: T
+
+
+class ConcreteAttached(GenericAttached[int]):
+    label: str
+
+    def __init__(self, value: int, label: str):
+        super().__init__(value)
+        self.label = label
+
+
 def main() -> Result[None, ContractError | RustPanicError]:
     first: Model = Model(7)
     second: Model = Model(8)
@@ -76,6 +89,14 @@ def main() -> Result[None, ContractError | RustPanicError]:
     assert imported.inspect() == 41
     assert imported.touch() == 42
     assert plain.value == 12
+    concrete: ConcreteAttached = ConcreteAttached(13, "local")
+    imported_concrete: ImportedConcrete = ImportedConcrete(14, "imported")
+    assert ConcreteAttached.describe() == "attached-contract"
+    assert ImportedConcrete.describe() == "attached-contract"
+    assert concrete.value == 13
+    assert concrete.label == "local"
+    assert imported_concrete.value == 14
+    assert imported_concrete.label == "imported"
     try:
         identity_is_bound: bool = AttachedModel.program_identity_is_bound()
         assert identity_is_bound

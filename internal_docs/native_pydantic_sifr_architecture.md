@@ -763,6 +763,10 @@ Pydantic-Sifr uses these rules:
   declaration.
 - The data parent can be a concretely instantiated generic class that uses the
   same adapter provider.
+- A concrete child gets one static program from its flattened inherited and
+  local fields. Generated Rust keeps the concrete generic parent embedded.
+- The structural bridge constructs that embedded parent and projects inherited
+  fields through it. The parent must use the compiler-generated constructor.
 - Schema generation requires concrete type arguments.
 
 ### Identity and bounded evaluation
