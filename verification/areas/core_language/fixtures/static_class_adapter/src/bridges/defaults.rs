@@ -3,7 +3,7 @@ use core::fmt;
 use sifr_runtime::interop::structural::{
     structural_construct, ArenaNode, NodeId, StructuralArena, StructuralConstruct,
     StructuralContractError, StructuralEdgeKind, StructuralKind, StructuralNodeEdge,
-    StructuralScalar, StructuralType,
+    StructuralScalar, StructuralType, StaticProgramType,
 };
 
 #[derive(Debug)]
@@ -26,6 +26,13 @@ impl fmt::Display for ContractError {
 }
 
 impl std::error::Error for ContractError {}
+
+pub fn program_identity_is_bound<T>() -> Result<bool, ContractError>
+where
+    T: StaticProgramType,
+{
+    Ok(T::static_program().header().identity().as_bytes().len() == 32)
+}
 
 pub fn construct_partial<T>() -> Result<T, ContractError>
 where

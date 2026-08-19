@@ -909,7 +909,9 @@ method bodies. Calls lower directly to the declared package function through det
 imports. The lowering substitutes the concrete owner and `Self`, infers residual type parameters,
 and records their concrete arguments in the emitted call identity. Type, shared-borrow,
 mutable-borrow, and owned receivers use the normal call and ownership checks; type-directed calls
-do not construct or pass a dummy owner value.
+do not construct or pass a dummy owner value. For a structural Rust bridge, a type receiver's
+declared owner is a valid use of its exact `StaticProgram` type parameter. The generated call keeps
+that concrete Rust type argument even when no runtime parameter or result contains the owner.
 
 The Native Pydantic-Sifr consumer architecture is documented in
 [`native_pydantic_sifr_architecture.md`](native_pydantic_sifr_architecture.md).

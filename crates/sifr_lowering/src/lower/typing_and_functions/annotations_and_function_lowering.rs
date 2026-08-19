@@ -390,6 +390,8 @@ pub(in crate::lower) fn lower_function(
         .get::<str>(func.name.as_ref())
         .cloned()
         .unwrap_or_default();
+    let type_receiver_owner =
+        super::super::attached_api_declarations::type_receiver_owner_type_param(func);
     validate_structural_function_contract(
         StructuralFunctionContract {
             function_name: func.name.as_str(),
@@ -397,6 +399,7 @@ pub(in crate::lower) fn lower_function(
             return_type: &inferred_return_type,
             type_params: &type_params,
             declarations: &rust_interop,
+            type_receiver_owner: type_receiver_owner.as_deref(),
             is_async: effective_is_async,
             span: func.name.range(),
         },

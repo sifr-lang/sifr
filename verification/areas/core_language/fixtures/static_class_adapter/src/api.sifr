@@ -38,6 +38,20 @@ def construct_contract[T: StaticProgram]() -> Result[
 @attached_api(
     "fixture.api",
     "ContractApi",
+    public_name="program_identity_is_bound",
+    receiver="type",
+    owner="T",
+)
+@rust.structural
+@rust(bridge.defaults.program_identity_is_bound)
+def program_identity_is_bound_contract[T: StaticProgram]() -> Result[
+    bool, ContractError | RustPanicError
+]: ...
+
+
+@attached_api(
+    "fixture.api",
+    "ContractApi",
     public_name="echo",
     receiver="type",
     owner="T",
