@@ -1,6 +1,6 @@
 use crate::{LintOptions, LintResult, RuleMetadata, RULES};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -125,12 +125,15 @@ impl<'a> LintRunner<'a> {
         }
     }
 
-    pub fn run_paths(&self, paths: &[PathBuf]) -> Result<LintRun, Vec<RenderedDiagnostic>> {
+    pub fn run_paths(
+        &self,
+        paths: &[PathBuf],
+        provider: &mut impl SourceProvider,
+    ) -> Result<LintRun, Vec<RenderedDiagnostic>> {
         let mut phases = empty_phase_plan();
         set_phase(&mut phases, LintPhase::FileDiscovery, true);
-        let files = crate::collect_sifr_files_for_targets(paths, self.options)?;
+        let files = crate::collect_sifr_files_for_targets(paths, self.options, provider)?;
         let mut diagnostics = Vec::new();
-        let mut provider = DiskSourceProvider::new();
         for file in files {
             let source = provider.read_file(&file).map_err(|err| {
                 vec![crate::diagnostic(
@@ -282,6 +285,7 @@ fn merge_phases(target: &mut [PhaseExecution], source: &[PhaseExecution]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sifr_frontend::DiskSourceProvider;
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -332,7 +336,7 @@ mod tests {
         fs::create_dir_all(&root).unwrap();
         fs::write(root.join("main.sifr"), "def main():  \n").unwrap();
         let run = LintRunner::new(&LintOptions::default())
-            .run_paths(&[root.clone()])
+            .run_paths(&[root.clone()], &mut DiskSourceProvider::new())
             .unwrap();
         assert!(
             run.phases

@@ -3,6 +3,7 @@ use crate::graph::derive::{derive_package_graph, SifrPackageId};
 use crate::graph::type_identity::{PackageTypeIdentity, TypeIdentityMismatch};
 use crate::manifest::sifr::ImportRoot;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_frontend::DiskSourceProvider;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -27,7 +28,8 @@ fn same_import_root_can_resolve_to_different_versions_in_different_scopes() {
         ],
     ))
     .expect("metadata parses");
-    let graph = derive_package_graph(metadata).expect("graph derives");
+    let graph =
+        derive_package_graph(metadata, &mut DiskSourceProvider::new()).expect("graph derives");
 
     let image_scope = &graph.direct_dependency_scopes[&sifr_id(&image)];
     let physics_scope = &graph.direct_dependency_scopes[&sifr_id(&physics)];
@@ -55,7 +57,8 @@ fn duplicate_direct_import_root_in_one_scope_reports_0201() {
         &[edge(&app, "math1", &math_v1), edge(&app, "math2", &math_v2)],
     ))
     .expect("metadata parses");
-    let diagnostics = derive_package_graph(metadata).expect_err("ambiguous root fails");
+    let diagnostics = derive_package_graph(metadata, &mut DiskSourceProvider::new())
+        .expect_err("ambiguous root fails");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(
@@ -89,7 +92,8 @@ fn direct_dependency_aliases_allow_same_export_root_in_one_scope() {
         &[edge(&app, "math1", &math_v1), edge(&app, "math2", &math_v2)],
     ))
     .expect("metadata parses");
-    let graph = derive_package_graph(metadata).expect("aliases disambiguate");
+    let graph = derive_package_graph(metadata, &mut DiskSourceProvider::new())
+        .expect("aliases disambiguate");
     let app_scope = &graph.direct_dependency_scopes[&sifr_id(&app)];
 
     assert!(!app_scope

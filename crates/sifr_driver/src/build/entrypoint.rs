@@ -28,7 +28,7 @@ use crate::project::{
 use crate::stdlib::{compile_stdlib, StdlibCompiled};
 use crate::workspace::find_workspace_root;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_frontend::{FrontendDiagnosticStyle, FrontendSourceContext};
+use sifr_frontend::{FrontendDiagnosticStyle, FrontendSourceContext, SourceProvider};
 use sifr_lowering::LoweringOptions;
 use sifr_package::{PackageSourceMap, SifrPackageGraph, SifrPackageId};
 use std::collections::BTreeSet;
@@ -49,9 +49,11 @@ pub(crate) enum RootedEntrypoint<'a> {
     },
     Project {
         main_file: &'a Path,
+        provider: &'a mut dyn SourceProvider,
     },
     PackageProject {
         entrypoint: &'a PackageEntrypoint,
+        provider: &'a mut dyn SourceProvider,
     },
 }
 
@@ -67,8 +69,8 @@ impl RootedEntrypoint<'_> {
     fn display_path(&self) -> PathBuf {
         match self {
             Self::SingleFile { display_path, .. } => PathBuf::from(display_path),
-            Self::Project { main_file } => (*main_file).to_path_buf(),
-            Self::PackageProject { entrypoint } => entrypoint.main_file.clone(),
+            Self::Project { main_file, .. } => (*main_file).to_path_buf(),
+            Self::PackageProject { entrypoint, .. } => entrypoint.main_file.clone(),
         }
     }
 }
@@ -96,7 +98,7 @@ pub(crate) struct RootedEntrypointPlan {
 pub(crate) fn compile_single_file_frontend(
     source: &str,
 ) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {
-    RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
+    RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::SingleFile {
         source,
         display_path: "main",
         lowering_options: LoweringOptions::default(),
@@ -114,7 +116,7 @@ pub(crate) fn compile_single_file_entrypoint_with_metadata_and_options(
     source: &str,
     lowering_options: LoweringOptions,
 ) -> Result<CompiledSingleFileMetadata, Vec<RenderedDiagnostic>> {
-    let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
+    let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::SingleFile {
         source,
         display_path: "main",
         lowering_options,
@@ -131,7 +133,7 @@ pub(crate) fn check_single_file_entrypoint(
     entrypoint_file: &Path,
 ) -> Vec<RenderedDiagnostic> {
     let display_path = entrypoint_file.to_string_lossy();
-    match RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
+    match RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::SingleFile {
         source,
         display_path: &display_path,
         lowering_options: LoweringOptions::default(),
@@ -143,18 +145,29 @@ pub(crate) fn check_single_file_entrypoint(
 
 pub(crate) fn resolve_project_entrypoint_plan(
     main_file: &Path,
+    provider: &mut dyn SourceProvider,
 ) -> Result<RootedEntrypointPlan, Vec<RenderedDiagnostic>> {
-    RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project { main_file })
+    RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
+        main_file,
+        provider,
+    })
 }
 
 pub(crate) fn resolve_package_project_entrypoint_plan(
     entrypoint: &PackageEntrypoint,
+    provider: &mut dyn SourceProvider,
 ) -> Result<RootedEntrypointPlan, Vec<RenderedDiagnostic>> {
-    RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::PackageProject { entrypoint })
+    RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::PackageProject {
+        entrypoint,
+        provider,
+    })
 }
 
-pub(crate) fn emit_project_entrypoint(main_file: &Path) -> CompileResult {
-    let plan = match resolve_project_entrypoint_plan(main_file) {
+pub(crate) fn emit_project_entrypoint(
+    main_file: &Path,
+    provider: &mut dyn SourceProvider,
+) -> CompileResult {
+    let plan = match resolve_project_entrypoint_plan(main_file, provider) {
         Ok(plan) => plan,
         Err(errors) => return CompileResult::Errors { errors },
     };
@@ -171,7 +184,7 @@ pub(crate) fn emit_project_entrypoint(main_file: &Path) -> CompileResult {
 }
 
 pub(crate) fn build_rooted_entrypoint_binary_with_report(
-    entrypoint: &RootedEntrypoint<'_>,
+    entrypoint: RootedEntrypoint<'_>,
     output_dir: &Path,
 ) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
     let total_start = Instant::now();
@@ -213,9 +226,13 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
 
 pub(crate) fn build_cached_project_binary(
     main_file: &Path,
+    provider: &mut dyn SourceProvider,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
     build_cached_rooted_entrypoint_binary(
-        &RootedEntrypoint::Project { main_file },
+        RootedEntrypoint::Project {
+            main_file,
+            provider,
+        },
         main_file.parent().unwrap_or(Path::new(".")),
         "run",
     )
@@ -223,9 +240,13 @@ pub(crate) fn build_cached_project_binary(
 
 pub(crate) fn build_cached_package_project_binary(
     entrypoint: &PackageEntrypoint,
+    provider: &mut dyn SourceProvider,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
     build_cached_rooted_entrypoint_binary(
-        &RootedEntrypoint::PackageProject { entrypoint },
+        RootedEntrypoint::PackageProject {
+            entrypoint,
+            provider,
+        },
         entrypoint.main_file.parent().unwrap_or(Path::new(".")),
         "run",
     )
@@ -237,7 +258,7 @@ pub(crate) fn build_cached_single_file_binary(
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
     let display_path = entrypoint_file.to_string_lossy();
     build_cached_rooted_entrypoint_binary(
-        &RootedEntrypoint::SingleFile {
+        RootedEntrypoint::SingleFile {
             source,
             display_path: &display_path,
             lowering_options: LoweringOptions::default(),
@@ -248,7 +269,7 @@ pub(crate) fn build_cached_single_file_binary(
 }
 
 fn build_cached_rooted_entrypoint_binary(
-    entrypoint: &RootedEntrypoint<'_>,
+    entrypoint: RootedEntrypoint<'_>,
     cache_scope: &Path,
     cache_namespace: &str,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
@@ -298,19 +319,21 @@ fn build_cached_rooted_entrypoint_binary(
 }
 
 impl RootedEntrypointPlan {
-    fn from_entrypoint(entrypoint: &RootedEntrypoint<'_>) -> Result<Self, Vec<RenderedDiagnostic>> {
+    fn from_entrypoint(entrypoint: RootedEntrypoint<'_>) -> Result<Self, Vec<RenderedDiagnostic>> {
         let mut stages = Vec::new();
         Self::from_entrypoint_with_stages(entrypoint, &mut stages)
             .map(|(plan, _mode, _entrypoint_path)| plan)
     }
 
     fn from_entrypoint_with_stages(
-        entrypoint: &RootedEntrypoint<'_>,
+        entrypoint: RootedEntrypoint<'_>,
         stages: &mut Vec<BuildStageReport>,
     ) -> Result<(Self, BuildCompilationMode, PathBuf), Vec<RenderedDiagnostic>> {
+        let mode = entrypoint.build_mode();
+        let entrypoint_path = entrypoint.display_path();
         let stdlib = measure_stage(stages, "Loading Sifr standard library", compile_stdlib)?;
-        let package_entrypoint = match entrypoint {
-            RootedEntrypoint::PackageProject { entrypoint } => Some(*entrypoint),
+        let package_entrypoint = match &entrypoint {
+            RootedEntrypoint::PackageProject { entrypoint, .. } => Some(*entrypoint),
             RootedEntrypoint::SingleFile { .. } | RootedEntrypoint::Project { .. } => None,
         };
         let cargo_resolution = super::entrypoint_resolution::package_cargo_resolution_policy(
@@ -346,7 +369,10 @@ impl RootedEntrypointPlan {
                     None,
                 )
             }
-            RootedEntrypoint::Project { main_file } => {
+            RootedEntrypoint::Project {
+                main_file,
+                provider,
+            } => {
                 let project_dir = main_file.parent().unwrap_or(Path::new("."));
                 let Some(main_module_name) = main_file
                     .file_stem()
@@ -358,7 +384,7 @@ impl RootedEntrypointPlan {
                     )]);
                 };
                 let root_modules = BTreeSet::from([main_module_name.clone()]);
-                let resolver = match find_workspace_root(main_file)? {
+                let resolver = match find_workspace_root(main_file, provider)? {
                     Some(workspace_root) => {
                         ModuleResolver::with_workspace(project_dir, workspace_root)
                     }
@@ -369,6 +395,7 @@ impl RootedEntrypointPlan {
                     &resolver,
                     &root_modules,
                     DiscoveryDiagnosticStyle::ModuleName,
+                    provider,
                 )?;
                 if main_module_name != "main" {
                     if let Some(entry_module) = parsed_modules.remove(&main_module_name) {
@@ -392,7 +419,10 @@ impl RootedEntrypointPlan {
                     None,
                 )
             }
-            RootedEntrypoint::PackageProject { entrypoint } => {
+            RootedEntrypoint::PackageProject {
+                entrypoint,
+                provider,
+            } => {
                 let python_bridges = sifr_package::resolve_python_bridge_graph(
                     &entrypoint.graph,
                     &entrypoint.package_id,
@@ -410,6 +440,7 @@ impl RootedEntrypointPlan {
                     &entrypoint.package_id,
                     &entrypoint.main_file,
                     DiscoveryDiagnosticStyle::ModuleName,
+                    provider,
                 )?;
                 let entry_module_name = package_project.entry_module_name.clone();
                 if entry_module_name != "main" {
@@ -481,8 +512,6 @@ impl RootedEntrypointPlan {
         let (shape, project_lowering, python_runtime, python_bridges, rust_interop_context) =
             resolved;
 
-        let mode = entrypoint.build_mode();
-        let entrypoint_path = entrypoint.display_path();
         Ok((
             Self {
                 shape,
@@ -595,259 +624,5 @@ impl RootedEntrypointPlan {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use sifr_stdlib_manifest::StdlibFeature;
-
-    fn mktemp_dir(name: &str) -> PathBuf {
-        let unique = format!(
-            "sifr_rooted_entrypoint_{name}_{}_{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("time should move forward")
-                .as_nanos()
-        );
-        let dir = std::env::temp_dir().join(unique);
-        std::fs::create_dir_all(&dir).expect("temp dir should be created");
-        dir
-    }
-
-    #[test]
-    #[ignore = "generated build integration coverage runs in full validation profiles"]
-    fn test_single_file_entrypoint_plan_generates_main_only_project() {
-        let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::SingleFile {
-            source: "def main():\n    print(\"ok\")\n",
-            display_path: "main",
-            lowering_options: LoweringOptions::default(),
-        })
-        .expect("single-file entrypoint should compile");
-
-        let generated_project = plan
-            .into_generated_binary_project()
-            .expect("single-file generated project should succeed");
-
-        assert!(generated_project.support_modules.is_empty());
-        assert!(generated_project.main_rs.contains("fn main"));
-        assert!(generated_project.used_stdlib_modules.is_empty());
-        assert!(generated_project.required_features.is_empty());
-    }
-
-    #[test]
-    #[ignore = "generated build integration coverage runs in full validation profiles"]
-    fn test_project_entrypoint_plan_generates_support_modules() {
-        let dir = mktemp_dir("project_positive");
-        let main_file = dir.join("main.sifr");
-        std::fs::write(
-            &main_file,
-            "from helper import message\n\ndef main():\n    print(message())\n",
-        )
-        .expect("main should be written");
-        std::fs::write(
-            dir.join("helper.sifr"),
-            "def message() -> str:\n    return \"ok\"\n",
-        )
-        .expect("helper should be written");
-
-        let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project {
-            main_file: &main_file,
-        })
-        .expect("project entrypoint should compile");
-        let generated_project = plan
-            .into_generated_binary_project()
-            .expect("project generated project should succeed");
-
-        assert_eq!(
-            generated_project
-                .support_modules
-                .keys()
-                .cloned()
-                .collect::<Vec<_>>(),
-            vec!["helper".to_string()]
-        );
-        assert!(generated_project.main_rs.starts_with("mod helper;"));
-        assert!(generated_project.main_rs.contains("fn main"));
-
-        let _ = std::fs::remove_dir_all(dir);
-    }
-
-    #[test]
-    fn test_project_entrypoint_plan_reports_reachable_frontend_errors() {
-        let dir = mktemp_dir("project_negative");
-        let main_file = dir.join("main.sifr");
-        std::fs::write(
-            &main_file,
-            "from helper import broken\n\ndef main():\n    print(broken())\n",
-        )
-        .expect("main should be written");
-        std::fs::write(
-            dir.join("helper.sifr"),
-            "def broken() -> int:\n    return \"bad\"\n",
-        )
-        .expect("helper should be written");
-
-        let errors = match RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project {
-            main_file: &main_file,
-        }) {
-            Ok(_) => panic!("reachable project type error should fail plan construction"),
-            Err(errors) => errors,
-        };
-
-        assert!(errors
-            .iter()
-            .any(|error| error.message.contains("[helper] return type mismatch")));
-
-        let _ = std::fs::remove_dir_all(dir);
-    }
-
-    #[test]
-    #[ignore = "generated build integration coverage runs in full validation profiles"]
-    fn test_project_entrypoint_plan_aggregates_reachable_dependency_metadata() {
-        let dir = mktemp_dir("project_metadata_positive");
-        let main_file = dir.join("main.sifr");
-        std::fs::write(
-            &main_file,
-            "from helper import helper\n\ndef main():\n    print(helper())\n",
-        )
-        .expect("main should be written");
-        std::fs::write(
-            dir.join("helper.sifr"),
-            "from sifr.statistics import mean\n\n\
-def helper() -> int:\n    return 1\n",
-        )
-        .expect("helper should be written");
-
-        let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project {
-            main_file: &main_file,
-        })
-        .expect("project entrypoint should compile");
-        let generated_project = plan
-            .into_generated_binary_project()
-            .expect("project metadata aggregation should succeed");
-
-        assert!(generated_project
-            .used_stdlib_modules
-            .contains("sifr.statistics"));
-        assert!(generated_project.used_stdlib_modules.contains("sifr.math"));
-        assert!(generated_project
-            .required_features
-            .contains(&StdlibFeature::NumBigint));
-        assert!(generated_project
-            .required_features
-            .contains(&StdlibFeature::NumTraits));
-
-        let _ = std::fs::remove_dir_all(dir);
-    }
-
-    #[test]
-    #[ignore = "generated build integration coverage runs in full validation profiles"]
-    fn test_project_entrypoint_plan_ignores_unreachable_dependency_metadata() {
-        let dir = mktemp_dir("project_metadata_negative");
-        let main_file = dir.join("main.sifr");
-        std::fs::write(
-            &main_file,
-            "from helper import helper\n\ndef main():\n    print(helper())\n",
-        )
-        .expect("main should be written");
-        std::fs::write(
-            dir.join("helper.sifr"),
-            "def helper() -> int:\n    return 1\n",
-        )
-        .expect("helper should be written");
-        std::fs::write(
-            dir.join("unused_dependency.sifr"),
-            "from sifr.json import dumps\n\ndef unused() -> str:\n    return dumps({\"x\": 1})\n",
-        )
-        .expect("unused dependency should be written");
-
-        let plan = RootedEntrypointPlan::from_entrypoint(&RootedEntrypoint::Project {
-            main_file: &main_file,
-        })
-        .expect("project entrypoint should compile");
-        let generated_project = plan
-            .into_generated_binary_project()
-            .expect("project metadata aggregation should succeed");
-
-        assert!(!generated_project.used_stdlib_modules.contains("sifr.json"));
-        assert!(!generated_project
-            .required_features
-            .contains(&StdlibFeature::SerdeJson));
-
-        let _ = std::fs::remove_dir_all(dir);
-    }
-
-    #[test]
-    #[ignore = "generated build integration coverage runs in full validation profiles"]
-    fn test_cached_project_binary_reuses_workspace_for_unchanged_input() {
-        let dir = mktemp_dir("cached_project_reuse");
-        let main_file = dir.join("main.sifr");
-        std::fs::write(
-            &main_file,
-            "from helper import value\n\ndef main():\n    print(value())\n",
-        )
-        .expect("main should be written");
-        std::fs::write(
-            dir.join("helper.sifr"),
-            "def value() -> int:\n    return 11\n",
-        )
-        .expect("helper should be written");
-
-        let first =
-            build_cached_project_binary(&main_file).expect("first cached build should succeed");
-        assert!(first.binary_path().exists());
-        assert!(!first.build_report().cache_hit());
-
-        let first_output = std::process::Command::new(first.binary_path())
-            .output()
-            .expect("first cached binary should run");
-        assert!(first_output.status.success());
-        assert_eq!(String::from_utf8_lossy(&first_output.stdout).trim(), "11");
-
-        let second =
-            build_cached_project_binary(&main_file).expect("second cached build should succeed");
-        assert!(second.build_report().cache_hit());
-        assert_eq!(first.binary_path(), second.binary_path());
-
-        let second_output = std::process::Command::new(second.binary_path())
-            .output()
-            .expect("second cached binary should run");
-        assert!(second_output.status.success());
-        assert_eq!(String::from_utf8_lossy(&second_output.stdout).trim(), "11");
-
-        let _ = std::fs::remove_dir_all(dir);
-    }
-
-    #[test]
-    #[ignore = "generated build integration coverage runs in full validation profiles"]
-    fn test_cached_project_binary_invalidates_when_sources_change() {
-        let dir = mktemp_dir("cached_project_invalidation");
-        let main_file = dir.join("main.sifr");
-        std::fs::write(
-            &main_file,
-            "from helper import value\n\ndef main():\n    print(value())\n",
-        )
-        .expect("main should be written");
-        let helper = dir.join("helper.sifr");
-        std::fs::write(&helper, "def value() -> int:\n    return 21\n")
-            .expect("helper should be written");
-
-        let first =
-            build_cached_project_binary(&main_file).expect("first cached build should succeed");
-        assert!(!first.build_report().cache_hit());
-
-        std::fs::write(&helper, "def value() -> int:\n    return 22\n")
-            .expect("helper should be updated");
-        let second =
-            build_cached_project_binary(&main_file).expect("second cached build should succeed");
-        assert!(!second.build_report().cache_hit());
-        assert_ne!(first.binary_path(), second.binary_path());
-
-        let output = std::process::Command::new(second.binary_path())
-            .output()
-            .expect("updated cached binary should run");
-        assert!(output.status.success());
-        assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), "22");
-
-        let _ = std::fs::remove_dir_all(dir);
-    }
-}
+#[path = "entrypoint_tests.rs"]
+mod tests;

@@ -1,4 +1,4 @@
-use sifr_frontend::{DiskSourceProvider, SourceProvider, SourceProviderError};
+use sifr_frontend::{SourceProvider, SourceProviderError};
 use std::path::Path;
 
 const CANONICAL_PURE_MARKER: &str =
@@ -27,13 +27,7 @@ pub fn validate_pure_marker_source(source: &str) -> MarkerValidation {
     }
 }
 
-pub fn validate_pure_marker_file(path: &Path) -> Result<MarkerValidation, std::io::Error> {
-    let mut provider = DiskSourceProvider::new();
-    validate_pure_marker_file_with_provider(path, &mut provider)
-        .map_err(|error| std::io::Error::other(error.to_string()))
-}
-
-pub fn validate_pure_marker_file_with_provider(
+pub fn validate_pure_marker_file(
     path: &Path,
     provider: &mut impl SourceProvider,
 ) -> Result<MarkerValidation, SourceProviderError> {

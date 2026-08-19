@@ -3,6 +3,7 @@ use crate::{
     execute_test_runner_project, generate_test_runner_cargo_toml, run_tests,
 };
 use sifr_diagnostics::DiagnosticCode;
+use sifr_frontend::DiskSourceProvider;
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::{Arc, Barrier};
@@ -41,7 +42,8 @@ def test_import_parity():
     )
     .expect("test module should be written");
 
-    let result = run_tests(&test_dir).expect("test runner should compile and execute");
+    let result = run_tests(&test_dir, &mut DiskSourceProvider::new())
+        .expect("test runner should compile and execute");
     assert!(result, "sifr test run should succeed");
 
     let _ = std::fs::remove_dir_all(&test_dir);
@@ -79,7 +81,8 @@ def test_dotted_import():
     )
     .expect("test module should be written");
 
-    let result = run_tests(&test_dir).expect("test runner should compile dotted support modules");
+    let result = run_tests(&test_dir, &mut DiskSourceProvider::new())
+        .expect("test runner should compile dotted support modules");
     assert!(result, "sifr test run should succeed");
 
     let _ = std::fs::remove_dir_all(&test_dir);
@@ -113,7 +116,8 @@ fn test_run_tests_support_module_named_main_imports_root_owned_unions() {
     )
     .expect("test module should be written");
 
-    let result = run_tests(&test_dir).expect("test runner should compile unions and upcasts");
+    let result = run_tests(&test_dir, &mut DiskSourceProvider::new())
+        .expect("test runner should compile unions and upcasts");
     assert!(result, "sifr test run should succeed");
     let _ = std::fs::remove_dir_all(&test_dir);
 }
@@ -141,9 +145,10 @@ fn test_run_tests_reuses_cached_workspace_for_unchanged_project() {
     )
     .expect("test module should be written");
 
-    let discovered = discover_test_root_modules(&test_dir);
+    let discovered = discover_test_root_modules(&test_dir, &mut DiskSourceProvider::new());
     let generated_project =
-        build_test_runner_project(&test_dir, &discovered).expect("generated project should build");
+        build_test_runner_project(&test_dir, &discovered, &mut DiskSourceProvider::new())
+            .expect("generated project should build");
     let first = execute_test_runner_project(&generated_project)
         .expect("first test execution should succeed");
     assert!(first.success);
@@ -183,9 +188,10 @@ fn test_run_tests_invalidates_cached_workspace_when_sources_change() {
     )
     .expect("test module should be written");
 
-    let first_discovered = discover_test_root_modules(&test_dir);
-    let first_project = build_test_runner_project(&test_dir, &first_discovered)
-        .expect("generated project should build");
+    let first_discovered = discover_test_root_modules(&test_dir, &mut DiskSourceProvider::new());
+    let first_project =
+        build_test_runner_project(&test_dir, &first_discovered, &mut DiskSourceProvider::new())
+            .expect("generated project should build");
     let first =
         execute_test_runner_project(&first_project).expect("first test execution should succeed");
     assert!(first.success);
@@ -199,9 +205,13 @@ fn test_run_tests_invalidates_cached_workspace_when_sources_change() {
     )
     .expect("test module should update");
 
-    let second_discovered = discover_test_root_modules(&test_dir);
-    let second_project = build_test_runner_project(&test_dir, &second_discovered)
-        .expect("updated generated project should build");
+    let second_discovered = discover_test_root_modules(&test_dir, &mut DiskSourceProvider::new());
+    let second_project = build_test_runner_project(
+        &test_dir,
+        &second_discovered,
+        &mut DiskSourceProvider::new(),
+    )
+    .expect("updated generated project should build");
     let second =
         execute_test_runner_project(&second_project).expect("second test execution should succeed");
     assert!(second.success);
@@ -248,14 +258,14 @@ fn test_run_tests_parallel_invocations_are_isolated() {
     let first_path = first_dir.clone();
     let first = std::thread::spawn(move || {
         first_barrier.wait();
-        run_tests(&first_path)
+        run_tests(&first_path, &mut DiskSourceProvider::new())
     });
 
     let second_barrier = Arc::clone(&barrier);
     let second_path = second_dir.clone();
     let second = std::thread::spawn(move || {
         second_barrier.wait();
-        run_tests(&second_path)
+        run_tests(&second_path, &mut DiskSourceProvider::new())
     });
 
     barrier.wait();
@@ -300,7 +310,8 @@ fn test_run_tests_ignores_unrelated_non_closure_parse_errors() {
     std::fs::write(test_dir.join("unrelated_bad.sifr"), "def unrelated(:\n")
         .expect("unrelated sibling should be written");
 
-    let result = run_tests(&test_dir).expect("unrelated sibling parse errors should be ignored");
+    let result = run_tests(&test_dir, &mut DiskSourceProvider::new())
+        .expect("unrelated sibling parse errors should be ignored");
     assert!(result, "sifr test run should succeed");
 
     let _ = std::fs::remove_dir_all(&test_dir);
@@ -324,36 +335,38 @@ fn test_run_tests_reports_deterministic_parse_error_order() {
     std::fs::write(test_dir.join("test_a_bad.sifr"), "def a(:\n")
         .expect("test_a_bad should be written");
 
-    let first_diagnostics: Vec<(String, Vec<String>)> = run_tests(&test_dir)
-        .err()
-        .expect("parse errors should be reported")
-        .into_iter()
-        .map(|error| {
-            (
-                error.message,
-                error
-                    .children
-                    .into_iter()
-                    .map(|child| child.message)
-                    .collect(),
-            )
-        })
-        .collect();
-    let second_diagnostics: Vec<(String, Vec<String>)> = run_tests(&test_dir)
-        .err()
-        .expect("parse errors should be deterministic")
-        .into_iter()
-        .map(|error| {
-            (
-                error.message,
-                error
-                    .children
-                    .into_iter()
-                    .map(|child| child.message)
-                    .collect(),
-            )
-        })
-        .collect();
+    let first_diagnostics: Vec<(String, Vec<String>)> =
+        run_tests(&test_dir, &mut DiskSourceProvider::new())
+            .err()
+            .expect("parse errors should be reported")
+            .into_iter()
+            .map(|error| {
+                (
+                    error.message,
+                    error
+                        .children
+                        .into_iter()
+                        .map(|child| child.message)
+                        .collect(),
+                )
+            })
+            .collect();
+    let second_diagnostics: Vec<(String, Vec<String>)> =
+        run_tests(&test_dir, &mut DiskSourceProvider::new())
+            .err()
+            .expect("parse errors should be deterministic")
+            .into_iter()
+            .map(|error| {
+                (
+                    error.message,
+                    error
+                        .children
+                        .into_iter()
+                        .map(|child| child.message)
+                        .collect(),
+                )
+            })
+            .collect();
 
     assert_eq!(first_diagnostics, second_diagnostics);
     assert!(
@@ -392,7 +405,8 @@ fn test_run_tests_frontend_type_errors_use_single_path_prefix() {
     )
     .expect("bad test module should be written");
 
-    let errors = run_tests(&test_dir).expect_err("type errors in test module should fail frontend");
+    let errors = run_tests(&test_dir, &mut DiskSourceProvider::new())
+        .expect_err("type errors in test module should fail frontend");
     let messages: Vec<String> = errors.iter().map(|error| error.message.clone()).collect();
     assert!(messages
         .iter()

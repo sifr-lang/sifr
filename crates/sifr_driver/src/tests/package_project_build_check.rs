@@ -217,7 +217,8 @@ fn package_graph(
     });
     let metadata = sifr_package::parse_metadata_json(&metadata.to_string())
         .expect("metadata json should parse");
-    sifr_package::derive_package_graph(metadata).expect("package graph should derive")
+    sifr_package::derive_package_graph(metadata, &mut sifr_frontend::DiskSourceProvider::new())
+        .expect("package graph should derive")
 }
 
 fn package_entrypoint(
@@ -243,70 +244,9 @@ fn package_entrypoint(
     }
 }
 
-fn local_python_runtime(project_root: &Path) -> crate::PackagePythonRuntime {
-    local_python_runtime_with_roots(project_root, &[])
-}
-
-fn local_python_runtime_with_roots(
-    project_root: &Path,
-    roots: &[&str],
-) -> crate::PackagePythonRuntime {
-    let pyproject = project_root.join("pyproject.toml");
-    let lock = project_root.join("uv.lock");
-    std::fs::write(
-        &pyproject,
-        "[project]\nname = \"sifr-bridge-test\"\nversion = \"0.0.0\"\nrequires-python = \">=3.11\"\n",
-    )
-    .expect("test pyproject should be written");
-    let uv = std::process::Command::new("uv")
-        .args(["lock", "--project"])
-        .arg(project_root)
-        .output()
-        .expect("uv should create the test lock");
-    assert!(
-        uv.status.success(),
-        "uv lock should pass: {}",
-        String::from_utf8_lossy(&uv.stderr)
-    );
-    let venv_root = project_root.join(".venv");
-    let uv = std::process::Command::new("uv")
-        .args(["venv", "--python"])
-        .arg(if cfg!(windows) { "python" } else { "python3" })
-        .arg(&venv_root)
-        .output()
-        .expect("uv should create the test venv");
-    assert!(
-        uv.status.success(),
-        "uv venv should pass: {}",
-        String::from_utf8_lossy(&uv.stderr)
-    );
-    let interpreter = if cfg!(windows) {
-        venv_root.join("Scripts/python.exe")
-    } else {
-        venv_root.join("bin/python")
-    };
-    let request = sifr_package::PythonEnvironmentProbeRequest {
-        venv_root,
-        interpreter,
-        pyproject: Some(pyproject),
-        lock: Some(lock),
-        required_imports: Vec::new(),
-        declared_imports: Vec::new(),
-        native_imports: Vec::new(),
-    };
-    let probe = sifr_package::probe_python_environment(&request)
-        .expect("local CPython environment should probe");
-    let digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
-    crate::PackagePythonRuntime::from_probe(
-        &request,
-        &probe,
-        digest,
-        roots.iter().map(|root| (*root).to_string()).collect(),
-        roots.iter().map(|root| (*root).to_string()).collect(),
-        Vec::new(),
-    )
-}
-
+#[path = "package_project_build_check_support.rs"]
+mod support;
+use support::{local_python_runtime, local_python_runtime_with_roots};
 #[path = "package_python_async_runtime_tests.rs"]
 mod python_async_runtime_tests;
 #[path = "package_python_bridge_archive_tests.rs"]
@@ -357,10 +297,14 @@ def main():\n    assert parse_json() == 1\n    assert decode_json() == 2\n",
         &[&app, &json],
         &[package_edge(&app, "demo_json_v1", &json)],
     );
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(
         errors.is_empty(),
@@ -400,10 +344,14 @@ fn package_source_cannot_declare_compiler_intrinsics() {
         &[&app, &library],
         &[package_edge(&app, "sifr-demo-library", &library)],
     );
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(errors.iter().any(|error| {
         error.code == DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM.code()
@@ -429,10 +377,14 @@ fn package_python_bridge_target_activates_only_for_owning_package() {
         "def value():\n    return 42\n",
     );
     let graph = package_graph(&dir, &[&app], &[]);
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(
         errors.is_empty(),
@@ -469,11 +421,16 @@ def main():\n    print(parse_json())\n",
         &[&app, &json],
         &[package_edge(&app, "demo_json_v1", &json)],
     );
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
 
-    let artifact = build_cached_package_project(&entrypoint)
-        .expect("package namespace root project should build");
+    let artifact =
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("package namespace root project should build");
     let generated_project_root = generated_project_root(artifact.binary_path());
     assert!(
         !generated_project_root.join(".cargo/config.toml").exists(),
@@ -518,10 +475,15 @@ fn test_build_const_specialization_without_structural_runtime() {
         &[&app, &meta],
         &[package_edge(&app, "const_meta", &meta)],
     );
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
-    let artifact = build_cached_package_project(&entrypoint)
-        .expect("non-structural const specialization should build");
+    let artifact =
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("non-structural const specialization should build");
     let generated =
         std::fs::read_to_string(generated_project_root(artifact.binary_path()).join("src/main.rs"))
             .expect("generated source should be retained");
@@ -561,11 +523,16 @@ def main():\n    print(crc32(b\"abc\"))\n",
         &[&app, &crc32fast],
         &[package_edge(&app, "crc32fast", &crc32fast)],
     );
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
 
-    let artifact = build_cached_package_project(&entrypoint)
-        .expect("direct Rust interop project should build");
+    let artifact =
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("direct Rust interop project should build");
     let output = std::process::Command::new(artifact.binary_path())
         .output()
         .expect("package binary should run");
@@ -589,13 +556,18 @@ def describe(error: RuntimePythonError) -> str:\n    return error.kind\n\n\
 def main() -> None:\n    local: PythonError = PythonError(\"local\", 7)\n    assert local.code == 7\n",
     );
     let graph = package_graph(&dir, &[&app], &[]);
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let mut entrypoint =
         package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
     entrypoint.python_runtime = Some(local_python_runtime(&dir));
 
-    let artifact = build_cached_package_project(&entrypoint)
-        .expect("canonical and source PythonError declarations should build together");
+    let artifact =
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("canonical and source PythonError declarations should build together");
     let output = std::process::Command::new(artifact.binary_path())
         .output()
         .expect("package binary should run");
@@ -631,10 +603,14 @@ def main():\n    assert parse_json() == 1\n",
         &[&app, &json],
         &[package_edge(&app, "demo_json_v1", &json)],
     );
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(
         errors.is_empty(),
@@ -699,10 +675,14 @@ def physics_value() -> int:\n    return math_value()\n",
             package_edge(&physics, "demo_math", &math_v2),
         ],
     );
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(
         errors.is_empty(),
@@ -733,10 +713,14 @@ def main():\n    assert parse_json() == 1\n",
         &[&app, &json],
         &[package_edge(&app, "demo_json", &json)],
     );
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(
         errors
@@ -758,10 +742,14 @@ fn test_check_package_project_reclassifies_unresolved_bare_stdlib_import() {
 def main():\n    pass\n",
     );
     let graph = package_graph(&dir, &[&app], &[]);
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     let diagnostic = errors
         .iter()
@@ -808,10 +796,14 @@ def main():\n    assert parse_json() == 1\n",
             package_edge(&mid, "demo_json", &json),
         ],
     );
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(
         errors
@@ -841,10 +833,14 @@ def main():\n    assert value() == 1\n",
         &[&app, &cycle],
         &[package_edge(&app, "demo_cycle", &cycle)],
     );
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let entrypoint = package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(
         errors

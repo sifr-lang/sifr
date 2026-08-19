@@ -40,9 +40,9 @@ pub use worker_lanes::{
 };
 
 pub use sifr_frontend::{
-    DocumentVersion, FileId, FrontendInput, FrontendMode, InvalidationReport, ProjectRoot,
-    SourceOrigin, SourcePath, SourceText, WorkspaceTraceEvent, WorkspaceTraceLog,
-    WorkspaceTracePhase,
+    DiskSourceProvider, DocumentVersion, FileId, FrontendInput, FrontendMode, InvalidationReport,
+    ProjectRoot, SourceOrigin, SourcePath, SourceProvider, SourceText, WorkspaceTraceEvent,
+    WorkspaceTraceLog, WorkspaceTracePhase,
 };
 pub use sifr_syntax::TextPosition;
 
@@ -60,6 +60,7 @@ pub fn tooling_sysroot_probe() -> ToolingSysrootProbe {
 
 pub fn format_options_for_path(
     path: &std::path::Path,
+    provider: &mut impl SourceProvider,
 ) -> Result<FormatOptions, Vec<sifr_diagnostics::RenderedDiagnostic>> {
-    sifr_format::config::effective_format_options_for_file(path)
+    sifr_format::config::effective_format_options_for_file(path, provider)
 }

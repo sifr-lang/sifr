@@ -1,6 +1,6 @@
 use crate::diagnostics::RenderedDiagnostic;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 use std::path::{Component, Path, PathBuf};
 
 const MANIFEST_FILE: &str = "sifr.toml";
@@ -23,14 +23,9 @@ struct SifrManifest {
     source_root: String,
 }
 
-pub fn find_workspace_root(entry: &Path) -> Result<Option<WorkspaceRoot>, Vec<RenderedDiagnostic>> {
-    let mut provider = DiskSourceProvider::new();
-    find_workspace_root_with_provider(entry, &mut provider)
-}
-
-pub(crate) fn find_workspace_root_with_provider(
+pub fn find_workspace_root(
     entry: &Path,
-    provider: &mut impl SourceProvider,
+    provider: &mut dyn SourceProvider,
 ) -> Result<Option<WorkspaceRoot>, Vec<RenderedDiagnostic>> {
     let Some(mut current) = entry.parent().map(Path::to_path_buf) else {
         return Ok(None);
@@ -39,7 +34,7 @@ pub(crate) fn find_workspace_root_with_provider(
     loop {
         let manifest_path = current.join(MANIFEST_FILE);
         if provider.is_file(&manifest_path) {
-            let config = parse_workspace_config_with_provider(&current, &manifest_path, provider)?;
+            let config = parse_workspace_config(&current, &manifest_path, provider)?;
             let dir = if current.as_os_str().is_empty() {
                 PathBuf::from(".")
             } else {
@@ -53,17 +48,16 @@ pub(crate) fn find_workspace_root_with_provider(
     }
 }
 
-fn parse_workspace_config_with_provider(
+fn parse_workspace_config(
     workspace_root: &Path,
     manifest_path: &Path,
-    provider: &mut impl SourceProvider,
+    provider: &mut dyn SourceProvider,
 ) -> Result<SifrWorkspaceConfig, Vec<RenderedDiagnostic>> {
     let source = provider
         .read_file(manifest_path)
         .map_err(|error| vec![parse_manifest_error(manifest_path, error)])?;
     let manifest = parse_manifest(manifest_path, source.as_str())?;
-    let source_root =
-        validate_source_root_with_provider(workspace_root, &manifest.source_root, provider)?;
+    let source_root = validate_source_root(workspace_root, &manifest.source_root, provider)?;
 
     Ok(SifrWorkspaceConfig {
         source_root,
@@ -123,10 +117,10 @@ fn parse_source_root(
     Ok(root.to_string())
 }
 
-fn validate_source_root_with_provider(
+fn validate_source_root(
     workspace_root: &Path,
     source_root: &str,
-    provider: &mut impl SourceProvider,
+    provider: &mut dyn SourceProvider,
 ) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     let raw = Path::new(source_root);
     if source_root.is_empty() || raw.is_absolute() {

@@ -1,9 +1,12 @@
 use crate::cargo::metadata::parse_metadata_json;
 use crate::graph::derive::{derive_package_graph, SifrPackageId};
-use crate::imports::source_map::{DottedModulePath, PackageImportOrigin, PackageSourceMap};
+use crate::imports::source_map::{
+    DottedModulePath, PackageImportOrigin, PackageImportResolutionResult, PackageSourceMap,
+};
 use crate::manifest::sifr::SifrManifest;
 use crate::CargoPackageId;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_frontend::DiskSourceProvider;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -34,15 +37,16 @@ fn source_layout_public_namespaces_derive_from_init_sifr() {
         "def decode_json() -> int:\n    return 1\n",
     );
     let graph = graph(&temp, &[&app, &json], &[edge(&app, "demo_json", &json)]);
-    let source_map = PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map =
+        PackageSourceMap::build(&graph, &mut DiskSourceProvider::new()).expect("source map builds");
 
-    let root = source_map
-        .resolve_import(
-            &graph,
-            &sifr_id(&app),
-            &DottedModulePath("demo_json".to_string()),
-        )
-        .expect("public package root resolves");
+    let PackageImportResolutionResult::Resolved(root) = source_map.resolve_import_result(
+        &graph,
+        &sifr_id(&app),
+        &DottedModulePath("demo_json".to_string()),
+    ) else {
+        panic!("public package root must resolve");
+    };
     assert_eq!(
         root.origin,
         PackageImportOrigin::DirectDependency {
@@ -52,21 +56,24 @@ fn source_layout_public_namespaces_derive_from_init_sifr() {
         }
     );
 
-    source_map
-        .resolve_import(
+    assert!(matches!(
+        source_map.resolve_import_result(
             &graph,
             &sifr_id(&app),
             &DottedModulePath("demo_json.codecs".to_string()),
-        )
-        .expect("public child namespace resolves");
+        ),
+        PackageImportResolutionResult::Resolved(_)
+    ));
 
-    let diagnostic = source_map
-        .resolve_import(
+    let PackageImportResolutionResult::PrivateAccess(diagnostic) = source_map
+        .resolve_import_result(
             &graph,
             &sifr_id(&app),
             &DottedModulePath("demo_json.parse".to_string()),
         )
-        .expect_err("implementation module is private across packages");
+    else {
+        panic!("implementation module must preserve private access state");
+    };
     assert_eq!(
         diagnostic.code,
         DiagnosticCode::PACKAGE_PRIVATE_MODULE_ACCESS
@@ -88,15 +95,16 @@ fn local_package_can_import_own_private_implementation_module() {
         "def parse_json() -> int:\n    return 1\n",
     );
     let graph = graph(&temp, &[&json], &[]);
-    let source_map = PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map =
+        PackageSourceMap::build(&graph, &mut DiskSourceProvider::new()).expect("source map builds");
 
-    let own = source_map
-        .resolve_import(
-            &graph,
-            &sifr_id(&json),
-            &DottedModulePath("demo_json.parse".to_string()),
-        )
-        .expect("own implementation module resolves");
+    let PackageImportResolutionResult::Resolved(own) = source_map.resolve_import_result(
+        &graph,
+        &sifr_id(&json),
+        &DottedModulePath("demo_json.parse".to_string()),
+    ) else {
+        panic!("own implementation module must resolve");
+    };
     assert_eq!(own.origin, PackageImportOrigin::OwnPackage);
 }
 
@@ -112,7 +120,8 @@ fn duplicate_init_public_symbol_reports_0713() {
     write_src_file(&json.root, "parse.sifr", "");
     write_src_file(&json.root, "value.sifr", "");
     let graph = graph(&temp, &[&json], &[]);
-    let diagnostics = PackageSourceMap::build(&graph).expect_err("duplicate public symbol fails");
+    let diagnostics = PackageSourceMap::build(&graph, &mut DiskSourceProvider::new())
+        .expect_err("duplicate public symbol fails");
 
     assert!(diagnostics
         .iter()
@@ -174,7 +183,7 @@ fn graph(
 ) -> crate::SifrPackageGraph {
     let metadata =
         parse_metadata_json(&metadata_json(&temp.root, packages, edges)).expect("metadata parses");
-    derive_package_graph(metadata).expect("graph derives")
+    derive_package_graph(metadata, &mut DiskSourceProvider::new()).expect("graph derives")
 }
 
 fn production_package(

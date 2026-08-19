@@ -108,7 +108,10 @@ fn test_build_local_bridge_blake3_positive_cargo_probe() {
     );
     let pristine_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "local-blake3-bridge");
-    let pristine_errors = check_package_project(&pristine_entrypoint);
+    let pristine_errors = check_package_project(
+        &pristine_entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         pristine_errors.is_empty(),
         "checked-in local bridge scenario should pass package checking: {pristine_errors:#?}"
@@ -152,7 +155,7 @@ fn test_check_local_bridge_blake3_missing_export_cargo_probe() {
         .expect("negative local bridge trust should be installed");
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "local-blake3-bridge");
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(
         errors.iter().any(|error| {
@@ -175,7 +178,10 @@ fn test_build_bridge_type_matrix_positive_cargo_probe() {
     );
     let pristine_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "bridge-type-roundtrip");
-    let pristine_errors = check_package_project(&pristine_entrypoint);
+    let pristine_errors = check_package_project(
+        &pristine_entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         pristine_errors.is_empty(),
         "checked-in bridge type scenario should pass package checking: {pristine_errors:#?}"
@@ -202,7 +208,10 @@ fn test_build_panic_boundary_wrapper_runtime() {
     rebase_sifr_runtime_dependency(&package_root);
     let pristine_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "panic-wrapper-runtime");
-    let pristine_errors = check_package_project(&pristine_entrypoint);
+    let pristine_errors = check_package_project(
+        &pristine_entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         pristine_errors.is_empty(),
         "checked-in panic wrapper scenario should pass package checking: {pristine_errors:#?}"
@@ -240,7 +249,7 @@ fn test_check_panic_boundary_invalid_mapper_signature() {
     install_evidence_source(&package_root, PANIC_WRAPPER_INVALID_MAPPER);
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "panic-wrapper-runtime");
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(
         errors.iter().any(|error| {
@@ -264,7 +273,10 @@ fn test_build_call_scoped_callback_runtime() {
     rebase_sifr_runtime_dependency(&package_root);
     let pristine_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "call-scoped-callback-runtime");
-    let pristine_errors = check_package_project(&pristine_entrypoint);
+    let pristine_errors = check_package_project(
+        &pristine_entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         pristine_errors.is_empty(),
         "checked-in call-scoped callback scenario should pass package checking: {pristine_errors:#?}"
@@ -324,7 +336,8 @@ fn test_check_call_scoped_callback_storage_rejected() {
         let entrypoint =
             package_entrypoint_from_cargo_layout(&package_root, "call-scoped-callback-runtime");
 
-        let errors = check_package_project(&entrypoint);
+        let errors =
+            check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
         assert!(
             errors.iter().any(|error| {
@@ -355,7 +368,7 @@ fn test_check_call_scoped_callback_storage_rejected() {
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "call-scoped-callback-runtime");
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(
         errors
@@ -384,7 +397,10 @@ fn test_build_async_reqwest_loopback_runtime() {
     rebase_sifr_runtime_dependency(&package_root);
     let pristine_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "reqwest-loopback-runtime");
-    let pristine_errors = check_package_project(&pristine_entrypoint);
+    let pristine_errors = check_package_project(
+        &pristine_entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         pristine_errors.is_empty(),
         "checked-in reqwest loopback scenario should pass package checking: {pristine_errors:#?}"
@@ -493,7 +509,7 @@ fn test_check_callback_subscription_invalid_thread_capture_rejected() {
     install_evidence_source(&package_root, CALLBACK_SUBSCRIPTION_NEGATIVE);
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "subscription-lifecycle-runtime");
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert_eq!(
         errors.len(),
@@ -602,7 +618,10 @@ fn test_build_async_reqwest_rejects_undeclared_native_link() {
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "reqwest-loopback-runtime");
 
-    let errors = match build_cached_package_project(&entrypoint) {
+    let errors = match build_cached_package_project(
+        &entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    ) {
         Ok(_) => panic!("undeclared transitive native link must fail the generated package build"),
         Err(errors) => errors,
     };
@@ -637,7 +656,7 @@ fn test_check_async_reqwest_hidden_blocking_rejected() {
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "reqwest-loopback-runtime");
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert_eq!(
         errors.len(),
@@ -715,7 +734,7 @@ fn test_check_same_workspace_crate_negative_cargo_probe() {
     .expect("checked-in negative Cargo lock should be installed");
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "workspace-hash-consumer");
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(errors.iter().any(|error| {
         error.code == DiagnosticCode::RUST_RESOLVE_TARGET_ROOT.code()
@@ -770,7 +789,7 @@ fn test_check_shared_bridge_crate_negative_cargo_probe() {
     .expect("checked-in rejected shared bridge source should be installed");
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "shared-hash-consumer");
 
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
 
     assert!(errors.iter().any(|error| {
         error.code == DiagnosticCode::RUST_RESOLVE_TARGET_ROOT.code()

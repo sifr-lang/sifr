@@ -2,6 +2,7 @@ use crate::{
     check_projection, init_package, repair_projection, InitPackageKind, InitPackageOptions,
 };
 use sifr_diagnostics::DiagnosticCode;
+use sifr_frontend::DiskSourceProvider;
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -26,7 +27,9 @@ fn init_lib_creates_canonical_src_layout_and_cargo_projection() {
     assert!(cargo.contains("[package.metadata.sifr]"));
     assert!(cargo.contains("manifest = \"sifr.toml\""));
     assert!(cargo.contains("src/**/*.sifr"));
-    assert!(check_projection(&package).diagnostics.is_empty());
+    assert!(check_projection(&package, &mut DiskSourceProvider::new())
+        .diagnostics
+        .is_empty());
 }
 
 #[test]
@@ -47,13 +50,13 @@ fn projection_repair_generates_canonical_python_bridge_inventory() {
     )
     .expect("write bridge");
 
-    let check = check_projection(&package);
+    let check = check_projection(&package, &mut DiskSourceProvider::new());
     assert!(check.diagnostics.iter().any(|diagnostic| {
         diagnostic.code == DiagnosticCode::PYIMP_INVALID_BRIDGE_SOURCE
             && diagnostic.message.contains("missing or unreadable")
     }));
 
-    let repair = repair_projection(&package, false);
+    let repair = repair_projection(&package, false, &mut DiskSourceProvider::new());
     let inventory = package.join("src/python_bridges/__sifr_inventory__.json");
     assert!(repair.wrote_files.contains(&inventory));
     assert!(inventory.is_file());
@@ -98,7 +101,7 @@ fn cargo_projection_repair_check_reports_missing_manifest_pointer_0703() {
     )
     .expect("break projection");
 
-    let check = check_projection(&package);
+    let check = check_projection(&package, &mut DiskSourceProvider::new());
 
     assert!(check.diagnostics.iter().any(|diagnostic| {
         diagnostic.code == DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT
@@ -121,7 +124,7 @@ fn cargo_projection_repair_check_reports_missing_required_include_0704() {
         .replace("\"src/**/*.sifr\", ", "");
     fs::write(package.join("Cargo.toml"), cargo).expect("break include");
 
-    let check = check_projection(&package);
+    let check = check_projection(&package, &mut DiskSourceProvider::new());
 
     assert!(check
         .diagnostics
@@ -142,12 +145,12 @@ fn cargo_projection_repair_regenerates_missing_pure_marker() {
     .expect("init succeeds");
     fs::remove_file(package.join("src/lib.rs")).expect("remove marker");
 
-    let check = check_projection(&package);
+    let check = check_projection(&package, &mut DiskSourceProvider::new());
     assert!(check.diagnostics.iter().any(|diagnostic| {
         diagnostic.code == DiagnosticCode::PACKAGE_PROJECTION_PURE_MARKER_MISSING
     }));
 
-    let repair = repair_projection(&package, false);
+    let repair = repair_projection(&package, false, &mut DiskSourceProvider::new());
     assert!(repair.diagnostics.is_empty());
     assert!(package.join("src/lib.rs").is_file());
 }
@@ -158,7 +161,7 @@ fn rust_bridge_projection_repair_writes_managed_projection_without_touching_user
     let package = temp.root.join("demo_json");
     write_rust_bridge_package(&package);
 
-    let repair = repair_projection(&package, false);
+    let repair = repair_projection(&package, false, &mut DiskSourceProvider::new());
 
     assert!(repair.diagnostics.is_empty());
     assert!(package.join("src/lib.rs").is_file());
@@ -178,7 +181,9 @@ fn rust_bridge_projection_repair_writes_managed_projection_without_touching_user
     assert!(fs::read_to_string(package.join("Cargo.toml"))
         .expect("cargo projection exists")
         .contains("src/**/*.rs"));
-    assert!(check_projection(&package).diagnostics.is_empty());
+    assert!(check_projection(&package, &mut DiskSourceProvider::new())
+        .diagnostics
+        .is_empty());
 }
 
 #[test]
@@ -192,7 +197,7 @@ fn rust_bridge_projection_conflict_does_not_overwrite_user_authored_mod_rs() {
     )
     .expect("write conflict");
 
-    let repair = repair_projection(&package, false);
+    let repair = repair_projection(&package, false, &mut DiskSourceProvider::new());
 
     assert!(repair.diagnostics.iter().any(|diagnostic| {
         diagnostic.code == DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT
@@ -212,7 +217,7 @@ fn rust_bridge_projection_rejects_reserved_generated_bridge_file() {
     fs::write(package.join("src/__sifr_bridge.rs"), "pub mod user {}\n")
         .expect("write reserved conflict");
 
-    let check = check_projection(&package);
+    let check = check_projection(&package, &mut DiskSourceProvider::new());
 
     assert!(check.diagnostics.iter().any(|diagnostic| {
         diagnostic.code == DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT
@@ -231,7 +236,7 @@ fn rust_bridge_projection_rejects_keyword_bridge_module_filename() {
     )
     .expect("write keyword bridge file");
 
-    let check = check_projection(&package);
+    let check = check_projection(&package, &mut DiskSourceProvider::new());
 
     assert!(check.diagnostics.iter().any(|diagnostic| {
         diagnostic.code == DiagnosticCode::PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT

@@ -25,7 +25,10 @@ fn test_check_project_preserves_aliased_error_status_through_facade() {
     let dir = mktemp_dir("aliased_error_facade_check");
     write_aliased_error_project(&dir);
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
 
     assert!(errors.is_empty(), "aliased error should check: {errors:?}");
     let _ = std::fs::remove_dir_all(dir);
@@ -37,8 +40,12 @@ fn test_build_project_preserves_aliased_error_status_through_facade() {
     let dir = mktemp_dir("aliased_error_facade_native");
     write_aliased_error_project(&dir);
 
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("aliased error project should build natively");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("aliased error project should build natively");
     let status = std::process::Command::new(binary)
         .status()
         .expect("aliased error binary should run");
@@ -63,7 +70,10 @@ fn test_check_project_does_not_leak_error_status_between_modules() {
     )
     .expect("main module should be written");
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
 
     assert!(
         errors

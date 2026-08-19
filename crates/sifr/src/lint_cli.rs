@@ -227,13 +227,21 @@ fn lint_entrypoint(
 ) -> Result<LintCommandResult, Vec<RenderedDiagnostic>> {
     let overrides = lint_cli_overrides(args)?;
     let start_dir = lint_start_dir(args);
-    let config = sifr_lint::effective_lint_config(&start_dir, config_inputs, isolated, &overrides)?;
+    let mut provider = DiskSourceProvider::new();
+    let config = sifr_lint::effective_lint_config(
+        &start_dir,
+        config_inputs,
+        isolated,
+        &overrides,
+        &mut provider,
+    )?;
     if args.show_settings {
         return Ok(LintCommandResult::Text(render_settings(&config)));
     }
     let targets = lint_targets(args);
     if args.show_files {
-        let files = sifr_lint::collect_sifr_files_for_targets(&targets, &config.options)?;
+        let files =
+            sifr_lint::collect_sifr_files_for_targets(&targets, &config.options, &mut provider)?;
         let output = files
             .iter()
             .map(|path| path.display().to_string())
@@ -242,7 +250,7 @@ fn lint_entrypoint(
         return Ok(LintCommandResult::Text(format!("{output}\n")));
     }
     if fix_mode_requested(args) {
-        return run_fix_command(args, &config.options).map(LintCommandResult::Fixes);
+        return run_fix_command(args, &config.options, &mut provider).map(LintCommandResult::Fixes);
     }
     if reads_stdin(args) {
         let mut source = String::new();
@@ -259,7 +267,7 @@ fn lint_entrypoint(
         }
         return Ok(LintCommandResult::Diagnostics(diagnostics));
     }
-    let diagnostics = sifr_lint::lint_paths(&targets, &config.options)?.diagnostics;
+    let diagnostics = sifr_lint::lint_paths(&targets, &config.options, &mut provider)?.diagnostics;
     if args.statistics {
         return Ok(LintCommandResult::Statistics(diagnostics));
     }
@@ -273,6 +281,7 @@ fn fix_mode_requested(args: &LintArgs) -> bool {
 fn run_fix_command(
     args: &LintArgs,
     options: &sifr_lint::LintOptions,
+    provider: &mut impl SourceProvider,
 ) -> Result<FixCommandResult, Vec<RenderedDiagnostic>> {
     if reads_stdin(args) {
         let mut source = String::new();
@@ -299,13 +308,11 @@ fn run_fix_command(
         });
     }
 
-    let files = sifr_lint::collect_sifr_files_for_targets(&lint_targets(args), options)?;
+    let files = sifr_lint::collect_sifr_files_for_targets(&lint_targets(args), options, provider)?;
     let mut diagnostics = Vec::new();
     let mut summary_counts = BTreeMap::<String, usize>::new();
     let mut diff = String::new();
     let mut applied_count = 0usize;
-    let mut provider = DiskSourceProvider::new();
-
     for file in files {
         let source = provider.read_file(&file).map_err(|err| {
             vec![diagnostic_with_code(

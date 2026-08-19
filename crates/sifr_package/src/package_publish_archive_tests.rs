@@ -265,6 +265,7 @@ fn package_publish_vendor_session_plans_route_through_package_session() {
         manifest_less_mode: false,
         lock_mode: CargoLockMode::Locked,
         manifest: None,
+        app_targets: Ok(Vec::new()),
     };
     let selection = CargoPackageSelection {
         workspace: false,

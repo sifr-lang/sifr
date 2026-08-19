@@ -7,42 +7,62 @@ use crate::build::{
     resolve_project_entrypoint_plan, CachedBinaryArtifact, PackageEntrypoint, RootedEntrypoint,
 };
 use crate::diagnostics::{CompileResult, RenderedDiagnostic};
+use sifr_frontend::SourceProvider;
 use sifr_lowering::LoweringOptions;
 use std::path::{Path, PathBuf};
 
 pub fn build_project(
     main_file: &Path,
     output_dir: &Path,
+    provider: &mut dyn SourceProvider,
 ) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
-    build_project_report(main_file, output_dir).map(|report| report.binary_path().to_path_buf())
+    build_project_report(main_file, output_dir, provider)
+        .map(|report| report.binary_path().to_path_buf())
 }
 
 pub fn build_project_report(
     main_file: &Path,
     output_dir: &Path,
+    provider: &mut dyn SourceProvider,
 ) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
-    build_rooted_entrypoint_binary_with_report(&RootedEntrypoint::Project { main_file }, output_dir)
+    build_rooted_entrypoint_binary_with_report(
+        RootedEntrypoint::Project {
+            main_file,
+            provider,
+        },
+        output_dir,
+    )
 }
 
 pub fn build_package_project_report(
     entrypoint: &PackageEntrypoint,
     output_dir: &Path,
+    provider: &mut dyn SourceProvider,
 ) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
     build_rooted_entrypoint_binary_with_report(
-        &RootedEntrypoint::PackageProject { entrypoint },
+        RootedEntrypoint::PackageProject {
+            entrypoint,
+            provider,
+        },
         output_dir,
     )
 }
 
-pub fn check_project(main_file: &Path) -> Vec<RenderedDiagnostic> {
-    match resolve_project_entrypoint_plan(main_file) {
+pub fn check_project(
+    main_file: &Path,
+    provider: &mut dyn SourceProvider,
+) -> Vec<RenderedDiagnostic> {
+    match resolve_project_entrypoint_plan(main_file, provider) {
         Ok(project_plan) => project_plan.frontend_diagnostics(),
         Err(errors) => errors,
     }
 }
 
-pub fn check_package_project(entrypoint: &PackageEntrypoint) -> Vec<RenderedDiagnostic> {
-    match check_package_python_interop(entrypoint) {
+pub fn check_package_project(
+    entrypoint: &PackageEntrypoint,
+    provider: &mut dyn SourceProvider,
+) -> Vec<RenderedDiagnostic> {
+    match check_package_python_interop(entrypoint, provider) {
         Ok(_) => Vec::new(),
         Err(errors) => errors,
     }
@@ -50,8 +70,9 @@ pub fn check_package_project(entrypoint: &PackageEntrypoint) -> Vec<RenderedDiag
 
 pub fn check_package_python_interop(
     entrypoint: &PackageEntrypoint,
+    provider: &mut dyn SourceProvider,
 ) -> Result<PythonInteropCheckReport, Vec<RenderedDiagnostic>> {
-    let project_plan = resolve_package_project_entrypoint_plan(entrypoint)?;
+    let project_plan = resolve_package_project_entrypoint_plan(entrypoint, provider)?;
     let diagnostics = project_plan.frontend_diagnostics();
     if !diagnostics.is_empty() {
         return Err(diagnostics);
@@ -65,8 +86,8 @@ pub fn check_single_file(source: &str, entrypoint_file: &Path) -> Vec<RenderedDi
     check_single_file_entrypoint(source, entrypoint_file)
 }
 
-pub fn emit_project(main_file: &Path) -> CompileResult {
-    emit_project_entrypoint(main_file)
+pub fn emit_project(main_file: &Path, provider: &mut dyn SourceProvider) -> CompileResult {
+    emit_project_entrypoint(main_file, provider)
 }
 
 pub fn build(source: &str, output_dir: &Path) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
@@ -81,7 +102,7 @@ pub fn build_single_file_report(
 ) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
     let display_path = entrypoint_file.to_string_lossy();
     build_rooted_entrypoint_binary_with_report(
-        &RootedEntrypoint::SingleFile {
+        RootedEntrypoint::SingleFile {
             source,
             display_path: &display_path,
             lowering_options: LoweringOptions::default(),
@@ -92,14 +113,16 @@ pub fn build_single_file_report(
 
 pub fn build_cached_project(
     main_file: &Path,
+    provider: &mut dyn SourceProvider,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
-    build_cached_project_binary(main_file)
+    build_cached_project_binary(main_file, provider)
 }
 
 pub fn build_cached_package_project(
     entrypoint: &PackageEntrypoint,
+    provider: &mut dyn SourceProvider,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
-    build_cached_package_project_binary(entrypoint)
+    build_cached_package_project_binary(entrypoint, provider)
 }
 
 pub fn build_cached_single_file(

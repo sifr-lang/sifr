@@ -7,6 +7,7 @@ use crate::manifest::metadata::CargoSifrAliasMetadata;
 use crate::manifest::sifr::{SifrManifest, SifrPackageName};
 use crate::manifest::validate::validate_source_root_exists;
 use crate::source::layout::{validate_pure_marker_file, MarkerValidation};
+use sifr_frontend::SourceProvider;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
@@ -67,12 +68,14 @@ pub(crate) struct DirectCargoDependency {
 
 pub fn derive_package_graph(
     metadata: CargoMetadata,
+    provider: &mut impl SourceProvider,
 ) -> Result<SifrPackageGraph, Vec<PackageDiagnostic>> {
-    derive_package_graph_from_normalized(&metadata.normalize())
+    derive_package_graph_from_normalized(&metadata.normalize(), provider)
 }
 
 pub fn derive_package_graph_from_normalized(
     metadata: &NormalizedCargoMetadata,
+    provider: &mut impl SourceProvider,
 ) -> Result<SifrPackageGraph, Vec<PackageDiagnostic>> {
     let mut diagnostics = Vec::new();
     let mut packages = BTreeMap::new();
@@ -86,7 +89,7 @@ pub fn derive_package_graph_from_normalized(
 
         let package_root = package_root(package);
         let manifest_path = package_root.join(&sifr_metadata.manifest);
-        match load_sifr_package(package, &package_root, &manifest_path) {
+        match load_sifr_package(package, &package_root, &manifest_path, provider) {
             Ok(package_metadata) => {
                 let package_id = package_metadata.package_id.clone();
                 let classification = if package_metadata.manifest.declares_rust_backend() {
@@ -139,11 +142,18 @@ fn load_sifr_package(
     package: &CargoPackage,
     package_root: &Path,
     manifest_path: &Path,
+    provider: &mut impl SourceProvider,
 ) -> Result<SifrPackageMetadata, PackageDiagnostic> {
-    let manifest = SifrManifest::load(&package.id, manifest_path)?;
-    validate_source_root_exists(&package.id, manifest_path, package_root, &manifest)?;
+    let manifest = SifrManifest::load(&package.id, manifest_path, provider)?;
+    validate_source_root_exists(
+        &package.id,
+        manifest_path,
+        package_root,
+        &manifest,
+        provider,
+    )?;
     if !manifest.declares_rust_backend() {
-        validate_pure_markers(package, &package.id)?;
+        validate_pure_markers(package, &package.id, provider)?;
     }
 
     let package_id = SifrPackageId(format!(
@@ -182,12 +192,13 @@ fn package_root(package: &CargoPackage) -> PathBuf {
 fn validate_pure_markers(
     package: &CargoPackage,
     cargo_package_id: &CargoPackageId,
+    provider: &mut impl SourceProvider,
 ) -> Result<(), PackageDiagnostic> {
     for target in &package.targets {
         if !target.kind.contains("lib") {
             continue;
         }
-        match validate_pure_marker_file(&target.src_path) {
+        match validate_pure_marker_file(&target.src_path, provider) {
             Ok(MarkerValidation::PureMarker) => {}
             Ok(MarkerValidation::NonTrivialRust { reason }) => {
                 return Err(PackageDiagnostic::non_trivial_pure_marker(

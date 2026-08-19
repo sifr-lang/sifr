@@ -27,6 +27,7 @@ mod formatter_cli;
 mod lint_cli;
 mod package_graph_context;
 mod package_python_certifications;
+mod package_session_cli;
 mod python_binding_cli;
 mod python_dlpack_certification_cli;
 mod python_runtime_context;

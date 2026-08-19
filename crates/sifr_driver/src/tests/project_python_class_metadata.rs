@@ -56,7 +56,10 @@ class Tools:
     )
     .expect("helper module should be written");
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         errors
             .iter()

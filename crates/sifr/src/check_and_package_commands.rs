@@ -4,10 +4,11 @@ use super::cli_model_and_entrypoint::{
     EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
 };
 use super::diagnostic_rendering_and_run::{
-    current_session_package_id, execute_cargo_plan, package_session_for_cwd, render_diagnostics,
+    current_session_package_id, execute_cargo_plan, render_diagnostics,
 };
 use super::formatter_cli::FmtArgs;
 use super::package_graph_context::load_package_graph_context_for_entrypoint;
+use super::package_session_cli::package_session_for_cwd;
 use super::python_runtime_context::{package_python_runtime, package_python_runtime_for_check};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
@@ -32,7 +33,8 @@ pub(super) fn cmd_check(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let session = match package_session_for_cwd(lock_mode) {
+    let mut provider = DiskSourceProvider::new();
+    let session = match package_session_for_cwd(lock_mode, &mut provider) {
         Ok(session) => session,
         Err(error) => {
             render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
@@ -66,17 +68,27 @@ pub(super) fn cmd_check(
     }
     if let Some(sifr_package::ResolvedRunTarget::File(path)) = plan.run_target {
         if !session.manifest_less_mode {
-            return cmd_check_package_file(&path, &session, lock_mode, diagnostic_format);
+            return cmd_check_package_file(
+                &path,
+                &session,
+                lock_mode,
+                diagnostic_format,
+                &mut provider,
+            );
         }
-        return cmd_check_file(&path, diagnostic_format);
+        return cmd_check_file(&path, diagnostic_format, &mut provider);
     }
     EXIT_SUCCESS
 }
 
-pub(super) fn cmd_check_file(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
+pub(super) fn cmd_check_file(
+    file: &Path,
+    diagnostic_format: DiagnosticFormat,
+    provider: &mut dyn SourceProvider,
+) -> i32 {
     let errors = match run_with_panic_boundary(
         "internal compiler panic during check command execution",
-        || check_entrypoint(file),
+        || check_entrypoint(file, provider),
     ) {
         Ok(errors) => errors,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -105,6 +117,7 @@ pub(super) fn cmd_check_package_file(
     session: &sifr_package::PackageSession,
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
+    provider: &mut impl SourceProvider,
 ) -> i32 {
     let allow_python_deferral = match session.runnable_app_paths() {
         Ok(paths) => paths.is_empty(),
@@ -119,14 +132,15 @@ pub(super) fn cmd_check_package_file(
         lock_mode,
         diagnostic_format,
         allow_python_deferral,
+        provider,
     ) {
         Ok(Some(entrypoint)) => entrypoint,
-        Ok(None) => return cmd_check_file(file, diagnostic_format),
+        Ok(None) => return cmd_check_file(file, diagnostic_format, provider),
         Err(exit_code) => return exit_code,
     };
     let errors = match run_with_panic_boundary(
         "internal compiler panic during package check command execution",
-        || check_package_project(&entrypoint),
+        || check_package_project(&entrypoint, provider),
     ) {
         Ok(errors) => errors,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -146,6 +160,7 @@ pub(super) fn package_entrypoint_for_file(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
     allow_python_deferral: bool,
+    provider: &mut impl SourceProvider,
 ) -> Result<Option<PackageEntrypoint>, i32> {
     let Some(context) = package_compiler_context(
         session,
@@ -153,6 +168,7 @@ pub(super) fn package_entrypoint_for_file(
         diagnostic_format,
         Some(file),
         allow_python_deferral,
+        provider,
     )?
     else {
         return Ok(None);
@@ -173,9 +189,10 @@ pub(super) fn package_compiler_context(
     diagnostic_format: DiagnosticFormat,
     entry_file: Option<&Path>,
     allow_python_deferral: bool,
+    provider: &mut impl SourceProvider,
 ) -> Result<Option<PackageCompilerContext>, i32> {
     let Some(context) =
-        load_package_graph_context_for_entrypoint(session, lock_mode, diagnostic_format)?
+        load_package_graph_context_for_entrypoint(session, lock_mode, diagnostic_format, provider)?
     else {
         return Ok(None);
     };
@@ -185,6 +202,7 @@ pub(super) fn package_compiler_context(
     let mut derived_python_requirements = declaration_python_requirements(
         &context.source_map,
         entry_file.map(|file| (file, &package_id)),
+        provider,
     );
     let bridge_graph = match sifr_package::resolve_python_bridge_graph(&context.graph, &package_id)
     {
@@ -227,9 +245,9 @@ pub(super) fn package_compiler_context(
 pub(super) fn declaration_python_requirements(
     source_map: &sifr_package::PackageSourceMap,
     entry_file: Option<(&Path, &sifr_package::SifrPackageId)>,
+    provider: &mut impl SourceProvider,
 ) -> Vec<sifr_package::PythonRequirementContribution> {
     let mut contributions = Vec::new();
-    let mut provider = DiskSourceProvider::new();
     for module in source_map.modules.values() {
         let Ok(source) = provider.read_file(&module.file_path) else {
             continue;
@@ -367,9 +385,10 @@ pub(super) fn emit_success_message(diagnostic_format: DiagnosticFormat, message:
 }
 
 pub(super) fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
+    let mut provider = DiskSourceProvider::new();
     let run_result = match run_with_panic_boundary(
         "internal compiler panic during test command execution",
-        || run_tests(dir),
+        || run_tests(dir, &mut provider),
     ) {
         Ok(result) => result,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -387,9 +406,10 @@ pub(super) fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
 }
 
 pub(super) fn cmd_emit(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
+    let mut provider = DiskSourceProvider::new();
     let compile_result = match run_with_panic_boundary(
         "internal compiler panic during emit command execution",
-        || emit_entrypoint(file),
+        || emit_entrypoint(file, &mut provider),
     ) {
         Ok(result) => result,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
@@ -407,18 +427,21 @@ pub(super) fn cmd_emit(file: &Path, diagnostic_format: DiagnosticFormat) -> i32 
 pub(super) fn compile_entrypoint(
     file: &Path,
     output: &Path,
+    provider: &mut dyn SourceProvider,
 ) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
-    compile_entrypoint_report(file, output).map(|report| report.binary_path().to_path_buf())
+    compile_entrypoint_report(file, output, provider)
+        .map(|report| report.binary_path().to_path_buf())
 }
 
 pub(super) fn compile_entrypoint_report(
     file: &Path,
     output: &Path,
+    provider: &mut dyn SourceProvider,
 ) -> Result<BuildReport, Vec<RenderedDiagnostic>> {
-    match resolve_compilation_mode(file)? {
-        CompilationMode::Project => build_project_report(file, output),
+    match resolve_compilation_mode(file, provider)? {
+        CompilationMode::Project => build_project_report(file, output, provider),
         CompilationMode::SingleFile => {
-            let source = read_source(file);
+            let source = read_source(file, provider);
             build_single_file_report(&source, file, output)
         }
     }
@@ -430,15 +453,16 @@ pub(super) fn compile_package_entrypoint_report(
     session: &sifr_package::PackageSession,
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
+    provider: &mut impl SourceProvider,
 ) -> Result<Option<BuildReport>, i32> {
     let Some(entrypoint) =
-        package_entrypoint_for_file(file, session, lock_mode, diagnostic_format, false)?
+        package_entrypoint_for_file(file, session, lock_mode, diagnostic_format, false, provider)?
     else {
         return Ok(None);
     };
     match run_with_panic_boundary(
         "internal compiler panic during package build command execution",
-        || build_package_project_report(&entrypoint, output),
+        || build_package_project_report(&entrypoint, output, provider),
     ) {
         Ok(Ok(report)) => Ok(Some(report)),
         Ok(Err(errors)) => Err(render_diagnostics(&errors, diagnostic_format)),
@@ -448,36 +472,40 @@ pub(super) fn compile_package_entrypoint_report(
 
 pub(super) fn build_run_artifact(
     file: &Path,
+    provider: &mut dyn SourceProvider,
 ) -> Result<CachedBinaryArtifact, Vec<RenderedDiagnostic>> {
-    match resolve_compilation_mode(file)? {
-        CompilationMode::Project => build_cached_project(file),
+    match resolve_compilation_mode(file, provider)? {
+        CompilationMode::Project => build_cached_project(file, provider),
         CompilationMode::SingleFile => {
-            let source = read_source(file);
+            let source = read_source(file, provider);
             build_cached_single_file(&source, file)
         }
     }
 }
 
-pub(super) fn check_entrypoint(file: &Path) -> Vec<RenderedDiagnostic> {
-    match resolve_compilation_mode(file) {
+pub(super) fn check_entrypoint(
+    file: &Path,
+    provider: &mut dyn SourceProvider,
+) -> Vec<RenderedDiagnostic> {
+    match resolve_compilation_mode(file, provider) {
         Err(errors) => errors,
-        Ok(CompilationMode::Project) => check_project(file),
+        Ok(CompilationMode::Project) => check_project(file, provider),
         Ok(CompilationMode::SingleFile) => {
-            let source = read_source(file);
+            let source = read_source(file, provider);
             check_single_file(&source, file)
         }
     }
 }
 
-pub(super) fn emit_entrypoint(file: &Path) -> CompileResult {
-    let mode = match resolve_compilation_mode(file) {
+pub(super) fn emit_entrypoint(file: &Path, provider: &mut dyn SourceProvider) -> CompileResult {
+    let mode = match resolve_compilation_mode(file, provider) {
         Ok(mode) => mode,
         Err(errors) => return CompileResult::Errors { errors },
     };
     match mode {
-        CompilationMode::Project => emit_project(file),
+        CompilationMode::Project => emit_project(file, provider),
         CompilationMode::SingleFile => {
-            let source = read_source(file);
+            let source = read_source(file, provider);
             compile(&source)
         }
     }
@@ -493,8 +521,14 @@ pub(super) fn fmt_entrypoint(
             "could not read current directory: {err}"
         ))]
     })?;
-    let config =
-        effective_format_config(&cwd, config_inputs, isolated, &format_cli_overrides(args))?;
+    let mut provider = DiskSourceProvider::new();
+    let config = effective_format_config(
+        &cwd,
+        config_inputs,
+        isolated,
+        &format_cli_overrides(args),
+        &mut provider,
+    )?;
     let options = config.format_options;
     if args.stdin_filename.is_some() || (args.paths.is_empty() && !io::stdin().is_terminal()) {
         return fmt_stdin(args, options);
@@ -506,22 +540,25 @@ pub(super) fn fmt_entrypoint(
         args.paths.clone()
     };
     let mut diagnostics = Vec::new();
-    let mut provider = DiskSourceProvider::new();
     for target in targets {
         let explicit_target = provider.is_file(&target);
-        let files = select_formatter_files(&target, &config, explicit_target)?;
+        let files = select_formatter_files(&target, &config, explicit_target, &mut provider)?;
         for file in files {
             if args.check {
-                diagnostics.extend(sifr_format::check_path_with_options(&file, options)?);
+                diagnostics.extend(sifr_format::check_path_with_options(
+                    &file,
+                    options,
+                    &mut provider,
+                )?);
             } else if args.diff {
-                let source = read_formatter_source(&file)?;
+                let source = read_formatter_source(&file, &mut provider)?;
                 let formatted = format_source_or_range(&source, &file, args, options)?;
                 if formatted != source {
                     write_unified_diff(&file, &source, &formatted);
                     diagnostics.push(formatting_drift_for_path(&source, &file));
                 }
             } else if args.range.is_some() {
-                let source = read_formatter_source(&file)?;
+                let source = read_formatter_source(&file, &mut provider)?;
                 let formatted = format_source_or_range(&source, &file, args, options)?;
                 if formatted != source {
                     fs::write(&file, formatted).map_err(|err| {
@@ -532,11 +569,12 @@ pub(super) fn fmt_entrypoint(
                     })?;
                 }
             } else {
-                if try_formatter_cache_hit(&file, options, &config)? {
+                if try_formatter_cache_hit(&file, options, &config, &mut provider)? {
                     continue;
                 }
-                let _formatted = sifr_format::format_path_with_options(&file, false, options)?;
-                write_formatter_cache_entry(&file, options, &config)?;
+                let _formatted =
+                    sifr_format::format_path_with_options(&file, false, options, &mut provider)?;
+                write_formatter_cache_entry(&file, options, &config, &mut provider)?;
             }
         }
     }
@@ -619,11 +657,12 @@ fn select_formatter_files(
     target: &Path,
     config: &EffectiveFormatConfig,
     explicit_target: bool,
+    provider: &mut impl SourceProvider,
 ) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
-    let files = sifr_format::collect_sifr_files(target)?;
+    let files = sifr_format::collect_sifr_files(target, provider)?;
     let mut selected = Vec::new();
     let ignore_patterns = if config.respect_gitignore {
-        read_gitignore_patterns()?
+        read_gitignore_patterns(provider)?
     } else {
         Vec::new()
     };
@@ -638,9 +677,10 @@ fn select_formatter_files(
     Ok(selected)
 }
 
-fn read_gitignore_patterns() -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
+fn read_gitignore_patterns(
+    provider: &mut impl SourceProvider,
+) -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
     let path = Path::new(".gitignore");
-    let mut provider = DiskSourceProvider::new();
     if !provider.is_file(path) {
         return Ok(Vec::new());
     }
@@ -670,11 +710,12 @@ fn try_formatter_cache_hit(
     path: &Path,
     options: sifr_format::FormatOptions,
     config: &EffectiveFormatConfig,
+    provider: &mut impl SourceProvider,
 ) -> Result<bool, Vec<RenderedDiagnostic>> {
     if config.no_cache {
         return Ok(false);
     }
-    let source = read_formatter_source(path)?;
+    let source = read_formatter_source(path, provider)?;
     let key = formatter_cache_key(path, &source, options);
     Ok(config.cache_dir.join(key).is_file())
 }
@@ -683,11 +724,12 @@ fn write_formatter_cache_entry(
     path: &Path,
     options: sifr_format::FormatOptions,
     config: &EffectiveFormatConfig,
+    provider: &mut impl SourceProvider,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     if config.no_cache {
         return Ok(());
     }
-    let source = read_formatter_source(path)?;
+    let source = read_formatter_source(path, provider)?;
     fs::create_dir_all(&config.cache_dir).map_err(|err| {
         vec![formatter_cli_diagnostic(format!(
             "could not create formatter cache {}: {err}",
@@ -703,8 +745,11 @@ fn write_formatter_cache_entry(
     })
 }
 
-fn read_formatter_source(path: &Path) -> Result<String, Vec<RenderedDiagnostic>> {
-    DiskSourceProvider::new()
+fn read_formatter_source(
+    path: &Path,
+    provider: &mut impl SourceProvider,
+) -> Result<String, Vec<RenderedDiagnostic>> {
+    provider
         .read_file(path)
         .map(|source| source.as_str().to_string())
         .map_err(|err| {

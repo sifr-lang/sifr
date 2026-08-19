@@ -57,10 +57,14 @@ pub(super) fn package_entrypoint_from_cargo_layout(
     );
     let metadata = sifr_package::parse_metadata_json(&String::from_utf8_lossy(&output.stdout))
         .expect("fixture Cargo metadata should parse");
-    let graph = sifr_package::derive_package_graph(metadata)
-        .expect("fixture Cargo package graph should derive");
-    let source_map =
-        sifr_package::PackageSourceMap::build(&graph).expect("fixture source map should build");
+    let graph =
+        sifr_package::derive_package_graph(metadata, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("fixture Cargo package graph should derive");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("fixture source map should build");
     let package_id = graph
         .packages
         .values()
@@ -105,7 +109,8 @@ pub(super) fn rebase_sifr_runtime_dependency(package_root: &Path) {
 
 pub(super) fn built_package_output(entrypoint: &PackageEntrypoint) -> std::process::Output {
     let artifact =
-        build_cached_package_project(entrypoint).expect("Rust interop package should build");
+        build_cached_package_project(entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("Rust interop package should build");
     let output = std::process::Command::new(artifact.binary_path())
         .output()
         .expect("Rust interop package binary should run");

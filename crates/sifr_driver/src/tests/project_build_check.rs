@@ -39,7 +39,10 @@ def area(radius: float) -> float:
     )
     .expect("helper module should be written");
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         errors.is_empty(),
         "check_project should succeed: {errors:?}"
@@ -55,7 +58,7 @@ fn test_check_project_reports_primary_span_for_ranged_hir_diagnostic() {
     std::fs::write(&main_file, "def main() -> None:\n    if 1:\n        pass\n")
         .expect("main module should be written");
 
-    let errors = check_project(&main_file);
+    let errors = check_project(&main_file, &mut sifr_frontend::DiskSourceProvider::new());
     let diagnostic = errors
         .iter()
         .find(|error| error.code == DiagnosticCode::FLOW_INVALID_CONDITION_TYPE.code())
@@ -94,7 +97,10 @@ fn test_check_project_resolves_workspace_source_import_for_non_main_entry() {
     )
     .expect("helper should be written");
 
-    let errors = check_project(&dir.join("cases/app.sifr"));
+    let errors = check_project(
+        &dir.join("cases/app.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
 
     assert!(
         errors.is_empty(),
@@ -125,8 +131,12 @@ fn test_build_project_materializes_dotted_workspace_modules() {
     )
     .expect("helper should be written");
 
-    let binary = build_project(&main_file, &build_out)
-        .expect("workspace dotted project should build successfully");
+    let binary = build_project(
+        &main_file,
+        &build_out,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("workspace dotted project should build successfully");
 
     assert!(binary.exists());
     let src_dir = build_out.join("sifr_output/src");
@@ -191,8 +201,12 @@ def node_value(node: LinkedNode | None) -> int:
     )
     .expect("helper should be written");
 
-    let binary = build_project(&main_file, &build_out)
-        .expect("imported class constructors should build successfully");
+    let binary = build_project(
+        &main_file,
+        &build_out,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("imported class constructors should build successfully");
 
     assert!(binary.exists());
     let _ = std::fs::remove_dir_all(dir);
@@ -309,8 +323,12 @@ from helpers.left import Box as Left
     )
     .expect("leaf facade should be written");
 
-    let binary = build_project(&main_file, &build_out)
-        .expect("aliased same-name generic classes should build successfully");
+    let binary = build_project(
+        &main_file,
+        &build_out,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("aliased same-name generic classes should build successfully");
 
     assert!(binary.exists());
     let _ = std::fs::remove_dir_all(dir);
@@ -361,7 +379,10 @@ class Child(Parent):
     std::fs::write(dir.join("children.sifr"), "from helper import Child\n")
         .expect("child facade should be written");
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         errors.is_empty(),
         "aliased ancestry should check: {errors:?}"
@@ -408,7 +429,10 @@ def main():
     )
     .expect("factory facade should be written");
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         errors.iter().any(|error| {
             error.code == DiagnosticCode::TYPE_MISMATCH.code()
@@ -446,7 +470,10 @@ def invalid(value: Box[Local], other: Local) -> bool:
     )
     .expect("facade should be written");
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         errors.iter().any(|error| {
             error.code == DiagnosticCode::TYPE_MISMATCH.code()
@@ -478,7 +505,7 @@ fn test_emit_project_includes_workspace_support_modules() {
     )
     .expect("helper should be written");
 
-    let emitted = emit_project(&main_file);
+    let emitted = emit_project(&main_file, &mut sifr_frontend::DiskSourceProvider::new());
 
     let CompileResult::Success { rust_source } = emitted else {
         panic!("workspace project emit should succeed");
@@ -508,10 +535,12 @@ fn test_cached_project_invalidates_when_workspace_helper_changes() {
     std::fs::write(&helper_file, "def answer() -> int:\n    return 10\n")
         .expect("helper should be written");
 
-    let first = build_cached_project(&main_file).expect("first workspace build should succeed");
+    let first = build_cached_project(&main_file, &mut sifr_frontend::DiskSourceProvider::new())
+        .expect("first workspace build should succeed");
     std::fs::write(&helper_file, "def answer() -> int:\n    return 11\n")
         .expect("helper should be updated");
-    let second = build_cached_project(&main_file).expect("second workspace build should succeed");
+    let second = build_cached_project(&main_file, &mut sifr_frontend::DiskSourceProvider::new())
+        .expect("second workspace build should succeed");
 
     assert!(!first.build_report().cache_hit());
     assert!(!second.build_report().cache_hit());
@@ -537,7 +566,10 @@ fn test_check_project_ignores_unrelated_non_closure_parse_errors() {
     std::fs::write(dir.join("unrelated_bad.sifr"), "def unrelated(:\n")
         .expect("unrelated sibling should be written");
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         errors.is_empty(),
         "unrelated sibling parse errors should not affect check_project: {errors:?}"
@@ -563,7 +595,10 @@ fn test_check_project_reports_reachable_parse_errors_in_import_closure() {
     )
     .expect("unrelated module should be written");
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         errors.iter().any(|e| e.code == "SIFR-PARSE-0002"
             && e.children
@@ -598,10 +633,17 @@ def broken() -> int:
     )
     .expect("helper module should be written");
 
-    let check_errors = check_project(&dir.join("main.sifr"));
-    let build_errors = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .err()
-        .expect("build_project should fail with same frontend error");
+    let check_errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
+    let build_errors = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .err()
+    .expect("build_project should fail with same frontend error");
 
     let check_messages = render_compact_diagnostics(&check_errors);
     let build_messages = render_compact_diagnostics(&build_errors);
@@ -629,8 +671,12 @@ def render() -> str:\n    try:\n        parsed: TomlValue = loads(\"name = \\\"f
     )
     .expect("helper should be written");
 
-    let binary = build_project(&main_file, &build_out)
-        .expect("project build should succeed with support-module stdlib dependencies");
+    let binary = build_project(
+        &main_file,
+        &build_out,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("project build should succeed with support-module stdlib dependencies");
     assert!(binary.exists());
 
     let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
@@ -668,8 +714,12 @@ def unused() -> str:\n    try:\n        parsed: str = loads(\"name = \\\"unused\
     )
     .expect("unused helper should be written");
 
-    let binary = build_project(&main_file, &build_out)
-        .expect("project build should ignore unreachable stdlib dependency metadata");
+    let binary = build_project(
+        &main_file,
+        &build_out,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("project build should ignore unreachable stdlib dependency metadata");
     assert!(binary.exists());
 
     let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))

@@ -20,7 +20,10 @@ fn test_check_project_imports_generic_function_metadata_through_facade() {
     )
     .expect("main should be written");
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(errors.is_empty(), "generic import should check: {errors:?}");
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -44,8 +47,12 @@ fn test_build_project_imports_generic_function_metadata_through_facade() {
         "from facade import public_identity as identity\n\ndef main():\n    value: int = identity(1)\n    assert value == 1\n",
     )
     .expect("main should be written");
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("generic function facade should build natively");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("generic function facade should build natively");
     assert!(binary.exists());
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -69,8 +76,12 @@ fn test_build_project_shares_union_identity_across_modules() {
     )
     .expect("union consumer should be written");
 
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("one project-wide union identity should build natively");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("one project-wide union identity should build natively");
     assert!(binary.exists());
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -89,8 +100,12 @@ fn test_build_project_centralizes_stdlib_nominal_union_payload() {
     )
     .expect("main should be written");
 
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("stdlib nominal union payload should have one project type");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("stdlib nominal union payload should have one project type");
     let status = std::process::Command::new(&binary)
         .status()
         .expect("generated binary should run");
@@ -112,8 +127,12 @@ fn test_build_project_isolates_union_prelude_imports() {
     )
     .expect("main should be written");
 
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("union prelude imports should not conflict with root imports");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("union prelude imports should not conflict with root imports");
     let status = std::process::Command::new(&binary)
         .status()
         .expect("generated binary should run");
@@ -140,8 +159,12 @@ fn test_build_project_keeps_same_basename_enum_and_newtype_unions_distinct() {
     )
     .expect("union consumer should be written");
 
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("same-basename enum and newtype unions should remain distinct");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("same-basename enum and newtype unions should remain distinct");
     assert!(binary.exists());
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -158,7 +181,10 @@ fn test_check_project_keeps_same_basename_protocol_unions_distinct() {
     )
     .expect("protocol consumer should be written");
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         errors.is_empty(),
         "same-basename protocol unions should remain distinct: {errors:?}"
@@ -197,8 +223,12 @@ fn test_build_project_keeps_same_basename_union_identities_distinct() {
     )
     .expect("union consumer should be written");
 
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("same-basename unions should remain nominally distinct");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("same-basename unions should remain nominally distinct");
     assert!(binary.exists());
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -222,7 +252,10 @@ fn test_check_project_preserves_imported_generic_function_bounds() {
     )
     .expect("main should be written");
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         errors.iter().any(|error| {
             error.message.contains("does not satisfy bound")
@@ -255,7 +288,10 @@ fn test_check_project_preserves_same_basename_affine_capabilities() {
     )
     .expect("main should be written");
 
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         errors.iter().any(|error| {
             error.message.contains("affine")
@@ -296,7 +332,10 @@ fn write_split_ancestry_project(dir: &std::path::Path) {
 fn test_check_project_canonicalizes_imported_parent_ancestry() {
     let dir = mktemp_dir("imported_parent_ancestry");
     write_split_ancestry_project(&dir);
-    let errors = check_project(&dir.join("main.sifr"));
+    let errors = check_project(
+        &dir.join("main.sifr"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(errors.is_empty(), "split ancestry should check: {errors:?}");
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -306,8 +345,12 @@ fn test_check_project_canonicalizes_imported_parent_ancestry() {
 fn test_build_project_canonicalizes_imported_parent_ancestry() {
     let dir = mktemp_dir("imported_parent_ancestry_native");
     write_split_ancestry_project(&dir);
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("split imported ancestry should build natively");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("split imported ancestry should build natively");
     assert!(binary.exists());
     let status = std::process::Command::new(&binary)
         .status()
@@ -325,8 +368,12 @@ fn test_build_project_specializes_zero_argument_generic_return() {
         "class Marker[T]:\n    pass\n\nclass Local(NonSend):\n    pass\n\ndef make[T]() -> Marker[T]:\n    return Marker()\n\ndef relay(own marker: Marker[Local]) -> Marker[Local]:\n    return marker\n\ndef main():\n    inferred: Marker[int] = make()\n    marker: Marker[Local] = Marker()\n    moved: Marker[Local] = relay(marker)\n",
     )
     .expect("main should be written");
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("zero-argument generic return should build natively");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("zero-argument generic return should build natively");
     let status = std::process::Command::new(&binary)
         .status()
         .expect("zero-argument generic return binary should run");
@@ -343,8 +390,12 @@ fn test_build_project_consumes_transitive_class_upcasts() {
         "class Root:\n    value: int\n\nclass Mid(Root):\n    middle: int\n\n    def __init__(self, value: int, middle: int):\n        super().__init__(value)\n        self.middle = middle\n\nclass Child(Mid):\n    extra: int\n\n    def __init__(self, value: int, middle: int, extra: int):\n        super().__init__(value, middle)\n        self.extra = extra\n\ndef consume(own value: Root) -> int:\n    return value.value\n\ndef as_root(own value: Child) -> Root:\n    return value\n\ndef as_union(own value: Child) -> Root | int:\n    return value\n\ndef as_result(own value: Child) -> Result[Root, ValueError]:\n    return value\n\ndef main():\n    child: Child = Child(1, 2, 3)\n    assert consume(child) == 1\n    root: Root = as_root(Child(4, 5, 6))\n    assert root.value == 4\n    union_value: Root | int = as_union(Child(7, 8, 9))\n    result_value: Result[Root, ValueError] = as_result(Child(10, 11, 12))\n",
     )
     .expect("main should be written");
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("consuming class upcasts should build natively");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("consuming class upcasts should build natively");
     let status = std::process::Command::new(&binary)
         .status()
         .expect("consuming class upcast binary should run");
@@ -372,8 +423,12 @@ fn test_build_project_crate_roots_non_main_transitive_upcasts() {
     )
     .expect("main consumer should be written");
 
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("non-main transitive upcasts should use crate-rooted paths");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("non-main transitive upcasts should use crate-rooted paths");
     let status = std::process::Command::new(&binary)
         .status()
         .expect("non-main transitive upcast binary should run");
@@ -390,8 +445,12 @@ fn test_build_project_remaps_structural_consuming_upcasts() {
         "class Root:\n    value: int\n\nclass Mid(Root):\n    middle: int\n\n    def __init__(self, value: int, middle: int):\n        super().__init__(value)\n        self.middle = middle\n\nclass Child(Mid):\n    extra: int\n\n    def __init__(self, value: int, middle: int, extra: int):\n        super().__init__(value, middle)\n        self.extra = extra\n\ndef make_union() -> Child | int:\n    return Child(1, 2, 3)\n\ndef relay_union() -> Root | int:\n    return make_union()\n\ndef consume_union(own value: Root | int) -> int:\n    return 21\n\ndef borrow_union(value: Root | int) -> int:\n    return 23\n\ndef make_option() -> Child | None:\n    return Child(10, 11, 12)\n\ndef relay_option() -> Root | None:\n    return make_option()\n\ndef consume_option(own value: Root | None) -> int:\n    return 24\n\ndef make_result() -> Result[Child, ValueError]:\n    return Child(4, 5, 6)\n\ndef relay_result() -> Result[Root, ValueError]:\n    return make_result()\n\ndef consume_result(own value: Result[Root, ValueError]) -> int:\n    return 22\n\ndef main():\n    assert consume_union(Child(7, 8, 9)) == 21\n    assert consume_union(make_union()) == 21\n    borrowed: Child | int = make_union()\n    assert borrow_union(borrowed) == 23\n    assert consume_option(make_option()) == 24\n    assert consume_result(make_result()) == 22\n    union_value: Root | int = relay_union()\n    option_value: Root | None = relay_option()\n    result_value: Result[Root, ValueError] = relay_result()\n",
     )
     .expect("main should be written");
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("structural consuming upcasts should build natively");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("structural consuming upcasts should build natively");
     let status = std::process::Command::new(&binary)
         .status()
         .expect("structural consuming upcast binary should run");
@@ -425,8 +484,12 @@ fn test_build_project_prefers_exact_same_basename_ancestor() {
         "from facade import PublicRoot as Root, PublicChild as Child\n\ndef as_root(own value: Child) -> Root:\n    return value\n\ndef main():\n    root: Root = as_root(Child(1, 2, 3))\n    assert root.value == 1\n",
     )
     .expect("main should be written");
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("same-basename ancestry should build natively");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("same-basename ancestry should build natively");
     let status = std::process::Command::new(&binary)
         .status()
         .expect("same-basename ancestry binary should run");
@@ -443,8 +506,12 @@ fn test_build_project_specializes_inferred_generic_returns() {
         "class Box[T]:\n    value: T\n\ndef identity[T](value: T) -> T:\n    return value\n\ndef make_box():\n    return Box(1)\n\ndef make_value():\n    return identity(2)\n\ndef main():\n    value: Box[int] = make_box()\n    assert value.value + make_value() == 3\n",
     )
     .expect("main should be written");
-    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
-        .expect("inferred generic returns should build natively");
+    let binary = build_project(
+        &dir.join("main.sifr"),
+        &dir.join("build_out"),
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("inferred generic returns should build natively");
     assert!(binary.exists());
     let _ = std::fs::remove_dir_all(dir);
 }

@@ -5,7 +5,7 @@ use super::discovery::{
 use crate::diagnostics::RenderedDiagnostic;
 use ruff_text_size::{Ranged as _, TextRange};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 use sifr_package::{
     DottedModulePath, PackageImportAmbiguity, PackageImportOrigin, PackageImportResolution,
     PackageImportResolutionResult, PackageSourceMap, SifrPackageGraph, SifrPackageId,
@@ -36,6 +36,7 @@ pub(crate) fn parse_package_import_closure_source_project(
     entry_package_id: &SifrPackageId,
     entry_file: &Path,
     diagnostic_style: DiscoveryDiagnosticStyle,
+    provider: &mut dyn SourceProvider,
 ) -> Result<PackageParsedProject, Vec<RenderedDiagnostic>> {
     let Some(entry_module) = source_map.module_for_file(entry_package_id, entry_file) else {
         return Err(vec![crate::diagnostics::diagnostic_with_code(
@@ -50,7 +51,6 @@ pub(crate) fn parse_package_import_closure_source_project(
     let mut parsed_modules: HashMap<String, ParsedProjectModule> = HashMap::new();
     let mut module_packages: HashMap<String, SifrPackageId> = HashMap::new();
     let mut parsed_names: BTreeSet<PackageDiscoveryItem> = BTreeSet::new();
-    let mut provider = DiskSourceProvider::new();
     let mut pending = BTreeSet::from([PackageDiscoveryItem {
         package_id: entry_package_id.clone(),
         source_module_path: DottedModulePath(entry_module_name.clone()),

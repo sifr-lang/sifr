@@ -108,6 +108,22 @@ GENERATED_DEPENDENCY_SPEC_DEFINITION_PATTERNS = (
     re.compile(r"\bfn\s+render_dependency_spec\b"),
 )
 
+PROVIDER_CONSTRUCTION_SCAN_CRATES = (
+    "sifr_analysis",
+    "sifr_driver",
+    "sifr_format",
+    "sifr_frontend",
+    "sifr_lint",
+    "sifr_package",
+)
+PROVIDER_CONSTRUCTION_PATTERN = "DiskSourceProvider::new"
+INLINE_TEST_MODULE_PATTERN = re.compile(
+    r"(?m)^#\[cfg\(test\)\]\s*(?:#\[path\s*=\s*\"[^\"]+\"\]\s*)?mod\s+\w+\s*\{"
+)
+PROVIDER_COMPOSITION_ROOTS = {
+    Path("crates/sifr_frontend/src/workspace_session.rs"),
+}
+
 
 @dataclass(frozen=True)
 class CrateRule:
@@ -276,11 +292,38 @@ def generated_dependency_spec_violations(root: Path) -> list[str]:
     return failures
 
 
+def provider_construction_violations(root: Path) -> list[str]:
+    failures: list[str] = []
+    for crate in PROVIDER_CONSTRUCTION_SCAN_CRATES:
+        for path in crate_source_files(root, crate, skip_test_sources=True):
+            rel = path.relative_to(root)
+            if rel in PROVIDER_COMPOSITION_ROOTS or "bin" in rel.parts:
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+            lines = text.splitlines()
+            inline_test_module = INLINE_TEST_MODULE_PATTERN.search(text)
+            test_boundary = (
+                text.count("\n", 0, inline_test_module.start()) + 1
+                if inline_test_module is not None
+                else None
+            )
+            for line_number, line in enumerate(lines, start=1):
+                if PROVIDER_CONSTRUCTION_PATTERN not in line:
+                    continue
+                if test_boundary is not None and line_number > test_boundary:
+                    continue
+                failures.append(
+                    f"{rel}:{line_number} constructs DiskSourceProvider outside a composition root"
+                )
+    return failures
+
+
 def validate(root: Path) -> list[str]:
     failures: list[str] = []
     for rule in RULES:
         failures.extend(validate_crate_rule(root, rule))
     failures.extend(generated_dependency_spec_violations(root))
+    failures.extend(provider_construction_violations(root))
     return failures
 
 
@@ -461,6 +504,29 @@ def run_self_test() -> int:
             / "lib.rs"
         ).write_text("pub struct GeneratedCargoDependency;\n", encoding="utf-8"),
         "generated dependency spec pattern",
+        failures,
+    )
+    assert_self_test_case(
+        "lower compiler disk provider construction",
+        lambda root: (
+            root / "crates" / "sifr_package" / "src" / "lib.rs"
+        ).write_text(
+            "pub fn leak() { let _ = DiskSourceProvider::new(); }\n",
+            encoding="utf-8",
+        ),
+        "constructs DiskSourceProvider outside a composition root",
+        failures,
+    )
+    assert_self_test_case(
+        "lower compiler construction after external test module",
+        lambda root: (
+            root / "crates" / "sifr_package" / "src" / "lib.rs"
+        ).write_text(
+            "#[cfg(test)]\nmod tests;\n"
+            "pub fn leak() { let _ = DiskSourceProvider::new(); }\n",
+            encoding="utf-8",
+        ),
+        "constructs DiskSourceProvider outside a composition root",
         failures,
     )
 

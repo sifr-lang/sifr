@@ -301,16 +301,18 @@ pub(crate) fn lint_physical_line_rules(
 pub fn lint_path(
     path: &Path,
     options: &LintOptions,
+    provider: &mut impl sifr_frontend::SourceProvider,
 ) -> Result<LintResult, Vec<RenderedDiagnostic>> {
-    lint_paths(&[path.to_path_buf()], options)
+    lint_paths(&[path.to_path_buf()], options, provider)
 }
 
 pub fn lint_paths(
     paths: &[PathBuf],
     options: &LintOptions,
+    provider: &mut impl sifr_frontend::SourceProvider,
 ) -> Result<LintResult, Vec<RenderedDiagnostic>> {
     LintRunner::new(options)
-        .run_paths(paths)
+        .run_paths(paths, provider)
         .map(|run| run.result)
 }
 
@@ -690,6 +692,7 @@ fn line_column_for_byte(source: &str, byte: u32) -> (u32, u32) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sifr_frontend::DiskSourceProvider;
     use std::collections::BTreeSet;
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -732,8 +735,14 @@ mod tests {
             "[lint.rules]\ntrailing-whitespace = \"ignore\"\n",
         )
         .unwrap();
-        let config =
-            effective_lint_config(&root, &[], false, &LintConfigOverrides::default()).unwrap();
+        let config = effective_lint_config(
+            &root,
+            &[],
+            false,
+            &LintConfigOverrides::default(),
+            &mut DiskSourceProvider::new(),
+        )
+        .unwrap();
         let result = lint_source("def main():  \n    pass\n", None, &config.options);
         assert!(result.diagnostics.is_empty());
         let _ = fs::remove_dir_all(root);
@@ -750,13 +759,18 @@ mod tests {
             "def skip():\n    pass\n",
         )
         .unwrap();
-        let files = collect_sifr_files(&root, &LintOptions::default()).unwrap();
+        let files = collect_sifr_files(
+            &root,
+            &LintOptions::default(),
+            &mut DiskSourceProvider::new(),
+        )
+        .unwrap();
         assert_eq!(files.len(), 1);
         let options = LintOptions {
             respect_gitignore: false,
             ..LintOptions::default()
         };
-        let files = collect_sifr_files(&root, &options).unwrap();
+        let files = collect_sifr_files(&root, &options, &mut DiskSourceProvider::new()).unwrap();
         assert_eq!(files.len(), 2);
         let _ = fs::remove_dir_all(root);
     }

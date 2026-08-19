@@ -75,12 +75,17 @@ def main() -> Result[None, PythonError]:
     );
 
     let graph = package_graph(&dir, &[&app], &[]);
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map = sifr_package::PackageSourceMap::build(
+        &graph,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("source map builds");
     let mut entrypoint =
         package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
     entrypoint.python_runtime = Some(local_python_runtime(&app.root));
-    let artifact = build_cached_package_project(&entrypoint)
-        .expect("typed raw Python API package should build");
+    let artifact =
+        build_cached_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new())
+            .expect("typed raw Python API package should build");
     let output = std::process::Command::new(artifact.binary_path())
         .output()
         .expect("typed raw Python API package should run");

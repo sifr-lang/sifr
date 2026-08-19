@@ -1,19 +1,11 @@
 use super::SifrManifest;
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 use std::path::Path;
 
 impl SifrManifest {
     pub fn load(
-        cargo_package_id: &CargoPackageId,
-        manifest_path: &Path,
-    ) -> Result<Self, PackageDiagnostic> {
-        let mut provider = DiskSourceProvider::new();
-        Self::load_with_provider(cargo_package_id, manifest_path, &mut provider)
-    }
-
-    pub fn load_with_provider(
         cargo_package_id: &CargoPackageId,
         manifest_path: &Path,
         provider: &mut impl SourceProvider,

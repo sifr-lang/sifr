@@ -53,7 +53,7 @@ fn test_build_trusted_proc_macro_and_deterministic_codegen() {
 
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "proc-macro-trust-package");
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     assert!(
         errors.is_empty(),
         "trusted proc-macro package must pass compiler checking: {errors:#?}"
@@ -140,7 +140,7 @@ fn assert_armed_build_time_dependencies_write_sentinels() {
     install_evidence_source(&package_root, PROC_MACRO_NEGATIVE);
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "proc-macro-trust-package");
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     assert!(
         errors.is_empty(),
         "negative evidence must be valid while build-time trust is present: {errors:#?}"
@@ -175,7 +175,7 @@ fn assert_untrusted_build_time_dependency_rejected(
     std::fs::write(&manifest_path, untrusted).expect("negative trust manifest should be installed");
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "proc-macro-trust-package");
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     let rendered = format!("{errors:#?}");
 
     assert_eq!(

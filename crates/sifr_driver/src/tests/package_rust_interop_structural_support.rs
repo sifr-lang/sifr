@@ -19,7 +19,10 @@ fn test_build_structural_bridge_runtime() {
     rebase_sifr_runtime_dependency(&package_root);
     let source_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "structural-bridge-runtime");
-    let errors = check_package_project(&source_entrypoint);
+    let errors = check_package_project(
+        &source_entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         errors.is_empty(),
         "checked-in structural bridge scenario should pass package checking: {errors:#?}"
@@ -59,7 +62,7 @@ fn test_check_structural_bridge_rejects_abort_profile() {
     .expect("abort profile should be installed");
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "structural-bridge-runtime");
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     assert!(
         errors.iter().any(|error| {
             error.code == DiagnosticCode::RUST_PANIC_CONTRACT.code()
@@ -83,7 +86,7 @@ fn test_check_structural_bridge_mismatches_rejected() {
     install_evidence_source(&package_root, STRUCTURAL_BRIDGE_NEGATIVE);
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "structural-bridge-runtime");
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     assert!(
         errors
             .iter()
@@ -118,7 +121,8 @@ fn test_check_structural_bridge_mismatches_rejected() {
         std::fs::write(&bridge_path, mutated).expect("negative structural bridge should install");
         let entrypoint =
             package_entrypoint_from_cargo_layout(&package_root, "structural-bridge-runtime");
-        let errors = check_package_project(&entrypoint);
+        let errors =
+            check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
         assert!(
             errors
                 .iter()

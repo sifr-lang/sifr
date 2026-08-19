@@ -10,7 +10,7 @@ use ruff_python_formatter::{
 };
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic};
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 use sifr_syntax::{parse_module, SourceText};
 use std::collections::BTreeMap;
 use std::fs;
@@ -135,16 +135,21 @@ pub fn format_range(
     }])
 }
 
-pub fn format_path(path: &Path, check: bool) -> Result<FormattedPath, Vec<RenderedDiagnostic>> {
-    format_path_with_options(path, check, FormatOptions::default())
+pub fn format_path(
+    path: &Path,
+    check: bool,
+    provider: &mut impl SourceProvider,
+) -> Result<FormattedPath, Vec<RenderedDiagnostic>> {
+    format_path_with_options(path, check, FormatOptions::default(), provider)
 }
 
 pub fn format_path_with_options(
     path: &Path,
     check: bool,
     options: FormatOptions,
+    provider: &mut impl SourceProvider,
 ) -> Result<FormattedPath, Vec<RenderedDiagnostic>> {
-    let source = read_source(path)?;
+    let source = read_source(path, provider)?;
     if check {
         let check = check_source(&source, Some(path), options)?;
         return Ok(FormattedPath {
@@ -162,24 +167,23 @@ pub fn format_path_with_options(
     })
 }
 
-pub fn check_path(path: &Path) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedDiagnostic>> {
-    check_path_with_options(path, FormatOptions::default())
+pub fn check_path(
+    path: &Path,
+    provider: &mut impl SourceProvider,
+) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedDiagnostic>> {
+    check_path_with_options(path, FormatOptions::default(), provider)
 }
 
 pub fn check_path_with_options(
     path: &Path,
     options: FormatOptions,
+    provider: &mut impl SourceProvider,
 ) -> Result<Vec<RenderedDiagnostic>, Vec<RenderedDiagnostic>> {
-    let source = read_source(path)?;
+    let source = read_source(path, provider)?;
     check_source(&source, Some(path), options).map(|check| check.diagnostics)
 }
 
-pub fn collect_sifr_files(path: &Path) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
-    let mut provider = DiskSourceProvider::new();
-    collect_sifr_files_with_provider(path, &mut provider)
-}
-
-pub fn collect_sifr_files_with_provider(
+pub fn collect_sifr_files(
     path: &Path,
     provider: &mut impl SourceProvider,
 ) -> Result<Vec<PathBuf>, Vec<RenderedDiagnostic>> {
@@ -442,12 +446,7 @@ fn first_diff_offset(left: &str, right: &str) -> u32 {
     u32::try_from(offset).unwrap_or(u32::MAX)
 }
 
-fn read_source(path: &Path) -> Result<String, Vec<RenderedDiagnostic>> {
-    let mut provider = DiskSourceProvider::new();
-    read_source_with_provider(path, &mut provider)
-}
-
-pub fn read_source_with_provider(
+pub fn read_source(
     path: &Path,
     provider: &mut impl SourceProvider,
 ) -> Result<String, Vec<RenderedDiagnostic>> {

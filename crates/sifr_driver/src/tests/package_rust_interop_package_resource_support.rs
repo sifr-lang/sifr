@@ -78,7 +78,7 @@ fn test_package_resource_alias_use_after_close_rejected() {
     install_evidence_source(&package_root, &compile_rejections);
     let entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "package-resource-runtime");
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     assert_eq!(
         errors.len(),
         2,

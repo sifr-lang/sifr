@@ -9,7 +9,7 @@ use crate::stdlib::compile_stdlib;
 use sifr_codegen::generate_rust_test_project_with_metadata;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::{
-    compile_module_hir_with_source, FrontendDiagnosticStyle, FrontendSourceContext,
+    compile_module_hir_with_source, FrontendDiagnosticStyle, FrontendSourceContext, SourceProvider,
 };
 use sifr_lowering::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
@@ -25,8 +25,11 @@ pub(crate) struct GeneratedTestRunnerProject {
     pub(crate) all_required_features: HashSet<StdlibFeature>,
 }
 
-pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<RenderedDiagnostic>> {
-    let test_files_by_module = discover_test_root_modules(test_dir);
+pub fn run_tests(
+    test_dir: &Path,
+    provider: &mut dyn SourceProvider,
+) -> Result<bool, Vec<RenderedDiagnostic>> {
+    let test_files_by_module = discover_test_root_modules(test_dir, provider);
 
     if test_files_by_module.is_empty() {
         write_stderr_line(&format!("No test files found in {}", test_dir.display()));
@@ -38,13 +41,14 @@ pub fn run_tests(test_dir: &Path) -> Result<bool, Vec<RenderedDiagnostic>> {
         test_files_by_module.len()
     ));
 
-    let generated_project = build_test_runner_project(test_dir, &test_files_by_module)?;
+    let generated_project = build_test_runner_project(test_dir, &test_files_by_module, provider)?;
     execute_test_runner_project(&generated_project).map(|outcome| outcome.success)
 }
 
 pub(crate) fn build_test_runner_project(
     test_dir: &Path,
     test_files_by_module: &BTreeMap<String, PathBuf>,
+    provider: &mut dyn SourceProvider,
 ) -> Result<GeneratedTestRunnerProject, Vec<RenderedDiagnostic>> {
     let test_roots: BTreeSet<String> = test_files_by_module.keys().cloned().collect();
     let resolver = ModuleResolver::entry_parent(test_dir);
@@ -52,6 +56,7 @@ pub(crate) fn build_test_runner_project(
         &resolver,
         &test_roots,
         DiscoveryDiagnosticStyle::FilePath,
+        provider,
     )?;
     let mut support_modules: HashMap<String, ParsedProjectModule> = HashMap::new();
     let mut test_modules: HashMap<String, ParsedProjectModule> = HashMap::new();

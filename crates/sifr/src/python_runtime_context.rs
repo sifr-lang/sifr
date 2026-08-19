@@ -2,10 +2,10 @@ use crate::check_and_package_commands::declaration_python_requirements;
 use crate::cli_model_and_entrypoint::{
     diagnostic_with_code, package_diagnostic, DiagnosticFormat, EXIT_USER_DIAGNOSTIC,
 };
-use crate::diagnostic_rendering_and_run::{
-    current_session_package_id, package_session_for_cwd, render_diagnostics,
-};
+use crate::diagnostic_rendering_and_run::{current_session_package_id, render_diagnostics};
 use crate::package_graph_context::load_package_graph_context;
+use crate::package_session_cli::package_session_for_cwd;
+use sifr_frontend::DiskSourceProvider;
 use std::path::PathBuf;
 
 pub(super) fn package_python_runtime(
@@ -190,7 +190,8 @@ pub(super) fn package_python_authoring_context(
     additional_import_roots: &[String],
     diagnostic_format: DiagnosticFormat,
 ) -> Result<PythonAuthoringContext, i32> {
-    let session = package_session_for_cwd(lock_mode).map_err(|error| {
+    let mut provider = DiskSourceProvider::new();
+    let session = package_session_for_cwd(lock_mode, &mut provider).map_err(|error| {
         render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
         crate::cli_model_and_entrypoint::EXIT_USAGE_OR_CONFIG
     })?;
@@ -203,8 +204,9 @@ pub(super) fn package_python_authoring_context(
         );
         return Err(crate::cli_model_and_entrypoint::EXIT_USAGE_OR_CONFIG);
     }
-    let graph_context = load_package_graph_context(&session, lock_mode, diagnostic_format)?
-        .ok_or(crate::cli_model_and_entrypoint::EXIT_USAGE_OR_CONFIG)?;
+    let graph_context =
+        load_package_graph_context(&session, lock_mode, diagnostic_format, &mut provider)?
+            .ok_or(crate::cli_model_and_entrypoint::EXIT_USAGE_OR_CONFIG)?;
     let package_id = current_session_package_id(&session, &graph_context.graph)
         .ok_or(crate::cli_model_and_entrypoint::EXIT_USAGE_OR_CONFIG)?;
     let package = graph_context
@@ -212,7 +214,8 @@ pub(super) fn package_python_authoring_context(
         .packages
         .get(&package_id)
         .ok_or(crate::cli_model_and_entrypoint::EXIT_USAGE_OR_CONFIG)?;
-    let mut requirements = declaration_python_requirements(&graph_context.source_map, None);
+    let mut requirements =
+        declaration_python_requirements(&graph_context.source_map, None, &mut provider);
     requirements.extend(additional_import_roots.iter().map(|root| {
         sifr_package::PythonRequirementContribution {
             root: root.clone(),

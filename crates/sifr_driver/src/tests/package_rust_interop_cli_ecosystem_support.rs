@@ -25,7 +25,7 @@ fn test_build_cli_tooling_probe_and_anyhow_adapter() {
         ),
     );
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "cli-feature-package");
-    let errors = check_package_project(&entrypoint);
+    let errors = check_package_project(&entrypoint, &mut sifr_frontend::DiskSourceProvider::new());
     assert!(
         errors.is_empty(),
         "bridge-safe CLI/tooling package must pass compiler checking: {errors:#?}"
@@ -65,7 +65,10 @@ fn test_check_direct_anyhow_surface_rejected() {
     install_evidence_source(&package_root, CLI_EVIDENCE);
     let accepted_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "cli-feature-package");
-    let accepted = check_package_project(&accepted_entrypoint);
+    let accepted = check_package_project(
+        &accepted_entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     assert!(
         accepted.is_empty(),
         "explicit CliError adapter must remain accepted before the negative mutation: {accepted:#?}"
@@ -74,7 +77,10 @@ fn test_check_direct_anyhow_surface_rejected() {
     install_evidence_source(&package_root, CLI_NEGATIVE);
     let rejected_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "cli-feature-package");
-    let errors = check_package_project(&rejected_entrypoint);
+    let errors = check_package_project(
+        &rejected_entrypoint,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    );
     let rendered = format!("{errors:#?}");
     assert!(
         errors.iter().any(|error| {

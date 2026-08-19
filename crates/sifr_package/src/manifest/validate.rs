@@ -1,26 +1,10 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::manifest::sifr::SifrManifest;
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 use std::path::Path;
 
 pub fn validate_source_root_exists(
-    cargo_package_id: &CargoPackageId,
-    manifest_path: &Path,
-    package_root: &Path,
-    manifest: &SifrManifest,
-) -> Result<(), PackageDiagnostic> {
-    let mut provider = DiskSourceProvider::new();
-    validate_source_root_exists_with_provider(
-        cargo_package_id,
-        manifest_path,
-        package_root,
-        manifest,
-        &mut provider,
-    )
-}
-
-pub fn validate_source_root_exists_with_provider(
     cargo_package_id: &CargoPackageId,
     manifest_path: &Path,
     package_root: &Path,

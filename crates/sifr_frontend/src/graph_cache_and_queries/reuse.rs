@@ -432,8 +432,9 @@ pub(crate) struct ModuleCacheReuseIdentity {
 #[cfg(test)]
 mod tests {
     use crate::{
-        CacheStatus, DocumentVersion, FileId, FrontendContext, FrontendInput, FrontendMode,
-        FrontendReuseStats, ModuleId, ProjectRoot, SourcePath, SourceText, WorkspaceDirtyScope,
+        CacheStatus, DiskSourceProvider, DocumentVersion, FileId, FrontendContext, FrontendInput,
+        FrontendMode, FrontendReuseStats, ModuleId, ProjectRoot, SourcePath, SourceText,
+        WorkspaceDirtyScope,
     };
     use std::fs;
     use std::path::{Path, PathBuf};
@@ -645,10 +646,14 @@ mod tests {
     }
 
     fn load_project(root: &Path) -> FrontendContext {
-        FrontendContext::load_project(&ProjectRoot {
-            root: SourcePath::new(root.to_path_buf()),
-            entrypoint: SourcePath::new(root.join("main.sifr")),
-        })
+        let mut provider = DiskSourceProvider::new();
+        FrontendContext::load_project(
+            &ProjectRoot {
+                root: SourcePath::new(root.to_path_buf()),
+                entrypoint: SourcePath::new(root.join("main.sifr")),
+            },
+            &mut provider,
+        )
         .expect("project should load")
     }
 

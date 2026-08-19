@@ -2,6 +2,7 @@ use crate::errors::{LspError, LspResult};
 use crate::session::Session;
 use serde_json::Value;
 use sifr_analysis::FileId;
+use sifr_analysis::{DiskSourceProvider, SourceProvider};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic};
 use sifr_driver::{
     PackagePythonRuntime, PythonInteropPlan, PythonInteropPlanDiagnostic, PythonTargetInspection,
@@ -129,8 +130,11 @@ impl Session {
     ) -> LspResult<PythonDeclarationSnapshot> {
         self.check_active_request_cancelled()?;
         let document_path = self.store().document(uri)?.path().to_path_buf();
-        let package_root = package_root_for(&document_path);
-        let external_fingerprint = package_root.as_deref().map_or(0, package_input_fingerprint);
+        let mut provider = DiskSourceProvider::new();
+        let package_root = package_root_for(&document_path, &mut provider);
+        let external_fingerprint = package_root
+            .as_deref()
+            .map_or(0, |root| package_input_fingerprint(root, &mut provider));
         let (graph_revision, source_revision, analysis_plan, compiler_has_errors, current_file) =
             self.with_document_analysis(uri, |snapshot, host, file, _source| {
                 let plan = snapshot
@@ -157,7 +161,7 @@ impl Session {
             .unwrap_or_else(|| document_path.clone());
         let package_owner = package_root
             .as_deref()
-            .is_none_or(|root| self.is_python_package_diagnostic_owner(uri, root));
+            .is_none_or(|root| self.is_python_package_diagnostic_owner(uri, root, &mut provider));
         if let Some(entry) = self.python_declarations.entries.get(&cache_key) {
             if entry.graph_revision == graph_revision
                 && entry.source_revision == source_revision
@@ -170,7 +174,8 @@ impl Session {
         let mut plan = analysis_plan.plan;
         let mut diagnostics = Vec::new();
         if let Some(root) = package_root.as_deref() {
-            let environment = self.package_python_environment(root, external_fingerprint, &plan);
+            let environment =
+                self.package_python_environment(root, external_fingerprint, &plan, &mut provider);
             diagnostics.extend(environment.diagnostics.into_iter().map(|diagnostic| {
                 ScopedDiagnostic {
                     file: None,
@@ -221,6 +226,7 @@ impl Session {
         package_root: &Path,
         external_fingerprint: u64,
         plan: &PythonInteropPlan,
+        provider: &mut impl SourceProvider,
     ) -> EnvironmentSnapshot {
         let mut required_import_roots = plan.required_import_roots.clone();
         required_import_roots.sort();
@@ -233,7 +239,8 @@ impl Session {
         if let Some(snapshot) = self.python_declarations.environments.get(&key) {
             return snapshot.clone();
         }
-        let snapshot = resolve_package_python_environment(package_root, &required_import_roots);
+        let snapshot =
+            resolve_package_python_environment(package_root, &required_import_roots, provider);
         #[cfg(test)]
         if snapshot.runtime.is_some() {
             self.python_declarations.environment_probe_runs += 1;
@@ -295,14 +302,20 @@ impl Session {
         Ok(diagnostics)
     }
 
-    fn is_python_package_diagnostic_owner(&self, uri: &str, package_root: &Path) -> bool {
+    fn is_python_package_diagnostic_owner(
+        &self,
+        uri: &str,
+        package_root: &Path,
+        provider: &mut impl SourceProvider,
+    ) -> bool {
         let owner = self
             .document_uris()
             .into_iter()
             .filter(|candidate| self.can_analyze_document(candidate))
             .filter_map(|candidate| {
                 let path = self.store().document(&candidate).ok()?.path();
-                (package_root_for(path).as_deref() == Some(package_root)).then_some(candidate)
+                (package_root_for(path, provider).as_deref() == Some(package_root))
+                    .then_some(candidate)
             })
             .min();
         owner.as_deref() == Some(uri)
@@ -312,8 +325,9 @@ impl Session {
 fn resolve_package_python_environment(
     package_root: &Path,
     required_import_roots: &[String],
+    provider: &mut impl SourceProvider,
 ) -> EnvironmentSnapshot {
-    match resolve_package_python_environment_inner(package_root, required_import_roots) {
+    match resolve_package_python_environment_inner(package_root, required_import_roots, provider) {
         Ok(snapshot) => snapshot,
         Err(diagnostics) => EnvironmentSnapshot {
             runtime: None,
@@ -325,15 +339,20 @@ fn resolve_package_python_environment(
 fn resolve_package_python_environment_inner(
     package_root: &Path,
     required_import_roots: &[String],
+    provider: &mut impl SourceProvider,
 ) -> Result<EnvironmentSnapshot, Vec<RenderedDiagnostic>> {
-    let session = sifr_package::PackageSession::discover(sifr_package::PackageSessionOptions {
-        current_dir: package_root.to_path_buf(),
-        lock_mode: sifr_package::CargoLockMode::Frozen,
-    })
+    let session = sifr_package::PackageSession::discover(
+        sifr_package::PackageSessionOptions {
+            current_dir: package_root.to_path_buf(),
+            lock_mode: sifr_package::CargoLockMode::Frozen,
+        },
+        provider,
+    )
     .map_err(|error| vec![sifr_driver::render_package_diagnostic(error)])?;
     let snapshot = match sifr_package::load_package_graph_snapshot(
         &session.workspace_root,
         sifr_package::CargoLockMode::Frozen,
+        provider,
     ) {
         Ok(snapshot) => snapshot,
         Err(failure) if missing_lockfile_frozen_failure(&failure) => {
@@ -570,10 +589,10 @@ fn mark_embedded_bridge_targets(plan: &mut PythonInteropPlan) {
     }
 }
 
-fn package_root_for(path: &Path) -> Option<PathBuf> {
+fn package_root_for(path: &Path, provider: &mut impl SourceProvider) -> Option<PathBuf> {
     let mut current = path.parent()?.to_path_buf();
     loop {
-        if current.join("sifr.toml").is_file() {
+        if provider.is_file(&current.join("sifr.toml")) {
             return Some(current);
         }
         if !current.pop() {
@@ -582,7 +601,7 @@ fn package_root_for(path: &Path) -> Option<PathBuf> {
     }
 }
 
-fn package_input_fingerprint(root: &Path) -> u64 {
+fn package_input_fingerprint(root: &Path, provider: &mut impl SourceProvider) -> u64 {
     let mut hasher = DefaultHasher::new();
     let mut paths = vec![
         root.join("Cargo.toml"),
@@ -591,7 +610,7 @@ fn package_input_fingerprint(root: &Path) -> u64 {
         root.join(sifr_package::PYTHON_BINDINGS_FILE),
         root.join(sifr_package::PYTHON_CERTIFICATIONS_FILE),
     ];
-    let interpreter = python_environment_selection(root).map(|selection| {
+    let interpreter = python_environment_selection(root, provider).map(|selection| {
         paths.extend(selection.pyproject);
         paths.extend(selection.lock);
         selection.interpreter
@@ -604,7 +623,7 @@ fn package_input_fingerprint(root: &Path) -> u64 {
         }
     }
     hash_python_bridge_inputs(root, &mut hasher);
-    hash_runnable_app_entries(root, &mut hasher);
+    hash_runnable_app_entries(root, &mut hasher, provider);
     if let Some(interpreter) = interpreter {
         interpreter.hash(&mut hasher);
         match std::fs::metadata(&interpreter) {
@@ -618,12 +637,19 @@ fn package_input_fingerprint(root: &Path) -> u64 {
     hasher.finish()
 }
 
-fn hash_runnable_app_entries(root: &Path, hasher: &mut DefaultHasher) {
+fn hash_runnable_app_entries(
+    root: &Path,
+    hasher: &mut DefaultHasher,
+    provider: &mut impl SourceProvider,
+) {
     "runnable-app-entries".hash(hasher);
-    let result = sifr_package::PackageSession::discover(sifr_package::PackageSessionOptions {
-        current_dir: root.to_path_buf(),
-        lock_mode: sifr_package::CargoLockMode::Frozen,
-    })
+    let result = sifr_package::PackageSession::discover(
+        sifr_package::PackageSessionOptions {
+            current_dir: root.to_path_buf(),
+            lock_mode: sifr_package::CargoLockMode::Frozen,
+        },
+        provider,
+    )
     .and_then(|session| session.runnable_app_paths());
     match result {
         Ok(mut paths) => {
@@ -666,11 +692,17 @@ fn hash_python_bridge_inputs(root: &Path, hasher: &mut DefaultHasher) {
     }
 }
 
-fn python_environment_selection(root: &Path) -> Option<sifr_package::PythonEnvironmentSelection> {
-    let session = sifr_package::PackageSession::discover(sifr_package::PackageSessionOptions {
-        current_dir: root.to_path_buf(),
-        lock_mode: sifr_package::CargoLockMode::Frozen,
-    })
+fn python_environment_selection(
+    root: &Path,
+    provider: &mut impl SourceProvider,
+) -> Option<sifr_package::PythonEnvironmentSelection> {
+    let session = sifr_package::PackageSession::discover(
+        sifr_package::PackageSessionOptions {
+            current_dir: root.to_path_buf(),
+            lock_mode: sifr_package::CargoLockMode::Frozen,
+        },
+        provider,
+    )
     .ok()?;
     let manifest = session.manifest?;
     sifr_package::select_root_python_environment(root, &manifest.python)
@@ -750,6 +782,7 @@ pub(crate) fn enrich_hover(
 #[cfg(test)]
 mod tests {
     use super::{package_input_fingerprint, policy_help};
+    use sifr_analysis::DiskSourceProvider;
 
     #[test]
     fn protocol_policy_help_covers_affine_and_callback_contracts() {
@@ -783,18 +816,28 @@ mod tests {
         )
         .expect("Cargo lock");
 
-        let initial = package_input_fingerprint(root.path());
+        let mut provider = DiskSourceProvider::new();
+        let initial = package_input_fingerprint(root.path(), &mut provider);
         std::fs::write(root.path().join("uv.lock"), "unselected-lock-change")
             .expect("unselected lock");
-        assert_eq!(initial, package_input_fingerprint(root.path()));
+        assert_eq!(
+            initial,
+            package_input_fingerprint(root.path(), &mut provider)
+        );
 
         std::fs::write(metadata.join("uv.lock"), "lock-b").expect("selected lock drift");
-        assert_ne!(initial, package_input_fingerprint(root.path()));
+        assert_ne!(
+            initial,
+            package_input_fingerprint(root.path(), &mut provider)
+        );
 
-        let before_app = package_input_fingerprint(root.path());
+        let before_app = package_input_fingerprint(root.path(), &mut provider);
         std::fs::create_dir(root.path().join("src")).expect("source directory");
         std::fs::write(root.path().join("src/main.sifr"), "def main():\n    pass\n")
             .expect("application entrypoint");
-        assert_ne!(before_app, package_input_fingerprint(root.path()));
+        assert_ne!(
+            before_app,
+            package_input_fingerprint(root.path(), &mut provider)
+        );
     }
 }

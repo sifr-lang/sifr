@@ -5,7 +5,7 @@ use sifr_diagnostics::{
     ChildSeverity, DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink, Severity,
     SourceMap, SourceSpan,
 };
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 use sifr_python_ast::Stmt;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -87,16 +87,10 @@ impl ModuleResolver {
         self.workspace.is_some()
     }
 
-    #[cfg(test)]
-    pub(crate) fn resolve(&self, module_name: &str) -> Result<ResolvedModule, ResolutionError> {
-        let mut provider = DiskSourceProvider::new();
-        self.resolve_with_provider(module_name, &mut provider)
-    }
-
-    pub(crate) fn resolve_with_provider(
+    pub(crate) fn resolve(
         &self,
         module_name: &str,
-        provider: &mut impl SourceProvider,
+        provider: &mut dyn SourceProvider,
     ) -> Result<ResolvedModule, ResolutionError> {
         let entry_path = self.module_source_path(module_name);
         if provider.is_file(&entry_path) {
@@ -145,7 +139,7 @@ impl ModuleResolver {
     fn reject_namespace_file_collision(
         &self,
         resolved: &ResolvedModule,
-        provider: &mut impl SourceProvider,
+        provider: &mut dyn SourceProvider,
     ) -> Result<(), ResolutionError> {
         let Some((parent_name, parent_path)) =
             self.parent_module_file(&resolved.module_name, provider)
@@ -162,7 +156,7 @@ impl ModuleResolver {
     fn parent_module_file(
         &self,
         module_name: &str,
-        provider: &mut impl SourceProvider,
+        provider: &mut dyn SourceProvider,
     ) -> Option<(String, PathBuf)> {
         let parts: Vec<&str> = module_name.split('.').collect();
         if parts.len() < 2 {
@@ -342,14 +336,9 @@ pub(crate) enum DiscoveryDiagnosticStyle {
     FilePath,
 }
 
-fn discover_project_sifr_files(project_dir: &Path) -> Vec<PathBuf> {
-    let mut provider = DiskSourceProvider::new();
-    discover_project_sifr_files_with_provider(project_dir, &mut provider)
-}
-
-fn discover_project_sifr_files_with_provider(
+fn discover_project_sifr_files(
     project_dir: &Path,
-    provider: &mut impl SourceProvider,
+    provider: &mut dyn SourceProvider,
 ) -> Vec<PathBuf> {
     let mut sifr_files = Vec::new();
     if let Ok(entries) = provider.read_dir(project_dir) {
@@ -368,9 +357,12 @@ fn is_test_module_name(module_name: &str) -> bool {
     module_name.starts_with("test_") || module_name.ends_with("_test")
 }
 
-pub(crate) fn discover_test_root_modules(test_dir: &Path) -> BTreeMap<String, PathBuf> {
+pub(crate) fn discover_test_root_modules(
+    test_dir: &Path,
+    provider: &mut dyn SourceProvider,
+) -> BTreeMap<String, PathBuf> {
     let mut test_files_by_module = BTreeMap::new();
-    for path in discover_project_sifr_files(test_dir) {
+    for path in discover_project_sifr_files(test_dir, provider) {
         let Some(file_stem) = path.file_stem() else {
             continue;
         };
@@ -611,31 +603,34 @@ pub(crate) fn parse_import_closure_modules(
     resolver: &ModuleResolver,
     root_modules: &BTreeSet<String>,
     diagnostic_style: DiscoveryDiagnosticStyle,
+    provider: &mut dyn SourceProvider,
 ) -> Result<HashMap<String, Vec<Stmt>>, Vec<RenderedDiagnostic>> {
-    parse_import_closure_source_modules(resolver, root_modules, diagnostic_style).map(|modules| {
-        modules
-            .into_iter()
-            .map(|(name, module)| (name, module.suite))
-            .collect()
-    })
+    parse_import_closure_source_modules(resolver, root_modules, diagnostic_style, provider).map(
+        |modules| {
+            modules
+                .into_iter()
+                .map(|(name, module)| (name, module.suite))
+                .collect()
+        },
+    )
 }
 
 pub(crate) fn parse_import_closure_source_modules(
     resolver: &ModuleResolver,
     root_modules: &BTreeSet<String>,
     diagnostic_style: DiscoveryDiagnosticStyle,
+    provider: &mut dyn SourceProvider,
 ) -> Result<HashMap<String, ParsedProjectModule>, Vec<RenderedDiagnostic>> {
     let mut parsed_modules: HashMap<String, ParsedProjectModule> = HashMap::new();
     let mut parsed_names: BTreeSet<String> = BTreeSet::new();
     let mut pending = root_modules.clone();
-    let mut provider = DiskSourceProvider::new();
 
     while let Some(module_name) = pending.pop_first() {
         if !parsed_names.insert(module_name.clone()) {
             continue;
         }
 
-        let path = match resolver.resolve_with_provider(&module_name, &mut provider) {
+        let path = match resolver.resolve(&module_name, provider) {
             Ok(resolved) => resolved.path,
             Err(error) if resolver.has_workspace() => {
                 return Err(vec![error.to_spanless_diagnostic(resolver)]);
@@ -661,7 +656,7 @@ pub(crate) fn parse_import_closure_source_modules(
             if parsed_names.contains(dependency.module_name.as_str()) {
                 continue;
             }
-            match resolver.resolve_with_provider(&dependency.module_name, &mut provider) {
+            match resolver.resolve(&dependency.module_name, provider) {
                 Ok(_) => {
                     pending.insert(dependency.module_name);
                 }

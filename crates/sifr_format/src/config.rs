@@ -1,5 +1,5 @@
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
-use sifr_frontend::{DiskSourceProvider, SourceProvider};
+use sifr_frontend::SourceProvider;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
@@ -42,18 +42,24 @@ pub fn effective_format_config(
     config_inputs: &[String],
     isolated: bool,
     overrides: &FormatConfigOverrides,
+    provider: &mut impl SourceProvider,
 ) -> Result<EffectiveFormatConfig, Vec<RenderedDiagnostic>> {
     let mut config = EffectiveFormatConfig::default();
     if !isolated {
-        if let Some(path) = discover_sifr_toml(start_dir)? {
-            apply_config_file(&mut config, &path, &mut BTreeSet::new())?;
+        if let Some(path) = discover_sifr_toml(start_dir, provider)? {
+            apply_config_file(&mut config, &path, &mut BTreeSet::new(), provider)?;
         }
     }
     for input in config_inputs {
         if let Some((key, value)) = input.split_once('=') {
             apply_config_override(&mut config, key, value)?;
         } else if !isolated {
-            apply_config_file(&mut config, Path::new(input), &mut BTreeSet::new())?;
+            apply_config_file(
+                &mut config,
+                Path::new(input),
+                &mut BTreeSet::new(),
+                provider,
+            )?;
         }
     }
     apply_overrides(&mut config, overrides);
@@ -62,18 +68,20 @@ pub fn effective_format_config(
 
 pub fn effective_format_options_for_file(
     path: &Path,
+    provider: &mut impl SourceProvider,
 ) -> Result<crate::FormatOptions, Vec<RenderedDiagnostic>> {
     let start_dir = path.parent().unwrap_or_else(|| Path::new("."));
-    effective_format_config(start_dir, &[], false, &FormatConfigOverrides::default())
-        .map(|config| config.format_options)
+    effective_format_config(
+        start_dir,
+        &[],
+        false,
+        &FormatConfigOverrides::default(),
+        provider,
+    )
+    .map(|config| config.format_options)
 }
 
-fn discover_sifr_toml(start_dir: &Path) -> Result<Option<PathBuf>, Vec<RenderedDiagnostic>> {
-    let mut provider = DiskSourceProvider::new();
-    discover_sifr_toml_with_provider(start_dir, &mut provider)
-}
-
-fn discover_sifr_toml_with_provider(
+fn discover_sifr_toml(
     start_dir: &Path,
     provider: &mut impl SourceProvider,
 ) -> Result<Option<PathBuf>, Vec<RenderedDiagnostic>> {
@@ -98,15 +106,6 @@ fn discover_sifr_toml_with_provider(
 }
 
 fn apply_config_file(
-    config: &mut EffectiveFormatConfig,
-    path: &Path,
-    seen: &mut BTreeSet<PathBuf>,
-) -> Result<(), Vec<RenderedDiagnostic>> {
-    let mut provider = DiskSourceProvider::new();
-    apply_config_file_with_provider(config, path, seen, &mut provider)
-}
-
-fn apply_config_file_with_provider(
     config: &mut EffectiveFormatConfig,
     path: &Path,
     seen: &mut BTreeSet<PathBuf>,
@@ -159,14 +158,14 @@ fn apply_extends(
         return Ok(());
     };
     if let Some(path) = value.as_str() {
-        return apply_config_file_with_provider(config, &parent.join(path), seen, provider);
+        return apply_config_file(config, &parent.join(path), seen, provider);
     }
     let Some(paths) = value.as_array() else {
         return Err(vec![fmt_diagnostic("extend must be a string or array")]);
     };
     for path in paths {
         let path = as_string("extend", path)?;
-        apply_config_file_with_provider(config, &parent.join(path), seen, provider)?;
+        apply_config_file(config, &parent.join(path), seen, provider)?;
     }
     Ok(())
 }

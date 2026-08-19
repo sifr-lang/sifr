@@ -2,13 +2,12 @@ use super::{
     collect_module_exports, diagnostic_with_code, editor_semantics_from_module,
     hir_diagnostic_to_rendered, local_import_dependencies, module_state, reveal_type_diagnostics,
     source_hash, symbols_from_hir, warning_diagnostics, CacheFamily, CacheKeyContext,
-    DiagnosticsCacheKey, DiskSourceProvider, DocumentVersion, FileId, HirLoweringCacheKey,
-    ModuleAnalysisView, ParseCacheKey, ProjectAnalysisView, SourceDependency, SourceFileView,
-    SourceHash, SourceMapCacheKey, SourceMapView, SourceOrigin, SourcePath, SourceProvider,
-    SourceRevision, SourceText, SymbolBucketScope, SymbolBucketsCacheKey, TrackingSourceProvider,
-    WorkspaceAuxiliarySource, WorkspaceCompilerOptions, WorkspaceDirtyReason, WorkspaceDirtyScope,
-    WorkspaceDirtyScopeReport, WorkspacePackageConfigIdentity, WorkspaceSessionTarget,
-    WorkspaceSingleFileTarget,
+    DiagnosticsCacheKey, DocumentVersion, FileId, HirLoweringCacheKey, ModuleAnalysisView,
+    ParseCacheKey, ProjectAnalysisView, SourceFileView, SourceHash, SourceMapCacheKey,
+    SourceMapView, SourceOrigin, SourcePath, SourceProvider, SourceRevision, SourceText,
+    SymbolBucketScope, SymbolBucketsCacheKey, WorkspaceAuxiliarySource, WorkspaceCompilerOptions,
+    WorkspaceDirtyReason, WorkspaceDirtyScope, WorkspaceDirtyScopeReport,
+    WorkspacePackageConfigIdentity, WorkspaceSessionTarget, WorkspaceSingleFileTarget,
 };
 use crate::frontend_reuse::FrontendReuseCaches;
 use crate::module_signatures::{module_signature, ModuleSignature};

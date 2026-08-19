@@ -52,7 +52,8 @@ fn ensure_formatting_enabled(session: &Session) -> LspResult<()> {
 }
 
 fn format_options(params: &Value, path: &Path) -> LspResult<FormatOptions> {
-    let mut options = sifr_analysis::format_options_for_path(path)
+    let mut provider = sifr_analysis::DiskSourceProvider::new();
+    let mut options = sifr_analysis::format_options_for_path(path, &mut provider)
         .map_err(|diagnostics| LspError::internal(formatter_diagnostic_message(&diagnostics)))?;
     options.final_newline = params
         .pointer("/options/insertFinalNewline")

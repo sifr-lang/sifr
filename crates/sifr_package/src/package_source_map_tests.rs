@@ -1,8 +1,11 @@
 use crate::cargo::metadata::parse_metadata_json;
 use crate::graph::derive::{derive_package_graph, SifrPackageId};
-use crate::imports::source_map::{DottedModulePath, PackageImportOrigin, PackageSourceMap};
+use crate::imports::source_map::{
+    DottedModulePath, PackageImportOrigin, PackageImportResolutionResult, PackageSourceMap,
+};
 use crate::manifest::sifr::ImportRoot;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_frontend::DiskSourceProvider;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -21,24 +24,25 @@ fn package_source_map_resolves_own_and_direct_dependency_modules() {
         &["vector"],
     );
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math", &math)]);
-    let source_map = PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map =
+        PackageSourceMap::build(&graph, &mut DiskSourceProvider::new()).expect("source map builds");
 
-    let own = source_map
-        .resolve_import(
-            &graph,
-            &sifr_id(&app),
-            &DottedModulePath("app.main".to_string()),
-        )
-        .expect("own module resolves");
+    let PackageImportResolutionResult::Resolved(own) = source_map.resolve_import_result(
+        &graph,
+        &sifr_id(&app),
+        &DottedModulePath("app.main".to_string()),
+    ) else {
+        panic!("own module must resolve");
+    };
     assert_eq!(own.origin, PackageImportOrigin::OwnPackage);
 
-    let direct = source_map
-        .resolve_import(
-            &graph,
-            &sifr_id(&app),
-            &DottedModulePath("math.vector".to_string()),
-        )
-        .expect("direct dependency module resolves");
+    let PackageImportResolutionResult::Resolved(direct) = source_map.resolve_import_result(
+        &graph,
+        &sifr_id(&app),
+        &DottedModulePath("math.vector".to_string()),
+    ) else {
+        panic!("direct dependency module must resolve");
+    };
     assert_eq!(direct.resolved_module.package_id, sifr_id(&math));
 }
 
@@ -61,15 +65,16 @@ fn transitive_dependency_import_reports_0202() {
         &[&app, &image, &math],
         &[edge(&app, "image", &image), edge(&image, "math", &math)],
     );
-    let source_map = PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map =
+        PackageSourceMap::build(&graph, &mut DiskSourceProvider::new()).expect("source map builds");
 
-    let diagnostic = source_map
-        .resolve_import(
-            &graph,
-            &sifr_id(&app),
-            &DottedModulePath("math.vector".to_string()),
-        )
-        .expect_err("transitive import must fail");
+    let PackageImportResolutionResult::Unresolved(diagnostic) = source_map.resolve_import_result(
+        &graph,
+        &sifr_id(&app),
+        &DottedModulePath("math.vector".to_string()),
+    ) else {
+        panic!("transitive import must remain unresolved");
+    };
 
     assert_eq!(
         diagnostic.code,
@@ -99,15 +104,16 @@ fn alias_import_root_remaps_to_dependency_export_root() {
         &["vector"],
     );
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math1", &math)]);
-    let source_map = PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map =
+        PackageSourceMap::build(&graph, &mut DiskSourceProvider::new()).expect("source map builds");
 
-    let resolved = source_map
-        .resolve_import(
-            &graph,
-            &sifr_id(&app),
-            &DottedModulePath("math_v1.vector".to_string()),
-        )
-        .expect("alias remaps to dependency export root");
+    let PackageImportResolutionResult::Resolved(resolved) = source_map.resolve_import_result(
+        &graph,
+        &sifr_id(&app),
+        &DottedModulePath("math_v1.vector".to_string()),
+    ) else {
+        panic!("alias must remap to the dependency export root");
+    };
 
     assert_eq!(
         resolved.resolved_module.module_path,
@@ -137,15 +143,16 @@ fn dotted_dependency_export_root_resolves_by_longest_scope_prefix() {
         &["vector"],
     );
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math", &math)]);
-    let source_map = PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map =
+        PackageSourceMap::build(&graph, &mut DiskSourceProvider::new()).expect("source map builds");
 
-    let resolved = source_map
-        .resolve_import(
-            &graph,
-            &sifr_id(&app),
-            &DottedModulePath("math.core.vector".to_string()),
-        )
-        .expect("dotted export root resolves");
+    let PackageImportResolutionResult::Resolved(resolved) = source_map.resolve_import_result(
+        &graph,
+        &sifr_id(&app),
+        &DottedModulePath("math.core.vector".to_string()),
+    ) else {
+        panic!("dotted export root must resolve");
+    };
 
     assert_eq!(resolved.resolved_module.package_id, sifr_id(&math));
 }
@@ -164,15 +171,18 @@ fn private_dependency_module_reports_0203() {
         &["_internal"],
     );
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math", &math)]);
-    let source_map = PackageSourceMap::build(&graph).expect("source map builds");
+    let source_map =
+        PackageSourceMap::build(&graph, &mut DiskSourceProvider::new()).expect("source map builds");
 
-    let diagnostic = source_map
-        .resolve_import(
+    let PackageImportResolutionResult::PrivateAccess(diagnostic) = source_map
+        .resolve_import_result(
             &graph,
             &sifr_id(&app),
             &DottedModulePath("math._internal".to_string()),
         )
-        .expect_err("private dependency module must fail");
+    else {
+        panic!("private dependency module must preserve private access state");
+    };
 
     assert_eq!(
         diagnostic.code,
@@ -187,7 +197,7 @@ fn graph(
 ) -> crate::SifrPackageGraph {
     let metadata =
         parse_metadata_json(&metadata_json(&temp.root, packages, edges)).expect("metadata parses");
-    derive_package_graph(metadata).expect("graph derives")
+    derive_package_graph(metadata, &mut DiskSourceProvider::new()).expect("graph derives")
 }
 
 fn package(

@@ -671,7 +671,8 @@ pub(super) fn cmd_repair(check: bool, diagnostic_format: DiagnosticFormat) -> i3
             return EXIT_USAGE_OR_CONFIG;
         }
     };
-    let repair = sifr_package::repair_projection(&root, check);
+    let mut provider = DiskSourceProvider::new();
+    let repair = sifr_package::repair_projection(&root, check, &mut provider);
     if repair.diagnostics.is_empty() {
         EXIT_SUCCESS
     } else {
@@ -715,16 +716,17 @@ pub(super) fn cmd_lsp(stdio: bool, parent_pid: Option<u32>) -> i32 {
 
 pub(super) fn resolve_compilation_mode(
     file: &Path,
+    provider: &mut dyn SourceProvider,
 ) -> Result<CompilationMode, Vec<RenderedDiagnostic>> {
-    if find_workspace_root(file)?.is_some() {
+    if find_workspace_root(file, provider)?.is_some() {
         Ok(CompilationMode::Project)
     } else {
         Ok(CompilationMode::SingleFile)
     }
 }
 
-pub(super) fn read_source(file: &Path) -> String {
-    match DiskSourceProvider::new().read_file(file) {
+pub(super) fn read_source(file: &Path, provider: &mut dyn SourceProvider) -> String {
+    match provider.read_file(file) {
         Ok(source) => source,
         Err(e) => {
             let _ = writeln!(
