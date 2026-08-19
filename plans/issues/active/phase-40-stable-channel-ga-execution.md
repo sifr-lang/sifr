@@ -1703,7 +1703,7 @@ resumes from the merged Item 13 result.
   and
   `plans/reviews/archive/phase-40-candidate-release-notes-review-pass-2-satisfied.md`.
 - The canonical candidate plan has SHA-256
-  `3ae2d0af46e3a0352a13f70f8287b20adf433e099c61f67985c7bdf0c6274c38`.
+  `aeb96c3b5ddf0974539519ae2274d16d07c3bf2d66498ce31c216da4d933d4a3`.
   Focused qualification plus evidence custody passed 2/2; the unfiltered
   distribution area passed 125/125; canonical plan, release-report, and
   qualification-index validation passed; and the source checkout remained
