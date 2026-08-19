@@ -1592,8 +1592,31 @@ blocking findings
 Deferred follow-up: M12 should align provisional `MethodSlots` attached-owner
 handling with the `StaticProgram` shortcut, add a direct wrongly-bound owner
 negative case, and make canonical marker-import enforcement consistent.
+
+No-context slot-bound prerequisite state: complete
+PR: [`sifr-lang/sifr#3314`](https://github.com/sifr-lang/sifr/pull/3314)
+Base SHA: `c2850630aabaf5ebc999ae1577d3b6b2789faafc`
+Candidate SHA: `7861d4db6f508f55ea342a22a4096bc399b32ea5`
+Merge SHA: `c1b41a6078cff5bb678bd94df5bbf4e8c7e0ec6c`
+Changed paths: generic Rust bound emission and its focused code-generation
+test under `crates/sifr_codegen`.
+Validation: the focused no-context method-slot bound test passed; code-generation
+Clippy passed with warnings denied; formatting, HIR maintainability, the
+900-line file-size guardrail, and `git diff --check` passed; the release
+compiler built; and a fresh task-owned native M10 package demo passed with
+plain and serializer-aware attached dump methods plus typed context. The one
+create-PR gate and one merge gate ran on the unchanged candidate. Both passed
+all guardrails, verification self-tests, Rust-interop tiers, compatibility,
+stale-draft, and stable-candidate checks before stopping at separately owned
+Rust-interop fixture-matrix inputs. Neither gate was rerun.
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3314#issuecomment-5339255712)).
+Deferred follow-up: M12 should strengthen generic-bound assertions to pin both
+the positive composite bound and the `StaticProgram`-only negative, and resolve
+the pre-existing nondeterministic multi-context selection.
 Next action: implement the M10 package facade on compiler merge
-`c2850630aabaf5ebc999ae1577d3b6b2789faafc` and package merge
+`c1b41a6078cff5bb678bd94df5bbf4e8c7e0ec6c` and package merge
 `8af4a1f4d598829ac427f96c34b76289e13eedd9`.
 
 ### M11: Complete Model Operations and Schema Surface
