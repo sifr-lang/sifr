@@ -662,19 +662,14 @@ fn normalized_field_types(
     expected: &[(String, String)],
 ) -> Result<Vec<(String, Type)>, String> {
     let local_prefix = format!("{module_name}.{}.", selection.owner);
-    let parent_name = selection.data_parent.as_deref();
-    let parent_identity = class
-        .parent_type
-        .as_ref()
-        .and_then(|parent| match parent {
-            Type::Class { identity, name, .. } => Some(inheritance::canonical_parent_identity(
-                module_name,
-                identity.as_deref(),
-                name,
-            )),
-            _ => None,
-        })
-        .or_else(|| parent_name.map(|name| format!("{module_name}.{name}")));
+    let parent_identity = class.parent_type.as_ref().and_then(|parent| match parent {
+        Type::Class { identity, name, .. } => Some(inheritance::canonical_parent_identity(
+            module_name,
+            identity.as_deref(),
+            name,
+        )),
+        _ => None,
+    });
     let parent = parent_identity.as_deref().and_then(|identity| {
         inheritance::parent_selection(module_name, result, external_defs, identity)
     });
