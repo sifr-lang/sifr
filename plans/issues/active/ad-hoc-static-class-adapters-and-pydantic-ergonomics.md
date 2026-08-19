@@ -1551,8 +1551,28 @@ blocking findings
 Deferred follow-up: M12 should add a direct ordered-projection regression test
 and can deduplicate the `HashMap` and `IndexMap` mapping bridge bodies. Existing
 duplicate-key and custom-hasher behavior matches the prior `HashMap` scope.
+
+Static-program structural-bound prerequisite state: complete
+PR: [`sifr-lang/sifr#3309`](https://github.com/sifr-lang/sifr/pull/3309)
+Base SHA: `f84157163debdf2cd1ca00b15ef45541ced602e9`
+Candidate SHA: `90f9086b11b7d3d2163a1a238aabbf6af048befb`
+Merge SHA: `441e7f543ebe1d559f31687e2c09055935b4fc94`
+Changed path:
+`crates/sifr_runtime/src/interop/structural/static_program.rs`.
+Validation: the focused static-program bound and plain-generic code-generation
+tests passed. Runtime and code-generation Clippy passed with warnings denied.
+Formatting, HIR maintainability, the 900-line file-size guardrail, and
+`git diff --check` passed. The package workspace compiled with the exact
+candidate. Its M10 Sifr demo also generated and compiled through a generic
+facade that returns `dict[str, JsonValue]`. The later demo execution error was
+inside the package JSON-value bridge. The one create-PR gate and one merge gate
+ran on the unchanged candidate. Both passed their preceding guards and stopped
+at the shared stale generated-demo freshness boundary. Neither gate was rerun.
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3309#issuecomment-5338347038)).
 Next action: implement the M10 package facade on compiler merge
-`72abec78703dfb55cbdaad929b1475b2000c56ea` and package merge
+`441e7f543ebe1d559f31687e2c09055935b4fc94` and package merge
 `8af4a1f4d598829ac427f96c34b76289e13eedd9`.
 
 ### M11: Complete Model Operations and Schema Surface
@@ -1709,5 +1729,5 @@ compiler implementation or demo output, so it did not absorb or rerun this
 failure. Refresh or retire the companions under this phase's emission owner.
 
 Next action: implement M10 serializers, computed fields, and attached dump
-methods on compiler merge `72abec78703dfb55cbdaad929b1475b2000c56ea`
+methods on compiler merge `441e7f543ebe1d559f31687e2c09055935b4fc94`
 and package merge `8af4a1f4d598829ac427f96c34b76289e13eedd9`.
