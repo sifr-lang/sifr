@@ -277,7 +277,6 @@ def assert_json_rules(
     *,
     expected_code: str,
     case_id: str,
-    forbidden_codes: set[str] | None = None,
     forbidden_prefixes: tuple[str, ...] = (),
     required_args: set[str] | None = None,
     require_help: bool = False,
@@ -298,9 +297,6 @@ def assert_json_rules(
         if require_help:
             require(diagnostic.get("help"), f"{expected_code} dropped help text")
         break
-    if forbidden_codes:
-        leaked = sorted(codes.intersection(forbidden_codes))
-        require(not leaked, f"{case_id}: retired workspace import code leaked: {leaked}")
     for prefix in forbidden_prefixes:
         leaked = sorted(code for code in codes if code.startswith(prefix))
         require(not leaked, f"{case_id}: forbidden diagnostic family leaked: {leaked}")

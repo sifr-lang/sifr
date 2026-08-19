@@ -25,6 +25,8 @@ SCAN_ROOTS = (
     Path("demos"),
     Path("scripts"),
     Path("editor_integrations"),
+    Path("plans/issues/archive"),
+    Path("plans/reviews/archive"),
 )
 TEXT_EXTENSIONS = {".json", ".md", ".mdx", ".py", ".rs", ".sifr", ".toml", ".yml", ".yaml"}
 SKIP_DIR_NAMES = {
@@ -173,6 +175,15 @@ RULES = (
         ("crates/sifr_package/src/manifest/production.rs", "crates/sifr_driver/src/workspace/mod.rs"),
     ),
     Rule(
+        "legacy-source-default",
+        "non-src package source-root default",
+        (
+            re.compile(r"unwrap_or_else\s*\(\|\|\s*['\"](?!src['\"])[^'\"]+['\"]\.to_string\(\)"),
+            re.compile(r"None\s*=>[^\n]*PackageSourceRoot\s*\(\s*PathBuf::from\s*\(\s*['\"](?!src['\"])[^'\"]+['\"]"),
+        ),
+        ("crates/sifr_package/src/manifest/", "crates/sifr_driver/src/workspace/"),
+    ),
+    Rule(
         "legacy-manifest-targets",
         "manifest export or binary-table reader",
         (
@@ -305,11 +316,15 @@ def validate_contracts(payload: Any, root: Path) -> None:
 def should_skip(relative: Path) -> bool:
     if relative in EXCLUDED_FILES or relative.suffix not in TEXT_EXTENSIONS:
         return True
-    if relative.name.endswith(".emitted.rs") or relative.name.endswith(".snap"):
+    if relative.name == "emitted.rs" or relative.name.endswith(".snap"):
         return True
     if set(relative.parts) & SKIP_DIR_NAMES:
         return True
-    return len(relative.parts) >= 3 and relative.parts[:3] == ("plans", "issues", "archive")
+    return (
+        len(relative.parts) >= 3
+        and relative.parts[0] == "plans"
+        and relative.parts[2] == "archive"
+    )
 
 
 def public_stdlib_alias(line: str, relative: str) -> str | None:
@@ -371,6 +386,10 @@ def run_self_test() -> None:
             "copy-heap-bisect": ("stdlib/sifr/heapq.sifr", "def heapify_copy(values):"),
             "legacy-verification-schema": ("verification/runner/profile.py", 'parser.add_argument("--hardening-summary")'),
             "legacy-source-roots": ("crates/sifr_package/src/manifest/production.rs", 'source.get("roots")'),
+            "legacy-source-default": (
+                "crates/sifr_driver/src/workspace/mod.rs",
+                'let root = source_root.unwrap_or_else(|| "source".to_string());',
+            ),
             "legacy-manifest-targets": ("crates/sifr_package/src/manifest/read.rs", 'let exports = value.get("exports");'),
             "expect-stdout-harness": ("verification/runner/harness.py", 'def extract_expect_stdout(source):'),
             "hidden-compat-names": ("docs/compiler.md", "__compat_sifr_sync_Lock"),
@@ -387,13 +406,27 @@ def run_self_test() -> None:
         archive = root / "plans/issues/archive/history.md"
         archive.parent.mkdir(parents=True, exist_ok=True)
         archive.write_text("__compat_sifr_sync_Archived\n", encoding="utf-8")
-        generated = root / "demos/example/main.emitted.rs"
+        generated = root / "demos/example/emitted.rs"
         generated.parent.mkdir(parents=True, exist_ok=True)
         generated.write_text("SIFR-WORKSPACE-0101\n", encoding="utf-8")
         retained = root / "crates/sifr_lint/src/lib.rs"
         retained.parent.mkdir(parents=True, exist_ok=True)
         retained.write_text("enum RuleStatus { Deprecated }\n", encoding="utf-8")
         failures = scan(root)
+        excluded_paths = {
+            archive.relative_to(root),
+            generated.relative_to(root),
+        }
+        leaked_exclusions = sorted(
+            failure.path.as_posix()
+            for failure in failures
+            if failure.path in excluded_paths
+        )
+        if leaked_exclusions:
+            raise SystemExit(
+                "no-compatibility guard scanned excluded archive/generated mutations: "
+                + ", ".join(leaked_exclusions)
+            )
     observed = {failure.rule_id for failure in failures}
     expected = set(mutations)
     if observed != expected:

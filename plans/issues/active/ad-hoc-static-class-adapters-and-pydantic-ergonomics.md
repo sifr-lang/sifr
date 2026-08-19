@@ -1657,5 +1657,20 @@ gates both stopped at `guardrail_demo_emitted_freshness`. Item 13 changed no
 compiler implementation or demo output, so it did not absorb or rerun this
 failure. Refresh or retire the companions under this phase's emission owner.
 
+External baseline record (2026-08-19): pre-v1 Item 16 found four failing
+expectations introduced by this phase's compiler merge chain. Three attached
+API tests still expected the old compact HIR debug spelling instead of the
+current structured `GenericCall` representation:
+`adapter_plan_retains_selected_attached_api_set`,
+`concrete_generic_adapted_child_receives_concrete_attached_signature`, and
+`imported_selected_owner_uses_finalized_set_through_type_and_instance_aliases`.
+The lowering test `test_unknown_parent_class_has_class_code` still expected
+the old undefined-parent message, while the current compiler emits the generic
+unknown-type diagnostic and reports that the parent type is not a class. Item
+16 updated only those assertions so its validation could observe the current
+tree. It did not change either owning production mechanism. Restore the more
+specific undefined-parent diagnostic, and preserve durable structured HIR
+assertions, under this phase's compiler owner.
+
 Next action: implement M10 serializers, computed fields, and attached dump
 methods on package merge `8af4a1f4d598829ac427f96c34b76289e13eedd9`.

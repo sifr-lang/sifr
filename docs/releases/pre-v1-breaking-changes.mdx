@@ -25,7 +25,7 @@ changes include:
 - Use `platform.system`, `platform.machine`, `platform.node`, `platform.release`, `platform.version`, and `platform.processor`.
 - Use `time.time`, `time.strftime`, `sys.argv`, `sys.exit`, and the documented `sifr.env` names.
 - Use `json.loads`, `json.dumps`, `tomllib.loads`, `fnmatch.filter`, `html.escape`, and `html.unescape`.
-- Use `calendar.isleap`, `calendar.weekday`, `calendar.monthrange`, `urlparse.parse`, and `urlparse.build`.
+- Use `calendar.isleap`, `calendar.weekday`, `calendar.monthrange`, `url.parse`, and `url.build`.
 - Use first-class `bytes` methods and bytes-native hashing. Encode text before hashing it.
 - Use first-class `set[T]` operations. `heapq` and `bisect` now mutate their input collections.
 
@@ -47,7 +47,8 @@ The compiler does not infer receiver mutability from the method body.
 
 ## Packages and source layout
 
-Use one optional `[source].root` value. It defaults to `src`.
+Use one optional `[source].root` value. It defaults to `src`. The `[source]`
+table does not accept other fields.
 
 Do not use multiple source roots, manifest export lists, or Sifr manifest
 binary tables. Declare library exports in `src/__init__.sifr`. Put applications
