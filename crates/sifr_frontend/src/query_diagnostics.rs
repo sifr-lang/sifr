@@ -193,7 +193,13 @@ pub fn collect_module_exports(
     let mut rust_callback_exports = RustCallbackExports::default();
     let (mut generic_exports, mut type_param_bound_exports, local_classes) =
         declared_generic_metadata(module_name, module);
-    let structural_method_exports = structural_method_map(module, &local_classes, lowering_result);
+    let structural_method_exports = structural_method_map(
+        module_name,
+        module,
+        &local_classes,
+        lowering_result,
+        external_defs,
+    );
     let imported_ancestry = imported_class_ancestry(module, external_defs);
 
     for (name, (type_params, alias)) in &lowering_result.generic_type_aliases {

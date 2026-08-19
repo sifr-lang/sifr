@@ -176,6 +176,14 @@ flag. For `Result[T, E]`, `output` describes `T` and `fallible` is true. For oth
 `output` equals `result` and `fallible` is false. Packages use these typed facts to reject invalid
 handler signatures during specialization. They do not parse a displayed type name.
 
+An inherited handler signature is specialized through every generic ancestor from the concrete
+adapted owner to the checked callable owner. Module exports retain a handler's checked callable
+target and its signature relative to the exported adapted owner's type parameters. An importing
+module therefore reconstructs the same concrete handler shape, descriptor, declaration order, and
+method or parameter metadata. A descriptor source origin is exposed only while its declaring class
+is the current declaration. Inherited and imported shapes omit that unrelated origin instead of
+making it available to a different declaration's issue registry.
+
 The compiler accepts synchronous static, class, shared-instance, mutable-instance, and owned
 receiver handlers. A checked handler can return an infallible structural value or a typed `Result`.
 An instance handler can also declare one owned structural value before its optional borrowed

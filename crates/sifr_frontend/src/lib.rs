@@ -23,6 +23,7 @@ pub use const_evaluator::*;
 mod structural_shape;
 pub use structural_shape::*;
 mod class_method_exports;
+mod handler_ancestry;
 mod slot_table;
 #[cfg(test)]
 mod slot_table_tests;

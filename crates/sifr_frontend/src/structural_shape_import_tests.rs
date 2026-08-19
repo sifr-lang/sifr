@@ -42,6 +42,7 @@ class Parent[T]:
 
     @classmethod
     @metadata("fixture.callback", "after")
+    @metadata("parameter", "value", "fixture.role", "input")
     def normalize(cls, own value: T) -> T:
         return value
 "#,
@@ -54,7 +55,10 @@ class Parent[T]:
         r#"
 from models import Parent
 
-class Child(Parent[int]):
+class Mid[V](Parent[V]):
+    pass
+
+class Child(Mid[int]):
     pass
 
 class Use:
@@ -171,6 +175,236 @@ class Box[T]:
         ShapeNode::Primitive("int".to_string())
     );
     assert!(!shape.canonical_identity.contains("param:T"));
+}
+
+#[test]
+fn fully_imported_adapted_handler_preserves_metadata_and_concrete_types() {
+    let mut external_defs = ExternalDefs::default();
+    let mut models = compile(
+        "models",
+        r#"
+class Model[T]:
+    value: T
+
+    @classmethod
+    @metadata("fixture.callback", "after")
+    @metadata("parameter", "value", "fixture.role", "input")
+    def normalize(cls, own value: T) -> T:
+        return value
+"#,
+        &external_defs,
+    );
+    let callable = CallableIdentity {
+        module: "models".to_string(),
+        owner: Some("models.Model".to_string()),
+        symbol: "normalize".to_string(),
+        generic_arguments: Vec::new(),
+        signature: "checked".to_string(),
+    };
+    models.class_adapter_selections.push(ClassAdapterSelection {
+        owner: "Model".to_string(),
+        provider_module: "fixture.adapter".to_string(),
+        provider_function: "adapt".to_string(),
+        descriptor_type: Type::Str,
+        marker_identities: Vec::new(),
+        data_parent: None,
+        field_plans: vec![AdapterFieldPlan {
+            identity: "models.Model.value".to_string(),
+            name: "value".to_string(),
+            declared_type: Type::TypeVar("T".to_string()),
+            default: AdapterFieldDefault::Required,
+            validation_policy: None,
+        }],
+        handler_plans: vec![AdapterHandlerPlan {
+            callable: callable.clone(),
+            descriptor_type: Type::Str,
+            descriptor_value: StaticProgramValue::String("after".to_string()),
+            descriptor_origin: SourceOriginId::new([10; 32], 2),
+            descriptor_range: ruff_text_size::TextRange::default(),
+            declaration_order: 0,
+        }],
+        attached_api_set: None,
+        adapter_invocation_identity: [0; 32],
+        post_adapter_identity: [0; 32],
+        range: ruff_text_size::TextRange::default(),
+    });
+    collect_module_exports("models", &models, &mut external_defs);
+
+    let consumer = compile(
+        "consumer",
+        "from models import Model\n\nclass Container:\n    item: Model[int]\n",
+        &external_defs,
+    );
+    let shape = describe_type_with_externals(
+        "consumer",
+        field_type(&consumer, "Container", "item"),
+        &consumer,
+        &external_defs,
+    );
+    let ShapeNode::Nominal { methods, .. } = shape.root else {
+        panic!("model must have a nominal shape");
+    };
+    assert_eq!(methods.len(), 1);
+    assert_eq!(methods[0].target.as_ref(), Some(&callable));
+    assert_eq!(
+        methods[0].descriptor,
+        Some(crate::ConstValue::String("after".to_string()))
+    );
+    assert_eq!(methods[0].declaration_order, Some(0));
+    assert_eq!(methods[0].origin, None);
+    assert_eq!(methods[0].metadata[0].key, "fixture.callback");
+    assert_eq!(methods[0].params[0].metadata[0].key, "fixture.role");
+    assert_eq!(
+        methods[0].params[0].declared_type,
+        ShapeNode::Primitive("int".to_string())
+    );
+    assert_eq!(*methods[0].result, ShapeNode::Primitive("int".to_string()));
+    assert!(!shape.canonical_identity.contains("param:T"));
+}
+
+#[test]
+fn imported_transitive_generic_handler_uses_the_concrete_child_argument() {
+    let mut external_defs = ExternalDefs::default();
+    let mut models = compile(
+        "models",
+        r#"
+class Grand[T]:
+    value: T
+
+    @classmethod
+    @metadata("fixture.callback", "after")
+    @metadata("parameter", "value", "fixture.role", "input")
+    def normalize(cls, own value: T) -> T:
+        return value
+
+class Parent[U](Grand[list[U]]):
+    pass
+"#,
+        &external_defs,
+    );
+    let callable = CallableIdentity {
+        module: "models".to_string(),
+        owner: Some("models.Grand".to_string()),
+        symbol: "normalize".to_string(),
+        generic_arguments: Vec::new(),
+        signature: "checked".to_string(),
+    };
+    for (owner, declared_type, data_parent) in [
+        ("Grand", Type::TypeVar("T".to_string()), None),
+        (
+            "Parent",
+            Type::List(Box::new(Type::TypeVar("U".to_string()))),
+            Some("Grand".to_string()),
+        ),
+    ] {
+        models.class_adapter_selections.push(ClassAdapterSelection {
+            owner: owner.to_string(),
+            provider_module: "fixture.adapter".to_string(),
+            provider_function: "adapt".to_string(),
+            descriptor_type: Type::Str,
+            marker_identities: Vec::new(),
+            data_parent,
+            field_plans: vec![AdapterFieldPlan {
+                identity: "models.Grand.value".to_string(),
+                name: "value".to_string(),
+                declared_type,
+                default: AdapterFieldDefault::Required,
+                validation_policy: None,
+            }],
+            handler_plans: vec![AdapterHandlerPlan {
+                callable: callable.clone(),
+                descriptor_type: Type::Str,
+                descriptor_value: StaticProgramValue::String("after".to_string()),
+                descriptor_origin: SourceOriginId::new([11; 32], 1),
+                descriptor_range: ruff_text_size::TextRange::default(),
+                declaration_order: 0,
+            }],
+            attached_api_set: None,
+            adapter_invocation_identity: [0; 32],
+            post_adapter_identity: [0; 32],
+            range: ruff_text_size::TextRange::default(),
+        });
+    }
+    collect_module_exports("models", &models, &mut external_defs);
+    assert!(external_defs
+        .structural_methods_for("models")
+        .and_then(|classes| classes.get("Parent"))
+        .is_some_and(|methods| {
+            methods
+                .iter()
+                .any(|method| method.handler_target.as_ref() == Some(&callable))
+        }));
+    external_defs.class_adapter_selections.remove("models");
+
+    let mut consumer = compile(
+        "consumer",
+        r#"
+from models import Parent
+
+class Mid[V](Parent[V]):
+    pass
+
+class Child(Mid[int]):
+    pass
+
+class Use:
+    value: Child
+"#,
+        &external_defs,
+    );
+    consumer
+        .class_adapter_selections
+        .push(ClassAdapterSelection {
+            owner: "Child".to_string(),
+            provider_module: "fixture.adapter".to_string(),
+            provider_function: "adapt".to_string(),
+            descriptor_type: Type::Str,
+            marker_identities: Vec::new(),
+            data_parent: Some("Mid".to_string()),
+            field_plans: vec![AdapterFieldPlan {
+                identity: "models.Grand.value".to_string(),
+                name: "value".to_string(),
+                declared_type: Type::List(Box::new(Type::Int)),
+                default: AdapterFieldDefault::Required,
+                validation_policy: None,
+            }],
+            handler_plans: vec![AdapterHandlerPlan {
+                callable: callable.clone(),
+                descriptor_type: Type::Str,
+                descriptor_value: StaticProgramValue::String("after".to_string()),
+                descriptor_origin: SourceOriginId::new([12; 32], 1),
+                descriptor_range: ruff_text_size::TextRange::default(),
+                declaration_order: 0,
+            }],
+            attached_api_set: None,
+            adapter_invocation_identity: [0; 32],
+            post_adapter_identity: [0; 32],
+            range: ruff_text_size::TextRange::default(),
+        });
+    let shape = describe_type_with_externals(
+        "consumer",
+        field_type(&consumer, "Use", "value"),
+        &consumer,
+        &external_defs,
+    );
+    let ShapeNode::Nominal { methods, .. } = shape.root else {
+        panic!("child must have a nominal shape");
+    };
+    assert_eq!(methods.len(), 1);
+    assert_eq!(methods[0].target.as_ref(), Some(&callable));
+    assert_eq!(
+        methods[0].params[0].declared_type,
+        ShapeNode::List(Box::new(ShapeNode::Primitive("int".to_string())))
+    );
+    assert_eq!(
+        *methods[0].result,
+        ShapeNode::List(Box::new(ShapeNode::Primitive("int".to_string())))
+    );
+    assert_eq!(methods[0].origin, None);
+    assert_eq!(methods[0].metadata[0].key, "fixture.callback");
+    assert_eq!(methods[0].params[0].metadata[0].key, "fixture.role");
+    assert!(!shape.canonical_identity.contains("param:T"));
+    assert!(!shape.canonical_identity.contains("param:U"));
 }
 
 #[test]

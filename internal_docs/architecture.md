@@ -896,6 +896,13 @@ owner arguments before package specialization. Local and imported adapted generi
 same substitution rule, so nested concrete uses do not expose unbound declaration parameters to a
 package specializer.
 
+Checked adapted-handler exports retain the callable target with a signature specialized relative
+to the selected owner's type parameters. Generic substitution follows the full local ancestor
+chain before export. Imported structural shapes bind those owner parameters to the concrete use
+and restore the handler descriptor, order, and declaration metadata. Source origins remain scoped
+to the declaration that created them; inherited and imported handler shapes do not expose a
+foreign origin to another declaration's package-issue registry.
+
 The same final field state governs structural construction. Structural records match incoming
 edges by field name, reject unknown and duplicate names, and fill omitted defaulted fields from
 their checked HIR defaults. Factory defaults retain a canonical callable-identity side channel in
