@@ -59,7 +59,9 @@ impl RustEmitter {
                         Some(context) => format!(
                             "{base} + sifr_runtime::interop::structural::MethodSlotTable<{context}>"
                         ),
-                        None => base,
+                        None => format!(
+                            "{base} + sifr_runtime::interop::structural::MethodSlotTable<sifr_runtime::interop::structural::NoContext>"
+                        ),
                     }
                 } else {
                     base

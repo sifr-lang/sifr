@@ -483,6 +483,32 @@ fn plain_static_program_generic_emits_the_sealed_runtime_bound() {
 }
 
 #[test]
+fn no_context_method_slots_generic_emits_the_slot_table_bound() {
+    let mut retain = ordinary_function("retain", Type::TypeVar("T".to_string()));
+    retain.return_type = Type::TypeVar("T".to_string());
+    retain.type_params = vec!["T".to_string()];
+    retain.body = vec![sifr_ir::HirStmt::Return {
+        value: Some(HirExpr::Name {
+            name: "value".to_string(),
+            binding_id: None,
+            ty: Type::TypeVar("T".to_string()),
+        }),
+    }];
+    let mut module = module(vec![retain], Vec::new());
+    module.type_param_bounds.insert(
+        "retain".to_string(),
+        std::collections::HashMap::from([("T".to_string(), vec!["MethodSlots".to_string()])]),
+    );
+
+    let rust_code = generate_rust(&module);
+
+    assert!(
+        rust_code.contains("MethodSlotTable<::sifr_runtime::interop::structural::NoContext>"),
+        "{rust_code}"
+    );
+}
+
+#[test]
 fn project_static_program_owners_include_supported_imported_fields() {
     let imported = HirClass {
         name: "ImportedPayload".to_string(),
