@@ -733,15 +733,15 @@ Scope:
 
 Acceptance criteria:
 
-- [ ] The profile loader accepts schema version 2 only.
-- [ ] Profiles contain no `legacy_facade` key.
-- [ ] One field selects each verification area and suite.
-- [ ] Area runners emit one structured result format.
-- [ ] No report parser consumes a legacy summary line.
-- [ ] No harness code or generator produces or accepts `# expect-stdout`.
-- [ ] E2E runtime expectations use Sifr `assert` statements only.
-- [ ] Create-PR, merge, nightly, and release profiles preserve their coverage.
-- [ ] Phase 40 release qualification uses the canonical model.
+- [x] The profile loader accepts schema version 2 only.
+- [x] Profiles contain no `legacy_facade` key.
+- [x] One field selects each verification area and suite.
+- [x] Area runners emit one structured result format.
+- [x] No report parser consumes a legacy summary line.
+- [x] No harness code or generator produces or accepts `# expect-stdout`.
+- [x] E2E runtime expectations use Sifr `assert` statements only.
+- [x] Create-PR, merge, nightly, and release profiles preserve their coverage.
+- [x] Phase 40 release qualification uses the canonical model.
 
 Focused validation:
 
@@ -1009,8 +1009,8 @@ migrates its repository consumers before the old path disappears.
 | 10. Installation layout | merged | [#3285](https://github.com/sifr-lang/sifr/pull/3285) | `5c94968db425414808856ec521960da6580a538a` | Candidate `f99442a9cc5a19d4c92c4551eba9e06f28228a46`: self-update receipt (16 passed), self-update (54 passed), receipt rules, all 56 representative distribution-release variants, canonical installed-stdlib boundary, formatting, Clippy, file-size, HIR, docs, inventory, and residue checks passed. The broad CLI run had only the inherited protocol diagnostic mismatch. The sysroot boundary then hit the inherited external static-adapter dependency path. The one create-PR and one merge gate stopped at the inherited verification-taxonomy conflict; neither gate was repeated. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3285#issuecomment-5335392607): SATISFIED, no blocking findings. | Kept only `<sysroot>/bin/sifr`, removed flat receipt discovery and acceptance, rejected non-canonical installer relationships, and documented one install layout without a converter. |
 | 11. Diagnostics and rejection residue | merged | [#3287](https://github.com/sifr-lang/sifr/pull/3287) | `e71174f31587b9f84d0051c8c0a9309c66b3a59c` | Final candidate `d9ecd3c4f7cbe353d13b4e970f0f199f99082eec`: diagnostics registry/docs rules, diagnostics crate, project root and cycle tests, workspace baselines, canonicalization contract and self-test, runtime-platform golden, Rust interop declarations, stdlib import policy, CLI rendering and explain, formatting, Clippy, file-size, HIR, inventory, docs, JSON, and residue checks passed. The e2e fail suite reached only the inherited protocol diagnostic mismatch; later changed fixtures passed directly. The one create-PR gate on initial candidate `2b1b4347edc5457747cae77f9ccc65deea5ddc70` and one merge gate on the final candidate stopped at the inherited verification-taxonomy conflict; neither gate was repeated. | [Initial and remediation exact-SHA Opus evidence](https://github.com/sifr-lang/sifr/pull/3287#issuecomment-5335839622): the initial review found two blockers; the one remediation review was SATISFIED with no blockers. | Removed workspace diagnostic codes 0101–0104 and IMPORT-0009, kept canonical span-less import diagnostics, removed migration suggestion tables and old Rust-key handling, migrated fixtures and catalogs, and removed the legacy render helpers. |
 | 12. Hidden compatibility names | merged | [#3289](https://github.com/sifr-lang/sifr/pull/3289) | `e3d4bf656a6992cc712911723c215d409c26e175` | Candidate `a3f75bbf4a9a5a1705da392dcbeda9f84a0b9524`: 25 focused task, blocking, sendability, and IPC lowering tests; all 140 create-PR e2e fixtures; 11 runtime-platform golden cases with one capability-gated skip; all 14 developer-tooling static variants; Clippy, formatting, file-size, HIR, inventory, residue, and diff checks passed. The full lowering crate had only one inherited class-diagnostic assertion failure in an untouched path. The one create-PR and one merge gate stopped at the inherited verification-taxonomy conflict assigned to Item 16; neither gate was repeated. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3289#issuecomment-5336012950): SATISFIED, no blocking findings. | Removed both hidden-prefix stripping mechanisms, made task, synchronization, IPC, and blocking checks use canonical names directly, and registered a production/fixture residue guard with a mutation self-test. |
-| 13. Verification runner and e2e expectations | active | — | — | — | — | Phase 40 handoff required before implementation. |
-| 14. Source and package API wrappers | pending | — | — | — | — | — |
+| 13. Verification runner and e2e expectations | merged | [#3294](https://github.com/sifr-lang/sifr/pull/3294) | `0841486b09e14d701b142db02dd7d38b8cadf0fb` | Final candidate `ddc6e3590c99fd775d5d98a6fbb3f34bdff28e17`: verification runner self-tests passed all 14 groups; profile schema, coverage, assignment, dry-plan, area CLI, E2E harness, dependency-plan, fixture, LeetCode audit, Phase 40 governance, diagnostic-rules, ecosystem-broader, evidence-custody, formatting, file-size, HIR, JSON, and diff checks passed. The one create-PR and one merge gate stopped at the same 98 stale demo companions introduced by base compiler merge `6152fc50984395a640c42f31e9e270cd3a9e09c8`; Item 13 changed no compiler implementation or demo output, and neither gate was repeated. | [Initial and remediation exact-SHA Opus evidence](https://github.com/sifr-lang/sifr/pull/3294#issuecomment-5336571091): the initial review found four integration blockers; the one remediation review was SATISFIED with no blockers. | Kept only schema-v2 canonical selections, structured area evidence, assertion-based runtime expectations, and canonical Phase 40 critical steps. Removed legacy execution, report, hardening-summary, and stdout-directive paths. |
+| 14. Source and package API wrappers | active | — | — | — | — | — |
 | 15. Structured Rust types | pending | — | — | — | — | — |
 | 16. Final guard and closure | pending | — | — | — | — | — |
 
@@ -1073,6 +1073,9 @@ migrates its repository consumers before the old path disappears.
 | Item 11 remediation review | The canonicalization checker retains an unused `forbidden_codes` parameter after all callers moved to prefix checks. | `pre_v1_compat_13_verification` | Remove the dead checker branch during verification-runner closure. |
 | Item 12 review | The hidden-prefix guard scans `crates/` and `verification/` but not the other production and documentation roots. | `pre_v1_compat_16_closure` | Broaden the final no-compatibility guard after the temporary inventory is removed. Current residue scans prove those roots are clean. |
 | Item 12 review | The hidden-prefix self-test proves archive exclusion by placing the archive outside all scan roots, not by exercising an explicit archive rule. | `pre_v1_compat_16_closure` | Make archive exclusion explicit in the final guard and add a direct mutation case. |
+| Item 13 gates | Base compiler merge `6152fc50984395a640c42f31e9e270cd3a9e09c8` changed emission without refreshing 98 generated demo companions. | `ad-hoc-static-class-adapters-and-pydantic-ergonomics` | Refresh or retire the stale companions under the compiler-emission owner. Item 13 consumed both gates and did not rerun them. |
+| Item 13 remediation review | Commit-level evidence isolation permits one pull request to contain separate source and release-evidence commits. Squash merging would collapse that separation. | `pre_v1_compat_16_closure` | Reconcile the custody invariant and cross-candidate scope before final closure. Do not reopen Item 13 or run a third review. |
+| Item 13 remediation review | The retained Phase 40 report migrated only the four custody-bound step names. Other historical step names are not reproducible by the canonical runner. | Phase 40 release-governance owner | Regenerate the complete report during the next Phase 40 qualification. Do not patch historical timings in Item 13. |
 
 ## Phase Completion Record
 
