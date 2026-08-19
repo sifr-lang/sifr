@@ -191,12 +191,16 @@ pub(super) fn finalize(ctx: &mut LowerCtx, module: &str) {
             .unwrap_or_default();
         if !bounds
             .get(&declaration.owner_type_param)
-            .is_some_and(|items| items.iter().any(|item| item == "StaticProgram"))
+            .is_some_and(|items| {
+                items
+                    .iter()
+                    .any(|item| item == "StaticProgram" || item == "MethodSlots")
+            })
         {
             malformed(
                 ctx,
                 "attached_api_owner_bound",
-                "attached API owner type parameter must be bounded by StaticProgram",
+                "attached API owner type parameter must be bounded by StaticProgram or MethodSlots",
                 declaration.range,
             );
             continue;
