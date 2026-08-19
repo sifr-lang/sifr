@@ -5,6 +5,8 @@ use sifr_type_system::{FunctionType, ReceiverConvention, Type};
 /// Package-neutral method contract retained for imported structural shape descriptions.
 #[derive(Debug, Clone)]
 pub struct StructuralMethodExport {
+    /// Checked handler target when this method was exported for an adapted owner.
+    pub handler_target: Option<sifr_ir::CallableIdentity>,
     pub name: String,
     pub params: Vec<HirParam>,
     pub return_type: Type,

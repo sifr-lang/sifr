@@ -513,6 +513,90 @@ class Child(Parent[int]):
 }
 
 #[test]
+fn transitive_generic_ancestor_handler_uses_concrete_child_arguments() {
+    use sifr_lowering::{
+        AdapterFieldDefault, AdapterFieldPlan, AdapterHandlerPlan, CallableIdentity,
+        ClassAdapterSelection, SourceOriginId, StaticProgramValue,
+    };
+
+    let source = r#"
+class Grand[T]:
+    value: T
+
+    @classmethod
+    @metadata("fixture.callback", "after")
+    def normalize(cls, own value: T) -> T:
+        return value
+
+class Parent[U](Grand[list[U]]):
+    pass
+
+class Child(Parent[int]):
+    pass
+"#;
+    let parsed = parse_module_suite(source, None).expect("fixture parses");
+    let mut lowered = lower_module(&parsed).expect("fixture lowers");
+    let callable = CallableIdentity {
+        module: "fixture.transitive".to_string(),
+        owner: Some("fixture.transitive.Grand".to_string()),
+        symbol: "normalize".to_string(),
+        generic_arguments: Vec::new(),
+        signature: "checked".to_string(),
+    };
+    lowered
+        .class_adapter_selections
+        .push(ClassAdapterSelection {
+            owner: "Child".to_string(),
+            provider_module: "fixture.adapter".to_string(),
+            provider_function: "adapt".to_string(),
+            descriptor_type: Type::Str,
+            marker_identities: Vec::new(),
+            data_parent: Some("Parent".to_string()),
+            field_plans: vec![AdapterFieldPlan {
+                identity: "fixture.transitive.Grand.value".to_string(),
+                name: "value".to_string(),
+                declared_type: Type::List(Box::new(Type::Int)),
+                default: AdapterFieldDefault::Required,
+                validation_policy: None,
+            }],
+            handler_plans: vec![AdapterHandlerPlan {
+                callable: callable.clone(),
+                descriptor_type: Type::Str,
+                descriptor_value: StaticProgramValue::String("after".to_string()),
+                descriptor_origin: SourceOriginId::new([8; 32], 1),
+                descriptor_range: ruff_text_size::TextRange::default(),
+                declaration_order: 0,
+            }],
+            attached_api_set: None,
+            adapter_invocation_identity: [0; 32],
+            post_adapter_identity: [0; 32],
+            range: ruff_text_size::TextRange::default(),
+        });
+    let child = &lowered.module.classes[2];
+    let shape = describe_type(
+        "fixture.transitive",
+        &class_type(child, Vec::new()),
+        &lowered,
+    );
+    let ShapeNode::Nominal { methods, .. } = shape.root else {
+        panic!("child must have a nominal shape");
+    };
+    assert_eq!(methods.len(), 1);
+    assert_eq!(methods[0].target.as_ref(), Some(&callable));
+    assert_eq!(
+        methods[0].params[0].declared_type,
+        ShapeNode::List(Box::new(ShapeNode::Primitive("int".to_string())))
+    );
+    assert_eq!(
+        *methods[0].result,
+        ShapeNode::List(Box::new(ShapeNode::Primitive("int".to_string())))
+    );
+    assert_eq!(methods[0].origin, None);
+    assert!(!shape.canonical_identity.contains("param:T"));
+    assert!(!shape.canonical_identity.contains("param:U"));
+}
+
+#[test]
 fn async_method_contract_is_identical_at_root_and_nested_positions() {
     let source = r#"
 class Inner:

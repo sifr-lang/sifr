@@ -1,7 +1,8 @@
 use sifr_lowering::{
-    canonicalize_user_export_type, DeclarationMetadataTargetKind, ExternalDefs, HirClass,
-    MethodKind, StructuralMethodExport,
+    canonicalize_user_export_type, substitute_type_vars, AdapterHandlerPlan,
+    DeclarationMetadataTargetKind, ExternalDefs, HirClass, MethodKind, StructuralMethodExport,
 };
+use sifr_type_system::Type;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Default)]
@@ -65,6 +66,7 @@ fn exported_structural_methods(
                 .chain(class.operator_impls.iter().map(|(_, method)| method))
                 .find(|method| method.name == hir_name)?;
             Some(StructuralMethodExport {
+                handler_target: None,
                 name: declared_name.to_string(),
                 params: method
                     .params
@@ -85,10 +87,164 @@ fn exported_structural_methods(
     (!methods.is_empty()).then_some(methods)
 }
 
+fn adapted_handler_method(
+    module_name: &str,
+    owner: &HirClass,
+    handler: &AdapterHandlerPlan,
+    local_classes: &HashMap<String, String>,
+    lowering: &sifr_lowering::LoweringResult,
+    external_defs: &ExternalDefs,
+) -> Option<StructuralMethodExport> {
+    let callable_owner = handler.callable.owner.as_deref()?;
+    let root_args = owner
+        .type_params
+        .iter()
+        .cloned()
+        .map(Type::TypeVar)
+        .collect::<Vec<_>>();
+    let bindings = crate::handler_ancestry::bindings_for_owner(
+        module_name,
+        owner,
+        &root_args,
+        callable_owner,
+        lowering,
+        external_defs,
+    );
+    if bindings.is_none() {
+        return adapted_imported_parent_method(
+            owner,
+            &root_args,
+            handler,
+            local_classes,
+            external_defs,
+        );
+    }
+    let bindings = bindings.unwrap_or_default();
+    let (source_module, source_name) = callable_owner.rsplit_once('.')?;
+    let hir_name = if handler.callable.symbol == "__init__" {
+        "new"
+    } else {
+        handler.callable.symbol.as_str()
+    };
+    if source_module == module_name {
+        let source = lowering.module.classes.iter().find(|class| {
+            class.identity.as_deref() == Some(callable_owner)
+                || (class.identity.is_none() && class.name == source_name)
+        })?;
+        let method = source
+            .methods
+            .iter()
+            .chain(source.operator_impls.iter().map(|(_, method)| method))
+            .find(|method| method.name == hir_name)?;
+        return Some(StructuralMethodExport {
+            handler_target: Some(handler.callable.clone()),
+            name: handler.callable.symbol.clone(),
+            params: method
+                .params
+                .iter()
+                .cloned()
+                .map(|mut param| {
+                    param.ty = canonicalize_user_export_type(
+                        &substitute_type_vars(&param.ty, &bindings),
+                        local_classes,
+                    );
+                    param
+                })
+                .collect(),
+            return_type: canonicalize_user_export_type(
+                &substitute_type_vars(&method.return_type, &bindings),
+                local_classes,
+            ),
+            is_async: method.is_async,
+            method_kind: method.method_kind,
+            receiver: method.receiver,
+        });
+    }
+    let method = external_defs
+        .structural_methods_for(source_module)?
+        .get(source_name)?
+        .iter()
+        .find(|method| {
+            method.handler_target.as_ref() == Some(&handler.callable)
+                || (method.handler_target.is_none() && method.name == handler.callable.symbol)
+        })?;
+    let mut method = method.clone();
+    method.handler_target = Some(handler.callable.clone());
+    for parameter in &mut method.params {
+        parameter.ty = canonicalize_user_export_type(
+            &substitute_type_vars(&parameter.ty, &bindings),
+            local_classes,
+        );
+    }
+    method.return_type = canonicalize_user_export_type(
+        &substitute_type_vars(&method.return_type, &bindings),
+        local_classes,
+    );
+    Some(method)
+}
+
+fn adapted_imported_parent_method(
+    owner: &HirClass,
+    root_args: &[Type],
+    handler: &AdapterHandlerPlan,
+    local_classes: &HashMap<String, String>,
+    external_defs: &ExternalDefs,
+) -> Option<StructuralMethodExport> {
+    let root_bindings = owner
+        .type_params
+        .iter()
+        .cloned()
+        .zip(root_args.iter().cloned())
+        .collect::<HashMap<_, _>>();
+    let Type::Class {
+        identity,
+        name,
+        type_args,
+        ..
+    } = owner.parent_type.as_ref()?.resolve_alias()
+    else {
+        return None;
+    };
+    let parent_identity = identity.as_deref().unwrap_or(name);
+    let (parent_module, parent_name) = parent_identity.rsplit_once('.')?;
+    let parent_params = external_defs
+        .class_type_params
+        .get(parent_module)
+        .and_then(|classes| classes.get(parent_name))?;
+    let parent_bindings = parent_params
+        .iter()
+        .cloned()
+        .zip(
+            type_args
+                .iter()
+                .map(|argument| substitute_type_vars(argument, &root_bindings)),
+        )
+        .collect::<HashMap<_, _>>();
+    let mut method = external_defs
+        .structural_methods_for(parent_module)?
+        .get(parent_name)?
+        .iter()
+        .find(|method| method.handler_target.as_ref() == Some(&handler.callable))?
+        .clone();
+    for parameter in &mut method.params {
+        parameter.ty = canonicalize_user_export_type(
+            &substitute_type_vars(&parameter.ty, &parent_bindings),
+            local_classes,
+        );
+    }
+    method.return_type = canonicalize_user_export_type(
+        &substitute_type_vars(&method.return_type, &parent_bindings),
+        local_classes,
+    );
+    Some(method)
+}
+
 pub(crate) fn structural_method_map(
+    module_name: &str,
     module: &sifr_lowering::HirModule,
     local_classes: &HashMap<String, String>,
     lowering: &sifr_lowering::LoweringResult,
+    external_defs: &ExternalDefs,
 ) -> HashMap<String, Vec<StructuralMethodExport>> {
     if module.classes.is_empty() {
         return HashMap::new();
@@ -129,10 +285,7 @@ pub(crate) fn structural_method_map(
             }
         }
     }
-    if names_by_class.is_empty() {
-        return HashMap::new();
-    }
-    module
+    let mut methods = module
         .classes
         .iter()
         .filter_map(|class| {
@@ -140,7 +293,37 @@ pub(crate) fn structural_method_map(
             exported_structural_methods(class, local_classes, declared_names)
                 .map(|methods| (class.name.clone(), methods))
         })
-        .collect()
+        .collect::<HashMap<_, _>>();
+    for selection in &lowering.class_adapter_selections {
+        let Some(owner) = module
+            .classes
+            .iter()
+            .find(|class| class.name == selection.owner)
+        else {
+            continue;
+        };
+        let exports = selection
+            .handler_plans
+            .iter()
+            .filter_map(|handler| {
+                adapted_handler_method(
+                    module_name,
+                    owner,
+                    handler,
+                    local_classes,
+                    lowering,
+                    external_defs,
+                )
+            })
+            .collect::<Vec<_>>();
+        if !exports.is_empty() {
+            methods
+                .entry(selection.owner.clone())
+                .or_default()
+                .extend(exports);
+        }
+    }
+    methods
 }
 
 impl ClassMethodExports {

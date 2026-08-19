@@ -410,10 +410,18 @@ fn describe_class(
             .and_then(|classes| classes.get(source_name))
             .map(Vec::as_slice)
             .unwrap_or_default();
+        let handlers = external_defs
+            .class_adapter_selections
+            .get(source_module)
+            .and_then(|classes| classes.get(source_name))
+            .map(|selection| selection.handler_plans.as_slice())
+            .unwrap_or_default();
         described_exported_methods(
             module_name,
+            &identity,
             source_name,
             methods,
+            handlers,
             type_params,
             type_args,
             declaration_metadata,

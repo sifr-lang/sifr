@@ -243,6 +243,16 @@ fn described_handler(
         .clone()
         .unwrap_or_else(|| format!("{module_name}.{}", class.name));
     let callable_owner = handler.callable.owner.as_deref();
+    let root_args = class
+        .type_params
+        .iter()
+        .map(|name| {
+            bindings
+                .get(name)
+                .cloned()
+                .unwrap_or_else(|| Type::TypeVar(name.clone()))
+        })
+        .collect::<Vec<_>>();
     let local_detail = callable_owner.and_then(|owner| {
         let (source_module, source_name) = owner.rsplit_once('.')?;
         (source_module == module_name)
@@ -266,9 +276,17 @@ fn described_handler(
             })
             .flatten()
     });
-    let mut method = if let Some((source_name, owner_class, method)) = local_detail {
+    let mut method = if let Some((source_name, _owner_class, method)) = local_detail {
         let owner = format!("{source_name}.{declared_name}");
-        let inherited_bindings = inherited_handler_bindings(class, owner_class, bindings);
+        let inherited_bindings = crate::handler_ancestry::bindings_for_owner(
+            module_name,
+            class,
+            &root_args,
+            callable_owner.unwrap_or(&local_owner),
+            lowering,
+            external_defs,
+        )
+        .unwrap_or_default();
         described_method(
             module_name,
             &owner,
@@ -290,14 +308,20 @@ fn described_handler(
             external_defs,
             visiting,
         )
-    } else if let Some(method) = imported_handler_method(handler, external_defs) {
+    } else if let Some((method, inherited_bindings)) = imported_handler_detail(
+        module_name,
+        class,
+        &root_args,
+        handler,
+        lowering,
+        external_defs,
+    ) {
         let owner_name = handler
             .callable
             .owner
             .as_deref()
             .and_then(|owner| owner.rsplit_once('.').map(|(_, name)| name))
             .unwrap_or(class_name);
-        let inherited_bindings = imported_handler_bindings(class, handler, bindings, external_defs);
         described_method(
             &handler.callable.module,
             &format!("{owner_name}.{declared_name}"),
@@ -339,83 +363,6 @@ fn described_handler(
     method
 }
 
-fn imported_handler_bindings(
-    child: &HirClass,
-    handler: &AdapterHandlerPlan,
-    child_bindings: &HashMap<String, Type>,
-    external_defs: &sifr_lowering::ExternalDefs,
-) -> HashMap<String, Type> {
-    let Some(owner) = handler.callable.owner.as_deref() else {
-        return HashMap::new();
-    };
-    let Some((source_module, source_name)) = owner.rsplit_once('.') else {
-        return HashMap::new();
-    };
-    let Some(Type::Class {
-        identity,
-        name,
-        type_args,
-        ..
-    }) = child.parent_type.as_ref().map(Type::resolve_alias)
-    else {
-        return HashMap::new();
-    };
-    if identity
-        .as_deref()
-        .map_or(name != source_name, |value| value != owner)
-    {
-        return HashMap::new();
-    }
-    let type_params = external_defs
-        .class_type_params
-        .get(source_module)
-        .and_then(|classes| classes.get(source_name))
-        .map(Vec::as_slice)
-        .unwrap_or_default();
-    type_params
-        .iter()
-        .cloned()
-        .zip(
-            type_args
-                .iter()
-                .map(|argument| substitute_type_vars(argument, child_bindings)),
-        )
-        .collect()
-}
-
-fn inherited_handler_bindings(
-    child: &HirClass,
-    owner: &HirClass,
-    child_bindings: &HashMap<String, Type>,
-) -> HashMap<String, Type> {
-    if child.name == owner.name {
-        return child_bindings.clone();
-    }
-    let Some(Type::Class {
-        identity,
-        name,
-        type_args,
-        ..
-    }) = child.parent_type.as_ref().map(Type::resolve_alias)
-    else {
-        return HashMap::new();
-    };
-    let owner_identity = owner.identity.as_deref().unwrap_or(&owner.name);
-    if identity.as_deref().unwrap_or(name) != owner_identity && name != &owner.name {
-        return HashMap::new();
-    }
-    owner
-        .type_params
-        .iter()
-        .cloned()
-        .zip(
-            type_args
-                .iter()
-                .map(|argument| substitute_type_vars(argument, child_bindings)),
-        )
-        .collect()
-}
-
 fn imported_handler_method<'a>(
     handler: &AdapterHandlerPlan,
     external_defs: &'a sifr_lowering::ExternalDefs,
@@ -429,14 +376,76 @@ fn imported_handler_method<'a>(
         .structural_methods_for(source_module)?
         .get(source_name)?
         .iter()
-        .find(|method| method.name == handler.callable.symbol)
+        .find(|method| {
+            method.handler_target.as_ref() == Some(&handler.callable)
+                || (method.handler_target.is_none() && method.name == handler.callable.symbol)
+        })
+}
+
+fn imported_handler_detail<'a>(
+    module_name: &str,
+    class: &HirClass,
+    root_args: &[Type],
+    handler: &AdapterHandlerPlan,
+    lowering: &LoweringResult,
+    external_defs: &'a sifr_lowering::ExternalDefs,
+) -> Option<(&'a StructuralMethodExport, HashMap<String, Type>)> {
+    let owner = handler.callable.owner.as_deref()?;
+    if let Some(bindings) = crate::handler_ancestry::bindings_for_owner(
+        module_name,
+        class,
+        root_args,
+        owner,
+        lowering,
+        external_defs,
+    ) {
+        return Some((imported_handler_method(handler, external_defs)?, bindings));
+    }
+    let root_bindings = class
+        .type_params
+        .iter()
+        .cloned()
+        .zip(root_args.iter().cloned())
+        .collect::<HashMap<_, _>>();
+    let Type::Class {
+        identity,
+        name,
+        type_args,
+        ..
+    } = class.parent_type.as_ref()?.resolve_alias()
+    else {
+        return None;
+    };
+    let parent_identity = identity.as_deref().unwrap_or(name);
+    let (parent_module, parent_name) = parent_identity.rsplit_once('.')?;
+    let parent_params = external_defs
+        .class_type_params
+        .get(parent_module)
+        .and_then(|classes| classes.get(parent_name))?;
+    let parent_bindings = parent_params
+        .iter()
+        .cloned()
+        .zip(
+            type_args
+                .iter()
+                .map(|argument| substitute_type_vars(argument, &root_bindings)),
+        )
+        .collect::<HashMap<_, _>>();
+    let method = external_defs
+        .structural_methods_for(parent_module)?
+        .get(parent_name)?
+        .iter()
+        .find(|method| method.handler_target.as_ref() == Some(&handler.callable))?;
+    Some((method, parent_bindings))
 }
 
 #[allow(clippy::too_many_arguments)]
 pub(super) fn described_exported_methods(
     module_name: &str,
+    source_identity: &str,
     class_name: &str,
     methods: &[StructuralMethodExport],
+    handlers: &[AdapterHandlerPlan],
     type_params: &[String],
     type_args: &[Type],
     declaration_metadata: &[TypedDeclarationMetadata],
@@ -449,8 +458,16 @@ pub(super) fn described_exported_methods(
         .cloned()
         .zip(type_args.iter().cloned())
         .collect::<HashMap<_, _>>();
-    methods
+    let own_handler_names = handlers
         .iter()
+        .filter(|handler| handler.callable.owner.as_deref() == Some(source_identity))
+        .map(|handler| handler.callable.symbol.as_str())
+        .collect::<BTreeSet<_>>();
+    let mut described = methods
+        .iter()
+        .filter(|method| {
+            method.handler_target.is_none() && !own_handler_names.contains(method.name.as_str())
+        })
         .map(|method| {
             let owner = format!("{class_name}.{}", method.name);
             described_method(
@@ -475,7 +492,56 @@ pub(super) fn described_exported_methods(
                 visiting,
             )
         })
-        .collect()
+        .collect::<Vec<_>>();
+    let mut ordered_handlers = handlers.iter().collect::<Vec<_>>();
+    ordered_handlers.sort_by_key(|handler| handler.declaration_order);
+    for handler in ordered_handlers {
+        let Some(method) = methods
+            .iter()
+            .find(|method| method.handler_target.as_ref() == Some(&handler.callable))
+        else {
+            continue;
+        };
+        let owner_name = handler
+            .callable
+            .owner
+            .as_deref()
+            .and_then(|owner| owner.rsplit_once('.').map(|(_, name)| name))
+            .unwrap_or(class_name);
+        let owner = format!("{owner_name}.{}", handler.callable.symbol);
+        let handler_metadata = external_defs
+            .declaration_metadata
+            .get(&handler.callable.module)
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        let mut described_handler = described_method(
+            &handler.callable.module,
+            &owner,
+            &handler.callable.symbol,
+            &method.params,
+            &method.return_type,
+            method.method_kind,
+            method.receiver,
+            method.is_async,
+            &bindings,
+            metadata_for(
+                handler_metadata,
+                &owner,
+                DeclarationMetadataTargetKind::Method,
+                None,
+            ),
+            handler_metadata,
+            lowering,
+            external_defs,
+            visiting,
+        );
+        described_handler.target = Some(handler.callable.clone());
+        described_handler.descriptor = Some(validated_adapter_value(&handler.descriptor_value));
+        described_handler.origin = None;
+        described_handler.declaration_order = Some(handler.declaration_order);
+        described.push(described_handler);
+    }
+    described
 }
 
 #[allow(clippy::too_many_arguments)]
