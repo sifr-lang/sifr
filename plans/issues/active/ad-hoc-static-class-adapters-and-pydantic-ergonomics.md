@@ -1571,8 +1571,29 @@ at the shared stale generated-demo freshness boundary. Neither gate was rerun.
 Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3309#issuecomment-5338347038)).
+
+Method-slot attached-API prerequisite state: complete
+PR: [`sifr-lang/sifr#3312`](https://github.com/sifr-lang/sifr/pull/3312)
+Base SHA: `441e7f543ebe1d559f31687e2c09055935b4fc94`
+Candidate SHA: `ae39a8826c3d23c7253b8cea0b927006c26045bc`
+Merge SHA: `c2850630aabaf5ebc999ae1577d3b6b2789faafc`
+Changed paths: attached-API declaration validation and its focused driver test.
+Validation: the focused `MethodSlots` attached-owner lowering test passed;
+lowering and driver Clippy passed with warnings denied; formatting, HIR
+maintainability, the 900-line file-size guardrail, and `git diff --check`
+passed; the release compiler built; and the package source plus M10 demo both
+passed `sifr check` with the exact candidate. The one create-PR gate and one
+merge gate ran on the unchanged candidate. Both passed their preceding guards
+and stopped at the shared stale generated-demo freshness boundary. Neither gate
+was rerun.
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3312#issuecomment-5338969453)).
+Deferred follow-up: M12 should align provisional `MethodSlots` attached-owner
+handling with the `StaticProgram` shortcut, add a direct wrongly-bound owner
+negative case, and make canonical marker-import enforcement consistent.
 Next action: implement the M10 package facade on compiler merge
-`441e7f543ebe1d559f31687e2c09055935b4fc94` and package merge
+`c2850630aabaf5ebc999ae1577d3b6b2789faafc` and package merge
 `8af4a1f4d598829ac427f96c34b76289e13eedd9`.
 
 ### M11: Complete Model Operations and Schema Surface
