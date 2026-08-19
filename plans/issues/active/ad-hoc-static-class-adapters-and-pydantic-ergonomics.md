@@ -1728,8 +1728,37 @@ package-compilable, add a direct attached-API code-generation unit, and align
 negative metadata if core-language gains a manifest-driven harness. M12 should
 also repair the pre-existing stale source-root paths in the installed attached
 API certification helper.
+Compiler prerequisite 3 state: complete
+PR: [`sifr-lang/sifr#3321`](https://github.com/sifr-lang/sifr/pull/3321)
+Base SHA: `5aa584fef25f6628445f9f92273685e366b62a2e`
+Candidate SHA: `2b1e9f26d8f152bf01c663a0357f692c1cff55c1`
+Merge SHA: `ae29ceba22a877c4cd561d1e16d5b75db88eaab6`
+Changed paths: attached-API declaration inspection and structural bridge
+validation under `crates/sifr_lowering`; focused lowering tests; the
+package-neutral static class-adapter fixture; and durable architecture text.
+Validation: the lowering suite passed 1004 tests with one ignored. The
+code-generation suite passed 1051 tests. Focused early-adapter tests passed.
+The package-neutral attached fixture compiled through `rustc` and ran a
+type-directed generic Rust bridge without an owner value. The in-progress
+package source also passed checking with its no-dummy schema declarations.
+Normal affected-library Clippy passed with warnings denied. Rust formatting,
+both maintainability guards, file-size, documentation-link, and diff guards
+passed. An all-targets Clippy attempt found existing test-only lint debt in
+unmodified files. The exact candidate's create-PR and merge gates each ran
+once. Both passed every preceding guard and stopped at the same two external
+Rust-interop matrix inputs recorded above. Neither gate was rerun.
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3321#issuecomment-5341032365)).
+The exact gate evidence is recorded on the PR
+([evidence](https://github.com/sifr-lang/sifr/pull/3321#issuecomment-5341070391)).
+Deferred follow-up: M12 should consolidate the duplicate attached-decorator
+scan, add a direct code-generation assertion for concrete owner retention,
+and revisit the existing structural probe's broad construction/projection
+bounds. It should split `rust_interop_structural_tests.rs` before that file
+reaches 900 lines.
 Next action: implement the M11 package surface on compiler merge
-`240852f15423bac125db7debfd168b47f29aba6a`.
+`ae29ceba22a877c4cd561d1e16d5b75db88eaab6`.
 
 Scope:
 
