@@ -2268,6 +2268,34 @@ significant. Generic ancestor and alias scope remain later hardening work.
 Next action: harden declared generic parameter authority across nested class,
 ancestor, and alias scopes.
 
+Compiler hardening item 10 state: complete
+PR: [`sifr-lang/sifr#3350`](https://github.com/sifr-lang/sifr/pull/3350)
+Base SHA: `f1eeb7cf3cf261ed7062a7372f1ff05e0cffe0bf`
+Candidate SHA: `6b93320b8eccfd2b54074098859b162dfb476cea`
+Merge SHA: `98e71e5387754fde7a2e28a4b0d460f0d95de98d`
+Changed paths: declared generic-parent binding authority, canonical candidate
+keys, shared nested-scope arity rejection, focused regressions, and the
+durable compiler contract.
+Validation: all 138 type-system tests passed. The lowering suite passed 1,006
+tests and ignored one test. All 1,057 codegen tests and 107 frontend tests
+passed. The driver suite passed 540 tests and ignored 76 tests. Workspace
+Clippy passed with warnings denied. Rust formatting, both maintainability
+guards, the 900-line guard, and diff hygiene passed. The create-PR and merge
+gates each ran once on the exact candidate. Both passed generated-demo
+freshness and every preceding guard. Both then stopped at the same two
+separately owned Rust-interop matrix inputs. Neither gate was rerun
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3350#issuecomment-5346368491),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3350#issuecomment-5346393937)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3350#issuecomment-5346368518)).
+Deferred follow-up: a later item can make duplicate canonical-identity
+selection deterministic by construction. It can also distinguish an
+unreachable arity diagnostic from a union-topology diagnostic. Unspecialized
+generic ancestor arguments and generic alias scope remain later work.
+Next action: review and harden unspecialized generic ancestor and generic alias
+scope.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2355,12 +2383,12 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 9 merged in Sifr PRs #3332, #3334, #3336, #3338, #3340, #3342,
-#3344, #3346, and #3348. The seven M11 compiler prerequisites merged in Sifr
-PRs #3317, #3319, #3321, #3323, #3325, #3327, and #3329. The M11 package
-surface merged in Pydantic-Sifr PR #47. M12 is in progress. The current
-compiler merge is `311dc8d02dc6390446664e6b841554f54eae8b9a`, and the current
-package merge is `a44116e188cc6b45cffb297d57b9084467a39e8f`.
+through 10 merged in Sifr PRs #3332, #3334, #3336, #3338, #3340, #3342,
+#3344, #3346, #3348, and #3350. The seven M11 compiler prerequisites merged
+in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327, and #3329. The M11
+package surface merged in Pydantic-Sifr PR #47. M12 is in progress. The
+current compiler merge is `98e71e5387754fde7a2e28a4b0d460f0d95de98d`, and
+the current package merge is `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
 prerequisites stopped at the Rust-interop matrix. The matrix reported one
@@ -2368,6 +2396,6 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: harden declared generic parameter authority across nested class,
-ancestor, and alias scopes. Then continue compiler-owned hardening before
-package certification and final review.
+Next action: review and harden unspecialized generic ancestor and generic alias
+scope. Then continue compiler-owned hardening before package certification and
+final review.
