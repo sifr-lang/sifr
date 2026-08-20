@@ -232,3 +232,80 @@ fn unshadowed_module_const_still_promotes_return_to_sifr_int() {
         &HashSet::new(),
     ));
 }
+
+#[test]
+fn generic_call_uses_canonical_sifr_int_parameter_metadata() {
+    let body = vec![HirStmt::Expr {
+        expr: HirExpr::GenericCall {
+            func: "consume::<i64>".to_string(),
+            type_args: vec![Type::Int],
+            args: vec![HirExpr::LargeIntLiteral(
+                "100000000000000000000".to_string(),
+            )],
+            mutable_arg_places: vec![None],
+            ty: Type::None,
+        },
+    }];
+    let params = HashMap::from([("consume".to_string(), vec![Type::Int])]);
+
+    let discovered = collect_sifr_int_call_arg_function_params(
+        &body,
+        &params,
+        &HashSet::new(),
+        &HashSet::new(),
+        &HashSet::new(),
+        &HashSet::new(),
+    );
+
+    assert_eq!(discovered.get("consume"), Some(&HashSet::from([0])));
+}
+
+#[test]
+fn generic_call_uses_canonical_sifr_int_return_metadata() {
+    let expression = HirExpr::GenericCall {
+        func: "produce::<i64>".to_string(),
+        type_args: vec![Type::Int],
+        args: Vec::new(),
+        mutable_arg_places: Vec::new(),
+        ty: Type::Int,
+    };
+
+    assert!(hir_expr_needs_sifr_int_storage(
+        &expression,
+        &HashSet::new(),
+        &HashSet::new(),
+        &HashSet::new(),
+        &HashSet::from(["produce".to_string()]),
+    ));
+}
+
+#[test]
+fn generic_result_call_uses_canonical_sifr_int_metadata() {
+    let result_ty = Type::Result(Box::new(Type::Int), Box::new(Type::Str));
+    let body = vec![HirStmt::Expr {
+        expr: HirExpr::GenericCall {
+            func: "consume_result::<i64>".to_string(),
+            type_args: vec![Type::Int],
+            args: vec![HirExpr::GenericCall {
+                func: "produce_result::<i64>".to_string(),
+                type_args: vec![Type::Int],
+                args: Vec::new(),
+                mutable_arg_places: Vec::new(),
+                ty: result_ty.clone(),
+            }],
+            mutable_arg_places: vec![None],
+            ty: Type::None,
+        },
+    }];
+    let params = HashMap::from([("consume_result".to_string(), vec![result_ty])]);
+
+    let discovered = collect_sifr_int_result_call_arg_function_params_with_initial(
+        &body,
+        &params,
+        &HashSet::from(["produce_result".to_string()]),
+        &HashSet::new(),
+        HashSet::new(),
+    );
+
+    assert_eq!(discovered.get("consume_result"), Some(&HashSet::from([0])));
+}

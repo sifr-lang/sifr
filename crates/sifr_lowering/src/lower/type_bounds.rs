@@ -267,8 +267,7 @@ fn supports_structural_bridge_type_inner(
                         .get(name)
                         .is_none_or(Vec::is_empty);
             }
-            if (parent_class.is_some() && !ctx.adapted_class_bindings.contains_key(name))
-                || ctx.error_types.contains(name)
+            if ctx.error_types.contains(name)
                 || ctx.python_opaque_classes.contains_key(name)
                 || !structural_identity_inputs_supported(name, ctx)
             {
@@ -281,9 +280,22 @@ fn supports_structural_bridge_type_inner(
             if !visiting.insert(key.clone()) {
                 return true;
             }
-            let supported = type_args
-                .iter()
-                .all(|value| supports_structural_bridge_type_inner(value, ctx, visiting, false))
+            let data_parent_supported = match parent_class {
+                None => true,
+                Some(_) => {
+                    ctx.adapted_class_bindings.contains_key(name)
+                        && ctx.class_data_parent_types.get(name).map_or_else(
+                            || ctx.imported_structural_identity_inputs.contains_key(name),
+                            |parent| {
+                                supports_structural_bridge_type_inner(parent, ctx, visiting, false)
+                            },
+                        )
+                }
+            };
+            let supported = data_parent_supported
+                && type_args.iter().all(|value| {
+                    supports_structural_bridge_type_inner(value, ctx, visiting, false)
+                })
                 && fields.iter().all(|(_, field)| {
                     supports_structural_bridge_type_inner(field, ctx, visiting, true)
                 });

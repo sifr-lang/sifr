@@ -317,6 +317,8 @@ pub(in crate::lower) fn collect_class_type(
             crate::lower::descriptor_declarations::data_parent_type(class_def, ctx)
                 .or_else(|| ctx.class_types.get(parent_name).cloned())
         {
+            ctx.class_data_parent_types
+                .insert(class_name.clone(), parent_ty.clone());
             if !super::super::generic_parent_representation::preserves_union_structure(
                 &ctx.class_types,
                 &ctx.class_declared_type_params,

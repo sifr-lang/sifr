@@ -35,25 +35,17 @@ pub(super) fn try_lower_type_call(
             if matches!(owner_type, Type::Any | Type::Unknown) {
                 return Some(None);
             }
-            let surface_name = if ctx
-                .attached_method_bindings
-                .contains_key(&format!("{}.{}", name.id, attr.attr))
-            {
-                name.id.to_string()
-            } else {
-                match owner_type.resolve_alias() {
-                    Type::Class { name, .. } => name.clone(),
-                    _ => return None,
-                }
-            };
-            (surface_name, owner_type)
+            (name.id.to_string(), owner_type)
         }
         _ => return None,
     };
-    let binding = ctx
-        .attached_method_bindings
-        .get(&format!("{surface_name}.{}", attr.attr))?
-        .clone();
+    let binding = super::super::attached_api_surfaces::binding_for_owner(
+        ctx,
+        &surface_name,
+        &owner_type,
+        attr.attr.as_str(),
+    )?
+    .clone();
     if binding.declaration.receiver != AttachedApiReceiver::Type {
         return None;
     }
@@ -76,10 +68,13 @@ pub(super) fn try_lower_instance_call(
     let Type::Class { name, .. } = object.ty().resolve_alias() else {
         return None;
     };
-    let binding = ctx
-        .attached_method_bindings
-        .get(&format!("{name}.{}", attr.attr))?
-        .clone();
+    let binding = super::super::attached_api_surfaces::binding_for_owner(
+        ctx,
+        name,
+        object.ty(),
+        attr.attr.as_str(),
+    )?
+    .clone();
     if binding.declaration.receiver == AttachedApiReceiver::Type {
         return None;
     }

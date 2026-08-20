@@ -1,5 +1,6 @@
 mod adapter_defaults;
 mod attached_api_aliases;
+mod attached_api_audit;
 mod diagnostics;
 mod discovery_and_workspace;
 mod early_adapters;
