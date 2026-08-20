@@ -2477,7 +2477,7 @@ work.
 | M7c-M7d representation sequencing | Complete in item 21. Nested option-represented union payloads, per-member conversions, warning-clean `None` branches, owned registry-call widening, and shared assignment sequencing use the consuming-value conversion authority. Behavioral presence and absence runs remain certification work. Item 29 owns a separate pre-existing option-to-non-optional argument safety path. |
 | M7e structural construction defaults | Complete in item 22. Structural construction reserves generated locals, rejects required omissions before evaluating defaults, and has two-sided factory freshness evidence. Item 30 owns a distinct user-field and callable-name collision. Class-body lowering remained below the guard and did not need a split. |
 | M7f static-program integration | Complete in item 23. Speculative union branches restore string-cache state, imported mapped-opaque identities use canonical project paths, const evaluation and code generation accept the same `isinstance` targets, and generic bounds compose. Borrowed structural returns now require `Clone`; owned returns do not. Item 31 owns a separate pre-existing non-union `if` cache-state leak found by the final review. |
-| M8-M10 compiler prerequisites | Items 24 and 25. Item 24 owns method-slot receiver roles, direct codegen and arity diagnostics, ordered projection, provisional `MethodSlots` parity, and wrongly bound owners. Item 25 owns deterministic multi-context selection and exact positive and negative generic-bound assertions. Body deduplication and clone-inference ideas are terminal without a failing case. |
+| M8-M10 compiler prerequisites | Item 24 is complete. Method-slot input roles are explicit, dispatch and arity diagnostics have direct coverage, ordered mapping projection is pinned, provisional `MethodSlots` matches `StaticProgram`, and a bound on the wrong owner parameter is rejected. Item 25 owns deterministic multi-context selection and exact positive and negative generic-bound assertions. Body deduplication and clone-inference ideas are terminal without a failing case. |
 | M11 compiler prerequisites | Item 26. Close independent package-compilable negatives, direct attached codegen, stale installed-helper paths, duplicate decorator scans, concrete-owner assertions, nonliteral attached-default provider localization, generic hash predicate ownership, flattened parent defaults, recursive boxed parents, direct plain-parent structural coverage, structural-bound prescans, and retained `StdlibFeature` inventory. Negative metadata alignment is conditional on a future manifest-driven core harness. The 900-line guard owns the structural-test split. Broad probe-bound and clone-inference ideas are terminal unless a focused failure proves a mechanism gap. |
 | M12 items 1-16 | Complete. Item 1 closes the compiler part of nested direct generic specialization. Items 12 and 13-15 close impossible local handler ancestry and imported-boundary name collisions. Item 18 makes the handler ordering dependency local. Other remaining notes are assertions, comments, performance ideas, or certification work. Repeated ancestry walks and identity indexes are terminal without measured cost. |
 
@@ -2515,7 +2515,7 @@ string-cache state transactional in the ordinary `if` lowering path. A local
 declared in one branch must not suppress a later cache declaration outside
 that branch. Item 31 runs after item 30. No third item 23 review applies.
 
-Item 23 is complete. Next action: implement item 24, the first M8-M10 compiler
+Item 24 is complete. Next action: implement item 25, the second M8-M10 compiler
 prerequisite audit.
 
 Compiler hardening item 17 state: complete
@@ -2707,6 +2707,36 @@ defensive mapped-identity assertions remain terminal suggestions. The external
 gate inputs and all `pre_v1` work remain out of scope.
 Next action: implement item 24, the first M8-M10 compiler prerequisite audit.
 
+Compiler hardening item 24 state: complete
+Issue: [`sifr-lang/sifr#3382`](https://github.com/sifr-lang/sifr/issues/3382)
+PR: [`sifr-lang/sifr#3383`](https://github.com/sifr-lang/sifr/pull/3383)
+Base SHA: `a4d0b16a8285db01c07693bcef5816a71561f357`
+Candidate SHA: `de03269b1073b0330cd7cd33347d964a46be740d`
+Merge SHA: `435991bfdfd8b80d62d0788f6a1640786a9d5342`
+Changed paths: explicit method-slot input roles; role-driven generated dispatch;
+owned composite-input validation; slot arity diagnostics; provisional
+`MethodSlots` parity; exact attached-owner bound validation; and ordered
+`IndexMap` projection coverage.
+Validation: lowering passed 1,015 tests and ignored one test. Frontend passed
+122 tests. Codegen passed 1,072 tests. Runtime passed 81 tests. The four
+attached-API audit tests and the existing provisional `MethodSlots` integration
+test passed. Workspace Clippy, formatting, HIR and driver maintainability, the
+900-line guard, and diff hygiene passed. A package-build-heavy aggregate driver
+run was stopped after 32 minutes without a reported failure. The changed and
+in-scope driver tests passed directly. The create-PR and merge gates each ran
+once on the exact candidate. Both passed every earlier guard. Both stopped at
+the same two separately owned Rust-interop matrix inputs. Neither gate ran
+again
+([evidence](https://github.com/sifr-lang/sifr/pull/3383#issuecomment-5357149554)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no blocking
+finding
+([evidence](https://github.com/sifr-lang/sifr/pull/3383#issuecomment-5357083164)).
+Deferred follow-up: an unreachable legacy missing-value diagnostic, uniform
+release-mode enforcement of the single-value ownership invariant, and direct
+mutable receiver-only binding coverage remain terminal suggestions. The
+external gate inputs and all `pre_v1` work remain out of scope.
+Next action: implement item 25, the second M8-M10 compiler prerequisite audit.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2794,18 +2824,19 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 23 are merged and recorded. Items 1-16 close the first compiler
+through 24 are merged and recorded. Items 1-16 close the first compiler
 mechanism sequence. Item 17 classifies every remaining compiler deferral and
 orders items 18-26. Item 18 closes the M5 audit. Item 19 closes the M6 audit
 and adds item 27 for second-review coverage. Item 20 closes the M7/M7b audit
 and adds item 28 for lookup consistency. Item 21 closes the M7c/M7d
 representation audit. It adds item 29 for option-argument safety. Item 22
 closes the M7e audit and adds item 30 for structural-default naming. Item 23
-closes the M7f audit and adds item 31 for non-union conditional state. The seven
+closes the M7f audit and adds item 31 for non-union conditional state. Item 24
+closes the first M8-M10 prerequisite audit. The seven
 M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
 #3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
 #47. M12 is in progress. The current compiler merge is
-`7941d0a88c6e32f5eea4eae65c5d43b636976a18`, and the current package merge is
+`435991bfdfd8b80d62d0788f6a1640786a9d5342`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
@@ -2814,5 +2845,5 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: implement item 24, then continue items 25-31 before package
+Next action: implement item 25, then continue items 26-31 before package
 certification and final review.
