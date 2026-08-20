@@ -221,10 +221,12 @@ fn validate_bindings(
         };
         let mut constraints = Vec::new();
         for bound in bounds {
-            if binding.provisional
-                && type_param == &binding.declaration.owner_type_param
-                && bound == "StaticProgram"
-            {
+            if provisional_owner_bound_is_deferred(
+                binding.provisional,
+                type_param,
+                &binding.declaration.owner_type_param,
+                bound,
+            ) {
                 continue;
             }
             if let Some(constraint) = decode_typevar_constraint(bound) {
@@ -256,6 +258,17 @@ fn validate_bindings(
             );
         }
     }
+}
+
+fn provisional_owner_bound_is_deferred(
+    provisional: bool,
+    type_param: &str,
+    owner_type_param: &str,
+    bound: &str,
+) -> bool {
+    provisional
+        && type_param == owner_type_param
+        && matches!(bound, "StaticProgram" | "MethodSlots")
 }
 
 fn validate_arguments(
@@ -328,5 +341,44 @@ fn substitute_function_type(
             })
             .collect(),
         return_type: Box::new(substitute_type_vars(&function_type.return_type, bindings)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::provisional_owner_bound_is_deferred;
+
+    #[test]
+    fn provisional_static_owner_bounds_have_exact_parity() {
+        assert!(provisional_owner_bound_is_deferred(
+            true,
+            "T",
+            "T",
+            "StaticProgram"
+        ));
+        assert!(provisional_owner_bound_is_deferred(
+            true,
+            "T",
+            "T",
+            "MethodSlots"
+        ));
+        assert!(!provisional_owner_bound_is_deferred(
+            true,
+            "T",
+            "T",
+            "Structural"
+        ));
+        assert!(!provisional_owner_bound_is_deferred(
+            true,
+            "Context",
+            "T",
+            "MethodSlots"
+        ));
+        assert!(!provisional_owner_bound_is_deferred(
+            false,
+            "T",
+            "T",
+            "MethodSlots"
+        ));
     }
 }

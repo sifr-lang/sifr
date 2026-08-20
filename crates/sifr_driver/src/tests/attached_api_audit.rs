@@ -95,3 +95,42 @@ def invalid():
         "expected a StaticProgram eligibility diagnostic: {errors:#?}"
     );
 }
+
+#[test]
+fn attached_api_rejects_method_slots_bound_on_the_wrong_type_parameter() {
+    let contract = attached_contract()
+        .replace(
+            "from sifr.meta import StaticProgram, StringStructural, Structural, ",
+            "from sifr.meta import MethodSlots, StaticProgram, StringStructural, Structural, ",
+        )
+        .replace(
+            "@class_adapter_provider",
+            r#"@attached_api("fixture.contract", "ContractApi", public_name="misbound", receiver="type", owner="T")
+def misbound[T: Structural, Slots: MethodSlots]() -> int:
+    return 1
+
+@class_adapter_provider"#,
+        );
+    let modules = project(
+        r#"
+from fixture.contract import Contract
+
+class Model(Contract):
+    value: int
+"#,
+        &contract,
+    );
+
+    let errors = compile_errors(
+        &modules,
+        "a MethodSlots bound on a non-owner parameter must not authorize the owner",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error
+                .message
+                .contains("owner type parameter must be bounded by StaticProgram or MethodSlots")
+        }),
+        "expected the owner-bound diagnostic: {errors:#?}"
+    );
+}

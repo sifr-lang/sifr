@@ -357,6 +357,16 @@ pub enum StaticMethodSlotContext {
     Mutable(Type),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StaticMethodSlotInputRole {
+    /// The structural input is the checked method's value parameter.
+    Value,
+    /// The structural input is the checked method's receiver.
+    Receiver,
+    /// The structural input is `(receiver, value)`.
+    ReceiverAndValue,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StaticMethodSlot {
     /// Exact module-qualified nominal owner identity.
@@ -372,6 +382,7 @@ pub struct StaticMethodSlot {
     pub params: Vec<StaticMethodParam>,
     pub return_type: Type,
     pub is_async: bool,
+    pub input_role: StaticMethodSlotInputRole,
     pub input_type: Type,
     pub output_type: Type,
     pub context_type: Option<Type>,

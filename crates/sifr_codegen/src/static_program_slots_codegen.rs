@@ -1,4 +1,7 @@
-use sifr_ir::{MethodKind, StaticMethodSlot, StaticMethodSlotContext, StaticSpecializationOutput};
+use sifr_ir::{
+    MethodKind, StaticMethodSlot, StaticMethodSlotContext, StaticMethodSlotInputRole,
+    StaticSpecializationOutput,
+};
 use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
 use std::fmt::Write as _;
 
@@ -100,7 +103,6 @@ fn slot_identity_expression(slot: &StaticMethodSlot) -> String {
 
 fn slot_arm(index: usize, slot: &StaticMethodSlot, context: &StaticMethodSlotContext) -> String {
     let input = render_slot_type(&slot.input_type);
-    let receiver_value_input = has_receiver_value_input(slot);
     let receiver_binding = if slot.receiver == Some(ReceiverConvention::MutableBorrow) {
         "mut "
     } else {
@@ -115,12 +117,12 @@ fn slot_arm(index: usize, slot: &StaticMethodSlot, context: &StaticMethodSlotCon
     } else {
         ""
     };
-    let binding = if receiver_value_input {
-        format!("({receiver_binding}receiver, {value_binding}value)")
-    } else {
-        let mutable_input = slot.receiver == Some(ReceiverConvention::MutableBorrow)
-            || (slot.receiver.is_none() && value_binding == "mut ");
-        format!("{}value", if mutable_input { "mut " } else { "" })
+    let binding = match slot.input_role {
+        StaticMethodSlotInputRole::ReceiverAndValue => {
+            format!("({receiver_binding}receiver, {value_binding}value)")
+        }
+        StaticMethodSlotInputRole::Receiver => format!("{receiver_binding}value"),
+        StaticMethodSlotInputRole::Value => format!("{value_binding}value"),
     };
     let call = slot_call_expression(slot, context);
     let dispatch = if slot.is_fallible {
@@ -147,7 +149,7 @@ fn slot_call_expression(slot: &StaticMethodSlot, context: &StaticMethodSlotConte
     });
     if slot.receiver.is_some() {
         let mut args = Vec::new();
-        let receiver = if has_receiver_value_input(slot) {
+        let receiver = if slot.input_role == StaticMethodSlotInputRole::ReceiverAndValue {
             let value = slot.params.first().map_or_else(
                 || "value".to_string(),
                 |param| argument_for_convention("value", param.convention),
@@ -174,11 +176,6 @@ fn slot_call_expression(slot: &StaticMethodSlot, context: &StaticMethodSlotConte
             format!("{owner}::{method}({})", args.join(", "))
         }
     }
-}
-
-fn has_receiver_value_input(slot: &StaticMethodSlot) -> bool {
-    slot.receiver.is_some()
-        && matches!(slot.input_type.resolve_alias(), Type::Tuple(values) if values.len() == 2)
 }
 
 fn argument_for_convention(name: &str, convention: ParamConvention) -> String {
