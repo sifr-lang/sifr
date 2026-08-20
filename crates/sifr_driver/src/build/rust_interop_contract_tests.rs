@@ -258,6 +258,83 @@ fn package_rust_interop_direct_probe_accepts_mutable_borrow_signature() {
 }
 
 #[test]
+#[doc = "sifr-evidence: executes-cargo-probe"]
+fn package_rust_interop_opaque_probe_accepts_declared_send_sync_copy() {
+    let backend_root = temp_package_root("rust_interop_opaque_send_sync_copy");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "#[derive(Clone, Copy)]\npub struct Tokenizer(pub u64);\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![opaque_class_declaration_entry(vec![
+            target_argument("type", "native.Tokenizer"),
+            bool_argument("send", true),
+            bool_argument("sync", true),
+            symbol_argument("clone", "copy"),
+        ])],
+        Vec::new(),
+    );
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "native",
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    let generated = apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("opaque Send + Sync + Copy type should pass probe");
+    let probe = &generated.interop.rust.probe_plan.probes[0];
+    assert_eq!(probe.kind, sifr_codegen::RustBridgeProbeKind::OpaqueHandle);
+    assert!(probe.requires_send);
+    assert!(probe.requires_sync);
+}
+
+#[test]
+fn package_rust_interop_opaque_probe_rejects_unsatisfied_send_obligation() {
+    let backend_root = temp_package_root("rust_interop_opaque_not_send");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "pub struct Tokenizer(pub std::rc::Rc<()>);\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![opaque_class_declaration_entry(vec![
+            target_argument("type", "native.Tokenizer"),
+            bool_argument("send", true),
+        ])],
+        Vec::new(),
+    );
+    let context = package_context(
+        TrustPolicy::default(),
+        vec![backend_with_manifest(
+            "native",
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    let diagnostics = interop_errors(generated, Some(context), "Send probe must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
+    assert!(diagnostics[0].message.contains("Rust bridge probe failed"));
+}
+
+#[test]
 fn package_rust_interop_opaque_rejects_unknown_contract_key() {
     let generated = base_project_with_contracts(
         vec![opaque_class_declaration_entry(vec![
@@ -616,7 +693,7 @@ pub(super) fn target_argument(name: &str, target: &str) -> RustInteropArgument {
     }
 }
 
-pub(super) fn bool_argument(name: &str, value: bool) -> RustInteropArgument {
+fn bool_argument(name: &str, value: bool) -> RustInteropArgument {
     RustInteropArgument {
         name: Some(name.to_string()),
         value: RustInteropValue::Boolean(value),
