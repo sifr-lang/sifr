@@ -2474,7 +2474,7 @@ work.
 | M5 handler-bearing method descriptors | Complete in item 18. Declared-owned receiver storage, `Self` availability, `@staticmethod` stacking, and local handler-plan ordering are closed. Slot fallibility and canonical adapter selection were already complete. |
 | M6 structural public values and mappings | Complete in item 19. Same-path obligations, mapping-path marking, explicit stdlib origin, mapped-value thread traits, and multi-module late-stdlib coverage are closed. Item 27 owns two second-review coverage mechanisms. File headroom and body deduplication remain terminal unless the guard or measurement requires work. |
 | M7 and M7b attached APIs | Complete in item 20. Exact set identity, all native-member collisions, generic-call metadata, concrete data-parent eligibility, canonical binding keys, module-less identity, private filtering, and bound documentation are closed. Item 28 owns two pre-existing lookup-consistency mechanisms from the review. |
-| M7c-M7d representation sequencing | Item 21. The two blocking optional-to-union defects are complete in M7d. Remaining work covers nested option-represented union payloads, per-member conversions, warning-clean `None` bindings, owned-argument widening, and shared assignment sequencing. Behavioral presence and absence runs belong to certification. |
+| M7c-M7d representation sequencing | Complete in item 21. Nested option-represented union payloads, per-member conversions, warning-clean `None` branches, owned registry-call widening, and shared assignment sequencing use the consuming-value conversion authority. Behavioral presence and absence runs remain certification work. Item 29 owns a separate pre-existing option-to-non-optional argument safety path. |
 | M7e structural construction defaults | Item 22. Close generated-local naming, factory freshness on both sides, and the ordering contract for default evaluation before later required-field rejection. Split class-body lowering only when a touched file reaches the guard. |
 | M7f static-program integration | Item 23. Close speculative emitter-state restoration, imported mapped-opaque paths, const-evaluator and codegen `isinstance` parity, and any real generic-bound lifetime defect. Lifetime investigation that finds no defect becomes terminal evidence. |
 | M8-M10 compiler prerequisites | Items 24 and 25. Item 24 owns method-slot receiver roles, direct codegen and arity diagnostics, ordered projection, provisional `MethodSlots` parity, and wrongly bound owners. Item 25 owns deterministic multi-context selection and exact positive and negative generic-bound assertions. Body deduplication and clone-inference ideas are terminal without a failing case. |
@@ -2497,8 +2497,15 @@ generic-call lookup sites reported by item 20. It must also route imported
 attached-set binding registration through exact identity membership. Item 28
 runs after item 27.
 
-Item 20 is complete. Next action: implement item 21, the M7c-M7d
-representation-sequencing audit.
+Item 29 is a later option-argument safety item. It must determine whether a
+checked optional argument can reach a non-optional registry-call parameter. If
+the path is reachable, reject it statically or lower it without a
+data-dependent `expect`, while preserving any required class upcast. If it is
+unreachable, encode the invariant with focused coverage and record the path as
+terminal. Item 29 runs after item 28.
+
+Item 21 is complete. Next action: implement item 22, the M7e structural
+construction-default audit.
 
 Compiler hardening item 17 state: complete
 PR: [`sifr-lang/sifr#3364`](https://github.com/sifr-lang/sifr/pull/3364)
@@ -2603,6 +2610,34 @@ terminal suggestions. The external gate inputs and all `pre_v1` work remain
 out of scope.
 Next action: implement item 21, the M7c-M7d representation-sequencing audit.
 
+Compiler hardening item 21 state: complete
+PR: [`sifr-lang/sifr#3374`](https://github.com/sifr-lang/sifr/pull/3374)
+Base SHA: `ae781bfe31ebdab68e332d1bc6091ba06ebd1f60`
+Candidate SHA: `bc0ebdf404e87faceb6c82308e14342dbb9f7929`
+Merge SHA: `66176fb85589d8d8ee7f8cf5df155278c72170d1`
+Changed paths: option and enum-backed union conversion sequencing; local
+assignment routing; owned registry-call argument adaptation; and focused
+code-generation coverage for nested option payloads, member upcasts, clean
+`None` branches, and shared assignment behavior.
+Validation: runtime passed 80 tests. Codegen passed 1,064 tests. Lowering passed
+1,014 tests and ignored one test. Driver passed 546 tests and ignored 76 tests.
+The affected representation shapes also compiled through generated Rust.
+Workspace Clippy, formatting, maintainability, the 900-line guard, and diff
+hygiene passed. The create-PR and merge gates each ran once on the exact
+candidate. Both passed every earlier guard. Both stopped at the same two
+separately owned Rust-interop matrix inputs. Neither gate ran again
+([evidence](https://github.com/sifr-lang/sifr/pull/3374#issuecomment-5355861831)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3374#issuecomment-5355806695)).
+Deferred follow-up: item 29 owns the pre-existing non-union option-argument
+`expect` path. The broader simple-path predicate, an unreachable enum-shape
+invariant, and more specific generated-output assertions remain terminal
+without focused correctness evidence. Behavioral presence and absence runs
+remain certification work. The external gate inputs and all `pre_v1` work
+remain out of scope.
+Next action: implement item 22, the M7e structural construction-default audit.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2690,15 +2725,16 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 20 are merged and recorded. Items 1-16 close the first compiler
+through 21 are merged and recorded. Items 1-16 close the first compiler
 mechanism sequence. Item 17 classifies every remaining compiler deferral and
 orders items 18-26. Item 18 closes the M5 audit. Item 19 closes the M6 audit
 and adds item 27 for second-review coverage. Item 20 closes the M7/M7b audit
-and adds item 28 for lookup consistency. The seven M11 compiler
-prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323, #3325, #3327,
-and #3329. The M11 package surface merged in Pydantic-Sifr PR #47. M12 is in
-progress. The current compiler merge is
-`a0111e13b21caf84dd01f4748ebde070b9bc9969`, and the current package merge is
+and adds item 28 for lookup consistency. Item 21 closes the M7c/M7d
+representation audit. It adds item 29 for option-argument safety. The seven
+M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
+#3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
+#47. M12 is in progress. The current compiler merge is
+`66176fb85589d8d8ee7f8cf5df155278c72170d1`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
@@ -2707,5 +2743,5 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: implement item 21, then continue items 22-28 before package
+Next action: implement item 22, then continue items 23-29 before package
 certification and final review.
