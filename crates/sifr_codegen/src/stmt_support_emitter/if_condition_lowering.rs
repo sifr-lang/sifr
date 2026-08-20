@@ -358,8 +358,7 @@ impl RustEmitter {
                                     .collect::<Vec<_>>()
                             })
                             .unwrap_or_default();
-                        let Some(lowered_else_body) =
-                            self.try_lower_speculative_branch_for_ir(else_body)?
+                        let Some(lowered_else_body) = self.try_lower_if_branch_for_ir(else_body)?
                         else {
                             return Ok(None);
                         };
@@ -400,8 +399,7 @@ impl RustEmitter {
                         } else {
                             var_name.clone()
                         };
-                        let Some(lowered_body) = self.try_lower_speculative_branch_for_ir(body)?
-                        else {
+                        let Some(lowered_body) = self.try_lower_if_branch_for_ir(body)? else {
                             return Ok(None);
                         };
                         nested_else = Some(vec![RustStmt::IfLet {
@@ -488,7 +486,7 @@ impl RustEmitter {
         }
 
         let mut nested_else = if let Some(else_body) = else_body {
-            let Some(lowered_else) = self.try_lower_stmt_block_for_ir(else_body)? else {
+            let Some(lowered_else) = self.try_lower_if_branch_for_ir(else_body)? else {
                 return Ok(None);
             };
             Some(lowered_else)
@@ -514,7 +512,7 @@ impl RustEmitter {
         then_body: &[HirStmt],
         nested_else: Option<Vec<RustStmt>>,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
-        let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)? else {
+        let Some(lowered_then_body) = self.try_lower_if_branch_for_ir(then_body)? else {
             return Ok(None);
         };
 
@@ -584,7 +582,7 @@ impl RustEmitter {
         }))
     }
 
-    fn try_lower_speculative_branch_for_ir(
+    pub(crate) fn try_lower_if_branch_for_ir(
         &mut self,
         body: &[HirStmt],
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
@@ -699,7 +697,7 @@ mod tests {
         ];
 
         let lowered = emitter
-            .try_lower_speculative_branch_for_ir(&body)
+            .try_lower_if_branch_for_ir(&body)
             .expect("speculative lowering must not error");
 
         assert!(lowered.is_none());
@@ -721,7 +719,7 @@ mod tests {
         }];
 
         let lowered = emitter
-            .try_lower_speculative_branch_for_ir(&body)
+            .try_lower_if_branch_for_ir(&body)
             .expect("speculative lowering must not error");
 
         assert!(lowered.is_some());

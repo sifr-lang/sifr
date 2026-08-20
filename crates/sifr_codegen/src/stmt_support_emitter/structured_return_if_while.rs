@@ -239,7 +239,7 @@ impl RustEmitter {
                     else {
                         return Ok(false);
                     };
-                    let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)?
+                    let Some(lowered_then_body) = self.try_lower_if_branch_for_ir(then_body)?
                     else {
                         return Ok(false);
                     };
