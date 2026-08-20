@@ -53,6 +53,9 @@ impl RustInteropResolver<'_> {
         sysroot_trust: Option<&SysrootRustInteropTrust>,
     ) -> Option<String> {
         let dependency_name = package_bridge_dependency_name(package);
+        if !super::target_resolution::is_concrete_probe_path(&declaration.declaration, path) {
+            return Some(dependency_name);
+        }
         let signature = super::target_resolution::is_primary_target(&declaration.declaration, path)
             .then(|| {
                 self.signature_contracts
@@ -108,5 +111,58 @@ impl RustInteropResolver<'_> {
             cargo_resolution: self.cargo_resolution.clone(),
         });
         Some(dependency_name)
+    }
+
+    pub(super) fn plan_direct_backend_probe(
+        &mut self,
+        declaration: &RustInteropPlanDeclaration,
+        path: &RustTargetPath,
+        backend: &BackendCrateMetadata,
+        sysroot_trust: Option<&SysrootRustInteropTrust>,
+    ) -> bool {
+        if !super::target_resolution::is_concrete_probe_path(&declaration.declaration, path) {
+            return true;
+        }
+
+        let canonical_target_path =
+            super::target_resolution::canonical_sifr_target_path(declaration);
+        let signature = super::target_resolution::is_primary_target(&declaration.declaration, path)
+            .then(|| {
+                self.signature_contracts
+                    .get(&canonical_target_path)
+                    .cloned()
+            })
+            .flatten();
+        let async_thread_affinity = self.async_thread_affinity_for_probe(declaration);
+        let Some(sysroot_runtime_crate) = self.context.sysroot_runtime_crate.clone() else {
+            self.push_diagnostic(
+                declaration,
+                path.span,
+                DiagnosticCode::RUST_CARGO_METADATA,
+                "Rust bridge probe requires a resolved Sifr sysroot runtime crate",
+                vec![("target", path.dotted())],
+                vec!["Direct Rust bridge probes must use the same resolved sysroot runtime crate as generated Cargo projects.".to_string()],
+                None,
+            );
+            return false;
+        };
+        self.pending_direct_probes.push(PendingRustBridgeProbe {
+            declaration: declaration.clone(),
+            path: path.clone(),
+            backend: backend.clone(),
+            source_prefix: None,
+            signature,
+            async_thread_affinity,
+            zero_copy_obligations: self
+                .zero_copy_probe_obligations
+                .get(&canonical_target_path)
+                .copied()
+                .unwrap_or((false, false)),
+            trusted_sysroot: sysroot_trust.is_some(),
+            sysroot_runtime_crate,
+            sysroot_vendor_dir: sysroot_trust.map(|trust| trust.vendor_dir.clone()),
+            cargo_resolution: self.cargo_resolution.clone(),
+        });
+        true
     }
 }
