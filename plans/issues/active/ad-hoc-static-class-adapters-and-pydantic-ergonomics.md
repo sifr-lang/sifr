@@ -2472,7 +2472,7 @@ work.
 | M0-M2 declaration names, callable identity, keyword origins, and alias boundaries | Complete. `ClassDeclaration`, `CallableIdentity`, named argument origins, local malformed diagnostics, and exact alias rejection are implemented. Human and JSON span baselines plus the four-kind runtime fixture remain certification work. Cross-module const helpers remain optional package ergonomics. Lazy origin collection and label-count tuning are terminal without measured pressure. |
 | M3-M4 adapter execution, defaults, inheritance, and identity | Complete through the milestone work and M12 items 1-16. This includes semantic provider identity, generic substitution, canonical parent selection, bindings, and fail-closed parent reconstruction. Fixture registration, an unknown-plan-output case, and the stale `contract_types.sifr` check remain certification work. Allocation and wording cleanups are terminal. |
 | M5 handler-bearing method descriptors | Complete in item 18. Declared-owned receiver storage, `Self` availability, `@staticmethod` stacking, and local handler-plan ordering are closed. Slot fallibility and canonical adapter selection were already complete. |
-| M6 structural public values and mappings | Complete in item 19. Same-path obligations, mapping-path marking, explicit stdlib origin, mapped-value thread traits, and multi-module late-stdlib coverage are closed. Item 27 owns two second-review coverage mechanisms. File headroom and body deduplication remain terminal unless the guard or measurement requires work. |
+| M6 structural public values and mappings | Complete through items 19 and 27. Same-path obligations and structured probe diagnostics, parsed mapping-path marking, explicit stdlib origin, mapped-value thread traits, and multi-module late-stdlib coverage are closed. File headroom and body deduplication remain terminal unless the guard or measurement requires work. |
 | M7 and M7b attached APIs | Complete in item 20. Exact set identity, all native-member collisions, generic-call metadata, concrete data-parent eligibility, canonical binding keys, module-less identity, private filtering, and bound documentation are closed. Item 28 owns two pre-existing lookup-consistency mechanisms from the review. |
 | M7c-M7d representation sequencing | Complete in item 21. Nested option-represented union payloads, per-member conversions, warning-clean `None` branches, owned registry-call widening, and shared assignment sequencing use the consuming-value conversion authority. Behavioral presence and absence runs remain certification work. Item 29 owns a separate pre-existing option-to-non-optional argument safety path. |
 | M7e structural construction defaults | Complete in item 22. Structural construction reserves generated locals, rejects required omissions before evaluating defaults, and has two-sided factory freshness evidence. Item 30 owns a distinct user-field and callable-name collision. Class-body lowering remained below the guard and did not need a split. |
@@ -2487,10 +2487,10 @@ JSON diagnostics, source and installed toolchains, and the registered negative
 cases. The separately owned Rust-interop inputs and all `pre_v1` work remain
 outside this phase.
 
-Item 27 is a later M6 hardening item. It must gate local pre-scan marking on a
-valid complete `@rust.opaque(...)` declaration. It must also add an end-to-end
-same-path probe diagnostic case. Item 27 runs after items 20-26. No third item
-19 review applies.
+Item 27 is complete. Syntactic opaque identity remains fail closed. Parsed
+declarations alone grant structural and consuming capabilities. Mapped opaque
+probes enable the structural runtime feature, and the same-path missing-mapping
+case returns a structured Sifr diagnostic. No third item 19 review applies.
 
 Item 28 is a later lookup-consistency item. It must canonicalize the remaining
 generic-call lookup sites reported by item 20. It must also route imported
@@ -2515,8 +2515,8 @@ string-cache state transactional in the ordinary `if` lowering path. A local
 declared in one branch must not suppress a later cache declaration outside
 that branch. Item 31 runs after item 30. No third item 23 review applies.
 
-Item 26 is complete. Next action: implement item 27, the M6 pre-scan and
-same-path diagnostic hardening item.
+Item 27 is complete. Next action: implement item 28, the remaining attached-API
+lookup-consistency hardening item.
 
 Compiler hardening item 17 state: complete
 PR: [`sifr-lang/sifr#3364`](https://github.com/sifr-lang/sifr/pull/3364)
@@ -2798,6 +2798,42 @@ out of scope.
 Next action: implement item 27, the M6 pre-scan and same-path diagnostic
 hardening item.
 
+Compiler hardening item 27 state: complete
+Issue: [`sifr-lang/sifr#3391`](https://github.com/sifr-lang/sifr/issues/3391)
+PR: [`sifr-lang/sifr#3392`](https://github.com/sifr-lang/sifr/pull/3392)
+Base SHA: `de3672664c12ea685e7f05a645197724cb491cbc`
+Initial candidate SHA: `117b90baf587795f209aafa013a659ccb818a006`
+Final candidate SHA: `6c4d258cc7e551c849936f07580c032c74aec73d`
+Merge SHA: `81691f23ec48af26cbfbe6bd8e7be82daf3a9405`
+Changed paths: canonical opaque-declaration pre-scan parsing, structural runtime
+feature selection for mapped opaque probes, end-to-end same-path diagnostic
+coverage, and a responsibility split for opaque cargo-probe tests.
+Validation: lowering passed 1,019 tests and ignored one test. All nine opaque
+contract tests and all 22 probe source and manifest tests passed. Workspace
+Clippy, formatting, both maintainability guards, the 900-line guard, and diff
+hygiene passed. The create-PR gate ran once on the initial candidate. It found
+that two fixture-registered tests had moved from their inventory-owned source
+file, plus the two external Rust-interop inputs. The single remediation restored
+those test locations. Targeted inventory validation then reported only the two
+external inputs, and the compatibility matrix passed all 40 rows. The merge
+gate ran once on the exact final candidate. It passed every earlier guard and
+confirmed the inventory fix, then stopped only on the external inputs. Neither
+gate ran again
+([evidence](https://github.com/sifr-lang/sifr/pull/3392#issuecomment-5358431376)).
+Review evidence: the initial exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3392#issuecomment-5358275957)).
+The final permitted review verified the test-location remediation and returned
+`SATISFIED` with no new mechanism defect
+([evidence](https://github.com/sifr-lang/sifr/pull/3392#issuecomment-5358395945)).
+Deferred follow-up: exact trait-bound wording, explicit malformed-diagnostic
+counting, and the inert evidence marker are coverage suggestions only. Parsing
+opaque class decorators twice remains terminal without measured cost. Two
+all-target Clippy warnings predate this item; the repository gate-form Clippy
+passes. The external gate inputs and all `pre_v1` work remain out of scope.
+Next action: implement item 28, the remaining attached-API lookup-consistency
+hardening item.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2885,10 +2921,11 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 26 are merged and recorded. Items 1-16 close the first compiler
+through 27 are merged and recorded. Items 1-16 close the first compiler
 mechanism sequence. Item 17 classifies every remaining compiler deferral and
 orders items 18-26. Item 18 closes the M5 audit. Item 19 closes the M6 audit
-and adds item 27 for second-review coverage. Item 20 closes the M7/M7b audit
+and adds item 27 for second-review coverage. Item 27 closes that coverage.
+Item 20 closes the M7/M7b audit
 and adds item 28 for lookup consistency. Item 21 closes the M7c/M7d
 representation audit. It adds item 29 for option-argument safety. Item 22
 closes the M7e audit and adds item 30 for structural-default naming. Item 23
@@ -2898,7 +2935,7 @@ audit. The seven
 M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
 #3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
 #47. M12 is in progress. The current compiler merge is
-`a488dfd18989c56dc5535c5d2d03288eaa7e61fc`, and the current package merge is
+`81691f23ec48af26cbfbe6bd8e7be82daf3a9405`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-20): the one-time gates for the M11 compiler
@@ -2907,5 +2944,5 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: implement item 27, then continue items 28-31 before package
+Next action: implement item 28, then continue items 29-31 before package
 certification and final review.
