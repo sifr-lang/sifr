@@ -14,6 +14,9 @@ use super::{
 /// The mapping type and native value type are both selected by a checked Sifr
 /// declaration. Implementations remain in the native package; generated code
 /// only names this trait and [`MappedValue`].
+///
+/// `MappedValue<T, M>` retains both type parameters. Rust therefore derives
+/// `Send` and `Sync` only when both the stored value and mapping marker do.
 pub trait StructuralMapping<T> {
     fn shape_identity() -> ShapeIdentity;
 
@@ -220,5 +223,12 @@ mod tests {
             structural_construct::<Value, _>(mismatch),
             Err(StructuralContractError::ShapeMismatch)
         );
+    }
+
+    #[test]
+    fn mapped_value_preserves_send_and_sync_backstops() {
+        fn assert_send_sync<T: Send + Sync>() {}
+
+        assert_send_sync::<MappedValue<String, StringMapping>>();
     }
 }

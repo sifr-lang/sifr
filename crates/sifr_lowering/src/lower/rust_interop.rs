@@ -33,12 +33,7 @@ pub(in crate::lower) fn collect_rust_opaque_close_methods(stmts: &[Stmt], ctx: &
             continue;
         };
         ctx.rust_opaque_classes.insert(class_def.name.to_string());
-        if opaque.arguments.keywords.iter().any(|keyword| {
-            keyword
-                .arg
-                .as_ref()
-                .is_some_and(|name| name.as_str() == "structural")
-        }) {
+        if has_valid_rust_opaque_structural_mapping_syntax(opaque) {
             ctx.rust_structural_classes
                 .insert(class_def.name.to_string());
         }
@@ -61,6 +56,16 @@ pub(in crate::lower) fn collect_rust_opaque_close_methods(stmts: &[Stmt], ctx: &
                 .insert(format!("{}.{}", class_def.name, close_method));
         }
     }
+}
+
+fn has_valid_rust_opaque_structural_mapping_syntax(opaque: &ExprCall) -> bool {
+    opaque.arguments.keywords.iter().any(|keyword| {
+        keyword
+            .arg
+            .as_ref()
+            .is_some_and(|name| name.as_str() == "structural")
+            && matches!(keyword.value, Expr::Attribute(_))
+    })
 }
 
 pub(in crate::lower) fn has_rust_opaque_structural_mapping_syntax(

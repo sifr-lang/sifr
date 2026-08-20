@@ -26,7 +26,7 @@ use crate::stdlib_filter::{
     filter_canonical_stdlib_ir_to_needed, seal_canonical_stdlib_names,
 };
 use crate::stdlib_import_signatures::register_imported_stdlib_signature;
-use crate::StdlibRustSource;
+use crate::StdlibCode;
 use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
 use sifr_type_system::{ParamConvention, Type};
@@ -35,7 +35,6 @@ use std::fmt::Write as _;
 
 pub(crate) type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
 pub(crate) type ModuleFuncSignatures = HashMap<String, FuncSignature>;
-type StdlibFuncSignatures = HashMap<String, ModuleFuncSignatures>;
 pub(crate) type UnionVariantTypes = Vec<(String, Type)>;
 pub(crate) type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
 
@@ -100,38 +99,6 @@ pub struct LoweringStats {
     pub stmt_candidate_structured: u64,
     pub expr_candidate_total: u64,
     pub expr_candidate_structured: u64,
-}
-
-/// Compiled stdlib information for codegen.
-/// Contains per-module checked Rust code and callable metadata.
-#[derive(Clone, Default)]
-pub struct StdlibCode {
-    /// Map of `module_name` -> compiled Rust source with checked-source provenance.
-    pub module_rust_code: HashMap<String, StdlibRustSource>,
-    /// Map of `module_name` -> (`constant_name` -> (type, `rust_name`)) for stdlib constants
-    /// This allows user code to reference stdlib constants with the correct Rust names.
-    pub module_constants: HashMap<String, HashMap<String, (Type, String)>>,
-    /// Map of `module_name` -> (`func_name` -> (`param_types_with_conventions`, `return_type`))
-    /// for pure Sifr stdlib functions. Used to emit correct borrow prefixes at call sites.
-    pub func_signatures: StdlibFuncSignatures,
-    /// Map of `module_name` -> set of transitive intrinsic module dependencies.
-    /// E.g., sifr.secrets depends on _sifr.crypto, so when user imports sifr.secrets,
-    /// the Cargo dependencies for _sifr.crypto (rand) must be included.
-    pub transitive_deps: HashMap<String, HashSet<String>>,
-    /// Map of `module_name` -> set of function names that are generators (contain yield).
-    /// Used to emit .`collect()` when assigning generator results to list[T] in user code.
-    pub generator_functions: HashMap<String, HashSet<String>>,
-    /// Set of class names that have generic type parameters across all stdlib modules.
-    pub generic_classes: HashSet<String>,
-    /// Map of stdlib generic class name -> declared type parameter names.
-    pub generic_class_params: HashMap<String, Vec<String>>,
-    /// Map of stdlib generic class name -> template HIR class for concrete type-argument inference.
-    pub generic_class_templates: HashMap<String, sifr_ir::HirClass>,
-    /// Map of `module_name` -> (`class_name` -> ordered class fields).
-    /// Multi-module project codegen also uses this for local helper modules.
-    pub module_class_fields: HashMap<String, HashMap<String, Vec<(String, Type)>>>,
-    /// Checked stdlib classes retained for late project-policy implementations.
-    pub module_class_templates: HashMap<String, HashMap<String, sifr_ir::HirClass>>,
 }
 
 pub(super) fn module_func_signatures(module: &HirModule) -> ModuleFuncSignatures {
