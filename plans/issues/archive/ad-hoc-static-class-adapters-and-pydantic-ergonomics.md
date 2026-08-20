@@ -3225,21 +3225,41 @@ and machine evidence references.
 Next action: run the one package merge gate, merge item 39, and implement item
 40 immediately.
 
-Package closure item 40 state: in progress
+Package closure item 40 state: complete
+Issue: [`sifr-lang/pydantic-sifr#54`](https://github.com/sifr-lang/pydantic-sifr/issues/54)
+PR: [`sifr-lang/pydantic-sifr#55`](https://github.com/sifr-lang/pydantic-sifr/pull/55)
+Base SHA: `2b92b2d6a73e85c442d0b59cea552b37b64bd92e`
+Candidate SHA: `7b0677be23835167357c0e61302c2641e985bf07`
+Merge SHA: `e96fc671c7d37deaea41d322ff4275f8cc8c8db2`
 Scope: update `README.md`, `docs/quickstart.md`, and the migration introduction
 to describe delivered adaptations and terminal exclusions. Add one guard that
 binds each document's named status vocabulary to the machine ledger. Align the
 public and machine evidence references for `api/serialization`.
-Review limit: item 40 receives one focused exact-SHA Opus review and at most one
-remediation review. It does not trigger a third item 39 or whole-phase review.
-Next action: start item 40 after item 39 merges.
+Validation: 9 focused documentation and compatibility tests passed. All 41
+package unit tests, the file-size guard, exact Sifr pin check, Python syntax,
+and diff checks passed. The create-PR and merge gates each ran once on the
+exact candidate. Both passed file size, the pin check, and all unit tests.
+Both then stopped at the absent external `.upstream/pydantic` checkout and did
+not run again
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/55#issuecomment-5362872876)).
+No Sifr compiler gate applies because no compiler file changed.
+Review evidence: the one focused exact-SHA Opus review returned `SATISFIED`
+with no blockers
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/55#issuecomment-5362870698)).
+This later item does not trigger a third item 39 or whole-phase review.
+Deferred follow-up: richer public evidence, an all-row evidence-containment
+guard, and generated status prose are optional. The blocked-status schema
+remains valid even though the current PS10 ledger has no blocked row.
+Next action: close and archive the phase through the existing documentation-only
+closure PR.
 
 Final certification and closure state: complete
 Compiler record SHA: `c63ba88914c947fd860b1b7bc0eb3ccda457a6e5`
 Compiler implementation SHA: `643cf76a10e1e0462b3a8572605e3ccbbb194279`
-Package merge SHA: `c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`
+Certified package merge SHA: `c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`
 Package closure candidate SHA: `2b1db062368abe915ad0c9c2cdebe46f0ddf8653`
 Package closure merge SHA: `2b92b2d6a73e85c442d0b59cea552b37b64bd92e`
+Current package merge SHA: `e96fc671c7d37deaea41d322ff4275f8cc8c8db2`
 Changed paths: final certification used fresh source and installed package
 copies. Phase closure changes only this record, `plans/roadmap.md`, and
 `plans/phases/index.md`; no compiler or package implementation changed.
@@ -3284,14 +3304,23 @@ repeated; their two external Rust-interop inputs remain recorded in their
 owners. The separately running `pre_v1` task, including its union-order audit,
 remains outside this phase. Closure is documentation-only, so no Sifr
 create-PR or merge gate applies.
-Review evidence: the final closure candidate receives the one required
-whole-phase exact-SHA Opus review before merge. Review output is published
-outside the reviewed Git tree and keyed to that candidate.
-Deferred follow-up: item 40 owns the status-vocabulary and evidence-parity
-mechanism first found by the item 39 remediation review. Existing external
-inputs and the parallel `pre_v1` task retain their separate owners.
-Next action: archive this completed record after the whole-phase review reports
-no blocking finding.
+Review evidence: the initial whole-phase review of closure SHA
+`104c96636ec9d154c054cea093ae9f257ea36b19` found four package-record omissions
+([evidence](https://github.com/sifr-lang/sifr/pull/3423#issuecomment-5362702377)).
+The one permitted remediation review of closure SHA
+`4a58b5e9abeb9decc41535c73d9f381710ea2349` confirmed those four corrections.
+It assigned one newly found documentation mechanism to item 40, so no third
+whole-phase review ran
+([evidence](https://github.com/sifr-lang/sifr/pull/3423#issuecomment-5362807479)).
+Item 40 then received its own focused exact-SHA `SATISFIED` review with no
+blocker
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/55#issuecomment-5362870698)).
+Deferred follow-up: no in-scope mechanism remains. Item 40 closed the
+status-vocabulary and evidence-parity mechanism first found by the item 39
+remediation review. Existing external inputs and the parallel `pre_v1` task
+retain their separate owners.
+Next action: merge the existing documentation-only closure PR and archive this
+completed record.
 
 Acceptance criteria:
 
@@ -3379,15 +3408,15 @@ Next action:
 
 ## Closure Record
 
-M0-M12 are implemented, certified, and recorded. M12 compiler hardening items
-1-36, package certification items 37-38, package closure item 39, and the final
-source/installed certification are complete. Package closure item 40 is the
-sole remaining item. The current compiler
+M0-M12 are merged, certified, and recorded. M12 compiler hardening items 1-36,
+package certification items 37-38, package closure items 39-40, and the final
+source/installed certification are complete. The current compiler
 implementation merge is
 `643cf76a10e1e0462b3a8572605e3ccbbb194279`; its later phase-record commits do
 not change compiler code. The current package merge is
-`2b92b2d6a73e85c442d0b59cea552b37b64bd92e`. Package closure candidate
-`2b1db062368abe915ad0c9c2cdebe46f0ddf8653` changed only documentation, the
+`e96fc671c7d37deaea41d322ff4275f8cc8c8db2`. Package closure candidates
+`2b1db062368abe915ad0c9c2cdebe46f0ddf8653` and
+`7b0677be23835167357c0e61302c2641e985bf07` changed only documentation, the
 compatibility ledger, and documentation contract tests.
 
 External gate record (2026-08-20): the one-time gates for the M11 compiler
@@ -3396,5 +3425,8 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Final action: the one whole-phase exact-SHA Opus review must report no blocking
-finding before the documentation-only closure candidate merges.
+Final action: merge the documentation-only closure PR. The two-round
+whole-phase review fixed its four original findings and assigned one new
+documentation mechanism to later item 40. Item 40 is merged and its exact-SHA
+review reported no blocking finding. The phase rule prohibits a third
+whole-phase review.
