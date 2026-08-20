@@ -108,3 +108,86 @@ fn concrete_generic_child_flattens_parent_fields_for_structural_bridge() {
     );
     assert_eq!(identities.get("main.Concrete"), Some(&expected));
 }
+
+#[test]
+fn plain_data_parent_flattens_into_structural_child_impls() {
+    let parent = HirClass {
+        name: "Parent".to_string(),
+        identity: Some("main.Parent".to_string()),
+        fields: vec![("value".to_string(), Type::Int)],
+        is_hashable: true,
+        ..payload_class()
+    };
+    let child = HirClass {
+        name: "Child".to_string(),
+        identity: Some("main.Child".to_string()),
+        fields: vec![("label".to_string(), Type::Str)],
+        parent_class: Some("Parent".to_string()),
+        parent_type: Some(Type::Class {
+            identity: Some("main.Parent".to_string()),
+            type_args: Vec::new(),
+            name: "Parent".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: Vec::new(),
+            parent_class: None,
+        }),
+        is_hashable: true,
+        ..payload_class()
+    };
+    let module = module(vec![structural_function()], vec![parent, child]);
+
+    let generated = crate::generate_rust(&module);
+
+    assert!(
+        generated.contains("StructuralConstruct for Child"),
+        "{generated}"
+    );
+    assert!(generated.contains("RecordField(\"value\")"), "{generated}");
+    assert!(
+        generated.contains("parent: <Parent>::new(value)"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn recursive_boxed_data_parent_is_not_structurally_emitted_for_child() {
+    let recursive_type = Type::Class {
+        identity: Some("main.Node".to_string()),
+        type_args: Vec::new(),
+        name: "Node".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let recursive_field = Type::Union(vec![Type::None, recursive_type]);
+    let parent = HirClass {
+        name: "Node".to_string(),
+        identity: Some("main.Node".to_string()),
+        fields: vec![("next".to_string(), recursive_field.clone())],
+        is_hashable: true,
+        ..payload_class()
+    };
+    let child = HirClass {
+        name: "RecursiveChild".to_string(),
+        identity: Some("main.RecursiveChild".to_string()),
+        parent_class: Some("Node".to_string()),
+        parent_type: Some(Type::Class {
+            identity: Some("main.Node".to_string()),
+            type_args: Vec::new(),
+            name: "Node".to_string(),
+            fields: vec![("next".to_string(), recursive_field)],
+            methods: Vec::new(),
+            parent_class: None,
+        }),
+        is_hashable: true,
+        ..payload_class()
+    };
+    let module = module(vec![structural_function()], vec![parent, child]);
+
+    let generated = crate::generate_rust(&module);
+
+    assert!(
+        !generated.contains("StructuralType for RecursiveChild"),
+        "{generated}"
+    );
+}

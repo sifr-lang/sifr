@@ -61,32 +61,12 @@ fn supports_generic_clone(ty: &Type) -> bool {
     }
 }
 
-fn supports_generic_hash(ty: &Type) -> bool {
-    match ty.resolve_alias() {
-        Type::TypeVar(_) => true,
-        Type::Tuple(values) | Type::Union(values) => values.iter().all(supports_generic_hash),
-        Type::Result(left, right) => supports_generic_hash(left) && supports_generic_hash(right),
-        Type::Newtype { inner, .. } => supports_generic_hash(inner),
-        Type::Class {
-            fields,
-            methods,
-            parent_class,
-            ..
-        } => {
-            !parent_chain_contains(parent_class.as_deref(), "NonSend")
-                && !methods.iter().any(|(name, _)| name == "__eq__")
-                && fields.iter().all(|(_, field)| supports_generic_hash(field))
-        }
-        _ => ty.supports_hash_key(),
-    }
-}
-
 fn supports_generic_equality(ty: &Type) -> bool {
     match ty.resolve_alias() {
         Type::TypeVar(_) => true,
         Type::List(value) | Type::Iterable(value) => supports_generic_equality(value),
-        Type::Set(value) => supports_generic_hash(value),
-        Type::Dict(key, value) => supports_generic_hash(key) && supports_generic_equality(value),
+        Type::Set(value) => value.supports_derived_hash(),
+        Type::Dict(key, value) => key.supports_derived_hash() && supports_generic_equality(value),
         Type::Result(left, right) => {
             supports_generic_equality(left) && supports_generic_equality(right)
         }
@@ -135,7 +115,7 @@ impl ClassTraitCapabilities {
             debug: supports_generic_debug(parent),
             clone: supports_generic_clone(parent),
             partial_eq: supports_generic_equality(parent),
-            hash: supports_generic_hash(parent),
+            hash: parent.supports_derived_hash(),
         }
     }
 }
@@ -241,7 +221,10 @@ impl RustEmitter {
                 && !has_custom_eq
                 && class.is_hashable
                 && !has_affine_field
-                && class.fields.iter().all(|(_, ty)| supports_generic_hash(ty)),
+                && class
+                    .fields
+                    .iter()
+                    .all(|(_, ty)| ty.supports_derived_hash()),
         };
         visiting.remove(&class.name);
         capabilities

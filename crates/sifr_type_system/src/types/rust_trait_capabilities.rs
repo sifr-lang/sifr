@@ -2,6 +2,57 @@ use super::{type_queries::parent_chain_contains, Type};
 use std::collections::HashSet;
 
 impl Type {
+    /// Whether Rust aggregate generation may derive conditional `Eq + Hash`.
+    ///
+    /// Type variables are accepted because the generated implementation adds
+    /// the required bounds. Containers whose Rust representation is never
+    /// hashable remain rejected.
+    #[must_use]
+    pub fn supports_derived_hash(&self) -> bool {
+        self.supports_derived_hash_inner(&mut HashSet::new())
+    }
+
+    fn supports_derived_hash_inner(
+        &self,
+        visiting_classes: &mut HashSet<(String, Vec<Self>)>,
+    ) -> bool {
+        match self.resolve_alias() {
+            Self::TypeVar(_) => true,
+            Self::Tuple(elements) | Self::Union(elements) => elements
+                .iter()
+                .all(|element| element.supports_derived_hash_inner(visiting_classes)),
+            Self::Result(ok, error) => {
+                ok.supports_derived_hash_inner(visiting_classes)
+                    && error.supports_derived_hash_inner(visiting_classes)
+            }
+            Self::Newtype { inner, .. } => inner.supports_derived_hash_inner(visiting_classes),
+            Self::Class {
+                fields,
+                methods,
+                parent_class,
+                ..
+            } => {
+                if parent_chain_contains(parent_class.as_deref(), "NonSend")
+                    || methods.iter().any(|(method, _)| method == "__eq__")
+                {
+                    return false;
+                }
+                let Some(key) = self.class_recursion_key() else {
+                    return false;
+                };
+                if !visiting_classes.insert(key.clone()) {
+                    return true;
+                }
+                let supports = fields
+                    .iter()
+                    .all(|(_, field)| field.supports_derived_hash_inner(visiting_classes));
+                visiting_classes.remove(&key);
+                supports
+            }
+            _ => self.supports_hash_key(),
+        }
+    }
+
     /// Whether the generated Rust representation implements `Eq + Hash` and
     /// can therefore be used as a `HashSet` element or `HashMap` key.
     #[must_use]

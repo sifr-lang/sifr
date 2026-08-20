@@ -338,24 +338,47 @@ mod tests {
 
     #[test]
     fn retained_registry_dependencies_pin_authoritative_versions() {
-        for feature in [
-            StdlibFeature::BigDecimal,
-            StdlibFeature::NumBigint,
-            StdlibFeature::NumTraits,
-            StdlibFeature::Rayon,
-            StdlibFeature::RustDecimal,
-            StdlibFeature::Tokio,
-        ] {
-            for dependency in retained_dependency_specs(feature) {
-                let Some((_package, specification)) = dependency.split_once('=') else {
-                    panic!("retained dependency must contain an assignment: {dependency}");
+        let mut retained_features = BTreeSet::new();
+        for feature in StdlibFeature::ALL {
+            let dependencies = retained_dependency_specs(*feature);
+            if !dependencies.is_empty() {
+                retained_features.insert(feature.id());
+            }
+            for dependency in dependencies {
+                let document = format!("[dependencies]\n{dependency}\n");
+                let parsed = document.parse::<toml::Table>().unwrap_or_else(|error| {
+                    panic!("invalid retained dependency {dependency}: {error}")
+                });
+                let dependencies = parsed["dependencies"]
+                    .as_table()
+                    .expect("dependencies must be a TOML table");
+                let (_package, specification) = dependencies
+                    .iter()
+                    .next()
+                    .expect("one retained dependency must be parsed");
+                let version = match specification {
+                    toml::Value::String(version) => version,
+                    toml::Value::Table(table) => table["version"]
+                        .as_str()
+                        .expect("inline retained dependency tables must declare a version"),
+                    _ => panic!("unsupported retained dependency form: {dependency}"),
                 };
-                let specification = specification.trim_start();
                 assert!(
-                    specification.starts_with("\"=") || specification.contains("version = \"="),
+                    version.starts_with('='),
                     "retained dependency must use an exact version: {dependency}"
                 );
             }
         }
+        assert_eq!(
+            retained_features,
+            BTreeSet::from([
+                "bigdecimal",
+                "num-bigint",
+                "num-traits",
+                "rayon",
+                "rust_decimal",
+                "tokio",
+            ])
+        );
     }
 }

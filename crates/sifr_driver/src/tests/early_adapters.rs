@@ -11,7 +11,7 @@ class ContractDescriptor:
 "#;
 
 const STRING_STRUCTURAL_NEGATIVE: &str = include_str!(
-    "../../../../verification/areas/core_language/fixtures/static_class_adapter/negative/non_string_leaf_rejected.sifr"
+    "../../../../verification/areas/core_language/fixtures/static_class_adapter/negative/non_string_leaf_rejected/src/main.sifr"
 );
 
 pub(super) const CONTRACT: &str = r#"
@@ -309,7 +309,11 @@ def main():
 #[test]
 fn attached_string_structural_api_rejects_a_non_string_leaf() {
     let contract = attached_contract();
-    let modules = project(STRING_STRUCTURAL_NEGATIVE, &contract);
+    let direct_source = STRING_STRUCTURAL_NEGATIVE.replace(
+        "from fixture import Contract, contract_config",
+        "from fixture.contract import Contract, contract_config",
+    );
+    let modules = project(&direct_source, &contract);
     let errors = compile_errors(&modules, "non-string attached input must fail checking");
     assert!(errors.iter().any(|error| {
         error.code == sifr_diagnostics::DiagnosticCode::PROTO_BOUND_NOT_SATISFIED.code()

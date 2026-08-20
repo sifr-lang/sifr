@@ -20,7 +20,7 @@ def run_attached_api_certification(
         str(compiler),
         *extra,
         "build",
-        str(fixture / "app.sifr"),
+        str(fixture / "src" / "app.sifr"),
         "-o",
         str(output),
         "--quiet",
@@ -39,7 +39,7 @@ def run_attached_api_certification(
     if result.stdout.strip() != "attached-contract":
         return f"{label} attached API fixture returned an unexpected value"
 
-    api_path = fixture / "fixture" / "api.sifr"
+    api_path = fixture / "src" / "api.sifr"
     original_api = api_path.read_text(encoding="utf-8")
     edited_api = original_api.replace(
         'return "attached-contract"', 'return "attached-contract-edited"'

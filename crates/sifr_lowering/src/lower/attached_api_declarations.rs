@@ -5,30 +5,36 @@ use sifr_ir::{
 use sifr_python_ast::{Decorator, StmtClassDef, StmtFunctionDef};
 use std::collections::HashSet;
 
-pub(super) fn owner_type_param(function: &StmtFunctionDef) -> Option<String> {
+pub(super) fn is_attached_api_decorator(decorator: &Decorator) -> bool {
+    matches!(
+        &decorator.expression,
+        Expr::Call(call)
+            if matches!(call.func.as_ref(), Expr::Name(name) if name.id.as_str() == "attached_api")
+    )
+}
+
+pub(super) fn attached_api_call(function: &StmtFunctionDef) -> Option<&sifr_python_ast::ExprCall> {
     function.decorator_list.iter().find_map(|decorator| {
+        if !is_attached_api_decorator(decorator) {
+            return None;
+        }
         let Expr::Call(call) = &decorator.expression else {
             return None;
         };
-        if !matches!(call.func.as_ref(), Expr::Name(name) if name.id.as_str() == "attached_api") {
-            return None;
-        }
-        keyword_string(call, "owner")
+        Some(call)
     })
 }
 
-pub(super) fn type_receiver_owner_type_param(function: &StmtFunctionDef) -> Option<String> {
-    function.decorator_list.iter().find_map(|decorator| {
-        let Expr::Call(call) = &decorator.expression else {
-            return None;
-        };
-        if !matches!(call.func.as_ref(), Expr::Name(name) if name.id.as_str() == "attached_api")
-            || keyword_string(call, "receiver").as_deref() != Some("type")
-        {
-            return None;
-        }
-        keyword_string(call, "owner")
-    })
+pub(super) fn owner_type_param(function: &StmtFunctionDef) -> Option<String> {
+    keyword_string(attached_api_call(function)?, "owner")
+}
+
+pub(super) fn type_receiver_owner_type_param_from_call(
+    call: &sifr_python_ast::ExprCall,
+) -> Option<String> {
+    (keyword_string(call, "receiver").as_deref() == Some("type"))
+        .then(|| keyword_string(call, "owner"))
+        .flatten()
 }
 
 pub(super) fn collect_set(class: &StmtClassDef, ctx: &mut LowerCtx) {

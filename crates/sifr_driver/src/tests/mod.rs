@@ -1,12 +1,14 @@
 mod adapter_defaults;
 mod attached_api_aliases;
 mod attached_api_audit;
+mod attached_api_codegen;
 mod diagnostics;
 mod discovery_and_workspace;
 mod early_adapters;
 mod generic_adapter_representation;
 mod handler_descriptors;
 mod imported_attached_apis;
+mod inheritance_metadata;
 mod package_project_build_check;
 mod panic_boundary;
 mod project_build_check;
