@@ -53,7 +53,7 @@ impl RustEmitter {
                 class_name,
             });
         }
-        let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+        let Some(lowered_body) = self.try_lower_scoped_stmt_block_for_ir(body)? else {
             return Ok(None);
         };
         Ok(Some(RustStmt::With {
@@ -92,7 +92,7 @@ impl RustEmitter {
         }
         if let sifr_ir::HirAsyncWithKind::UserDefined { context, .. } = kind {
             let body_always_exits = queries::block_control_flow_effect(body).always_exits();
-            let Some(mut lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+            let Some(mut lowered_body) = self.try_lower_scoped_stmt_block_for_ir(body)? else {
                 return Ok(None);
             };
             if let HirExpr::Name { name, .. } = context {
@@ -195,7 +195,7 @@ impl RustEmitter {
         if let Some(duration) = timeout_duration.clone() {
             self.active_timeout_durations.push(duration);
         }
-        let lowered_body_result = self.try_lower_stmt_block_for_ir(body);
+        let lowered_body_result = self.try_lower_scoped_stmt_block_for_ir(body);
         if timeout_duration.is_some() {
             let _ = self.active_timeout_durations.pop();
         }
@@ -264,7 +264,7 @@ impl RustEmitter {
         close_error_ty: Option<&Type>,
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
-        let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+        let Some(lowered_body) = self.try_lower_scoped_stmt_block_for_ir(body)? else {
             return Ok(None);
         };
         let target_pattern = if queries::stmts_reference_var(body, target) {

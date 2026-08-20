@@ -37,7 +37,7 @@ impl RustEmitter {
             return Ok(false);
         };
         self.loop_else_stack.push(has_else);
-        let lowered_body = self.try_lower_stmt_block_for_ir(body)?;
+        let lowered_body = self.try_lower_scoped_stmt_block_for_ir(body)?;
         let popped = self.loop_else_stack.pop();
         debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
         let Some(lowered_body) = lowered_body else {
@@ -45,7 +45,8 @@ impl RustEmitter {
         };
 
         if let Some(else_body) = else_body {
-            let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)? else {
+            let Some(lowered_else_body) = self.try_lower_scoped_stmt_block_for_ir(else_body)?
+            else {
                 return Ok(false);
             };
             self.push_captured_stmt(&RustStmt::Block(vec![
@@ -112,18 +113,15 @@ impl RustEmitter {
 
         self.loop_else_stack.push(has_else);
         let lowered_iter = self.try_lower_for_iter_expr_for_ir(iter, target_ty)?;
-        let previous_target_cache = self.string_char_cache_vars.get(target).cloned();
+        let string_char_cache_vars = self.string_char_cache_vars.clone();
         let target_cache_init = if target.contains(',') {
             None
         } else {
             self.string_char_cache_init_stmt_for_loop_target(target, target_ty)
         };
-        let lowered_body = self.try_lower_stmt_block_for_ir(body)?;
-        if let Some(previous) = previous_target_cache {
-            self.string_char_cache_vars.insert(target.clone(), previous);
-        } else {
-            self.string_char_cache_vars.remove(target);
-        }
+        let lowered_body = self.try_lower_stmt_block_for_ir(body);
+        self.string_char_cache_vars = string_char_cache_vars;
+        let lowered_body = lowered_body?;
         let popped = self.loop_else_stack.pop();
         debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
         let Some(lowered_iter) = lowered_iter else {
@@ -137,7 +135,8 @@ impl RustEmitter {
         }
 
         if let Some(else_body) = else_body {
-            let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)? else {
+            let Some(lowered_else_body) = self.try_lower_scoped_stmt_block_for_ir(else_body)?
+            else {
                 return Ok(false);
             };
             self.push_captured_stmt(&RustStmt::Block(vec![
@@ -267,7 +266,7 @@ impl RustEmitter {
             }
             self.try_closure_error_type.push(err_ty.clone());
             self.try_closure_error_type_info.push(error_carrier.clone());
-            let lowered = self.try_lower_stmt_block_for_ir(body)?;
+            let lowered = self.try_lower_scoped_stmt_block_for_ir(body)?;
             if capture_returns {
                 self.try_closure_depth -= 1;
                 self.try_closure_option_wrap.pop();
@@ -516,7 +515,7 @@ impl RustEmitter {
             }
             self.try_closure_error_type.push(err_ty.clone());
             self.try_closure_error_type_info.push(active_error_type);
-            let lowered = self.try_lower_stmt_block_for_ir(body)?;
+            let lowered = self.try_lower_scoped_stmt_block_for_ir(body)?;
             if capture_returns {
                 self.try_closure_depth -= 1;
                 self.try_closure_option_wrap.pop();
@@ -574,7 +573,7 @@ impl RustEmitter {
         }];
 
         let saved_timeout_durations = std::mem::take(&mut self.active_timeout_durations);
-        let finalbody_result = self.try_lower_stmt_block_for_ir(finalbody);
+        let finalbody_result = self.try_lower_scoped_stmt_block_for_ir(finalbody);
         self.active_timeout_durations = saved_timeout_durations;
         let Some(finalbody_lowered) = finalbody_result? else {
             return Ok(None);

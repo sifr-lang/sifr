@@ -159,7 +159,8 @@ impl RustEmitter {
                     );
                 Some(binding_value)
             };
-            let lowered_handler_body = match self.try_lower_stmt_block_for_ir(&handler.body) {
+            let lowered_handler_body = match self.try_lower_scoped_stmt_block_for_ir(&handler.body)
+            {
                 Ok(Some(lowered_handler_body)) => lowered_handler_body,
                 Ok(None) => return Ok(None),
                 Err(err) => return Err(err),
