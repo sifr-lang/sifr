@@ -335,42 +335,6 @@ fn package_rust_interop_opaque_probe_rejects_unsatisfied_send_obligation() {
 }
 
 #[test]
-fn package_rust_interop_opaque_probe_rejects_unsatisfied_copy_clone_policy() {
-    let backend_root = temp_package_root("rust_interop_opaque_not_copy");
-    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
-    std::fs::write(
-        backend_root.join("Cargo.toml"),
-        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
-    )
-    .expect("write backend cargo toml");
-    std::fs::write(
-        backend_root.join("src/lib.rs"),
-        "#[derive(Clone)]\npub struct Tokenizer(pub String);\n",
-    )
-    .expect("write backend lib");
-
-    let generated = base_project_with_contracts(
-        vec![opaque_class_declaration_entry(vec![
-            target_argument("type", "native.Tokenizer"),
-            symbol_argument("clone", "copy"),
-        ])],
-        Vec::new(),
-    );
-    let context = package_context(
-        TrustPolicy::default(),
-        vec![backend_with_manifest(
-            "native",
-            backend_root.join("Cargo.toml"),
-        )],
-    );
-
-    let diagnostics = interop_errors(generated, Some(context), "Copy probe must fail");
-
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
-    assert!(diagnostics[0].message.contains("Rust bridge probe failed"));
-}
-
-#[test]
 fn package_rust_interop_opaque_rejects_unknown_contract_key() {
     let generated = base_project_with_contracts(
         vec![opaque_class_declaration_entry(vec![

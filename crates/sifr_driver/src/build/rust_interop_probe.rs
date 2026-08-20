@@ -78,7 +78,11 @@ pub(super) fn execute_direct_cargo_probe(
     let requires_structural_runtime = probe
         .signature
         .as_ref()
-        .is_some_and(|signature| !signature.structural_type_params.is_empty());
+        .is_some_and(|signature| !signature.structural_type_params.is_empty())
+        || sifr_ir::rust_opaque_structural_mapping(std::slice::from_ref(
+            &probe.declaration.declaration,
+        ))
+        .is_some();
     let probe_manifest = probe_cargo_toml(
         &probe.backend.dependency_name,
         &probe.backend.cargo_package_name,

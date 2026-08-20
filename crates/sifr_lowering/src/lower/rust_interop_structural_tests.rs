@@ -582,6 +582,28 @@ def use(value: Token) -> None:
 }
 
 #[test]
+fn incomplete_opaque_declaration_remains_diagnostic() {
+    let errors = lower_errors(
+        r#"
+@rust.opaque(
+    type=bridge.token.Token,
+    structural=bridge.token.TokenMapping,
+    close="invalid",
+)
+class Token:
+    pass
+"#,
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR)
+            && error
+                .message
+                .contains("string decorator values are not part of the Rust interop grammar")
+    }));
+}
+
+#[test]
 fn structural_bound_rejects_enum_discriminant_overflow() {
     let errors = lower_errors(
         r"
