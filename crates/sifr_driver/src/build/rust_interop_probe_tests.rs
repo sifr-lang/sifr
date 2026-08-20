@@ -3,8 +3,9 @@ use super::super::rust_interop_probe_paths::{
 };
 use super::super::workspace::artifact_cache_root;
 use super::{
-    dependency_features, generated_bridge_type_stubs, prefixed_probe_source, probe_cargo_toml,
-    probe_cargo_vendor_args, python_raw_callback_probe_source, signature_return_probe_type,
+    dependency_features, generated_bridge_type_stubs, opaque_type_probe_source,
+    prefixed_probe_source, probe_cargo_toml, probe_cargo_vendor_args,
+    python_raw_callback_probe_source, signature_return_probe_type,
     structural_signature_probe_source, zero_copy_type_probe_source,
 };
 use ruff_text_size::TextRange;
@@ -29,6 +30,17 @@ fn zero_copy_type_probe_emits_each_declared_thread_obligation() {
         assert_eq!(source.contains("__sifr_assert_send::<__SifrView>();"), send);
         assert_eq!(source.contains("__sifr_assert_sync::<__SifrView>();"), sync);
     }
+}
+
+#[test]
+fn same_path_structural_mapping_keeps_the_mapping_obligation() {
+    let source =
+        opaque_type_probe_source("bridge::Token", Some("bridge::Token"), false, false, false);
+
+    assert!(source.contains("type __SifrProbe = bridge::Token;"));
+    assert!(source.contains("type __SifrMapping = bridge::Token;"));
+    assert!(source.contains("StructuralMapping<__SifrProbe>"));
+    assert!(source.contains("__sifr_assert_structural_mapping::<__SifrMapping>();"));
 }
 
 #[test]

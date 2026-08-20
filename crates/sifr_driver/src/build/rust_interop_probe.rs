@@ -232,35 +232,49 @@ fn prefixed_probe_source(prefix: &str, body: &str) -> String {
 }
 
 fn opaque_probe_source(probe: &PendingRustBridgeProbe, rust_path: &str) -> String {
+    opaque_type_probe_source(
+        rust_path,
+        opaque_target_argument(probe, "structural").as_deref(),
+        opaque_bool_argument(probe, "send"),
+        opaque_bool_argument(probe, "sync"),
+        opaque_symbol_argument(probe, "clone") == Some("copy"),
+    )
+}
+
+pub(super) fn opaque_type_probe_source(
+    rust_path: &str,
+    structural_mapping: Option<&str>,
+    requires_send: bool,
+    requires_sync: bool,
+    requires_copy: bool,
+) -> String {
     let mut out = format!("#![allow(dead_code)]\ntype __SifrProbe = {rust_path};\n");
-    let structural_mapping =
-        opaque_target_argument(probe, "structural").filter(|mapping| mapping != rust_path);
-    if let Some(mapping) = &structural_mapping {
+    if let Some(mapping) = structural_mapping {
         let _ = writeln!(out, "type __SifrMapping = {mapping};");
         out.push_str(
             "fn __sifr_assert_structural_mapping<M: sifr_runtime::interop::structural::StructuralMapping<__SifrProbe>>() {}\n",
         );
     }
-    if opaque_bool_argument(probe, "send") {
+    if requires_send {
         out.push_str("fn __sifr_assert_send<T: Send>() {}\n");
     }
-    if opaque_bool_argument(probe, "sync") {
+    if requires_sync {
         out.push_str("fn __sifr_assert_sync<T: Sync>() {}\n");
     }
-    if opaque_symbol_argument(probe, "clone") == Some("copy") {
+    if requires_copy {
         out.push_str("fn __sifr_assert_copy<T: Copy>() {}\n");
     }
     out.push_str("fn __sifr_probe() {\n");
     if structural_mapping.is_some() {
         out.push_str("    __sifr_assert_structural_mapping::<__SifrMapping>();\n");
     }
-    if opaque_bool_argument(probe, "send") {
+    if requires_send {
         out.push_str("    __sifr_assert_send::<__SifrProbe>();\n");
     }
-    if opaque_bool_argument(probe, "sync") {
+    if requires_sync {
         out.push_str("    __sifr_assert_sync::<__SifrProbe>();\n");
     }
-    if opaque_symbol_argument(probe, "clone") == Some("copy") {
+    if requires_copy {
         out.push_str("    __sifr_assert_copy::<__SifrProbe>();\n");
     }
     out.push_str("}\n");

@@ -1,12 +1,14 @@
 use crate::{RustEmitter, RustItem, RustParam, RustStmt, RustType, RustTypeParam, Visibility};
 use sifr_ir::{HirClass, HirModule, RustInteropDecoratorKind};
-use sifr_type_system::{class_rust_name, Type};
+use sifr_type_system::Type;
 use std::collections::{BTreeSet, HashSet};
 
 #[cfg(test)]
 mod generic_representation_tests;
 
 use crate::structural_record_fields::structural_record_fields;
+
+mod stdlib_implementations;
 
 const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
 
@@ -36,11 +38,16 @@ impl RustEmitter {
                 let Some(class) = templates.get(name) else {
                     continue;
                 };
-                let target = imported_stdlib_impl_target(class);
+                let target = stdlib_implementations::target(class);
                 if !emitted_targets.insert(target.clone()) {
                     continue;
                 }
-                self.emit_structural_record_impls_for_target(class, &support_module, &target);
+                self.emit_structural_record_impls_for_target(
+                    class,
+                    &support_module,
+                    &target,
+                    StructuralRecordOrigin::Stdlib,
+                );
                 self.emit_structural_enum_impls_for_target(class, &target);
             }
         }
@@ -48,7 +55,12 @@ impl RustEmitter {
 
     pub(crate) fn emit_structural_record_impls(&mut self, class: &HirClass, module: &HirModule) {
         let target = Self::class_impl_target(class);
-        self.emit_structural_record_impls_for_target(class, module, &target);
+        self.emit_structural_record_impls_for_target(
+            class,
+            module,
+            &target,
+            StructuralRecordOrigin::Project,
+        );
     }
 
     fn emit_structural_record_impls_for_target(
@@ -56,6 +68,7 @@ impl RustEmitter {
         class: &HirClass,
         module: &HirModule,
         target: &str,
+        origin: StructuralRecordOrigin,
     ) {
         let supported = self
             .project_structural_record_identities
@@ -66,7 +79,7 @@ impl RustEmitter {
                     let identity =
                         structural_record_identity(class, self.current_module_name.as_deref());
                     identities.contains(&identity)
-                        || (identity.starts_with("sifr.")
+                        || (origin == StructuralRecordOrigin::Stdlib
                             && structural_record_supported(class, module))
                 },
             );
@@ -141,13 +154,10 @@ impl RustEmitter {
     }
 }
 
-fn imported_stdlib_impl_target(class: &HirClass) -> String {
-    let rust_name = class_rust_name(class.identity.as_deref(), &class.name);
-    if class.type_params.is_empty() {
-        rust_name
-    } else {
-        format!("{rust_name}<{}>", class.type_params.join(", "))
-    }
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum StructuralRecordOrigin {
+    Project,
+    Stdlib,
 }
 
 pub(crate) fn structural_record_supported(class: &HirClass, module: &HirModule) -> bool {

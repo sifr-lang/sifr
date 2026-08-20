@@ -160,7 +160,9 @@ pub use rust_interop_plan::{
 };
 mod rust_ir;
 pub use rust_ir::*;
+mod stdlib_codegen_metadata;
 mod stdlib_filter;
+pub use stdlib_codegen_metadata::StdlibCode;
 mod stdlib_import_signatures;
 mod stdlib_rust_source;
 pub use stdlib_rust_source::StdlibRustSource;
