@@ -49,11 +49,12 @@ fn structural_construction_uses_checked_defaults_for_missing_fields() {
 fn structural_construction_checks_required_fields_before_default_factories() {
     let mut payload = payload_class();
     payload.fields = vec![
+        ("description".to_string(), Type::Str),
         ("names".to_string(), Type::List(Box::new(Type::Str))),
         ("required".to_string(), Type::Int),
     ];
     payload.field_defaults = vec![(
-        0,
+        1,
         HirExpr::Call {
             func: "description".to_string(),
             args: Vec::new(),
@@ -61,18 +62,27 @@ fn structural_construction_checks_required_fields_before_default_factories() {
             ty: Type::List(Box::new(Type::Str)),
         },
     )];
-    payload.field_default_identities = vec![(0, "callable[main.description]".to_string())];
+    payload.field_default_identities = vec![(1, "callable[main.description]".to_string())];
     let module = module(vec![structural_function()], vec![payload]);
 
     let generated = generate_rust(&module);
     let required_check = generated
-        .find("if __sifr_child_nodes[1].is_none()")
+        .find("if __sifr_child_nodes[2].is_none()")
         .unwrap_or_else(|| panic!("required-field precheck must be emitted: {generated}"));
     let factory_call = generated
         .find("None => description()")
         .expect("checked default factory must remain callable");
 
     assert!(required_check < factory_call, "{generated}");
+    let first_field = generated
+        .find("let (__sifr_field_0, __sifr_field_1, __sifr_field_2,) =")
+        .expect("field construction must use reserved tuple temporaries");
+    assert!(first_field < factory_call, "{generated}");
+    assert!(!generated.contains("let description ="), "{generated}");
+    assert!(
+        generated.contains("description: __sifr_field_0, names: __sifr_field_1"),
+        "record initialization must map reserved temporaries explicitly: {generated}"
+    );
     assert!(
         generated.contains("let __sifr_description = __sifr_source.node(__sifr_node)?;"),
         "generated locals must not shadow default callables: {generated}"
@@ -387,8 +397,8 @@ fn structural_impls_escape_rust_keyword_field_identifiers() {
     let generated = generate_rust_multi(&[("models", &models), ("api", &api)]);
     let models_rust = generated.get("models").expect("models module is generated");
 
-    assert!(models_rust.contains("let r#type ="));
-    assert!(models_rust.contains("Ok(Self { r#type })"));
+    assert!(models_rust.contains("let (__sifr_field_0,) ="));
+    assert!(models_rust.contains("Ok(Self { r#type: __sifr_field_0 })"));
     assert!(models_rust.contains("&self.r#type"));
     assert!(models_rust.contains("RecordField"));
     assert!(models_rust.contains("\"type\""));

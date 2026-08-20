@@ -48,6 +48,7 @@ class StructuralDefaults(Contract):
     enabled: bool = contract_field(default=True)
     tags: list[str] = contract_field(default_factory=list)
     names: list[str] = contract_field(default_factory=make_names)
+    description: str = contract_field(default="field")
     descriptions: list[str] = contract_field(default_factory=description)
 
 
@@ -111,6 +112,7 @@ def main() -> Result[None, ContractError | RustPanicError]:
         assert defaulted.enabled
         assert defaulted.tags == []
         assert defaulted.names == []
+        assert defaulted.description == "field"
         assert defaulted.descriptions == []
         another: StructuralDefaults = StructuralDefaults.construct()
         defaulted.tags.append("one")
