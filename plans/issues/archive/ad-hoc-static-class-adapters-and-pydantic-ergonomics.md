@@ -3191,10 +3191,38 @@ external compiler gate inputs and all `pre_v1` work remain out of scope.
 Next action: complete final source and installed-package certification from
 fresh copies of this merge.
 
+Package closure remediation item 39 state: review candidate
+Issue: [`sifr-lang/pydantic-sifr#52`](https://github.com/sifr-lang/pydantic-sifr/issues/52)
+PR: [`sifr-lang/pydantic-sifr#53`](https://github.com/sifr-lang/pydantic-sifr/pull/53)
+Base SHA: `c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`
+Candidate SHA: `2b1db062368abe915ad0c9c2cdebe46f0ddf8653`
+Changed paths: package architecture, migration, and compatibility documents;
+the machine-readable PS10 ledger; and focused documentation contract tests.
+Validation: 10 focused documentation and compatibility tests passed. All 40
+package unit tests, the file-size guard, exact Sifr pin check, Python syntax,
+and diff checks passed. The package create-PR gate ran once on the exact
+candidate. It passed file size, the pin check, and all unit tests. It then
+stopped at the absent external `.upstream/pydantic` checkout and did not run
+again. No Sifr compiler gate applies because no compiler file changed.
+Review evidence: the initial whole-phase exact-SHA Opus review found four
+blocking record omissions
+([evidence](https://github.com/sifr-lang/sifr/pull/3423#issuecomment-5362702377)).
+The remediation removes the stale serializer statement, documents
+`model_construct` and `model_copy` replacements, synchronizes all delivered
+statuses, records all 20 terminal exclusions, and makes the export list exact.
+It also enforces public/machine status parity and architecture/export parity.
+The one permitted whole-phase remediation review must cover this exact package
+candidate before merge.
+Deferred follow-up: none. The review's suggested parity guard is included in
+this remediation batch.
+Next action: obtain the one whole-phase remediation review, then run the one
+package merge gate and merge this package PR.
+
 Final certification and closure state: complete
 Compiler record SHA: `c63ba88914c947fd860b1b7bc0eb3ccda457a6e5`
 Compiler implementation SHA: `643cf76a10e1e0462b3a8572605e3ccbbb194279`
 Package merge SHA: `c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`
+Package closure candidate SHA: `2b1db062368abe915ad0c9c2cdebe46f0ddf8653`
 Changed paths: final certification used fresh source and installed package
 copies. Phase closure changes only this record, `plans/roadmap.md`, and
 `plans/phases/index.md`; no compiler or package implementation changed.
@@ -3242,8 +3270,9 @@ create-PR or merge gate applies.
 Review evidence: the final closure candidate receives the one required
 whole-phase exact-SHA Opus review before merge. Review output is published
 outside the reviewed Git tree and keyed to that candidate.
-Deferred follow-up: no in-scope implementation mechanism remains. Existing
-external inputs and the parallel `pre_v1` task retain their separate owners.
+Deferred follow-up: no in-scope implementation mechanism remains after package
+closure item 39. Existing external inputs and the parallel `pre_v1` task retain
+their separate owners.
 Next action: archive this completed record after the whole-phase review reports
 no blocking finding.
 
@@ -3333,12 +3362,15 @@ Next action:
 
 ## Closure Record
 
-M0-M12 are merged, certified, and recorded. M12 compiler hardening items 1-36,
-package certification items 37-38, and the final source/installed certification
-are complete. The current compiler implementation merge is
+M0-M12 are implemented, certified, and recorded. M12 compiler hardening items
+1-36, package certification items 37-38, package closure item 39, and the final
+source/installed certification are complete. The current compiler
+implementation merge is
 `643cf76a10e1e0462b3a8572605e3ccbbb194279`; its later phase-record commits do
 not change compiler code. The current package merge is
-`c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`.
+`c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`. Package closure candidate
+`2b1db062368abe915ad0c9c2cdebe46f0ddf8653` changes only documentation, the
+compatibility ledger, and documentation contract tests.
 
 External gate record (2026-08-20): the one-time gates for the M11 compiler
 prerequisites stopped at the Rust-interop matrix. The matrix reported one
