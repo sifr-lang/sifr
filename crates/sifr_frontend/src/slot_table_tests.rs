@@ -1,5 +1,7 @@
 use crate::{collect_module_exports, compile_module_hir, FrontendDiagnosticStyle};
-use sifr_lowering::{ExternalDefs, LoweringResult, StaticMethodSlotContext};
+use sifr_lowering::{
+    ExternalDefs, LoweringResult, StaticMethodSlotContext, StaticMethodSlotInputRole,
+};
 use sifr_syntax::parse_module_suite;
 
 fn compile(
@@ -72,6 +74,16 @@ fn diagnostic_codes(
             .into_iter()
             .map(|diagnostic| diagnostic.code)
             .collect(),
+    }
+}
+
+fn diagnostics(
+    result: Result<LoweringResult, Vec<sifr_diagnostics::RenderedDiagnostic>>,
+    failure: &str,
+) -> Vec<sifr_diagnostics::RenderedDiagnostic> {
+    match result {
+        Ok(_) => panic!("{failure}"),
+        Err(diagnostics) => diagnostics,
     }
 }
 
@@ -163,8 +175,35 @@ class Record:
     )
     .expect("infallible checked method slot specializes");
     let slot = &result.specialization_outputs[0].method_slots[0];
+    assert_eq!(slot.input_role, StaticMethodSlotInputRole::Value);
     assert_eq!(slot.output_type, sifr_type_system::Type::Str);
     assert!(!slot.is_fallible);
+}
+
+#[test]
+fn receiver_only_slot_records_receiver_input_role() {
+    let mut external_defs = ExternalDefs::default();
+    install_specializer(&mut external_defs, &["target.Record::label"]);
+    let result = compile(
+        "target",
+        r#"
+from fixture.slots import describe
+
+@const_specialize("fixture.slots", "describe")
+class Record:
+    value: str
+
+    @metadata("fixture.slot", "label")
+    def label(self) -> str:
+        return self.value
+"#,
+        &external_defs,
+    )
+    .expect("receiver-only method slot specializes");
+    let slot = &result.specialization_outputs[0].method_slots[0];
+
+    assert_eq!(slot.input_role, StaticMethodSlotInputRole::Receiver);
+    assert_eq!(slot.input_type, slot.owner_type);
 }
 
 #[test]
@@ -192,10 +231,45 @@ class Record:
         slot.input_type,
         sifr_type_system::Type::Tuple(vec![slot.owner_type.clone(), sifr_type_system::Type::Str,])
     );
+    assert_eq!(slot.input_role, StaticMethodSlotInputRole::ReceiverAndValue);
     assert_eq!(
         result.specialization_outputs[0].method_slot_context,
         Some(StaticMethodSlotContext::None)
     );
+}
+
+#[test]
+fn receiver_slot_requires_an_owned_composite_value_input() {
+    let mut external_defs = ExternalDefs::default();
+    install_specializer(&mut external_defs, &["target.Record::serialize"]);
+    let diagnostics = diagnostics(
+        compile(
+            "target",
+            r#"
+from fixture.slots import describe
+
+class AppContext:
+    calls: int
+
+@const_specialize("fixture.slots", "describe")
+class Record:
+    value: str
+
+    @metadata("fixture.slot", "serialize")
+    def serialize(self, value: str, context: AppContext) -> str:
+        return self.value + value
+"#,
+            &external_defs,
+        ),
+        "a borrowed composite value input must fail",
+    );
+
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == "SIFR-RUST-SLOT-0003"
+            && diagnostic
+                .message
+                .contains("receiver value input must be owned")
+    }));
 }
 
 #[test]
@@ -231,4 +305,68 @@ class Record:
         &external_defs,
     ));
     assert!(codes.iter().any(|code| code == "SIFR-RUST-SLOT-0005"));
+}
+
+#[test]
+fn static_method_slot_requires_one_value_input() {
+    let mut external_defs = ExternalDefs::default();
+    install_specializer(&mut external_defs, &["target.Record::missing"]);
+    let diagnostics = diagnostics(
+        compile(
+            "target",
+            r#"
+from fixture.slots import describe
+
+@const_specialize("fixture.slots", "describe")
+class Record:
+    value: str
+
+    @staticmethod
+    @metadata("fixture.slot", "missing")
+    def missing() -> str:
+        return "missing"
+"#,
+            &external_defs,
+        ),
+        "a static method slot without a value input must fail",
+    );
+
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == "SIFR-RUST-SLOT-0003"
+            && diagnostic
+                .message
+                .contains("exactly one value input and at most one context parameter")
+    }));
+}
+
+#[test]
+fn method_slot_rejects_more_than_value_and_context_inputs() {
+    let mut external_defs = ExternalDefs::default();
+    install_specializer(&mut external_defs, &["target.Record::excess"]);
+    let diagnostics = diagnostics(
+        compile(
+            "target",
+            r#"
+from fixture.slots import describe
+
+@const_specialize("fixture.slots", "describe")
+class Record:
+    value: str
+
+    @staticmethod
+    @metadata("fixture.slot", "excess")
+    def excess(own value: str, context: str, extra: str) -> str:
+        return value
+"#,
+            &external_defs,
+        ),
+        "a method slot with three inputs must fail",
+    );
+
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == "SIFR-RUST-SLOT-0003"
+            && diagnostic
+                .message
+                .contains("exactly one value input and at most one context parameter")
+    }));
 }

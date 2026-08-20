@@ -42,6 +42,6 @@ pub use sifr_ir::{
     PythonArrowSchemaMode, PythonDlpackStreamMode, PythonInteropDeclaration, RevealTypeDiagnostic,
     RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
     RustInteropEffect, RustInteropValue, RustTargetPath, SourceOriginId, StaticMethodParam,
-    StaticMethodSlot, StaticMethodSlotContext, StaticProgramValue, StaticSpecializationOutput,
-    TypedDeclarationDescriptor, TypedDeclarationMetadata,
+    StaticMethodSlot, StaticMethodSlotContext, StaticMethodSlotInputRole, StaticProgramValue,
+    StaticSpecializationOutput, TypedDeclarationDescriptor, TypedDeclarationMetadata,
 };

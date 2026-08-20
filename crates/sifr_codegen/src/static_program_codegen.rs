@@ -233,6 +233,7 @@ mod tests {
     use super::*;
     use sifr_ir::{
         CallableIdentity, MethodKind, StaticMethodParam, StaticMethodSlot, StaticMethodSlotContext,
+        StaticMethodSlotInputRole,
     };
     use sifr_type_system::{ParamConvention, Type};
 
@@ -313,23 +314,8 @@ mod tests {
         assert!(method_slot_cache_fragment(&[output(7)]).is_empty());
     }
 
-    #[test]
-    fn emitted_symbols_cannot_collide_after_readable_name_normalization() {
-        let mut dotted = output(7);
-        dotted.package_module = "schema.package".to_string();
-        let mut underscored = output(8);
-        underscored.package_module = "schema_package".to_string();
-
-        assert_ne!(
-            rust_static_suffix(&dotted),
-            rust_static_suffix(&underscored)
-        );
-    }
-
-    #[test]
-    fn emits_monomorphic_method_slot_dispatch_and_header_identity() {
-        let mut output = output(9);
-        output.method_slots.push(StaticMethodSlot {
+    fn test_method_slot() -> StaticMethodSlot {
+        StaticMethodSlot {
             owner_identity: "fixture.Record".to_string(),
             owner_type: Type::Class {
                 identity: Some("fixture.Record".to_string()),
@@ -351,6 +337,7 @@ mod tests {
             }],
             return_type: Type::Result(Box::new(Type::Str), Box::new(Type::Str)),
             is_async: false,
+            input_role: StaticMethodSlotInputRole::Value,
             input_type: Type::Str,
             output_type: Type::Str,
             context_type: None,
@@ -361,7 +348,26 @@ mod tests {
             descriptor_range: None,
             declaration_order: None,
             is_fallible: true,
-        });
+        }
+    }
+
+    #[test]
+    fn emitted_symbols_cannot_collide_after_readable_name_normalization() {
+        let mut dotted = output(7);
+        dotted.package_module = "schema.package".to_string();
+        let mut underscored = output(8);
+        underscored.package_module = "schema_package".to_string();
+
+        assert_ne!(
+            rust_static_suffix(&dotted),
+            rust_static_suffix(&underscored)
+        );
+    }
+
+    #[test]
+    fn emits_monomorphic_method_slot_dispatch_and_header_identity() {
+        let mut output = output(9);
+        output.method_slots.push(test_method_slot());
         output.method_slot_context = Some(StaticMethodSlotContext::None);
 
         let cache_fragment = method_slot_cache_fragment(&[output.clone()]);
@@ -374,5 +380,27 @@ mod tests {
         assert!(emitted.contains("match index"));
         assert!(emitted.contains("Record::normalize(value)"));
         assert!(emitted.contains("Some(*__SIFR_METHOD_SLOT_IDENTITY_"));
+    }
+
+    #[test]
+    fn emits_receiver_and_value_dispatch_from_the_recorded_input_role() {
+        let mut output = output(10);
+        let mut slot = test_method_slot();
+        slot.name = "serialize".to_string();
+        slot.hir_name = "serialize".to_string();
+        slot.method_kind = MethodKind::Regular;
+        slot.receiver = Some(sifr_type_system::ReceiverConvention::SharedBorrow);
+        slot.input_role = StaticMethodSlotInputRole::ReceiverAndValue;
+        slot.input_type = Type::Tuple(vec![slot.owner_type.clone(), Type::Str]);
+        slot.return_type = Type::Str;
+        slot.is_fallible = false;
+        output.method_slots.push(slot);
+        output.method_slot_context = Some(StaticMethodSlotContext::None);
+
+        let emitted =
+            emit_static_specialization_programs(&[output], &BTreeSet::from(["Record".to_string()]));
+
+        assert!(emitted.contains("let (receiver, value) ="), "{emitted}");
+        assert!(emitted.contains("receiver.serialize(value)"), "{emitted}");
     }
 }

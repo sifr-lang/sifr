@@ -1,7 +1,7 @@
 use crate::{describe_type_with_externals, ShapeNode, StructuralShape};
 use sifr_lowering::{
     AdapterHandlerPlan, CallableIdentity, ExternalDefs, LoweringResult, StaticMethodParam,
-    StaticMethodSlot, StaticMethodSlotContext,
+    StaticMethodSlot, StaticMethodSlotContext, StaticMethodSlotInputRole,
 };
 use sifr_type_system::{ReceiverConvention, Type};
 use std::collections::{BTreeSet, HashMap};
@@ -476,6 +476,11 @@ fn resolve_method_slot(
             params: method.params.iter().map(static_method_param).collect(),
             return_type: method.return_type.clone(),
             is_async: method.is_async,
+            input_role: if method.receiver.is_some() {
+                StaticMethodSlotInputRole::Receiver
+            } else {
+                StaticMethodSlotInputRole::Value
+            },
             input_type: Type::Unknown,
             output_type: Type::Unknown,
             context_type: None,
@@ -511,6 +516,11 @@ fn resolve_method_slot(
         params: method.params.iter().map(static_method_param).collect(),
         return_type: method.return_type.clone(),
         is_async: method.is_async,
+        input_role: if method.receiver.is_some() {
+            StaticMethodSlotInputRole::Receiver
+        } else {
+            StaticMethodSlotInputRole::Value
+        },
         input_type: Type::Unknown,
         output_type: Type::Unknown,
         context_type: None,
@@ -642,10 +652,22 @@ fn finish_method_slot(
                 Some(parameter)
             }
             [value] => {
+                debug_assert!(value.convention.is_owned());
+                slot.input_role = StaticMethodSlotInputRole::ReceiverAndValue;
                 slot.input_type = Type::Tuple(vec![slot.owner_type.clone(), value.ty.clone()]);
                 None
             }
             [value, context] => {
+                if !value.convention.is_owned() {
+                    return Err(MethodSlotError::new(
+                        MethodSlotErrorKind::Signature,
+                        format!(
+                            "method slot `{}::{}` receiver value input must be owned",
+                            slot.owner_identity, slot.name
+                        ),
+                    ));
+                }
+                slot.input_role = StaticMethodSlotInputRole::ReceiverAndValue;
                 slot.input_type = Type::Tuple(vec![slot.owner_type.clone(), value.ty.clone()]);
                 Some(context)
             }

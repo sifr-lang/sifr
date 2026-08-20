@@ -298,9 +298,46 @@ mod tests {
     use super::*;
     use crate::interop::structural::{
         primitive, structural_construct, ArenaNode, StructuralArena, StructuralNodeEdge,
-        StructuralScalar,
+        StructuralScalar, StructuralScalarRef,
     };
     use crate::SifrInt;
+
+    #[derive(Default)]
+    struct MappingProjectionVisitor {
+        events: Vec<String>,
+    }
+
+    impl<'value> StructuralVisitor<'value> for MappingProjectionVisitor {
+        type Error = std::convert::Infallible;
+
+        fn enter(&mut self, _event: StructuralEnter<'value>) -> Result<VisitControl, Self::Error> {
+            Ok(VisitControl::Continue)
+        }
+
+        fn edge(&mut self, edge: StructuralEdge<'value>) -> Result<(), Self::Error> {
+            match edge.kind() {
+                StructuralEdgeKind::MappingKey(index) => {
+                    self.events.push(format!("key:{index}"));
+                }
+                StructuralEdgeKind::MappingValue(index) => {
+                    self.events.push(format!("value:{index}"));
+                }
+                _ => {}
+            }
+            Ok(())
+        }
+
+        fn scalar(&mut self, value: StructuralScalarRef<'value>) -> Result<(), Self::Error> {
+            if let StructuralScalarRef::String(value) = value {
+                self.events.push(value.to_string());
+            }
+            Ok(())
+        }
+
+        fn exit(&mut self, _kind: StructuralKind) -> Result<(), Self::Error> {
+            Ok(())
+        }
+    }
 
     #[test]
     fn index_map_construction_preserves_mapping_order() {
@@ -330,6 +367,24 @@ mod tests {
         assert_eq!(
             output.keys().map(String::as_str).collect::<Vec<_>>(),
             vec!["first", "second"]
+        );
+    }
+
+    #[test]
+    fn index_map_projection_preserves_mapping_order() {
+        let input = IndexMap::from([
+            ("first".to_string(), SifrInt::from(1_i64)),
+            ("second".to_string(), SifrInt::from(2_i64)),
+        ]);
+        let mut visitor = MappingProjectionVisitor::default();
+
+        input
+            .structural_project(&mut visitor)
+            .expect("mapping projection is infallible");
+
+        assert_eq!(
+            visitor.events,
+            vec!["key:0", "first", "value:0", "key:1", "second", "value:1"]
         );
     }
 
