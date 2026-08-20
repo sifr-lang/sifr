@@ -64,7 +64,7 @@ fn has_valid_rust_opaque_structural_mapping_syntax(opaque: &ExprCall) -> bool {
             .arg
             .as_ref()
             .is_some_and(|name| name.as_str() == "structural")
-            && matches!(keyword.value, Expr::Attribute(_))
+            && target_path_segments(&keyword.value, RustInteropOwner::Class).is_ok()
     })
 }
 
@@ -568,45 +568,36 @@ fn parse_target_path(
     owner: RustInteropOwner,
     ctx: &mut LowerCtx,
 ) -> Option<RustTargetPath> {
-    let mut segments = Vec::new();
-    collect_path_segments(expr, &mut segments).or_else(|| {
-        malformed(
-            ctx,
-            "Rust target must be a dotted identifier path, not a dynamic expression".to_string(),
-            expr.range(),
-        );
-        None
-    })?;
-    if segments.len() < 2 {
-        malformed(
-            ctx,
-            "Rust target path must include a root and item name".to_string(),
-            expr.range(),
-        );
-        return None;
-    }
-    let root = &segments[0];
-    if root == "rust" {
-        malformed(
-            ctx,
-            "`rust` is the decorator namespace and cannot be a Rust target root".to_string(),
-            expr.range(),
-        );
-        return None;
-    }
-    if root == "Self" && owner != RustInteropOwner::Method {
-        malformed(
-            ctx,
-            "`Self` Rust target paths are valid only on methods inside Rust opaque classes"
-                .to_string(),
-            expr.range(),
-        );
-        return None;
-    }
+    let segments = match target_path_segments(expr, owner) {
+        Ok(segments) => segments,
+        Err(message) => {
+            malformed(ctx, message.to_string(), expr.range());
+            return None;
+        }
+    };
     Some(RustTargetPath {
         segments,
         span: expr.range(),
     })
+}
+
+fn target_path_segments(expr: &Expr, owner: RustInteropOwner) -> Result<Vec<String>, &'static str> {
+    let mut segments = Vec::new();
+    collect_path_segments(expr, &mut segments)
+        .ok_or("Rust target must be a dotted identifier path, not a dynamic expression")?;
+    if segments.len() < 2 {
+        return Err("Rust target path must include a root and item name");
+    }
+    let root = &segments[0];
+    if root == "rust" {
+        return Err("`rust` is the decorator namespace and cannot be a Rust target root");
+    }
+    if root == "Self" && owner != RustInteropOwner::Method {
+        return Err(
+            "`Self` Rust target paths are valid only on methods inside Rust opaque classes",
+        );
+    }
+    Ok(segments)
 }
 
 fn collect_path_segments(expr: &Expr, segments: &mut Vec<String>) -> Option<()> {

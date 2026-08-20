@@ -14,9 +14,6 @@ use super::{
 /// The mapping type and native value type are both selected by a checked Sifr
 /// declaration. Implementations remain in the native package; generated code
 /// only names this trait and [`MappedValue`].
-///
-/// `MappedValue<T, M>` retains both type parameters. Rust therefore derives
-/// `Send` and `Sync` only when both the stored value and mapping marker do.
 pub trait StructuralMapping<T> {
     fn shape_identity() -> ShapeIdentity;
 
@@ -41,6 +38,10 @@ pub trait StructuralMapping<T> {
 /// Unlike an opaque resource handle, this value has no closed or poisoned
 /// state. The handle-shaped accessors let existing generated Rust method glue
 /// borrow or consume the native value without exposing its representation.
+///
+/// The mapping marker has no runtime state and uses `PhantomData<fn() -> M>`.
+/// Consequently, `Send` and `Sync` follow `T` alone. A package must encode any
+/// thread-safety restriction in the stored native value, not in `M`.
 pub struct MappedValue<T, M> {
     value: T,
     _mapping: PhantomData<fn() -> M>,
@@ -227,8 +228,13 @@ mod tests {
 
     #[test]
     fn mapped_value_preserves_send_and_sync_backstops() {
+        struct NonThreadSafeMarker {
+            _not_send_sync: *mut (),
+        }
+
         fn assert_send_sync<T: Send + Sync>() {}
 
         assert_send_sync::<MappedValue<String, StringMapping>>();
+        assert_send_sync::<MappedValue<String, NonThreadSafeMarker>>();
     }
 }

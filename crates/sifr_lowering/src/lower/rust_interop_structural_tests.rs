@@ -557,9 +557,10 @@ def use(value: Token) -> None:
 
 #[test]
 fn malformed_local_mapping_does_not_mark_the_opaque_class_structural() {
-    let errors = lower_errors(
-        r"
-@rust.opaque(type=bridge.token.Token, structural=invalid, close=none)
+    for mapping in ["invalid", "rust.Invalid", "make().Invalid"] {
+        let errors = lower_errors(&format!(
+            r"
+@rust.opaque(type=bridge.token.Token, structural={mapping}, close=none)
 class Token:
     pass
 
@@ -569,14 +570,15 @@ def accept[T: Structural](value: T) -> None:
 def use(value: Token) -> None:
     accept(value)
 ",
-    );
+        ));
 
-    assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
-            && error
-                .message
-                .contains("does not implement protocol 'Structural'")
-    }));
+        assert!(errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+                && error
+                    .message
+                    .contains("does not implement protocol 'Structural'")
+        }));
+    }
 }
 
 #[test]
