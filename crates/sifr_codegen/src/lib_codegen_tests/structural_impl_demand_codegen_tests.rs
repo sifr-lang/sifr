@@ -32,7 +32,7 @@ fn structural_construction_uses_checked_defaults_for_missing_fields() {
     let generated = generate_rust(&module);
 
     assert!(
-        generated.contains("let mut child_nodes: [Option<"),
+        generated.contains("let mut __sifr_child_nodes: [Option<"),
         "{generated}"
     );
     assert!(
@@ -42,6 +42,44 @@ fn structural_construction_uses_checked_defaults_for_missing_fields() {
     assert!(
         !generated.contains("description.edges().len() != 1"),
         "defaulted structural fields must be omittable: {generated}"
+    );
+}
+
+#[test]
+fn structural_construction_checks_required_fields_before_default_factories() {
+    let mut payload = payload_class();
+    payload.fields = vec![
+        ("names".to_string(), Type::List(Box::new(Type::Str))),
+        ("required".to_string(), Type::Int),
+    ];
+    payload.field_defaults = vec![(
+        0,
+        HirExpr::Call {
+            func: "description".to_string(),
+            args: Vec::new(),
+            mutable_arg_places: Vec::new(),
+            ty: Type::List(Box::new(Type::Str)),
+        },
+    )];
+    payload.field_default_identities = vec![(0, "callable[main.description]".to_string())];
+    let module = module(vec![structural_function()], vec![payload]);
+
+    let generated = generate_rust(&module);
+    let required_check = generated
+        .find("if __sifr_child_nodes[1].is_none()")
+        .unwrap_or_else(|| panic!("required-field precheck must be emitted: {generated}"));
+    let factory_call = generated
+        .find("None => description()")
+        .expect("checked default factory must remain callable");
+
+    assert!(required_check < factory_call, "{generated}");
+    assert!(
+        generated.contains("let __sifr_description = __sifr_source.node(__sifr_node)?;"),
+        "generated locals must not shadow default callables: {generated}"
+    );
+    assert!(
+        generated.contains("let __sifr_field_index: usize"),
+        "generated edge locals must use reserved names: {generated}"
     );
 }
 

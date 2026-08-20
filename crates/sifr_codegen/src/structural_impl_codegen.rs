@@ -550,13 +550,13 @@ fn structural_construct_impl(
         let rust_name = crate::Renderer::render_identifier(name);
         let present = if matches!(ty.resolve_alias(), Type::Bytes) {
             format!(
-                "{STRUCTURAL}::construct_bytes_at(__sifr_source, child, __sifr_construct_token)?"
+                "{STRUCTURAL}::construct_bytes_at(__sifr_source, __sifr_child, __sifr_construct_token)?"
             )
         } else {
             let rust_type = emitter.class_struct_field_rust_type(class, name, ty);
             let rust_type = crate::Renderer::render_type_string(&rust_type);
             format!(
-                "<{rust_type} as {STRUCTURAL}::StructuralConstruct>::structural_construct_at(__sifr_source, child, __sifr_construct_token)?"
+                "<{rust_type} as {STRUCTURAL}::StructuralConstruct>::structural_construct_at(__sifr_source, __sifr_child, __sifr_construct_token)?"
             )
         };
         let missing = class
@@ -572,10 +572,26 @@ fn structural_construct_impl(
                 },
             );
         field_values.push(format!(
-            "let {rust_name} = match child_nodes[{index}] {{ Some(child) => {present}, None => {missing}, }};"
+            "let {rust_name} = match __sifr_child_nodes[{index}] {{ Some(__sifr_child) => {present}, None => {missing}, }};"
         ));
     }
     let field_values = field_values.join("\n");
+    let required_prechecks = fields
+        .iter()
+        .enumerate()
+        .filter(|(index, _)| {
+            !class
+                .field_defaults
+                .iter()
+                .any(|(field_index, _)| field_index == index)
+        })
+        .map(|(index, _)| {
+            format!(
+                "if __sifr_child_nodes[{index}].is_none() {{ return Err({STRUCTURAL}::StructuralContractError::ArityMismatch); }}"
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
     let inherited_names = fields
         .iter()
         .filter(|field| field.inherited)
@@ -602,17 +618,17 @@ fn structural_construct_impl(
     }
     let collect_children = if fields.is_empty() {
         format!(
-            "if !description.edges().is_empty() {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}"
+            "if !__sifr_description.edges().is_empty() {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}"
         )
     } else {
         format!(
-            "let mut child_nodes: [Option<{STRUCTURAL}::NodeId>; {}] = [None; {}];\nfor edge in description.edges() {{\nlet field_index: usize = match edge.kind() {{\n{edge_cases}\n_ => return Err({STRUCTURAL}::StructuralContractError::MemberMismatch),\n}};\nif child_nodes[field_index].replace(edge.node()).is_some() {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}\n}}",
+            "let mut __sifr_child_nodes: [Option<{STRUCTURAL}::NodeId>; {}] = [None; {}];\nfor __sifr_edge in __sifr_description.edges() {{\nlet __sifr_field_index: usize = match __sifr_edge.kind() {{\n{edge_cases}\n_ => return Err({STRUCTURAL}::StructuralContractError::MemberMismatch),\n}};\nif __sifr_child_nodes[__sifr_field_index].replace(__sifr_edge.node()).is_some() {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}\n}}",
             fields.len(),
             fields.len()
         )
     };
     let body = format!(
-        "let description = __sifr_source.node(__sifr_node)?;\nif description.kind() != {STRUCTURAL}::StructuralKind::Record {{ return Err({STRUCTURAL}::StructuralContractError::KindMismatch); }}\nif description.nominal_identity() != Some({}) {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}\n{collect_children}\n{field_values}\nOk(Self {{ {} }})",
+        "let __sifr_description = __sifr_source.node(__sifr_node)?;\nif __sifr_description.kind() != {STRUCTURAL}::StructuralKind::Record {{ return Err({STRUCTURAL}::StructuralContractError::KindMismatch); }}\nif __sifr_description.nominal_identity() != Some({}) {{ return Err({STRUCTURAL}::StructuralContractError::MemberMismatch); }}\n{collect_children}\n{required_prechecks}\n{field_values}\nOk(Self {{ {} }})",
         nominal_identity,
         initializers.join(", ")
     );

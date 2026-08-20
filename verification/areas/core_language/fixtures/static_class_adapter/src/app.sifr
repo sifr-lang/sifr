@@ -12,6 +12,10 @@ def make_names() -> list[str]:
     return []
 
 
+def description() -> list[str]:
+    return []
+
+
 class Factory:
     @staticmethod
     def make_names() -> list[str]:
@@ -44,6 +48,7 @@ class StructuralDefaults(Contract):
     enabled: bool = contract_field(default=True)
     tags: list[str] = contract_field(default_factory=list)
     names: list[str] = contract_field(default_factory=make_names)
+    descriptions: list[str] = contract_field(default_factory=description)
 
 
 class GenericAttached[T](Contract):
@@ -106,8 +111,10 @@ def main() -> Result[None, ContractError | RustPanicError]:
         assert defaulted.enabled
         assert defaulted.tags == []
         assert defaulted.names == []
+        assert defaulted.descriptions == []
         another: StructuralDefaults = StructuralDefaults.construct()
         defaulted.tags.append("one")
+        assert defaulted.tags == ["one"]
         assert another.tags == []
     except ContractError as error:
         raise error

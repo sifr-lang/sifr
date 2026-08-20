@@ -941,7 +941,9 @@ edges by field name, reject unknown and duplicate names, and fill omitted defaul
 their checked HIR defaults. Factory defaults retain a canonical callable-identity side channel in
 HIR because their executable call expression is not a constant literal; bound checking, shape
 identity, and code generation all consume that same identity. Required omissions remain typed
-structural contract errors rather than generated panics.
+structural contract errors rather than generated panics. Construction checks all required fields
+before it evaluates any omitted-field default. A later required omission therefore cannot run an
+earlier constant or factory default.
 
 Structural support includes a class with one direct data parent when that parent uses the
 compiler-generated constructor. The parent cannot have another data parent. The wire record lists
