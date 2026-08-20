@@ -518,6 +518,7 @@ fn plain_static_program_generic_emits_the_sealed_runtime_bound() {
         !rust_code.contains("T: Clone + std::fmt::Display"),
         "{rust_code}"
     );
+    assert!(!rust_code.contains("MethodSlotTable<"), "{rust_code}");
 }
 
 #[test]
@@ -696,7 +697,57 @@ fn no_context_method_slots_generic_emits_the_slot_table_bound() {
     let rust_code = generate_rust(&module);
 
     assert!(
-        rust_code.contains("MethodSlotTable<::sifr_runtime::interop::structural::NoContext>"),
+        rust_code.contains(
+            "T: ::sifr_runtime::interop::structural::StaticProgramType + Clone + ::sifr_runtime::interop::structural::MethodSlotTable<::sifr_runtime::interop::structural::NoContext>"
+        ),
+        "{rust_code}"
+    );
+}
+
+#[test]
+fn method_slots_context_uses_declared_type_parameter_order() {
+    let mut invoke = ordinary_function("invoke", Type::TypeVar("T".to_string()));
+    invoke.type_params = vec![
+        "T".to_string(),
+        "ZContext".to_string(),
+        "AContext".to_string(),
+    ];
+    invoke.params.extend([
+        HirParam {
+            name: "first_context".to_string(),
+            ty: Type::TypeVar("ZContext".to_string()),
+            default: None,
+            keyword_only: false,
+            convention: ParamConvention::borrow(),
+        },
+        HirParam {
+            name: "second_context".to_string(),
+            ty: Type::TypeVar("AContext".to_string()),
+            default: None,
+            keyword_only: false,
+            convention: ParamConvention::mut_borrow(),
+        },
+    ]);
+    let mut module = module(vec![invoke], Vec::new());
+    module.type_param_bounds.insert(
+        "invoke".to_string(),
+        std::collections::HashMap::from([
+            ("T".to_string(), vec!["MethodSlots".to_string()]),
+            ("ZContext".to_string(), vec!["Context".to_string()]),
+            ("AContext".to_string(), vec!["Context".to_string()]),
+        ]),
+    );
+
+    let rust_code = generate_rust(&module);
+
+    assert!(
+        rust_code.contains(
+            "MethodSlotTable<::sifr_runtime::interop::structural::SharedContext<'__sifr_context, ZContext>>"
+        ),
+        "{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("MethodSlotTable<AContext>"),
         "{rust_code}"
     );
 }
