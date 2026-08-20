@@ -2551,6 +2551,11 @@ ordinary receiver. Static serializer and computed-field fixtures keep
 26 negative cases reach their intended package diagnostics, and the M10 demo
 uses the same valid ordering.
 
+Item 38 is complete. The canonical static-program bytes remain unchanged, and
+their reviewed identity now matches both final toolchains. The M11
+model-operation identity check builds its own temporary package with the
+selected compiler instead of reading an incidental demo output directory.
+
 Next action: resume source and installed-package certification.
 
 Compiler hardening item 17 state: complete
@@ -3156,6 +3161,36 @@ item. The external compiler gate inputs and all `pre_v1` work remain out of
 scope.
 Next action: resume source and installed-package certification.
 
+Package certification item 38 state: complete
+Issue: [`sifr-lang/pydantic-sifr#50`](https://github.com/sifr-lang/pydantic-sifr/issues/50)
+PR: [`sifr-lang/pydantic-sifr#51`](https://github.com/sifr-lang/pydantic-sifr/pull/51)
+Base SHA: `512f29432207a14461c7c8cf455591e78ad4bc69`
+Candidate SHA: `be30527e769c2f30c3bcc0b6b2369ac187a80fd2`
+Merge SHA: `c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`
+Changed paths: the reviewed schema-program identity, the self-contained M11
+identity check, and its package-gate invocation.
+Validation: the 3,286 canonical program bytes remained unchanged. Source and
+installed compilers produced identity
+`141b2e5847c901f298dde1014b0f16502b54af98666e4795575b1f9bbb175a27`.
+Both compilers also produced one shared M11 validation, dump, and JSON Schema
+identity. All 39 unit tests, Python and shell syntax, file-size, Rust
+formatting, and diff checks passed. The package create-PR and merge gates each
+ran once on the exact candidate. Both passed file-size, the exact Sifr pin,
+and all unit tests, then stopped at the absent external `.upstream/pydantic`
+checkout. Neither gate ran again
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/51#issuecomment-5362011251)).
+No Sifr compiler gate applied because no compiler file changed.
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking findings. It verified byte preservation, source and installed
+equality, temporary project completeness, exact compiler selection, cleanup,
+failure propagation, and identity cardinality
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/51#issuecomment-5361998762)).
+Deferred follow-up: richer captured compiler failure output and a shared
+temporary-project helper are optional. No new mechanism item is required. The
+external compiler gate inputs and all `pre_v1` work remain out of scope.
+Next action: resume source and installed-package certification from fresh
+copies of this merge.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -3262,14 +3297,15 @@ control-flow state and closes the original compiler hardening sequence. Item
 34 closes the installed static-class-adapter certification boundary. Item 35
 closes its architecture documentation alignment. Item 36 closes mapped-opaque
 value/mapping probe selection. Package-owned item 37 closes the stale
-validator, serializer, and M10 demo certification inputs. Items 24
+validator, serializer, and M10 demo certification inputs. Package-owned item
+38 closes durable static-program identity evidence. Items 24
 and 25 close the M8-M10 prerequisite audit. Item 26 closes the M11 prerequisite
 audit. The seven
 M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
 #3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
 #47. M12 certification is in progress. The current compiler merge is
 `643cf76a10e1e0462b3a8572605e3ccbbb194279`, and the current package merge is
-`512f29432207a14461c7c8cf455591e78ad4bc69`.
+`c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`.
 
 External gate record (2026-08-20): the one-time gates for the M11 compiler
 prerequisites stopped at the Rust-interop matrix. The matrix reported one
