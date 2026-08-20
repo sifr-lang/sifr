@@ -96,7 +96,7 @@ impl RustEmitter {
                 args,
                 lowered_args,
             );
-            if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
+            if let Some(captures) = self.nested_fn_captures.get(canonical_func).cloned() {
                 for capture in captures {
                     lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
                 }

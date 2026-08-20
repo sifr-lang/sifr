@@ -55,11 +55,7 @@ pub(super) fn apply(ctx: &mut LowerCtx) {
         };
         for declaration in declarations {
             let qualified = format!("{owner}.{}", declaration.public_name);
-            let has_collision = class_methods(&owner_type).is_some_and(|methods| {
-                methods
-                    .iter()
-                    .any(|(name, _)| name == &declaration.public_name)
-            });
+            let has_collision = class_has_member(&owner_type, &declaration.public_name);
             if has_collision {
                 if provisional {
                     continue;
@@ -89,9 +85,9 @@ pub(super) fn apply(ctx: &mut LowerCtx) {
             if let Some(Type::Class { methods, .. }) = ctx.class_types.get_mut(&owner) {
                 methods.push((declaration.public_name.clone(), surface));
             }
-            let canonical_qualified = class_name(&owner_type)
-                .filter(|name| *name != owner)
-                .map(|name| format!("{name}.{}", declaration.public_name));
+            let canonical_qualified = canonical_owner_binding_key(&selection.owner, &owner_type)
+                .filter(|identity| *identity != owner)
+                .map(|identity| format!("{identity}.{}", declaration.public_name));
             if declaration.receiver != AttachedApiReceiver::Type {
                 ctx.class_instance_methods.insert(qualified.clone());
                 if let Some(canonical) = canonical_qualified.as_ref() {
@@ -142,6 +138,7 @@ fn provisional_declarations(ctx: &LowerCtx, provider_module: &str) -> Vec<Attach
                 .attached_apis
                 .values()
                 .flat_map(HashMap::values)
+                .filter(|declaration| !declaration.function.starts_with('_'))
                 .cloned(),
         )
         .collect::<Vec<_>>();
@@ -174,7 +171,7 @@ fn declarations_for_set(
             .get(&set.module)
             .into_iter()
             .flat_map(HashMap::values)
-            .filter(|declaration| declaration.set == *set)
+            .filter(|declaration| declaration.set == *set && !declaration.function.starts_with('_'))
             .cloned()
             .collect::<Vec<_>>()
     };
@@ -244,18 +241,45 @@ fn substitute_function_type(
     }
 }
 
-fn class_methods(owner_type: &Type) -> Option<&[(String, FunctionType)]> {
+fn class_has_member(owner_type: &Type, member: &str) -> bool {
     match owner_type.resolve_alias() {
-        Type::Class { methods, .. } => Some(methods),
+        Type::Class {
+            methods, fields, ..
+        } => {
+            methods.iter().any(|(name, _)| name == member)
+                || fields.iter().any(|(name, _)| name == member)
+        }
+        _ => false,
+    }
+}
+
+fn canonical_owner_binding_key<'a>(selected_owner: &str, owner_type: &'a Type) -> Option<&'a str> {
+    match owner_type.resolve_alias() {
+        Type::Class {
+            identity: Some(identity),
+            ..
+        } if identity.rsplit('.').next() == Some(selected_owner) => Some(identity),
         _ => None,
     }
 }
 
-fn class_name(owner_type: &Type) -> Option<&str> {
-    match owner_type.resolve_alias() {
-        Type::Class { name, .. } => Some(name),
-        _ => None,
-    }
+pub(super) fn binding_for_owner<'a>(
+    ctx: &'a LowerCtx,
+    surface_name: &str,
+    owner_type: &Type,
+    member: &str,
+) -> Option<&'a AttachedMethodBinding> {
+    let (canonical_identity, emitted_name) = match owner_type.resolve_alias() {
+        Type::Class { identity, name, .. } => (identity.as_deref(), Some(name.as_str())),
+        _ => (None, None),
+    };
+    [Some(surface_name), canonical_identity, emitted_name]
+        .into_iter()
+        .flatten()
+        .find_map(|owner| {
+            ctx.attached_method_bindings
+                .get(&format!("{owner}.{member}"))
+        })
 }
 
 fn hidden_alias(module: &str, function: &str) -> String {
@@ -272,4 +296,37 @@ fn hidden_alias(module: &str, function: &str) -> String {
         })
         .collect::<String>();
     format!("__sifr_attached_api_{sanitized}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn class(identity: Option<&str>) -> Type {
+        Type::Class {
+            identity: identity.map(str::to_string),
+            type_args: Vec::new(),
+            name: "Selected".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        }
+    }
+
+    #[test]
+    fn canonical_binding_key_requires_the_selected_owner_symbol() {
+        let selected = class(Some("fixture.Selected"));
+        let mismatched = class(Some("fixture.Other"));
+
+        assert_eq!(
+            canonical_owner_binding_key("Selected", &selected),
+            Some("fixture.Selected")
+        );
+        assert_eq!(canonical_owner_binding_key("Selected", &mismatched), None);
+    }
+
+    #[test]
+    fn module_less_owner_does_not_gain_a_synthetic_binding_key() {
+        assert_eq!(canonical_owner_binding_key("Selected", &class(None)), None);
+    }
 }

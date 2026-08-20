@@ -657,10 +657,12 @@ impl RustEmitter {
                     });
                 }
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
-                let call_return_ty = if let HirExpr::Call { func, .. } = &args[0] {
-                    self.func_signatures.get(func).map(|(_, ret)| ret.clone())
-                } else {
-                    None
+                let call_return_ty = match &args[0] {
+                    HirExpr::Call { func, .. } | HirExpr::GenericCall { func, .. } => self
+                        .func_signatures
+                        .get(crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func))
+                        .map(|(_, ret)| ret.clone()),
+                    _ => None,
                 };
                 let str_arg_ty = call_return_ty.as_ref().unwrap_or_else(|| args[0].ty());
                 if let Some(inner) = registry_option_inner_type(str_arg_ty) {

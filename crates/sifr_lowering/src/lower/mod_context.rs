@@ -53,6 +53,7 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) attached_api_set_bindings: HashSet<String>,
     pub(in crate::lower) adapted_class_bindings: HashMap<String, sifr_ir::ClassAdapterSelection>,
     pub(in crate::lower) class_data_parents: HashMap<String, Option<String>>,
+    pub(in crate::lower) class_data_parent_types: HashMap<String, Type>,
     pub(in crate::lower) adapter_field_plans:
         std::collections::BTreeMap<String, Vec<sifr_ir::AdapterFieldPlan>>,
     pub(in crate::lower) descriptor_functions: Vec<sifr_ir::DeclarationDescriptorFunction>,
@@ -262,6 +263,7 @@ impl LowerCtx {
             attached_api_set_bindings: HashSet::new(),
             adapted_class_bindings: HashMap::new(),
             class_data_parents: HashMap::new(),
+            class_data_parent_types: HashMap::new(),
             adapter_field_plans: std::collections::BTreeMap::new(),
             descriptor_functions: Vec::new(),
             descriptor_bindings: HashMap::new(),

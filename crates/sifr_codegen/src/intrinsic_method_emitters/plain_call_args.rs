@@ -333,7 +333,8 @@ impl RustEmitter {
             lowered_args.push(lowered_arg);
         }
 
-        if let Some(captures) = self.nested_fn_captures.get(func).cloned() {
+        let canonical = crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func);
+        if let Some(captures) = self.nested_fn_captures.get(canonical).cloned() {
             for capture in captures {
                 lowered_args.push(self.lower_recursive_capture_arg_for_ir(&capture));
             }

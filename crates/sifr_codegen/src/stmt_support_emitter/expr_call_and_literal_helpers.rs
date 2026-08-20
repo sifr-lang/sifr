@@ -782,7 +782,7 @@ macro_rules! stmt_expr_literals_and_calls {
                     }
                 }
             }
-            if let Some(captures) = $emitter.nested_fn_captures.get(func).cloned() {
+            if let Some(captures) = $emitter.nested_fn_captures.get(canonical_func).cloned() {
                 for capture in captures {
                     lowered_args.push($emitter.lower_recursive_capture_arg_for_ir(&capture));
                 }

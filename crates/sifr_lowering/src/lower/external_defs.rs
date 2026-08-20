@@ -15,6 +15,36 @@ pub struct StructuralMethodExport {
     pub receiver: Option<ReceiverConvention>,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn attached_api_set_membership_checks_the_stored_canonical_identity() {
+        let mut defs = ExternalDefs::default();
+        defs.attached_api_sets
+            .entry("declared".to_string())
+            .or_default()
+            .insert(
+                "Api".to_string(),
+                sifr_ir::AttachedApiSetDeclaration {
+                    identity: sifr_ir::AttachedApiSetIdentity {
+                        module: "actual".to_string(),
+                        symbol: "Api".to_string(),
+                    },
+                    range: ruff_text_size::TextRange::default(),
+                },
+            );
+
+        assert!(
+            !defs.contains_attached_api_set(&sifr_ir::AttachedApiSetIdentity {
+                module: "declared".to_string(),
+                symbol: "Api".to_string(),
+            })
+        );
+    }
+}
+
 pub type StructuralMethodExports = std::collections::HashMap<String, Vec<StructuralMethodExport>>;
 type StructuralMethodModules = std::collections::HashMap<String, StructuralMethodExports>;
 
@@ -163,6 +193,14 @@ pub struct ExternalDefs {
 }
 
 impl ExternalDefs {
+    #[must_use]
+    pub fn contains_attached_api_set(&self, identity: &sifr_ir::AttachedApiSetIdentity) -> bool {
+        self.attached_api_sets
+            .get(&identity.module)
+            .and_then(|sets| sets.get(&identity.symbol))
+            .is_some_and(|declaration| declaration.identity == *identity)
+    }
+
     pub fn replace_structural_methods(
         &mut self,
         module_name: &str,

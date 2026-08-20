@@ -443,10 +443,7 @@ fn attached_api_set_exists(
             .iter()
             .any(|set| set.identity == *identity)
     } else {
-        external_defs
-            .attached_api_sets
-            .get(&identity.module)
-            .is_some_and(|sets| sets.contains_key(&identity.symbol))
+        external_defs.contains_attached_api_set(identity)
     }
 }
 

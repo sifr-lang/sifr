@@ -958,7 +958,10 @@ consumer lowering never applies provisional candidates to an imported owner, inc
 final plan selected no set. Attached signatures are added to the adapted
 `Type::Class` surface without adding HIR methods, structural members, handler slots, or synthesized
 method bodies. Calls lower directly to the declared package function through deterministic hidden
-imports. The lowering substitutes the concrete owner and `Self`, infers residual type parameters,
+imports. Local and imported declarations use the same public-function filter. Binding keys use the
+selected class's canonical identity when its final symbol matches the selected owner. Classes
+without a module identity use their local emitted name and do not gain a synthetic module key. The
+lowering substitutes the concrete owner and `Self`, infers residual type parameters,
 records their concrete arguments in the emitted call identity, and applies the checked package
 function defaults to omitted public arguments. Instance bindings remove the hidden owner parameter
 before they map default indexes. A generic type alias can forward an attached type call when its
@@ -968,6 +971,9 @@ mutable-borrow, and owned receivers use the normal call and ownership checks; ty
 do not construct or pass a dummy owner value. For a structural Rust bridge, a type receiver's
 declared owner is a valid use of its exact `StaticProgram` type parameter. The generated call keeps
 that concrete Rust type argument even when no runtime parameter or result contains the owner.
+Sifr lowering enforces declared protocol bounds before code generation. Generated Rust generics
+therefore emit only the weaker bounds required by generated operations. Rust bounds are not a
+second copy of the Sifr protocol contract.
 
 The Native Pydantic-Sifr consumer architecture is documented in
 [`native_pydantic_sifr_architecture.md`](native_pydantic_sifr_architecture.md).

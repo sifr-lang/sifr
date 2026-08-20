@@ -153,10 +153,7 @@ pub(super) fn finalize(ctx: &mut LowerCtx, module: &str) {
                 .iter()
                 .any(|set| set.identity == declaration.set)
         } else {
-            ctx.externals
-                .attached_api_sets
-                .get(&declaration.set.module)
-                .is_some_and(|sets| sets.contains_key(&declaration.set.symbol))
+            ctx.externals.contains_attached_api_set(&declaration.set)
         };
         if !set_exists {
             malformed(

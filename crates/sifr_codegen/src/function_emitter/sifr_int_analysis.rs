@@ -244,7 +244,8 @@ pub(super) fn hir_expr_returns_sifr_int_result(
         HirExpr::BinOp { op, ty, .. } => {
             matches!(op.as_str(), "//" | "%") && is_result_int_type(ty)
         }
-        HirExpr::Call { func, .. } => result_function_returns.contains(func),
+        HirExpr::Call { func, .. } | HirExpr::GenericCall { func, .. } => result_function_returns
+            .contains(crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func)),
         HirExpr::MethodCall { object, method, .. } => {
             hir_expr_class_name(object).is_some_and(|class_name| {
                 result_method_returns.contains(&result_method_key(&class_name, method))
@@ -444,10 +445,12 @@ pub(super) fn collect_sifr_int_call_arg_function_params(
     let mut discovered: HashMap<String, HashSet<usize>> = HashMap::new();
     let mut on_stmt = |_stmt: &HirStmt| {};
     let mut on_expr = |expr: &HirExpr| {
-        let HirExpr::Call { func, args, .. } = expr else {
+        let (HirExpr::Call { func, args, .. } | HirExpr::GenericCall { func, args, .. }) = expr
+        else {
             return;
         };
-        let Some(params) = module_function_params.get(func) else {
+        let canonical = crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func);
+        let Some(params) = module_function_params.get(canonical) else {
             return;
         };
         for (idx, arg) in args.iter().enumerate() {
@@ -464,7 +467,10 @@ pub(super) fn collect_sifr_int_call_arg_function_params(
                 module_sifr_int_bindings,
                 function_sifr_int_returns,
             ) {
-                discovered.entry(func.clone()).or_default().insert(idx);
+                discovered
+                    .entry(canonical.to_string())
+                    .or_default()
+                    .insert(idx);
             }
         }
     };
@@ -511,10 +517,12 @@ pub(super) fn collect_sifr_int_result_call_arg_function_params_with_initial(
     let mut discovered: HashMap<String, HashSet<usize>> = HashMap::new();
     let mut on_stmt = |_stmt: &HirStmt| {};
     let mut on_expr = |expr: &HirExpr| {
-        let HirExpr::Call { func, args, .. } = expr else {
+        let (HirExpr::Call { func, args, .. } | HirExpr::GenericCall { func, args, .. }) = expr
+        else {
             return;
         };
-        let Some(params) = module_function_params.get(func) else {
+        let canonical = crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func);
+        let Some(params) = module_function_params.get(canonical) else {
             return;
         };
         for (idx, arg) in args.iter().enumerate() {
@@ -529,7 +537,10 @@ pub(super) fn collect_sifr_int_result_call_arg_function_params_with_initial(
                     &local_result_bindings,
                 )
             {
-                discovered.entry(func.clone()).or_default().insert(idx);
+                discovered
+                    .entry(canonical.to_string())
+                    .or_default()
+                    .insert(idx);
             }
         }
     };
@@ -831,7 +842,8 @@ pub(super) fn hir_expr_needs_sifr_int_storage(
                 || (module_sifr_int_bindings.contains(name)
                     && !shadowed_module_bindings.contains(name))
         }
-        HirExpr::Call { func, .. } => function_sifr_int_returns.contains(func),
+        HirExpr::Call { func, .. } | HirExpr::GenericCall { func, .. } => function_sifr_int_returns
+            .contains(crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func)),
         HirExpr::BinOp { op, ty, .. }
             if op == "**" && matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Int) =>
         {
