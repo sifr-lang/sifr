@@ -546,11 +546,10 @@ fn structural_construct_impl(
         })
         .collect::<Vec<_>>()
         .join("\n");
-    let mut field_values = Vec::with_capacity(fields.len());
+    let mut field_initializers = Vec::with_capacity(fields.len());
     for (index, field) in fields.iter().enumerate() {
         let name = field.name;
         let ty = field.ty;
-        let rust_name = crate::Renderer::render_identifier(name);
         let present = if matches!(ty.resolve_alias(), Type::Bytes) {
             format!(
                 "{STRUCTURAL}::construct_bytes_at(__sifr_source, __sifr_child, __sifr_construct_token)?"
@@ -574,11 +573,22 @@ fn structural_construct_impl(
                     crate::render::render_expr(&value)
                 },
             );
-        field_values.push(format!(
-            "let {rust_name} = match __sifr_child_nodes[{index}] {{ Some(__sifr_child) => {present}, None => {missing}, }};"
+        field_initializers.push(format!(
+            "match __sifr_child_nodes[{index}] {{ Some(__sifr_child) => {present}, None => {missing}, }}"
         ));
     }
-    let field_values = field_values.join("\n");
+    let field_values = if field_initializers.is_empty() {
+        String::new()
+    } else {
+        let local_names = (0..field_initializers.len())
+            .map(|index| format!("__sifr_field_{index}"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!(
+            "let ({local_names},) = ({},);",
+            field_initializers.join(", ")
+        )
+    };
     let required_prechecks = fields
         .iter()
         .enumerate()
@@ -595,10 +605,11 @@ fn structural_construct_impl(
         })
         .collect::<Vec<_>>()
         .join("\n");
-    let inherited_names = fields
+    let inherited_values = fields
         .iter()
-        .filter(|field| field.inherited)
-        .map(|field| crate::Renderer::render_identifier(field.name))
+        .enumerate()
+        .filter(|(_, field)| field.inherited)
+        .map(|(index, _)| format!("__sifr_field_{index}"))
         .collect::<Vec<_>>();
     let mut initializers = Vec::new();
     if let (Some(parent_name), Some(parent_type)) = (&class.parent_class, &class.parent_type) {
@@ -607,14 +618,20 @@ fn structural_construct_impl(
         initializers.push(format!(
             "{}: <{parent_rust_type}>::new({})",
             parent_name.to_lowercase(),
-            inherited_names.join(", ")
+            inherited_values.join(", ")
         ));
     }
     initializers.extend(
         fields
             .iter()
-            .filter(|field| !field.inherited)
-            .map(|field| crate::Renderer::render_identifier(field.name)),
+            .enumerate()
+            .filter(|(_, field)| !field.inherited)
+            .map(|(index, field)| {
+                format!(
+                    "{}: __sifr_field_{index}",
+                    crate::Renderer::render_identifier(field.name)
+                )
+            }),
     );
     if RustEmitter::class_needs_phantom_marker(class) {
         initializers.push("__sifr_type_marker: std::marker::PhantomData".to_string());
