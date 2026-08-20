@@ -2531,8 +2531,16 @@ Item 33 is complete. One shared scoped-block transaction now covers all
 reachable nested bodies. For-loop target cache setup uses the same rollback
 boundary. Focused source evidence covers every reachable body mechanism.
 
-Item 33 is complete. Next action: run package and source certification before
-the final whole-phase review.
+Item 34 is complete. Installed certification copies now bind their direct
+runtime dependency to the selected sysroot. Release archives include and
+validate the structural-identity crate, and source and installed cache-edit
+probes pass independently.
+
+Item 35 is a documentation-only follow-up from item 34 review. It must align
+the distribution and sysroot architecture records with the installed
+structural-identity crate and workspace member. No compiler gate applies.
+
+Next action: implement item 35, then resume package and source certification.
 
 Compiler hardening item 17 state: complete
 PR: [`sifr-lang/sifr#3364`](https://github.com/sifr-lang/sifr/pull/3364)
@@ -3023,6 +3031,42 @@ inputs and all `pre_v1` work remain out of scope.
 Next action: run package and source certification before the final whole-phase
 review.
 
+Compiler hardening item 34 state: complete
+Issue: [`sifr-lang/sifr#3412`](https://github.com/sifr-lang/sifr/issues/3412)
+PR: [`sifr-lang/sifr#3413`](https://github.com/sifr-lang/sifr/pull/3413)
+Base SHA: `3d7073653e4961b6c5a30ac5e7fd9c7bc68b6498`
+Initial candidate SHA: `8cb5a9e2b21e4162b331df3a84986e9c6880dddb`
+Final candidate SHA: `0d90ecb6eef2c25d7dcc0bc32ea80649bd52b07c`
+Merge SHA: `4bf07c41c294ba8cb37a0397122b87d9001a6da0`
+Changed paths: source/installed fixture runtime binding; independent cache
+probe copies; the installed structural-identity archive, installer, sysroot,
+and workspace contract; fail-closed tests; and edit-aware cross-owner fixture
+assertions.
+Validation: two helper tests, 12 sysroot tests, three CLI sysroot tests, both
+distribution archive/installer fixture suites, focused Clippy, formatting,
+Python and shell syntax, maintainability, file-size, and diff checks passed.
+Boundary equivalence passed with `variants=1 failures=0`; installed and source
+toolchains each built and ran the package-neutral fixture, then rebuilt an
+`api.sifr`-only edit from `attached-contract` to
+`attached-contract-edited`. The create-PR and merge gates each ran once on the
+exact final candidate. Both passed every preceding guard and all 40
+compatibility rows, then stopped only at the two separately owned Rust-interop
+inputs. Neither gate ran again
+([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3413#issuecomment-5360750282),
+[merge evidence](https://github.com/sifr-lang/sifr/pull/3413#issuecomment-5360775439)).
+Review evidence: the initial exact-SHA Opus review found one stale CLI sysroot
+skeleton
+([evidence](https://github.com/sifr-lang/sifr/pull/3413#issuecomment-5360722988)).
+The single remediation added the required workspace member and minimal crate,
+made replacement escaping literal, and strengthened its helper test. The
+final permitted review returned `SATISFIED` with no new mechanism defect
+([evidence](https://github.com/sifr-lang/sifr/pull/3413#issuecomment-5360723211)).
+Deferred follow-up: item 35 aligns the internal distribution and sysroot
+architecture inventories. The unused directory field, helper idempotence on
+quoted paths, and ignored fixture-target copy cost are terminal suggestions.
+The external gate inputs and all `pre_v1` work remain out of scope.
+Next action: implement item 35, then resume package and source certification.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -3110,7 +3154,7 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 33 are merged and recorded. Items 1-16 close the first compiler
+through 34 are merged and recorded. Items 1-16 close the first compiler
 mechanism sequence. Item 17 classifies every remaining compiler deferral and
 orders items 18-26. Item 18 closes the M5 audit. Item 19 closes the M6 audit
 and adds item 27 for second-review coverage. Item 27 closes that coverage.
@@ -3124,13 +3168,15 @@ closes that naming path. Item 23
 closes the M7f audit and adds item 31 for non-union conditional state. Item 31
 closes ordinary `if` state and adds items 32 and 33 for separate cache-state
 mechanisms. Item 32 closes statement-level union state. Item 33 owns non-`if`
-control-flow state and closes the compiler hardening sequence. Items 24
+control-flow state and closes the original compiler hardening sequence. Item
+34 closes the installed static-class-adapter certification boundary. Item 35
+owns its architecture documentation alignment. Items 24
 and 25 close the M8-M10 prerequisite audit. Item 26 closes the M11 prerequisite
 audit. The seven
 M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
 #3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
 #47. M12 certification is in progress. The current compiler merge is
-`94c4f8c7b3f978b6dd68d6fca3f4216f57b8af29`, and the current package merge is
+`4bf07c41c294ba8cb37a0397122b87d9001a6da0`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-20): the one-time gates for the M11 compiler
@@ -3139,5 +3185,5 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: run package and source certification before the final whole-phase
-review.
+Next action: implement item 35, then resume package and source certification
+before the final whole-phase review.
