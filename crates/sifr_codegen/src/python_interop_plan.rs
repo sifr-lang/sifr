@@ -270,8 +270,13 @@ fn module_requires_raw_coroutine_loop(module: &HirModule) -> bool {
     }
     let mut required = false;
     let mut inspect = |expression: &sifr_ir::HirExpr| {
-        if matches!(expression, sifr_ir::HirExpr::Call { func, .. } if raw_call_names.contains(func))
-        {
+        if matches!(
+            expression,
+            sifr_ir::HirExpr::Call { func, .. } | sifr_ir::HirExpr::GenericCall { func, .. }
+                if raw_call_names.contains(
+                    crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func)
+                )
+        ) {
             required = true;
         }
     };
