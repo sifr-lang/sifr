@@ -582,7 +582,7 @@ impl RustEmitter {
         }))
     }
 
-    fn try_lower_if_branch_for_ir(
+    pub(crate) fn try_lower_if_branch_for_ir(
         &mut self,
         body: &[HirStmt],
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
