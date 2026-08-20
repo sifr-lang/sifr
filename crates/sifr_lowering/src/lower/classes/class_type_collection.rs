@@ -307,11 +307,11 @@ pub(in crate::lower) fn collect_class_type(
 
     // For error types, ensure a 'message' field exists (add if not explicitly declared)
     // This will be checked after collecting all fields
-
     // Inherit parent fields and methods for single inheritance
     let parent_class_name =
         crate::lower::descriptor_declarations::data_parent_name(&class_name, ctx);
     let mut parent_class_chain: Option<String> = None;
+    let mut inherited_field_defaults = Vec::new();
     if let Some(ref parent_name) = parent_class_name {
         if let Some(parent_ty) =
             crate::lower::descriptor_declarations::data_parent_type(class_def, ctx)
@@ -319,6 +319,11 @@ pub(in crate::lower) fn collect_class_type(
         {
             ctx.class_data_parent_types
                 .insert(class_name.clone(), parent_ty.clone());
+            inherited_field_defaults = ctx
+                .class_field_defaults
+                .get(parent_name)
+                .cloned()
+                .unwrap_or_default();
             if !super::super::generic_parent_representation::preserves_union_structure(
                 &ctx.class_types,
                 &ctx.class_declared_type_params,
@@ -394,7 +399,7 @@ pub(in crate::lower) fn collect_class_type(
         },
     );
 
-    let mut field_defaults: Vec<(usize, HirExpr)> = Vec::new();
+    let mut field_defaults: Vec<(usize, HirExpr)> = inherited_field_defaults;
     let mut own_fields: Vec<(String, ruff_text_size::TextRange)> = Vec::new();
     let mut own_field_index_by_field_index = std::collections::HashMap::new();
     let mut own_field_default_indices = std::collections::HashSet::new();

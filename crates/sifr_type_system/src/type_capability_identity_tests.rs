@@ -27,6 +27,7 @@ fn repeated_class_basenames_do_not_short_circuit_recursive_capabilities() {
     assert!(!outer.supports_derived_clone());
     assert!(!outer.supports_structural_equality());
     assert!(!outer.supports_hash_key());
+    assert!(!outer.supports_derived_hash());
 
     let callable = Type::Callable(Vec::new(), Vec::new(), Box::new(Type::Int));
     let non_debug_inner = class("inner.DebugRoot", Vec::new(), vec![("callback", callable)]);
@@ -49,6 +50,20 @@ fn recursive_capability_keys_distinguish_concrete_specializations() {
 
     assert!(outer_specialization.contains_affine_resource());
     assert!(!outer_specialization.supports_derived_clone());
+}
+
+#[test]
+fn derived_hash_accepts_type_variables_but_rejects_transitive_non_send_ancestry() {
+    assert!(Type::TypeVar("T".to_string()).supports_derived_hash());
+    let non_send_child = Type::Class {
+        identity: Some("main.Child".to_string()),
+        type_args: Vec::new(),
+        name: "Child".to_string(),
+        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
+        methods: Vec::new(),
+        parent_class: Some("Parent|NonSend".to_string()),
+    };
+    assert!(!non_send_child.supports_derived_hash());
 }
 
 #[test]

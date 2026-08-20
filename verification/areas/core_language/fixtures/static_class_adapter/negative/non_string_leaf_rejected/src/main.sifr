@@ -1,6 +1,6 @@
 # expected-diagnostic: SIFR-PROTO-0001
 
-from fixture.contract import Contract, contract_config
+from fixture import Contract, contract_config
 
 
 class Model(Contract):

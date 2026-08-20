@@ -625,15 +625,30 @@ pub(crate) fn type_contains_typevar(ty: &Type, tv_name: &str) -> bool {
 
 /// Check if a type references a specific class name (directly or via union/option).
 pub(crate) fn type_references_class(ty: &Type, class_name: &str) -> bool {
-    match ty {
+    match ty.resolve_alias() {
         Type::Class { name, .. } => name == class_name,
         Type::Union(members) => members.iter().any(|m| type_references_class(m, class_name)),
-        Type::List(inner) => type_references_class(inner, class_name),
+        Type::List(inner)
+        | Type::Set(inner)
+        | Type::Iterable(inner)
+        | Type::Iterator(inner)
+        | Type::Awaitable(inner)
+        | Type::Failure(inner)
+        | Type::TimeoutResult(inner)
+        | Type::Newtype { inner, .. } => type_references_class(inner, class_name),
         Type::Dict(key, val) => {
             type_references_class(key, class_name) || type_references_class(val, class_name)
         }
         Type::Tuple(elems) => elems.iter().any(|e| type_references_class(e, class_name)),
-        Type::Result(ok, err) => {
+        Type::Result(ok, err)
+        | Type::Task(ok, err)
+        | Type::TaskResult(ok, err)
+        | Type::Coroutine(ok, err)
+        | Type::Select2(ok, err)
+        | Type::BlockingTask(ok, err)
+        | Type::JoinSet(ok, err)
+        | Type::AsyncIterator(ok, err)
+        | Type::AsyncGenerator(ok, err) => {
             type_references_class(ok, class_name) || type_references_class(err, class_name)
         }
         _ => false,

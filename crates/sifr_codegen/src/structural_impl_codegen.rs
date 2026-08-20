@@ -248,6 +248,9 @@ fn structural_parent_supported(
     };
     generic_arguments_preserve_union_structure(parent, type_args, modules)
         && parent.parent_class.is_none()
+        && !fields
+            .iter()
+            .any(|(_, ty)| crate::helpers::type_references_class(ty, name))
         && !parent.methods.iter().any(|method| method.name == "new")
         && !parent.is_error_type
         && parent.newtype_inner.is_none()

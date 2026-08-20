@@ -340,6 +340,14 @@ pub(in crate::lower) fn resolve_imports_early(
                             );
                             ctx.class_types
                                 .insert(local.clone(), imported_class_ty.clone());
+                            if let Some(defaults) = externals
+                                .class_field_defaults
+                                .get(&module_key)
+                                .and_then(|classes| classes.get(name))
+                            {
+                                ctx.class_field_defaults
+                                    .insert(local.clone(), defaults.clone());
+                            }
                             register_imported_structural_identity_inputs(
                                 ctx,
                                 externals,

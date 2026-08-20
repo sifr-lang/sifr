@@ -1,6 +1,6 @@
 use crate::{RustEmitter, BUILTIN_ERROR_CLASSES};
 use sifr_ir::HirModule;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 impl RustEmitter {
     pub(crate) fn prescan_module_metadata(&mut self, module: &HirModule) {
@@ -8,70 +8,49 @@ impl RustEmitter {
         self.collect_display_class_metadata(module);
         self.collect_parent_field_metadata(module);
         self.collect_function_signature_metadata(module);
-        self.structural_type_params = module
-            .type_param_bounds
-            .iter()
-            .filter_map(|(owner, bounds)| {
-                let params = bounds
-                    .iter()
-                    .filter(|(_, values)| {
-                        matches!(values.as_slice(), [bound] if bound == "Structural" || bound == "StringStructural")
-                    })
-                    .map(|(name, _)| name.clone())
-                    .collect::<HashSet<_>>();
-                (!params.is_empty()).then(|| (owner.clone(), params))
-            })
-            .collect();
-        self.string_structural_type_params = module
-            .type_param_bounds
-            .iter()
-            .filter_map(|(owner, bounds)| {
-                let params = bounds
-                    .iter()
-                    .filter(|(_, values)| values.as_slice() == ["StringStructural"])
-                    .map(|(name, _)| name.clone())
-                    .collect::<HashSet<_>>();
-                (!params.is_empty()).then(|| (owner.clone(), params))
-            })
-            .collect();
-        self.static_program_type_params = module
-            .type_param_bounds
-            .iter()
-            .filter_map(|(owner, bounds)| {
-                let params = bounds
-                    .iter()
-                    .filter(|(_, values)| {
-                        matches!(values.as_slice(), [bound] if bound == "StaticProgram" || bound == "MethodSlots")
-                    })
-                    .map(|(name, _)| name.clone())
-                    .collect::<HashSet<_>>();
-                (!params.is_empty()).then(|| (owner.clone(), params))
-            })
-            .collect();
-        self.method_slot_type_params = module
-            .type_param_bounds
-            .iter()
-            .filter_map(|(owner, bounds)| {
-                let params = bounds
-                    .iter()
-                    .filter(|(_, values)| values.as_slice() == ["MethodSlots"])
-                    .map(|(name, _)| name.clone())
-                    .collect::<HashSet<_>>();
-                (!params.is_empty()).then(|| (owner.clone(), params))
-            })
-            .collect();
-        self.context_type_params = module
-            .type_param_bounds
-            .iter()
-            .filter_map(|(owner, bounds)| {
-                let params = bounds
-                    .iter()
-                    .filter(|(_, values)| values.as_slice() == ["Context"])
-                    .map(|(name, _)| name.clone())
-                    .collect::<HashSet<_>>();
-                (!params.is_empty()).then(|| (owner.clone(), params))
-            })
-            .collect();
+        let mut structural = HashMap::<String, HashSet<String>>::new();
+        let mut string_structural = HashMap::<String, HashSet<String>>::new();
+        let mut static_program = HashMap::<String, HashSet<String>>::new();
+        let mut method_slots = HashMap::<String, HashSet<String>>::new();
+        let mut context = HashMap::<String, HashSet<String>>::new();
+        for (owner, bounds) in &module.type_param_bounds {
+            for (name, values) in bounds {
+                let [bound] = values.as_slice() else {
+                    continue;
+                };
+                let destination = match bound.as_str() {
+                    "Structural" => Some(&mut structural),
+                    "StringStructural" => {
+                        string_structural
+                            .entry(owner.clone())
+                            .or_default()
+                            .insert(name.clone());
+                        Some(&mut structural)
+                    }
+                    "StaticProgram" => Some(&mut static_program),
+                    "MethodSlots" => {
+                        method_slots
+                            .entry(owner.clone())
+                            .or_default()
+                            .insert(name.clone());
+                        Some(&mut static_program)
+                    }
+                    "Context" => Some(&mut context),
+                    _ => None,
+                };
+                if let Some(destination) = destination {
+                    destination
+                        .entry(owner.clone())
+                        .or_default()
+                        .insert(name.clone());
+                }
+            }
+        }
+        self.structural_type_params = structural;
+        self.string_structural_type_params = string_structural;
+        self.static_program_type_params = static_program;
+        self.method_slot_type_params = method_slots;
+        self.context_type_params = context;
     }
 
     pub(crate) fn collect_import_metadata(&mut self, module: &HirModule) {

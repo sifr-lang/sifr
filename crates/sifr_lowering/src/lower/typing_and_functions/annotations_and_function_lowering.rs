@@ -361,6 +361,7 @@ pub(in crate::lower) fn lower_function(
     }
     validate_python_interop_signature(&mut python_interop, &params, &inferred_return_type, ctx);
 
+    let attached_api_call = super::super::attached_api_declarations::attached_api_call(func);
     // Collect user-defined decorators (excluding classmethod/staticmethod)
     let decorators: Vec<String> = func
         .decorator_list
@@ -373,11 +374,7 @@ pub(in crate::lower) fn lower_function(
                 } else {
                     None
                 }
-            } else if matches!(
-                &d.expression,
-                Expr::Call(call)
-                    if matches!(call.func.as_ref(), Expr::Name(name) if name.id.as_str() == "attached_api")
-            ) {
+            } else if super::super::attached_api_declarations::is_attached_api_decorator(d) {
                 Some("attached_api".to_string())
             } else {
                 None
@@ -390,8 +387,9 @@ pub(in crate::lower) fn lower_function(
         .get::<str>(func.name.as_ref())
         .cloned()
         .unwrap_or_default();
-    let type_receiver_owner =
-        super::super::attached_api_declarations::type_receiver_owner_type_param(func);
+    let type_receiver_owner = attached_api_call.and_then(
+        super::super::attached_api_declarations::type_receiver_owner_type_param_from_call,
+    );
     validate_structural_function_contract(
         StructuralFunctionContract {
             function_name: func.name.as_str(),

@@ -1,0 +1,12 @@
+[package]
+name = "static-class-adapter-non-string-negative"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+static-class-adapter = { path = "../.." }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[workspace]
