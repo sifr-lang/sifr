@@ -439,46 +439,14 @@ impl<'a> RustInteropResolver<'a> {
                     sysroot_trust.is_some(),
                 );
                 self.validate_backend_generated_bridge_imports(declaration, backend);
-                let signature =
-                    target_resolution::is_primary_target(&declaration.declaration, path)
-                        .then(|| {
-                            self.signature_contracts
-                                .get(&canonical_target_path)
-                                .cloned()
-                        })
-                        .flatten();
-                let async_thread_affinity = self.async_thread_affinity_for_probe(declaration);
-                let Some(sysroot_runtime_crate) = self.context.sysroot_runtime_crate.clone() else {
-                    self.push_diagnostic(
-                        declaration,
-                        path.span,
-                        DiagnosticCode::RUST_CARGO_METADATA,
-                        "Rust bridge probe requires a resolved Sifr sysroot runtime crate",
-                        vec![("target", path.dotted())],
-                        vec!["Direct Rust bridge probes must use the same resolved sysroot runtime crate as generated Cargo projects.".to_string()],
-                        None,
-                    );
+                if !self.plan_direct_backend_probe(
+                    declaration,
+                    path,
+                    backend,
+                    sysroot_trust.as_ref(),
+                ) {
                     return;
-                };
-                self.pending_direct_probes.push(PendingRustBridgeProbe {
-                    declaration: declaration.clone(),
-                    path: path.clone(),
-                    backend: backend.clone(),
-                    source_prefix: None,
-                    signature,
-                    async_thread_affinity,
-                    zero_copy_obligations: self
-                        .zero_copy_probe_obligations
-                        .get(&canonical_target_path)
-                        .copied()
-                        .unwrap_or((false, false)),
-                    trusted_sysroot: sysroot_trust.is_some(),
-                    sysroot_runtime_crate,
-                    sysroot_vendor_dir: sysroot_trust
-                        .as_ref()
-                        .map(|trust| trust.vendor_dir.clone()),
-                    cargo_resolution: self.cargo_resolution.clone(),
-                });
+                }
                 if let Some(trust) = &sysroot_trust {
                     resolved_sysroot_crate_root(&backend.dependency_name, backend, trust)
                         .unwrap_or_else(|| RustInteropResolvedRoot::DirectCargoDependency {
