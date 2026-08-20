@@ -403,7 +403,6 @@ pub(in crate::lower) fn collect_class_type(
     let mut own_fields: Vec<(String, ruff_text_size::TextRange)> = Vec::new();
     let mut own_field_index_by_field_index = std::collections::HashMap::new();
     let mut own_field_default_indices = std::collections::HashSet::new();
-
     for stmt in &class_def.body {
         match stmt {
             // Field annotations: `x: float` or `x: float = 0.0`
@@ -441,6 +440,7 @@ pub(in crate::lower) fn collect_class_type(
                     own_field_index_by_field_index.insert(field_idx, own_field_idx);
                     // Collect default value if present (for auto-init default params)
                     if let Some(ref default_expr) = ann.value {
+                        field_defaults.retain(|(index, _)| *index != field_idx);
                         if let Some(kind) =
                             crate::lower::descriptor_declarations::descriptor_kind_for_call(
                                 default_expr,
