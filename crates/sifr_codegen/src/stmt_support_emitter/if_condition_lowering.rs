@@ -355,7 +355,8 @@ impl RustEmitter {
                                 .collect::<Vec<_>>()
                         })
                         .unwrap_or_default();
-                    let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)?
+                    let Some(lowered_else_body) =
+                        self.try_lower_speculative_branch_for_ir(else_body)?
                     else {
                         return Ok(None);
                     };
@@ -395,7 +396,7 @@ impl RustEmitter {
                     } else {
                         var_name.clone()
                     };
-                    let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+                    let Some(lowered_body) = self.try_lower_speculative_branch_for_ir(body)? else {
                         return Ok(None);
                     };
                     nested_else = Some(vec![RustStmt::IfLet {
@@ -575,6 +576,24 @@ impl RustEmitter {
         }))
     }
 
+    fn try_lower_speculative_branch_for_ir(
+        &mut self,
+        body: &[HirStmt],
+    ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
+        let string_char_cache_vars = self.string_char_cache_vars.clone();
+        match self.try_lower_stmt_block_for_ir(body) {
+            Ok(Some(lowered)) => Ok(Some(lowered)),
+            Ok(None) => {
+                self.string_char_cache_vars = string_char_cache_vars;
+                Ok(None)
+            }
+            Err(error) => {
+                self.string_char_cache_vars = string_char_cache_vars;
+                Err(error)
+            }
+        }
+    }
+
     pub(crate) fn detect_or_is_none_vars_with_bindings_for_ir(
         &self,
         expr: &HirExpr,
@@ -620,5 +639,43 @@ impl RustEmitter {
         } else {
             None
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn declined_speculative_branch_restores_string_cache_state() {
+        let mut emitter = RustEmitter::new();
+        emitter
+            .string_char_cache_required_names
+            .insert("text".to_string());
+        emitter
+            .string_char_cache_vars
+            .insert("existing".to_string(), "__sifr_existing_chars".to_string());
+        let before = emitter.string_char_cache_vars.clone();
+        let body = vec![
+            HirStmt::Let {
+                name: "text".to_string(),
+                ty: Type::Str,
+                value: HirExpr::StringLiteral("value".to_string()),
+                is_mutable: false,
+            },
+            HirStmt::AttributeAugAssign {
+                object: "self".to_string(),
+                field: "label".to_string(),
+                op: "+=".to_string(),
+                value: HirExpr::StringLiteral("suffix".to_string()),
+            },
+        ];
+
+        let lowered = emitter
+            .try_lower_speculative_branch_for_ir(&body)
+            .expect("speculative lowering must not error");
+
+        assert!(lowered.is_none());
+        assert_eq!(emitter.string_char_cache_vars, before);
     }
 }

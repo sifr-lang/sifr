@@ -23,6 +23,7 @@ enum CompiledIdentity {
 
 struct IdentityContext<'a> {
     modules: &'a [(&'a str, &'a HirModule)],
+    nominal_type_paths: Option<&'a HashMap<String, String>>,
 }
 
 impl<'a> IdentityContext<'a> {
@@ -110,7 +111,10 @@ pub(crate) fn class_identity_expression(
 ) -> String {
     let module_key = module_name.unwrap_or("");
     let modules = [(module_key, module)];
-    let context = IdentityContext { modules: &modules };
+    let context = IdentityContext {
+        modules: &modules,
+        nominal_type_paths: None,
+    };
     if class.is_enum() {
         compile_enum(class, module_name).expression()
     } else {
@@ -121,8 +125,12 @@ pub(crate) fn class_identity_expression(
 pub(crate) fn class_identity_expressions_for_project(
     modules: &[(&str, &HirModule)],
     structural_record_identities: &HashSet<String>,
+    nominal_type_paths: &HashMap<String, String>,
 ) -> HashMap<String, String> {
-    let context = IdentityContext { modules };
+    let context = IdentityContext {
+        modules,
+        nominal_type_paths: Some(nominal_type_paths),
+    };
     modules
         .iter()
         .flat_map(|(module_name, module)| {
@@ -151,7 +159,12 @@ pub(crate) fn static_class_identities_for_project(
     modules: &[(&str, &HirModule)],
     structural_record_identities: &HashSet<String>,
 ) -> HashMap<String, ShapeIdentity> {
-    let context = IdentityContext { modules };
+    let nominal_type_paths =
+        crate::lib_project_codegen::project_nominal_type_paths(modules, &HashSet::new());
+    let context = IdentityContext {
+        modules,
+        nominal_type_paths: Some(&nominal_type_paths),
+    };
     modules
         .iter()
         .flat_map(|(module_name, module)| {
@@ -183,7 +196,10 @@ pub(crate) fn static_class_identity(
 ) -> Option<ShapeIdentity> {
     let module_key = module_name.unwrap_or("");
     let modules = [(module_key, module)];
-    let context = IdentityContext { modules: &modules };
+    let context = IdentityContext {
+        modules: &modules,
+        nominal_type_paths: None,
+    };
     if class.is_enum() {
         compile_enum(class, module_name).static_value()
     } else {
@@ -340,7 +356,13 @@ fn compile_type(
                 let mapped_expression = if module_name == scope_module_name {
                     mapped_opaque_identity_expression(class)
                 } else {
-                    mapped_opaque_identity_expression_for_imported_type(class, module_name)
+                    context.nominal_type_paths.and_then(|paths| {
+                        mapped_opaque_identity_expression_for_imported_type(
+                            class,
+                            module_name,
+                            paths,
+                        )
+                    })
                 };
                 if let Some(expression) = mapped_expression {
                     return CompiledIdentity::Dynamic(expression);
@@ -635,7 +657,10 @@ mod tests {
     #[test]
     fn exact_and_fixed_width_integer_identities_are_distinct() {
         let modules = Vec::new();
-        let context = IdentityContext { modules: &modules };
+        let context = IdentityContext {
+            modules: &modules,
+            nominal_type_paths: None,
+        };
         let exact = compile_type(&Type::Int, "main", &context, &mut Vec::new()).static_value();
         let fixed = compile_type(
             &Type::FixedInt(sifr_type_system::FixedIntType::I64),
@@ -653,7 +678,10 @@ mod tests {
     #[test]
     fn structural_identity_recanonicalizes_raw_union_members() {
         let modules = Vec::new();
-        let context = IdentityContext { modules: &modules };
+        let context = IdentityContext {
+            modules: &modules,
+            nominal_type_paths: None,
+        };
         let raw = Type::Union(vec![Type::Int, Type::Bool]);
         let canonical = sifr_type_system::make_union(vec![Type::Int, Type::Bool]);
         let actual = compile_type(&raw, "main", &context, &mut Vec::new()).static_value();
@@ -763,6 +791,7 @@ mod tests {
         let expressions = class_identity_expressions_for_project(
             &modules,
             &HashSet::from(["models.Payload".to_string(), "main.Envelope".to_string()]),
+            &HashMap::new(),
         );
         let payload_identity =
             static_class_identity(&payload, &models, Some("models")).expect("static payload");

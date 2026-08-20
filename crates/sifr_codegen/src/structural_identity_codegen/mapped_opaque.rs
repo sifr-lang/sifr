@@ -1,4 +1,5 @@
 use sifr_ir::HirClass;
+use std::collections::HashMap;
 
 const STRUCTURAL: &str = "::sifr_runtime::interop::structural";
 
@@ -18,14 +19,18 @@ pub(super) fn mapped_opaque_identity_expression(class: &HirClass) -> Option<Stri
 pub(super) fn mapped_opaque_identity_expression_for_imported_type(
     class: &HirClass,
     module_name: &str,
+    nominal_type_paths: &HashMap<String, String>,
 ) -> Option<String> {
     if !crate::structural_impl_codegen::structural_mapped_opaque_supported(class) {
         return None;
     }
-    let module_path = module_name.replace('.', "::");
+    let canonical = class
+        .identity
+        .clone()
+        .unwrap_or_else(|| format!("{module_name}.{}", class.name));
+    let generated_path = nominal_type_paths.get(&canonical)?;
     Some(format!(
-        "<crate::{module_path}::{} as {STRUCTURAL}::StructuralType>::shape_identity()",
-        class.name
+        "<{generated_path} as {STRUCTURAL}::StructuralType>::shape_identity()"
     ))
 }
 
@@ -141,6 +146,10 @@ mod tests {
         let expressions = super::super::class_identity_expressions_for_project(
             &[("values", &values), ("main", &main)],
             &HashSet::from(["main.Envelope".to_string()]),
+            &HashMap::from([(
+                "values.Token".to_string(),
+                "crate::values::Token".to_string(),
+            )]),
         );
         let expression = expressions
             .get("main.Envelope")
@@ -152,5 +161,65 @@ mod tests {
             "{expression}"
         );
         assert!(!expression.contains("::bridge::"), "{expression}");
+        let static_identities = super::super::static_class_identities_for_project(
+            &[("values", &values), ("main", &main)],
+            &HashSet::from(["main.Envelope".to_string()]),
+        );
+        assert!(
+            !static_identities.contains_key("main.Envelope"),
+            "mapped identities must remain dynamic: {static_identities:?}"
+        );
+    }
+
+    #[test]
+    fn imported_identity_uses_crate_root_and_escaped_project_paths() {
+        let mut token = class("std", Vec::new());
+        token.identity = Some("main.std".to_string());
+        token.rust_interop = vec![RustInteropDeclaration {
+            kind: RustInteropDecoratorKind::Opaque,
+            target: None,
+            arguments: vec![
+                RustInteropArgument {
+                    name: Some("type".to_string()),
+                    value: RustInteropValue::TargetPath(RustTargetPath {
+                        segments: ["bridge", "token", "Token"].map(str::to_string).to_vec(),
+                        span: Default::default(),
+                    }),
+                    span: Default::default(),
+                },
+                RustInteropArgument {
+                    name: Some("structural".to_string()),
+                    value: RustInteropValue::TargetPath(RustTargetPath {
+                        segments: ["bridge", "token", "TokenMapping"]
+                            .map(str::to_string)
+                            .to_vec(),
+                        span: Default::default(),
+                    }),
+                    span: Default::default(),
+                },
+            ],
+            span: Default::default(),
+            effect: RustInteropEffect::Sync,
+            abi_requirements: RustInteropAbiRequirements {
+                opaque_handle: true,
+                ..RustInteropAbiRequirements::default()
+            },
+            consumes_receiver: false,
+        }];
+        let expression = mapped_opaque_identity_expression_for_imported_type(
+            &token,
+            "main",
+            &HashMap::from([(
+                "main.std".to_string(),
+                "crate::__SifrSource_std".to_string(),
+            )]),
+        )
+        .expect("mapped opaque identity must be available");
+
+        assert!(
+            expression.contains("<crate::__SifrSource_std as"),
+            "{expression}"
+        );
+        assert!(!expression.contains("crate::main::std"), "{expression}");
     }
 }
