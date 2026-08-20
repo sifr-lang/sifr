@@ -83,6 +83,7 @@ PY
 for spec in \
   "manifest:sysroot.toml:missing required archive file: sysroot.toml" \
   "runtime:crates/sifr_runtime:missing required archive file: crates/sifr_runtime/Cargo.toml" \
+  "structural_identity:crates/sifr_structural_identity:missing required archive file: crates/sifr_structural_identity/Cargo.toml" \
   "stdlib:lib/sifr/stdlib/sifr:missing required archive directory: lib/sifr/stdlib/sifr" \
   "vendor:vendor:missing required archive directory: vendor" \
   "cargo_config:.cargo/config.toml:missing required archive file: .cargo/config.toml"

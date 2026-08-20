@@ -259,6 +259,7 @@ package_toolchain() {
   copy_sysroot_file "Cargo.toml" "${package_root}/Cargo.toml"
   copy_sysroot_file "Cargo.lock" "${package_root}/Cargo.lock"
   copy_sysroot_dir "crates/sifr_runtime" "${package_root}/crates/sifr_runtime"
+  copy_sysroot_dir "crates/sifr_structural_identity" "${package_root}/crates/sifr_structural_identity"
   copy_sysroot_dir "crates/sifr_stdlib" "${package_root}/crates/sifr_stdlib"
   copy_sysroot_dir "stdlib/sifr" "${package_root}/lib/sifr/stdlib/sifr"
   copy_sysroot_dir "stdlib/_sifr" "${package_root}/lib/sifr/stdlib/_sifr"

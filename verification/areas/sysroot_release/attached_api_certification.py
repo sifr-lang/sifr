@@ -2,8 +2,39 @@
 
 from __future__ import annotations
 
+import json
+import re
 from pathlib import Path
 from typing import Any, Callable
+
+
+RUNTIME_DEPENDENCY = re.compile(
+    r'^sifr_runtime = \{ path = "[^"]+", features = \["structural"\] \}$',
+    re.MULTILINE,
+)
+
+
+def bind_runtime_dependency(*, fixture: Path, runtime_crate: Path) -> str | None:
+    manifest_path = fixture / "Cargo.toml"
+    try:
+        manifest = manifest_path.read_text(encoding="utf-8")
+    except OSError as error:
+        return f"failed to read attached API Cargo manifest: {error}"
+    replacement = (
+        "sifr_runtime = { path = "
+        f"{json.dumps(str(runtime_crate))}, features = [\"structural\"] }}"
+    )
+    updated, replacements = RUNTIME_DEPENDENCY.subn(lambda _match: replacement, manifest)
+    if replacements != 1:
+        return (
+            "attached API Cargo manifest must contain exactly one structural "
+            "sifr_runtime path dependency"
+        )
+    try:
+        manifest_path.write_text(updated, encoding="utf-8")
+    except OSError as error:
+        return f"failed to bind attached API runtime dependency: {error}"
+    return None
 
 
 def run_attached_api_certification(
@@ -14,8 +45,14 @@ def run_attached_api_certification(
     output: Path,
     env: dict[str, str],
     label: str,
+    runtime_crate: Path,
     run_checked: Callable[..., Any],
 ) -> str | None:
+    dependency_error = bind_runtime_dependency(
+        fixture=fixture, runtime_crate=runtime_crate
+    )
+    if dependency_error is not None:
+        return dependency_error
     build_command = [
         str(compiler),
         *extra,

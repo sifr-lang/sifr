@@ -189,6 +189,10 @@ fn layout_validation_checks_all_skeleton_assets() {
         ("stdlib_private_sources", "lib/sifr/stdlib/_sifr"),
         ("vendor", "vendor"),
         ("runtime_manifest", "crates/sifr_runtime/Cargo.toml"),
+        (
+            "structural_identity_manifest",
+            "crates/sifr_structural_identity/Cargo.toml",
+        ),
         ("stdlib_manifest", "crates/sifr_stdlib/Cargo.toml"),
     ] {
         let root = complete_sysroot(label, COMPILER_SIFR_VERSION);
@@ -213,7 +217,7 @@ fn workspace_validation_requires_generated_stdlib_member() {
         root.path.join("Cargo.toml"),
         r#"
 [workspace]
-members = ["crates/sifr_runtime"]
+members = ["crates/sifr_runtime", "crates/sifr_structural_identity"]
 resolver = "2"
 "#,
     )
@@ -232,6 +236,35 @@ resolver = "2"
     assert!(error
         .message
         .contains("workspace member crates/sifr_stdlib"));
+}
+
+#[test]
+fn workspace_validation_requires_structural_identity_member() {
+    let root = complete_sysroot("missing_structural_identity_member", COMPILER_SIFR_VERSION);
+    fs::write(
+        root.path.join("Cargo.toml"),
+        r#"
+[workspace]
+members = ["crates/sifr_runtime", "crates/sifr_stdlib"]
+resolver = "2"
+"#,
+    )
+    .expect("workspace manifest");
+    let input = SysrootResolutionInput {
+        explicit_sysroot: Some(root.path.clone()),
+        env_sysroot: None,
+        current_exe: PathBuf::from("/tool/bin/sifr"),
+        current_dir: root.path.clone(),
+        allow_source_tree_development: false,
+    };
+
+    let error =
+        resolve_sysroot_with(&input).expect_err("missing structural identity member should fail");
+
+    assert_eq!(error.kind, SysrootErrorKind::InvalidWorkspace);
+    assert!(error
+        .message
+        .contains("workspace member crates/sifr_structural_identity"));
 }
 
 #[test]
@@ -310,7 +343,7 @@ fn write_complete_sysroot(root: &Path, version: &str) {
         root.join("Cargo.toml"),
         r#"
 [workspace]
-members = ["crates/sifr_runtime", "crates/sifr_stdlib"]
+members = ["crates/sifr_runtime", "crates/sifr_structural_identity", "crates/sifr_stdlib"]
 resolver = "2"
 "#,
     )
@@ -322,6 +355,7 @@ resolver = "2"
     fs::create_dir_all(root.join("lib/sifr/stdlib/sifr")).expect("public stdlib root");
     fs::create_dir_all(root.join("lib/sifr/stdlib/_sifr")).expect("private stdlib root");
     write_minimal_crate(root, "sifr_runtime");
+    write_minimal_crate(root, "sifr_structural_identity");
     write_minimal_crate(root, "sifr_stdlib");
 }
 
