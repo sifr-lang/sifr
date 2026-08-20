@@ -7,10 +7,10 @@ impl RustEmitter {
             return Vec::new();
         }
         let needs_hash_eq = Self::func_needs_hash_eq(func);
-        let context_type_param = self
-            .context_type_params
-            .get(&func.name)
-            .and_then(|params| params.iter().next());
+        let context_type_params = self.context_type_params.get(&func.name);
+        let context_type_param = func.type_params.iter().find(|type_param| {
+            context_type_params.is_some_and(|params| params.contains(*type_param))
+        });
         let context_is_shared = context_type_param.is_some_and(|context| {
             func.params.iter().any(|param| {
                 matches!(param.ty.resolve_alias(), Type::TypeVar(name) if name == context)
