@@ -502,6 +502,16 @@ impl RustEmitter {
         result
     }
 
+    pub(crate) fn try_lower_scoped_stmt_block_for_ir(
+        &mut self,
+        stmts: &[HirStmt],
+    ) -> Result<Option<Vec<crate::RustStmt>>, crate::CodegenError> {
+        let string_char_cache_vars = self.string_char_cache_vars.clone();
+        let result = self.try_lower_stmt_block_for_ir(stmts);
+        self.string_char_cache_vars = string_char_cache_vars;
+        result
+    }
+
     pub(crate) fn stmt_block_scope_context(&self) -> crate::ScopeContext {
         crate::ScopeContext {
             function_return_type: self.current_return_type.clone(),

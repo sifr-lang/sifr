@@ -586,21 +586,7 @@ impl RustEmitter {
         &mut self,
         body: &[HirStmt],
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
-        let string_char_cache_vars = self.string_char_cache_vars.clone();
-        match self.try_lower_stmt_block_for_ir(body) {
-            Ok(Some(lowered)) => {
-                self.string_char_cache_vars = string_char_cache_vars;
-                Ok(Some(lowered))
-            }
-            Ok(None) => {
-                self.string_char_cache_vars = string_char_cache_vars;
-                Ok(None)
-            }
-            Err(error) => {
-                self.string_char_cache_vars = string_char_cache_vars;
-                Err(error)
-            }
-        }
+        self.try_lower_scoped_stmt_block_for_ir(body)
     }
 
     pub(crate) fn detect_or_is_none_vars_with_bindings_for_ir(

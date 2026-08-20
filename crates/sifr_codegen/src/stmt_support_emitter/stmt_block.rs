@@ -716,7 +716,7 @@ impl RustEmitter {
                     return Ok(None);
                 };
                 self.loop_else_stack.push(has_else);
-                let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+                let Some(lowered_body) = self.try_lower_scoped_stmt_block_for_ir(body)? else {
                     let popped = self.loop_else_stack.pop();
                     debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
                     return Ok(None);
@@ -724,7 +724,8 @@ impl RustEmitter {
                 let popped = self.loop_else_stack.pop();
                 debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
                 if let Some(else_body) = else_body {
-                    let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)?
+                    let Some(lowered_else_body) =
+                        self.try_lower_scoped_stmt_block_for_ir(else_body)?
                     else {
                         return Ok(None);
                     };
@@ -784,31 +785,23 @@ impl RustEmitter {
                 }) else {
                     return Ok(None);
                 };
-                let previous_target_cache = self.string_char_cache_vars.get(target).cloned();
+                let string_char_cache_vars = self.string_char_cache_vars.clone();
                 let target_cache_init = if char_set_loop || target.contains(',') {
                     None
                 } else {
                     self.string_char_cache_init_stmt_for_loop_target(target, target_ty)
                 };
                 self.loop_else_stack.push(false);
-                let lowered_body_result = self.try_lower_stmt_block_for_ir(body)?;
+                let lowered_body_result = self.try_lower_stmt_block_for_ir(body);
+                self.string_char_cache_vars = string_char_cache_vars;
                 let popped = self.loop_else_stack.pop();
                 debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
+                let lowered_body_result = lowered_body_result?;
                 let Some(mut lowered_body) = lowered_body_result else {
-                    if let Some(previous) = previous_target_cache {
-                        self.string_char_cache_vars.insert(target.clone(), previous);
-                    } else {
-                        self.string_char_cache_vars.remove(target);
-                    }
                     return Ok(None);
                 };
                 if let Some(cache_stmt) = target_cache_init {
                     lowered_body.insert(0, cache_stmt);
-                }
-                if let Some(previous) = previous_target_cache {
-                    self.string_char_cache_vars.insert(target.clone(), previous);
-                } else {
-                    self.string_char_cache_vars.remove(target);
                 }
                 let var = if target.contains(',') {
                     let names = target

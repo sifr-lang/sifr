@@ -12,7 +12,7 @@ impl RustEmitter {
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
         self.python_context_envelope_depth += 1;
-        let lowered_body = self.try_lower_stmt_block_for_ir(body);
+        let lowered_body = self.try_lower_scoped_stmt_block_for_ir(body);
         self.python_context_envelope_depth -= 1;
         let Some(lowered_body) = lowered_body? else {
             return Ok(None);

@@ -81,6 +81,8 @@ mod recursive_node_codegen_tests;
 #[cfg(test)]
 mod string_char_cache_branch_codegen_tests;
 #[cfg(test)]
+mod string_char_cache_control_flow_codegen_tests;
+#[cfg(test)]
 mod string_concat_codegen_tests;
 #[cfg(test)]
 mod structural_impl_demand_codegen_tests;
