@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-19. M0-M11 are complete; M12 is in progress.
+Status: active on 2026-08-20. M0-M11 are complete; M12 is in progress.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -2478,7 +2478,7 @@ work.
 | M7e structural construction defaults | Complete in item 22. Structural construction reserves generated locals, rejects required omissions before evaluating defaults, and has two-sided factory freshness evidence. Item 30 owns a distinct user-field and callable-name collision. Class-body lowering remained below the guard and did not need a split. |
 | M7f static-program integration | Complete in item 23. Speculative union branches restore string-cache state, imported mapped-opaque identities use canonical project paths, const evaluation and code generation accept the same `isinstance` targets, and generic bounds compose. Borrowed structural returns now require `Clone`; owned returns do not. Item 31 owns a separate pre-existing non-union `if` cache-state leak found by the final review. |
 | M8-M10 compiler prerequisites | Complete in items 24 and 25. Method-slot input roles are explicit, dispatch and arity diagnostics have direct coverage, ordered mapping projection is pinned, provisional `MethodSlots` matches `StaticProgram`, and a bound on the wrong owner parameter is rejected. Multi-context selection follows deterministic HIR type-parameter order. Exact tests pin the positive `MethodSlots` composite bound and the `StaticProgram`-only negative. Body deduplication and clone-inference ideas are terminal without a failing case. |
-| M11 compiler prerequisites | Item 26. Close independent package-compilable negatives, direct attached codegen, stale installed-helper paths, duplicate decorator scans, concrete-owner assertions, nonliteral attached-default provider localization, generic hash predicate ownership, flattened parent defaults, recursive boxed parents, direct plain-parent structural coverage, structural-bound prescans, and retained `StdlibFeature` inventory. Negative metadata alignment is conditional on a future manifest-driven core harness. The 900-line guard owns the structural-test split. Broad probe-bound and clone-inference ideas are terminal unless a focused failure proves a mechanism gap. |
+| M11 compiler prerequisites | Complete in item 26. The package-aware negative, direct attached codegen, installed-helper paths, decorator inspection, concrete-owner assertions, provider-local default rejection, shared hash predicate, inherited defaults, parent structural coverage, bound prescan, and `StdlibFeature` inventory are closed. Negative metadata alignment remains conditional on a future manifest-driven core harness. Broad probe-bound and clone-inference ideas remain terminal without a focused failure. |
 | M12 items 1-16 | Complete. Item 1 closes the compiler part of nested direct generic specialization. Items 12 and 13-15 close impossible local handler ancestry and imported-boundary name collisions. Item 18 makes the handler ordering dependency local. Other remaining notes are assertions, comments, performance ideas, or certification work. Repeated ancestry walks and identity indexes are terminal without measured cost. |
 
 Compiler certification must include the package-neutral descriptor, adapter,
@@ -2515,8 +2515,8 @@ string-cache state transactional in the ordinary `if` lowering path. A local
 declared in one branch must not suppress a later cache declaration outside
 that branch. Item 31 runs after item 30. No third item 23 review applies.
 
-Item 25 is complete. Next action: implement item 26, the M11 compiler
-prerequisite audit.
+Item 26 is complete. Next action: implement item 27, the M6 pre-scan and
+same-path diagnostic hardening item.
 
 Compiler hardening item 17 state: complete
 PR: [`sifr-lang/sifr#3364`](https://github.com/sifr-lang/sifr/pull/3364)
@@ -2761,6 +2761,43 @@ A repeated context-map lookup remains a terminal cleanup. The external gate
 inputs and all `pre_v1` work remain out of scope.
 Next action: implement item 26, the M11 compiler prerequisite audit.
 
+Compiler hardening item 26 state: complete
+Issue: [`sifr-lang/sifr#3388`](https://github.com/sifr-lang/sifr/issues/3388)
+PR: [`sifr-lang/sifr#3389`](https://github.com/sifr-lang/sifr/pull/3389)
+Base SHA: `adcb447698b0f9804a869f7152c975fb1d0217ec`
+Initial candidate SHA: `da5ff96ae917cdd0c8e136fad02b1373b263d6b8`
+Final candidate SHA: `c54bd7215dbb7fbf97e712e7666a38d0df7bd46d`
+Merge SHA: `a488dfd18989c56dc5535c5d2d03288eaa7e61fc`
+Changed paths: package-aware `StringStructural` negative coverage; direct
+attached-API Rust assertions; installed-helper paths; shared decorator and
+bound scans; provider-local default rejection; shared derived-hash capability;
+flattened parent defaults; recursive and plain parent structural coverage; and
+the exhaustive `StdlibFeature` retained-dependency inventory.
+Validation: the type-system suite passed 140 tests. Lowering passed 1,017 tests
+and ignored one test after remediation. Frontend passed 122 tests. Codegen
+passed 1,075 tests. The stdlib-manifest suites and all focused driver suites
+passed. Workspace Clippy, formatting, both maintainability guards, the
+900-line guard, diff hygiene, and Python helper syntax passed. The create-PR
+and merge gates each ran once on the exact final candidate. Both passed every
+earlier guard. Both stopped at the same two separately owned Rust-interop
+matrix inputs. Neither gate ran again
+([evidence](https://github.com/sifr-lang/sifr/pull/3389#issuecomment-5357979689)).
+Review evidence: the initial exact-SHA Opus review found that a child default
+could be shadowed by its flattened parent default
+([evidence](https://github.com/sifr-lang/sifr/pull/3389#issuecomment-5357861781)).
+The single remediation replaces the seeded entry at the inherited field index
+and adds a focused regression. The final permitted exact-SHA review returned
+`SATISFIED` with no blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3389#issuecomment-5357904033)).
+Deferred follow-up: `class_type_collection.rs` is exactly 900 lines, so its
+next edit must split it by responsibility. The broader recursive-type helper
+asymmetry has no demonstrated reachable failure and remains terminal without
+focused evidence. Non-adapter descriptor override semantics are also terminal
+without a failing case. The external gate inputs and all `pre_v1` work remain
+out of scope.
+Next action: implement item 27, the M6 pre-scan and same-path diagnostic
+hardening item.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2848,26 +2885,27 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 25 are merged and recorded. Items 1-16 close the first compiler
+through 26 are merged and recorded. Items 1-16 close the first compiler
 mechanism sequence. Item 17 classifies every remaining compiler deferral and
 orders items 18-26. Item 18 closes the M5 audit. Item 19 closes the M6 audit
 and adds item 27 for second-review coverage. Item 20 closes the M7/M7b audit
 and adds item 28 for lookup consistency. Item 21 closes the M7c/M7d
 representation audit. It adds item 29 for option-argument safety. Item 22
 closes the M7e audit and adds item 30 for structural-default naming. Item 23
-closes the M7f audit and adds item 31 for non-union conditional state. Item 24
-and item 25 close the M8-M10 prerequisite audit. The seven
+closes the M7f audit and adds item 31 for non-union conditional state. Items 24
+and 25 close the M8-M10 prerequisite audit. Item 26 closes the M11 prerequisite
+audit. The seven
 M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
 #3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
 #47. M12 is in progress. The current compiler merge is
-`efd13da807fc1e3d444cffd5a253c1c6d441455c`, and the current package merge is
+`a488dfd18989c56dc5535c5d2d03288eaa7e61fc`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
-External gate record (2026-08-19): the one-time gates for the M11 compiler
+External gate record (2026-08-20): the one-time gates for the M11 compiler
 prerequisites stopped at the Rust-interop matrix. The matrix reported one
 missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: implement item 26, then continue items 27-31 before package
+Next action: implement item 27, then continue items 28-31 before package
 certification and final review.
