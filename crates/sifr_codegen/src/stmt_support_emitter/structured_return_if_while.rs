@@ -294,7 +294,7 @@ impl RustEmitter {
                                 .collect::<Vec<_>>()
                         })
                         .unwrap_or_default();
-                    let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)?
+                    let Some(lowered_else_body) = self.try_lower_if_branch_for_ir(else_body)?
                     else {
                         return Ok(false);
                     };
@@ -334,7 +334,7 @@ impl RustEmitter {
                     } else {
                         var_name.clone()
                     };
-                    let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+                    let Some(lowered_body) = self.try_lower_if_branch_for_ir(body)? else {
                         return Ok(false);
                     };
                     nested_else = Some(vec![RustStmt::IfLet {
@@ -367,7 +367,7 @@ impl RustEmitter {
                 } else {
                     var_name.clone()
                 };
-                let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)? else {
+                let Some(lowered_then_body) = self.try_lower_if_branch_for_ir(then_body)? else {
                     return Ok(false);
                 };
 
@@ -385,7 +385,7 @@ impl RustEmitter {
                     } else {
                         var_name.clone()
                     };
-                    let Some(lowered_else_body) = self.try_lower_stmt_block_for_ir(else_body)?
+                    let Some(lowered_else_body) = self.try_lower_if_branch_for_ir(else_body)?
                     else {
                         return Ok(false);
                     };

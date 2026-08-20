@@ -49,3 +49,31 @@ def count_text(enabled: bool) -> int:
         "walrus branch and outer declarations need separate caches:\n{generated}"
     );
 }
+
+#[test]
+fn statement_union_branches_use_separate_string_caches() {
+    let generated = generate_rust_from_source(
+        r#"
+def count_text(value: int | str | float) -> int:
+    selected: int = 0
+    if isinstance(value, int):
+        text: str = "int"
+        selected = len(text)
+    elif isinstance(value, str):
+        text: str = "string"
+        selected = len(text)
+    else:
+        text: str = "float"
+        selected = len(text)
+    return selected
+"#,
+    );
+
+    assert_eq!(
+        generated
+            .matches("let __sifr_chars_text: Vec<char> = text.chars().collect")
+            .count(),
+        3,
+        "each union branch needs its own cache declaration:\n{generated}"
+    );
+}
