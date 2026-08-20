@@ -2472,7 +2472,7 @@ work.
 | M0-M2 declaration names, callable identity, keyword origins, and alias boundaries | Complete. `ClassDeclaration`, `CallableIdentity`, named argument origins, local malformed diagnostics, and exact alias rejection are implemented. Human and JSON span baselines plus the four-kind runtime fixture remain certification work. Cross-module const helpers remain optional package ergonomics. Lazy origin collection and label-count tuning are terminal without measured pressure. |
 | M3-M4 adapter execution, defaults, inheritance, and identity | Complete through the milestone work and M12 items 1-16. This includes semantic provider identity, generic substitution, canonical parent selection, bindings, and fail-closed parent reconstruction. Fixture registration, an unknown-plan-output case, and the stale `contract_types.sifr` check remain certification work. Allocation and wording cleanups are terminal. |
 | M5 handler-bearing method descriptors | Complete in item 18. Declared-owned receiver storage, `Self` availability, `@staticmethod` stacking, and local handler-plan ordering are closed. Slot fallibility and canonical adapter selection were already complete. |
-| M6 structural public values and mappings | Complete through items 19 and 27. Same-path obligations and structured probe diagnostics, parsed mapping-path marking, explicit stdlib origin, mapped-value thread traits, and multi-module late-stdlib coverage are closed. File headroom and body deduplication remain terminal unless the guard or measurement requires work. |
+| M6 structural public values and mappings | Complete through items 19, 27, and 36. Same-path obligations and structured probe diagnostics, parsed mapping-path marking, explicit stdlib origin, mapped-value thread traits, multi-module late-stdlib coverage, and distinct mapped-opaque value/mapping probe selection are closed. File headroom and body deduplication remain terminal unless the guard or measurement requires work. |
 | M7 and M7b attached APIs | Complete through items 20 and 28. Exact set identity, all native-member collisions, generic-call metadata and consumers, concrete data-parent eligibility, canonical binding keys, module-less identity, private filtering, bound documentation, and exact imported-set binding registration are closed. |
 | M7c-M7d representation sequencing | Complete through items 21 and 29. Nested option-represented union payloads, per-member conversions, warning-clean `None` branches, owned registry-call widening, shared assignment sequencing, and registry callback input safety are closed. Behavioral presence and absence runs remain certification work. |
 | M7e structural construction defaults | Complete through items 22 and 30. Structural construction reserves generated locals, rejects required omissions before evaluating defaults, uses collision-free tuple-bound field temporaries and explicit initializers, and has two-sided factory freshness evidence. Class-body lowering remained below the guard and did not need a split. |
@@ -2540,7 +2540,20 @@ Item 35 is complete. The distribution and sysroot architecture records now
 include the installed structural-identity crate, workspace member, boundary
 asset, and single-toolchain version contract.
 
-Next action: resume package and source certification.
+Item 36 is complete. Opaque declarations still resolve every declared Rust
+path, but only the `type=` path schedules the concrete opaque probe. The
+surviving probe keeps the `structural=` mapping obligation against that value
+type for package-local and direct backend roots.
+
+Item 37 is a package-owned certification correction. Two negative fixture
+generators stop at earlier valid compiler diagnostics before they reach their
+intended validator-receiver and serializer-wildcard checks. Item 37 must make
+the inputs valid up to the intended checks and keep their existing diagnostic
+assertions. It must not change compiler diagnostics or absorb the external
+Rust-interop gate inputs.
+
+Next action: implement item 37, then resume source and installed-package
+certification.
 
 Compiler hardening item 17 state: complete
 PR: [`sifr-lang/sifr#3364`](https://github.com/sifr-lang/sifr/pull/3364)
@@ -3089,6 +3102,34 @@ optional. Two remaining runtime/stdlib pairs are illustrative path examples,
 not asset authorities. No new mechanism item is required.
 Next action: resume package and source certification.
 
+Compiler hardening item 36 state: complete
+Issue: [`sifr-lang/sifr#3418`](https://github.com/sifr-lang/sifr/issues/3418)
+PR: [`sifr-lang/sifr#3419`](https://github.com/sifr-lang/sifr/pull/3419)
+Base SHA: `dd1d599453d1b2261b41a6abae1331e429698f63`
+Candidate SHA: `97a3383ef88a37683dadcf537c070703d5c511e0`
+Merge SHA: `643cf76a10e1e0462b3a8572605e3ccbbb194279`
+Changed paths: opaque target-path role selection and package-local and direct
+backend probe planning, with focused equal-path and distinct-path tests.
+Validation: all 554 non-ignored driver tests passed. The mapped structural
+bridge runtime test passed, and the exact Pydantic-Sifr package merge checked
+without errors. Workspace Clippy, formatting, HIR maintainability, file-size,
+and diff guards passed. The create-PR and merge gates each ran once on the
+exact candidate. Both passed every earlier guard and all 40 compatibility
+rows, then stopped only at the two separately owned Rust-interop inputs.
+Neither gate ran again
+([gate evidence](https://github.com/sifr-lang/sifr/pull/3419#issuecomment-5361219748)).
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking findings. It verified path-role identity, both planners, retained
+mapping resolution and trust checks, equal-path deduplication, and the
+`Mapping: StructuralMapping<Value>` obligation
+([evidence](https://github.com/sifr-lang/sifr/pull/3419#issuecomment-5361168697)).
+Deferred follow-up: an explicit path-role type is terminal unless a caller
+starts passing cloned declarations. Custom clone-target existence checking is
+outside this item and remains optional. The external gate inputs and all
+`pre_v1` work remain out of scope.
+Next action: implement package certification item 37, then resume source and
+installed-package certification.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -3176,9 +3217,9 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 34 and documentation item 35 are merged and recorded. Items 1-16 close
-the first compiler
-mechanism sequence. Item 17 classifies every remaining compiler deferral and
+through 34 and 36 are merged and recorded. Documentation item 35 is also
+merged and recorded. Items 1-16 close the first compiler mechanism sequence.
+Item 17 classifies every remaining compiler deferral and
 orders items 18-26. Item 18 closes the M5 audit. Item 19 closes the M6 audit
 and adds item 27 for second-review coverage. Item 27 closes that coverage.
 Item 20 closes the M7/M7b audit
@@ -3193,13 +3234,15 @@ closes ordinary `if` state and adds items 32 and 33 for separate cache-state
 mechanisms. Item 32 closes statement-level union state. Item 33 owns non-`if`
 control-flow state and closes the original compiler hardening sequence. Item
 34 closes the installed static-class-adapter certification boundary. Item 35
-closes its architecture documentation alignment. Items 24
+closes its architecture documentation alignment. Item 36 closes mapped-opaque
+value/mapping probe selection. Package-owned item 37 corrects the two stale
+negative fixture generators found by source certification. Items 24
 and 25 close the M8-M10 prerequisite audit. Item 26 closes the M11 prerequisite
 audit. The seven
 M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
 #3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
 #47. M12 certification is in progress. The current compiler merge is
-`4bf07c41c294ba8cb37a0397122b87d9001a6da0`, and the current package merge is
+`643cf76a10e1e0462b3a8572605e3ccbbb194279`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-20): the one-time gates for the M11 compiler
@@ -3208,5 +3251,5 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: resume package and source certification before the final
-whole-phase review.
+Next action: implement package item 37, then resume source and installed-package
+certification before the final whole-phase review.
