@@ -74,7 +74,13 @@ pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
             }])
         }
         HirStmt::Assign { name, value }
-            if try_lower_simple_assign_value(value, bindings.borrowed_params).is_some() =>
+            if try_lower_simple_assign_value(value, bindings.borrowed_params).is_some()
+                && !bindings
+                    .local_binding_types
+                    .get(name)
+                    .is_some_and(|target| {
+                        crate::helpers::requires_union_representation_transition(target, value.ty())
+                    }) =>
         {
             let lowered_value = try_lower_simple_assign_value(value, bindings.borrowed_params)?;
             let lowered_value = coerce_simple_assign_value_for_target_type(
@@ -395,13 +401,6 @@ pub(super) fn coerce_simple_assign_value_for_target_type(
     );
     if adapted_value != lowered_value {
         return adapted_value;
-    }
-    if let Some(widened) = crate::helpers::widen_option_value_for_union_target(
-        target_ty,
-        value.ty(),
-        lowered_value.clone(),
-    ) {
-        return widened;
     }
     let wrapped_member = if matches!(value, HirExpr::NoneLiteral) {
         &Type::None
