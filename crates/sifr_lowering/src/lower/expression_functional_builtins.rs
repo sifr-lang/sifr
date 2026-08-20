@@ -22,6 +22,38 @@ fn call_arity_range(call: &ExprCall) -> TextRange {
         .map_or_else(|| call.func.range(), Ranged::range)
 }
 
+fn validate_callable_input_types(
+    builtin_name: &str,
+    call: &ExprCall,
+    param_types: &[Type],
+    iterable_element_types: &[Type],
+    ctx: &mut LowerCtx,
+) -> bool {
+    let mut valid = true;
+    for (index, (element_ty, param_ty)) in iterable_element_types
+        .iter()
+        .zip(param_types.iter())
+        .enumerate()
+    {
+        if element_ty.is_assignable_to(param_ty) {
+            continue;
+        }
+        expression_diagnostics::type_mismatch(
+            ctx,
+            format!(
+                "{builtin_name}() callable parameter {} expects '{}', but iterable {} yields '{}'",
+                index + 1,
+                param_ty.display_name(),
+                index + 1,
+                element_ty.display_name(),
+            ),
+            call.arguments.args[index + 1].range(),
+        );
+        valid = false;
+    }
+    valid
+}
+
 pub(in crate::lower) fn lower_zip_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if reject_zip_keywords_if_present(call, ctx) {
         return None;
@@ -168,6 +200,9 @@ pub(in crate::lower) fn lower_map_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
         );
         return None;
     }
+    if !validate_callable_input_types("map", call, &param_types, &context_types, ctx) {
+        return None;
+    }
     if super::statement_diagnostics::reject_affine_iterator_builtin(
         ctx,
         "map",
@@ -243,6 +278,15 @@ pub(in crate::lower) fn lower_filter_call(call: &ExprCall, ctx: &mut LowerCtx) -
         );
         return None;
     }
+    if !validate_callable_input_types(
+        "filter",
+        call,
+        &param_types,
+        std::slice::from_ref(&elem_ty),
+        ctx,
+    ) {
+        return None;
+    }
     if !return_ty.is_assignable_to(&Type::Bool) && !Type::Bool.is_assignable_to(&return_ty) {
         expression_diagnostics::type_mismatch(
             ctx,
@@ -260,4 +304,69 @@ pub(in crate::lower) fn lower_filter_call(call: &ExprCall, ctx: &mut LowerCtx) -
         mutable_arg_places: Vec::new(),
         ty: Type::Iterator(Box::new(elem_ty)),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    fn lower_errors(source: &str) -> Vec<crate::HirDiagnostic> {
+        let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+        match crate::lower_module(parsed.suite()) {
+            Ok(_) => panic!("source should fail lowering"),
+            Err(errors) => errors,
+        }
+    }
+
+    #[test]
+    fn map_rejects_optional_elements_for_a_required_callback_parameter() {
+        let source = r#"
+def values() -> list[int | None]:
+    return []
+
+def use_int(value: int) -> int:
+    return value + 1
+
+def main():
+    for value in map(use_int, values()):
+        print(value)
+"#;
+
+        let errors = lower_errors(source);
+
+        assert_eq!(errors.len(), 1, "{errors:?}");
+        assert_eq!(
+            errors[0].code,
+            Some(sifr_diagnostics::DiagnosticCode::TYPE_MISMATCH)
+        );
+        assert_eq!(
+            errors[0].message,
+            "map() callable parameter 1 expects 'int', but iterable 1 yields 'None | int'"
+        );
+    }
+
+    #[test]
+    fn filter_rejects_optional_elements_for_a_required_callback_parameter() {
+        let source = r#"
+def values() -> list[int | None]:
+    return []
+
+def keep_int(value: int) -> bool:
+    return value > 0
+
+def main():
+    for value in filter(keep_int, values()):
+        print(value)
+"#;
+
+        let errors = lower_errors(source);
+
+        assert_eq!(errors.len(), 1, "{errors:?}");
+        assert_eq!(
+            errors[0].code,
+            Some(sifr_diagnostics::DiagnosticCode::TYPE_MISMATCH)
+        );
+        assert_eq!(
+            errors[0].message,
+            "filter() callable parameter 1 expects 'int', but iterable 1 yields 'None | int'"
+        );
+    }
 }
