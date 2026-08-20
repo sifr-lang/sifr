@@ -158,6 +158,7 @@ sysroot.toml
 lib/sifr/stdlib/sifr/*.sifr
 lib/sifr/stdlib/_sifr/*.sifr
 crates/sifr_runtime/**
+crates/sifr_structural_identity/**
 crates/sifr_stdlib/**
 vendor/**
 ```

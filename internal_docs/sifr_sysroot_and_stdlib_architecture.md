@@ -71,6 +71,7 @@ state. Later implementation stages update the implementation toward the architec
 | Compiler-side stdlib manifest | `crates/sifr_stdlib_manifest` owns source inventory, private declaration metadata, feature/dependency mapping, and sysroot validation; `crates/sifr_stdlib_imports` owns legacy/bare stdlib import suggestion policy; `crates/sifr_ipc` owns shared IPC protocol/frame/schema/request tracking; fallback signature tables have been deleted | `crates/sifr_stdlib_manifest` remains limited to source inventory, private declarations, feature planning, sysroot validation, migration-state loading, and inventory data queried by diagnostics | complete for manifest/model split and signature authority | yes |
 | Generated-program stdlib implementation crate | `crates/sifr_stdlib` exists as the generated-program crate foundation with empty defaults, narrow additive leaf features, runtime-backed wrapper APIs for existing runtime primitives, and feature-plan expectations in `sifr_stdlib_manifest` | `crates/sifr_stdlib`, shipped under `<sysroot>/crates/sifr_stdlib` | full native leaf migration, generated Cargo sysroot dependency emission, and installed sysroot packaging | yes |
 | Runtime crate | `crates/sifr_runtime` under the resolved development or installed sysroot; generated Cargo and Rust interop probes receive the explicit `ResolvedSysroot` runtime crate path | `<sysroot>/crates/sifr_runtime` path dependency selected by `ResolvedSysroot` | Sysroot resolver, generated dependency plan | yes |
+| Structural identity crate | `crates/sifr_structural_identity` is a workspace dependency of the runtime structural feature | `<sysroot>/crates/sifr_structural_identity`, shipped with the runtime crate | Release archive, installer, and sysroot boundary validation | yes |
 | Generated Cargo planning | `sifr_codegen::generate_project_with_deps_and_crates` asked `sifr_stdlib_manifest::generated_cargo_dependencies` for dependency strings | `SysrootDependencyPlan` from the manifest/sysroot planning layer, consumed by codegen, driver, cache keys, reports, and LSP traces | manifest/model split and dependency planner | yes |
 | Third-party stdlib/runtime dependencies | Generated projects emit registry dependencies directly, for example `regex`, `serde_json`, `tokio`, `url`, `zip`, and others | Vendored under `<sysroot>/vendor` from the sysroot workspace lockfile for Sifr-owned dependencies | vendor and Cargo config mode matrix | yes |
 | Distribution packaging | Preview/self-update artifacts and receipts pair the standalone binary with installer metadata; no sysroot contract is validated | Release archive contains `bin/sifr` plus the complete sysroot tree and replaces them atomically | installer and release artifact update | yes |
@@ -245,6 +246,9 @@ The canonical standalone installation layout is:
     sifr_runtime/
       Cargo.toml
       src/
+    sifr_structural_identity/
+      Cargo.toml
+      src/
     sifr_stdlib/
       Cargo.toml
       src/
@@ -399,6 +403,7 @@ The distributed sysroot workspace manifest has this shape:
 [workspace]
 members = [
   "crates/sifr_runtime",
+  "crates/sifr_structural_identity",
   "crates/sifr_stdlib",
 ]
 resolver = "2"
@@ -997,6 +1002,7 @@ sysroot.toml
 lib/sifr/stdlib/sifr/*.sifr
 lib/sifr/stdlib/_sifr/*.sifr
 crates/sifr_runtime/**
+crates/sifr_structural_identity/**
 crates/sifr_stdlib/**
 vendor/**
 .cargo/config.toml
@@ -1077,6 +1083,7 @@ check verifies:
 - public stdlib source root exists,
 - private declaration root exists,
 - `crates/sifr_runtime/Cargo.toml` exists,
+- `crates/sifr_structural_identity/Cargo.toml` exists,
 - `crates/sifr_stdlib/Cargo.toml` exists,
 - `.cargo/config.toml` and `vendor/` exist for bundled dependency mode.
 
@@ -1125,9 +1132,9 @@ them as a sysroot unless the resolved layout contains a valid `sysroot.toml`.
 
 ## Versioning and Compatibility
 
-The compiler, sysroot manifest, `sifr_runtime`, `sifr_stdlib`, private
-declarations, and public stdlib sources are versioned as a single toolchain.
-Sysroot-only patching is not a supported standalone operation.
+The compiler, sysroot manifest, `sifr_runtime`, `sifr_structural_identity`,
+`sifr_stdlib`, private declarations, and public stdlib sources are versioned
+as one toolchain. Sysroot-only patching is not a supported operation.
 
 Generated artifacts should record the sysroot version in build reports and
 trace/debug output so users and CI logs can identify which stdlib/runtime
