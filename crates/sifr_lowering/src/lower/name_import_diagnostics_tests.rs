@@ -229,6 +229,43 @@ fn public_sysroot_stdlib_source_resolves_compiled_private_classes() {
 }
 
 #[test]
+fn attached_api_set_import_requires_the_stored_canonical_identity() {
+    let source = "from declared import Api\n\nclass Child(Api):\n    pass\n";
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals.classes.insert(
+        "declared".to_string(),
+        HashMap::from([(
+            "Api".to_string(),
+            Type::Class {
+                identity: None,
+                type_args: Vec::new(),
+                name: "Api".to_string(),
+                fields: Vec::new(),
+                methods: Vec::new(),
+                parent_class: None,
+            },
+        )]),
+    );
+    externals.attached_api_sets.insert(
+        "declared".to_string(),
+        HashMap::from([(
+            "Api".to_string(),
+            sifr_ir::AttachedApiSetDeclaration {
+                identity: sifr_ir::AttachedApiSetIdentity {
+                    module: "actual".to_string(),
+                    symbol: "Api".to_string(),
+                },
+                range: ruff_text_size::TextRange::default(),
+            },
+        )]),
+    );
+
+    lower_module_with_externals(parsed.suite(), &externals)
+        .expect("a mismatched stored identity must not erase the imported class");
+}
+
+#[test]
 fn builtin_open_preserves_an_aliased_imported_text_handle_identity() {
     let source = "from sifr.io import TextFileHandle as Handle\n\ndef main():\n    handle: Handle = open(\"out.txt\", \"w\", encoding=\"utf-8\")\n    handle.close()\n";
     let parsed = parse_module(source).expect("parse failed");

@@ -164,6 +164,32 @@ fn aliased_raw_coroutine_call_requires_the_owned_async_loop() {
 }
 
 #[test]
+fn generic_raw_coroutine_call_requires_the_owned_async_loop() {
+    let mut module = module_with_functions(vec![function(
+        "main",
+        vec![HirStmt::Expr {
+            expr: HirExpr::GenericCall {
+                mutable_arg_places: Vec::new(),
+                func: "run_coroutine_blocking::<Object>".to_string(),
+                type_args: vec![Type::Any],
+                args: Vec::new(),
+                ty: Type::None,
+            },
+        }],
+        Vec::new(),
+    )]);
+    module.imports.push(HirImport {
+        module: "sifr.python".to_string(),
+        names: vec!["run_coroutine_blocking".to_string()],
+        aliases: Vec::new(),
+    });
+
+    let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
+
+    assert!(plan.python.requires_async_loop);
+}
+
+#[test]
 fn sync_python_declaration_does_not_require_the_owned_async_loop() {
     let module = module_with_functions(vec![function("main", Vec::new(), Vec::new())]);
     let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);

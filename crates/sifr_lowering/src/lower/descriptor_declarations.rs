@@ -247,9 +247,10 @@ fn import_bindings(stmts: &[Stmt], ctx: &mut LowerCtx) {
             }
             if ctx
                 .externals
-                .attached_api_sets
-                .get(&module)
-                .is_some_and(|exports| exports.contains_key(&original))
+                .contains_attached_api_set(&sifr_ir::AttachedApiSetIdentity {
+                    module: module.clone(),
+                    symbol: original,
+                })
             {
                 ctx.attached_api_set_bindings.insert(local.clone());
             }

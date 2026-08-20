@@ -4,6 +4,20 @@ use super::{
     is_result_int_division_error_type, unwrap_compiler_verified_nonempty_pop_result_for_ir,
     HirExpr, HirFStringPart, RustEmitter, Type,
 };
+
+fn is_imported_project_call_for_ir(
+    expression: &HirExpr,
+    imported_project_functions: &std::collections::HashSet<String>,
+) -> bool {
+    matches!(
+        expression,
+        HirExpr::Call { func, .. }
+            | HirExpr::GenericCall { func, .. }
+            | HirExpr::PythonCall { func, .. }
+            if imported_project_functions.contains(canonical_plain_call_name_for_ir(func))
+    )
+}
+
 macro_rules! stmt_expr_method_call {
     ($emitter:ident, $expr:ident) => {{
         if let HirExpr::MethodCall {
@@ -340,10 +354,9 @@ macro_rules! stmt_expr_question_mark {
                         .last()
                         .and_then(Option::as_ref)
                         .cloned();
-                    let imported_project_call = matches!(
+                    let imported_project_call = is_imported_project_call_for_ir(
                         inner.as_ref(),
-                        HirExpr::Call { func, .. } | HirExpr::PythonCall { func, .. }
-                            if $emitter.imported_project_functions.contains(func)
+                        &$emitter.imported_project_functions,
                     );
                     if imported_project_call
                         && inner_err_ty.is_python_error_contract()
@@ -353,9 +366,7 @@ macro_rules! stmt_expr_question_mark {
                     {
                         let target_name = target_error_info
                             .as_ref()
-                            .map(|ty| {
-                                crate::render_type(&crate::sifr_type_to_rust_type(ty))
-                            })
+                            .map(|ty| crate::render_type(&crate::sifr_type_to_rust_type(ty)))
                             .unwrap_or_else(|| target_err_ty.clone());
                         let field = |name: &str| crate::RustExpr::Field {
                             expr: Box::new(error_ident.clone()),
@@ -391,12 +402,12 @@ macro_rules! stmt_expr_question_mark {
                         ))));
                     }
                     let converted_error = target_error_info.as_ref().map(|target| {
-                            $emitter.consuming_value_upcast_for_ir(
-                                target,
-                                inner_err_ty,
-                                error_ident.clone(),
-                            )
-                        });
+                        $emitter.consuming_value_upcast_for_ir(
+                            target,
+                            inner_err_ty,
+                            error_ident.clone(),
+                        )
+                    });
                     if converted_error
                         .as_ref()
                         .is_some_and(|converted| converted != &error_ident)
@@ -456,6 +467,25 @@ macro_rules! stmt_expr_question_mark {
             return Ok(Some(crate::RustExpr::Try(Box::new(lowered_inner))));
         }
     }};
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generic_imported_project_calls_use_the_canonical_function_name() {
+        let expression = HirExpr::GenericCall {
+            func: "load::<i64>".to_string(),
+            type_args: vec![Type::Int],
+            args: Vec::new(),
+            mutable_arg_places: Vec::new(),
+            ty: Type::None,
+        };
+        let imported = std::collections::HashSet::from(["load".to_string()]);
+
+        assert!(is_imported_project_call_for_ir(&expression, &imported));
+    }
 }
 
 impl RustEmitter {
