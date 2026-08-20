@@ -3191,19 +3191,22 @@ external compiler gate inputs and all `pre_v1` work remain out of scope.
 Next action: complete final source and installed-package certification from
 fresh copies of this merge.
 
-Package closure remediation item 39 state: review candidate
+Package closure remediation item 39 state: complete
 Issue: [`sifr-lang/pydantic-sifr#52`](https://github.com/sifr-lang/pydantic-sifr/issues/52)
 PR: [`sifr-lang/pydantic-sifr#53`](https://github.com/sifr-lang/pydantic-sifr/pull/53)
 Base SHA: `c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`
 Candidate SHA: `2b1db062368abe915ad0c9c2cdebe46f0ddf8653`
+Merge SHA: `2b92b2d6a73e85c442d0b59cea552b37b64bd92e`
 Changed paths: package architecture, migration, and compatibility documents;
 the machine-readable PS10 ledger; and focused documentation contract tests.
 Validation: 10 focused documentation and compatibility tests passed. All 40
 package unit tests, the file-size guard, exact Sifr pin check, Python syntax,
 and diff checks passed. The package create-PR gate ran once on the exact
-candidate. It passed file size, the pin check, and all unit tests. It then
-stopped at the absent external `.upstream/pydantic` checkout and did not run
-again. No Sifr compiler gate applies because no compiler file changed.
+candidate. The package merge gate also ran once on that exact candidate. Both
+passed file size, the pin check, and all unit tests. Both then stopped at the
+absent external `.upstream/pydantic` checkout and did not run again. No Sifr
+compiler gate applies because no compiler file changed
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/53#issuecomment-5362814909)).
 Review evidence: the initial whole-phase exact-SHA Opus review found four
 blocking record omissions
 ([evidence](https://github.com/sifr-lang/sifr/pull/3423#issuecomment-5362702377)).
@@ -3211,18 +3214,32 @@ The remediation removes the stale serializer statement, documents
 `model_construct` and `model_copy` replacements, synchronizes all delivered
 statuses, records all 20 terminal exclusions, and makes the export list exact.
 It also enforces public/machine status parity and architecture/export parity.
-The one permitted whole-phase remediation review must cover this exact package
-candidate before merge.
-Deferred follow-up: none. The review's suggested parity guard is included in
-this remediation batch.
-Next action: obtain the one whole-phase remediation review, then run the one
-package merge gate and merge this package PR.
+The one permitted whole-phase remediation review confirmed that all four prior
+findings are fixed. It then found a new documentation status-vocabulary drift
+and assigned that mechanism to later item 40. No third item 39 review applies
+([evidence](https://github.com/sifr-lang/sifr/pull/3423#issuecomment-5362807479)).
+Deferred follow-up: item 40 must update all remaining entry documents from the
+old blocked-only vocabulary. It must also bind every document that names
+ledger statuses to the machine ledger's current status set and align public
+and machine evidence references.
+Next action: run the one package merge gate, merge item 39, and implement item
+40 immediately.
+
+Package closure item 40 state: in progress
+Scope: update `README.md`, `docs/quickstart.md`, and the migration introduction
+to describe delivered adaptations and terminal exclusions. Add one guard that
+binds each document's named status vocabulary to the machine ledger. Align the
+public and machine evidence references for `api/serialization`.
+Review limit: item 40 receives one focused exact-SHA Opus review and at most one
+remediation review. It does not trigger a third item 39 or whole-phase review.
+Next action: start item 40 after item 39 merges.
 
 Final certification and closure state: complete
 Compiler record SHA: `c63ba88914c947fd860b1b7bc0eb3ccda457a6e5`
 Compiler implementation SHA: `643cf76a10e1e0462b3a8572605e3ccbbb194279`
 Package merge SHA: `c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`
 Package closure candidate SHA: `2b1db062368abe915ad0c9c2cdebe46f0ddf8653`
+Package closure merge SHA: `2b92b2d6a73e85c442d0b59cea552b37b64bd92e`
 Changed paths: final certification used fresh source and installed package
 copies. Phase closure changes only this record, `plans/roadmap.md`, and
 `plans/phases/index.md`; no compiler or package implementation changed.
@@ -3270,9 +3287,9 @@ create-PR or merge gate applies.
 Review evidence: the final closure candidate receives the one required
 whole-phase exact-SHA Opus review before merge. Review output is published
 outside the reviewed Git tree and keyed to that candidate.
-Deferred follow-up: no in-scope implementation mechanism remains after package
-closure item 39. Existing external inputs and the parallel `pre_v1` task retain
-their separate owners.
+Deferred follow-up: item 40 owns the status-vocabulary and evidence-parity
+mechanism first found by the item 39 remediation review. Existing external
+inputs and the parallel `pre_v1` task retain their separate owners.
 Next action: archive this completed record after the whole-phase review reports
 no blocking finding.
 
@@ -3364,12 +3381,13 @@ Next action:
 
 M0-M12 are implemented, certified, and recorded. M12 compiler hardening items
 1-36, package certification items 37-38, package closure item 39, and the final
-source/installed certification are complete. The current compiler
+source/installed certification are complete. Package closure item 40 is the
+sole remaining item. The current compiler
 implementation merge is
 `643cf76a10e1e0462b3a8572605e3ccbbb194279`; its later phase-record commits do
 not change compiler code. The current package merge is
-`c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`. Package closure candidate
-`2b1db062368abe915ad0c9c2cdebe46f0ddf8653` changes only documentation, the
+`2b92b2d6a73e85c442d0b59cea552b37b64bd92e`. Package closure candidate
+`2b1db062368abe915ad0c9c2cdebe46f0ddf8653` changed only documentation, the
 compatibility ledger, and documentation contract tests.
 
 External gate record (2026-08-20): the one-time gates for the M11 compiler
