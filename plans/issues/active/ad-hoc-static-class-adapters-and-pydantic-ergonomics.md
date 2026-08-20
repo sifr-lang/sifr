@@ -2536,11 +2536,11 @@ runtime dependency to the selected sysroot. Release archives include and
 validate the structural-identity crate, and source and installed cache-edit
 probes pass independently.
 
-Item 35 is a documentation-only follow-up from item 34 review. It must align
-the distribution and sysroot architecture records with the installed
-structural-identity crate and workspace member. No compiler gate applies.
+Item 35 is complete. The distribution and sysroot architecture records now
+include the installed structural-identity crate, workspace member, boundary
+asset, and single-toolchain version contract.
 
-Next action: implement item 35, then resume package and source certification.
+Next action: resume package and source certification.
 
 Compiler hardening item 17 state: complete
 PR: [`sifr-lang/sifr#3364`](https://github.com/sifr-lang/sifr/pull/3364)
@@ -3067,6 +3067,28 @@ quoted paths, and ignored fixture-target copy cost are terminal suggestions.
 The external gate inputs and all `pre_v1` work remain out of scope.
 Next action: implement item 35, then resume package and source certification.
 
+Documentation item 35 state: complete
+Issue: [`sifr-lang/sifr#3415`](https://github.com/sifr-lang/sifr/issues/3415)
+PR: [`sifr-lang/sifr#3416`](https://github.com/sifr-lang/sifr/pull/3416)
+Base SHA: `13d410000f7186123849ee758e9c514d633c6f77`
+Candidate SHA: `629c819509540c48e6a8e655fa6e8ff948b24856`
+Merge SHA: `eab345df7a700d7b3460ceb5d900a3931134a470`
+Changed paths: the distribution archive inventory and the installed sysroot
+layout, workspace, boundary, and versioning architecture records.
+Validation: the stdlib native-intrinsic architecture guard and self-test,
+file-size guard, and diff hygiene passed. The documentation area stopped on
+the missing external `editor_integrations/vscode/package.json` input before it
+checked these files. Only documentation changed, so compiler tests and gates
+did not apply.
+Review evidence: the one exact-SHA Opus review returned `SATISFIED`; every
+added inventory entry matched the item 34 archive builder, verifier, installer,
+and `SysrootPaths` implementation
+([evidence](https://github.com/sifr-lang/sifr/pull/3416#issuecomment-5360830792)).
+Deferred follow-up: documenting compiler-side users of structural identity is
+optional. Two remaining runtime/stdlib pairs are illustrative path examples,
+not asset authorities. No new mechanism item is required.
+Next action: resume package and source certification.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -3154,7 +3176,8 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 34 are merged and recorded. Items 1-16 close the first compiler
+through 34 and documentation item 35 are merged and recorded. Items 1-16 close
+the first compiler
 mechanism sequence. Item 17 classifies every remaining compiler deferral and
 orders items 18-26. Item 18 closes the M5 audit. Item 19 closes the M6 audit
 and adds item 27 for second-review coverage. Item 27 closes that coverage.
@@ -3170,7 +3193,7 @@ closes ordinary `if` state and adds items 32 and 33 for separate cache-state
 mechanisms. Item 32 closes statement-level union state. Item 33 owns non-`if`
 control-flow state and closes the original compiler hardening sequence. Item
 34 closes the installed static-class-adapter certification boundary. Item 35
-owns its architecture documentation alignment. Items 24
+closes its architecture documentation alignment. Items 24
 and 25 close the M8-M10 prerequisite audit. Item 26 closes the M11 prerequisite
 audit. The seven
 M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
@@ -3185,5 +3208,5 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: implement item 35, then resume package and source certification
-before the final whole-phase review.
+Next action: resume package and source certification before the final
+whole-phase review.
