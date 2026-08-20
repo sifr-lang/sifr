@@ -24,7 +24,7 @@ def bind_runtime_dependency(*, fixture: Path, runtime_crate: Path) -> str | None
         "sifr_runtime = { path = "
         f"{json.dumps(str(runtime_crate))}, features = [\"structural\"] }}"
     )
-    updated, replacements = RUNTIME_DEPENDENCY.subn(replacement, manifest)
+    updated, replacements = RUNTIME_DEPENDENCY.subn(lambda _match: replacement, manifest)
     if replacements != 1:
         return (
             "attached API Cargo manifest must contain exactly one structural "

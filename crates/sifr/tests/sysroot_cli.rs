@@ -144,7 +144,7 @@ fn write_skeleton(root: &Path) {
     std::fs::write(
         root.join("Cargo.toml"),
         r#"[workspace]
-members = ["crates/sifr_runtime", "crates/sifr_stdlib"]
+members = ["crates/sifr_runtime", "crates/sifr_structural_identity", "crates/sifr_stdlib"]
 resolver = "2"
 "#,
     )
@@ -152,6 +152,7 @@ resolver = "2"
     std::fs::write(root.join("Cargo.lock"), "").expect("lockfile");
     std::fs::write(root.join(".cargo/config.toml"), "").expect("cargo config");
     write_minimal_crate(root, "sifr_runtime");
+    write_minimal_crate(root, "sifr_structural_identity");
     write_minimal_crate(root, "sifr_stdlib");
 }
 

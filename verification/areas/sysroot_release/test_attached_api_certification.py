@@ -26,12 +26,12 @@ class BindRuntimeDependencyTests(unittest.TestCase):
 
             error = bind_runtime_dependency(
                 fixture=fixture,
-                runtime_crate=Path('/tmp/runtime "exact"'),
+                runtime_crate=Path('/tmp/runtime \\ "exact"'),
             )
 
             self.assertIsNone(error)
             self.assertIn(
-                'path = "/tmp/runtime \\"exact\\""',
+                'path = "/tmp/runtime \\\\ \\"exact\\""',
                 manifest.read_text(encoding="utf-8"),
             )
 
