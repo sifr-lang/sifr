@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: active on 2026-08-20. M0-M11 are complete; M12 is in progress.
+Status: completed and audited on 2026-08-21. M0-M12 are complete.
 
 This phase starts after the completed Native Pydantic-Sifr engine phase. It
 does not reopen the validated schema engine, structural bridge, or native core.
@@ -3188,8 +3188,139 @@ failure propagation, and identity cardinality
 Deferred follow-up: richer captured compiler failure output and a shared
 temporary-project helper are optional. No new mechanism item is required. The
 external compiler gate inputs and all `pre_v1` work remain out of scope.
-Next action: resume source and installed-package certification from fresh
-copies of this merge.
+Next action: complete final source and installed-package certification from
+fresh copies of this merge.
+
+Package closure remediation item 39 state: complete
+Issue: [`sifr-lang/pydantic-sifr#52`](https://github.com/sifr-lang/pydantic-sifr/issues/52)
+PR: [`sifr-lang/pydantic-sifr#53`](https://github.com/sifr-lang/pydantic-sifr/pull/53)
+Base SHA: `c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`
+Candidate SHA: `2b1db062368abe915ad0c9c2cdebe46f0ddf8653`
+Merge SHA: `2b92b2d6a73e85c442d0b59cea552b37b64bd92e`
+Changed paths: package architecture, migration, and compatibility documents;
+the machine-readable PS10 ledger; and focused documentation contract tests.
+Validation: 10 focused documentation and compatibility tests passed. All 40
+package unit tests, the file-size guard, exact Sifr pin check, Python syntax,
+and diff checks passed. The package create-PR gate ran once on the exact
+candidate. The package merge gate also ran once on that exact candidate. Both
+passed file size, the pin check, and all unit tests. Both then stopped at the
+absent external `.upstream/pydantic` checkout and did not run again. No Sifr
+compiler gate applies because no compiler file changed
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/53#issuecomment-5362814909)).
+Review evidence: the initial whole-phase exact-SHA Opus review found four
+blocking record omissions
+([evidence](https://github.com/sifr-lang/sifr/pull/3423#issuecomment-5362702377)).
+The remediation removes the stale serializer statement, documents
+`model_construct` and `model_copy` replacements, synchronizes all delivered
+statuses, records all 20 terminal exclusions, and makes the export list exact.
+It also enforces public/machine status parity and architecture/export parity.
+The one permitted whole-phase remediation review confirmed that all four prior
+findings are fixed. It then found a new documentation status-vocabulary drift
+and assigned that mechanism to later item 40. No third item 39 review applies
+([evidence](https://github.com/sifr-lang/sifr/pull/3423#issuecomment-5362807479)).
+Deferred follow-up: item 40 must update all remaining entry documents from the
+old blocked-only vocabulary. It must also bind every document that names
+ledger statuses to the machine ledger's current status set and align public
+and machine evidence references.
+Next action: run the one package merge gate, merge item 39, and implement item
+40 immediately.
+
+Package closure item 40 state: complete
+Issue: [`sifr-lang/pydantic-sifr#54`](https://github.com/sifr-lang/pydantic-sifr/issues/54)
+PR: [`sifr-lang/pydantic-sifr#55`](https://github.com/sifr-lang/pydantic-sifr/pull/55)
+Base SHA: `2b92b2d6a73e85c442d0b59cea552b37b64bd92e`
+Candidate SHA: `7b0677be23835167357c0e61302c2641e985bf07`
+Merge SHA: `e96fc671c7d37deaea41d322ff4275f8cc8c8db2`
+Scope: update `README.md`, `docs/quickstart.md`, and the migration introduction
+to describe delivered adaptations and terminal exclusions. Add one guard that
+binds each document's named status vocabulary to the machine ledger. Align the
+public and machine evidence references for `api/serialization`.
+Validation: 9 focused documentation and compatibility tests passed. All 41
+package unit tests, the file-size guard, exact Sifr pin check, Python syntax,
+and diff checks passed. The create-PR and merge gates each ran once on the
+exact candidate. Both passed file size, the pin check, and all unit tests.
+Both then stopped at the absent external `.upstream/pydantic` checkout and did
+not run again
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/55#issuecomment-5362872876)).
+No Sifr compiler gate applies because no compiler file changed.
+Review evidence: the one focused exact-SHA Opus review returned `SATISFIED`
+with no blockers
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/55#issuecomment-5362870698)).
+This later item does not trigger a third item 39 or whole-phase review.
+Deferred follow-up: richer public evidence, an all-row evidence-containment
+guard, and generated status prose are optional. The blocked-status schema
+remains valid even though the current PS10 ledger has no blocked row.
+Next action: close and archive the phase through the existing documentation-only
+closure PR.
+
+Final certification and closure state: complete
+Compiler record SHA: `c63ba88914c947fd860b1b7bc0eb3ccda457a6e5`
+Compiler implementation SHA: `643cf76a10e1e0462b3a8572605e3ccbbb194279`
+Certified package merge SHA: `c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`
+Package closure candidate SHA: `2b1db062368abe915ad0c9c2cdebe46f0ddf8653`
+Package closure merge SHA: `2b92b2d6a73e85c442d0b59cea552b37b64bd92e`
+Current package merge SHA: `e96fc671c7d37deaea41d322ff4275f8cc8c8db2`
+Changed paths: final certification used fresh source and installed package
+copies. Phase closure changes only this record, `plans/roadmap.md`, and
+`plans/phases/index.md`; no compiler or package implementation changed.
+Validation: the package-neutral boundary-equivalence suite passed with
+`variants=1 failures=0`. It built and independently exercised the source and
+installed toolchains, the stdlib boundary, and the original and cache-edited
+static-adapter package. The installed release archive was
+`sifr-0.1.0-beta.1300-aarch64-apple-darwin.tar.gz`, with SHA-256
+`cdd01320b8152e94397579d62ff354cb473b6fa68d420d23f58092731b8968ec`.
+Its sysroot-content digest was
+`03e8da78685919ee0e8e487e003eea1f5aa65b3450a2359002b77574aa514ce2`.
+
+Fresh source and installed certification both passed package formatting,
+checking, and two package tests. Both runs passed 7 schema, 3 descriptor, 13
+validator, 13 serializer, and 1 model-operation diagnostic checks. Both runs
+also passed all six native milestone demos and the canonical demo snapshot.
+Both toolchains produced the same 3,286-byte static program with identity
+`141b2e5847c901f298dde1014b0f16502b54af98666e4795575b1f9bbb175a27`.
+Validation, dumping, and JSON Schema also produced one shared M11 identity,
+`73bbf853a079c02c5442b0f0dde2caa2462de954b15b48945f071bc9a30ce4d8`.
+The installed run used only the extracted release toolchain and a fresh package
+copy. Both package copies remained clean.
+
+M12 reuses these unchanged certification assets from the completed predecessor:
+
+- the five-case pinned differential result from
+  [Pydantic-Sifr PR #35](https://github.com/sifr-lang/pydantic-sifr/pull/35);
+- the 4,096-case property suites and six 1,000-run fuzz/resource targets from
+  [PR #37](https://github.com/sifr-lang/pydantic-sifr/pull/37); and
+- the published parse, validation, construction, and serialization measurements
+  from [PR #38](https://github.com/sifr-lang/pydantic-sifr/pull/38).
+
+Every subsequent backend item passed its full Rust workspace tests and
+exact-SHA review. The current robustness harness and differential corpus remain
+unchanged. The closure does not repeat authoritative gates.
+
+The package gates already ran once on their exact item candidates and were not
+repeated. Their sole remaining prerequisite is the external
+`.upstream/pydantic` environment recorded in those items. The compiler gates
+already ran once on their exact implementation candidates and were not
+repeated; their two external Rust-interop inputs remain recorded in their
+owners. The separately running `pre_v1` task, including its union-order audit,
+remains outside this phase. Closure is documentation-only, so no Sifr
+create-PR or merge gate applies.
+Review evidence: the initial whole-phase review of closure SHA
+`104c96636ec9d154c054cea093ae9f257ea36b19` found four package-record omissions
+([evidence](https://github.com/sifr-lang/sifr/pull/3423#issuecomment-5362702377)).
+The one permitted remediation review of closure SHA
+`4a58b5e9abeb9decc41535c73d9f381710ea2349` confirmed those four corrections.
+It assigned one newly found documentation mechanism to item 40, so no third
+whole-phase review ran
+([evidence](https://github.com/sifr-lang/sifr/pull/3423#issuecomment-5362807479)).
+Item 40 then received its own focused exact-SHA `SATISFIED` review with no
+blocker
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/55#issuecomment-5362870698)).
+Deferred follow-up: no in-scope mechanism remains. Item 40 closed the
+status-vocabulary and evidence-parity mechanism first found by the item 39
+remediation review. Existing external inputs and the parallel `pre_v1` task
+retain their separate owners.
+Next action: merge the existing documentation-only closure PR and archive this
+completed record.
 
 Acceptance criteria:
 
@@ -3275,37 +3406,18 @@ Deferred follow-up:
 Next action:
 ```
 
-## Current Handoff
+## Closure Record
 
-Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 34 and 36 are merged and recorded. Documentation item 35 is also
-merged and recorded. Items 1-16 close the first compiler mechanism sequence.
-Item 17 classifies every remaining compiler deferral and
-orders items 18-26. Item 18 closes the M5 audit. Item 19 closes the M6 audit
-and adds item 27 for second-review coverage. Item 27 closes that coverage.
-Item 20 closes the M7/M7b audit
-and adds item 28 for lookup consistency. Item 28 closes that consistency work.
-Item 21 closes the M7c/M7d
-representation audit. It adds item 29 for option-argument safety. Item 29
-closes that safety path. Item 22
-closes the M7e audit and adds item 30 for structural-default naming. Item 30
-closes that naming path. Item 23
-closes the M7f audit and adds item 31 for non-union conditional state. Item 31
-closes ordinary `if` state and adds items 32 and 33 for separate cache-state
-mechanisms. Item 32 closes statement-level union state. Item 33 owns non-`if`
-control-flow state and closes the original compiler hardening sequence. Item
-34 closes the installed static-class-adapter certification boundary. Item 35
-closes its architecture documentation alignment. Item 36 closes mapped-opaque
-value/mapping probe selection. Package-owned item 37 closes the stale
-validator, serializer, and M10 demo certification inputs. Package-owned item
-38 closes durable static-program identity evidence. Items 24
-and 25 close the M8-M10 prerequisite audit. Item 26 closes the M11 prerequisite
-audit. The seven
-M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
-#3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
-#47. M12 certification is in progress. The current compiler merge is
-`643cf76a10e1e0462b3a8572605e3ccbbb194279`, and the current package merge is
-`c42d45d3ad10ddaf8ff8801644f1bafa86681a5b`.
+M0-M12 are merged, certified, and recorded. M12 compiler hardening items 1-36,
+package certification items 37-38, package closure items 39-40, and the final
+source/installed certification are complete. The current compiler
+implementation merge is
+`643cf76a10e1e0462b3a8572605e3ccbbb194279`; its later phase-record commits do
+not change compiler code. The current package merge is
+`e96fc671c7d37deaea41d322ff4275f8cc8c8db2`. Package closure candidates
+`2b1db062368abe915ad0c9c2cdebe46f0ddf8653` and
+`7b0677be23835167357c0e61302c2641e985bf07` changed only documentation, the
+compatibility ledger, and documentation contract tests.
 
 External gate record (2026-08-20): the one-time gates for the M11 compiler
 prerequisites stopped at the Rust-interop matrix. The matrix reported one
@@ -3313,5 +3425,8 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: resume source and installed-package certification before the
-final whole-phase review.
+Final action: merge the documentation-only closure PR. The two-round
+whole-phase review fixed its four original findings and assigned one new
+documentation mechanism to later item 40. Item 40 is merged and its exact-SHA
+review reported no blocking finding. The phase rule prohibits a third
+whole-phase review.
