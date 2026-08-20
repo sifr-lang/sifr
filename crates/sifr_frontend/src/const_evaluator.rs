@@ -501,11 +501,14 @@ impl<'a> DeterministicConstEvaluator<'a> {
             );
         }
         let value = self.eval_expr(&arguments[0], environment, depth)?;
-        let HirExpr::StringLiteral(name) = &arguments[1] else {
-            return error(
-                ConstEvalErrorKind::TypeMismatch,
-                "const isinstance requires one primitive type name",
-            );
+        let name = match &arguments[1] {
+            HirExpr::StringLiteral(name) | HirExpr::Name { name, .. } => name,
+            _ => {
+                return error(
+                    ConstEvalErrorKind::TypeMismatch,
+                    "const isinstance requires one primitive type name",
+                );
+            }
         };
         let matches = match (name.as_str(), &value) {
             ("bool", ConstValue::Bool(_))
@@ -762,6 +765,10 @@ fn error<T>(kind: ConstEvalErrorKind, detail: impl Into<String>) -> Result<T, Co
         detail: detail.into(),
     })
 }
+
+#[cfg(test)]
+#[path = "const_evaluator_target_tests.rs"]
+mod target_tests;
 
 #[cfg(test)]
 mod tests {

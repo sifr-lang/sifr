@@ -59,15 +59,16 @@ pub fn generate_rust_test_project_with_metadata(
         .iter()
         .map(|(module_name, _)| *module_name)
         .collect::<HashSet<_>>();
+    let mut nominal_type_paths = project_nominal_type_paths(&all_modules, &crate_root_modules);
     let structural_identity_expressions = if structural_interop_enabled {
         crate::structural_identity_codegen::class_identity_expressions_for_project(
             &all_modules,
             &structural_record_identities,
+            &nominal_type_paths,
         )
     } else {
         HashMap::new()
     };
-    let mut nominal_type_paths = project_nominal_type_paths(&all_modules, &crate_root_modules);
     nominal_type_paths.extend(stdlib_nominal_plan.nominal_paths.clone());
     let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
     let project_union_prelude = [stdlib_nominal_plan.prelude.as_str(), union_prelude.as_str()]

@@ -27,7 +27,10 @@ fn class(name: &str, fields: Vec<(String, Type)>) -> HirClass {
 #[test]
 fn structural_substitution_canonicalizes_generic_union_members() {
     let modules = Vec::new();
-    let context = IdentityContext { modules: &modules };
+    let context = IdentityContext {
+        modules: &modules,
+        nominal_type_paths: None,
+    };
     let template = sifr_type_system::make_union(vec![Type::Int, Type::TypeVar("T".to_string())]);
     let bindings = HashMap::from([("T".to_string(), Type::Bool)]);
     let actual = substitute_structural_type(&template, &bindings, "main", &context);
@@ -51,7 +54,10 @@ fn structural_substitution_uses_project_nominal_scope_authority() {
         type_param_bounds: HashMap::new(),
     };
     let modules = [("models", &module)];
-    let context = IdentityContext { modules: &modules };
+    let context = IdentityContext {
+        modules: &modules,
+        nominal_type_paths: None,
+    };
     let template = Type::Class {
         identity: Some("models.Inner".to_string()),
         type_args: vec![Type::Str],
@@ -136,7 +142,10 @@ fn imported_outer_fields_resolve_nested_scopes_in_the_declaring_module() {
         type_param_bounds: HashMap::new(),
     };
     let modules = [("models", &models), ("main", &main)];
-    let context = IdentityContext { modules: &modules };
+    let context = IdentityContext {
+        modules: &modules,
+        nominal_type_paths: None,
+    };
     let concrete_outer = Type::Class {
         identity: Some("models.Outer".to_string()),
         type_args: vec![Type::Int],
@@ -176,7 +185,10 @@ fn imported_outer_fields_resolve_nested_scopes_in_the_declaring_module() {
 #[test]
 fn generic_union_identity_matches_reordered_collapsed_and_nested_substitutions() {
     let modules = Vec::new();
-    let context = IdentityContext { modules: &modules };
+    let context = IdentityContext {
+        modules: &modules,
+        nominal_type_paths: None,
+    };
     let template = sifr_type_system::make_union(vec![Type::Str, Type::TypeVar("T".to_string())]);
     assert_eq!(
         compile_type(&template, "main", &context, &mut Vec::new()).expression(),

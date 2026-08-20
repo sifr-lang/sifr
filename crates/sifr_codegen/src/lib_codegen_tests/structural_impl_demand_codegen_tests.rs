@@ -574,11 +574,14 @@ fn plain_structural_generic_emits_projection_bounds() {
 
     assert!(
         rust_code.contains(
-            "T: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject"
+            "T: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject + Clone"
         ),
         "{rust_code}"
     );
-    assert!(!rust_code.contains("T: Clone + 'static"), "{rust_code}");
+    assert!(
+        !rust_code.contains("StructuralProject + Clone + 'static"),
+        "{rust_code}"
+    );
 }
 
 #[test]
@@ -604,11 +607,72 @@ fn attached_structural_generic_emits_projection_bounds() {
 
     assert!(
         rust_code.contains(
+            "T: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject + Clone + 'static"
+        ),
+        "{rust_code}"
+    );
+}
+
+#[test]
+fn owned_structural_generic_does_not_require_clone() {
+    let mut retain = ordinary_function("retain", Type::TypeVar("T".to_string()));
+    retain.params[0].convention = ParamConvention::own();
+    retain.return_type = Type::TypeVar("T".to_string());
+    retain.type_params = vec!["T".to_string()];
+    retain.body = vec![sifr_ir::HirStmt::Return {
+        value: Some(HirExpr::Name {
+            name: "value".to_string(),
+            binding_id: None,
+            ty: Type::TypeVar("T".to_string()),
+        }),
+    }];
+    let mut module = module(vec![retain], Vec::new());
+    module.type_param_bounds.insert(
+        "retain".to_string(),
+        std::collections::HashMap::from([("T".to_string(), vec!["Structural".to_string()])]),
+    );
+
+    let rust_code = generate_rust(&module);
+
+    assert!(
+        rust_code.contains(
             "T: ::sifr_runtime::interop::structural::StructuralConstruct + ::sifr_runtime::interop::structural::StructuralProject"
         ),
         "{rust_code}"
     );
-    assert!(!rust_code.contains("T: Clone + 'static"), "{rust_code}");
+    assert!(
+        !rust_code.contains("StructuralProject + Clone"),
+        "{rust_code}"
+    );
+}
+
+#[test]
+fn attached_static_program_generic_keeps_clone_and_static_bounds() {
+    let mut retain = ordinary_function("retain", Type::TypeVar("T".to_string()));
+    retain.return_type = Type::TypeVar("T".to_string());
+    retain.type_params = vec!["T".to_string()];
+    retain.decorators = vec!["attached_api".to_string()];
+    retain.body = vec![sifr_ir::HirStmt::Return {
+        value: Some(HirExpr::Name {
+            name: "value".to_string(),
+            binding_id: None,
+            ty: Type::TypeVar("T".to_string()),
+        }),
+    }];
+    let mut module = module(vec![retain], Vec::new());
+    module.type_param_bounds.insert(
+        "retain".to_string(),
+        std::collections::HashMap::from([("T".to_string(), vec!["StaticProgram".to_string()])]),
+    );
+
+    let rust_code = generate_rust(&module);
+
+    assert!(
+        rust_code.contains(
+            "T: ::sifr_runtime::interop::structural::StaticProgramType + Clone + 'static"
+        ),
+        "{rust_code}"
+    );
 }
 
 #[test]
@@ -670,113 +734,7 @@ fn project_static_program_owners_include_supported_imported_fields() {
     assert!(project.contains("Owner"));
 }
 
-#[test]
-fn concrete_generic_child_flattens_parent_fields_for_structural_bridge() {
-    let parent = HirClass {
-        name: "GenericParent".to_string(),
-        identity: Some("models.GenericParent".to_string()),
-        fields: vec![("value".to_string(), Type::TypeVar("T".to_string()))],
-        type_params: vec!["T".to_string()],
-        is_hashable: true,
-        ..payload_class()
-    };
-    let parent_type = Type::Class {
-        identity: Some("models.GenericParent".to_string()),
-        type_args: vec![Type::Int],
-        name: "GenericParent".to_string(),
-        fields: vec![("value".to_string(), Type::Int)],
-        methods: Vec::new(),
-        parent_class: None,
-    };
-    let child = HirClass {
-        name: "Concrete".to_string(),
-        identity: Some("main.Concrete".to_string()),
-        fields: vec![("label".to_string(), Type::Str)],
-        parent_class: Some("GenericParent".to_string()),
-        parent_type: Some(parent_type),
-        is_hashable: true,
-        ..payload_class()
-    };
-    let nested = HirClass {
-        name: "Nested".to_string(),
-        identity: Some("main.Nested".to_string()),
-        fields: vec![(
-            "payload".to_string(),
-            Type::Class {
-                identity: Some("main.Concrete".to_string()),
-                type_args: Vec::new(),
-                name: "Concrete".to_string(),
-                fields: vec![
-                    ("value".to_string(), Type::Int),
-                    ("label".to_string(), Type::Str),
-                ],
-                methods: Vec::new(),
-                parent_class: Some("models.GenericParent".to_string()),
-            },
-        )],
-        is_hashable: true,
-        ..payload_class()
-    };
-    let models = module(Vec::new(), vec![parent]);
-    let main = module(vec![structural_function()], vec![child, nested]);
-    let modules = [("models", &models), ("main", &main)];
-
-    let project = crate::generate_rust_multi_with_metadata(&modules, &crate::StdlibCode::default());
-    let main_rust = project
-        .rust_files
-        .get("main")
-        .expect("main module is generated");
-    assert!(
-        main_rust.contains("StructuralType for Concrete"),
-        "{main_rust}"
-    );
-    assert!(
-        main_rust.contains("StructuralConstruct for Concrete"),
-        "{main_rust}"
-    );
-    assert!(
-        main_rust.contains("StructuralProject for Concrete"),
-        "{main_rust}"
-    );
-    assert!(
-        main_rust.contains("StructuralType for Nested"),
-        "{main_rust}"
-    );
-    assert!(main_rust.contains("RecordField(\"value\")"), "{main_rust}");
-    assert!(main_rust.contains("RecordField(\"label\")"), "{main_rust}");
-    assert!(
-        main_rust.contains("genericparent: <GenericParent<i64>>::new(value)"),
-        "{main_rust}"
-    );
-
-    let supported =
-        crate::structural_impl_codegen::structural_record_identities_for_project(&modules);
-    let identities = crate::structural_identity_codegen::static_class_identities_for_project(
-        &modules, &supported,
-    );
-    let expected = nominal_record(
-        "main.Concrete",
-        &[],
-        &[
-            NominalField {
-                name: "value",
-                identity: primitive("int"),
-                required: true,
-                default_identity: None,
-            },
-            NominalField {
-                name: "label",
-                identity: primitive("str"),
-                required: true,
-                default_identity: None,
-            },
-        ],
-        metadata(&[]),
-    );
-    assert_eq!(identities.get("main.Concrete"), Some(&expected));
-}
-
-fn module(functions: Vec<HirFunction>, classes: Vec<HirClass>) -> HirModule {
+pub(super) fn module(functions: Vec<HirFunction>, classes: Vec<HirClass>) -> HirModule {
     HirModule {
         functions,
         classes,
@@ -787,7 +745,7 @@ fn module(functions: Vec<HirFunction>, classes: Vec<HirClass>) -> HirModule {
     }
 }
 
-fn payload_class() -> HirClass {
+pub(super) fn payload_class() -> HirClass {
     HirClass {
         name: "Payload".to_string(),
         identity: None,
@@ -810,7 +768,7 @@ fn payload_class() -> HirClass {
     }
 }
 
-fn structural_function() -> HirFunction {
+pub(super) fn structural_function() -> HirFunction {
     HirFunction {
         name: "construct".to_string(),
         params: Vec::new(),
