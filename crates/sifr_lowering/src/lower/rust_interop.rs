@@ -28,29 +28,19 @@ pub(in crate::lower) fn collect_rust_opaque_close_methods(stmts: &[Stmt], ctx: &
         let Stmt::ClassDef(class_def) = stmt else {
             continue;
         };
-        let opaque = rust_opaque_decorator_call(&class_def.decorator_list);
-        let Some(opaque) = opaque else {
+        let Some(opaque) = rust_opaque_decorator_call(&class_def.decorator_list) else {
             continue;
         };
         ctx.rust_opaque_classes.insert(class_def.name.to_string());
-        if has_valid_rust_opaque_structural_mapping_syntax(opaque) {
+        let Some(declaration) = parse_rust_opaque_for_prescan(opaque, ctx) else {
+            continue;
+        };
+        let declaration = std::slice::from_ref(&declaration);
+        if sifr_ir::rust_opaque_structural_mapping(declaration).is_some() {
             ctx.rust_structural_classes
                 .insert(class_def.name.to_string());
         }
-        let close_method = opaque.arguments.keywords.iter().find_map(|keyword| {
-            if keyword
-                .arg
-                .as_ref()
-                .is_none_or(|name| name.as_str() != "close")
-            {
-                return None;
-            }
-            match &keyword.value {
-                Expr::Name(policy) if policy.id.as_str() == "close" => Some("close"),
-                Expr::Name(policy) if policy.id.as_str() == "async_close" => Some("aclose"),
-                _ => None,
-            }
-        });
+        let close_method = sifr_ir::rust_opaque_close_method(declaration);
         if let Some(close_method) = close_method {
             ctx.rust_consuming_methods
                 .insert(format!("{}.{}", class_def.name, close_method));
@@ -58,14 +48,24 @@ pub(in crate::lower) fn collect_rust_opaque_close_methods(stmts: &[Stmt], ctx: &
     }
 }
 
-fn has_valid_rust_opaque_structural_mapping_syntax(opaque: &ExprCall) -> bool {
-    opaque.arguments.keywords.iter().any(|keyword| {
-        keyword
-            .arg
-            .as_ref()
-            .is_some_and(|name| name.as_str() == "structural")
-            && target_path_segments(&keyword.value, RustInteropOwner::Class).is_ok()
-    })
+/// Use the canonical parser for pre-scan capabilities. Normal class lowering
+/// remains responsible for emitting any declaration diagnostic.
+fn parse_rust_opaque_for_prescan(
+    opaque: &ExprCall,
+    ctx: &mut LowerCtx,
+) -> Option<RustInteropDeclaration> {
+    let previous_error_count = ctx.errors.len();
+    let previous_error_taint = ctx.last_error_taint;
+    let declaration = parse_declaration(
+        RustInteropDecoratorKind::Opaque,
+        opaque,
+        RustInteropOwner::Class,
+        false,
+        ctx,
+    );
+    ctx.errors.truncate(previous_error_count);
+    ctx.last_error_taint = previous_error_taint;
+    declaration
 }
 
 pub(in crate::lower) fn has_rust_opaque_structural_mapping_syntax(
@@ -724,4 +724,51 @@ fn malformed(ctx: &mut LowerCtx, reason: impl std::fmt::Display, span: TextRange
         format!("malformed Rust interop decorator: {reason}"),
         span,
     );
+}
+
+#[cfg(test)]
+mod prescan_tests {
+    use super::{collect_rust_opaque_close_methods, LowerCtx};
+    use sifr_python_parser::parse_module;
+
+    fn prescan(source: &str) -> LowerCtx {
+        let parsed = parse_module(source).expect("source must parse");
+        let mut ctx = LowerCtx::new();
+        collect_rust_opaque_close_methods(parsed.suite(), &mut ctx);
+        ctx
+    }
+
+    #[test]
+    fn opaque_prescan_gates_capabilities_on_complete_declarations() {
+        let incomplete = prescan(
+            r#"
+@rust.opaque(
+    type=bridge.token.Token,
+    structural=bridge.token.TokenMapping,
+    close="invalid",
+)
+class Token:
+    pass
+"#,
+        );
+        assert!(incomplete.rust_opaque_classes.contains("Token"));
+        assert!(incomplete.rust_structural_classes.is_empty());
+        assert!(incomplete.rust_consuming_methods.is_empty());
+        assert!(incomplete.errors.is_empty());
+
+        let complete = prescan(
+            r"
+@rust.opaque(
+    type=bridge.token.Token,
+    structural=bridge.token.TokenMapping,
+    close=none,
+)
+class Token:
+    pass
+",
+        );
+        assert!(complete.rust_opaque_classes.contains("Token"));
+        assert!(complete.rust_structural_classes.contains("Token"));
+        assert!(complete.errors.is_empty());
+    }
 }
