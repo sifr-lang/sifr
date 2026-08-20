@@ -2545,15 +2545,13 @@ path, but only the `type=` path schedules the concrete opaque probe. The
 surviving probe keeps the `structural=` mapping obligation against that value
 type for package-local and direct backend roots.
 
-Item 37 is a package-owned certification correction. Two negative fixture
-generators stop at earlier valid compiler diagnostics before they reach their
-intended validator-receiver and serializer-wildcard checks. Item 37 must make
-the inputs valid up to the intended checks and keep their existing diagnostic
-assertions. It must not change compiler diagnostics or absorb the external
-Rust-interop gate inputs.
+Item 37 is complete. The validator receiver negative now uses a borrowed
+ordinary receiver. Static serializer and computed-field fixtures keep
+`@staticmethod` outer and the package descriptor adjacent to the method. All
+26 negative cases reach their intended package diagnostics, and the M10 demo
+uses the same valid ordering.
 
-Next action: implement item 37, then resume source and installed-package
-certification.
+Next action: resume source and installed-package certification.
 
 Compiler hardening item 17 state: complete
 PR: [`sifr-lang/sifr#3364`](https://github.com/sifr-lang/sifr/pull/3364)
@@ -3130,6 +3128,34 @@ outside this item and remains optional. The external gate inputs and all
 Next action: implement package certification item 37, then resume source and
 installed-package certification.
 
+Package certification item 37 state: complete
+Issue: [`sifr-lang/pydantic-sifr#48`](https://github.com/sifr-lang/pydantic-sifr/issues/48)
+PR: [`sifr-lang/pydantic-sifr#49`](https://github.com/sifr-lang/pydantic-sifr/pull/49)
+Base SHA: `a44116e188cc6b45cffb297d57b9084467a39e8f`
+Candidate SHA: `76dc1a74309ec5e83497c155658b5c0f26fdd017`
+Merge SHA: `512f29432207a14461c7c8cf455591e78ad4bc69`
+Changed paths: validator and serializer negative generators and the M10
+serializer demo.
+Validation: both 13-case negative suites reached their exact intended package
+diagnostics. The M10 demo formatted, checked, built, and ran with all runtime
+assertions. All 39 unit tests, Python syntax, file-size, Rust formatting, and
+diff guards passed. The package create-PR and merge gates each ran once on the
+exact candidate. Both passed file-size, the exact Sifr pin, and all unit tests,
+then stopped at the absent external `.upstream/pydantic` checkout. Neither
+gate ran again
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/49#issuecomment-5361504594)).
+No Sifr compiler gate applied because no compiler file changed.
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking findings. It verified that each negative emits only its intended
+diagnostic, the positive demo retains behavior, the M9 classmethod demo still
+runs, and no stale static-method sequence remains
+([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/49#issuecomment-5361496619)).
+Deferred follow-up: a separate classmethod-shaped model-after negative is
+optional. Assert-only demo output is pre-existing and does not need a new
+item. The external compiler gate inputs and all `pre_v1` work remain out of
+scope.
+Next action: resume source and installed-package certification.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -3235,15 +3261,15 @@ mechanisms. Item 32 closes statement-level union state. Item 33 owns non-`if`
 control-flow state and closes the original compiler hardening sequence. Item
 34 closes the installed static-class-adapter certification boundary. Item 35
 closes its architecture documentation alignment. Item 36 closes mapped-opaque
-value/mapping probe selection. Package-owned item 37 corrects the two stale
-negative fixture generators found by source certification. Items 24
+value/mapping probe selection. Package-owned item 37 closes the stale
+validator, serializer, and M10 demo certification inputs. Items 24
 and 25 close the M8-M10 prerequisite audit. Item 26 closes the M11 prerequisite
 audit. The seven
 M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
 #3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
 #47. M12 certification is in progress. The current compiler merge is
 `643cf76a10e1e0462b3a8572605e3ccbbb194279`, and the current package merge is
-`a44116e188cc6b45cffb297d57b9084467a39e8f`.
+`512f29432207a14461c7c8cf455591e78ad4bc69`.
 
 External gate record (2026-08-20): the one-time gates for the M11 compiler
 prerequisites stopped at the Rust-interop matrix. The matrix reported one
@@ -3251,5 +3277,5 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: implement package item 37, then resume source and installed-package
-certification before the final whole-phase review.
+Next action: resume source and installed-package certification before the
+final whole-phase review.
