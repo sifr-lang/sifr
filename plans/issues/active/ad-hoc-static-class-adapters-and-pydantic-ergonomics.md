@@ -2476,7 +2476,7 @@ work.
 | M7 and M7b attached APIs | Complete through items 20 and 28. Exact set identity, all native-member collisions, generic-call metadata and consumers, concrete data-parent eligibility, canonical binding keys, module-less identity, private filtering, bound documentation, and exact imported-set binding registration are closed. |
 | M7c-M7d representation sequencing | Complete through items 21 and 29. Nested option-represented union payloads, per-member conversions, warning-clean `None` branches, owned registry-call widening, shared assignment sequencing, and registry callback input safety are closed. Behavioral presence and absence runs remain certification work. |
 | M7e structural construction defaults | Complete through items 22 and 30. Structural construction reserves generated locals, rejects required omissions before evaluating defaults, uses collision-free tuple-bound field temporaries and explicit initializers, and has two-sided factory freshness evidence. Class-body lowering remained below the guard and did not need a split. |
-| M7f static-program integration | Complete in item 23. Speculative union branches restore string-cache state, imported mapped-opaque identities use canonical project paths, const evaluation and code generation accept the same `isinstance` targets, and generic bounds compose. Borrowed structural returns now require `Clone`; owned returns do not. Item 31 owns a separate pre-existing non-union `if` cache-state leak found by the final review. |
+| M7f static-program integration | Complete through items 23 and 31 for static-program integration and ordinary non-union `if` state. Speculative union branches and ordinary branches restore string-cache state. Imported mapped-opaque identities use canonical project paths. Const evaluation and code generation accept the same `isinstance` targets, and generic bounds compose. Borrowed structural returns require `Clone`; owned returns do not. Items 32 and 33 own separate statement-union and non-`if` control-flow leaks found by item 31 review. |
 | M8-M10 compiler prerequisites | Complete in items 24 and 25. Method-slot input roles are explicit, dispatch and arity diagnostics have direct coverage, ordered mapping projection is pinned, provisional `MethodSlots` matches `StaticProgram`, and a bound on the wrong owner parameter is rejected. Multi-context selection follows deterministic HIR type-parameter order. Exact tests pin the positive `MethodSlots` composite bound and the `StaticProgram`-only negative. Body deduplication and clone-inference ideas are terminal without a failing case. |
 | M11 compiler prerequisites | Complete in item 26. The package-aware negative, direct attached codegen, installed-helper paths, decorator inspection, concrete-owner assertions, provider-local default rejection, shared hash predicate, inherited defaults, parent structural coverage, bound prescan, and `StdlibFeature` inventory are closed. Negative metadata alignment remains conditional on a future manifest-driven core harness. Broad probe-bound and clone-inference ideas remain terminal without a focused failure. |
 | M12 items 1-16 | Complete. Item 1 closes the compiler part of nested direct generic specialization. Items 12 and 13-15 close impossible local handler ancestry and imported-boundary name collisions. Item 18 makes the handler ordering dependency local. Other remaining notes are assertions, comments, performance ideas, or certification work. Repeated ancestry walks and identity indexes are terminal without measured cost. |
@@ -2511,8 +2511,20 @@ string-cache state transactional in the ordinary `if` lowering path. A local
 declared in one branch must not suppress a later cache declaration outside
 that branch. Item 31 runs after item 30. No third item 23 review applies.
 
-Item 30 is complete. Next action: implement item 31, the non-union conditional
-state item.
+Item 31 is complete. Ordinary then, `elif`, `else`, and walrus-condition
+branches restore string-cache state after lowering. Success, decline, and error
+paths use one branch transaction.
+
+Item 32 is a later statement-union state item. It must make every
+statement-level `isinstance` union branch transactional. A cached local in one
+arm must not suppress a declaration in another arm or the enclosing block.
+
+Item 33 is a later non-`if` control-flow state item. It must audit loop, `with`,
+`try`, and async body lowering. Nested body cache state must not escape its Rust
+scope. The item must add focused evidence for each reachable body mechanism.
+
+Item 31 is complete. Next action: implement item 32, the statement-union state
+item.
 
 Compiler hardening item 17 state: complete
 PR: [`sifr-lang/sifr#3364`](https://github.com/sifr-lang/sifr/pull/3364)
@@ -2918,6 +2930,37 @@ responsibility. The external gate inputs and all `pre_v1` work remain out of
 scope.
 Next action: implement item 31, the non-union conditional-state item.
 
+Compiler hardening item 31 state: complete
+Issue: [`sifr-lang/sifr#3403`](https://github.com/sifr-lang/sifr/issues/3403)
+PR: [`sifr-lang/sifr#3404`](https://github.com/sifr-lang/sifr/pull/3404)
+Base SHA: `1245ed4c2343e7a01eaf8c24667b892e5ee2ad0c`
+Initial candidate SHA: `154aa35f365d3928793567014baae2cb7c2984b4`
+Final candidate SHA: `be9652442ea740386fe1b9fceadbb47aa88464e3`
+Merge SHA: `249758494f31062ca5e37692c9d6f554fb8a51da`
+Changed paths: shared transactional `if` branch lowering, the top-level walrus
+special case, and focused ordinary and walrus source regressions.
+Validation: codegen passed 1,082 tests. Both focused cache regressions and the
+existing union rollback regression passed. Workspace Clippy, formatting,
+maintainability, file-size, and diff checks passed. The create-PR and merge
+gates each ran once on the exact final candidate. Both passed every earlier
+guard and stopped only at the two separately owned Rust-interop inputs. The
+compatibility matrix passed all 40 rows in both gates. Neither gate ran again
+([evidence](https://github.com/sifr-lang/sifr/pull/3404#issuecomment-5359634393)).
+Review evidence: the initial exact-SHA Opus review found that the ordinary
+walrus-condition special case bypassed the transaction. It also found two
+separate pre-existing mechanisms
+([evidence](https://github.com/sifr-lang/sifr/pull/3404#issuecomment-5359413901)).
+The remediation routed the walrus body through the shared transaction. Its
+first response was incomplete, so the same review was retried under the skill
+rule. The retry returned `SATISFIED` with no item 31 blocker
+([evidence](https://github.com/sifr-lang/sifr/pull/3404#issuecomment-5359582808)).
+No third review round ran.
+Deferred follow-up: item 32 owns statement-level `isinstance` union branches.
+Item 33 owns non-`if` control-flow bodies. Fast-path deduplication and helper
+wording are terminal suggestions. The external gate inputs and all `pre_v1`
+work remain out of scope.
+Next action: implement item 32, the statement-union state item.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -3005,7 +3048,7 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 30 are merged and recorded. Items 1-16 close the first compiler
+through 31 are merged and recorded. Items 1-16 close the first compiler
 mechanism sequence. Item 17 classifies every remaining compiler deferral and
 orders items 18-26. Item 18 closes the M5 audit. Item 19 closes the M6 audit
 and adds item 27 for second-review coverage. Item 27 closes that coverage.
@@ -3016,13 +3059,15 @@ representation audit. It adds item 29 for option-argument safety. Item 29
 closes that safety path. Item 22
 closes the M7e audit and adds item 30 for structural-default naming. Item 30
 closes that naming path. Item 23
-closes the M7f audit and adds item 31 for non-union conditional state. Items 24
+closes the M7f audit and adds item 31 for non-union conditional state. Item 31
+closes ordinary `if` state and adds items 32 and 33 for separate cache-state
+mechanisms. Items 24
 and 25 close the M8-M10 prerequisite audit. Item 26 closes the M11 prerequisite
 audit. The seven
 M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
 #3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
 #47. M12 is in progress. The current compiler merge is
-`c1a8c70a1ed971c40c648744f6417f9264708060`, and the current package merge is
+`249758494f31062ca5e37692c9d6f554fb8a51da`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-20): the one-time gates for the M11 compiler
@@ -3031,4 +3076,4 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: implement item 31 before package certification and final review.
+Next action: implement item 32 before package certification and final review.
