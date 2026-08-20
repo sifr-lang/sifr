@@ -2475,8 +2475,8 @@ work.
 | M6 structural public values and mappings | Complete in item 19. Same-path obligations, mapping-path marking, explicit stdlib origin, mapped-value thread traits, and multi-module late-stdlib coverage are closed. Item 27 owns two second-review coverage mechanisms. File headroom and body deduplication remain terminal unless the guard or measurement requires work. |
 | M7 and M7b attached APIs | Complete in item 20. Exact set identity, all native-member collisions, generic-call metadata, concrete data-parent eligibility, canonical binding keys, module-less identity, private filtering, and bound documentation are closed. Item 28 owns two pre-existing lookup-consistency mechanisms from the review. |
 | M7c-M7d representation sequencing | Complete in item 21. Nested option-represented union payloads, per-member conversions, warning-clean `None` branches, owned registry-call widening, and shared assignment sequencing use the consuming-value conversion authority. Behavioral presence and absence runs remain certification work. Item 29 owns a separate pre-existing option-to-non-optional argument safety path. |
-| M7e structural construction defaults | Item 22. Close generated-local naming, factory freshness on both sides, and the ordering contract for default evaluation before later required-field rejection. Split class-body lowering only when a touched file reaches the guard. |
-| M7f static-program integration | Item 23. Close speculative emitter-state restoration, imported mapped-opaque paths, const-evaluator and codegen `isinstance` parity, and any real generic-bound lifetime defect. Lifetime investigation that finds no defect becomes terminal evidence. |
+| M7e structural construction defaults | Complete in item 22. Structural construction reserves generated locals, rejects required omissions before evaluating defaults, and has two-sided factory freshness evidence. Item 30 owns a distinct user-field and callable-name collision. Class-body lowering remained below the guard and did not need a split. |
+| M7f static-program integration | Item 23. Close speculative emitter-state restoration, imported mapped-opaque paths, const-evaluator and codegen `isinstance` parity, and any real generic-bound lifetime defect. It also owns the concrete `retain_static_program` clone-bound failure found during item 22 validation. Lifetime investigation that finds no defect becomes terminal evidence. |
 | M8-M10 compiler prerequisites | Items 24 and 25. Item 24 owns method-slot receiver roles, direct codegen and arity diagnostics, ordered projection, provisional `MethodSlots` parity, and wrongly bound owners. Item 25 owns deterministic multi-context selection and exact positive and negative generic-bound assertions. Body deduplication and clone-inference ideas are terminal without a failing case. |
 | M11 compiler prerequisites | Item 26. Close independent package-compilable negatives, direct attached codegen, stale installed-helper paths, duplicate decorator scans, concrete-owner assertions, nonliteral attached-default provider localization, generic hash predicate ownership, flattened parent defaults, recursive boxed parents, direct plain-parent structural coverage, structural-bound prescans, and retained `StdlibFeature` inventory. Negative metadata alignment is conditional on a future manifest-driven core harness. The 900-line guard owns the structural-test split. Broad probe-bound and clone-inference ideas are terminal unless a focused failure proves a mechanism gap. |
 | M12 items 1-16 | Complete. Item 1 closes the compiler part of nested direct generic specialization. Items 12 and 13-15 close impossible local handler ancestry and imported-boundary name collisions. Item 18 makes the handler ordering dependency local. Other remaining notes are assertions, comments, performance ideas, or certification work. Repeated ancestry walks and identity indexes are terminal without measured cost. |
@@ -2504,8 +2504,14 @@ data-dependent `expect`, while preserving any required class upcast. If it is
 unreachable, encode the invariant with focused coverage and record the path as
 terminal. Item 29 runs after item 28.
 
-Item 21 is complete. Next action: implement item 22, the M7e structural
-construction-default audit.
+Item 30 is a later structural-default naming item. It must prevent an earlier
+user field from shadowing a later same-named default factory in generated
+construction. Use reserved field temporaries with explicit record
+initializers, or enforce an equivalent checked rule. Item 30 runs after item
+29.
+
+Item 22 is complete. Next action: implement item 23, the M7f static-program
+integration audit.
 
 Compiler hardening item 17 state: complete
 PR: [`sifr-lang/sifr#3364`](https://github.com/sifr-lang/sifr/pull/3364)
@@ -2638,6 +2644,33 @@ remain certification work. The external gate inputs and all `pre_v1` work
 remain out of scope.
 Next action: implement item 22, the M7e structural construction-default audit.
 
+Compiler hardening item 22 state: complete
+PR: [`sifr-lang/sifr#3377`](https://github.com/sifr-lang/sifr/pull/3377)
+Base SHA: `979da97f32e2cca91cccafbc7f541b5fa0fcd4f8`
+Candidate SHA: `44971b4fd83db9163efa95bb025d4de3920564fe`
+Merge SHA: `81c1536ffe5ea67f8a231ebcc1f191ed72e979c1`
+Changed paths: structural construction naming and required-field sequencing;
+focused generated-code coverage; the architecture contract; and two-sided
+factory freshness in the package-neutral fixture.
+Validation: codegen passed 1,065 tests. All 15 adapter-default tests passed.
+Workspace Clippy, formatting, maintainability, the 900-line guard, and diff
+hygiene passed. The package-neutral fixture reached generated Rust and proved
+that a `description` factory is not shadowed by generated construction locals.
+It then stopped at a separate existing M7f generic clone-bound failure. Item
+23 owns that failure. The create-PR and merge gates each ran once on the exact
+candidate. Both passed every earlier guard. Both stopped at the same two
+separately owned Rust-interop matrix inputs. Neither gate ran again
+([evidence](https://github.com/sifr-lang/sifr/pull/3377#issuecomment-5356030951)).
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking findings
+([evidence](https://github.com/sifr-lang/sifr/pull/3377#issuecomment-5355979587)).
+Deferred follow-up: item 23 owns the concrete M7f clone-bound failure. Item 30
+owns the pre-existing collision between an earlier user field and a later
+same-named factory. Diagnostic precedence wording and the duplicate unreachable
+arity-error arm remain terminal without focused correctness evidence. The
+external gate inputs and all `pre_v1` work remain out of scope.
+Next action: implement item 23, the M7f static-program integration audit.
+
 Acceptance criteria:
 
 - The canonical demo contains no raw metadata or specialization decorators.
@@ -2725,16 +2758,17 @@ Next action:
 ## Current Handoff
 
 Current state: M0-M11 are merged and recorded. M12 compiler hardening items 1
-through 21 are merged and recorded. Items 1-16 close the first compiler
+through 22 are merged and recorded. Items 1-16 close the first compiler
 mechanism sequence. Item 17 classifies every remaining compiler deferral and
 orders items 18-26. Item 18 closes the M5 audit. Item 19 closes the M6 audit
 and adds item 27 for second-review coverage. Item 20 closes the M7/M7b audit
 and adds item 28 for lookup consistency. Item 21 closes the M7c/M7d
-representation audit. It adds item 29 for option-argument safety. The seven
+representation audit. It adds item 29 for option-argument safety. Item 22
+closes the M7e audit and adds item 30 for structural-default naming. The seven
 M11 compiler prerequisites merged in Sifr PRs #3317, #3319, #3321, #3323,
 #3325, #3327, and #3329. The M11 package surface merged in Pydantic-Sifr PR
 #47. M12 is in progress. The current compiler merge is
-`66176fb85589d8d8ee7f8cf5df155278c72170d1`, and the current package merge is
+`81c1536ffe5ea67f8a231ebcc1f191ed72e979c1`, and the current package merge is
 `a44116e188cc6b45cffb297d57b9084467a39e8f`.
 
 External gate record (2026-08-19): the one-time gates for the M11 compiler
@@ -2743,5 +2777,5 @@ missing negative evidence source and one existing empty placeholder class.
 The items did not own or alter those inputs. The gates passed all earlier
 guards, and no gate was rerun.
 
-Next action: implement item 22, then continue items 23-29 before package
+Next action: implement item 23, then continue items 24-30 before package
 certification and final review.
