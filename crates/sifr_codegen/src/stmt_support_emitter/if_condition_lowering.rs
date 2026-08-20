@@ -342,72 +342,80 @@ impl RustEmitter {
                 branch_specs.push((elif_variant, elif_body.as_slice()));
             }
             if all_isinstance {
-                let enum_name = self.resolve_union_enum_name(&first_enum_name, &needed_variants);
-                let mut nested_else = if let Some(else_body) = else_body {
-                    let remaining_variants = self
-                        .union_enums
-                        .get(&enum_name)
-                        .map(|members| {
-                            members
-                                .iter()
-                                .map(Type::union_variant_name)
-                                .filter(|variant| !needed_variants.contains(variant))
-                                .collect::<Vec<_>>()
-                        })
-                        .unwrap_or_default();
-                    let Some(lowered_else_body) =
-                        self.try_lower_speculative_branch_for_ir(else_body)?
-                    else {
-                        return Ok(None);
+                let speculative_string_char_cache_vars = self.string_char_cache_vars.clone();
+                let lowered_union = (|| -> Result<Option<RustStmt>, crate::CodegenError> {
+                    let enum_name =
+                        self.resolve_union_enum_name(&first_enum_name, &needed_variants);
+                    let mut nested_else = if let Some(else_body) = else_body {
+                        let remaining_variants = self
+                            .union_enums
+                            .get(&enum_name)
+                            .map(|members| {
+                                members
+                                    .iter()
+                                    .map(Type::union_variant_name)
+                                    .filter(|variant| !needed_variants.contains(variant))
+                                    .collect::<Vec<_>>()
+                            })
+                            .unwrap_or_default();
+                        let Some(lowered_else_body) =
+                            self.try_lower_speculative_branch_for_ir(else_body)?
+                        else {
+                            return Ok(None);
+                        };
+                        if remaining_variants.len() == 1 {
+                            let else_mutated = queries::collect_mutated_vars(else_body, None);
+                            let else_binding = if else_mutated.contains(&var_name) {
+                                format!("mut {var_name}")
+                            } else {
+                                var_name.clone()
+                            };
+                            Some(vec![RustStmt::IfLet {
+                                pattern: format!(
+                                    "{enum_name}::{}({else_binding})",
+                                    remaining_variants[0]
+                                ),
+                                expr: crate::RustExpr::Ident(var_name.clone()),
+                                then_body: lowered_else_body,
+                                else_body: Some(vec![RustStmt::Expr(
+                                    crate::RustExpr::FormatMacro {
+                                        name: "unreachable".to_string(),
+                                        format_str: "sifr union narrowing fell through exhaustive branch chain"
+                                            .to_string(),
+                                        args: vec![],
+                                    },
+                                )]),
+                            }])
+                        } else {
+                            Some(lowered_else_body)
+                        }
+                    } else {
+                        None
                     };
-                    if remaining_variants.len() == 1 {
-                        let else_mutated = queries::collect_mutated_vars(else_body, None);
-                        let else_binding = if else_mutated.contains(&var_name) {
+
+                    for (variant_name, body) in branch_specs.iter().rev() {
+                        let mutated = queries::collect_mutated_vars(body, None);
+                        let binding = if mutated.contains(&var_name) {
                             format!("mut {var_name}")
                         } else {
                             var_name.clone()
                         };
-                        Some(vec![RustStmt::IfLet {
-                            pattern: format!(
-                                "{enum_name}::{}({else_binding})",
-                                remaining_variants[0]
-                            ),
+                        let Some(lowered_body) = self.try_lower_speculative_branch_for_ir(body)?
+                        else {
+                            return Ok(None);
+                        };
+                        nested_else = Some(vec![RustStmt::IfLet {
+                            pattern: format!("{enum_name}::{variant_name}({binding})"),
                             expr: crate::RustExpr::Ident(var_name.clone()),
-                            then_body: lowered_else_body,
-                            else_body: Some(vec![RustStmt::Expr(crate::RustExpr::FormatMacro {
-                                name: "unreachable".to_string(),
-                                format_str:
-                                    "sifr union narrowing fell through exhaustive branch chain"
-                                        .to_string(),
-                                args: vec![],
-                            })]),
-                        }])
-                    } else {
-                        Some(lowered_else_body)
+                            then_body: lowered_body,
+                            else_body: nested_else,
+                        }]);
                     }
-                } else {
-                    None
-                };
 
-                for (variant_name, body) in branch_specs.iter().rev() {
-                    let mutated = queries::collect_mutated_vars(body, None);
-                    let binding = if mutated.contains(&var_name) {
-                        format!("mut {var_name}")
-                    } else {
-                        var_name.clone()
-                    };
-                    let Some(lowered_body) = self.try_lower_speculative_branch_for_ir(body)? else {
-                        return Ok(None);
-                    };
-                    nested_else = Some(vec![RustStmt::IfLet {
-                        pattern: format!("{enum_name}::{variant_name}({binding})"),
-                        expr: crate::RustExpr::Ident(var_name.clone()),
-                        then_body: lowered_body,
-                        else_body: nested_else,
-                    }]);
-                }
-
-                return Ok(nested_else.and_then(|stmts| stmts.into_iter().next()));
+                    Ok(nested_else.and_then(|stmts| stmts.into_iter().next()))
+                })();
+                self.string_char_cache_vars = speculative_string_char_cache_vars;
+                return lowered_union;
             }
         }
 
@@ -582,7 +590,10 @@ impl RustEmitter {
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         let string_char_cache_vars = self.string_char_cache_vars.clone();
         match self.try_lower_stmt_block_for_ir(body) {
-            Ok(Some(lowered)) => Ok(Some(lowered)),
+            Ok(Some(lowered)) => {
+                self.string_char_cache_vars = string_char_cache_vars;
+                Ok(Some(lowered))
+            }
             Ok(None) => {
                 self.string_char_cache_vars = string_char_cache_vars;
                 Ok(None)
@@ -646,6 +657,22 @@ impl RustEmitter {
 mod tests {
     use super::*;
 
+    fn isinstance_union_condition(target: &str) -> HirExpr {
+        HirExpr::Call {
+            func: "isinstance".to_string(),
+            args: vec![
+                HirExpr::Name {
+                    name: "value".to_string(),
+                    binding_id: None,
+                    ty: Type::Union(vec![Type::Int, Type::Str]),
+                },
+                HirExpr::StringLiteral(target.to_string()),
+            ],
+            mutable_arg_places: vec![None, None],
+            ty: Type::Bool,
+        }
+    }
+
     #[test]
     fn declined_speculative_branch_restores_string_cache_state() {
         let mut emitter = RustEmitter::new();
@@ -674,6 +701,64 @@ mod tests {
         let lowered = emitter
             .try_lower_speculative_branch_for_ir(&body)
             .expect("speculative lowering must not error");
+
+        assert!(lowered.is_none());
+        assert_eq!(emitter.string_char_cache_vars, before);
+    }
+
+    #[test]
+    fn successful_speculative_branch_restores_string_cache_state() {
+        let mut emitter = RustEmitter::new();
+        emitter
+            .string_char_cache_required_names
+            .insert("text".to_string());
+        let before = emitter.string_char_cache_vars.clone();
+        let body = vec![HirStmt::Let {
+            name: "text".to_string(),
+            ty: Type::Str,
+            value: HirExpr::StringLiteral("value".to_string()),
+            is_mutable: false,
+        }];
+
+        let lowered = emitter
+            .try_lower_speculative_branch_for_ir(&body)
+            .expect("speculative lowering must not error");
+
+        assert!(lowered.is_some());
+        assert_eq!(emitter.string_char_cache_vars, before);
+    }
+
+    #[test]
+    fn declined_isinstance_union_restores_successful_sibling_cache_state() {
+        let mut emitter = RustEmitter::new();
+        emitter
+            .string_char_cache_required_names
+            .insert("text".to_string());
+        emitter
+            .string_char_cache_vars
+            .insert("existing".to_string(), "__sifr_existing_chars".to_string());
+        let before = emitter.string_char_cache_vars.clone();
+        let declined_then_body = vec![HirStmt::AttributeAugAssign {
+            object: "self".to_string(),
+            field: "label".to_string(),
+            op: "+=".to_string(),
+            value: HirExpr::StringLiteral("suffix".to_string()),
+        }];
+        let successful_elif_body = vec![HirStmt::Let {
+            name: "text".to_string(),
+            ty: Type::Str,
+            value: HirExpr::StringLiteral("value".to_string()),
+            is_mutable: false,
+        }];
+
+        let lowered = emitter
+            .try_lower_if_stmt_for_ir(
+                &isinstance_union_condition("int"),
+                &declined_then_body,
+                &[(isinstance_union_condition("str"), successful_elif_body)],
+                None,
+            )
+            .expect("union lowering must not error");
 
         assert!(lowered.is_none());
         assert_eq!(emitter.string_char_cache_vars, before);
