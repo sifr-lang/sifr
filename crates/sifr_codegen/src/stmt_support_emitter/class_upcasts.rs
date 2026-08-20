@@ -52,12 +52,34 @@ impl RustEmitter {
             return lowered;
         }
 
-        if let Some(widened) = crate::helpers::widen_option_value_for_union_target(
-            target_ty,
-            source_ty,
-            lowered.clone(),
-        ) {
-            return widened;
+        if let (Type::Union(target_members), Some(source_inner)) =
+            (target, Self::option_inner_type_for_ir(source_ty))
+        {
+            if !crate::helpers::is_option_type(target_ty)
+                && source_ty.is_assignable_to(target_ty)
+                && target_members
+                    .iter()
+                    .any(|member| matches!(member.resolve_alias(), Type::None))
+            {
+                let binding = "__sifr_option_value";
+                let present = self.consuming_value_upcast_for_ir(
+                    target_ty,
+                    &source_inner,
+                    crate::RustExpr::Ident(binding.to_string()),
+                );
+                let mapped = map_value(lowered, "map", binding, present);
+                return crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(mapped))),
+                    method: "unwrap_or".to_string(),
+                    args: vec![crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            target.union_enum_name(),
+                            Type::None.union_variant_name(),
+                        ])),
+                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
+                    }],
+                };
+            }
         }
 
         if let Some(target_inner) = Self::option_inner_type_for_ir(target_ty) {
@@ -103,12 +125,21 @@ impl RustEmitter {
                 else {
                     return lowered;
                 };
-                let binding = "__sifr_union_value";
-                let converted_member = self.consuming_value_upcast_for_ir(
-                    target_member,
-                    source_member,
-                    crate::RustExpr::Ident(binding.to_string()),
-                );
+                let source_is_none = matches!(source_member.resolve_alias(), Type::None);
+                let binding = if source_is_none {
+                    "_"
+                } else {
+                    "__sifr_union_value"
+                };
+                let converted_member = if source_is_none {
+                    crate::RustExpr::Literal(crate::RustLiteral::Unit)
+                } else {
+                    self.consuming_value_upcast_for_ir(
+                        target_member,
+                        source_member,
+                        crate::RustExpr::Ident(binding.to_string()),
+                    )
+                };
                 let wrapped = crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec![
                         target.union_enum_name(),

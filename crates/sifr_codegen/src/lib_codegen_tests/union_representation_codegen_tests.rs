@@ -85,6 +85,84 @@ def forward(values: dict[str, int | str | None]) -> bool:
 }
 
 #[test]
+fn nested_option_represented_union_payload_widens_recursively() {
+    let payload = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
+    let target = sifr_type_system::make_union(vec![Type::Bool, Type::Int, Type::Str, Type::None]);
+    let rust_code = generate_rust_from_source(
+        r#"def consume(own value: bool | int | str | None) -> bool:
+    return value is None
+
+def forward(values: dict[str, int | str | None]) -> bool:
+    return consume(values.get("value"))
+"#,
+    );
+
+    assert!(
+        rust_code.contains(&payload.union_enum_name()),
+        "{rust_code}"
+    );
+    assert!(rust_code.contains(&target.union_enum_name()), "{rust_code}");
+    assert!(rust_code.contains(".map("), "{rust_code}");
+    assert!(
+        rust_code.contains("match __sifr_option_value"),
+        "{rust_code}"
+    );
+    assert!(rust_code.contains(".unwrap_or("), "{rust_code}");
+    let none_pattern = format!(
+        "{}::{}(_)",
+        payload.union_enum_name(),
+        Type::None.union_variant_name()
+    );
+    assert!(rust_code.contains(&none_pattern), "{rust_code}");
+}
+
+#[test]
+fn option_union_members_receive_assignable_payload_conversions() {
+    let rust_code = generate_rust_from_source(
+        r#"class Root:
+    value: int
+
+class Child(Root):
+    pass
+
+def consume(own value: Root | str | None) -> bool:
+    return value is None
+
+def forward(values: dict[str, Child | str]) -> bool:
+    return consume(values.get("value"))
+"#,
+    );
+
+    assert!(
+        rust_code.contains("::std::convert::Into::<Root>::into(__sifr_union_value)"),
+        "{rust_code}"
+    );
+}
+
+#[test]
+fn union_assignment_uses_the_consuming_representation_sequence() {
+    let rust_code = generate_rust_from_source(
+        r#"class Root:
+    value: int
+
+class Child(Root):
+    pass
+
+def select(values: dict[str, Child | str]) -> Root | str | None:
+    selected: Root | str | None = None
+    selected = values.get("value")
+    return selected
+"#,
+    );
+
+    assert!(
+        rust_code.contains("::std::convert::Into::<Root>::into(__sifr_union_value)"),
+        "{rust_code}"
+    );
+    assert!(rust_code.contains("selected ="), "{rust_code}");
+}
+
+#[test]
 fn isinstance_narrows_union_items_inside_for_loops() {
     let source = r#"def collect_text(values: list[int | str]) -> list[int | str]:
     output: list[int | str] = []

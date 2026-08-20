@@ -551,8 +551,12 @@ pub(super) fn registry_call_callable_with_owned_args(
         let mut lowered_arg = RustExpr::Ident(name.clone());
         let arg_is_option = crate::helpers::is_option_type(arg_ty);
         let param_is_option = crate::helpers::is_option_type(param_ty);
-        let adapted_arg =
+        let mut adapted_arg =
             crate::helpers::flatten_option_value_for_target(param_ty, arg_ty, lowered_arg.clone());
+        if adapted_arg == lowered_arg {
+            adapted_arg =
+                emitter.consuming_value_upcast_for_ir(param_ty, arg_ty, lowered_arg.clone());
+        }
         let option_value_adapted = adapted_arg != lowered_arg;
         lowered_arg = adapted_arg;
         if param_is_option && !arg_is_option {
@@ -657,6 +661,43 @@ pub(super) fn registry_nested_zip_field_expr(
             expr: Box::new(base),
             field: "1".to_string(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn owned_callable_argument_uses_union_representation_conversion() {
+        let source = sifr_type_system::make_union(vec![Type::Str, Type::None]);
+        let target = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
+        let callable = HirExpr::Name {
+            name: "handler".to_string(),
+            binding_id: None,
+            ty: Type::Callable(
+                vec![target.clone()],
+                vec![ParamConvention::own()],
+                Box::new(Type::Bool),
+            ),
+        };
+        let mut emitter = RustEmitter::new();
+
+        let lowered = registry_call_callable_with_owned_args(
+            &mut emitter,
+            &callable,
+            &[("value".to_string(), source)],
+        )
+        .expect("owned callable argument should lower");
+        let rendered = crate::render_expr(&lowered);
+
+        assert!(rendered.contains(").map("), "{rendered}");
+        assert!(rendered.contains(".unwrap_or("), "{rendered}");
+        assert!(rendered.contains(&target.union_enum_name()), "{rendered}");
+        assert!(
+            !rendered.contains("compiler-verified callable argument should be Some"),
+            "{rendered}"
+        );
     }
 }
 

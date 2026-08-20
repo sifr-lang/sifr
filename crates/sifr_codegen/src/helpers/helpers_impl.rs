@@ -268,88 +268,13 @@ pub(crate) fn flatten_option_value_for_target(
     value
 }
 
-/// Widen an ordinary `T | None` (`Option<T>`) into a larger enum-backed union.
-/// The source wrapper must be mapped member-by-member; treating it as the
-/// target representation either drops the present value or references an
-/// enum that does not represent the source option.
-pub(crate) fn widen_option_value_for_union_target(
-    target: &Type,
-    source: &Type,
-    value: RustExpr,
-) -> Option<RustExpr> {
-    let Type::Union(target_members) = crate::resolve_alias_type_for_plain_call(target) else {
-        return None;
-    };
-    if is_option_type(target) {
-        return None;
-    }
-    let source_payload = source.optional_member_type()?;
-    if !target_members
-        .iter()
-        .any(|member| matches!(member.resolve_alias(), Type::None))
-    {
-        return None;
-    }
-    let target_name = target.union_enum_name();
-    let payload_value = RustExpr::Ident("__sifr_union_value".to_string());
-    let present = if let Type::Union(source_members) =
-        crate::resolve_alias_type_for_plain_call(&source_payload)
-    {
-        let mut arms = Vec::with_capacity(source_members.len());
-        for source_member in source_members {
-            let wrapped = wrap_union_member_expr(
-                target,
-                source_member,
-                RustExpr::Ident("__sifr_union_member".to_string()),
-            )?;
-            arms.push(crate::RustMatchArm {
-                pattern: format!(
-                    "{}::{}(__sifr_union_member)",
-                    source_payload.union_enum_name(),
-                    source_member.union_variant_name()
-                ),
-                bindings: Vec::new(),
-                guard: None,
-                body: vec![crate::RustStmt::TailExpr(wrapped)],
-            });
-        }
-        RustExpr::Match {
-            expr: Box::new(payload_value),
-            arms,
-        }
-    } else {
-        let payload_member = find_union_member(target_members, &source_payload)?;
-        RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                target_name.clone(),
-                payload_member.union_variant_name(),
-            ])),
-            args: vec![payload_value],
-        }
-    };
-    let mapped = RustExpr::MethodCall {
-        receiver: Box::new(value),
-        method: "map".to_string(),
-        args: vec![RustExpr::Closure {
-            params: vec![crate::RustParam::Named {
-                name: "__sifr_union_value".to_string(),
-                ty: crate::RustType::Named("_".to_string()),
-            }],
-            body: Box::new(present),
-            is_move: false,
-        }],
-    };
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Paren(Box::new(mapped))),
-        method: "unwrap_or".to_string(),
-        args: vec![RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                target_name,
-                Type::None.union_variant_name(),
-            ])),
-            args: vec![RustExpr::Literal(crate::RustLiteral::Unit)],
-        }],
-    })
+/// Whether assignment needs the emitter's recursive union conversion authority.
+pub(crate) fn requires_union_representation_transition(target: &Type, source: &Type) -> bool {
+    let (target, source) = (
+        crate::resolve_alias_type_for_plain_call(target),
+        crate::resolve_alias_type_for_plain_call(source),
+    );
+    target != source && matches!(target, Type::Union(_)) && !is_option_type(target)
 }
 
 /// Normalize nested absence produced by a safe collection operation.
