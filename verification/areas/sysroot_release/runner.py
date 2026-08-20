@@ -196,13 +196,23 @@ def run_boundary_equivalence() -> tuple[int, list[str]]:
             work_root.mkdir()
             fixture = work_root / BOUNDARY_FIXTURE_PATH.name
             fixture.write_text(BOUNDARY_FIXTURE_PATH.read_text(encoding="utf-8"), encoding="utf-8")
-            attached_fixture = work_root / "static_class_adapter"
-            shutil.copytree(ATTACHED_API_FIXTURE_ROOT, attached_fixture)
             installed_sifr = install_root / "bin" / "sifr"
 
-            for label, compiler, output, extra in (
-                ("installed", installed_sifr, installed_output, []),
-                ("source-tree", source_sifr, source_output, ["--sysroot", str(REPO_ROOT)]),
+            for label, compiler, output, extra, runtime_crate in (
+                (
+                    "installed",
+                    installed_sifr,
+                    installed_output,
+                    [],
+                    install_root / "crates" / "sifr_runtime",
+                ),
+                (
+                    "source-tree",
+                    source_sifr,
+                    source_output,
+                    ["--sysroot", str(REPO_ROOT)],
+                    REPO_ROOT / "crates" / "sifr_runtime",
+                ),
             ):
                 env = installed_env(temp_root)
                 probe_cache = temp_root / "probe-cache" / label
@@ -222,6 +232,8 @@ def run_boundary_equivalence() -> tuple[int, list[str]]:
                 if "stdlib boundary recertification: pass" not in result.stdout:
                     return 1, [f"{label} boundary fixture did not execute successfully"]
 
+                attached_fixture = work_root / f"static_class_adapter-{label}"
+                shutil.copytree(ATTACHED_API_FIXTURE_ROOT, attached_fixture)
                 attached_error = run_attached_api_certification(
                     compiler=compiler,
                     extra=extra,
@@ -229,6 +241,7 @@ def run_boundary_equivalence() -> tuple[int, list[str]]:
                     output=temp_root / f"{label}-attached-output",
                     env=env,
                     label=label,
+                    runtime_crate=runtime_crate,
                     run_checked=run_checked,
                 )
                 if attached_error is not None:

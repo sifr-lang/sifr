@@ -442,6 +442,9 @@ def write_synthetic_target(
         "Cargo.lock": b"# fixture lock\n",
         ".cargo/config.toml": b"[net]\noffline = true\n",
         "crates/sifr_runtime/Cargo.toml": b'[package]\nname = "sifr_runtime"\n',
+        "crates/sifr_structural_identity/Cargo.toml": (
+            b'[package]\nname = "sifr_structural_identity"\n'
+        ),
         "crates/sifr_stdlib/Cargo.toml": b'[package]\nname = "sifr_stdlib"\n',
         "lib/sifr/stdlib/sifr/fixture.sifr": b"def fixture() -> int:\n    return 1\n",
         "lib/sifr/stdlib/_sifr/fixture.sifr": b"def fixture() -> int:\n    return 1\n",

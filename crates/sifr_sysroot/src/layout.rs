@@ -35,6 +35,8 @@ pub struct SysrootPaths {
     pub stdlib_private_sources: PathBuf,
     pub runtime_crate: PathBuf,
     pub runtime_crate_manifest: PathBuf,
+    pub structural_identity_crate: PathBuf,
+    pub structural_identity_crate_manifest: PathBuf,
     pub stdlib_crate: PathBuf,
     pub stdlib_crate_manifest: PathBuf,
     pub cargo_manifest: PathBuf,
@@ -47,6 +49,7 @@ impl SysrootPaths {
     #[must_use]
     pub fn from_root(root: &Path) -> Self {
         let runtime_crate = root.join("crates").join("sifr_runtime");
+        let structural_identity_crate = root.join("crates").join("sifr_structural_identity");
         let stdlib_crate = root.join("crates").join("sifr_stdlib");
         let stdlib_root = stdlib_source_root(root);
         Self {
@@ -56,6 +59,8 @@ impl SysrootPaths {
             stdlib_root,
             runtime_crate_manifest: runtime_crate.join("Cargo.toml"),
             runtime_crate,
+            structural_identity_crate_manifest: structural_identity_crate.join("Cargo.toml"),
+            structural_identity_crate,
             stdlib_crate_manifest: stdlib_crate.join("Cargo.toml"),
             stdlib_crate,
             cargo_manifest: root.join("Cargo.toml"),
@@ -88,6 +93,12 @@ impl SysrootPaths {
             root,
             &self.runtime_crate_manifest,
             "crates/sifr_runtime/Cargo.toml",
+        )?;
+        require_file(
+            binary_path,
+            root,
+            &self.structural_identity_crate_manifest,
+            "crates/sifr_structural_identity/Cargo.toml",
         )?;
         require_file(
             binary_path,
@@ -187,6 +198,13 @@ fn validate_workspace_manifest(
         ));
     };
     require_workspace_member(binary_path, root, manifest, members, "crates/sifr_runtime")?;
+    require_workspace_member(
+        binary_path,
+        root,
+        manifest,
+        members,
+        "crates/sifr_structural_identity",
+    )?;
     require_workspace_member(binary_path, root, manifest, members, "crates/sifr_stdlib")?;
     if workspace.get("resolver").and_then(toml::Value::as_str) != Some("2") {
         return Err(SysrootError::new(

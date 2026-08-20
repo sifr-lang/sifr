@@ -50,6 +50,7 @@ do
   test -f "${install_root}/.cargo/config.toml" || { echo "missing installed cargo config" >&2; exit 1; }
   test -d "${install_root}/vendor" || { echo "missing installed vendor" >&2; exit 1; }
   test -f "${install_root}/crates/sifr_runtime/Cargo.toml" || { echo "missing installed runtime crate" >&2; exit 1; }
+  test -f "${install_root}/crates/sifr_structural_identity/Cargo.toml" || { echo "missing installed structural identity crate" >&2; exit 1; }
   test -f "${install_root}/crates/sifr_stdlib/Cargo.toml" || { echo "missing installed stdlib crate" >&2; exit 1; }
   test -d "${install_root}/lib/sifr/stdlib/sifr" || { echo "missing installed public stdlib" >&2; exit 1; }
   test -d "${install_root}/lib/sifr/stdlib/_sifr" || { echo "missing installed private stdlib" >&2; exit 1; }

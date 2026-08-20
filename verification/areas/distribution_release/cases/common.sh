@@ -197,6 +197,7 @@ make_mock_sysroot_root() {
   mkdir -p \
     "${root}/.cargo" \
     "${root}/crates/sifr_runtime/src" \
+    "${root}/crates/sifr_structural_identity/src" \
     "${root}/crates/sifr_stdlib/src" \
     "${root}/stdlib/sifr" \
     "${root}/stdlib/_sifr" \
@@ -205,6 +206,7 @@ make_mock_sysroot_root() {
 [workspace]
 members = [
   "crates/sifr_runtime",
+  "crates/sifr_structural_identity",
   "crates/sifr_stdlib",
 ]
 resolver = "2"
@@ -231,6 +233,13 @@ version = "0.0.0-fixture"
 edition = "2021"
 EOF
   printf '%s\n' 'pub fn fixture() {}' >"${root}/crates/sifr_runtime/src/lib.rs"
+  cat >"${root}/crates/sifr_structural_identity/Cargo.toml" <<'EOF'
+[package]
+name = "sifr_structural_identity"
+version = "0.0.0-fixture"
+edition = "2021"
+EOF
+  printf '%s\n' 'pub fn fixture() {}' >"${root}/crates/sifr_structural_identity/src/lib.rs"
   cat >"${root}/crates/sifr_stdlib/Cargo.toml" <<'EOF'
 [package]
 name = "sifr_stdlib"

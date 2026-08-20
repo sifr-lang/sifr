@@ -18,6 +18,7 @@ REQUIRED_FILES = (
     "sysroot.toml",
     ".cargo/config.toml",
     "crates/sifr_runtime/Cargo.toml",
+    "crates/sifr_structural_identity/Cargo.toml",
     "crates/sifr_stdlib/Cargo.toml",
 )
 
@@ -25,6 +26,7 @@ REQUIRED_DIR_PREFIXES = (
     "lib/sifr/stdlib/sifr/",
     "lib/sifr/stdlib/_sifr/",
     "crates/sifr_runtime/",
+    "crates/sifr_structural_identity/",
     "crates/sifr_stdlib/",
     "vendor/",
 )

@@ -707,6 +707,7 @@ validate_extracted_toolchain() {
   require_extracted_file ".cargo/config.toml"
   require_extracted_dir "vendor"
   require_extracted_file "crates/sifr_runtime/Cargo.toml"
+  require_extracted_file "crates/sifr_structural_identity/Cargo.toml"
   require_extracted_file "crates/sifr_stdlib/Cargo.toml"
   require_extracted_dir "lib/sifr/stdlib/sifr"
   require_extracted_dir "lib/sifr/stdlib/_sifr"
