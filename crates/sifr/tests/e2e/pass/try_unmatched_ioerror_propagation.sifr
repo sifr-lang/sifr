@@ -1,0 +1,50 @@
+def bubble_other() -> Result[str, IOError]:
+    try:
+        raise IOError("result other")
+    except FileNotFoundError:
+        return "missing"
+
+
+def catch_outer() -> str:
+    try:
+        try:
+            raise IOError("outer other")
+        except FileNotFoundError:
+            return "missing"
+    except IOError as error:
+        return error.message
+
+
+def bubble_union(flag: bool) -> Result[str, IOError | ValueError]:
+    try:
+        if flag:
+            raise IOError("union other")
+        raise ValueError("union value")
+    except FileNotFoundError:
+        return "missing"
+
+
+def main() -> None:
+    try:
+        _: str = bubble_other()
+        assert False
+    except IOError as error:
+        assert error.message == "result other"
+
+    assert catch_outer() == "outer other"
+
+    try:
+        _: str = bubble_union(True)
+        assert False
+    except IOError as error:
+        assert error.message == "union other"
+    except ValueError:
+        assert False
+
+    try:
+        _: str = bubble_union(False)
+        assert False
+    except IOError:
+        assert False
+    except ValueError as error:
+        assert error.message == "union value"

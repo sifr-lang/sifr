@@ -592,29 +592,18 @@ pub(in crate::lower) fn lower_stmt(
                 });
             }
 
-            // Exhaustiveness checking: if no catch-all, all error types must be covered.
             // A parent handler covers a child error. Child handlers do not cover their parent:
-            // base errors can contain values outside the known child set.
-            if !has_catch_all && !try_error_types.is_empty() {
-                let uncovered: Vec<String> = try_error_types
-                    .iter()
-                    .filter(|error_ty| {
-                        !covered_types
-                            .iter()
-                            .any(|covered| error_ty.is_assignable_to(covered))
-                    })
-                    .map(Type::display_name)
-                    .collect();
-                if !uncovered.is_empty() {
-                    let mut sorted = uncovered;
-                    sorted.sort();
-                    super::result_diagnostics::uncovered_try_errors(
-                        ctx,
-                        &sorted.join(", "),
-                        try_stmt.range(),
-                    );
-                }
-            }
+            // base errors can contain values outside the known child set. Preserve unmatched
+            // errors when an outer try or the function result channel can carry them.
+            super::try_error_propagation::record_or_reject_unmatched_try_errors(
+                &try_error_types,
+                &covered_types,
+                has_catch_all,
+                prev_in_try,
+                func_type,
+                ctx,
+                try_stmt.range(),
+            );
 
             let handlers_exit = handler_moved_states.iter().all(|(_, exits)| *exits);
             if handlers_exit {
