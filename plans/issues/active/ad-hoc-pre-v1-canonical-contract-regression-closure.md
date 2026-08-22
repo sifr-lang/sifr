@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Item 0 locks the baseline and ownership.
+Status: active on 2026-08-22. Item 0 is complete. Item 1 is next.
 
 ## Objective
 
@@ -127,7 +127,7 @@ scope and does not repeat that work.
 | Failure | Root cause | Delivery owner |
 | --- | --- | --- |
 | `sifr_stdlib_all_features` | The test still calls removed string-hash helpers. | Item 1 |
-| Rust shared-bridge evidence | The manifest omits the new `negative/src/` segment. | Required linked delivery A |
+| Rust shared-bridge evidence | The manifest omits the new `negative/src/` segment. | [Linked delivery A](#required-linked-delivery-a-rust-interop-evidence-path) |
 | Performance LSP cold start | The benchmark assumes that `sifr.toml` is beside `src/main.sifr`. | Item 2 |
 | Performance trend variants | The stored benchmark-manifest hash is stale. | Item 3 |
 | Fuzz smoke | Two seed paths omit the new `src/` segment. | Item 3 |
@@ -270,6 +270,34 @@ fixtures are collateral members of the failed optional-union batch.
 All rows have one current owner. No new failure needs a new issue. The
 installed-sysroot boundary remains an approved resolved row and stays outside
 this phase.
+
+### Item 0 record
+
+State: complete
+
+PR: [#3425](https://github.com/sifr-lang/sifr/pull/3425)
+
+Base SHA: `4815e74c2cf59989e8eba5afb4f7ca2e31b7d097`
+
+Candidate SHA: `8146e5057ad80457285bb72c68b8b7b4cfe825d3`
+
+Merge SHA: `97f72e9383313482d67ad61b8e34c5bdaa8f5fb8`
+
+Changed paths: this phase document.
+
+Validation: the unchanged rebaseline evidence was reused. Document links,
+code fences, item numbering, terminology, and diff checks passed. No compiler
+file changed, so the Sifr gates did not apply.
+
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. The evidence is in the
+[#3425 review comment](https://github.com/sifr-lang/sifr/pull/3425#issuecomment-5376641794).
+
+Deferred follow-up: Item 12 must make the 15 failing-variant total
+mechanically reconcilable. Closed historical ownership records remain
+unchanged.
+
+Next action: implement Item 1.
 
 ## Item 1: Migrate the Native Hash Test to Bytes
 
@@ -650,7 +678,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Item 0 locks the baseline on
-`4815e74c2cf59989e8eba5afb4f7ca2e31b7d097`.
+Current state: Item 0 is complete and recorded. Item 1 is next.
 
-Next action: review and merge Item 0. Then record its merge and start Item 1.
+Next action: migrate the all-features native hash test to the bytes API.
