@@ -1,0 +1,20 @@
+# expect-error: SIFR-NAME-0001
+class ProbeError(Error):
+    message: str
+
+
+def load(value: int) -> Result[int, ProbeError]:
+    if value < 0:
+        raise ProbeError("negative probe")
+    return value
+
+
+def invalid(flag: bool) -> int:
+    probe: int = 1
+    if flag:
+        probe = -1
+    try:
+        value: int = load(probe)
+    except ProbeError as error:
+        _ = error.message
+    return value

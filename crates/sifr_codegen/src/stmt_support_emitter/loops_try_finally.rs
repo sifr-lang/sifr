@@ -1,6 +1,6 @@
 use super::{
-    first_try_error_type_in_stmts, queries, select_try_error_type, HirExceptHandler, HirStmt,
-    RustEmitter, RustExpr, RustStmt, Type,
+    first_try_error_type_in_stmts, queries, select_try_error_type, successful_try_bindings,
+    HirExceptHandler, HirStmt, RustEmitter, RustExpr, RustStmt, Type,
 };
 impl RustEmitter {
     pub(crate) fn lower_loop_control_stmt_for_ir(&self, stmt: &HirStmt) -> Option<RustStmt> {
@@ -232,41 +232,77 @@ impl RustEmitter {
             || select_try_error_type(handlers),
             |carrier| crate::render_type(&crate::sifr_type_to_rust_type(carrier)),
         );
-        let capture_returns = self.current_return_type.is_some()
-            && (queries::body_contains_return(body)
-                || handlers
-                    .iter()
-                    .any(|handler| queries::body_contains_return(&handler.body)));
+        // Handler bodies are emitted in the enclosing function's match arm, so
+        // only returns from the closure-backed try body need a carrier.
+        let capture_returns =
+            self.current_return_type.is_some() && queries::body_contains_return(body);
         let direct_return_capture = capture_returns
             && queries::block_control_flow_effect(body).always_exits()
             && handlers
                 .iter()
                 .all(|handler| queries::block_control_flow_effect(&handler.body).always_exits());
+        let successful_bindings = successful_try_bindings(body, handlers)
+            .into_iter()
+            .map(|(name, ty)| {
+                let ty = self.local_binding_types.get(&name).cloned().unwrap_or(ty);
+                (name, ty)
+            })
+            .collect::<Vec<_>>();
+        let binding_tuple_ty = crate::RustType::Tuple(
+            successful_bindings
+                .iter()
+                .map(|(_, ty)| crate::sifr_type_to_rust_type(ty))
+                .collect(),
+        );
+        let binding_pattern = format!(
+            "({})",
+            successful_bindings
+                .iter()
+                .map(|(name, ty)| {
+                    if self.mutated_vars.contains(name)
+                        || super::should_force_mutable_binding(ty, &self.recursive_fields)
+                    {
+                        format!("mut {name},")
+                    } else {
+                        format!("{name},")
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(" ")
+        );
         let ok_ty = if capture_returns {
             if let Some(return_ty) = self.current_return_type.as_ref() {
                 if direct_return_capture {
-                    crate::render_type(&crate::sifr_type_to_rust_type(return_ty))
+                    crate::sifr_type_to_rust_type(return_ty)
                 } else {
-                    format!(
-                        "Option<{}>",
-                        crate::render_type(&crate::sifr_type_to_rust_type(return_ty))
-                    )
+                    crate::RustType::Option(Box::new(crate::sifr_type_to_rust_type(return_ty)))
                 }
             } else {
-                "()".to_string()
+                crate::RustType::Unit
             }
+        } else if !successful_bindings.is_empty() {
+            binding_tuple_ty.clone()
         } else {
-            "()".to_string()
+            crate::RustType::Unit
         };
 
         let mut closure_body = {
+            let saved_cache_requirements = self.string_char_cache_required_names.clone();
+            let body_cache_uses = crate::string_char_cache_scan::string_cache_uses_in_stmts(body);
+            for (name, _) in &successful_bindings {
+                if !body_cache_uses.contains(name) {
+                    self.string_char_cache_required_names.remove(name);
+                }
+            }
             if capture_returns {
                 self.try_closure_depth += 1;
                 self.try_closure_option_wrap.push(!direct_return_capture);
             }
             self.try_closure_error_type.push(err_ty.clone());
             self.try_closure_error_type_info.push(error_carrier.clone());
-            let lowered = self.try_lower_scoped_stmt_block_for_ir(body)?;
+            let lowered_result = self.try_lower_scoped_stmt_block_for_ir(body);
+            self.string_char_cache_required_names = saved_cache_requirements;
+            let lowered = lowered_result?;
             if capture_returns {
                 self.try_closure_depth -= 1;
                 self.try_closure_option_wrap.pop();
@@ -279,7 +315,34 @@ impl RustEmitter {
             lowered
         };
 
-        if !capture_returns {
+        if !successful_bindings.is_empty() && capture_returns {
+            closure_body.push(RustStmt::Assign {
+                target: RustExpr::Ident("__sifr_successful_try_bindings".to_string()),
+                value: RustExpr::FnCall {
+                    func: Box::new(RustExpr::Ident("Some".to_string())),
+                    args: vec![RustExpr::Tuple(
+                        successful_bindings
+                            .iter()
+                            .map(|(name, _)| RustExpr::Ident(name.clone()))
+                            .collect(),
+                    )],
+                },
+            });
+            closure_body.push(RustStmt::Return(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Ident("Ok".to_string())),
+                args: vec![RustExpr::Literal(crate::RustLiteral::None)],
+            })));
+        } else if !successful_bindings.is_empty() {
+            closure_body.push(RustStmt::Return(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Ident("Ok".to_string())),
+                args: vec![RustExpr::Tuple(
+                    successful_bindings
+                        .iter()
+                        .map(|(name, _)| RustExpr::Ident(name.clone()))
+                        .collect(),
+                )],
+            })));
+        } else if !capture_returns {
             closure_body.push(RustStmt::Return(Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Ident("Ok".to_string())),
                 args: vec![RustExpr::Literal(crate::RustLiteral::Unit)],
@@ -313,17 +376,58 @@ impl RustEmitter {
             try_call
         };
 
-        let mut lowered = vec![RustStmt::Let {
+        let mut lowered = Vec::new();
+        if capture_returns && !successful_bindings.is_empty() {
+            lowered.push(RustStmt::Let {
+                mutable: true,
+                name: "__sifr_successful_try_bindings".to_string(),
+                ty: Some(crate::RustType::Option(Box::new(binding_tuple_ty))),
+                value: RustExpr::Literal(crate::RustLiteral::None),
+            });
+        }
+        lowered.push(RustStmt::Let {
             mutable: false,
             name: "__sifr_try_res".to_string(),
             ty: Some(crate::RustType::Result(
-                Box::new(crate::RustType::Named(ok_ty.clone())),
+                Box::new(ok_ty),
                 Box::new(crate::RustType::Named(err_ty.clone())),
             )),
             value: try_value,
-        }];
+        });
 
-        if capture_returns {
+        if !successful_bindings.is_empty() && !capture_returns {
+            let Some(handler_chain) = self.lower_try_except_handler_chain_for_ir(
+                handlers,
+                "__sifr_try_err",
+                error_carrier.as_ref(),
+                &err_ty,
+            )?
+            else {
+                return Ok(None);
+            };
+            let value_name = "__sifr_try_bindings";
+            let match_value = RustExpr::Match {
+                expr: Box::new(RustExpr::Ident("__sifr_try_res".to_string())),
+                arms: vec![
+                    crate::RustMatchArm {
+                        pattern: format!("Ok({value_name})"),
+                        bindings: vec![value_name.to_string()],
+                        guard: None,
+                        body: vec![RustStmt::TailExpr(RustExpr::Ident(value_name.to_string()))],
+                    },
+                    crate::RustMatchArm {
+                        pattern: "Err(__sifr_try_err)".to_string(),
+                        bindings: vec!["__sifr_try_err".to_string()],
+                        guard: None,
+                        body: handler_chain,
+                    },
+                ],
+            };
+            lowered.push(RustStmt::LetPattern {
+                pattern: binding_pattern.clone(),
+                value: match_value,
+            });
+        } else if capture_returns {
             let mut arms = vec![crate::RustMatchArm {
                 pattern: if direct_return_capture {
                     "Ok(__sifr_ret_val)".to_string()
@@ -363,6 +467,19 @@ impl RustEmitter {
                 expr: RustExpr::Ident("__sifr_try_res".to_string()),
                 arms,
             });
+            if !successful_bindings.is_empty() {
+                lowered.push(RustStmt::LetElse {
+                    pattern: format!("Some({binding_pattern})"),
+                    value: RustExpr::Ident("__sifr_successful_try_bindings".to_string()),
+                    else_body: vec![RustStmt::Expr(RustExpr::MacroCall {
+                        name: "unreachable".to_string(),
+                        args: vec![RustExpr::Literal(crate::RustLiteral::Str(
+                            "successful try fallthrough must initialize promoted bindings"
+                                .to_string(),
+                        ))],
+                    })],
+                });
+            }
         } else {
             let Some(handler_chain) = self.lower_try_except_handler_chain_for_ir(
                 handlers,
@@ -379,6 +496,11 @@ impl RustEmitter {
                 then_body: handler_chain,
                 else_body: None,
             });
+        }
+        for (name, ty) in &successful_bindings {
+            if let Some(cache_stmt) = self.string_char_cache_init_stmt_for_local(name, ty) {
+                lowered.push(cache_stmt);
+            }
         }
         Ok(Some(lowered))
     }

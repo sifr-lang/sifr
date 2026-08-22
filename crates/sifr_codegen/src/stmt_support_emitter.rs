@@ -60,6 +60,7 @@ use result_type_helpers::{
     is_none_like_result_value, is_result_int_division_error_type, result_int_to_sifr_int_rust_type,
 };
 pub(crate) use stmt_expr_binop_option::binop_with_optional_operands;
+pub(crate) use try_error_helpers::successful_try_bindings;
 use try_error_helpers::{
     can_construct_error_from_message_for_ir, first_try_error_type_in_stmts,
     io_error_kind_for_handler, select_try_error_type, HandlerMatchCondition,

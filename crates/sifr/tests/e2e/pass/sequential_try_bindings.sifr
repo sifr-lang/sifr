@@ -1,0 +1,45 @@
+class ProbeError(Error):
+    message: str
+
+
+def load(value: int) -> Result[int, ProbeError]:
+    if value < 0:
+        raise ProbeError("negative probe")
+    return value
+
+
+def collect_pair() -> Result[int, ProbeError]:
+    try:
+        first: int = load(20)
+    except ProbeError as error:
+        raise error
+
+    try:
+        second: int = load(22)
+    except ProbeError as error:
+        raise error
+
+    return first + second
+
+
+def conditional_value(flag: bool) -> Result[int, ProbeError]:
+    try:
+        value: int = load(41)
+        if flag:
+            return value
+    except ProbeError as error:
+        raise error
+    return value + 1
+
+
+def main() -> None:
+    try:
+        result: int = collect_pair()
+        assert result == 42
+        direct: int = conditional_value(True)
+        assert direct == 41
+        continued: int = conditional_value(False)
+        assert continued == 42
+    except ProbeError as error:
+        _ = error.message
+        assert False
