@@ -327,6 +327,12 @@ fn resolve_package_python_environment(
     required_import_roots: &[String],
     provider: &mut impl SourceProvider,
 ) -> EnvironmentSnapshot {
+    if !provider.is_file(&package_root.join("Cargo.toml")) {
+        return EnvironmentSnapshot {
+            runtime: None,
+            diagnostics: Vec::new(),
+        };
+    }
     match resolve_package_python_environment_inner(package_root, required_import_roots, provider) {
         Ok(snapshot) => snapshot,
         Err(diagnostics) => EnvironmentSnapshot {

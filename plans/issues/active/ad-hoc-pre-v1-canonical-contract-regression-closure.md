@@ -1,6 +1,7 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 2 are complete. Item 3 is next.
+Status: active on 2026-08-22. Items 0 through 2 are complete. Item 3 has a
+passing performance correction and is in final validation.
 
 ## Objective
 
@@ -422,6 +423,32 @@ Acceptance criteria:
 - No reader accepts an old path as a fallback.
 - The item does not repair or waive the linked Rust-interop failure.
 
+### Item 3 performance correction evidence
+
+State: in progress
+
+The performance trend hash and its negative self-test pass. The fuzz/property
+area passes all 39 variants. The ecosystem area passes all 34 variants. The
+warm controlled representative and full profiles pass all 10 benchmark
+commands and every budget. The performance smoke profile also passes.
+
+[Performance issue #3431](https://github.com/sifr-lang/sifr/issues/3431) tracks
+the correction. PR #3262 copied all retained stdlib class templates into each
+later stdlib codegen operation. It also retained method bodies that late
+structural codegen does not use. The correction selects only imported modules'
+templates and removes unused bodies from retained templates.
+
+The canonical LSP project exposed a separate ownership defect. Python editor
+diagnostics adopted an ancestor Cargo workspace when the Sifr package had no
+local `Cargo.toml`. The correction now requires package-local Cargo ownership.
+
+The passing representative artifact has SHA-256
+`9ab0db8499f1a42905983fe76ab756533fbb7655517ac59a78bd09671506cb72`.
+No baseline, threshold, waiver, timeout, profile, or product feature changed.
+
+Next action: freeze the candidate, run its exact-SHA review, and run the two
+required Sifr gates.
+
 ## Item 4: Correct the Dependency Feature Assertion
 
 Purpose: Make the driver test match reachable module metadata.
@@ -740,6 +767,7 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 2 are complete and recorded. Item 3 is next.
+Current state: Items 0 through 2 are complete and recorded. Item 3 has passing
+focused, fuzz, ecosystem, and representative performance evidence.
 
-Next action: refresh migrated evidence paths, hashes, and checksums.
+Next action: complete Item 3 validation, review, gates, merge, and record.

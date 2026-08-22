@@ -196,7 +196,7 @@
       "coverage_mode": "diagnostic-rules-smoke",
       "corpus_dir": "verification/areas/project_workspace/fixtures/project",
       "seed_files": [
-        "verification/areas/project_workspace/fixtures/project/workspace_missing_import_canonical/main.sifr"
+        "verification/areas/project_workspace/fixtures/project/workspace_missing_import_canonical/src/main.sifr"
       ],
       "expect_exit_code": 0,
       "assert_no_panic": true,
@@ -214,7 +214,7 @@
         "--target",
         "package_project_manifest_entrypoint",
         "--seed",
-        "verification/areas/project_workspace/fixtures/project/workspace_missing_import_canonical/main.sifr"
+        "verification/areas/project_workspace/fixtures/project/workspace_missing_import_canonical/src/main.sifr"
       ],
       "minimization_command": [
         "python3",

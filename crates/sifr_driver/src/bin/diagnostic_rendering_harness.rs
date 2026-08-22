@@ -194,7 +194,7 @@ fn check_parser_runtime_rules(root: &Path) -> Result<(), String> {
 fn check_parser_seed_runtime_rules(root: &Path, seed_path: &Path) -> Result<(), String> {
     let base = root.join("verification/areas/diagnostics/fixtures/diagnostics");
     let seed = root.join(seed_path);
-    let fixture = fixture_name_for_seed(&base, &seed)?;
+    let fixture = fixture_name_for_seed(&base, &seed, FixtureLayout::Flat)?;
     let (_, code) = PARSER_FIXTURES
         .iter()
         .find(|(candidate, _)| *candidate == fixture)
@@ -222,7 +222,7 @@ fn check_project_runtime_rules(root: &Path) -> Result<(), String> {
 fn check_project_seed_runtime_rules(root: &Path, seed_path: &Path) -> Result<(), String> {
     let base = root.join("verification/areas/project_workspace/fixtures/project");
     let seed = root.join(seed_path);
-    let fixture = fixture_name_for_seed(&base, &seed)?;
+    let fixture = fixture_name_for_seed(&base, &seed, FixtureLayout::SourceRoot)?;
     if let Some((_, code, required_args)) = PROJECT_FIXTURES
         .iter()
         .find(|(candidate, _, _)| *candidate == fixture)
@@ -247,7 +247,7 @@ fn check_project_fixture(
     code: &str,
     required_args: &[&str],
 ) -> Result<(), String> {
-    let entry = base.join(fixture).join("main.sifr");
+    let entry = base.join(fixture).join("src/main.sifr");
     let mut provider = sifr_frontend::DiskSourceProvider::new();
     let diagnostics = check_project(&entry, &mut provider);
     assert_rules(&diagnostics, code, fixture, required_args, true, true)?;
@@ -263,7 +263,16 @@ fn check_cycle_runtime_rules(root: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn fixture_name_for_seed(base: &Path, seed: &Path) -> Result<String, String> {
+enum FixtureLayout {
+    Flat,
+    SourceRoot,
+}
+
+fn fixture_name_for_seed(
+    base: &Path,
+    seed: &Path,
+    layout: FixtureLayout,
+) -> Result<String, String> {
     if seed.file_name().and_then(|name| name.to_str()) != Some("main.sifr") {
         return Err(format!(
             "seed must point at a main.sifr fixture: {}",
@@ -273,7 +282,21 @@ fn fixture_name_for_seed(base: &Path, seed: &Path) -> Result<String, String> {
     let parent = seed
         .parent()
         .ok_or_else(|| format!("seed has no parent fixture: {}", seed.display()))?;
-    parent
+    let fixture_root = match layout {
+        FixtureLayout::Flat => parent,
+        FixtureLayout::SourceRoot => {
+            if parent.file_name().and_then(|name| name.to_str()) != Some("src") {
+                return Err(format!(
+                    "seed must use the canonical src/main.sifr layout: {}",
+                    seed.display()
+                ));
+            }
+            parent
+                .parent()
+                .ok_or_else(|| format!("seed has no parent fixture: {}", seed.display()))?
+        }
+    };
+    fixture_root
         .strip_prefix(base)
         .ok()
         .and_then(|relative| {
