@@ -1,6 +1,6 @@
 use crate::stdlib_filter::{
     partition_rust_items_by_name, rust_source_defined_item_names, rust_source_references_item_name,
-    strip_rust_items_by_name,
+    strip_relocated_rust_items_by_name, strip_rust_items_by_name,
 };
 use crate::{
     build_error_into_error_impl, generate_rust_with_stdlib_for_module_with_structural_policy,
@@ -61,6 +61,7 @@ pub(crate) fn relocate_project_stdlib_nominals(
     module_name: &str,
     plan: &ProjectStdlibNominalPlan,
     crate_root_modules: &HashSet<&str>,
+    local_class_rust_names: &HashSet<String>,
 ) -> String {
     if plan.registry.shared_rust_names.is_empty() && plan.registry.crate_root_rust_names.is_empty()
     {
@@ -73,7 +74,7 @@ pub(crate) fn relocate_project_stdlib_nominals(
         .chain(&plan.registry.crate_root_rust_names)
         .map(String::as_str)
         .collect();
-    let stripped = strip_rust_items_by_name(source, &names);
+    let stripped = strip_relocated_rust_items_by_name(source, &names, local_class_rust_names);
     if crate_root_modules.contains(module_name) {
         return stripped;
     }
@@ -806,5 +807,35 @@ mod tests {
             .contains("FileNotFoundError"));
         syn::parse_file(&generated.project_union_prelude)
             .expect("project nominal prelude should not contain a dangling re-export");
+    }
+
+    #[test]
+    fn relocation_retains_local_child_conversion_into_shared_parent() {
+        let mut plan = ProjectStdlibNominalPlan::empty();
+        plan.registry.register_shared(
+            "sifr.logging.Formatter".to_string(),
+            "Formatter".to_string(),
+        );
+        let source = r#"
+struct Formatter { template: String }
+struct ChildFormatter { formatter: Formatter }
+
+impl From<ChildFormatter> for Formatter {
+    fn from(value: ChildFormatter) -> Self { value.formatter }
+}
+"#;
+
+        let relocated = relocate_project_stdlib_nominals(
+            source,
+            "main",
+            &plan,
+            &HashSet::from(["main"]),
+            &HashSet::from(["ChildFormatter".to_string()]),
+        );
+
+        assert!(!relocated.contains("struct Formatter"));
+        assert!(relocated.contains("struct ChildFormatter"));
+        assert!(relocated.contains("From<ChildFormatter> for Formatter"));
+        syn::parse_file(&relocated).expect("retained local-child conversion should parse");
     }
 }

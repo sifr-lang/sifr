@@ -2,6 +2,46 @@ use super::*;
 use std::collections::HashSet;
 
 #[test]
+fn relocation_keeps_local_child_conversion_into_canonical_parent() {
+    let code = r#"
+struct Parent {}
+struct RelocatedChild {}
+struct LocalChild {}
+
+impl Parent {
+    fn inherited() {}
+}
+
+impl From<String> for Parent {
+    fn from(_value: String) -> Self { Parent {} }
+}
+
+impl From<RelocatedChild> for Parent {
+    fn from(_value: RelocatedChild) -> Self { Parent {} }
+}
+
+impl From<LocalChild> for Parent {
+    fn from(_value: LocalChild) -> Self { Parent {} }
+}
+"#;
+    let relocated = HashSet::from(["Parent", "RelocatedChild"]);
+
+    let stripped = strip_relocated_rust_items_by_name(
+        code,
+        &relocated,
+        &HashSet::from(["LocalChild".to_string()]),
+    );
+
+    assert!(!stripped.contains("struct Parent"));
+    assert!(!stripped.contains("struct RelocatedChild"));
+    assert!(!stripped.contains("fn inherited"));
+    assert!(!stripped.contains("From<String>"));
+    assert!(!stripped.contains("From<RelocatedChild>"));
+    assert!(stripped.contains("struct LocalChild"));
+    assert!(stripped.contains("From<LocalChild> for Parent"));
+}
+
+#[test]
 fn filter_keeps_transitive_dependencies_in_item_order() {
     let code = r#"
 use std::collections::HashMap;

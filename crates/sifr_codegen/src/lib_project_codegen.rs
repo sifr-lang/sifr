@@ -392,6 +392,11 @@ pub fn generate_rust_multi_with_metadata(
             module_name,
             &stdlib_nominal_plan,
             &crate_root_modules,
+            &module
+                .classes
+                .iter()
+                .map(|class| source_class_rust_name(&class.name))
+                .collect(),
         );
         let imports = [local_imports, union_imports]
             .into_iter()
