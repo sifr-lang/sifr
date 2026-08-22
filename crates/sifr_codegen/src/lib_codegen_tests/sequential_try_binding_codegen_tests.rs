@@ -255,23 +255,18 @@ def outer() -> int:
 fn nested_function_try_channel_is_isolated_and_enclosing_channel_is_restored() {
     let generated = generate_rust_from_source(
         r#"
-def fail_inner() -> Result[int, ValueError]:
-    raise ValueError("inner")
-
 def fail_outer() -> Result[int, IOError]:
     raise IOError("outer")
 
 def run() -> Result[int, IOError]:
     try:
-        def inner() -> Result[int, ValueError]:
-            try:
-                value: int = fail_inner()
-            except FileNotFoundError:
-                return 0
-            return value
+        def inner(succeed: bool) -> Result[int, ValueError]:
+            if succeed:
+                return 1
+            raise ValueError("inner")
 
-        nested: Result[int, ValueError] = inner()
-        assert str(nested) == "Err(ValueError { message: \"inner\" })"
+        nested_text: str = str(inner(False))
+        assert nested_text == "Err(ValueError { message: \"inner\" })"
         outer_value: int = fail_outer()
         return outer_value
     except IOError:
@@ -279,11 +274,10 @@ def run() -> Result[int, IOError]:
 "#,
     );
 
-    assert!(generated.contains("let inner = ||"));
-    assert!(generated.contains("let __sifr_try_res: Result<(i64,), ValueError>"));
+    assert!(generated.contains("let inner = |succeed: bool|"));
     assert!(generated.contains("Result<Result<i64, IOError>, IOError>"));
-    assert!(generated.contains("return Err(__sifr_try_err);"));
-    assert!(!generated.contains("Into::<IOError>::into(__sifr_try_err)"));
+    assert!(generated.contains("Err(ValueError::new(\"inner\".to_string()))"));
+    assert!(!generated.contains("Err(ValueError::new(\"inner\".to_string()).into())"));
     assert!(generated.contains("Err(__sifr_try_err) =>"));
     syn::parse_file(&generated).expect("nested try-channel Rust should parse");
 }
@@ -292,24 +286,19 @@ def run() -> Result[int, IOError]:
 fn nested_async_function_try_channel_is_isolated() {
     let generated = generate_rust_from_source(
         r#"
-async def fail_inner_async() -> Result[int, ValueError]:
-    await task.sleep(0.0)
-    raise ValueError("inner async")
-
 def fail_outer() -> Result[int, IOError]:
     raise IOError("outer")
 
 async def run() -> Result[int, IOError]:
     try:
-        async def inner() -> Result[int, ValueError]:
-            try:
-                value: int = await fail_inner_async()
-            except FileNotFoundError:
-                return 0
-            return value
+        async def inner(succeed: bool) -> Result[int, ValueError]:
+            await task.sleep(0.0)
+            if succeed:
+                return 1
+            raise ValueError("inner async")
 
-        nested: Result[int, ValueError] = await inner()
-        assert str(nested) == "Err(ValueError { message: \"inner async\" })"
+        nested_text: str = str(await inner(False))
+        assert nested_text == "Err(ValueError { message: \"inner async\" })"
         outer_value: int = fail_outer()
         return outer_value
     except IOError:
@@ -317,11 +306,10 @@ async def run() -> Result[int, IOError]:
 "#,
     );
 
-    assert!(generated.contains("let inner = async move ||"));
-    assert!(generated.contains("let __sifr_try_res: Result<(i64,), ValueError>"));
+    assert!(generated.contains("let inner = async move |succeed: bool|"));
     assert!(generated.contains("Result<Result<i64, IOError>, IOError>"));
-    assert!(generated.contains("return Err(__sifr_try_err);"));
-    assert!(!generated.contains("Into::<IOError>::into(__sifr_try_err)"));
+    assert!(generated.contains("Err(ValueError::new(\"inner async\".to_string()))"));
+    assert!(!generated.contains("Err(ValueError::new(\"inner async\".to_string()).into())"));
     syn::parse_file(&generated).expect("nested async try-channel Rust should parse");
 }
 

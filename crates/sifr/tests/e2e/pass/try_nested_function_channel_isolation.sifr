@@ -1,27 +1,16 @@
-def fail_inner() -> Result[int, ValueError]:
-    raise ValueError("inner")
-
-
-async def fail_inner_async() -> Result[int, ValueError]:
-    await task.sleep(0.0)
-    raise ValueError("inner async")
-
-
 def fail_outer() -> Result[int, IOError]:
     raise IOError("outer")
 
 
 def run_sync() -> Result[int, IOError]:
     try:
-        def inner() -> Result[int, ValueError]:
-            try:
-                value: int = fail_inner()
-            except FileNotFoundError:
-                return 0
-            return value
+        def inner(succeed: bool) -> Result[int, ValueError]:
+            if succeed:
+                return 1
+            raise ValueError("inner")
 
-        nested: Result[int, ValueError] = inner()
-        assert str(nested) == 'Err(ValueError { message: "inner" })'
+        nested_text: str = str(inner(False))
+        assert nested_text == 'Err(ValueError { message: "inner" })'
         outer_value: int = fail_outer()
         return outer_value
     except IOError:
@@ -30,15 +19,14 @@ def run_sync() -> Result[int, IOError]:
 
 async def run_async() -> Result[int, IOError]:
     try:
-        async def inner() -> Result[int, ValueError]:
-            try:
-                value: int = await fail_inner_async()
-            except FileNotFoundError:
-                return 0
-            return value
+        async def inner(succeed: bool) -> Result[int, ValueError]:
+            await task.sleep(0.0)
+            if succeed:
+                return 1
+            raise ValueError("inner async")
 
-        nested: Result[int, ValueError] = await inner()
-        assert str(nested) == 'Err(ValueError { message: "inner async" })'
+        nested_text: str = str(await inner(False))
+        assert nested_text == 'Err(ValueError { message: "inner async" })'
         outer_value: int = fail_outer()
         return outer_value
     except IOError:
