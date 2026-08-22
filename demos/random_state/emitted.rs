@@ -991,6 +991,7 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
+pub use __sifr_project_nominals::ParseError;
 pub use __sifr_project_nominals::ValueError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2erandom_x2eRandom;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2erandom_x2eRandomState;
@@ -1756,21 +1757,6 @@ fn random() -> f64 {
     _sync_module_random(&mut generator);
     value
 }
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
 fn main() {
     let mut rng: __SifrStdlib_sifr_x2erandom_x2eRandom = __SifrStdlib_sifr_x2erandom_x2eRandom::new(
         Some(77_i64),

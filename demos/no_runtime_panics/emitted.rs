@@ -3215,8 +3215,12 @@ mod __sifr_project_nominals {
         }
     }
 }
+pub use __sifr_project_nominals::Error;
 pub use __sifr_project_nominals::IOError;
 pub use __sifr_project_nominals::JSONDecodeError;
+pub use __sifr_project_nominals::JsonIntegerRangeError;
+pub use __sifr_project_nominals::JsonLimitError;
+pub use __sifr_project_nominals::ParseError;
 pub use __sifr_project_nominals::RegexError;
 pub use __sifr_project_nominals::ValueError;
 pub use __sifr_project_nominals::__SifrIoBinaryFileHandle;
@@ -6798,108 +6802,6 @@ fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         }
     };
     IOError { message: msg, kind }
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Error {
-    message: String,
-}
-impl Error {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for Error {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for Error {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JsonIntegerRangeError {
-    message: String,
-    path: String,
-    profile: String,
-}
-impl JsonIntegerRangeError {
-    fn new(message: String) -> Self {
-        Self {
-            message,
-            path: String::new(),
-            profile: String::new(),
-        }
-    }
-}
-impl ::std::fmt::Display for JsonIntegerRangeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for JsonIntegerRangeError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JsonLimitError {
-    message: String,
-    limit: i64,
-}
-impl JsonLimitError {
-    fn new(message: String) -> Self {
-        Self { message, limit: 0 }
-    }
-}
-impl ::std::fmt::Display for JsonLimitError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for JsonLimitError {}
-impl From<IOError> for Error {
-    fn from(err: IOError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ParseError> for Error {
-    fn from(err: ParseError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ValueError> for Error {
-    fn from(err: ValueError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<JSONDecodeError> for Error {
-    fn from(err: JSONDecodeError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<JsonIntegerRangeError> for Error {
-    fn from(err: JsonIntegerRangeError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<JsonLimitError> for Error {
-    fn from(err: JsonLimitError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<RegexError> for Error {
-    fn from(err: RegexError) -> Self {
-        Self::new(err.message)
-    }
 }
 fn has_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
     let __sifr_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {

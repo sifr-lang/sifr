@@ -480,6 +480,7 @@ mod __sifr_project_nominals {
         }
     }
 }
+pub use __sifr_project_nominals::Error;
 pub use __sifr_project_nominals::ParseError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2egraphlib_x2eCycleError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2estatistics_x2eStatisticsError;
@@ -934,26 +935,6 @@ fn modf_integral(x: f64) -> f64 {
 }
 fn pow(x: f64, y: f64) -> f64 {
     pow_val(x, y)
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Error {
-    message: String,
-}
-impl Error {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for Error {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for Error {}
-impl From<ParseError> for Error {
-    fn from(err: ParseError) -> Self {
-        Self::new(err.message)
-    }
 }
 fn compute_mean(
     data: &Vec<f64>,

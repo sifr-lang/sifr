@@ -1994,6 +1994,8 @@ mod __sifr_project_nominals {
         }
     }
 }
+pub use __sifr_project_nominals::Error;
+pub use __sifr_project_nominals::ParseError;
 pub use __sifr_project_nominals::ValueError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eargparse_x2eArgumentParser;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec;
@@ -3018,46 +3020,6 @@ fn uuid_from_hex(
             let e = __sifr_try_err.clone();
             return Err(ValueError::new(e.message.clone()));
         }
-    }
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Error {
-    message: String,
-}
-impl Error {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for Error {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for Error {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
-impl From<ParseError> for Error {
-    fn from(err: ParseError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ValueError> for Error {
-    fn from(err: ValueError) -> Self {
-        Self::new(err.message)
     }
 }
 fn main() {

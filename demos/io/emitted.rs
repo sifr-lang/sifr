@@ -1930,6 +1930,7 @@ mod __sifr_project_nominals {
         }
     }
 }
+pub use __sifr_project_nominals::Error;
 pub use __sifr_project_nominals::IOError;
 pub use __sifr_project_nominals::JSONDecodeError;
 pub use __sifr_project_nominals::JsonIntegerRangeError;
@@ -2971,71 +2972,6 @@ fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         }
     };
     IOError { message: msg, kind }
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Error {
-    message: String,
-}
-impl Error {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for Error {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for Error {}
-impl From<IOError> for Error {
-    fn from(err: IOError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ParseError> for Error {
-    fn from(err: ParseError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ValueError> for Error {
-    fn from(err: ValueError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<JSONDecodeError> for Error {
-    fn from(err: JSONDecodeError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<JsonIntegerRangeError> for Error {
-    fn from(err: JsonIntegerRangeError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<JsonLimitError> for Error {
-    fn from(err: JsonLimitError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<TOMLDecodeError> for Error {
-    fn from(err: TOMLDecodeError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<RegexError> for Error {
-    fn from(err: RegexError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<TimeoutError> for Error {
-    fn from(err: TimeoutError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ScopeFailure> for Error {
-    fn from(err: ScopeFailure) -> Self {
-        Self::new(err.message)
-    }
 }
 fn collect_io_roundtrip_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];

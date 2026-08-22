@@ -5216,6 +5216,9 @@ mod __sifr_project_nominals {
 pub use __sifr_project_nominals::Error;
 pub use __sifr_project_nominals::IOError;
 pub use __sifr_project_nominals::JSONDecodeError;
+pub use __sifr_project_nominals::JsonIntegerRangeError;
+pub use __sifr_project_nominals::JsonLimitError;
+pub use __sifr_project_nominals::ParseError;
 pub use __sifr_project_nominals::__SifrIoBinaryFileHandle;
 pub use __sifr_project_nominals::__SifrIoFileHandle;
 pub use __sifr_project_nominals::__SifrIoTextFileHandle;
@@ -7665,58 +7668,6 @@ fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     };
     IOError { message: msg, kind }
 }
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JsonIntegerRangeError {
-    message: String,
-    path: String,
-    profile: String,
-}
-impl JsonIntegerRangeError {
-    fn new(message: String) -> Self {
-        Self {
-            message,
-            path: String::new(),
-            profile: String::new(),
-        }
-    }
-}
-impl ::std::fmt::Display for JsonIntegerRangeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for JsonIntegerRangeError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JsonLimitError {
-    message: String,
-    limit: i64,
-}
-impl JsonLimitError {
-    fn new(message: String) -> Self {
-        Self { message, limit: 0 }
-    }
-}
-impl ::std::fmt::Display for JsonLimitError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for JsonLimitError {}
 fn main() {
     let encoder: __SifrStdlib_sifr_x2ejson_x2eJSONEncoder = __SifrStdlib_sifr_x2ejson_x2eJSONEncoder::new(
         Some(2_i64),

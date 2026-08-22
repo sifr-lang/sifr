@@ -563,6 +563,7 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
+pub use __sifr_project_nominals::IOError;
 pub use __sifr_project_nominals::ParseError;
 pub use __sifr_project_nominals::ValueError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ehashlib_x2eHashObject;
@@ -1147,25 +1148,6 @@ fn new(
     }
     Ok(_build_hash(name, data))
 }
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct IOError {
-    message: String,
-    kind: String,
-}
-impl IOError {
-    fn new(message: String) -> Self {
-        Self {
-            message,
-            kind: "Other".to_string(),
-        }
-    }
-}
-impl ::std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for IOError {}
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {

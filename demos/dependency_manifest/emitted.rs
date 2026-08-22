@@ -2880,6 +2880,9 @@ mod __sifr_project_nominals {
         }
     }
 }
+pub use __sifr_project_nominals::Error;
+pub use __sifr_project_nominals::IOError;
+pub use __sifr_project_nominals::ParseError;
 pub use __sifr_project_nominals::TOMLDecodeError;
 pub use __sifr_project_nominals::__SifrIoBinaryFileHandle;
 pub use __sifr_project_nominals::__SifrIoFileHandle;
@@ -2910,6 +2913,8 @@ fn main() {
 }
 
 // src/helper.rs
+pub use crate::IOError;
+pub use crate::ParseError;
 pub use crate::TOMLDecodeError;
 pub use crate::__SifrIoBinaryFileHandle;
 pub use crate::__SifrIoFileHandle;
@@ -4457,25 +4462,6 @@ pub fn loads(
         }
     }
 }
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct IOError {
-    pub message: String,
-    pub kind: String,
-}
-impl IOError {
-    pub fn new(message: String) -> Self {
-        Self {
-            message,
-            kind: "Other".to_string(),
-        }
-    }
-}
-impl ::std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for IOError {}
 pub fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
@@ -4497,51 +4483,6 @@ pub fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         }
     };
     IOError { message: msg, kind }
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Error {
-    pub message: String,
-}
-impl Error {
-    pub fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for Error {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for Error {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ParseError {
-    pub message: String,
-}
-impl ParseError {
-    pub fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
-impl From<IOError> for Error {
-    fn from(err: IOError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ParseError> for Error {
-    fn from(err: ParseError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<TOMLDecodeError> for Error {
-    fn from(err: TOMLDecodeError) -> Self {
-        Self::new(err.message)
-    }
 }
 pub fn render() -> String {
     let __sifr_try_res: Result<String, TOMLDecodeError> = (|| {

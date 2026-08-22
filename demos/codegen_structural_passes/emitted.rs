@@ -835,6 +835,7 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
+pub use __sifr_project_nominals::ParseError;
 pub use __sifr_project_nominals::ValueError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2edatetime_x2edate;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2edatetime_x2edatetime;
@@ -1387,21 +1388,6 @@ fn from_timestamp(
 ) -> Result<__SifrStdlib_sifr_x2edatetime_x2edatetime, ValueError> {
     _from_timestamp_with_tz(ts, tz)
 }
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
 fn main() {
     let current: __SifrStdlib_sifr_x2edatetime_x2edatetime = now(&None);
     let current_iso: String = current.isoformat();
