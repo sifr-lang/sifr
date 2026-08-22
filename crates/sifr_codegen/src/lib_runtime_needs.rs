@@ -100,10 +100,6 @@ impl<T: Clone> Channel<T> {
         self._recv_notify.notify_waiters();
     }
 
-    fn clone(&self) -> Channel<T> {
-        return Clone::clone(self);
-    }
-
     fn register_sender(&self) {
         self.with_state(|state| {
             state.sender_count += 1;
@@ -213,10 +209,6 @@ impl<T: Clone> ChannelSender<T> {
 
     fn close(&mut self) {
         self._channel.close();
-    }
-
-    fn clone(&self) -> ChannelSender<T> {
-        return ChannelSender::new(self._channel.clone());
     }
 }
 

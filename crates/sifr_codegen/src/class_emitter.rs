@@ -691,12 +691,42 @@ impl RustEmitter {
         }
         self.current_class_name = saved_class_name;
         if !constructor_items.is_empty() {
+            let constructor_type_params =
+                Self::class_constructor_impl_type_params(class, &constructor_items);
+            let has_zero_argument_constructor = constructor_items.iter().any(|item| {
+                matches!(
+                    item,
+                    RustItem::Fn { name, params, .. } if name == "new" && params.is_empty()
+                )
+            });
             self.body_items.push(RustItem::Impl {
                 target: Self::class_impl_target(class),
-                type_params: Self::class_constructor_impl_type_params(class, &constructor_items),
+                type_params: constructor_type_params.clone(),
                 trait_: None,
                 items: constructor_items,
             });
+            if has_zero_argument_constructor {
+                self.body_items.push(RustItem::Impl {
+                    target: Self::class_impl_target(class),
+                    type_params: constructor_type_params,
+                    trait_: Some("std::default::Default".to_string()),
+                    items: vec![RustItem::Fn {
+                        name: "default".to_string(),
+                        visibility: Visibility::Private,
+                        type_params: Vec::new(),
+                        params: Vec::new(),
+                        ret: Some(RustType::Named("Self".to_string())),
+                        body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "Self".to_string(),
+                                "new".to_string(),
+                            ])),
+                            args: Vec::new(),
+                        }))],
+                        is_async: false,
+                    }],
+                });
+            }
         }
         if method_items.is_empty() && class.type_params.is_empty() {
             self.body_items.push(RustItem::Impl {
