@@ -157,6 +157,38 @@ def main():
 }
 
 #[test]
+fn ioerror_subclass_handlers_do_not_cover_the_open_base_error() {
+    let source = "\
+def fallible() -> Result[int, IOError]:
+    raise IOError(\"other\")
+
+def main():
+    try:
+        value: int = fallible()
+    except FileNotFoundError:
+        pass
+    except PermissionError:
+        pass
+    except FileExistsError:
+        pass
+    except IsADirectoryError:
+        pass
+    except NotADirectoryError:
+        pass
+    except DirectoryNotEmptyError:
+        pass
+";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RESULT_UNCOVERED_TRY_ERRORS)
+            && error.message == "except arms do not cover all error types from try body: IOError"
+            && error.primary_range.map(|range| range.start())
+                == Some(range_for(source, "try:").start())
+    }));
+}
+
+#[test]
 fn try_finally_without_except_preserves_cleanup_boundary() {
     let source = "\
 def main():

@@ -2773,7 +2773,7 @@ mod __sifr_project_nominals {
                     continue;
                 }
                 let __sifr_try_res: Result<
-                    (),
+                    ((String, Option<String>),),
                     __SifrStdlib_sifr_x2econfigparser_x2eParsingError,
                 > = (|| {
                     let parsed_option_pair: (String, Option<String>) = _split_option_line(
@@ -2829,12 +2829,15 @@ mod __sifr_project_nominals {
                             break;
                         }
                     }
-                    Ok(())
+                    Ok((parsed_option_pair,))
                 })();
-                if let Err(__sifr_try_err) = __sifr_try_res {
-                    let e = __sifr_try_err.clone();
-                    return Err(e);
-                }
+                let (parsed_option_pair,) = match __sifr_try_res {
+                    Ok(__sifr_try_bindings) => __sifr_try_bindings,
+                    Err(__sifr_try_err) => {
+                        let e = __sifr_try_err.clone();
+                        return Err(e);
+                    }
+                };
             }
             Ok(())
         }
@@ -10190,26 +10193,18 @@ fn main() {
         false,
         true,
     );
-    let __sifr_try_res: Result<
-        Option<()>,
-        __SifrStdlib_sifr_x2econfigparser_x2eParsingError,
-    > = (|| {
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2econfigparser_x2eParsingError> = (||
+    {
         let _ = parser
             .read_string(
                 &"[server]\nport = 8080\nenabled = true\nfeature\n".to_string(),
             )?;
-        Ok(None)
+        Ok(())
     })();
-    match __sifr_try_res {
-        Ok(Some(__sifr_ret_val)) => {
-            return __sifr_ret_val;
-        }
-        Ok(None) => {}
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            println!("{}", e.message.clone());
-            return;
-        }
+    if let Err(__sifr_try_err) = __sifr_try_res {
+        let e = __sifr_try_err.clone();
+        println!("{}", e.message.clone());
+        return;
     }
     println!(
         "{}", (parser.getint(& "server".to_string(), & "port".to_string(), None))

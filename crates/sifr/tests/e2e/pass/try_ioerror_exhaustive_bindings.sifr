@@ -1,14 +1,19 @@
-def load_io() -> Result[str, IOError]:
-    raise IOError("missing")
+from sifr.io import read_text
 
 
-def length_or_error(flag: bool) -> Result[int, IOError]:
+def load_io(use_subclass: bool) -> Result[str, IOError]:
+    if use_subclass:
+        return read_text("/tmp/sifr_try_ioerror_exhaustive_bindings_missing.txt")
+    raise IOError("other")
+
+
+def length_or_error(flag: bool, use_subclass: bool) -> Result[int, IOError]:
     try:
-        content: str = load_io()
+        content: str = load_io(use_subclass)
         if flag:
             return len(content)
-    except FileNotFoundError as error:
-        raise error
+    except FileNotFoundError:
+        raise IOError("file-handler")
     except PermissionError as error:
         raise error
     except FileExistsError as error:
@@ -19,13 +24,22 @@ def length_or_error(flag: bool) -> Result[int, IOError]:
         raise error
     except DirectoryNotEmptyError as error:
         raise error
+    except IOError as error:
+        raise error
     return len(content)
 
 
 def main() -> None:
     try:
-        value: int = length_or_error(False)
+        value: int = length_or_error(False, False)
         _ = value
         assert False
     except IOError as error:
-        assert error.message == "missing"
+        assert error.message == "other"
+
+    try:
+        value: int = length_or_error(False, True)
+        _ = value
+        assert False
+    except IOError as error:
+        assert error.message == "file-handler"
