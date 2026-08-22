@@ -263,6 +263,7 @@ fn check_cycle_runtime_rules(root: &Path) -> Result<(), String> {
     Ok(())
 }
 
+#[derive(Clone, Copy)]
 enum FixtureLayout {
     Flat,
     SourceRoot,
