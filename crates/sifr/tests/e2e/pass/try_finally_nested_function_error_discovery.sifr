@@ -1,0 +1,46 @@
+def fail_value() -> Result[int, ValueError]:
+    raise ValueError("local")
+
+
+def run_sync() -> None:
+    try:
+        def inner() -> None:
+            try:
+                try:
+                    _: int = fail_value()
+                    assert False
+                except ValueError as error:
+                    assert error.message == "local"
+            finally:
+                marker: int = 1
+                assert marker == 1
+
+        inner()
+    finally:
+        marker: int = 2
+        assert marker == 2
+
+
+async def run_async() -> None:
+    try:
+        async def inner() -> None:
+            await task.sleep(0.0)
+            try:
+                try:
+                    _: int = fail_value()
+                    assert False
+                except ValueError as error:
+                    assert error.message == "local"
+            finally:
+                marker: int = 1
+                assert marker == 1
+
+        await inner()
+    finally:
+        marker: int = 2
+        assert marker == 2
+
+
+async def main() -> None:
+    run_sync()
+    await run_async()

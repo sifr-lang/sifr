@@ -131,7 +131,7 @@ fn first_try_error_type_in_stmt(stmt: &HirStmt) -> Option<String> {
         HirStmt::With { body, .. }
         | HirStmt::AsyncWith { body, .. }
         | HirStmt::AsyncFor { body, .. } => first_try_error_type_in_stmts(body),
-        HirStmt::NestedFunction { func, .. } => first_try_error_type_in_stmts(&func.body),
+        HirStmt::NestedFunction { .. } => None,
         HirStmt::Match { arms, .. } => arms
             .iter()
             .find_map(|arm| first_try_error_type_in_stmts(&arm.body)),
