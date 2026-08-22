@@ -120,6 +120,9 @@ pub(crate) fn project_stdlib_nominal_plan(
             false,
             crate::BUILTIN_ERROR_CLASSES,
         ) {
+            if sifr_type_system::io_error_kind(&name).is_some() {
+                continue;
+            }
             builtin_types
                 .entry(name.clone())
                 .or_insert_with(|| builtin_error_type(&name));
@@ -620,5 +623,48 @@ mod tests {
             registry.rust_paths.get("sifr.io.BinaryFileHandle"),
             Some(&"crate::__sifr_project_nominals::__SifrIoBinaryFileHandle".to_string())
         );
+    }
+
+    #[test]
+    fn io_error_kind_handlers_do_not_create_dangling_project_nominals() {
+        let module = HirModule {
+            functions: vec![HirFunction {
+                name: "main".to_string(),
+                params: Vec::new(),
+                return_type: Type::None,
+                body: vec![HirStmt::TryExcept {
+                    body: vec![HirStmt::Pass],
+                    handlers: vec![sifr_ir::HirExceptHandler {
+                        error_type: Some("FileNotFoundError".to_string()),
+                        error_resolved_type: None,
+                        name: None,
+                        body: vec![HirStmt::Pass],
+                    }],
+                    body_error_types: Vec::new(),
+                }],
+                is_async: false,
+                method_kind: MethodKind::Regular,
+                receiver: None,
+                decorators: Vec::new(),
+                rust_interop: Vec::new(),
+                python_interop: Vec::new(),
+                compiler_intrinsic: None,
+                type_params: Vec::new(),
+            }],
+            classes: Vec::new(),
+            imports: Vec::new(),
+            constants: Vec::new(),
+            generic_functions: HashMap::new(),
+            type_param_bounds: HashMap::new(),
+        };
+
+        let generated =
+            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default());
+
+        assert!(!generated
+            .project_union_prelude
+            .contains("FileNotFoundError"));
+        syn::parse_file(&generated.project_union_prelude)
+            .expect("project nominal prelude should not contain a dangling re-export");
     }
 }
