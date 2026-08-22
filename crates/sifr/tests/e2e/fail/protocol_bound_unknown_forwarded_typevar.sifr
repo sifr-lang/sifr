@@ -1,10 +1,14 @@
 # expect-error[col=12]: SIFR-PROTO-0001
-# Test: unknown protocol bounds are rejected when forwarding TypeVars through generic calls
+# Test: forwarded TypeVars must satisfy a resolved protocol bound
+
+class MissingBound(Protocol):
+    def required(self) -> int:
+        pass
 
 def take_missing[T: MissingBound](x: T) -> T:
     return x
 
-def relay_missing[U: MissingBound](x: U) -> U:
+def relay_missing[U](x: U) -> U:
     return take_missing(x)
 
 def main():

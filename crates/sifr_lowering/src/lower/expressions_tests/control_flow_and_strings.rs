@@ -633,28 +633,32 @@ pub(super) fn test_protocol_bound_forwarding_accepts_conforming_typevar() {
 }
 
 #[test]
-pub(super) fn test_generic_declaration_rejects_unknown_bound() {
+pub(super) fn test_generic_declaration_reports_only_unknown_bound_name() {
     let result = lower_source(
-        "def take_missing[T: MissingBound](x: T) -> T:\n    return x\n\ndef relay_missing[U: MissingBound](x: U) -> U:\n    return take_missing(x)\n\ndef main():\n    print(1)\n",
+        "def take_missing[T: MissingBound](x: T) -> T:\n    return x\n\ndef main():\n    print(1)\n",
     );
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| {
-        e.code == Some(DiagnosticCode::NAME_UNKNOWN_TYPE)
-            && e.message == "unknown type: 'MissingBound'"
-    }));
+    assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+    assert_eq!(errors[0].code, Some(DiagnosticCode::NAME_UNKNOWN_TYPE));
+    assert_eq!(errors[0].message, "unknown type: 'MissingBound'");
 }
 
 #[test]
 pub(super) fn test_protocol_bound_forwarding_rejects_non_conforming_typevar() {
     let result = lower_source(
-        "class Readable(Protocol):\n    def read(self) -> str:\n        pass\n\nclass Closable(Protocol):\n    def close(self) -> None:\n        pass\n\ndef take_readable[T: Readable](x: T) -> T:\n    return x\n\ndef relay_bad[U: Closable](x: U) -> U:\n    return take_readable(x)\n\ndef main():\n    print(1)\n",
+        "class MissingBound(Protocol):\n    def required(self) -> int:\n        pass\n\ndef take_missing[T: MissingBound](x: T) -> T:\n    return x\n\ndef relay_missing[U](x: U) -> U:\n    return take_missing(x)\n\ndef main():\n    print(1)\n",
     );
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("does not implement protocol 'Readable'")));
+    assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+    assert_eq!(
+        errors[0].code,
+        Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
+    );
+    assert!(errors[0]
+        .message
+        .contains("does not implement protocol 'MissingBound'"));
 }
 
 #[test]
