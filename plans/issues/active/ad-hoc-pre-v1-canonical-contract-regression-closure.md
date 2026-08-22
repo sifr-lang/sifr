@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-23. Items 0 through 10O and linked delivery A are
-complete. Item 11 qualification found Item 10P, which is next.
+Status: active on 2026-08-23. Items 0 through 10P and linked delivery A are
+complete. Item 11 qualification is next.
 
 ## Objective
 
@@ -2040,6 +2040,55 @@ Acceptance criteria:
 - The concurrency generated-code Clippy group passes under Rust 1.94.
 - Focused code-generation and native sync-channel tests pass.
 
+### Item 10P record
+
+State: complete
+
+PR: [#3483](https://github.com/sifr-lang/sifr/pull/3483)
+
+Base SHA: `c2dffcc811cafbe58c762780aae2703fc75c9868`
+
+Candidate SHA: `3d9f26a9b3018957b5f09b4c275e444d815af076`
+
+Merge SHA: `a3e956f9e196c2a0840695984629e4265b4d7051`
+
+Changed paths: class trait emission, sync-channel runtime emission, focused
+code-generation tests, and 32 checked-in demo companions.
+
+The root cause was duplicate trait ownership in generated Rust. Zero-argument
+classes exposed only an inherent `new`, while cloneable sync-channel types
+exposed matching inherent and `Clone` implementations.
+
+The correction emits one `Default` implementation that delegates to the
+existing zero-argument `Self::new()`. It removes the duplicate inherent clone
+methods and keeps the canonical `Clone` implementations. Sifr source call
+sites continue to use `.clone()` through the trait.
+
+Validation: both focused code-generation tests and all 1,140 code-generation
+tests passed. Code-generation Clippy passed with warnings denied. All seven
+concurrency generated-code Clippy entries passed under Rust 1.94. The sync-
+channel demo and sender-close clone fixture passed native execution. Demo
+freshness, format, HIR maintainability, diff, and file-size checks passed.
+
+The one create-PR gate ran on the initial source candidate
+`9453b3780e971e21aca14c2316457edb34c9bb50`. It stopped only because 32 demo
+companions were stale. It was not repeated. The companions were refreshed and
+the focused freshness check passed. The one merge gate ran on the final
+candidate and passed every validation step, including 698 E2E pass fixtures.
+The warm-time budget overrun was advisory and came from cold generated caches.
+
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. The evidence is in the
+[#3483 review comment](https://github.com/sifr-lang/sifr/pull/3483#issuecomment-5382669592).
+
+Deferred follow-up: the review suggested making the zero-argument constructor
+predicate also assert synchronous `Self` return shape, tightening the clone
+test against a `-> Self` spelling, and adding a zero-argument class to the
+generated-code Clippy corpus. These are hardening suggestions. They do not
+identify a reachable defect in the current contract.
+
+Next action: resume Item 11 qualification.
+
 ### Item 11 qualification attempt before Item 10P
 
 Candidate SHA: `cdb3834352d9121562b86901ad3dd381b2c31364`
@@ -2249,8 +2298,7 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10O and linked delivery A are complete and
-recorded. Item 11 stopped on the newly owned Item 10P generated Rust trait
-contract defect.
+Current state: Items 0 through 10P and linked delivery A are complete. Item 10P
+is merged and its implementation evidence is ready to record.
 
-Next action: implement Item 10P, then resume Item 11.
+Next action: merge the Item 10P record, then resume Item 11 qualification.
