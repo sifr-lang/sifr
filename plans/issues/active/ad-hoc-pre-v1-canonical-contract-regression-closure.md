@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10B are complete. Item 10C is next.
+Status: active on 2026-08-22. Items 0 through 10C are complete. Item 10D is next.
 
 ## Objective
 
@@ -65,6 +65,9 @@ This planning change makes these transfers effective when it merges:
 | Moved `try` binding declarations | Item 10B review found that a moved binding needed only as a later assignment target requires an enclosing declaration, but not value transport. | Item 10D |
 | Nested-function default references | Item 10B review found that canonical HIR reference traversal does not visit parameter default expressions. | Item 10E |
 | Imported union nominal paths | Item 10B validation reproduced a project-codegen panic for the canonical imported union identity `sifr.csv.Error` on the exact item base. | Item 10F |
+| Unmatched conditional handlers | Item 10C review found that an `IOError` kind handler can fall through without propagating an unmatched error. | Item 10G |
+| Nested `try/finally` propagation | Item 10C review found that nested `try/finally` can select an invariant panic inside a non-return-capturing `try` closure. | Item 10H |
+| Diagnostic harness Clippy | Item 10C validation confirmed that Item 3 passed `FixtureLayout` by value although the helper only borrows it. | Item 10I |
 
 The archived static-class phase no longer owns active corrective work. Item 10
 owns its unresolved method-slot fixture and runtime evidence.
@@ -155,6 +158,9 @@ scope and does not repeat that work.
 | Moved binding later reassignment | Continuation liveness does not distinguish the declaration needed for a later assignment from the value needed for a later read. | Item 10D |
 | Nested-function default expression | Canonical HIR reference traversal visits nested bodies by configuration but omits their parameter default expressions. | Item 10E |
 | Imported union nominal registry | Project code generation can miss the crate-root path for a canonical imported union member such as `sifr.csv.Error`. | Item 10F |
+| Unmatched `IOError` kind | A conditional handler chain has no residual-error path when no kind condition matches. | Item 10G |
+| Nested `try/finally` panic | Error capability is inferred from return capture, so a nested `try/finally` can emit a reachable invariant panic. | Item 10H |
+| Diagnostic harness strict Clippy | `fixture_name_for_seed` consumes a non-`Copy` layout enum that it only inspects. | Item 10I |
 | Read-only Python duration | The latest contended run completed in 314,714 ms. An isolated run completed in approximately 68 seconds. | Qualification rule B |
 
 ## Scope
@@ -178,6 +184,9 @@ scope and does not repeat that work.
 - Separate declaration liveness from value liveness for moved `try` bindings.
 - Include nested-function parameter defaults in canonical HIR reference traversal.
 - Register canonical crate-root paths for imported union members.
+- Preserve unmatched conditional errors through the checked error channel.
+- Preserve nested `try/finally` errors inside every error-capable `try` closure.
+- Remove the Item 3 diagnostic-harness strict-Clippy warning.
 - Add regression guards for the migrated evidence and representation defects.
 - Record completion evidence from the linked owner.
 - Qualify the read-only Python doctor without a timeout increase.
@@ -215,6 +224,9 @@ Item 0  baseline and ownership lock
   -> Item 10D try declaration and value liveness
   -> Item 10E nested-function default traversal
   -> Item 10F imported union nominal paths
+  -> Item 10G unmatched conditional handler propagation
+  -> Item 10H nested try/finally error propagation
+  -> Item 10I diagnostic harness strict Clippy
   -> linked delivery A final validation and merge
   -> Item 11 linked delivery and timeout qualification
   -> Item 12 final regression guard and closure
@@ -1203,6 +1215,51 @@ Acceptance criteria:
 - Generated Rust has no E0317 or E0308 diagnostic from a total `try` return.
 - Focused lowering, code-generation, and E2E tests pass.
 
+### Item 10C record
+
+State: complete
+
+PR: [#3454](https://github.com/sifr-lang/sifr/pull/3454)
+
+Base SHA: `ae12c92f61d73128bd75fdd7de82989a148e5428`
+
+Candidate SHA: `752d9258c71414d4736c8e4ebb23fdf09886fd3d`
+
+Merge SHA: `fdc39c2ae0da9253f0bbc1b9ccff732aaa3424f9`
+
+Changed paths: `try` statement emission, focused code-generation coverage, and
+the fresh `error_subclasses` generated demo.
+
+The emitter now uses the canonical HIR control-flow effect to identify a
+`try` body that always raises. It does not add a synthetic successful value to
+that closure. The outer handler dispatch uses a total `match`. Its impossible
+success arm is a compiler invariant, and its error arm keeps the existing
+nominal handler chain.
+
+Validation: all 1,108 code-generation tests passed. The
+`imported_error_not_catch_all` fixture built and ran natively without E0317 or
+E0308. Demo freshness, affected-crate Clippy, format, HIR maintainability,
+file-size, and diff checks passed. The union fixtures still stop before this
+mechanism at the Item 10F-owned imported-union nominal-path panic.
+
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. The evidence is in the
+[#3454 review comment](https://github.com/sifr-lang/sifr/pull/3454#issuecomment-5380707838).
+
+The create-PR and merge gates each ran once on the exact candidate. Every
+preceding guardrail passed. Both gates stopped only at linked delivery A's
+stale Rust-interop evidence path. The evidence is in the
+[#3454 gate comment](https://github.com/sifr-lang/sifr/pull/3454#issuecomment-5380707920).
+
+Deferred follow-up: Item 10G owns residual propagation for unmatched
+conditional handlers. Item 10H owns nested `try/finally` propagation inside a
+non-return-capturing `try` closure. Item 10I owns the Item 3 diagnostic-harness
+strict-Clippy warning. Opus also suggested consolidating duplicated handler
+match construction and strengthening the focused Rust-typing assertion. Those
+are optional hardening because native fixture validation covers the diagnostic.
+
+Next action: implement Item 10D.
+
 ## Item 10D: Separate Try Declarations from Transported Values
 
 Purpose: Preserve the declaration of a moved binding when later code assigns
@@ -1263,6 +1320,64 @@ Acceptance criteria:
 - Every imported union member resolves through its canonical crate-root path.
 - Focused registry, code-generation, and native-build tests pass.
 
+## Item 10G: Propagate Unmatched Conditional Try Handlers
+
+Purpose: Preserve an error when no conditional handler matches it.
+
+Scope:
+
+- Give a conditional handler chain one explicit residual-error outcome.
+- Route the unmatched value through the checked error channel.
+- Keep exact nominal and `IOError` kind matching.
+- Reject an unhandled error when the enclosing function cannot propagate it.
+- Do not swallow the error or add a catch-all handler.
+
+Acceptance criteria:
+
+- An unmatched `IOError` kind propagates or produces a structured compile-time
+  diagnostic.
+- A matching subclass handler keeps its current behavior.
+- A later base handler remains the explicit source-level catch-all.
+- Focused type-checking, code-generation, and native-run tests pass.
+
+## Item 10H: Preserve Nested Try-finally Error Propagation
+
+Purpose: Keep nested `try/finally` error propagation valid inside every
+closure-backed `try` statement.
+
+Scope:
+
+- Track closure error capability separately from return capture.
+- Emit the nested `try/finally` error path when the enclosing `try` closure can
+  return an error.
+- Preserve `finally` execution and the original typed error.
+- Do not use an invariant panic for a source-reachable error.
+
+Acceptance criteria:
+
+- A nested `try/finally` that raises inside a non-`Result` function reaches its
+  matching outer handler without a runtime panic.
+- The `finally` body runs exactly once.
+- Generated runtime code contains no reachable invariant-panic path for this
+  source shape.
+- Focused lowering, code-generation, and native-run tests pass.
+
+## Item 10I: Close Diagnostic Harness Strict Clippy
+
+Purpose: Remove the strict-Clippy defect left by the Item 3 harness migration.
+
+Scope:
+
+- Borrow or copy `FixtureLayout` according to its value semantics.
+- Update focused harness tests only when the signature requires it.
+- Do not add a Clippy allow or change fixture-path behavior.
+
+Acceptance criteria:
+
+- Workspace Clippy passes with warnings denied after all earlier owners merge.
+- Diagnostic rendering produces the same canonical fixture names.
+- Focused diagnostic harness tests pass.
+
 ## Required Linked Delivery A: Rust-interop Evidence Path
 
 The active
@@ -1304,7 +1419,7 @@ Purpose: Combine phase-owned corrections with independently owned changes.
 
 Dependencies:
 
-- Items 1 through 10F are merged.
+- Items 1 through 10I are merged.
 - Required linked delivery A is merged.
 
 Scope:
@@ -1375,6 +1490,9 @@ Acceptance criteria:
 | Try declaration liveness | Focused scalar replacement, value-dependent target, and native-build tests |
 | Nested-function defaults | Canonical traversal, shadowing, code-generation, and native-build tests |
 | Imported union nominal paths | Focused registry, project code-generation, and nominal-identity fixtures |
+| Conditional handler residuals | Focused error-effect, exact-handler, and native propagation tests |
+| Nested try-finally propagation | Focused nested cleanup, typed-error, and native-run tests |
+| Diagnostic harness Clippy | Focused harness tests and workspace Clippy with warnings denied |
 | Regression guards | Focused stale-path, stale-hash, nominal-identity, conversion, and no-compatibility self-tests |
 | Python doctor | One final-candidate run and one isolated profile only after a timeout |
 
@@ -1430,6 +1548,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10B are complete and recorded.
+Current state: Items 0 through 10C are complete and recorded.
 
-Next action: implement Item 10C.
+Next action: implement Item 10D.
