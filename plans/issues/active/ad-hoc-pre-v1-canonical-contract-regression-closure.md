@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 6 are complete. Item 7 is next.
+Status: active on 2026-08-22. Items 0 through 7 are complete. Item 8 is next.
 
 ## Objective
 
@@ -751,6 +751,51 @@ Acceptance criteria:
 - Generated Rust calls `map` or `unwrap_or` only on an `Option` value.
 - No string renderer or raw-code escape implements the correction.
 
+### Item 7 record
+
+State: complete
+
+PR: [#3442](https://github.com/sifr-lang/sifr/pull/3442)
+
+Base SHA: `c2acc22a8201a4e34bc312c33aa2d55a9f73feaa`
+
+Candidate SHA: `251a2aa4cee107db93cf4a8760dd7c26d984fe82`
+
+Merge SHA: `2648b79db168e0daa20f3ee41675c3e78a3ef1c5`
+
+Changed paths: the single consuming-value conversion authority, call and
+collection argument paths, local assignment paths, error conversion paths,
+and focused option and union representation tests.
+
+The root cause was two independent conversion authorities. Some paths first
+adapted an optional wrapper and then applied recursive union conversion. Other
+paths applied the same operations in reverse order.
+
+The correction gives each conversion one source type and one target type. The
+public authority applies an optional-wrapper transition first. It applies the
+recursive union or class transition only when the wrapper did not change.
+The lower-level upcast helper is private.
+
+Validation: `nested_optional_safe_operations` passed check, build, and runtime
+execution. All 1,101 codegen tests passed. Codegen Clippy passed with warnings
+denied. Format, diff, HIR maintainability, and file-size checks passed.
+
+The create-PR gate and merge gate each ran once on the final candidate. Both
+passed all earlier checks. Both stopped at the same two Rust-interop matrix
+inputs. Linked delivery A owns the missing shared-bridge negative source.
+Item 10 owns the empty method-slot declaration. The gate evidence is in the
+[#3442 gate comment](https://github.com/sifr-lang/sifr/pull/3442#issuecomment-5379842007).
+
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. The evidence is in the
+[#3442 review comment](https://github.com/sifr-lang/sifr/pull/3442#issuecomment-5379820829).
+
+Deferred follow-up: the review recorded three suggestions. The suggestions
+cover deeper private recursion, one redundant clone, and narrower test text
+matching. No focused correctness error makes these suggestions phase work.
+
+Next action: implement Item 8.
+
 ## Item 8: Replace Invalid-program CFG Panics
 
 Purpose: Make invalid source produce a normal compiler result.
@@ -1009,6 +1054,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 6 are complete and recorded.
+Current state: Items 0 through 7 are complete and recorded.
 
-Next action: implement Item 7.
+Next action: implement Item 8.
