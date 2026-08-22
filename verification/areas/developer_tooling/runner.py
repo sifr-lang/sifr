@@ -67,6 +67,14 @@ SUITE_COMMANDS: dict[str, list[tuple[str, list[str]]]] = {
             "no-pre-v1-compatibility-self-test",
             [sys.executable, str(AREA_ROOT / "check_no_pre_v1_compatibility.py"), "--self-test"],
         ),
+        (
+            "pre-v1-regression-closure",
+            [sys.executable, str(AREA_ROOT / "check_pre_v1_regression_closure.py")],
+        ),
+        (
+            "pre-v1-regression-closure-self-test",
+            [sys.executable, str(AREA_ROOT / "check_pre_v1_regression_closure.py"), "--self-test"],
+        ),
     ],
     "formatter": [
         ("formatter-rules", [sys.executable, str(AREA_ROOT / "check_formatter_rules.py")]),

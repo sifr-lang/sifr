@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "baseline": {
+    "base_sha": "b52fbc7e46257a7fd14d8f551fc9f2c28fb4ac47",
+    "failed_variant_count": 15,
+    "failed_variants": [
+      {
+        "area": "rust_interop",
+        "id": "matrix/area-check",
+        "mechanism": "shared bridge evidence path and method-slot fixture validation",
+        "owner": "linked-delivery-a-and-item-10"
+      },
+      {
+        "area": "generated_code_quality",
+        "id": "representative/corpus",
+        "mechanism": "project-wide structured nominal identity",
+        "owner": "item-6"
+      },
+      {
+        "area": "generated_code_quality",
+        "id": "representative/panic-scan",
+        "mechanism": "project-wide structured nominal identity",
+        "owner": "item-6"
+      },
+      {
+        "area": "performance",
+        "id": "representative/benchmark-manifest",
+        "mechanism": "canonical LSP project root",
+        "owner": "item-2"
+      },
+      {
+        "area": "performance",
+        "id": "representative/benchmark-runner-self-test",
+        "mechanism": "canonical LSP project root",
+        "owner": "item-2"
+      },
+      {
+        "area": "performance",
+        "id": "representative/trend-policy",
+        "mechanism": "benchmark manifest hash freshness",
+        "owner": "item-3"
+      },
+      {
+        "area": "performance",
+        "id": "representative/trend-policy-self-test",
+        "mechanism": "benchmark manifest hash freshness",
+        "owner": "item-3"
+      },
+      {
+        "area": "performance",
+        "id": "representative/benchmark-subset",
+        "mechanism": "canonical LSP project root",
+        "owner": "item-2"
+      },
+      {
+        "area": "performance",
+        "id": "representative/budget-subset",
+        "mechanism": "blocked by the failed benchmark subset",
+        "owner": "item-2"
+      },
+      {
+        "area": "fuzz_property",
+        "id": "fuzz-smoke/metadata",
+        "mechanism": "canonical missing-import seed path",
+        "owner": "item-3"
+      },
+      {
+        "area": "ecosystem_compatibility",
+        "id": "OSS-CURATED-0001/source-checksum",
+        "mechanism": "curated project source checksum freshness",
+        "owner": "item-3"
+      },
+      {
+        "area": "ecosystem_compatibility",
+        "id": "OSS-CURATED-0002/source-checksum",
+        "mechanism": "curated project source checksum freshness",
+        "owner": "item-3"
+      },
+      {
+        "area": "ecosystem_compatibility",
+        "id": "OSS-CURATED-0003/source-checksum",
+        "mechanism": "curated project source checksum freshness",
+        "owner": "item-3"
+      },
+      {
+        "area": "ecosystem_compatibility",
+        "id": "OSS-CURATED-0004/source-checksum",
+        "mechanism": "curated project source checksum freshness",
+        "owner": "item-3"
+      },
+      {
+        "area": "ecosystem_compatibility",
+        "id": "OSS-CURATED-0005/source-checksum",
+        "mechanism": "curated project source checksum freshness",
+        "owner": "item-3"
+      }
+    ]
+  },
+  "create_pr_fixture_locks": [
+    "nominal_identity_alias_paths",
+    "nested_optional_safe_operations",
+    "try_nested_finally_error_propagation"
+  ],
+  "item_10h_return_capture_twin_decision": "not-added-existing-return-capture-coverage"
+}
