@@ -496,10 +496,10 @@ def run_lsp_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any]:
             "python3",
             str(PERF_ROOT / "lsp_query_bench.py"),
             str(case.raw["scenario"]),
+            str(REPO_ROOT / case.raw["project_root"]),
             str(REPO_ROOT / case.raw["source_path"]),
             str(iterations),
             str(case.raw.get("inner_repetitions", 1)),
-            str(case.raw["workspace_mode"]),
         ],
         run_subprocess,
     )
@@ -733,6 +733,15 @@ def run_self_test() -> None:
     )
     manifest = load_manifest(DEFAULT_MANIFEST)
     cases = {case.id: case for case in validate_manifest(manifest)}
+    old_flat_manifest = json.loads(json.dumps(manifest))
+    old_flat_case = next(
+        case for case in old_flat_manifest["cases"] if case["kind"] == "lsp-query"
+    )
+    old_flat_case["project_root"] = str(Path(old_flat_case["source_path"]).parent)
+    assert_fails(
+        lambda: validate_manifest(old_flat_manifest),
+        "project root requires sifr.toml",
+    )
     assert_fails(
         lambda: validate_baseline_capture(
             load_manifest(NEGATIVE_ROOT / "timeout_result.json"), cases

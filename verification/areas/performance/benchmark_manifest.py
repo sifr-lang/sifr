@@ -156,17 +156,30 @@ def validate_case(raw: dict[str, Any]) -> None:
     if raw["kind"] == "lsp-query":
         if not isinstance(raw.get("scenario"), str) or not raw["scenario"]:
             raise BenchmarkError(f"LSP query benchmark {raw['id']} must define scenario")
-        if raw.get("workspace_mode") not in {"isolated", "package"}:
-            raise BenchmarkError(f"LSP query benchmark {raw['id']} must define workspace_mode as isolated or package")
+        if not isinstance(raw.get("project_root"), str) or not raw["project_root"]:
+            raise BenchmarkError(
+                f"LSP query benchmark {raw['id']} must define project_root"
+            )
     path = REPO_ROOT / raw["source_path"]
     if not path.exists():
         raise BenchmarkError(f"benchmark case {raw['id']} input path does not exist: {raw['source_path']}")
     if raw["kind"] == "lsp-query":
-        has_manifest = path.parent.joinpath("sifr.toml").is_file()
-        if raw["workspace_mode"] == "package" and not has_manifest:
-            raise BenchmarkError(f"package LSP benchmark {raw['id']} requires a sibling sifr.toml")
-        if raw["workspace_mode"] == "isolated" and has_manifest:
-            raise BenchmarkError(f"isolated LSP benchmark {raw['id']} cannot use a package source")
+        project_root = REPO_ROOT / raw["project_root"]
+        if not project_root.is_dir():
+            raise BenchmarkError(
+                f"LSP query benchmark {raw['id']} project root does not exist: "
+                f"{raw['project_root']}"
+            )
+        if not project_root.joinpath("sifr.toml").is_file():
+            raise BenchmarkError(
+                f"LSP query benchmark {raw['id']} project root requires sifr.toml"
+            )
+        canonical_source = project_root / "src" / "main.sifr"
+        if path != canonical_source:
+            raise BenchmarkError(
+                f"LSP query benchmark {raw['id']} source_path must be "
+                f"project_root/src/main.sifr"
+            )
 
 
 def select_cases(
