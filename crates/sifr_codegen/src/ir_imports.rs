@@ -120,6 +120,7 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
             }
             collect_expr(value, needs);
         }
+        RustStmt::LetDecl { ty, .. } => collect_type(ty, needs),
         RustStmt::LetPattern { value, .. } => collect_expr(value, needs),
         RustStmt::LetElse {
             value, else_body, ..

@@ -283,3 +283,29 @@ def main() -> Result[str, ValueError]:
             && error.message == "use of moved value: 'value'"
     }));
 }
+
+#[test]
+fn moved_try_binding_rejects_value_dependent_subscript_assignment() {
+    let source = "\
+def fallible() -> Result[list[int], ValueError]:
+    return [1]
+
+def consume(own value: list[int]) -> None:
+    pass
+
+def main() -> Result[int, ValueError]:
+    try:
+        values: list[int] = fallible()
+        consume(values)
+    except ValueError as error:
+        raise error
+    values[0] = 2
+    return 0
+";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+            && error.message == "use of moved value: 'values'"
+    }));
+}

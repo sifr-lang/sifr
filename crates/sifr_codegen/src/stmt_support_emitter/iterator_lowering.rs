@@ -627,7 +627,10 @@ impl RustEmitter {
                 Self::rust_expr_contains_await(cond)
                     || msg.as_ref().is_some_and(Self::rust_expr_contains_await)
             }
-            RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => false,
+            RustStmt::LetDecl { .. }
+            | RustStmt::Return(None)
+            | RustStmt::Break
+            | RustStmt::Continue => false,
             RustStmt::If {
                 cond,
                 then_body,

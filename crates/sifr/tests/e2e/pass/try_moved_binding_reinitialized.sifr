@@ -1,0 +1,29 @@
+class ProbeError(Error):
+    message: str
+
+
+def load_text() -> Result[str, ProbeError]:
+    return "old"
+
+
+def consume(own value: str) -> None:
+    assert value == "old"
+
+
+def replace_text() -> Result[str, ProbeError]:
+    try:
+        text: str = load_text()
+        consume(text)
+    except ProbeError as error:
+        raise error
+    text = "new"
+    return text
+
+
+def main() -> None:
+    try:
+        result: str = replace_text()
+    except ProbeError:
+        assert False
+        return
+    assert result == "new"

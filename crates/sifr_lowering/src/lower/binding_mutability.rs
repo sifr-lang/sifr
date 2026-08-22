@@ -6,6 +6,10 @@ pub(in crate::lower) fn ensure_mutable_parameter_binding(
     name: &str,
     range: TextRange,
 ) -> bool {
+    if ctx.scope.is_moved(name) {
+        super::ownership_diagnostics::use_after_move(ctx, name, range);
+        return false;
+    }
     if ctx
         .scope
         .lookup(name)
