@@ -1064,6 +1064,7 @@ mod __sifr_project_nominals {
     impl ::std::error::Error for RegexError {}
 }
 pub use __sifr_project_nominals::IOError;
+pub use __sifr_project_nominals::RegexError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2epathlib_x2ePath;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ere_x2eMatch;
 fn _encoding_is_supported_impl(label: &String) -> bool {
@@ -3184,25 +3185,6 @@ impl ::std::fmt::Display for ParseError {
     }
 }
 impl ::std::error::Error for ParseError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct RegexError {
-    message: String,
-    detail: String,
-}
-impl RegexError {
-    fn new(message: String) -> Self {
-        Self {
-            message,
-            detail: String::new(),
-        }
-    }
-}
-impl ::std::fmt::Display for RegexError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for RegexError {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)

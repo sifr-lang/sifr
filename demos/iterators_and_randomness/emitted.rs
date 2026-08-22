@@ -1,5 +1,22 @@
 // src/main.rs
-// --- stdlib: sifr.itertools ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ValueError {
+        pub message: String,
+    }
+    impl ValueError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ValueError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ValueError {}
+}
+pub use __sifr_project_nominals::ValueError;
 fn _prepend<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     head: T,
     tails: &Vec<Vec<T>>,
@@ -327,8 +344,6 @@ fn starmap<
     }
     Box::new(result.into_iter())
 }
-
-// --- stdlib: _sifr.crypto ---
 fn random_int(min: i64, max: i64) -> i64 {
     ::sifr_stdlib::random::random_int(
             ::sifr_runtime::interop::SifrIntBridge::from(min),
@@ -498,8 +513,6 @@ fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
 fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
 }
-
-// --- stdlib: _sifr.math ---
 const PI: f64 = 3.141592653589793_f64;
 const E: f64 = 2.718281828459045_f64;
 const TAU: f64 = 6.283185307179586_f64;
@@ -680,8 +693,6 @@ fn nextafter(x: f64, y: f64) -> f64 {
 fn ulp(x: f64) -> f64 {
     ::sifr_stdlib::math::ulp(x)
 }
-
-// --- stdlib: _sifr.time ---
 fn time_now() -> f64 {
     ::sifr_stdlib::time::time_now()
 }
@@ -747,8 +758,6 @@ fn time_localtime() -> Vec<i64> {
         .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
         .collect()
 }
-
-// --- stdlib: sifr.math ---
 fn factorial(n: i64) -> i64 {
     if n < (0_i64) {
         return 0_i64;
@@ -971,8 +980,6 @@ fn modf_integral(x: f64) -> f64 {
 fn pow(x: f64, y: f64) -> f64 {
     pow_val(x, y)
 }
-
-// --- stdlib: sifr.random ---
 const _MT_N: i64 = 624_i64;
 const _MT_M: i64 = 397_i64;
 const _MT_MATRIX_A: i64 = 2567483615_i64;
@@ -1700,8 +1707,6 @@ fn randbytes(n: i64) -> Result<Vec<u8>, ValueError> {
     _sync_module_random(&mut generator);
     value
 }
-
-// --- stdlib: sifr.secrets ---
 fn compare_digest(a: &String, b: &String) -> bool {
     a == b
 }
@@ -1741,182 +1746,148 @@ fn randbits(k: i64) -> Result<i64, ValueError> {
     }
     Ok(result)
 }
-// --- end stdlib ---
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
-
 impl ParseError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ParseError {
-}
-
+impl ::std::error::Error for ParseError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ValueError {
-    message: String,
-}
-
-impl ValueError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for ValueError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Doubler {
-}
-
+struct Doubler {}
 impl Doubler {
     fn new() -> Self {
-        Self {  }
+        Self {}
     }
 }
-
 impl Doubler {
     fn __call__(&self, x: i64) -> i64 {
         x * (2_i64)
     }
 }
-
 fn add(a: i64, b: i64) -> i64 {
     a + b
 }
-
 fn main() {
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(20usize + 0usize);
-    __sifr_concat.push_str("chain(*iterables) = ");
-    __sifr_concat.push_str((format!("{:?}", chain(&vec![vec![1_i64], vec![2_i64], vec![3_i64], vec![4_i64]]).collect::<Vec<_>>())).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(28usize + 0usize);
-    __sifr_concat.push_str("islice(start, stop, step) = ");
-    __sifr_concat.push_str((format!("{:?}", islice(&(vec![10_i64, 20_i64, 30_i64, 40_i64, 50_i64]).into_iter().collect::<Vec<_>>(), 1_i64, Some(5_i64), 2_i64).collect::<Vec<_>>())).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(20usize + 0usize);
-    __sifr_concat.push_str("product(repeat=2) = ");
-    __sifr_concat.push_str((format!("{:?}", product(&vec![vec![1_i64, 2_i64]], 2_i64).collect::<Vec<_>>())).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(20usize + 0usize);
-    __sifr_concat.push_str("permutations(r=2) = ");
-    __sifr_concat.push_str((format!("{:?}", permutations(&(vec![1_i64, 2_i64, 3_i64]).into_iter().collect::<Vec<_>>(), Some(2_i64)).collect::<Vec<_>>())).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(20usize + 0usize);
-    __sifr_concat.push_str("combinations(r=2) = ");
-    __sifr_concat.push_str((format!("{:?}", combinations(&(vec![1_i64, 2_i64, 3_i64]).into_iter().collect::<Vec<_>>(), 2_i64).collect::<Vec<_>>())).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(22usize + 0usize);
-    __sifr_concat.push_str("starmap(add, pairs) = ");
-    __sifr_concat.push_str((format!("{:?}", starmap(|__arg0, __arg1| add((__arg0).clone(), (__arg1).clone()), &(vec![(2_i64, 3_i64), (4_i64, 5_i64)]).into_iter().collect::<Vec<_>>()).collect::<Vec<_>>())).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(20usize + 0usize);
+        __sifr_concat.push_str("chain(*iterables) = "); __sifr_concat
+        .push_str((format!("{:?}", chain(& vec![vec![1_i64], vec![2_i64], vec![3_i64],
+        vec![4_i64]]).collect::< Vec < _ >> ())).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(28usize + 0usize);
+        __sifr_concat.push_str("islice(start, stop, step) = "); __sifr_concat
+        .push_str((format!("{:?}", islice(& (vec![10_i64, 20_i64, 30_i64, 40_i64,
+        50_i64]).into_iter().collect::< Vec < _ >> (), 1_i64, Some(5_i64), 2_i64)
+        .collect::< Vec < _ >> ())).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(20usize + 0usize);
+        __sifr_concat.push_str("product(repeat=2) = "); __sifr_concat
+        .push_str((format!("{:?}", product(& vec![vec![1_i64, 2_i64]], 2_i64).collect::<
+        Vec < _ >> ())).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(20usize + 0usize);
+        __sifr_concat.push_str("permutations(r=2) = "); __sifr_concat
+        .push_str((format!("{:?}", permutations(& (vec![1_i64, 2_i64, 3_i64]).into_iter()
+        .collect::< Vec < _ >> (), Some(2_i64)).collect::< Vec < _ >> ())).as_str());
+        __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(20usize + 0usize);
+        __sifr_concat.push_str("combinations(r=2) = "); __sifr_concat
+        .push_str((format!("{:?}", combinations(& (vec![1_i64, 2_i64, 3_i64]).into_iter()
+        .collect::< Vec < _ >> (), 2_i64).collect::< Vec < _ >> ())).as_str());
+        __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(22usize + 0usize);
+        __sifr_concat.push_str("starmap(add, pairs) = "); __sifr_concat
+        .push_str((format!("{:?}", starmap(| __arg0, __arg1 | add((__arg0).clone(),
+        (__arg1).clone()), & (vec![(2_i64, 3_i64), (4_i64, 5_i64)]).into_iter()
+        .collect::< Vec < _ >> ()).collect::< Vec < _ >> ())).as_str()); __sifr_concat }
+    );
     let doubler: Doubler = Doubler::new();
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(25usize + 0usize);
-    __sifr_concat.push_str("callable object direct = ");
-    __sifr_concat.push_str((format!("{}", doubler.__call__(4_i64))).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(25usize + 0usize);
+        __sifr_concat.push_str("callable object direct = "); __sifr_concat
+        .push_str((format!("{}", doubler.__call__(4_i64))).as_str()); __sifr_concat }
+    );
     let mut items: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64];
     shuffle(&mut items);
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(25usize + 0usize);
-    __sifr_concat.push_str("shuffle(mut items) len = ");
-    __sifr_concat.push_str((format!("{}", items.len() as i64)).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(25usize + 0usize);
+        __sifr_concat.push_str("shuffle(mut items) len = "); __sifr_concat
+        .push_str((format!("{}", items.len() as i64)).as_str()); __sifr_concat }
+    );
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let picked: i64 = choice(&items)?;
-    let many: Vec<i64> = choices(&items, 3_i64)?;
-    let rr: i64 = randrange(10_i64, None, 1_i64)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(19usize + 0usize);
-    __sifr_concat.push_str("choice(items) ok = ");
-    __sifr_concat.push_str((format!("{}", (picked >= (1_i64)) && (picked <= (5_i64)))).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(26usize + 0usize);
-    __sifr_concat.push_str("choices(items, k=3) len = ");
-    __sifr_concat.push_str((format!("{}", many.len() as i64)).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(19usize + 0usize);
-    __sifr_concat.push_str("randrange(10) ok = ");
-    __sifr_concat.push_str((format!("{}", (rr >= (0_i64)) && (rr < (10_i64)))).as_str());
-    __sifr_concat
-});
-    Ok(())
-})();
+        let picked: i64 = choice(&items)?;
+        let many: Vec<i64> = choices(&items, 3_i64)?;
+        let rr: i64 = randrange(10_i64, None, 1_i64)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(19usize +
+            0usize); __sifr_concat.push_str("choice(items) ok = "); __sifr_concat
+            .push_str((format!("{}", (picked >= (1_i64)) && (picked <= (5_i64))))
+            .as_str()); __sifr_concat }
+        );
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(26usize +
+            0usize); __sifr_concat.push_str("choices(items, k=3) len = "); __sifr_concat
+            .push_str((format!("{}", many.len() as i64)).as_str()); __sifr_concat }
+        );
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(19usize +
+            0usize); __sifr_concat.push_str("randrange(10) ok = "); __sifr_concat
+            .push_str((format!("{}", (rr >= (0_i64)) && (rr < (10_i64)))).as_str());
+            __sifr_concat }
+        );
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
-    __sifr_concat.push_str("random error: ");
-    __sifr_concat.push_str((e.message.clone()).as_str());
-    __sifr_concat
-});
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(14usize +
+            0usize); __sifr_concat.push_str("random error: "); __sifr_concat.push_str((e
+            .message.clone()).as_str()); __sifr_concat }
+        );
     }
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(25usize + 0usize);
-    __sifr_concat.push_str("secrets.compare_digest = ");
-    __sifr_concat.push_str((format!("{}", compare_digest(&"abc".to_string(), &"abc".to_string()))).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(27usize + 0usize);
-    __sifr_concat.push_str("secrets.token_hex(4) len = ");
-    __sifr_concat.push_str((format!("{}", token_hex(4_i64).chars().count() as i64)).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(25usize + 0usize);
+        __sifr_concat.push_str("secrets.compare_digest = "); __sifr_concat
+        .push_str((format!("{}", compare_digest(& "abc".to_string(), & "abc"
+        .to_string()))).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(27usize + 0usize);
+        __sifr_concat.push_str("secrets.token_hex(4) len = "); __sifr_concat
+        .push_str((format!("{}", token_hex(4_i64).chars().count() as i64)).as_str());
+        __sifr_concat }
+    );
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let bits: i64 = randbits(16_i64)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(26usize + 0usize);
-    __sifr_concat.push_str("secrets.randbits(16) ok = ");
-    __sifr_concat.push_str((format!("{}", bits >= (0_i64))).as_str());
-    __sifr_concat
-});
-    Ok(())
-})();
+        let bits: i64 = randbits(16_i64)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(26usize +
+            0usize); __sifr_concat.push_str("secrets.randbits(16) ok = "); __sifr_concat
+            .push_str((format!("{}", bits >= (0_i64))).as_str()); __sifr_concat }
+        );
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(15usize + 0usize);
-    __sifr_concat.push_str("secrets error: ");
-    __sifr_concat.push_str((e.message.clone()).as_str());
-    __sifr_concat
-});
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(15usize +
+            0usize); __sifr_concat.push_str("secrets error: "); __sifr_concat.push_str((e
+            .message.clone()).as_str()); __sifr_concat }
+        );
     }
 }

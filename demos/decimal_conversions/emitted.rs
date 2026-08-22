@@ -1,11 +1,25 @@
 // src/main.rs
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct DecimalConversionError {
+        pub message: String,
+    }
+    impl DecimalConversionError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for DecimalConversionError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for DecimalConversionError {}
+}
+pub use __sifr_project_nominals::DecimalConversionError;
 use ::num_bigint::BigInt;
-
 use ::rust_decimal::Decimal;
-
 use ::bigdecimal::BigDecimal;
-
-// --- stdlib: _sifr.encoding ---
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
 }
@@ -115,8 +129,6 @@ fn _encoding_encode_recoveries_impl(
             message: __sifr_bridge_error.to_string(),
         })
 }
-
-// --- stdlib: _sifr.fs ---
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrIoNativeFileHandle {
     _id: String,
@@ -334,8 +346,6 @@ fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError>
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-
-// --- stdlib: _sifr.json ---
 fn json_load_tokens(text: &String) -> Result<Vec<String>, JSONDecodeError> {
     ::sifr_stdlib::json::json_load_tokens(text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -371,8 +381,6 @@ fn json_dump_tokens_web(tokens: &Vec<String>) -> Result<String, JsonIntegerRange
             profile: __sifr_bridge_error.profile().to_string(),
         })
 }
-
-// --- stdlib: sifr.encoding ---
 fn __const_ENCODING_UTF8() -> String {
     "utf-8".to_string().to_string()
 }
@@ -1314,8 +1322,6 @@ fn encode(
         }
     }
 }
-
-// --- stdlib: sifr.io ---
 #[derive(Debug, Clone)]
 enum __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0 {
     __SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(IOError),
@@ -2597,8 +2603,6 @@ fn open_text(
         }
     }
 }
-
-// --- stdlib: sifr.json ---
 #[derive(Debug, Clone, PartialEq)]
 enum __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0 {
     __SifrUnionVariant_4_x3aatom4_x3abool(bool),
@@ -3014,280 +3018,267 @@ fn dumps(
         }
     }
 }
-// --- end stdlib ---
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct IOError {
     message: String,
     kind: String,
 }
-
 impl IOError {
     fn new(message: String) -> Self {
-        Self { message, kind: "Other".to_string() }
+        Self {
+            message,
+            kind: "Other".to_string(),
+        }
     }
 }
-
 impl ::std::fmt::Display for IOError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for IOError {
-}
-
+impl ::std::error::Error for IOError {}
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
-    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
-    match __sifr_io_kind {
-    Some(::std::io::ErrorKind::NotFound) => {
-        "FileNotFound".to_string()
-    },
-    Some(::std::io::ErrorKind::PermissionDenied) => {
-        "PermissionDenied".to_string()
-    },
-    Some(::std::io::ErrorKind::AlreadyExists) => {
-        "FileExists".to_string()
-    },
-    Some(::std::io::ErrorKind::IsADirectory) => {
-        "IsADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::NotADirectory) => {
-        "NotADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-        "DirectoryNotEmpty".to_string()
-    },
-    _ => {
-        "Other".to_string()
-    },
-}
-};
+        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+            .downcast_ref::<std::io::Error>()
+            .map(::std::io::Error::kind);
+        match __sifr_io_kind {
+            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+            Some(::std::io::ErrorKind::PermissionDenied) => {
+                "PermissionDenied".to_string()
+            }
+            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                "DirectoryNotEmpty".to_string()
+            }
+            _ => "Other".to_string(),
+        }
+    };
     IOError { message: msg, kind }
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
-
 impl Error {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for Error {
-}
-
+impl ::std::error::Error for Error {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
-
 impl ParseError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ParseError {
-}
-
+impl ::std::error::Error for ParseError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct JSONDecodeError {
     message: String,
     line: i64,
     column: i64,
 }
-
 impl JSONDecodeError {
     fn new(message: String) -> Self {
-        Self { message, line: 0, column: 0 }
+        Self {
+            message,
+            line: 0,
+            column: 0,
+        }
     }
 }
-
 impl ::std::fmt::Display for JSONDecodeError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for JSONDecodeError {
-}
-
+impl ::std::error::Error for JSONDecodeError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct JsonIntegerRangeError {
     message: String,
     path: String,
     profile: String,
 }
-
 impl JsonIntegerRangeError {
     fn new(message: String) -> Self {
-        Self { message, path: String::new(), profile: String::new() }
+        Self {
+            message,
+            path: String::new(),
+            profile: String::new(),
+        }
     }
 }
-
 impl ::std::fmt::Display for JsonIntegerRangeError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for JsonIntegerRangeError {
-}
-
+impl ::std::error::Error for JsonIntegerRangeError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct JsonLimitError {
     message: String,
     limit: i64,
 }
-
 impl JsonLimitError {
     fn new(message: String) -> Self {
         Self { message, limit: 0 }
     }
 }
-
 impl ::std::fmt::Display for JsonLimitError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for JsonLimitError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct DecimalConversionError {
-    message: String,
-}
-
-impl DecimalConversionError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for DecimalConversionError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for DecimalConversionError {
-}
-
+impl ::std::error::Error for JsonLimitError {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ParseError> for Error {
     fn from(err: ParseError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JSONDecodeError> for Error {
     fn from(err: JSONDecodeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JsonIntegerRangeError> for Error {
     fn from(err: JsonIntegerRangeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JsonLimitError> for Error {
     fn from(err: JsonLimitError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<DecimalConversionError> for Error {
     fn from(err: DecimalConversionError) -> Self {
         Self::new(err.message)
     }
 }
-
 fn main() {
     println!("decimal_conversions conversion and boundary rules demo");
-    let d: Decimal = Decimal::from_str_exact(("-1.9".to_string()).as_str()).unwrap_or_else(|__e| unreachable!());
-    let bd: BigDecimal = ("-1.9".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!());
+    let d: Decimal = Decimal::from_str_exact(("-1.9".to_string()).as_str())
+        .unwrap_or_else(|__e| unreachable!());
+    let bd: BigDecimal = ("-1.9".to_string())
+        .parse::<BigDecimal>()
+        .unwrap_or_else(|__e| unreachable!());
     let __sifr_try_res: Result<(), DecimalConversionError> = (|| {
-    let i_from_decimal: i64 = ({
-    let __decimal_bigint = BigInt::from((d).trunc().mantissa());
-    i64::try_from(&__decimal_bigint).map_err(|__e_ignored| DecimalConversionError { message: "decimal value out of range for int".to_string().to_string() })
-})?;
-    let i_from_bigdecimal: i64 = ({
-    let __decimal_bigint = (bd).with_scale(0).into_bigint_and_scale().0;
-    i64::try_from(&__decimal_bigint).map_err(|__e_ignored| DecimalConversionError { message: "bigdecimal value out of range for int".to_string().to_string() })
-})?;
-    println!("{}", i_from_decimal);
-    println!("{}", i_from_bigdecimal);
-    Ok(())
-})();
+        let i_from_decimal: i64 = ({
+            let __decimal_bigint = BigInt::from((d).trunc().mantissa());
+            i64::try_from(&__decimal_bigint)
+                .map_err(|__e_ignored| DecimalConversionError {
+                    message: "decimal value out of range for int".to_string().to_string(),
+                })
+        })?;
+        let i_from_bigdecimal: i64 = ({
+            let __decimal_bigint = (bd).with_scale(0).into_bigint_and_scale().0;
+            i64::try_from(&__decimal_bigint)
+                .map_err(|__e_ignored| DecimalConversionError {
+                    message: "bigdecimal value out of range for int"
+                        .to_string()
+                        .to_string(),
+                })
+        })?;
+        println!("{}", i_from_decimal);
+        println!("{}", i_from_bigdecimal);
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(31usize + 0usize);
-    __sifr_concat.push_str("unexpected conversion failure: ");
-    __sifr_concat.push_str((e.message.clone()).as_str());
-    __sifr_concat
-});
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(31usize +
+            0usize); __sifr_concat.push_str("unexpected conversion failure: ");
+            __sifr_concat.push_str((e.message.clone()).as_str()); __sifr_concat }
+        );
     }
-    let bd_from_decimal: BigDecimal = ((Decimal::from_str_exact(("12.3400".to_string()).as_str()).unwrap_or_else(|__e| unreachable!())).to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!());
+    let bd_from_decimal: BigDecimal = ((Decimal::from_str_exact(
+            ("12.3400".to_string()).as_str(),
+        )
+        .unwrap_or_else(|__e| unreachable!()))
+        .to_string())
+        .parse::<BigDecimal>()
+        .unwrap_or_else(|__e| unreachable!());
     println!("{}", bd_from_decimal);
     let __sifr_try_res: Result<(), DecimalConversionError> = (|| {
-    let d_from_bigdecimal: Decimal = Decimal::from_str_exact((("7.5000".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!())).to_string().as_str()).map_err(|e| DecimalConversionError { message: e.to_string() }).map(|__v| __v)?;
-    println!("{}", d_from_bigdecimal);
-    Ok(())
-})();
+        let d_from_bigdecimal: Decimal = Decimal::from_str_exact(
+                (("7.5000".to_string())
+                    .parse::<BigDecimal>()
+                    .unwrap_or_else(|__e| unreachable!()))
+                    .to_string()
+                    .as_str(),
+            )
+            .map_err(|e| DecimalConversionError {
+                message: e.to_string(),
+            })
+            .map(|__v| __v)?;
+        println!("{}", d_from_bigdecimal);
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(39usize + 0usize);
-    __sifr_concat.push_str("unexpected decimal conversion failure: ");
-    __sifr_concat.push_str((e.message.clone()).as_str());
-    __sifr_concat
-});
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(39usize +
+            0usize); __sifr_concat.push_str("unexpected decimal conversion failure: ");
+            __sifr_concat.push_str((e.message.clone()).as_str()); __sifr_concat }
+        );
     }
-    println!("{}", dumps(&__SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom7_x3adecimal(Decimal::from_str_exact(("1.2300".to_string()).as_str()).unwrap_or_else(|__e| unreachable!()))));
-    println!("{}", dumps(&__SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom10_x3abigdecimal((("1.2300".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!())).clone())));
+    println!(
+        "{}", dumps(&
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom7_x3adecimal(Decimal::from_str_exact(("1.2300"
+        .to_string()).as_str()).unwrap_or_else(| __e | unreachable!())))
+    );
+    println!(
+        "{}", dumps(&
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom10_x3abigdecimal((("1.2300"
+        .to_string()).parse::< BigDecimal > ().unwrap_or_else(| __e | unreachable!()))
+        .clone()))
+    );
     let __sifr_try_res: Result<(), DecimalConversionError> = (|| {
-    let out_of_range: i64 = ({
-    let __decimal_bigint = (("999999999999999999999999999999999999".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!())).with_scale(0).into_bigint_and_scale().0;
-    i64::try_from(&__decimal_bigint).map_err(|__e_ignored| DecimalConversionError { message: "bigdecimal value out of range for int".to_string().to_string() })
-})?;
-    println!("{}", out_of_range);
-    Ok(())
-})();
+        let out_of_range: i64 = ({
+            let __decimal_bigint = (("999999999999999999999999999999999999".to_string())
+                .parse::<BigDecimal>()
+                .unwrap_or_else(|__e| unreachable!()))
+                .with_scale(0)
+                .into_bigint_and_scale()
+                .0;
+            i64::try_from(&__decimal_bigint)
+                .map_err(|__e_ignored| DecimalConversionError {
+                    message: "bigdecimal value out of range for int"
+                        .to_string()
+                        .to_string(),
+                })
+        })?;
+        println!("{}", out_of_range);
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(25usize + 0usize);
-    __sifr_concat.push_str("caught conversion error: ");
-    __sifr_concat.push_str((e.message.clone()).as_str());
-    __sifr_concat
-});
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(25usize +
+            0usize); __sifr_concat.push_str("caught conversion error: "); __sifr_concat
+            .push_str((e.message.clone()).as_str()); __sifr_concat }
+        );
     }
 }

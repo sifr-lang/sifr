@@ -1,5 +1,215 @@
 // src/main.rs
-// --- stdlib: _sifr.math ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct IOError {
+        pub message: String,
+        pub kind: String,
+    }
+    impl IOError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                kind: "Other".to_string(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for IOError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for IOError {}
+    pub fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match __sifr_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => {
+                    "PermissionDenied".to_string()
+                }
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                    "DirectoryNotEmpty".to_string()
+                }
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ParseError {
+        pub message: String,
+    }
+    impl ParseError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ParseError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ParseError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ValueError {
+        pub message: String,
+    }
+    impl ValueError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ValueError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ValueError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct JSONDecodeError {
+        pub message: String,
+        pub line: i64,
+        pub column: i64,
+    }
+    impl JSONDecodeError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                line: 0,
+                column: 0,
+            }
+        }
+    }
+    impl ::std::fmt::Display for JSONDecodeError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for JSONDecodeError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct JsonIntegerRangeError {
+        pub message: String,
+        pub path: String,
+        pub profile: String,
+    }
+    impl JsonIntegerRangeError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                path: String::new(),
+                profile: String::new(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for JsonIntegerRangeError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for JsonIntegerRangeError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct JsonLimitError {
+        pub message: String,
+        pub limit: i64,
+    }
+    impl JsonLimitError {
+        pub fn new(message: String) -> Self {
+            Self { message, limit: 0 }
+        }
+    }
+    impl ::std::fmt::Display for JsonLimitError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for JsonLimitError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct TOMLDecodeError {
+        pub message: String,
+        pub line: i64,
+        pub column: i64,
+    }
+    impl TOMLDecodeError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                line: 0,
+                column: 0,
+            }
+        }
+    }
+    impl ::std::fmt::Display for TOMLDecodeError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for TOMLDecodeError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct RegexError {
+        pub message: String,
+        pub detail: String,
+    }
+    impl RegexError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                detail: String::new(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for RegexError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for RegexError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct TimeoutError {
+        pub message: String,
+    }
+    impl TimeoutError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for TimeoutError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for TimeoutError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ScopeFailure {
+        pub message: String,
+    }
+    impl ScopeFailure {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ScopeFailure {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ScopeFailure {}
+}
+pub use __sifr_project_nominals::IOError;
+pub use __sifr_project_nominals::JSONDecodeError;
+pub use __sifr_project_nominals::JsonIntegerRangeError;
+pub use __sifr_project_nominals::JsonLimitError;
+pub use __sifr_project_nominals::ParseError;
+pub use __sifr_project_nominals::RegexError;
+pub use __sifr_project_nominals::ScopeFailure;
+pub use __sifr_project_nominals::TOMLDecodeError;
+pub use __sifr_project_nominals::TimeoutError;
+pub use __sifr_project_nominals::ValueError;
 const PI: f64 = 3.141592653589793_f64;
 const E: f64 = 2.718281828459045_f64;
 const TAU: f64 = 6.283185307179586_f64;
@@ -180,8 +390,6 @@ fn nextafter(x: f64, y: f64) -> f64 {
 fn ulp(x: f64) -> f64 {
     ::sifr_stdlib::math::ulp(x)
 }
-
-// --- stdlib: sifr.math ---
 fn factorial(n: i64) -> i64 {
     if n < (0_i64) {
         return 0_i64;
@@ -404,8 +612,6 @@ fn modf_integral(x: f64) -> f64 {
 fn pow(x: f64, y: f64) -> f64 {
     pow_val(x, y)
 }
-
-// --- stdlib: sifr.statistics ---
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {
     message: String,
@@ -526,412 +732,206 @@ fn pstdev(
     let v: f64 = total / (n as f64);
     Ok(sqrt(v))
 }
-// --- end stdlib ---
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct IOError {
-    message: String,
-    kind: String,
-}
-
-impl IOError {
-    fn new(message: String) -> Self {
-        Self { message, kind: "Other".to_string() }
-    }
-}
-
-impl ::std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for IOError {
-}
-
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
-    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
-    match __sifr_io_kind {
-    Some(::std::io::ErrorKind::NotFound) => {
-        "FileNotFound".to_string()
-    },
-    Some(::std::io::ErrorKind::PermissionDenied) => {
-        "PermissionDenied".to_string()
-    },
-    Some(::std::io::ErrorKind::AlreadyExists) => {
-        "FileExists".to_string()
-    },
-    Some(::std::io::ErrorKind::IsADirectory) => {
-        "IsADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::NotADirectory) => {
-        "NotADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-        "DirectoryNotEmpty".to_string()
-    },
-    _ => {
-        "Other".to_string()
-    },
-}
-};
+        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+            .downcast_ref::<std::io::Error>()
+            .map(::std::io::Error::kind);
+        match __sifr_io_kind {
+            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+            Some(::std::io::ErrorKind::PermissionDenied) => {
+                "PermissionDenied".to_string()
+            }
+            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                "DirectoryNotEmpty".to_string()
+            }
+            _ => "Other".to_string(),
+        }
+    };
     IOError { message: msg, kind }
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
-
 impl Error {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for Error {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for ParseError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ValueError {
-    message: String,
-}
-
-impl ValueError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for ValueError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JSONDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl JSONDecodeError {
-    fn new(message: String) -> Self {
-        Self { message, line: 0, column: 0 }
-    }
-}
-
-impl ::std::fmt::Display for JSONDecodeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for JSONDecodeError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JsonIntegerRangeError {
-    message: String,
-    path: String,
-    profile: String,
-}
-
-impl JsonIntegerRangeError {
-    fn new(message: String) -> Self {
-        Self { message, path: String::new(), profile: String::new() }
-    }
-}
-
-impl ::std::fmt::Display for JsonIntegerRangeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for JsonIntegerRangeError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JsonLimitError {
-    message: String,
-    limit: i64,
-}
-
-impl JsonLimitError {
-    fn new(message: String) -> Self {
-        Self { message, limit: 0 }
-    }
-}
-
-impl ::std::fmt::Display for JsonLimitError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for JsonLimitError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct TOMLDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl TOMLDecodeError {
-    fn new(message: String) -> Self {
-        Self { message, line: 0, column: 0 }
-    }
-}
-
-impl ::std::fmt::Display for TOMLDecodeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for TOMLDecodeError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct RegexError {
-    message: String,
-    detail: String,
-}
-
-impl RegexError {
-    fn new(message: String) -> Self {
-        Self { message, detail: String::new() }
-    }
-}
-
-impl ::std::fmt::Display for RegexError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for RegexError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct TimeoutError {
-    message: String,
-}
-
-impl TimeoutError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for TimeoutError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for TimeoutError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ScopeFailure {
-    message: String,
-}
-
-impl ScopeFailure {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for ScopeFailure {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for ScopeFailure {
-}
-
+impl ::std::error::Error for Error {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ParseError> for Error {
     fn from(err: ParseError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ValueError> for Error {
     fn from(err: ValueError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JSONDecodeError> for Error {
     fn from(err: JSONDecodeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JsonIntegerRangeError> for Error {
     fn from(err: JsonIntegerRangeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JsonLimitError> for Error {
     fn from(err: JsonLimitError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<TOMLDecodeError> for Error {
     fn from(err: TOMLDecodeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<RegexError> for Error {
     fn from(err: RegexError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<TimeoutError> for Error {
     fn from(err: TimeoutError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ScopeFailure> for Error {
     fn from(err: ScopeFailure) -> Self {
         Self::new(err.message)
     }
 }
-
 fn main() {
-    let data: Vec<f64> = vec![2.0_f64, 4.0_f64, 4.0_f64, 4.0_f64, 5.0_f64, 5.0_f64, 7.0_f64, 9.0_f64];
-    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
-    let m: f64 = mean(&data)?;
-    let sv: f64 = variance(&data)?;
-    let pv: f64 = pvariance(&data)?;
-    let sd: f64 = stdev(&data)?;
-    let pd: f64 = pstdev(&data)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(7usize + 0usize);
-    __sifr_concat.push_str("mean = ");
-    __sifr_concat.push_str((format!("{}", m)).as_str());
-    __sifr_concat
-});
-    assert!((format!("{}", format!("{}{}", "mean = ", format!("{}", m))) == "mean = 5"));
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(18usize + 0usize);
-    __sifr_concat.push_str("sample variance = ");
-    __sifr_concat.push_str((format!("{}", sv)).as_str());
-    __sifr_concat
-});
-    assert!((format!("{}", format!("{}{}", "sample variance = ", format!("{}", sv))) == "sample variance = 4.571428571428571"));
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(22usize + 0usize);
-    __sifr_concat.push_str("population variance = ");
-    __sifr_concat.push_str((format!("{}", pv)).as_str());
-    __sifr_concat
-});
-    assert!((format!("{}", format!("{}{}", "population variance = ", format!("{}", pv))) == "population variance = 4"));
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(15usize + 0usize);
-    __sifr_concat.push_str("sample stdev = ");
-    __sifr_concat.push_str((format!("{}", sd)).as_str());
-    __sifr_concat
-});
-    assert!((format!("{}", format!("{}{}", "sample stdev = ", format!("{}", sd))) == "sample stdev = 2.138089935299395"));
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(19usize + 0usize);
-    __sifr_concat.push_str("population stdev = ");
-    __sifr_concat.push_str((format!("{}", pd)).as_str());
-    __sifr_concat
-});
-    assert!((format!("{}", format!("{}{}", "population stdev = ", format!("{}", pd))) == "population stdev = 2"));
+    let data: Vec<f64> = vec![
+        2.0_f64, 4.0_f64, 4.0_f64, 4.0_f64, 5.0_f64, 5.0_f64, 7.0_f64, 9.0_f64
+    ];
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (||
     {
-    let __lhs = m;
-    let __rhs = 5.0_f64;
-    let __tol = 0.001_f64;
-    assert!((__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol), "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol)
-};
-    {
-    let __lhs = sv;
-    let __rhs = 4.571_f64;
-    let __tol = 0.01_f64;
-    assert!((__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol), "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol)
-};
-    {
-    let __lhs = pv;
-    let __rhs = 4.0_f64;
-    let __tol = 0.001_f64;
-    assert!((__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol), "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol)
-};
-    {
-    let __lhs = sd;
-    let __rhs = 2.138_f64;
-    let __tol = 0.01_f64;
-    assert!((__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol), "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol)
-};
-    {
-    let __lhs = pd;
-    let __rhs = 2.0_f64;
-    let __tol = 0.001_f64;
-    assert!((__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol), "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol)
-};
-    Ok(())
-})();
+        let m: f64 = mean(&data)?;
+        let sv: f64 = variance(&data)?;
+        let pv: f64 = pvariance(&data)?;
+        let sd: f64 = stdev(&data)?;
+        let pd: f64 = pstdev(&data)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(7usize +
+            0usize); __sifr_concat.push_str("mean = "); __sifr_concat
+            .push_str((format!("{}", m)).as_str()); __sifr_concat }
+        );
+        assert!(
+            (format!("{}", format!("{}{}", "mean = ", format!("{}", m))) == "mean = 5")
+        );
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
+            0usize); __sifr_concat.push_str("sample variance = "); __sifr_concat
+            .push_str((format!("{}", sv)).as_str()); __sifr_concat }
+        );
+        assert!(
+            (format!("{}", format!("{}{}", "sample variance = ", format!("{}", sv))) ==
+            "sample variance = 4.571428571428571")
+        );
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(22usize +
+            0usize); __sifr_concat.push_str("population variance = "); __sifr_concat
+            .push_str((format!("{}", pv)).as_str()); __sifr_concat }
+        );
+        assert!(
+            (format!("{}", format!("{}{}", "population variance = ", format!("{}", pv)))
+            == "population variance = 4")
+        );
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(15usize +
+            0usize); __sifr_concat.push_str("sample stdev = "); __sifr_concat
+            .push_str((format!("{}", sd)).as_str()); __sifr_concat }
+        );
+        assert!(
+            (format!("{}", format!("{}{}", "sample stdev = ", format!("{}", sd))) ==
+            "sample stdev = 2.138089935299395")
+        );
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(19usize +
+            0usize); __sifr_concat.push_str("population stdev = "); __sifr_concat
+            .push_str((format!("{}", pd)).as_str()); __sifr_concat }
+        );
+        assert!(
+            (format!("{}", format!("{}{}", "population stdev = ", format!("{}", pd))) ==
+            "population stdev = 2")
+        );
+        {
+            let __lhs = m;
+            let __rhs = 5.0_f64;
+            let __tol = 0.001_f64;
+            assert!(
+                (__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol),
+                "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol
+            )
+        };
+        {
+            let __lhs = sv;
+            let __rhs = 4.571_f64;
+            let __tol = 0.01_f64;
+            assert!(
+                (__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol),
+                "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol
+            )
+        };
+        {
+            let __lhs = pv;
+            let __rhs = 4.0_f64;
+            let __tol = 0.001_f64;
+            assert!(
+                (__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol),
+                "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol
+            )
+        };
+        {
+            let __lhs = sd;
+            let __rhs = 2.138_f64;
+            let __tol = 0.01_f64;
+            assert!(
+                (__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol),
+                "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol
+            )
+        };
+        {
+            let __lhs = pd;
+            let __rhs = 2.0_f64;
+            let __tol = 0.001_f64;
+            assert!(
+                (__lhs == __rhs) || ((__lhs - __rhs).abs() <= __tol),
+                "assert_almost_eq failed: {} != {} (tolerance {})", __lhs, __rhs, __tol
+            )
+        };
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(18usize + 0usize);
-    __sifr_concat.push_str("statistics error: ");
-    __sifr_concat.push_str((e.message.clone()).as_str());
-    __sifr_concat
-});
-        assert!((format!("{}", format!("{}{}", "statistics error: ", e.message.clone())) == "All assertions passed!"));
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
+            0usize); __sifr_concat.push_str("statistics error: "); __sifr_concat
+            .push_str((e.message.clone()).as_str()); __sifr_concat }
+        );
+        assert!(
+            (format!("{}", format!("{}{}", "statistics error: ", e.message.clone())) ==
+            "All assertions passed!")
+        );
     }
     assert!((10_i64) > (5_i64), "assert_gt failed: {} is not > {}", 10_i64, 5_i64);
     assert!((3_i64) < (7_i64), "assert_lt failed: {} is not < {}", 3_i64, 7_i64);

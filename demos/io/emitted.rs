@@ -1736,6 +1736,149 @@ mod __sifr_project_nominals {
         }
     }
     impl ::std::error::Error for ParseError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ValueError {
+        pub message: String,
+    }
+    impl ValueError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ValueError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ValueError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct JSONDecodeError {
+        pub message: String,
+        pub line: i64,
+        pub column: i64,
+    }
+    impl JSONDecodeError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                line: 0,
+                column: 0,
+            }
+        }
+    }
+    impl ::std::fmt::Display for JSONDecodeError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for JSONDecodeError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct JsonIntegerRangeError {
+        pub message: String,
+        pub path: String,
+        pub profile: String,
+    }
+    impl JsonIntegerRangeError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                path: String::new(),
+                profile: String::new(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for JsonIntegerRangeError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for JsonIntegerRangeError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct JsonLimitError {
+        pub message: String,
+        pub limit: i64,
+    }
+    impl JsonLimitError {
+        pub fn new(message: String) -> Self {
+            Self { message, limit: 0 }
+        }
+    }
+    impl ::std::fmt::Display for JsonLimitError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for JsonLimitError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct TOMLDecodeError {
+        pub message: String,
+        pub line: i64,
+        pub column: i64,
+    }
+    impl TOMLDecodeError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                line: 0,
+                column: 0,
+            }
+        }
+    }
+    impl ::std::fmt::Display for TOMLDecodeError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for TOMLDecodeError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct RegexError {
+        pub message: String,
+        pub detail: String,
+    }
+    impl RegexError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                detail: String::new(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for RegexError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for RegexError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct TimeoutError {
+        pub message: String,
+    }
+    impl TimeoutError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for TimeoutError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for TimeoutError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ScopeFailure {
+        pub message: String,
+    }
+    impl ScopeFailure {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ScopeFailure {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ScopeFailure {}
     impl From<IOError> for Error {
         fn from(err: IOError) -> Self {
             Self::new(err.message)
@@ -1746,9 +1889,68 @@ mod __sifr_project_nominals {
             Self::new(err.message)
         }
     }
+    impl From<ValueError> for Error {
+        fn from(err: ValueError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<JSONDecodeError> for Error {
+        fn from(err: JSONDecodeError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<JsonIntegerRangeError> for Error {
+        fn from(err: JsonIntegerRangeError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<JsonLimitError> for Error {
+        fn from(err: JsonLimitError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<TOMLDecodeError> for Error {
+        fn from(err: TOMLDecodeError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<RegexError> for Error {
+        fn from(err: RegexError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<TimeoutError> for Error {
+        fn from(err: TimeoutError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<ScopeFailure> for Error {
+        fn from(err: ScopeFailure) -> Self {
+            Self::new(err.message)
+        }
+    }
 }
 pub use __sifr_project_nominals::IOError;
+pub use __sifr_project_nominals::JSONDecodeError;
+pub use __sifr_project_nominals::JsonIntegerRangeError;
+pub use __sifr_project_nominals::JsonLimitError;
+pub use __sifr_project_nominals::ParseError;
+pub use __sifr_project_nominals::RegexError;
+pub use __sifr_project_nominals::ScopeFailure;
+pub use __sifr_project_nominals::TOMLDecodeError;
+pub use __sifr_project_nominals::TimeoutError;
+pub use __sifr_project_nominals::ValueError;
+pub use __sifr_project_nominals::__SifrIoBinaryFileHandle;
 pub use __sifr_project_nominals::__SifrIoTextFileHandle;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eDecodeError;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eDecodeErrorHandler;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eDecoder;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eEncodeError;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eEncodeErrorHandler;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eEncoder;
+pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eEncoding;
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
 }
@@ -2133,343 +2335,6 @@ fn __const_ENCODE_ERRORS_XMLCHARREF_REPLACE() -> String {
 }
 fn __const_ENCODE_ERRORS_NAME_REPLACE() -> String {
     "namereplace".to_string().to_string()
-}
-#[derive(Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2eencoding_x2eDecodeError {
-    message: String,
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eDecodeError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eDecodeError {}
-impl ::std::fmt::Debug for __SifrStdlib_sifr_x2eencoding_x2eDecodeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        f.debug_struct("DecodeError").field("message", &self.message).finish()
-    }
-}
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2eencoding_x2eDecodeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-impl ::std::error::Error for __SifrStdlib_sifr_x2eencoding_x2eDecodeError {}
-#[derive(Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2eencoding_x2eEncodeError {
-    message: String,
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eEncodeError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eEncodeError {}
-impl ::std::fmt::Debug for __SifrStdlib_sifr_x2eencoding_x2eEncodeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        f.debug_struct("EncodeError").field("message", &self.message).finish()
-    }
-}
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2eencoding_x2eEncodeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-impl ::std::error::Error for __SifrStdlib_sifr_x2eencoding_x2eEncodeError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2eencoding_x2eEncoding {
-    label: String,
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eEncoding {
-    fn new(label: String) -> Self {
-        let __sifr_field_init_0: String = {
-            let mut __sifr_concat: String = String::with_capacity(label.len() + 0usize);
-            __sifr_concat.push_str((label).as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
-        };
-        Self { label: __sifr_field_init_0 }
-    }
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eEncoding {
-    fn canonical_label(
-        &self,
-    ) -> Result<String, __SifrStdlib_sifr_x2eencoding_x2eDecodeError> {
-        _encoding_canonical_label(&self.label)
-    }
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eEncoding {
-    fn is_supported(&self) -> bool {
-        _encoding_is_supported(&self.label)
-    }
-}
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2eencoding_x2eEncoding {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "Encoding(label={})", self.label)
-    }
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2eencoding_x2eDecodeErrorHandler {
-    name: String,
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eDecodeErrorHandler {
-    fn new(name: String) -> Self {
-        let __sifr_field_init_0: String = {
-            let mut __sifr_concat: String = String::with_capacity(name.len() + 0usize);
-            __sifr_concat.push_str((name).as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
-        };
-        Self { name: __sifr_field_init_0 }
-    }
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eDecodeErrorHandler {}
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2eencoding_x2eDecodeErrorHandler {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "DecodeErrorHandler(name={})", self.name)
-    }
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2eencoding_x2eEncodeErrorHandler {
-    name: String,
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eEncodeErrorHandler {
-    fn new(name: String) -> Self {
-        let __sifr_field_init_0: String = {
-            let mut __sifr_concat: String = String::with_capacity(name.len() + 0usize);
-            __sifr_concat.push_str((name).as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
-        };
-        Self { name: __sifr_field_init_0 }
-    }
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eEncodeErrorHandler {}
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2eencoding_x2eEncodeErrorHandler {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "EncodeErrorHandler(name={})", self.name)
-    }
-}
-#[derive(Debug, Clone, PartialEq)]
-struct __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome {
-    text: String,
-    recoveries: Vec<String>,
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome {
-    fn new(text: String, recoveries: Vec<String>) -> Self {
-        let __sifr_field_init_0: String = {
-            let mut __sifr_concat: String = String::with_capacity(text.len() + 0usize);
-            __sifr_concat.push_str((text).as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
-        };
-        let __sifr_field_init_1: Vec<String> = recoveries;
-        Self {
-            text: __sifr_field_init_0,
-            recoveries: __sifr_field_init_1,
-        }
-    }
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome {
-    fn get_text(&self) -> String {
-        {
-            let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
-            __sifr_concat.push_str((self.text.clone()).as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
-        }
-    }
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome {
-    fn get_recoveries(&self) -> Vec<String> {
-        self.recoveries.clone()
-    }
-}
-#[derive(Debug, Clone, PartialEq)]
-struct __SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome {
-    data: Vec<u8>,
-    recoveries: Vec<String>,
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome {
-    fn new(data: Vec<u8>, recoveries: Vec<String>) -> Self {
-        let __sifr_field_init_0: Vec<u8> = data;
-        let __sifr_field_init_1: Vec<String> = recoveries;
-        Self {
-            data: __sifr_field_init_0,
-            recoveries: __sifr_field_init_1,
-        }
-    }
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome {
-    fn get_data(&self) -> Vec<u8> {
-        self.data.clone()
-    }
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome {
-    fn get_recoveries(&self) -> Vec<String> {
-        self.recoveries.clone()
-    }
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2eencoding_x2eDecoder {
-    _encoding: __SifrStdlib_sifr_x2eencoding_x2eEncoding,
-    _errors: __SifrStdlib_sifr_x2eencoding_x2eDecodeErrorHandler,
-    _exhausted: bool,
-    _pending: Vec<u8>,
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
-    fn new(
-        enc: __SifrStdlib_sifr_x2eencoding_x2eEncoding,
-        errors: Option<__SifrStdlib_sifr_x2eencoding_x2eDecodeErrorHandler>,
-    ) -> Self {
-        let __sifr_field_init_0: __SifrStdlib_sifr_x2eencoding_x2eEncoding = enc;
-        let __sifr_field_init_1: __SifrStdlib_sifr_x2eencoding_x2eDecodeErrorHandler = _decode_handler_or_strict(
-            &errors,
-        );
-        let __sifr_field_init_2: bool = false;
-        let __sifr_field_init_3: Vec<u8> = vec![];
-        Self {
-            _encoding: __sifr_field_init_0,
-            _errors: __sifr_field_init_1,
-            _exhausted: __sifr_field_init_2,
-            _pending: __sifr_field_init_3,
-        }
-    }
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
-    fn decode(
-        &mut self,
-        data: &Vec<u8>,
-        r#final: bool,
-    ) -> Result<
-        __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome,
-        __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
-    > {
-        if self._exhausted {
-            return Err(
-                __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(
-                    "decoder is exhausted".to_string(),
-                ),
-            );
-        }
-        let __sifr_try_res: Result<
-            Result<
-                __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome,
-                __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
-            >,
-            __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
-        > = (|| {
-            let outcome: __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome = _encoding_decode_incremental_outcome(
-                data,
-                &self._pending,
-                &self._encoding.clone().label.clone(),
-                &self._errors.clone().name.clone(),
-                r#final,
-            )?;
-            let next_pending: Vec<u8> = _encoding_decode_incremental_pending(
-                data,
-                &self._pending,
-                &self._encoding.clone().label.clone(),
-                r#final,
-            )?;
-            self._pending = next_pending;
-            if r#final {
-                self._pending = vec![];
-                self._exhausted = true;
-            }
-            return Ok(Ok(outcome));
-            unreachable!("sifr try/except return capture fell through");
-        })();
-        match __sifr_try_res {
-            Ok(__sifr_ret_val) => {
-                return __sifr_ret_val;
-            }
-            Err(__sifr_try_err) => {
-                let e = __sifr_try_err.clone();
-                return Err(
-                    __SifrStdlib_sifr_x2eencoding_x2eDecodeError::new(e.message.clone()),
-                );
-            }
-        }
-    }
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2eencoding_x2eEncoder {
-    _encoding: __SifrStdlib_sifr_x2eencoding_x2eEncoding,
-    _errors: __SifrStdlib_sifr_x2eencoding_x2eEncodeErrorHandler,
-    _exhausted: bool,
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eEncoder {
-    fn new(
-        enc: __SifrStdlib_sifr_x2eencoding_x2eEncoding,
-        errors: Option<__SifrStdlib_sifr_x2eencoding_x2eEncodeErrorHandler>,
-    ) -> Self {
-        let __sifr_field_init_0: __SifrStdlib_sifr_x2eencoding_x2eEncoding = enc;
-        let __sifr_field_init_1: __SifrStdlib_sifr_x2eencoding_x2eEncodeErrorHandler = _encode_handler_or_strict(
-            &errors,
-        );
-        let __sifr_field_init_2: bool = false;
-        Self {
-            _encoding: __sifr_field_init_0,
-            _errors: __sifr_field_init_1,
-            _exhausted: __sifr_field_init_2,
-        }
-    }
-}
-impl __SifrStdlib_sifr_x2eencoding_x2eEncoder {
-    fn encode(
-        &mut self,
-        text: &String,
-        r#final: bool,
-    ) -> Result<
-        __SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome,
-        __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
-    > {
-        if self._exhausted {
-            return Err(
-                __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(
-                    "encoder is exhausted".to_string(),
-                ),
-            );
-        }
-        let __sifr_try_res: Result<
-            Result<
-                __SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome,
-                __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
-            >,
-            __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
-        > = (|| {
-            let outcome: __SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome = encode_outcome(
-                text,
-                &self._encoding,
-                &Some((self._errors.clone()).clone()),
-            )?;
-            if r#final {
-                self._exhausted = true;
-            }
-            return Ok(Ok(outcome));
-            unreachable!("sifr try/except return capture fell through");
-        })();
-        match __sifr_try_res {
-            Ok(__sifr_ret_val) => {
-                return __sifr_ret_val;
-            }
-            Err(__sifr_try_err) => {
-                let e = __sifr_try_err.clone();
-                return Err(
-                    __SifrStdlib_sifr_x2eencoding_x2eEncodeError::new(e.message.clone()),
-                );
-            }
-        }
-    }
-}
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2eencoding_x2eEncoder {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(
-            f, "Encoder(_encoding={}, _errors={}, _exhausted={})", self._encoding, self
-            ._errors, self._exhausted
-        )
-    }
 }
 fn _encoding_is_supported(label: &String) -> bool {
     _encoding_is_supported_impl(label)
@@ -3064,114 +2929,6 @@ for __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencod
         }
     }
 }
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct __SifrIoBinaryFileHandle {
-    _handle: __SifrIoNativeFileHandle,
-    _mode: String,
-    _closed: bool,
-}
-impl __SifrIoBinaryFileHandle {
-    fn new(handle: __SifrIoNativeFileHandle, mode: String) -> Self {
-        let __sifr_field_init_0: __SifrIoNativeFileHandle = handle;
-        let __sifr_field_init_1: String = mode;
-        let __sifr_field_init_2: bool = false;
-        Self {
-            _handle: __sifr_field_init_0,
-            _mode: __sifr_field_init_1,
-            _closed: __sifr_field_init_2,
-        }
-    }
-}
-impl __SifrIoBinaryFileHandle {
-    fn close(&mut self) {
-        if self._closed {
-            return;
-        }
-        file_close(&self._handle);
-        self._closed = true;
-    }
-}
-impl __SifrIoBinaryFileHandle {
-    fn closed(&self) -> bool {
-        self._closed
-    }
-}
-impl __SifrIoBinaryFileHandle {
-    fn flush(&self) -> Result<(), IOError> {
-        if self._closed {
-            return Err(IOError::new(_closed_stream_error()));
-        }
-        Ok(())
-    }
-}
-impl __SifrIoBinaryFileHandle {
-    fn read_bytes(&self, size: Option<i64>) -> Result<Vec<u8>, IOError> {
-        let _ = size;
-        if self._closed {
-            return Err(IOError::new(_closed_stream_error()));
-        }
-        if !(self.readable()) {
-            return Err(IOError::new("stream is not readable".to_string()));
-        }
-        file_read_bytes(&self._handle)
-    }
-}
-impl __SifrIoBinaryFileHandle {
-    fn write_bytes(&self, data: &Vec<u8>) -> Result<(), IOError> {
-        if self._closed {
-            return Err(IOError::new(_closed_stream_error()));
-        }
-        if !(self.writable()) {
-            return Err(IOError::new("stream is not writable".to_string()));
-        }
-        file_write_bytes(&self._handle, data)
-    }
-}
-impl __SifrIoBinaryFileHandle {
-    fn seek(&self, offset: i64, whence: i64) -> Result<i64, IOError> {
-        let _ = offset;
-        let _ = whence;
-        Err(IOError::new(_unsupported_seek_tell_error()))
-    }
-}
-impl __SifrIoBinaryFileHandle {
-    fn tell(&self) -> Result<i64, IOError> {
-        Err(IOError::new(_unsupported_seek_tell_error()))
-    }
-}
-impl __SifrIoBinaryFileHandle {
-    fn readable(&self) -> bool {
-        _mode_is_readable(&self._mode)
-    }
-}
-impl __SifrIoBinaryFileHandle {
-    fn writable(&self) -> bool {
-        _mode_is_writable(&self._mode)
-    }
-}
-impl __SifrIoBinaryFileHandle {
-    fn seekable(&self) -> bool {
-        false
-    }
-}
-impl __SifrIoBinaryFileHandle {
-    fn __enter__(&self) -> __SifrIoBinaryFileHandle {
-        self.clone()
-    }
-}
-impl __SifrIoBinaryFileHandle {
-    fn __exit__(&mut self) {
-        self.close();
-    }
-}
-impl ::std::fmt::Display for __SifrIoBinaryFileHandle {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(
-            f, "BinaryFileHandle(_handle={:?}, _mode={}, _closed={})", self._handle, self
-            ._mode, self._closed
-        )
-    }
-}
 fn _closed_stream_error() -> String {
     "I/O operation on closed stream".to_string()
 }
@@ -3230,164 +2987,6 @@ impl ::std::fmt::Display for Error {
     }
 }
 impl ::std::error::Error for Error {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ValueError {
-    message: String,
-}
-impl ValueError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ValueError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JSONDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-impl JSONDecodeError {
-    fn new(message: String) -> Self {
-        Self {
-            message,
-            line: 0,
-            column: 0,
-        }
-    }
-}
-impl ::std::fmt::Display for JSONDecodeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for JSONDecodeError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JsonIntegerRangeError {
-    message: String,
-    path: String,
-    profile: String,
-}
-impl JsonIntegerRangeError {
-    fn new(message: String) -> Self {
-        Self {
-            message,
-            path: String::new(),
-            profile: String::new(),
-        }
-    }
-}
-impl ::std::fmt::Display for JsonIntegerRangeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for JsonIntegerRangeError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JsonLimitError {
-    message: String,
-    limit: i64,
-}
-impl JsonLimitError {
-    fn new(message: String) -> Self {
-        Self { message, limit: 0 }
-    }
-}
-impl ::std::fmt::Display for JsonLimitError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for JsonLimitError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct TOMLDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-impl TOMLDecodeError {
-    fn new(message: String) -> Self {
-        Self {
-            message,
-            line: 0,
-            column: 0,
-        }
-    }
-}
-impl ::std::fmt::Display for TOMLDecodeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for TOMLDecodeError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct RegexError {
-    message: String,
-    detail: String,
-}
-impl RegexError {
-    fn new(message: String) -> Self {
-        Self {
-            message,
-            detail: String::new(),
-        }
-    }
-}
-impl ::std::fmt::Display for RegexError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for RegexError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct TimeoutError {
-    message: String,
-}
-impl TimeoutError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for TimeoutError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for TimeoutError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ScopeFailure {
-    message: String,
-}
-impl ScopeFailure {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ScopeFailure {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ScopeFailure {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)

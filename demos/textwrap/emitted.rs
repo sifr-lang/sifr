@@ -1,5 +1,22 @@
 // src/main.rs
-// --- stdlib: sifr.test ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ValueError {
+        pub message: String,
+    }
+    impl ValueError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ValueError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ValueError {}
+}
+pub use __sifr_project_nominals::ValueError;
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     assert_eq!(actual.len() as i64, expected.len() as i64);
     let mut i: i64 = 0_i64;
@@ -8,8 +25,6 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
         i += 1_i64;
     }
 }
-
-// --- stdlib: sifr.textwrap ---
 fn _replace_whitespace_chars(text: &String, replace_tabs: bool) -> String {
     let normalized: String = text
         .replace('\n', " ")
@@ -508,74 +523,65 @@ fn shorten(text: &String, width: i64) -> String {
     }
     result
 }
-// --- end stdlib ---
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ValueError {
-    message: String,
-}
-
-impl ValueError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for ValueError {
-}
-
 fn collect_wrap_fill_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let lines: Vec<String> = wrap(&"alpha\tbeta\ngamma".to_string(), 10_i64)?;
-    actual.push((format!("{:?}", lines)).as_str() == ("[\"alpha beta\", \"gamma\"]".to_string()).as_str());
-    Ok(())
-})();
+        let lines: Vec<String> = wrap(&"alpha\tbeta\ngamma".to_string(), 10_i64)?;
+        actual
+            .push(
+                (format!("{:?}", lines)).as_str()
+                    == ("[\"alpha beta\", \"gamma\"]".to_string()).as_str(),
+            );
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         actual.push(false);
     }
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let filled: String = fill(&"alpha\tbeta\ngamma".to_string(), 10_i64)?;
-    actual.push(filled == "alpha beta\ngamma");
-    Ok(())
-})();
+        let filled: String = fill(&"alpha\tbeta\ngamma".to_string(), 10_i64)?;
+        actual.push(filled == "alpha beta\ngamma");
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         actual.push(false);
     }
     actual
 }
-
 fn collect_other_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    actual.push((dedent(&"  x\n  y".to_string())).as_str() == ("x\ny".to_string()).as_str());
-    actual.push((indent(&"x\n \ny".to_string(), &">> ".to_string())).as_str() == (">> x\n \n>> y".to_string()).as_str());
-    actual.push((shorten(&"alpha beta gamma".to_string(), 16_i64)).as_str() == ("alpha beta [...]".to_string()).as_str());
+    actual
+        .push(
+            (dedent(&"  x\n  y".to_string())).as_str() == ("x\ny".to_string()).as_str(),
+        );
+    actual
+        .push(
+            (indent(&"x\n \ny".to_string(), &">> ".to_string())).as_str()
+                == (">> x\n \n>> y".to_string()).as_str(),
+        );
+    actual
+        .push(
+            (shorten(&"alpha beta gamma".to_string(), 16_i64)).as_str()
+                == ("alpha beta [...]".to_string()).as_str(),
+        );
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let wrap_empty: Vec<String> = wrap(&"".to_string(), 5_i64)?;
-    actual.push((format!("{:?}", wrap_empty)).as_str() == ("[]".to_string()).as_str());
-    Ok(())
-})();
+        let wrap_empty: Vec<String> = wrap(&"".to_string(), 5_i64)?;
+        actual
+            .push((format!("{:?}", wrap_empty)).as_str() == ("[]".to_string()).as_str());
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         actual.push(false);
     }
     actual
 }
-
 fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {
     for value in values.iter().copied() {
         target.push(value);
     }
 }
-
 fn main() {
     let expected: Vec<bool> = vec![true, true, true, true, true, true];
     let mut actual: Vec<bool> = vec![];

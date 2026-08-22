@@ -1,44 +1,41 @@
 // src/main.rs
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ValueError {
-    message: String,
-}
-
-impl ValueError {
-    fn new(message: String) -> Self {
-        Self { message }
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ValueError {
+        pub message: String,
     }
-}
-
-impl ::std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
+    impl ValueError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
     }
+    impl ::std::fmt::Display for ValueError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ValueError {}
 }
-
-impl ::std::error::Error for ValueError {
-}
-
+pub use __sifr_project_nominals::ValueError;
 fn classify(n: i64) -> i64 {
     let __sifr_try_res: Result<i64, ValueError> = (|| {
-    if n > (0_i64) {
-        return Ok(n);
-    } else {
-        return Err(ValueError::new("non-positive".to_string()));
-    }
-    unreachable!("sifr try/except return capture fell through");
-})();
+        if n > (0_i64) {
+            return Ok(n);
+        } else {
+            return Err(ValueError::new("non-positive".to_string()));
+        }
+        unreachable!("sifr try/except return capture fell through");
+    })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
-        },
+        }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
             return 99_i64;
-        },
+        }
     }
 }
-
 fn main() {
     println!("return_and_raise_paths control-flow effect query unification demo:");
     println!("{}", classify(7_i64));

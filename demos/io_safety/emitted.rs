@@ -1,5 +1,48 @@
 // src/main.rs
-// --- stdlib: _sifr.encoding ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct IOError {
+        pub message: String,
+        pub kind: String,
+    }
+    impl IOError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                kind: "Other".to_string(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for IOError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for IOError {}
+    pub fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match __sifr_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => {
+                    "PermissionDenied".to_string()
+                }
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                    "DirectoryNotEmpty".to_string()
+                }
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+}
+pub use __sifr_project_nominals::IOError;
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
 }
@@ -109,8 +152,6 @@ fn _encoding_encode_recoveries_impl(
             message: __sifr_bridge_error.to_string(),
         })
 }
-
-// --- stdlib: _sifr.fs ---
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrIoNativeFileHandle {
     _id: String,
@@ -328,8 +369,6 @@ fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError>
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-
-// --- stdlib: sifr.encoding ---
 fn __const_ENCODING_UTF8() -> String {
     "utf-8".to_string().to_string()
 }
@@ -1271,8 +1310,6 @@ fn encode(
         }
     }
 }
-
-// --- stdlib: _sifr.sys ---
 fn run_command(cmd: &String) -> Result<String, IOError> {
     ::sifr_stdlib::sys::run_command(cmd)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -1329,241 +1366,208 @@ fn os_linesep() -> String {
 fn os_name() -> String {
     ::sifr_stdlib::sys::os_name()
 }
-
-// --- stdlib: sifr.shutil ---
 fn copy(src: &String, dst: &String) -> Result<(), IOError> {
     copy_file(src, dst)
 }
 fn rmtree(path: &String) -> Result<(), IOError> {
     rmdir_all(path)
 }
-// --- end stdlib ---
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct IOError {
-    message: String,
-    kind: String,
-}
-
-impl IOError {
-    fn new(message: String) -> Self {
-        Self { message, kind: "Other".to_string() }
-    }
-}
-
-impl ::std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for IOError {
-}
-
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
-    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
-    match __sifr_io_kind {
-    Some(::std::io::ErrorKind::NotFound) => {
-        "FileNotFound".to_string()
-    },
-    Some(::std::io::ErrorKind::PermissionDenied) => {
-        "PermissionDenied".to_string()
-    },
-    Some(::std::io::ErrorKind::AlreadyExists) => {
-        "FileExists".to_string()
-    },
-    Some(::std::io::ErrorKind::IsADirectory) => {
-        "IsADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::NotADirectory) => {
-        "NotADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-        "DirectoryNotEmpty".to_string()
-    },
-    _ => {
-        "Other".to_string()
-    },
-}
-};
+        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+            .downcast_ref::<std::io::Error>()
+            .map(::std::io::Error::kind);
+        match __sifr_io_kind {
+            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+            Some(::std::io::ErrorKind::PermissionDenied) => {
+                "PermissionDenied".to_string()
+            }
+            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                "DirectoryNotEmpty".to_string()
+            }
+            _ => "Other".to_string(),
+        }
+    };
     IOError { message: msg, kind }
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
-
 impl Error {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for Error {
-}
-
+impl ::std::error::Error for Error {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
-
 impl ParseError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ParseError {
-}
-
+impl ::std::error::Error for ParseError {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ParseError> for Error {
     fn from(err: ParseError) -> Self {
         Self::new(err.message)
     }
 }
-
 fn demo_safe_read_write() {
     println!("=== Safe File Read/Write ===");
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let w: () = write_text(&"/tmp/sifr_io_demo.txt".to_string(), &"hello from sifr".to_string())?;
-    let content: String = read_text(&"/tmp/sifr_io_demo.txt".to_string())?;
-    println!("read: {}", content);
-    Ok(())
-})();
+        let w: () = write_text(
+            &"/tmp/sifr_io_demo.txt".to_string(),
+            &"hello from sifr".to_string(),
+        )?;
+        let content: String = read_text(&"/tmp/sifr_io_demo.txt".to_string())?;
+        println!("read: {}", content);
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("error: {}", e.message.clone());
     }
 }
-
 fn demo_file_not_found() {
     println!("=== File Not Found (no panic) ===");
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let data: String = read_text(&"/tmp/sifr_io_demo_missing_file.txt".to_string())?;
-    println!("should not reach here");
-    Ok(())
-})();
+        let data: String = read_text(&"/tmp/sifr_io_demo_missing_file.txt".to_string())?;
+        println!("should not reach here");
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("caught IOError: {}", e.message.clone());
     }
 }
-
 fn demo_directory_ops() {
     println!("=== Directory Operations ===");
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let m: () = mkdir(&"/tmp/sifr_io_demo_dir".to_string())?;
-    let w: () = write_text(&"/tmp/sifr_io_demo_dir/test.txt".to_string(), &"inside dir".to_string())?;
-    let entries: Vec<String> = listdir(&"/tmp/sifr_io_demo_dir".to_string())?;
-    println!("entries: {}", entries.len() as i64);
-    let content: String = read_text(&"/tmp/sifr_io_demo_dir/test.txt".to_string())?;
-    println!("file in dir: {}", content);
-    Ok(())
-})();
+        let m: () = mkdir(&"/tmp/sifr_io_demo_dir".to_string())?;
+        let w: () = write_text(
+            &"/tmp/sifr_io_demo_dir/test.txt".to_string(),
+            &"inside dir".to_string(),
+        )?;
+        let entries: Vec<String> = listdir(&"/tmp/sifr_io_demo_dir".to_string())?;
+        println!("entries: {}", entries.len() as i64);
+        let content: String = read_text(&"/tmp/sifr_io_demo_dir/test.txt".to_string())?;
+        println!("file in dir: {}", content);
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("error: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let bad_entries: Vec<String> = listdir(&"/tmp/sifr_io_demo_nonexistent_xyz".to_string())?;
-    println!("should not reach here");
-    Ok(())
-})();
+        let bad_entries: Vec<String> = listdir(
+            &"/tmp/sifr_io_demo_nonexistent_xyz".to_string(),
+        )?;
+        println!("should not reach here");
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("caught listdir IOError: {}", e.message.clone());
     }
 }
-
 fn demo_copy_and_cleanup() {
     println!("=== Copy and Cleanup ===");
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let c: () = copy(&"/tmp/sifr_io_demo.txt".to_string(), &"/tmp/sifr_io_demo_copy.txt".to_string())?;
-    let copy_content: String = read_text(&"/tmp/sifr_io_demo_copy.txt".to_string())?;
-    println!("copy: {}", copy_content);
-    Ok(())
-})();
+        let c: () = copy(
+            &"/tmp/sifr_io_demo.txt".to_string(),
+            &"/tmp/sifr_io_demo_copy.txt".to_string(),
+        )?;
+        let copy_content: String = read_text(&"/tmp/sifr_io_demo_copy.txt".to_string())?;
+        println!("copy: {}", copy_content);
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("error: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let r1: () = remove_file(&"/tmp/sifr_io_demo.txt".to_string())?;
-    let r2: () = remove_file(&"/tmp/sifr_io_demo_copy.txt".to_string())?;
-    let r3: () = rmtree(&"/tmp/sifr_io_demo_dir".to_string())?;
-    Ok(())
-})();
+        let r1: () = remove_file(&"/tmp/sifr_io_demo.txt".to_string())?;
+        let r2: () = remove_file(&"/tmp/sifr_io_demo_copy.txt".to_string())?;
+        let r3: () = rmtree(&"/tmp/sifr_io_demo_dir".to_string())?;
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("cleanup error: {}", e.message.clone());
     }
 }
-
 fn demo_read_lines() {
     println!("=== Read Lines ===");
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let w: () = write_text(&"/tmp/sifr_io_demo_lines.txt".to_string(), &"line1\nline2\nline3".to_string())?;
-    let lines: Vec<String> = read_lines(&"/tmp/sifr_io_demo_lines.txt".to_string())?;
-    println!("line count: {}", lines.len() as i64);
-    let r: () = remove_file(&"/tmp/sifr_io_demo_lines.txt".to_string())?;
-    Ok(())
-})();
+        let w: () = write_text(
+            &"/tmp/sifr_io_demo_lines.txt".to_string(),
+            &"line1\nline2\nline3".to_string(),
+        )?;
+        let lines: Vec<String> = read_lines(&"/tmp/sifr_io_demo_lines.txt".to_string())?;
+        println!("line count: {}", lines.len() as i64);
+        let r: () = remove_file(&"/tmp/sifr_io_demo_lines.txt".to_string())?;
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("error: {}", e.message.clone());
     }
 }
-
 fn demo_append() {
     println!("=== Append Text ===");
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let w1: () = write_text(&"/tmp/sifr_io_demo_append.txt".to_string(), &"first".to_string())?;
-    let a: () = append_text(&"/tmp/sifr_io_demo_append.txt".to_string(), &" second".to_string())?;
-    let content: String = read_text(&"/tmp/sifr_io_demo_append.txt".to_string())?;
-    println!("appended: {}", content);
-    let r: () = remove_file(&"/tmp/sifr_io_demo_append.txt".to_string())?;
-    Ok(())
-})();
+        let w1: () = write_text(
+            &"/tmp/sifr_io_demo_append.txt".to_string(),
+            &"first".to_string(),
+        )?;
+        let a: () = append_text(
+            &"/tmp/sifr_io_demo_append.txt".to_string(),
+            &" second".to_string(),
+        )?;
+        let content: String = read_text(&"/tmp/sifr_io_demo_append.txt".to_string())?;
+        println!("appended: {}", content);
+        let r: () = remove_file(&"/tmp/sifr_io_demo_append.txt".to_string())?;
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("error: {}", e.message.clone());
     }
 }
-
 fn demo_getcwd() {
     println!("=== Get Current Directory ===");
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let cwd: String = getcwd()?;
-    println!("getcwd succeeded");
-    Ok(())
-})();
+        let cwd: String = getcwd()?;
+        println!("getcwd succeeded");
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("getcwd error: {}", e.message.clone());
     }
 }
-
 fn main() {
     demo_safe_read_write();
     demo_file_not_found();

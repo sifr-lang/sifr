@@ -1,5 +1,215 @@
 // src/main.rs
-// --- stdlib: sifr.argparse ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct IOError {
+        pub message: String,
+        pub kind: String,
+    }
+    impl IOError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                kind: "Other".to_string(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for IOError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for IOError {}
+    pub fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match __sifr_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => {
+                    "PermissionDenied".to_string()
+                }
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                    "DirectoryNotEmpty".to_string()
+                }
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ParseError {
+        pub message: String,
+    }
+    impl ParseError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ParseError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ParseError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ValueError {
+        pub message: String,
+    }
+    impl ValueError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ValueError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ValueError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct JSONDecodeError {
+        pub message: String,
+        pub line: i64,
+        pub column: i64,
+    }
+    impl JSONDecodeError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                line: 0,
+                column: 0,
+            }
+        }
+    }
+    impl ::std::fmt::Display for JSONDecodeError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for JSONDecodeError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct JsonIntegerRangeError {
+        pub message: String,
+        pub path: String,
+        pub profile: String,
+    }
+    impl JsonIntegerRangeError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                path: String::new(),
+                profile: String::new(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for JsonIntegerRangeError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for JsonIntegerRangeError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct JsonLimitError {
+        pub message: String,
+        pub limit: i64,
+    }
+    impl JsonLimitError {
+        pub fn new(message: String) -> Self {
+            Self { message, limit: 0 }
+        }
+    }
+    impl ::std::fmt::Display for JsonLimitError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for JsonLimitError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct TOMLDecodeError {
+        pub message: String,
+        pub line: i64,
+        pub column: i64,
+    }
+    impl TOMLDecodeError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                line: 0,
+                column: 0,
+            }
+        }
+    }
+    impl ::std::fmt::Display for TOMLDecodeError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for TOMLDecodeError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct RegexError {
+        pub message: String,
+        pub detail: String,
+    }
+    impl RegexError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                detail: String::new(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for RegexError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for RegexError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct TimeoutError {
+        pub message: String,
+    }
+    impl TimeoutError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for TimeoutError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for TimeoutError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ScopeFailure {
+        pub message: String,
+    }
+    impl ScopeFailure {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ScopeFailure {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ScopeFailure {}
+}
+pub use __sifr_project_nominals::IOError;
+pub use __sifr_project_nominals::JSONDecodeError;
+pub use __sifr_project_nominals::JsonIntegerRangeError;
+pub use __sifr_project_nominals::JsonLimitError;
+pub use __sifr_project_nominals::ParseError;
+pub use __sifr_project_nominals::RegexError;
+pub use __sifr_project_nominals::ScopeFailure;
+pub use __sifr_project_nominals::TOMLDecodeError;
+pub use __sifr_project_nominals::TimeoutError;
+pub use __sifr_project_nominals::ValueError;
 fn parse_flag(args: &Vec<String>, flag: &String) -> bool {
     for arg in args.iter().cloned() {
         if arg == *flag {
@@ -109,8 +319,6 @@ fn parse_option(args: &Vec<String>, name: &String, default: &String) -> String {
         __sifr_concat
     }
 }
-
-// --- stdlib: sifr.bisect ---
 fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     a: &Vec<T>,
     x: &T,
@@ -161,8 +369,6 @@ fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     left
 }
-
-// --- stdlib: _sifr.encoding ---
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
 }
@@ -272,8 +478,6 @@ fn _encoding_encode_recoveries_impl(
             message: __sifr_bridge_error.to_string(),
         })
 }
-
-// --- stdlib: _sifr.fs ---
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrIoNativeFileHandle {
     _id: String,
@@ -491,8 +695,6 @@ fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError>
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-
-// --- stdlib: sifr.encoding ---
 fn __const_ENCODING_UTF8() -> String {
     "utf-8".to_string().to_string()
 }
@@ -1434,8 +1636,6 @@ fn encode(
         }
     }
 }
-
-// --- stdlib: sifr.io ---
 #[derive(Debug, Clone)]
 enum __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0 {
     __SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(IOError),
@@ -2717,8 +2917,6 @@ fn open_text(
         }
     }
 }
-
-// --- stdlib: sifr.csv ---
 const QUOTE_ALL: i64 = 1_i64;
 const QUOTE_NONNUMERIC: i64 = 2_i64;
 const QUOTE_NONE: i64 = 3_i64;
@@ -3200,8 +3398,6 @@ fn format_row(
     }
     parts.join(&resolved.delimiter)
 }
-
-// --- stdlib: sifr.fnmatch ---
 fn fnmatch(name: &String, pattern: &String) -> bool {
     _match(name, 0_i64, pattern, 0_i64)
 }
@@ -3278,8 +3474,6 @@ fn filter(names: &Vec<String>, pattern: &String) -> Vec<String> {
     }
     result
 }
-
-// --- stdlib: sifr.functools ---
 fn reduce<
     T: Clone + ::std::fmt::Display + PartialOrd + 'static,
     U: Clone + ::std::fmt::Display + PartialOrd + 'static,
@@ -3290,8 +3484,6 @@ fn reduce<
     }
     result
 }
-
-// --- stdlib: sifr.heapq ---
 fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &mut Vec<T>,
     mut pos: i64,
@@ -3574,8 +3766,6 @@ fn nsmallest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     result
 }
-
-// --- stdlib: sifr.itertools ---
 fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     iterables: &Vec<Vec<T>>,
 ) -> Box<dyn Iterator<Item = T>> {
@@ -3624,8 +3814,6 @@ fn flatten<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     result
 }
-
-// --- stdlib: _sifr.crypto ---
 fn random_int(min: i64, max: i64) -> i64 {
     ::sifr_stdlib::random::random_int(
             ::sifr_runtime::interop::SifrIntBridge::from(min),
@@ -3795,8 +3983,6 @@ fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
 fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
 }
-
-// --- stdlib: _sifr.math ---
 const PI: f64 = 3.141592653589793_f64;
 const E: f64 = 2.718281828459045_f64;
 const TAU: f64 = 6.283185307179586_f64;
@@ -3977,8 +4163,6 @@ fn nextafter(x: f64, y: f64) -> f64 {
 fn ulp(x: f64) -> f64 {
     ::sifr_stdlib::math::ulp(x)
 }
-
-// --- stdlib: _sifr.time ---
 fn time_now() -> f64 {
     ::sifr_stdlib::time::time_now()
 }
@@ -4044,8 +4228,6 @@ fn time_localtime() -> Vec<i64> {
         .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
         .collect()
 }
-
-// --- stdlib: sifr.math ---
 fn factorial(n: i64) -> i64 {
     if n < (0_i64) {
         return 0_i64;
@@ -4268,8 +4450,6 @@ fn modf_integral(x: f64) -> f64 {
 fn pow(x: f64, y: f64) -> f64 {
     pow_val(x, y)
 }
-
-// --- stdlib: sifr.random ---
 const _MT_N: i64 = 624_i64;
 const _MT_M: i64 = 397_i64;
 const _MT_MATRIX_A: i64 = 2567483615_i64;
@@ -4997,8 +5177,6 @@ fn randbytes(n: i64) -> Result<Vec<u8>, ValueError> {
     _sync_module_random(&mut generator);
     value
 }
-
-// --- stdlib: sifr.secrets ---
 fn token_hex(nbytes: i64) -> String {
     let hex_chars: String = "0123456789abcdef".to_string();
     let mut result: String = "".to_string();
@@ -5022,8 +5200,6 @@ fn token_hex(nbytes: i64) -> String {
     }
     result
 }
-
-// --- stdlib: sifr.statistics ---
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {
     message: String,
@@ -5066,16 +5242,12 @@ fn mean(
     let total: f64 = _sum(data);
     Ok(total / (count as f64))
 }
-
-// --- stdlib: sifr.string ---
 fn __const_ascii_lowercase() -> String {
     "abcdefghijklmnopqrstuvwxyz".to_string().to_string()
 }
 fn __const_digits() -> String {
     "0123456789".to_string().to_string()
 }
-
-// --- stdlib: sifr.textwrap ---
 fn _replace_whitespace_chars(text: &String, replace_tabs: bool) -> String {
     let normalized: String = text
         .replace('\n', " ")
@@ -5430,332 +5602,96 @@ fn indent(text: &String, prefix: &String) -> String {
     }
     result
 }
-// --- end stdlib ---
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct IOError {
-    message: String,
-    kind: String,
-}
-
-impl IOError {
-    fn new(message: String) -> Self {
-        Self { message, kind: "Other".to_string() }
-    }
-}
-
-impl ::std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for IOError {
-}
-
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
-    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
-    match __sifr_io_kind {
-    Some(::std::io::ErrorKind::NotFound) => {
-        "FileNotFound".to_string()
-    },
-    Some(::std::io::ErrorKind::PermissionDenied) => {
-        "PermissionDenied".to_string()
-    },
-    Some(::std::io::ErrorKind::AlreadyExists) => {
-        "FileExists".to_string()
-    },
-    Some(::std::io::ErrorKind::IsADirectory) => {
-        "IsADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::NotADirectory) => {
-        "NotADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-        "DirectoryNotEmpty".to_string()
-    },
-    _ => {
-        "Other".to_string()
-    },
-}
-};
+        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+            .downcast_ref::<std::io::Error>()
+            .map(::std::io::Error::kind);
+        match __sifr_io_kind {
+            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+            Some(::std::io::ErrorKind::PermissionDenied) => {
+                "PermissionDenied".to_string()
+            }
+            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                "DirectoryNotEmpty".to_string()
+            }
+            _ => "Other".to_string(),
+        }
+    };
     IOError { message: msg, kind }
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
-
 impl Error {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for Error {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for ParseError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ValueError {
-    message: String,
-}
-
-impl ValueError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for ValueError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JSONDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl JSONDecodeError {
-    fn new(message: String) -> Self {
-        Self { message, line: 0, column: 0 }
-    }
-}
-
-impl ::std::fmt::Display for JSONDecodeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for JSONDecodeError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JsonIntegerRangeError {
-    message: String,
-    path: String,
-    profile: String,
-}
-
-impl JsonIntegerRangeError {
-    fn new(message: String) -> Self {
-        Self { message, path: String::new(), profile: String::new() }
-    }
-}
-
-impl ::std::fmt::Display for JsonIntegerRangeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for JsonIntegerRangeError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct JsonLimitError {
-    message: String,
-    limit: i64,
-}
-
-impl JsonLimitError {
-    fn new(message: String) -> Self {
-        Self { message, limit: 0 }
-    }
-}
-
-impl ::std::fmt::Display for JsonLimitError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for JsonLimitError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct TOMLDecodeError {
-    message: String,
-    line: i64,
-    column: i64,
-}
-
-impl TOMLDecodeError {
-    fn new(message: String) -> Self {
-        Self { message, line: 0, column: 0 }
-    }
-}
-
-impl ::std::fmt::Display for TOMLDecodeError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for TOMLDecodeError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct RegexError {
-    message: String,
-    detail: String,
-}
-
-impl RegexError {
-    fn new(message: String) -> Self {
-        Self { message, detail: String::new() }
-    }
-}
-
-impl ::std::fmt::Display for RegexError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for RegexError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct TimeoutError {
-    message: String,
-}
-
-impl TimeoutError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for TimeoutError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for TimeoutError {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ScopeFailure {
-    message: String,
-}
-
-impl ScopeFailure {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for ScopeFailure {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for ScopeFailure {
-}
-
+impl ::std::error::Error for Error {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ParseError> for Error {
     fn from(err: ParseError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ValueError> for Error {
     fn from(err: ValueError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JSONDecodeError> for Error {
     fn from(err: JSONDecodeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JsonIntegerRangeError> for Error {
     fn from(err: JsonIntegerRangeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JsonLimitError> for Error {
     fn from(err: JsonLimitError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<TOMLDecodeError> for Error {
     fn from(err: TOMLDecodeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<RegexError> for Error {
     fn from(err: RegexError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<TimeoutError> for Error {
     fn from(err: TimeoutError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ScopeFailure> for Error {
     fn from(err: ScopeFailure) -> Self {
         Self::new(err.message)
     }
 }
-
 fn add_ints(a: i64, b: i64) -> i64 {
     a + b
 }
-
 fn main() {
     assert!((__const_ascii_lowercase().chars().count() as i64) == (26_i64));
     assert!((__const_digits().chars().count() as i64) == (10_i64));
@@ -5763,26 +5699,33 @@ fn main() {
     let pos: i64 = bisect_left(&data, &(30_i64), 0_i64, None);
     assert_eq!(pos, 2_i64);
     let nums_r: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64];
-    let total: i64 = reduce(|__arg0, __arg1| add_ints((__arg0).clone(), (__arg1).clone()), &nums_r, &(0_i64));
+    let total: i64 = reduce(
+        |__arg0, __arg1| add_ints((__arg0).clone(), (__arg1).clone()),
+        &nums_r,
+        &(0_i64),
+    );
     assert_eq!(total, 15_i64);
     let token: String = token_hex(8_i64);
     let __sifr_chars_token: Vec<char> = token.chars().collect::<Vec<char>>();
     assert!((token.chars().count() as i64) == (16_i64));
     let data2: Vec<f64> = vec![2.0_f64, 4.0_f64, 6.0_f64];
-    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
-    let avg: f64 = mean(&data2)?;
-    assert!(avg == (4.0_f64));
-    Ok(())
-})();
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (||
+    {
+        let avg: f64 = mean(&data2)?;
+        assert!(avg == (4.0_f64));
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let se = __sifr_try_err.clone();
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(18usize + 0usize);
-    __sifr_concat.push_str("statistics error: ");
-    __sifr_concat.push_str((se.message.clone()).as_str());
-    __sifr_concat
-});
-        assert!((format!("{}", format!("{}{}", "statistics error: ", se.message.clone())) == "stdlib_expansion demo: all checks passed!"));
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
+            0usize); __sifr_concat.push_str("statistics error: "); __sifr_concat
+            .push_str((se.message.clone()).as_str()); __sifr_concat }
+        );
+        assert!(
+            (format!("{}", format!("{}{}", "statistics error: ", se.message.clone())) ==
+            "stdlib_expansion demo: all checks passed!")
+        );
     }
     let mut heap: Vec<i64> = vec![];
     heappush(&mut heap, &(5_i64));
@@ -5794,30 +5737,56 @@ fn main() {
     }
     let small: Vec<i64> = nsmallest(2_i64, &vec![9_i64, 3_i64, 7_i64, 1_i64]);
     assert_eq!(small.len() as i64, 2_i64);
-    let merged: Vec<i64> = chain(&vec![vec![1_i64, 2_i64], vec![3_i64, 4_i64]]).collect::<Vec<_>>();
+    let merged: Vec<i64> = chain(&vec![vec![1_i64, 2_i64], vec![3_i64, 4_i64]])
+        .collect::<Vec<_>>();
     assert_eq!(merged.len() as i64, 4_i64);
-    let first3: Vec<i64> = take(3_i64, &(vec![10_i64, 20_i64, 30_i64, 40_i64]).into_iter().collect::<Vec<_>>());
+    let first3: Vec<i64> = take(
+        3_i64,
+        &(vec![10_i64, 20_i64, 30_i64, 40_i64]).into_iter().collect::<Vec<_>>(),
+    );
     assert_eq!(first3.len() as i64, 3_i64);
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let filled: String = fill(&"hello world foo bar".to_string(), 12_i64)?;
-    let __sifr_chars_filled: Vec<char> = filled.chars().collect::<Vec<char>>();
-    assert!((filled.chars().count() as i64) > (0_i64));
-    Ok(())
-})();
+        let filled: String = fill(&"hello world foo bar".to_string(), 12_i64)?;
+        let __sifr_chars_filled: Vec<char> = filled.chars().collect::<Vec<char>>();
+        assert!((filled.chars().count() as i64) > (0_i64));
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("error: {}", e.message.clone());
     }
-    let row: Vec<String> = parse_row(&"a,b,c".to_string(), &None, &",".to_string(), &"\"".to_string(), &"".to_string(), true, false, 0_i64);
+    let row: Vec<String> = parse_row(
+        &"a,b,c".to_string(),
+        &None,
+        &",".to_string(),
+        &"\"".to_string(),
+        &"".to_string(),
+        true,
+        false,
+        0_i64,
+    );
     assert_eq!(row.len() as i64, 3_i64);
-    let line: String = format_row(&vec!["x".to_string(), "y".to_string()], &None, &",".to_string(), &"\"".to_string(), &"".to_string(), true, false, 0_i64);
+    let line: String = format_row(
+        &vec!["x".to_string(), "y".to_string()],
+        &None,
+        &",".to_string(),
+        &"\"".to_string(),
+        &"".to_string(),
+        true,
+        false,
+        0_i64,
+    );
     assert_eq!(line, "x,y");
     let args: Vec<String> = vec!["--output".to_string(), "file.txt".to_string()];
     let has_output: bool = parse_flag(&args, &"--output".to_string());
     assert!(has_output);
-    let val: String = parse_option(&args, &"--output".to_string(), &"default".to_string());
+    let val: String = parse_option(
+        &args,
+        &"--output".to_string(),
+        &"default".to_string(),
+    );
     assert_eq!(val, "file.txt");
-    assert!(fnmatch(&"test.py".to_string(), &"*.py".to_string()));
-    assert!(!(fnmatch(&"test.py".to_string(), &"*.txt".to_string())));
+    assert!(fnmatch(& "test.py".to_string(), & "*.py".to_string()));
+    assert!(! (fnmatch(& "test.py".to_string(), & "*.txt".to_string())));
     println!("stdlib_expansion demo: all checks passed!");
 }

@@ -1,5 +1,48 @@
 // src/main.rs
-// --- stdlib: _sifr.encoding ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct IOError {
+        pub message: String,
+        pub kind: String,
+    }
+    impl IOError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                kind: "Other".to_string(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for IOError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for IOError {}
+    pub fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match __sifr_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => {
+                    "PermissionDenied".to_string()
+                }
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                    "DirectoryNotEmpty".to_string()
+                }
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+}
+pub use __sifr_project_nominals::IOError;
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
 }
@@ -109,8 +152,6 @@ fn _encoding_encode_recoveries_impl(
             message: __sifr_bridge_error.to_string(),
         })
 }
-
-// --- stdlib: _sifr.fs ---
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrIoNativeFileHandle {
     _id: String,
@@ -328,8 +369,6 @@ fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError>
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-
-// --- stdlib: sifr.encoding ---
 fn __const_ENCODING_UTF8() -> String {
     "utf-8".to_string().to_string()
 }
@@ -1271,8 +1310,6 @@ fn encode(
         }
     }
 }
-
-// --- stdlib: _sifr.sys ---
 fn run_command(cmd: &String) -> Result<String, IOError> {
     ::sifr_stdlib::sys::run_command(cmd)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -1329,8 +1366,6 @@ fn os_linesep() -> String {
 fn os_name() -> String {
     ::sifr_stdlib::sys::os_name()
 }
-
-// --- stdlib: sifr.shutil ---
 fn copy(src: &String, dst: &String) -> Result<(), IOError> {
     copy_file(src, dst)
 }
@@ -1340,8 +1375,6 @@ fn move_file(src: &String, dst: &String) -> Result<(), IOError> {
 fn rmtree(path: &String) -> Result<(), IOError> {
     rmdir_all(path)
 }
-
-// --- stdlib: _sifr.crypto ---
 fn random_int(min: i64, max: i64) -> i64 {
     ::sifr_stdlib::random::random_int(
             ::sifr_runtime::interop::SifrIntBridge::from(min),
@@ -1511,8 +1544,6 @@ fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
 fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
 }
-
-// --- stdlib: sifr.tempfile ---
 fn _random_suffix() -> String {
     let n: i64 = random_int(100000_i64, 999999_i64);
     format!("{}", n)
@@ -1553,8 +1584,6 @@ fn mktemp_path(prefix: &String) -> String {
         __sifr_concat
     }
 }
-
-// --- stdlib: sifr.test ---
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     assert_eq!(actual.len() as i64, expected.len() as i64);
     let mut i: i64 = 0_i64;
@@ -1563,197 +1592,147 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
         i += 1_i64;
     }
 }
-// --- end stdlib ---
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct IOError {
-    message: String,
-    kind: String,
-}
-
-impl IOError {
-    fn new(message: String) -> Self {
-        Self { message, kind: "Other".to_string() }
-    }
-}
-
-impl ::std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for IOError {
-}
-
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
-    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
-    match __sifr_io_kind {
-    Some(::std::io::ErrorKind::NotFound) => {
-        "FileNotFound".to_string()
-    },
-    Some(::std::io::ErrorKind::PermissionDenied) => {
-        "PermissionDenied".to_string()
-    },
-    Some(::std::io::ErrorKind::AlreadyExists) => {
-        "FileExists".to_string()
-    },
-    Some(::std::io::ErrorKind::IsADirectory) => {
-        "IsADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::NotADirectory) => {
-        "NotADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-        "DirectoryNotEmpty".to_string()
-    },
-    _ => {
-        "Other".to_string()
-    },
-}
-};
+        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+            .downcast_ref::<std::io::Error>()
+            .map(::std::io::Error::kind);
+        match __sifr_io_kind {
+            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+            Some(::std::io::ErrorKind::PermissionDenied) => {
+                "PermissionDenied".to_string()
+            }
+            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                "DirectoryNotEmpty".to_string()
+            }
+            _ => "Other".to_string(),
+        }
+    };
     IOError { message: msg, kind }
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
-
 impl Error {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for Error {
-}
-
+impl ::std::error::Error for Error {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
-
 impl ParseError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ParseError {
-}
-
+impl ::std::error::Error for ParseError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
-
 impl ValueError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ValueError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ValueError {
-}
-
+impl ::std::error::Error for ValueError {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ParseError> for Error {
     fn from(err: ParseError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ValueError> for Error {
     fn from(err: ValueError) -> Self {
         Self::new(err.message)
     }
 }
-
 fn collect_copy_move_tree_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let base: String = mktemp_path(&"sifr_shutil_shutil_demo_".to_string());
     let src: String = {
-    let mut __sifr_concat: String = String::with_capacity(base.len() + 8usize);
-    __sifr_concat.push_str((base).as_str());
-    __sifr_concat.push_str("/src.txt");
-    __sifr_concat
-};
+        let mut __sifr_concat: String = String::with_capacity(base.len() + 8usize);
+        __sifr_concat.push_str((base).as_str());
+        __sifr_concat.push_str("/src.txt");
+        __sifr_concat
+    };
     let copied: String = {
-    let mut __sifr_concat: String = String::with_capacity(base.len() + 11usize);
-    __sifr_concat.push_str((base).as_str());
-    __sifr_concat.push_str("/copied.txt");
-    __sifr_concat
-};
+        let mut __sifr_concat: String = String::with_capacity(base.len() + 11usize);
+        __sifr_concat.push_str((base).as_str());
+        __sifr_concat.push_str("/copied.txt");
+        __sifr_concat
+    };
     let moved: String = {
-    let mut __sifr_concat: String = String::with_capacity(base.len() + 10usize);
-    __sifr_concat.push_str((base).as_str());
-    __sifr_concat.push_str("/moved.txt");
-    __sifr_concat
-};
+        let mut __sifr_concat: String = String::with_capacity(base.len() + 10usize);
+        __sifr_concat.push_str((base).as_str());
+        __sifr_concat.push_str("/moved.txt");
+        __sifr_concat
+    };
     let tree: String = {
-    let mut __sifr_concat: String = String::with_capacity(base.len() + 5usize);
-    __sifr_concat.push_str((base).as_str());
-    __sifr_concat.push_str("/tree");
-    __sifr_concat
-};
+        let mut __sifr_concat: String = String::with_capacity(base.len() + 5usize);
+        __sifr_concat.push_str((base).as_str());
+        __sifr_concat.push_str("/tree");
+        __sifr_concat
+    };
     let nested: String = {
-    let mut __sifr_concat: String = String::with_capacity(tree.len() + 11usize);
-    __sifr_concat.push_str((tree).as_str());
-    __sifr_concat.push_str("/nested.txt");
-    __sifr_concat
-};
+        let mut __sifr_concat: String = String::with_capacity(tree.len() + 11usize);
+        __sifr_concat.push_str((tree).as_str());
+        __sifr_concat.push_str("/nested.txt");
+        __sifr_concat
+    };
     let mut copy_ok: bool = false;
     let mut move_ok: bool = false;
     let mut rmtree_ok: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let _mk: () = mkdir(&base)?;
-    let _w: () = write_text(&src, &"demo".to_string())?;
-    let _cp: () = copy(&src, &copied)?;
-    let mut copied_content_ok: bool = false;
-    let __sifr_try_res: Result<(), IOError> = (|| {
-    let copied_content: String = read_text(&copied)?;
-    copied_content_ok = copied_content == "demo";
-    Ok(())
-})();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message.clone());
-    }
-    copy_ok = (((exists(&src)) && (exists(&copied))) && (copied_content_ok));
-    let _mv: () = move_file(&copied, &moved)?;
-    move_ok = ((exists(&moved)) && (!(exists(&copied))));
-    let _mk_tree: () = mkdir(&tree)?;
-    let _w_nested: () = write_text(&nested, &"nested".to_string())?;
-    let _rm_tree: () = rmtree(&tree)?;
-    rmtree_ok = !(exists(&tree));
-    Ok(())
-})();
+        let _mk: () = mkdir(&base)?;
+        let _w: () = write_text(&src, &"demo".to_string())?;
+        let _cp: () = copy(&src, &copied)?;
+        let mut copied_content_ok: bool = false;
+        let __sifr_try_res: Result<(), IOError> = (|| {
+            let copied_content: String = read_text(&copied)?;
+            copied_content_ok = copied_content == "demo";
+            Ok(())
+        })();
+        if let Err(__sifr_try_err) = __sifr_try_res {
+            let e = __sifr_try_err.clone();
+            let _ = format!("{}", e.message.clone());
+        }
+        copy_ok = (((exists(&src)) && (exists(&copied))) && (copied_content_ok));
+        let _mv: () = move_file(&copied, &moved)?;
+        move_ok = ((exists(&moved)) && (!(exists(&copied))));
+        let _mk_tree: () = mkdir(&tree)?;
+        let _w_nested: () = write_text(&nested, &"nested".to_string())?;
+        let _rm_tree: () = rmtree(&tree)?;
+        rmtree_ok = !(exists(&tree));
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         let _ = format!("{}", e.message.clone());
@@ -1763,16 +1742,15 @@ fn collect_copy_move_tree_actual() -> Vec<bool> {
     actual.push(rmtree_ok);
     actual
 }
-
 fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let base: String = mktemp_path(&"sifr_shutil_shutil_demo_cleanup_".to_string());
     let mut base_ready: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let _mk: () = mkdir(&base)?;
-    base_ready = exists(&base);
-    Ok(())
-})();
+        let _mk: () = mkdir(&base)?;
+        base_ready = exists(&base);
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         let _ = format!("{}", e.message.clone());
@@ -1795,9 +1773,12 @@ fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
     actual.push(usage_ok);
     let mut missing_copy_rejected: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let _bad: () = copy(&format!("{}{}", base, "/missing_src.txt"), &format!("{}{}", base, "/missing_dst.txt"))?;
-    Ok(())
-})();
+        let _bad: () = copy(
+            &format!("{}{}", base, "/missing_src.txt"),
+            &format!("{}{}", base, "/missing_dst.txt"),
+        )?;
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         let _ = format!("{}", e.message.clone());
@@ -1806,10 +1787,10 @@ fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
     actual.push(missing_copy_rejected);
     let mut cleanup_ok: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let _cleanup: String = run_command(&format!("{}{}", "rm -rf ", base))?;
-    cleanup_ok = !(exists(&base));
-    Ok(())
-})();
+        let _cleanup: String = run_command(&format!("{}{}", "rm -rf ", base))?;
+        cleanup_ok = !(exists(&base));
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         let _ = format!("{}", e.message.clone());
@@ -1818,13 +1799,11 @@ fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
     actual.push(cleanup_ok);
     actual
 }
-
 fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {
     for value in values.iter().copied() {
         target.push(value);
     }
 }
-
 fn main() {
     let expected: Vec<bool> = vec![true, true, true, true, true, true, true];
     let mut actual: Vec<bool> = vec![];
