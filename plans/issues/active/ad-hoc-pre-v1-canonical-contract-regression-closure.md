@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10F are complete. Item 10G is next.
+Status: active on 2026-08-22. Items 0 through 10G are complete. Item 10H is next.
 
 ## Objective
 
@@ -70,6 +70,8 @@ This planning change makes these transfers effective when it merges:
 | Diagnostic harness Clippy | Item 10C validation confirmed that Item 3 passed `FixtureLayout` by value although the helper only borrows it. | Item 10I |
 | Nested-function signature scope | Item 10E remediation review found that nested calls can combine a scoped callable binding with an unscoped name-keyed signature. | Item 10J |
 | Checked-stdlib parent upcast | Item 10F validation reached Rust compilation after it closed the imported-union panic. The emitted child-to-parent conversion has no retained `From` implementation. | Item 10K |
+| User-error parent handler | Item 10G remediation review found that lowering accepts parent coverage, but code generation matches only exact user nominals. | Item 10L |
+| Nested-function try-channel codegen | Item 10G remediation review found that code generation does not isolate the active try-channel stack at a nested function boundary. | Item 10M |
 
 The archived static-class phase no longer owns active corrective work. Item 10
 owns its unresolved method-slot fixture and runtime evidence.
@@ -165,6 +167,8 @@ scope and does not repeat that work.
 | Diagnostic harness strict Clippy | `fixture_name_for_seed` consumes a non-`Copy` layout enum that it only inspects. | Item 10I |
 | Nested-function signature collision | The scope binding is lexical, but the function signature registry is name-keyed and is not restored when a sibling scope ends. | Item 10J |
 | Checked-stdlib parent conversion | Project nominal relocation can remove the `From<Child>` implementation that a by-value child-to-parent upcast requires. | Item 10K |
+| User-error parent dispatch | A user-defined parent handler covers a child during lowering, but code generation can treat that handler as unsupported and propagate the child. | Item 10L |
+| Nested-function try-channel leak | Nested-function emission can reuse the enclosing try closure's error-channel stack instead of the nested function's `Result` channel. | Item 10M |
 | Read-only Python duration | The latest contended run completed in 314,714 ms. An isolated run completed in approximately 68 seconds. | Qualification rule B |
 
 ## Scope
@@ -193,6 +197,8 @@ scope and does not repeat that work.
 - Remove the Item 3 diagnostic-harness strict-Clippy warning.
 - Keep nested-function callable metadata in the same lexical scope as its binding.
 - Preserve checked-stdlib parent upcasts after project nominal relocation.
+- Align user-defined parent-handler dispatch with lowering coverage.
+- Isolate code-generation try channels at nested function boundaries.
 - Add regression guards for the migrated evidence and representation defects.
 - Record completion evidence from the linked owner.
 - Qualify the read-only Python doctor without a timeout increase.
@@ -235,6 +241,8 @@ Item 0  baseline and ownership lock
   -> Item 10I diagnostic harness strict Clippy
   -> Item 10J nested-function signature scope
   -> Item 10K checked-stdlib parent upcast
+  -> Item 10L user-error parent handler dispatch
+  -> Item 10M nested-function try-channel isolation
   -> linked delivery A final validation and merge
   -> Item 11 linked delivery and timeout qualification
   -> Item 12 final regression guard and closure
@@ -1469,6 +1477,47 @@ Acceptance criteria:
 - A later base handler remains the explicit source-level catch-all.
 - Focused type-checking, code-generation, and native-run tests pass.
 
+### Item 10G record
+
+State: complete
+
+PR: [#3462](https://github.com/sifr-lang/sifr/pull/3462)
+
+Base SHA: `d25f897d9ccd1b90fd8c9cda6e2221fd15413df3`
+
+Candidate SHA: `00e67dc56ce27ec6ce2a64ac91216b19afbf87b3`
+
+Merge SHA: `5641e278a4c05941deeedc833adcb4d32a6ccf94`
+
+Changed paths: unmatched-error lowering, function-boundary try state,
+conditional handler-chain emission, focused lowering and code-generation
+tests, and one native residual-propagation fixture.
+
+Validation: in lowering, 1,035 tests passed and one test was ignored. All
+1,126 code-generation tests passed. Existing `IOError` subclass handling and
+the expanded single, nested, and union residual fixture ran natively. Affected
+Clippy, formatting, HIR maintainability, and the 3,220-file size guardrail
+passed. `SIFR-RESULT-0005` remains for a function with no compatible channel.
+
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all preceding checks and stopped only at linked delivery A's stale
+Rust-interop evidence path. Neither gate was repeated. The evidence is in the
+[#3462 gate comment](https://github.com/sifr-lang/sifr/pull/3462#issuecomment-5381428950).
+
+Review evidence: the first exact-SHA Opus review returned `BLOCKED`. It found
+that branchless carrier members had no residual and that lowering try state
+leaked into nested functions. The one permitted remediation review returned
+`SATISFIED`. No third review ran. The evidence is in the
+[first review comment](https://github.com/sifr-lang/sifr/pull/3462#issuecomment-5381428944)
+and the [remediation review comment](https://github.com/sifr-lang/sifr/pull/3462#issuecomment-5381428956).
+
+Deferred follow-up: Item 10L owns user-defined parent-handler dispatch. Item
+10M owns the code-generation try-channel stack at nested function boundaries.
+These are new mechanisms found by the second review and did not trigger a
+third round. Linked delivery A retains its stale Rust-interop evidence path.
+
+Next action: implement Item 10H.
+
 ## Item 10H: Preserve Nested Try-finally Error Propagation
 
 Purpose: Keep nested `try/finally` error propagation valid inside every
@@ -1544,6 +1593,43 @@ Acceptance criteria:
 - The conversion consumes the child and returns its embedded parent value.
 - `nominal_identity_alias_paths` builds and runs through its existing checks.
 - Focused inheritance, project-code-generation, and native-run tests pass.
+
+## Item 10L: Match User-defined Parent Error Handlers
+
+Purpose: Make generated handler dispatch follow the same user-defined error
+ancestry that lowering uses for coverage.
+
+Scope:
+
+- Match a child error in a handler for its declared user-defined parent.
+- Preserve exact nominal identity for unrelated same-basename errors.
+- Convert the child to the handler binding type through the checked ancestry.
+- Do not add basename matching or make a parent handler a global catch-all.
+
+Acceptance criteria:
+
+- `except BaseError` runs for a raised `ChildError(BaseError)`.
+- An unrelated nominal error does not match the parent handler.
+- Residual propagation remains available after the parent-handler chain.
+- Focused lowering, code-generation, and native-run tests pass.
+
+## Item 10M: Isolate Nested-function Try-channel Codegen State
+
+Purpose: Make each generated nested function own its error-channel context.
+
+Scope:
+
+- Save and clear active try-closure error stacks at a function boundary.
+- Restore the enclosing stacks after nested-function emission.
+- Route a nested function residual through its own `Result` error type.
+- Do not convert the residual to an enclosing closure's carrier.
+
+Acceptance criteria:
+
+- A nested `Result[_, E1]` function inside an `E2` try uses `E1`.
+- Enclosing try emission resumes with its original carrier after the function.
+- Nested async and ordinary functions preserve the same isolation rule.
+- Focused code-generation and native-run tests pass.
 
 ## Required Linked Delivery A: Rust-interop Evidence Path
 
@@ -1662,6 +1748,8 @@ Acceptance criteria:
 | Diagnostic harness Clippy | Focused harness tests and workspace Clippy with warnings denied |
 | Nested-function signature scope | Focused sibling-scope, default, vararg, and native-call tests |
 | Checked-stdlib parent upcast | Focused inheritance, relocation, project-build, and native-run tests |
+| User-error parent handler | Focused ancestry, unrelated nominal, residual, and native-run tests |
+| Nested-function try-channel state | Focused sync, async, carrier restoration, and native-run tests |
 | Regression guards | Focused stale-path, stale-hash, nominal-identity, conversion, and no-compatibility self-tests |
 | Python doctor | One final-candidate run and one isolated profile only after a timeout |
 
@@ -1717,6 +1805,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10F are complete and recorded.
+Current state: Items 0 through 10G are complete and recorded.
 
-Next action: implement Item 10G.
+Next action: implement Item 10H.
