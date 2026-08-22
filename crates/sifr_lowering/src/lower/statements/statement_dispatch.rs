@@ -570,7 +570,8 @@ pub(in crate::lower) fn lower_stmt(
                 }
                 let handler_body = lower_stmts(&h.body, func_type, ctx);
                 ctx.scope.pop();
-                let handler_exits = crate::cfg::flow_facts(&handler_body).always_exits();
+                let handler_exits =
+                    sifr_ir::block_control_flow_effect(&handler_body).always_exits();
                 handler_moved_states.push((ctx.scope.save_moved_state(), handler_exits));
 
                 handlers.push(HirExceptHandler {

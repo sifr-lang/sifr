@@ -24,15 +24,7 @@ pub(crate) fn successful_try_bindings(
 }
 
 pub(crate) fn io_error_kind_for_handler(error_type: &str) -> Option<&'static str> {
-    match error_type {
-        "FileNotFoundError" => Some("FileNotFound"),
-        "PermissionError" => Some("PermissionDenied"),
-        "FileExistsError" => Some("FileExists"),
-        "IsADirectoryError" => Some("IsADirectory"),
-        "NotADirectoryError" => Some("NotADirectory"),
-        "DirectoryNotEmptyError" => Some("DirectoryNotEmpty"),
-        _ => None,
-    }
+    sifr_type_system::io_error_kind(error_type)
 }
 
 pub(crate) fn select_try_error_type(handlers: &[HirExceptHandler]) -> String {

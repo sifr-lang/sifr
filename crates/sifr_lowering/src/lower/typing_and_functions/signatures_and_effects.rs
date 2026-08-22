@@ -295,14 +295,10 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     // Build error hierarchy for exhaustiveness checking
     ctx.error_hierarchy.insert(
         "IOError".to_string(),
-        vec![
-            "FileNotFoundError".to_string(),
-            "PermissionError".to_string(),
-            "FileExistsError".to_string(),
-            "IsADirectoryError".to_string(),
-            "NotADirectoryError".to_string(),
-            "DirectoryNotEmptyError".to_string(),
-        ],
+        sifr_type_system::IO_ERROR_KIND_CASES
+            .iter()
+            .map(|(name, _)| (*name).to_string())
+            .collect(),
     );
 }
 

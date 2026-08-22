@@ -5,6 +5,25 @@ use super::{
 use sifr_type_system::Type;
 
 impl RustEmitter {
+    fn handler_set_exhausts_error_type(handlers: &[HirExceptHandler], err_ty: &str) -> bool {
+        if handlers.iter().any(|handler| {
+            matches!(
+                Self::try_except_handler_condition_expr(handler, "__sifr_exhaustiveness", err_ty),
+                HandlerMatchCondition::Always
+            )
+        }) {
+            return true;
+        }
+        err_ty == "IOError"
+            && sifr_type_system::IO_ERROR_KIND_CASES
+                .iter()
+                .all(|(name, _)| {
+                    handlers
+                        .iter()
+                        .any(|handler| handler.error_type.as_deref() == Some(*name))
+                })
+    }
+
     pub(crate) fn try_except_handler_condition_expr(
         handler: &HirExceptHandler,
         err_ident: &str,
@@ -185,15 +204,14 @@ impl RustEmitter {
         }
 
         if branches.is_empty() {
-            return Ok(Some(vec![RustStmt::Let {
-                mutable: false,
-                name: "_".to_string(),
-                ty: None,
-                value: RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(RustExpr::Ident(err_ident.to_string())),
-                },
-            }]));
+            return Ok(None);
+        }
+        if Self::handler_set_exhausts_error_type(handlers, err_ty)
+            && branches.iter().all(|(condition, _)| condition.is_some())
+        {
+            if let Some((condition, _)) = branches.last_mut() {
+                *condition = None;
+            }
         }
 
         let mut current_else: Option<Vec<RustStmt>> = None;

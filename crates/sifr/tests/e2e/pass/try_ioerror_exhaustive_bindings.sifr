@@ -1,0 +1,31 @@
+def load_io() -> Result[str, IOError]:
+    raise IOError("missing")
+
+
+def length_or_error(flag: bool) -> Result[int, IOError]:
+    try:
+        content: str = load_io()
+        if flag:
+            return len(content)
+    except FileNotFoundError as error:
+        raise error
+    except PermissionError as error:
+        raise error
+    except FileExistsError as error:
+        raise error
+    except IsADirectoryError as error:
+        raise error
+    except NotADirectoryError as error:
+        raise error
+    except DirectoryNotEmptyError as error:
+        raise error
+    return len(content)
+
+
+def main() -> None:
+    try:
+        value: int = length_or_error(False)
+        _ = value
+        assert False
+    except IOError as error:
+        assert error.message == "missing"

@@ -94,6 +94,42 @@ def conditional(flag: bool) -> Result[int, ProbeError]:
 }
 
 #[test]
+fn exhaustive_ioerror_subclass_handlers_end_in_a_diverging_arm() {
+    let generated = generate_rust_from_source(
+        r#"
+def load_io() -> Result[str, IOError]:
+    raise IOError("missing")
+
+def length_or_error(flag: bool) -> Result[int, IOError]:
+    try:
+        content: str = load_io()
+        if flag:
+            return len(content)
+    except FileNotFoundError as error:
+        raise error
+    except PermissionError as error:
+        raise error
+    except FileExistsError as error:
+        raise error
+    except IsADirectoryError as error:
+        raise error
+    except NotADirectoryError as error:
+        raise error
+    except DirectoryNotEmptyError as error:
+        raise error
+    return len(content)
+"#,
+    );
+
+    assert!(generated.contains("let Some((content,)) = __sifr_successful_try_bindings else"));
+    assert!(generated.contains("\"NotADirectory\".to_string()"));
+    assert_eq!(generated.matches("__sifr_try_err.kind ==").count(), 5);
+    assert!(!generated.contains(".unwrap()"));
+    assert!(!generated.contains(".expect("));
+    syn::parse_file(&generated).expect("exhaustive IOError handler Rust should parse");
+}
+
+#[test]
 fn promoted_string_binding_initializes_enclosing_character_cache() {
     let generated = generate_rust_from_source(
         r#"
