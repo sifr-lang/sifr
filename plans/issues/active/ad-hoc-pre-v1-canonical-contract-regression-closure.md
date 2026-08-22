@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 and 1 are complete. Item 2 is next.
+Status: active on 2026-08-22. Items 0 through 2 are complete. Item 3 is next.
 
 ## Objective
 
@@ -367,6 +367,39 @@ Acceptance criteria:
 - No benchmark accepts the old flat project layout.
 - LSP behavior uses the same provider-backed project inputs as production.
 
+### Item 2 record
+
+State: complete
+
+PR: [#3429](https://github.com/sifr-lang/sifr/pull/3429)
+
+Base SHA: `dec6c03558725922c258a7c3d975257f2712d0de`
+
+Candidate SHA: `ddcecec119601724487adef2e1f888fc65a646de`
+
+Merge SHA: `c872dafa37024762fc8d4634f5b0af31a65eb5fb`
+
+Changed paths: the performance benchmark manifest, validator, runner, LSP
+benchmark, minimal LSP project fixture, and performance budget documentation.
+
+Validation: manifest validation and its flat-layout negative self-test passed.
+All 18 LSP scenarios passed in smoke mode. The transfer guardrails, JSON and
+Python checks, diff checks, and first-party file-size guardrail passed. The
+performance rules runner passed its manifest, runner, and budget variants. Its
+two trend-policy variants stopped only on the stale manifest hash assigned to
+Item 3. No compiler file changed, so the Sifr gates did not apply.
+
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. The evidence is in the
+[#3429 review comment](https://github.com/sifr-lang/sifr/pull/3429#issuecomment-5376741902).
+
+Deferred follow-up: later hardening can cover the valid-root and invalid-source
+branch, align explicit and default `src` notation in both fixtures, and revisit
+path normalization only if manifest authoring requires it. The current spelling
+check is fail-closed.
+
+Next action: implement Item 3.
+
 ## Item 3: Complete Migrated Evidence Freshness
 
 Purpose: Finish repository-consumer migration for the canonical source layout.
@@ -707,6 +740,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 and 1 are complete and recorded. Item 2 is next.
+Current state: Items 0 through 2 are complete and recorded. Item 3 is next.
 
-Next action: give performance tools one canonical project root.
+Next action: refresh migrated evidence paths, hashes, and checksums.
