@@ -55,12 +55,27 @@ pub(super) fn union_non_exhaustive_match_has_match_code() {
         "def describe(x: int | None) -> str:\n    match x:\n        case int():\n            return \"integer\"\n";
     let errors = lower_errors(source);
 
+    assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
     assert!(errors.iter().any(|error| {
         error.message
             == "non-exhaustive match: type 'None | int' has uncovered variants: None — add matching case(s) or `case _:`"
             && error.code == Some(DiagnosticCode::MATCH_NON_EXHAUSTIVE)
             && error.primary_range == Some(range_for_after(source, "match ", "x"))
     }));
+}
+
+#[test]
+pub(super) fn optional_non_exhaustive_match_has_only_match_code() {
+    let source =
+        "def describe(x: str | None) -> str:\n    match x:\n        case str():\n            return \"has value\"\n";
+    let errors = lower_errors(source);
+
+    assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+    assert_eq!(errors[0].code, Some(DiagnosticCode::MATCH_NON_EXHAUSTIVE));
+    assert_eq!(
+        errors[0].primary_range,
+        Some(range_for_after(source, "match ", "x"))
+    );
 }
 
 #[test]

@@ -5,12 +5,13 @@
       "id": "CR-0001",
       "issue": "diagnostic panic hardening record",
       "owner": "verification_hardening_rules",
-      "status": "unresolved",
+      "status": "promoted",
       "root_cause_category": "cfg-invariant-panic-path",
       "source_reference": "crates/sifr_lowering/src/cfg.rs",
       "reproducer_fixture": "verification/areas/regression/fixtures/crashes/CR-0001_cfg_invariant_minimized.sifr",
       "promotion_target_suite": "fixedbugs",
-      "note": "Track HIR CFG invariant panic conversion into typed diagnostics. Promote to fixedbugs with minimized reproducer when resolved."
+      "promoted_fixedbug_id": "FB-0004",
+      "note": "Item 8 made one-arm match CFG construction valid and changed CFG validation to return a typed invariant error."
     },
     {
       "id": "CR-0002",

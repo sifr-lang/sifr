@@ -1,8 +1,6 @@
-# CR-0001 minimized sentinel fixture.
-# Intent: preserve a minimal structural shape for CFG-invariant panic-path investigations.
+# CR-0001 minimized one-arm match CFG regression.
 
-def main():
-    i: int = 0
-    while i < 1:
-        if i == 0:
-            i = i + 1
+def describe(value: int | None) -> int:
+    match value:
+        case int():
+            return 1
