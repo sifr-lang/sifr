@@ -4,8 +4,8 @@ use sifr_type_system::{make_union, Type};
 /// Collect all return types from a list of HIR statements (recursively).
 pub(in crate::lower) fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
     crate::cfg::flow_facts(stmts)
-        .reachable_return_types()
-        .to_vec()
+        .map(|facts| facts.reachable_return_types().to_vec())
+        .unwrap_or_default()
 }
 
 /// Collect all yielded expression types from a list of HIR statements (recursively).

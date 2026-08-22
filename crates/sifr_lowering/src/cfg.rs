@@ -2,7 +2,8 @@
 
 use crate::{HirExpr, HirStmt};
 use sifr_ir::{
-    CfgBlock, CfgBlockId, CfgBlockLabel, CfgTerminator, ControlFlowGraph, FlowExitEffect, FlowFacts,
+    CfgBlock, CfgBlockId, CfgBlockLabel, CfgInvariantError, CfgTerminator, ControlFlowGraph,
+    FlowExitEffect, FlowFacts,
 };
 use sifr_type_system::Type;
 
@@ -185,14 +186,16 @@ impl CfgBuilder {
             }
             HirStmt::Match { arms, .. } => {
                 let block = self.new_block(CfgBlockLabel::Statement("match"), top_level_stmt_index);
-                if arms.is_empty() {
-                    self.set_terminator(block, CfgTerminator::Goto(next));
-                } else {
-                    let arm_entries: Vec<CfgBlockId> = arms
-                        .iter()
-                        .map(|arm| self.build_stmt_list(&arm.body, next, loop_targets, false))
-                        .collect();
-                    self.set_terminator(block, CfgTerminator::Branch(arm_entries));
+                let arm_entries: Vec<CfgBlockId> = arms
+                    .iter()
+                    .map(|arm| self.build_stmt_list(&arm.body, next, loop_targets, false))
+                    .collect();
+                match arm_entries.as_slice() {
+                    [] => self.set_terminator(block, CfgTerminator::Goto(next)),
+                    [only_arm] => {
+                        self.set_terminator(block, CfgTerminator::Goto(*only_arm));
+                    }
+                    _ => self.set_terminator(block, CfgTerminator::Branch(arm_entries)),
                 }
                 block
             }
@@ -243,15 +246,17 @@ impl CfgBuilder {
         }
     }
 
-    fn finish(mut self, root_entry: CfgBlockId) -> ControlFlowGraph {
+    fn finish(mut self, root_entry: CfgBlockId) -> Result<ControlFlowGraph, CfgInvariantError> {
         self.set_terminator(self.entry, CfgTerminator::Goto(root_entry));
         self.set_terminator(self.exit, CfgTerminator::Exit);
-        ControlFlowGraph::new(
+        let cfg = ControlFlowGraph::new(
             self.blocks,
             self.entry,
             self.exit,
             self.top_level_stmt_nodes,
-        )
+        );
+        cfg.validate()?;
+        Ok(cfg)
     }
 }
 
@@ -292,18 +297,14 @@ fn stmt_label(stmt: &HirStmt) -> &'static str {
     }
 }
 
-pub fn build_control_flow_graph(stmts: &[HirStmt]) -> ControlFlowGraph {
+pub fn build_control_flow_graph(stmts: &[HirStmt]) -> Result<ControlFlowGraph, CfgInvariantError> {
     let mut builder = CfgBuilder::new(stmts.len());
     let root_entry = builder.build_stmt_list(stmts, builder.exit, None, true);
-    let cfg = builder.finish(root_entry);
-    if let Err(err) = cfg.validate() {
-        panic!("internal compiler error: invalid control-flow graph: {err}");
-    }
-    cfg
+    builder.finish(root_entry)
 }
 
-pub fn flow_facts(stmts: &[HirStmt]) -> FlowFacts {
-    let cfg = build_control_flow_graph(stmts);
+pub fn flow_facts(stmts: &[HirStmt]) -> Result<FlowFacts, CfgInvariantError> {
+    let cfg = build_control_flow_graph(stmts)?;
     let flow_graph = crate::flow_graph::build_statement_flow_graph(stmts);
     let reachable = cfg.reachable_blocks();
 
@@ -349,7 +350,7 @@ pub fn flow_facts(stmts: &[HirStmt]) -> FlowFacts {
         FlowExitEffect::AlwaysExits
     };
 
-    FlowFacts::new(
+    Ok(FlowFacts::new(
         exit_effect,
         flow_graph,
         reachable_top_level_stmt_indices,
@@ -357,12 +358,20 @@ pub fn flow_facts(stmts: &[HirStmt]) -> FlowFacts {
         reachable_return_types,
         has_reachable_return,
         has_reachable_value_return,
-    )
+    ))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn valid_cfg(stmts: &[HirStmt]) -> ControlFlowGraph {
+        build_control_flow_graph(stmts).expect("test HIR must produce a valid CFG")
+    }
+
+    fn valid_flow_facts(stmts: &[HirStmt]) -> FlowFacts {
+        flow_facts(stmts).expect("test HIR must produce valid flow facts")
+    }
 
     #[test]
     fn flow_facts_reports_always_raises_for_raise_only_branch() {
@@ -387,7 +396,7 @@ mod tests {
             }]),
         }];
 
-        let facts = flow_facts(&stmts);
+        let facts = valid_flow_facts(&stmts);
         assert_eq!(facts.exit_effect(), FlowExitEffect::AlwaysRaises);
         assert!(facts.always_exits());
         assert!(!facts.has_reachable_return());
@@ -404,7 +413,7 @@ mod tests {
             },
         ];
 
-        let facts = flow_facts(&stmts);
+        let facts = valid_flow_facts(&stmts);
         assert_eq!(facts.reachable_top_level_stmt_indices(), &[0]);
         assert_eq!(facts.unreachable_top_level_stmt_indices(), &[1]);
     }
@@ -420,7 +429,7 @@ mod tests {
             },
         ];
 
-        let facts = flow_facts(&stmts);
+        let facts = valid_flow_facts(&stmts);
         assert_eq!(facts.reachable_return_types(), &[Type::Int]);
     }
 
@@ -436,8 +445,51 @@ mod tests {
                 value: Some(HirExpr::IntLiteral(2)),
             }]),
         }];
-        let cfg = build_control_flow_graph(&stmts);
+        let cfg = valid_cfg(&stmts);
         assert!(cfg.validate().is_ok());
+    }
+
+    #[test]
+    fn single_arm_match_uses_goto_instead_of_incomplete_branch() {
+        let stmts = vec![HirStmt::Match {
+            subject: HirExpr::Name {
+                name: "value".to_string(),
+                binding_id: None,
+                ty: Type::Union(vec![Type::Int, Type::None]),
+            },
+            subject_ty: Type::Union(vec![Type::Int, Type::None]),
+            arms: vec![crate::HirMatchArm {
+                pattern: crate::HirPattern::Class {
+                    class_name: "int".to_string(),
+                    class_type: Type::Int,
+                    fields: Vec::new(),
+                },
+                guard: None,
+                body: vec![HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(1)),
+                }],
+            }],
+        }];
+
+        let cfg = valid_cfg(&stmts);
+        let match_block = cfg
+            .blocks()
+            .iter()
+            .find(|block| block.label == CfgBlockLabel::Statement("match"))
+            .expect("match block");
+        assert!(matches!(match_block.terminator, CfgTerminator::Goto(_)));
+    }
+
+    #[test]
+    fn cfg_builder_returns_invariant_error_instead_of_panicking() {
+        let mut builder = CfgBuilder::new(0);
+        let invalid = builder.new_block(CfgBlockLabel::Synthetic, None);
+        builder.set_terminator(invalid, CfgTerminator::Branch(vec![builder.exit]));
+
+        let error = builder
+            .finish(invalid)
+            .expect_err("one-target branch must return an invariant error");
+        assert!(error.to_string().contains("incomplete (1 target(s))"));
     }
 
     #[test]
@@ -495,10 +547,10 @@ mod tests {
             },
         ];
 
-        let cfg_one = build_control_flow_graph(&stmts);
-        let cfg_two = build_control_flow_graph(&stmts);
-        let facts_one = flow_facts(&stmts);
-        let facts_two = flow_facts(&stmts);
+        let cfg_one = valid_cfg(&stmts);
+        let cfg_two = valid_cfg(&stmts);
+        let facts_one = valid_flow_facts(&stmts);
+        let facts_two = valid_flow_facts(&stmts);
         assert_eq!(cfg_one.shape_fingerprint(), cfg_two.shape_fingerprint());
         assert_eq!(facts_one, facts_two);
     }
@@ -566,10 +618,10 @@ mod tests {
         ];
 
         for stmts in corpus {
-            let cfg_first = build_control_flow_graph(&stmts);
-            let cfg_second = build_control_flow_graph(&stmts);
-            let facts_first = flow_facts(&stmts);
-            let facts_second = flow_facts(&stmts);
+            let cfg_first = valid_cfg(&stmts);
+            let cfg_second = valid_cfg(&stmts);
+            let facts_first = valid_flow_facts(&stmts);
+            let facts_second = valid_flow_facts(&stmts);
             assert_eq!(
                 cfg_first.shape_fingerprint(),
                 cfg_second.shape_fingerprint()

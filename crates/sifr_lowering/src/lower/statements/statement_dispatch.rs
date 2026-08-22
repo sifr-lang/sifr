@@ -74,9 +74,19 @@ pub(in crate::lower) fn lower_stmts(
 
     let mut result = Vec::new();
     for stmt in stmts {
-        if crate::cfg::flow_facts(&result).always_exits() {
-            ctx.warn_unreachable_statement(stmt.range());
-            continue;
+        match crate::cfg::flow_facts(&result) {
+            Ok(facts) if facts.always_exits() => {
+                ctx.warn_unreachable_statement(stmt.range());
+                continue;
+            }
+            Ok(_) => {}
+            Err(error) => {
+                ctx.error_with_code_at(
+                    DiagnosticCode::INTERNAL_COMPILER_PANIC,
+                    format!("internal compiler error: invalid control-flow graph: {error}"),
+                    stmt.range(),
+                );
+            }
         }
         // Handle chained assignment (x = y = z = 0) by expanding into multiple statements
         if let Stmt::Assign(assign) = stmt {

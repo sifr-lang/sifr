@@ -298,10 +298,8 @@ pub(in crate::lower) fn lower_function(
         && !has_yield
         && requires_exhaustive_return_annotation(func, ft.return_type.as_ref())
     {
-        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            crate::cfg::flow_facts(&body).always_exits()
-        })) {
-            Ok(false) => {
+        match crate::cfg::flow_facts(&body) {
+            Ok(facts) if !facts.always_exits() => {
                 let return_type = ft.return_type.display_name();
                 super::flow_diagnostics::missing_return_value(
                     ctx,
@@ -310,15 +308,15 @@ pub(in crate::lower) fn lower_function(
                     func.name.range(),
                 );
             }
-            Ok(true) => {}
-            Err(_) => {
+            Ok(_) => {}
+            Err(error) => {
                 // Fail closed: skipping return-completeness validation after an
                 // invalid CFG would let an unsound function compile.
                 ctx.error_with_code_at(
                     DiagnosticCode::INTERNAL_COMPILER_PANIC,
                     format!(
-                        "internal compiler error: invalid control-flow graph while validating exhaustive return for '{}'",
-                        func.name
+                        "internal compiler error: invalid control-flow graph while validating exhaustive return for '{}': {error}",
+                        func.name,
                     ),
                     func.name.range(),
                 );

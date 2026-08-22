@@ -2,7 +2,7 @@ use crate::hir_nodes::HirStmt;
 use sifr_python_ast::{Expr, Number};
 
 pub(in crate::lower) fn then_body_always_exits(stmts: &[HirStmt]) -> bool {
-    crate::cfg::flow_facts(stmts).always_exits()
+    crate::cfg::flow_facts(stmts).is_ok_and(|facts| facts.always_exits())
 }
 
 pub(in crate::lower) fn body_always_leaves_current_path(stmts: &[HirStmt]) -> bool {
