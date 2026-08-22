@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10O and linked delivery A are
-complete. Item 11 is next.
+Status: active on 2026-08-23. Items 0 through 10O and linked delivery A are
+complete. Item 11 qualification found Item 10P, which is next.
 
 ## Objective
 
@@ -75,6 +75,7 @@ This planning change makes these transfers effective when it merges:
 | Nested-function try-channel codegen | Item 10G remediation review found that code generation does not isolate the active try-channel stack at a nested function boundary. | Item 10M |
 | Nested-helper receiver mutation | Item 10J remediation review found that removing nested functions from the module name registry can hide a mutable receiver argument from method receiver analysis. | Item 10N |
 | Nested-function `try/finally` discovery | Item 10M remediation review found that error-type discovery descends into nested-function bodies when selecting an enclosing `try/finally` carrier. | Item 10O |
+| Generated Rust trait contracts | Item 11 qualification found duplicate inherent `clone` methods and zero-argument constructors without `Default` under Rust 1.94 Clippy. | Item 10P |
 
 The archived static-class phase no longer owns active corrective work. Item 10
 owns its unresolved method-slot fixture and runtime evidence.
@@ -174,6 +175,7 @@ scope and does not repeat that work.
 | Nested-function try-channel leak | Nested-function emission can reuse the enclosing try closure's error-channel stack instead of the nested function's `Result` channel. | Item 10M |
 | Nested-helper receiver mutation | Method receiver analysis uses the module function registry. It can miss a nested helper that mutates `self.field` after nested metadata moves to lexical binding identity. | Item 10N |
 | Nested-function `try/finally` discovery | Enclosing `try/finally` carrier discovery can adopt an error type found only inside a nested function body. | Item 10O |
+| Generated Rust trait contracts | The sync runtime emits inherent `clone` methods beside canonical `Clone` implementations. Zero-argument class constructors omit canonical `Default` implementations. | Item 10P |
 | Read-only Python duration | The latest contended run completed in 314,714 ms. An isolated run completed in approximately 68 seconds. | Qualification rule B |
 
 ## Scope
@@ -2001,6 +2003,67 @@ path. No new Item 10O mechanism defect was found.
 
 Next action: merge and record linked delivery A.
 
+## Item 10P: Emit Canonical Rust Trait Contracts
+
+Purpose: Keep generated zero-argument construction and cloning on canonical
+Rust trait paths.
+
+Source:
+
+Item 11 ran the full generated-code quality area on integrated main
+`cdb3834352d9121562b86901ad3dd381b2c31364`. Six of seven full variants
+passed. The Clippy variant stopped on `concurrency-007-sync-channel-demo`.
+
+Rust 1.94 reported `clippy::new_without_default` for four zero-field classes.
+It also reported `clippy::should_implement_trait` for `Channel.clone` and
+`ChannelSender.clone`. Both channel types already had canonical `Clone`
+implementations beside those inherent duplicates.
+
+The active algorithmic closeout owns a different Rust 1.94 recursive-boxing
+defect. It does not own this concurrency-runtime row.
+
+Scope:
+
+- Implement `Default` when generated `new` takes no arguments.
+- Delegate `Default::default` to the single generated constructor body.
+- Remove inherent sync-channel `clone` methods when `Clone` already provides
+  the same public call.
+- Preserve Sifr `channel.clone()` and `sender.clone()` behavior.
+- Do not add a Clippy allow, rename a Sifr API, or add a second constructor.
+
+Acceptance criteria:
+
+- A generated zero-argument class has one `new` body and one `Default`
+  delegation.
+- The sync runtime has one cloning implementation for each cloneable type.
+- Existing Sifr clone call sites compile and keep their runtime behavior.
+- The concurrency generated-code Clippy group passes under Rust 1.94.
+- Focused code-generation and native sync-channel tests pass.
+
+### Item 11 qualification attempt before Item 10P
+
+Candidate SHA: `cdb3834352d9121562b86901ad3dd381b2c31364`
+
+Passed evidence:
+
+- The Rust-interop matrix passed both variants, including its 237-case
+  self-test.
+- Fuzz and property validation passed all 37 current variants.
+- Ecosystem validation passed all 34 variants.
+- Generated-code corpus, panic scan, intrinsic panic lint, rustfmt,
+  determinism, and demo freshness passed across the full current corpus.
+
+Stopped evidence:
+
+- Generated-code Clippy failed only on the six trait-contract diagnostics
+  described above.
+- The full generated-code area reported six passed variants and one blocking
+  failure.
+
+Item 11 stopped before performance, method-slot runtime, and Python doctor
+qualification. It resumes after Item 10P merges. No stopped command is
+classified as a pass.
+
 ## Required Linked Delivery A: Rust-interop Evidence Path
 
 The archived
@@ -2049,7 +2112,7 @@ Purpose: Combine phase-owned corrections with independently owned changes.
 
 Dependencies:
 
-- Items 1 through 10O are merged.
+- Items 1 through 10P are merged.
 - Required linked delivery A is merged.
 
 Scope:
@@ -2130,6 +2193,7 @@ Acceptance criteria:
 | User-error parent handler | Focused ancestry, unrelated nominal, residual, and native-run tests |
 | Nested-function try-channel state | Focused sync, async, carrier restoration, and native-run tests |
 | Nested-helper receiver mutation | Focused lexical helper, receiver mutability, sibling-scope, and native-run tests |
+| Generated Rust trait contracts | Focused zero-argument constructor, sync-channel clone, generated Clippy, and native runtime tests |
 | Regression guards | Focused stale-path, stale-hash, nominal-identity, conversion, and no-compatibility self-tests |
 | Python doctor | One final-candidate run and one isolated profile only after a timeout |
 
@@ -2186,6 +2250,7 @@ The phase is complete when all of these conditions are true:
 ## Current Handoff
 
 Current state: Items 0 through 10O and linked delivery A are complete and
-recorded.
+recorded. Item 11 stopped on the newly owned Item 10P generated Rust trait
+contract defect.
 
-Next action: implement Item 11.
+Next action: implement Item 10P, then resume Item 11.
