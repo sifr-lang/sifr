@@ -1,0 +1,17 @@
+from sifr.configparser import Error as ConfigError
+from sifr.csv import Error as CsvError
+
+
+def error_message(value: CsvError | ConfigError) -> str:
+    match value:
+        case CsvError(message=message):
+            return "csv:" + message
+        case ConfigError(message=message):
+            return "config:" + message
+
+
+def main() -> None:
+    csv_error: CsvError | ConfigError = CsvError("one")
+    config_error: CsvError | ConfigError = ConfigError("two")
+    assert error_message(csv_error) == "csv:one"
+    assert error_message(config_error) == "config:two"
