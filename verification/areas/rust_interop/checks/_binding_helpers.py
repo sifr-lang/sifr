@@ -99,5 +99,47 @@ def is_identifier_or_path_char(char: str) -> bool:
     return char.isalnum() or char in {"_", "."}
 
 
-def contains_empty_pass_body(text: str) -> bool:
-    return any(line.strip() == "pass" for line in text.splitlines())
+def contains_empty_placeholder_class(text: str) -> bool:
+    lines = text.splitlines()
+    decorators: list[tuple[int, str]] = []
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            index += 1
+            continue
+        if stripped.startswith("@"):
+            decorators.append((len(line) - len(line.lstrip()), stripped))
+            index += 1
+            continue
+        if not stripped.startswith("class ") or not stripped.endswith(":"):
+            decorators.clear()
+            index += 1
+            continue
+
+        class_indent = len(line) - len(line.lstrip())
+        body: list[str] = []
+        body_index = index + 1
+        while body_index < len(lines):
+            body_line = lines[body_index]
+            body_stripped = body_line.strip()
+            if not body_stripped or body_stripped.startswith("#"):
+                body_index += 1
+                continue
+            body_indent = len(body_line) - len(body_line.lstrip())
+            if body_indent <= class_indent:
+                break
+            body.append(body_stripped)
+            body_index += 1
+
+        is_required_marker = any(
+            decorator_indent == class_indent
+            and decorator.startswith("@class_adapter_marker(")
+            for decorator_indent, decorator in decorators
+        )
+        if body == ["pass"] and not is_required_marker:
+            return True
+        decorators.clear()
+        index += 1
+    return False
