@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 4 are complete. Item 5 is next.
+Status: active on 2026-08-22. Items 0 through 5 are complete. Item 5A is next.
 
 ## Objective
 
@@ -134,6 +134,7 @@ scope and does not repeat that work.
 | Ecosystem checksum variants | Two canonical project manifests have stale checksums. | Item 3 |
 | Driver dependency test | The test requires `NumBigint` for `sifr.statistics.mean`. | Item 4 |
 | `cpython_hashlib_api_subset` | Generated Rust scopes hide successful sequential `try` bindings. | Item 5 |
+| Open `IOError` dispatch and stale demo output | Six subclass handlers do not cover `kind = "Other"`; the new `try` emission also changes checked-in demo output. | Item 5A |
 | Structured concurrency builds | Local and hoisted `ScopeFailure` types have different identities. | Item 6 |
 | File-handle builds | Local and hoisted file-handle types have different identities. | Item 6 |
 | `nested_optional_safe_operations` | Lowering converts an optional union more than once. | Item 7 |
@@ -152,6 +153,7 @@ scope and does not repeat that work.
 - Refresh paths, hashes, and checksums after the source-layout migration.
 - Correct generated dependency assertions.
 - Preserve successful bindings across sequential `try` statements.
+- Preserve unmatched base `IOError` values and refresh affected generated demos.
 - Give each generated nominal one project-wide identity.
 - Make optional and union conversion representation-aware and single-pass.
 - Replace invalid-program CFG panics with structured diagnostics.
@@ -182,6 +184,7 @@ Item 0  baseline and ownership lock
   -> Item 3  migrated evidence freshness
   -> Item 4  exact dependency feature test
   -> Item 5  sequential try binding scope
+  -> Item 5A open IOError dispatch and demo freshness
   -> Item 6  project-wide nominal identity
   -> Item 7  nested optional conversion
   -> Item 8  invalid-program CFG diagnostics
@@ -534,6 +537,69 @@ Acceptance criteria:
 - Generated code contains no data-dependent `.unwrap()` or `.expect()`.
 - The file handle closes once on each continuing or error path.
 
+### Item 5 record
+
+State: complete
+
+PR: [#3436](https://github.com/sifr-lang/sifr/pull/3436)
+
+Base SHA: `adff7eebadcf6df33daf68e7a494d55590dcb17b`
+
+Candidate SHA: `606a5a6e52d41e25b799e949fed59ee838778c54`
+
+Merge SHA: `4b521a4d1554bd9e89ba243f26eccaed485784d7`
+
+Changed paths: lowering scope and `try` flow, shared HIR flow analysis,
+structured `try` emission, canonical I/O error metadata, focused compiler
+tests, and pass/fail E2E fixtures.
+
+Validation: the type-system, HIR, lowering, and codegen suites passed. Clippy
+passed with warnings denied. The hash and sequential-`try` fixtures checked,
+built, and ran. The negative fixture emitted `SIFR-NAME-0001`. Generated hash
+code had two file-close calls and no data-dependent unwrap or expect. Format,
+diff, maintainability, and file-size checks passed.
+
+The create-PR and merge gates each ran once on the candidate SHA. Both stopped
+at demo emitted-freshness and reported the same 21 stale generated outputs.
+Neither gate was repeated.
+
+Review evidence: the initial exact-SHA review found two blocking flow defects.
+The remediation review confirmed that one shared HIR flow analysis closed the
+lowering/codegen disagreement. It then found a new mechanism defect: six
+subclass handlers do not cover a base `IOError` with `kind = "Other"`. The
+review and gate evidence is in the
+[#3436 review comment](https://github.com/sifr-lang/sifr/pull/3436#issuecomment-5377738618).
+The review-round rule assigns that new defect to Item 5A. No third review ran.
+
+Deferred follow-up: Item 5A owns open I/O-error dispatch and the 21 generated
+demo refreshes. Items 8 and 9 retain the broad negative-suite failures.
+
+Next action: implement Item 5A.
+
+## Item 5A: Preserve Open `IOError` Dispatch and Refresh Demo Evidence
+
+Purpose: Keep promoted `try` bindings without treating base I/O errors as a
+closed set of subclass kinds.
+
+Scope:
+
+- Require a base `IOError` or catch-all handler for kind-total coverage.
+- Keep every subclass handler guarded by its exact runtime kind.
+- Preserve an unmatched base `IOError`; do not run a subclass handler for it.
+- Remove the remaining duplicate I/O-error subclass registries.
+- Refresh the 21 checked-in demo outputs changed by Item 5.
+- Do not fabricate a promoted value or add a panic/fallback path.
+
+Acceptance criteria:
+
+- Six subclass handlers alone do not claim to cover base `IOError`.
+- A final base handler preserves `kind = "Other"` without subclass dispatch.
+- Exact subclass kinds still select their declared handlers.
+- Promoted bindings compile only when every continuing path initializes them.
+- The demo emitted-freshness guard passes.
+- Generated code contains no data-dependent `.unwrap()` or `.expect()`.
+- Focused I/O-error fixtures check, build, and run.
+
 ## Item 6: Use One Project-wide Nominal Identity
 
 Purpose: Make structured Rust types stable across project and module emission.
@@ -812,6 +878,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 4 are complete and recorded.
+Current state: Items 0 through 5 are complete and recorded.
 
-Next action: implement Item 5.
+Next action: implement Item 5A.
