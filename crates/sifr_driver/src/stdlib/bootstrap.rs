@@ -750,15 +750,14 @@ fn select_imported_class_templates<T: Clone>(
         let Some(module_templates) = available.get(&import.module) else {
             continue;
         };
-        for name in &import.names {
-            let Some(template) = module_templates.get(name) else {
-                continue;
-            };
+        if import
+            .names
+            .iter()
+            .any(|name| module_templates.contains_key(name))
+        {
             selected
                 .entry(import.module.clone())
-                .or_default()
-                .entry(name.clone())
-                .or_insert_with(|| template.clone());
+                .or_insert_with(|| module_templates.clone());
         }
     }
     selected

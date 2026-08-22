@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn stdlib_codegen_selects_only_explicitly_imported_class_templates() {
+fn stdlib_codegen_selects_only_modules_with_explicit_class_imports() {
     let available = HashMap::from([
         (
             "sifr.alpha".to_string(),
@@ -31,7 +31,7 @@ fn stdlib_codegen_selects_only_explicitly_imported_class_templates() {
         selected,
         HashMap::from([(
             "sifr.alpha".to_string(),
-            HashMap::from([("Second".to_string(), 2)]),
+            HashMap::from([("First".to_string(), 1), ("Second".to_string(), 2)]),
         )])
     );
 }

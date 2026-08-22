@@ -435,8 +435,8 @@ commands and every budget. The performance smoke profile also passes.
 [Performance issue #3431](https://github.com/sifr-lang/sifr/issues/3431) tracks
 the correction. PR #3262 copied all retained stdlib class templates into each
 later stdlib codegen operation. It also retained method bodies that late
-structural codegen does not use. The correction selects only imported templates
-and removes unused bodies from retained templates.
+structural codegen does not use. The correction selects only imported modules'
+templates and removes unused bodies from retained templates.
 
 The canonical LSP project exposed a separate ownership defect. Python editor
 diagnostics adopted an ancestor Cargo workspace when the Sifr package had no
