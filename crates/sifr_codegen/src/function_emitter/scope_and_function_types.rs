@@ -387,10 +387,7 @@ impl RustEmitter {
         if func.method_kind != sifr_ir::MethodKind::Regular
             || !func.decorators.is_empty()
             || !func.type_params.is_empty()
-            || func
-                .params
-                .iter()
-                .any(|param| param.default.is_some() || param.keyword_only)
+            || func.params.iter().any(|param| param.keyword_only)
         {
             return false;
         }

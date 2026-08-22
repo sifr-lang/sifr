@@ -23,6 +23,44 @@ pub(super) fn test_callable_variable_call_errors_have_codes() {
 }
 
 #[test]
+pub(super) fn rebound_nested_function_does_not_reuse_its_declared_default() {
+    let source = "\
+def required(value: int) -> int:
+    return value
+
+def outer() -> int:
+    def local(value: int = 1) -> int:
+        return value
+    local = required
+    return local()
+";
+    let errors = lower_source(source).expect_err("rebound callable must require its argument");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY)
+            && error.message == "callable 'local' expects 1 argument(s), got 0"
+    }));
+
+    let tuple_source = "\
+def required(value: int) -> int:
+    return value
+
+def outer() -> int:
+    def local(value: int = 1) -> int:
+        return value
+    local, count = (required, 2)
+    return local()
+";
+    let tuple_errors =
+        lower_source(tuple_source).expect_err("tuple-rebound callable must require its argument");
+
+    assert!(tuple_errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::CALL_NOT_CALLABLE_OR_ARITY)
+            && error.message == "callable 'local' expects 1 argument(s), got 0"
+    }));
+}
+
+#[test]
 pub(super) fn test_async_callable_is_distinct_and_produces_awaitable_call() {
     let source = "async def apply(f: AsyncCallable[[int], int]) -> int:\n    return await f(4)\n";
     let module = lower_source(source).expect("AsyncCallable call should lower");

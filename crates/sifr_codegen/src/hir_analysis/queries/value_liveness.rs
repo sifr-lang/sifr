@@ -408,9 +408,16 @@ fn stmt_requires_value(stmt: &HirStmt, var_name: &str, live_after: bool) -> bool
                 || live_after
         }
         HirStmt::NestedFunction { func, .. } => {
+            let defaults_reference_value = func.params.iter().any(|param| {
+                param
+                    .default
+                    .as_ref()
+                    .is_some_and(|default| expr_references_var(default, var_name))
+            });
             let parameter_shadows_value = func.params.iter().any(|param| param.name == var_name);
-            (!parameter_shadows_value
-                && super::stmts_reference_var_including_nested_functions(&func.body, var_name))
+            defaults_reference_value
+                || (!parameter_shadows_value
+                    && super::stmts_reference_var_including_nested_functions(&func.body, var_name))
                 || live_after
         }
         HirStmt::Match { subject, arms, .. } => {
@@ -479,8 +486,8 @@ mod tests {
         declaration_only_binding_needs_mutability,
         stmts_require_var_value_at_entry_including_nested_functions,
     };
-    use sifr_ir::{HirExpr, HirStmt};
-    use sifr_type_system::Type;
+    use sifr_ir::{HirExpr, HirFunction, HirParam, HirStmt, MethodKind};
+    use sifr_type_system::{ParamConvention, Type};
 
     fn name(value: &str) -> HirExpr {
         HirExpr::Name {
@@ -599,5 +606,39 @@ mod tests {
         }];
 
         assert!(!declaration_only_binding_needs_mutability(&stmts, "value"));
+    }
+
+    #[test]
+    fn nested_function_default_reads_the_value_in_the_defining_scope() {
+        let stmts = vec![HirStmt::NestedFunction {
+            func: HirFunction {
+                name: "read_value".to_string(),
+                params: vec![HirParam {
+                    name: "candidate".to_string(),
+                    ty: Type::Str,
+                    default: Some(name("value")),
+                    keyword_only: false,
+                    convention: ParamConvention::own(),
+                }],
+                return_type: Type::Str,
+                body: vec![HirStmt::Return {
+                    value: Some(name("candidate")),
+                }],
+                is_async: false,
+                method_kind: MethodKind::Regular,
+                receiver: None,
+                decorators: vec![],
+                rust_interop: Vec::new(),
+                python_interop: Vec::new(),
+                compiler_intrinsic: None,
+                type_params: vec![],
+            },
+            move_captures: false,
+            capture_clones: Vec::new(),
+        }];
+
+        assert!(stmts_require_var_value_at_entry_including_nested_functions(
+            &stmts, "value"
+        ));
     }
 }

@@ -177,6 +177,7 @@ pub(in crate::lower) fn lower_tuple_unpack_assign(
                             range,
                         );
                     }
+                    ctx.scope.mark_rebound_local(&name);
                     ctx.reset_moved_with_flow(&name);
                     ctx.clear_narrowing_with_flow(&name);
                     ctx.clear_sequence_guards_for_binding(&name);

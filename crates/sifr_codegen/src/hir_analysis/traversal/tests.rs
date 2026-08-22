@@ -135,7 +135,18 @@ fn walk_stmts_covers_try_handlers_loop_else_and_match_patterns() {
 fn walk_stmts_respects_nested_function_scope_boundary() {
     let nested = HirFunction {
         name: "inner".to_string(),
-        params: vec![],
+        params: vec![HirParam {
+            name: "value".to_string(),
+            ty: Type::Int,
+            default: Some(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
+                func: "default_only".to_string(),
+                args: vec![],
+                ty: Type::Int,
+            }),
+            keyword_only: false,
+            convention: ParamConvention::own(),
+        }],
         return_type: Type::None,
         body: vec![HirStmt::Expr {
             expr: HirExpr::Call {
@@ -160,13 +171,11 @@ fn walk_stmts_respects_nested_function_scope_boundary() {
         capture_clones: Vec::new(),
     }];
 
-    let mut saw_nested_call = false;
+    let mut local_calls = Vec::new();
     let mut on_stmt = |_stmt: &HirStmt| {};
     let mut on_expr = |expr: &HirExpr| {
         if let HirExpr::Call { func, .. } = expr {
-            if func == "nested_only" {
-                saw_nested_call = true;
-            }
+            local_calls.push(func.clone());
         }
     };
 
@@ -177,7 +186,24 @@ fn walk_stmts_respects_nested_function_scope_boundary() {
         &mut on_expr,
     );
 
-    assert!(!saw_nested_call);
+    assert_eq!(local_calls, vec!["default_only".to_string()]);
+
+    let mut inclusive_calls = Vec::new();
+    walk_stmts(
+        &stmts,
+        TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+        &mut |_stmt| {},
+        &mut |expr| {
+            if let HirExpr::Call { func, .. } = expr {
+                inclusive_calls.push(func.clone());
+            }
+        },
+    );
+
+    assert_eq!(
+        inclusive_calls,
+        vec!["default_only".to_string(), "nested_only".to_string()]
+    );
 }
 
 #[test]

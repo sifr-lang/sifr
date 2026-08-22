@@ -532,11 +532,7 @@ pub(super) fn try_lower_simple_nested_function_stmt(
     {
         return None;
     }
-    if func
-        .params
-        .iter()
-        .any(|param| param.default.is_some() || param.keyword_only)
-    {
+    if func.params.iter().any(|param| param.keyword_only) {
         return None;
     }
 

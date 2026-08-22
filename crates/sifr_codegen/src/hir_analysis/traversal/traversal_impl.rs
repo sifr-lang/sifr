@@ -4,7 +4,8 @@ use sifr_ir::{HirExpr, HirFStringPart, HirPattern, HirStmt};
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct TraversalConfig {
     /// When false, nested function bodies are treated as scope boundaries and
-    /// not traversed. When true, nested function bodies are included.
+    /// not traversed. Definition-time parameter defaults are always visited.
+    /// When true, nested function bodies are also included.
     pub descend_nested_functions: bool,
 }
 
@@ -31,7 +32,8 @@ pub(crate) enum TraversalControl {
 /// - Expression/statement recursion for analysis must flow through this module.
 /// - `on_stmt` is invoked once for each visited statement before children.
 /// - `on_expr` is invoked once for each visited expression before children.
-/// - Nested function recursion is controlled only by `TraversalConfig`.
+/// - Nested function defaults are visited in the defining scope.
+/// - Nested function body recursion is controlled only by `TraversalConfig`.
 /// - `_until` walkers stop recursively as soon as callbacks return `Stop`.
 ///
 /// Extension rules for future HIR variants:
@@ -627,6 +629,13 @@ where
             }
         }
         HirStmt::NestedFunction { func, .. } => {
+            for param in &func.params {
+                if let Some(default) = &param.default {
+                    if matches!(walk_expr_until(default, on_expr), TraversalControl::Stop) {
+                        return TraversalControl::Stop;
+                    }
+                }
+            }
             if config.descend_nested_functions {
                 if matches!(
                     walk_stmts_until(&func.body, config, on_stmt, on_expr),

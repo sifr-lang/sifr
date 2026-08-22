@@ -1,0 +1,27 @@
+class ProbeError(Error):
+    message: str
+
+
+def load_value() -> Result[int, ProbeError]:
+    return 42
+
+
+def read_after_try() -> Result[int, ProbeError]:
+    try:
+        value: int = load_value()
+    except ProbeError as error:
+        raise error
+
+    def read_value(candidate: int = 1) -> int:
+        return candidate
+
+    return value + read_value() + read_value(candidate=5)
+
+
+def main() -> None:
+    try:
+        result: int = read_after_try()
+    except ProbeError:
+        assert False
+        return
+    assert result == 48

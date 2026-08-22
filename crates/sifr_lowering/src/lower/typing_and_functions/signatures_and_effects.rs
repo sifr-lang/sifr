@@ -611,7 +611,8 @@ pub(in crate::lower) fn register_local_function_signature(
         ctx.function_defaults
             .insert(function_name.clone(), defaults);
     }
-    ctx.scope.define(function_name.clone(), callable_ty);
+    ctx.scope
+        .define_function(function_name.clone(), callable_ty);
     ctx.functions.insert(function_name.clone(), ft.clone());
     if let Some(workload) =
         workload_annotations::annotation_for_decorators(func.decorator_list.iter())

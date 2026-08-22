@@ -310,6 +310,7 @@ pub(super) fn failed_initializer_taint(
 }
 
 pub(super) fn invalidate_rebound_binding_facts(ctx: &mut LowerCtx, name: &str) {
+    ctx.scope.mark_rebound_local(name);
     ctx.clear_narrowing_with_flow(name);
     ctx.scope.clear_const_integer_value(name);
     ctx.clear_sequence_guards_for_binding(name);

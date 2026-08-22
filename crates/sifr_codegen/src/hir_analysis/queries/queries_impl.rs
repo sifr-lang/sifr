@@ -98,6 +98,16 @@ fn stmts_reference_var_with_config(
     config: TraversalConfig,
 ) -> bool {
     let mut on_stmt = |stmt: &HirStmt| {
+        if config.descend_nested_functions {
+            if let HirStmt::NestedFunction { func, .. } = stmt {
+                let parameter_shadows_var = func.params.iter().any(|param| param.name == var_name);
+                if !parameter_shadows_var
+                    && stmts_reference_var_with_config(&func.body, var_name, config)
+                {
+                    return TraversalControl::Stop;
+                }
+            }
+        }
         let target_references_var = match stmt {
             HirStmt::Assign { name, .. } | HirStmt::AugAssign { name, .. } => name == var_name,
             HirStmt::FieldAssign { object, .. }
@@ -133,7 +143,12 @@ fn stmts_reference_var_with_config(
         TraversalControl::Continue
     };
     matches!(
-        traversal::walk_stmts_until(stmts, config, &mut on_stmt, &mut on_expr,),
+        traversal::walk_stmts_until(
+            stmts,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        ),
         TraversalControl::Stop
     )
 }

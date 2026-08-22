@@ -18,6 +18,7 @@ pub enum EphemeralOrigin {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BindingKind {
     Local,
+    Function,
     ModuleConstant,
     Parameter,
     Receiver,
@@ -96,6 +97,10 @@ impl VarInfo {
 
     pub fn is_parameter_binding(&self) -> bool {
         matches!(self.binding_kind, BindingKind::Parameter)
+    }
+
+    pub fn is_function_binding(&self) -> bool {
+        matches!(self.binding_kind, BindingKind::Function)
     }
 
     pub fn is_mutable_binding(&self) -> bool {
@@ -199,6 +204,11 @@ impl Scope {
     /// Define a variable in the current (innermost) scope.
     pub fn define(&mut self, name: String, ty: Type) {
         self.define_binding(name, ty, true, BindingKind::Local, false);
+    }
+
+    /// Define a local function so callable dispatch can preserve its defaults.
+    pub fn define_function(&mut self, name: String, ty: Type) {
+        self.define_binding(name, ty, true, BindingKind::Function, true);
     }
 
     /// Define an immutable module-level value that codegen re-materializes on access.
@@ -443,6 +453,20 @@ impl Scope {
             fact.ty = ty;
         }
         true
+    }
+
+    pub fn mark_rebound_local(&mut self, name: &str) {
+        let Some(info) = self.lookup_var_mut(name) else {
+            return;
+        };
+        if info.binding_kind != BindingKind::Function {
+            return;
+        }
+        let binding_id = info.binding_id;
+        info.binding_kind = BindingKind::Local;
+        if let Some(fact) = self.retained_bindings.get_mut(&binding_id) {
+            fact.binding_kind = BindingKind::Local;
+        }
     }
 
     pub(crate) fn set_const_integer_value(&mut self, name: &str, value: BigInt) -> bool {
@@ -703,198 +727,5 @@ impl Default for Scope {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_define_and_lookup() {
-        let mut scope = Scope::new();
-        scope.define("x".to_string(), Type::Int);
-        let info = scope.lookup("x").unwrap();
-        assert_eq!(info.ty, Type::Int);
-        assert!(!info.is_moved);
-    }
-
-    #[test]
-    fn test_nested_scopes() {
-        let mut scope = Scope::new();
-        scope.define("x".to_string(), Type::Int);
-        scope.push();
-        scope.define("y".to_string(), Type::Str);
-        assert!(scope.lookup("x").is_some()); // visible from outer
-        assert!(scope.lookup("y").is_some());
-        scope.pop();
-        assert!(scope.lookup("x").is_some());
-        assert!(scope.lookup("y").is_none()); // no longer visible
-    }
-
-    #[test]
-    fn binding_ids_distinguish_shadowed_names_and_outlive_frames() {
-        let mut scope = Scope::new();
-        scope.define("value".to_string(), Type::Int);
-        let outer = scope.lookup("value").unwrap().binding_id;
-
-        scope.push();
-        scope.define("value".to_string(), Type::Str);
-        let inner = scope.lookup("value").unwrap().binding_id;
-        assert_ne!(outer, inner);
-        scope.pop();
-
-        assert_eq!(scope.lookup("value").unwrap().binding_id, outer);
-        assert_eq!(scope.retained_binding(inner).unwrap().name, "value");
-        assert_eq!(
-            scope.retained_binding(inner).unwrap().binding_kind,
-            BindingKind::Local
-        );
-    }
-
-    #[test]
-    fn module_constants_have_distinct_immutable_binding_facts() {
-        let mut scope = Scope::new();
-        scope.define_module_constant("VALUES".to_string(), Type::List(Box::new(Type::Int)));
-
-        let info = scope.lookup("VALUES").unwrap();
-        assert_eq!(info.binding_kind, BindingKind::ModuleConstant);
-        assert_eq!(info.mutability, BindingMutability::Immutable);
-        assert_eq!(
-            scope
-                .retained_binding(info.binding_id)
-                .unwrap()
-                .binding_kind,
-            BindingKind::ModuleConstant
-        );
-    }
-
-    #[test]
-    fn retained_receiver_and_ephemeral_facts_keep_final_conventions() {
-        let mut scope = Scope::new();
-        scope.push();
-        let receiver = scope.define_receiver(
-            "self".to_string(),
-            Type::Any,
-            ReceiverConvention::SharedBorrow,
-        );
-        scope.define_ephemeral("item".to_string(), Type::Int, EphemeralOrigin::Iteration);
-        let item = scope.lookup("item").unwrap().binding_id;
-        scope.pop();
-
-        scope.patch_receiver_convention(receiver, ReceiverConvention::MutableBorrow);
-        let receiver_fact = scope.retained_binding(receiver).unwrap();
-        assert_eq!(receiver_fact.binding_kind, BindingKind::Receiver);
-        assert_eq!(
-            receiver_fact.receiver_convention,
-            Some(ReceiverConvention::MutableBorrow)
-        );
-        assert_eq!(receiver_fact.mutability, BindingMutability::Mutable);
-        assert_eq!(
-            scope.retained_binding(item).unwrap().binding_kind,
-            BindingKind::EphemeralLocal(EphemeralOrigin::Iteration)
-        );
-    }
-
-    #[test]
-    fn test_move_tracking() {
-        let mut scope = Scope::new();
-        scope.define("s".to_string(), Type::Str);
-        assert!(!scope.is_moved("s"));
-        scope.mark_moved("s");
-        assert!(scope.is_moved("s"));
-    }
-
-    #[test]
-    fn test_copy_types_not_moved() {
-        let mut scope = Scope::new();
-        scope.define("x".to_string(), Type::Int);
-        let moved = scope.mark_moved("x");
-        assert!(!moved); // Int is Copy, not moved
-        assert!(!scope.is_moved("x"));
-    }
-
-    #[test]
-    fn test_specialized_copy_binding_can_be_marked_moved() {
-        let mut scope = Scope::new();
-        scope.define("handler".to_string(), Type::Int);
-
-        assert!(scope.mark_binding_moved("handler"));
-        assert!(scope.is_moved("handler"));
-        scope.reset_moved("handler");
-        assert!(scope.mark_moved("handler"));
-        assert!(scope.is_moved("handler"));
-    }
-
-    // --- Narrowing tests ---
-
-    #[test]
-    fn test_narrowing() {
-        let mut scope = Scope::new();
-        let union_type = Type::Union(vec![Type::Int, Type::Str]);
-        scope.define("x".to_string(), union_type.clone());
-
-        // Before narrowing, effective type is declared type
-        assert_eq!(scope.effective_type("x"), Some(&union_type));
-
-        // Narrow to Int
-        scope.narrow_var("x", Type::Int);
-        assert_eq!(scope.effective_type("x"), Some(&Type::Int));
-
-        // Clear narrowing
-        scope.clear_narrowing("x");
-        assert_eq!(scope.effective_type("x"), Some(&union_type));
-    }
-
-    #[test]
-    fn test_narrowing_save_restore() {
-        let mut scope = Scope::new();
-        let union_type = Type::Union(vec![Type::Int, Type::Str]);
-        scope.define("x".to_string(), union_type.clone());
-
-        // Save state before branch
-        let snapshot = scope.save_narrowing_state();
-
-        // Narrow in branch
-        scope.narrow_var("x", Type::Int);
-        assert_eq!(scope.effective_type("x"), Some(&Type::Int));
-
-        // Restore state
-        scope.restore_narrowing_state(&snapshot);
-        assert_eq!(scope.effective_type("x"), Some(&union_type));
-    }
-
-    #[test]
-    fn test_type_alias() {
-        let mut scope = Scope::new();
-        scope.define_type_alias("UserId".to_string(), Type::Int);
-        assert_eq!(scope.lookup_type_alias("UserId"), Some(&Type::Int));
-        assert_eq!(scope.lookup_type_alias("Unknown"), None);
-    }
-
-    // --- Moved state snapshot tests ---
-
-    #[test]
-    fn test_save_restore_moved_state() {
-        let mut scope = Scope::new();
-        scope.define("s".to_string(), Type::Str);
-        assert!(!scope.is_moved("s"));
-
-        let snapshot = scope.save_moved_state();
-        scope.mark_moved("s");
-        assert!(scope.is_moved("s"));
-
-        scope.restore_moved_state(&snapshot);
-        assert!(!scope.is_moved("s"));
-    }
-
-    #[test]
-    fn test_moved_since() {
-        let mut scope = Scope::new();
-        scope.define("s".to_string(), Type::Str);
-        scope.define("x".to_string(), Type::Int);
-
-        let snapshot = scope.save_moved_state();
-        scope.mark_moved("s"); // Move type — should appear in moved_since
-        scope.mark_moved("x"); // Copy type — should NOT appear
-
-        let newly = scope.moved_since(&snapshot);
-        assert_eq!(newly, vec!["s".to_string()]);
-    }
-}
+#[path = "scope_tests.rs"]
+mod tests;

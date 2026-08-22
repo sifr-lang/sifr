@@ -105,42 +105,81 @@ pub(super) fn lower_regular_call(
                 conventions.clone(),
                 *ret_type.clone(),
                 false,
+                info.is_function_binding(),
             )),
             Type::AsyncCallable(param_types, conventions, ret_type) => Some((
                 param_types.clone(),
                 conventions.clone(),
                 *ret_type.clone(),
                 true,
+                info.is_function_binding(),
             )),
             _ => None,
         });
-    if let Some((param_types, conventions, ret_type, is_async_callable)) = callable_info {
-        // Lower arguments
-        let mut args = Vec::new();
-        for arg in &call.arguments.args {
-            let expr = lower_expr(arg, ctx)?;
-            args.push(expr);
-        }
-        if args.len() != param_types.len() {
-            let range = if args.len() > param_types.len() {
-                call.arguments.args[param_types.len()].range()
-            } else {
-                call.func.range()
+    if let Some((param_types, conventions, ret_type, is_async_callable, is_declared_function)) =
+        callable_info
+    {
+        let (args, arg_ranges) = if is_declared_function {
+            let Some(function_type) = ctx.functions.get(&func_name).cloned() else {
+                ctx.error_with_code_at(
+                    DiagnosticCode::INTERNAL_COMPILER_PANIC,
+                    format!(
+                        "internal compiler error: declared function binding '{func_name}' has no signature"
+                    ),
+                    call.func.range(),
+                );
+                return None;
             };
-            expression_diagnostics::call_not_callable_or_arity(
+            let defaults = ctx.function_defaults.get(&func_name).cloned();
+            let vararg_index = ctx.vararg_functions.get(&func_name).copied();
+            let args = lower_function_call_args(
+                call,
+                &func_name,
+                &function_type,
+                defaults.as_deref(),
+                vararg_index,
                 ctx,
-                format!(
-                    "callable '{}' expects {} argument(s), got {}",
-                    func_name,
-                    param_types.len(),
-                    args.len()
-                ),
-                range,
-            );
-            return None;
-        }
+            )?;
+            let ranges = call_argument_ranges_by_param(call, &function_type);
+            (args, ranges)
+        } else {
+            let mut args = Vec::new();
+            for arg in &call.arguments.args {
+                args.push(lower_expr(arg, ctx)?);
+            }
+            if args.len() != param_types.len() {
+                let range = if args.len() > param_types.len() {
+                    call.arguments.args[param_types.len()].range()
+                } else {
+                    call.func.range()
+                };
+                expression_diagnostics::call_not_callable_or_arity(
+                    ctx,
+                    format!(
+                        "callable '{}' expects {} argument(s), got {}",
+                        func_name,
+                        param_types.len(),
+                        args.len()
+                    ),
+                    range,
+                );
+                return None;
+            }
+            let ranges = call
+                .arguments
+                .args
+                .iter()
+                .map(|arg| Some(arg.range()))
+                .collect::<Vec<_>>();
+            (args, ranges)
+        };
         // Type check arguments and apply convention-aware move tracking
         for (i, (arg, param_ty)) in args.iter().zip(param_types.iter()).enumerate() {
+            let arg_range = arg_ranges
+                .get(i)
+                .copied()
+                .flatten()
+                .unwrap_or_else(|| call.func.range());
             if !arg.ty().is_assignable_to(param_ty) {
                 expression_diagnostics::type_mismatch(
                     ctx,
@@ -151,7 +190,7 @@ pub(super) fn lower_regular_call(
                         param_ty.display_name(),
                         arg.ty().display_name()
                     ),
-                    call.arguments.args[i].range(),
+                    arg_range,
                 );
             }
             // Apply move tracking based on convention
@@ -159,17 +198,11 @@ pub(super) fn lower_regular_call(
                 .get(i)
                 .copied()
                 .unwrap_or(ParamConvention::borrow());
-            validate_borrowed_structural_coercion(
-                arg.ty(),
-                param_ty,
-                convention,
-                call.arguments.args[i].range(),
-                ctx,
-            );
+            validate_borrowed_structural_coercion(arg.ty(), param_ty, convention, arg_range, ctx);
             if convention.is_owned() {
                 // Own convention transfers every affine candidate contained in
                 // a conditional or wrapper expression.
-                consume_owned_value(arg, call.arguments.args[i].range(), ctx);
+                consume_owned_value(arg, arg_range, ctx);
             }
             // Borrow/MutBorrow: no move, variable remains usable
         }
@@ -191,12 +224,7 @@ pub(super) fn lower_regular_call(
                 .collect(),
             return_type: Box::new(ret_type.clone()),
         };
-        let ranges = call
-            .arguments
-            .args
-            .iter()
-            .map(|arg| Some(arg.range()))
-            .collect::<Vec<_>>();
+        let ranges = arg_ranges;
         let mutable_arg_places =
             super::super::method_receiver_places::validate_regular_call_arguments(
                 &args,
