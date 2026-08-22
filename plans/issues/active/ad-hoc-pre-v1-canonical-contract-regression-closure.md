@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 5A are complete. Item 6 is next.
+Status: active on 2026-08-22. Items 0 through 6 are complete. Item 7 is next.
 
 ## Objective
 
@@ -59,6 +59,7 @@ This planning change makes these transfers effective when it merges:
 | Nested option-represented union conversion | Static-class M12 previously held a deferred hardening row. | Item 7 |
 | Protocol-bound CFG and diagnostic failure | The pre-v1 record and static-class records assign it to each other. | Items 8 and 9 |
 | Method-slot fixture and runtime evidence | The static-class phase is archived, but both verification defects remain. | Item 10 |
+| Residual nominal registry gaps | Item 6 reviews found two pre-existing gaps outside that implementation scope. | Item 10A |
 
 The archived static-class phase no longer owns active corrective work. Item 10
 owns its unresolved method-slot fixture and runtime evidence.
@@ -142,6 +143,8 @@ scope and does not repeat that work.
 | Protocol diagnostic mismatch | The fixture references an unknown bound before conformance checking. | Item 9 |
 | Method-slot placeholder | The matrix fixture contains an empty placeholder declaration. | Item 10 |
 | Method-slot runtime output | The driver expectation predates the receiver-value serializer and keeps the stale count `2`. | Item 10 |
+| Direct `IOError` kind nominal | A direct `Type::Class` path can register a kind alias that has no Rust struct. | Item 10A |
+| Dead shared `ParseError` | The `uuid_and_datetime` output keeps a shared definition beside a local duplicate. | Item 10A |
 | Read-only Python duration | The latest contended run completed in 314,714 ms. An isolated run completed in approximately 68 seconds. | Qualification rule B |
 
 ## Scope
@@ -159,6 +162,7 @@ scope and does not repeat that work.
 - Replace invalid-program CFG panics with structured diagnostics.
 - Separate name-resolution and protocol-conformance fixture intent.
 - Complete the method-slot fixture and align its runtime evidence.
+- Close the two residual nominal registry gaps from the Item 6 reviews.
 - Add regression guards for the migrated evidence and representation defects.
 - Record completion evidence from the linked owner.
 - Qualify the read-only Python doctor without a timeout increase.
@@ -190,6 +194,7 @@ Item 0  baseline and ownership lock
   -> Item 8  invalid-program CFG diagnostics
   -> Item 9  protocol fixture intent
   -> Item 10 method-slot verification closure
+  -> Item 10A residual nominal registry consistency
   -> linked delivery A final validation and merge
   -> Item 11 linked delivery and timeout qualification
   -> Item 12 final regression guard and closure
@@ -668,6 +673,65 @@ Acceptance criteria:
 - Unsupported types return a structured code-generation error.
 - The structured-type guard and mutation test pass.
 
+### Item 6 record
+
+State: complete
+
+PR: [#3440](https://github.com/sifr-lang/sifr/pull/3440)
+
+Base SHA: `c8b50ec1a383899156a446a30401cdd30b20e49c`
+
+Candidate SHA: `57698a86deb400cecddc88ca4323daf2310094d6`
+
+Merge SHA: `ca8e2ff6ebb0078128820adbb90b5762de671c86`
+
+Changed paths: the project nominal registry, error-reference collection,
+project code-generation consumers, stdlib item filtering, 75 generated demo
+companions, and the typed-intrinsic allowlist.
+
+Validation: all 1,097 codegen tests passed. Codegen Clippy passed with warnings
+denied. All seven structured-concurrency variants passed. Both native
+file-handle project builds passed.
+
+The focused tests prove one `ScopeFailure` definition and one shared
+`From<ScopeFailure>` conversion. They also prove that transitive stdlib
+nominals use the project registry.
+
+The structured-type guard and its mutation self-test passed. Demo freshness,
+format, diff, HIR maintainability, file-size, and all stdlib ownership guards
+passed.
+
+The create-PR and merge gates each ran once on the final candidate. Both gates
+passed every guardrail and stopped at the same two Rust-interop matrix rows.
+Linked delivery A owns the missing shared-bridge source. Item 10 owns the empty
+method-slot declaration.
+
+Review evidence: the initial exact-SHA review found a dangling project export
+for exception-only `IOError` kind aliases. The first remediation added the
+emission-aligned filter and a package regression.
+
+The user authorized two additional exact-SHA reviews after gate-discovered
+baseline and allowlist omissions. Both final reviews returned `SATISFIED` with
+no blocking findings.
+
+The review evidence is in the
+[#3440 initial and remediation comment](https://github.com/sifr-lang/sifr/pull/3440#issuecomment-5378067779),
+the
+[#3440 generated-baseline comment](https://github.com/sifr-lang/sifr/pull/3440#issuecomment-5379696658),
+and the
+[#3440 final allowlist comment](https://github.com/sifr-lang/sifr/pull/3440#issuecomment-5379730091).
+The final gate evidence is in the
+[#3440 gate comment](https://github.com/sifr-lang/sifr/pull/3440#issuecomment-5379745889).
+
+Deferred follow-up: Item 10A owns two pre-existing nominal registry gaps. One
+gap can seed an `IOError` kind alias from a direct `Type::Class`. The other gap
+keeps a dead shared `ParseError` beside a local duplicate.
+
+The allowlist scanner and demo rendering-style notes are infrastructure
+suggestions. They do not change Item 6 behavior or acceptance.
+
+Next action: implement Item 7.
+
 ## Item 7: Make Optional and Union Conversion Single-pass
 
 Purpose: Prevent duplicate conversion of nested optional unions.
@@ -761,6 +825,28 @@ Acceptance criteria:
 - Item 10 can record a full-matrix stop only for linked delivery A.
 - Item 11 owns the final full-matrix pass after linked delivery A merges.
 
+## Item 10A: Close Residual Nominal Registry Inconsistencies
+
+Purpose: Remove the two pre-existing nominal registry gaps found during the
+Item 6 reviews.
+
+Scope:
+
+- Reject `IOError` kind aliases as shared nominal owners in every collection path.
+- Give the `uuid_and_datetime` `ParseError` one generated owner.
+- Remove the dead shared definition or the duplicate local definition.
+- Keep the public error behavior unchanged.
+- Add focused registry consistency coverage.
+- Do not add a fallback owner or a second nominal path.
+
+Acceptance criteria:
+
+- A direct `Type::Class` for an `IOError` kind cannot create a dangling owner path.
+- The `uuid_and_datetime` output contains one `ParseError` identity.
+- Every shared registry export resolves to one generated definition.
+- No registered shared nominal also has a module-local duplicate.
+- Focused tests and demo freshness pass.
+
 ## Required Linked Delivery A: Rust-interop Evidence Path
 
 The active
@@ -802,7 +888,7 @@ Purpose: Combine phase-owned corrections with independently owned changes.
 
 Dependencies:
 
-- Items 1 through 10 are merged.
+- Items 1 through 10A are merged.
 - Required linked delivery A is merged.
 
 Scope:
@@ -867,6 +953,7 @@ Acceptance criteria:
 | CFG diagnostics | Lowering CFG tests and broad CLI negative tests |
 | Protocol diagnostics | Protocol conformance tests and broad CLI tests |
 | Method slots | Focused ignored driver runtime test and the method-slot matrix case. Item 11 runs the full matrix. |
+| Residual nominal registry | Focused direct-class, registry consistency, and `uuid_and_datetime` demo checks |
 | Regression guards | Focused stale-path, stale-hash, nominal-identity, conversion, and no-compatibility self-tests |
 | Python doctor | One final-candidate run and one isolated profile only after a timeout |
 
@@ -922,6 +1009,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 5A are complete and recorded.
+Current state: Items 0 through 6 are complete and recorded.
 
-Next action: implement Item 6.
+Next action: implement Item 7.
