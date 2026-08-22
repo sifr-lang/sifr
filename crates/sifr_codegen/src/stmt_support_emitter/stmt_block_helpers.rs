@@ -507,8 +507,12 @@ impl RustEmitter {
         stmts: &[HirStmt],
     ) -> Result<Option<Vec<crate::RustStmt>>, crate::CodegenError> {
         let string_char_cache_vars = self.string_char_cache_vars.clone();
+        let callable_var_conventions = self.callable_var_conventions.clone();
+        let nested_fn_captures = self.nested_fn_captures.clone();
         let result = self.try_lower_stmt_block_for_ir(stmts);
         self.string_char_cache_vars = string_char_cache_vars;
+        self.callable_var_conventions = callable_var_conventions;
+        self.nested_fn_captures = nested_fn_captures;
         result
     }
 

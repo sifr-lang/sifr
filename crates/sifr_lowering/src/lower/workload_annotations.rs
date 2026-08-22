@@ -101,7 +101,7 @@ pub(in crate::lower) fn reject_async_direct_call(
     if !ctx.current_function_is_async {
         return;
     }
-    let Some(workload) = ctx.function_workload_annotations.get(function).copied() else {
+    let Some(workload) = declared_workload(ctx, function) else {
         return;
     };
     ctx.error_with_code_at(
@@ -164,9 +164,7 @@ pub(in crate::lower) fn reject_unclassified_offload_target(
         );
         return true;
     };
-    if ctx.function_workload_annotations.contains_key(function)
-        || known_stdlib_offload_target(function).is_some()
-    {
+    if offload_workload(ctx, function).is_some() {
         return false;
     }
     ctx.error_with_code_at(
@@ -196,11 +194,7 @@ pub(in crate::lower) fn reject_offload_target_without_kind(
         );
         return true;
     };
-    let actual = ctx
-        .function_workload_annotations
-        .get(function)
-        .copied()
-        .or_else(|| known_stdlib_offload_target(function));
+    let actual = offload_workload(ctx, function);
     let Some(actual) = actual else {
         ctx.error_with_code_at(
             DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET,
@@ -226,6 +220,27 @@ pub(in crate::lower) fn reject_offload_target_without_kind(
         return true;
     }
     false
+}
+
+fn declared_workload(ctx: &LowerCtx, function: &str) -> Option<WorkloadKind> {
+    if ctx.scope.lookup(function).is_some() {
+        return ctx
+            .visible_local_function_metadata(function)
+            .and_then(|metadata| metadata.workload);
+    }
+    ctx.function_workload_annotations.get(function).copied()
+}
+
+fn offload_workload(ctx: &LowerCtx, function: &str) -> Option<WorkloadKind> {
+    if ctx.scope.lookup(function).is_some() {
+        return ctx
+            .visible_local_function_metadata(function)
+            .and_then(|metadata| metadata.workload);
+    }
+    ctx.function_workload_annotations
+        .get(function)
+        .copied()
+        .or_else(|| known_stdlib_offload_target(function))
 }
 
 fn target_name(target: &Expr) -> Option<&str> {

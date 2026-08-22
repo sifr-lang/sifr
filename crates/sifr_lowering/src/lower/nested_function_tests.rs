@@ -121,6 +121,32 @@ fn same_named_nested_helpers_keep_lexical_mutable_call_metadata() {
 }
 
 #[test]
+fn shadowed_nested_helper_restores_defaults_keywords_and_varargs() {
+    let result = lower_source(
+        "def outer(flag: bool) -> int:\n    def helper(value: int = 40, *extra: int) -> int:\n        return value + len(extra)\n\n    if flag:\n        def helper(prefix: str, suffix: str = \"!\") -> str:\n            return prefix + suffix\n        assert helper(\"ok\") == \"ok!\"\n\n    return helper() + helper(value=1) + helper(1, 2, 3)\n",
+    );
+    assert!(
+        result.is_ok(),
+        "calls after a shadowing block must use the restored outer signature: {result:?}"
+    );
+}
+
+#[test]
+fn shadowed_nested_helper_does_not_inherit_outer_default_or_vararg() {
+    let errors = lower_source(
+        "def outer(flag: bool) -> int:\n    def helper(value: int = 1, *extra: int) -> int:\n        return value + len(extra)\n\n    if flag:\n        def helper(value: int) -> int:\n            return value\n        helper()\n        helper(1, 2)\n\n    return 0\n",
+    )
+    .expect_err("the inner helper must retain its required fixed-arity signature");
+
+    assert!(errors
+        .iter()
+        .any(|error| error.message == "helper() missing required argument 'value'"));
+    assert!(errors
+        .iter()
+        .any(|error| error.message == "helper() takes at most 1 argument(s), got 2"));
+}
+
+#[test]
 fn test_conflicting_nested_helper_call_sites_fail_inference_explicitly() {
     let result = lower_source(
         "def outer(flag: bool) -> None:\n    def helper(value):\n        print(value)\n\n    if flag:\n        helper(1)\n    else:\n        helper(\"x\")\n",

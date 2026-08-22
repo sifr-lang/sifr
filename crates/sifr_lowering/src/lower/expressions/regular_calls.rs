@@ -105,22 +105,22 @@ pub(super) fn lower_regular_call(
                 conventions.clone(),
                 *ret_type.clone(),
                 false,
-                info.is_function_binding(),
+                info.is_function_binding().then_some(info.binding_id),
             )),
             Type::AsyncCallable(param_types, conventions, ret_type) => Some((
                 param_types.clone(),
                 conventions.clone(),
                 *ret_type.clone(),
                 true,
-                info.is_function_binding(),
+                info.is_function_binding().then_some(info.binding_id),
             )),
             _ => None,
         });
-    if let Some((param_types, conventions, ret_type, is_async_callable, is_declared_function)) =
+    if let Some((param_types, conventions, ret_type, is_async_callable, function_binding_id)) =
         callable_info
     {
-        let (args, arg_ranges) = if is_declared_function {
-            let Some(function_type) = ctx.functions.get(&func_name).cloned() else {
+        let (args, arg_ranges) = if let Some(binding_id) = function_binding_id {
+            let Some(metadata) = ctx.local_function_metadata.get(&binding_id).cloned() else {
                 ctx.error_with_code_at(
                     DiagnosticCode::INTERNAL_COMPILER_PANIC,
                     format!(
@@ -130,17 +130,15 @@ pub(super) fn lower_regular_call(
                 );
                 return None;
             };
-            let defaults = ctx.function_defaults.get(&func_name).cloned();
-            let vararg_index = ctx.vararg_functions.get(&func_name).copied();
             let args = lower_function_call_args(
                 call,
                 &func_name,
-                &function_type,
-                defaults.as_deref(),
-                vararg_index,
+                &metadata.signature,
+                Some(&metadata.defaults),
+                metadata.vararg_index,
                 ctx,
             )?;
-            let ranges = call_argument_ranges_by_param(call, &function_type);
+            let ranges = call_argument_ranges_by_param(call, &metadata.signature);
             (args, ranges)
         } else {
             let mut args = Vec::new();

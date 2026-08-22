@@ -207,8 +207,8 @@ impl Scope {
     }
 
     /// Define a local function so callable dispatch can preserve its defaults.
-    pub fn define_function(&mut self, name: String, ty: Type) {
-        self.define_binding(name, ty, true, BindingKind::Function, true);
+    pub fn define_function(&mut self, name: String, ty: Type) -> BindingId {
+        self.define_binding_with_taint(name, ty, true, BindingKind::Function, true, None)
     }
 
     /// Define an immutable module-level value that codegen re-materializes on access.

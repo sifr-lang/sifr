@@ -1,0 +1,19 @@
+def evaluate(flag: bool) -> int:
+    def helper(value: int = 40, *extra: int) -> int:
+        return value + len(extra)
+
+    if flag:
+        def helper(prefix: str, suffix: str = "!") -> str:
+            return prefix + suffix
+
+        assert helper("ok") == "ok!"
+
+    return helper() + helper(value=1) + helper(1, 2, 3)
+
+
+def main() -> None:
+    assert evaluate(False) == 44
+    assert evaluate(True) == 44
+
+
+main()

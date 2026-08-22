@@ -658,9 +658,8 @@ pub(in crate::lower) fn lower_stmt(
             }
             // Extract the function type (params + return type)
             let ft = ctx
-                .functions
-                .get(func.name.as_str())
-                .cloned()
+                .visible_local_function_metadata(func.name.as_str())
+                .map(|metadata| metadata.signature.clone())
                 .unwrap_or_else(|| register_local_function_symbol(func, ctx));
 
             reject_unsupported_nested_async_generator(func, ft.return_type.as_ref(), ctx);

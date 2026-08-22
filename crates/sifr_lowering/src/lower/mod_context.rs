@@ -20,10 +20,20 @@ use sifr_type_system::{FunctionType, Type};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use workload_annotations::WorkloadKind;
 
+#[derive(Clone)]
+pub(in crate::lower) struct LocalFunctionMetadata {
+    pub(in crate::lower) signature: FunctionType,
+    pub(in crate::lower) defaults: Vec<(usize, HirExpr)>,
+    pub(in crate::lower) vararg_index: Option<usize>,
+    pub(in crate::lower) workload: Option<WorkloadKind>,
+}
+
 /// The lowering context that tracks state during AST->HIR conversion.
 pub(in crate::lower) struct LowerCtx {
     /// Function signatures (name -> type)
     pub(in crate::lower) functions: HashMap<String, FunctionType>,
+    /// Nested-function metadata keyed by the lexical function binding.
+    pub(in crate::lower) local_function_metadata: HashMap<BindingId, LocalFunctionMetadata>,
     /// Resolved local callable name -> typed compiler intrinsic identity.
     pub(in crate::lower) compiler_intrinsics: HashMap<String, CompilerIntrinsicId>,
     pub(in crate::lower) async_functions: std::collections::HashSet<String>,
@@ -239,6 +249,7 @@ impl LowerCtx {
     pub(in crate::lower) fn new() -> Self {
         Self {
             functions: HashMap::new(),
+            local_function_metadata: HashMap::new(),
             compiler_intrinsics: HashMap::new(),
             async_functions: std::collections::HashSet::new(),
             async_generator_functions: std::collections::HashSet::new(),
@@ -363,6 +374,17 @@ impl LowerCtx {
             const_integer_values: HashMap::new(),
             flow_effects: Vec::new(),
         }
+    }
+
+    pub(in crate::lower) fn visible_local_function_metadata(
+        &self,
+        name: &str,
+    ) -> Option<&LocalFunctionMetadata> {
+        let binding = self.scope.lookup(name)?;
+        binding
+            .is_function_binding()
+            .then(|| self.local_function_metadata.get(&binding.binding_id))
+            .flatten()
     }
 
     pub(in crate::lower) fn is_stdlib_lowering(&self) -> bool {

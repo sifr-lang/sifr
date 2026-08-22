@@ -400,7 +400,11 @@ pub(super) fn infer_call_type(
                 }
                 return inferred.return_type;
             }
-            if let Some(function_type) = ctx.functions.get(name.id.as_str()).cloned() {
+            let function_type = ctx
+                .visible_local_function_metadata(name.id.as_str())
+                .map(|metadata| metadata.signature.clone())
+                .or_else(|| ctx.functions.get(name.id.as_str()).cloned());
+            if let Some(function_type) = function_type {
                 return infer_registered_call(
                     call,
                     &function_type,
