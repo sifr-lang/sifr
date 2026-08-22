@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10D are complete. Item 10E is next.
+Status: active on 2026-08-22. Items 0 through 10E are complete. Item 10F is next.
 
 ## Objective
 
@@ -68,6 +68,7 @@ This planning change makes these transfers effective when it merges:
 | Unmatched conditional handlers | Item 10C review found that an `IOError` kind handler can fall through without propagating an unmatched error. | Item 10G |
 | Nested `try/finally` propagation | Item 10C review found that nested `try/finally` can select an invariant panic inside a non-return-capturing `try` closure. | Item 10H |
 | Diagnostic harness Clippy | Item 10C validation confirmed that Item 3 passed `FixtureLayout` by value although the helper only borrows it. | Item 10I |
+| Nested-function signature scope | Item 10E remediation review found that nested calls can combine a scoped callable binding with an unscoped name-keyed signature. | Item 10J |
 
 The archived static-class phase no longer owns active corrective work. Item 10
 owns its unresolved method-slot fixture and runtime evidence.
@@ -161,6 +162,7 @@ scope and does not repeat that work.
 | Unmatched `IOError` kind | A conditional handler chain has no residual-error path when no kind condition matches. | Item 10G |
 | Nested `try/finally` panic | Error capability is inferred from return capture, so a nested `try/finally` can emit a reachable invariant panic. | Item 10H |
 | Diagnostic harness strict Clippy | `fixture_name_for_seed` consumes a non-`Copy` layout enum that it only inspects. | Item 10I |
+| Nested-function signature collision | The scope binding is lexical, but the function signature registry is name-keyed and is not restored when a sibling scope ends. | Item 10J |
 | Read-only Python duration | The latest contended run completed in 314,714 ms. An isolated run completed in approximately 68 seconds. | Qualification rule B |
 
 ## Scope
@@ -187,6 +189,7 @@ scope and does not repeat that work.
 - Preserve unmatched conditional errors through the checked error channel.
 - Preserve nested `try/finally` errors inside every error-capable `try` closure.
 - Remove the Item 3 diagnostic-harness strict-Clippy warning.
+- Keep nested-function callable metadata in the same lexical scope as its binding.
 - Add regression guards for the migrated evidence and representation defects.
 - Record completion evidence from the linked owner.
 - Qualify the read-only Python doctor without a timeout increase.
@@ -227,6 +230,7 @@ Item 0  baseline and ownership lock
   -> Item 10G unmatched conditional handler propagation
   -> Item 10H nested try/finally error propagation
   -> Item 10I diagnostic harness strict Clippy
+  -> Item 10J nested-function signature scope
   -> linked delivery A final validation and merge
   -> Item 11 linked delivery and timeout qualification
   -> Item 12 final regression guard and closure
@@ -1340,6 +1344,48 @@ Acceptance criteria:
 - Traversal configurations preserve their documented body behavior.
 - Focused traversal, code-generation, and native-build tests pass.
 
+### Item 10E record
+
+State: complete
+
+PR: [#3458](https://github.com/sifr-lang/sifr/pull/3458)
+
+Base SHA: `218ba6029ff3de4ab75803925e15536c5bdeed0b`
+
+Candidate SHA: `76a19d209d875906b0d7c9751d7216b206a58976`
+
+Merge SHA: `f479d6ad68c265d8b1b846cc7a7aaf0ee4f9a21a`
+
+Changed paths: canonical HIR traversal and reference queries, `try` value
+liveness, nested-function code generation, declared-call argument resolution,
+function-binding provenance, scope tests, and one native fixture.
+
+Validation: all 1,121 code-generation tests passed. In lowering, 1,032 tests
+passed and one test was ignored. The native nested-default fixture built and
+ran. Affected-package Clippy passed with warnings denied. Demo freshness, HIR
+maintainability, the 3,217-file size guardrail, formatting, and diff checks
+passed. Unsupported name and call defaults still produce `SIFR-TYPE-0011`.
+
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all preceding checks and stopped only at linked delivery A's stale
+Rust-interop evidence path. Neither gate was repeated. The evidence is in the
+[#3458 gate comment](https://github.com/sifr-lang/sifr/pull/3458#issuecomment-5381103242).
+
+Review evidence: the first exact-SHA Opus review returned `BLOCKED`. It found
+that explicit keyword values could be replaced by defaults and that tuple
+rebinding retained function provenance. The one permitted remediation review
+on the final candidate returned `SATISFIED`. No third review ran. The evidence
+is in the [first review comment](https://github.com/sifr-lang/sifr/pull/3458#issuecomment-5381102552)
+and the [remediation review comment](https://github.com/sifr-lang/sifr/pull/3458#issuecomment-5381102557).
+
+Deferred follow-up: Item 10J owns the new mechanism risk found by the second
+review. A lexical nested-function binding can consult an unscoped name-keyed
+signature left by a sibling scope. The stricter optional-widening behavior and
+the cosmetic vararg diagnostic range are recorded as non-blocking review
+observations. Linked delivery A retains its stale Rust-interop evidence path.
+
+Next action: implement Item 10F.
+
 ## Item 10F: Complete Imported Union Nominal Paths
 
 Purpose: Give every imported union member one canonical crate-root nominal
@@ -1417,6 +1463,25 @@ Acceptance criteria:
 - Workspace Clippy passes with warnings denied after all earlier owners merge.
 - Diagnostic rendering produces the same canonical fixture names.
 - Focused diagnostic harness tests pass.
+
+## Item 10J: Scope Nested-function Signature Metadata
+
+Purpose: Keep a nested function's callable metadata aligned with its lexical
+binding when sibling scopes declare the same name.
+
+Scope:
+
+- Store or resolve nested-function signatures by lexical binding identity.
+- Restore or remove nested-function metadata when its scope ends.
+- Keep parameter types, defaults, varargs, and calling conventions aligned.
+- Do not add a basename fallback or change ordinary `Callable` behavior.
+
+Acceptance criteria:
+
+- Same-named nested functions in sibling scopes use their own signatures.
+- Argument validation cannot truncate a mismatched signature and binding.
+- Nested defaults, keyword arguments, and varargs use the scoped declaration.
+- Focused lowering, code-generation, and native-run tests pass.
 
 ## Required Linked Delivery A: Rust-interop Evidence Path
 
@@ -1533,6 +1598,7 @@ Acceptance criteria:
 | Conditional handler residuals | Focused error-effect, exact-handler, and native propagation tests |
 | Nested try-finally propagation | Focused nested cleanup, typed-error, and native-run tests |
 | Diagnostic harness Clippy | Focused harness tests and workspace Clippy with warnings denied |
+| Nested-function signature scope | Focused sibling-scope, default, vararg, and native-call tests |
 | Regression guards | Focused stale-path, stale-hash, nominal-identity, conversion, and no-compatibility self-tests |
 | Python doctor | One final-candidate run and one isolated profile only after a timeout |
 
@@ -1588,6 +1654,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10D are complete and recorded.
+Current state: Items 0 through 10E are complete and recorded.
 
-Next action: implement Item 10E.
+Next action: implement Item 10F.
