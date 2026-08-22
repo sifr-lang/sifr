@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10M are complete. Item 10N is next.
+Status: active on 2026-08-22. Items 0 through 10N are complete. Item 10O is next.
 
 ## Objective
 
@@ -1897,6 +1897,47 @@ Acceptance criteria:
 - Same-named helpers in sibling scopes do not change receiver analysis.
 - Focused lowering, code-generation, and native-run tests pass.
 
+### Item 10N record
+
+State: complete
+
+PR: [#3476](https://github.com/sifr-lang/sifr/pull/3476)
+
+Base SHA: `51106f45666ea477b225dc058845801eaaec3a18`
+
+Candidate SHA: `60a65c6b909329697fa8e148efe8b96b7774f5e9`
+
+Merge SHA: `b7773f417d0a2b1f876fbb01170e058c510376bb`
+
+Changed paths: method receiver analysis, a focused lowering test module,
+code-generation regressions, and one native nested-helper fixture.
+
+Validation: 1,041 lowering tests passed, with one ignored. All 1,137
+code-generation tests passed. The new sibling-helper fixture built and ran
+release-native. Strict lowering and code-generation Clippy, formatting, HIR
+maintainability, diff checks, and the 3,229-file size guardrail passed. A
+controlled mutation check restored only the old module-name lookup; the
+immutable-receiver regression then failed because lowering wrongly succeeded.
+
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all preceding checks and stopped only at linked delivery A's stale Rust-interop
+evidence path. Neither gate was repeated. The evidence is in the
+[#3476 create-PR gate comment](https://github.com/sifr-lang/sifr/pull/3476#issuecomment-5382200597)
+and the
+[#3476 merge gate comment](https://github.com/sifr-lang/sifr/pull/3476#issuecomment-5382209257).
+
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. It confirmed that lexical call resolution, checked mutable
+places, receiver analysis, and code generation now use one per-call authority.
+It also confirmed that no legitimate module-function mutation signal was lost.
+The evidence is in the
+[#3476 review comment](https://github.com/sifr-lang/sifr/pull/3476#issuecomment-5382191968).
+
+Deferred follow-up: linked delivery A retains its stale Rust-interop evidence
+path. No new Item 10N mechanism defect was found.
+
+Next action: implement Item 10O.
+
 ## Item 10O: Isolate Nested-function Try-finally Error Discovery
 
 Purpose: Keep an enclosing `try/finally` carrier independent from error types
@@ -2094,6 +2135,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10M are complete and recorded.
+Current state: Items 0 through 10N are complete and recorded.
 
-Next action: implement Item 10N.
+Next action: implement Item 10O.
