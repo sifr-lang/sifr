@@ -254,6 +254,10 @@ impl RustEmitter {
         // only returns from the closure-backed try body need a carrier.
         let capture_returns =
             self.current_return_type.is_some() && queries::body_contains_return(body);
+        let body_always_raises = matches!(
+            queries::block_control_flow_effect(body),
+            sifr_ir::HirControlFlowEffect::AlwaysRaises
+        );
         let direct_return_capture = capture_returns
             && queries::block_control_flow_effect(body).always_exits()
             && handlers
@@ -360,6 +364,12 @@ impl RustEmitter {
                         .collect(),
                 )],
             })));
+        } else if body_always_raises {
+            closure_body.push(RustStmt::Expr(RustExpr::FormatMacro {
+                name: "unreachable".to_string(),
+                format_str: "sifr try/except raising body fell through".to_string(),
+                args: vec![],
+            }));
         } else if !capture_returns {
             closure_body.push(RustStmt::Return(Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Ident("Ok".to_string())),
@@ -498,6 +508,37 @@ impl RustEmitter {
                     })],
                 });
             }
+        } else if body_always_raises {
+            let Some(handler_chain) = self.lower_try_except_handler_chain_for_ir(
+                handlers,
+                "__sifr_try_err",
+                error_carrier.as_ref(),
+                &err_ty,
+            )?
+            else {
+                return Ok(None);
+            };
+            lowered.push(RustStmt::Match {
+                expr: RustExpr::Ident("__sifr_try_res".to_string()),
+                arms: vec![
+                    crate::RustMatchArm {
+                        pattern: "Ok(())".to_string(),
+                        bindings: vec![],
+                        guard: None,
+                        body: vec![RustStmt::Expr(RustExpr::FormatMacro {
+                            name: "unreachable".to_string(),
+                            format_str: "sifr try/except raising body returned success".to_string(),
+                            args: vec![],
+                        })],
+                    },
+                    crate::RustMatchArm {
+                        pattern: "Err(__sifr_try_err)".to_string(),
+                        bindings: vec!["__sifr_try_err".to_string()],
+                        guard: None,
+                        body: handler_chain,
+                    },
+                ],
+            });
         } else {
             let Some(handler_chain) = self.lower_try_except_handler_chain_for_ir(
                 handlers,

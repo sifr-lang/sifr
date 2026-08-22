@@ -5427,11 +5427,16 @@ fn demo_user_defined_error() {
     println!("=== 7. User-Defined Error ===");
     let __sifr_try_res: Result<(), ValueError> = (|| {
         return Err(ValueError::new("connection timed out after 30s".to_string()));
-        Ok(())
+        unreachable!("sifr try/except raising body fell through");
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        println!("ValueError: {}", e.message.clone());
+    match __sifr_try_res {
+        Ok(()) => {
+            unreachable!("sifr try/except raising body returned success");
+        }
+        Err(__sifr_try_err) => {
+            let e = __sifr_try_err.clone();
+            println!("ValueError: {}", e.message.clone());
+        }
     }
     println!("User-defined errors inherit message from Error");
 }
