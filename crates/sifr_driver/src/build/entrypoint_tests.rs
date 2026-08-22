@@ -1,6 +1,6 @@
 use super::*;
 use sifr_frontend::DiskSourceProvider;
-use sifr_stdlib_manifest::StdlibFeature;
+use sifr_stdlib_manifest::{planned_sifr_stdlib_features, StdlibFeature};
 
 fn mktemp_dir(name: &str) -> PathBuf {
     let unique = format!(
@@ -117,8 +117,17 @@ fn test_project_entrypoint_plan_aggregates_reachable_dependency_metadata() {
     .expect("main should be written");
     std::fs::write(
         dir.join("helper.sifr"),
-        "from sifr.statistics import mean\n\n\
-def helper() -> int:\n    return 1\n",
+        concat!(
+            "from sifr.statistics import mean, StatisticsError\n",
+            "\n",
+            "def helper() -> float:\n",
+            "    try:\n",
+            "        value: float = mean([1.0, 2.0])\n",
+            "        return value\n",
+            "    except StatisticsError as error:\n",
+            "        _ = error.message\n",
+            "        return 0.0\n",
+        ),
     )
     .expect("helper should be written");
 
@@ -135,12 +144,18 @@ def helper() -> int:\n    return 1\n",
         .used_stdlib_modules
         .contains("sifr.statistics"));
     assert!(generated_project.used_stdlib_modules.contains("sifr.math"));
-    assert!(generated_project
-        .required_features
-        .contains(&StdlibFeature::NumBigint));
-    assert!(generated_project
+    let stdlib_features = planned_sifr_stdlib_features(
+        &generated_project.used_stdlib_modules,
+        &generated_project.required_features,
+    );
+    assert!(stdlib_features.contains("math"));
+    assert!(!stdlib_features.contains("numeric"));
+    assert!(!generated_project
         .required_features
         .contains(&StdlibFeature::NumTraits));
+    assert!(!generated_project
+        .required_features
+        .contains(&StdlibFeature::NumBigint));
 
     let _ = std::fs::remove_dir_all(dir);
 }

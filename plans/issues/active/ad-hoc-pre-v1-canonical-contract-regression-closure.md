@@ -467,16 +467,17 @@ Purpose: Make the driver test match reachable module metadata.
 Scope:
 
 - Keep the production dependency aggregation path unchanged unless evidence finds a defect.
-- Require `NumTraits` for the selected statistics project.
-- Assert that `NumBigint` is absent for that project.
+- Require the transitive `math` feature for the selected statistics project.
+- Assert that `NumTraits`, `NumBigint`, and the broad `numeric` feature are
+  absent for that project.
 - Add a separate positive `NumBigint` case only if current coverage is absent.
 
 Acceptance criteria:
 
 - The focused project-entrypoint tests pass.
-- A reachable feature appears in the generated dependency plan.
-- An unreachable feature does not appear in that plan.
-- The test does not use an unrelated module to request `NumBigint`.
+- The reachable `math` feature appears in the generated dependency plan.
+- The unreachable numeric features do not appear in that plan.
+- The test does not use an unrelated module to request a numeric feature.
 
 ## Item 5: Preserve Successful Sequential `try` Bindings
 
