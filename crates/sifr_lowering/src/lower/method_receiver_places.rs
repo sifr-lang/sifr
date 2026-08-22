@@ -381,6 +381,7 @@ fn prove_mutable_place(
     }
     match fact.binding_kind {
         BindingKind::Local => Ok(place),
+        BindingKind::Function => Err(InvalidPlace::Unsupported),
         BindingKind::ModuleConstant => Err(InvalidPlace::Unsupported),
         BindingKind::EphemeralLocal(_) => Err(InvalidPlace::Unsupported),
         BindingKind::Parameter => {

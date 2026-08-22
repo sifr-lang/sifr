@@ -1,4 +1,9 @@
 use super::generate_rust_from_source;
+use crate::generate_rust;
+use sifr_ir::{HirExpr, HirStmt};
+use sifr_lowering::lower_module;
+use sifr_python_parser::parse_module;
+use sifr_type_system::Type;
 
 const PROBE_ERROR: &str = r#"
 class ProbeError(Error):
@@ -206,6 +211,91 @@ def outer() -> Result[int, ProbeError]:
 
     assert!(generated.contains("let (value,) = match __sifr_try_res"));
     syn::parse_file(&generated).expect("captured live try binding Rust should parse");
+}
+
+#[test]
+fn nested_function_with_literal_default_uses_structured_codegen() {
+    let generated = generate_rust_from_source(
+        r#"
+def outer() -> int:
+    def read_value(candidate: int = 42) -> int:
+        return candidate
+
+    return read_value() + read_value(candidate=5)
+"#,
+    );
+
+    assert!(generated.contains("let read_value = |candidate: i64|"));
+    assert!(generated.contains("read_value(42_i64)"));
+    assert!(generated.contains("read_value(5_i64)"));
+    syn::parse_file(&generated).expect("nested literal default Rust should parse");
+}
+
+#[test]
+fn post_try_hir_default_reference_keeps_the_binding_live() {
+    let source = format!(
+        r#"{PROBE_ERROR}
+def outer() -> Result[int, ProbeError]:
+    try:
+        value: int = load_int(42)
+    except ProbeError as error:
+        raise error
+
+    def read_value(candidate: int = 1) -> int:
+        return candidate
+
+    return read_value()
+"#
+    );
+    let parsed = parse_module(&source).expect("parse failed");
+    let mut module = lower_module(parsed.suite())
+        .expect("lowering failed")
+        .module;
+    let outer = module
+        .functions
+        .iter_mut()
+        .find(|function| function.name == "outer")
+        .expect("outer function should lower");
+    let nested = outer
+        .body
+        .iter_mut()
+        .find_map(|stmt| match stmt {
+            HirStmt::NestedFunction { func, .. } if func.name == "read_value" => Some(func),
+            _ => None,
+        })
+        .expect("nested function should lower");
+    nested.params[0].default = Some(HirExpr::Name {
+        name: "value".to_string(),
+        binding_id: None,
+        ty: Type::Int,
+    });
+
+    let generated = generate_rust(&module);
+
+    assert!(generated.contains("let (value,) = match __sifr_try_res"));
+    syn::parse_file(&generated).expect("post-try HIR default Rust should parse");
+}
+
+#[test]
+fn shadowing_nested_parameter_does_not_keep_try_binding_live() {
+    let generated = generate_rust_from_source(&format!(
+        r#"{PROBE_ERROR}
+def outer() -> Result[int, ProbeError]:
+    try:
+        value: int = load_int(42)
+    except ProbeError as error:
+        raise error
+
+    def read_value(value: int) -> int:
+        return value
+
+    return read_value(7)
+"#
+    ));
+
+    assert!(!generated.contains("Ok((value,))"));
+    assert!(!generated.contains("let value: i64;"));
+    syn::parse_file(&generated).expect("shadowing nested parameter Rust should parse");
 }
 
 #[test]
