@@ -1,7 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: planned and rebaselined on 2026-08-21. No implementation item has
-started.
+Status: active on 2026-08-22. Item 0 locks the baseline and ownership.
 
 ## Objective
 
@@ -219,6 +218,58 @@ Acceptance criteria:
 - No active issue has duplicate implementation ownership.
 - The phase records all unexpected failures in their owning issues.
 - Items 1 through 10 do not start until the ownership transfers are effective.
+
+### Item 0 baseline evidence
+
+Base SHA: `4815e74c2cf59989e8eba5afb4f7ca2e31b7d097`.
+
+Only the phase-plan merge changed main after the rebaseline. Therefore, Item 0
+reuses the recorded validation evidence.
+
+| Inventory row | Exact baseline result | Owner |
+| --- | --- | --- |
+| `sifr_stdlib_all_features` | The all-features build cannot find removed `hash::sha256`, `hash::md5`, and `hash::sha1` functions. | Item 1 |
+| Rust shared-bridge evidence | The matrix requests `negative/package_generated_type_import_rejected.sifr`. The checked-in source is under `negative/src/`. | Linked delivery A |
+| Performance LSP cold start | Three variants use the obsolete sibling-manifest project shape. | Item 2 |
+| Performance trend variants | The stored `manifest_sha256` value does not match the benchmark manifest. | Item 3 |
+| Fuzz smoke | Two manifest fields omit `src/` from the canonical missing-import seed path. | Item 3 |
+| Ecosystem checksum variants | Five variants report stale checksums for `curated_cli_math` and `curated_data_flow`. | Item 3 |
+| Driver dependency test | The test incorrectly requires `NumBigint` for the selected statistics project. | Item 4 |
+| `cpython_hashlib_api_subset` | Generated Rust loses `handle` and `data` after successful sequential `try` bodies. | Item 5 |
+| Structured concurrency builds | Generated `Error` has no `From<ScopeFailure>` conversion for the project nominal. | Item 6 |
+| File-handle builds | Generated module-local and project-hoisted file-handle types are distinct Rust types. | Item 6 |
+| `nested_optional_safe_operations` | Generated Rust calls `unwrap_or` and `map` on a union after duplicate optional conversion. | Item 7 |
+| CLI CFG panics | Invalid source reaches `cfg.rs:300` with a branch terminator that has one target. | Item 8 |
+| Protocol diagnostic mismatch | The fixture expects `SIFR-PROTO-0001`, but unresolved `MissingBound` names produce `SIFR-NAME-0003`. | Item 9 |
+| Method-slot placeholder | `SlotContract` has an empty `pass` body in the matrix fixture. | Item 10 |
+| Method-slot runtime output | Runtime emits five canonical lines and count `3`. The driver expects four lines and count `2`. | Item 10 |
+| Read-only Python duration | All 25 variants passed in 314,714 ms. The isolated run passed in approximately 68 seconds. | Qualification rule B |
+
+The five failed areas map as follows:
+
+| Failed area | Inventory owner |
+| --- | --- |
+| Rust interop | Linked delivery A and Item 10 |
+| Generated-code quality | Item 6 |
+| Performance | Items 2 and 3 |
+| Fuzz | Item 3 |
+| Ecosystem | Item 3 |
+
+The three failed Cargo commands map as follows:
+
+| Failed Cargo command | Inventory owner |
+| --- | --- |
+| `sifr_stdlib` with all features | Item 1 |
+| Regular `sifr` suite | Items 8 and 9 |
+| Ignored `sifr_driver` suite | Items 4, 6, and 10 |
+
+The E2E runner reported 13 failed fixtures. The source defects are
+`cpython_hashlib_api_subset` and `nested_optional_safe_operations`. Eleven
+fixtures are collateral members of the failed optional-union batch.
+
+All rows have one current owner. No new failure needs a new issue. The
+installed-sysroot boundary remains an approved resolved row and stays outside
+this phase.
 
 ## Item 1: Migrate the Native Hash Test to Bytes
 
@@ -599,10 +650,7 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: the phase plan is rebaselined at
-`b52fbc7e46257a7fd14d8f551fc9f2c28fb4ac47`. No implementation item has
-started.
+Current state: Item 0 locks the baseline on
+`4815e74c2cf59989e8eba5afb4f7ca2e31b7d097`.
 
-Next action: start Item 0 in a separate phase-closure session. Reuse this
-evidence if main is unchanged. If main changes, run only the affected focused
-tests again.
+Next action: review and merge Item 0. Then record its merge and start Item 1.
