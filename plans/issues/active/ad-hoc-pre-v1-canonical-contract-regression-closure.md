@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10J are complete. Item 10K is next.
+Status: active on 2026-08-22. Items 0 through 10K are complete. Item 10L is next.
 
 ## Objective
 
@@ -1713,6 +1713,47 @@ Acceptance criteria:
 - `nominal_identity_alias_paths` builds and runs through its existing checks.
 - Focused inheritance, project-code-generation, and native-run tests pass.
 
+### Item 10K record
+
+State: complete
+
+PR: [#3470](https://github.com/sifr-lang/sifr/pull/3470)
+
+Base SHA: `3a8d4892c7d4ef0e82135496c5943528bbb9ebcd`
+
+Candidate SHA: `b3146d9fca6647132fc5ffd1a7e3fbc03fb9b233`
+
+Merge SHA: `fa94a64c617f038e69a166953c0b67ae613575ad`
+
+Changed paths: project and test-project code generation, project stdlib
+nominal relocation, the relocation-specific Rust-item filter, and focused
+filter and project-plan tests.
+
+Validation: all 1,132 code-generation tests passed. The existing
+`nominal_identity_alias_paths` fixture built and ran release-native through
+project code generation. Strict code-generation Clippy, formatting, HIR
+maintainability, diff checks, and the 3,225-file size guardrail passed.
+
+The private target exceeded 20 GiB, so the required worktree-local
+`cargo clean` ran before the create-PR gate. The create-PR and merge gates each
+ran once on the candidate SHA. Each passed all preceding checks and stopped
+only at linked delivery A's stale Rust-interop evidence path. Neither gate was
+repeated. The evidence is in the
+[#3470 create-PR gate comment](https://github.com/sifr-lang/sifr/pull/3470#issuecomment-5381846942)
+and the
+[#3470 merge gate comment](https://github.com/sifr-lang/sifr/pull/3470#issuecomment-5381856507).
+
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. It confirmed exact user-class selection, generic child
+support, multi-module parent imports, and coherent parent ownership. The
+evidence is in the
+[#3470 review comment](https://github.com/sifr-lang/sifr/pull/3470#issuecomment-5381830553).
+
+Deferred follow-up: linked delivery A retains its stale Rust-interop evidence
+path. No new Item 10K mechanism defect was found.
+
+Next action: implement Item 10L.
+
 ## Item 10L: Match User-defined Parent Error Handlers
 
 Purpose: Make generated handler dispatch follow the same user-defined error
@@ -1947,6 +1988,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10J are complete and recorded.
+Current state: Items 0 through 10K are complete and recorded.
 
-Next action: implement Item 10K.
+Next action: implement Item 10L.
