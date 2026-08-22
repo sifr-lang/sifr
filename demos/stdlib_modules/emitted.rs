@@ -1590,6 +1590,11 @@ impl __SifrStdlib_sifr_x2eio_x2eIOBase {
         }
     }
 }
+impl ::std::default::Default for __SifrStdlib_sifr_x2eio_x2eIOBase {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl __SifrStdlib_sifr_x2eio_x2eIOBase {
     fn close(&mut self) {
         self._closed = true;
@@ -2160,6 +2165,11 @@ impl __SifrStdlib_sifr_x2eio_x2eTextReader {
         }
     }
 }
+impl ::std::default::Default for __SifrStdlib_sifr_x2eio_x2eTextReader {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl __SifrStdlib_sifr_x2eio_x2eTextReader {
     fn read(&self) -> Result<String, IOError> {
         Err(
@@ -2208,6 +2218,11 @@ impl __SifrStdlib_sifr_x2eio_x2eTextWriter {
         Self {
             _closed: __sifr_field_init_0,
         }
+    }
+}
+impl ::std::default::Default for __SifrStdlib_sifr_x2eio_x2eTextWriter {
+    fn default() -> Self {
+        Self::new()
     }
 }
 impl __SifrStdlib_sifr_x2eio_x2eTextWriter {

@@ -1270,6 +1270,11 @@ impl __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
         Self {}
     }
 }
+impl ::std::default::Default for __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
     fn seed(&self, _seed_value: Option<i64>) {}
 }
@@ -1766,6 +1771,11 @@ struct Doubler {}
 impl Doubler {
     fn new() -> Self {
         Self {}
+    }
+}
+impl ::std::default::Default for Doubler {
+    fn default() -> Self {
+        Self::new()
     }
 }
 impl Doubler {

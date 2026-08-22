@@ -196,6 +196,12 @@ impl MathHelper {
     }
 }
 
+impl ::std::default::Default for MathHelper {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MathHelper {
     fn clamp(value: f64, low: f64, high: f64) -> f64 {
         if value < low {

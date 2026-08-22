@@ -92,6 +92,11 @@ mod __sifr_project_nominals {
             }
         }
     }
+    impl ::std::default::Default for __SifrStdlib_sifr_x2eargparse_x2eNamespace {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
     impl __SifrStdlib_sifr_x2eargparse_x2eNamespace {
         pub fn set(&mut self, name: &String, value: &String) {
             let mut updated: Vec<(String, String)> = vec![];
@@ -1113,6 +1118,11 @@ mod __sifr_project_nominals {
                 _ready_order: __sifr_field_init_5,
                 _next_index: __sifr_field_init_6,
             }
+        }
+    }
+    impl ::std::default::Default for __SifrStdlib_sifr_x2egraphlib_x2eTopologicalSorter {
+        fn default() -> Self {
+            Self::new()
         }
     }
     impl __SifrStdlib_sifr_x2egraphlib_x2eTopologicalSorter {
