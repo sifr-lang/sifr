@@ -239,6 +239,11 @@ mod __sifr_project_nominals {
             }
         }
     }
+    impl ::std::default::Default for __SifrStdlib_sifr_x2egraphlib_x2eTopologicalSorter {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
     impl __SifrStdlib_sifr_x2egraphlib_x2eTopologicalSorter {
         pub fn _record_node(&mut self, node: i64) {
             if !(_contains_int(&self.nodes, node)) {
@@ -1883,6 +1888,11 @@ mod __sifr_project_nominals {
             }
         }
     }
+    impl ::std::default::Default for __SifrStdlib_sifr_x2eio_x2eIOBase {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
     impl __SifrStdlib_sifr_x2eio_x2eIOBase {
         pub fn close(&mut self) {
             self._closed = true;
@@ -2453,6 +2463,11 @@ mod __sifr_project_nominals {
             }
         }
     }
+    impl ::std::default::Default for __SifrStdlib_sifr_x2eio_x2eTextReader {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
     impl __SifrStdlib_sifr_x2eio_x2eTextReader {
         pub fn read(&self) -> Result<String, IOError> {
             Err(
@@ -2501,6 +2516,11 @@ mod __sifr_project_nominals {
             Self {
                 _closed: __sifr_field_init_0,
             }
+        }
+    }
+    impl ::std::default::Default for __SifrStdlib_sifr_x2eio_x2eTextWriter {
+        fn default() -> Self {
+            Self::new()
         }
     }
     impl __SifrStdlib_sifr_x2eio_x2eTextWriter {

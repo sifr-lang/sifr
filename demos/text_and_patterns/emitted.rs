@@ -70,6 +70,11 @@ mod __sifr_project_nominals {
             Self {}
         }
     }
+    impl ::std::default::Default for __SifrStdlib_sifr_x2estring_x2eFormatter {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
     impl __SifrStdlib_sifr_x2estring_x2eFormatter {
         pub fn format(
             &self,

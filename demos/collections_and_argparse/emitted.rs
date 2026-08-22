@@ -93,6 +93,11 @@ mod __sifr_project_nominals {
             }
         }
     }
+    impl ::std::default::Default for __SifrStdlib_sifr_x2eargparse_x2eNamespace {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
     impl __SifrStdlib_sifr_x2eargparse_x2eNamespace {
         pub fn set(&mut self, name: &String, value: &String) {
             let mut updated: Vec<(String, String)> = vec![];
