@@ -34,7 +34,16 @@ pub(super) struct ParamState {
     pub(super) ty: Type,
     pub(super) explicit: bool,
     pub(super) convention: sifr_python_ast::AstParamConvention,
+    pub(super) kind: ParamKind,
     pub(super) mutated: bool,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum ParamKind {
+    Positional,
+    Vararg,
+    KeywordOnly,
+    Kwarg,
 }
 
 #[derive(Clone)]
@@ -290,24 +299,72 @@ fn collect_function_states<'a>(
             continue;
         };
 
-        let mut params = Vec::new();
-        let resolved_params = func
-            .parameters
-            .args
-            .iter()
-            .map(|param| {
-                let name = param.parameter.name.to_string();
-                let (ty, explicit) = if let Some(annotation) = &param.parameter.annotation {
-                    (resolve_annotation_expr(annotation, ctx), true)
-                } else {
-                    (Type::Unknown, false)
-                };
-                (name, ty, explicit)
-            })
-            .collect::<Vec<_>>();
+        let mut resolved_params = Vec::new();
+        for param in &func.parameters.args {
+            let name = param.parameter.name.to_string();
+            let (ty, explicit) = if let Some(annotation) = &param.parameter.annotation {
+                (resolve_annotation_expr(annotation, ctx), true)
+            } else {
+                (Type::Unknown, false)
+            };
+            resolved_params.push((
+                name,
+                param.parameter.name.range(),
+                ty,
+                explicit,
+                param.parameter.convention,
+                ParamKind::Positional,
+            ));
+        }
+        if let Some(vararg) = &func.parameters.vararg {
+            let (element_ty, explicit) = if let Some(annotation) = &vararg.annotation {
+                (resolve_annotation_expr(annotation, ctx), true)
+            } else {
+                (Type::Unknown, false)
+            };
+            resolved_params.push((
+                vararg.name.to_string(),
+                vararg.name.range(),
+                Type::List(Box::new(element_ty)),
+                explicit,
+                vararg.convention,
+                ParamKind::Vararg,
+            ));
+        }
+        for param in &func.parameters.kwonlyargs {
+            let name = param.parameter.name.to_string();
+            let (ty, explicit) = if let Some(annotation) = &param.parameter.annotation {
+                (resolve_annotation_expr(annotation, ctx), true)
+            } else {
+                (Type::Unknown, false)
+            };
+            resolved_params.push((
+                name,
+                param.parameter.name.range(),
+                ty,
+                explicit,
+                param.parameter.convention,
+                ParamKind::KeywordOnly,
+            ));
+        }
+        if let Some(kwarg) = &func.parameters.kwarg {
+            let (value_ty, explicit) = if let Some(annotation) = &kwarg.annotation {
+                (resolve_annotation_expr(annotation, ctx), true)
+            } else {
+                (Type::Unknown, false)
+            };
+            resolved_params.push((
+                kwarg.name.to_string(),
+                kwarg.name.range(),
+                Type::Dict(Box::new(Type::Str), Box::new(value_ty)),
+                explicit,
+                kwarg.convention,
+                ParamKind::Kwarg,
+            ));
+        }
         let param_types = resolved_params
             .iter()
-            .map(|(name, ty, _)| {
+            .map(|(name, _, ty, _, _, _)| {
                 let candidate = if ty.is_unknown() {
                     MutationCandidate::InferFromUsage
                 } else {
@@ -317,14 +374,17 @@ fn collect_function_states<'a>(
             })
             .collect::<HashMap<_, _>>();
         let mutated_params = collect_mutated_binding_names(&func.body, &param_types);
-        for (param, (name, ty, explicit)) in func.parameters.args.iter().zip(resolved_params) {
+        let mut params = Vec::with_capacity(resolved_params.len());
+        for (name, name_range, ty, explicit, convention, kind) in resolved_params {
+            let mutated = mutated_params.contains(&name);
             params.push(ParamState {
                 name,
-                name_range: param.parameter.name.range(),
+                name_range,
                 ty,
                 explicit,
-                convention: param.parameter.convention,
-                mutated: mutated_params.contains(param.parameter.name.as_str()),
+                convention,
+                kind,
+                mutated,
             });
         }
 
@@ -375,7 +435,7 @@ pub(super) fn finalize_nested_function_types(
 
     for state in states.values_mut() {
         for param in &mut state.params {
-            if !param.explicit && param.ty.is_unknown() {
+            if !param.explicit && param.ty.contains_unknown_or_any() {
                 state.inference_failed = true;
                 ctx.error_with_code_at(
                     DiagnosticCode::TYPE_MISSING_ANNOTATION,

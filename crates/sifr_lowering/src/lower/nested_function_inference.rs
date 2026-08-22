@@ -25,6 +25,8 @@ use type_unification::{
 };
 mod generic_call_inference;
 use generic_call_inference::infer_registered_call;
+mod call_argument_inference;
+use call_argument_inference::unify_inferred_call_arguments;
 mod return_inference;
 use return_inference::unify_function_return;
 mod compound_statement_inference;

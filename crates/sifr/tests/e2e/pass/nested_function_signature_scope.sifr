@@ -1,0 +1,57 @@
+def evaluate(flag: bool) -> int:
+    def helper(value: int = 40, *extra: int) -> int:
+        return value + len(extra)
+
+    if flag:
+        def helper(prefix: str, suffix: str = "!") -> str:
+            return prefix + suffix
+
+        assert helper("ok") == "ok!"
+
+    return helper() + helper(value=1) + helper(1, 2, 3)
+
+
+def evaluate_loop(count: int) -> int:
+    def helper(value: int = 3, *rest: int) -> int:
+        return value + len(rest)
+
+    for i in range(count):
+        def helper(value: str) -> str:
+            return value
+
+        assert helper("x") == "x"
+
+    return helper() + helper(1, 2, 3)
+
+
+def evaluate_exiting_branch(flag: bool) -> int:
+    def helper(value: int = 3, *rest: int) -> int:
+        return value + len(rest)
+
+    if flag:
+        def helper(value: str) -> str:
+            return value
+
+        return len(helper("x"))
+
+    return helper() + helper(1, 2, 3)
+
+
+def inferred_vararg() -> int:
+    def helper(*extra):
+        return len(extra)
+
+    return helper(1, 2)
+
+
+def main() -> None:
+    assert evaluate(False) == 44
+    assert evaluate(True) == 44
+    assert evaluate_loop(0) == 6
+    assert evaluate_loop(1) == 6
+    assert evaluate_exiting_branch(False) == 6
+    assert evaluate_exiting_branch(True) == 1
+    assert inferred_vararg() == 2
+
+
+main()

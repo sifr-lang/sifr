@@ -606,24 +606,20 @@ pub(in crate::lower) fn register_local_function_signature(
         func.is_async && !function_body_contains_yield(&func.body),
     );
     let defaults = collect_function_defaults(func, ctx);
-
-    if !defaults.is_empty() {
-        ctx.function_defaults
-            .insert(function_name.clone(), defaults);
-    }
-    ctx.scope
-        .define_function(function_name.clone(), callable_ty);
-    ctx.functions.insert(function_name.clone(), ft.clone());
-    if let Some(workload) =
-        workload_annotations::annotation_for_decorators(func.decorator_list.iter())
-    {
-        ctx.function_workload_annotations
-            .insert(function_name.clone(), workload);
-    }
-    if func.parameters.vararg.is_some() {
-        ctx.vararg_functions
-            .insert(function_name, func.parameters.args.len());
-    }
+    let binding_id = ctx.scope.define_function(function_name, callable_ty);
+    ctx.local_function_metadata.insert(
+        binding_id,
+        super::super::LocalFunctionMetadata {
+            signature: ft.clone(),
+            defaults,
+            vararg_index: func
+                .parameters
+                .vararg
+                .as_ref()
+                .map(|_| func.parameters.args.len()),
+            workload: workload_annotations::annotation_for_decorators(func.decorator_list.iter()),
+        },
+    );
 
     ft
 }
@@ -632,10 +628,8 @@ pub(in crate::lower) fn register_local_function_symbol(
     func: &StmtFunctionDef,
     ctx: &mut LowerCtx,
 ) -> FunctionType {
-    if let Some(existing) = ctx.functions.get(func.name.as_str()) {
-        if ctx.scope.lookup(func.name.as_str()).is_some() {
-            return existing.clone();
-        }
+    if let Some(existing) = ctx.visible_local_function_metadata(func.name.as_str()) {
+        return existing.signature.clone();
     }
 
     register_local_function_signature(func, extract_function_type(func, ctx), ctx)

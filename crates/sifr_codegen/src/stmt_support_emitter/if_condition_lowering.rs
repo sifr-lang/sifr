@@ -421,9 +421,8 @@ impl RustEmitter {
             && else_body.is_none()
             && crate::helpers::codegen_body_always_exits(then_body)
         {
-            let speculative_string_char_cache_vars = self.string_char_cache_vars.clone();
-            let Some(lowered_then_body) = self.try_lower_stmt_block_for_ir(then_body)? else {
-                self.string_char_cache_vars = speculative_string_char_cache_vars;
+            let Some(lowered_then_body) = self.try_lower_scoped_stmt_block_for_ir(then_body)?
+            else {
                 return Ok(None);
             };
             if let Some(option_vars) = self.detect_or_is_none_vars_with_bindings_for_ir(condition) {
@@ -441,7 +440,6 @@ impl RustEmitter {
                         .map(|option_var| self.option_binding_value_expr_for_ir(option_var))
                         .collect(),
                 );
-                self.string_char_cache_vars = speculative_string_char_cache_vars;
                 return Ok(Some(RustStmt::LetElse {
                     pattern,
                     value,
@@ -451,7 +449,6 @@ impl RustEmitter {
             if let Some(option_var) = crate::helpers::detect_is_none_var(condition)
                 .or_else(|| crate::helpers::detect_not_option_truthiness(condition))
             {
-                self.string_char_cache_vars = speculative_string_char_cache_vars;
                 return Ok(Some(RustStmt::LetElse {
                     pattern: self.option_binding_pattern_for_ir(&option_var),
                     value: self.option_binding_value_expr_for_ir(&option_var),
@@ -475,14 +472,12 @@ impl RustEmitter {
                         .map(|option_var| self.option_binding_value_expr_for_ir(option_var))
                         .collect(),
                 );
-                self.string_char_cache_vars = speculative_string_char_cache_vars;
                 return Ok(Some(RustStmt::LetElse {
                     pattern,
                     value,
                     else_body: lowered_then_body,
                 }));
             }
-            self.string_char_cache_vars = speculative_string_char_cache_vars;
         }
 
         let mut nested_else = if let Some(else_body) = else_body {
