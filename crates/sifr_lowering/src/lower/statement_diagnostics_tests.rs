@@ -188,3 +188,66 @@ def main():
         [HirStmt::Assign { name, .. }] if name == "value"
     ));
 }
+
+#[test]
+fn successful_try_binding_is_visible_when_every_handler_exits() {
+    let source = "\
+def fallible() -> Result[str, ValueError]:
+    return \"value\"
+
+def main() -> Result[str, ValueError]:
+    try:
+        value: str = fallible()
+    except ValueError as error:
+        raise error
+    return value
+";
+    let parsed = parse_module(source).expect("parse failed");
+    lower_module(parsed.suite()).expect("successful try binding should remain visible");
+}
+
+#[test]
+fn try_binding_is_undefined_when_a_handler_continues_without_it() {
+    let source = "\
+def fallible() -> Result[str, ValueError]:
+    return \"value\"
+
+def main() -> str:
+    try:
+        value: str = fallible()
+    except ValueError as error:
+        _ = error.message
+    return value
+";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::NAME_UNDEFINED_VARIABLE)
+            && error.message == "undefined variable: 'value'"
+    }));
+}
+
+#[test]
+fn successful_try_binding_preserves_moved_state() {
+    let source = "\
+def fallible() -> Result[str, ValueError]:
+    return \"value\"
+
+def consume(own value: str) -> None:
+    pass
+
+def main() -> Result[str, ValueError]:
+    try:
+        value: str = fallible()
+        consume(value)
+    except ValueError as error:
+        raise error
+    return value
+";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+            && error.message == "use of moved value: 'value'"
+    }));
+}

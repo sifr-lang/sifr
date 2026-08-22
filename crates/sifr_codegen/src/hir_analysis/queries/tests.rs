@@ -834,6 +834,10 @@ fn python_async_context_suppression_keeps_following_return_reachable() {
         },
     ];
 
+    assert_eq!(
+        block_control_flow_effect(&stmts[..1]),
+        ControlFlowEffect::FallsThrough
+    );
     assert!(body_contains_return(&stmts));
     assert_eq!(
         block_control_flow_effect(&stmts),

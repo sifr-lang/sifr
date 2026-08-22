@@ -486,6 +486,14 @@ impl Scope {
     pub fn lookup(&self, name: &str) -> Option<&VarInfo> {
         self.lookup_var(name)
     }
+    pub(crate) fn current_frame_binding(&self, name: &str) -> Option<&VarInfo> {
+        self.frames.last().and_then(|frame| frame.get(name))
+    }
+    pub(crate) fn restore_captured_binding(&mut self, name: String, info: VarInfo) {
+        if let Some(frame) = self.frames.last_mut() {
+            frame.insert(name, info);
+        }
+    }
 
     pub(crate) fn active_bindings(&self) -> Vec<(String, Type)> {
         let mut bindings = Vec::new();

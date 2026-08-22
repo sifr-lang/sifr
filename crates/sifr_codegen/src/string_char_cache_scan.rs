@@ -17,6 +17,17 @@ pub(crate) fn function_calls_itself(func: &HirFunction) -> bool {
     recursive
 }
 
+pub(crate) fn string_cache_uses_in_stmts(stmts: &[crate::HirStmt]) -> HashSet<String> {
+    let mut used = HashSet::new();
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut |_| {},
+        &mut |expr| collect_string_cache_uses(expr, &mut used),
+    );
+    used
+}
+
 pub(crate) fn collect_string_cache_uses(expr: &HirExpr, used: &mut HashSet<String>) {
     match expr {
         HirExpr::Index { object, .. } if matches!(object.ty().resolve_alias(), Type::Str) => {

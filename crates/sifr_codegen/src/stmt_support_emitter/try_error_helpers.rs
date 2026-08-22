@@ -1,15 +1,30 @@
-use super::{HirExceptHandler, HirStmt, RustExpr};
+use super::{HirExceptHandler, HirStmt, RustExpr, Type};
+
+pub(crate) fn successful_try_bindings(
+    body: &[HirStmt],
+    handlers: &[HirExceptHandler],
+) -> Vec<(String, Type)> {
+    if crate::hir_analysis::queries::block_control_flow_effect(body).always_exits()
+        || handlers.iter().any(|handler| {
+            !crate::hir_analysis::queries::block_control_flow_effect(&handler.body).always_exits()
+        })
+    {
+        return Vec::new();
+    }
+
+    let mut names = std::collections::HashSet::new();
+    body.iter()
+        .filter_map(|stmt| {
+            let HirStmt::Let { name, ty, .. } = stmt else {
+                return None;
+            };
+            (name != "_" && names.insert(name.clone())).then(|| (name.clone(), ty.clone()))
+        })
+        .collect()
+}
 
 pub(crate) fn io_error_kind_for_handler(error_type: &str) -> Option<&'static str> {
-    match error_type {
-        "FileNotFoundError" => Some("FileNotFound"),
-        "PermissionError" => Some("PermissionDenied"),
-        "FileExistsError" => Some("FileExists"),
-        "IsADirectoryError" => Some("IsADirectory"),
-        "NotADirectoryError" => Some("NotADirectory"),
-        "DirectoryNotEmptyError" => Some("DirectoryNotEmpty"),
-        _ => None,
-    }
+    sifr_type_system::io_error_kind(error_type)
 }
 
 pub(crate) fn select_try_error_type(handlers: &[HirExceptHandler]) -> String {

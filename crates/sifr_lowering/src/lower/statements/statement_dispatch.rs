@@ -457,22 +457,46 @@ pub(in crate::lower) fn lower_stmt(
             Some(HirStmt::With { items, body })
         }
         Stmt::Try(try_stmt) => {
+            let saved_narrowing = ctx.scope.save_narrowing_state();
+            let saved_moved = ctx.scope.save_moved_state();
+            let saved_const_integers = ctx.scope.save_const_integer_state();
             let prev_in_try = ctx.in_try_block;
             let prev_try_errors = std::mem::take(&mut ctx.try_block_error_types);
             ctx.in_try_block = true;
+            ctx.scope.push();
             let body = lower_stmts(&try_stmt.body, func_type, ctx);
+            let successful_body_bindings = body
+                .iter()
+                .filter_map(|stmt| {
+                    let HirStmt::Let { name, .. } = stmt else {
+                        return None;
+                    };
+                    ctx.scope
+                        .current_frame_binding(name)
+                        .cloned()
+                        .map(|info| (name.clone(), info))
+                })
+                .collect::<Vec<_>>();
+            ctx.scope.pop();
             ctx.in_try_block = prev_in_try;
             let mut try_error_types =
                 std::mem::replace(&mut ctx.try_block_error_types, prev_try_errors);
+            let body_narrowing = ctx.scope.save_narrowing_state();
+            let body_moved = ctx.scope.save_moved_state();
+            let body_const_integers = ctx.scope.save_const_integer_state();
 
             // Also collect error types from raise statements in the body
             collect_raise_error_types(&body, &mut try_error_types);
 
             let mut handlers = Vec::new();
+            let mut handler_moved_states = Vec::new();
             let mut has_catch_all = false;
             let mut covered_types = std::collections::HashSet::new();
 
             for handler in &try_stmt.handlers {
+                ctx.scope.restore_narrowing_state(&saved_narrowing);
+                ctx.scope.restore_moved_state(&saved_moved);
+                ctx.scope.restore_const_integer_state(&saved_const_integers);
                 let ExceptHandler::ExceptHandler(h) = handler;
                 let (error_type, error_type_range, invalid_error_type_form) =
                     if let Some(ref type_expr) = h.type_ {
@@ -546,6 +570,9 @@ pub(in crate::lower) fn lower_stmt(
                 }
                 let handler_body = lower_stmts(&h.body, func_type, ctx);
                 ctx.scope.pop();
+                let handler_exits =
+                    sifr_ir::block_control_flow_effect(&handler_body).always_exits();
+                handler_moved_states.push((ctx.scope.save_moved_state(), handler_exits));
 
                 handlers.push(HirExceptHandler {
                     error_type,
@@ -590,6 +617,32 @@ pub(in crate::lower) fn lower_stmt(
                         &sorted.join(", "),
                         try_stmt.range(),
                     );
+                }
+            }
+
+            let handlers_exit = handler_moved_states.iter().all(|(_, exits)| *exits);
+            if handlers_exit {
+                ctx.scope.restore_narrowing_state(&body_narrowing);
+                ctx.scope.restore_moved_state(&body_moved);
+                ctx.scope.restore_const_integer_state(&body_const_integers);
+                for (name, info) in successful_body_bindings {
+                    if name != "_" {
+                        ctx.scope.restore_captured_binding(name, info);
+                    }
+                }
+            } else {
+                ctx.scope.restore_narrowing_state(&saved_narrowing);
+                ctx.scope.restore_moved_state(&saved_moved);
+                ctx.scope.restore_const_integer_state(&saved_const_integers);
+                for (name, was_moved) in body_moved.iter().chain(
+                    handler_moved_states
+                        .iter()
+                        .filter(|(_, exits)| !*exits)
+                        .flat_map(|(state, _)| state.iter()),
+                ) {
+                    if *was_moved {
+                        ctx.mark_moved_with_flow(name);
+                    }
                 }
             }
 

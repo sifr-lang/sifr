@@ -40,6 +40,21 @@ pub use substitution::{
     substitution_preserves_union_structure_with_class_scopes, UnionStructureClassScope,
 };
 
+pub const IO_ERROR_KIND_CASES: [(&str, &str); 6] = [
+    ("FileNotFoundError", "FileNotFound"),
+    ("PermissionError", "PermissionDenied"),
+    ("FileExistsError", "FileExists"),
+    ("IsADirectoryError", "IsADirectory"),
+    ("NotADirectoryError", "NotADirectory"),
+    ("DirectoryNotEmptyError", "DirectoryNotEmpty"),
+];
+
+pub fn io_error_kind(error_type: &str) -> Option<&'static str> {
+    IO_ERROR_KIND_CASES
+        .iter()
+        .find_map(|(name, kind)| (*name == error_type).then_some(*kind))
+}
+
 /// Returns whether a declaration belongs to a public stdlib module's compiled
 /// export surface. Underscore-prefixed declarations are private except for the
 /// three CPython-compatible max-heap operations whose leading underscore is
