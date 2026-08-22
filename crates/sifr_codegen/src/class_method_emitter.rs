@@ -121,9 +121,18 @@ impl RustEmitter {
     pub(crate) fn lower_class_stmt_strict(
         &mut self,
         stmt: &HirStmt,
+        context: &str,
+    ) -> Vec<RustStmt> {
+        self.lower_class_stmt_strict_with_following(stmt, None, context)
+    }
+
+    pub(crate) fn lower_class_stmt_strict_with_following(
+        &mut self,
+        stmt: &HirStmt,
+        following_stmts: Option<&[HirStmt]>,
         _context: &str,
     ) -> Vec<RustStmt> {
-        self.capture_structured_stmts(|inner| inner.emit_stmt(stmt))
+        self.capture_structured_stmts(|inner| inner.emit_stmt_with_following(stmt, following_stmts))
     }
 
     pub(crate) fn lower_class_expr_strict(&mut self, expr: &HirExpr, context: &str) -> RustExpr {
@@ -279,11 +288,13 @@ impl RustEmitter {
         let mut field_inits = Vec::<(String, RustExpr)>::new();
         let mut instance_materialized = false;
 
-        for stmt in &method.body {
+        for (stmt_index, stmt) in method.body.iter().enumerate() {
+            let following_stmts = Some(&method.body[stmt_index + 1..]);
             if instance_materialized {
                 let rewritten = Self::rewrite_constructor_self(stmt);
-                body.extend(self.lower_class_stmt_strict(
+                body.extend(self.lower_class_stmt_strict_with_following(
                     &rewritten,
+                    following_stmts,
                     "class constructor post-initialization statement lowering",
                 ));
                 continue;
@@ -388,15 +399,17 @@ impl RustEmitter {
                 });
                 instance_materialized = true;
                 let rewritten = Self::rewrite_constructor_self(stmt);
-                body.extend(self.lower_class_stmt_strict(
+                body.extend(self.lower_class_stmt_strict_with_following(
                     &rewritten,
+                    following_stmts,
                     "class constructor post-initialization statement lowering",
                 ));
                 continue;
             }
 
-            body.extend(self.lower_class_stmt_strict(
+            body.extend(self.lower_class_stmt_strict_with_following(
                 stmt,
+                following_stmts,
                 "class constructor pre-initialization statement lowering",
             ));
         }
@@ -753,9 +766,12 @@ impl RustEmitter {
             self.lower_constructor_body(method, class, uses_python_error_bridge)
         } else {
             let mut lowered = Vec::new();
-            for stmt in &method.body {
-                lowered
-                    .extend(self.lower_class_stmt_strict(stmt, "class method statement lowering"));
+            for (stmt_index, stmt) in method.body.iter().enumerate() {
+                lowered.extend(self.lower_class_stmt_strict_with_following(
+                    stmt,
+                    Some(&method.body[stmt_index + 1..]),
+                    "class method statement lowering",
+                ));
             }
             lowered
         };

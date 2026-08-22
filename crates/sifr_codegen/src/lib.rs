@@ -39,6 +39,7 @@ mod class_method_emitter;
 mod class_method_receiver_analysis;
 mod class_trait_capabilities;
 mod context;
+mod structured_stmt_entrypoints;
 pub use context::*;
 mod entrypoints;
 mod error_refs;

@@ -4416,19 +4416,16 @@ mod __sifr_project_nominals {
                 0_i64,
             );
             if let Some(tz) = tz.as_ref() {
-                let __sifr_try_res: Result<(String, i64), ValueError> = (|| {
+                let __sifr_try_res: Result<(), ValueError> = (|| {
                     let tz_text: String = format!("{}", tz);
                     let target_offset: i64 = _timezone_offset_from_text(&tz_text)?;
                     target = __SifrStdlib_sifr_x2edatetime_x2etimezone::new(target_offset);
-                    Ok((tz_text, target_offset))
+                    Ok(())
                 })();
-                let (tz_text, target_offset) = match __sifr_try_res {
-                    Ok(__sifr_try_bindings) => __sifr_try_bindings,
-                    Err(__sifr_try_err) => {
-                        let e = __sifr_try_err.clone();
-                        return Err(ValueError::new(e.message.clone()));
-                    }
-                };
+                if let Err(__sifr_try_err) = __sifr_try_res {
+                    let e = __sifr_try_err.clone();
+                    return Err(ValueError::new(e.message.clone()));
+                }
             }
             _from_timestamp_microseconds_with_tz(
                 self.timestamp_microseconds(),

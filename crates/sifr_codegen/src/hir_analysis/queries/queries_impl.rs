@@ -82,7 +82,48 @@ pub(crate) fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
 }
 
 pub(crate) fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
-    let mut on_stmt = |_stmt: &HirStmt| TraversalControl::Continue;
+    stmts_reference_var_with_config(stmts, var_name, TraversalConfig::LOCAL_SCOPE_ONLY)
+}
+
+pub(crate) fn stmts_reference_var_including_nested_functions(
+    stmts: &[HirStmt],
+    var_name: &str,
+) -> bool {
+    stmts_reference_var_with_config(stmts, var_name, TraversalConfig::INCLUDE_NESTED_FUNCTIONS)
+}
+
+fn stmts_reference_var_with_config(
+    stmts: &[HirStmt],
+    var_name: &str,
+    config: TraversalConfig,
+) -> bool {
+    let mut on_stmt = |stmt: &HirStmt| {
+        let target_references_var = match stmt {
+            HirStmt::Assign { name, .. } | HirStmt::AugAssign { name, .. } => name == var_name,
+            HirStmt::FieldAssign { object, .. }
+            | HirStmt::NestedFieldAssign { object, .. }
+            | HirStmt::SubscriptAssign { object, .. }
+            | HirStmt::NestedSubscriptAssign { object, .. }
+            | HirStmt::AttributeNestedSubscriptAssign { object, .. }
+            | HirStmt::SubscriptAugAssign { object, .. }
+            | HirStmt::AttributeAugAssign { object, .. }
+            | HirStmt::AttributeSubscriptAssign { object, .. } => object == var_name,
+            HirStmt::TupleUnpack { targets, .. } => {
+                targets.iter().any(|target| match &target.binding {
+                    sifr_ir::HirTupleTargetBinding::Name(name) => {
+                        target.rebind_existing && name == var_name
+                    }
+                    sifr_ir::HirTupleTargetBinding::Field { object, .. } => object == var_name,
+                })
+            }
+            _ => false,
+        };
+        if target_references_var {
+            TraversalControl::Stop
+        } else {
+            TraversalControl::Continue
+        }
+    };
     let mut on_expr = |expr: &HirExpr| {
         if let HirExpr::Name { name, .. } = expr {
             if name == var_name {
@@ -92,12 +133,7 @@ pub(crate) fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
         TraversalControl::Continue
     };
     matches!(
-        traversal::walk_stmts_until(
-            stmts,
-            TraversalConfig::LOCAL_SCOPE_ONLY,
-            &mut on_stmt,
-            &mut on_expr,
-        ),
+        traversal::walk_stmts_until(stmts, config, &mut on_stmt, &mut on_expr,),
         TraversalControl::Stop
     )
 }

@@ -922,7 +922,6 @@ mod __sifr_project_nominals {
             };
         }
         if _is_digit_string(nargs) {
-            let mut __sifr_successful_try_bindings: Option<(i64,)> = None;
             let __sifr_try_res: Result<Option<String>, ParseError> = (|| {
                 let parsed: i64 = (nargs)
                     .parse::<i64>()
@@ -932,7 +931,6 @@ mod __sifr_project_nominals {
                 if parsed > (0_i64) {
                     return Ok(Some(format!("{}", parsed)));
                 }
-                __sifr_successful_try_bindings = Some((parsed,));
                 Ok(None)
             })();
             match __sifr_try_res {
@@ -945,9 +943,6 @@ mod __sifr_project_nominals {
                     return "1".to_string();
                 }
             }
-            let Some((parsed,)) = __sifr_successful_try_bindings else {
-                unreachable!("successful try fallthrough must initialize promoted bindings");
-            };
         }
         "1".to_string()
     }
@@ -1521,7 +1516,6 @@ fn _normalize_nargs(nargs: &String) -> String {
         };
     }
     if _is_digit_string(nargs) {
-        let mut __sifr_successful_try_bindings: Option<(i64,)> = None;
         let __sifr_try_res: Result<Option<String>, ParseError> = (|| {
             let parsed: i64 = (nargs)
                 .parse::<i64>()
@@ -1531,7 +1525,6 @@ fn _normalize_nargs(nargs: &String) -> String {
             if parsed > (0_i64) {
                 return Ok(Some(format!("{}", parsed)));
             }
-            __sifr_successful_try_bindings = Some((parsed,));
             Ok(None)
         })();
         match __sifr_try_res {
@@ -1544,9 +1537,6 @@ fn _normalize_nargs(nargs: &String) -> String {
                 return "1".to_string();
             }
         }
-        let Some((parsed,)) = __sifr_successful_try_bindings else {
-            unreachable!("successful try fallthrough must initialize promoted bindings");
-        };
     }
     "1".to_string()
 }

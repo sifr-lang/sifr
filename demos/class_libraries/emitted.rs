@@ -297,10 +297,8 @@ mod __sifr_project_nominals {
                 return Ok(());
             }
             let mut prepare_ok: bool = false;
-            let __sifr_try_res: Result<
-                (Vec<i64>,),
-                __SifrStdlib_sifr_x2egraphlib_x2eCycleError,
-            > = (|| {
+            let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2egraphlib_x2eCycleError> = (||
+            {
                 let order: Vec<i64> = topological_sort(
                     self.max_node + (1_i64),
                     &self.from_nodes,
@@ -309,20 +307,17 @@ mod __sifr_project_nominals {
                 self._ready_order = self._filter_order(&order);
                 self._prepared = true;
                 prepare_ok = true;
-                Ok((order,))
+                Ok(())
             })();
-            let (order,) = match __sifr_try_res {
-                Ok(__sifr_try_bindings) => __sifr_try_bindings,
-                Err(__sifr_try_err) => {
-                    let e = __sifr_try_err.clone();
-                    self._prepared = false;
-                    self._ready_order = vec![];
-                    self._next_index = 0_i64;
-                    return Err(
-                        __SifrStdlib_sifr_x2egraphlib_x2eCycleError::new(e.message.clone()),
-                    );
-                }
-            };
+            if let Err(__sifr_try_err) = __sifr_try_res {
+                let e = __sifr_try_err.clone();
+                self._prepared = false;
+                self._ready_order = vec![];
+                self._next_index = 0_i64;
+                return Err(
+                    __SifrStdlib_sifr_x2egraphlib_x2eCycleError::new(e.message.clone()),
+                );
+            }
             if prepare_ok {
                 return Ok(());
             }
@@ -335,24 +330,19 @@ mod __sifr_project_nominals {
         ) -> Result<Vec<i64>, __SifrStdlib_sifr_x2egraphlib_x2eCycleError> {
             if !(self._prepared) {
                 let __sifr_try_res: Result<
-                    ((),),
+                    (),
                     __SifrStdlib_sifr_x2egraphlib_x2eCycleError,
                 > = (|| {
                     let _prepared: () = self.prepare()?;
                     let _ = _prepared;
-                    Ok((_prepared,))
+                    Ok(())
                 })();
-                let (_prepared,) = match __sifr_try_res {
-                    Ok(__sifr_try_bindings) => __sifr_try_bindings,
-                    Err(__sifr_try_err) => {
-                        let e = __sifr_try_err.clone();
-                        return Err(
-                            __SifrStdlib_sifr_x2egraphlib_x2eCycleError::new(
-                                e.message.clone(),
-                            ),
-                        );
-                    }
-                };
+                if let Err(__sifr_try_err) = __sifr_try_res {
+                    let e = __sifr_try_err.clone();
+                    return Err(
+                        __SifrStdlib_sifr_x2egraphlib_x2eCycleError::new(e.message.clone()),
+                    );
+                }
             }
             if (self._next_index < (self._ready_order.len() as i64)) {
                 let current: Option<i64> = {

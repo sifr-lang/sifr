@@ -3,6 +3,7 @@ use super::{HirExceptHandler, HirStmt, RustExpr, Type};
 pub(crate) fn successful_try_bindings(
     body: &[HirStmt],
     handlers: &[HirExceptHandler],
+    following_stmts: Option<&[HirStmt]>,
 ) -> Vec<(String, Type)> {
     if crate::hir_analysis::queries::block_control_flow_effect(body).always_exits()
         || handlers.iter().any(|handler| {
@@ -18,7 +19,14 @@ pub(crate) fn successful_try_bindings(
             let HirStmt::Let { name, ty, .. } = stmt else {
                 return None;
             };
-            (name != "_" && names.insert(name.clone())).then(|| (name.clone(), ty.clone()))
+            (name != "_"
+                && names.insert(name.clone())
+                && following_stmts.is_none_or(|following| {
+                    crate::hir_analysis::queries::stmts_reference_var_including_nested_functions(
+                        following, name,
+                    )
+                }))
+            .then(|| (name.clone(), ty.clone()))
         })
         .collect()
 }

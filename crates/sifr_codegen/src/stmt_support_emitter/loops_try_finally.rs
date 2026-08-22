@@ -188,10 +188,19 @@ impl RustEmitter {
     }
 
     pub(crate) fn try_lower_structured_try_except_stmt(&mut self, stmt: &HirStmt) -> bool {
-        let lowered = match self.try_lower_try_except_hir_stmt_for_ir(stmt) {
-            Ok(Some(lowered)) => lowered,
-            Ok(None) | Err(_) => return false,
-        };
+        self.try_lower_structured_try_except_stmt_with_following(stmt, None)
+    }
+
+    pub(crate) fn try_lower_structured_try_except_stmt_with_following(
+        &mut self,
+        stmt: &HirStmt,
+        following_stmts: Option<&[HirStmt]>,
+    ) -> bool {
+        let lowered =
+            match self.try_lower_try_except_hir_stmt_for_ir_with_following(stmt, following_stmts) {
+                Ok(Some(lowered)) => lowered,
+                Ok(None) | Err(_) => return false,
+            };
         for lowered_stmt in lowered {
             self.push_captured_stmt(&lowered_stmt);
         }
@@ -202,6 +211,14 @@ impl RustEmitter {
         &mut self,
         stmt: &HirStmt,
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
+        self.try_lower_try_except_hir_stmt_for_ir_with_following(stmt, None)
+    }
+
+    pub(crate) fn try_lower_try_except_hir_stmt_for_ir_with_following(
+        &mut self,
+        stmt: &HirStmt,
+        following_stmts: Option<&[HirStmt]>,
+    ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         let HirStmt::TryExcept {
             body,
             handlers,
@@ -210,7 +227,7 @@ impl RustEmitter {
         else {
             return Ok(None);
         };
-        self.try_lower_try_except_stmt_for_ir(body, handlers, body_error_types)
+        self.try_lower_try_except_stmt_for_ir(body, handlers, body_error_types, following_stmts)
     }
 
     pub(crate) fn try_lower_try_except_stmt_for_ir(
@@ -218,6 +235,7 @@ impl RustEmitter {
         body: &[HirStmt],
         handlers: &[HirExceptHandler],
         body_error_types: &[Type],
+        following_stmts: Option<&[HirStmt]>,
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         if handlers.is_empty() {
             return Ok(None);
@@ -241,7 +259,7 @@ impl RustEmitter {
             && handlers
                 .iter()
                 .all(|handler| queries::block_control_flow_effect(&handler.body).always_exits());
-        let successful_bindings = successful_try_bindings(body, handlers)
+        let successful_bindings = successful_try_bindings(body, handlers, following_stmts)
             .into_iter()
             .map(|(name, ty)| {
                 let ty = self.local_binding_types.get(&name).cloned().unwrap_or(ty);

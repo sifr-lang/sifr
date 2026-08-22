@@ -11,7 +11,7 @@ pub(super) fn try_lower_simple_try_except_stmt(
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    if !crate::stmt_support_emitter::successful_try_bindings(body, handlers).is_empty() {
+    if !crate::stmt_support_emitter::successful_try_bindings(body, handlers, None).is_empty() {
         return None;
     }
     if crate::try_error_carrier::exact_try_error_carrier(body_error_types).is_some_and(|carrier| {

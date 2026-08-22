@@ -424,8 +424,10 @@ impl RustEmitter {
         self.register_local_body_binding_types(&str_func.body);
 
         let mut body = Vec::new();
-        for stmt in &str_func.body {
-            let lowered = self.capture_structured_stmts(|inner| inner.emit_stmt(stmt));
+        for (stmt_index, stmt) in str_func.body.iter().enumerate() {
+            let lowered = self.capture_structured_stmts(|inner| {
+                inner.emit_stmt_with_following(stmt, Some(&str_func.body[stmt_index + 1..]));
+            });
             body.extend(lowered);
         }
 
