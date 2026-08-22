@@ -398,7 +398,7 @@ fn collect_shared_nominals(
             methods,
             ..
         } => {
-            if crate::BUILTIN_ERROR_CLASSES.contains(&name.as_str())
+            if is_compiler_builtin_error(identity.as_deref(), name)
                 && sifr_type_system::io_error_kind(name).is_none()
             {
                 builtin_types
@@ -494,7 +494,7 @@ fn collect_nominal_identity(
     let Some((module, name)) = identity.rsplit_once('.') else {
         return;
     };
-    if crate::BUILTIN_ERROR_CLASSES.contains(&name) {
+    if is_compiler_builtin_error(Some(identity), name) {
         return;
     }
     declarations
@@ -503,9 +503,93 @@ fn collect_nominal_identity(
         .insert(name.to_string());
 }
 
+fn is_compiler_builtin_error(identity: Option<&str>, name: &str) -> bool {
+    crate::BUILTIN_ERROR_CLASSES.contains(&name)
+        && identity.is_none_or(|identity| {
+            identity.starts_with("sifr.builtin.")
+                || sifr_type_system::is_global_rust_nominal_identity(identity)
+        })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn stdlib_error(identity: &str) -> Type {
+        Type::Class {
+            identity: Some(identity.to_string()),
+            type_args: Vec::new(),
+            name: "Error".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        }
+    }
+
+    #[test]
+    fn same_basename_stdlib_errors_keep_distinct_nominal_declarations() {
+        let mut declarations = BTreeMap::new();
+        let mut builtin_types = BTreeMap::new();
+
+        collect_shared_nominals(
+            &Type::Union(vec![
+                stdlib_error("sifr.csv.Error"),
+                stdlib_error("sifr.configparser.Error"),
+            ]),
+            &mut declarations,
+            &mut builtin_types,
+        );
+
+        assert_eq!(
+            declarations.get("sifr.csv"),
+            Some(&HashSet::from(["Error".to_string()]))
+        );
+        assert_eq!(
+            declarations.get("sifr.configparser"),
+            Some(&HashSet::from(["Error".to_string()]))
+        );
+        assert!(builtin_types.is_empty());
+    }
+
+    #[test]
+    fn same_basename_stdlib_errors_get_distinct_project_paths() {
+        let csv = stdlib_error("sifr.csv.Error");
+        let config = stdlib_error("sifr.configparser.Error");
+        let unions = HashMap::from([("ImportedErrors".to_string(), vec![csv, config])]);
+        let mut stdlib = StdlibCode::default();
+        for module in ["sifr.csv", "sifr.configparser"] {
+            let identity = format!("{module}.Error");
+            let rust_name = class_rust_name(Some(&identity), "Error");
+            stdlib.module_rust_code.insert(
+                module.to_string(),
+                crate::StdlibRustSource {
+                    module: module.to_string(),
+                    source_path: format!("stdlib/{}.sifr", module.replace('.', "/")),
+                    source_sha256: "fixture".to_string(),
+                    nominal_types: HashSet::from(["Error".to_string()]),
+                    rust: format!(
+                        "#[derive(Debug, Clone, PartialEq, Eq, Hash)]\npub struct {rust_name} {{ pub message: String }}\n"
+                    ),
+                },
+            );
+        }
+
+        let plan = project_stdlib_nominal_plan(&unions, &stdlib, &[], false);
+        let csv_path = plan
+            .registry
+            .rust_paths
+            .get("sifr.csv.Error")
+            .expect("csv error should have a canonical project path");
+        let config_path = plan
+            .registry
+            .rust_paths
+            .get("sifr.configparser.Error")
+            .expect("configparser error should have a canonical project path");
+
+        assert_ne!(csv_path, config_path);
+        assert!(csv_path.contains(&class_rust_name(Some("sifr.csv.Error"), "Error")));
+        assert!(config_path.contains(&class_rust_name(Some("sifr.configparser.Error"), "Error")));
+    }
 
     #[test]
     fn builtin_error_union_keeps_its_shared_module_definition() {
