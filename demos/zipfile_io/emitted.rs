@@ -463,14 +463,17 @@ mod __sifr_project_nominals {
                 return Ok(());
             }
             if exists(&self._path) {
-                let __sifr_try_res: Result<(), IOError> = (|| {
+                let __sifr_try_res: Result<((),), IOError> = (|| {
                     let _rm_done: () = remove_file(&self._path)?;
-                    Ok(())
+                    Ok((_rm_done,))
                 })();
-                if let Err(__sifr_try_err) = __sifr_try_res {
-                    let e = __sifr_try_err.clone();
-                    return Err(IOError::new(e.message.clone()));
-                }
+                let (_rm_done,) = match __sifr_try_res {
+                    Ok(__sifr_try_bindings) => __sifr_try_bindings,
+                    Err(__sifr_try_err) => {
+                        let e = __sifr_try_err.clone();
+                        return Err(IOError::new(e.message.clone()));
+                    }
+                };
             }
             self._cleaned = true;
             Ok(())

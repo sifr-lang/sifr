@@ -1,0 +1,22 @@
+# expect-error[col=5]: SIFR-RESULT-0005
+# Test: named IOError subclasses do not cover the open base IOError kind domain.
+
+def load_io() -> Result[str, IOError]:
+    raise IOError("other")
+
+
+def main() -> None:
+    try:
+        content: str = load_io()
+    except FileNotFoundError:
+        pass
+    except PermissionError:
+        pass
+    except FileExistsError:
+        pass
+    except IsADirectoryError:
+        pass
+    except NotADirectoryError:
+        pass
+    except DirectoryNotEmptyError:
+        pass

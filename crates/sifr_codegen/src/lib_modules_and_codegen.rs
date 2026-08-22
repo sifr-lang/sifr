@@ -47,15 +47,6 @@ pub(crate) struct NestedFnCapture {
     pub(crate) convention: ParamConvention,
 }
 
-const IO_ERROR_SUBCLASSES: &[&str] = &[
-    "FileNotFoundError",
-    "PermissionError",
-    "FileExistsError",
-    "IsADirectoryError",
-    "NotADirectoryError",
-    "DirectoryNotEmptyError",
-];
-
 /// Result of code generation, including the Rust source and metadata.
 pub struct CodegenResult {
     pub rust_source: String,
@@ -353,7 +344,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     for &error_name in BUILTIN_ERROR_CLASSES {
         infra_skip_types.insert(error_name.to_string());
     }
-    for &error_name in IO_ERROR_SUBCLASSES {
+    for &(error_name, _) in &sifr_type_system::IO_ERROR_KIND_CASES {
         infra_skip_types.insert(error_name.to_string());
     }
     infra_skip_types.insert("__io_err".to_string());
@@ -495,9 +486,9 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         .collect();
     let user_defined_file_handle_struct = module.classes.iter().any(|c| c.name == "FileHandle");
     let io_error_referenced = referenced_error_classes.contains("IOError")
-        || IO_ERROR_SUBCLASSES
+        || sifr_type_system::IO_ERROR_KIND_CASES
             .iter()
-            .any(|subclass| referenced_error_classes.contains(*subclass))
+            .any(|(subclass, _)| referenced_error_classes.contains(*subclass))
         || needs_file_handles;
 
     let mut preamble_items: Vec<RustItem> = Vec::new();
@@ -507,7 +498,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
 
     for &error_name in BUILTIN_ERROR_CLASSES {
         // Skip IOError and its subclasses (handled separately)
-        if error_name == "IOError" || IO_ERROR_SUBCLASSES.contains(&error_name) {
+        if error_name == "IOError" || sifr_type_system::io_error_kind(error_name).is_some() {
             continue;
         }
         let is_referenced = referenced_error_classes.contains(error_name);
@@ -580,7 +571,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     }
     if referenced_error_classes.contains("Error") && !user_defined_error_classes.contains("Error") {
         for &error_name in BUILTIN_ERROR_CLASSES {
-            if error_name == "Error" || IO_ERROR_SUBCLASSES.contains(&error_name) {
+            if error_name == "Error" || sifr_type_system::io_error_kind(error_name).is_some() {
                 continue;
             }
             if referenced_error_classes.contains(error_name)

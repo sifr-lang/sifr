@@ -582,30 +582,16 @@ pub(in crate::lower) fn lower_stmt(
                 });
             }
 
-            // Exhaustiveness checking: if no catch-all, all error types must be covered
-            // A parent type covers all its children (e.g., except IOError covers FileNotFoundError)
-            // Subclasses partially cover their parent (e.g., except FileNotFoundError covers IOError::FileNotFound)
+            // Exhaustiveness checking: if no catch-all, all error types must be covered.
+            // A parent handler covers a child error. Child handlers do not cover their parent:
+            // base errors can contain values outside the known child set.
             if !has_catch_all && !try_error_types.is_empty() {
                 let uncovered: Vec<String> = try_error_types
                     .iter()
                     .filter(|error_ty| {
-                        if covered_types
+                        !covered_types
                             .iter()
                             .any(|covered| error_ty.is_assignable_to(covered))
-                        {
-                            return false;
-                        }
-                        let error_name = error_ty.display_name();
-                        let Some(children) = ctx.error_hierarchy.get(&error_name) else {
-                            return true;
-                        };
-                        !children.iter().all(|child| {
-                            ctx.class_types.get(child).is_some_and(|child_ty| {
-                                covered_types
-                                    .iter()
-                                    .any(|covered| child_ty.is_assignable_to(covered))
-                            })
-                        })
                     })
                     .map(Type::display_name)
                     .collect();

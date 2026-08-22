@@ -191,15 +191,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     }
 
     // --- IOError subclasses (parent: IOError) ---
-    let io_subclasses = [
-        "FileNotFoundError",
-        "PermissionError",
-        "FileExistsError",
-        "IsADirectoryError",
-        "NotADirectoryError",
-        "DirectoryNotEmptyError",
-    ];
-    for &error_name in &io_subclasses {
+    for &(error_name, _) in &sifr_type_system::IO_ERROR_KIND_CASES {
         let fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {
             identity: None,
@@ -291,15 +283,6 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
         );
     }
-
-    // Build error hierarchy for exhaustiveness checking
-    ctx.error_hierarchy.insert(
-        "IOError".to_string(),
-        sifr_type_system::IO_ERROR_KIND_CASES
-            .iter()
-            .map(|(name, _)| (*name).to_string())
-            .collect(),
-    );
 }
 
 pub(in crate::lower) fn ast_convention_to_param(

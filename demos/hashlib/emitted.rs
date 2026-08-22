@@ -1131,23 +1131,33 @@ fn file_digest(
     path: &String,
     name: &String,
 ) -> Result<String, __SifrStdlib_sifr_x2ehashlib_x2eHashlibError> {
-    let __sifr_try_res: Result<(), IOError> = (|| {
+    let __sifr_try_res: Result<(__SifrIoNativeFileHandle,), IOError> = (|| {
         let handle: __SifrIoNativeFileHandle = open_file(path, &"rb".to_string())?;
-        Ok(())
+        Ok((handle,))
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        return Err(__SifrStdlib_sifr_x2ehashlib_x2eHashlibError::new(e.message.clone()));
-    }
-    let __sifr_try_res: Result<(), IOError> = (|| {
+    let (handle,) = match __sifr_try_res {
+        Ok(__sifr_try_bindings) => __sifr_try_bindings,
+        Err(__sifr_try_err) => {
+            let e = __sifr_try_err.clone();
+            return Err(
+                __SifrStdlib_sifr_x2ehashlib_x2eHashlibError::new(e.message.clone()),
+            );
+        }
+    };
+    let __sifr_try_res: Result<(Vec<u8>,), IOError> = (|| {
         let data: Vec<u8> = file_read_bytes(&handle)?;
-        Ok(())
+        Ok((data,))
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        file_close(&handle);
-        return Err(__SifrStdlib_sifr_x2ehashlib_x2eHashlibError::new(e.message.clone()));
-    }
+    let (data,) = match __sifr_try_res {
+        Ok(__sifr_try_bindings) => __sifr_try_bindings,
+        Err(__sifr_try_err) => {
+            let e = __sifr_try_err.clone();
+            file_close(&handle);
+            return Err(
+                __SifrStdlib_sifr_x2ehashlib_x2eHashlibError::new(e.message.clone()),
+            );
+        }
+    };
     file_close(&handle);
     let __sifr_try_res: Result<
         Result<String, __SifrStdlib_sifr_x2ehashlib_x2eHashlibError>,
