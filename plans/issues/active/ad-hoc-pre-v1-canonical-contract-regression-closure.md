@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10A are complete. Item 10B is next.
+Status: active on 2026-08-22. Items 0 through 10B are complete. Item 10C is next.
 
 ## Objective
 
@@ -62,6 +62,9 @@ This planning change makes these transfers effective when it merges:
 | Residual nominal registry gaps | Item 6 reviews found two pre-existing gaps outside that implementation scope. | Item 10A |
 | `try` continuation ownership | Item 10A validation exposed pre-existing moves and partial moves in generated continuation state. | Item 10B |
 | Total `try` return emission | Item 10A validation exposed pre-existing fall-through `()` paths after exhaustive handlers. | Item 10C |
+| Moved `try` binding declarations | Item 10B review found that a moved binding needed only as a later assignment target requires an enclosing declaration, but not value transport. | Item 10D |
+| Nested-function default references | Item 10B review found that canonical HIR reference traversal does not visit parameter default expressions. | Item 10E |
+| Imported union nominal paths | Item 10B validation reproduced a project-codegen panic for the canonical imported union identity `sifr.csv.Error` on the exact item base. | Item 10F |
 
 The archived static-class phase no longer owns active corrective work. Item 10
 owns its unresolved method-slot fixture and runtime evidence.
@@ -149,6 +152,9 @@ scope and does not repeat that work.
 | Dead shared `ParseError` | The `uuid_and_datetime` output keeps a shared definition beside a local duplicate. | Item 10A |
 | `try` continuation moves | Generated continuation state returns locals that the `try` body already moved or partially moved. | Item 10B |
 | Exhaustive `try` returns | Generated error handling can fall through as `()` even when the source body and handlers return. | Item 10C |
+| Moved binding later reassignment | Continuation liveness does not distinguish the declaration needed for a later assignment from the value needed for a later read. | Item 10D |
+| Nested-function default expression | Canonical HIR reference traversal visits nested bodies by configuration but omits their parameter default expressions. | Item 10E |
+| Imported union nominal registry | Project code generation can miss the crate-root path for a canonical imported union member such as `sifr.csv.Error`. | Item 10F |
 | Read-only Python duration | The latest contended run completed in 314,714 ms. An isolated run completed in approximately 68 seconds. | Qualification rule B |
 
 ## Scope
@@ -169,6 +175,9 @@ scope and does not repeat that work.
 - Close the two residual nominal registry gaps from the Item 6 reviews.
 - Return only live locals from generated `try` continuations.
 - Emit total control flow for exhaustive `try` return paths.
+- Separate declaration liveness from value liveness for moved `try` bindings.
+- Include nested-function parameter defaults in canonical HIR reference traversal.
+- Register canonical crate-root paths for imported union members.
 - Add regression guards for the migrated evidence and representation defects.
 - Record completion evidence from the linked owner.
 - Qualify the read-only Python doctor without a timeout increase.
@@ -203,6 +212,9 @@ Item 0  baseline and ownership lock
   -> Item 10A residual nominal registry consistency
   -> Item 10B try continuation ownership
   -> Item 10C total try return emission
+  -> Item 10D try declaration and value liveness
+  -> Item 10E nested-function default traversal
+  -> Item 10F imported union nominal paths
   -> linked delivery A final validation and merge
   -> Item 11 linked delivery and timeout qualification
   -> Item 12 final regression guard and closure
@@ -1123,6 +1135,54 @@ Acceptance criteria:
 - Focused emitted Rust does not return dead or moved continuation locals.
 - Focused lowering, code-generation, and E2E tests pass.
 
+### Item 10B record
+
+State: complete
+
+PR: [#3452](https://github.com/sifr-lang/sifr/pull/3452)
+
+Base SHA: `cbf256719ff6dc1ed800c878ad50390c046fa400`
+
+Candidate SHA: `42cbe6ef798c8047b33289c9779dde94852e0046`
+
+Merge SHA: `ffce9ef452a555441ebc8e3d9a84f7dfd4f719ba`
+
+Changed paths: canonical HIR reference traversal, structured statement entry
+points, `try` continuation emission, focused source-architecture and
+code-generation tests, and 20 fresh generated demo outputs.
+
+The emitter now passes following statements into each `try` statement. It
+promotes only successful bindings that are referenced after that statement.
+The reference query covers expression reads, nested-function bodies, and
+scalar, field, subscript, attribute, augmented, and tuple assignment targets.
+The statement entry points moved to a responsibility-specific module to keep
+the maintained emitter source below the file-size limit.
+
+Validation: all 1,107 code-generation tests passed. Ten focused sequential
+`try` tests passed. The config-parser fixture family built. The CPython
+config-parser and TLS loopback fixtures ran. Demo freshness, Clippy, format,
+diff, HIR maintainability, and file-size checks passed.
+
+Review evidence: the first exact-SHA Opus review found that assignment-target
+liveness was incomplete. The remediation covered every canonical assignment
+target form. The second and final review returned `SATISFIED`. The evidence is
+in the [#3452 review comment](https://github.com/sifr-lang/sifr/pull/3452#issuecomment-5380564471).
+
+The user authorized replacement gates after the first candidate stopped on
+stale demo output. The create-PR and merge gates each ran once on the final
+exact candidate. Every check before the Rust-interop matrix passed. Both gates
+stopped only because linked delivery A still names the removed source path.
+The evidence is in the [#3452 gate comment](https://github.com/sifr-lang/sifr/pull/3452#issuecomment-5380589941).
+
+Deferred follow-up: Item 10D owns declaration-only liveness for a moved
+binding used later only as an assignment target. Item 10E owns nested-function
+parameter default traversal. Item 10F owns the imported-union nominal-path
+panic reproduced on the exact Item 10B base. Test-only wrapper removal remains
+optional hardening. The shared reference query intentionally treats assignment
+targets conservatively until Item 10D separates declaration and value needs.
+
+Next action: implement Item 10C.
+
 ## Item 10C: Emit Total Exhaustive Try Returns
 
 Purpose: Preserve return-position control flow when a `try` body and all
@@ -1142,6 +1202,66 @@ Acceptance criteria:
 - `nominal_identity_alias_paths` has no fall-through type diagnostic.
 - Generated Rust has no E0317 or E0308 diagnostic from a total `try` return.
 - Focused lowering, code-generation, and E2E tests pass.
+
+## Item 10D: Separate Try Declarations from Transported Values
+
+Purpose: Preserve the declaration of a moved binding when later code assigns
+it again without transporting an unavailable value through the continuation.
+
+Scope:
+
+- Distinguish declaration liveness from value liveness after a `try`.
+- Keep an enclosing declaration when a later scalar assignment needs it.
+- Transport only values that are available at the continuation boundary.
+- Reject a later field or subscript assignment when it needs the moved value.
+- Do not add clones, uninitialized values, or fallback transport paths.
+
+Acceptance criteria:
+
+- A moved binding that is later replaced by a scalar assignment has a valid
+  enclosing declaration and is not returned in the continuation tuple.
+- A value-dependent assignment through a moved binding is rejected before
+  Rust code generation.
+- Focused ownership, code-generation, and native-build tests pass.
+
+## Item 10E: Traverse Nested-function Default Expressions
+
+Purpose: Include definition-time parameter defaults in canonical HIR reference
+queries without changing nested-body traversal policy.
+
+Scope:
+
+- Visit nested-function parameter default expressions at definition time.
+- Continue to control nested-function body descent through `TraversalConfig`.
+- Preserve parameter shadowing behavior.
+- Implement the rule in canonical traversal, not in an emitter-local scan.
+
+Acceptance criteria:
+
+- A post-`try` nested-function default that reads the binding keeps it live.
+- A shadowing nested parameter does not create a false outer-body reference.
+- Traversal configurations preserve their documented body behavior.
+- Focused traversal, code-generation, and native-build tests pass.
+
+## Item 10F: Complete Imported Union Nominal Paths
+
+Purpose: Give every imported union member one canonical crate-root nominal
+path during project code generation.
+
+Scope:
+
+- Register canonical identities for imported union members.
+- Preserve distinct identities for equal basenames from different modules.
+- Keep registry lookup and emitted ownership consistent.
+- Do not add basename lookup, local duplicates, or fallback paths.
+
+Acceptance criteria:
+
+- `nominal_identity_alias_paths` no longer panics during project code generation.
+- The registry contains distinct `sifr.csv.Error` and
+  `sifr.configparser.Error` identities.
+- Every imported union member resolves through its canonical crate-root path.
+- Focused registry, code-generation, and native-build tests pass.
 
 ## Required Linked Delivery A: Rust-interop Evidence Path
 
@@ -1184,7 +1304,7 @@ Purpose: Combine phase-owned corrections with independently owned changes.
 
 Dependencies:
 
-- Items 1 through 10C are merged.
+- Items 1 through 10F are merged.
 - Required linked delivery A is merged.
 
 Scope:
@@ -1252,6 +1372,9 @@ Acceptance criteria:
 | Residual nominal registry | Focused direct-class, registry consistency, and `uuid_and_datetime` demo checks |
 | `try` continuation ownership | Focused continuation-state tests, config-parser fixtures, and TLS loopback fixtures |
 | Total `try` returns | Focused control-flow tests and imported and union error fixtures |
+| Try declaration liveness | Focused scalar replacement, value-dependent target, and native-build tests |
+| Nested-function defaults | Canonical traversal, shadowing, code-generation, and native-build tests |
+| Imported union nominal paths | Focused registry, project code-generation, and nominal-identity fixtures |
 | Regression guards | Focused stale-path, stale-hash, nominal-identity, conversion, and no-compatibility self-tests |
 | Python doctor | One final-candidate run and one isolated profile only after a timeout |
 
@@ -1307,6 +1430,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10A are complete and recorded.
+Current state: Items 0 through 10B are complete and recorded.
 
-Next action: implement Item 10B.
+Next action: implement Item 10C.
