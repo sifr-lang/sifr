@@ -243,3 +243,22 @@ def replace_first() -> Result[int, ProbeError]:
     assert!(generated.contains("let (mut data,) = match __sifr_try_res"));
     syn::parse_file(&generated).expect("subscript-live try binding Rust should parse");
 }
+
+#[test]
+fn always_raising_try_body_uses_total_result_match() {
+    let generated = generate_rust_from_source(&format!(
+        r#"{PROBE_ERROR}
+def classify() -> str:
+    try:
+        raise ProbeError("bad")
+    except ProbeError as error:
+        return error.message
+"#
+    ));
+
+    assert!(generated.contains("match __sifr_try_res"));
+    assert!(generated.contains("Ok(()) =>"));
+    assert!(generated.contains("sifr try/except raising body returned success"));
+    assert!(!generated.contains("if let Err(__sifr_try_err) = __sifr_try_res"));
+    syn::parse_file(&generated).expect("total raising try Rust should parse");
+}
