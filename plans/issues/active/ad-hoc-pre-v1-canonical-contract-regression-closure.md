@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10 are complete. Item 10A is next.
+Status: active on 2026-08-22. Items 0 through 10A are complete. Item 10B is next.
 
 ## Objective
 
@@ -60,6 +60,8 @@ This planning change makes these transfers effective when it merges:
 | Protocol-bound CFG and diagnostic failure | The pre-v1 record and static-class records assign it to each other. | Items 8 and 9 |
 | Method-slot fixture and runtime evidence | The static-class phase is archived, but both verification defects remain. | Item 10 |
 | Residual nominal registry gaps | Item 6 reviews found two pre-existing gaps outside that implementation scope. | Item 10A |
+| `try` continuation ownership | Item 10A validation exposed pre-existing moves and partial moves in generated continuation state. | Item 10B |
+| Total `try` return emission | Item 10A validation exposed pre-existing fall-through `()` paths after exhaustive handlers. | Item 10C |
 
 The archived static-class phase no longer owns active corrective work. Item 10
 owns its unresolved method-slot fixture and runtime evidence.
@@ -145,6 +147,8 @@ scope and does not repeat that work.
 | Method-slot runtime output | The driver expectation predates the receiver-value serializer and keeps the stale count `2`. | Item 10 |
 | Direct `IOError` kind nominal | A direct `Type::Class` path can register a kind alias that has no Rust struct. | Item 10A |
 | Dead shared `ParseError` | The `uuid_and_datetime` output keeps a shared definition beside a local duplicate. | Item 10A |
+| `try` continuation moves | Generated continuation state returns locals that the `try` body already moved or partially moved. | Item 10B |
+| Exhaustive `try` returns | Generated error handling can fall through as `()` even when the source body and handlers return. | Item 10C |
 | Read-only Python duration | The latest contended run completed in 314,714 ms. An isolated run completed in approximately 68 seconds. | Qualification rule B |
 
 ## Scope
@@ -163,6 +167,8 @@ scope and does not repeat that work.
 - Separate name-resolution and protocol-conformance fixture intent.
 - Complete the method-slot fixture and align its runtime evidence.
 - Close the two residual nominal registry gaps from the Item 6 reviews.
+- Return only live locals from generated `try` continuations.
+- Emit total control flow for exhaustive `try` return paths.
 - Add regression guards for the migrated evidence and representation defects.
 - Record completion evidence from the linked owner.
 - Qualify the read-only Python doctor without a timeout increase.
@@ -195,6 +201,8 @@ Item 0  baseline and ownership lock
   -> Item 9  protocol fixture intent
   -> Item 10 method-slot verification closure
   -> Item 10A residual nominal registry consistency
+  -> Item 10B try continuation ownership
+  -> Item 10C total try return emission
   -> linked delivery A final validation and merge
   -> Item 11 linked delivery and timeout qualification
   -> Item 12 final regression guard and closure
@@ -1048,6 +1056,93 @@ Acceptance criteria:
 - No registered shared nominal also has a module-local duplicate.
 - Focused tests and demo freshness pass.
 
+### Item 10A record
+
+State: complete
+
+PR: [#3450](https://github.com/sifr-lang/sifr/pull/3450)
+
+Base SHA: `529573333780f24f4ef8ab1cf6072ab3db2f4316`
+
+Candidate SHA: `c11ccebe428ee9ac2c1593d4f8e27ace485394eb`
+
+Merge SHA: `f27f04bb4f9ab36e3c1ae5133f3f8990ebe821e1`
+
+Changed paths: the project shared-nominal registry, its focused tests, and 41
+fresh generated demo outputs.
+
+The direct class collector now rejects all six `IOError` kind aliases. The
+synthetic prelude registers emitted builtin definitions before nominal
+relocation. The generated `uuid_and_datetime` project now has one
+`ParseError` definition and one canonical re-export.
+
+Validation: all 1,103 code-generation tests passed. The focused direct-class
+and emitted-builtin registry tests passed. The UUID demo and fixture compiled
+and ran. Demo freshness, shared-definition, kind-alias, Clippy, format, diff,
+HIR maintainability, and file-size checks passed.
+
+The broad E2E pass run reported nine build failures. Exact-base reproduction
+proved that all three reported Rust diagnostics existed at the base SHA. They
+reduce to two compiler mechanisms: moved continuation state and non-total
+return emission. Items 10B and 10C own those mechanisms.
+
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. The evidence is in the
+[#3450 review comment](https://github.com/sifr-lang/sifr/pull/3450#issuecomment-5380279698).
+
+The create-PR and merge gates each ran once on the exact candidate. All checks
+before the Rust-interop matrix passed. The matrix stopped only for linked
+delivery A. The evidence and base-failure classification are in the
+[#3450 gate comment](https://github.com/sifr-lang/sifr/pull/3450#issuecomment-5380405067)
+and its linked validation comment.
+
+Deferred follow-up: Opus suggested comparing the computed Rust definition name
+directly and adding another integration assertion. These are optional
+hardening. Items 10B and 10C own the newly classified base defects.
+
+Next action: implement Item 10B.
+
+## Item 10B: Preserve Ownership Across Try Continuations
+
+Purpose: Keep moved values out of generated continuation state after a `try`
+body completes.
+
+Scope:
+
+- Compute the locals that are live after each `try` statement.
+- Return and rebind only those live locals from the generated continuation.
+- Exclude values that the `try` body moved or partially moved.
+- Cover tuple destructuring and moved network or TLS resources.
+- Do not add unconditional clones or a fallback continuation path.
+
+Acceptance criteria:
+
+- The config-parser fixture family compiles without partial-move diagnostics.
+- `network_http_tls_loopback_split` compiles and runs without moved-resource diagnostics.
+- `nominal_identity_alias_paths` has no continuation ownership diagnostic.
+- Focused emitted Rust does not return dead or moved continuation locals.
+- Focused lowering, code-generation, and E2E tests pass.
+
+## Item 10C: Emit Total Exhaustive Try Returns
+
+Purpose: Preserve return-position control flow when a `try` body and all
+matching handlers return.
+
+Scope:
+
+- Detect when the `try` body and its handlers make the construct total.
+- Emit an expression or control-flow shape with no implicit `()` fall-through.
+- Preserve exact nominal handler matching.
+- Do not add a dummy return value or compatibility fallback.
+
+Acceptance criteria:
+
+- `imported_error_not_catch_all`, `try_union_error_alias`, and
+  `try_union_error_channel` compile and run.
+- `nominal_identity_alias_paths` has no fall-through type diagnostic.
+- Generated Rust has no E0317 or E0308 diagnostic from a total `try` return.
+- Focused lowering, code-generation, and E2E tests pass.
+
 ## Required Linked Delivery A: Rust-interop Evidence Path
 
 The active
@@ -1089,7 +1184,7 @@ Purpose: Combine phase-owned corrections with independently owned changes.
 
 Dependencies:
 
-- Items 1 through 10A are merged.
+- Items 1 through 10C are merged.
 - Required linked delivery A is merged.
 
 Scope:
@@ -1155,6 +1250,8 @@ Acceptance criteria:
 | Protocol diagnostics | Protocol conformance tests and broad CLI tests |
 | Method slots | Focused ignored driver runtime test and the method-slot matrix case. Item 11 runs the full matrix. |
 | Residual nominal registry | Focused direct-class, registry consistency, and `uuid_and_datetime` demo checks |
+| `try` continuation ownership | Focused continuation-state tests, config-parser fixtures, and TLS loopback fixtures |
+| Total `try` returns | Focused control-flow tests and imported and union error fixtures |
 | Regression guards | Focused stale-path, stale-hash, nominal-identity, conversion, and no-compatibility self-tests |
 | Python doctor | One final-candidate run and one isolated profile only after a timeout |
 
@@ -1210,6 +1307,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10 are complete and recorded.
+Current state: Items 0 through 10A are complete and recorded.
 
-Next action: implement Item 10A.
+Next action: implement Item 10B.
