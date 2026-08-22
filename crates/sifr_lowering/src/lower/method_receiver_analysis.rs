@@ -184,17 +184,20 @@ fn collect_method_facts(
                 call_mutates_receiver = true;
             }
         }
-        HirExpr::Call { func, args, .. } => {
+        HirExpr::Call {
+            func,
+            args,
+            mutable_arg_places,
+            ..
+        } => {
             if func == "anext" && args.first().is_some_and(|arg| receiver_rooted(arg, ctx)) {
                 call_mutates_receiver = true;
             }
-            if ctx.functions.get(func).is_some_and(|signature| {
-                args.iter()
-                    .zip(&signature.params)
-                    .any(|(arg, (_, _, convention))| {
-                        convention.is_mut_borrow() && receiver_rooted(arg, ctx)
-                    })
-            }) {
+            if args
+                .iter()
+                .zip(mutable_arg_places)
+                .any(|(arg, target)| target.is_some() && receiver_rooted(arg, ctx))
+            {
                 call_mutates_receiver = true;
             }
         }

@@ -1,0 +1,26 @@
+class Bucket:
+    values: list[int]
+
+    def __init__(self) -> None:
+        self.values = []
+
+    def update(mut self) -> None:
+        def helper(values: list[int]) -> None:
+            values.append(1)
+
+        helper(self.values)
+
+    def size(self) -> int:
+        def helper(values: list[int]) -> int:
+            return len(values)
+
+        return helper(self.values)
+
+
+def main() -> None:
+    bucket = Bucket()
+    bucket.update()
+    assert bucket.size() == 1
+
+
+main()

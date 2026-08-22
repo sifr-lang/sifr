@@ -101,6 +101,8 @@ mod method_receiver_diagnostics;
 mod method_receiver_diagnostics_tests;
 #[cfg(test)]
 mod method_receiver_footprint_tests;
+#[cfg(test)]
+mod method_receiver_nested_helper_tests;
 mod method_receiver_places;
 mod min_max_validation;
 mod mod_impl;
