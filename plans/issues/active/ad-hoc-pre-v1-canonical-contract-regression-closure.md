@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10K are complete. Item 10L is next.
+Status: active on 2026-08-22. Items 0 through 10L are complete. Item 10M is next.
 
 ## Objective
 
@@ -1773,6 +1773,45 @@ Acceptance criteria:
 - Residual propagation remains available after the parent-handler chain.
 - Focused lowering, code-generation, and native-run tests pass.
 
+### Item 10L record
+
+State: complete
+
+PR: [#3472](https://github.com/sifr-lang/sifr/pull/3472)
+
+Base SHA: `cce6832c3d46f9e8111e44aaca2216ce6bc5a44f`
+
+Candidate SHA: `176e67d2752a12000b0727017ca875da40bfc974`
+
+Merge SHA: `c51ca39911fa532d28637b3c48ad38e9551c5bda`
+
+Changed paths: transitive error-class collection, try-handler dispatch,
+lowering and code-generation regressions, and a native parent-handler fixture.
+
+Validation: all 1,039 lowering tests passed, with one ignored. All 1,134
+code-generation tests passed. The new parent-handler fixture and the existing
+imported-error fixture built and ran release-native. Strict targeted Clippy,
+formatting, HIR maintainability, diff checks, and the 3,226-file size guardrail
+passed.
+
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all preceding checks and stopped only at linked delivery A's stale Rust-interop
+evidence path. Neither gate was repeated. The evidence is in the
+[#3472 create-PR gate comment](https://github.com/sifr-lang/sifr/pull/3472#issuecomment-5381944991)
+and the
+[#3472 merge gate comment](https://github.com/sifr-lang/sifr/pull/3472#issuecomment-5381953728).
+
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. It confirmed shared lowering and code-generation ancestry,
+exact nominal identity, handler ordering, checked binding conversion, and
+residual ownership. The evidence is in the
+[#3472 review comment](https://github.com/sifr-lang/sifr/pull/3472#issuecomment-5381935990).
+
+Deferred follow-up: linked delivery A retains its stale Rust-interop evidence
+path. No new Item 10L mechanism defect was found.
+
+Next action: implement Item 10M.
+
 ## Item 10M: Isolate Nested-function Try-channel Codegen State
 
 Purpose: Make each generated nested function own its error-channel context.
@@ -1988,6 +2027,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10K are complete and recorded.
+Current state: Items 0 through 10L are complete and recorded.
 
-Next action: implement Item 10L.
+Next action: implement Item 10M.
