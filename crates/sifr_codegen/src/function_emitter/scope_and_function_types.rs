@@ -487,6 +487,11 @@ impl RustEmitter {
         let saved_current_sifr_int_result_return = self.current_sifr_int_result_return.get();
         let saved_python_context_counter = self.python_context_counter;
         let saved_python_context_envelope_depth = self.python_context_envelope_depth;
+        let saved_try_closure_depth = std::mem::replace(&mut self.try_closure_depth, 0);
+        let saved_try_closure_option_wrap = std::mem::take(&mut self.try_closure_option_wrap);
+        let saved_try_closure_error_type = std::mem::take(&mut self.try_closure_error_type);
+        let saved_try_closure_error_type_info =
+            std::mem::take(&mut self.try_closure_error_type_info);
         let nested_binding_mutable = saved_mutated_vars.contains(&func.name)
             || nested_function_mutates_capture(func, &nested_mutated_vars);
 
@@ -567,6 +572,10 @@ impl RustEmitter {
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
         self.python_context_counter = saved_python_context_counter;
         self.python_context_envelope_depth = saved_python_context_envelope_depth;
+        self.try_closure_depth = saved_try_closure_depth;
+        self.try_closure_option_wrap = saved_try_closure_option_wrap;
+        self.try_closure_error_type = saved_try_closure_error_type;
+        self.try_closure_error_type_info = saved_try_closure_error_type_info;
         self.string_char_cache_vars = saved_string_char_cache_vars;
         self.string_char_cache_required_names = saved_string_char_cache_required_names;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;

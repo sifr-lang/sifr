@@ -1,0 +1,47 @@
+def fail_outer() -> Result[int, IOError]:
+    raise IOError("outer")
+
+
+def run_sync() -> Result[int, IOError]:
+    try:
+        def inner(succeed: bool) -> Result[int, ValueError]:
+            if succeed:
+                return 1
+            raise ValueError("inner")
+
+        nested_text: str = str(inner(False))
+        assert nested_text == 'Err(ValueError { message: "inner" })'
+        outer_value: int = fail_outer()
+        return outer_value
+    except IOError:
+        return 42
+
+
+async def run_async() -> Result[int, IOError]:
+    try:
+        async def inner(succeed: bool) -> Result[int, ValueError]:
+            await task.sleep(0.0)
+            if succeed:
+                return 1
+            raise ValueError("inner async")
+
+        nested_text: str = str(await inner(False))
+        assert nested_text == 'Err(ValueError { message: "inner async" })'
+        outer_value: int = fail_outer()
+        return outer_value
+    except IOError:
+        return 42
+
+
+async def main() -> None:
+    try:
+        sync_value: int = run_sync()
+        assert sync_value == 42
+    except IOError:
+        assert False
+
+    try:
+        async_value: int = await run_async()
+        assert async_value == 42
+    except IOError:
+        assert False
