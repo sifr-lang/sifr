@@ -16,6 +16,21 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for Error {}
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ParseError {
+        pub message: String,
+    }
+    impl ParseError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ParseError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ParseError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ValueError {
         pub message: String,
     }
@@ -45,6 +60,11 @@ mod __sifr_project_nominals {
         }
     }
     impl ::std::error::Error for DivisionError {}
+    impl From<ParseError> for Error {
+        fn from(err: ParseError) -> Self {
+            Self::new(err.message)
+        }
+    }
     impl From<ValueError> for Error {
         fn from(err: ValueError) -> Self {
             Self::new(err.message)
@@ -58,25 +78,28 @@ mod __sifr_project_nominals {
 }
 pub use __sifr_project_nominals::DivisionError;
 pub use __sifr_project_nominals::Error;
+pub use __sifr_project_nominals::ParseError;
 pub use __sifr_project_nominals::ValueError;
 
 mod __sifr_project_unions {
     #[derive(Debug, Clone)]
     pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0 {
-        __SifrUnionVariant_5_x3aclass5_x3aError1_x3a0(crate::Error),
-        __SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(crate::ValueError),
+        __SifrUnionVariant_5_x3aclass5_x3aError1_x3a0(crate::__sifr_project_nominals::Error),
+        __SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
+            crate::__sifr_project_nominals::ValueError,
+        ),
     }
-    impl From<crate::Error>
+    impl From<crate::__sifr_project_nominals::Error>
     for __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0 {
-        fn from(value: crate::Error) -> Self {
+        fn from(value: crate::__sifr_project_nominals::Error) -> Self {
             __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass5_x3aError1_x3a0(
                 value,
             )
         }
     }
-    impl From<crate::ValueError>
+    impl From<crate::__sifr_project_nominals::ValueError>
     for __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0 {
-        fn from(value: crate::ValueError) -> Self {
+        fn from(value: crate::__sifr_project_nominals::ValueError) -> Self {
             __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
                 value,
             )
@@ -101,21 +124,6 @@ mod __sifr_project_unions {
     }
 }
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0;
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct AppError {
     message: String,

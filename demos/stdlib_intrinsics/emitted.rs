@@ -205,6 +205,21 @@ mod __sifr_project_nominals {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ParseError {
+        pub message: String,
+    }
+    impl ParseError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ParseError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ParseError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ValueError {
         pub message: String,
     }
@@ -220,6 +235,8 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
+pub use __sifr_project_nominals::ParseError;
+pub use __sifr_project_nominals::ValueError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2etime_x2estruct__time;
 fn random_int(min: i64, max: i64) -> i64 {
     ::sifr_stdlib::random::random_int(
@@ -1446,36 +1463,6 @@ fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     };
     IOError { message: msg, kind }
 }
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ValueError {
-    message: String,
-}
-impl ValueError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ValueError {}
 fn demo_math() {
     println!("=== math new intrinsics ===");
     let e0: f64 = erf(0.0_f64);

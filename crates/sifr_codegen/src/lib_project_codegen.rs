@@ -350,7 +350,7 @@ pub fn generate_rust_multi_with_metadata(
     } else {
         HashMap::new()
     };
-    nominal_type_paths.extend(stdlib_nominal_plan.nominal_paths.clone());
+    nominal_type_paths.extend(stdlib_nominal_plan.registry.rust_paths.clone());
     let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
     let project_union_prelude = [stdlib_nominal_plan.prelude.as_str(), union_prelude.as_str()]
         .into_iter()

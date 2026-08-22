@@ -1,5 +1,22 @@
 // src/main.rs
-// --- stdlib: sifr.itertools ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ValueError {
+        pub message: String,
+    }
+    impl ValueError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ValueError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ValueError {}
+}
+pub use __sifr_project_nominals::ValueError;
 fn _collect_iterable<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: Vec<T>,
 ) -> Vec<T> {
@@ -144,8 +161,6 @@ fn cycle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     Box::new(result.into_iter())
 }
-
-// --- stdlib: sifr.test ---
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     assert_eq!(actual.len() as i64, expected.len() as i64);
     let mut i: i64 = 0_i64;
@@ -154,56 +169,67 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
         i += 1_i64;
     }
 }
-// --- end stdlib ---
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ValueError {
-    message: String,
-}
-
-impl ValueError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for ValueError {
-}
-
 fn collect_core_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    actual.push((format!("{:?}", chain(&vec![vec![1_i64, 2_i64], vec![3_i64]]).collect::<Vec<_>>())).as_str() == ("[1, 2, 3]".to_string()).as_str());
-    actual.push((format!("{:?}", pairwise(&(vec![1_i64, 2_i64, 3_i64, 4_i64]).into_iter().collect::<Vec<_>>()))).as_str() == ("[[1, 2], [2, 3], [3, 4]]".to_string()).as_str());
+    actual
+        .push(
+            (format!(
+                "{:?}", chain(& vec![vec![1_i64, 2_i64], vec![3_i64]]).collect::< Vec < _
+                >> ()
+            ))
+                .as_str() == ("[1, 2, 3]".to_string()).as_str(),
+        );
+    actual
+        .push(
+            (format!(
+                "{:?}", pairwise(& (vec![1_i64, 2_i64, 3_i64, 4_i64]).into_iter()
+                .collect::< Vec < _ >> ())
+            ))
+                .as_str() == ("[[1, 2], [2, 3], [3, 4]]".to_string()).as_str(),
+        );
     let mut batched_ok: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let bat: Vec<Vec<i64>> = batched(&(vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64]).into_iter().collect::<Vec<_>>(), 2_i64)?;
-    batched_ok = (format!("{:?}", bat) == "[[1, 2], [3, 4], [5]]");
-    Ok(())
-})();
+        let bat: Vec<Vec<i64>> = batched(
+            &(vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64]).into_iter().collect::<Vec<_>>(),
+            2_i64,
+        )?;
+        batched_ok = (format!("{:?}", bat) == "[[1, 2], [3, 4], [5]]");
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         let _ = format!("{}", e.message.clone());
     }
     actual.push(batched_ok);
-    actual.push((format!("{:?}", accumulate(&(vec![1_i64, 2_i64, 3_i64]).into_iter().collect::<Vec<_>>(), None).collect::<Vec<_>>())).as_str() == ("[1, 3, 6]".to_string()).as_str());
-    actual.push((format!("{:?}", cycle(&(vec![5_i64, 6_i64]).into_iter().collect::<Vec<_>>(), 5_i64).collect::<Vec<_>>())).as_str() == ("[5, 6, 5, 6, 5]".to_string()).as_str());
+    actual
+        .push(
+            (format!(
+                "{:?}", accumulate(& (vec![1_i64, 2_i64, 3_i64]).into_iter().collect::<
+                Vec < _ >> (), None).collect::< Vec < _ >> ()
+            ))
+                .as_str() == ("[1, 3, 6]".to_string()).as_str(),
+        );
+    actual
+        .push(
+            (format!(
+                "{:?}", cycle(& (vec![5_i64, 6_i64]).into_iter().collect::< Vec < _ >>
+                (), 5_i64).collect::< Vec < _ >> ()
+            ))
+                .as_str() == ("[5, 6, 5, 6, 5]".to_string()).as_str(),
+        );
     actual
 }
-
 fn collect_negative_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let mut invalid_batch_rejected: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let _bad: Vec<Vec<i64>> = batched(&(vec![1_i64]).into_iter().collect::<Vec<_>>(), 0_i64)?;
-    let _ = _bad;
-    Ok(())
-})();
+        let _bad: Vec<Vec<i64>> = batched(
+            &(vec![1_i64]).into_iter().collect::<Vec<_>>(),
+            0_i64,
+        )?;
+        let _ = _bad;
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         invalid_batch_rejected = ((e.message.chars().count() as i64) > (0_i64));
@@ -211,13 +237,11 @@ fn collect_negative_actual() -> Vec<bool> {
     actual.push(invalid_batch_rejected);
     actual
 }
-
 fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {
     for value in values.iter().copied() {
         target.push(value);
     }
 }
-
 fn main() {
     let expected: Vec<bool> = vec![true, true, true, true, true, true];
     let mut actual: Vec<bool> = vec![];

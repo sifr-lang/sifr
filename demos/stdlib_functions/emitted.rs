@@ -1,5 +1,22 @@
 // src/main.rs
-// --- stdlib: sifr.bisect ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ValueError {
+        pub message: String,
+    }
+    impl ValueError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ValueError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ValueError {}
+}
+pub use __sifr_project_nominals::ValueError;
 fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     a: &Vec<T>,
     x: &T,
@@ -50,8 +67,6 @@ fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     left
 }
-
-// --- stdlib: sifr.itertools ---
 fn pairwise<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &Vec<T>,
 ) -> Vec<Vec<T>> {
@@ -106,8 +121,6 @@ fn batched<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     Ok(result)
 }
-
-// --- stdlib: _sifr.math ---
 const PI: f64 = 3.141592653589793_f64;
 const E: f64 = 2.718281828459045_f64;
 const TAU: f64 = 6.283185307179586_f64;
@@ -288,8 +301,6 @@ fn nextafter(x: f64, y: f64) -> f64 {
 fn ulp(x: f64) -> f64 {
     ::sifr_stdlib::math::ulp(x)
 }
-
-// --- stdlib: sifr.math ---
 fn factorial(n: i64) -> i64 {
     if n < (0_i64) {
         return 0_i64;
@@ -512,8 +523,6 @@ fn modf_integral(x: f64) -> f64 {
 fn pow(x: f64, y: f64) -> f64 {
     pow_val(x, y)
 }
-
-// --- stdlib: _sifr.fs ---
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrIoNativeFileHandle {
     _id: String,
@@ -731,8 +740,6 @@ fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError>
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-
-// --- stdlib: sifr.pathlib ---
 fn basename(path: &String) -> String {
     let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
     let mut i: i64 = (__sifr_chars_path.len() as i64) - (1_i64);
@@ -853,8 +860,6 @@ fn is_absolute(path: &String) -> bool {
     }
     false
 }
-
-// --- stdlib: sifr.statistics ---
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {
     message: String,
@@ -993,8 +998,6 @@ fn median_high(
         ),
     )
 }
-
-// --- stdlib: sifr.string ---
 fn capwords(s: &String) -> String {
     let normalized: String = s
         .replace('\t', " ")
@@ -1027,246 +1030,194 @@ fn capwords(s: &String) -> String {
     }
     result
 }
-// --- end stdlib ---
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct IOError {
     message: String,
     kind: String,
 }
-
 impl IOError {
     fn new(message: String) -> Self {
-        Self { message, kind: "Other".to_string() }
+        Self {
+            message,
+            kind: "Other".to_string(),
+        }
     }
 }
-
 impl ::std::fmt::Display for IOError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for IOError {
-}
-
+impl ::std::error::Error for IOError {}
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
-    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
-    match __sifr_io_kind {
-    Some(::std::io::ErrorKind::NotFound) => {
-        "FileNotFound".to_string()
-    },
-    Some(::std::io::ErrorKind::PermissionDenied) => {
-        "PermissionDenied".to_string()
-    },
-    Some(::std::io::ErrorKind::AlreadyExists) => {
-        "FileExists".to_string()
-    },
-    Some(::std::io::ErrorKind::IsADirectory) => {
-        "IsADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::NotADirectory) => {
-        "NotADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-        "DirectoryNotEmpty".to_string()
-    },
-    _ => {
-        "Other".to_string()
-    },
-}
-};
+        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+            .downcast_ref::<std::io::Error>()
+            .map(::std::io::Error::kind);
+        match __sifr_io_kind {
+            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+            Some(::std::io::ErrorKind::PermissionDenied) => {
+                "PermissionDenied".to_string()
+            }
+            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                "DirectoryNotEmpty".to_string()
+            }
+            _ => "Other".to_string(),
+        }
+    };
     IOError { message: msg, kind }
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
-
 impl Error {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for Error {
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ValueError {
-    message: String,
-}
-
-impl ValueError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for ValueError {
-}
-
+impl ::std::error::Error for Error {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ValueError> for Error {
     fn from(err: ValueError) -> Self {
         Self::new(err.message)
     }
 }
-
 fn main() {
     println!("=== Math Functions ===");
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
-    __sifr_concat.push_str("factorial(10) = ");
-    __sifr_concat.push_str((format!("{}", factorial(10_i64))).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
-    __sifr_concat.push_str("gcd(48, 18) = ");
-    __sifr_concat.push_str((format!("{}", gcd(48_i64, 18_i64))).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(12usize + 0usize);
-    __sifr_concat.push_str("lcm(4, 6) = ");
-    __sifr_concat.push_str((format!("{}", lcm(4_i64, 6_i64))).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
-    __sifr_concat.push_str("comb(10, 3) = ");
-    __sifr_concat.push_str((format!("{}", comb(10_i64, 3_i64))).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
-    __sifr_concat.push_str("perm(5, 3) = ");
-    __sifr_concat.push_str((format!("{}", perm(5_i64, 3_i64))).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(16usize + 0usize);
+        __sifr_concat.push_str("factorial(10) = "); __sifr_concat.push_str((format!("{}",
+        factorial(10_i64))).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(14usize + 0usize);
+        __sifr_concat.push_str("gcd(48, 18) = "); __sifr_concat.push_str((format!("{}",
+        gcd(48_i64, 18_i64))).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(12usize + 0usize);
+        __sifr_concat.push_str("lcm(4, 6) = "); __sifr_concat.push_str((format!("{}",
+        lcm(4_i64, 6_i64))).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(14usize + 0usize);
+        __sifr_concat.push_str("comb(10, 3) = "); __sifr_concat.push_str((format!("{}",
+        comb(10_i64, 3_i64))).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(13usize + 0usize);
+        __sifr_concat.push_str("perm(5, 3) = "); __sifr_concat.push_str((format!("{}",
+        perm(5_i64, 3_i64))).as_str()); __sifr_concat }
+    );
     let nums: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64];
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(20usize + 0usize);
-    __sifr_concat.push_str("prod([1,2,3,4,5]) = ");
-    __sifr_concat.push_str((format!("{}", prod(&nums))).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(11usize + 0usize);
-    __sifr_concat.push_str("exp(1.0) = ");
-    __sifr_concat.push_str((format!("{}", exp(1.0_f64))).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
-    __sifr_concat.push_str("isfinite(1.0) = ");
-    __sifr_concat.push_str((format!("{}", isfinite(1.0_f64))).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(20usize + 0usize);
+        __sifr_concat.push_str("prod([1,2,3,4,5]) = "); __sifr_concat
+        .push_str((format!("{}", prod(& nums))).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(11usize + 0usize);
+        __sifr_concat.push_str("exp(1.0) = "); __sifr_concat.push_str((format!("{}",
+        exp(1.0_f64))).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(16usize + 0usize);
+        __sifr_concat.push_str("isfinite(1.0) = "); __sifr_concat.push_str((format!("{}",
+        isfinite(1.0_f64))).as_str()); __sifr_concat }
+    );
     println!("=== Statistics Functions ===");
     let data: Vec<f64> = vec![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64];
     let even: Vec<f64> = vec![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64];
-    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (|| {
-    let hm: f64 = harmonic_mean(&data)?;
-    let ml: f64 = median_low(&even)?;
-    let mh: f64 = median_high(&even)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
-    __sifr_concat.push_str("harmonic_mean = ");
-    __sifr_concat.push_str((format!("{}", hm)).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
-    __sifr_concat.push_str("median_low = ");
-    __sifr_concat.push_str((format!("{}", ml)).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
-    __sifr_concat.push_str("median_high = ");
-    __sifr_concat.push_str((format!("{}", mh)).as_str());
-    __sifr_concat
-});
-    Ok(())
-})();
+    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (||
+    {
+        let hm: f64 = harmonic_mean(&data)?;
+        let ml: f64 = median_low(&even)?;
+        let mh: f64 = median_high(&even)?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(16usize +
+            0usize); __sifr_concat.push_str("harmonic_mean = "); __sifr_concat
+            .push_str((format!("{}", hm)).as_str()); __sifr_concat }
+        );
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(13usize +
+            0usize); __sifr_concat.push_str("median_low = "); __sifr_concat
+            .push_str((format!("{}", ml)).as_str()); __sifr_concat }
+        );
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(14usize +
+            0usize); __sifr_concat.push_str("median_high = "); __sifr_concat
+            .push_str((format!("{}", mh)).as_str()); __sifr_concat }
+        );
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let se = __sifr_try_err.clone();
-        println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(18usize + 0usize);
-    __sifr_concat.push_str("statistics error: ");
-    __sifr_concat.push_str((se.message.clone()).as_str());
-    __sifr_concat
-});
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
+            0usize); __sifr_concat.push_str("statistics error: "); __sifr_concat
+            .push_str((se.message.clone()).as_str()); __sifr_concat }
+        );
     }
     println!("=== String Functions ===");
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(11usize + 0usize);
-    __sifr_concat.push_str("capwords = ");
-    __sifr_concat.push_str((capwords(&"hello world test".to_string())).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(11usize + 0usize);
+        __sifr_concat.push_str("capwords = "); __sifr_concat.push_str((capwords(&
+        "hello world test".to_string())).as_str()); __sifr_concat }
+    );
     println!("=== Path Functions ===");
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(7usize + 0usize);
-    __sifr_concat.push_str("stem = ");
-    __sifr_concat.push_str((stem(&"/docs/report.pdf".to_string())).as_str());
-    __sifr_concat
-});
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
-    __sifr_concat.push_str("is_absolute = ");
-    __sifr_concat.push_str((format!("{}", is_absolute(&"/usr/bin".to_string()))).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(7usize + 0usize);
+        __sifr_concat.push_str("stem = "); __sifr_concat.push_str((stem(&
+        "/docs/report.pdf".to_string())).as_str()); __sifr_concat }
+    );
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(14usize + 0usize);
+        __sifr_concat.push_str("is_absolute = "); __sifr_concat.push_str((format!("{}",
+        is_absolute(& "/usr/bin".to_string()))).as_str()); __sifr_concat }
+    );
     println!("=== Generic Bisect ===");
     let floats: Vec<f64> = vec![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64];
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(27usize + 0usize);
-    __sifr_concat.push_str("bisect_left(floats, 2.5) = ");
-    __sifr_concat.push_str((format!("{}", bisect_left(&floats, &(2.5_f64), 0_i64, None))).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(27usize + 0usize);
+        __sifr_concat.push_str("bisect_left(floats, 2.5) = "); __sifr_concat
+        .push_str((format!("{}", bisect_left(& floats, & (2.5_f64), 0_i64, None)))
+        .as_str()); __sifr_concat }
+    );
     println!("=== Itertools ===");
     let items: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64];
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(11usize + 0usize);
-    __sifr_concat.push_str("pairwise = ");
-    __sifr_concat.push_str((format!("{:?}", pairwise(&(items).iter().copied().collect::<Vec<_>>()))).as_str());
-    __sifr_concat
-});
+    println!(
+        "{}", { let mut __sifr_concat : String = String::with_capacity(11usize + 0usize);
+        __sifr_concat.push_str("pairwise = "); __sifr_concat.push_str((format!("{:?}",
+        pairwise(& (items).iter().copied().collect::< Vec < _ >> ()))).as_str());
+        __sifr_concat }
+    );
     let items2: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64, 6_i64, 7_i64, 8_i64];
     let __sifr_try_res: Result<(), ValueError> = (|| {
-    let bat: Vec<Vec<i64>> = batched(&(items2).iter().copied().collect::<Vec<_>>(), 3_i64)?;
-    println!("{}", {
-    let mut __sifr_concat: String = String::with_capacity(10usize + 0usize);
-    __sifr_concat.push_str("batched = ");
-    __sifr_concat.push_str((format!("{:?}", bat)).as_str());
-    __sifr_concat
-});
-    Ok(())
-})();
+        let bat: Vec<Vec<i64>> = batched(
+            &(items2).iter().copied().collect::<Vec<_>>(),
+            3_i64,
+        )?;
+        println!(
+            "{}", { let mut __sifr_concat : String = String::with_capacity(10usize +
+            0usize); __sifr_concat.push_str("batched = "); __sifr_concat
+            .push_str((format!("{:?}", bat)).as_str()); __sifr_concat }
+        );
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         println!("error: {}", e.message.clone());

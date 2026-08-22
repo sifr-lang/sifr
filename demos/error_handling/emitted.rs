@@ -1,6 +1,21 @@
 // src/main.rs
 mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ParseError {
+        pub message: String,
+    }
+    impl ParseError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ParseError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ParseError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DivisionError {
         pub message: String,
     }
@@ -17,21 +32,7 @@ mod __sifr_project_nominals {
     impl ::std::error::Error for DivisionError {}
 }
 pub use __sifr_project_nominals::DivisionError;
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
+pub use __sifr_project_nominals::ParseError;
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct ValidationError {
     message: String,

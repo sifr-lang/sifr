@@ -146,6 +146,7 @@ lowering_files = [
   "crates/sifr_lowering/src/lower/mod_context.rs",
 ]
 codegen_files = [
+  "crates/sifr_codegen/src/error_refs.rs",
   "crates/sifr_codegen/src/intrinsic_method_emitters/builtin_core_methods.rs",
   "crates/sifr_codegen/src/intrinsic_method_emitters/literal_and_intrinsic_exprs.rs",
   "crates/sifr_codegen/src/intrinsics/registry.rs",

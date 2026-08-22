@@ -1,5 +1,48 @@
 // src/main.rs
-// --- stdlib: _sifr.encoding ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct IOError {
+        pub message: String,
+        pub kind: String,
+    }
+    impl IOError {
+        pub fn new(message: String) -> Self {
+            Self {
+                message,
+                kind: "Other".to_string(),
+            }
+        }
+    }
+    impl ::std::fmt::Display for IOError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for IOError {}
+    pub fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match __sifr_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => {
+                    "PermissionDenied".to_string()
+                }
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                    "DirectoryNotEmpty".to_string()
+                }
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+}
+pub use __sifr_project_nominals::IOError;
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
 }
@@ -109,8 +152,6 @@ fn _encoding_encode_recoveries_impl(
             message: __sifr_bridge_error.to_string(),
         })
 }
-
-// --- stdlib: _sifr.fs ---
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrIoNativeFileHandle {
     _id: String,
@@ -328,8 +369,6 @@ fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError>
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-
-// --- stdlib: sifr.encoding ---
 fn __const_ENCODING_UTF8() -> String {
     "utf-8".to_string().to_string()
 }
@@ -1271,8 +1310,6 @@ fn encode(
         }
     }
 }
-
-// --- stdlib: _sifr.sys ---
 fn run_command(cmd: &String) -> Result<String, IOError> {
     ::sifr_stdlib::sys::run_command(cmd)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -1329,8 +1366,6 @@ fn os_linesep() -> String {
 fn os_name() -> String {
     ::sifr_stdlib::sys::os_name()
 }
-
-// --- stdlib: sifr.pathlib ---
 fn basename(path: &String) -> String {
     let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
     let mut i: i64 = (__sifr_chars_path.len() as i64) - (1_i64);
@@ -1410,8 +1445,6 @@ fn dirname(path: &String) -> String {
     }
     "".to_string()
 }
-
-// --- stdlib: _sifr.crypto ---
 fn random_int(min: i64, max: i64) -> i64 {
     ::sifr_stdlib::random::random_int(
             ::sifr_runtime::interop::SifrIntBridge::from(min),
@@ -1581,8 +1614,6 @@ fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
 fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
 }
-
-// --- stdlib: sifr.tempfile ---
 fn _random_suffix() -> String {
     let n: i64 = random_int(100000_i64, 999999_i64);
     format!("{}", n)
@@ -1711,8 +1742,6 @@ fn mkdtemp(prefix: &String) -> Result<String, IOError> {
     }
     Err(IOError::new(_collision_message(&"mkdtemp".to_string(), max_attempts)))
 }
-
-// --- stdlib: sifr.test ---
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     assert_eq!(actual.len() as i64, expected.len() as i64);
     let mut i: i64 = 0_i64;
@@ -1721,213 +1750,242 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
         i += 1_i64;
     }
 }
-// --- end stdlib ---
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct IOError {
-    message: String,
-    kind: String,
-}
-
-impl IOError {
-    fn new(message: String) -> Self {
-        Self { message, kind: "Other".to_string() }
-    }
-}
-
-impl ::std::fmt::Display for IOError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for IOError {
-}
-
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
-    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
-    match __sifr_io_kind {
-    Some(::std::io::ErrorKind::NotFound) => {
-        "FileNotFound".to_string()
-    },
-    Some(::std::io::ErrorKind::PermissionDenied) => {
-        "PermissionDenied".to_string()
-    },
-    Some(::std::io::ErrorKind::AlreadyExists) => {
-        "FileExists".to_string()
-    },
-    Some(::std::io::ErrorKind::IsADirectory) => {
-        "IsADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::NotADirectory) => {
-        "NotADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-        "DirectoryNotEmpty".to_string()
-    },
-    _ => {
-        "Other".to_string()
-    },
-}
-};
+        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+            .downcast_ref::<std::io::Error>()
+            .map(::std::io::Error::kind);
+        match __sifr_io_kind {
+            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+            Some(::std::io::ErrorKind::PermissionDenied) => {
+                "PermissionDenied".to_string()
+            }
+            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                "DirectoryNotEmpty".to_string()
+            }
+            _ => "Other".to_string(),
+        }
+    };
     IOError { message: msg, kind }
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
-
 impl Error {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for Error {
-}
-
+impl ::std::error::Error for Error {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
-
 impl ParseError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ParseError {
-}
-
+impl ::std::error::Error for ParseError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
-
 impl ValueError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ValueError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ValueError {
-}
-
+impl ::std::error::Error for ValueError {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ParseError> for Error {
     fn from(err: ParseError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ValueError> for Error {
     fn from(err: ValueError) -> Self {
         Self::new(err.message)
     }
 }
-
 fn collect_tempfile_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let preview_path: String = mktemp_path(&"sifr_tempfile_preview_".to_string());
     let __sifr_try_res: Result<(), IOError> = (|| {
-    let file_path: String = mkstemp(&"sifr_tempfile_tmp_".to_string())?;
-    let dir_path: String = mkdtemp(&"sifr_tempfile_tmpd_".to_string())?;
-    actual.push(exists(&file_path));
-    actual.push(exists(&dir_path));
-    let preview_name: String = basename(&preview_path);
-    let __sifr_chars_preview_name: Vec<char> = preview_name.chars().collect::<Vec<char>>();
-    let file_name: String = basename(&file_path);
-    let __sifr_chars_file_name: Vec<char> = file_name.chars().collect::<Vec<char>>();
-    let dir_name: String = basename(&dir_path);
-    let __sifr_chars_dir_name: Vec<char> = dir_name.chars().collect::<Vec<char>>();
-    let preview_has_prefix: bool = ((((__sifr_chars_preview_name.len() as i64) > ("sifr_tempfile_preview_".to_string().chars().count() as i64))) && ((({
-    let _slice_src = &__sifr_chars_preview_name;
-    let _slice_len_i64 = _slice_src.len() as i64;
-    let _slice_start_i64 = if (0_i64) < 0 { (_slice_len_i64 + (0_i64)).max(0) } else { (0_i64).min(_slice_len_i64) };
-    let _slice_stop_i64 = if ("sifr_tempfile_preview_".to_string().chars().count() as i64) < 0 { (_slice_len_i64 + ("sifr_tempfile_preview_".to_string().chars().count() as i64)).max(0) } else { ("sifr_tempfile_preview_".to_string().chars().count() as i64).min(_slice_len_i64) };
-    String::from_iter(_slice_src.iter().skip(_slice_start_i64 as usize).take((_slice_stop_i64 - _slice_start_i64).max(0) as usize).copied())
-}) == "sifr_tempfile_preview_")));
-    let file_has_prefix: bool = ((((__sifr_chars_file_name.len() as i64) > ("sifr_tempfile_tmp_".to_string().chars().count() as i64))) && ((({
-    let _slice_src = &__sifr_chars_file_name;
-    let _slice_len_i64 = _slice_src.len() as i64;
-    let _slice_start_i64 = if (0_i64) < 0 { (_slice_len_i64 + (0_i64)).max(0) } else { (0_i64).min(_slice_len_i64) };
-    let _slice_stop_i64 = if ("sifr_tempfile_tmp_".to_string().chars().count() as i64) < 0 { (_slice_len_i64 + ("sifr_tempfile_tmp_".to_string().chars().count() as i64)).max(0) } else { ("sifr_tempfile_tmp_".to_string().chars().count() as i64).min(_slice_len_i64) };
-    String::from_iter(_slice_src.iter().skip(_slice_start_i64 as usize).take((_slice_stop_i64 - _slice_start_i64).max(0) as usize).copied())
-}) == "sifr_tempfile_tmp_")));
-    let dir_has_prefix: bool = ((((__sifr_chars_dir_name.len() as i64) > ("sifr_tempfile_tmpd_".to_string().chars().count() as i64))) && ((({
-    let _slice_src = &__sifr_chars_dir_name;
-    let _slice_len_i64 = _slice_src.len() as i64;
-    let _slice_start_i64 = if (0_i64) < 0 { (_slice_len_i64 + (0_i64)).max(0) } else { (0_i64).min(_slice_len_i64) };
-    let _slice_stop_i64 = if ("sifr_tempfile_tmpd_".to_string().chars().count() as i64) < 0 { (_slice_len_i64 + ("sifr_tempfile_tmpd_".to_string().chars().count() as i64)).max(0) } else { ("sifr_tempfile_tmpd_".to_string().chars().count() as i64).min(_slice_len_i64) };
-    String::from_iter(_slice_src.iter().skip(_slice_start_i64 as usize).take((_slice_stop_i64 - _slice_start_i64).max(0) as usize).copied())
-}) == "sifr_tempfile_tmpd_")));
-    actual.push((preview_has_prefix && file_has_prefix) && dir_has_prefix);
-    let temp_root: String = dirname(&preview_path);
-    let missing_parent_name: String = "__sifr_tempfile_missing_parent__".to_string();
-    let missing_parent_path: String = {
-    let mut __sifr_concat: String = String::with_capacity((temp_root.len() + 1usize) + missing_parent_name.len());
-    __sifr_concat.push_str((temp_root).as_str());
-    __sifr_concat.push('/');
-    __sifr_concat.push_str((missing_parent_name).as_str());
-    __sifr_concat
-};
-    let missing_prefix: String = {
-    let mut __sifr_concat: String = String::with_capacity(missing_parent_name.len() + 5usize);
-    __sifr_concat.push_str((missing_parent_name).as_str());
-    __sifr_concat.push_str("/bad_");
-    __sifr_concat
-};
-    let _rm_missing: String = run_command(&format!("{}{}", "rm -rf ", missing_parent_path))?;
-    let mut missing_error: bool = false;
-    let __sifr_try_res: Result<(), IOError> = (|| {
-    let unexpected_file: String = mkstemp(&missing_prefix)?;
-    let _rm_unexpected: String = run_command(&format!("{}{}", "rm -f ", unexpected_file))?;
-    missing_error = false;
-    Ok(())
-})();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message.clone());
-        missing_error = true;
-    }
-    actual.push(missing_error);
-    let _c1: String = run_command(&format!("{}{}", "rm -f ", file_path))?;
-    let _c2: String = run_command(&format!("{}{}", "rm -rf ", dir_path))?;
-    let _c3: String = run_command(&format!("{}{}", "rm -rf ", missing_parent_path))?;
-    let cleaned: bool = ((!(exists(&file_path))) && (!(exists(&dir_path))));
-    actual.push(cleaned);
-    let next_path: String = mkstemp(&"sifr_tempfile_tmp_".to_string())?;
-    actual.push(next_path != file_path);
-    let _c4: String = run_command(&format!("{}{}", "rm -f ", next_path))?;
-    Ok(())
-})();
+        let file_path: String = mkstemp(&"sifr_tempfile_tmp_".to_string())?;
+        let dir_path: String = mkdtemp(&"sifr_tempfile_tmpd_".to_string())?;
+        actual.push(exists(&file_path));
+        actual.push(exists(&dir_path));
+        let preview_name: String = basename(&preview_path);
+        let __sifr_chars_preview_name: Vec<char> = preview_name
+            .chars()
+            .collect::<Vec<char>>();
+        let file_name: String = basename(&file_path);
+        let __sifr_chars_file_name: Vec<char> = file_name.chars().collect::<Vec<char>>();
+        let dir_name: String = basename(&dir_path);
+        let __sifr_chars_dir_name: Vec<char> = dir_name.chars().collect::<Vec<char>>();
+        let preview_has_prefix: bool = ((((__sifr_chars_preview_name.len() as i64)
+            > ("sifr_tempfile_preview_".to_string().chars().count() as i64)))
+            && ((({
+                let _slice_src = &__sifr_chars_preview_name;
+                let _slice_len_i64 = _slice_src.len() as i64;
+                let _slice_start_i64 = if (0_i64) < 0 {
+                    (_slice_len_i64 + (0_i64)).max(0)
+                } else {
+                    (0_i64).min(_slice_len_i64)
+                };
+                let _slice_stop_i64 = if ("sifr_tempfile_preview_"
+                    .to_string()
+                    .chars()
+                    .count() as i64) < 0
+                {
+                    (_slice_len_i64
+                        + ("sifr_tempfile_preview_".to_string().chars().count() as i64))
+                        .max(0)
+                } else {
+                    ("sifr_tempfile_preview_".to_string().chars().count() as i64)
+                        .min(_slice_len_i64)
+                };
+                String::from_iter(
+                    _slice_src
+                        .iter()
+                        .skip(_slice_start_i64 as usize)
+                        .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                        .copied(),
+                )
+            }) == "sifr_tempfile_preview_")));
+        let file_has_prefix: bool = ((((__sifr_chars_file_name.len() as i64)
+            > ("sifr_tempfile_tmp_".to_string().chars().count() as i64)))
+            && ((({
+                let _slice_src = &__sifr_chars_file_name;
+                let _slice_len_i64 = _slice_src.len() as i64;
+                let _slice_start_i64 = if (0_i64) < 0 {
+                    (_slice_len_i64 + (0_i64)).max(0)
+                } else {
+                    (0_i64).min(_slice_len_i64)
+                };
+                let _slice_stop_i64 = if ("sifr_tempfile_tmp_"
+                    .to_string()
+                    .chars()
+                    .count() as i64) < 0
+                {
+                    (_slice_len_i64
+                        + ("sifr_tempfile_tmp_".to_string().chars().count() as i64))
+                        .max(0)
+                } else {
+                    ("sifr_tempfile_tmp_".to_string().chars().count() as i64)
+                        .min(_slice_len_i64)
+                };
+                String::from_iter(
+                    _slice_src
+                        .iter()
+                        .skip(_slice_start_i64 as usize)
+                        .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                        .copied(),
+                )
+            }) == "sifr_tempfile_tmp_")));
+        let dir_has_prefix: bool = ((((__sifr_chars_dir_name.len() as i64)
+            > ("sifr_tempfile_tmpd_".to_string().chars().count() as i64)))
+            && ((({
+                let _slice_src = &__sifr_chars_dir_name;
+                let _slice_len_i64 = _slice_src.len() as i64;
+                let _slice_start_i64 = if (0_i64) < 0 {
+                    (_slice_len_i64 + (0_i64)).max(0)
+                } else {
+                    (0_i64).min(_slice_len_i64)
+                };
+                let _slice_stop_i64 = if ("sifr_tempfile_tmpd_"
+                    .to_string()
+                    .chars()
+                    .count() as i64) < 0
+                {
+                    (_slice_len_i64
+                        + ("sifr_tempfile_tmpd_".to_string().chars().count() as i64))
+                        .max(0)
+                } else {
+                    ("sifr_tempfile_tmpd_".to_string().chars().count() as i64)
+                        .min(_slice_len_i64)
+                };
+                String::from_iter(
+                    _slice_src
+                        .iter()
+                        .skip(_slice_start_i64 as usize)
+                        .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                        .copied(),
+                )
+            }) == "sifr_tempfile_tmpd_")));
+        actual.push((preview_has_prefix && file_has_prefix) && dir_has_prefix);
+        let temp_root: String = dirname(&preview_path);
+        let missing_parent_name: String = "__sifr_tempfile_missing_parent__".to_string();
+        let missing_parent_path: String = {
+            let mut __sifr_concat: String = String::with_capacity(
+                (temp_root.len() + 1usize) + missing_parent_name.len(),
+            );
+            __sifr_concat.push_str((temp_root).as_str());
+            __sifr_concat.push('/');
+            __sifr_concat.push_str((missing_parent_name).as_str());
+            __sifr_concat
+        };
+        let missing_prefix: String = {
+            let mut __sifr_concat: String = String::with_capacity(
+                missing_parent_name.len() + 5usize,
+            );
+            __sifr_concat.push_str((missing_parent_name).as_str());
+            __sifr_concat.push_str("/bad_");
+            __sifr_concat
+        };
+        let _rm_missing: String = run_command(
+            &format!("{}{}", "rm -rf ", missing_parent_path),
+        )?;
+        let mut missing_error: bool = false;
+        let __sifr_try_res: Result<(), IOError> = (|| {
+            let unexpected_file: String = mkstemp(&missing_prefix)?;
+            let _rm_unexpected: String = run_command(
+                &format!("{}{}", "rm -f ", unexpected_file),
+            )?;
+            missing_error = false;
+            Ok(())
+        })();
+        if let Err(__sifr_try_err) = __sifr_try_res {
+            let e = __sifr_try_err.clone();
+            let _ = format!("{}", e.message.clone());
+            missing_error = true;
+        }
+        actual.push(missing_error);
+        let _c1: String = run_command(&format!("{}{}", "rm -f ", file_path))?;
+        let _c2: String = run_command(&format!("{}{}", "rm -rf ", dir_path))?;
+        let _c3: String = run_command(&format!("{}{}", "rm -rf ", missing_parent_path))?;
+        let cleaned: bool = ((!(exists(&file_path))) && (!(exists(&dir_path))));
+        actual.push(cleaned);
+        let next_path: String = mkstemp(&"sifr_tempfile_tmp_".to_string())?;
+        actual.push(next_path != file_path);
+        let _c4: String = run_command(&format!("{}{}", "rm -f ", next_path))?;
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         let _ = format!("{}", e.message.clone());
@@ -1935,7 +1993,6 @@ fn collect_tempfile_actual() -> Vec<bool> {
     }
     actual
 }
-
 fn main() {
     let expected: Vec<bool> = vec![true, true, true, true, true, true];
     let actual: Vec<bool> = collect_tempfile_actual();

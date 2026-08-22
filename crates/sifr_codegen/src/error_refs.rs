@@ -29,6 +29,17 @@ pub(crate) fn collect_referenced_builtin_error_classes(
             collect_type_error_refs(&method.return_type, &mut referenced, builtin_error_classes);
             collect_stmt_error_refs(&method.body, &mut referenced, builtin_error_classes);
         }
+        for (_, operator) in &class.operator_impls {
+            for param in &operator.params {
+                collect_type_error_refs(&param.ty, &mut referenced, builtin_error_classes);
+            }
+            collect_type_error_refs(
+                &operator.return_type,
+                &mut referenced,
+                builtin_error_classes,
+            );
+            collect_stmt_error_refs(&operator.body, &mut referenced, builtin_error_classes);
+        }
     }
     for (_, ty, value) in &module.constants {
         collect_type_error_refs(ty, &mut referenced, builtin_error_classes);
@@ -60,6 +71,97 @@ pub(crate) fn collect_referenced_builtin_error_classes(
     }
 
     referenced
+}
+
+pub(crate) fn collect_complete_referenced_builtin_error_classes(
+    module: &HirModule,
+    stdlib_preamble: &str,
+    intrinsic_functions: &HashSet<String>,
+    needs_file_handles: bool,
+    builtin_error_classes: &[&str],
+) -> HashSet<String> {
+    let mut referenced = collect_referenced_builtin_error_classes(
+        module,
+        stdlib_preamble,
+        intrinsic_functions,
+        needs_file_handles,
+        builtin_error_classes,
+    );
+    if crate::module_uses_task_scope(module)
+        || crate::module_uses_join_set(module)
+        || crate::module_uses_failure_type(module)
+    {
+        referenced.insert("SecondaryError".to_string());
+    }
+    if crate::module_uses_async_generator_type(module) {
+        referenced.insert("GeneratorCloseError".to_string());
+    }
+    if crate::module_uses_spawn_cpu(module)
+        || crate::module_uses_join_set_spawn_cpu(module)
+        || crate::module_uses_task_scope_spawn_cpu(module)
+    {
+        referenced.insert("WorkerRuntimeError".to_string());
+        referenced.insert("WorkerError".to_string());
+    }
+    referenced
+}
+
+pub(crate) fn collect_module_intrinsic_function_names(module: &HirModule) -> HashSet<String> {
+    fn collect_expr(expr: &HirExpr, names: &mut HashSet<String>) {
+        crate::hir_analysis::traversal::walk_expr(expr, &mut |expr| {
+            if let HirExpr::IntrinsicCall { intrinsic, .. } = expr {
+                names.insert(intrinsic.declaration_name().to_string());
+            }
+        });
+    }
+
+    fn collect_body(body: &[HirStmt], names: &mut HashSet<String>) {
+        crate::hir_analysis::traversal::walk_stmts(
+            body,
+            crate::hir_analysis::traversal::TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+            &mut |_| {},
+            &mut |expr| {
+                if let HirExpr::IntrinsicCall { intrinsic, .. } = expr {
+                    names.insert(intrinsic.declaration_name().to_string());
+                }
+            },
+        );
+    }
+
+    let mut names = HashSet::new();
+    for function in &module.functions {
+        for param in &function.params {
+            if let Some(default) = &param.default {
+                collect_expr(default, &mut names);
+            }
+        }
+        collect_body(&function.body, &mut names);
+    }
+    for class in &module.classes {
+        for (_, default) in &class.field_defaults {
+            collect_expr(default, &mut names);
+        }
+        for method in &class.methods {
+            for param in &method.params {
+                if let Some(default) = &param.default {
+                    collect_expr(default, &mut names);
+                }
+            }
+            collect_body(&method.body, &mut names);
+        }
+        for (_, operator) in &class.operator_impls {
+            for param in &operator.params {
+                if let Some(default) = &param.default {
+                    collect_expr(default, &mut names);
+                }
+            }
+            collect_body(&operator.body, &mut names);
+        }
+    }
+    for (_, _, value) in &module.constants {
+        collect_expr(value, &mut names);
+    }
+    names
 }
 
 fn collect_type_error_refs(
@@ -560,10 +662,12 @@ fn collect_text_error_refs(
 
 #[cfg(test)]
 mod tests {
-    use super::collect_referenced_builtin_error_classes;
+    use super::{
+        collect_module_intrinsic_function_names, collect_referenced_builtin_error_classes,
+    };
     use sifr_ir::{
-        HirAsyncWithKind, HirClass, HirClassKind, HirExpr, HirFunction, HirModule, HirParam,
-        HirStmt, MethodKind,
+        CompilerIntrinsicId, HirAsyncWithKind, HirClass, HirClassKind, HirExpr, HirFunction,
+        HirModule, HirParam, HirStmt, MethodKind,
     };
     use sifr_type_system::{ParamConvention, Type};
     use std::collections::{HashMap, HashSet};
@@ -701,6 +805,26 @@ mod tests {
 
         assert!(referenced.contains("ScopeFailure"));
         assert!(referenced.contains("TimeoutError"));
+    }
+
+    #[test]
+    fn project_intrinsic_scan_includes_module_constant_expressions() {
+        let mut module = empty_module();
+        module.constants.push((
+            "DATA".to_string(),
+            Type::Bytes,
+            HirExpr::IntrinsicCall {
+                intrinsic: CompilerIntrinsicId::BytesWithSize,
+                args: vec![HirExpr::IntLiteral(4)],
+                ty: Type::Result(Box::new(Type::Bytes), Box::new(Type::Any)),
+                call_range: Default::default(),
+                arg_ranges: vec![Default::default()],
+            },
+        ));
+
+        let names = collect_module_intrinsic_function_names(&module);
+
+        assert_eq!(names, HashSet::from(["bytes_with_size".to_string()]));
     }
 
     #[test]

@@ -1,5 +1,22 @@
 // src/main.rs
-// --- stdlib: _sifr.crypto ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ParseError {
+        pub message: String,
+    }
+    impl ParseError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ParseError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ParseError {}
+}
+pub use __sifr_project_nominals::ParseError;
 fn random_int(min: i64, max: i64) -> i64 {
     ::sifr_stdlib::random::random_int(
             ::sifr_runtime::interop::SifrIntBridge::from(min),
@@ -169,8 +186,6 @@ fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
 fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
 }
-
-// --- stdlib: sifr.base64 ---
 fn b64encode(s: &String) -> String {
     base64_encode(s)
 }
@@ -271,8 +286,6 @@ fn b16decode(s: &String) -> Result<String, ParseError> {
         }
     }
 }
-
-// --- stdlib: sifr.test ---
 fn assert_vector_eq(actual: &Vec<String>, expected: &Vec<String>) {
     assert_eq!(actual.len() as i64, expected.len() as i64);
     let mut i: i64 = 0_i64;
@@ -289,154 +302,124 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
         i += 1_i64;
     }
 }
-// --- end stdlib ---
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-
-impl ::std::error::Error for ParseError {
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
-
 impl ValueError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ValueError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ValueError {
-}
-
+impl ::std::error::Error for ValueError {}
 fn encode_b64_or_empty(payload: &String) -> String {
     b64encode(payload)
 }
-
 fn encode_urlsafe_b64_or_empty(payload: &String) -> String {
     urlsafe_b64encode(payload)
 }
-
 fn decode_b64_or_empty(payload: &String) -> String {
     let __sifr_try_res: Result<String, ParseError> = (|| {
-    let decoded: String = b64decode(payload)?;
-    return Ok(decoded);
-    unreachable!("sifr try/except return capture fell through");
-})();
+        let decoded: String = b64decode(payload)?;
+        return Ok(decoded);
+        unreachable!("sifr try/except return capture fell through");
+    })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
-        },
+        }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
             let _ = format!("{}", format!("{}{}", "unexpected: ", e.message.clone()));
             return "".to_string();
-        },
+        }
     }
 }
-
 fn decode_urlsafe_b64_or_empty(payload: &String) -> String {
     let __sifr_try_res: Result<String, ParseError> = (|| {
-    let decoded: String = urlsafe_b64decode(payload)?;
-    return Ok(decoded);
-    unreachable!("sifr try/except return capture fell through");
-})();
+        let decoded: String = urlsafe_b64decode(payload)?;
+        return Ok(decoded);
+        unreachable!("sifr try/except return capture fell through");
+    })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
-        },
+        }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
             let _ = format!("{}", format!("{}{}", "unexpected: ", e.message.clone()));
             return "".to_string();
-        },
+        }
     }
 }
-
 fn b16_encode_or_empty(payload: &String) -> String {
     let mut encoded: String = "".to_string();
     let __sifr_try_res: Result<(), ParseError> = (|| {
-    let out: String = b16encode(payload)?;
-    encoded = out;
-    Ok(())
-})();
+        let out: String = b16encode(payload)?;
+        encoded = out;
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         let _ = format!("{}", format!("{}{}", "unexpected: ", e.message.clone()));
     }
     encoded
 }
-
 fn b16_decode_or_empty(payload: &String) -> String {
     let mut decoded: String = "".to_string();
     let __sifr_try_res: Result<(), ParseError> = (|| {
-    let out: String = b16decode(payload)?;
-    decoded = out;
-    Ok(())
-})();
+        let out: String = b16decode(payload)?;
+        decoded = out;
+        Ok(())
+    })();
     if let Err(__sifr_try_err) = __sifr_try_res {
         let e = __sifr_try_err.clone();
         let _ = format!("{}", format!("{}{}", "unexpected: ", e.message.clone()));
     }
     decoded
 }
-
 fn collect_positive_actual() -> Vec<String> {
     let mut actual: Vec<String> = vec![];
     actual.push(encode_b64_or_empty(&"foo".to_string()));
     actual.push(decode_b64_or_empty(&"Zm9v".to_string()));
     let urlsafe_encoded: String = encode_urlsafe_b64_or_empty(&"hello".to_string());
     let urlsafe_encoded_for_decode: String = {
-    let mut __sifr_concat: String = String::with_capacity(urlsafe_encoded.len() + 0usize);
-    __sifr_concat.push_str((urlsafe_encoded).as_str());
-    __sifr_concat.push_str("");
-    __sifr_concat
-};
+        let mut __sifr_concat: String = String::with_capacity(
+            urlsafe_encoded.len() + 0usize,
+        );
+        __sifr_concat.push_str((urlsafe_encoded).as_str());
+        __sifr_concat.push_str("");
+        __sifr_concat
+    };
     actual.push(urlsafe_encoded.clone());
     actual.push(decode_urlsafe_b64_or_empty(&urlsafe_encoded_for_decode));
     let b16_encoded: String = b16_encode_or_empty(&"Hi".to_string());
     let b16_encoded_for_decode: String = {
-    let mut __sifr_concat: String = String::with_capacity(b16_encoded.len() + 0usize);
-    __sifr_concat.push_str((b16_encoded).as_str());
-    __sifr_concat.push_str("");
-    __sifr_concat
-};
+        let mut __sifr_concat: String = String::with_capacity(
+            b16_encoded.len() + 0usize,
+        );
+        __sifr_concat.push_str((b16_encoded).as_str());
+        __sifr_concat.push_str("");
+        __sifr_concat
+    };
     actual.push(b16_encoded.clone());
     actual.push(b16_decode_or_empty(&b16_encoded_for_decode));
     actual
 }
-
 fn collect_decode_actual_ok(inputs: &Vec<String>) -> Vec<bool> {
     let mut actual_ok: Vec<bool> = vec![];
     for payload in inputs.iter().cloned() {
         let __sifr_try_res: Result<(), ParseError> = (|| {
-    let decoded: String = b64decode(&payload)?;
-    let _ = format!("{}", decoded);
-    actual_ok.push(true);
-    Ok(())
-})();
+            let decoded: String = b64decode(&payload)?;
+            let _ = format!("{}", decoded);
+            actual_ok.push(true);
+            Ok(())
+        })();
         if let Err(__sifr_try_err) = __sifr_try_res {
             let e = __sifr_try_err.clone();
             actual_ok.push(false);
@@ -444,12 +427,16 @@ fn collect_decode_actual_ok(inputs: &Vec<String>) -> Vec<bool> {
     }
     actual_ok
 }
-
 fn main() {
-    let expected: Vec<String> = vec!["Zm9v".to_string(), "foo".to_string(), "aGVsbG8=".to_string(), "hello".to_string(), "4869".to_string(), "Hi".to_string()];
+    let expected: Vec<String> = vec![
+        "Zm9v".to_string(), "foo".to_string(), "aGVsbG8=".to_string(), "hello"
+        .to_string(), "4869".to_string(), "Hi".to_string()
+    ];
     let actual: Vec<String> = collect_positive_actual();
     assert_vector_eq(&actual, &expected);
-    let decode_inputs: Vec<String> = vec!["not base64!!!".to_string(), "Zm9v".to_string()];
+    let decode_inputs: Vec<String> = vec![
+        "not base64!!!".to_string(), "Zm9v".to_string()
+    ];
     let expected_ok: Vec<bool> = vec![false, true];
     let actual_ok: Vec<bool> = collect_decode_actual_ok(&decode_inputs);
     assert_bool_vector_eq(&actual_ok, &expected_ok);

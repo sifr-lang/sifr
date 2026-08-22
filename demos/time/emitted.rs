@@ -220,6 +220,7 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
+pub use __sifr_project_nominals::ValueError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2etime_x2estruct__time;
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     assert_eq!(actual.len() as i64, expected.len() as i64);
@@ -601,21 +602,6 @@ fn mktime(t: &__SifrStdlib_sifr_x2etime_x2estruct__time) -> f64 {
         + (t.tm_min * (60_i64))) + t.tm_sec;
     stamp as f64
 }
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ValueError {
-    message: String,
-}
-impl ValueError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ValueError {}
 fn collect_clock_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     actual.push(time() > (0.0_f64));

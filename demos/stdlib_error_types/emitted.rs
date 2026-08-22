@@ -487,22 +487,28 @@ pub use __sifr_project_nominals::__SifrStdlib_sifr_x2estatistics_x2eStatisticsEr
 mod __sifr_project_unions {
     #[derive(Debug, Clone)]
     pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a044_x3a5_x3aclass31_x3asifr_x2estatistics_x2eStatisticsError1_x3a0 {
-        __SifrUnionVariant_5_x3aclass10_x3aParseError1_x3a0(crate::ParseError),
+        __SifrUnionVariant_5_x3aclass10_x3aParseError1_x3a0(
+            crate::__sifr_project_nominals::ParseError,
+        ),
         __SifrUnionVariant_5_x3aclass31_x3asifr_x2estatistics_x2eStatisticsError1_x3a0(
-            crate::__SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+            crate::__sifr_project_nominals::__SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
         ),
     }
-    impl From<crate::ParseError>
+    impl From<crate::__sifr_project_nominals::ParseError>
     for __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a044_x3a5_x3aclass31_x3asifr_x2estatistics_x2eStatisticsError1_x3a0 {
-        fn from(value: crate::ParseError) -> Self {
+        fn from(value: crate::__sifr_project_nominals::ParseError) -> Self {
             __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a044_x3a5_x3aclass31_x3asifr_x2estatistics_x2eStatisticsError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aParseError1_x3a0(
                 value,
             )
         }
     }
-    impl From<crate::__SifrStdlib_sifr_x2estatistics_x2eStatisticsError>
+    impl From<
+        crate::__sifr_project_nominals::__SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+    >
     for __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a044_x3a5_x3aclass31_x3asifr_x2estatistics_x2eStatisticsError1_x3a0 {
-        fn from(value: crate::__SifrStdlib_sifr_x2estatistics_x2eStatisticsError) -> Self {
+        fn from(
+            value: crate::__sifr_project_nominals::__SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+        ) -> Self {
             __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a044_x3a5_x3aclass31_x3asifr_x2estatistics_x2eStatisticsError1_x3a0::__SifrUnionVariant_5_x3aclass31_x3asifr_x2estatistics_x2eStatisticsError1_x3a0(
                 value,
             )
