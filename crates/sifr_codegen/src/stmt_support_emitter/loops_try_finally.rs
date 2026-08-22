@@ -547,7 +547,8 @@ impl RustEmitter {
         let Some(target) = target else {
             return source;
         };
-        let converted = self.consuming_value_upcast_for_ir(target, &source_type, source.clone());
+        let converted =
+            self.consuming_value_conversion_for_ir(target, &source_type, source.clone());
         if converted != source {
             return converted;
         }

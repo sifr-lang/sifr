@@ -1,28 +1,15 @@
-use super::{HirExpr, RustEmitter, Type};
-use crate::ParamConvention;
+use super::{RustEmitter, Type};
 
 impl RustEmitter {
     pub(crate) fn adapt_consuming_call_argument_for_ir(
         &self,
-        arg: &HirExpr,
         target_ty: &Type,
         source_ty: &Type,
-        convention: ParamConvention,
         lowered: crate::RustExpr,
         borrowed_source: bool,
     ) -> (crate::RustExpr, bool) {
-        let flattened = Self::flatten_option_argument_for_ir(
-            arg,
-            target_ty,
-            source_ty,
-            convention,
-            lowered.clone(),
-        );
-        if flattened != lowered {
-            return (flattened, true);
-        }
         let probe = crate::RustExpr::Ident("__sifr_consuming_upcast_probe".to_string());
-        if self.consuming_value_upcast_for_ir(target_ty, source_ty, probe.clone()) == probe {
+        if self.consuming_value_conversion_for_ir(target_ty, source_ty, probe.clone()) == probe {
             return (lowered, false);
         }
         let lowered = if borrowed_source && !crate::helpers::is_copy_type_for_codegen(source_ty) {
@@ -35,12 +22,31 @@ impl RustEmitter {
             lowered
         };
         (
-            self.consuming_value_upcast_for_ir(target_ty, source_ty, lowered),
+            self.consuming_value_conversion_for_ir(target_ty, source_ty, lowered),
             true,
         )
     }
 
-    pub(crate) fn consuming_value_upcast_for_ir(
+    /// Convert between the source and target runtime representations exactly once.
+    ///
+    /// Optional-wrapper adaptation and recursive union upcasting overlap for an
+    /// `Option<Union>` source. Keep their source/target representation pair under
+    /// one authority so a caller cannot apply both transitions to the same value.
+    pub(crate) fn consuming_value_conversion_for_ir(
+        &self,
+        target_ty: &Type,
+        source_ty: &Type,
+        lowered: crate::RustExpr,
+    ) -> crate::RustExpr {
+        let wrapper_adapted =
+            crate::helpers::flatten_option_value_for_target(target_ty, source_ty, lowered.clone());
+        if wrapper_adapted != lowered {
+            return wrapper_adapted;
+        }
+        self.consuming_value_upcast_for_ir(target_ty, source_ty, lowered)
+    }
+
+    fn consuming_value_upcast_for_ir(
         &self,
         target_ty: &Type,
         source_ty: &Type,
@@ -244,6 +250,53 @@ impl RustEmitter {
     }
 }
 
+#[cfg(test)]
+mod representation_tests {
+    use super::*;
+
+    fn render_conversion(target: &Type, source: &Type) -> String {
+        let emitter = RustEmitter::new();
+        crate::render_expr(&emitter.consuming_value_conversion_for_ir(
+            target,
+            source,
+            crate::RustExpr::Ident("value".to_string()),
+        ))
+    }
+
+    #[test]
+    fn representation_conversion_flattens_nested_option_once() {
+        let target = sifr_type_system::make_union(vec![Type::Str, Type::None]);
+        let source = Type::Union(vec![target.clone(), Type::None]);
+        let rendered = render_conversion(&target, &source);
+
+        assert_eq!(rendered.matches(".flatten(").count(), 1, "{rendered}");
+        assert_eq!(rendered.matches(".map(").count(), 0, "{rendered}");
+        assert_eq!(rendered.matches(".unwrap_or(").count(), 0, "{rendered}");
+    }
+
+    #[test]
+    fn representation_conversion_maps_option_union_once() {
+        let payload = sifr_type_system::make_union(vec![Type::Int, Type::Str]);
+        let source = sifr_type_system::safe_optional_result(payload);
+        let target =
+            sifr_type_system::make_union(vec![Type::Bool, Type::Int, Type::Str, Type::None]);
+        let rendered = render_conversion(&target, &source);
+
+        assert_eq!(rendered.matches(".map(").count(), 1, "{rendered}");
+        assert_eq!(rendered.matches(".unwrap_or(").count(), 1, "{rendered}");
+    }
+
+    #[test]
+    fn representation_conversion_materializes_nullable_union_once() {
+        let target = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
+        let source = sifr_type_system::safe_optional_result(target.clone());
+        let rendered = render_conversion(&target, &source);
+
+        assert_eq!(rendered.matches(".map(").count(), 0, "{rendered}");
+        assert_eq!(rendered.matches(".unwrap_or(").count(), 1, "{rendered}");
+    }
+}
+
 fn render_ancestor_rust_type(current_module: Option<&str>, ancestor: &str) -> String {
     let Some((module, name)) = ancestor.rsplit_once('.') else {
         return sifr_type_system::source_class_rust_name(ancestor);
@@ -305,10 +358,10 @@ mod tests {
         let value = RustExpr::Ident("value".to_string());
 
         assert_eq!(
-            RustEmitter::new().consuming_class_upcast_for_ir(
+            RustEmitter::new().consuming_value_conversion_for_ir(
                 &unrelated_root,
                 &source,
-                value.clone()
+                value.clone(),
             ),
             value
         );

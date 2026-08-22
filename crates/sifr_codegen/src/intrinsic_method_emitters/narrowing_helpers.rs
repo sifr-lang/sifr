@@ -8,9 +8,7 @@ impl RustEmitter {
         lowered: RustExpr,
     ) -> RustExpr {
         let source_ty = self.effective_registry_expr_ty(argument);
-        let lowered =
-            crate::helpers::flatten_option_value_for_target(target_ty, &source_ty, lowered);
-        self.consuming_value_upcast_for_ir(target_ty, &source_ty, lowered)
+        self.consuming_value_conversion_for_ir(target_ty, &source_ty, lowered)
     }
 }
 

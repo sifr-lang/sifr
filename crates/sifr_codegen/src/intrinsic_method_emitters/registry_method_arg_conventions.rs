@@ -20,10 +20,8 @@ impl RustEmitter {
         let unadapted_option_arg = lowered_arg.clone();
         if convention.is_owned() {
             (lowered_arg, _) = self.adapt_consuming_call_argument_for_ir(
-                arg,
                 param_ty,
                 &effective_arg_ty,
-                convention,
                 lowered_arg,
                 borrowed_name_arg,
             );

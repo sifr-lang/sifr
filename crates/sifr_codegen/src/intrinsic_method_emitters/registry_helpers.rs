@@ -551,12 +551,8 @@ pub(super) fn registry_call_callable_with_owned_args(
         let mut lowered_arg = RustExpr::Ident(name.clone());
         let arg_is_option = crate::helpers::is_option_type(arg_ty);
         let param_is_option = crate::helpers::is_option_type(param_ty);
-        let mut adapted_arg =
-            crate::helpers::flatten_option_value_for_target(param_ty, arg_ty, lowered_arg.clone());
-        if adapted_arg == lowered_arg {
-            adapted_arg =
-                emitter.consuming_value_upcast_for_ir(param_ty, arg_ty, lowered_arg.clone());
-        }
+        let adapted_arg =
+            emitter.consuming_value_conversion_for_ir(param_ty, arg_ty, lowered_arg.clone());
         let option_value_adapted = adapted_arg != lowered_arg;
         lowered_arg = adapted_arg;
         if param_is_option && !arg_is_option {

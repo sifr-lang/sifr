@@ -104,7 +104,7 @@ impl RustEmitter {
             let coercion_probe = RustExpr::Ident("__sifr_coercion_probe".to_string());
             let needs_borrowed_structural_coercion = convention.is_shared_borrow()
                 && registry_needs_structural_value_coercion(param_ty, &effective_arg_ty)
-                && self.consuming_value_upcast_for_ir(
+                && self.consuming_value_conversion_for_ir(
                     param_ty,
                     &effective_arg_ty,
                     coercion_probe.clone(),
@@ -113,10 +113,8 @@ impl RustEmitter {
             let mut consuming_value_adapted = false;
             if convention.is_owned() {
                 (lowered_arg, consuming_value_adapted) = self.adapt_consuming_call_argument_for_ir(
-                    arg,
                     param_ty,
                     &effective_arg_ty,
-                    *convention,
                     lowered_arg,
                     borrowed_name_arg,
                 );
@@ -128,8 +126,11 @@ impl RustEmitter {
                         args: Vec::new(),
                     };
                 }
-                lowered_arg =
-                    self.consuming_value_upcast_for_ir(param_ty, &effective_arg_ty, lowered_arg);
+                lowered_arg = self.consuming_value_conversion_for_ir(
+                    param_ty,
+                    &effective_arg_ty,
+                    lowered_arg,
+                );
                 consuming_value_adapted = true;
             } else if let Type::Union(_) = resolved_param {
                 if !crate::helpers::is_option_type(resolved_param)

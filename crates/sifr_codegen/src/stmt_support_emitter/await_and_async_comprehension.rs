@@ -164,10 +164,9 @@ impl RustEmitter {
             });
         }
         let upcasted_value =
-            self.consuming_value_upcast_for_ir(target_ty, value_ty, lowered_value.clone());
+            self.consuming_value_conversion_for_ir(target_ty, value_ty, lowered_value.clone());
         let value_was_upcasted = upcasted_value != lowered_value;
-        let lowered_value =
-            crate::helpers::flatten_option_value_for_target(target_ty, value_ty, upcasted_value);
+        let lowered_value = upcasted_value;
         let wrapped_member = if matches!(value, HirExpr::NoneLiteral) {
             &Type::None
         } else {
