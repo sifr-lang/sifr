@@ -2185,13 +2185,19 @@ Acceptance criteria:
 
 State: complete
 
-Qualification PR: pending
+PR: [#3485](https://github.com/sifr-lang/sifr/pull/3485)
 
 Base SHA: `069041c500dd1f9995ce9283eb967353b994975d`
 
+Candidate SHA: `8f3e6f274d6eee0ccfe54e58896e3870b3717346`
+
+Merge SHA: `e0e4e9cefff86d33c6e78216dbcbe0a58585d71f`
+
+Validated implementation SHA: `3d9f26a9b3018957b5f09b4c275e444d815af076`
+
 Integrated implementation SHA: `a3e956f9e196c2a0840695984629e4265b4d7051`
 
-Validated candidate SHA: `3d9f26a9b3018957b5f09b4c275e444d815af076`
+Shared implementation tree: `0f5e3498894f9c605d71366c9863952e281f3e42`
 
 Linked delivery A merge SHA:
 `2021f60ca8970bca76e4f5060cec28994f9addc8`
@@ -2208,6 +2214,9 @@ Performance passed all 12 merge variants and the representative benchmark
 budget. Fuzz and property validation passed all 25 merge variants. Ecosystem
 compatibility passed all 20 merge variants. The earlier full Item 11 attempt
 also passed all 37 fuzz and property variants and all 34 ecosystem variants.
+The broader profile-scoped performance rules, fuzz property and Cargo smoke,
+and ecosystem suites last ran on the pre-10P candidate. Their manifests and
+inputs did not change before the final gate.
 
 The driver generated-build pass ran all 76 ignored integration tests. The
 method-slot runtime test and the lifetime, thread, and shared-context rejection
@@ -2224,12 +2233,16 @@ No Sifr create-PR or merge gate applies to this qualification record because
 it changes no compiler file. The validation above reuses the one final Item
 10P merge gate. Its implementation inputs are unchanged.
 
-Review evidence: pending one exact-SHA Opus review of this qualification
-record.
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. It verified the identical implementation tree, linked-
+delivery ancestry, profile scoping, and every recorded result. The evidence is
+in the
+[#3485 review comment](https://github.com/sifr-lang/sifr/pull/3485#issuecomment-5383129301).
 
-Deferred follow-up: none. The merge gate's warm-time budget overrun was an
-advisory caused by cold generated caches. All individual performance budgets
-and the isolated Python doctor limit passed.
+Deferred follow-up: Item 12 retains Item 0's requirement to make the original
+15 failing variants mechanically reconcilable. The merge gate's warm-time
+budget overrun was an advisory caused by cold generated caches. All individual
+performance budgets and the isolated Python doctor limit passed.
 
 Next action: implement Item 12 and close the phase.
 
