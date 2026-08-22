@@ -80,6 +80,39 @@ fn test_mut_on_local_nested_function_mutborrow_call_argument() {
 }
 
 #[test]
+fn nested_helper_receiver_mutation_uses_lexical_call_metadata() {
+    let rust_code = generate_rust_from_source(
+        r#"
+class Bucket:
+    values: list[int]
+
+    def __init__(self) -> None:
+        self.values = []
+
+    def update(mut self) -> None:
+        def helper(values: list[int]) -> None:
+            values.append(1)
+
+        helper(self.values)
+
+    def size(self) -> int:
+        def helper(values: list[int]) -> int:
+            return len(values)
+
+        return helper(self.values)
+"#,
+    );
+
+    assert!(rust_code.contains("fn update(&mut self)"), "{rust_code}");
+    assert!(
+        rust_code.contains("helper(&mut self.values)"),
+        "{rust_code}"
+    );
+    assert!(rust_code.contains("fn size(&self) -> i64"), "{rust_code}");
+    assert!(rust_code.contains("helper(&self.values)"), "{rust_code}");
+}
+
+#[test]
 fn explicit_class_receiver_signatures_are_emitted_from_hir_metadata() {
     let rust_code = generate_rust_from_source(
         r#"
