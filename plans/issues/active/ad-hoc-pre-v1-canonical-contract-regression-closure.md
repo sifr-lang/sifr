@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10L are complete. Item 10M is next.
+Status: active on 2026-08-22. Items 0 through 10M are complete. Item 10N is next.
 
 ## Objective
 
@@ -73,6 +73,7 @@ This planning change makes these transfers effective when it merges:
 | User-error parent handler | Item 10G remediation review found that lowering accepts parent coverage, but code generation matches only exact user nominals. | Item 10L |
 | Nested-function try-channel codegen | Item 10G remediation review found that code generation does not isolate the active try-channel stack at a nested function boundary. | Item 10M |
 | Nested-helper receiver mutation | Item 10J remediation review found that removing nested functions from the module name registry can hide a mutable receiver argument from method receiver analysis. | Item 10N |
+| Nested-function `try/finally` discovery | Item 10M remediation review found that error-type discovery descends into nested-function bodies when selecting an enclosing `try/finally` carrier. | Item 10O |
 
 The archived static-class phase no longer owns active corrective work. Item 10
 owns its unresolved method-slot fixture and runtime evidence.
@@ -171,6 +172,7 @@ scope and does not repeat that work.
 | User-error parent dispatch | A user-defined parent handler covers a child during lowering, but code generation can treat that handler as unsupported and propagate the child. | Item 10L |
 | Nested-function try-channel leak | Nested-function emission can reuse the enclosing try closure's error-channel stack instead of the nested function's `Result` channel. | Item 10M |
 | Nested-helper receiver mutation | Method receiver analysis uses the module function registry. It can miss a nested helper that mutates `self.field` after nested metadata moves to lexical binding identity. | Item 10N |
+| Nested-function `try/finally` discovery | Enclosing `try/finally` carrier discovery can adopt an error type found only inside a nested function body. | Item 10O |
 | Read-only Python duration | The latest contended run completed in 314,714 ms. An isolated run completed in approximately 68 seconds. | Qualification rule B |
 
 ## Scope
@@ -247,6 +249,7 @@ Item 0  baseline and ownership lock
   -> Item 10L user-error parent handler dispatch
   -> Item 10M nested-function try-channel isolation
   -> Item 10N nested-helper receiver mutation analysis
+  -> Item 10O nested-function try/finally discovery isolation
   -> linked delivery A final validation and merge
   -> Item 11 linked delivery and timeout qualification
   -> Item 12 final regression guard and closure
@@ -1830,6 +1833,50 @@ Acceptance criteria:
 - Nested async and ordinary functions preserve the same isolation rule.
 - Focused code-generation and native-run tests pass.
 
+### Item 10M record
+
+State: complete
+
+PR: [#3474](https://github.com/sifr-lang/sifr/pull/3474)
+
+Base SHA: `f049984d327e4609739baf0dc9d735ef69bc4794`
+
+Candidate SHA: `5f7c85d559c34203b0392496d0f49323f7428a41`
+
+Merge SHA: `092c56582fb3bc8653a725466a8fb9593952458a`
+
+Changed paths: structured nested-function state isolation, sync and async
+code-generation regressions, and one native channel-isolation fixture.
+
+Validation: all 1,136 code-generation tests passed. The new sync and async
+fixture built and ran release-native. Strict code-generation Clippy,
+formatting, HIR maintainability, diff checks, and the 3,227-file size guardrail
+passed. A controlled mutation check removed only the isolation hunk: both unit
+regressions failed, and the native fixture failed Rust compilation. The hunk
+was restored before the candidate SHA was created.
+
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all preceding checks and stopped only at linked delivery A's stale Rust-interop
+evidence path. Neither gate was repeated. The evidence is in the
+[#3474 create-PR gate comment](https://github.com/sifr-lang/sifr/pull/3474#issuecomment-5382107626)
+and the
+[#3474 merge gate comment](https://github.com/sifr-lang/sifr/pull/3474#issuecomment-5382116316).
+
+Review evidence: the first exact-SHA Opus review returned `BLOCKED` because
+the original regressions did not exercise the state leak. The one permitted
+remediation review returned `SATISFIED` after the regressions used direct
+sync and async raises and proved failure under the controlled mutation. No
+third review ran. The evidence is in the
+[#3474 first review comment](https://github.com/sifr-lang/sifr/pull/3474#issuecomment-5382051161)
+and the
+[#3474 remediation review comment](https://github.com/sifr-lang/sifr/pull/3474#issuecomment-5382098636).
+
+Deferred follow-up: Item 10O owns the separate nested-function error discovery
+mechanism found by the remediation review. Linked delivery A retains its stale
+Rust-interop evidence path.
+
+Next action: implement Item 10N.
+
 ## Item 10N: Preserve Nested-helper Receiver Mutation Analysis
 
 Purpose: Keep method receiver mutability aligned with a nested helper's
@@ -1849,6 +1896,26 @@ Acceptance criteria:
 - The method receives `&mut self` when the nested call requires it.
 - Same-named helpers in sibling scopes do not change receiver analysis.
 - Focused lowering, code-generation, and native-run tests pass.
+
+## Item 10O: Isolate Nested-function Try-finally Error Discovery
+
+Purpose: Keep an enclosing `try/finally` carrier independent from error types
+that exist only inside a nested function body.
+
+Scope:
+
+- Treat nested functions as scope boundaries during enclosing error discovery.
+- Discover the nested function's own errors when its body is emitted.
+- Preserve enclosing body and `finally` error discovery.
+- Do not add a fallback carrier or scan nested functions by name.
+
+Acceptance criteria:
+
+- A `try/finally` with no error source except a nested function does not adopt
+  that function's error type.
+- A nested function's own `try/finally` still selects its local error type.
+- Ordinary and async nested functions preserve the same scope boundary.
+- Focused code-generation and native-run tests pass.
 
 ## Required Linked Delivery A: Rust-interop Evidence Path
 
@@ -1891,7 +1958,7 @@ Purpose: Combine phase-owned corrections with independently owned changes.
 
 Dependencies:
 
-- Items 1 through 10N are merged.
+- Items 1 through 10O are merged.
 - Required linked delivery A is merged.
 
 Scope:
@@ -2027,6 +2094,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10L are complete and recorded.
+Current state: Items 0 through 10M are complete and recorded.
 
-Next action: implement Item 10M.
+Next action: implement Item 10N.
