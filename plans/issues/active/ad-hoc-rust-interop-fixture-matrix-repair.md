@@ -17,6 +17,12 @@ The checked-in source is currently at
 `verification/areas/rust_interop/fixtures/shared_bridge_crate/negative/src/package_generated_type_import_rejected.sifr`,
 while `fixture.json` records the path without `src/`.
 
+The pre-v1 regression phase Item 5A create-PR and merge gates each ran once on
+exact candidate `080fd152e55ca96a8caff682c2049d24ea37fe48`. Both attempts passed
+their earlier guardrails and stopped at the same missing shared-bridge source.
+They also reported the separately owned Item 10 method-slot placeholder. Item
+5A did not change either external row and did not repeat either gate.
+
 ## Item 0: Reconcile Shared-Bridge Evidence Location
 
 Select one canonical fixture layout. Update the manifest, source location,
