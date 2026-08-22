@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10I are complete. Item 10J is next.
+Status: active on 2026-08-22. Items 0 through 10J are complete. Item 10K is next.
 
 ## Objective
 
@@ -72,6 +72,7 @@ This planning change makes these transfers effective when it merges:
 | Checked-stdlib parent upcast | Item 10F validation reached Rust compilation after it closed the imported-union panic. The emitted child-to-parent conversion has no retained `From` implementation. | Item 10K |
 | User-error parent handler | Item 10G remediation review found that lowering accepts parent coverage, but code generation matches only exact user nominals. | Item 10L |
 | Nested-function try-channel codegen | Item 10G remediation review found that code generation does not isolate the active try-channel stack at a nested function boundary. | Item 10M |
+| Nested-helper receiver mutation | Item 10J remediation review found that removing nested functions from the module name registry can hide a mutable receiver argument from method receiver analysis. | Item 10N |
 
 The archived static-class phase no longer owns active corrective work. Item 10
 owns its unresolved method-slot fixture and runtime evidence.
@@ -169,6 +170,7 @@ scope and does not repeat that work.
 | Checked-stdlib parent conversion | Project nominal relocation can remove the `From<Child>` implementation that a by-value child-to-parent upcast requires. | Item 10K |
 | User-error parent dispatch | A user-defined parent handler covers a child during lowering, but code generation can treat that handler as unsupported and propagate the child. | Item 10L |
 | Nested-function try-channel leak | Nested-function emission can reuse the enclosing try closure's error-channel stack instead of the nested function's `Result` channel. | Item 10M |
+| Nested-helper receiver mutation | Method receiver analysis uses the module function registry. It can miss a nested helper that mutates `self.field` after nested metadata moves to lexical binding identity. | Item 10N |
 | Read-only Python duration | The latest contended run completed in 314,714 ms. An isolated run completed in approximately 68 seconds. | Qualification rule B |
 
 ## Scope
@@ -199,6 +201,7 @@ scope and does not repeat that work.
 - Preserve checked-stdlib parent upcasts after project nominal relocation.
 - Align user-defined parent-handler dispatch with lowering coverage.
 - Isolate code-generation try channels at nested function boundaries.
+- Resolve nested-helper receiver mutation through lexical callable metadata.
 - Add regression guards for the migrated evidence and representation defects.
 - Record completion evidence from the linked owner.
 - Qualify the read-only Python doctor without a timeout increase.
@@ -243,6 +246,7 @@ Item 0  baseline and ownership lock
   -> Item 10K checked-stdlib parent upcast
   -> Item 10L user-error parent handler dispatch
   -> Item 10M nested-function try-channel isolation
+  -> Item 10N nested-helper receiver mutation analysis
   -> linked delivery A final validation and merge
   -> Item 11 linked delivery and timeout qualification
   -> Item 12 final regression guard and closure
@@ -1646,6 +1650,50 @@ Acceptance criteria:
 - Nested defaults, keyword arguments, and varargs use the scoped declaration.
 - Focused lowering, code-generation, and native-run tests pass.
 
+### Item 10J record
+
+State: complete
+
+PR: [#3468](https://github.com/sifr-lang/sifr/pull/3468)
+
+Base SHA: `239a4de113a884f93a16db453a03a085818ca222`
+
+Candidate SHA: `796af10658f825f1df1387af91a63dcf11d4c455`
+
+Merge SHA: `8a4cc80ebbf5c420d32db133c88c36f68c56ec6f`
+
+Changed paths: lexical scope and local-function metadata, nested-function
+inference and call validation, scoped statement code generation, focused
+lowering and code-generation tests, and one native fixture.
+
+Validation: all 1,038 lowering tests passed, with one ignored test. All 1,130
+code-generation tests passed. The expanded release-native fixture passed for
+ordinary blocks, loops, always-exiting branches, and inferred varargs. Strict
+targeted Clippy, formatting, HIR maintainability, diff checks, and the
+3,224-file size guardrail passed.
+
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all preceding checks and stopped only at linked delivery A's stale
+Rust-interop evidence path. Neither gate was repeated. The evidence is in the
+[#3468 create-PR gate comment](https://github.com/sifr-lang/sifr/pull/3468#issuecomment-5381737699)
+and the
+[#3468 merge gate comment](https://github.com/sifr-lang/sifr/pull/3468#issuecomment-5381747251).
+
+Review evidence: the first exact-SHA Opus review found two blocking defects.
+The remediation changed every remaining raw statement-block caller to use the
+scoped code-generation helper. It also made variadic inference preserve
+container shape. The second and final exact-SHA review returned `SATISFIED`.
+The evidence is in the
+[#3468 first review comment](https://github.com/sifr-lang/sifr/pull/3468#issuecomment-5381692163)
+and the
+[#3468 remediation review comment](https://github.com/sifr-lang/sifr/pull/3468#issuecomment-5381727214).
+
+Deferred follow-up: Item 10N owns the separate method receiver-analysis
+mechanism found by the remediation review. Linked delivery A retains its stale
+Rust-interop evidence path.
+
+Next action: implement Item 10K.
+
 ## Item 10K: Preserve Checked-stdlib Parent Upcasts
 
 Purpose: Keep the consuming child-to-parent conversion available when the
@@ -1702,6 +1750,26 @@ Acceptance criteria:
 - Nested async and ordinary functions preserve the same isolation rule.
 - Focused code-generation and native-run tests pass.
 
+## Item 10N: Preserve Nested-helper Receiver Mutation Analysis
+
+Purpose: Keep method receiver mutability aligned with a nested helper's
+lexical callable metadata.
+
+Scope:
+
+- Resolve a nested helper's parameter conventions by lexical binding identity.
+- Mark a method receiver mutable when the helper mutates a receiver-rooted
+  argument such as `self.field`.
+- Preserve exact nominal and binding identity for same-named helpers.
+- Do not restore module registry pollution or add a basename fallback.
+
+Acceptance criteria:
+
+- A method that passes `self.field` to a mutating nested helper builds.
+- The method receives `&mut self` when the nested call requires it.
+- Same-named helpers in sibling scopes do not change receiver analysis.
+- Focused lowering, code-generation, and native-run tests pass.
+
 ## Required Linked Delivery A: Rust-interop Evidence Path
 
 The active
@@ -1743,7 +1811,7 @@ Purpose: Combine phase-owned corrections with independently owned changes.
 
 Dependencies:
 
-- Items 1 through 10M are merged.
+- Items 1 through 10N are merged.
 - Required linked delivery A is merged.
 
 Scope:
@@ -1823,6 +1891,7 @@ Acceptance criteria:
 | Checked-stdlib parent upcast | Focused inheritance, relocation, project-build, and native-run tests |
 | User-error parent handler | Focused ancestry, unrelated nominal, residual, and native-run tests |
 | Nested-function try-channel state | Focused sync, async, carrier restoration, and native-run tests |
+| Nested-helper receiver mutation | Focused lexical helper, receiver mutability, sibling-scope, and native-run tests |
 | Regression guards | Focused stale-path, stale-hash, nominal-identity, conversion, and no-compatibility self-tests |
 | Python doctor | One final-candidate run and one isolated profile only after a timeout |
 
@@ -1878,6 +1947,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10I are complete and recorded.
+Current state: Items 0 through 10J are complete and recorded.
 
-Next action: implement Item 10J.
+Next action: implement Item 10K.
