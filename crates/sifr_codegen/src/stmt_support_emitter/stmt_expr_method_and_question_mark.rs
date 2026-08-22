@@ -402,7 +402,7 @@ macro_rules! stmt_expr_question_mark {
                         ))));
                     }
                     let converted_error = target_error_info.as_ref().map(|target| {
-                        $emitter.consuming_value_upcast_for_ir(
+                        $emitter.consuming_value_conversion_for_ir(
                             target,
                             inner_err_ty,
                             error_ident.clone(),

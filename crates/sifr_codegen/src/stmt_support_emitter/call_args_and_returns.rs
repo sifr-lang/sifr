@@ -75,10 +75,8 @@ impl RustEmitter {
             let mut consuming_value_adapted = false;
             if convention.is_owned() {
                 (lowered_arg, consuming_value_adapted) = self.adapt_consuming_call_argument_for_ir(
-                    hir_arg,
                     param_ty,
                     &effective_arg_ty,
-                    *convention,
                     lowered_arg,
                     borrowed_name_arg,
                 );

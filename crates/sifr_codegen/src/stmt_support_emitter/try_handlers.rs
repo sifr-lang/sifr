@@ -133,7 +133,7 @@ impl RustEmitter {
                                     }],
                                 };
                             }
-                            let converted = self.consuming_value_upcast_for_ir(
+                            let converted = self.consuming_value_conversion_for_ir(
                                 target,
                                 source,
                                 cloned_error.clone(),

@@ -85,6 +85,40 @@ def forward(values: dict[str, int | str | None]) -> bool:
 }
 
 #[test]
+fn safe_nullable_union_boundaries_convert_each_value_once() {
+    let rust_code = generate_rust_from_source(
+        r#"def consume(value: int | str | None) -> bool:
+    return value is None
+
+def select(
+    values: dict[str, int | str | None],
+    choose_safe: bool,
+    fallback: int | str | None = None,
+) -> int | str | None:
+    assigned: int | str | None = values.get("assigned")
+    stored: list[int | str | None] = []
+    stored.append(values.get("stored"))
+    joined = values.get("joined") if choose_safe else fallback
+    assert consume(values.get("argument"))
+    if assigned is not None:
+        return assigned
+    return joined
+"#,
+    );
+
+    assert_eq!(
+        rust_code.matches(".unwrap_or(").count(),
+        4,
+        "each safe read must materialize its nullable union exactly once:\n{rust_code}"
+    );
+    assert_eq!(
+        rust_code.matches(".map(").count(),
+        0,
+        "exact nullable-union conversions do not need a payload map:\n{rust_code}"
+    );
+}
+
+#[test]
 fn nested_option_represented_union_payload_widens_recursively() {
     let payload = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
     let target = sifr_type_system::make_union(vec![Type::Bool, Type::Int, Type::Str, Type::None]);
