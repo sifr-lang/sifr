@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 3 are complete. Item 4 is next.
+Status: active on 2026-08-22. Items 0 through 4 are complete. Item 5 is next.
 
 ## Objective
 
@@ -479,6 +479,39 @@ Acceptance criteria:
 - The unreachable numeric features do not appear in that plan.
 - The test does not use an unrelated module to request a numeric feature.
 
+### Item 4 record
+
+State: complete
+
+PR: [#3434](https://github.com/sifr-lang/sifr/pull/3434)
+
+Base SHA: `17274ca1e60b60dbb254710b836c3cdb1c0be32e`
+
+Candidate SHA: `a6a2ee7812c4f58d762bc40d369028478e5e68e7`
+
+Merge SHA: `a566074bad6d49d58b9b71af8846792507646488`
+
+Changed paths: the focused project-entrypoint test and the corrected Item 4
+dependency contract.
+
+Validation: all four focused project-entrypoint tests passed. The existing
+positive `_bigint` typed-metadata authority test passed. Formatting, diff,
+file-size, HIR maintainability, and driver maintainability checks passed.
+
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all earlier checks and stopped at the Rust-interop matrix. The matrix reported
+only linked delivery A's missing negative fixture and Item 10's empty
+method-slot fixture.
+
+Review evidence: the exact-SHA Opus review returned `SATISFIED`. No
+remediation review was used. The evidence is in the
+[#3434 review comment](https://github.com/sifr-lang/sifr/pull/3434#issuecomment-5377332955).
+
+Deferred follow-up: linked delivery A and Item 10 retain their recorded
+fixtures. No Item 4 mechanism defect remains.
+
+Next action: implement Item 5.
+
 ## Item 5: Preserve Successful Sequential `try` Bindings
 
 Purpose: Make Sifr lexical scope independent of generated Rust block scope.
@@ -779,6 +812,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 3 are complete and recorded.
+Current state: Items 0 through 4 are complete and recorded.
 
-Next action: implement Item 4.
+Next action: implement Item 5.
