@@ -1,6 +1,6 @@
 use super::{
-    first_try_error_type_in_stmts, queries, select_try_error_type, successful_try_bindings,
-    HirExceptHandler, HirStmt, RustEmitter, RustExpr, RustStmt, Type,
+    declaration_only_try_bindings, first_try_error_type_in_stmts, queries, select_try_error_type,
+    successful_try_bindings, HirExceptHandler, HirStmt, RustEmitter, RustExpr, RustStmt, Type,
 };
 impl RustEmitter {
     pub(crate) fn lower_loop_control_stmt_for_ir(&self, stmt: &HirStmt) -> Option<RustStmt> {
@@ -263,6 +263,14 @@ impl RustEmitter {
             && handlers
                 .iter()
                 .all(|handler| queries::block_control_flow_effect(&handler.body).always_exits());
+        let declaration_only_bindings =
+            declaration_only_try_bindings(body, handlers, following_stmts)
+                .into_iter()
+                .map(|(name, ty)| {
+                    let ty = self.local_binding_types.get(&name).cloned().unwrap_or(ty);
+                    (name, ty)
+                })
+                .collect::<Vec<_>>();
         let successful_bindings = successful_try_bindings(body, handlers, following_stmts)
             .into_iter()
             .map(|(name, ty)| {
@@ -311,7 +319,7 @@ impl RustEmitter {
         let mut closure_body = {
             let saved_cache_requirements = self.string_char_cache_required_names.clone();
             let body_cache_uses = crate::string_char_cache_scan::string_cache_uses_in_stmts(body);
-            for (name, _) in &successful_bindings {
+            for (name, _) in successful_bindings.iter().chain(&declaration_only_bindings) {
                 if !body_cache_uses.contains(name) {
                     self.string_char_cache_required_names.remove(name);
                 }
@@ -405,6 +413,18 @@ impl RustEmitter {
         };
 
         let mut lowered = Vec::new();
+        lowered.extend(
+            declaration_only_bindings
+                .iter()
+                .map(|(name, ty)| RustStmt::LetDecl {
+                    mutable: queries::declaration_only_binding_needs_mutability(
+                        following_stmts.unwrap_or_default(),
+                        name,
+                    ) || super::should_force_mutable_binding(ty, &self.recursive_fields),
+                    name: name.clone(),
+                    ty: crate::sifr_type_to_rust_type(ty),
+                }),
+        );
         if capture_returns && !successful_bindings.is_empty() {
             lowered.push(RustStmt::Let {
                 mutable: true,

@@ -551,6 +551,19 @@ impl RustEmitter {
                     value,
                 }
             }
+            crate::RustStmt::LetDecl {
+                mutable,
+                name,
+                mut ty,
+            } => {
+                if is_plain_i64_storage_type(Some(&ty)) && self.is_forced_sifr_int_local(&name) {
+                    ty = crate::RustType::Named("SifrInt".to_string());
+                    self.sifr_int_local_bindings
+                        .borrow_mut()
+                        .insert(name.clone());
+                }
+                crate::RustStmt::LetDecl { mutable, name, ty }
+            }
             crate::RustStmt::LetPattern { pattern, value } => crate::RustStmt::LetPattern {
                 pattern,
                 value: self.rewrite_stdlib_constant_idents_in_expr(value),

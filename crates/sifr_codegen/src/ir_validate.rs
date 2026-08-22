@@ -122,6 +122,7 @@ fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_functi
             }
             validate_expr(value, issues, in_function);
         }
+        RustStmt::LetDecl { ty, .. } => validate_type(ty, issues),
         RustStmt::LetPattern { value, .. } => {
             validate_expr(value, issues, in_function);
         }

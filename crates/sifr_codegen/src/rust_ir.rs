@@ -89,6 +89,11 @@ pub enum RustStmt {
         ty: Option<RustType>,
         value: RustExpr,
     },
+    LetDecl {
+        mutable: bool,
+        name: String,
+        ty: RustType,
+    },
     LetPattern {
         pattern: String,
         value: RustExpr,

@@ -746,7 +746,10 @@ pub(super) fn append_recursive_capture_args_to_stmts(
             RustStmt::LocalFn { body, .. } => {
                 append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
             }
-            RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => {}
+            RustStmt::LetDecl { .. }
+            | RustStmt::Return(None)
+            | RustStmt::Break
+            | RustStmt::Continue => {}
         }
     }
 }

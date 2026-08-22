@@ -525,6 +525,7 @@ mod tests {
             RustStmt::Let { ty, value, .. } => {
                 ty.as_ref().map(count_raw_in_type).unwrap_or(0) + count_raw_in_expr(value)
             }
+            RustStmt::LetDecl { ty, .. } => count_raw_in_type(ty),
             RustStmt::LetPattern { value, .. } => count_raw_in_expr(value),
             RustStmt::LetElse {
                 value, else_body, ..

@@ -142,7 +142,10 @@ fn stmt_uses_name_only_as_set_key(stmt: &RustStmt, name: &str, found: &mut bool)
                     }) && block_uses_name_only_as_set_key_with_found(&arm.body, name, found)
                 })
         }
-        RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => true,
+        RustStmt::LetDecl { .. }
+        | RustStmt::Return(None)
+        | RustStmt::Break
+        | RustStmt::Continue => true,
     }
 }
 

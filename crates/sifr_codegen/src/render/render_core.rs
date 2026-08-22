@@ -386,6 +386,14 @@ impl Renderer {
                     value = Self::render_expr_string(value)
                 ));
             }
+            RustStmt::LetDecl { mutable, name, ty } => {
+                let mutability = if *mutable { "mut " } else { "" };
+                self.emit_line(&format!(
+                    "let {mutability}{name}: {ty};",
+                    name = Self::render_identifier(name),
+                    ty = Self::render_type_string(ty),
+                ));
+            }
             RustStmt::LetPattern { pattern, value } => {
                 self.emit_line(&format!(
                     "let {pattern} = {value};",

@@ -209,7 +209,7 @@ def outer() -> Result[int, ProbeError]:
 }
 
 #[test]
-fn try_binding_used_only_as_following_assignment_target_remains_live() {
+fn try_binding_replaced_before_read_keeps_only_its_declaration() {
     let generated = generate_rust_from_source(&format!(
         r#"{PROBE_ERROR}
 def replace_value() -> Result[int, ProbeError]:
@@ -222,8 +222,56 @@ def replace_value() -> Result[int, ProbeError]:
 "#
     ));
 
-    assert!(generated.contains("let (mut total,) = match __sifr_try_res"));
-    syn::parse_file(&generated).expect("assigned live try binding Rust should parse");
+    assert!(generated.contains("let total: i64;"));
+    assert!(!generated.contains("Ok((total,))"));
+    assert!(!generated.contains("let (mut total,) = match __sifr_try_res"));
+    syn::parse_file(&generated).expect("declaration-only try binding Rust should parse");
+}
+
+#[test]
+fn moved_try_binding_can_be_replaced_without_value_transport() {
+    let generated = generate_rust_from_source(&format!(
+        r#"{PROBE_ERROR}
+def load_text() -> Result[str, ProbeError]:
+    return "old"
+
+def consume(own value: str) -> None:
+    _ = value
+
+def replace_text() -> Result[str, ProbeError]:
+    try:
+        text: str = load_text()
+        consume(text)
+    except ProbeError as error:
+        raise error
+    text = "new"
+    return text
+"#
+    ));
+
+    assert!(generated.contains("let text: String;"));
+    assert!(!generated.contains("Ok((text,))"));
+    syn::parse_file(&generated).expect("replaced moved try binding Rust should parse");
+}
+
+#[test]
+fn declaration_only_try_binding_is_mutable_for_repeated_replacement() {
+    let generated = generate_rust_from_source(&format!(
+        r#"{PROBE_ERROR}
+def replace_twice() -> Result[int, ProbeError]:
+    try:
+        value: int = load_int(1)
+    except ProbeError as error:
+        raise error
+    value = 2
+    value = 3
+    return value
+"#
+    ));
+
+    assert!(generated.contains("let mut value: i64;"));
+    assert!(!generated.contains("Ok((value,))"));
+    syn::parse_file(&generated).expect("mutable declaration-only try binding Rust should parse");
 }
 
 #[test]

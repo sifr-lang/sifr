@@ -497,6 +497,11 @@ mod tests {
                 ty: Some(RustType::I64),
                 value: RustExpr::Literal(RustLiteral::Int(1)),
             },
+            RustStmt::LetDecl {
+                mutable: true,
+                name: "pending".to_string(),
+                ty: RustType::String_,
+            },
             RustStmt::LetPattern {
                 pattern: "(a, b)".to_string(),
                 value: RustExpr::Tuple(vec![
@@ -512,6 +517,7 @@ mod tests {
         let rendered = render_stmts(&stmts);
         assert_snapshot!(rendered, @r###"
         let x: i64 = 1;
+        let mut pending: String;
         let (a, b) = (2, true);
         may_fail()?;
         "###);
