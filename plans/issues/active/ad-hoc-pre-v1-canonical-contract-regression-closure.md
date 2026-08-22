@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 5 are complete. Item 5A is next.
+Status: active on 2026-08-22. Items 0 through 5A are complete. Item 6 is next.
 
 ## Objective
 
@@ -600,6 +600,50 @@ Acceptance criteria:
 - Generated code contains no data-dependent `.unwrap()` or `.expect()`.
 - Focused I/O-error fixtures check, build, and run.
 
+### Item 5A record
+
+State: complete
+
+PR: [#3438](https://github.com/sifr-lang/sifr/pull/3438)
+
+Base SHA: `625aaa5ad0b13634697dcf8fcc2dd72218240001`
+
+Candidate SHA: `080fd152e55ca96a8caff682c2049d24ea37fe48`
+
+Merge SHA: `4185ae9223021001c1672d88cc36ca4c1b270ab1`
+
+Changed paths: I/O-error coverage lowering, structured handler emission,
+canonical I/O-error registry consumers, focused lowering and codegen tests,
+one pass fixture, one fail fixture, and 21 generated demo companions.
+
+Validation: the full lowering suite passed 1,026 tests with one ignored test.
+The full codegen suite passed 1,093 tests. A real `FileNotFound` value selected
+the named handler. An `IOError` with `kind = "Other"` selected the base handler.
+The pass fixture checked, built, and ran. The fail fixture emitted
+`SIFR-RESULT-0005` at the recorded column. A generated-code scan found no
+data-dependent unwrap or expect. Affected-package clippy passed with warnings
+denied. Demo freshness, format, diff, HIR maintainability, and file-size checks
+passed.
+
+The create-PR and merge gates each ran once on the candidate SHA. Both passed
+all earlier guardrails, including demo freshness, and stopped at the same two
+Rust-interop matrix rows. Linked delivery A owns the missing shared-bridge
+negative source path. Item 10 owns the empty method-slot declaration. Neither
+gate was repeated.
+
+Review evidence: the exact-SHA Opus review returned `APPROVED`. It confirmed
+that lowering no longer treats child handlers as parent coverage, codegen no
+longer makes the last named kind unconditional, and the type system owns the
+single I/O-error kind registry. No remediation review was used. The evidence
+is in the
+[#3438 review comment](https://github.com/sifr-lang/sifr/pull/3438#issuecomment-5377842874).
+
+Deferred follow-up: linked delivery A and Item 10 retain their recorded matrix
+rows. The broad fail harness still stops first at Item 9's protocol diagnostic
+mismatch. No Item 5A mechanism defect remains.
+
+Next action: implement Item 6.
+
 ## Item 6: Use One Project-wide Nominal Identity
 
 Purpose: Make structured Rust types stable across project and module emission.
@@ -878,6 +922,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 5 are complete and recorded.
+Current state: Items 0 through 5A are complete and recorded.
 
-Next action: implement Item 5A.
+Next action: implement Item 6.
