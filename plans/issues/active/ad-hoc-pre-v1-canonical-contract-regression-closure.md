@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10N are complete. Item 10O is next.
+Status: active on 2026-08-22. Items 0 through 10O are complete. Linked delivery A is next.
 
 ## Objective
 
@@ -1958,6 +1958,48 @@ Acceptance criteria:
 - Ordinary and async nested functions preserve the same scope boundary.
 - Focused code-generation and native-run tests pass.
 
+### Item 10O record
+
+State: complete
+
+PR: [#3478](https://github.com/sifr-lang/sifr/pull/3478)
+
+Base SHA: `bf980bd7ef0abc0bab60a2a72ff99b6781c83590`
+
+Candidate SHA: `594286bb20245629a1d2b3aada98cc16b0d9c5a5`
+
+Merge SHA: `c24f863a1293db49a811b916d5025d6fdfa9e8a1`
+
+Changed paths: nested-function error discovery, infallible `try/finally`
+fallback selection, a sync and async code-generation regression, and one
+native fixture.
+
+Validation: all 1,138 code-generation tests passed. The new sync and async
+fixture built and ran release-native. Strict code-generation Clippy,
+formatting, HIR maintainability, diff checks, and the 3,230-file size guardrail
+passed. Restoring nested descent made the carrier-count regression fail.
+Restoring the fake `Error` fallback made the native fixture fail Rust
+compilation with an undefined type. Both changes were restored before the
+candidate SHA was created.
+
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all preceding checks and stopped only at linked delivery A's stale Rust-interop
+evidence path. Neither gate was repeated. The evidence is in the
+[#3478 create-PR gate comment](https://github.com/sifr-lang/sifr/pull/3478#issuecomment-5382273638)
+and the
+[#3478 merge gate comment](https://github.com/sifr-lang/sifr/pull/3478#issuecomment-5382282423).
+
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. It confirmed scope isolation, local nested discovery,
+carrier priority, unit fallback reachability, and sync and async parity. The
+evidence is in the
+[#3478 review comment](https://github.com/sifr-lang/sifr/pull/3478#issuecomment-5382264636).
+
+Deferred follow-up: linked delivery A retains its stale Rust-interop evidence
+path. No new Item 10O mechanism defect was found.
+
+Next action: merge and record linked delivery A.
+
 ## Required Linked Delivery A: Rust-interop Evidence Path
 
 The active
@@ -2135,6 +2177,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10N are complete and recorded.
+Current state: Items 0 through 10O are complete and recorded.
 
-Next action: implement Item 10O.
+Next action: merge and record linked delivery A.
