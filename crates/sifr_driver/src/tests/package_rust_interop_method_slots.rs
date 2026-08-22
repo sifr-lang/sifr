@@ -31,7 +31,7 @@ fn test_method_slot_runtime() {
     );
     assert_eq!(
         run_built_package(&entrypoint),
-        "value-normalized\ninput-receiver\nvalue-no-context\nvalue-shared-2"
+        "value-normalized\ninput-receiver\ninput-serialized\nvalue-no-context\nvalue-shared-3"
     );
     let _ = std::fs::remove_dir_all(package_root);
 }

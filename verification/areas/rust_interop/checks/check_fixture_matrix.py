@@ -7,7 +7,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from _binding_helpers import contains_empty_pass_body as _contains_empty_pass_body
+from _binding_helpers import (
+    contains_empty_placeholder_class as _contains_empty_placeholder_class,
+)
 from _binding_helpers import decorated_function_name as _decorated_function_name
 from _binding_helpers import package_example_binding_token
 from _binding_helpers import rust_bound_declarations as _rust_bound_declarations
@@ -710,7 +712,7 @@ def _validate_package_example_text(
     for header in required_headers:
         if header not in text:
             failures.append(f"{fixture_id}: {raw_path} missing header {header!r}")
-    if _contains_empty_pass_body(text):
+    if _contains_empty_placeholder_class(text):
         failures.append(f"{fixture_id}: {raw_path} must not use empty placeholder class bodies")
     crate_token = crate.replace("-", "_")
     binding_token = package_example_binding_token(fixture_id, crate_token)
@@ -859,7 +861,7 @@ def _validate_evidence_example_text(
 ) -> None:
     if len(text.strip().splitlines()) < 9:
         failures.append(f"{fixture_id}: {raw_path} must include a binding and concrete verifier call site")
-    if _contains_empty_pass_body(text):
+    if _contains_empty_placeholder_class(text):
         failures.append(f"{fixture_id}: {raw_path} must not use empty placeholder class bodies")
     if (
         fixture_id == "proc_macro_trust"

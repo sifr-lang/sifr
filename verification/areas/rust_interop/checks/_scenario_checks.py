@@ -158,6 +158,23 @@ def run_self_test() -> tuple[int, str | None]:
         ):
             return cases, f"auxiliary placeholder was accepted: {placeholder_failures}"
         cases += 1
+
+        helper_path.write_text(
+            "@class_adapter_marker(\"fixture.contract\", \"adapt_contract\")\n"
+            "class Helper:\n"
+            "    pass\n",
+            encoding="utf-8",
+        )
+        marker_failures: list[str] = []
+        validate_scenario_examples(
+            marker_failures,
+            "bridge_type_matrix",
+            fixture_dir,
+            raw_examples,
+        )
+        if marker_failures:
+            return cases, f"required class-adapter marker was rejected: {marker_failures}"
+        cases += 1
         helper_path.unlink()
 
         mutation_cases = (

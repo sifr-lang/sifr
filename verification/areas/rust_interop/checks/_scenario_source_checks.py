@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from _binding_helpers import contains_empty_pass_body
+from _binding_helpers import contains_empty_placeholder_class
 from _binding_helpers import rust_bound_declarations
 from _binding_helpers import verifier_binds_call
 
@@ -42,7 +42,7 @@ def validate_scenario_sifr_source(
     for header in ("# execution-kind:", "# expected-result:"):
         if header not in text:
             failures.append(f"{fixture_id}: {raw_path} missing {header} header")
-    if contains_empty_pass_body(text):
+    if contains_empty_placeholder_class(text):
         failures.append(
             f"{fixture_id}: {raw_path} must not use empty placeholder class bodies"
         )
@@ -88,7 +88,7 @@ def validate_auxiliary_sifr_source(
     text: str,
 ) -> None:
     """Reject placeholders without imposing entrypoint-only evidence rules."""
-    if contains_empty_pass_body(text):
+    if contains_empty_placeholder_class(text):
         failures.append(
             f"{fixture_id}: {raw_path} must not use empty placeholder class bodies"
         )
