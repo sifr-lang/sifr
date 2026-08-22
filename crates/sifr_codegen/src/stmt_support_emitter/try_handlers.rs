@@ -184,10 +184,23 @@ impl RustEmitter {
             branches.push((cond_expr, handler_body));
         }
 
+        let has_unconditional_branch = branches.iter().any(|(cond, _)| cond.is_none());
+        let mut current_else = if has_unconditional_branch {
+            None
+        } else {
+            let Some(source_error_type) = source_error_type else {
+                return Ok(None);
+            };
+            let Some(residual) =
+                self.unmatched_try_error_return_for_ir(err_ident, source_error_type)
+            else {
+                return Ok(None);
+            };
+            Some(vec![residual])
+        };
         if branches.is_empty() {
-            return Ok(None);
+            return Ok(current_else);
         }
-        let mut current_else: Option<Vec<RustStmt>> = None;
         for (cond, body) in branches.into_iter().rev() {
             if let Some(cond) = cond {
                 current_else = Some(vec![RustStmt::If {
@@ -200,5 +213,29 @@ impl RustEmitter {
             }
         }
         Ok(Some(current_else.unwrap_or_default()))
+    }
+
+    fn unmatched_try_error_return_for_ir(
+        &self,
+        err_ident: &str,
+        source_error_type: &Type,
+    ) -> Option<RustStmt> {
+        let target_error_type = self
+            .try_closure_error_type_info
+            .last()
+            .and_then(Clone::clone)
+            .or_else(
+                || match self.current_return_type.as_ref()?.resolve_alias() {
+                    Type::Result(_, error_type) => Some(error_type.as_ref().clone()),
+                    _ => None,
+                },
+            )?;
+        let error = RustExpr::Ident(err_ident.to_string());
+        let converted =
+            self.consuming_value_conversion_for_ir(&target_error_type, source_error_type, error);
+        Some(RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Ident("Err".to_string())),
+            args: vec![converted],
+        })))
     }
 }

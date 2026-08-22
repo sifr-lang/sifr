@@ -189,6 +189,57 @@ def main():
 }
 
 #[test]
+fn result_error_channel_accepts_an_unmatched_conditional_handler_error() {
+    let source = "\
+def classify() -> Result[str, IOError]:
+    try:
+        raise IOError(\"other\")
+    except FileNotFoundError:
+        return \"missing\"
+";
+    let parsed = parse_module(source).expect("parse failed");
+    lower_module(parsed.suite()).expect("Result channel should accept the unmatched error");
+}
+
+#[test]
+fn outer_try_accepts_an_unmatched_conditional_handler_error() {
+    let source = "\
+def classify() -> str:
+    try:
+        try:
+            raise IOError(\"other\")
+        except FileNotFoundError:
+            return \"missing\"
+    except IOError as error:
+        return error.message
+";
+    let parsed = parse_module(source).expect("parse failed");
+    lower_module(parsed.suite()).expect("outer try should accept the unmatched error");
+}
+
+#[test]
+fn outer_try_does_not_accept_an_error_from_a_nested_function() {
+    let source = "\
+def outer() -> str:
+    try:
+        def inner() -> str:
+            try:
+                raise IOError(\"leak\")
+            except FileNotFoundError:
+                return \"missing\"
+        return inner()
+    except IOError as error:
+        return error.message
+";
+    let errors = lower_errors(source);
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RESULT_UNCOVERED_TRY_ERRORS)
+            && error.message == "except arms do not cover all error types from try body: IOError"
+    }));
+}
+
+#[test]
 fn try_finally_without_except_preserves_cleanup_boundary() {
     let source = "\
 def main():

@@ -400,3 +400,57 @@ def classify() -> str:
     assert!(!generated.contains("if let Err(__sifr_try_err) = __sifr_try_res"));
     syn::parse_file(&generated).expect("total raising try Rust should parse");
 }
+
+#[test]
+fn unmatched_ioerror_kind_returns_through_the_checked_error_channel() {
+    let generated = generate_rust_from_source(
+        r#"
+def classify() -> Result[str, IOError]:
+    try:
+        raise IOError("other")
+    except FileNotFoundError:
+        return "missing"
+"#,
+    );
+
+    assert!(generated.contains("__sifr_try_err.kind == \"FileNotFound\""));
+    assert!(generated.contains("return Err(__sifr_try_err);"));
+    syn::parse_file(&generated).expect("residual IOError propagation Rust should parse");
+}
+
+#[test]
+fn branchless_handler_member_returns_through_the_checked_error_channel() {
+    let generated = generate_rust_from_source(
+        r#"
+def classify() -> Result[str, IOError]:
+    try:
+        raise IOError("other")
+    except ValueError:
+        return "value"
+"#,
+    );
+
+    assert!(generated.contains("Err(__sifr_try_err) => {\n            return Err(__sifr_try_err);"));
+    assert!(!generated.contains("structured statement emission missing"));
+    syn::parse_file(&generated).expect("branchless residual Rust should parse");
+}
+
+#[test]
+fn union_member_without_a_handler_keeps_its_residual() {
+    let generated = generate_rust_from_source(
+        r#"
+def classify(flag: bool) -> Result[str, IOError | ValueError]:
+    try:
+        if flag:
+            raise IOError("other")
+        raise ValueError("value")
+    except FileNotFoundError:
+        return "missing"
+"#,
+    );
+
+    assert!(generated.contains("__sifr_try_variant_error.kind == \"FileNotFound\""));
+    assert!(generated.matches("return Err(").count() >= 2);
+    assert!(!generated.contains("structured statement emission missing"));
+    syn::parse_file(&generated).expect("union residual Rust should parse");
+}

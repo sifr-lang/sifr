@@ -7,7 +7,11 @@ pub(in crate::lower) fn lower_function_stmts(
     ctx: &mut LowerCtx,
 ) -> Vec<HirStmt> {
     let previous_handlers = std::mem::take(&mut ctx.rust_threadsafe_callback_move_handlers);
+    let previous_in_try_block = std::mem::replace(&mut ctx.in_try_block, false);
+    let previous_try_block_error_types = std::mem::take(&mut ctx.try_block_error_types);
     let result = lower_stmts(stmts, func_type, ctx);
+    ctx.try_block_error_types = previous_try_block_error_types;
+    ctx.in_try_block = previous_in_try_block;
     ctx.rust_threadsafe_callback_move_handlers = previous_handlers;
     result
 }
