@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 7 are complete. Item 8 is next.
+Status: active on 2026-08-22. Items 0 through 8 are complete. Item 9 is next.
 
 ## Objective
 
@@ -815,6 +815,59 @@ Acceptance criteria:
 - No user-controlled source reaches the panic at `crates/sifr_lowering/src/cfg.rs:300`.
 - Valid control-flow fixtures keep their existing semantics.
 
+### Item 8 record
+
+State: complete
+
+PR: [#3444](https://github.com/sifr-lang/sifr/pull/3444)
+
+Base SHA: `882947d53e1b49b584973b4e6096b7d0153b79fa`
+
+Candidate SHA: `7d51849ba8d9672792eaf8671f1377e4e81b74f4`
+
+Merge SHA: `4eb28a70c986d6c6f8752d84c7ca351b58035e02`
+
+Changed paths: CFG construction and validation, CFG consumers in lowering,
+focused match diagnostics, and the fixed-bug and crash regression records.
+
+The root cause was a one-arm match that created a branch terminator with one
+target. The CFG invariant requires at least two branch targets. Validation then
+panicked on user-controlled invalid source.
+
+The correction emits a direct jump for a one-arm match. CFG construction now
+returns an invariant error. The lowering entry points convert that error to a
+structured internal compiler diagnostic instead of catching a panic.
+
+Validation: all 9 focused CFG tests and all 6 focused match-diagnostic tests
+passed. The full lowering suite passed 1,029 tests, with 1 ignored. Lowering
+Clippy passed with warnings denied. Direct checks of both negative fixtures
+produced only `SIFR-MATCH-0001`. The fixed-bug and crash regression runner
+passed all 6 variants. Format, diff, HIR maintainability, and file-size checks
+passed.
+
+The broad fail suite crossed both CFG fixtures without a panic. It stopped at
+Item 9's protocol diagnostic mismatch.
+
+The create-PR and merge gates each ran once on the final candidate. Both passed
+all prerequisite guardrails. Both stopped at the same two Rust-interop matrix
+inputs. Linked delivery A owns the missing shared-bridge source. Item 10 owns
+the empty method-slot declaration. The gate evidence is in the
+[#3444 gate comment](https://github.com/sifr-lang/sifr/pull/3444#issuecomment-5379944267).
+
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. The evidence is in the
+[#3444 review comment](https://github.com/sifr-lang/sifr/pull/3444#issuecomment-5379927019).
+
+Deferred follow-up: the review recorded two pre-existing correctness issues.
+Guarded wildcard arms can be treated as exhaustive. A two-arm `int | None`
+match can reference an unresolved generated union module. These issues are not
+CFG construction defects and need separate ownership. The review also suggested
+deduplicating invariant diagnostics, propagating two conservative CFG helper
+fallbacks, and strengthening the fixed-bug message lock. Direct tests already
+lock the Item 8 diagnostic code and count.
+
+Next action: implement Item 9.
+
 ## Item 9: Separate Protocol and Name-resolution Intent
 
 Purpose: Make the protocol fixture reach the diagnostic that it claims to test.
@@ -1054,6 +1107,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 7 are complete and recorded.
+Current state: Items 0 through 8 are complete and recorded.
 
-Next action: implement Item 8.
+Next action: implement Item 9.
