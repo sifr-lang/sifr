@@ -11,8 +11,9 @@ package-boundary restriction: shared crates must not import package-specific
   values crossing the boundary.
 - Negative `cargo-probe` evidence:
   `test_check_shared_bridge_crate_negative_cargo_probe` checks the checked-in
-  negative source, negative-only trust manifest, and rejected shared-crate Rust
-  source; it observes `SIFR-RUST-RESOLVE-0001` for
+  `negative/package_generated_type_import_rejected.sifr` source, negative-only
+  trust manifest, and rejected shared-crate Rust source; it observes
+  `SIFR-RUST-RESOLVE-0001` for
   `crate::__sifr_bridge::*` before Cargo execution.
 
 Both tests belong to the blocking `sifr_driver_generated_builds` crate-test
