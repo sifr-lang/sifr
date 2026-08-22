@@ -1,6 +1,7 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 2 are complete. Item 3 is next.
+Status: active on 2026-08-22. Items 0 through 2 are complete. Item 3 is
+blocked by [performance issue #3431](https://github.com/sifr-lang/sifr/issues/3431).
 
 ## Objective
 
@@ -422,6 +423,24 @@ Acceptance criteria:
 - No reader accepts an old path as a fallback.
 - The item does not repair or waive the linked Rust-interop failure.
 
+### Item 3 blocker evidence
+
+State: blocked
+
+The performance trend hash and its negative self-test pass. The fuzz smoke area
+passes all 25 variants. The ecosystem area passes all 34 variants. The warm
+controlled representative profile executes all 10 benchmark commands, but the
+budget check rejects three instruction results and two RSS results.
+
+[Performance issue #3431](https://github.com/sifr-lang/sifr/issues/3431) owns
+the newly unmasked regression. Its exact result artifact has SHA-256
+`8fa4fac41c6d63ee854259bf8199b0e14b6eb1af88b65e414c57adac7a067b28`.
+The phase does not change a baseline, threshold, waiver, timeout, or profile to
+absorb this failure.
+
+Next action: resume Item 3 after issue #3431 provides a merged correction and
+passing warm representative and full performance evidence.
+
 ## Item 4: Correct the Dependency Feature Assertion
 
 Purpose: Make the driver test match reachable module metadata.
@@ -740,6 +759,8 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 2 are complete and recorded. Item 3 is next.
+Current state: Items 0 through 2 are complete and recorded. Item 3 is blocked
+by performance issue #3431.
 
-Next action: refresh migrated evidence paths, hashes, and checksums.
+Next action: resume Item 3 after issue #3431 merges its correction and provides
+passing warm performance evidence.
