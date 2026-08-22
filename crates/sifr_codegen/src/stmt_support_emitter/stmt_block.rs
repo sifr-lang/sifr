@@ -785,15 +785,13 @@ impl RustEmitter {
                 }) else {
                     return Ok(None);
                 };
-                let string_char_cache_vars = self.string_char_cache_vars.clone();
                 let target_cache_init = if char_set_loop || target.contains(',') {
                     None
                 } else {
                     self.string_char_cache_init_stmt_for_loop_target(target, target_ty)
                 };
                 self.loop_else_stack.push(false);
-                let lowered_body_result = self.try_lower_stmt_block_for_ir(body);
-                self.string_char_cache_vars = string_char_cache_vars;
+                let lowered_body_result = self.try_lower_scoped_stmt_block_for_ir(body);
                 let popped = self.loop_else_stack.pop();
                 debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
                 let lowered_body_result = lowered_body_result?;

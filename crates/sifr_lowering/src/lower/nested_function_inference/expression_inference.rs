@@ -1,9 +1,9 @@
 use super::{
     defaultdict_shape_expr_is_lowering_exact, has_conflicting_inference,
     infer_defaultdict_call_type, infer_registered_call, refine_defaultdict_method_call,
-    refine_defaultdict_subscript, str, type_check_binary_op, unify_function_return, unify_types,
-    CmpOp, DefaultdictMethodCall, Expr, ExprCall, FunctionEnv, HashMap, LocalFunctionState,
-    LowerCtx, Operator, Type,
+    refine_defaultdict_subscript, str, type_check_binary_op, unify_function_return,
+    unify_inferred_call_arguments, unify_types, CmpOp, DefaultdictMethodCall, Expr, ExprCall,
+    FunctionEnv, HashMap, LocalFunctionState, LowerCtx, Operator, Type,
 };
 pub(super) fn analyze_assign(
     targets: &[Expr],
@@ -391,14 +391,9 @@ pub(super) fn infer_call_type(
                     current_function,
                     ctx,
                 );
-                for (index, arg_ty) in inferred.positional_types.into_iter().enumerate() {
-                    if let Some(param_name) =
-                        state.params.get(index).map(|param| param.name.clone())
-                    {
-                        unify_function_param(name.id.as_str(), param_name.as_str(), arg_ty, states);
-                    }
-                }
-                return inferred.return_type;
+                let return_type = inferred.return_type.clone();
+                unify_inferred_call_arguments(name.id.as_str(), &state, inferred, states);
+                return return_type;
             }
             let function_type = ctx
                 .visible_local_function_metadata(name.id.as_str())
@@ -837,29 +832,5 @@ pub(super) fn unify_name_binding(
 
     if let Some(callee_name) = env.call_return_origins.get(name).cloned() {
         unify_function_return(callee_name.as_str(), merged, states);
-    }
-}
-
-pub(super) fn unify_function_param(
-    function_name: &str,
-    param_name: &str,
-    incoming: Type,
-    states: &mut HashMap<String, LocalFunctionState<'_>>,
-) {
-    let Some(state) = states.get_mut(function_name) else {
-        return;
-    };
-    let Some(param) = state
-        .params
-        .iter_mut()
-        .find(|param| param.name == param_name)
-    else {
-        return;
-    };
-    if !param.explicit && has_conflicting_inference(&param.ty, &incoming) {
-        param.ty = Type::Unknown;
-        state.inference_failed = true;
-    } else {
-        param.ty = unify_types(param.ty.clone(), incoming);
     }
 }

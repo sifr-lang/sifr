@@ -21,3 +21,45 @@ fn shadowed_nested_helper_restores_outer_calling_conventions() {
     assert!(!generated.contains("helper(&(40_i64)"));
     syn::parse_file(&generated).expect("scoped nested-function calls should parse as Rust");
 }
+
+#[test]
+fn loop_scopes_restore_outer_calling_conventions() {
+    let generated = generate_rust_from_source(
+        r#"def outer(n: int) -> int:
+    def helper(value: int = 3, *rest: int) -> int:
+        return value + len(rest)
+
+    for i in range(n):
+        def helper(value: str) -> str:
+            return value
+        assert helper("x") == "x"
+
+    return helper() + helper(1, 2, 3)
+"#,
+    );
+
+    assert!(generated.contains("helper(3_i64, &"));
+    assert!(generated.contains("helper(1_i64, &vec![2_i64, 3_i64])"));
+    syn::parse_file(&generated).expect("loop-scoped nested-function calls should parse as Rust");
+}
+
+#[test]
+fn exiting_branch_scopes_restore_outer_calling_conventions() {
+    let generated = generate_rust_from_source(
+        r#"def outer(flag: bool) -> int:
+    def helper(value: int = 3, *rest: int) -> int:
+        return value + len(rest)
+
+    if flag:
+        def helper(value: str) -> str:
+            return value
+        return len(helper("x"))
+
+    return helper() + helper(1, 2, 3)
+"#,
+    );
+
+    assert!(generated.contains("helper(3_i64, &"));
+    assert!(generated.contains("helper(1_i64, &vec![2_i64, 3_i64])"));
+    syn::parse_file(&generated).expect("exiting-branch nested-function calls should parse as Rust");
+}

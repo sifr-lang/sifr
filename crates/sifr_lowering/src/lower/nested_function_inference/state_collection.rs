@@ -34,7 +34,16 @@ pub(super) struct ParamState {
     pub(super) ty: Type,
     pub(super) explicit: bool,
     pub(super) convention: sifr_python_ast::AstParamConvention,
+    pub(super) kind: ParamKind,
     pub(super) mutated: bool,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum ParamKind {
+    Positional,
+    Vararg,
+    KeywordOnly,
+    Kwarg,
 }
 
 #[derive(Clone)]
@@ -304,6 +313,7 @@ fn collect_function_states<'a>(
                 ty,
                 explicit,
                 param.parameter.convention,
+                ParamKind::Positional,
             ));
         }
         if let Some(vararg) = &func.parameters.vararg {
@@ -318,6 +328,7 @@ fn collect_function_states<'a>(
                 Type::List(Box::new(element_ty)),
                 explicit,
                 vararg.convention,
+                ParamKind::Vararg,
             ));
         }
         for param in &func.parameters.kwonlyargs {
@@ -333,6 +344,7 @@ fn collect_function_states<'a>(
                 ty,
                 explicit,
                 param.parameter.convention,
+                ParamKind::KeywordOnly,
             ));
         }
         if let Some(kwarg) = &func.parameters.kwarg {
@@ -347,11 +359,12 @@ fn collect_function_states<'a>(
                 Type::Dict(Box::new(Type::Str), Box::new(value_ty)),
                 explicit,
                 kwarg.convention,
+                ParamKind::Kwarg,
             ));
         }
         let param_types = resolved_params
             .iter()
-            .map(|(name, _, ty, _, _)| {
+            .map(|(name, _, ty, _, _, _)| {
                 let candidate = if ty.is_unknown() {
                     MutationCandidate::InferFromUsage
                 } else {
@@ -362,7 +375,7 @@ fn collect_function_states<'a>(
             .collect::<HashMap<_, _>>();
         let mutated_params = collect_mutated_binding_names(&func.body, &param_types);
         let mut params = Vec::with_capacity(resolved_params.len());
-        for (name, name_range, ty, explicit, convention) in resolved_params {
+        for (name, name_range, ty, explicit, convention, kind) in resolved_params {
             let mutated = mutated_params.contains(&name);
             params.push(ParamState {
                 name,
@@ -370,6 +383,7 @@ fn collect_function_states<'a>(
                 ty,
                 explicit,
                 convention,
+                kind,
                 mutated,
             });
         }
@@ -421,7 +435,7 @@ pub(super) fn finalize_nested_function_types(
 
     for state in states.values_mut() {
         for param in &mut state.params {
-            if !param.explicit && param.ty.is_unknown() {
+            if !param.explicit && param.ty.contains_unknown_or_any() {
                 state.inference_failed = true;
                 ctx.error_with_code_at(
                     DiagnosticCode::TYPE_MISSING_ANNOTATION,

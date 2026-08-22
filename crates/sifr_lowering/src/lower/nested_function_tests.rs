@@ -147,6 +147,17 @@ fn shadowed_nested_helper_does_not_inherit_outer_default_or_vararg() {
 }
 
 #[test]
+fn inferred_nested_vararg_keeps_its_list_shape() {
+    let result = lower_source(
+        "def outer() -> int:\n    def helper(*extra):\n        return len(extra)\n\n    return helper(1, 2)\n",
+    );
+    assert!(
+        result.is_ok(),
+        "vararg call sites must infer the packed list element type: {result:?}"
+    );
+}
+
+#[test]
 fn test_conflicting_nested_helper_call_sites_fail_inference_explicitly() {
     let result = lower_source(
         "def outer(flag: bool) -> None:\n    def helper(value):\n        print(value)\n\n    if flag:\n        helper(1)\n    else:\n        helper(\"x\")\n",
