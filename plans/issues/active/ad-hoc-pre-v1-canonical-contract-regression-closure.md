@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 2 are complete. Item 3 is
-blocked by [performance issue #3431](https://github.com/sifr-lang/sifr/issues/3431).
+Status: active on 2026-08-22. Items 0 through 2 are complete. Item 3 has a
+passing performance correction and is in final validation.
 
 ## Objective
 
@@ -423,23 +423,31 @@ Acceptance criteria:
 - No reader accepts an old path as a fallback.
 - The item does not repair or waive the linked Rust-interop failure.
 
-### Item 3 blocker evidence
+### Item 3 performance correction evidence
 
-State: blocked
+State: in progress
 
-The performance trend hash and its negative self-test pass. The fuzz smoke area
-passes all 25 variants. The ecosystem area passes all 34 variants. The warm
-controlled representative profile executes all 10 benchmark commands, but the
-budget check rejects three instruction results and two RSS results.
+The performance trend hash and its negative self-test pass. The fuzz/property
+area passes all 39 variants. The ecosystem area passes all 34 variants. The
+warm controlled representative and full profiles pass all 10 benchmark
+commands and every budget. The performance smoke profile also passes.
 
-[Performance issue #3431](https://github.com/sifr-lang/sifr/issues/3431) owns
-the newly unmasked regression. Its exact result artifact has SHA-256
-`8fa4fac41c6d63ee854259bf8199b0e14b6eb1af88b65e414c57adac7a067b28`.
-The phase does not change a baseline, threshold, waiver, timeout, or profile to
-absorb this failure.
+[Performance issue #3431](https://github.com/sifr-lang/sifr/issues/3431) tracks
+the correction. PR #3262 copied all retained stdlib class templates into each
+later stdlib codegen operation. It also retained method bodies that late
+structural codegen does not use. The correction selects only imported templates
+and removes unused bodies from retained templates.
 
-Next action: resume Item 3 after issue #3431 provides a merged correction and
-passing warm representative and full performance evidence.
+The canonical LSP project exposed a separate ownership defect. Python editor
+diagnostics adopted an ancestor Cargo workspace when the Sifr package had no
+local `Cargo.toml`. The correction now requires package-local Cargo ownership.
+
+The passing representative artifact has SHA-256
+`d8361c5d3794796cf9dcfe466eed22025e7ba7a94935438908a0c8f4c016cc23`.
+No baseline, threshold, waiver, timeout, profile, or product feature changed.
+
+Next action: freeze the candidate, run its exact-SHA review, and run the two
+required Sifr gates.
 
 ## Item 4: Correct the Dependency Feature Assertion
 
@@ -759,8 +767,7 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 2 are complete and recorded. Item 3 is blocked
-by performance issue #3431.
+Current state: Items 0 through 2 are complete and recorded. Item 3 has passing
+focused, fuzz, ecosystem, and representative performance evidence.
 
-Next action: resume Item 3 after issue #3431 merges its correction and provides
-passing warm performance evidence.
+Next action: complete Item 3 validation, review, gates, merge, and record.

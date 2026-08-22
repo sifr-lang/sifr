@@ -327,7 +327,10 @@ fn compile_stdlib_sources_with_sysroot(
                 generic_class_params: stdlib_code.generic_class_params.clone(),
                 generic_class_templates: stdlib_code.generic_class_templates.clone(),
                 module_class_fields: stdlib_code.module_class_fields.clone(),
-                module_class_templates: stdlib_code.module_class_templates.clone(),
+                module_class_templates: select_imported_class_templates(
+                    &result.module.imports,
+                    &stdlib_code.module_class_templates,
+                ),
             };
             let codegen_result = run_codegen_with_boundary(
                 format!(
@@ -466,9 +469,10 @@ fn compile_stdlib_sources_with_sysroot(
                 .classes
                 .iter()
                 .map(|class| {
-                    let mut template = class.clone();
-                    template.identity = Some(format!("{module_name}.{}", class.name));
-                    (class.name.clone(), template)
+                    (
+                        class.name.clone(),
+                        stdlib_class_template(module_name, class),
+                    )
                 })
                 .collect();
             stdlib_code
@@ -737,6 +741,45 @@ fn collect_public_constant_integer_value_exports<'a, T: Clone>(
         .collect()
 }
 
+fn select_imported_class_templates<T: Clone>(
+    imports: &[sifr_ir::HirImport],
+    available: &HashMap<String, HashMap<String, T>>,
+) -> HashMap<String, HashMap<String, T>> {
+    let mut selected = HashMap::<String, HashMap<String, T>>::new();
+    for import in imports {
+        let Some(module_templates) = available.get(&import.module) else {
+            continue;
+        };
+        for name in &import.names {
+            let Some(template) = module_templates.get(name) else {
+                continue;
+            };
+            selected
+                .entry(import.module.clone())
+                .or_default()
+                .entry(name.clone())
+                .or_insert_with(|| template.clone());
+        }
+    }
+    selected
+}
+
+fn stdlib_class_template(module_name: &str, class: &sifr_ir::HirClass) -> sifr_ir::HirClass {
+    let mut template = class.clone();
+    template.identity = Some(format!("{module_name}.{}", class.name));
+    for method in &mut template.methods {
+        method.body.clear();
+    }
+    for (_, method) in &mut template.operator_impls {
+        method.body.clear();
+    }
+    template
+}
+
 #[cfg(test)]
 #[path = "bootstrap_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "bootstrap_template_tests.rs"]
+mod template_tests;
