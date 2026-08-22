@@ -97,6 +97,58 @@ def run() -> None:
 }
 
 #[test]
+fn nested_function_errors_do_not_select_enclosing_try_finally_carriers() {
+    let generated = generate_rust_from_source(
+        r#"
+def fail_value() -> Result[int, ValueError]:
+    raise ValueError("local")
+
+def run_sync() -> None:
+    try:
+        def inner() -> None:
+            try:
+                try:
+                    _: int = fail_value()
+                except ValueError:
+                    pass
+            finally:
+                marker: int = 1
+
+        inner()
+    finally:
+        marker: int = 2
+
+async def run_async() -> None:
+    try:
+        async def inner() -> None:
+            try:
+                try:
+                    _: int = fail_value()
+                except ValueError:
+                    pass
+            finally:
+                marker: int = 1
+
+        await inner()
+    finally:
+        marker: int = 2
+"#,
+    );
+
+    assert_eq!(
+        generated.matches("Result<(), ()>").count(),
+        2,
+        "{generated}"
+    );
+    assert_eq!(
+        generated.matches("Result<(), ValueError>").count(),
+        4,
+        "{generated}"
+    );
+    syn::parse_file(&generated).expect("nested try/finally discovery Rust should parse");
+}
+
+#[test]
 fn try_body_return_and_fallthrough_binding_use_distinct_carriers() {
     let generated = generate_rust_from_source(&format!(
         r#"{PROBE_ERROR}

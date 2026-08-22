@@ -658,7 +658,7 @@ impl RustEmitter {
                 first_try_error_type_in_stmts(body)
                     .or_else(|| first_try_error_type_in_stmts(finalbody))
             })
-            .unwrap_or_else(|| "Error".to_string())
+            .unwrap_or_else(|| "()".to_string())
     }
 
     pub(crate) fn try_lower_try_finally_stmt_for_ir(
