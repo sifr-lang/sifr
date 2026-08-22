@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10E are complete. Item 10F is next.
+Status: active on 2026-08-22. Items 0 through 10F are complete. Item 10G is next.
 
 ## Objective
 
@@ -69,6 +69,7 @@ This planning change makes these transfers effective when it merges:
 | Nested `try/finally` propagation | Item 10C review found that nested `try/finally` can select an invariant panic inside a non-return-capturing `try` closure. | Item 10H |
 | Diagnostic harness Clippy | Item 10C validation confirmed that Item 3 passed `FixtureLayout` by value although the helper only borrows it. | Item 10I |
 | Nested-function signature scope | Item 10E remediation review found that nested calls can combine a scoped callable binding with an unscoped name-keyed signature. | Item 10J |
+| Checked-stdlib parent upcast | Item 10F validation reached Rust compilation after it closed the imported-union panic. The emitted child-to-parent conversion has no retained `From` implementation. | Item 10K |
 
 The archived static-class phase no longer owns active corrective work. Item 10
 owns its unresolved method-slot fixture and runtime evidence.
@@ -163,6 +164,7 @@ scope and does not repeat that work.
 | Nested `try/finally` panic | Error capability is inferred from return capture, so a nested `try/finally` can emit a reachable invariant panic. | Item 10H |
 | Diagnostic harness strict Clippy | `fixture_name_for_seed` consumes a non-`Copy` layout enum that it only inspects. | Item 10I |
 | Nested-function signature collision | The scope binding is lexical, but the function signature registry is name-keyed and is not restored when a sibling scope ends. | Item 10J |
+| Checked-stdlib parent conversion | Project nominal relocation can remove the `From<Child>` implementation that a by-value child-to-parent upcast requires. | Item 10K |
 | Read-only Python duration | The latest contended run completed in 314,714 ms. An isolated run completed in approximately 68 seconds. | Qualification rule B |
 
 ## Scope
@@ -190,6 +192,7 @@ scope and does not repeat that work.
 - Preserve nested `try/finally` errors inside every error-capable `try` closure.
 - Remove the Item 3 diagnostic-harness strict-Clippy warning.
 - Keep nested-function callable metadata in the same lexical scope as its binding.
+- Preserve checked-stdlib parent upcasts after project nominal relocation.
 - Add regression guards for the migrated evidence and representation defects.
 - Record completion evidence from the linked owner.
 - Qualify the read-only Python doctor without a timeout increase.
@@ -231,6 +234,7 @@ Item 0  baseline and ownership lock
   -> Item 10H nested try/finally error propagation
   -> Item 10I diagnostic harness strict Clippy
   -> Item 10J nested-function signature scope
+  -> Item 10K checked-stdlib parent upcast
   -> linked delivery A final validation and merge
   -> Item 11 linked delivery and timeout qualification
   -> Item 12 final regression guard and closure
@@ -1406,6 +1410,45 @@ Acceptance criteria:
 - Every imported union member resolves through its canonical crate-root path.
 - Focused registry, code-generation, and native-build tests pass.
 
+### Item 10F record
+
+State: complete
+
+PR: [#3460](https://github.com/sifr-lang/sifr/pull/3460)
+
+Base SHA: `0b45970f5980f94225f2a9e95813deb433960952`
+
+Candidate SHA: `a26b21d10e9da58efce486ce1e2e09297cb9e6ce`
+
+Merge SHA: `732b39b789e37ce02b8984354562a2a5fb53de50`
+
+Changed paths: project-wide stdlib nominal collection, identity-aware built-in
+error ownership, focused registry tests, and one native imported-union fixture.
+
+Validation: all 1,123 code-generation tests passed. All eight focused project
+nominal tests passed. The same-basename imported-union fixture built and ran.
+The original `nominal_identity_alias_paths` fixture completed project code
+generation without the imported-union panic. Affected Clippy, formatting, HIR
+maintainability, and the 3,218-file size guardrail passed.
+
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all preceding checks and stopped only at linked delivery A's stale
+Rust-interop evidence path. Neither gate was repeated. The evidence is in the
+[#3460 gate comment](https://github.com/sifr-lang/sifr/pull/3460#issuecomment-5381213927).
+
+Review evidence: the one exact-SHA Opus review returned `SATISFIED`. No
+remediation review ran. It confirmed that the fix uses canonical identity and
+adds no basename lookup, duplicate nominal, or fallback path. The evidence is
+in the [#3460 review comment](https://github.com/sifr-lang/sifr/pull/3460#issuecomment-5381213928).
+
+Deferred follow-up: Item 10K owns the separate failure reached after project
+code generation. A user class that inherits a checked-stdlib class emits a
+by-value `Into` conversion, but the required `From<Child>` implementation is
+not retained. Item 10F does not change inheritance or conversion behavior.
+Linked delivery A retains its stale Rust-interop evidence path.
+
+Next action: implement Item 10G.
+
 ## Item 10G: Propagate Unmatched Conditional Try Handlers
 
 Purpose: Preserve an error when no conditional handler matches it.
@@ -1482,6 +1525,25 @@ Acceptance criteria:
 - Argument validation cannot truncate a mismatched signature and binding.
 - Nested defaults, keyword arguments, and varargs use the scoped declaration.
 - Focused lowering, code-generation, and native-run tests pass.
+
+## Item 10K: Preserve Checked-stdlib Parent Upcasts
+
+Purpose: Keep the consuming child-to-parent conversion available when the
+parent is a checked-stdlib nominal relocated to project scope.
+
+Scope:
+
+- Retain the canonical `From<Child>` implementation for a relocated parent.
+- Keep the child field, `Deref`, and consuming upcast on one parent identity.
+- Preserve one project-wide parent definition.
+- Do not add a clone, basename match, duplicate parent, or fallback conversion.
+
+Acceptance criteria:
+
+- Passing a user child to an owned checked-stdlib parent parameter builds.
+- The conversion consumes the child and returns its embedded parent value.
+- `nominal_identity_alias_paths` builds and runs through its existing checks.
+- Focused inheritance, project-code-generation, and native-run tests pass.
 
 ## Required Linked Delivery A: Rust-interop Evidence Path
 
@@ -1599,6 +1661,7 @@ Acceptance criteria:
 | Nested try-finally propagation | Focused nested cleanup, typed-error, and native-run tests |
 | Diagnostic harness Clippy | Focused harness tests and workspace Clippy with warnings denied |
 | Nested-function signature scope | Focused sibling-scope, default, vararg, and native-call tests |
+| Checked-stdlib parent upcast | Focused inheritance, relocation, project-build, and native-run tests |
 | Regression guards | Focused stale-path, stale-hash, nominal-identity, conversion, and no-compatibility self-tests |
 | Python doctor | One final-candidate run and one isolated profile only after a timeout |
 
@@ -1654,6 +1717,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10E are complete and recorded.
+Current state: Items 0 through 10F are complete and recorded.
 
-Next action: implement Item 10F.
+Next action: implement Item 10G.
