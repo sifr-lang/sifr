@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-23. Items 0 through 11 and linked delivery A are
-complete. Item 12 final regression guard and phase closure is next.
+Status: closed on 2026-08-23. All items and linked delivery A are merged,
+validated, reviewed, and recorded.
 
 ## Objective
 
@@ -2278,6 +2278,59 @@ Acceptance criteria:
 - The phase record contains no unowned failure.
 - A stopped external gate leaves this phase open and Item 12 blocked.
 
+### Item 12 record
+
+State: complete
+
+PR: [#3487](https://github.com/sifr-lang/sifr/pull/3487)
+
+Base SHA: `f97fa7d5f9e9ce993008b80b0c063a596707ec1d`
+
+Candidate SHA: `8be98bb041b24abc8167c1a628b0a3a28b81e6cf`
+
+Merge SHA: `fac1e9bb34f413923b18088d9b0591c4fccd8e0f`
+
+Changed paths: the pre-v1 regression closure guard and its 15-row evidence
+record, the developer-tooling static-suite registration, and the create-PR E2E
+fixture subset.
+
+Validation: the guard and its mutation self-test passed. The unchanged final
+no-compatibility guard and its mutation self-test passed. The developer-
+tooling static suite passed all 16 variants. The curated create-PR E2E lane
+passed all 143 fixtures, including `nominal_identity_alias_paths`,
+`nested_optional_safe_operations`, and
+`try_nested_finally_error_propagation`.
+
+Workspace Clippy passed with warnings denied. Rust formatting, Ruff, diff,
+HIR maintainability, and the first-party file-size guard passed. The guard
+mechanically reconciles the original failures as one Rust-interop variant, two
+generated-code-quality variants, six performance variants, one fuzz variant,
+and five ecosystem variants.
+
+The native propagation fixture from Item 10H belongs in the create-PR subset
+because it directly detects the source-reachable invariant-panic regression.
+We did not add a return-capture twin. The corrected error-channel predicate is
+a strict superset of the old return-capture predicate. The twin has no
+distinct mechanism to detect.
+
+No compiler file changed in Item 12. Under the user-authorized gate rule, no
+Sifr create-PR or merge gate applied. The phase reuses the one exact final
+implementation merge gate from Item 10P at
+`3d9f26a9b3018957b5f09b4c275e444d815af076`. Items 11 and 12 did not change
+the implementation tree.
+
+Review evidence: the one whole-phase exact-SHA Opus review returned
+`SATISFIED` with no blocking finding. The review covered the 15-row
+reconciliation, guard enforcement, curated fixtures, no-twin decision, gate
+applicability, and ownership record. The evidence is in the
+[#3487 review comment](https://github.com/sifr-lang/sifr/pull/3487#issuecomment-5383233814).
+
+Deferred follow-up: Opus recorded only non-blocking guard-maintenance
+suggestions. It found no new mechanism defect and no unowned failure. No
+deferred work remains in this phase.
+
+Next action: archive this completed phase record.
+
 ## Validation Matrix
 
 | Changed area | Required focused validation |
@@ -2359,12 +2412,13 @@ The phase is complete when all of these conditions are true:
 - The stale-path, stale-hash, identity, conversion, and no-compatibility guards pass.
 - The linked Rust-interop delivery is merged and recorded.
 - The read-only Python doctor passes under the unchanged command limit.
-- The final create-PR and merge gates pass on the same implementation candidate.
+- The last compiler-changing candidate passes the create-PR and merge gates.
+  Later verification-only records follow the explicit no-compiler gate rule.
 
-## Current Handoff
+## Closed Handoff
 
-Current state: Items 0 through 11 and linked delivery A are complete. Item 11
-qualification reuses the final Item 10P gate because the implementation inputs
-are unchanged.
+Items 0 through 12 and linked delivery A are complete. The original 15 failed
+area variants have exact guarded ownership. The final compiler implementation
+gate, Item 12 verification, and the whole-phase exact-SHA review all pass.
 
-Next action: merge the Item 11 qualification record, then implement Item 12.
+No active failure, compatibility restoration, or unowned follow-up remains.
