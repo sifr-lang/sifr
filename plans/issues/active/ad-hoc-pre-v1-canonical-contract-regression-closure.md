@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10C are complete. Item 10D is next.
+Status: active on 2026-08-22. Items 0 through 10D are complete. Item 10E is next.
 
 ## Objective
 
@@ -1281,6 +1281,46 @@ Acceptance criteria:
   Rust code generation.
 - Focused ownership, code-generation, and native-build tests pass.
 
+### Item 10D record
+
+State: complete
+
+PR: [#3456](https://github.com/sifr-lang/sifr/pull/3456)
+
+Base SHA: `65a350884388d76d807bbf5a03dfaeca16840a55`
+
+Candidate SHA: `f87b5f7e03c54d85b0a08b01ecc0130a16379bff`
+
+Merge SHA: `5825cb6bf14b6911f2cc166b4dac85ee67f088e1`
+
+Changed paths: canonical HIR value-liveness analysis, structured Rust typed
+declarations, sequential `try` emission, moved-value mutation diagnostics,
+and focused compiler and native-run tests.
+
+Validation: all 1,116 code-generation tests and all 1,030 lowering tests
+passed. The moved-binding replacement fixture built and ran. Its generated
+Rust used `let text: String;`, returned no moved value from the `try` closure,
+and passed `rustc -D unused-mut`. Affected-package Clippy, formatting, demo
+freshness, HIR maintainability, the file-size guardrail, and diff checks
+passed. The typed declaration uses Rust definite assignment. It adds no
+runtime placeholder, clone, default value, `MaybeUninit`, or fallback path.
+
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all preceding guardrails and stopped only at linked delivery A's stale
+Rust-interop evidence path. Neither gate was repeated. The evidence is in the
+[#3456 gate comment](https://github.com/sifr-lang/sifr/pull/3456#issuecomment-5380890047).
+
+Review evidence: the exact-SHA Opus review returned `SATISFIED`. No
+remediation review was used. The evidence is in the
+[#3456 review comment](https://github.com/sifr-lang/sifr/pull/3456#issuecomment-5380889932).
+
+Deferred follow-up: Item 10E owns the canonical nested-function traversal and
+parameter-shadowing rule. Opus confirmed that the current general reference
+query can otherwise request a dead declaration for a shadowing parameter.
+Linked delivery A retains its stale Rust-interop evidence path.
+
+Next action: implement Item 10E.
+
 ## Item 10E: Traverse Nested-function Default Expressions
 
 Purpose: Include definition-time parameter defaults in canonical HIR reference
@@ -1548,6 +1588,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10C are complete and recorded.
+Current state: Items 0 through 10D are complete and recorded.
 
-Next action: implement Item 10D.
+Next action: implement Item 10E.
