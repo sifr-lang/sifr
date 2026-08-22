@@ -939,6 +939,8 @@ mod __sifr_project_nominals {
     impl ::std::error::Error for ValueError {}
 }
 pub use __sifr_project_nominals::IOError;
+pub use __sifr_project_nominals::ParseError;
+pub use __sifr_project_nominals::ValueError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2etempfile_x2eNamedTemporaryFile;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ezipfile_x2eZipFile;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ezipfile_x2eZipInfo;
@@ -2585,36 +2587,6 @@ impl ::std::fmt::Display for Error {
     }
 }
 impl ::std::error::Error for Error {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ValueError {
-    message: String,
-}
-impl ValueError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ValueError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ValueError {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)

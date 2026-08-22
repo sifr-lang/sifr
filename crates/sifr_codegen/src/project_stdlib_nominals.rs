@@ -212,6 +212,7 @@ pub(crate) fn project_stdlib_nominal_plan(
     );
     let probe_name_refs = probe_names.iter().map(String::as_str).collect();
     let shared_source = strip_rust_items_by_name(&generated.rust_source, &probe_name_refs);
+    register_emitted_builtin_nominals(&shared_source, &mut registry);
     register_transitive_stdlib_nominals(&shared_source, stdlib_code, &mut registry);
     let crate_root_candidates = SHARED_MODULE_CRATE_ROOT_NOMINAL_IDENTITIES
         .iter()
@@ -321,6 +322,16 @@ fn register_transitive_stdlib_nominals(
     }
 }
 
+fn register_emitted_builtin_nominals(shared_source: &str, registry: &mut ProjectNominalRegistry) {
+    let defined_names = rust_source_defined_item_names(shared_source);
+    for name in crate::BUILTIN_ERROR_CLASSES {
+        if sifr_type_system::io_error_kind(name).is_some() || !defined_names.contains(*name) {
+            continue;
+        }
+        registry.register_shared((*name).to_string(), class_rust_name(None, name));
+    }
+}
+
 fn collect_function_nominals(
     function: &FunctionType,
     declarations: &mut BTreeMap<String, HashSet<String>>,
@@ -387,7 +398,9 @@ fn collect_shared_nominals(
             methods,
             ..
         } => {
-            if crate::BUILTIN_ERROR_CLASSES.contains(&name.as_str()) {
+            if crate::BUILTIN_ERROR_CLASSES.contains(&name.as_str())
+                && sifr_type_system::io_error_kind(name).is_none()
+            {
                 builtin_types
                     .entry(name.clone())
                     .or_insert_with(|| class.clone());
@@ -623,6 +636,49 @@ mod tests {
             registry.rust_paths.get("sifr.io.BinaryFileHandle"),
             Some(&"crate::__sifr_project_nominals::__SifrIoBinaryFileHandle".to_string())
         );
+    }
+
+    #[test]
+    fn emitted_builtin_nominals_join_the_project_registry() {
+        let shared_source = "pub struct ParseError;\npub struct FileNotFoundError;\n";
+        let mut registry = ProjectNominalRegistry::default();
+
+        register_emitted_builtin_nominals(shared_source, &mut registry);
+
+        assert!(registry.shared_rust_names.contains("ParseError"));
+        assert_eq!(
+            registry.rust_paths.get("ParseError"),
+            Some(&"crate::__sifr_project_nominals::ParseError".to_string())
+        );
+        assert!(!registry.shared_rust_names.contains("FileNotFoundError"));
+        assert!(!registry.rust_paths.contains_key("FileNotFoundError"));
+    }
+
+    #[test]
+    fn direct_io_error_kind_type_does_not_create_a_project_nominal() {
+        let direct_kind = Type::Class {
+            identity: Some("sifr.builtin.FileNotFoundError".to_string()),
+            type_args: Vec::new(),
+            name: "FileNotFoundError".to_string(),
+            fields: vec![
+                ("message".to_string(), Type::Str),
+                ("kind".to_string(), Type::Str),
+            ],
+            methods: Vec::new(),
+            parent_class: Some("IOError".to_string()),
+        };
+        let unions = HashMap::from([("DirectKind".to_string(), vec![direct_kind])]);
+
+        let plan = project_stdlib_nominal_plan(&unions, &StdlibCode::default(), &[], false);
+
+        assert!(!plan.prelude.contains("FileNotFoundError"));
+        assert!(!plan.registry.rust_paths.contains_key("FileNotFoundError"));
+        assert!(!plan
+            .registry
+            .rust_paths
+            .contains_key("sifr.builtin.FileNotFoundError"));
+        syn::parse_file(&plan.prelude)
+            .expect("project nominal prelude should not contain a dangling re-export");
     }
 
     #[test]

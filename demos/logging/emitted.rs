@@ -3158,7 +3158,9 @@ mod __sifr_project_nominals {
         }
     }
 }
+pub use __sifr_project_nominals::Error;
 pub use __sifr_project_nominals::IOError;
+pub use __sifr_project_nominals::ParseError;
 pub use __sifr_project_nominals::__SifrIoBinaryFileHandle;
 pub use __sifr_project_nominals::__SifrIoFileHandle;
 pub use __sifr_project_nominals::__SifrIoTextFileHandle;
@@ -4655,36 +4657,6 @@ fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     IOError { message: msg, kind }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Error {
-    message: String,
-}
-impl Error {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for Error {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for Error {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ValueError {
     message: String,
 }
@@ -4699,21 +4671,6 @@ impl ::std::fmt::Display for ValueError {
     }
 }
 impl ::std::error::Error for ValueError {}
-impl From<IOError> for Error {
-    fn from(err: IOError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ParseError> for Error {
-    fn from(err: ParseError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ValueError> for Error {
-    fn from(err: ValueError) -> Self {
-        Self::new(err.message)
-    }
-}
 fn collect_logger_actual(base: &String) -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let app_log: String = {

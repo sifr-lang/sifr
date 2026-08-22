@@ -925,6 +925,7 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
+pub use __sifr_project_nominals::ParseError;
 pub use __sifr_project_nominals::ValueError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2edatetime_x2edatetime;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2edatetime_x2etimezone;
@@ -3578,21 +3579,6 @@ impl ::std::fmt::Display for Error {
     }
 }
 impl ::std::error::Error for Error {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
 impl From<ParseError> for Error {
     fn from(err: ParseError) -> Self {
         Self::new(err.message)

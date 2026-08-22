@@ -1439,6 +1439,7 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ParseError {}
 }
+pub use __sifr_project_nominals::ParseError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eargparse_x2eArgumentParser;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eargparse_x2eArgumentSpec;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eargparse_x2eNamespace;
@@ -1668,21 +1669,6 @@ fn _is_option_like_token(
     }
     false
 }
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
 fn main() {
     let counter: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = __SifrStdlib_sifr_x2ecollections_x2eCounter::new(
         None,
