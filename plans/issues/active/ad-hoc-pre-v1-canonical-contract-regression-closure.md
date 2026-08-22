@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10G are complete. Item 10H is next.
+Status: active on 2026-08-22. Items 0 through 10H are complete. Item 10I is next.
 
 ## Objective
 
@@ -1540,6 +1540,43 @@ Acceptance criteria:
   source shape.
 - Focused lowering, code-generation, and native-run tests pass.
 
+### Item 10H record
+
+State: complete
+
+PR: [#3464](https://github.com/sifr-lang/sifr/pull/3464)
+
+Base SHA: `7b5d9dabae3eb54960d3055b1033957e0fbb426b`
+
+Candidate SHA: `37e70db47fb08fc8e60defd242eb3f437056cdd1`
+
+Merge SHA: `153345286740a12d91042e07a2f8c2c0f6cc1615`
+
+Changed paths: the `try/finally` statement emitter, focused code-generation
+coverage, and one native nested-cleanup fixture.
+
+Validation: the focused lowering test passed. All 1,127 code-generation tests
+passed. The new release-native fixture reached its outer handler and ran its
+`finally` body once. Strict code-generation Clippy, formatting, diff checks,
+HIR maintainability, and the 3,221-file size guardrail passed.
+
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all preceding checks and stopped only at linked delivery A's stale
+Rust-interop evidence path. Neither gate was repeated. The evidence is in the
+[#3464 gate comment](https://github.com/sifr-lang/sifr/pull/3464#issuecomment-5381486206).
+
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking findings. The evidence is in the
+[#3464 review comment](https://github.com/sifr-lang/sifr/pull/3464#issuecomment-5381467719).
+
+Deferred follow-up: Item 12 makes a deliberate decision about adding the new
+fixture to the curated create-PR manifest and about adding the twin
+return-capture regression. The touched emitter remains below 900 lines. Split
+it by responsibility if later work makes it exceed the guardrail. Linked
+delivery A retains its stale Rust-interop evidence path.
+
+Next action: implement Item 10I.
+
 ## Item 10I: Close Diagnostic Harness Strict Clippy
 
 Purpose: Remove the strict-Clippy defect left by the Item 3 harness migration.
@@ -1672,7 +1709,7 @@ Purpose: Combine phase-owned corrections with independently owned changes.
 
 Dependencies:
 
-- Items 1 through 10I are merged.
+- Items 1 through 10M are merged.
 - Required linked delivery A is merged.
 
 Scope:
@@ -1701,6 +1738,8 @@ Scope:
 - Add guard coverage for stale fixture paths and stale recorded hashes.
 - Keep the existing no-compatibility guard intact.
 - Add structured-type identity and conversion regression coverage.
+- Decide whether the Item 10H fixture belongs in the curated create-PR subset.
+- Add the Item 10H return-capture twin only if it adds distinct guard value.
 - Record all item PRs, candidate SHAs, merge SHAs, and review evidence.
 - Run the create-PR gate on the final implementation candidate.
 - Run the merge gate once on the final implementation candidate.
@@ -1805,6 +1844,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10G are complete and recorded.
+Current state: Items 0 through 10H are complete and recorded.
 
-Next action: implement Item 10H.
+Next action: implement Item 10I.
