@@ -1,0 +1,26 @@
+class CleanupError(Error):
+    message: str
+
+
+def fail() -> Result[None, CleanupError]:
+    raise CleanupError("expected")
+
+
+def main() -> None:
+    cleanup_markers: list[int] = []
+    caught: bool = False
+
+    try:
+        try:
+            _value: None = fail()
+        finally:
+            cleanup_markers.append(1)
+    except CleanupError as error:
+        assert error.message == "expected"
+        caught = True
+
+    assert caught
+    assert cleanup_markers == [1]
+
+
+main()

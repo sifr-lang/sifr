@@ -669,7 +669,7 @@ impl RustEmitter {
         finalbody: &[HirStmt],
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         let err_ty = self.try_finally_error_type_name_for_ir(body, finalbody);
-        let can_return_error = self.try_closure_depth > 0
+        let can_return_error = !self.try_closure_error_type.is_empty()
             || self.current_return_type.as_ref().is_some_and(|return_ty| {
                 matches!(
                     crate::resolve_alias_type_for_plain_call(return_ty),

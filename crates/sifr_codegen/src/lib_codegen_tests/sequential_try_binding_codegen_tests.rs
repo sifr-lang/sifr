@@ -77,6 +77,26 @@ def value_or_zero() -> int:
 }
 
 #[test]
+fn nested_try_finally_uses_enclosing_try_error_channel_without_return_capture() {
+    let generated = generate_rust_from_source(&format!(
+        r#"{PROBE_ERROR}
+def run() -> None:
+    try:
+        try:
+            _value: int = load_int(-1)
+        finally:
+            marker: int = 1
+    except ProbeError:
+        marker = 2
+"#
+    ));
+
+    assert!(generated.contains("return Err(__sifr_finally_err.into());"));
+    assert!(!generated.contains("sifr try/finally error propagation in non-Result function"));
+    syn::parse_file(&generated).expect("nested try/finally Rust should parse");
+}
+
+#[test]
 fn try_body_return_and_fallthrough_binding_use_distinct_carriers() {
     let generated = generate_rust_from_source(&format!(
         r#"{PROBE_ERROR}
