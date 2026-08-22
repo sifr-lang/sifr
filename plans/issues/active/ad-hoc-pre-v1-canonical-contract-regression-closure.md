@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 8 are complete. Item 9 is next.
+Status: active on 2026-08-22. Items 0 through 9 are complete. Item 10 is next.
 
 ## Objective
 
@@ -887,6 +887,54 @@ Acceptance criteria:
 - The broad CLI test passes.
 - Diagnostic snapshots have one stable owner and source location.
 
+### Item 9 record
+
+State: complete
+
+PR: [#3446](https://github.com/sifr-lang/sifr/pull/3446)
+
+Base SHA: `3930d6e2616fefe6925fa6df4ed8d00acc6ce0a3`
+
+Candidate SHA: `5e7f78f40c87faca49589b0f062c47f9854091d8`
+
+Merge SHA: `8688fe22c51eeb552c0a3affc9b8531be1395b18`
+
+Changed paths: two negative fixtures and their focused lowering tests. No
+production compiler file changed.
+
+The root cause was mixed fixture intent. The forwarding fixture referenced an
+unknown protocol name. Name resolution correctly stopped before protocol
+conformance checking.
+
+The correction defines the protocol before it forwards an unbounded type
+variable. The existing unresolved `TypeVar` bound fixture now owns the
+name-resolution result. The change did not add a duplicate unknown-bound
+fixture.
+
+Validation: the two focused lowering tests passed. Each test produced one
+diagnostic in its intended family. The full lowering suite passed 1,029 tests,
+with 1 ignored. All 567 broad fail fixtures passed. Lowering Clippy passed with
+warnings denied. Format, diff, HIR maintainability, and file-size checks passed.
+
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. The evidence is in the
+[#3446 review comment](https://github.com/sifr-lang/sifr/pull/3446#issuecomment-5379972805).
+
+The review confirmed that the removed bound-mismatch test body was duplicate
+coverage. Its mechanism remains covered by the protocol diagnostics tests and
+the existing non-conforming forwarding fixture.
+
+No Sifr create-PR or merge gate applied because the item changed only tests and
+fixtures.
+
+Deferred follow-up: the review suggested names that distinguish an unbounded
+forwarded type variable from an unknown bound. A fixture rename would change
+lexical fixture order. It is not required for the diagnostic contract. An
+optional test-target Clippy probe also found pre-existing warnings outside this
+diff. The normal required Clippy lane passed.
+
+Next action: implement Item 10.
+
 ## Item 10: Complete Method-slot Verification
 
 Purpose: Make the fixture and driver test describe the complete checked slot
@@ -1107,6 +1155,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 8 are complete and recorded.
+Current state: Items 0 through 9 are complete and recorded.
 
-Next action: implement Item 9.
+Next action: implement Item 10.
