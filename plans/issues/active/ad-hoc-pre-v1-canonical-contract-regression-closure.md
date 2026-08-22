@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Item 0 is complete. Item 1 is next.
+Status: active on 2026-08-22. Items 0 and 1 are complete. Item 2 is next.
 
 ## Objective
 
@@ -317,6 +317,35 @@ Acceptance criteria:
 - The test checks complete digest values, not only digest lengths.
 - Text enters a hash function only through explicit encoding.
 - The compatibility guard still rejects removed string helpers.
+
+### Item 1 record
+
+State: complete
+
+PR: [#3427](https://github.com/sifr-lang/sifr/pull/3427)
+
+Base SHA: `e0dc41e993c2ddef0f61f6eec207ef2de88c7739`
+
+Candidate SHA: `07c213d8cf9b7aada0e55796469fb72195b5af39`
+
+Merge SHA: `6726dd6fcb6f1edd68c6272813437ba5885fa231`
+
+Changed paths: `crates/sifr_stdlib/tests/api_behavior.rs`.
+
+Validation: the `sifr_stdlib` all-features suite passed with 53 tests. The
+focused driver compatibility guard passed. Rust formatting, diff checks, and
+the first-party file-size guardrail passed. No compiler file changed, so the
+Sifr create-PR and merge gates did not apply.
+
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. The evidence is in the
+[#3427 review comment](https://github.com/sifr-lang/sifr/pull/3427#issuecomment-5376679974).
+
+Deferred follow-up: a later hardening item can replace the remaining
+length-only SHA-224, SHA-384, SHA-512, BLAKE2b, and BLAKE2s assertions with
+complete known vectors. This does not affect the Item 1 contract.
+
+Next action: implement Item 2.
 
 ## Item 2: Give Performance Tools a Canonical Project Root
 
@@ -678,6 +707,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Item 0 is complete and recorded. Item 1 is next.
+Current state: Items 0 and 1 are complete and recorded. Item 2 is next.
 
-Next action: migrate the all-features native hash test to the bytes API.
+Next action: give performance tools one canonical project root.
