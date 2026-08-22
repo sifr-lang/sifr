@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 9 are complete. Item 10 is next.
+Status: active on 2026-08-22. Items 0 through 10 are complete. Item 10A is next.
 
 ## Objective
 
@@ -952,7 +952,8 @@ value-shared-3
 
 Scope:
 
-- Replace the empty `SlotContract` body with a declaration that the fixture uses.
+- Treat the required `SlotContract` adapter marker as a declaration, not as an
+  empty placeholder. Continue to reject ordinary empty classes.
 - Keep the receiver-value serializer and its `input-serialized` output.
 - Update the driver expectation to include all five runtime output lines.
 - Require the shared-context count to be `3` after the three context calls.
@@ -970,6 +971,60 @@ Acceptance criteria:
 - The fixture keeps validator, receiver, serializer, no-context, and shared-context coverage.
 - Item 10 can record a full-matrix stop only for linked delivery A.
 - Item 11 owns the final full-matrix pass after linked delivery A merges.
+
+### Item 10 record
+
+State: complete
+
+PR: [#3448](https://github.com/sifr-lang/sifr/pull/3448)
+
+Base SHA: `bc4a77ae6cd4fe105c85cd5a184eb44a3ae263af`
+
+Candidate SHA: `c049f2d6e65e76f33efc7f2c890e1df9fb545c0c`
+
+Merge SHA: `66b4065ea6832fea58c903c810e163e7d6aeb6a5`
+
+Changed paths: the method-slot driver expectation, the Rust-interop placeholder
+classifier and its consumers, and the fixture-matrix mutation self-test. No
+production compiler file changed.
+
+Focused execution disproved the original planned repair. The compiler requires
+`@class_adapter_marker` to decorate a field-less class that contains only
+`pass`. Moving a used field into `SlotContract` correctly produced
+`SIFR-META-0003`.
+
+The actual root cause was the matrix helper. It treated every `pass` line as an
+empty class placeholder. The correction identifies empty classes and exempts
+the compiler-required adapter marker. An ordinary empty class remains rejected.
+
+The runtime fixture already emitted the five canonical lines. The driver test
+still expected four lines and shared-context count `2`. Its expectation now
+includes `input-serialized` in order and ends with `value-shared-3`.
+
+Validation: the 237-case fixture-matrix self-test passed. The focused ignored
+runtime test passed. The focused ignored lifetime, thread, and shared-context
+rejection test passed. The full driver suite passed 556 tests, with 76 ignored.
+Driver library Clippy passed with warnings denied. Python syntax, format, diff,
+HIR maintainability, and file-size checks passed.
+
+The full fixture matrix no longer reports the method-slot row. It stops only at
+linked delivery A's missing shared-bridge source.
+
+Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+blocking finding. The evidence is in the
+[#3448 review comment](https://github.com/sifr-lang/sifr/pull/3448#issuecomment-5380018372).
+
+No Sifr create-PR or merge gate applied because the item changed only tests and
+verification code.
+
+Deferred follow-up: the placeholder classifier intentionally narrows the old
+any-`pass` heuristic to class bodies. A later verification change can decide
+whether to cover docstring-plus-`pass`, multiline class headers, or decorator
+spacing. `_scenario_checks.py` and `check_fixture_matrix.py` are 898 and 899
+lines. The next change to either file must split it by responsibility. The
+unrelated diagnostic-rendering Clippy lint remains outside this item.
+
+Next action: implement Item 10A.
 
 ## Item 10A: Close Residual Nominal Registry Inconsistencies
 
@@ -1155,6 +1210,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 9 are complete and recorded.
+Current state: Items 0 through 10 are complete and recorded.
 
-Next action: implement Item 10.
+Next action: implement Item 10A.
