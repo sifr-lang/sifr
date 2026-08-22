@@ -1,6 +1,7 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10O are complete. Linked delivery A is next.
+Status: active on 2026-08-22. Items 0 through 10O and linked delivery A are
+complete. Item 11 is next.
 
 ## Objective
 
@@ -142,7 +143,7 @@ scope and does not repeat that work.
 | Failure | Root cause | Delivery owner |
 | --- | --- | --- |
 | `sifr_stdlib_all_features` | The test still calls removed string-hash helpers. | Item 1 |
-| Rust shared-bridge evidence | The manifest omits the new `negative/src/` segment. | [Linked delivery A](#required-linked-delivery-a-rust-interop-evidence-path) |
+| Rust shared-bridge evidence | The source was nested under `negative/src/`, but the canonical manifest path was flat. | [Linked delivery A](#required-linked-delivery-a-rust-interop-evidence-path) |
 | Performance LSP cold start | The benchmark assumes that `sifr.toml` is beside `src/main.sifr`. | Item 2 |
 | Performance trend variants | The stored benchmark-manifest hash is stale. | Item 3 |
 | Fuzz smoke | Two seed paths omit the new `src/` segment. | Item 3 |
@@ -2002,19 +2003,26 @@ Next action: merge and record linked delivery A.
 
 ## Required Linked Delivery A: Rust-interop Evidence Path
 
-The active
-[`ad-hoc-rust-interop-fixture-matrix-repair.md`](./ad-hoc-rust-interop-fixture-matrix-repair.md)
+The archived
+[`ad-hoc-rust-interop-fixture-matrix-repair.md`](../archive/ad-hoc-rust-interop-fixture-matrix-repair.md)
 owns this correction.
 
-That issue must select the checked-in `negative/src/` source path. It must
-update the matrix manifest, documentation, and Cargo probe together.
+State: complete
 
-This phase must not implement the same correction. Item 11 consumes the merged
-SHA and validation evidence from that owner.
+PR: [#3480](https://github.com/sifr-lang/sifr/pull/3480)
 
-The linked owner can prepare its path correction before Item 10 merges. Its
-final full-matrix evidence must use main after Item 10. The matrix includes the
-method-slot fixture.
+Candidate SHA: `d9339de46a9aca8c0e6ddd95af807648bd5de398`
+
+Merge SHA: `2021f60ca8970bca76e4f5060cec28994f9addc8`
+
+The linked owner selected the existing flat manifest contract. It moved the
+source from `negative/src/` to
+`negative/package_generated_type_import_rejected.sifr`. The Cargo probe and
+README now name that same source. No fallback or old-path reader remains.
+
+The configured full matrix passed both variants. The focused negative Cargo
+probe passed. The exact-SHA Opus review returned `SATISFIED` with no blocking
+finding. Item 11 consumes this merged SHA and validation evidence.
 
 ## Qualification Rule B: Read-only Python Doctor
 
@@ -2177,6 +2185,7 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10O are complete and recorded.
+Current state: Items 0 through 10O and linked delivery A are complete and
+recorded.
 
-Next action: merge and record linked delivery A.
+Next action: implement Item 11.
