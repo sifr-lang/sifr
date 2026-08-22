@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-23. Items 0 through 10P and linked delivery A are
-complete. Item 11 qualification is next.
+Status: active on 2026-08-23. Items 0 through 11 and linked delivery A are
+complete. Item 12 final regression guard and phase closure is next.
 
 ## Objective
 
@@ -2181,6 +2181,58 @@ Acceptance criteria:
 - The read-only Python doctor passes without a timeout increase.
 - No linked owner has unmerged validation inputs.
 
+### Item 11 record
+
+State: complete
+
+Qualification PR: pending
+
+Base SHA: `069041c500dd1f9995ce9283eb967353b994975d`
+
+Integrated implementation SHA: `a3e956f9e196c2a0840695984629e4265b4d7051`
+
+Validated candidate SHA: `3d9f26a9b3018957b5f09b4c275e444d815af076`
+
+Linked delivery A merge SHA:
+`2021f60ca8970bca76e4f5060cec28994f9addc8`
+
+Changed paths: this item changes only the phase qualification record. The
+validated candidate and integrated implementation have identical trees.
+
+Validation: the merge profile passed every step on the final Item 10P
+candidate. Rust interop passed all 10 matrix, tier, compatibility, stale-draft,
+and stable-candidate variants, including the 237-case matrix self-test.
+Generated-code quality passed all seven variants. Its Clippy group passed all
+seven concurrency entries, including `concurrency-007-sync-channel-demo`.
+Performance passed all 12 merge variants and the representative benchmark
+budget. Fuzz and property validation passed all 25 merge variants. Ecosystem
+compatibility passed all 20 merge variants. The earlier full Item 11 attempt
+also passed all 37 fuzz and property variants and all 34 ecosystem variants.
+
+The driver generated-build pass ran all 76 ignored integration tests. The
+method-slot runtime test and the lifetime, thread, and shared-context rejection
+test both passed. The read-only Python doctor ran once on the final candidate.
+It passed in 292,246 ms without a timeout increase and reported `deferred=1`,
+`resolved=3`, `parity=5`, and `mutations=0`. All 25 Python-interop variants
+passed. The full gate also passed 698 E2E pass fixtures.
+
+No linked owner has an unmerged validation input. Linked delivery A is merged
+and its canonical flat negative-fixture path passed in the integrated Rust-
+interop matrix.
+
+No Sifr create-PR or merge gate applies to this qualification record because
+it changes no compiler file. The validation above reuses the one final Item
+10P merge gate. Its implementation inputs are unchanged.
+
+Review evidence: pending one exact-SHA Opus review of this qualification
+record.
+
+Deferred follow-up: none. The merge gate's warm-time budget overrun was an
+advisory caused by cold generated caches. All individual performance budgets
+and the isolated Python doctor limit passed.
+
+Next action: implement Item 12 and close the phase.
+
 ## Item 12: Add the Regression Guard and Close the Phase
 
 Purpose: Prevent the same incomplete migration and representation defects.
@@ -2298,7 +2350,8 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10P and linked delivery A are complete. Item 10P
-is merged and its implementation evidence is ready to record.
+Current state: Items 0 through 11 and linked delivery A are complete. Item 11
+qualification reuses the final Item 10P gate because the implementation inputs
+are unchanged.
 
-Next action: merge the Item 10P record, then resume Item 11 qualification.
+Next action: merge the Item 11 qualification record, then implement Item 12.
