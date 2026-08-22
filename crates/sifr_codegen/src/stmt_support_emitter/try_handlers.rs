@@ -9,6 +9,7 @@ impl RustEmitter {
         handler: &HirExceptHandler,
         err_ident: &str,
         err_ty: &str,
+        source_error_type: Option<&Type>,
     ) -> HandlerMatchCondition {
         let Some(error_type) = handler.error_type.as_deref() else {
             return HandlerMatchCondition::Always;
@@ -42,6 +43,14 @@ impl RustEmitter {
             .error_resolved_type
             .as_ref()
             .map(|ty| crate::render_type(&crate::sifr_type_to_rust_type(ty)));
+        if let Some((source, target)) = source_error_type.zip(handler.error_resolved_type.as_ref())
+        {
+            return if source.is_assignable_to(target) {
+                HandlerMatchCondition::Always
+            } else {
+                HandlerMatchCondition::Unsupported
+            };
+        }
         if resolved_error_type.as_deref() == Some(err_ty) || error_type == err_ty {
             return HandlerMatchCondition::Always;
         }
@@ -97,7 +106,12 @@ impl RustEmitter {
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         let mut branches: Vec<(Option<RustExpr>, Vec<RustStmt>)> = Vec::new();
         for handler in handlers {
-            let condition = Self::try_except_handler_condition_expr(handler, err_ident, err_ty);
+            let condition = Self::try_except_handler_condition_expr(
+                handler,
+                err_ident,
+                err_ty,
+                source_error_type,
+            );
             if matches!(condition, HandlerMatchCondition::Unsupported) {
                 continue;
             }
@@ -237,5 +251,53 @@ impl RustEmitter {
             func: Box::new(RustExpr::Ident("Err".to_string())),
             args: vec![converted],
         })))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn error(identity: &str, name: &str, parent_class: Option<&str>) -> Type {
+        Type::Class {
+            identity: Some(identity.to_string()),
+            type_args: Vec::new(),
+            name: name.to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: parent_class.map(str::to_string),
+        }
+    }
+
+    #[test]
+    fn handler_matching_uses_exact_user_error_ancestry() {
+        let base = error("pkg.BaseError", "BaseError", Some("Error"));
+        let child = error("pkg.ChildError", "ChildError", Some("pkg.BaseError|Error"));
+        let unrelated = error("other.BaseError", "BaseError", Some("Error"));
+        let handler = HirExceptHandler {
+            error_type: Some("BaseError".to_string()),
+            error_resolved_type: Some(base),
+            name: Some("error".to_string()),
+            body: Vec::new(),
+        };
+
+        assert!(matches!(
+            RustEmitter::try_except_handler_condition_expr(
+                &handler,
+                "error",
+                "ChildError",
+                Some(&child),
+            ),
+            HandlerMatchCondition::Always
+        ));
+        assert!(matches!(
+            RustEmitter::try_except_handler_condition_expr(
+                &handler,
+                "error",
+                "BaseError",
+                Some(&unrelated),
+            ),
+            HandlerMatchCondition::Unsupported
+        ));
     }
 }

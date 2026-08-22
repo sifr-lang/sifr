@@ -6,7 +6,6 @@ use sifr_type_system::Type;
 
 use super::LowerCtx;
 
-#[allow(dead_code)]
 pub(in crate::lower) fn is_error_class_with_ctx(
     class_def: &StmtClassDef,
     error_types: &std::collections::HashSet<String>,
@@ -15,18 +14,6 @@ pub(in crate::lower) fn is_error_class_with_ctx(
         if let Expr::Name(n) = base {
             let base_name = n.id.as_str();
             if base_name == "Error" || error_types.contains(base_name) {
-                return true;
-            }
-        }
-    }
-    false
-}
-
-/// Check if a class definition has `(Error)` as its base class.
-pub(in crate::lower) fn is_error_class(class_def: &StmtClassDef) -> bool {
-    for base in class_def.bases() {
-        if let Expr::Name(n) = base {
-            if n.id.as_str() == "Error" {
                 return true;
             }
         }

@@ -10,8 +10,8 @@ use super::super::declared_class_identity;
 use super::async_await::coroutine_result_type;
 use super::class_field_inference::collect_constructor_self_field_assignments;
 use super::diagnostics::{
-    collect_enum_variants, get_newtype_inner, has_decorator, is_enum_class, is_error_class,
-    is_protocol_class,
+    collect_enum_variants, get_newtype_inner, has_decorator, is_enum_class,
+    is_error_class_with_ctx, is_protocol_class,
 };
 use super::parameter_conventions::{
     class_declared_method_param_convention, class_method_param_convention,
@@ -112,7 +112,7 @@ pub(in crate::lower) fn collect_class_type(
     let mut fields: Vec<(String, Type)> = Vec::new();
     let mut methods: Vec<(String, FunctionType)> = Vec::new();
     let mut method_ranges: HashMap<String, ruff_text_size::TextRange> = HashMap::new();
-    let is_error = is_error_class(class_def);
+    let is_error = is_error_class_with_ctx(class_def, &ctx.error_types);
     let is_protocol = is_protocol_class(class_def);
     let newtype_inner = get_newtype_inner(class_def);
 
