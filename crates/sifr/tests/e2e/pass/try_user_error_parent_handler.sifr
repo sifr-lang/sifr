@@ -1,0 +1,58 @@
+class BaseError(Error):
+    message: str
+
+
+class ChildError(BaseError):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+
+class OtherError(Error):
+    message: str
+
+
+def classify(child: bool) -> Result[str, ChildError | OtherError]:
+    if child:
+        raise ChildError("child")
+    raise OtherError("other")
+
+
+def handle_child() -> str:
+    try:
+        value: str = classify(True)
+        return value
+    except BaseError as error:
+        return "base:" + error.message
+    except OtherError as error:
+        return "other:" + error.message
+
+
+def handle_other() -> str:
+    try:
+        value: str = classify(False)
+        return value
+    except BaseError as error:
+        return "wrong:" + error.message
+    except OtherError as error:
+        return "other:" + error.message
+
+
+def propagate_other() -> Result[str, OtherError]:
+    try:
+        value: str = classify(False)
+        return value
+    except BaseError as error:
+        return "wrong:" + error.message
+
+
+def main() -> None:
+    assert handle_child() == "base:child"
+    assert handle_other() == "other:other"
+    try:
+        _: str = propagate_other()
+        assert False
+    except OtherError as error:
+        assert error.message == "other"
+
+
+main()

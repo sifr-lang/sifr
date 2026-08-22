@@ -474,3 +474,36 @@ def classify(flag: bool) -> Result[str, IOError | ValueError]:
     assert!(!generated.contains("structured statement emission missing"));
     syn::parse_file(&generated).expect("union residual Rust should parse");
 }
+
+#[test]
+fn user_error_parent_handler_converts_child_and_preserves_unrelated_residual() {
+    let generated = generate_rust_from_source(
+        r#"
+class BaseError(Error):
+    message: str
+
+class ChildError(BaseError):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+class OtherError(Error):
+    message: str
+
+def classify(flag: bool) -> Result[str, ChildError | OtherError]:
+    if flag:
+        raise ChildError("child")
+    raise OtherError("other")
+
+def handle(flag: bool) -> Result[str, OtherError]:
+    try:
+        value: str = classify(flag)
+        return value
+    except BaseError as error:
+        return error.message
+"#,
+    );
+
+    assert!(generated.contains("Into::<BaseError>::into(__sifr_try_variant_error.clone())"));
+    assert!(generated.contains("return Err(__sifr_try_variant_error);"));
+    syn::parse_file(&generated).expect("user error parent-handler Rust should parse");
+}

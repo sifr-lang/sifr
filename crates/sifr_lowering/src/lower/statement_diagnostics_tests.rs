@@ -240,6 +240,26 @@ def outer() -> str:
 }
 
 #[test]
+fn user_error_parent_handler_covers_its_child() {
+    let source = r#"
+class BaseError(Error):
+    message: str
+
+class ChildError(BaseError):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+def classify() -> str:
+    try:
+        raise ChildError("child")
+    except BaseError as error:
+        return error.message
+"#;
+    let parsed = parse_module(source).expect("parse failed");
+    lower_module(parsed.suite()).expect("the parent handler should cover the child error");
+}
+
+#[test]
 fn try_finally_without_except_preserves_cleanup_boundary() {
     let source = "\
 def main():
