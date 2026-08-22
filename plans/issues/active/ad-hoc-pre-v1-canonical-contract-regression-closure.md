@@ -443,7 +443,7 @@ diagnostics adopted an ancestor Cargo workspace when the Sifr package had no
 local `Cargo.toml`. The correction now requires package-local Cargo ownership.
 
 The passing representative artifact has SHA-256
-`d8361c5d3794796cf9dcfe466eed22025e7ba7a94935438908a0c8f4c016cc23`.
+`9ab0db8499f1a42905983fe76ab756533fbb7655517ac59a78bd09671506cb72`.
 No baseline, threshold, waiver, timeout, profile, or product feature changed.
 
 Next action: freeze the candidate, run its exact-SHA review, and run the two
