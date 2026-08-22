@@ -1,5 +1,5 @@
 use crate::stdlib_filter::{
-    partition_rust_items_by_name, rust_source_defines_item_name, rust_source_references_item_name,
+    partition_rust_items_by_name, rust_source_defined_item_names, rust_source_references_item_name,
     strip_rust_items_by_name,
 };
 use crate::{
@@ -16,20 +16,40 @@ const SHARED_MODULE_CRATE_ROOT_NOMINAL_IDENTITIES: &[&str] = &["_sifr.fs.NativeF
 
 pub(crate) struct ProjectStdlibNominalPlan {
     pub(crate) prelude: String,
-    pub(crate) rust_names: HashSet<String>,
-    pub(crate) crate_root_rust_names: HashSet<String>,
-    pub(crate) nominal_paths: HashMap<String, String>,
+    pub(crate) registry: ProjectNominalRegistry,
     pub(crate) used_stdlib_modules: HashSet<String>,
     pub(crate) required_features: HashSet<StdlibFeature>,
+}
+
+#[derive(Default)]
+pub(crate) struct ProjectNominalRegistry {
+    pub(crate) shared_rust_names: HashSet<String>,
+    pub(crate) crate_root_rust_names: HashSet<String>,
+    pub(crate) rust_paths: HashMap<String, String>,
+}
+
+impl ProjectNominalRegistry {
+    fn register_shared(&mut self, identity: String, rust_name: String) {
+        self.rust_paths.insert(
+            identity,
+            format!("crate::{SHARED_STDLIB_NOMINAL_MODULE}::{rust_name}"),
+        );
+        self.shared_rust_names.insert(rust_name);
+    }
+
+    fn register_crate_root(&mut self, identity: String, rust_name: String) {
+        self.rust_paths
+            .insert(identity, format!("crate::{rust_name}"));
+        self.shared_rust_names.remove(&rust_name);
+        self.crate_root_rust_names.insert(rust_name);
+    }
 }
 
 impl ProjectStdlibNominalPlan {
     pub(crate) fn empty() -> Self {
         Self {
             prelude: String::new(),
-            rust_names: HashSet::new(),
-            crate_root_rust_names: HashSet::new(),
-            nominal_paths: HashMap::new(),
+            registry: ProjectNominalRegistry::default(),
             used_stdlib_modules: HashSet::new(),
             required_features: HashSet::new(),
         }
@@ -42,13 +62,15 @@ pub(crate) fn relocate_project_stdlib_nominals(
     plan: &ProjectStdlibNominalPlan,
     crate_root_modules: &HashSet<&str>,
 ) -> String {
-    if plan.rust_names.is_empty() {
+    if plan.registry.shared_rust_names.is_empty() && plan.registry.crate_root_rust_names.is_empty()
+    {
         return source.to_string();
     }
     let names = plan
-        .rust_names
+        .registry
+        .shared_rust_names
         .iter()
-        .chain(&plan.crate_root_rust_names)
+        .chain(&plan.registry.crate_root_rust_names)
         .map(String::as_str)
         .collect();
     let stripped = strip_rust_items_by_name(source, &names);
@@ -56,9 +78,10 @@ pub(crate) fn relocate_project_stdlib_nominals(
         return stripped;
     }
     let mut ordered_names = plan
-        .rust_names
+        .registry
+        .shared_rust_names
         .iter()
-        .chain(&plan.crate_root_rust_names)
+        .chain(&plan.registry.crate_root_rust_names)
         .collect::<Vec<_>>();
     ordered_names.sort();
     let mut imports = String::new();
@@ -88,6 +111,19 @@ pub(crate) fn project_stdlib_nominal_plan(
     }
     for (_, module) in modules {
         collect_module_nominals(module, &mut declarations, &mut builtin_types);
+        let intrinsic_functions =
+            crate::error_refs::collect_module_intrinsic_function_names(module);
+        for name in crate::error_refs::collect_complete_referenced_builtin_error_classes(
+            module,
+            "",
+            &intrinsic_functions,
+            false,
+            crate::BUILTIN_ERROR_CLASSES,
+        ) {
+            builtin_types
+                .entry(name.clone())
+                .or_insert_with(|| builtin_error_type(&name));
+        }
     }
     let mut python_error_rust_names = HashSet::new();
     if builtin_types.contains_key("Error") {
@@ -107,16 +143,14 @@ pub(crate) fn project_stdlib_nominal_plan(
     }
 
     let mut imports = Vec::new();
-    let mut rust_names = HashSet::new();
-    let mut nominal_paths = HashMap::new();
+    let mut registry = ProjectNominalRegistry::default();
     for (module, names) in declarations {
         let mut names = names.into_iter().collect::<Vec<_>>();
         names.sort();
         for name in &names {
             let identity = format!("{module}.{name}");
             let rust_name = class_rust_name(Some(&identity), name);
-            rust_names.insert(rust_name.clone());
-            nominal_paths.insert(identity, format!("crate::{rust_name}"));
+            registry.register_shared(identity, rust_name);
         }
         imports.push(HirImport {
             module,
@@ -130,16 +164,14 @@ pub(crate) fn project_stdlib_nominal_plan(
         let probe_name = format!("__sifr_project_builtin_nominal_{index}");
         probe_names.insert(probe_name.clone());
         let rust_name = class_rust_name(None, &name);
-        rust_names.insert(rust_name.clone());
-        let rust_path = format!("crate::{rust_name}");
         if let Type::Class {
             identity: Some(identity),
             ..
         } = &ty
         {
-            nominal_paths.insert(identity.clone(), rust_path.clone());
+            registry.register_shared(identity.clone(), rust_name.clone());
         }
-        nominal_paths.insert(name, rust_path);
+        registry.register_shared(name, rust_name);
         functions.push(HirFunction {
             name: probe_name,
             params: Vec::new(),
@@ -177,6 +209,7 @@ pub(crate) fn project_stdlib_nominal_plan(
     );
     let probe_name_refs = probe_names.iter().map(String::as_str).collect();
     let shared_source = strip_rust_items_by_name(&generated.rust_source, &probe_name_refs);
+    register_transitive_stdlib_nominals(&shared_source, stdlib_code, &mut registry);
     let crate_root_candidates = SHARED_MODULE_CRATE_ROOT_NOMINAL_IDENTITIES
         .iter()
         .filter_map(|identity| {
@@ -191,10 +224,16 @@ pub(crate) fn project_stdlib_nominal_plan(
         .collect::<HashSet<_>>();
     let (crate_root_source, shared_source) =
         partition_rust_items_by_name(&shared_source, &crate_root_name_refs);
-    let crate_root_rust_names = crate_root_candidates
-        .into_iter()
-        .filter(|name| rust_source_defines_item_name(&crate_root_source, name))
-        .collect::<HashSet<_>>();
+    let crate_root_defined_names = rust_source_defined_item_names(&crate_root_source);
+    for identity in SHARED_MODULE_CRATE_ROOT_NOMINAL_IDENTITIES {
+        let Some((_, name)) = identity.rsplit_once('.') else {
+            continue;
+        };
+        let rust_name = class_rust_name(Some(identity), name);
+        if crate_root_defined_names.contains(&rust_name) {
+            registry.register_crate_root((*identity).to_string(), rust_name);
+        }
+    }
     let crate_root_source = publicize_generated_module_source(&crate_root_source);
     let mut shared_source = publicize_generated_module_source(&shared_source);
     if !python_error_rust_names.is_empty() {
@@ -213,7 +252,8 @@ pub(crate) fn project_stdlib_nominal_plan(
     prelude.push_str("mod ");
     prelude.push_str(SHARED_STDLIB_NOMINAL_MODULE);
     prelude.push_str(" {\n");
-    let mut crate_root_imports = crate_root_rust_names
+    let mut crate_root_imports = registry
+        .crate_root_rust_names
         .iter()
         .filter(|name| rust_source_references_item_name(&shared_source, name))
         .collect::<Vec<_>>();
@@ -229,7 +269,7 @@ pub(crate) fn project_stdlib_nominal_plan(
         prelude.push('\n');
     }
     prelude.push_str("}\n");
-    let mut ordered_names = rust_names.iter().collect::<Vec<_>>();
+    let mut ordered_names = registry.shared_rust_names.iter().collect::<Vec<_>>();
     ordered_names.sort();
     for name in ordered_names {
         prelude.push_str("pub use ");
@@ -241,11 +281,40 @@ pub(crate) fn project_stdlib_nominal_plan(
 
     ProjectStdlibNominalPlan {
         prelude,
-        rust_names,
-        crate_root_rust_names,
-        nominal_paths,
+        registry,
         used_stdlib_modules: generated.used_stdlib_modules,
         required_features: generated.required_features,
+    }
+}
+
+fn builtin_error_type(name: &str) -> Type {
+    Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: name.to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: Vec::new(),
+        parent_class: (name != "Error").then(|| "Error".to_string()),
+    }
+}
+
+fn register_transitive_stdlib_nominals(
+    shared_source: &str,
+    stdlib_code: &StdlibCode,
+    registry: &mut ProjectNominalRegistry,
+) {
+    let defined_names = rust_source_defined_item_names(shared_source);
+    for (module, source) in &stdlib_code.module_rust_code {
+        for name in &source.nominal_types {
+            let identity = format!("{module}.{name}");
+            if is_crate_root_rust_nominal_identity(&identity) {
+                continue;
+            }
+            let rust_name = class_rust_name(Some(&identity), name);
+            if defined_names.contains(&rust_name) {
+                registry.register_shared(identity, rust_name);
+            }
+        }
     }
 }
 
@@ -454,6 +523,102 @@ mod tests {
             .prelude
             .contains("pub use __sifr_project_nominals::TimeoutError"));
         assert!(!plan.prelude.contains("use crate::TimeoutError"));
-        assert!(plan.crate_root_rust_names.is_empty());
+        assert!(plan.registry.crate_root_rust_names.is_empty());
+    }
+
+    #[test]
+    fn task_scope_error_plan_includes_scope_failure_conversion() {
+        let module = HirModule {
+            functions: vec![HirFunction {
+                name: "main".to_string(),
+                params: Vec::new(),
+                return_type: Type::Result(
+                    Box::new(Type::None),
+                    Box::new(builtin_error_type("Error")),
+                ),
+                body: vec![HirStmt::AsyncWith {
+                    kind: sifr_ir::HirAsyncWithKind::TaskScope,
+                    target: Some("scope".to_string()),
+                    body: Vec::new(),
+                }],
+                is_async: true,
+                method_kind: MethodKind::Regular,
+                receiver: None,
+                decorators: Vec::new(),
+                rust_interop: Vec::new(),
+                python_interop: Vec::new(),
+                compiler_intrinsic: None,
+                type_params: Vec::new(),
+            }],
+            classes: Vec::new(),
+            imports: Vec::new(),
+            constants: Vec::new(),
+            generic_functions: HashMap::new(),
+            type_param_bounds: HashMap::new(),
+        };
+
+        let plan = project_stdlib_nominal_plan(
+            &HashMap::new(),
+            &StdlibCode::default(),
+            &[("main", &module)],
+            false,
+        );
+
+        assert!(plan.prelude.contains("impl From<ScopeFailure> for Error"));
+        assert!(plan
+            .prelude
+            .contains("pub use __sifr_project_nominals::ScopeFailure"));
+        assert_eq!(
+            plan.registry.rust_paths.get("ScopeFailure"),
+            Some(&"crate::__sifr_project_nominals::ScopeFailure".to_string())
+        );
+
+        let generated =
+            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default());
+        assert_eq!(
+            generated
+                .project_union_prelude
+                .matches("struct ScopeFailure")
+                .count(),
+            1,
+            "{}",
+            generated.project_union_prelude
+        );
+        assert!(!generated.rust_files["main"].contains("struct ScopeFailure"));
+    }
+
+    #[test]
+    fn emitted_transitive_nominals_join_the_project_registry() {
+        let mut stdlib = StdlibCode::default();
+        stdlib.module_rust_code.insert(
+            "sifr.io".to_string(),
+            crate::StdlibRustSource {
+                module: "sifr.io".to_string(),
+                source_path: "stdlib/sifr/io.sifr".to_string(),
+                source_sha256: "digest".to_string(),
+                nominal_types: HashSet::from([
+                    "BinaryFileHandle".to_string(),
+                    "TextFileHandle".to_string(),
+                ]),
+                rust: String::new(),
+            },
+        );
+        let shared_source =
+            "pub struct __SifrIoBinaryFileHandle;\npub struct __SifrIoTextFileHandle;\n";
+        let mut registry = ProjectNominalRegistry::default();
+        registry.register_shared(
+            "sifr.io.TextFileHandle".to_string(),
+            "__SifrIoTextFileHandle".to_string(),
+        );
+
+        register_transitive_stdlib_nominals(shared_source, &stdlib, &mut registry);
+
+        assert!(registry
+            .shared_rust_names
+            .contains("__SifrIoBinaryFileHandle"));
+        assert_eq!(
+            registry.rust_paths.get("sifr.io.BinaryFileHandle"),
+            Some(&"crate::__sifr_project_nominals::__SifrIoBinaryFileHandle".to_string())
+        );
     }
 }

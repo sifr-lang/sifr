@@ -17,7 +17,7 @@ use super::{
     sync_channel_runtime_needed, Renderer, RustEmitter, RustExpr, RustFile, RustItem, RustLiteral,
     BUILTIN_ERROR_CLASSES,
 };
-use crate::error_refs::collect_referenced_builtin_error_classes;
+use crate::error_refs::collect_complete_referenced_builtin_error_classes;
 use crate::ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
 use crate::ir_optimize::{remove_trivial_clones_in_items, remove_unneeded_mutability_in_items};
 use crate::ir_validate::validate_items;
@@ -461,23 +461,13 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         crate::python_interop_common::module_uses_async_python_declaration(module);
     let uses_timeout_result_type = module_uses_timeout_result_type(module);
     let uses_async_generator_type = module_uses_async_generator_type(module);
-    let mut referenced_error_classes = collect_referenced_builtin_error_classes(
+    let referenced_error_classes = collect_complete_referenced_builtin_error_classes(
         module,
         &stdlib_preamble,
         &emitter.intrinsic_functions,
         needs_file_handles,
         BUILTIN_ERROR_CLASSES,
     );
-    if uses_task_scope || uses_join_set || uses_failure_type {
-        referenced_error_classes.insert("SecondaryError".to_string());
-    }
-    if uses_async_generator_type {
-        referenced_error_classes.insert("GeneratorCloseError".to_string());
-    }
-    if uses_spawn_cpu || uses_join_set_spawn_cpu || uses_task_scope_spawn_cpu {
-        referenced_error_classes.insert("WorkerRuntimeError".to_string());
-        referenced_error_classes.insert("WorkerError".to_string());
-    }
     let user_defined_error_classes: HashSet<String> = module
         .classes
         .iter()

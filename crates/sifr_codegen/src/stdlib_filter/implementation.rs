@@ -361,6 +361,13 @@ pub(crate) fn rust_source_defines_item_name(rust_code: &str, name: &str) -> bool
     })
 }
 
+pub(crate) fn rust_source_defined_item_names(rust_code: &str) -> HashSet<String> {
+    syn::parse_file(rust_code).map_or_else(
+        |_| HashSet::new(),
+        |parsed| parsed.items.iter().filter_map(parse_item_name).collect(),
+    )
+}
+
 fn parse_stdlib_ir_file(rust_code: &str) -> Option<StdlibIrFile> {
     let Ok(parsed) = syn::parse_file(rust_code) else {
         return None;
