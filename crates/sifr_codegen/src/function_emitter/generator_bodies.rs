@@ -93,9 +93,10 @@ impl RustEmitter {
                 args: vec![],
             },
         }];
-        for stmt in &func.body {
-            materialize_body.extend(self.lower_stmt_strict_for_function(
+        for (stmt_index, stmt) in func.body.iter().enumerate() {
+            materialize_body.extend(self.lower_stmt_strict_for_function_with_following(
                 stmt,
+                Some(&func.body[stmt_index + 1..]),
                 "generator materialization statement lowering",
             ));
         }
@@ -210,9 +211,10 @@ impl RustEmitter {
                 args: vec![],
             },
         });
-        for stmt in &func.body {
-            materialize_body.extend(self.lower_stmt_strict_for_function(
+        for (stmt_index, stmt) in func.body.iter().enumerate() {
+            materialize_body.extend(self.lower_stmt_strict_for_function_with_following(
                 stmt,
+                Some(&func.body[stmt_index + 1..]),
                 "async generator lazy materialization statement lowering",
             ));
         }
@@ -371,10 +373,12 @@ impl RustEmitter {
         } else {
             let mut lowered = Self::emit_mutable_param_shadow_stmts(&mutable_param_shadows);
             lowered.extend(self.prepare_string_char_cache_stmts(func, &reassigned_vars));
-            for stmt in &func.body {
-                lowered.extend(
-                    self.lower_stmt_strict_for_function(stmt, "function body statement lowering"),
-                );
+            for (stmt_index, stmt) in func.body.iter().enumerate() {
+                lowered.extend(self.lower_stmt_strict_for_function_with_following(
+                    stmt,
+                    Some(&func.body[stmt_index + 1..]),
+                    "function body statement lowering",
+                ));
             }
             lowered
         };

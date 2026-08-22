@@ -2771,7 +2771,7 @@ mod __sifr_project_nominals {
                     continue;
                 }
                 let __sifr_try_res: Result<
-                    ((String, Option<String>),),
+                    (),
                     __SifrStdlib_sifr_x2econfigparser_x2eParsingError,
                 > = (|| {
                     let parsed_option_pair: (String, Option<String>) = _split_option_line(
@@ -2827,15 +2827,12 @@ mod __sifr_project_nominals {
                             break;
                         }
                     }
-                    Ok((parsed_option_pair,))
+                    Ok(())
                 })();
-                let (parsed_option_pair,) = match __sifr_try_res {
-                    Ok(__sifr_try_bindings) => __sifr_try_bindings,
-                    Err(__sifr_try_err) => {
-                        let e = __sifr_try_err.clone();
-                        return Err(e);
-                    }
-                };
+                if let Err(__sifr_try_err) = __sifr_try_res {
+                    let e = __sifr_try_err.clone();
+                    return Err(e);
+                }
             }
             Ok(())
         }

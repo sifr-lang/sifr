@@ -1,10 +1,10 @@
 use super::{
     body_contains_await, collect_locally_defined_vars, collect_mutated_vars_with_sigs,
     collect_referenced_vars_with_types, default_param_convention, hir_analysis,
-    is_simple_stmt_candidate, resolve_alias_type_for_plain_call,
-    try_lower_simple_stmt_with_scope_result_and_bindings, Cell, ClassScope, HashMap, HashSet,
-    HirExpr, HirFunction, HirModule, HirStmt, LoweringStats, NestedFnCapture, ParamConvention,
-    RefCell, RustExpr, RustItem, RustLiteral, RustStmt, RustType, ScopeContext, Type,
+    resolve_alias_type_for_plain_call, try_lower_simple_stmt_with_scope_result_and_bindings, Cell,
+    ClassScope, HashMap, HashSet, HirExpr, HirFunction, HirModule, HirStmt, LoweringStats,
+    NestedFnCapture, ParamConvention, RefCell, RustExpr, RustItem, RustStmt, RustType,
+    ScopeContext, Type,
 };
 use crate::stmt_support_emitter::performance_lowering_gate::stmt_needs_performance_lowering;
 pub struct RustEmitter {
@@ -383,6 +383,14 @@ impl RustEmitter {
     pub(crate) fn try_lower_structured_stmt(
         &mut self,
         stmt: &HirStmt,
+    ) -> Result<bool, crate::CodegenError> {
+        self.try_lower_structured_stmt_with_following(stmt, None)
+    }
+
+    pub(crate) fn try_lower_structured_stmt_with_following(
+        &mut self,
+        stmt: &HirStmt,
+        following_stmts: Option<&[HirStmt]>,
     ) -> Result<bool, crate::CodegenError> {
         let scope_ctx = ScopeContext {
             function_return_type: self.current_return_type.clone(),
@@ -813,7 +821,7 @@ impl RustEmitter {
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_lower_structured_try_except_stmt(stmt) {
+        if self.try_lower_structured_try_except_stmt_with_following(stmt, following_stmts) {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
@@ -865,33 +873,6 @@ impl RustEmitter {
             }
         }
         Ok(false)
-    }
-    pub(crate) fn emit_stmt(&mut self, stmt: &HirStmt) {
-        self.lowering_stats.stmt_total += 1;
-        if is_simple_stmt_candidate(stmt) {
-            self.lowering_stats.stmt_candidate_total += 1;
-        }
-        match self.try_lower_structured_stmt(stmt) {
-            Ok(true) => {}
-            Ok(false) => {
-                self.lowering_stats.stmt_lowering_errors += 1;
-                self.push_captured_stmt(&RustStmt::Expr(RustExpr::MacroCall {
-                    name: "compile_error".to_string(),
-                    args: vec![RustExpr::Literal(RustLiteral::Str(format!(
-                        "structured statement emission missing for production path: {stmt:?}"
-                    )))],
-                }));
-            }
-            Err(err) => {
-                self.lowering_stats.stmt_lowering_errors += 1;
-                self.push_captured_stmt(&RustStmt::Expr(RustExpr::MacroCall {
-                    name: "compile_error".to_string(),
-                    args: vec![RustExpr::Literal(RustLiteral::Str(format!(
-                        "structured statement lowering failed for production path: {stmt:?}; error={err}"
-                    )))],
-                }));
-            }
-        }
     }
 }
 

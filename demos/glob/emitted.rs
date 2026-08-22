@@ -437,7 +437,7 @@ fn glob(directory: &String, pattern: &String) -> Vec<String> {
             __indexed_char
         }) == ".")));
     let mut matches: Vec<String> = vec![];
-    let __sifr_try_res: Result<(Vec<String>,), IOError> = (|| {
+    let __sifr_try_res: Result<(), IOError> = (|| {
         let entries: Vec<String> = listdir(directory)?;
         for entry in entries.iter().cloned() {
             let __sifr_chars_entry: Vec<char> = entry.chars().collect::<Vec<char>>();
@@ -462,16 +462,13 @@ fn glob(directory: &String, pattern: &String) -> Vec<String> {
                 matches.push(entry.clone());
             }
         }
-        Ok((entries,))
+        Ok(())
     })();
-    let (entries,) = match __sifr_try_res {
-        Ok(__sifr_try_bindings) => __sifr_try_bindings,
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            let _ = format!("{}", e.message.clone());
-            return vec![];
-        }
-    };
+    if let Err(__sifr_try_err) = __sifr_try_res {
+        let e = __sifr_try_err.clone();
+        let _ = format!("{}", e.message.clone());
+        return vec![];
+    }
     {
         let mut __sifr_sorted_v = (matches).iter().cloned().collect::<Vec<_>>();
         __sifr_sorted_v.sort();

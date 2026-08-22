@@ -552,9 +552,10 @@ impl RustEmitter {
         self.register_local_body_binding_types(&func.body);
 
         let mut lowered_body = Vec::new();
-        for body_stmt in &func.body {
-            lowered_body.extend(self.lower_stmt_strict_for_function(
+        for (stmt_index, body_stmt) in func.body.iter().enumerate() {
+            lowered_body.extend(self.lower_stmt_strict_for_function_with_following(
                 body_stmt,
+                Some(&func.body[stmt_index + 1..]),
                 "nested function body statement lowering",
             ));
         }
@@ -813,8 +814,17 @@ impl RustEmitter {
     pub(crate) fn lower_stmt_strict_for_function(
         &mut self,
         stmt: &HirStmt,
+        context: &str,
+    ) -> Vec<RustStmt> {
+        self.lower_stmt_strict_for_function_with_following(stmt, None, context)
+    }
+
+    pub(crate) fn lower_stmt_strict_for_function_with_following(
+        &mut self,
+        stmt: &HirStmt,
+        following_stmts: Option<&[HirStmt]>,
         _context: &str,
     ) -> Vec<RustStmt> {
-        self.capture_structured_stmts(|inner| inner.emit_stmt(stmt))
+        self.capture_structured_stmts(|inner| inner.emit_stmt_with_following(stmt, following_stmts))
     }
 }
