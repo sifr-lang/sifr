@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 10H are complete. Item 10I is next.
+Status: active on 2026-08-22. Items 0 through 10I are complete. Item 10J is next.
 
 ## Objective
 
@@ -1593,6 +1593,40 @@ Acceptance criteria:
 - Diagnostic rendering produces the same canonical fixture names.
 - Focused diagnostic harness tests pass.
 
+### Item 10I record
+
+State: complete
+
+PR: [#3466](https://github.com/sifr-lang/sifr/pull/3466)
+
+Base SHA: `bbd116943112843a2b921cca09fec421c26ca33d`
+
+Candidate SHA: `192eed970cf67d917ccf39c25c425d204edd2d9c`
+
+Merge SHA: `326f41e9cd6da6b689201b1b7eaf69c3a7554f3d`
+
+Changed path: the diagnostic-rendering harness layout tag.
+
+Validation: strict workspace Clippy passed after reproducing the original
+`needless_pass_by_value` failure. Both canonical seed layouts passed. The
+complete diagnostic source-canonicalization check, formatting, diff checks,
+and the 3,221-file size guardrail passed.
+
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all preceding checks and stopped only at linked delivery A's stale
+Rust-interop evidence path. Neither gate was repeated. The evidence is in the
+[#3466 gate comment](https://github.com/sifr-lang/sifr/pull/3466#issuecomment-5381524255).
+
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking findings. The evidence is in the
+[#3466 review comment](https://github.com/sifr-lang/sifr/pull/3466#issuecomment-5381506805).
+
+Deferred follow-up: a future data-carrying layout variant must revisit the
+`Copy` semantics. No current variant carries data, so this is not phase work.
+Linked delivery A retains its stale Rust-interop evidence path.
+
+Next action: implement Item 10J.
+
 ## Item 10J: Scope Nested-function Signature Metadata
 
 Purpose: Keep a nested function's callable metadata aligned with its lexical
@@ -1844,6 +1878,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 10H are complete and recorded.
+Current state: Items 0 through 10I are complete and recorded.
 
-Next action: implement Item 10I.
+Next action: implement Item 10J.
