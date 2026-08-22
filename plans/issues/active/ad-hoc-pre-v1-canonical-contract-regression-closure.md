@@ -1,7 +1,6 @@
 # Ad Hoc Phase: Pre-v1 Canonical Contract Regression Closure
 
-Status: active on 2026-08-22. Items 0 through 2 are complete. Item 3 has a
-passing performance correction and is in final validation.
+Status: active on 2026-08-22. Items 0 through 3 are complete. Item 4 is next.
 
 ## Objective
 
@@ -423,31 +422,43 @@ Acceptance criteria:
 - No reader accepts an old path as a fallback.
 - The item does not repair or waive the linked Rust-interop failure.
 
-### Item 3 performance correction evidence
+### Item 3 record
 
-State: in progress
+State: complete
 
-The performance trend hash and its negative self-test pass. The fuzz/property
-area passes all 39 variants. The ecosystem area passes all 34 variants. The
-warm controlled representative and full profiles pass all 10 benchmark
-commands and every budget. The performance smoke profile also passes.
+PR: [#3432](https://github.com/sifr-lang/sifr/pull/3432)
 
-[Performance issue #3431](https://github.com/sifr-lang/sifr/issues/3431) tracks
-the correction. PR #3262 copied all retained stdlib class templates into each
-later stdlib codegen operation. It also retained method bodies that late
-structural codegen does not use. The correction selects only imported modules'
-templates and removes unused bodies from retained templates.
+Base SHA: `9f40cccfd3d8b16d8c77509c8c4e43144aba8c18`
 
-The canonical LSP project exposed a separate ownership defect. Python editor
-diagnostics adopted an ancestor Cargo workspace when the Sifr package had no
-local `Cargo.toml`. The correction now requires package-local Cargo ownership.
+Candidate SHA: `ff8c41c53c7f618c98993f312d09f8d85a2424ed`
 
-The passing representative artifact has SHA-256
+Merge SHA: `ab96e12963e8d8579dcf238395dd7c648ba0953c`
+
+Changed paths: the trend, fuzz, and ecosystem evidence; the diagnostic
+fixture layout; stdlib structural template retention; LSP Python package
+ownership; focused tests; and this phase record.
+
+Validation: all 39 fuzz/property variants and all 34 ecosystem variants
+passed. The performance representative, full, and smoke profiles passed all
+commands and budgets. The diagnostic harness, focused driver and LSP tests,
+formatting, maintainability checks, and file-size guard passed. The
+representative artifact has SHA-256
 `9ab0db8499f1a42905983fe76ab756533fbb7655517ac59a78bd09671506cb72`.
-No baseline, threshold, waiver, timeout, profile, or product feature changed.
 
-Next action: freeze the candidate, run its exact-SHA review, and run the two
-required Sifr gates.
+The create-PR and merge gates each ran once on the candidate SHA. Each passed
+all earlier checks and stopped at the Rust-interop matrix. The matrix reported
+only linked delivery A's missing negative fixture and Item 10's empty
+method-slot fixture. The item did not change or waive either later delivery.
+
+Review evidence: the exact-SHA Opus review returned `SATISFIED`. No
+remediation review was used. The evidence is in the
+[#3432 review comment](https://github.com/sifr-lang/sifr/pull/3432#issuecomment-5377265347).
+
+Deferred follow-up: linked delivery A owns
+`negative/package_generated_type_import_rejected.sifr`. Item 10 owns the
+method-slot fixture. No Item 3 mechanism defect remains.
+
+Next action: implement Item 4.
 
 ## Item 4: Correct the Dependency Feature Assertion
 
@@ -767,7 +778,6 @@ The phase is complete when all of these conditions are true:
 
 ## Current Handoff
 
-Current state: Items 0 through 2 are complete and recorded. Item 3 has passing
-focused, fuzz, ecosystem, and representative performance evidence.
+Current state: Items 0 through 3 are complete and recorded.
 
-Next action: complete Item 3 validation, review, gates, merge, and record.
+Next action: implement Item 4.
