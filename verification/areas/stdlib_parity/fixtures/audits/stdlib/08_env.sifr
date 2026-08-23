@@ -1,8 +1,8 @@
 # ============================================================
-# Test 8: sifr.env
+# Test 8: read-only sifr.env
 # ============================================================
 
-from sifr.env import getenv_opt, setenv
+from sifr.env import getenv, getenv_opt, items
 
 def main():
     home: str | None = getenv_opt("HOME")
@@ -13,7 +13,6 @@ def main():
     if missing is None:
         print("missing is None")
 
-    setenv("SIFR_TEST_VAR", "hello")
-    val: str | None = getenv_opt("SIFR_TEST_VAR")
-    if val is not None:
-        print(f"set/get: {val}")
+    assert getenv("SIFR_NONEXISTENT_12345", "fallback") == "fallback"
+    pairs: list[str] = items()
+    assert len(pairs) >= 0

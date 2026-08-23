@@ -1,6 +1,6 @@
 # Reference: stdlib_parity_d2_process_runtime_platform
 from sifr.os import run_command, getcwd
-from sifr.env import getenv, getenv_opt, setenv, unsetenv
+from sifr.env import getenv, getenv_opt
 from sifr.sys import argv, version, platform, maxsize
 from sifr.logging import getLogger, INFO, Logger
 from sifr.platform import system, machine, processor
@@ -38,11 +38,9 @@ def collect_runtime_actual() -> list[bool]:
         _ = e.message
     actual.append(cwd_ok)
 
-    setenv("SIFR_PSP_D2_KEY", "v2")
-    actual.append(getenv("SIFR_PSP_D2_KEY", "fallback") == "v2")
-    actual.append(getenv_opt("SIFR_PSP_D2_KEY") is not None)
-    unsetenv("SIFR_PSP_D2_KEY")
-    actual.append(getenv("SIFR_PSP_D2_KEY", "fallback") == "fallback")
+    actual.append(getenv("SIFR_PSP_D2_MISSING", "fallback") == "fallback")
+    actual.append(getenv_opt("SIFR_PSP_D2_MISSING") is None)
+    actual.append(getenv("BAD=KEY", "fallback") == "fallback")
 
     actual.append(len(argv()) > 0)
     actual.append(len(version()) > 0)

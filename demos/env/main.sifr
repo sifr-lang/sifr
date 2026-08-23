@@ -1,27 +1,22 @@
 # Reference: env
-# env env parity demo
-from sifr.env import getenv, getenv_opt, setenv, unsetenv
+# Read-only environment access demo.
+from sifr.env import getenv, getenv_opt, keys, values, items
 from sifr.test import assert_bool_vector_eq
 
 def main():
-    unsetenv("SIFR_ENV_SAMPLE")
-    setenv("SIFR_ENV_SAMPLE", "env")
-
-    with_default: str = getenv("SIFR_ENV_SAMPLE", "fallback")
+    with_default: str = getenv("SIFR_ENV_SAMPLE_MISSING", "fallback")
     print(with_default)
-    assert str(with_default) == "env"
+    assert str(with_default) == "fallback"
 
-    unsetenv("SIFR_ENV_SAMPLE")
-    without_default: str | None = getenv_opt("SIFR_ENV_SAMPLE")
+    without_default: str | None = getenv_opt("SIFR_ENV_SAMPLE_MISSING")
     assert str(without_default is None) == "true"
-    assert str(getenv("SIFR_ENV_SAMPLE", "fallback")) == "fallback"
 
     invalid_expected_lookup_found: list[bool] = [False, False]
     invalid_actual_lookup_found: list[bool] = []
-    setenv("", "x")
     invalid_actual_lookup_found.append(getenv_opt("") is not None)
-    setenv("A=B", "x")
     invalid_actual_lookup_found.append(getenv_opt("A=B") is not None)
     assert_bool_vector_eq(invalid_actual_lookup_found, invalid_expected_lookup_found)
 
-    print("env env parity demo: pass")
+    assert str(len(keys()) == len(values())) == "true"
+    assert str(len(keys()) == len(items())) == "true"
+    print("env read-only access demo: pass")

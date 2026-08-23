@@ -350,23 +350,8 @@ fn runtime_information_modules_export_only_canonical_operation_names() {
         ),
         (
             "sifr.env",
-            &[
-                "getenv_opt",
-                "getenv",
-                "setenv",
-                "unsetenv",
-                "keys",
-                "values",
-                "items",
-            ][..],
-            &[
-                "env_get",
-                "env_set",
-                "env_unset",
-                "env_keys",
-                "env_values",
-                "env_items",
-            ][..],
+            &["getenv_opt", "getenv", "keys", "values", "items"][..],
+            &["env_get", "env_keys", "env_values", "env_items"][..],
         ),
     ] {
         let functions = compiled

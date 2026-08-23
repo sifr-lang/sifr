@@ -1,17 +1,16 @@
-# Test sifr.env stdlib module
-from sifr.env import getenv_opt, setenv
+# Test the read-only sifr.env stdlib module.
+from sifr.env import getenv, getenv_opt, keys, values, items
 
 def main():
-    # Set an env var
-    setenv("SIFR_TEST_VAR", "hello_sifr")
-
-    # Get it back
-    val: str | None = getenv_opt("SIFR_TEST_VAR")
-    if val is not None:
-        assert str(val) == 'hello_sifr'
-
-    # Get a non-existent var
     missing: str | None = getenv_opt("SIFR_NONEXISTENT_VAR_XYZ")
-    if missing is None:
-        assert str("not found") == 'not found'
+    assert str(missing is None) == "true"
+    assert getenv("SIFR_NONEXISTENT_VAR_XYZ", "fallback") == "fallback"
 
+    assert str(getenv_opt("") is None) == "true"
+    assert str(getenv_opt("A=B") is None) == "true"
+
+    names: list[str] = keys()
+    vals: list[str] = values()
+    pairs: list[str] = items()
+    assert str(len(names) == len(vals)) == "true"
+    assert str(len(names) == len(pairs)) == "true"

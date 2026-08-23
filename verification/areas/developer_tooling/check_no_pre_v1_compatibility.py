@@ -117,6 +117,8 @@ PUBLIC_STDLIB_ALIASES = (
     "env_keys",
     "env_values",
     "env_items",
+    "setenv",
+    "unsetenv",
     "json_loads",
     "json_dumps",
     "toml_loads",

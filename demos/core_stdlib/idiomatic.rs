@@ -1,6 +1,5 @@
-use std::collections::BTreeMap;
+use std::env;
 use std::process::Command;
-use std::sync::{Mutex, OnceLock};
 
 use serde_json::Value;
 
@@ -74,24 +73,8 @@ fn loads(text: &str) -> Result<JsonValue, JSONDecodeError> {
         .map_err(|error| JSONDecodeError::new(error.to_string()))
 }
 
-fn env_store() -> &'static Mutex<BTreeMap<String, String>> {
-    static STORE: OnceLock<Mutex<BTreeMap<String, String>>> = OnceLock::new();
-    STORE.get_or_init(|| Mutex::new(BTreeMap::new()))
-}
-
-fn setenv(key: &str, value: &str) {
-    env_store()
-        .lock()
-        .unwrap_or_else(|poison| poison.into_inner())
-        .insert(key.to_string(), value.to_string());
-}
-
 fn getenv_opt(key: &str) -> Option<String> {
-    env_store()
-        .lock()
-        .unwrap_or_else(|poison| poison.into_inner())
-        .get(key)
-        .cloned()
+    env::var(key).ok()
 }
 
 fn run_command(command: &str) -> Result<String, IOError> {
@@ -143,9 +126,8 @@ fn main() {
     }
 
     println!("=== sifr.env ===");
-    setenv("SIFR_DEMO", "active");
-    if let Some(value) = getenv_opt("SIFR_DEMO") {
-        println!("SIFR_DEMO = {value}");
+    if let Some(value) = getenv_opt("PATH") {
+        println!("PATH available = {}", !value.is_empty());
     }
     if getenv_opt("SIFR_NONEXISTENT").is_none() {
         println!("SIFR_NONEXISTENT not set");

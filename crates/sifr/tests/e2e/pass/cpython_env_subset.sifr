@@ -1,5 +1,5 @@
-# Adapted CPython env subset for sifr.env safety model
-from sifr.env import getenv, getenv_opt, setenv, unsetenv, keys, values, items
+# Adapted CPython environment subset for Sifr's read-only process model.
+from sifr.env import getenv, getenv_opt, keys, values, items
 from sifr.test import assert_vector_eq, assert_bool_vector_eq
 
 def has_equals_pair(own pairs: list[str]) -> bool:
@@ -11,45 +11,32 @@ def has_equals_pair(own pairs: list[str]) -> bool:
     return has_equals
 
 def main():
-    # Keep this fixture deterministic.
-    unsetenv("SIFR_ENV_P30_VALUE")
-    unsetenv("SIFR_ENV_P30_MISSING")
-    setenv("SIFR_ENV_P30_VALUE", "v")
-
-    # Canonical parity fixture vectors: inputs, expected, actual.
-    inputs: list[str] = ["SIFR_ENV_P30_VALUE", "SIFR_ENV_P30_MISSING"]
-    expected: list[str] = ["v", "fallback"]
+    inputs: list[str] = ["SIFR_ENV_P30_MISSING", ""]
+    expected: list[str] = ["fallback", "fallback"]
     actual: list[str] = []
     for key in inputs:
-        with_default: str = getenv(key, "fallback")
-        actual.append(with_default)
+        actual.append(getenv(key, "fallback"))
     assert_vector_eq(actual, expected)
 
-    # Error-path fixture vectors using expected_ok/actual_ok.
-    expected_ok: list[bool] = [True, False]
+    expected_ok: list[bool] = [False, False]
     actual_ok: list[bool] = []
     for key in inputs:
         without_default: str | None = getenv_opt(key)
         actual_ok.append(without_default is not None)
     assert_bool_vector_eq(actual_ok, expected_ok)
 
-    # Safety adaptation: invalid names are ignored instead of panicking.
     invalid_inputs: list[str] = ["", "A=B"]
     invalid_expected_lookup_found: list[bool] = [False, False]
     invalid_actual_lookup_found: list[bool] = []
     for bad_key in invalid_inputs:
-        set_key: str = bad_key + ""
-        lookup_key: str = bad_key + ""
-        setenv(set_key, "blocked")
-        blocked: str | None = getenv_opt(lookup_key)
+        blocked: str | None = getenv_opt(bad_key)
         invalid_actual_lookup_found.append(blocked is not None)
     assert_bool_vector_eq(invalid_actual_lookup_found, invalid_expected_lookup_found)
 
     k: list[str] = keys()
     v: list[str] = values()
     it: list[str] = items()
-
-    assert str(len(k) == len(v)) == 'true'
-    assert str(len(k) == len(it)) == 'true'
-    assert str(has_equals_pair(it)) == 'true'
-    assert str("cpython_env_subset: pass") == 'cpython_env_subset: pass'
+    assert str(len(k) == len(v)) == "true"
+    assert str(len(k) == len(it)) == "true"
+    assert str(has_equals_pair(it)) == "true"
+    assert str("cpython_env_subset: pass") == "cpython_env_subset: pass"

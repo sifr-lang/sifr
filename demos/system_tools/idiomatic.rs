@@ -32,18 +32,6 @@ fn getenv(key: &str, default: &str) -> String {
     env::var(key).unwrap_or_else(|_| default.to_string())
 }
 
-fn setenv(key: &str, value: &str) {
-    unsafe {
-        env::set_var(key, value);
-    }
-}
-
-fn unsetenv(key: &str) {
-    unsafe {
-        env::remove_var(key);
-    }
-}
-
 fn argv() -> Vec<String> {
     vec!["system_tools".to_string()]
 }
@@ -199,9 +187,7 @@ fn main() {
         Err(error) => println!("os error: {}", error),
     }
 
-    setenv("SIFR_SYSTEM_TOOLS_DEMO", "ok");
-    println!("env getenv = {}", getenv("SIFR_SYSTEM_TOOLS_DEMO", "fallback"));
-    unsetenv("SIFR_SYSTEM_TOOLS_DEMO");
+    println!("env PATH available = {}", !getenv("PATH", "").is_empty());
 
     println!("sys.argv len = {}", argv().len());
     println!("sys.version = {}", version());

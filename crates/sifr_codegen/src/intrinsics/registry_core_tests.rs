@@ -215,8 +215,6 @@ pub(crate) fn i18n_intrinsics_are_owned_by_compiled_stdlib_declarations() {
 pub(crate) fn env_and_sys_intrinsics_are_owned_by_compiled_stdlib_declarations() {
     for name in [
         "env_get",
-        "env_set",
-        "env_unset",
         "env_keys",
         "env_values",
         "env_items",

@@ -1,7 +1,7 @@
 # Reference: system-tools-sample
 # Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.os import run_command, getcwd
-from sifr.env import getenv, setenv, unsetenv
+from sifr.env import getenv
 from sifr.sys import argv, version, platform
 from sifr.logging import getLogger, INFO, Logger
 from sifr.platform import system, machine, processor
@@ -26,9 +26,7 @@ def main():
     except IOError as e:
         print("os error: " + e.message)
 
-    setenv("SIFR_SYSTEM_TOOLS_DEMO", "ok")
-    print("env getenv = " + getenv("SIFR_SYSTEM_TOOLS_DEMO", "fallback"))
-    unsetenv("SIFR_SYSTEM_TOOLS_DEMO")
+    print("env PATH available = " + str(len(getenv("PATH", "")) > 0))
 
     print("sys.argv len = " + str(len(argv())))
     print("sys.version = " + version())

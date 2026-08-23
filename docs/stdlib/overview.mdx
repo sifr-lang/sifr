@@ -73,7 +73,7 @@ If a real user-defined or third-party top-level module named `math`, `json`, or 
 | `sifr.io` | `open_text` for text files with a required explicit encoding, and binary file I/O. Text-mode `open()` without `encoding=` is unsupported ([`SIFR-IO-0801`](/errors/SIFR-IO-0801)). |
 | `sifr.pathlib` | `Path` construction, joining, extension manipulation, existence checks, and directory traversal. |
 | `sifr.os` | File and directory operations: `remove_file`, `rename`, `mkdir`, `listdir`, and stat helpers. |
-| `sifr.env` | Read and write process environment variables as explicit typed values. |
+| `sifr.env` | Read process environment variables as explicit typed values. Process-wide mutation is intentionally unsupported because it is not sound in multithreaded native programs on all supported platforms. |
 | `sifr.sys` | Process arguments (`argv`), exit helpers, and platform query values. |
 
 </Accordion>

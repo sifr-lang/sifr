@@ -4384,12 +4384,6 @@ fn run_command(cmd: &String) -> Result<String, IOError> {
 fn env_get(key: &String) -> Option<String> {
     ::sifr_stdlib::sys::env_get(key)
 }
-fn env_set(key: &String, value: &String) {
-    ::sifr_stdlib::sys::env_set(key, value);
-}
-fn env_unset(key: &String) {
-    ::sifr_stdlib::sys::env_unset(key);
-}
 fn env_keys() -> Vec<String> {
     ::sifr_stdlib::sys::env_keys()
 }

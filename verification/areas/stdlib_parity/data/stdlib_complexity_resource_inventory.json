@@ -37,11 +37,11 @@
     {
       "module": "env",
       "api_class": "o1_wrapper",
-      "representative_apis": ["getenv_opt", "setenv", "unsetenv"],
+      "representative_apis": ["getenv_opt", "getenv"],
       "expected_asymptotic": "O(1)",
       "observed_asymptotic": "O(1)",
       "constant_factor_delta_band": "within_2x",
-      "resource_budget": "bounded allocation, panic-free invalid-key adaptation",
+      "resource_budget": "bounded allocation, read-only panic-free invalid-key adaptation",
       "waiver": null
     },
     {

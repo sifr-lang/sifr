@@ -48,8 +48,6 @@ fn sys_private_declarations_codegen_through_sifr_stdlib() {
     for name in [
         "run_command",
         "env_get",
-        "env_set",
-        "env_unset",
         "env_keys",
         "env_values",
         "env_items",
