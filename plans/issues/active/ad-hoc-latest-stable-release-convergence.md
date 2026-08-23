@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-23. Item 0 phase and inventory lock is complete.
-Item 1 Rust 1.98 toolchain is next.
+Status: active on 2026-08-23. Items 0-1 are complete. Item 2 Rust edition
+2024 is next.
 
 ## Objective
 
@@ -164,7 +164,7 @@ Only the first incomplete row may be active.
 | Item | State | Scope | Acceptance criteria |
 | --- | --- | --- | --- |
 | 0 | complete | Phase and inventory lock | This active record and roadmap entry merge after exact-SHA Opus satisfaction; all maintained surfaces, compatibility units, gate rules, and closure rules are owned. |
-| 1 | pending | Rust 1.98 toolchain | Local and CI compiler selection is reproducibly 1.98; the latest-only policy replaces the 1.93 floor; edition remains 2021. |
+| 1 | complete | Rust 1.98 toolchain | Local and CI compiler selection is reproducibly 1.98; the latest-only policy replaces the 1.93 floor; edition remains 2021. |
 | 2 | pending | Rust edition 2024 | Every maintained manifest/template uses edition 2024; `gen` and other reserved syntax are correctly emitted/escaped; generated Rust compiles. |
 | 3 | pending | uv 0.12 | uv and setup policy are current; all affected locks are reproducible under the new resolver. |
 | 4 | pending | Python 3.14 and PyO3 | Python 3.14.7 is primary, PyO3 is current, and the explicit 3.11 compatibility lane still passes. |
@@ -230,6 +230,57 @@ Item 6 owns maintained third-party action SHAs. Neither suggestion identified a
 new mechanism defect or changed Item 0 acceptance.
 
 Next action: implement Item 1 Rust 1.98 toolchain convergence from the Item 0
+record merge on `origin/main`.
+
+### Item 1 record
+
+State: complete
+
+PR: [#3491](https://github.com/sifr-lang/sifr/pull/3491)
+
+Base SHA: `4aac2860681a04eb66a1cbba64d901e893bc71b8`
+
+Candidate SHA: `cf9702fabbf9230a13daaeff3e88609aacb0f73d`
+
+Merge SHA: `445e03a6a1458d675055bc198b61da11f66f3321`
+
+Changed paths: the root toolchain and workspace manifest, three release and
+validation workflows, the supported-platform policy, architecture and
+dependency-audit records, and Rust 1.98 Clippy/API migrations in runtime,
+type-system, lowering, code-generation, lint, and package sources. The edition
+remained 2021 and `Cargo.lock` did not change.
+
+Stable-source result: the official Rust channel reported Rust 1.98.0, released
+on 2026-08-20. `rust-toolchain.toml`, the workspace `rust-version`, the six
+supported target declarations, and the six `dtolnay/rust-toolchain` selections
+now resolve exactly Rust 1.98.0 with Clippy and rustfmt.
+
+Focused validation: exact Rust, Cargo, Clippy, and rustfmt probes passed;
+workspace metadata, check, format, Clippy, six affected-package test suites,
+the runtime-platform support matrix, distribution-release checks,
+maintainability checks, and the file-size guardrail passed. Added UTF-16
+trailing-byte coverage passed with the Rust 1.98 `as_chunks` migration.
+
+Gate evidence: the sole create-PR gate attempt identified that generated
+projects outside the repository inherited the host rustup default 1.94.0. The
+candidate did not change. After the host stable default advanced to 1.98.0,
+all ten affected Python-interop variants passed directly. The sole merge gate
+then passed on the unchanged candidate SHA, including 698/698 E2E fixtures.
+The cold run took 6,508.96 seconds and exceeded only the advisory warm-cache
+time budget; it exited zero with no test failure. Full evidence is retained in
+the [#3491 final validation comment](https://github.com/sifr-lang/sifr/pull/3491#issuecomment-5386064589).
+
+Review evidence: the one exact-candidate Claude Opus review returned
+`SATISFIED` with no blocking findings. The response is retained in the
+[#3491 review comment](https://github.com/sifr-lang/sifr/pull/3491#issuecomment-5385475087).
+The candidate did not change after review, so no remediation review applied.
+
+Deferred follow-up: Item 6 owns replacing the temporary mutable
+`dtolnay/rust-toolchain@1.98.0` selections with reviewed immutable action SHAs.
+Opus also noted a cosmetic `sort_by_key` allocation and the pre-existing
+nightly sanitizer lane; neither is an Item 1 mechanism defect.
+
+Next action: implement Item 2 Rust edition 2024 convergence from the Item 1
 record merge on `origin/main`.
 
 ## Validation Ownership
