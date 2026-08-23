@@ -512,10 +512,8 @@ fn set_canonical_identities(ty: &mut Type, local_classes: &HashMap<String, Strin
             }
             set_canonical_identities(inner, local_classes);
         }
-        Type::Enum { identity, name, .. } => {
-            if identity.is_none() {
-                *identity = local_classes.get(name).cloned();
-            }
+        Type::Enum { identity, name, .. } if identity.is_none() => {
+            *identity = local_classes.get(name).cloned();
         }
         _ => {}
     }

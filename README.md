@@ -139,7 +139,8 @@ Windows installer support is not available yet.
 ### Build the compiler from source
 
 Source builds require the [Rust toolchain](https://rustup.rs/) with `rustc` and
-`cargo`.
+`cargo`. The root `rust-toolchain.toml` selects the exact supported compiler
+and installs the required formatting and lint components through `rustup`.
 
 ```bash
 git clone https://github.com/sifr-lang/sifr.git

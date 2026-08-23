@@ -139,7 +139,7 @@ pub(in crate::lower) fn lower_tuple_unpack_assign(
     record_tuple_unpack_pointer_facts(ctx, &target_names, value);
     record_tuple_unpack_len_alias_facts(ctx, &target_names, value);
     let mut lowered_targets = Vec::new();
-    for (target, ty) in targets.into_iter().zip(elem_types.into_iter()) {
+    for (target, ty) in targets.into_iter().zip(elem_types) {
         match target {
             TupleAssignTarget::Name { name, range } => {
                 if ctx.is_declared_nonlocal(&name) {

@@ -196,10 +196,8 @@ fn report_union_exhaustiveness(
                     uncovered.push(n.to_string());
                 }
             }
-            Type::LiteralBool(b) => {
-                if !covered_literal_bools.contains(b) {
-                    uncovered.push(b.to_string());
-                }
+            Type::LiteralBool(b) if !covered_literal_bools.contains(b) => {
+                uncovered.push(b.to_string());
             }
             _ => {}
         }

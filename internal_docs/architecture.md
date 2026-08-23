@@ -325,8 +325,9 @@ conventions, Sifr type syntax, generics, match/case, ownership-aware
 collections, formatter pragmas, and Sifr-tagged docstring snippets. The root
 workspace pins Sifr's direct and generated-runtime support crates to the latest
 stable releases independently from the excluded Ruff fork, which keeps its own
-sub-workspace dependency pins. The effective Rust toolchain floor follows the
-Ruff submodule crates and is currently Rust 1.93.
+sub-workspace dependency pins. Sifr is latest-stable-only: the root
+`rust-toolchain.toml` and CI select Rust 1.98.0 exactly, while workspace
+manifests declare Rust 1.98 as the required compiler line.
 
 ```
 sifr/

@@ -205,10 +205,8 @@ fn collect_method_facts(
             op: HirIteratorOp::Next,
             args,
             ..
-        } => {
-            if args.first().is_some_and(|arg| receiver_rooted(arg, ctx)) {
-                call_mutates_receiver = true;
-            }
+        } if args.first().is_some_and(|arg| receiver_rooted(arg, ctx)) => {
+            call_mutates_receiver = true;
         }
         _ => {}
     });

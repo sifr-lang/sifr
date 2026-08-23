@@ -188,7 +188,7 @@ pub(crate) fn required_archive_entries(
             continue;
         };
         required.insert(relative_root.join("mod.rs"));
-        required.extend(user_bridge_files(package_root, &relative_root).into_iter());
+        required.extend(user_bridge_files(package_root, &relative_root));
     }
     required
 }

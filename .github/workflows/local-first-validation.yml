@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.0
       # Advisory until legacy workspace lint debt is burned down by a dedicated cleanup.
       - name: Rustfmt check (advisory)
         continue-on-error: true
@@ -42,7 +42,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.0
       - uses: astral-sh/setup-uv@v5
         with:
           version: ${{ env.SIFR_MIN_UV_VERSION }}
@@ -59,7 +59,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.0
       - uses: astral-sh/setup-uv@v5
         with:
           version: ${{ env.SIFR_MIN_UV_VERSION }}
@@ -75,7 +75,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.0
       - uses: astral-sh/setup-uv@v5
         with:
           version: ${{ env.SIFR_MIN_UV_VERSION }}

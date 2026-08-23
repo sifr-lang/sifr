@@ -381,11 +381,9 @@ pub(crate) fn collect_mutated_vars(
                 }
             }
         }
-        HirExpr::IteratorCall { op, args, .. } => {
-            if *op == HirIteratorOp::Next {
-                if let Some(name) = args.first().and_then(expression_root_name) {
-                    mutated.borrow_mut().insert(name.to_string());
-                }
+        HirExpr::IteratorCall { op, args, .. } if *op == HirIteratorOp::Next => {
+            if let Some(name) = args.first().and_then(expression_root_name) {
+                mutated.borrow_mut().insert(name.to_string());
             }
         }
         _ => {}

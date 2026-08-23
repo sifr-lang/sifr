@@ -5,7 +5,7 @@ package-management rules keeps Cargo as the package substrate without linking to
 ## Cargo CLI Metadata JSON
 
 - Surface: `cargo metadata --format-version 1`.
-- Local toolchain audited for package-management readiness: `cargo 1.94.0`, `rustc 1.94.0`.
+- Local toolchain audited for package-management readiness: `cargo 1.98.0`, `rustc 1.98.0`.
 - Used by: `crates/sifr_package::cargo::metadata`.
 - Fields consumed: `packages[].id`, `name`, `version`, `source`, `manifest_path`, `dependencies`, `targets`, `features`, `metadata.sifr`, `resolve.nodes[].deps[]`, `workspace_members`, `target_directory`, and `workspace_root`.
 - Reason: Cargo owns package resolution, source identity, workspace membership, dependency rename identity, selected package roots, and resolved dependency edges. Sifr needs those facts but not Cargo's internal resolver APIs.
