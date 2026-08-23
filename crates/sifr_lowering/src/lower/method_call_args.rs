@@ -3,10 +3,10 @@ use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{PythonParameterKind, PythonRecordExpansion};
 use sifr_python_ast::ExprCall;
-use sifr_type_system::{make_union, FunctionType, Type};
+use sifr_type_system::{FunctionType, Type, make_union};
 
-use super::expressions::lower_expr;
 use super::LowerCtx;
+use super::expressions::lower_expr;
 
 struct LoweredKeyword {
     name: String,

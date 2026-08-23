@@ -1,6 +1,6 @@
 use crate::check_and_package_commands::declaration_python_requirements;
 use crate::cli_model_and_entrypoint::{
-    diagnostic_with_code, package_diagnostic, DiagnosticFormat, EXIT_USER_DIAGNOSTIC,
+    DiagnosticFormat, EXIT_USER_DIAGNOSTIC, diagnostic_with_code, package_diagnostic,
 };
 use crate::diagnostic_rendering_and_run::{current_session_package_id, render_diagnostics};
 use crate::package_graph_context::load_package_graph_context;

@@ -100,9 +100,11 @@ mod tests {
             .clone();
         let probe = panic_mapper_probe(&declaration, &path).expect("mapper probe");
 
-        assert!(probe
-            .assertion
-            .contains("fn(sifr_runtime::interop::RustPanicErrorBridge)"));
+        assert!(
+            probe
+                .assertion
+                .contains("fn(sifr_runtime::interop::RustPanicErrorBridge)")
+        );
         assert!(probe.assertion.contains("std::fmt::Display"));
         assert_eq!(
             probe.invocation,

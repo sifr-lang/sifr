@@ -1,12 +1,12 @@
-use super::{canonical_sifr_target_path, RustInteropResolver};
+use super::{RustInteropResolver, canonical_sifr_target_path};
 use crate::build::rust_interop_callback_probe::signature_contract_has_call_scoped_callback;
-use crate::build::rust_interop_trust::{effective_panic_policy, EffectivePanicPolicy};
+use crate::build::rust_interop_trust::{EffectivePanicPolicy, effective_panic_policy};
 use sifr_codegen::{
     RustBridgePanicErrorContract, RustBridgeParamConvention, RustBridgeSignatureContract,
     RustBridgeTypeKind,
 };
 use sifr_diagnostics::DiagnosticCode;
-use sifr_ir::{rust_threadsafe_callback_contract, RustInteropDecoratorKind};
+use sifr_ir::{RustInteropDecoratorKind, rust_threadsafe_callback_contract};
 use std::collections::{BTreeMap, BTreeSet};
 
 impl RustInteropResolver<'_> {

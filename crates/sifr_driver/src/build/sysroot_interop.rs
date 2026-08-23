@@ -8,7 +8,7 @@ use sifr_package::{
     SifrPackageId, SifrPackageMetadata, SifrPackageName, TrustPolicy,
 };
 use sifr_stdlib_manifest::SysrootCrate;
-use sifr_sysroot::{ResolvedSysroot, COMPILER_SIFR_VERSION};
+use sifr_sysroot::{COMPILER_SIFR_VERSION, ResolvedSysroot};
 use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
 
@@ -317,10 +317,12 @@ mod tests {
                 ..
             } if dependency_name == "sifr_stdlib" && sysroot_root == &root.path.display().to_string()
         ));
-        assert!(resolved
-            .interop
-            .cache_key_fragment()
-            .contains("rust.cargo.package=sifr-sysroot-stdlib@"));
+        assert!(
+            resolved
+                .interop
+                .cache_key_fragment()
+                .contains("rust.cargo.package=sifr-sysroot-stdlib@")
+        );
     }
 
     #[test]
@@ -393,38 +395,46 @@ class FileHandle:\n\
         let resolved = apply_package_rust_interop_metadata(generated, context)
             .expect("opaque sysroot interop should resolve");
 
-        assert!(resolved
-            .interop
-            .rust
-            .resolved_targets
-            .iter()
-            .any(|target| target.written_path == "sifr_stdlib.io.FileHandle"
-                && matches!(
-                    &target.root,
-                    RustInteropResolvedRoot::SysrootCrate {
-                        dependency_name,
-                        sysroot_root,
-                        ..
-                    } if dependency_name == "sifr_stdlib"
-                        && sysroot_root == &root.path.display().to_string()
-                )));
-        assert!(resolved
-            .interop
-            .rust
-            .resolved_targets
-            .iter()
-            .any(|target| target.written_path == "Self.close"
-                && matches!(
-                    &target.root,
-                    RustInteropResolvedRoot::SelfMethod { class_name }
-                        if class_name == "FileHandle"
-                )));
-        assert!(resolved
-            .interop
-            .rust
-            .trust_requirements
-            .iter()
-            .any(|requirement| requirement.required_entry == "Self.close" && requirement.trusted));
+        assert!(
+            resolved
+                .interop
+                .rust
+                .resolved_targets
+                .iter()
+                .any(|target| target.written_path == "sifr_stdlib.io.FileHandle"
+                    && matches!(
+                        &target.root,
+                        RustInteropResolvedRoot::SysrootCrate {
+                            dependency_name,
+                            sysroot_root,
+                            ..
+                        } if dependency_name == "sifr_stdlib"
+                            && sysroot_root == &root.path.display().to_string()
+                    ))
+        );
+        assert!(
+            resolved
+                .interop
+                .rust
+                .resolved_targets
+                .iter()
+                .any(|target| target.written_path == "Self.close"
+                    && matches!(
+                        &target.root,
+                        RustInteropResolvedRoot::SelfMethod { class_name }
+                            if class_name == "FileHandle"
+                    ))
+        );
+        assert!(
+            resolved
+                .interop
+                .rust
+                .trust_requirements
+                .iter()
+                .any(
+                    |requirement| requirement.required_entry == "Self.close" && requirement.trusted
+                )
+        );
     }
 
     #[test]
@@ -457,10 +467,12 @@ class FileHandle:\n\
 
         assert_eq!(diagnostics[0].code, "SIFR-RUST-RESOLVE-0001");
         assert!(!diagnostics[0].message.contains("canonical sysroot crate"));
-        assert!(diagnostics[0]
-            .children
-            .iter()
-            .any(|child| child.message.contains("@rust.opaque")));
+        assert!(
+            diagnostics[0]
+                .children
+                .iter()
+                .any(|child| child.message.contains("@rust.opaque"))
+        );
         assert_eq!(
             diagnostics[0].spans[0].file.as_deref(),
             Some(root.private_path("_sifr.io").to_string_lossy().as_ref())

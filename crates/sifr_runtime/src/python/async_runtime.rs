@@ -1,13 +1,13 @@
 use super::async_terminal::{
-    terminal_error_to_python, PythonTerminal, PythonTerminalError, PythonTerminalOutcome,
-    PythonTerminalValue,
+    PythonTerminal, PythonTerminalError, PythonTerminalOutcome, PythonTerminalValue,
+    terminal_error_to_python,
 };
 use super::{PythonError, PythonRuntimeError};
 use crate::cancellation::{CancellationCarrier, CancellationClaimError, CancellationHook};
 use pyo3::prelude::*;
 use pyo3::types::{PyAnyMethods, PyCFunction, PyDict, PyTuple};
 use std::collections::BTreeMap;
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread::JoinHandle;
 

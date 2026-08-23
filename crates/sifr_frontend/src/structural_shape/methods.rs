@@ -1,13 +1,13 @@
 use super::{
-    describe_node, metadata_const_value, metadata_for, node_const_value, validated_adapter_value,
-    ShapeMetadata, ShapeNode,
+    ShapeMetadata, ShapeNode, describe_node, metadata_const_value, metadata_for, node_const_value,
+    validated_adapter_value,
 };
 use crate::ConstValue;
 use num_bigint::BigInt;
 use sifr_lowering::{
-    substitute_type_vars, AdapterHandlerPlan, CallableIdentity, DeclarationMetadataTargetKind,
-    HirClass, HirParam, LoweringResult, MethodKind, SourceOriginId, StructuralMethodExport,
-    TypedDeclarationMetadata,
+    AdapterHandlerPlan, CallableIdentity, DeclarationMetadataTargetKind, HirClass, HirParam,
+    LoweringResult, MethodKind, SourceOriginId, StructuralMethodExport, TypedDeclarationMetadata,
+    substitute_type_vars,
 };
 use sifr_type_system::{
     ParamConvention, ParamMutability, ParamOwnership, ReceiverConvention, Type,

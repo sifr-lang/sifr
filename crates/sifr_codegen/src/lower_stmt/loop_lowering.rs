@@ -1,8 +1,7 @@
 use super::{
-    resolve_alias_type, try_lower_leaf_or_name_expr, try_lower_loop_else_stmts,
-    try_lower_simple_condition_test_expr, try_lower_simple_stmt_block, FunctionType, HirExpr,
-    HirStmt, RustExpr, RustParam, RustStmt, RustType, SimpleStmtBindings, SimpleStmtLoweringCtx,
-    Type,
+    FunctionType, HirExpr, HirStmt, RustExpr, RustParam, RustStmt, RustType, SimpleStmtBindings,
+    SimpleStmtLoweringCtx, Type, resolve_alias_type, try_lower_leaf_or_name_expr,
+    try_lower_loop_else_stmts, try_lower_simple_condition_test_expr, try_lower_simple_stmt_block,
 };
 pub(super) fn try_lower_simple_while_stmt(
     condition: &HirExpr,
@@ -165,11 +164,7 @@ pub(super) fn try_lower_simple_for_iter_expr(iter: &HirExpr, target_ty: &Type) -
     ) -> Option<&'a FunctionType> {
         methods.iter().find_map(
             |(name, ft)| {
-                if name == method_name {
-                    Some(ft)
-                } else {
-                    None
-                }
+                if name == method_name { Some(ft) } else { None }
             },
         )
     }

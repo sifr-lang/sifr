@@ -1,7 +1,7 @@
 use crate::check_and_package_commands::cmd_check;
 use crate::cli_model_and_entrypoint::{
-    cmd_init, cmd_repair, diagnostic_with_code, resolve_compilation_mode, Cli, Commands,
-    CompilationMode, DiagnosticFormat, InvocationWorkspace, EXIT_SUCCESS, EXIT_USER_DIAGNOSTIC,
+    Cli, Commands, CompilationMode, DiagnosticFormat, EXIT_SUCCESS, EXIT_USER_DIAGNOSTIC,
+    InvocationWorkspace, cmd_init, cmd_repair, diagnostic_with_code, resolve_compilation_mode,
 };
 use crate::diagnostic_rendering_and_run::{cmd_run, fetch_success_message};
 use crate::explain_cli::diagnostic_explanation;
@@ -159,7 +159,7 @@ pub(super) fn write_real_sifr_package(
     std::fs::write(
             root.join("Cargo.toml"),
             format!(
-                "[package]\nname = \"{cargo_name}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\n{cargo_dependencies}\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n"
+                "[package]\nname = \"{cargo_name}\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[dependencies]\n{cargo_dependencies}\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n"
             ),
         )
         .expect("cargo manifest should be written");

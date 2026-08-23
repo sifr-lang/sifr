@@ -3,10 +3,10 @@ use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::ExprCall;
 use sifr_type_system::Type;
 
+use super::LowerCtx;
 use super::builtin_calls::{callable_builtin_element_type, lower_builtin_reverseable_arg};
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
-use super::LowerCtx;
 
 fn call_arity_range(call: &ExprCall) -> TextRange {
     call.arguments

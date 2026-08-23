@@ -1,6 +1,6 @@
 use super::{
-    call_argument_ranges_by_param, consume_owned_value, lower_signature_call_args, DiagnosticCode,
-    Expr, ExprAttribute, ExprCall, FunctionType, HirExpr, LowerCtx, Ranged, Type,
+    DiagnosticCode, Expr, ExprAttribute, ExprCall, FunctionType, HirExpr, LowerCtx, Ranged, Type,
+    call_argument_ranges_by_param, consume_owned_value, lower_signature_call_args,
 };
 
 pub(super) fn method_function_type(ty: &Type, method_name: &str) -> Option<FunctionType> {

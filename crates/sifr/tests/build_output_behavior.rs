@@ -153,9 +153,11 @@ fn build_output_project_mode_reports_import_closure_counts() {
     assert_eq!(capture.status_code, 0, "stderr:\n{}", capture.stderr);
     assert!(capture.stdout.is_empty());
     assert!(capture.stderr.contains("mode:   project"));
-    assert!(capture
-        .stderr
-        .contains("Parsing import closure (2 modules)"));
+    assert!(
+        capture
+            .stderr
+            .contains("Parsing import closure (2 modules)")
+    );
     assert!(capture.stderr.contains("Analyzing 2 modules"));
 }
 
@@ -242,9 +244,11 @@ fn build_output_compact_warning_success_emits_diagnostics_without_progress() {
     assert_eq!(capture.status_code, 0, "stderr:\n{}", capture.stderr);
     assert!(capture.stdout.is_empty());
     assert!(capture.stderr.contains("0 errors, 1 warning"));
-    assert!(capture
-        .stderr
-        .contains("integer multiplication may overflow"));
+    assert!(
+        capture
+            .stderr
+            .contains("integer multiplication may overflow")
+    );
     assert!(!capture.stderr.contains("Finished release build"));
     assert!(!capture.stderr.contains("Binary: "));
 }

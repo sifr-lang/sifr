@@ -1,5 +1,5 @@
 use crate::cargo::metadata::parse_metadata_json;
-use crate::graph::derive::{derive_package_graph, SifrPackageId};
+use crate::graph::derive::{SifrPackageId, derive_package_graph};
 use crate::imports::source_map::{
     DottedModulePath, PackageImportOrigin, PackageImportResolutionResult, PackageSourceMap,
 };

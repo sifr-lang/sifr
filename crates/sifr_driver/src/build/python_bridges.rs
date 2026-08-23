@@ -229,18 +229,22 @@ mod tests {
             generated.interop.python.required_import_roots,
             ["requests".to_string()]
         );
-        assert!(generated
-            .interop
-            .cache_key_fragment()
-            .contains("inventory-a"));
+        assert!(
+            generated
+                .interop
+                .cache_key_fragment()
+                .contains("inventory-a")
+        );
         assert!(generated.interop.cache_key_fragment().contains("source-a"));
         let sources = embedded_bridge_sources(&generated.interop.python.bridge_packages);
         assert_eq!(sources[0].module, "__sifr_bridge__");
         assert_eq!(sources[1].module, "__sifr_bridge__.p_abc123");
         assert_eq!(sources[2].filename, "<__sifr_bridge__.p_abc123.adapter>");
         assert_eq!(sources[2].source, "def value():\n    return 1\n");
-        assert!(sources
-            .iter()
-            .any(|source| source.module == "__sifr_bridge__.p_abc123.unused"));
+        assert!(
+            sources
+                .iter()
+                .any(|source| source.module == "__sifr_bridge__.p_abc123.unused")
+        );
     }
 }

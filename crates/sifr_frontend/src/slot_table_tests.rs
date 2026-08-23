@@ -1,4 +1,4 @@
-use crate::{collect_module_exports, compile_module_hir, FrontendDiagnosticStyle};
+use crate::{FrontendDiagnosticStyle, collect_module_exports, compile_module_hir};
 use sifr_lowering::{
     ExternalDefs, LoweringResult, StaticMethodSlotContext, StaticMethodSlotInputRole,
 };

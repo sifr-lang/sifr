@@ -69,11 +69,13 @@ fn private_module_body_update_stays_local_when_signatures_match() {
     let mut context = load_temp_project(&dir);
     let helper = ModuleId(1);
     let main = ModuleId(0);
-    assert!(context
-        .diagnostics_for_project()
-        .into_value()
-        .diagnostics
-        .is_empty());
+    assert!(
+        context
+            .diagnostics_for_project()
+            .into_value()
+            .diagnostics
+            .is_empty()
+    );
 
     let report = context
         .update_module_source(
@@ -114,11 +116,13 @@ fn private_body_update_with_unchanged_imports_stays_local() {
     let mut context = load_temp_project(&dir);
     let helper = ModuleId(2);
     let main = ModuleId(0);
-    assert!(context
-        .diagnostics_for_project()
-        .into_value()
-        .diagnostics
-        .is_empty());
+    assert!(
+        context
+            .diagnostics_for_project()
+            .into_value()
+            .diagnostics
+            .is_empty()
+    );
 
     let report = context
         .update_module_source(
@@ -261,9 +265,9 @@ fn project_graph_records_local_import_edges() {
 
     let diagnostics = context.diagnostics_for_project().into_value().diagnostics;
     assert!(
-            diagnostics.is_empty(),
-            "project diagnostics should consume dependency exports from the canonical frontend: {diagnostics:?}"
-        );
+        diagnostics.is_empty(),
+        "project diagnostics should consume dependency exports from the canonical frontend: {diagnostics:?}"
+    );
 }
 
 #[test]
@@ -305,10 +309,12 @@ fn project_loading_uses_overlay_and_tracking_provider() {
     )
     .expect("project should load through provider");
 
-    assert!(provider
-        .dependencies()
-        .iter()
-        .any(|dependency| dependency.kind == SourceDependencyKind::DirectoryRead));
+    assert!(
+        provider
+            .dependencies()
+            .iter()
+            .any(|dependency| dependency.kind == SourceDependencyKind::DirectoryRead)
+    );
     assert!(context.source_map().files.iter().any(|file| {
         file.canonical_path.as_path() == helper_path && file.source.as_str() == "value: int = 2\n"
     }));

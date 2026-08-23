@@ -1,5 +1,5 @@
 use serde_json::Value;
-use sifr_stdlib_manifest::{try_generated_cargo_dependencies, StdlibFeature};
+use sifr_stdlib_manifest::{StdlibFeature, try_generated_cargo_dependencies};
 use std::collections::HashSet;
 
 const SNAPSHOT_JSON: &str = include_str!(
@@ -315,7 +315,9 @@ fn network_http_url_module_emits_locked_parser_dependencies() {
 
     assert_eq!(
         deps,
-        vec!["sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"url\"] }"]
+        vec![
+            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"url\"] }"
+        ]
     );
     assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.starts_with("http = ")));
@@ -339,7 +341,9 @@ fn network_http_http_module_emits_locked_header_dependencies_without_cookie_crat
 
     assert_eq!(
         deps,
-        vec!["sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\"] }",]
+        vec![
+            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\"] }",
+        ]
     );
     assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.starts_with("url = ")));
@@ -366,7 +370,9 @@ fn network_http_combined_modules_emit_all_locked_url_http_dependencies_without_r
 
     assert_eq!(
         deps,
-        vec!["sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"url\"] }",]
+        vec![
+            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"url\"] }",
+        ]
     );
     assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.contains("proptest")));
@@ -385,7 +391,9 @@ fn network_http_url_and_http_modules_emit_locked_dependencies() {
 
     assert_eq!(
         deps,
-        vec!["sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"url\"] }",]
+        vec![
+            "sifr_stdlib = { path = \"<sifr_stdlib_path>\", default-features = false, features = [\"http\", \"url\"] }",
+        ]
     );
     assert!(!deps.iter().any(|dep| dep.contains("cookie")));
     assert!(!deps.iter().any(|dep| dep.contains("proptest")));

@@ -23,8 +23,8 @@ use direct_validation::validate_direct_parameters;
 pub(in crate::lower) use direct_validation::validate_raw_conversion_intrinsic;
 
 pub(in crate::lower) use callsite::{
-    callback_call_policies, callback_method_arg_ranges, validate_callback_call_captures,
-    CallbackCallPolicy,
+    CallbackCallPolicy, callback_call_policies, callback_method_arg_ranges,
+    validate_callback_call_captures,
 };
 pub(super) use parameters::{parameter_metadata, receiver_is_owned};
 pub(super) use target::{decorator_path, invalid_target, parse_path as parse_target_path};

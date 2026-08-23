@@ -1,9 +1,8 @@
 use super::{
-    call_argument_ranges_by_param, collect_type_vars, consume_owned_value,
+    DiagnosticCode, Expr, ExprAttribute, ExprCall, FunctionType, HashMap, HirExpr, LowerCtx,
+    Ranged, Type, call_argument_ranges_by_param, collect_type_vars, consume_owned_value,
     decode_typevar_constraint, infer_type_var_bindings, lower_signature_call_args,
     protocol_diagnostics, substitute_type_vars, type_satisfies_bound, type_satisfies_constraint,
-    DiagnosticCode, Expr, ExprAttribute, ExprCall, FunctionType, HashMap, HirExpr, LowerCtx,
-    Ranged, Type,
 };
 use crate::lower::typing_and_functions::resolve_annotation_expr;
 use sifr_ir::AttachedApiReceiver;

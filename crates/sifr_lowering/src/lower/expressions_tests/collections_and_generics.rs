@@ -75,9 +75,11 @@ pub(super) fn test_empty_list_specialization_optional_append_in_loop_rejects_ret
         "optional element append should specialize to list[int|None] and fail list[int] return annotation"
     );
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("return type mismatch")));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("return type mismatch"))
+    );
 }
 
 #[test]
@@ -181,9 +183,11 @@ pub(super) fn test_invalid_return_expression_does_not_emit_missing_return_cascad
     let result = lower_source("def main(xs: list[int]) -> int:\n    return xs[0] + xs[0]\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("unsupported operand type(s) for +")));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("unsupported operand type(s) for +"))
+    );
     assert!(
         !errors.iter().any(|e| {
             e.message
@@ -199,11 +203,12 @@ pub(super) fn test_duplicate_module_function_definition_reports_error() {
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("duplicate function definition in module: 'same'")
-        && e.code == Some(DiagnosticCode::NAME_DUPLICATE_DEFINITION)
-        && e.primary_range == Some(range_for_after(source, "\n\ndef ", "same"))));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("duplicate function definition in module: 'same'")
+            && e.code == Some(DiagnosticCode::NAME_DUPLICATE_DEFINITION)
+            && e.primary_range == Some(range_for_after(source, "\n\ndef ", "same"))
+    }));
 }
 
 #[test]
@@ -791,9 +796,10 @@ pub(super) fn test_iterator_annotation_rejects_plain_list_argument() {
     );
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("expected 'Iterator[int]', got 'list[int]'")));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("expected 'Iterator[int]', got 'list[int]'")
+    }));
 }
 
 #[test]

@@ -3,8 +3,8 @@ use std::{
     io::{self, Write as _},
     process::{Command, ExitStatus, Output, Stdio},
     sync::{
-        atomic::{AtomicU64, Ordering},
         LazyLock, Mutex, MutexGuard,
+        atomic::{AtomicU64, Ordering},
     },
     time::{Duration, Instant},
 };
@@ -459,8 +459,9 @@ mod tests {
 
         let err = process_output_timeout("sh", &empty(), &empty(), "", false, b"", false, f64::NAN)
             .expect_err("invalid timeout should be rejected");
-        assert!(err
-            .to_string()
-            .contains("process timeout must be finite and non-negative"));
+        assert!(
+            err.to_string()
+                .contains("process timeout must be finite and non-negative")
+        );
     }
 }

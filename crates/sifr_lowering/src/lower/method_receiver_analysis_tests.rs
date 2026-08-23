@@ -1,5 +1,5 @@
 use crate::{
-    lower_module, HirExpr, HirFunction, HirModule, HirStmt, MutableReceiverTarget, PlaceProjection,
+    HirExpr, HirFunction, HirModule, HirStmt, MutableReceiverTarget, PlaceProjection, lower_module,
 };
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
@@ -602,9 +602,11 @@ def invoke(own mut entity: Mutable) -> None:
         .iter()
         .find(|class| class.name == "Counter")
         .expect("counter class should exist");
-    assert!(counter
-        .implements_protocols
-        .contains(&"Mutable".to_string()));
+    assert!(
+        counter
+            .implements_protocols
+            .contains(&"Mutable".to_string())
+    );
     let HirExpr::MethodCall {
         receiver_convention,
         source: Some(_),

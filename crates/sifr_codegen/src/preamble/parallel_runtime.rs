@@ -248,7 +248,10 @@ mod tests {
             4
         );
         assert!(!runtime.contains("sifr_runtime::interop::catch_unwind_silently(|| worker(item))"));
-        assert!(!runtime
-            .contains("std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| worker(item)))"));
+        assert!(
+            !runtime.contains(
+                "std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| worker(item)))"
+            )
+        );
     }
 }

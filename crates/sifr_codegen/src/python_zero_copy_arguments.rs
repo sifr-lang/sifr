@@ -1,5 +1,5 @@
-use crate::python_interop_direct_helpers::drop_value;
 use crate::RustStmt;
+use crate::python_interop_direct_helpers::drop_value;
 use sifr_ir::PythonParameterKind;
 use sifr_type_system::Type;
 

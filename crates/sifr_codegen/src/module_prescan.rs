@@ -1,4 +1,4 @@
-use crate::{RustEmitter, BUILTIN_ERROR_CLASSES};
+use crate::{BUILTIN_ERROR_CLASSES, RustEmitter};
 use sifr_ir::HirModule;
 use std::collections::{HashMap, HashSet};
 

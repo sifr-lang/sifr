@@ -1,6 +1,7 @@
 use super::{
+    LowerCtx,
     classes::{body_contains_receiver_mutation, fixed_trait_receiver_convention},
-    method_receiver_diagnostics, LowerCtx,
+    method_receiver_diagnostics,
 };
 use crate::hir_nodes::{HirClass, HirClassKind, HirExpr, HirFunction, HirIteratorOp, MethodKind};
 use crate::scope::BindingKind;

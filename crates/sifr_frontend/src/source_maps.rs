@@ -278,13 +278,15 @@ mod tests {
             revision: SourceRevision(0),
         };
 
-        assert!(map
-            .files
-            .iter()
-            .any(|file| file.origin == super::SourceOrigin::GeneratedSupport));
-        assert!(map
-            .files
-            .iter()
-            .any(|file| file.origin == super::SourceOrigin::CompilerSynthetic));
+        assert!(
+            map.files
+                .iter()
+                .any(|file| file.origin == super::SourceOrigin::GeneratedSupport)
+        );
+        assert!(
+            map.files
+                .iter()
+                .any(|file| file.origin == super::SourceOrigin::CompilerSynthetic)
+        );
     }
 }

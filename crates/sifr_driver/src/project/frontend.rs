@@ -1,15 +1,15 @@
 #[cfg(test)]
 use super::compile_order::compute_module_compile_order;
-use super::compile_order::{compute_module_compile_order_with_sources, CompileOrderSourceModule};
+use super::compile_order::{CompileOrderSourceModule, compute_module_compile_order_with_sources};
 use super::discovery::ParsedProjectModule;
-use crate::diagnostics::{apply_diagnostic_recovery_limits, write_stderr_line, RenderedDiagnostic};
+use crate::diagnostics::{RenderedDiagnostic, apply_diagnostic_recovery_limits, write_stderr_line};
 use sifr_diagnostics::DiagnosticCode;
 #[cfg(test)]
 use sifr_frontend::compile_module_hir;
 use sifr_frontend::{
+    FrontendDiagnosticStyle, FrontendModuleDiagnostics, FrontendSourceContext,
     collect_module_exports, compile_module_hir_with_source_and_options, erase_marker_imports,
-    reveal_type_diagnostics, warning_diagnostics, FrontendDiagnosticStyle,
-    FrontendModuleDiagnostics, FrontendSourceContext,
+    reveal_type_diagnostics, warning_diagnostics,
 };
 use sifr_ir::FlowGraph;
 use sifr_lowering::{ExternalDefs, HirModule, LoweringOptions, LoweringResult};

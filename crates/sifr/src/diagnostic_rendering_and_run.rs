@@ -1,21 +1,21 @@
-use super::build_output::{render_build_success, BuildOutputOptions};
+use super::build_output::{BuildOutputOptions, render_build_success};
 use super::cargo_diagnostics::{bounded_excerpt, cargo_failure_diagnostic};
 use super::check_and_package_commands::{
     build_run_artifact, cmd_check, compile_entrypoint_report, compile_package_entrypoint_report,
     package_compiler_context,
 };
 use super::cli_model_and_entrypoint::{
-    diagnostic_exit_code, diagnostic_with_code, package_diagnostic, run_with_panic_boundary,
-    DiagnosticFormat, PackageGraphContext, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS,
-    EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC, SIFR_BUILD_VERSION,
+    DiagnosticFormat, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
+    EXIT_USER_DIAGNOSTIC, PackageGraphContext, SIFR_BUILD_VERSION, diagnostic_exit_code,
+    diagnostic_with_code, package_diagnostic, run_with_panic_boundary,
 };
 use super::package_graph_context::load_package_graph_context;
 use super::package_session_cli::package_session_for_cwd;
 use super::workspace_run_selection::resolve_run_session;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
-    apply_diagnostic_recovery_limits, build_cached_package_project, CachedBinaryArtifact,
-    PackageEntrypoint,
+    CachedBinaryArtifact, PackageEntrypoint, apply_diagnostic_recovery_limits,
+    build_cached_package_project,
 };
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::collections::BTreeSet;

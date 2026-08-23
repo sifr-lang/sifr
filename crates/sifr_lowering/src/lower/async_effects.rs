@@ -362,7 +362,7 @@ fn summarize_comprehension(
 
 #[cfg(test)]
 mod tests {
-    use super::{collect_async_suspension_summaries, AsyncSuspensionSummary};
+    use super::{AsyncSuspensionSummary, collect_async_suspension_summaries};
     use sifr_python_parser::parse_module;
 
     fn summaries(source: &str) -> std::collections::HashMap<String, AsyncSuspensionSummary> {

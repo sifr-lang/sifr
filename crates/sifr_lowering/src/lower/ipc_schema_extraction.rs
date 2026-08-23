@@ -107,7 +107,7 @@ fn unsupported_schema_type(ty: &Type) -> IpcSchemaType {
 mod tests {
     use super::extract_ipc_schema_type;
     use sifr_ipc::{
-        canonical_schema_descriptor, IpcSchemaDescriptor, IpcSchemaType, IpcWireSchema,
+        IpcSchemaDescriptor, IpcSchemaType, IpcWireSchema, canonical_schema_descriptor,
     };
     use sifr_type_system::{FunctionType, Type};
 
@@ -172,9 +172,9 @@ mod tests {
     #[test]
     fn generated_schema_drives_unix_fixture_worker_bootstrap_and_round_trip() {
         use sifr_ipc::{
-            read_frame, schema_hash_hex_v1, schema_hash_v1, validate_ipc_payload_type, write_frame,
-            IpcConnectionConfig, IpcConnectionState, IpcEnvelope, IpcShutdownMode,
-            IpcTerminationReason, IPC_DEFAULT_MAX_FRAME_BYTES,
+            IPC_DEFAULT_MAX_FRAME_BYTES, IpcConnectionConfig, IpcConnectionState, IpcEnvelope,
+            IpcShutdownMode, IpcTerminationReason, read_frame, schema_hash_hex_v1, schema_hash_v1,
+            validate_ipc_payload_type, write_frame,
         };
         use std::path::{Path, PathBuf};
         use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};

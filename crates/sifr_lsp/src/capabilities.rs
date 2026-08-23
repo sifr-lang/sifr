@@ -1,5 +1,5 @@
 use lsp_types::PositionEncodingKind;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sifr_source::PositionEncoding;
 
 pub(crate) const LANGUAGE_ID: &str = "sifr";

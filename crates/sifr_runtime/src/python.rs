@@ -41,55 +41,56 @@ mod resource_identity;
 mod resource_ops;
 mod shutdown_hooks;
 pub use arrow_ops::{
-    arrow_array, arrow_array_with_schema, arrow_capsule_names, arrow_device_array,
+    ArrowHandle, PythonArrowArgument, PythonArrowCapsuleMetadata, arrow_array,
+    arrow_array_with_schema, arrow_capsule_names, arrow_device_array,
     arrow_device_array_with_schema, arrow_device_stream, arrow_device_stream_with_schema,
     arrow_schema, arrow_stream, arrow_stream_with_schema, prepare_arrow_argument, release_arrow,
-    require_arrow_certification, ArrowHandle, PythonArrowArgument, PythonArrowCapsuleMetadata,
+    require_arrow_certification,
 };
 #[doc(hidden)]
 pub use async_context::{
-    submit_async_context_enter, submit_async_context_exit,
-    submit_async_context_exit_with_callbacks, PythonAsyncExitCause,
+    PythonAsyncExitCause, submit_async_context_enter, submit_async_context_exit,
+    submit_async_context_exit_with_callbacks,
 };
 #[doc(hidden)]
 pub use async_declaration::{submit_async_declaration, submit_async_declaration_with_callbacks};
-pub use async_runtime::{async_runtime_diagnostics, PythonAsyncRuntimeDiagnostics};
+pub use async_runtime::{PythonAsyncRuntimeDiagnostics, async_runtime_diagnostics};
 #[doc(hidden)]
 pub use async_value::{
-    async_dict_items, async_from_bool, async_from_bytes, async_from_dict_results, async_from_float,
-    async_from_int, async_from_list_results, async_from_none, async_from_object,
-    async_from_owned_object, async_from_record_results, async_from_str, async_from_tuple_results,
-    async_list_items, async_record_field, async_to_bool, async_to_bytes, async_to_float,
-    async_to_int, async_to_none, async_to_object, async_to_str, async_tuple_items,
-    async_value_is_none, PythonAsyncRequest, PythonAsyncType, PythonAsyncValue,
+    PythonAsyncRequest, PythonAsyncType, PythonAsyncValue, async_dict_items, async_from_bool,
+    async_from_bytes, async_from_dict_results, async_from_float, async_from_int,
+    async_from_list_results, async_from_none, async_from_object, async_from_owned_object,
+    async_from_record_results, async_from_str, async_from_tuple_results, async_list_items,
+    async_record_field, async_to_bool, async_to_bytes, async_to_float, async_to_int, async_to_none,
+    async_to_object, async_to_str, async_tuple_items, async_value_is_none,
 };
 pub use bridge_loader::PythonBridgeSource;
 pub use buffer_ops::*;
 use call_depth::{enter_python_call, python_call_depth};
 pub use callback_ops::{
-    close_callback, local_callback, local_callback_echo, threadsafe_callback,
-    threadsafe_callback_echo, CallbackHandle, PythonCallbackMetadata,
+    CallbackHandle, PythonCallbackMetadata, close_callback, local_callback, local_callback_echo,
+    threadsafe_callback, threadsafe_callback_echo,
 };
 #[doc(hidden)]
 pub use callbacks::*;
 use config_verify::verify_interpreter_config;
 pub use context_ops::{
+    ContextCleanupEvidence, PythonExitDecision, SifrExitCause, SifrExitCauseKind,
     attach_secondary_python_error, context_exit_normal, context_exit_python_error,
     context_exit_sifr_cause, record_context_cleanup_evidence, record_context_ignored_suppression,
-    take_context_cleanup_evidence, ContextCleanupEvidence, PythonExitDecision, SifrExitCause,
-    SifrExitCauseKind,
+    take_context_cleanup_evidence,
 };
 pub use coroutine_ops::run_coroutine_blocking;
 #[doc(hidden)]
 pub use declaration_object_bridge::*;
 pub use dlpack_ops::{
+    DlpackHandle, PythonDlpackArgument, PythonDlpackStreamMetadata, PythonDlpackTensorMetadata,
     acquire_dlpack_tensor, dlpack_shape, dlpack_stream, dlpack_strides, dlpack_tensor,
-    prepare_dlpack_argument, release_dlpack, DlpackHandle, PythonDlpackArgument,
-    PythonDlpackStreamMetadata, PythonDlpackTensorMetadata,
+    prepare_dlpack_argument, release_dlpack,
 };
 pub use foreign_object::ForeignObject;
 pub use object_ops::{
-    call_attr, call_object, call_object_borrowed, call_object_owned, close_object,
+    ObjectHandle, call_attr, call_object, call_object_borrowed, call_object_owned, close_object,
     copy_dict_str_bool, copy_dict_str_bytes, copy_dict_str_float, copy_dict_str_i32,
     copy_dict_str_int, copy_dict_str_str, copy_dict_str_u8, copy_list_bool, copy_list_bytes,
     copy_list_float, copy_list_i32, copy_list_int, copy_list_str, copy_list_u8, copy_record_fields,
@@ -97,8 +98,8 @@ pub use object_ops::{
     copy_tuple_str, copy_tuple_u8, enter_context, exit_context, expect_instance, from_bool,
     from_bytes, from_dict_str, from_float, from_int, from_list, from_none, from_record, from_str,
     from_tuple, get_attr, get_item_str, import_module, poison_object, resolve_target,
-    temporary_argument_handle, to_bool, to_bytes, to_float, to_i16, to_i32, to_i64, to_i8, to_int,
-    to_isize, to_none, to_str, to_u16, to_u32, to_u64, to_u8, to_usize, ObjectHandle,
+    temporary_argument_handle, to_bool, to_bytes, to_float, to_i8, to_i16, to_i32, to_i64, to_int,
+    to_isize, to_none, to_str, to_u8, to_u16, to_u32, to_u64, to_usize,
 };
 pub use opaque_ops::semantic_close;
 pub use python_error::PythonError;
@@ -107,7 +108,7 @@ pub use recursive_ops::{
     from_tuple_results, list_items, object_is_none, record_field, tuple_items, tuple_items_exact,
 };
 pub use resource_identity::PythonResourceIdentity;
-pub use resource_ops::{exit_context_with_error, resource_diagnostics, PythonResourceDiagnostics};
+pub use resource_ops::{PythonResourceDiagnostics, exit_context_with_error, resource_diagnostics};
 
 static RUNTIME_STATE: Mutex<RuntimeState> = Mutex::new(RuntimeState::new());
 
@@ -238,7 +239,10 @@ impl fmt::Display for PythonRuntimeError {
                 write!(f, "owned Python asyncio runtime is stopping")
             }
             Self::AsyncSubmissionCancelled => {
-                write!(f, "owned Python asyncio submission was cancelled before start")
+                write!(
+                    f,
+                    "owned Python asyncio submission was cancelled before start"
+                )
             }
             Self::AsyncCancellationAlreadyClaimed => {
                 write!(f, "owned Python asyncio cancellation was already claimed")

@@ -182,9 +182,11 @@ def other_field() -> OtherDescriptor:
         error.code == sifr_diagnostics::DiagnosticCode::TYPE_MISMATCH.code()
             && error.message.contains("same canonical provider")
     }));
-    assert!(errors
-        .iter()
-        .all(|error| !error.message.contains("bounded const evaluation")));
+    assert!(
+        errors
+            .iter()
+            .all(|error| !error.message.contains("bounded const evaluation"))
+    );
 }
 
 #[test]
@@ -323,10 +325,12 @@ def bounded(value: int) -> int:
     let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
     let project = collect_project_hir_modules(&modules, stdlib_defs)
         .expect("an unrelated same-basename call should remain ordinary annotation metadata");
-    assert!(!project
-        .external_defs
-        .declaration_descriptors
-        .contains_key("main"));
+    assert!(
+        !project
+            .external_defs
+            .declaration_descriptors
+            .contains_key("main")
+    );
 }
 
 #[test]

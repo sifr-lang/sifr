@@ -1,7 +1,7 @@
 use crate::analysis_workspace::{LspAnalysisWorkspace, LspFileMaps, LspWorkspaceSymbol};
 use crate::cancellation::CancellationToken;
 use crate::diagnostic_jobs::{DiagnosticJobs, ScheduledDiagnosticJob};
-use crate::document_events::{compact_content_changes, CompactedDocumentChange};
+use crate::document_events::{CompactedDocumentChange, compact_content_changes};
 use crate::document_store::DocumentStore;
 use crate::errors::{LspError, LspResult};
 use crate::progress::{ProgressHandle, ProgressKind, ProgressState};
@@ -500,16 +500,20 @@ mod tests {
         session.finish_request(&id);
         assert!(session.check_request_cancelled(&id).is_ok());
         let trace = session.trace_snapshot();
-        assert!(trace
-            .events
-            .iter()
-            .any(|event| event.phase == WorkspaceTracePhase::Scheduler
-                && event.detail.contains("dispatch")));
-        assert!(trace
-            .events
-            .iter()
-            .any(|event| event.phase == WorkspaceTracePhase::Cancellation
-                && event.detail.contains("InFlight")));
+        assert!(
+            trace
+                .events
+                .iter()
+                .any(|event| event.phase == WorkspaceTracePhase::Scheduler
+                    && event.detail.contains("dispatch"))
+        );
+        assert!(
+            trace
+                .events
+                .iter()
+                .any(|event| event.phase == WorkspaceTracePhase::Cancellation
+                    && event.detail.contains("InFlight"))
+        );
     }
 
     #[test]
@@ -539,9 +543,11 @@ mod tests {
         let mut session = Session::new();
         session.set_work_done_progress_enabled(true);
 
-        assert!(session
-            .begin_progress(ProgressKind::FullDiagnostics, 1)
-            .is_none());
+        assert!(
+            session
+                .begin_progress(ProgressKind::FullDiagnostics, 1)
+                .is_none()
+        );
         let handle = session
             .begin_progress(ProgressKind::FullDiagnostics, 2)
             .expect("multi-document diagnostics should report progress");
@@ -658,17 +664,21 @@ mod tests {
             )
             .expect("change document");
 
-        assert!(!session
-            .document_version_matches(&job.uri, job.version)
-            .expect("document should still exist"));
+        assert!(
+            !session
+                .document_version_matches(&job.uri, job.version)
+                .expect("document should still exist")
+        );
         session.trace(
             WorkspaceTracePhase::StaleRejection,
             format!("diagnostic_job_version captured={:?}", job.version),
         );
-        assert!(session
-            .trace_snapshot()
-            .render_text()
-            .contains("phase=stale_rejection"));
+        assert!(
+            session
+                .trace_snapshot()
+                .render_text()
+                .contains("phase=stale_rejection")
+        );
     }
 
     #[test]

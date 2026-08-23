@@ -1,14 +1,14 @@
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
-    apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
+    PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
 };
 use super::rust_interop_contract_tests::{
     backend_with_manifest, interop_errors, package_context, param_contract, result_contract,
     set_bridge_roots, signature_contract, string_contract, temp_package_root,
 };
 use sifr_codegen::{
-    generate_rust_multi_with_metadata, RustBridgeParamConvention, RustBridgeSignatureContract,
-    RustInteropOwner, StdlibCode,
+    RustBridgeParamConvention, RustBridgeSignatureContract, RustInteropOwner, StdlibCode,
+    generate_rust_multi_with_metadata,
 };
 use sifr_package::TrustPolicy;
 use std::collections::BTreeMap;
@@ -211,9 +211,11 @@ async def hash(input: str) -> Result[str, RustError | RustPanicError]:
     );
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-ASYNC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("thread_affinity=` must be none or tokio_current_thread"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("thread_affinity=` must be none or tokio_current_thread")
+    );
 }
 
 #[test]
@@ -278,16 +280,20 @@ pub fn hidden_runtime_operations() {
     );
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-ASYNC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("reuse the generated Tokio runtime"));
-    assert!(diagnostics[0]
-        .children
-        .iter()
-        .any(|child| child.message.contains("block_on")
-            && child.message.contains("Tokio runtime construction")
-            && child.message.contains("blocking runtime operation")
-            && child.message.contains("rust/interop/runtime_helper.rs")));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("reuse the generated Tokio runtime")
+    );
+    assert!(
+        diagnostics[0]
+            .children
+            .iter()
+            .any(|child| child.message.contains("block_on")
+                && child.message.contains("Tokio runtime construction")
+                && child.message.contains("blocking runtime operation")
+                && child.message.contains("rust/interop/runtime_helper.rs"))
+    );
 }
 
 #[test]

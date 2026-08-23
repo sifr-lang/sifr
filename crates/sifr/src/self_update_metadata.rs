@@ -571,10 +571,10 @@ fn validate_hex(
 #[cfg(test)]
 mod tests {
     use super::{
-        parse_channel, resolve_update_plan, ChannelMetadata, PreviewChannel, PreviewVersion,
-        TargetRequest, UpdateAction,
+        ChannelMetadata, PreviewChannel, PreviewVersion, TargetRequest, UpdateAction,
+        parse_channel, resolve_update_plan,
     };
-    use serde_json::{json, Value};
+    use serde_json::{Value, json};
 
     pub(super) fn metadata_payload() -> Value {
         let targets = json!({

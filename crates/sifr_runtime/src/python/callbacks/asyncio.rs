@@ -1,11 +1,11 @@
 use super::asyncio_entry::AsyncioCallbackEntry;
 use super::execution::{
-    collect_args, execution_error, python_error, result_object, validate_call_shape,
-    CallbackExecutionError,
+    CallbackExecutionError, collect_args, execution_error, python_error, result_object,
+    validate_call_shape,
 };
-use super::{errors, CallbackInvocationLease, CallbackOwnerState};
+use super::{CallbackInvocationLease, CallbackOwnerState, errors};
 use crate::cancellation::CancellationCarrier;
-use crate::python::{object_ops, ObjectHandle, PythonError, PythonRuntimeError};
+use crate::python::{ObjectHandle, PythonError, PythonRuntimeError, object_ops};
 use pyo3::prelude::*;
 use pyo3::types::{PyCFunction, PyDict, PyTuple};
 use std::collections::{BTreeMap, BTreeSet};

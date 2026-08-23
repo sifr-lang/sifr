@@ -1,7 +1,7 @@
 use super::cargo_resolution::CargoResolutionPolicy;
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
-    apply_package_rust_interop_metadata_with_resolution, PackageRustInteropContext,
+    PackageRustInteropContext, apply_package_rust_interop_metadata_with_resolution,
 };
 use super::rust_interop_probe_policy::DirectProbePolicy;
 use crate::diagnostics::RenderedDiagnostic;

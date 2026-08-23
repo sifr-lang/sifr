@@ -1,4 +1,4 @@
-use super::digest::{digest_serializable, GraphDigest};
+use super::digest::{GraphDigest, digest_serializable};
 use crate::imports::source_map::PackageSourceMap;
 use serde::Serialize;
 use std::fs;

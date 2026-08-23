@@ -1,11 +1,11 @@
+use crate::SifrManifest;
 use crate::cargo::commands::{CargoFeatureSelection, CargoPackageSelection};
-use crate::cargo::errors::{map_cargo_failure, redact_cargo_stderr, CargoAction};
+use crate::cargo::errors::{CargoAction, map_cargo_failure, redact_cargo_stderr};
 use crate::cargo::lock_modes::CargoLockMode;
 use crate::ops::plan::PackageOperation;
 use crate::ops::session::{PackageRunRequest, PackageSession, PackageSessionOptions};
-use crate::SifrManifest;
-use sifr_diagnostics::codes::{active_registry_entries, DiagnosticState};
 use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::codes::{DiagnosticState, active_registry_entries};
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::fs;
 use std::path::{Path, PathBuf};

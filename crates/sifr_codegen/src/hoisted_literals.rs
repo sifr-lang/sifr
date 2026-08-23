@@ -1,8 +1,8 @@
 use sifr_ir::{HirExpr, HirFunction, HirStmt};
 
 use crate::{
-    hir_analysis::traversal::{walk_expr, walk_stmts, TraversalConfig},
     HashMap, HashSet, RustEmitter, RustExpr, RustItem, RustStmt, RustType, Type, Visibility,
+    hir_analysis::traversal::{TraversalConfig, walk_expr, walk_stmts},
 };
 
 impl RustEmitter {

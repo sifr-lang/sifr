@@ -24,20 +24,20 @@ pub use check::{
 };
 pub use infer::infer_literal_type;
 pub use types::{
+    COMPILER_RUST_PATH_ROOTS, CRATE_ROOT_RUST_NOMINAL_IDENTITIES, FixedIntType, FunctionType,
+    GLOBAL_RUST_NOMINAL_IDENTITIES, IterationCapability, IterationMetadata, OwnershipKind,
+    ParamConvention, ParamMutability, ParamOwnership, PythonArrowKind, ReceiverConvention, Type,
     class_rust_name, is_crate_root_rust_nominal_identity, is_global_rust_nominal_identity,
-    source_class_rust_name, stdlib_class_rust_name, FixedIntType, FunctionType,
-    IterationCapability, IterationMetadata, OwnershipKind, ParamConvention, ParamMutability,
-    ParamOwnership, PythonArrowKind, ReceiverConvention, Type, COMPILER_RUST_PATH_ROOTS,
-    CRATE_ROOT_RUST_NOMINAL_IDENTITIES, GLOBAL_RUST_NOMINAL_IDENTITIES,
+    source_class_rust_name, stdlib_class_rust_name,
 };
 pub mod narrow;
-pub use literal::{widen as widen_literal, LiteralValue};
-pub use narrow::{narrow_type, NarrowingCondition};
+pub use literal::{LiteralValue, widen as widen_literal};
+pub use narrow::{NarrowingCondition, narrow_type};
 pub use safe_optional::safe_optional_result;
 pub use substitution::{
-    substitute_type_vars, substitute_type_vars_with_class_scopes,
+    UnionStructureClassScope, substitute_type_vars, substitute_type_vars_with_class_scopes,
     substitution_preserves_union_structure,
-    substitution_preserves_union_structure_with_class_scopes, UnionStructureClassScope,
+    substitution_preserves_union_structure_with_class_scopes,
 };
 
 pub const IO_ERROR_KIND_CASES: [(&str, &str); 6] = [

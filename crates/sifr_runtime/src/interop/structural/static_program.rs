@@ -212,8 +212,8 @@ mod tests {
     use super::*;
     use crate::interop::__generated_glue;
     use crate::interop::structural::{
-        primitive, slot_table_identity, static_program_identity, SlotContextModeIdentity,
-        StructuralConstruct, StructuralProject,
+        SlotContextModeIdentity, StructuralConstruct, StructuralProject, primitive,
+        slot_table_identity, static_program_identity,
     };
 
     #[test]

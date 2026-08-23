@@ -1,4 +1,4 @@
-use super::{lower_source, DiagnosticCode, HirStmt, Type};
+use super::{DiagnosticCode, HirStmt, Type, lower_source};
 
 fn local_binding<'a>(source: &'a str, name: &str) -> (Type, Type) {
     let module = lower_source(source).expect("source should lower");
@@ -66,9 +66,11 @@ fn widening_numeric_dict_writes_keep_container_conflict_diagnostic() {
 fn widening_class_dict_writes_keep_container_conflict_diagnostic() {
     let source = "class Base:\n    value: int\n\nclass Derived(Base):\n    extra: int\n\ndef solve():\n    data = {}\n    data[1] = Derived(1, 2)\n    data[2] = Base(2)\n";
     let errors = lower_source(source).expect_err("widening writes should fail");
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT))
+    );
 }
 
 #[test]
@@ -83,9 +85,11 @@ fn widening_unhashable_key_reports_one_capability_error_and_the_conflict() {
         })
         .count();
     assert_eq!(hash_errors, 1);
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT))
+    );
 }
 
 #[test]
@@ -138,12 +142,16 @@ fn compatible_sibling_scope_hint_does_not_retype_later_binding() {
 fn preexisting_nested_function_hint_keeps_type_mismatch_diagnostic() {
     let source = "def solve():\n    data = {}\n    def nested() -> int:\n        return 1\n    data[1] = nested()\n    data[\"x\"] = 2\n";
     let errors = lower_source(source).expect_err("conflicting writes should fail");
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)));
-    assert!(!errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH))
+    );
+    assert!(
+        !errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT))
+    );
 }
 
 #[test]

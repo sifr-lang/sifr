@@ -2,15 +2,15 @@ pub(crate) use super::bridge_cli::BridgeCommands;
 use super::check_and_package_commands::{cmd_check, cmd_emit, cmd_fmt, cmd_test};
 use super::cli_lock_modes::lock_mode_from_flags;
 use super::diagnostic_rendering_and_run::{
-    cmd_build, cmd_fetch, cmd_package, cmd_publish, cmd_run_with_options, cmd_tree, cmd_vendor,
-    render_diagnostics, RunCommandOptions,
+    RunCommandOptions, cmd_build, cmd_fetch, cmd_package, cmd_publish, cmd_run_with_options,
+    cmd_tree, cmd_vendor, render_diagnostics,
 };
 use super::explain_cli::cmd_explain;
 use super::formatter_cli::FmtArgs;
-use super::lint_cli::{cmd_lint, LintArgs};
-use super::python_cli::{cmd_python, PythonArgs};
-use super::self_update_cli::{cmd_self, SelfArgs};
-use super::sysroot_cli::{cmd_doctor, cmd_print, PrintKind};
+use super::lint_cli::{LintArgs, cmd_lint};
+use super::python_cli::{PythonArgs, cmd_python};
+use super::self_update_cli::{SelfArgs, cmd_self};
+use super::sysroot_cli::{PrintKind, cmd_doctor, cmd_print};
 use super::trace_cli::cmd_trace;
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severity};
@@ -18,7 +18,7 @@ use sifr_driver::find_workspace_root;
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::collections::BTreeMap;
 use std::io::{self, Write as _};
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Path, PathBuf};
 use std::process;
 

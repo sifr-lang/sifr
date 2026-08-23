@@ -14,9 +14,10 @@ pub fn run_coroutine_blocking(coroutine: &ObjectHandle) -> Result<ObjectHandle, 
 mod tests {
     use super::*;
     use crate::python::{
-        async_runtime_diagnostics, call_object, close_object, from_float, from_int, get_attr,
-        import_module, initialize_runtime, reset_runtime_state_for_tests, shutdown_diagnostics,
-        test_config, test_guard, to_int, PythonAsyncRuntimeDiagnostics, PythonRuntimeDiagnostics,
+        PythonAsyncRuntimeDiagnostics, PythonRuntimeDiagnostics, async_runtime_diagnostics,
+        call_object, close_object, from_float, from_int, get_attr, import_module,
+        initialize_runtime, reset_runtime_state_for_tests, shutdown_diagnostics, test_config,
+        test_guard, to_int,
     };
     use pyo3::types::{PyAnyMethods, PyDict, PyDictMethods, PyModule};
     use std::sync::{Arc, Barrier};

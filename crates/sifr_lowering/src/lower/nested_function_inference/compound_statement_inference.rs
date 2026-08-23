@@ -1,6 +1,6 @@
 use super::{
-    analyze_block, infer_expr_type, merge_env_types, Expr, FunctionEnv, HashMap,
-    LocalFunctionState, LowerCtx, Type,
+    Expr, FunctionEnv, HashMap, LocalFunctionState, LowerCtx, Type, analyze_block, infer_expr_type,
+    merge_env_types,
 };
 use sifr_python_ast::{ExceptHandler, Pattern, Stmt, StmtMatch, StmtTry, StmtWith};
 use std::collections::HashSet;

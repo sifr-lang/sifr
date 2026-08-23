@@ -2,9 +2,9 @@ mod dependency_plan;
 mod generated_stdlib_features;
 mod runtime_features;
 pub use dependency_plan::{
+    CargoVendorMode, SysrootCrate, SysrootCrateDependency, SysrootDependencyPlan,
     sysroot_dependency_plan_with_sysroot, try_generated_cargo_dependencies,
-    try_sysroot_dependency_plan, CargoVendorMode, SysrootCrate, SysrootCrateDependency,
-    SysrootDependencyPlan,
+    try_sysroot_dependency_plan,
 };
 pub use generated_stdlib_features::planned_sifr_stdlib_features;
 

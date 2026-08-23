@@ -205,9 +205,11 @@ mod tests {
         let mut source_map = SourceMap::new();
         let source_id = source_map.register_source("emoji.sifr", "let x = '🦀'\n");
         let eof = TextSize::new(15);
-        assert!(source_map
-            .validate_span(&SourceSpan::new(source_id, TextRange::new(eof, eof)))
-            .is_ok());
+        assert!(
+            source_map
+                .validate_span(&SourceSpan::new(source_id, TextRange::new(eof, eof)))
+                .is_ok()
+        );
     }
 
     #[test]

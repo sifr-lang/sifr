@@ -136,11 +136,7 @@ pub fn remainder(x: f64, y: f64) -> f64 {
         n0
     };
     let r = x - (n * y);
-    if r == 0.0 {
-        0.0_f64.copysign(x)
-    } else {
-        r
-    }
+    if r == 0.0 { 0.0_f64.copysign(x) } else { r }
 }
 
 #[must_use]
@@ -225,11 +221,7 @@ pub fn erf(x: f64) -> f64 {
             + t * (-0.284_496_736
                 + t * (1.421_413_741 + t * (-1.453_152_027 + t * 1.061_405_429))));
     let r = 1.0 - (poly * (-x * x).exp());
-    if x >= 0.0 {
-        r
-    } else {
-        -r
-    }
+    if x >= 0.0 { r } else { -r }
 }
 
 #[must_use]
@@ -240,11 +232,7 @@ pub fn erfc(x: f64) -> f64 {
             + t * (-0.284_496_736
                 + t * (1.421_413_741 + t * (-1.453_152_027 + t * 1.061_405_429))));
     let r = poly * (-x * x).exp();
-    if x >= 0.0 {
-        r
-    } else {
-        2.0 - r
-    }
+    if x >= 0.0 { r } else { 2.0 - r }
 }
 
 const LANCZOS_G: f64 = 7.0;

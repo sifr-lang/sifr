@@ -1,13 +1,13 @@
 use crate::cargo::commands::{CargoCommandPlan, CargoFeatureSelection, CargoPackageMutation};
-use crate::cargo::errors::{map_cargo_failure, CargoAction};
-use crate::cargo::lock_modes::{validate_offline_source_availability, CargoLockMode};
+use crate::cargo::errors::{CargoAction, map_cargo_failure};
+use crate::cargo::lock_modes::{CargoLockMode, validate_offline_source_availability};
 use crate::cargo::metadata::{CargoPackage, CargoPackageId, CargoTarget, NormalizedCargoMetadata};
 use crate::cargo::trust::validate_backend_trust;
 use crate::graph::derive::{
     BackendCrateMetadata, PackageClassification, SifrPackageGraph, SifrPackageId,
     SifrPackageMetadata,
 };
-use crate::graph::digest::{digest_package_build_cache_inputs, PackageBuildCacheInputs};
+use crate::graph::digest::{PackageBuildCacheInputs, digest_package_build_cache_inputs};
 use crate::manifest::metadata::CargoSifrMetadata;
 use crate::manifest::sifr::{
     CompilerRequirement, PackageSourceRoot, PythonConfig, RustInteropConfig, SifrEdition,
@@ -238,10 +238,12 @@ fn cargo_metadata_parses_native_links_evidence() {
 
     let package = metadata.packages.first().expect("package exists");
     assert_eq!(package.links.as_deref(), Some("native"));
-    assert!(package
-        .targets
-        .iter()
-        .any(|target| target.kind.contains("custom-build")));
+    assert!(
+        package
+            .targets
+            .iter()
+            .any(|target| target.kind.contains("custom-build"))
+    );
 }
 
 #[test]

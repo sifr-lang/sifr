@@ -200,7 +200,10 @@ impl PackageDiagnostic {
             origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
                 cargo_package_id: Some(cargo_package_id.clone()),
             }),
-            help: Some("move compiler semantics to sifr.toml; Cargo metadata is only a discovery hook".to_string()),
+            help: Some(
+                "move compiler semantics to sifr.toml; Cargo metadata is only a discovery hook"
+                    .to_string(),
+            ),
         }
     }
 

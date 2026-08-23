@@ -1,7 +1,7 @@
 use super::{
-    bridge_type_contract, opaque_type_definition, rust_opaque_storage_type, unsupported_type,
     BTreeMap, BridgeTypePosition, GeneratedTypeCollector, ModuleCatalog, RustBridgeTypeContract,
-    RustBridgeTypeKind, Type,
+    RustBridgeTypeKind, Type, bridge_type_contract, opaque_type_definition,
+    rust_opaque_storage_type, unsupported_type,
 };
 
 pub(super) fn simple_type(

@@ -1,7 +1,7 @@
 use super::{
-    is_option_like_type, resolve_alias_type, try_lower_attribute_dict_insert_key_expr,
-    try_lower_leaf_expr, try_lower_leaf_or_name_expr, try_lower_name_ident_expr, HirExpr, RustExpr,
-    RustLiteral, RustStmt, RustType, Type,
+    HirExpr, RustExpr, RustLiteral, RustStmt, RustType, Type, is_option_like_type,
+    resolve_alias_type, try_lower_attribute_dict_insert_key_expr, try_lower_leaf_expr,
+    try_lower_leaf_or_name_expr, try_lower_name_ident_expr,
 };
 
 pub(crate) fn build_list_subscript_assign_stmt(

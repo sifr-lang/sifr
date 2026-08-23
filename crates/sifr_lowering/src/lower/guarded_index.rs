@@ -1,6 +1,6 @@
 use super::LowerCtx;
 use sifr_python_ast::{Expr, ExprBinOp, ExprSubscript, Number, Operator};
-use sifr_type_system::{remove_none_from_union, Type};
+use sifr_type_system::{Type, remove_none_from_union};
 
 pub(in crate::lower) fn guarded_sequence_index_result_type(
     sub: &ExprSubscript,
@@ -193,7 +193,7 @@ fn sequence_guard_target_name(expr: &Expr) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{lower_module, HirDiagnostic, HirModule, LoweringResult};
+    use crate::{HirDiagnostic, HirModule, LoweringResult, lower_module};
     use sifr_python_parser::parse_module;
     use sifr_type_system::Type;
 
@@ -214,10 +214,12 @@ mod tests {
         )
         .expect("guarded while string index should lower");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "str"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "str")
+        );
     }
 
     #[test]
@@ -227,10 +229,12 @@ mod tests {
         )
         .expect("tuple-unpacked len alias should narrow while-loop string index");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "str"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "str")
+        );
     }
 
     #[test]
@@ -240,10 +244,12 @@ mod tests {
         )
         .expect("range(len(list)) index should lower");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -253,10 +259,12 @@ mod tests {
         )
         .expect("range(len-alias) index should lower");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -266,10 +274,12 @@ mod tests {
         )
         .expect("reverse range(len-alias) index should lower");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -279,10 +289,12 @@ mod tests {
         )
         .expect("while end-pointer len-alias index should lower");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -292,10 +304,12 @@ mod tests {
         )
         .expect("append-growth sized list should narrow under alias-backed index guard");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -305,10 +319,12 @@ mod tests {
         )
         .expect("early-return non-empty guard should lower");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -331,10 +347,12 @@ mod tests {
         )
         .expect("post-return method len guard should lower");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -344,10 +362,12 @@ mod tests {
         )
         .expect("post-return len(values) < 2 guard should narrow values[1]");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -357,10 +377,12 @@ mod tests {
         )
         .expect("post-return len(values) <= 1 guard should narrow values[1]");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -370,10 +392,12 @@ mod tests {
         )
         .expect("post-return or guard should narrow the guarded index");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -559,10 +583,12 @@ mod tests {
         )
         .expect("non-empty attribute guard should narrow head index");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -572,10 +598,12 @@ mod tests {
         )
         .expect("sliding-window left pointer should lower");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "str"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "str")
+        );
     }
 
     #[test]
@@ -585,10 +613,12 @@ mod tests {
         )
         .expect("tuple-unpacked sliding-window left pointer should lower");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "str"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "str")
+        );
     }
 
     #[test]
@@ -616,10 +646,12 @@ mod tests {
         )
         .expect("reverse range recurrence should lower");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -629,10 +661,12 @@ mod tests {
         )
         .expect("matrix recurrence offsets should lower");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]
@@ -653,10 +687,12 @@ mod tests {
         )
         .expect("reverse range +2 recurrence should lower");
 
-        assert!(result
-            .reveal_types
-            .iter()
-            .any(|diagnostic| diagnostic.revealed_type == "int"));
+        assert!(
+            result
+                .reveal_types
+                .iter()
+                .any(|diagnostic| diagnostic.revealed_type == "int")
+        );
     }
 
     #[test]

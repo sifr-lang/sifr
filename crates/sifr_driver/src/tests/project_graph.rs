@@ -1,7 +1,7 @@
 use super::support::parse_suite;
 use crate::{
-    assemble_project_main_rs, check, collect_project_hir_modules, compile_frontend_modules,
-    compile_stdlib, compute_module_compile_order, FrontendDiagnosticStyle,
+    FrontendDiagnosticStyle, assemble_project_main_rs, check, collect_project_hir_modules,
+    compile_frontend_modules, compile_stdlib, compute_module_compile_order,
 };
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{HirExpr, HirStmt};
@@ -37,12 +37,16 @@ def main():
     .err()
     .expect("module-prefixed diagnostic style should report type errors");
 
-    assert!(bare_errors
-        .iter()
-        .any(|e| !e.message.starts_with("[main] ")));
-    assert!(prefixed_errors
-        .iter()
-        .all(|e| e.message.starts_with("[main] ")));
+    assert!(
+        bare_errors
+            .iter()
+            .any(|e| !e.message.starts_with("[main] "))
+    );
+    assert!(
+        prefixed_errors
+            .iter()
+            .all(|e| e.message.starts_with("[main] "))
+    );
 }
 
 #[test]

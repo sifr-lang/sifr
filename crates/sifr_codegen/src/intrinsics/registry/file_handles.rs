@@ -79,7 +79,7 @@ pub(crate) fn lower_builtin_open(args: &[RustExpr]) -> Option<RustExpr> {
                 },
                 RustStmt::Return(Some(RustExpr::FnCall {
                     func: Box::new(RustExpr::Path(vec![
-                        "Ok::<__SifrIoFileHandle, IOError>".to_string()
+                        "Ok::<__SifrIoFileHandle, IOError>".to_string(),
                     ])),
                     args: vec![RustExpr::FnCall {
                         func: Box::new(RustExpr::Path(vec![

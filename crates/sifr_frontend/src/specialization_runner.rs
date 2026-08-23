@@ -1,12 +1,13 @@
 use crate::package_issues::{
-    evaluation_error, issue_templates, replace_unknown_package, SpecializationDiagnostic,
-    SpecializationDiagnostics,
+    SpecializationDiagnostic, SpecializationDiagnostics, evaluation_error, issue_templates,
+    replace_unknown_package,
 };
 use crate::specialization_support::{malformed, method_slot_diagnostic, static_program_value};
 use crate::{
+    ConstIssueSeverity, DeterministicConstEvaluator, JsonIntegerBoundaryDescriptor,
+    JsonIntegerKind, JsonIntegerProfile, JsonIntegerRepresentation,
     decode_const_specialization_outcome, describe_type_with_externals, package_note,
-    verify_json_integer_boundary, ConstIssueSeverity, DeterministicConstEvaluator,
-    JsonIntegerBoundaryDescriptor, JsonIntegerKind, JsonIntegerProfile, JsonIntegerRepresentation,
+    verify_json_integer_boundary,
 };
 use sifr_lowering::{
     ExternalDefs, HirDiagnostic, HirModule, LoweringResult, LoweringWarningDiagnostic,
@@ -326,12 +327,14 @@ fn verify_integer_boundaries(module_name: &str, result: &LoweringResult) -> Vec<
 mod tests {
     use super::*;
     use crate::{
-        collect_module_exports, compile_module_hir, warning_diagnostics, FrontendDiagnosticStyle,
-        FrontendSourceContext,
+        FrontendDiagnosticStyle, FrontendSourceContext, collect_module_exports, compile_module_hir,
+        warning_diagnostics,
     };
     use sifr_diagnostics::DiagnosticArg;
     use sifr_lowering::StaticMethodSlotContext;
     use sifr_syntax::parse_module_suite;
+
+    mod integer_boundary_tests;
 
     fn compile(
         module: &str,
@@ -452,9 +455,11 @@ class Model:
             target.specialization_outputs[0].package_module,
             "fixture.meta"
         );
-        assert!(target.specialization_outputs[0]
-            .canonical_value
-            .contains("target.Model"));
+        assert!(
+            target.specialization_outputs[0]
+                .canonical_value
+                .contains("target.Model")
+        );
         assert_ne!(target.specialization_outputs[0].program_identity, [0; 32]);
         assert_eq!(
             target.specialization_outputs[0].structural_contract_version,
@@ -531,10 +536,12 @@ class Model:
         assert_eq!(cli[0].url, editor[0].url);
         assert_eq!(cli[0].message_template, editor[0].message_template);
         assert_eq!(editor[0].spans.len(), 2);
-        assert!(editor[0]
-            .spans
-            .iter()
-            .any(|span| span.label.as_deref() == Some("class declared here")));
+        assert!(
+            editor[0]
+                .spans
+                .iter()
+                .any(|span| span.label.as_deref() == Some("class declared here"))
+        );
     }
 
     #[test]
@@ -678,9 +685,11 @@ class Record:
 "#,
             &external_defs,
         ));
-        assert!(diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "SIFR-RUST-SLOT-0001"));
+        assert!(
+            diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "SIFR-RUST-SLOT-0001")
+        );
     }
 
     #[test]
@@ -799,9 +808,11 @@ class ImportedUse:
         assert!(imported_box.canonical_identity.contains("__init__:regular"));
         assert!(imported_box.canonical_identity.contains("__eq__:regular"));
         assert!(imported_box.canonical_identity.contains("from_value:class"));
-        assert!(imported_box
-            .canonical_identity
-            .contains("normalize:static:none:true"));
+        assert!(
+            imported_box
+                .canonical_identity
+                .contains("normalize:static:none:true")
+        );
         assert!(imported_box.canonical_identity.contains("fixture.role"));
         assert!(imported_color.canonical_identity.contains("models.Color"));
         assert!(imported_color.canonical_identity.contains("fixture.label"));
@@ -855,45 +866,5 @@ class ImportedUse:
         let diagnostics = errors(compile("target", TARGET, &external_defs));
         assert_eq!(diagnostics[0].code, "SIFR-META-0003");
         assert!(diagnostics[0].message.contains("primary_origin"));
-    }
-
-    #[test]
-    fn non_package_integer_boundary_fixture_fails_closed_for_missing_or_unsafe_policy() {
-        let missing = errors(compile(
-            "fixture.boundaries",
-            r#"
-@json_integer_boundary("count", None, "default", None, None)
-class Counter:
-    count: int
-"#,
-            &ExternalDefs::default(),
-        ));
-        assert_eq!(missing[0].code, "SIFR-INT-0009");
-        assert_eq!(
-            missing[0].args["path"],
-            DiagnosticArg::String("fixture.boundaries.Counter.count".to_string())
-        );
-
-        let unsafe_web = errors(compile(
-            "fixture.boundaries",
-            r#"
-@json_integer_boundary("count", "web", "number", None, None)
-class Counter:
-    count: int
-"#,
-            &ExternalDefs::default(),
-        ));
-        assert_eq!(unsafe_web[0].code, "SIFR-INT-0009");
-
-        let safe = compile(
-            "fixture.boundaries",
-            r#"
-@json_integer_boundary("count", "web", "number", -2147483648, 2147483647)
-class Counter:
-    count: int32
-"#,
-            &ExternalDefs::default(),
-        );
-        assert!(safe.is_ok());
     }
 }

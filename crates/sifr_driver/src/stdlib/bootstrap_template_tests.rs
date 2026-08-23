@@ -48,12 +48,16 @@ fn stdlib_structural_templates_retain_signatures_without_bodies() {
 
     assert_eq!(json_value.identity.as_deref(), Some("sifr.json.JsonValue"));
     assert!(!json_value.methods.is_empty());
-    assert!(json_value
-        .methods
-        .iter()
-        .all(|method| method.body.is_empty()));
-    assert!(json_value
-        .operator_impls
-        .iter()
-        .all(|(_, method)| method.body.is_empty()));
+    assert!(
+        json_value
+            .methods
+            .iter()
+            .all(|method| method.body.is_empty())
+    );
+    assert!(
+        json_value
+            .operator_impls
+            .iter()
+            .all(|(_, method)| method.body.is_empty())
+    );
 }

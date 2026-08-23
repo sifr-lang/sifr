@@ -15,8 +15,10 @@ fn tuple_key_defaultdict_set_has_concrete_declaration_codegen() {
         "from sifr.collections import defaultdict\n\ndef solve(cell: str) -> int:\n    squares = defaultdict(set)\n    square = (1, 2)\n    if cell in squares[square]:\n        return 0\n    squares[square].add(cell)\n    return len(squares)\n",
     );
 
-    assert!(rust_code
-        .contains("let mut squares: HashMap<(i64, i64), HashSet<String>> = HashMap::new();"));
+    assert!(
+        rust_code
+            .contains("let mut squares: HashMap<(i64, i64), HashSet<String>> = HashMap::new();")
+    );
 }
 
 #[test]

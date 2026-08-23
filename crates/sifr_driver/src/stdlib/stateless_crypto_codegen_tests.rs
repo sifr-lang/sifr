@@ -67,40 +67,58 @@ fn crypto_private_declarations_codegen_through_sifr_stdlib() {
             "{private_call} should be a live canonical hashlib consumer"
         );
     }
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::base64::base64_encode(s)"));
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::base64::base64_encode_bytes(data)"));
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::base64::urlsafe_b64encode(s)"));
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::base64::urlsafe_b64encode_bytes(data)"));
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::base64::b32encode(s)"));
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::base64::b32hexencode(s)"));
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::base64::base64_encode(s)")
+    );
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::base64::base64_encode_bytes(data)")
+    );
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::base64::urlsafe_b64encode(s)")
+    );
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::base64::urlsafe_b64encode_bytes(data)")
+    );
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::base64::b32encode(s)")
+    );
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::base64::b32hexencode(s)")
+    );
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.hashlib")
-        .is_some_and(|deps| deps.contains("_sifr.crypto")));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.random")
-        .is_some_and(|deps| deps.contains("_sifr.crypto")));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.base64")
-        .is_some_and(|deps| deps.contains("_sifr.crypto")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.hashlib")
+            .is_some_and(|deps| deps.contains("_sifr.crypto"))
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.random")
+            .is_some_and(|deps| deps.contains("_sifr.crypto"))
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.base64")
+            .is_some_and(|deps| deps.contains("_sifr.crypto"))
+    );
 }

@@ -1,4 +1,4 @@
-use crate::{try_lower_leaf_expr_result, CodegenError, RustExpr, RustParam, RustType};
+use crate::{CodegenError, RustExpr, RustParam, RustType, try_lower_leaf_expr_result};
 use sifr_ir::HirExpr;
 use sifr_type_system::Type;
 use std::collections::HashSet;

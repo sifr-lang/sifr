@@ -3,9 +3,9 @@ use super::artifacts::{
 };
 use super::orchestrator::GeneratedTestRunnerProject;
 use crate::build::{
-    prepare_cached_artifact, sysroot_cargo_config_args, ArtifactCacheReport, PreparedArtifactCache,
+    ArtifactCacheReport, PreparedArtifactCache, prepare_cached_artifact, sysroot_cargo_config_args,
 };
-use crate::diagnostics::{write_stderr, write_stderr_line, RenderedDiagnostic};
+use crate::diagnostics::{RenderedDiagnostic, write_stderr, write_stderr_line};
 use crate::project::namespace_module_files;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_stdlib_manifest::SysrootDependencyPlan;

@@ -1,6 +1,6 @@
 use super::{
-    generic_call_inference::InferredCall, has_conflicting_inference, unify_types, HashMap,
-    LocalFunctionState, ParamKind, Type,
+    HashMap, LocalFunctionState, ParamKind, Type, generic_call_inference::InferredCall,
+    has_conflicting_inference, unify_types,
 };
 
 pub(super) fn unify_inferred_call_arguments(

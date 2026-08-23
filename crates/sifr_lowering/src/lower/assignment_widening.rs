@@ -1,5 +1,5 @@
 use super::LowerCtx;
-use sifr_type_system::{make_union, union_contains_none, Type};
+use sifr_type_system::{Type, make_union, union_contains_none};
 
 pub(in crate::lower) fn reconcile_optional_reassignment(
     ctx: &mut LowerCtx,

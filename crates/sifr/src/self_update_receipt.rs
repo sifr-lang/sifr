@@ -401,7 +401,7 @@ fn missing_receipt_diagnostic(message: impl Into<String>) -> Box<RenderedDiagnos
 #[cfg(test)]
 mod tests {
     use super::{
-        discover_install_receipt, parse_install_receipt_json, InstallReceipt, ReceiptDiscoveryEnv,
+        InstallReceipt, ReceiptDiscoveryEnv, discover_install_receipt, parse_install_receipt_json,
     };
     use sifr_diagnostics::DiagnosticCode;
     use std::fs;
@@ -530,9 +530,11 @@ mod tests {
             DiagnosticCode::SELF_UPDATE_UNMANAGED_RECEIPT.code()
         );
         assert!(error.message.contains("predates"));
-        assert!(error
-            .message
-            .contains("curl -LsSf https://sifr.sh/install | sh"));
+        assert!(
+            error
+                .message
+                .contains("curl -LsSf https://sifr.sh/install | sh")
+        );
     }
 
     #[test]
@@ -620,9 +622,11 @@ mod tests {
         .expect("receipt discovers");
 
         assert_eq!(discovered.receipt.version, "0.1.0-beta.2");
-        assert!(discovered
-            .receipt_path
-            .ends_with(Path::new("manifest/install.json")));
+        assert!(
+            discovered
+                .receipt_path
+                .ends_with(Path::new("manifest/install.json"))
+        );
     }
 
     #[test]
@@ -689,9 +693,11 @@ mod tests {
         })
         .expect("custom sysroot receipt discovers");
 
-        assert!(discovered
-            .receipt_path
-            .ends_with(Path::new("toolchain/install.json")));
+        assert!(
+            discovered
+                .receipt_path
+                .ends_with(Path::new("toolchain/install.json"))
+        );
     }
 
     #[test]

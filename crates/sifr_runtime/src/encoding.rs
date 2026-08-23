@@ -326,11 +326,7 @@ fn encode_ascii(text: &str, handler: Handler) -> Result<(Vec<u8>, Vec<String>), 
         text,
         handler,
         |ch| {
-            if ch.is_ascii() {
-                Some(ch as u8)
-            } else {
-                None
-            }
+            if ch.is_ascii() { Some(ch as u8) } else { None }
         },
         "ascii",
     )

@@ -3,13 +3,13 @@ use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, ExprAttribute, ExprTuple};
 
+use super::LowerCtx;
 use super::assignment_widening::reconcile_optional_reassignment;
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::expressions::{consume_owned_value, lower_expr};
 use super::len_aliases::record_tuple_unpack_len_alias_facts;
 use super::name_diagnostics;
 use super::sequence_pointers::record_tuple_unpack_pointer_facts;
-use super::LowerCtx;
 
 #[derive(Debug, Clone)]
 enum TupleAssignTarget {

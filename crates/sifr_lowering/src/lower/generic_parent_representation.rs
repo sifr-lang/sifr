@@ -1,5 +1,5 @@
 use sifr_type_system::{
-    substitution_preserves_union_structure_with_class_scopes, Type, UnionStructureClassScope,
+    Type, UnionStructureClassScope, substitution_preserves_union_structure_with_class_scopes,
 };
 use std::collections::HashMap;
 

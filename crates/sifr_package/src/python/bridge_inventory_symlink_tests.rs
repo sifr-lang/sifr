@@ -15,9 +15,11 @@ fn symbolic_link_bridge_source_is_rejected() {
 
     let diagnostics = discover_python_bridge_inventory(&fixture.package)
         .expect_err("bridge source symlinks must fail");
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("symbolic links")));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("symbolic links"))
+    );
 }
 
 #[test]

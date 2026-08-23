@@ -79,10 +79,12 @@ fn package_rust_interop_same_path_mapping_failure_is_structured() {
         "{diagnostics:#?}"
     );
     assert!(diagnostics[0].message.contains("Rust bridge probe failed"));
-    assert!(diagnostics[0]
-        .children
-        .iter()
-        .any(|child| child.message.contains("StructuralMapping")));
+    assert!(
+        diagnostics[0]
+            .children
+            .iter()
+            .any(|child| child.message.contains("StructuralMapping"))
+    );
 }
 
 #[test]
@@ -100,9 +102,11 @@ fn package_rust_interop_opaque_close_policy_requires_close_method_contract() {
     let diagnostics = interop_errors(generated, Some(context), "missing close method must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-HANDLE-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("requires `close` cleanup method"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("requires `close` cleanup method")
+    );
 }
 
 #[test]
@@ -148,9 +152,11 @@ fn package_rust_interop_opaque_async_close_policy_requires_owned_receiver() {
     );
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-HANDLE-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("requires `aclose` cleanup method"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("requires `aclose` cleanup method")
+    );
 }
 
 #[test]
@@ -171,9 +177,11 @@ fn package_rust_interop_opaque_async_close_policy_requires_async_aclose_contract
     let diagnostics = interop_errors(generated, Some(context), "sync aclose must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-HANDLE-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("requires `aclose` cleanup method"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("requires `aclose` cleanup method")
+    );
 }
 
 #[test]
@@ -198,7 +206,9 @@ fn package_rust_interop_opaque_async_close_policy_rejects_sync_close_only_contra
     );
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-HANDLE-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("requires `aclose` cleanup method"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("requires `aclose` cleanup method")
+    );
 }

@@ -4,10 +4,10 @@ use std::hash::Hash;
 use indexmap::IndexMap;
 
 use super::{
-    binary_container, tuple, unary_container, ConstructToken, NodeId, ShapeIdentity,
-    StructuralConstruct, StructuralContractError, StructuralEdge, StructuralEdgeKind,
-    StructuralEnter, StructuralKind, StructuralProject, StructuralSource, StructuralType,
-    StructuralVisitor, VisitControl,
+    ConstructToken, NodeId, ShapeIdentity, StructuralConstruct, StructuralContractError,
+    StructuralEdge, StructuralEdgeKind, StructuralEnter, StructuralKind, StructuralProject,
+    StructuralSource, StructuralType, StructuralVisitor, VisitControl, binary_container, tuple,
+    unary_container,
 };
 
 impl<T: StructuralType> StructuralType for Box<T> {
@@ -296,11 +296,11 @@ tuple_structural!(A:0, B:1, C:2, D:3);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::interop::structural::{
-        primitive, structural_construct, ArenaNode, StructuralArena, StructuralNodeEdge,
-        StructuralScalar, StructuralScalarRef,
-    };
     use crate::SifrInt;
+    use crate::interop::structural::{
+        ArenaNode, StructuralArena, StructuralNodeEdge, StructuralScalar, StructuralScalarRef,
+        primitive, structural_construct,
+    };
 
     #[derive(Default)]
     struct MappingProjectionVisitor {

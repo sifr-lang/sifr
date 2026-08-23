@@ -1,5 +1,5 @@
 use super::*;
-use crate::{render_expr, RustExpr};
+use crate::{RustExpr, render_expr};
 use sifr_ir::CompilerIntrinsicId;
 
 pub(crate) fn parse_test_arg(rendered: &str) -> RustExpr {
@@ -360,9 +360,11 @@ pub(crate) fn lowers_encoding_intrinsics_via_registry() {
         enc_result.required_feature,
         Some(sifr_stdlib_manifest::StdlibFeature::SifrRuntime)
     );
-    assert!(enc_result
-        .additional_required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::EncodingRs));
+    assert!(
+        enc_result
+            .additional_required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::EncodingRs)
+    );
 
     let enc_with_codec = lower_intrinsic(
         "str_encode_utf8_result_with_encoding",

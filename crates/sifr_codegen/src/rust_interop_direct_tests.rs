@@ -1,5 +1,5 @@
 use crate::rust_interop_direct::{rust_interop_function_body, rust_interop_method_body};
-use crate::{generate_rust_with_metadata, render_expr, RustStmt};
+use crate::{RustStmt, generate_rust_with_metadata, render_expr};
 use ruff_text_size::TextRange;
 use sifr_ir::{
     HirClass, HirClassKind, HirFunction, HirModule, HirParam, MethodKind,

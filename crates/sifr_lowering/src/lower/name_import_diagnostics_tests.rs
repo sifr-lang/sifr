@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use crate::{
-    lower_module, lower_module_sysroot_private_declaration_with_externals,
-    lower_module_sysroot_public_stdlib_with_externals, lower_module_with_externals, ExternalDefs,
-    HirDiagnostic,
+    ExternalDefs, HirDiagnostic, lower_module,
+    lower_module_sysroot_private_declaration_with_externals,
+    lower_module_sysroot_public_stdlib_with_externals, lower_module_with_externals,
 };
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
@@ -149,11 +149,13 @@ fn public_sysroot_stdlib_source_can_import_private_declarations() {
     let result = lower_module_sysroot_public_stdlib_with_externals(parsed.suite(), &externals)
         .expect("public stdlib source should import private declarations");
 
-    assert!(result
-        .module
-        .imports
-        .iter()
-        .any(|import| import.module == "_sifr.fs" && import.names == ["read_text".to_string()]));
+    assert!(
+        result
+            .module
+            .imports
+            .iter()
+            .any(|import| import.module == "_sifr.fs" && import.names == ["read_text".to_string()])
+    );
 }
 
 #[test]
@@ -169,17 +171,18 @@ fn public_sysroot_stdlib_source_resolves_compiled_private_constants() {
     let result = lower_module_sysroot_public_stdlib_with_externals(parsed.suite(), &externals)
         .expect("public stdlib source should import compiled private constants");
 
-    assert!(result
-        .module
-        .imports
-        .iter()
-        .any(|import| import.module == "_sifr.math" && import.names == ["pi".to_string()]));
+    assert!(
+        result
+            .module
+            .imports
+            .iter()
+            .any(|import| import.module == "_sifr.math" && import.names == ["pi".to_string()])
+    );
 }
 
 #[test]
 fn public_sysroot_stdlib_source_rejects_uncompiled_private_import_name() {
-    let source =
-        "from _sifr.hidden import missing_name\n\ndef main(data: bytes) -> bytes:\n    return missing_name(data)\n";
+    let source = "from _sifr.hidden import missing_name\n\ndef main(data: bytes) -> bytes:\n    return missing_name(data)\n";
     let parsed = parse_module(source).expect("parse failed");
     let mut externals = ExternalDefs::default();
     externals.constants.insert(

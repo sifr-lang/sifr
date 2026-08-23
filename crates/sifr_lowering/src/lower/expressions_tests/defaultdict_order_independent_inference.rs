@@ -1,6 +1,6 @@
-use super::{lower_source_with_stdlib_collections, DiagnosticCode, HirExpr, HirStmt, Type};
-use crate::lower::builtin_calls::{DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
+use super::{DiagnosticCode, HirExpr, HirStmt, Type, lower_source_with_stdlib_collections};
 use crate::MutableReceiverTarget;
+use crate::lower::builtin_calls::{DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
 
 fn binding_and_constructor_types(source: &str, binding: &str) -> (Type, Type) {
     let module = lower_source_with_stdlib_collections(source).expect("source should lower");

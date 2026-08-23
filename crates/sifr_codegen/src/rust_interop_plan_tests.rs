@@ -7,6 +7,8 @@ use sifr_ir::{
 };
 use sifr_type_system::{ParamConvention, Type};
 
+#[path = "rust_interop_plan_tests/callback_tests.rs"]
+mod callback_tests;
 #[path = "rust_interop_plan_tests/mapped_structural_tests.rs"]
 mod mapped_structural_tests;
 
@@ -157,7 +159,9 @@ fn interop_build_plan_records_bridge_signature_and_generated_types() {
     );
     assert_eq!(
         signature.return_type.rust_return_type.as_deref(),
-        Some("Result<crate::__sifr_bridge::main::TokenBridge, crate::__sifr_bridge::main::HashErrorBridge>")
+        Some(
+            "Result<crate::__sifr_bridge::main::TokenBridge, crate::__sifr_bridge::main::HashErrorBridge>"
+        )
     );
     let bridge_type_names = plan
         .rust
@@ -167,9 +171,10 @@ fn interop_build_plan_records_bridge_signature_and_generated_types() {
         .map(|bridge_type| bridge_type.name.as_str())
         .collect::<Vec<_>>();
     assert_eq!(bridge_type_names, vec!["HashErrorBridge", "TokenBridge"]);
-    assert!(plan
-        .cache_key_fragment()
-        .contains("rust.generated_bridge_types=2"));
+    assert!(
+        plan.cache_key_fragment()
+            .contains("rust.generated_bridge_types=2")
+    );
 }
 
 #[test]
@@ -383,73 +388,6 @@ fn interop_bridge_omits_explicit_receiver_for_opaque_self_method() {
 }
 
 #[test]
-fn interop_bridge_distinguishes_call_scoped_and_threadsafe_callbacks() {
-    let mut function = HirFunction {
-        name: "subscribe".to_string(),
-        params: vec![HirParam {
-            name: "callback".to_string(),
-            ty: Type::Callable(
-                vec![Type::Int],
-                vec![ParamConvention::borrow()],
-                Box::new(Type::None),
-            ),
-            default: None,
-            keyword_only: false,
-            convention: ParamConvention::own(),
-        }],
-        return_type: Type::None,
-        body: Vec::new(),
-        is_async: false,
-        method_kind: MethodKind::Regular,
-        receiver: None,
-        decorators: Vec::new(),
-        rust_interop: vec![declaration(
-            RustInteropDecoratorKind::Function,
-            "bridge.events.subscribe",
-        )],
-        python_interop: Vec::new(),
-        compiler_intrinsic: None,
-        type_params: Vec::new(),
-    };
-    let module_without_callback = module_with(vec![function.clone()], Vec::new());
-    let plan_without_callback =
-        interop_build_plan_for_named_modules([(Some("main"), &module_without_callback)]);
-
-    let call_scoped = &plan_without_callback.rust.bridge_contracts.signatures[0].params[0].ty;
-    assert_eq!(call_scoped.kind, RustBridgeTypeKind::CallScopedCallback);
-    assert_eq!(
-        call_scoped.rust_borrowed_type.as_deref(),
-        Some(
-            "::sifr_runtime::interop::CallScopedCallbackBridge<'_, \
-             (::sifr_runtime::interop::SifrIntBridge,), ()>"
-        )
-    );
-
-    function.rust_interop.push(callback_declaration());
-    let module_with_callback = module_with(vec![function], Vec::new());
-    let plan_with_callback =
-        interop_build_plan_for_named_modules([(Some("main"), &module_with_callback)]);
-    let signature = &plan_with_callback.rust.bridge_contracts.signatures[0];
-
-    assert_eq!(plan_with_callback.rust.bridge_contracts.signatures.len(), 1);
-    assert_eq!(signature.params[0].ty.kind, RustBridgeTypeKind::Callback);
-    assert_eq!(
-        signature.params[0].ty.rust_borrowed_type.as_deref(),
-        Some(
-            "&::sifr_runtime::interop::ThreadsafeCallbackBridge<\
-             (::sifr_runtime::interop::SifrIntBridge,), ()>"
-        )
-    );
-    assert_eq!(
-        signature.params[0].ty.rust_owned_type.as_deref(),
-        Some(
-            "::sifr_runtime::interop::ThreadsafeCallbackBridge<\
-             (::sifr_runtime::interop::SifrIntBridge,), ()>"
-        )
-    );
-}
-
-#[test]
 fn interop_bridge_rejects_nested_and_returned_call_scoped_callbacks() {
     let callback = Type::Callable(
         vec![Type::Str],
@@ -615,15 +553,16 @@ fn interop_bridge_generated_field_paths_use_declaring_module() {
         wrapper.fields[0].rust_type,
         "crate::__sifr_bridge::models::TokenBridge"
     );
-    assert!(plan
-        .rust
-        .bridge_contracts
-        .generated_types
-        .iter()
-        .any(|bridge_type| {
-            bridge_type.module_name.as_deref() == Some("models")
-                && bridge_type.name == "TokenBridge"
-        }));
+    assert!(
+        plan.rust
+            .bridge_contracts
+            .generated_types
+            .iter()
+            .any(|bridge_type| {
+                bridge_type.module_name.as_deref() == Some("models")
+                    && bridge_type.name == "TokenBridge"
+            })
+    );
 }
 
 #[test]
@@ -880,18 +819,6 @@ fn opaque_declaration(target: &str) -> RustInteropDeclaration {
             opaque_handle: true,
             ..RustInteropAbiRequirements::default()
         },
-        consumes_receiver: false,
-    }
-}
-
-fn callback_declaration() -> RustInteropDeclaration {
-    RustInteropDeclaration {
-        kind: RustInteropDecoratorKind::Callback,
-        target: None,
-        arguments: Vec::new(),
-        span: Default::default(),
-        effect: RustInteropEffect::Sync,
-        abi_requirements: RustInteropAbiRequirements::default(),
         consumes_receiver: false,
     }
 }

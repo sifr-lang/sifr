@@ -1,7 +1,7 @@
 use crate::conversion;
 use crate::errors::{LspError, LspResult};
 use crate::session::Session;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sifr_analysis::AnalysisQueryResult;
 use sifr_analysis::DiagnosticId;
 

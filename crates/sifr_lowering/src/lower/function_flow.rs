@@ -1,5 +1,5 @@
 use crate::hir_nodes::HirStmt;
-use sifr_type_system::{make_union, Type};
+use sifr_type_system::{Type, make_union};
 
 /// Collect all return types from a list of HIR statements (recursively).
 pub(in crate::lower) fn collect_return_types(stmts: &[HirStmt]) -> Vec<Type> {
@@ -150,20 +150,20 @@ pub(in crate::lower) fn infer_function_return_type(
                     Type::Iterator(elem_ty) => {
                         if !yielded_type.is_assignable_to(elem_ty.as_ref()) {
                             report_error(format!(
-                            "generator '{}' yields '{}', which is not assignable to declared iterator element type '{}'",
-                            function_name,
-                            yielded_type.display_name(),
-                            elem_ty.display_name()
-                        ));
+                                "generator '{}' yields '{}', which is not assignable to declared iterator element type '{}'",
+                                function_name,
+                                yielded_type.display_name(),
+                                elem_ty.display_name()
+                            ));
                         }
                         Type::Iterator(elem_ty.clone())
                     }
                     declared => {
                         report_error(format!(
-                        "generator function '{}' must declare return type 'Iterator[T]', got '{}'",
-                        function_name,
-                        declared.display_name()
-                    ));
+                            "generator function '{}' must declare return type 'Iterator[T]', got '{}'",
+                            function_name,
+                            declared.display_name()
+                        ));
                         inferred_iterator
                     }
                 }

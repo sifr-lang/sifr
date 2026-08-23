@@ -278,12 +278,12 @@ fn callback_store() -> Result<MutexGuard<'static, CallbackStore>, PythonError> {
 mod tests {
     use super::*;
     use crate::python::{
-        call_object, close_object, from_int, initialize_runtime, reset_runtime_state_for_tests,
-        resource_diagnostics, test_config, test_guard, to_int, PythonResourceDiagnostics,
+        PythonResourceDiagnostics, call_object, close_object, from_int, initialize_runtime,
+        reset_runtime_state_for_tests, resource_diagnostics, test_config, test_guard, to_int,
     };
     use std::sync::{
-        atomic::{AtomicUsize, Ordering},
         Arc,
+        atomic::{AtomicUsize, Ordering},
     };
 
     #[test]

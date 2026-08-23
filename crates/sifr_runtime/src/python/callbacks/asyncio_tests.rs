@@ -1,20 +1,19 @@
 use super::{
-    abandon_callback_owner_after_error_async, asyncio_callback_scoped_with_owner,
-    asyncio_callback_with_owner, finalize_retained_callbacks,
-    finish_retained_callback_finalization, retained_callback_finalization_scope,
     AsyncioCallbackConcurrency, CallbackExecutionError, CallbackOwnerSlot, CallbackOwnerState,
-    CallbackOwnerStatus, RetainedCallbackGroup,
+    CallbackOwnerStatus, RetainedCallbackGroup, abandon_callback_owner_after_error_async,
+    asyncio_callback_scoped_with_owner, asyncio_callback_with_owner, finalize_retained_callbacks,
+    finish_retained_callback_finalization, retained_callback_finalization_scope,
 };
 use crate::cancellation::{CancellationBind, CancellationCarrier, CancellationRequest};
 use crate::python::{
-    async_from_int, async_from_object, async_to_int, initialize_runtime,
-    reset_runtime_state_for_tests, submit_async_declaration, test_config, test_guard,
-    PythonAsyncRequest, PythonAsyncType,
+    PythonAsyncRequest, PythonAsyncType, async_from_int, async_from_object, async_to_int,
+    initialize_runtime, reset_runtime_state_for_tests, submit_async_declaration, test_config,
+    test_guard,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyModule};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 const MODULE: &str = "__sifr_asyncio_callback_tests__";
 

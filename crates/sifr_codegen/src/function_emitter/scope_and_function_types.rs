@@ -1,4 +1,6 @@
 use super::{
+    HashMap, HashSet, HirFunction, HirModule, HirParam, HirStmt, NestedFnCapture, OwnershipKind,
+    ParamConvention, RustEmitter, RustExpr, RustParam, RustStmt, RustType, Type,
     collect_function_local_shadow_names, collect_function_sifr_int_forced_locals_with_extra,
     collect_locally_defined_vars, collect_mutated_vars_with_sigs,
     collect_nested_sifr_int_function_returns, collect_sifr_int_call_arg_function_params,
@@ -11,8 +13,6 @@ use super::{
     hir_function_returns_sifr_int_with_extra_forced,
     hir_function_returns_sifr_int_with_extra_forced_and_shadowed, is_result_int_type,
     nested_function_mutates_capture, result_int_return_type_to_sifr_int, result_method_key,
-    HashMap, HashSet, HirFunction, HirModule, HirParam, HirStmt, NestedFnCapture, OwnershipKind,
-    ParamConvention, RustEmitter, RustExpr, RustParam, RustStmt, RustType, Type,
 };
 impl RustEmitter {
     pub(crate) fn effective_nested_param_convention(
@@ -49,8 +49,8 @@ impl RustEmitter {
         if convention.is_mut_borrow() && ty.ownership() != sifr_type_system::OwnershipKind::Copy {
             self.mut_borrowed_params.insert(name.to_string());
         }
-        if let Type::Callable(ref param_types, ref conventions, _)
-        | Type::AsyncCallable(ref param_types, ref conventions, _) = ty
+        if let Type::Callable(param_types, conventions, _)
+        | Type::AsyncCallable(param_types, conventions, _) = ty
         {
             let conv_list: Vec<(Type, ParamConvention)> = param_types
                 .iter()

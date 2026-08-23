@@ -1,9 +1,9 @@
 use super::cargo_invocation_trace::record_cargo_invocation;
-use super::cargo_resolution::{prepare_cargo_resolution, CargoResolutionPolicy};
+use super::cargo_resolution::{CargoResolutionPolicy, prepare_cargo_resolution};
 use super::rust_interop_digest::fnv1a64_hex;
 use super::rust_interop_panic_probe::panic_mapper_probe;
 use super::rust_interop_probe_cache::{
-    mark_probe_cache_hit, probe_cache_file, probe_cache_key, ProbeCacheKeyCache,
+    ProbeCacheKeyCache, mark_probe_cache_hit, probe_cache_file, probe_cache_key,
 };
 use super::rust_interop_probe_diagnostics::{
     classify_probe_failure, probe_cargo_resolution_failure, probe_resolution_diagnostics,

@@ -10,8 +10,8 @@ mod list;
 mod set;
 mod string;
 
-use crate::helpers::is_option_type;
 use crate::RustExpr;
+use crate::helpers::is_option_type;
 use sifr_type_system::Type;
 
 pub(crate) struct LoweredMethod {
@@ -496,8 +496,10 @@ mod tests {
         )
         .expect("list remove lowers");
         let list_remove_rendered = render_expr(&list_remove.expr);
-        assert!(list_remove_rendered
-            .contains("if let Some(__pos) = xs.iter().position(|__x| *__x == 1)"));
+        assert!(
+            list_remove_rendered
+                .contains("if let Some(__pos) = xs.iter().position(|__x| *__x == 1)")
+        );
         assert!(list_remove_rendered.contains("xs.remove(__pos);"));
 
         let list_index = lower_method(

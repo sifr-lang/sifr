@@ -1,9 +1,9 @@
-use super::execution::{
-    collect_args, execution_error, python_error, result_object, validate_call_shape,
-    CallbackExecutionError,
-};
 use super::CallbackOwnerState;
-use crate::python::{object_ops, ObjectHandle, PythonError};
+use super::execution::{
+    CallbackExecutionError, collect_args, execution_error, python_error, result_object,
+    validate_call_shape,
+};
+use crate::python::{ObjectHandle, PythonError, object_ops};
 use pyo3::prelude::*;
 use pyo3::types::{PyCFunction, PyDict, PyTuple};
 use std::cell::{Cell, RefCell};
@@ -558,8 +558,8 @@ mod tests {
         initialize_runtime, reset_runtime_state_for_tests, test_config, test_guard,
     };
     use pyo3::types::PyAnyMethods;
-    use std::sync::atomic::{AtomicBool, AtomicUsize};
     use std::sync::Barrier;
+    use std::sync::atomic::{AtomicBool, AtomicUsize};
 
     struct DropProbe(Arc<AtomicUsize>);
 

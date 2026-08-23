@@ -1,6 +1,6 @@
 use crate::{
-    check, compile, compile_with_metadata, lower_source, parse_source, type_check_source,
-    CompileResult, CompileResultFull,
+    CompileResult, CompileResultFull, check, compile, compile_with_metadata, lower_source,
+    parse_source, type_check_source,
 };
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_frontend::SourceOrigin;
@@ -17,9 +17,11 @@ fn generated_rust_production_preserves_deferred_sysroot_probe_plan() {
 
 fn assert_check_compile_error_parity(source: &str, expected_code: DiagnosticCode) {
     let check_errors = type_check_source(source);
-    assert!(check_errors
-        .iter()
-        .any(|error| error.code == expected_code.code()));
+    assert!(
+        check_errors
+            .iter()
+            .any(|error| error.code == expected_code.code())
+    );
 
     let CompileResult::Errors {
         errors: compile_errors,
@@ -145,9 +147,11 @@ fn test_parse_source_normalizes_parser_recovery_messages() {
                 && diagnostic.message.contains("recovery:")
         })
         .expect("non-expected recovery payload should be normalized");
-    assert!(recovery_prefixed
-        .message
-        .starts_with("syntax error: expected recovery: "));
+    assert!(
+        recovery_prefixed
+            .message
+            .starts_with("syntax error: expected recovery: ")
+    );
 }
 
 #[test]
@@ -176,9 +180,11 @@ fn test_lower_source_and_type_check_source_surface_type_errors() {
         Err(errors) => errors,
     };
     assert!(!errors.is_empty());
-    assert!(errors
-        .iter()
-        .all(|error| error.code == DiagnosticCode::TYPE_MISMATCH.code()));
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code == DiagnosticCode::TYPE_MISMATCH.code())
+    );
 
     let check_errors = type_check_source("def main():\n    x: int = \"bad\"\n");
     assert_eq!(errors.len(), check_errors.len());
@@ -675,9 +681,11 @@ def main():
 "#;
     let errors = check(source);
     assert!(!errors.is_empty());
-    assert!(errors
-        .iter()
-        .all(|error| error.code == DiagnosticCode::TYPE_MISMATCH.code()));
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code == DiagnosticCode::TYPE_MISMATCH.code())
+    );
 }
 
 #[test]
@@ -721,9 +729,10 @@ def main():
     print(value())
 "#;
     let errors = check(source);
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("unsupported import form: relative import level 2")));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("unsupported import form: relative import level 2")
+    }));
 }
 
 #[test]
@@ -735,9 +744,10 @@ def main():
     print(helper)
 "#;
     let errors = check(source);
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("unsupported import form: bare relative import")));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("unsupported import form: bare relative import")
+    }));
 }
 
 #[test]
@@ -749,7 +759,9 @@ def main():
     print("ok")
 "#;
     let errors = check(source);
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("unsupported import form: import helper")));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("unsupported import form: import helper"))
+    );
 }

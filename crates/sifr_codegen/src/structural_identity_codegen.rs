@@ -1,6 +1,6 @@
-use sifr_ir::{canonical_structural_identity_value, HirClass, HirModule};
-use sifr_structural_identity::{self as identity, NominalField, ShapeIdentity, ALGORITHM_VERSION};
-use sifr_type_system::{substitute_type_vars_with_class_scopes, Type};
+use sifr_ir::{HirClass, HirModule, canonical_structural_identity_value};
+use sifr_structural_identity::{self as identity, ALGORITHM_VERSION, NominalField, ShapeIdentity};
+use sifr_type_system::{Type, substitute_type_vars_with_class_scopes};
 use std::collections::{HashMap, HashSet};
 
 mod mapped_opaque;

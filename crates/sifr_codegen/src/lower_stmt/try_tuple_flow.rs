@@ -1,7 +1,7 @@
 use super::{
-    try_lower_leaf_or_name_expr, try_lower_simple_stmt_with_ctx_and_bindings, HashSet,
-    HirExceptHandler, HirExpr, HirStmt, RustExpr, RustLiteral, RustStmt, RustType,
-    SimpleStmtBindings, SimpleStmtLoweringCtx, Type,
+    HashSet, HirExceptHandler, HirExpr, HirStmt, RustExpr, RustLiteral, RustStmt, RustType,
+    SimpleStmtBindings, SimpleStmtLoweringCtx, Type, try_lower_leaf_or_name_expr,
+    try_lower_simple_stmt_with_ctx_and_bindings,
 };
 pub(super) fn try_lower_simple_try_except_stmt(
     body: &[HirStmt],

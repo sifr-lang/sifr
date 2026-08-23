@@ -1,8 +1,8 @@
 use super::*;
 use crate::python::{
-    close_object, get_attr, initialize_runtime, reset_runtime_state_for_tests,
-    resource_diagnostics, test_config, test_guard, to_bool, PythonArrowCertification,
-    PythonResourceDiagnostics,
+    PythonArrowCertification, PythonResourceDiagnostics, close_object, get_attr,
+    initialize_runtime, reset_runtime_state_for_tests, resource_diagnostics, test_config,
+    test_guard, to_bool,
 };
 use pyo3::types::{PyCapsule, PyDict};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -84,10 +84,12 @@ fn arrow_declaration_certification_requires_exact_producer_identity() {
     let stream = arrow_stream(&object).expect("stream should export");
     let mut wrong = stream.clone();
     wrong.producer_type = "DifferentExporter".to_string();
-    assert!(require_arrow_certification(&wrong, "pkg.make_array")
-        .expect_err("different producer must fail")
-        .message
-        .contains("no exact executable no-copy certification"));
+    assert!(
+        require_arrow_certification(&wrong, "pkg.make_array")
+            .expect_err("different producer must fail")
+            .message
+            .contains("no exact executable no-copy certification")
+    );
     assert!(require_arrow_certification(&array, "pkg.other").is_err());
     assert!(require_arrow_certification(&stream, "pkg.make_array").is_err());
 

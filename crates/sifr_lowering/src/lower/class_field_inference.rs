@@ -1,8 +1,8 @@
 use sifr_python_ast::{Expr, Operator, Stmt, UnaryOp};
-use sifr_type_system::{make_union, Type};
+use sifr_type_system::{Type, make_union};
 use std::collections::HashMap;
 
-use super::{simple_expr::lower_expr_simple, LowerCtx};
+use super::{LowerCtx, simple_expr::lower_expr_simple};
 
 fn merge_inferred_types(existing: Type, inferred: Type) -> Type {
     if matches!(existing.resolve_alias(), Type::Any | Type::Unknown)

@@ -1,22 +1,22 @@
 use super::{
-    ast_convention_to_param, collect_declared_nonlocals, collect_yield_types,
-    first_await_range_in_stmts, first_yield_range_in_stmts, function_body_contains_yield,
-    infer_function_return_type, lower_expr, lower_function_stmts, ownership_diagnostics,
-    reject_borrowed_affine_generator_params, reject_declared_async_generator_boundary,
-    reject_live_join_sets_at_function_exit, reject_live_must_use_bindings_at_function_exit, str,
-    workload_annotations, DiagnosticCode, Expr, HirFunction, HirParam, LowerCtx, MethodKind,
-    OwnershipKind, Ranged, StmtFunctionDef, Type,
+    DiagnosticCode, Expr, HirFunction, HirParam, LowerCtx, MethodKind, OwnershipKind, Ranged,
+    StmtFunctionDef, Type, ast_convention_to_param, collect_declared_nonlocals,
+    collect_yield_types, first_await_range_in_stmts, first_yield_range_in_stmts,
+    function_body_contains_yield, infer_function_return_type, lower_expr, lower_function_stmts,
+    ownership_diagnostics, reject_borrowed_affine_generator_params,
+    reject_declared_async_generator_boundary, reject_live_join_sets_at_function_exit,
+    reject_live_must_use_bindings_at_function_exit, str, workload_annotations,
 };
 use crate::lower::python_interop::{
     classify_python_interop_stub_body, collect_python_interop_declarations,
     has_python_interop_decorator_syntax, is_python_omit, validate_python_interop_signature,
 };
 use crate::lower::rust_interop::{
-    classify_rust_interop_stub_body, collect_rust_interop_declarations,
-    has_rust_interop_decorator_syntax, RustInteropOwner,
+    RustInteropOwner, classify_rust_interop_stub_body, collect_rust_interop_declarations,
+    has_rust_interop_decorator_syntax,
 };
 use crate::lower::rust_interop_structural::{
-    validate_structural_function_contract, StructuralFunctionContract,
+    StructuralFunctionContract, validate_structural_function_contract,
 };
 use crate::lower::{compiler_intrinsics, diagnostics::has_decorator};
 pub(in crate::lower) fn lower_function(

@@ -121,13 +121,17 @@ fn rebound_function_binding_becomes_an_ordinary_local() {
     let mut scope = Scope::new();
     scope.define_function("callback".to_string(), Type::Int);
 
-    assert!(scope
-        .lookup("callback")
-        .is_some_and(VarInfo::is_function_binding));
+    assert!(
+        scope
+            .lookup("callback")
+            .is_some_and(VarInfo::is_function_binding)
+    );
     scope.mark_rebound_local("callback");
-    assert!(!scope
-        .lookup("callback")
-        .is_some_and(VarInfo::is_function_binding));
+    assert!(
+        !scope
+            .lookup("callback")
+            .is_some_and(VarInfo::is_function_binding)
+    );
     assert_eq!(
         scope.lookup("callback").map(|info| info.binding_kind),
         Some(BindingKind::Local)

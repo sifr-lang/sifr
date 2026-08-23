@@ -8,7 +8,7 @@ use crate::manifest::package_sections::SifrScript;
 use crate::manifest::sifr::SifrManifest;
 use crate::ops::plan::{OperationPlan, PackageOperation};
 use crate::ops::session_discovery::{find_manifest, session_cargo_id};
-use crate::ops::session_targets::{discover_app_targets, AppTarget};
+use crate::ops::session_targets::{AppTarget, discover_app_targets};
 use sifr_frontend::SourceProvider;
 use std::path::{Path, PathBuf};
 

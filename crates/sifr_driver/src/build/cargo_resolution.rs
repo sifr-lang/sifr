@@ -1,9 +1,9 @@
 use super::cargo_invocation_trace::record_cargo_invocation;
 use super::rust_interop_digest::{digest_file, fnv1a64_hex, push_cache_bytes};
 use super::workspace::artifact_cache_root;
-use crate::diagnostics::{diagnostic_with_code, RenderedDiagnostic};
+use crate::diagnostics::{RenderedDiagnostic, diagnostic_with_code};
 use sifr_diagnostics::DiagnosticCode;
-use sifr_package::{cargo::lock_modes::cargo_lock_failure_reason, CargoLockMode};
+use sifr_package::{CargoLockMode, cargo::lock_modes::cargo_lock_failure_reason};
 use sifr_stdlib_manifest::CargoVendorMode;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -513,9 +513,9 @@ fn cargo_resolution_error(message: impl Into<String>) -> RenderedDiagnostic {
 #[cfg(test)]
 mod tests {
     use super::{
+        CargoResolutionPolicy, CargoVendorMode, PREPARED_LOCK_NONCE,
         normalized_manifest_cache_input, registry_entries, registry_version_compatibility_family,
         seed_lockfile_from_authorities, validate_authoritative_registry_entries,
-        CargoResolutionPolicy, CargoVendorMode, PREPARED_LOCK_NONCE,
     };
     use sifr_package::CargoLockMode;
     use std::collections::BTreeSet;

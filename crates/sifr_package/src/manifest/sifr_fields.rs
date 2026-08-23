@@ -1,8 +1,8 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::manifest::sifr::{
-    validate_relative_path, CompilerRequirement, PythonConfig, RustInteropConfig, SifrEdition,
-    TrustPolicy,
+    CompilerRequirement, PythonConfig, RustInteropConfig, SifrEdition, TrustPolicy,
+    validate_relative_path,
 };
 use std::path::Path;
 

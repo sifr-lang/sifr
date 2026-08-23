@@ -91,11 +91,13 @@ fn analysis_source_map_tracks_public_and_private_sysroot_origins() {
         .expect("context should be loaded")
         .source_map();
 
-    assert!(source_map
-        .files
-        .iter()
-        .any(|file| file.origin == SourceOrigin::UserSource
-            && file.module_name.as_deref() == Some("main")));
+    assert!(
+        source_map
+            .files
+            .iter()
+            .any(|file| file.origin == SourceOrigin::UserSource
+                && file.module_name.as_deref() == Some("main"))
+    );
     assert!(source_map.files.iter().any(|file| {
         file.origin == SourceOrigin::SysrootPublicStdlib
             && file.module_name.as_deref() == Some("sifr.random")
@@ -135,10 +137,12 @@ fn stdlib_symbol_bucket_is_available_without_private_declarations() {
     assert_eq!(stdlib.state, SymbolBucketReadinessState::Exact);
     assert!(stdlib.entry_count > 0);
     assert!(completion.items.iter().any(|item| item.label == "randint"));
-    assert!(!completion
-        .items
-        .iter()
-        .any(|item| item.detail.as_deref() == Some("_sifr.random")));
+    assert!(
+        !completion
+            .items
+            .iter()
+            .any(|item| item.detail.as_deref() == Some("_sifr.random"))
+    );
 }
 
 #[test]
@@ -164,10 +168,11 @@ fn definition_for_public_stdlib_import_lands_in_sysroot_source() {
         .path_for_file(location.file)
         .expect("stdlib file path should be mapped");
     assert!(path.ends_with("stdlib/sifr/random.sifr"));
-    assert!(host
-        .source_text_for_file(location.file)
-        .expect("stdlib source should be mapped")
-        .contains("def randint"));
+    assert!(
+        host.source_text_for_file(location.file)
+            .expect("stdlib source should be mapped")
+            .contains("def randint")
+    );
     assert!(location.range.is_some());
 }
 

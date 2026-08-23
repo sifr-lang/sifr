@@ -35,7 +35,7 @@ pub(crate) fn static_program_value(
             StaticProgramValue::CallableIdentity(identity.clone())
         }
         crate::ConstValue::SourceOrigin(_) => {
-            return Err("source origins cannot be retained in a static program")
+            return Err("source origins cannot be retained in a static program");
         }
     })
 }

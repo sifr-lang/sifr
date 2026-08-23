@@ -1,6 +1,6 @@
 use crate::session::Session;
 use lsp_server::{Connection, Message};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 #[test]
 fn closing_python_package_diagnostic_owner_republishes_on_remaining_document() {

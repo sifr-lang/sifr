@@ -11,7 +11,7 @@ tracing-subscriber = { version = "=0.3.23", default-features = true, features = 
 [package]
 name = "cli-feature-package"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 anyhow = { workspace = true }

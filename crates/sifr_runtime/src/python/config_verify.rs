@@ -1,6 +1,6 @@
-use super::{py_error, PythonRuntimeConfig, PythonRuntimeError};
+use super::{PythonRuntimeConfig, PythonRuntimeError, py_error};
 use pyo3::types::PyAnyMethods;
-use pyo3::{prelude::Python, Bound, PyAny};
+use pyo3::{Bound, PyAny, prelude::Python};
 use std::path::Path;
 
 pub(super) fn verify_interpreter_config(

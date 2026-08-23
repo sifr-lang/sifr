@@ -1,5 +1,5 @@
-use super::abi::{ManagedTensor, DLTENSOR_NAME, DLTENSOR_VERSIONED_NAME};
-use super::{closed_error, dlpack_error, dlpack_store, DlpackEntry, DlpackHandle, PythonError};
+use super::abi::{DLTENSOR_NAME, DLTENSOR_VERSIONED_NAME, ManagedTensor};
+use super::{DlpackEntry, DlpackHandle, PythonError, closed_error, dlpack_error, dlpack_store};
 use crate::python::ObjectHandle;
 use pyo3::ffi;
 use pyo3::prelude::*;

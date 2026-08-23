@@ -14,48 +14,47 @@ pub use crate::cargo::commands::{
     CargoCommandPlan, CargoFeatureSelection, CargoPackageArchiveOptions, CargoPackageMutation,
     CargoPackageSelection, CargoPublishOptions, CargoVendorOptions,
 };
-pub use crate::cargo::errors::{map_cargo_failure, CargoAction};
+pub use crate::cargo::errors::{CargoAction, map_cargo_failure};
 #[doc(hidden)]
 pub use crate::cargo::invocation_trace::{
-    capture_cargo_invocations, record_cargo_invocation, CargoInvocation,
+    CargoInvocation, capture_cargo_invocations, record_cargo_invocation,
 };
 pub use crate::cargo::load::{
-    load_package_graph_snapshot, PackageGraphLoadFailure, PackageGraphLoadFailureKind,
-    PackageGraphSnapshot,
+    PackageGraphLoadFailure, PackageGraphLoadFailureKind, PackageGraphSnapshot,
+    load_package_graph_snapshot,
 };
-pub use crate::cargo::lock_modes::{validate_offline_source_availability, CargoLockMode};
+pub use crate::cargo::lock_modes::{CargoLockMode, validate_offline_source_availability};
 pub use crate::cargo::metadata::{
-    parse_metadata_json, CargoDependency, CargoMetadata, CargoPackage, CargoPackageId,
-    CargoResolveEdge, CargoTarget, NormalizedCargoMetadata,
+    CargoDependency, CargoMetadata, CargoPackage, CargoPackageId, CargoResolveEdge, CargoTarget,
+    NormalizedCargoMetadata, parse_metadata_json,
 };
 pub use crate::cargo::package::{
-    package_dry_run_plan, required_archive_entries, validate_package_archive, CargoPackageRole,
-    PackageArchiveEntry, PackageArchiveValidation, PackageDryRunPlan,
+    CargoPackageRole, PackageArchiveEntry, PackageArchiveValidation, PackageDryRunPlan,
+    package_dry_run_plan, required_archive_entries, validate_package_archive,
 };
 pub use crate::cargo::package_lock_drift_reason;
-pub use crate::cargo::trust::{validate_backend_trust, BackendTrustSummary};
+pub use crate::cargo::trust::{BackendTrustSummary, validate_backend_trust};
 pub use crate::diag::{PackageDiagnostic, PackageDiagnosticOrigin};
 pub use crate::graph::changed::{
-    select_changed_packages, ChangedPackageSelection, ChangedPathSelection,
+    ChangedPackageSelection, ChangedPathSelection, select_changed_packages,
 };
 pub use crate::graph::derive::{
-    derive_package_graph, BackendCrateMetadata, PackageClassification, SifrPackageGraph,
-    SifrPackageId, SifrPackageMetadata,
+    BackendCrateMetadata, PackageClassification, SifrPackageGraph, SifrPackageId,
+    SifrPackageMetadata, derive_package_graph,
 };
 pub use crate::graph::digest::{
-    digest_graph_inputs, digest_package_build_cache_inputs, digest_package_graph,
-    digest_package_source_map, digest_package_source_snapshot,
-    digest_python_authoring_environment_probe, digest_python_environment_probe, GraphDigest,
-    PackageBuildCacheInputs,
+    GraphDigest, PackageBuildCacheInputs, digest_graph_inputs, digest_package_build_cache_inputs,
+    digest_package_graph, digest_package_source_map, digest_package_source_snapshot,
+    digest_python_authoring_environment_probe, digest_python_environment_probe,
 };
 pub use crate::graph::filters::{
-    apply_package_filters, parse_package_filter, PackageFilter, PackageFilterTerm,
+    PackageFilter, PackageFilterTerm, apply_package_filters, parse_package_filter,
 };
 pub use crate::graph::scopes::{DirectDependencyScope, ScopedImport, ScopedImportSource};
 pub use crate::graph::type_identity::{PackageTypeIdentity, TypeIdentityMismatch};
 pub use crate::graph::workspace::{
-    explicit_package_selection, select_sifr_workspace_members, selected_workspace_members,
-    WorkspacePackageSelection,
+    WorkspacePackageSelection, explicit_package_selection, select_sifr_workspace_members,
+    selected_workspace_members,
 };
 pub use crate::imports::source_map::{
     DottedModulePath, PackageImportAmbiguity, PackageImportOrigin, PackageImportResolution,
@@ -68,19 +67,31 @@ pub use crate::manifest::sifr::{
     SifrEdition, SifrManifest, SifrPackageName, TrustPolicy,
 };
 pub use crate::ops::publish::{
-    package_plan, publish_plan, publish_plan_with_options, vendor_plan, vendor_plan_with_options,
-    PublishPlan, VendorPlan,
+    PublishPlan, VendorPlan, package_plan, publish_plan, publish_plan_with_options, vendor_plan,
+    vendor_plan_with_options,
 };
-pub use crate::ops::read::{outdated_query_report, OutdatedPackageReport, OutdatedPackageSource};
+pub use crate::ops::read::{OutdatedPackageReport, OutdatedPackageSource, outdated_query_report};
 pub use crate::ops::session::{
     PackageCommandPlan, PackageRunRequest, PackageSession, PackageSessionOptions,
     ResolvedRunTarget, ScriptOrigin,
 };
 pub use crate::projection::{
-    check_projection, init_package, repair_projection, InitPackageKind, InitPackageOptions,
-    ProjectionCheck, ProjectionRepair,
+    InitPackageKind, InitPackageOptions, ProjectionCheck, ProjectionRepair, check_projection,
+    init_package, repair_projection,
 };
 pub use crate::python::{
+    ARROW_CERTIFICATION_SCHEMA_VERSION, ArrowCertification, ArrowCertifiedDistribution,
+    ArrowCertifiedIdentityMethod, ArrowCertifiedKind, ArrowCertifiedSchemaMode,
+    DeferredPythonEnvironment, DlpackCertification, DlpackCertifiedDevice,
+    DlpackCertifiedStreamPolicy, PYTHON_BINDING_SCHEMA_VERSION, PYTHON_BINDINGS_FILE,
+    PYTHON_BRIDGE_INVENTORY, PYTHON_BRIDGE_ROOT, PYTHON_BRIDGE_RUNTIME_ROOT,
+    PYTHON_CERTIFICATION_SCHEMA_VERSION, PYTHON_CERTIFICATIONS_FILE, PythonBinding,
+    PythonBindingArtifact, PythonBindingDistribution, PythonBindingSource, PythonBindingSourceKind,
+    PythonBridgeImport, PythonBridgeInventory, PythonBridgeModule, PythonCertificationArtifact,
+    PythonDistributionProbe, PythonEnvironmentProbe, PythonEnvironmentProbeRequest,
+    PythonEnvironmentResolution, PythonEnvironmentSelection, PythonRequirementContribution,
+    PythonRequirementKind, ResolvedPythonBridgeGraph, ResolvedPythonBridgeImport,
+    ResolvedPythonBridgeModule, ResolvedPythonBridgePackage, ResolvedPythonEnvironment,
     arrow_fixture_digest, arrow_fixture_path, discover_python_bridge_inventory,
     load_python_bindings, load_python_bindings_for_update, load_python_certifications,
     load_python_certifications_for_dlpack_update, load_python_certifications_for_update,
@@ -92,21 +103,9 @@ pub use crate::python::{
     select_root_python_environment, validate_python_bindings,
     validate_python_bindings_with_generated_source, validate_python_bridge_inventory_manifest,
     validate_python_environment_probe, write_python_bindings, write_python_bridge_inventory,
-    write_python_certifications, ArrowCertification, ArrowCertifiedDistribution,
-    ArrowCertifiedIdentityMethod, ArrowCertifiedKind, ArrowCertifiedSchemaMode,
-    DeferredPythonEnvironment, DlpackCertification, DlpackCertifiedDevice,
-    DlpackCertifiedStreamPolicy, PythonBinding, PythonBindingArtifact, PythonBindingDistribution,
-    PythonBindingSource, PythonBindingSourceKind, PythonBridgeImport, PythonBridgeInventory,
-    PythonBridgeModule, PythonCertificationArtifact, PythonDistributionProbe,
-    PythonEnvironmentProbe, PythonEnvironmentProbeRequest, PythonEnvironmentResolution,
-    PythonEnvironmentSelection, PythonRequirementContribution, PythonRequirementKind,
-    ResolvedPythonBridgeGraph, ResolvedPythonBridgeImport, ResolvedPythonBridgeModule,
-    ResolvedPythonBridgePackage, ResolvedPythonEnvironment, ARROW_CERTIFICATION_SCHEMA_VERSION,
-    PYTHON_BINDINGS_FILE, PYTHON_BINDING_SCHEMA_VERSION, PYTHON_BRIDGE_INVENTORY,
-    PYTHON_BRIDGE_ROOT, PYTHON_BRIDGE_RUNTIME_ROOT, PYTHON_CERTIFICATIONS_FILE,
-    PYTHON_CERTIFICATION_SCHEMA_VERSION,
+    write_python_certifications,
 };
-pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
+pub use crate::source::layout::{MarkerValidation, validate_pure_marker_source};
 
 #[cfg(test)]
 mod cargo_backend_integration_tests;
@@ -134,7 +133,7 @@ mod package_workspace_query_tests;
 #[cfg(test)]
 mod tests {
     use crate::cargo::metadata::parse_metadata_json;
-    use crate::graph::derive::{derive_package_graph, PackageClassification};
+    use crate::graph::derive::{PackageClassification, derive_package_graph};
     use crate::graph::digest::digest_graph_inputs;
     use sifr_diagnostics::DiagnosticCode;
     use sifr_frontend::DiskSourceProvider;

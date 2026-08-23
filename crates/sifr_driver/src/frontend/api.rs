@@ -4,7 +4,7 @@ use crate::diagnostics::{
 };
 use crate::stdlib::StdlibCompiled;
 use sifr_frontend::{
-    reveal_type_diagnostics, warning_diagnostics, FrontendSourceContext, SourceOrigin,
+    FrontendSourceContext, SourceOrigin, reveal_type_diagnostics, warning_diagnostics,
 };
 use sifr_lowering::LoweringResult;
 use sifr_python_ast::Stmt;

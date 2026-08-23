@@ -1,7 +1,7 @@
 use super::task_scope_calls;
 use crate::{
-    lower_module, ExternalDefs, HirDiagnostic, HirModule, LoweringOptions,
-    PythonBridgeTargetAuthority,
+    ExternalDefs, HirDiagnostic, HirModule, LoweringOptions, PythonBridgeTargetAuthority,
+    lower_module,
 };
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{PythonBufferAccess, PythonBufferLayout, PythonInteropDecoratorKind};
@@ -237,9 +237,11 @@ fn buffer_policy_and_return_contract_fail_with_pyzc_0001() {
         "@python.buffer(pkg.make, access=read, layout=any)\ndef bad() -> Result[bytes, PythonError]: ...",
     ] {
         let errors = lower_errors(&format!("{ERROR}\n{declaration}\n"));
-        assert!(errors
-            .iter()
-            .any(|error| error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)));
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION))
+        );
     }
 }
 
@@ -282,16 +284,20 @@ fn release_consumes_buffer_and_borrowed_release_is_rejected() {
     let moved = lower_errors(&format!(
         "{ERROR}\ndef consume(own view: python.Buffer[uint8]) -> Result[None, PythonError]:\n    try:\n        released: None = view.release()\n        value: uint8 = view.read(0)\n        return None\n    except PythonError as error:\n        raise error\n"
     ));
-    assert!(moved
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)));
+    assert!(
+        moved
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE))
+    );
 
     let borrowed = lower_errors(&format!(
         "{ERROR}\ndef consume(view: python.Buffer[uint8]) -> Result[None, PythonError]:\n    try:\n        released: None = view.release()\n        return None\n    except PythonError as error:\n        raise error\n"
     ));
-    assert!(borrowed
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)));
+    assert!(
+        borrowed
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION))
+    );
 
     let field = lower_errors(&format!(
         "{ERROR}\nclass Holder:\n    view: python.Buffer[uint8]\n\ndef release_field(holder: Holder) -> Result[None, PythonError]:\n    try:\n        released: None = holder.view.release()\n        return None\n    except PythonError as error:\n        raise error\n"
@@ -309,9 +315,11 @@ fn writable_access_requires_exclusive_parameter_borrow() {
     let direct = lower_errors(&format!(
         "{ERROR}\ndef overwrite(view: python.Buffer[uint8], value: uint8) -> Result[None, PythonError]:\n    try:\n        written: None = view.write(0, value)\n        return None\n    except PythonError as error:\n        raise error\n"
     ));
-    assert!(direct
-        .iter()
-        .any(|error| { error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION) }));
+    assert!(
+        direct
+            .iter()
+            .any(|error| { error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION) })
+    );
 
     for function in [
         "class Holder:\n    view: python.Buffer[uint8]\n\ndef overwrite(holder: Holder, value: uint8) -> Result[None, PythonError]:\n    try:\n        written: None = holder.view.write(0, value)\n        return None\n    except PythonError as error:\n        raise error",
@@ -386,10 +394,13 @@ fn affine_buffer_aggregate_projections_are_rejected_before_codegen() {
         "def visit(values: list[python.Buffer[uint8]]) -> None:\n    for value in values:\n        print(value.length())\n",
     ] {
         let errors = lower_errors(source);
-        assert!(errors.iter().any(|error| {
-            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
-                || error.message.contains("affine Python resource")
-        }), "{source}: {errors:?}");
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                    || error.message.contains("affine Python resource")
+            }),
+            "{source}: {errors:?}"
+        );
     }
 }
 
@@ -511,10 +522,13 @@ fn affine_buffer_reusable_callable_captures_are_rejected() {
         "def keep(own view: python.Buffer[uint8]) -> Callable[[], python.Buffer[uint8]]:\n    def inner() -> python.Buffer[uint8]:\n        return view\n    return inner\n",
     ] {
         let errors = lower_errors(source);
-        assert!(errors.iter().any(|error| {
-            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
-                && error.message.contains("reusable callables")
-        }), "{source}: {errors:?}");
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                    && error.message.contains("reusable callables")
+            }),
+            "{source}: {errors:?}"
+        );
     }
 }
 
@@ -528,10 +542,13 @@ fn affine_buffer_comprehension_moves_are_rejected() {
         "def generate(own view: python.Buffer[uint8]) -> Iterator[python.Buffer[uint8]]:\n    return (view for number in [1, 2])\n",
     ] {
         let errors = lower_errors(source);
-        assert!(errors.iter().any(|error| {
-            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
-                || error.code == Some(DiagnosticCode::FLOW_INVALID_ITERATION)
-        }), "{source}: {errors:?}");
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                    || error.code == Some(DiagnosticCode::FLOW_INVALID_ITERATION)
+            }),
+            "{source}: {errors:?}"
+        );
     }
 }
 

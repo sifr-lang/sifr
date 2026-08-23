@@ -57,7 +57,7 @@ def write_probe_project() -> None:
     cargo_toml = f"""[package]
 name = "integer_model_readiness_perf_probe"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 sifr_runtime = {{ path = "{(REPO_ROOT / 'crates/sifr_runtime').as_posix()}" }}

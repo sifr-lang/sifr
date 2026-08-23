@@ -1,4 +1,4 @@
-use super::implementation::{unknown_file, AnalysisHost};
+use super::implementation::{AnalysisHost, unknown_file};
 use crate::queries::{HoverInfo, SignatureHelp};
 use crate::snapshot::{AnalysisError, AnalysisErrorKind};
 use ruff_text_size::{TextRange, TextSize};

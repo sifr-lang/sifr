@@ -1,6 +1,6 @@
 use super::{
-    expression_diagnostics, lower_any_all_call, lower_expr, lower_filter_call, lower_map_call, str,
-    CallLowering, ExprCall, FunctionType, HirExpr, LowerCtx, Ranged, Type,
+    CallLowering, ExprCall, FunctionType, HirExpr, LowerCtx, Ranged, Type, expression_diagnostics,
+    lower_any_all_call, lower_expr, lower_filter_call, lower_map_call, str,
 };
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::CompilerIntrinsicId;

@@ -260,7 +260,9 @@ mod tests {
             &[output(7)],
             &BTreeSet::from(["Record".to_string()]),
         );
-        assert!(emitted.contains("static __SIFR_STATIC_PROGRAM_BYTES_RECORD_SCHEMA_PACKAGE_DERIVE"));
+        assert!(
+            emitted.contains("static __SIFR_STATIC_PROGRAM_BYTES_RECORD_SCHEMA_PACKAGE_DERIVE")
+        );
         assert!(emitted.contains("StaticProgram<Record>"));
         assert!(emitted.contains("StaticProgramIdentity::from_bytes([7, 7"));
         assert!(emitted.contains("StaticProgramValue::Record"));

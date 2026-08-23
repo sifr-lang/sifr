@@ -1,16 +1,16 @@
 use super::errors::registered_exception_names;
 use super::registry::{retained_owner_count, shutdown_registered_callback_owners};
 use super::{
-    attach_callback_failure_evidence, current_callback, current_callback_with_owner,
-    foreign_callback, foreign_callback_with_owner, reconcile_callback_outcome,
     CallbackExecutionError, CallbackFailureSlot, CallbackHandlerFailure, CallbackOwnerSlot,
     CallbackOwnerState, CallbackOwnerStatus, ForeignCallbackConcurrency, RetainedCallbackCleanup,
-    RetainedCallbackGroup,
+    RetainedCallbackGroup, attach_callback_failure_evidence, current_callback,
+    current_callback_with_owner, foreign_callback, foreign_callback_with_owner,
+    reconcile_callback_outcome,
 };
 use crate::python::{
-    call_object_owned, close_object, context_exit_normal_with_callbacks, enter_context, from_int,
-    from_str, initialize_runtime, reset_runtime_state_for_tests, resolve_target,
-    semantic_close_with_callbacks, test_config, test_guard, to_int, ObjectHandle, PythonError,
+    ObjectHandle, PythonError, call_object_owned, close_object, context_exit_normal_with_callbacks,
+    enter_context, from_int, from_str, initialize_runtime, reset_runtime_state_for_tests,
+    resolve_target, semantic_close_with_callbacks, test_config, test_guard, to_int,
 };
 use pyo3::types::PyAnyMethods;
 use std::cell::Cell;
@@ -281,9 +281,11 @@ fn callback_reconciliation_drains_before_combining_primary_and_cleanup_failures(
         .expect_err("Python failure should remain primary");
     assert_eq!(error.exception_type, "ValueError");
     assert!(error.context.contains("LateHandlerError at entry 5"));
-    assert!(error
-        .context
-        .contains("secondary Python context cleanup failure"));
+    assert!(
+        error
+            .context
+            .contains("secondary Python context cleanup failure")
+    );
     assert!(error.context.contains("CleanupError"));
     owner.close_call_scope().expect("owner should close");
 }

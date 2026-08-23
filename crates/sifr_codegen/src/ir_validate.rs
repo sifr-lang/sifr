@@ -484,9 +484,11 @@ mod tests {
         }];
 
         let issues = validate_items(&items);
-        assert!(issues
-            .iter()
-            .any(|issue| issue.kind == IrValidationKind::EmptyFunctionBody));
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue.kind == IrValidationKind::EmptyFunctionBody)
+        );
     }
 
     #[test]
@@ -504,9 +506,11 @@ mod tests {
         }];
 
         let issues = validate_items(&items);
-        assert!(issues
-            .iter()
-            .any(|issue| issue.kind == IrValidationKind::ReturnOutsideFunction));
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue.kind == IrValidationKind::ReturnOutsideFunction)
+        );
     }
 
     #[test]
@@ -560,8 +564,10 @@ mod tests {
             ty: RustType::I64,
             value: RustExpr::Verbatim("std::cmp::max(".to_string()),
         }];
-        assert!(validate_items(&invalid)
-            .iter()
-            .any(|issue| issue.kind == IrValidationKind::InvalidVerbatimExpression));
+        assert!(
+            validate_items(&invalid)
+                .iter()
+                .any(|issue| issue.kind == IrValidationKind::InvalidVerbatimExpression)
+        );
     }
 }

@@ -5,12 +5,12 @@ use super::conversions::{
     method, push_keyword, push_keyword_expr, push_positional, vector_let,
 };
 use crate::python_interop_callbacks::{
-    append_owner_failure_evidence, append_owner_failure_observer_setup,
+    CallbackSetup, append_owner_failure_evidence, append_owner_failure_observer_setup,
     append_owner_failure_reconciliation, append_retained_callback_retention,
     append_retained_failure_slots, append_retained_failure_transfers, callback_cleanup_expr,
     callback_object_expr, callback_outcome_after_cleanup, callback_owner_expr, callback_setup,
     failure_reconciliation_stmt, owner_outcome_with_evidence, retained_cleanup_expr,
-    retained_failure_field, retained_slot_source, CallbackSetup,
+    retained_failure_field, retained_slot_source,
 };
 use crate::python_interop_direct::{mapped_try, runtime_call};
 use crate::{RustExpr, RustLiteral, RustStmt};

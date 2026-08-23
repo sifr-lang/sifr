@@ -1,6 +1,6 @@
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
-use zip_8_6::{write::SimpleFileOptions, ZipArchive, ZipWriter};
+use zip_8_6::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
 pub fn zip_create(path: &str) -> Result<(), std::io::Error> {
     let file = File::create(path)?;
@@ -77,9 +77,11 @@ mod tests {
     fn zipfile_adapter_round_trips_text_and_names() {
         let archive = temp_archive_path("roundtrip");
         zip_create(&archive).expect("zip should be created");
-        assert!(zip_namelist(&archive)
-            .expect("empty archive should be readable")
-            .is_empty());
+        assert!(
+            zip_namelist(&archive)
+                .expect("empty archive should be readable")
+                .is_empty()
+        );
         zip_add_file(&archive, "hello.txt", "hello zip").expect("text should be written");
         zip_add_file_bytes(&archive, "bytes.bin", &[1, 2, 3]).expect("bytes should be written");
 

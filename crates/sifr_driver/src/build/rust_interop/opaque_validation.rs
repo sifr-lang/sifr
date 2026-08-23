@@ -1,4 +1,4 @@
-use super::{canonical_sifr_target_path, opaque_contract, RustInteropOwner, RustInteropResolver};
+use super::{RustInteropOwner, RustInteropResolver, canonical_sifr_target_path, opaque_contract};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDeclaration, RustInteropDecoratorKind};
 use std::collections::HashMap;

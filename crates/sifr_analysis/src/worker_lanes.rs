@@ -35,7 +35,7 @@ pub const SINGLE_OWNER_PHASES: &[SingleOwnerCompilerPhase] = &[
 #[cfg(test)]
 mod tests {
     use super::{
-        ApprovedWorkerLane, SingleOwnerCompilerPhase, APPROVED_WORKER_LANES, SINGLE_OWNER_PHASES,
+        APPROVED_WORKER_LANES, ApprovedWorkerLane, SINGLE_OWNER_PHASES, SingleOwnerCompilerPhase,
     };
     use std::collections::BTreeSet;
 

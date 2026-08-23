@@ -1,3 +1,4 @@
+use super::LowerCtx;
 use super::async_await::lower_await;
 use super::builtin_calls::{lower_bytes_type_factory_call, lower_defaultdict_constructor_call};
 use super::container_literal_diagnostics::{
@@ -13,21 +14,20 @@ use super::sequence_guard_detection::{
     detect_false_exit_sequence_guards, detect_true_sequence_guards,
 };
 use super::subscript_type::resolve_subscript_result_type;
-use super::task_calls::{lower_task_module_call, TaskCallLowering};
+use super::task_calls::{TaskCallLowering, lower_task_module_call};
 pub(in crate::lower) use super::tuple_unpack::{
     lower_star_unpack_assign, lower_tuple_unpack_assign,
 };
-use super::LowerCtx;
 use super::{
-    lower_dict_comp, lower_generator_expr, lower_lambda, lower_list_comp, lower_method_call,
-    lower_named_expr, lower_regular_call, lower_set_comp, lower_shadowable_builtin_call,
-    lower_unshadowed_builtin_call, CallLowering,
+    CallLowering, lower_dict_comp, lower_generator_expr, lower_lambda, lower_list_comp,
+    lower_method_call, lower_named_expr, lower_regular_call, lower_set_comp,
+    lower_shadowable_builtin_call, lower_unshadowed_builtin_call,
 };
 use crate::hir_nodes::HirExpr;
 use crate::lower::parallel_calls;
 use crate::lower::python_interop::reject_python_context_borrow_created_value;
 use crate::lower::task_join_set_calls::{
-    lower_task_join_set_constructor, JoinSetConstructorLowering,
+    JoinSetConstructorLowering, lower_task_join_set_constructor,
 };
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
@@ -35,7 +35,7 @@ use sifr_python_ast::{
     BoolOp, Expr, ExprAttribute, ExprBoolOp, ExprCall, ExprDict, ExprList, ExprName, ExprSet,
     ExprSubscript, ExprTuple,
 };
-use sifr_type_system::{make_union, type_check_bool_op, FunctionType, ParamConvention, Type};
+use sifr_type_system::{FunctionType, ParamConvention, Type, make_union, type_check_bool_op};
 pub(in crate::lower) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let lowered = match expr {
         Expr::NumberLiteral(num) => lower_number_literal(num),
@@ -77,7 +77,7 @@ pub(in crate::lower) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<Hi
             .unwrap_or_else(|| lower_set_comp(comp, ctx)),
         Expr::DictComp(comp) => super::async_comprehensions::lower_dict_comp(comp, ctx)
             .unwrap_or_else(|| lower_dict_comp(comp, ctx)),
-        Expr::Generator(gen) => lower_generator_expr(gen, ctx),
+        Expr::Generator(generator) => lower_generator_expr(generator, ctx),
         Expr::YieldFrom(yield_from) if ctx.current_function_is_async_generator => {
             expression_diagnostics::unsupported_form(
                 ctx,

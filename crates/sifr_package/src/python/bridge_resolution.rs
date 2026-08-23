@@ -1,5 +1,5 @@
 use super::bridge_inventory::{
-    discover_python_bridge_inventory, PythonBridgeImport, PythonBridgeInventory,
+    PythonBridgeImport, PythonBridgeInventory, discover_python_bridge_inventory,
 };
 use super::requirements::{PythonRequirementContribution, PythonRequirementKind};
 use crate::diag::PackageDiagnostic;

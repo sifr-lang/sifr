@@ -1,7 +1,7 @@
 use crate::{
-    derive_package_graph, map_cargo_failure, parse_metadata_json, record_cargo_invocation,
     CargoCommandPlan, CargoLockMode, NormalizedCargoMetadata, PackageDiagnostic, PackageSourceMap,
-    SifrPackageGraph,
+    SifrPackageGraph, derive_package_graph, map_cargo_failure, parse_metadata_json,
+    record_cargo_invocation,
 };
 use sifr_frontend::SourceProvider;
 use std::path::Path;

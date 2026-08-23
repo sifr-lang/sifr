@@ -2,14 +2,14 @@ use super::cargo_resolution::CargoResolutionPolicy;
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop_bridge_audit::unsafe_bridge_files;
 use super::rust_interop_cargo_inputs::{
-    bridge_source_digests, cargo_inputs, combined_cargo_inputs, generated_bridge_module_path,
-    GeneratedBridgeImportCache,
+    GeneratedBridgeImportCache, bridge_source_digests, cargo_inputs, combined_cargo_inputs,
+    generated_bridge_module_path,
 };
 use super::rust_interop_contracts::bridge_contract_diagnostics;
 use super::rust_interop_diagnostics::{render_template, source_diagnostic};
 use super::rust_interop_digest::normalized_path_string;
 use super::rust_interop_probe::{
-    execute_direct_cargo_probe, AsyncThreadAffinity, PendingRustBridgeProbe,
+    AsyncThreadAffinity, PendingRustBridgeProbe, execute_direct_cargo_probe,
 };
 use super::rust_interop_probe_cache::ProbeCacheKeyCache;
 use super::rust_interop_probe_policy::DirectProbePolicy;
@@ -17,13 +17,13 @@ use super::rust_interop_probe_policy::DirectProbePolicy;
 pub(super) use super::rust_interop_resolution::apply_package_rust_interop_metadata;
 use super::rust_interop_sqlx_offline::combined_sqlx_offline_metadata_digest;
 use super::rust_interop_trust::{
-    build_env_trust_entries, effective_panic_policy, EffectivePanicPolicy,
+    EffectivePanicPolicy, build_env_trust_entries, effective_panic_policy,
 };
 use super::sysroot_interop::{
-    is_trusted_sysroot_package, resolved_sysroot_crate_root, sysroot_crate_for_dependency_name,
-    SysrootRustInteropTrust,
+    SysrootRustInteropTrust, is_trusted_sysroot_package, resolved_sysroot_crate_root,
+    sysroot_crate_for_dependency_name,
 };
-use crate::diagnostics::{diagnostic_with_code, RenderedDiagnostic};
+use crate::diagnostics::{RenderedDiagnostic, diagnostic_with_code};
 use crate::project::ParsedProjectModule;
 use opaque_contract::OpaqueContract;
 use opaque_validation::opaque_probe_obligations;
@@ -404,8 +404,10 @@ impl<'a> RustInteropResolver<'a> {
                         DiagnosticCode::RUST_RESOLVE_TARGET_ROOT,
                         "unresolved Rust target root `{root}`",
                         vec![("root", root.clone()), ("target", path.dotted())],
-                        vec!["`Self` target roots are valid only on Rust interop methods"
-                            .to_string()],
+                        vec![
+                            "`Self` target roots are valid only on Rust interop methods"
+                                .to_string(),
+                        ],
                         None,
                     );
                     return;

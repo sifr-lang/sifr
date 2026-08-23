@@ -1,6 +1,6 @@
 use super::{
-    inject_async_for_early_exit_cleanup, inject_async_with_return_cleanup, queries, HirExpr,
-    HirStmt, RustEmitter, RustStmt, Type,
+    HirExpr, HirStmt, RustEmitter, RustStmt, Type, inject_async_for_early_exit_cleanup,
+    inject_async_with_return_cleanup, queries,
 };
 impl RustEmitter {
     pub(crate) fn try_lower_with_stmt_for_ir(

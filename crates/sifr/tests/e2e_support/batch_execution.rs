@@ -430,21 +430,24 @@ where
             let index = Arc::clone(&index);
             let results = Arc::clone(&results);
 
-            let handle = scope.spawn(move || loop {
-                let item_index = {
-                    let mut cursor = index.lock().unwrap_or_else(|err| err.into_inner());
-                    let next = *cursor;
-                    *cursor += 1;
-                    next
-                };
+            let handle = scope.spawn(move || {
+                loop {
+                    let item_index = {
+                        let mut cursor = index.lock().unwrap_or_else(|err| err.into_inner());
+                        let next = *cursor;
+                        *cursor += 1;
+                        next
+                    };
 
-                if item_index >= items.len() {
-                    break;
-                }
+                    if item_index >= items.len() {
+                        break;
+                    }
 
-                let result = worker(&items[item_index]);
-                if let Ok(mut output) = results.lock() {
-                    output[item_index] = Some(result);
+                    let result = worker(&items[item_index]);
+                    let locked_results = results.lock();
+                    if let Ok(mut output) = locked_results {
+                        output[item_index] = Some(result);
+                    }
                 }
             });
             handles.push(handle);
@@ -595,13 +598,7 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
 
     eprintln!(
         "[sifr-e2e] timing: compile={}ms plan={}ms build={}ms build-sum={}ms run={}ms cache_hits={}/{}",
-        compile_ms,
-        plan_ms,
-        build_ms,
-        observed_build_ms,
-        run_ms,
-        cache_hits,
-        group_count
+        compile_ms, plan_ms, build_ms, observed_build_ms, run_ms, cache_hits, group_count
     );
     eprintln!(
         "[sifr-e2e] group_stats: groups={} largest_group_fixtures={} median_group_fixtures={}",

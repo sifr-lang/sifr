@@ -43,9 +43,11 @@ fn real_dependency_table_controls_sqlx_preflight() {
     fixture
         .write_manifest("[dependencies]\ndatabase = { package = \"sqlx\", version = \"0.8\" }\n");
     fixture.write_source("fn query() { let _ = database::query!(\"SELECT 13\"); }\n");
-    assert!(validate_sqlx_offline_metadata(&fixture.0)
-        .expect_err("renamed SQLx dependency must activate preflight")
-        .contains("there is no cached data"));
+    assert!(
+        validate_sqlx_offline_metadata(&fixture.0)
+            .expect_err("renamed SQLx dependency must activate preflight")
+            .contains("there is no cached data")
+    );
 }
 
 #[test]

@@ -4,7 +4,7 @@ use super::rust_interop_digest::{
 };
 use super::sysroot_interop::SysrootRustInteropTrust;
 use sifr_codegen::{RustBridgeSourceDigest, RustInteropCargoInputs};
-use sifr_package::{digest_package_graph, digest_package_source_map, TrustPolicy};
+use sifr_package::{TrustPolicy, digest_package_graph, digest_package_source_map};
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -464,8 +464,8 @@ fn tool_version(tool: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        combined_cargo_inputs, generated_bridge_module_path, imports_generated_bridge_namespace,
-        GeneratedBridgeImportCache,
+        GeneratedBridgeImportCache, combined_cargo_inputs, generated_bridge_module_path,
+        imports_generated_bridge_namespace,
     };
     use sifr_codegen::RustInteropCargoInputs;
 

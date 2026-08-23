@@ -1,4 +1,4 @@
-use super::{has_conflicting_inference, unify_types, HashMap, LocalFunctionState, Type};
+use super::{HashMap, LocalFunctionState, Type, has_conflicting_inference, unify_types};
 
 pub(super) fn unify_function_return(
     function_name: &str,

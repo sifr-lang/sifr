@@ -1,5 +1,5 @@
 use super::invalid_context;
-use crate::lower::{statement_diagnostics, LowerCtx};
+use crate::lower::{LowerCtx, statement_diagnostics};
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{HirAsyncWithKind, HirExpr, HirStmt, PythonCleanupPolicy};

@@ -1,7 +1,7 @@
 use super::{
-    methods, registry_defaultdict_alias_parts, registry_defaultdict_default_expr,
-    registry_defaultdict_key_arg, registry_iterator_op_func_name, registry_option_inner_type,
-    registry_uses_debug_display_format, HirExpr, HirFStringPart, RustEmitter, Type,
+    HirExpr, HirFStringPart, RustEmitter, Type, methods, registry_defaultdict_alias_parts,
+    registry_defaultdict_default_expr, registry_defaultdict_key_arg,
+    registry_iterator_op_func_name, registry_option_inner_type, registry_uses_debug_display_format,
 };
 use crate::place_emitter::MethodCallPlaces;
 use crate::stmt_support_emitter::canonical_constructor_class_name;

@@ -1,8 +1,8 @@
 use crate::{
+    RustEmitter, RustExpr, RustStmt, RustType, StdlibCode, StdlibRustSource,
     generate_project_with_deps_and_crates, generate_rust, generate_rust_multi,
     generate_rust_multi_with_metadata, generate_rust_test, generate_rust_with_metadata,
-    generate_rust_with_stdlib_for_module, RustEmitter, RustExpr, RustStmt, RustType, StdlibCode,
-    StdlibRustSource,
+    generate_rust_with_stdlib_for_module,
 };
 use sifr_ir::{
     HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFunction, HirImport, HirMatchArm,
@@ -104,5 +104,7 @@ mod structured_intrinsic_codegen_tests;
 mod structured_lowering_codegen_tests;
 #[cfg(test)]
 mod structured_path_codegen_tests;
+#[cfg(test)]
+mod task_spawn_ownership_codegen_tests;
 #[cfg(test)]
 mod union_representation_codegen_tests;

@@ -1,4 +1,4 @@
-use super::{apply_python_target_inspection, PythonTargetInspection};
+use super::{PythonTargetInspection, apply_python_target_inspection};
 use sifr_codegen::{PythonInteropPlan, PythonTargetProbe, PythonTargetProbeStatus};
 
 #[test]
@@ -24,10 +24,11 @@ fn shared_target_inspection_updates_every_probe_status() {
     };
 
     assert!(apply_python_target_inspection(&mut plan, "math.sqrt", Ok(&inspection)).is_empty());
-    assert!(plan
-        .target_probes
-        .iter()
-        .all(|probe| probe.status == PythonTargetProbeStatus::Verified));
+    assert!(
+        plan.target_probes
+            .iter()
+            .all(|probe| probe.status == PythonTargetProbeStatus::Verified)
+    );
 }
 
 #[test]
@@ -58,10 +59,11 @@ fn shared_target_inspection_combines_type_constraints() {
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].diagnostic.code, "SIFR-PYCALL-0001");
-    assert!(plan
-        .target_probes
-        .iter()
-        .all(|probe| probe.status == PythonTargetProbeStatus::Planned));
+    assert!(
+        plan.target_probes
+            .iter()
+            .all(|probe| probe.status == PythonTargetProbeStatus::Planned)
+    );
 }
 
 #[test]
@@ -92,8 +94,9 @@ fn shared_target_inspection_combines_inspectability_constraints() {
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].diagnostic.code, "SIFR-PYCALL-0001");
-    assert!(plan
-        .target_probes
-        .iter()
-        .all(|probe| probe.status == PythonTargetProbeStatus::Planned));
+    assert!(
+        plan.target_probes
+            .iter()
+            .all(|probe| probe.status == PythonTargetProbeStatus::Planned)
+    );
 }

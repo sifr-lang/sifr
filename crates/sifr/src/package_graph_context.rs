@@ -1,7 +1,7 @@
 use crate::cargo_diagnostics::{bounded_excerpt, cargo_failure_diagnostic};
 use crate::cli_model_and_entrypoint::{
-    package_diagnostic, DiagnosticFormat, PackageGraphContext, EXIT_USAGE_OR_CONFIG,
-    EXIT_USER_DIAGNOSTIC,
+    DiagnosticFormat, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC, PackageGraphContext,
+    package_diagnostic,
 };
 use crate::diagnostic_rendering_and_run::render_diagnostics;
 use std::path::Path;

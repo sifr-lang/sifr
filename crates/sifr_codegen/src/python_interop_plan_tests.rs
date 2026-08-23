@@ -1,4 +1,4 @@
-use crate::{interop_build_plan_for_named_modules, PythonTargetProbeStatus};
+use crate::{PythonTargetProbeStatus, interop_build_plan_for_named_modules};
 use ruff_text_size::TextRange;
 use sifr_ir::{
     HirClass, HirClassKind, HirExpr, HirFunction, HirImport, HirModule, HirStmt, MethodKind,
@@ -130,9 +130,10 @@ fn raw_coroutine_call_requires_the_owned_async_loop() {
     let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
 
     assert!(plan.python.requires_async_loop);
-    assert!(plan
-        .cache_key_fragment()
-        .contains("python.requires_async_loop=yes"));
+    assert!(
+        plan.cache_key_fragment()
+            .contains("python.requires_async_loop=yes")
+    );
 }
 
 #[test]
@@ -243,9 +244,11 @@ fn callback_attachment_policy_is_retained_in_plan_and_cache_identity() {
     );
     assert_eq!(attachment.owner_class.as_deref(), Some("Subscription"));
     assert_eq!(attachment.owner_cleanup, Some(PythonCleanupPolicy::Close));
-    assert!(plan
-        .cache_key_fragment()
-        .contains("python.callback=handler:Result:Foreign:Some(Serial):Subscription:Some(Close)"));
+    assert!(
+        plan.cache_key_fragment().contains(
+            "python.callback=handler:Result:Foreign:Some(Serial):Subscription:Some(Close)"
+        )
+    );
 }
 
 #[test]
@@ -323,9 +326,10 @@ class Owner(NonSend):
         .expect("Arrow method must be retained in the build plan");
     assert_eq!(arrow.function_name, "Owner.array");
     assert_eq!(arrow.certification_target.as_deref(), Some("pkg.Owner"));
-    assert!(plan
-        .cache_key_fragment()
-        .contains("python.certification_target=pkg.Owner"));
+    assert!(
+        plan.cache_key_fragment()
+            .contains("python.certification_target=pkg.Owner")
+    );
 }
 
 fn module_with_functions(functions: Vec<HirFunction>) -> HirModule {

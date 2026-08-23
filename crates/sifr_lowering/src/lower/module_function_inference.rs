@@ -1,4 +1,4 @@
-use super::{nested_function_inference, LowerCtx, Stmt, Type};
+use super::{LowerCtx, Stmt, Type, nested_function_inference};
 
 pub(super) fn infer_unannotated_returns(stmts: &[Stmt], ctx: &mut LowerCtx) {
     // This pass only seeds mutually visible signatures. Normal body lowering remains the

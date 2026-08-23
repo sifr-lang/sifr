@@ -1,13 +1,14 @@
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Operator, StmtAugAssign};
-use sifr_type_system::{type_check_binary_op, Type};
+use sifr_type_system::{Type, type_check_binary_op};
 
 use crate::hir_nodes::{HirExpr, HirStmt};
 
+use super::LowerCtx;
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::container_literal_specialization::{
-    validate_subscript_augassign_target, SubscriptAugAssignTarget,
+    SubscriptAugAssignTarget, validate_subscript_augassign_target,
 };
 use super::defaultdict_refinement::refine_defaultdict_int_augassign_key;
 use super::expressions::{affine_value_references_name, consume_owned_value, lower_expr};
@@ -16,7 +17,6 @@ use super::name_diagnostics;
 use super::python_interop::lower_python_context_owned_expr;
 use super::statements::resolve_object_field_type;
 use super::subscript_type::resolve_subscript_result_type;
-use super::LowerCtx;
 
 const AUGMENTED_SUBSCRIPT_TARGET_SIMPLE_NAME: &str =
     "augmented subscript assignment target must be a simple name";

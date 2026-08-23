@@ -3,8 +3,8 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::visitor::{self, Visitor};
 use sifr_python_ast::{Expr, Number, Stmt};
 
-use super::integer_literals::canonical_large_int_literal_text;
 use super::LowerCtx;
+use super::integer_literals::canonical_large_int_literal_text;
 
 pub(in crate::lower) const INTEGER_EVAL_DECIMAL_DIGIT_BUDGET: usize = 4096;
 

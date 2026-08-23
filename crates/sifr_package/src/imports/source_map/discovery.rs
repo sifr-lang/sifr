@@ -1,7 +1,7 @@
 use super::{DottedModulePath, PackageModuleSource};
 use crate::diag::PackageDiagnostic;
 use crate::graph::derive::SifrPackageMetadata;
-use crate::imports::namespace_api::{parse_init_sifr_reexports, NamespaceApi};
+use crate::imports::namespace_api::{NamespaceApi, parse_init_sifr_reexports};
 use crate::manifest::sifr::ImportRoot;
 use sifr_frontend::SourceProvider;
 use std::path::{Path, PathBuf};

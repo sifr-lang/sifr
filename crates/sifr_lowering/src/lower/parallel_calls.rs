@@ -1,8 +1,8 @@
+use super::LowerCtx;
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
 use super::offload_worker_captures::validate_offload_worker_captures;
 use super::task_scope_calls::non_send_reason;
-use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
@@ -239,7 +239,9 @@ fn validate_parallel_worker_signature(
         (false, Type::Result(_, _)) => {
             expression_diagnostics::type_mismatch(
                 ctx,
-                format!("{api_name} worker must return a plain value; use try_map for Result-returning workers"),
+                format!(
+                    "{api_name} worker must return a plain value; use try_map for Result-returning workers"
+                ),
                 call.arguments.args[1].range(),
             );
             None

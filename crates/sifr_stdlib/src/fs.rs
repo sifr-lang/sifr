@@ -5,8 +5,8 @@ use std::{
     path::{Path, PathBuf},
     process::Command,
     sync::{
-        atomic::{AtomicU64, Ordering},
         LazyLock, Mutex, MutexGuard,
+        atomic::{AtomicU64, Ordering},
     },
 };
 

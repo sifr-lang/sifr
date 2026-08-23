@@ -1,14 +1,14 @@
-use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use crate::ModuleFuncSignatures;
+use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
+#[cfg(test)]
+pub(crate) use sifr_ir::{
+    HirControlFlowEffect as ControlFlowEffect, reachable_top_level_stmt_indices,
+    unreachable_top_level_stmt_indices,
+};
+use sifr_ir::{HirExpr, HirIteratorOp, HirPattern, HirStmt};
 pub(crate) use sifr_ir::{
     block_control_flow_effect, body_contains_return, try_body_has_value_return,
 };
-#[cfg(test)]
-pub(crate) use sifr_ir::{
-    reachable_top_level_stmt_indices, unreachable_top_level_stmt_indices,
-    HirControlFlowEffect as ControlFlowEffect,
-};
-use sifr_ir::{HirExpr, HirIteratorOp, HirPattern, HirStmt};
 use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};

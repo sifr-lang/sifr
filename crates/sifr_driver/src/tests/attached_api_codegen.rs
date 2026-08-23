@@ -1,6 +1,6 @@
 use super::early_adapters::{attached_contract, compile_errors, project};
 use crate::{
-    check_package_project, collect_project_hir_modules, compile_stdlib, PackageEntrypoint,
+    PackageEntrypoint, check_package_project, collect_project_hir_modules, compile_stdlib,
 };
 use std::path::{Path, PathBuf};
 

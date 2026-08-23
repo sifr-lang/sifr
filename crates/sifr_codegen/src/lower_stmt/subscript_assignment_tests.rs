@@ -480,15 +480,15 @@ fn lowers_simple_nested_subscript_assign_stmt() {
     assert!(matches!(
         &stmts[0],
         RustStmt::Let {
-            ref name,
-            value: RustExpr::Ident(ref idx),
+            name,
+            value: RustExpr::Ident(idx),
             ..
         } if name == "__oi_raw" && idx == "i"
     ));
     assert!(matches!(
         &stmts[1],
         RustStmt::Let {
-            ref name,
+            name,
             value: RustExpr::If { .. },
             ..
         } if name == "__oi_norm"
@@ -496,7 +496,7 @@ fn lowers_simple_nested_subscript_assign_stmt() {
     assert!(matches!(
         &stmts[2],
         RustStmt::If {
-            then_body: ref outer_then,
+            then_body: outer_then,
             else_body: None,
             ..
         } if matches!(

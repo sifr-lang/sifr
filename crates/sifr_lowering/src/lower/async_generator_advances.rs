@@ -1,8 +1,8 @@
+use super::LowerCtx;
 use super::async_for::async_iterator_parts;
 use super::call_argument_ranges::{call_arity_range, first_call_keyword_range};
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
-use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::ExprCall;

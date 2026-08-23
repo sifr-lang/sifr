@@ -146,11 +146,7 @@ impl RustEmitter {
     ) -> Option<&'a sifr_type_system::FunctionType> {
         methods.iter().find_map(
             |(name, ft)| {
-                if name == method_name {
-                    Some(ft)
-                } else {
-                    None
-                }
+                if name == method_name { Some(ft) } else { None }
             },
         )
     }

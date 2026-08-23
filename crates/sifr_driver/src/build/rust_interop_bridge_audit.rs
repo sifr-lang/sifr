@@ -742,8 +742,8 @@ mod test_cases;
 #[cfg(test)]
 mod tests {
     use super::{
-        audit_file, audit_file_with_module_path, collect_async_runtime_bridge_violations,
-        test_cases, AsyncRuntimeAudit,
+        AsyncRuntimeAudit, audit_file, audit_file_with_module_path,
+        collect_async_runtime_bridge_violations, test_cases,
     };
     use std::collections::BTreeSet;
 

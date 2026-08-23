@@ -53,9 +53,10 @@ fn dispatcher_result_reports_invalid_module_constant_name() {
     let err =
         try_lower_simple_module_constant_item_result("9bad", &Type::Int, &HirExpr::IntLiteral(42))
             .expect_err("invalid constant name should return error");
-    assert!(err
-        .message
-        .contains("name must start with ASCII letter or underscore"));
+    assert!(
+        err.message
+            .contains("name must start with ASCII letter or underscore")
+    );
 }
 
 #[test]
@@ -147,27 +148,31 @@ fn lowers_simple_module_name_const_item() {
 
 #[test]
 fn does_not_lower_non_primitive_module_const_item() {
-    assert!(try_lower_simple_module_const_item(
-        "name",
-        &Type::Str,
-        &HirExpr::StringLiteral("x".to_string()),
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_module_const_item(
+            "name",
+            &Type::Str,
+            &HirExpr::StringLiteral("x".to_string()),
+        )
+        .is_none()
+    );
 }
 
 #[test]
 fn does_not_lower_non_leaf_module_const_item() {
-    assert!(try_lower_simple_module_const_item(
-        "answer",
-        &Type::Int,
-        &HirExpr::Call {
-            mutable_arg_places: Vec::new(),
-            func: "compute_answer".to_string(),
-            args: vec![],
-            ty: Type::Int,
-        },
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_module_const_item(
+            "answer",
+            &Type::Int,
+            &HirExpr::Call {
+                mutable_arg_places: Vec::new(),
+                func: "compute_answer".to_string(),
+                args: vec![],
+                ty: Type::Int,
+            },
+        )
+        .is_none()
+    );
 }
 
 #[test]
@@ -255,12 +260,10 @@ fn dispatcher_lowers_alias_primitive_module_const_as_const_item() {
 #[test]
 fn does_not_lower_alias_primitive_module_helper_const_item() {
     let alias_int = Type::alias("Meters", Type::Int);
-    assert!(try_lower_simple_module_helper_const_item(
-        "answer",
-        &alias_int,
-        &HirExpr::IntLiteral(42),
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_module_helper_const_item("answer", &alias_int, &HirExpr::IntLiteral(42),)
+            .is_none()
+    );
 }
 
 #[test]
@@ -337,12 +340,14 @@ fn dispatcher_lowers_alias_string_module_const_as_string_item() {
 
 #[test]
 fn does_not_lower_non_string_module_string_const_item() {
-    assert!(try_lower_simple_module_string_const_item(
-        "greeting",
-        &Type::Int,
-        &HirExpr::StringLiteral("hi".to_string()),
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_module_string_const_item(
+            "greeting",
+            &Type::Int,
+            &HirExpr::StringLiteral("hi".to_string()),
+        )
+        .is_none()
+    );
 }
 
 #[test]
@@ -397,17 +402,19 @@ fn lowers_simple_module_literal_string_const_item() {
 
 #[test]
 fn does_not_lower_non_leaf_module_string_const_item() {
-    assert!(try_lower_simple_module_string_const_item(
-        "greeting",
-        &Type::Str,
-        &HirExpr::BinOp {
-            left: Box::new(HirExpr::StringLiteral("a".to_string())),
-            op: "+".to_string(),
-            right: Box::new(HirExpr::StringLiteral("b".to_string())),
-            ty: Type::Str,
-        },
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_module_string_const_item(
+            "greeting",
+            &Type::Str,
+            &HirExpr::BinOp {
+                left: Box::new(HirExpr::StringLiteral("a".to_string())),
+                op: "+".to_string(),
+                right: Box::new(HirExpr::StringLiteral("b".to_string())),
+                ty: Type::Str,
+            },
+        )
+        .is_none()
+    );
 }
 
 #[test]
@@ -545,37 +552,35 @@ fn dispatcher_lowers_alias_none_name_module_const_as_none_item() {
 
 #[test]
 fn does_not_lower_non_none_module_none_const_item() {
-    assert!(try_lower_simple_module_none_const_item(
-        "nothing",
-        &Type::None,
-        &HirExpr::IntLiteral(0),
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_module_none_const_item("nothing", &Type::None, &HirExpr::IntLiteral(0),)
+            .is_none()
+    );
 }
 
 #[test]
 fn does_not_lower_non_none_name_module_none_const_item() {
-    assert!(try_lower_simple_module_none_const_item(
-        "nothing",
-        &Type::None,
-        &HirExpr::Name {
-            name: "x".to_string(),
-            binding_id: None,
-            ty: Type::Int,
-        },
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_module_none_const_item(
+            "nothing",
+            &Type::None,
+            &HirExpr::Name {
+                name: "x".to_string(),
+                binding_id: None,
+                ty: Type::Int,
+            },
+        )
+        .is_none()
+    );
 }
 
 #[test]
 fn does_not_lower_alias_none_module_helper_const_item() {
     let alias_none = Type::alias("Nothing", Type::None);
-    assert!(try_lower_simple_module_helper_const_item(
-        "nothing",
-        &alias_none,
-        &HirExpr::NoneLiteral
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_module_helper_const_item("nothing", &alias_none, &HirExpr::NoneLiteral)
+            .is_none()
+    );
 }
 
 #[test]
@@ -625,23 +630,23 @@ fn lowers_simple_module_helper_name_const_item() {
 
 #[test]
 fn does_not_lower_primitive_module_helper_const_item() {
-    assert!(try_lower_simple_module_helper_const_item(
-        "answer",
-        &Type::Int,
-        &HirExpr::IntLiteral(42),
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_module_helper_const_item("answer", &Type::Int, &HirExpr::IntLiteral(42),)
+            .is_none()
+    );
 }
 
 #[test]
 fn does_not_lower_alias_string_module_helper_const_item() {
     let alias_str = Type::alias("Message", Type::Str);
-    assert!(try_lower_simple_module_helper_const_item(
-        "greeting",
-        &alias_str,
-        &HirExpr::StringLiteral("hi".to_string()),
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_module_helper_const_item(
+            "greeting",
+            &alias_str,
+            &HirExpr::StringLiteral("hi".to_string()),
+        )
+        .is_none()
+    );
 }
 
 #[test]

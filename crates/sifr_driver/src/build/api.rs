@@ -1,10 +1,11 @@
 use super::report::{BuildReport, PythonInteropCheckReport};
 use super::rust_interop_probe_policy::DirectProbePolicy;
 use crate::build::{
-    build_cached_package_project_binary, build_cached_project_binary,
-    build_cached_single_file_binary, build_rooted_entrypoint_binary_with_report,
-    check_single_file_entrypoint, emit_project_entrypoint, resolve_package_project_entrypoint_plan,
-    resolve_project_entrypoint_plan, CachedBinaryArtifact, PackageEntrypoint, RootedEntrypoint,
+    CachedBinaryArtifact, PackageEntrypoint, RootedEntrypoint, build_cached_package_project_binary,
+    build_cached_project_binary, build_cached_single_file_binary,
+    build_rooted_entrypoint_binary_with_report, check_single_file_entrypoint,
+    emit_project_entrypoint, resolve_package_project_entrypoint_plan,
+    resolve_project_entrypoint_plan,
 };
 use crate::diagnostics::{CompileResult, RenderedDiagnostic};
 use sifr_frontend::SourceProvider;

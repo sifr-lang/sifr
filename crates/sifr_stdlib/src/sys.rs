@@ -144,9 +144,11 @@ mod tests {
         assert_eq!(env_get(key).as_deref(), Some("active"));
         assert!(env_keys().iter().any(|candidate| candidate == key));
         assert!(env_values().iter().any(|candidate| candidate == "active"));
-        assert!(env_items()
-            .iter()
-            .any(|candidate| candidate == "SIFR_STDLIB_SYS_TEST_VALUE=active"));
+        assert!(
+            env_items()
+                .iter()
+                .any(|candidate| candidate == "SIFR_STDLIB_SYS_TEST_VALUE=active")
+        );
         env_unset(key);
         assert_eq!(env_get(key), None);
     }

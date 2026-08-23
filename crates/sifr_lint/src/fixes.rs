@@ -1,4 +1,4 @@
-use crate::{rule_metadata, FixAvailability, LintOptions};
+use crate::{FixAvailability, LintOptions, rule_metadata};
 use sifr_diagnostics::render::RenderedDiagnosticSuggestion;
 use sifr_diagnostics::{DiagnosticArg, RenderedDiagnostic, SuggestionApplicability};
 

@@ -1,5 +1,5 @@
 use sifr_lowering::{
-    rust_opaque_structural_mapping, ExternalDefs, HirClass, RustInteropDecoratorKind,
+    ExternalDefs, HirClass, RustInteropDecoratorKind, rust_opaque_structural_mapping,
 };
 use std::collections::HashSet;
 

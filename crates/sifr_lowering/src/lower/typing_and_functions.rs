@@ -5,15 +5,15 @@ use super::nonlocal_support::collect_declared_nonlocals;
 use super::ownership_diagnostics;
 use super::statements::lower_function_stmts;
 use super::workload_annotations;
+use super::{LowerCtx, substitute_type_vars};
 use super::{async_effects, flow_diagnostics, simple_expr, str};
-use super::{substitute_type_vars, LowerCtx};
 use crate::hir_nodes::{HirFunction, HirParam, MethodKind};
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Number, Operator, StmtFunctionDef};
 use sifr_type_system::infer::resolve_type_annotation;
 use sifr_type_system::{
-    make_union, FunctionType, OwnershipKind, ParamConvention, PythonArrowKind, Type,
+    FunctionType, OwnershipKind, ParamConvention, PythonArrowKind, Type, make_union,
 };
 use std::collections::HashMap;
 

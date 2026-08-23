@@ -1,12 +1,12 @@
+use super::LowerCtx;
 use super::builtin_calls::{DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
 use super::guarded_index::guarded_sequence_index_result_type;
 use super::type_bounds::reject_unavailable_dict_hash_key;
-use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::ExprSubscript;
-use sifr_type_system::{make_union, Type};
+use sifr_type_system::{Type, make_union};
 
 fn tuple_members_for_subscript(object_ty: &Type) -> Option<Vec<Type>> {
     match object_ty.resolve_alias() {

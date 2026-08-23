@@ -2,8 +2,8 @@ use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_type_system::Type;
 
-use super::builtin_calls::{callable_builtin_dict_output_type, callable_builtin_element_type};
 use super::LowerCtx;
+use super::builtin_calls::{callable_builtin_dict_output_type, callable_builtin_element_type};
 
 pub(in crate::lower) fn validate_list_extend_arg(
     list_elem_ty: &Type,

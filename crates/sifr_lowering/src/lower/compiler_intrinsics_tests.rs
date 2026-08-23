@@ -1,6 +1,7 @@
 use crate::{
+    CompilerIntrinsicId, ExternalDefs, HirExpr, HirStmt,
     lower_module_sysroot_private_declaration_with_externals, lower_module_sysroot_public_stdlib,
-    lower_module_with_externals, CompilerIntrinsicId, ExternalDefs, HirExpr, HirStmt,
+    lower_module_with_externals,
 };
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;

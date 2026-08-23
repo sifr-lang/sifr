@@ -6,8 +6,7 @@ use crate::hir_nodes::HirExpr;
 
 use super::LowerCtx;
 
-const EXACT_INT_DIVISION_REQUIRES_HANDLING: &str =
-    "integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe";
+const EXACT_INT_DIVISION_REQUIRES_HANDLING: &str = "integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe";
 
 pub(in crate::lower) fn exact_int_division_requires_handling(
     left: &HirExpr,

@@ -1,7 +1,7 @@
 use super::RustInteropResolver;
 use super::{
-    canonical_sifr_target_path, opaque_contract::OpaqueThreadAffinity, uses_bridge_root,
-    RustInteropOwner,
+    RustInteropOwner, canonical_sifr_target_path, opaque_contract::OpaqueThreadAffinity,
+    uses_bridge_root,
 };
 use crate::build::rust_interop_probe::AsyncThreadAffinity;
 use sifr_diagnostics::DiagnosticCode;

@@ -61,7 +61,7 @@ use result_type_helpers::{
 };
 pub(crate) use stmt_expr_binop_option::binop_with_optional_operands;
 use try_error_helpers::{
-    can_construct_error_from_message_for_ir, first_try_error_type_in_stmts,
-    io_error_kind_for_handler, select_try_error_type, HandlerMatchCondition,
+    HandlerMatchCondition, can_construct_error_from_message_for_ir, first_try_error_type_in_stmts,
+    io_error_kind_for_handler, select_try_error_type,
 };
 pub(crate) use try_error_helpers::{declaration_only_try_bindings, successful_try_bindings};

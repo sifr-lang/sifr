@@ -21,7 +21,8 @@ fn ordinary_modules_skip_structural_identity_collection() {
 
     assert_eq!(plan.rust.structural_identity_algorithm_version, None);
     assert!(plan.rust.structural_shape_identities.is_empty());
-    assert!(plan
-        .cache_key_fragment()
-        .contains("rust.structural_shape_identities=0"));
+    assert!(
+        plan.cache_key_fragment()
+            .contains("rust.structural_shape_identities=0")
+    );
 }

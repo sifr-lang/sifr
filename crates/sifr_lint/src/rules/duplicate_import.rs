@@ -1,7 +1,7 @@
 use crate::suppression::ParserAwareSuppressions;
 use crate::{
-    line_index_for_byte, lint_rule_diagnostic, rule_enabled, with_rule_severity,
-    LintDiagnosticSpec, LintOptions, SuppressionComplexity,
+    LintDiagnosticSpec, LintOptions, SuppressionComplexity, line_index_for_byte,
+    lint_rule_diagnostic, rule_enabled, with_rule_severity,
 };
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_python_ast::Stmt;

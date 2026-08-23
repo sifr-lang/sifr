@@ -1,4 +1,4 @@
-use crate::{diagnostic, LintOptions};
+use crate::{LintOptions, diagnostic};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use ignore::WalkBuilder;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};

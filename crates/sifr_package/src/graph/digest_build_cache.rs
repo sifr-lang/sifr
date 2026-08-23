@@ -1,4 +1,4 @@
-use super::digest::{digest_serializable, GraphDigest};
+use super::digest::{GraphDigest, digest_serializable};
 use crate::python::{PythonEnvironmentProbe, PythonEnvironmentProbeRequest};
 use serde::Serialize;
 use std::collections::BTreeMap;

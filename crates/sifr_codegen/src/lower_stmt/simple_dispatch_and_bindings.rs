@@ -1,4 +1,6 @@
 use super::{
+    HashMap, HashSet, HirExpr, HirFunction, HirStmt, MethodKind, RustExpr, RustLiteral, RustParam,
+    RustStmt, RustType, SimpleForStmtParts, SimpleStmtBindings, SimpleStmtLoweringCtx, Type,
     body_calls_function, collect_locally_defined_vars, collect_mutated_vars,
     collect_referenced_vars_with_types, is_option_like_type, resolve_alias_type,
     try_lower_expr_stmt_with_bindings, try_lower_leaf_or_name_expr, try_lower_name_ident_expr,
@@ -12,9 +14,7 @@ use super::{
     try_lower_simple_star_unpack_stmt, try_lower_simple_subscript_assign_stmt,
     try_lower_simple_subscript_augassign_stmt, try_lower_simple_try_except_stmt,
     try_lower_simple_tuple_unpack_stmt, try_lower_simple_while_stmt, try_lower_simple_with_stmt,
-    try_lower_simple_yield_stmt, HashMap, HashSet, HirExpr, HirFunction, HirStmt, MethodKind,
-    RustExpr, RustLiteral, RustParam, RustStmt, RustType, SimpleForStmtParts, SimpleStmtBindings,
-    SimpleStmtLoweringCtx, Type,
+    try_lower_simple_yield_stmt,
 };
 pub(crate) fn try_lower_simple_stmt_with_ctx(
     stmt: &HirStmt,

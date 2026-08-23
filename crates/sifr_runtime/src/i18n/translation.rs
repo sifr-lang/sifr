@@ -811,9 +811,11 @@ mod tests {
             )],
             false,
         );
-        assert!(Catalog::parse(&bad_plural)
-            .expect_err("bad plural expression should fail")
-            .contains("invalid token"));
+        assert!(
+            Catalog::parse(&bad_plural)
+                .expect_err("bad plural expression should fail")
+                .contains("invalid token")
+        );
     }
 
     #[test]

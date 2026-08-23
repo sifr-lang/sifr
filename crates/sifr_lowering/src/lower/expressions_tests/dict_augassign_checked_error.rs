@@ -1,4 +1,4 @@
-use super::{lower_source, lower_source_with_stdlib_collections, DiagnosticCode, HirStmt, Type};
+use super::{DiagnosticCode, HirStmt, Type, lower_source, lower_source_with_stdlib_collections};
 
 #[test]
 fn plain_dict_augassign_requires_checked_error_handling() {
@@ -64,8 +64,7 @@ fn proven_present_plain_dict_key_does_not_require_checked_error_handling() {
 
 #[test]
 fn preceding_subscript_assignment_proves_plain_dict_key_present() {
-    let source =
-        "def solve(mut values: dict[str, int], key: str):\n    values[key] = 0\n    values[key] += 1\n";
+    let source = "def solve(mut values: dict[str, int], key: str):\n    values[key] = 0\n    values[key] += 1\n";
     let module = lower_source(source).expect("assigned dict key should be proven present");
     let function = module
         .functions

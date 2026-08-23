@@ -1,4 +1,4 @@
-use sifr_type_system::{make_union, Type};
+use sifr_type_system::{Type, make_union};
 
 pub(in crate::lower) fn optional_class_union_field_type(
     resolved_object_ty: &Type,

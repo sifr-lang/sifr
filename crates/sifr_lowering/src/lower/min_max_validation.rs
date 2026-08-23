@@ -3,7 +3,7 @@ use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::Expr;
-use sifr_type_system::{type_check_comparison, union_contains_none, Type};
+use sifr_type_system::{Type, type_check_comparison, union_contains_none};
 
 pub(in crate::lower) fn validate_two_arg_min_max_operands(
     func_name: &str,

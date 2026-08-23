@@ -1,7 +1,7 @@
 use super::{DiagnosticEnvelope, DiagnosticSpan, DiagnosticSpanLine, RenderedDiagnostic};
+use crate::DiagnosticSink;
 use crate::model::Severity;
 use crate::source_map::{SourceMap, SourceMapError};
-use crate::DiagnosticSink;
 use std::fmt::Write as _;
 use std::path::Path;
 
@@ -294,11 +294,7 @@ fn strip_leading_module_context(message: &str) -> &str {
 }
 
 const fn plural(count: usize, singular: &'static str, plural: &'static str) -> &'static str {
-    if count == 1 {
-        singular
-    } else {
-        plural
-    }
+    if count == 1 { singular } else { plural }
 }
 
 fn severity_label(severity: Severity) -> &'static str {
@@ -330,13 +326,13 @@ mod tests {
         render_compact_envelope, render_human_envelope, render_json_envelope, render_sink_compact,
         render_sink_human, render_sink_json,
     };
+    use crate::DiagnosticCode;
     use crate::model::{
         ChildSeverity, DiagnosticBuilder, DiagnosticSink, DiagnosticSuggestion, RelatedKind,
         Severity, SuggestionApplicability, SuggestionEdit,
     };
     use crate::render::render_sink;
     use crate::source_map::{SourceMap, SourceSpan};
-    use crate::DiagnosticCode;
     use ruff_text_size::{TextRange, TextSize};
 
     #[test]
@@ -441,12 +437,16 @@ mod tests {
         let human = render_sink_human(&sink, &source_map).expect("rendering succeeds");
         let compact = render_sink_compact(&sink, &source_map).expect("rendering succeeds");
 
-        assert!(human.contains("error[SIFR-INTERNAL-0001]: internal compiler panic during codegen"));
+        assert!(
+            human.contains("error[SIFR-INTERNAL-0001]: internal compiler panic during codegen")
+        );
         assert!(human.contains("  = location: <unavailable>"));
         assert!(human.contains("  = help: please report this compiler bug"));
         assert!(compact.starts_with("1 error, 1 warning, 1 note\n"));
-        assert!(compact
-            .contains("E SIFR-INTERNAL-0001 <unknown> internal compiler panic during codegen"));
+        assert!(
+            compact
+                .contains("E SIFR-INTERNAL-0001 <unknown> internal compiler panic during codegen")
+        );
         assert!(compact.contains("W SIFR-TYPE-0901 main.sifr:1:1 int multiplication may overflow"));
         assert!(compact.contains("N SIFR-TYPE-0902 main.sifr:1:1 revealed type is `int`"));
     }

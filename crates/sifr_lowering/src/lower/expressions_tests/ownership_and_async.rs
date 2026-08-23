@@ -724,8 +724,7 @@ pub(super) fn test_defaultdict_alias_call_resolves_with_explicit_import() {
 
 #[test]
 pub(super) fn test_defaultdict_keyword_constructor_unsupported_has_stdlib_code() {
-    let source =
-        "from sifr.collections import defaultdict\n\ndef main():\n    groups = defaultdict(default_factory=list)\n    _ = groups\n";
+    let source = "from sifr.collections import defaultdict\n\ndef main():\n    groups = defaultdict(default_factory=list)\n    _ = groups\n";
     let result = lower_source_with_stdlib_collections(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -738,8 +737,7 @@ pub(super) fn test_defaultdict_keyword_constructor_unsupported_has_stdlib_code()
 
 #[test]
 pub(super) fn test_defaultdict_unpacked_keyword_constructor_unsupported_has_stdlib_code() {
-    let source =
-        "from sifr.collections import defaultdict\n\ndef main():\n    groups = defaultdict(**{\"default_factory\": list})\n    _ = groups\n";
+    let source = "from sifr.collections import defaultdict\n\ndef main():\n    groups = defaultdict(**{\"default_factory\": list})\n    _ = groups\n";
     let result = lower_source_with_stdlib_collections(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();

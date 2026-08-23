@@ -1,5 +1,5 @@
-use super::sequence_guards::{key_guard_token, SequenceGuard};
 use super::LowerCtx;
+use super::sequence_guards::{SequenceGuard, key_guard_token};
 use sifr_python_ast::visitor::{self, Visitor};
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, Number, Operator, Stmt, StmtAssign, StmtAugAssign, StmtFor, StmtWhile,

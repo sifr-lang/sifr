@@ -88,8 +88,7 @@ pub(crate) const PRIVATE_RE_EXPORT_RULES: &[PrivateReExportRule] = &[
         public_module: "sifr.math",
         private_module: "_sifr.math",
         names: MATH_EXPORTS,
-        semantic_evidence:
-            "canonical scalar math operations and constants with no second public wrapper",
+        semantic_evidence: "canonical scalar math operations and constants with no second public wrapper",
     },
     PrivateReExportRule {
         public_module: "sifr.net",
@@ -107,8 +106,7 @@ pub(crate) const PRIVATE_RE_EXPORT_RULES: &[PrivateReExportRule] = &[
         public_module: "sifr.os",
         private_module: "_sifr.fs",
         names: OS_FS_EXPORTS,
-        semantic_evidence:
-            "canonical module-level filesystem operations; stat_size is excluded in favor of stat",
+        semantic_evidence: "canonical module-level filesystem operations; stat_size is excluded in favor of stat",
     },
     PrivateReExportRule {
         public_module: "sifr.process",
@@ -162,8 +160,7 @@ pub(crate) const PRIVATE_RE_EXPORT_RULES: &[PrivateReExportRule] = &[
         public_module: "sifr.time",
         private_module: "_sifr.time",
         names: &["sleep", "perf_counter", "monotonic"],
-        semantic_evidence:
-            "canonical timer operations distinct from wall-clock time and calendar wrappers",
+        semantic_evidence: "canonical timer operations distinct from wall-clock time and calendar wrappers",
     },
     PrivateReExportRule {
         public_module: "sifr.tls",
@@ -175,8 +172,7 @@ pub(crate) const PRIVATE_RE_EXPORT_RULES: &[PrivateReExportRule] = &[
         public_module: "sifr.uuid",
         private_module: "_sifr.uuid",
         names: &["uuid4"],
-        semantic_evidence:
-            "uuid4 returns canonical text while uuid4_obj returns a typed UUID value",
+        semantic_evidence: "uuid4 returns canonical text while uuid4_obj returns a typed UUID value",
     },
 ];
 

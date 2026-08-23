@@ -1,4 +1,4 @@
-use crate::{lower_module, HirDiagnostic};
+use crate::{HirDiagnostic, lower_module};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 
@@ -25,9 +25,11 @@ class PythonError(Error):
 def compute(values: set[int]) -> Result[int, PythonError]: ...
 ",
     );
-    assert!(errors
-        .iter()
-        .any(|error| { error.code == Some(DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE) }));
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE)
+        })
+    );
 }
 
 #[test]
@@ -92,9 +94,11 @@ class PythonError(Error):
 def compute(value: int = python.omit, *rest: int) -> Result[int, PythonError]: ...
 ",
     );
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE))
+    );
 }
 
 #[test]

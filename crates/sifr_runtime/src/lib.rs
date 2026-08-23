@@ -25,6 +25,6 @@ pub mod unicode;
 mod unicode_data;
 
 pub use int::{
-    IntegerParseError, IntegerRangeError, NormalizedIntegerHash, SifrInt,
-    DEFAULT_MAX_INTEGER_DIGITS,
+    DEFAULT_MAX_INTEGER_DIGITS, IntegerParseError, IntegerRangeError, NormalizedIntegerHash,
+    SifrInt,
 };

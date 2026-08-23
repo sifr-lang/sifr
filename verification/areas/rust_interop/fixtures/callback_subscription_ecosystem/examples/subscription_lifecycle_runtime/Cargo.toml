@@ -4,7 +4,7 @@ resolver = "2"
 [package]
 name = "subscription-lifecycle-runtime"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 futures = { version = "=0.3.33", default-features = true }

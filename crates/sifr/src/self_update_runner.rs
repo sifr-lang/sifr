@@ -1,4 +1,4 @@
-use crate::cli_model_and_entrypoint::{diagnostic_with_code, EXIT_USER_DIAGNOSTIC};
+use crate::cli_model_and_entrypoint::{EXIT_USER_DIAGNOSTIC, diagnostic_with_code};
 use crate::self_update_metadata::{UpdateAction, UpdatePlan};
 use crate::self_update_receipt::DiscoveredReceipt;
 use sha2::{Digest as _, Sha256};
@@ -56,9 +56,10 @@ impl SelfUpdateRunner {
         Err(runner_error_with_exit(
             format!(
                 "self-update installer exited with status {}; installer stdout/stderr above is preserved",
-                status
-                    .code()
-                    .map_or_else(|| "terminated by signal".to_owned(), |code| code.to_string())
+                status.code().map_or_else(
+                    || "terminated by signal".to_owned(),
+                    |code| code.to_string()
+                )
             ),
             status.code().unwrap_or(EXIT_USER_DIAGNOSTIC),
         ))
@@ -640,9 +641,11 @@ printf '%s\n' "$SIFR_INSTALL_DIR" >> "{}"
 
         let output = fs::read_to_string(record).expect("read record");
         assert_eq!(output.lines().count(), 2);
-        assert!(!Path::new(&discovered.receipt.install_dir)
-            .join(".sifr-update.lock")
-            .exists());
+        assert!(
+            !Path::new(&discovered.receipt.install_dir)
+                .join(".sifr-update.lock")
+                .exists()
+        );
     }
 
     #[test]
@@ -658,8 +661,10 @@ printf '%s\n' "$SIFR_INSTALL_DIR" >> "{}"
             .expect("no-op skips network");
 
         assert_eq!(exit, 0);
-        assert!(!Path::new(&discovered.receipt.install_dir)
-            .join(".sifr-update.lock")
-            .exists());
+        assert!(
+            !Path::new(&discovered.receipt.install_dir)
+                .join(".sifr-update.lock")
+                .exists()
+        );
     }
 }

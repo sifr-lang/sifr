@@ -3,8 +3,8 @@ use std::fs;
 use std::path::PathBuf;
 
 use super::{
-    active_registry_entries, DiagnosticCode, DiagnosticState, ACTIVE_DIAGNOSTIC_CODES,
-    DIAGNOSTIC_FAMILIES, DIAGNOSTIC_REGISTRY,
+    ACTIVE_DIAGNOSTIC_CODES, DIAGNOSTIC_FAMILIES, DIAGNOSTIC_REGISTRY, DiagnosticCode,
+    DiagnosticState, active_registry_entries,
 };
 
 #[test]

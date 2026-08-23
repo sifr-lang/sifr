@@ -208,7 +208,7 @@ mod workload_annotations;
 use classes::{collect_class_type, lower_class};
 use default_args::collect_function_defaults;
 pub(in crate::lower) use diagnostic_types::{
-    fallback_error_type, HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic,
+    HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic, fallback_error_type,
 };
 pub use external_defs::{ExternalDefs, StructuralMethodExport, StructuralMethodExports};
 
@@ -254,8 +254,8 @@ use imports::resolve_imports_early;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Stmt};
-pub use sifr_type_system::{substitute_type_vars, substitute_type_vars_with_class_scopes};
 use sifr_type_system::{FunctionType, Type};
+pub use sifr_type_system::{substitute_type_vars, substitute_type_vars_with_class_scopes};
 use std::collections::HashMap;
 use type_aliases::{collect_type_alias_decls, predeclare_type_aliases, resolve_type_aliases};
 use type_var_collection::collect_type_vars;
@@ -269,7 +269,7 @@ use typing_and_functions::{
 
 use crate::hir_nodes::{HirIteratorOp, HirParam};
 use sifr_python_ast::{
-    str, ExprAttribute, ExprCall, ExprDictComp, ExprGenerator, ExprLambda, ExprListComp, ExprNamed,
-    ExprSetComp,
+    ExprAttribute, ExprCall, ExprDictComp, ExprGenerator, ExprLambda, ExprListComp, ExprNamed,
+    ExprSetComp, str,
 };
 use sifr_type_system::ParamConvention;

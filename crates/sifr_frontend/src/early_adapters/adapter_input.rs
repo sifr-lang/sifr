@@ -1,8 +1,8 @@
 //! Closed declaration input passed to one package adapter invocation.
 
 use super::{handler_plans::inherited_handler_plans, inheritance};
-use crate::specialization_support::const_value;
 use crate::ConstValue;
+use crate::specialization_support::const_value;
 use sifr_lowering::{
     ClassAdapterSelection, DeclarationDescriptorKind, ExternalDefs, LoweringResult,
     TypedDeclarationDescriptor,

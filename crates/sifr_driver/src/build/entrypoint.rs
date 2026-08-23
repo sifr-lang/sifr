@@ -6,8 +6,8 @@ use super::materialize::{
     materialize_cached_binary_project_with_report,
 };
 use super::project_codegen::{
-    apply_package_runtime_metadata, codegen_single_file_frontend, generated_project_binary_project,
-    generated_single_file_binary_project, GeneratedBinaryProject,
+    GeneratedBinaryProject, apply_package_runtime_metadata, codegen_single_file_frontend,
+    generated_project_binary_project, generated_single_file_binary_project,
 };
 use super::python_bridges::apply_package_python_bridge_metadata;
 use super::python_bridges::package_bridge_lowering_options;
@@ -15,17 +15,17 @@ use super::python_runtime::PackagePythonRuntime;
 use super::report::{BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport};
 use super::rust_interop::{PackageRustInteropContext, RustInteropModuleSource};
 use super::rust_interop_probe_policy::DirectProbePolicy;
-use super::single_file_interop_cache::{resolve_single_file_metadata, CompiledSingleFileMetadata};
+use super::single_file_interop_cache::{CompiledSingleFileMetadata, resolve_single_file_metadata};
 use super::sysroot_interop::attach_stdlib_rust_interop;
 use crate::diagnostics::{CompileResult, RenderedDiagnostic};
-use crate::frontend::{parse_source, FrontendCompiled};
+use crate::frontend::{FrontendCompiled, parse_source};
 use crate::project::{
-    collect_project_hir_source_modules, collect_project_hir_source_modules_with_options,
+    DiscoveryDiagnosticStyle, ModuleResolver, ProjectLowering, collect_project_hir_source_modules,
+    collect_project_hir_source_modules_with_options,
     compile_single_frontend_module_with_source_and_options, emit_project_frontend_diagnostics,
     parse_import_closure_source_modules, parse_package_import_closure_source_project,
-    DiscoveryDiagnosticStyle, ModuleResolver, ProjectLowering,
 };
-use crate::stdlib::{compile_stdlib, StdlibCompiled};
+use crate::stdlib::{StdlibCompiled, compile_stdlib};
 use crate::workspace::find_workspace_root;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::{FrontendDiagnosticStyle, FrontendSourceContext, SourceProvider};

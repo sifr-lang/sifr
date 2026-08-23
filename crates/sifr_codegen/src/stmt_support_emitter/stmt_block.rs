@@ -1,7 +1,7 @@
 use super::{
-    is_none_like_result_value, is_result_int_division_error_type, result_int_to_sifr_int_rust_type,
+    HirExpr, HirStmt, RustEmitter, RustStmt, Type, is_none_like_result_value,
+    is_result_int_division_error_type, result_int_to_sifr_int_rust_type,
     should_force_mutable_binding, should_omit_local_type_annotation, type_contains_any_or_unknown,
-    HirExpr, HirStmt, RustEmitter, RustStmt, Type,
 };
 
 impl RustEmitter {
@@ -584,7 +584,7 @@ impl RustEmitter {
                                     {
                                         lowered_return_value = crate::RustExpr::FnCall {
                                             func: Box::new(crate::RustExpr::Path(vec![
-                                                "Ok".to_string()
+                                                "Ok".to_string(),
                                             ])),
                                             args: vec![crate::RustExpr::Literal(
                                                 crate::RustLiteral::Unit,

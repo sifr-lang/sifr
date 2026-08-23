@@ -1,8 +1,8 @@
 use crate::{
-    create_invocation_workspace, discover_test_root_modules, parse_import_closure_modules,
     DiscoveryDiagnosticStyle, ModuleResolver, SifrWorkspaceConfig, WorkspaceRoot,
+    create_invocation_workspace, discover_test_root_modules, parse_import_closure_modules,
 };
-use sifr_diagnostics::{render_compact_diagnostics, DiagnosticArg, DiagnosticCode};
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, render_compact_diagnostics};
 use sifr_frontend::DiskSourceProvider;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
@@ -170,14 +170,16 @@ fn test_project_and_test_discovery_parity_reports_reachable_parse_errors() {
     .err()
     .expect("test closure should fail on reachable parse error");
 
-    assert!(project_errors.iter().any(|e| e
-        .children
-        .iter()
-        .any(|child| child.message == "while parsing helper")));
-    assert!(test_errors.iter().any(|e| e
-        .children
-        .iter()
-        .any(|child| child.message == "while parsing helper")));
+    assert!(project_errors.iter().any(|e| {
+        e.children
+            .iter()
+            .any(|child| child.message == "while parsing helper")
+    }));
+    assert!(test_errors.iter().any(|e| {
+        e.children
+            .iter()
+            .any(|child| child.message == "while parsing helper")
+    }));
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -297,18 +299,24 @@ fn test_workspace_resolver_reports_unresolved_tried_paths() {
         errors[0].code,
         DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE.code()
     );
-    assert!(errors[0]
-        .message
-        .contains("unknown import target: 'missing'"));
+    assert!(
+        errors[0]
+            .message
+            .contains("unknown import target: 'missing'")
+    );
     assert!(errors[0].spans.iter().any(|span| span.is_primary));
-    assert!(errors[0]
-        .children
-        .iter()
-        .any(|child| child.message.contains("cases/missing.sifr")));
-    assert!(errors[0]
-        .children
-        .iter()
-        .any(|child| child.message.contains("lib/missing.sifr")));
+    assert!(
+        errors[0]
+            .children
+            .iter()
+            .any(|child| child.message.contains("cases/missing.sifr"))
+    );
+    assert!(
+        errors[0]
+            .children
+            .iter()
+            .any(|child| child.message.contains("lib/missing.sifr"))
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -350,8 +358,10 @@ fn test_workspace_resolver_renders_missing_root_with_unknown_location() {
     assert!(diagnostic.args.contains_key("tried_paths"));
     assert_eq!(diagnostic.children.len(), 2);
     assert!(diagnostic.spans.is_empty());
-    assert!(render_compact_diagnostics(&errors)
-        .contains("E SIFR-IMPORT-0002 <unknown> unknown import target: 'missing'"));
+    assert!(
+        render_compact_diagnostics(&errors)
+            .contains("E SIFR-IMPORT-0002 <unknown> unknown import target: 'missing'")
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -508,14 +518,18 @@ fn test_workspace_resolver_rejects_namespace_file_collision() {
         errors[0].code,
         DiagnosticCode::IMPORT_NAMESPACE_COLLISION.code()
     );
-    assert!(errors[0]
-        .message
-        .contains("import target 'helpers.nodes' collides with a namespace package"));
+    assert!(
+        errors[0]
+            .message
+            .contains("import target 'helpers.nodes' collides with a namespace package")
+    );
     assert!(errors[0].spans.iter().any(|span| span.is_primary));
-    assert!(errors[0]
-        .children
-        .iter()
-        .any(|child| child.message.contains("helpers.sifr")));
+    assert!(
+        errors[0]
+            .children
+            .iter()
+            .any(|child| child.message.contains("helpers.sifr"))
+    );
 
     let spanless = parse_import_closure_modules(
         &resolver,
@@ -535,10 +549,12 @@ fn test_workspace_resolver_rejects_namespace_file_collision() {
             "helpers.nodes".to_string()
         ))
     );
-    assert!(spanless[0]
-        .children
-        .iter()
-        .any(|child| child.message.contains("helpers.sifr")));
+    assert!(
+        spanless[0]
+            .children
+            .iter()
+            .any(|child| child.message.contains("helpers.sifr"))
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }

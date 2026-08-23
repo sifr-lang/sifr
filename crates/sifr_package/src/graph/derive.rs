@@ -2,11 +2,11 @@ use crate::cargo::metadata::{
     CargoMetadata, CargoPackage, CargoPackageId, NormalizedCargoMetadata,
 };
 use crate::diag::PackageDiagnostic;
-use crate::graph::scopes::{derive_direct_dependency_scopes, DirectDependencyScope};
+use crate::graph::scopes::{DirectDependencyScope, derive_direct_dependency_scopes};
 use crate::manifest::metadata::CargoSifrAliasMetadata;
 use crate::manifest::sifr::{SifrManifest, SifrPackageName};
 use crate::manifest::validate::validate_source_root_exists;
-use crate::source::layout::{validate_pure_marker_file, MarkerValidation};
+use crate::source::layout::{MarkerValidation, validate_pure_marker_file};
 use sifr_frontend::SourceProvider;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};

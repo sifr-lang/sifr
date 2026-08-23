@@ -1,4 +1,4 @@
-use crate::errors::{required_string, LspError, LspResult};
+use crate::errors::{LspError, LspResult, required_string};
 use serde_json::Value;
 
 pub(crate) enum DocumentContentChange {
@@ -38,7 +38,7 @@ pub(crate) fn compact_content_changes(changes: &[Value]) -> LspResult<CompactedD
 
 #[cfg(test)]
 mod tests {
-    use super::{compact_content_changes, DocumentContentChange};
+    use super::{DocumentContentChange, compact_content_changes};
     use serde_json::json;
 
     #[test]

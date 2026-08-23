@@ -143,24 +143,29 @@ fn marker_editor_corpus_covers_multifile_queries_and_stale_snapshots() {
     let main_range = full_range(&main_source).expect("fixture should fit in a text range");
 
     assert!(has_query(value, "hover"));
-    assert!(host
-        .hover(main_file, &value_position)
-        .expect("hover should query")
-        .into_value()
-        .is_some());
+    assert!(
+        host.hover(main_file, &value_position)
+            .expect("hover should query")
+            .into_value()
+            .is_some()
+    );
     assert!(has_query(value, "completion"));
-    assert!(!host
-        .completion(main_file, &value_position)
-        .expect("completion should query")
-        .into_value()
-        .items
-        .is_empty());
+    assert!(
+        !host
+            .completion(main_file, &value_position)
+            .expect("completion should query")
+            .into_value()
+            .items
+            .is_empty()
+    );
     assert!(has_query(value, "definition"));
-    assert!(!host
-        .definition(main_file, &value_position)
-        .expect("definition should query")
-        .into_value()
-        .is_empty());
+    assert!(
+        !host
+            .definition(main_file, &value_position)
+            .expect("definition should query")
+            .into_value()
+            .is_empty()
+    );
     assert!(has_query(value, "references"));
     assert!(
         host.references(main_file, &value_position)
@@ -170,76 +175,93 @@ fn marker_editor_corpus_covers_multifile_queries_and_stale_snapshots() {
             >= 2
     );
     assert!(has_query(value, "rename"));
-    assert!(!host
-        .rename(
-            main_file,
-            &value_position,
-            &SymbolName("renamed_value".to_string()),
-        )
-        .expect("rename should query")
-        .into_value()
-        .edits
-        .is_empty());
+    assert!(
+        !host
+            .rename(
+                main_file,
+                &value_position,
+                &SymbolName("renamed_value".to_string()),
+            )
+            .expect("rename should query")
+            .into_value()
+            .edits
+            .is_empty()
+    );
     assert!(has_query(value, "semantic_tokens"));
-    assert!(!host
-        .semantic_tokens(main_file, None)
-        .expect("semantic tokens should query")
-        .into_value()
-        .is_empty());
+    assert!(
+        !host
+            .semantic_tokens(main_file, None)
+            .expect("semantic tokens should query")
+            .into_value()
+            .is_empty()
+    );
     let helper = marker(&fixtures, "helper_export");
     assert!(has_query(helper, "definition"));
-    assert!(!host
-        .definition(helper_file, &position(helper))
-        .expect("helper definition should query")
-        .into_value()
-        .is_empty());
+    assert!(
+        !host
+            .definition(helper_file, &position(helper))
+            .expect("helper definition should query")
+            .into_value()
+            .is_empty()
+    );
     assert!(has_query(helper, "references"));
     let helper_references = host
         .references(helper_file, &position(helper))
         .expect("helper references should query")
         .into_value();
-    assert!(helper_references
-        .iter()
-        .any(|location| location.file == main_file));
-    assert!(helper_references
-        .iter()
-        .any(|location| location.file == helper_file));
+    assert!(
+        helper_references
+            .iter()
+            .any(|location| location.file == main_file)
+    );
+    assert!(
+        helper_references
+            .iter()
+            .any(|location| location.file == helper_file)
+    );
     assert!(has_query(helper, "semantic_tokens"));
-    assert!(!host
-        .semantic_tokens(helper_file, None)
-        .expect("helper semantic tokens should query")
-        .into_value()
-        .is_empty());
+    assert!(
+        !host
+            .semantic_tokens(helper_file, None)
+            .expect("helper semantic tokens should query")
+            .into_value()
+            .is_empty()
+    );
     assert!(has_query(value, "formatting"));
-    assert!(!host
-        .format_document(main_file, FormatOptions::default())
-        .expect("formatting should query")
-        .into_value()
-        .is_empty());
+    assert!(
+        !host
+            .format_document(main_file, FormatOptions::default())
+            .expect("formatting should query")
+            .into_value()
+            .is_empty()
+    );
     assert!(has_query(value, "code_actions"));
-    assert!(!host
-        .code_actions(
-            main_file,
-            main_range,
-            &CodeActionContext {
-                diagnostics: vec![DiagnosticId::policy(
-                    "SIFR-LINT-0004",
-                    "trailing-whitespace",
-                )],
-            },
-        )
-        .expect("code actions should query")
-        .into_value()
-        .is_empty());
+    assert!(
+        !host
+            .code_actions(
+                main_file,
+                main_range,
+                &CodeActionContext {
+                    diagnostics: vec![DiagnosticId::policy(
+                        "SIFR-LINT-0004",
+                        "trailing-whitespace",
+                    )],
+                },
+            )
+            .expect("code actions should query")
+            .into_value()
+            .is_empty()
+    );
 
     let stale = marker(&fixtures, "stale_return");
     assert!(has_query(stale, "diagnostics"));
-    assert!(host
-        .diagnostics(main_file)
-        .expect("diagnostics should query")
-        .into_value()
-        .iter()
-        .any(|diagnostic| diagnostic.code == "SIFR-LINT-0004"));
+    assert!(
+        host.diagnostics(main_file)
+            .expect("diagnostics should query")
+            .into_value()
+            .iter()
+            .any(|diagnostic| diagnostic.code == "SIFR-LINT-0004")
+    );
     assert!(has_query(stale, "stale_snapshot"));
     let snapshot = host.snapshot();
     host.update_document(
@@ -333,9 +355,11 @@ fn snapshot_handles_are_internal_and_reject_wrong_snapshot_resolution() {
         );
     }
 
-    assert!(snapshot
-        .hover(&mut host, file, &position)
-        .expect_err("old analysis snapshot should also reject host query")
-        .message
-        .contains("stale"));
+    assert!(
+        snapshot
+            .hover(&mut host, file, &position)
+            .expect_err("old analysis snapshot should also reject host query")
+            .message
+            .contains("stale")
+    );
 }

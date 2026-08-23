@@ -10,7 +10,7 @@ impl std::fmt::Display for Type {
 mod tests {
     use super::*;
     use crate::{
-        make_union, FixedIntType, FunctionType, IterationCapability, OwnershipKind, ParamConvention,
+        FixedIntType, FunctionType, IterationCapability, OwnershipKind, ParamConvention, make_union,
     };
 
     #[test]
@@ -34,9 +34,11 @@ mod tests {
     fn test_fixed_width_type_names_and_union_variants() {
         let fixed = Type::FixedInt(FixedIntType::U32);
         assert_eq!(fixed.display_name(), "uint32");
-        assert!(fixed
-            .union_variant_name()
-            .starts_with("__SifrUnionVariant_"));
+        assert!(
+            fixed
+                .union_variant_name()
+                .starts_with("__SifrUnionVariant_")
+        );
     }
 
     #[test]
@@ -384,11 +386,13 @@ mod tests {
         assert!(!Type::Float.supports_hash_key());
         assert!(!Type::List(Box::new(Type::Int)).supports_hash_key());
         assert!(!Type::Set(Box::new(Type::Float)).supports_structural_equality());
-        assert!(!Type::Dict(
-            Box::new(Type::List(Box::new(Type::Int))),
-            Box::new(Type::Int),
-        )
-        .supports_structural_equality());
+        assert!(
+            !Type::Dict(
+                Box::new(Type::List(Box::new(Type::Int))),
+                Box::new(Type::Int),
+            )
+            .supports_structural_equality()
+        );
         assert!(!callable_class.supports_debug_formatting());
         assert!(!callable_class.supports_display_formatting());
     }
@@ -467,8 +471,10 @@ mod tests {
             methods: vec![],
             parent_class: None,
         };
-        assert!(Type::List(Box::new(object_a.clone()))
-            .is_assignable_to(&Type::List(Box::new(object_b))));
+        assert!(
+            Type::List(Box::new(object_a.clone()))
+                .is_assignable_to(&Type::List(Box::new(object_b)))
+        );
 
         let child = Type::Class {
             identity: None,
@@ -550,8 +556,10 @@ mod tests {
         assert!(through_factory_facade.is_assignable_to(&through_type_facade));
         assert!(!unrelated_same_name.is_assignable_to(&through_type_facade));
         assert!(!other_specialization.is_assignable_to(&through_type_facade));
-        assert!(Type::Union(vec![through_type_facade, other_specialization])
-            .has_conflicting_class_specializations());
+        assert!(
+            Type::Union(vec![through_type_facade, other_specialization])
+                .has_conflicting_class_specializations()
+        );
     }
 
     #[test]

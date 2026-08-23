@@ -127,7 +127,7 @@ impl RustEmitter {
             return Ok(None);
         };
 
-        let lowered = (|| -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        (|| -> Result<Option<crate::RustExpr>, crate::CodegenError> {
             let lowered_object = if matches!(object, HirExpr::FieldAccess { .. }) {
                 if let Some(path) = self.emit_shared_receiver_path(object) {
                     Some(path)
@@ -555,11 +555,13 @@ impl RustEmitter {
                 return Ok(Some(lowered_expr));
             }
             match index_base_ty {
-                Type::List(_) | Type::Bytes | Type::Str => Ok(Some(Self::lower_proven_index_option_expr_for_ir(
-                    lowered_expr,
-                    "__sifr_index_value",
-                    "compiler-verified index should be in range",
-                ))),
+                Type::List(_) | Type::Bytes | Type::Str => {
+                    Ok(Some(Self::lower_proven_index_option_expr_for_ir(
+                        lowered_expr,
+                        "__sifr_index_value",
+                        "compiler-verified index should be in range",
+                    )))
+                }
                 Type::Dict(_, _) => Ok(Some(Self::lower_proven_index_option_expr_for_ir(
                     lowered_expr,
                     "__sifr_index_value",
@@ -569,8 +571,6 @@ impl RustEmitter {
                     "internal codegen invariant violated: list/dict/bytes/str index produced non-optional result type",
                 )),
             }
-        })();
-
-        lowered
+        })()
     }
 }

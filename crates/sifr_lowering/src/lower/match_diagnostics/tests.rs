@@ -1,5 +1,5 @@
 use super::*;
-use crate::{lower_module, HirDiagnostic};
+use crate::{HirDiagnostic, lower_module};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
@@ -51,8 +51,7 @@ pub(super) fn enum_non_exhaustive_match_has_match_code() {
 
 #[test]
 pub(super) fn union_non_exhaustive_match_has_match_code() {
-    let source =
-        "def describe(x: int | None) -> str:\n    match x:\n        case int():\n            return \"integer\"\n";
+    let source = "def describe(x: int | None) -> str:\n    match x:\n        case int():\n            return \"integer\"\n";
     let errors = lower_errors(source);
 
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
@@ -66,8 +65,7 @@ pub(super) fn union_non_exhaustive_match_has_match_code() {
 
 #[test]
 pub(super) fn optional_non_exhaustive_match_has_only_match_code() {
-    let source =
-        "def describe(x: str | None) -> str:\n    match x:\n        case str():\n            return \"has value\"\n";
+    let source = "def describe(x: str | None) -> str:\n    match x:\n        case str():\n            return \"has value\"\n";
     let errors = lower_errors(source);
 
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
@@ -80,8 +78,7 @@ pub(super) fn optional_non_exhaustive_match_has_only_match_code() {
 
 #[test]
 pub(super) fn literal_non_exhaustive_match_has_match_code() {
-    let source =
-        "def describe(x: int) -> str:\n    match x:\n        case 1:\n            return \"one\"\n        case 2:\n            return \"two\"\n";
+    let source = "def describe(x: int) -> str:\n    match x:\n        case 1:\n            return \"one\"\n        case 2:\n            return \"two\"\n";
     let errors = lower_errors(source);
 
     assert!(errors.iter().any(|error| {

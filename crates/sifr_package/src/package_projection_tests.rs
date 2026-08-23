@@ -1,5 +1,5 @@
 use crate::{
-    check_projection, init_package, repair_projection, InitPackageKind, InitPackageOptions,
+    InitPackageKind, InitPackageOptions, check_projection, init_package, repair_projection,
 };
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::DiskSourceProvider;
@@ -27,9 +27,11 @@ fn init_lib_creates_canonical_src_layout_and_cargo_projection() {
     assert!(cargo.contains("[package.metadata.sifr]"));
     assert!(cargo.contains("manifest = \"sifr.toml\""));
     assert!(cargo.contains("src/**/*.sifr"));
-    assert!(check_projection(&package, &mut DiskSourceProvider::new())
-        .diagnostics
-        .is_empty());
+    assert!(
+        check_projection(&package, &mut DiskSourceProvider::new())
+            .diagnostics
+            .is_empty()
+    );
 }
 
 #[test]
@@ -79,9 +81,11 @@ fn cargo_projection_init_bin_creates_main_target_without_manifest_bin_table() {
     .expect("init succeeds");
 
     assert!(package.join("src/main.sifr").is_file());
-    assert!(!fs::read_to_string(package.join("sifr.toml"))
-        .expect("manifest exists")
-        .contains("[[bin]]"));
+    assert!(
+        !fs::read_to_string(package.join("sifr.toml"))
+            .expect("manifest exists")
+            .contains("[[bin]]")
+    );
 }
 
 #[test]
@@ -126,10 +130,12 @@ fn cargo_projection_repair_check_reports_missing_required_include_0704() {
 
     let check = check_projection(&package, &mut DiskSourceProvider::new());
 
-    assert!(check
-        .diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.code == DiagnosticCode::PACKAGE_PROJECTION_INCLUDE_DRIFT));
+    assert!(
+        check
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == DiagnosticCode::PACKAGE_PROJECTION_INCLUDE_DRIFT)
+    );
 }
 
 #[test]
@@ -172,18 +178,26 @@ fn rust_bridge_projection_repair_writes_managed_projection_without_touching_user
             .expect("bridge remains readable"),
         "pub fn tokenize() {}\n"
     );
-    assert!(fs::read_to_string(package.join("src/lib.rs"))
-        .expect("lib projection exists")
-        .contains("pub mod __sifr_bridge;"));
-    assert!(fs::read_to_string(package.join("src/bridges/mod.rs"))
-        .expect("bridge projection exists")
-        .contains("pub mod tokenizer;"));
-    assert!(fs::read_to_string(package.join("Cargo.toml"))
-        .expect("cargo projection exists")
-        .contains("src/**/*.rs"));
-    assert!(check_projection(&package, &mut DiskSourceProvider::new())
-        .diagnostics
-        .is_empty());
+    assert!(
+        fs::read_to_string(package.join("src/lib.rs"))
+            .expect("lib projection exists")
+            .contains("pub mod __sifr_bridge;")
+    );
+    assert!(
+        fs::read_to_string(package.join("src/bridges/mod.rs"))
+            .expect("bridge projection exists")
+            .contains("pub mod tokenizer;")
+    );
+    assert!(
+        fs::read_to_string(package.join("Cargo.toml"))
+            .expect("cargo projection exists")
+            .contains("src/**/*.rs")
+    );
+    assert!(
+        check_projection(&package, &mut DiskSourceProvider::new())
+            .diagnostics
+            .is_empty()
+    );
 }
 
 #[test]

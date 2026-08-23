@@ -1,7 +1,7 @@
 //! Canonical export and re-export storage for typed descriptor declarations.
 
 use crate::module_export_storage::replace_module_entry;
-use sifr_lowering::{canonicalize_user_export_type, ExternalDefs, HirModule, LoweringResult};
+use sifr_lowering::{ExternalDefs, HirModule, LoweringResult, canonicalize_user_export_type};
 use sifr_type_system::Type;
 use std::collections::HashMap;
 

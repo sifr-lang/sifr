@@ -1,8 +1,8 @@
 use crate::{
-    homogeneous_large_tuple_backing_array, RustExpr, RustItem, RustParam, RustStmt, RustTrait,
-    RustType, Type, Visibility,
+    RustExpr, RustItem, RustParam, RustStmt, RustTrait, RustType, Type, Visibility,
+    homogeneous_large_tuple_backing_array,
 };
-use sifr_type_system::{class_rust_name, source_class_rust_name, OwnershipKind};
+use sifr_type_system::{OwnershipKind, class_rust_name, source_class_rust_name};
 
 pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     match ty {

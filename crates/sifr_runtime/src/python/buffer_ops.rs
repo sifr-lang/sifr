@@ -1,7 +1,7 @@
 use super::object_ops::clone_handle;
 use super::{ObjectHandle, PythonError, PythonRuntimeError};
-use pyo3::exceptions::{PyBufferError, PyIndexError, PyTypeError};
 use pyo3::Python;
+use pyo3::exceptions::{PyBufferError, PyIndexError, PyTypeError};
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 use std::sync::{Arc, LazyLock, Mutex, MutexGuard};

@@ -1,6 +1,6 @@
 use super::cli_model_and_entrypoint::{
-    diagnostic_with_code, run_with_panic_boundary, DiagnosticFormat,
-    EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
+    DiagnosticFormat, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
+    EXIT_USER_DIAGNOSTIC, diagnostic_with_code, run_with_panic_boundary,
 };
 use super::diagnostic_rendering_and_run::render_diagnostic_output;
 use clap::{Args, ValueEnum};
@@ -186,11 +186,7 @@ pub(super) fn cmd_lint(
                 return emit_success(lint_format, args);
             }
             let exit = render_lint_diagnostics(&diagnostics, lint_format, args, false);
-            if args.exit_zero {
-                EXIT_SUCCESS
-            } else {
-                exit
-            }
+            if args.exit_zero { EXIT_SUCCESS } else { exit }
         }
         Ok(LintCommandResult::Text(output)) => write_lint_output(&output, args, true),
         Ok(LintCommandResult::Statistics(diagnostics)) => {

@@ -1,4 +1,4 @@
-use super::{type_queries::parent_chain_contains, Type};
+use super::{Type, type_queries::parent_chain_contains};
 use std::collections::HashSet;
 
 impl Type {

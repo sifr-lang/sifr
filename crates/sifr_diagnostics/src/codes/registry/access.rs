@@ -1,4 +1,4 @@
-use super::{DiagnosticRegistryEntry, DiagnosticState, DiagnosticTooling, DIAGNOSTIC_REGISTRY};
+use super::{DIAGNOSTIC_REGISTRY, DiagnosticRegistryEntry, DiagnosticState, DiagnosticTooling};
 
 #[must_use]
 pub fn registry_entry(id: &str) -> Option<&'static DiagnosticRegistryEntry> {

@@ -104,16 +104,21 @@ impl Drop for SilentPanicBoundary {
         if state.active_boundaries != 0 {
             return;
         }
-        let _installed_hook = std::panic::take_hook();
-        if let Some(previous_hook) = state.previous_hook.take() {
+        let installed_hook = std::panic::take_hook();
+        let previous_hook = state.previous_hook.take();
+        drop(state);
+        if let Some(previous_hook) = previous_hook {
             let mut previous_hook = match previous_hook.lock() {
                 Ok(hook) => hook,
                 Err(poisoned) => poisoned.into_inner(),
             };
-            if let Some(previous_hook) = previous_hook.take() {
+            let restored_hook = previous_hook.take();
+            drop(previous_hook);
+            if let Some(previous_hook) = restored_hook {
                 std::panic::set_hook(previous_hook);
             }
         }
+        drop(installed_hook);
     }
 }
 

@@ -1,6 +1,6 @@
 use super::structural_impl_demand_codegen_tests::{module, payload_class, structural_function};
 use sifr_ir::HirClass;
-use sifr_structural_identity::{metadata, nominal_record, primitive, NominalField};
+use sifr_structural_identity::{NominalField, metadata, nominal_record, primitive};
 use sifr_type_system::Type;
 
 #[test]

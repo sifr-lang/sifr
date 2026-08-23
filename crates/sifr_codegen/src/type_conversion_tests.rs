@@ -1,5 +1,5 @@
 use crate::{
-    render_type, sifr_type_to_rust_field_type, sifr_type_to_rust_type, RustTrait, RustType,
+    RustTrait, RustType, render_type, sifr_type_to_rust_field_type, sifr_type_to_rust_type,
 };
 use sifr_type_system::{FixedIntType, FunctionType, ParamConvention, PythonArrowKind, Type};
 use std::collections::HashMap;

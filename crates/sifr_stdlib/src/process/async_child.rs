@@ -4,8 +4,8 @@ use std::{
     io,
     pin::Pin,
     sync::{
-        atomic::{AtomicBool, AtomicI64, Ordering},
         Arc, LazyLock, Mutex, MutexGuard,
+        atomic::{AtomicBool, AtomicI64, Ordering},
     },
 };
 

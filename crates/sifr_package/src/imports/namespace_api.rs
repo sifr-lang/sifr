@@ -1,6 +1,6 @@
+use crate::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::imports::source_map::DottedModulePath;
-use crate::CargoPackageId;
 use sifr_frontend::SourceProvider;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};

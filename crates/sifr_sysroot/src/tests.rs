@@ -1,7 +1,7 @@
 use super::{
-    canonical_sysroot_tree_digest, parse_sysroot_manifest, resolve_sysroot_with,
-    CanonicalDigestPolicy, SysrootErrorKind, SysrootResolutionInput, COMPILER_SIFR_VERSION,
-    SYSROOT_MANIFEST_FIELDS,
+    COMPILER_SIFR_VERSION, CanonicalDigestPolicy, SYSROOT_MANIFEST_FIELDS, SysrootErrorKind,
+    SysrootResolutionInput, canonical_sysroot_tree_digest, parse_sysroot_manifest,
+    resolve_sysroot_with,
 };
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -233,9 +233,11 @@ resolver = "2"
     let error = resolve_sysroot_with(&input).expect_err("missing stdlib member should fail");
 
     assert_eq!(error.kind, SysrootErrorKind::InvalidWorkspace);
-    assert!(error
-        .message
-        .contains("workspace member crates/sifr_stdlib"));
+    assert!(
+        error
+            .message
+            .contains("workspace member crates/sifr_stdlib")
+    );
 }
 
 #[test]
@@ -262,9 +264,11 @@ resolver = "2"
         resolve_sysroot_with(&input).expect_err("missing structural identity member should fail");
 
     assert_eq!(error.kind, SysrootErrorKind::InvalidWorkspace);
-    assert!(error
-        .message
-        .contains("workspace member crates/sifr_structural_identity"));
+    assert!(
+        error
+            .message
+            .contains("workspace member crates/sifr_structural_identity")
+    );
 }
 
 #[test]
@@ -364,7 +368,7 @@ fn write_minimal_crate(root: &Path, name: &str) {
     fs::create_dir_all(crate_dir.join("src")).expect("crate src dir");
     fs::write(
         crate_dir.join("Cargo.toml"),
-        format!("[package]\nname = \"{name}\"\nversion = \"0.0.0\"\nedition = \"2021\"\n"),
+        format!("[package]\nname = \"{name}\"\nversion = \"0.0.0\"\nedition = \"2024\"\n"),
     )
     .expect("crate manifest");
     fs::write(crate_dir.join("src/lib.rs"), "").expect("crate lib");

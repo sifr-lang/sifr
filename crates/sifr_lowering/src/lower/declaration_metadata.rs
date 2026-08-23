@@ -1,7 +1,7 @@
 use super::{
+    LowerCtx,
     diagnostics::{collect_enum_variants, is_enum_class},
     simple_expr::lower_expr_simple,
-    LowerCtx,
 };
 use ruff_text_size::Ranged;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
@@ -525,14 +525,18 @@ def inspect(value: int) -> int:
         let parsed = parse_module(source).expect("fixture parses");
         let lowered = lower_module(parsed.suite()).expect("fixture lowers");
         assert_eq!(lowered.declaration_metadata.len(), 6);
-        assert!(lowered
-            .declaration_metadata
-            .iter()
-            .any(|item| item.target_kind == DeclarationMetadataTargetKind::Field));
-        assert!(lowered
-            .declaration_metadata
-            .iter()
-            .any(|item| item.target_kind == DeclarationMetadataTargetKind::Parameter));
+        assert!(
+            lowered
+                .declaration_metadata
+                .iter()
+                .any(|item| item.target_kind == DeclarationMetadataTargetKind::Field)
+        );
+        assert!(
+            lowered
+                .declaration_metadata
+                .iter()
+                .any(|item| item.target_kind == DeclarationMetadataTargetKind::Parameter)
+        );
     }
 
     #[test]

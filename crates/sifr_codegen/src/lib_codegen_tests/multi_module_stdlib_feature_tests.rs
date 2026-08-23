@@ -53,14 +53,18 @@ fn test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_
 
     let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code);
 
-    assert!(result
-        .rust_files
-        .get("main")
-        .expect("main module should be generated")
-        .contains("::sifr_stdlib::fs::read_text"));
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Fs));
+    assert!(
+        result
+            .rust_files
+            .get("main")
+            .expect("main module should be generated")
+            .contains("::sifr_stdlib::fs::read_text")
+    );
+    assert!(
+        result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::Fs)
+    );
 }
 
 #[test]
@@ -108,9 +112,11 @@ fn test_generate_rust_multi_requires_runtime_for_absolute_private_stdlib_bridge_
 
     let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code);
 
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::SifrRuntime));
+    assert!(
+        result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::SifrRuntime)
+    );
 }
 
 #[test]

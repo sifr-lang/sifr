@@ -1,9 +1,9 @@
 use super::{
-    defaultdict_shape_expr_is_lowering_exact, has_conflicting_inference,
+    CmpOp, DefaultdictMethodCall, Expr, ExprCall, FunctionEnv, HashMap, LocalFunctionState,
+    LowerCtx, Operator, Type, defaultdict_shape_expr_is_lowering_exact, has_conflicting_inference,
     infer_defaultdict_call_type, infer_registered_call, refine_defaultdict_method_call,
     refine_defaultdict_subscript, str, type_check_binary_op, unify_function_return,
-    unify_inferred_call_arguments, unify_types, CmpOp, DefaultdictMethodCall, Expr, ExprCall,
-    FunctionEnv, HashMap, LocalFunctionState, LowerCtx, Operator, Type,
+    unify_inferred_call_arguments, unify_types,
 };
 pub(super) fn analyze_assign(
     targets: &[Expr],

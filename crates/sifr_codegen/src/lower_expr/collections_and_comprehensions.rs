@@ -1,7 +1,7 @@
 use super::{
+    HirExpr, HirFStringPart, HirParam, RustExpr, RustLiteral, RustParam, RustStmt, RustType, Type,
     try_lower_dict_get_key_expr, try_lower_leaf_expr, try_lower_leaf_or_name_expr,
-    try_lower_simple_defaultdict_index_expr, try_lower_simple_iter_source_expr, HirExpr,
-    HirFStringPart, HirParam, RustExpr, RustLiteral, RustParam, RustStmt, RustType, Type,
+    try_lower_simple_defaultdict_index_expr, try_lower_simple_iter_source_expr,
 };
 pub(super) fn try_lower_simple_index_expr(
     object: &HirExpr,

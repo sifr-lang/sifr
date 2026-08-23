@@ -1,5 +1,5 @@
-use super::{dlpack_error, unsupported_dtype_error, PythonDlpackTensorMetadata, DEVICE_CPU};
-use std::ffi::{c_void, CStr};
+use super::{DEVICE_CPU, PythonDlpackTensorMetadata, dlpack_error, unsupported_dtype_error};
+use std::ffi::{CStr, c_void};
 
 pub(super) const DLTENSOR_NAME: &CStr = c"dltensor";
 pub(super) const USED_DLTENSOR_NAME: &CStr = c"used_dltensor";

@@ -76,28 +76,38 @@ fn project_session_snapshot_records_overlay_and_dependencies() {
     assert_eq!(snapshot.overlays.len(), 1);
     assert!(!snapshot.overlays[0].matches_disk);
     assert_eq!(snapshot.overlays[0].source.as_str(), "value = 2\n");
-    assert!(snapshot
-        .source_dependencies
-        .iter()
-        .any(|dependency| matches!(dependency.kind, SourceDependencyKind::FileRead)));
-    assert!(snapshot
-        .residency
-        .projects
-        .iter()
-        .any(|project| project.kind == ProjectResidencyKind::ExplicitApiOpen && project.loaded));
-    assert!(snapshot.residency.configs.iter().any(|config| config
-        .path
-        .as_path()
-        .ends_with("sifr.toml")
-        && !config.pending_reload));
-    assert!(snapshot.residency.watchers.iter().any(|watcher| watcher
-        .reasons
-        .contains(&WatchRegistrationReason::PackageRoot)));
-    assert!(snapshot
-        .residency
-        .watchers
-        .iter()
-        .any(|watcher| watcher.reasons.contains(&WatchRegistrationReason::SeenFile)));
+    assert!(
+        snapshot
+            .source_dependencies
+            .iter()
+            .any(|dependency| matches!(dependency.kind, SourceDependencyKind::FileRead))
+    );
+    assert!(
+        snapshot
+            .residency
+            .projects
+            .iter()
+            .any(|project| project.kind == ProjectResidencyKind::ExplicitApiOpen && project.loaded)
+    );
+    assert!(
+        snapshot.residency.configs.iter().any(|config| config
+            .path
+            .as_path()
+            .ends_with("sifr.toml")
+            && !config.pending_reload)
+    );
+    assert!(snapshot.residency.watchers.iter().any(|watcher| {
+        watcher
+            .reasons
+            .contains(&WatchRegistrationReason::PackageRoot)
+    }));
+    assert!(
+        snapshot
+            .residency
+            .watchers
+            .iter()
+            .any(|watcher| watcher.reasons.contains(&WatchRegistrationReason::SeenFile))
+    );
     assert_eq!(
         snapshot
             .source_map
@@ -122,26 +132,24 @@ fn project_session_snapshot_records_overlay_and_dependencies() {
     assert_eq!(session.revision().as_u64(), snapshot.revision.as_u64() + 1);
     let removed_snapshot = session.snapshot();
     assert!(removed_snapshot.overlays.is_empty());
-    assert!(!removed_snapshot
-        .residency
-        .projects
-        .iter()
-        .any(
-            |project| project.kind == ProjectResidencyKind::OpenFileOwner
-                && project
-                    .root
-                    .as_ref()
-                    .is_some_and(|path| path.as_path().ends_with("helper.sifr"))
-        ));
+    assert!(!removed_snapshot.residency.projects.iter().any(|project| {
+        project.kind == ProjectResidencyKind::OpenFileOwner
+            && project
+                .root
+                .as_ref()
+                .is_some_and(|path| path.as_path().ends_with("helper.sifr"))
+    }));
     assert_eq!(
         removed_snapshot.dirty_scope_report.reasons,
         vec![WorkspaceDirtyReason::SourceTextChanged]
     );
-    assert!(removed_snapshot
-        .residency
-        .watchers
-        .iter()
-        .any(|watcher| watcher.reasons.contains(&WatchRegistrationReason::SeenFile)));
+    assert!(
+        removed_snapshot
+            .residency
+            .watchers
+            .iter()
+            .any(|watcher| watcher.reasons.contains(&WatchRegistrationReason::SeenFile))
+    );
 }
 
 #[test]
@@ -171,18 +179,22 @@ fn debug_snapshot_explains_invalidation_and_status_counts() {
     assert_eq!(debug.status.module_count, 2);
     assert!(debug.status.memory.source_text_bytes > 0);
     assert!(debug.status.memory.retained_watchers > 0);
-    assert!(debug
-        .trace
-        .events
-        .iter()
-        .any(|event| event.phase == WorkspaceTracePhase::SourceUpdate
-            && event.detail.contains("overlay_upsert")));
-    assert!(debug
-        .trace
-        .events
-        .iter()
-        .any(|event| event.phase == WorkspaceTracePhase::Invalidation
-            && event.detail.contains("SourceTextChanged")));
+    assert!(
+        debug
+            .trace
+            .events
+            .iter()
+            .any(|event| event.phase == WorkspaceTracePhase::SourceUpdate
+                && event.detail.contains("overlay_upsert"))
+    );
+    assert!(
+        debug
+            .trace
+            .events
+            .iter()
+            .any(|event| event.phase == WorkspaceTracePhase::Invalidation
+                && event.detail.contains("SourceTextChanged"))
+    );
     let rendered = debug.render_text();
     assert!(rendered.contains("[status]"));
     assert!(rendered.contains("phase=parse"));
@@ -218,9 +230,11 @@ fn closing_one_overlay_preserves_other_overlay_watcher() {
     );
     session.reload().expect("overlay-backed reload succeeds");
 
-    assert!(session
-        .remove_overlay(&temp.root.join("first.sifr"))
-        .is_some());
+    assert!(
+        session
+            .remove_overlay(&temp.root.join("first.sifr"))
+            .is_some()
+    );
     let snapshot = session.snapshot();
     let watcher_globs = snapshot
         .residency
@@ -229,31 +243,25 @@ fn closing_one_overlay_preserves_other_overlay_watcher() {
         .map(|watcher| watcher.glob.clone())
         .collect::<BTreeSet<_>>();
 
-    assert!(watcher_globs
-        .iter()
-        .any(|glob| glob.ends_with("second.sifr")));
-    assert!(!snapshot
-        .residency
-        .projects
-        .iter()
-        .any(
-            |project| project.kind == ProjectResidencyKind::OpenFileOwner
-                && project
-                    .root
-                    .as_ref()
-                    .is_some_and(|path| path.as_path().ends_with("first.sifr"))
-        ));
-    assert!(snapshot
-        .residency
-        .projects
-        .iter()
-        .any(
-            |project| project.kind == ProjectResidencyKind::OpenFileOwner
-                && project
-                    .root
-                    .as_ref()
-                    .is_some_and(|path| path.as_path().ends_with("second.sifr"))
-        ));
+    assert!(
+        watcher_globs
+            .iter()
+            .any(|glob| glob.ends_with("second.sifr"))
+    );
+    assert!(!snapshot.residency.projects.iter().any(|project| {
+        project.kind == ProjectResidencyKind::OpenFileOwner
+            && project
+                .root
+                .as_ref()
+                .is_some_and(|path| path.as_path().ends_with("first.sifr"))
+    }));
+    assert!(snapshot.residency.projects.iter().any(|project| {
+        project.kind == ProjectResidencyKind::OpenFileOwner
+            && project
+                .root
+                .as_ref()
+                .is_some_and(|path| path.as_path().ends_with("second.sifr"))
+    }));
     assert_eq!(
         watcher_globs.len(),
         snapshot.residency.watchers.len(),
@@ -279,27 +287,33 @@ fn config_registry_pending_reload_and_extra_watch_roots_are_snapshot_visible() {
         snapshot.dirty_scope_report.scope,
         WorkspaceDirtyScope::ConfigProject
     );
-    assert!(snapshot
-        .residency
-        .configs
-        .iter()
-        .any(|config| { config.path.as_path().ends_with("sifr.toml") && config.pending_reload }));
-    assert!(snapshot.residency.watchers.iter().any(|watcher| watcher
-        .reasons
-        .contains(&WatchRegistrationReason::StdlibRoot)));
-    assert!(snapshot.residency.watchers.iter().any(|watcher| watcher
-        .reasons
-        .contains(&WatchRegistrationReason::GeneratedArtifact)));
+    assert!(
+        snapshot.residency.configs.iter().any(|config| {
+            config.path.as_path().ends_with("sifr.toml") && config.pending_reload
+        })
+    );
+    assert!(snapshot.residency.watchers.iter().any(|watcher| {
+        watcher
+            .reasons
+            .contains(&WatchRegistrationReason::StdlibRoot)
+    }));
+    assert!(snapshot.residency.watchers.iter().any(|watcher| {
+        watcher
+            .reasons
+            .contains(&WatchRegistrationReason::GeneratedArtifact)
+    }));
 
     session
         .reload()
         .expect("unrelated reload should preserve pending config");
     let reloaded = session.snapshot();
-    assert!(reloaded.residency.configs.iter().any(|config| config
-        .path
-        .as_path()
-        .ends_with("sifr.toml")
-        && config.pending_reload));
+    assert!(
+        reloaded.residency.configs.iter().any(|config| config
+            .path
+            .as_path()
+            .ends_with("sifr.toml")
+            && config.pending_reload)
+    );
 }
 
 #[test]

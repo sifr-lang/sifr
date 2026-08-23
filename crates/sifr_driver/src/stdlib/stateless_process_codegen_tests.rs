@@ -67,9 +67,11 @@ fn process_sync_private_declarations_codegen_through_sifr_stdlib() {
         "map_err(|__sifr_bridge_error| {process_error} {{ message: __sifr_bridge_error.to_string() }})"
     )));
 
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.process")
-        .is_some_and(|deps| deps.contains("_sifr.process")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.process")
+            .is_some_and(|deps| deps.contains("_sifr.process"))
+    );
 }

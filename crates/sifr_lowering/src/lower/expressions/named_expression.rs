@@ -1,6 +1,6 @@
 use super::{
-    consume_affine_value_name, lower_expr, reject_invalid_expression_target, Expr, ExprNamed,
-    HirExpr, LowerCtx, Ranged,
+    Expr, ExprNamed, HirExpr, LowerCtx, Ranged, consume_affine_value_name, lower_expr,
+    reject_invalid_expression_target,
 };
 use crate::lower::python_interop::reject_python_context_borrow_storage;
 use sifr_diagnostics::DiagnosticCode;

@@ -1,6 +1,6 @@
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
-    apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
+    PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
 };
 use super::rust_interop_contract_tests::{
     backend_with_manifest, base_project_with_contracts, interop_errors, none_contract,
@@ -8,8 +8,8 @@ use super::rust_interop_contract_tests::{
     trusted_no_panic_context, trusted_no_panic_declaration_entry,
 };
 use sifr_codegen::{
-    generate_rust_multi_with_metadata, RustBridgeParamConvention, RustBridgeSignatureContract,
-    RustBridgeTypeContract, RustBridgeTypeKind, RustInteropOwner, StdlibCode,
+    RustBridgeParamConvention, RustBridgeSignatureContract, RustBridgeTypeContract,
+    RustBridgeTypeKind, RustInteropOwner, StdlibCode, generate_rust_multi_with_metadata,
 };
 use sifr_package::TrustPolicy;
 use std::collections::BTreeMap;
@@ -215,9 +215,11 @@ fn package_rust_interop_rejects_arrow_view_with_tensor_metadata() {
     let diagnostics = interop_errors(generated, Some(context), "tensor metadata must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-ZC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("cannot declare tensor metadata"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("cannot declare tensor metadata")
+    );
 }
 
 #[test]
@@ -229,9 +231,11 @@ fn package_rust_interop_rejects_arrow_transfer_ownership() {
     let diagnostics = interop_errors(generated, Some(context), "arrow transfer must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-ZC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("ownership=borrowed` or `ownership=owned"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("ownership=borrowed` or `ownership=owned")
+    );
 }
 
 #[test]
@@ -261,9 +265,11 @@ fn package_rust_interop_rejects_arrow_view_on_tensor_bridge_root() {
     let diagnostics = interop_errors(generated, Some(context), "wrong bridge root must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-ZC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("matching shared bridge crate"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("matching shared bridge crate")
+    );
 }
 
 #[test]

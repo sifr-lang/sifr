@@ -1,6 +1,6 @@
 use super::{
-    expression_diagnostics, reject_exact_method_arg_count, reject_no_method_args, HirExpr,
-    LowerCtx, TextRange, Type,
+    HirExpr, LowerCtx, TextRange, Type, expression_diagnostics, reject_exact_method_arg_count,
+    reject_no_method_args,
 };
 
 pub(super) fn resolve_python_buffer_method_type(

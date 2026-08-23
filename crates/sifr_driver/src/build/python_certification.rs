@@ -1,4 +1,4 @@
-use super::python_interop::{scoped_diagnostic, PythonInteropPlanDiagnostic};
+use super::python_interop::{PythonInteropPlanDiagnostic, scoped_diagnostic};
 use super::python_runtime::PackagePythonRuntime;
 use crate::diagnostics::diagnostic_with_code;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};

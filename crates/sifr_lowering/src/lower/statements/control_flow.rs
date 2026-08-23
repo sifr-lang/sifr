@@ -1,5 +1,7 @@
 use super::{
-    apply_narrowing, body_always_leaves_current_path, callable_builtin_element_type,
+    DiagnosticCode, Expr, FunctionType, HirExpr, HirIteratorOp, HirStmt, LowerCtx,
+    NarrowingCondition, Ranged, StmtAssign, StmtFor, StmtIf, TextRange, Type, apply_narrowing,
+    body_always_leaves_current_path, callable_builtin_element_type,
     detect_false_exit_sequence_guards, detect_false_nonzero_integer_guards,
     detect_narrowing_condition, detect_range_sequence_guards, detect_true_nonzero_integer_guards,
     detect_true_sequence_guards, empty_collection_literal_kind, ensure_mutable_parameter_binding,
@@ -16,8 +18,6 @@ use super::{
     seed_exhaustive_if_bindings, sequence_shape_fact, should_adopt_inferred_binding_hint,
     should_rebind_simple_name, statement_diagnostics, str, task_group_spawn_owner,
     then_body_always_exits, validate_control_flow_condition, validate_subscript_assignment_target,
-    DiagnosticCode, Expr, FunctionType, HirExpr, HirIteratorOp, HirStmt, LowerCtx,
-    NarrowingCondition, Ranged, StmtAssign, StmtFor, StmtIf, TextRange, Type,
 };
 use crate::lower::defaultdict_refinement::order_independent_defaultdict_hint;
 use crate::lower::expressions::{consume_affine_value_name, consume_owned_value};

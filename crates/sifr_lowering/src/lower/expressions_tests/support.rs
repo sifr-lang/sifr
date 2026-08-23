@@ -1,6 +1,6 @@
 use crate::{
-    lower_module, lower_module_with_externals, ExternalDefs, HirDiagnostic, HirExpr, HirModule,
-    HirStmt,
+    ExternalDefs, HirDiagnostic, HirExpr, HirModule, HirStmt, lower_module,
+    lower_module_with_externals,
 };
 use ruff_text_size::{TextRange, TextSize};
 use sifr_python_parser::parse_module;

@@ -1,6 +1,6 @@
 //! Unicode normalization, data, and case mapping helpers for generated code.
 
-use unicode_normalization::{is_nfc, is_nfd, is_nfkc, is_nfkd, UnicodeNormalization};
+use unicode_normalization::{UnicodeNormalization, is_nfc, is_nfd, is_nfkc, is_nfkd};
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::unicode_data;

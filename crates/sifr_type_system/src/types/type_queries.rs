@@ -288,11 +288,7 @@ impl Type {
     ) -> Option<&'a FunctionType> {
         methods.iter().find_map(
             |(name, ft)| {
-                if name == method_name {
-                    Some(ft)
-                } else {
-                    None
-                }
+                if name == method_name { Some(ft) } else { None }
             },
         )
     }

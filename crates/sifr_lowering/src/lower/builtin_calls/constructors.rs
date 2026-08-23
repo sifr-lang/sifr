@@ -4,10 +4,10 @@ use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::CompilerIntrinsicId;
 use sifr_python_ast::{Expr, ExprCall, Number};
-use sifr_type_system::{make_union, Type};
+use sifr_type_system::{Type, make_union};
 
-use super::expressions::{consume_affine_value_name, lower_expr};
 use super::LowerCtx;
+use super::expressions::{consume_affine_value_name, lower_expr};
 
 pub(in crate::lower) const DEFAULTDICT_INT_ALIAS: &str = "__sifr_defaultdict_int";
 pub(in crate::lower) const DEFAULTDICT_LIST_ALIAS: &str = "__sifr_defaultdict_list";

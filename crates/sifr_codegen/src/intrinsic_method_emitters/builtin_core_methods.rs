@@ -1,10 +1,11 @@
 use super::{
-    intrinsics, registry_box_iterator_expr, registry_call_callable_with_owned_args,
-    registry_call_callable_with_shared_ref_args, registry_callable_signature,
-    registry_class_has_next, registry_class_method_signature, registry_dict_source_to_map_expr,
-    registry_iter_from_next_method_expr, registry_iterable_to_owned_iter_expr,
-    registry_iterable_to_vec_expr, registry_iterable_to_vec_expr_with_hint,
-    registry_nested_zip_field_expr, registry_zip_iter_expr, HirExpr, RustEmitter, RustExpr, Type,
+    HirExpr, RustEmitter, RustExpr, Type, intrinsics, registry_box_iterator_expr,
+    registry_call_callable_with_owned_args, registry_call_callable_with_shared_ref_args,
+    registry_callable_signature, registry_class_has_next, registry_class_method_signature,
+    registry_dict_source_to_map_expr, registry_iter_from_next_method_expr,
+    registry_iterable_to_owned_iter_expr, registry_iterable_to_vec_expr,
+    registry_iterable_to_vec_expr_with_hint, registry_nested_zip_field_expr,
+    registry_zip_iter_expr,
 };
 use sifr_ir::CompilerIntrinsicId;
 impl RustEmitter {

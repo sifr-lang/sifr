@@ -1,6 +1,6 @@
 use super::{
-    expression_inference::infer_expr_type, infer_type_var_bindings, substitute_type_vars, ExprCall,
-    FunctionEnv, FunctionType, HashMap, LocalFunctionState, LowerCtx, Type,
+    ExprCall, FunctionEnv, FunctionType, HashMap, LocalFunctionState, LowerCtx, Type,
+    expression_inference::infer_expr_type, infer_type_var_bindings, substitute_type_vars,
 };
 
 pub(super) struct InferredCall {

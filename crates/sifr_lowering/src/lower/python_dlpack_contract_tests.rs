@@ -1,4 +1,4 @@
-use crate::{lower_module, HirDiagnostic, HirModule};
+use crate::{HirDiagnostic, HirModule, lower_module};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{
     PythonDlpackDevice, PythonDlpackStreamMode, PythonInteropDecoratorKind, PythonParameterKind,
@@ -101,15 +101,19 @@ fn dlpack_surface_diagnostics_identify_invalid_stream_and_missing_element_type()
     let stream_errors = lower_errors(&format!(
         "{ERROR}\n@python.dlpack.stream(pkg.stream, device=cuda, stream=none)\ndef stream() -> Result[python.DlpackStream, PythonError]: ...\n"
     ));
-    assert!(stream_errors.iter().any(|error| error
-        .message
-        .contains("does not accept a `stream` argument")));
+    assert!(stream_errors.iter().any(|error| {
+        error
+            .message
+            .contains("does not accept a `stream` argument")
+    }));
 
     let annotation_errors =
         lower_errors("def bad(value: python.DlpackTensor) -> None:\n    return None\n");
-    assert!(annotation_errors
-        .iter()
-        .any(|error| error.message.contains("requires exactly 1 element type")));
+    assert!(
+        annotation_errors
+            .iter()
+            .any(|error| error.message.contains("requires exactly 1 element type"))
+    );
 }
 
 #[test]
@@ -210,7 +214,9 @@ fn dlpack_constructor_callable_and_loop_moves_are_checked() {
     let loop_errors = lower_errors(
         "def consume(own value: python.DlpackTensor[int64]) -> int:\n    return 1\n\ndef misuse(own value: python.DlpackTensor[int64]) -> None:\n    results = [consume(value) for index in range(3)]\n    return None\n",
     );
-    assert!(loop_errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::OWN_MOVED_ACROSS_LOOP)));
+    assert!(
+        loop_errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::OWN_MOVED_ACROSS_LOOP))
+    );
 }

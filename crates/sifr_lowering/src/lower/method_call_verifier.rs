@@ -1,7 +1,7 @@
 use super::method_receiver_analysis::method_signature;
 use crate::hir_nodes::{HirExpr, HirFunction, HirIteratorOp, HirModule};
 use ruff_text_size::TextRange;
-use sifr_ir::{visit_hir_function_exprs_mut, MutableArgumentTarget, Place, PlaceProjection};
+use sifr_ir::{MutableArgumentTarget, Place, PlaceProjection, visit_hir_function_exprs_mut};
 use sifr_type_system::ReceiverConvention;
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
@@ -331,15 +331,21 @@ mod tests {
 
         let violations = verify_module_method_calls(&mut module, &HashMap::new(), &HashMap::new());
         assert_eq!(violations.len(), 3);
-        assert!(violations
-            .iter()
-            .any(|violation| violation.message.contains("no resolved receiver")));
-        assert!(violations
-            .iter()
-            .any(|violation| violation.message.contains("source range")));
-        assert!(violations
-            .iter()
-            .any(|violation| violation.message.contains("mutable-place proof slot")));
+        assert!(
+            violations
+                .iter()
+                .any(|violation| violation.message.contains("no resolved receiver"))
+        );
+        assert!(
+            violations
+                .iter()
+                .any(|violation| violation.message.contains("source range"))
+        );
+        assert!(
+            violations
+                .iter()
+                .any(|violation| violation.message.contains("mutable-place proof slot"))
+        );
     }
 
     #[test]

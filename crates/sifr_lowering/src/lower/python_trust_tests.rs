@@ -76,9 +76,11 @@ fn static_python_import_literal_uses_package_trust_policy() {
         }),
     );
 
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED))
+    );
 }
 
 #[test]
@@ -86,9 +88,11 @@ fn static_python_import_literal_without_policy_is_rejected() {
     let source = source_for_import("\"math\"", "");
     let errors = lower_errors(&source, None);
 
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED))
+    );
 }
 
 #[test]

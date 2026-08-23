@@ -3,7 +3,7 @@ use crate::cargo::commands::{
     CargoPublishOptions, CargoVendorOptions,
 };
 use crate::cargo::lock_modes::CargoLockMode;
-use crate::cargo::package::{package_dry_run_plan, validate_package_archive, PackageArchiveEntry};
+use crate::cargo::package::{PackageArchiveEntry, package_dry_run_plan, validate_package_archive};
 use crate::cargo::trust::validate_backend_trust;
 use crate::diag::PackageDiagnostic;
 use crate::graph::derive::{
@@ -30,9 +30,11 @@ fn archive_missing_sifr_source_reports_0401() {
     let diagnostics = validate_package_archive(&package, &source_map, &[entry("sifr.toml")])
         .expect_err("archive with no .sifr entries should fail");
 
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.code == DiagnosticCode::PACKAGE_ARCHIVE_MISSING_SIFR_SOURCE));
+    assert!(
+        diagnostics.iter().any(
+            |diagnostic| diagnostic.code == DiagnosticCode::PACKAGE_ARCHIVE_MISSING_SIFR_SOURCE
+        )
+    );
 }
 
 #[test]
@@ -64,9 +66,11 @@ fn archive_traversal_reports_0404() {
     )
     .expect_err("traversal path should fail");
 
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.code == DiagnosticCode::PACKAGE_ARCHIVE_TRAVERSAL));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == DiagnosticCode::PACKAGE_ARCHIVE_TRAVERSAL)
+    );
 }
 
 #[test]
@@ -133,9 +137,11 @@ fn package_dry_run_reports_backend_trust_failures_before_publish() {
     )
     .expect_err("untrusted backend should fail dry-run");
 
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.code == DiagnosticCode::PACKAGE_BACKEND_TRUST_VIOLATION));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == DiagnosticCode::PACKAGE_BACKEND_TRUST_VIOLATION)
+    );
 }
 
 #[test]

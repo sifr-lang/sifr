@@ -8,13 +8,13 @@ use adapter_input::adapter_input;
 use handler_plans::validate_handlers;
 
 use crate::package_issues::{
-    evaluation_error, issue_templates, replace_unknown_package, SpecializationDiagnostic,
-    SpecializationDiagnostics,
+    SpecializationDiagnostic, SpecializationDiagnostics, evaluation_error, issue_templates,
+    replace_unknown_package,
 };
 use crate::specialization_support::{malformed, static_program_value};
 use crate::{
-    decode_const_specialization_outcome, package_note, ConstIssueSeverity, ConstPackageIssue,
-    ConstValue, DeterministicConstEvaluator,
+    ConstIssueSeverity, ConstPackageIssue, ConstValue, DeterministicConstEvaluator,
+    decode_const_specialization_outcome, package_note,
 };
 use sifr_lowering::{
     AdapterFieldDefault, AdapterFieldPlan, AdapterHandlerPlan, AppliedAdapterMetadata,
@@ -396,7 +396,7 @@ fn validate_plan(
             return Err(
                 "adapter specialization module and function must both be present or absent"
                     .to_string(),
-            )
+            );
         }
     };
     if specialization.is_some()
@@ -419,7 +419,9 @@ fn validate_plan(
             Some(identity)
         }
         _ => {
-            return Err("attached API module and symbol must both be present or absent".to_string())
+            return Err(
+                "attached API module and symbol must both be present or absent".to_string(),
+            );
         }
     };
     Ok(ValidatedPlan {

@@ -620,8 +620,8 @@ fn format_arg(value: &DiagnosticArg) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        take_unemitted_diagnostic_drop_count, DiagnosticBuilder, DiagnosticSink, Severity,
-        SifrDiagnostic,
+        DiagnosticBuilder, DiagnosticSink, Severity, SifrDiagnostic,
+        take_unemitted_diagnostic_drop_count,
     };
     use crate::codes::DiagnosticCode;
     use crate::source_map::{SourceMap, SourceSpan};

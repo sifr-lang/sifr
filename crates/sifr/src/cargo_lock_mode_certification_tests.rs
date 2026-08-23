@@ -245,9 +245,11 @@ fn test_locked_offline_sifr_commands_and_warm_cache() {
             "sifr build must preserve {} mode",
             mode.as_str()
         );
-        assert!(output
-            .join("sifr_output/target/release/sifr_output")
-            .is_file());
+        assert!(
+            output
+                .join("sifr_output/target/release/sifr_output")
+                .is_file()
+        );
         let (run_exit, captured) = sifr_driver::capture_cargo_invocations(|| {
             cmd_run(
                 Some("src/main.sifr"),
@@ -391,11 +393,9 @@ fn assert_drift_rejected(case: DriftCase) {
         DriftCase::MissingLock => {
             std::fs::remove_file(&lock_path).expect("negative case should remove copied lock");
         }
-        DriftCase::StaleVersion => replace_file(
-            &lock_path,
-            "version = \"2.14.0\"",
-            "version = \"2.99.0\"",
-        ),
+        DriftCase::StaleVersion => {
+            replace_file(&lock_path, "version = \"2.14.0\"", "version = \"2.99.0\"")
+        }
         DriftCase::Checksum => replace_file(
             &lock_path,
             "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9",

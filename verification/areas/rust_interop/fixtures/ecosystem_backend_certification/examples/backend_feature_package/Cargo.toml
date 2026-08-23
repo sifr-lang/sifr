@@ -10,7 +10,7 @@ tokio = { version = "=1.52.3", default-features = false, features = ["io-util", 
 [package]
 name = "backend-feature-package"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 axum.workspace = true

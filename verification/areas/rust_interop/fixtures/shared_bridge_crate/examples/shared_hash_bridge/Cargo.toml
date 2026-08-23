@@ -7,7 +7,7 @@ resolver = "2"
 [package]
 name = "shared-hash-consumer"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 sifr_shared_hash_bridge = { path = "rust/sifr_shared_hash_bridge" }

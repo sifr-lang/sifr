@@ -182,8 +182,8 @@ fn validate_acyclic(nodes: &[ArenaNode]) -> Result<(), StructuralContractError> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::interop::structural::{primitive, structural_construct, StructuralEdgeKind};
     use crate::SifrInt;
+    use crate::interop::structural::{StructuralEdgeKind, primitive, structural_construct};
 
     #[test]
     fn seal_rejects_invalid_root_and_edge_indices() {

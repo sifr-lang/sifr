@@ -108,12 +108,14 @@ impl RustEmitter {
         if !matches!(&func.return_type, Type::Class { name, .. } if name == "NullContext") {
             return false;
         }
-        let [HirStmt::Return {
-            value:
-                Some(crate::HirExpr::ConstructorCall {
-                    class_name, args, ..
-                }),
-        }] = func.body.as_slice()
+        let [
+            HirStmt::Return {
+                value:
+                    Some(crate::HirExpr::ConstructorCall {
+                        class_name, args, ..
+                    }),
+            },
+        ] = func.body.as_slice()
         else {
             return false;
         };

@@ -1,4 +1,4 @@
-use super::{canonical_node, ShapeNode};
+use super::{ShapeNode, canonical_node};
 
 pub(super) fn canonical_sequence(kind: &str, elements: &[ShapeNode]) -> String {
     format!(

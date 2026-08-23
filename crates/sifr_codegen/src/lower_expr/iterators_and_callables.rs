@@ -1,7 +1,7 @@
 use super::{
-    is_option_like_simple, resolve_alias_type, try_lower_leaf_expr, try_lower_leaf_or_name_expr,
-    try_lower_task_duration_expr, HirExpr, ParamConvention, RustExpr, RustParam, RustStmt,
-    RustType, Type,
+    HirExpr, ParamConvention, RustExpr, RustParam, RustStmt, RustType, Type, is_option_like_simple,
+    resolve_alias_type, try_lower_leaf_expr, try_lower_leaf_or_name_expr,
+    try_lower_task_duration_expr,
 };
 pub(super) fn try_lower_simple_divmod_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
     let [left, right] = args else {

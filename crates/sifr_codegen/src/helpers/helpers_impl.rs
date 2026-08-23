@@ -1,6 +1,6 @@
 use super::{IsinstanceUnionMatch, ModuleFuncSignatures};
-use crate::hir_analysis::{queries, traversal};
 use crate::RustExpr;
+use crate::hir_analysis::{queries, traversal};
 use sifr_ir::{HirExpr, HirStmt};
 use sifr_type_system::{OwnershipKind, ParamConvention, ReceiverConvention, Type};
 use std::collections::{HashMap, HashSet};

@@ -1,8 +1,8 @@
 //! Validation and inheritance of package-selected method handlers.
 
 use super::inheritance;
-use crate::specialization_support::static_program_value;
 use crate::ConstValue;
+use crate::specialization_support::static_program_value;
 use sifr_lowering::{
     AdapterHandlerPlan, ClassAdapterSelection, DeclarationDescriptorKind, ExternalDefs,
     LoweringResult,
@@ -146,7 +146,7 @@ pub(super) fn inherited_handler_plans(
 #[cfg(test)]
 mod tests {
     use super::inherited_handler_plans;
-    use sifr_lowering::{lower_module, ClassAdapterSelection, ExternalDefs};
+    use sifr_lowering::{ClassAdapterSelection, ExternalDefs, lower_module};
     use sifr_syntax::parse_module_suite;
 
     #[test]

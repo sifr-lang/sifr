@@ -1,4 +1,4 @@
-use crate::{lower_module, HirDiagnostic, HirModule};
+use crate::{HirDiagnostic, HirModule, lower_module};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_python_parser::parse_module;
@@ -122,8 +122,7 @@ fn test_own_parameter_mutating_method_requires_mut() {
 
 #[test]
 fn test_borrowed_parameter_cannot_be_reassigned_without_mut() {
-    let source =
-        "def borrowed_reassign(items: list[int]) -> int:\n    items = [1, 2, 3]\n    return len(items)\n";
+    let source = "def borrowed_reassign(items: list[int]) -> int:\n    items = [1, 2, 3]\n    return len(items)\n";
     let errors = lower_errors(source);
 
     assert!(errors.iter().any(|error| {

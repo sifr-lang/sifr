@@ -1,14 +1,14 @@
 use super::{
-    module_signature, CacheFamily, CacheKeyContext, CacheStatus, DiagnosticsCacheKey, FileId,
-    FrontendContext, FrontendDiagnosticStyle, HirLoweringCacheKey, LoweredModuleView,
-    ModuleAnalysisView, ModuleDiagnostics, ModuleGraphNode, ModuleGraphView, ModuleId,
-    ModuleSignature, ParseCacheKey, ParsedModuleView, ProjectAnalysisView, ProjectDiagnostics,
-    QueryKind, QueryResult, SourceFileView, SourceMapCacheKey, SourceMapView, SourceOrigin,
-    SourceText, SymbolBucketScope, SymbolBucketsCacheKey,
+    CacheFamily, CacheKeyContext, CacheStatus, DiagnosticsCacheKey, FileId, FrontendContext,
+    FrontendDiagnosticStyle, HirLoweringCacheKey, LoweredModuleView, ModuleAnalysisView,
+    ModuleDiagnostics, ModuleGraphNode, ModuleGraphView, ModuleId, ModuleSignature, ParseCacheKey,
+    ParsedModuleView, ProjectAnalysisView, ProjectDiagnostics, QueryKind, QueryResult,
+    SourceFileView, SourceMapCacheKey, SourceMapView, SourceOrigin, SourceText, SymbolBucketScope,
+    SymbolBucketsCacheKey, module_signature,
 };
 use crate::cache_keys::stable_cache_fingerprint;
-use crate::{empty_hir_module, QueryPolicyFingerprint};
 use crate::{CacheKeyFingerprint, FrontendCacheEntryIdentity, FrontendReuseStats};
+use crate::{QueryPolicyFingerprint, empty_hir_module};
 #[cfg(test)]
 use sifr_diagnostics::RenderedDiagnostic;
 #[cfg(test)]

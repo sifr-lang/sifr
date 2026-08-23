@@ -26,8 +26,8 @@ mod types;
 pub(crate) use bootstrap::compile_stdlib;
 pub use bootstrap::external_defs;
 pub use tooling::{
-    sysroot_probe, sysroot_status, tooling_sources, ToolingSysrootDiagnostic, ToolingSysrootProbe,
-    ToolingSysrootStatus,
+    ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus, sysroot_probe,
+    sysroot_status, tooling_sources,
 };
 #[cfg(test)]
 pub(crate) use types::StdlibRustInteropModuleSource;

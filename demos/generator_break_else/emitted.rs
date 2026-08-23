@@ -1,5 +1,5 @@
 // src/main.rs
-fn gen(flag: bool) -> Box<dyn Iterator<Item = i64>> {
+fn r#gen(flag: bool) -> Box<dyn Iterator<Item = i64>> {
     let mut __sifr_generator_initialized: bool = false;
     let mut __sifr_generator_iter: ::std::vec::IntoIter<i64> = Vec::new().into_iter();
     Box::new(::std::iter::from_fn(move || {
@@ -25,10 +25,10 @@ fn gen(flag: bool) -> Box<dyn Iterator<Item = i64>> {
 
 fn main() {
     println!("generator_break_else yield/loop-path coverage demo:");
-    for v in gen(false) {
+    for v in r#gen(false) {
         println!("{}", v);
     }
-    for v in gen(true) {
+    for v in r#gen(true) {
         println!("{}", v);
     }
 }

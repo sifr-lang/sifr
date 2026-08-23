@@ -1,8 +1,8 @@
 use crate::helpers::{collect_mutated_vars_with_sigs, collect_reassigned_vars};
 use crate::stmt_support_emitter::performance_lowering_gate::stmt_needs_performance_lowering;
 use crate::{
-    is_simple_stmt_candidate, try_lower_simple_stmt_with_scope_result_and_bindings, ClassScope,
-    RustEmitter, RustStmt, ScopeContext,
+    ClassScope, RustEmitter, RustStmt, ScopeContext, is_simple_stmt_candidate,
+    try_lower_simple_stmt_with_scope_result_and_bindings,
 };
 use sifr_ir::{HirFunction, HirStmt};
 

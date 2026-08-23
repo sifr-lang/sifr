@@ -1,5 +1,5 @@
 use super::super::rust_interop_probe_paths::{
-    normalize_cargo_target_dir, probe_cargo_target_dir_with_env, RUST_BRIDGE_PROBE_TARGET_DIR,
+    RUST_BRIDGE_PROBE_TARGET_DIR, normalize_cargo_target_dir, probe_cargo_target_dir_with_env,
 };
 use super::super::workspace::artifact_cache_root;
 use super::{
@@ -195,8 +195,10 @@ fn structural_probe_normalizes_backend_display_errors_without_erasing_ok_type() 
     assert!(source.contains("let _: Result<T, String>"));
     assert!(source.contains("bridge::roundtrip::<T>()"));
     assert!(source.contains(".map_err(|error| error.to_string())"));
-    assert!(source
-        .contains("StructuralProject + ::sifr_runtime::interop::structural::StaticProgramType"));
+    assert!(
+        source
+            .contains("StructuralProject + ::sifr_runtime::interop::structural::StaticProgramType")
+    );
 }
 
 #[test]

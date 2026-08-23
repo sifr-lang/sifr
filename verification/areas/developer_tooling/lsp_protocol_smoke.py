@@ -398,7 +398,7 @@ root = "src"
 [package]
 name = "lsp-stdlib-smoke"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 include = ["Cargo.toml", "sifr.toml", "src/*.sifr", "src/lib.rs"]
 
 [package.metadata.sifr]

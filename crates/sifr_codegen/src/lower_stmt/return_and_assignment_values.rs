@@ -1,8 +1,8 @@
 use super::{
+    HashSet, HirExpr, RustExpr, RustLiteral, RustStmt, SimpleStmtLoweringCtx, Type,
     is_alias_equivalent_type, is_none_type, is_okwrap_none_expr, is_option_like_type,
     resolve_alias_type, try_lower_leaf_expr, try_lower_leaf_or_name_expr,
-    try_lower_name_ident_expr, HashSet, HirExpr, RustExpr, RustLiteral, RustStmt,
-    SimpleStmtLoweringCtx, Type,
+    try_lower_name_ident_expr,
 };
 
 pub(super) fn try_lower_simple_return_stmt(

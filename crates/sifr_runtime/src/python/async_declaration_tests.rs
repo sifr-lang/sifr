@@ -393,9 +393,11 @@ fn semantic_async_close_uses_python_terminal_outcome_after_cancellation() {
     let poisoned = async_from_object(&suppressed_failure_alias)
         .expect_err("suppression followed by failure poisons close identity");
     assert!(poisoned.message.contains("poisoned"), "{poisoned:?}");
-    assert!(close_events()
-        .iter()
-        .any(|event| event == "suppress_fail:finally"));
+    assert!(
+        close_events()
+            .iter()
+            .any(|event| event == "suppress_fail:finally")
+    );
     shutdown_typed_runtime();
 }
 

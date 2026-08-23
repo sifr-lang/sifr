@@ -1,4 +1,4 @@
-use super::{reject_no_method_args, HirExpr, LowerCtx, TextRange, Type};
+use super::{HirExpr, LowerCtx, TextRange, Type, reject_no_method_args};
 
 pub(super) fn resolve_python_dlpack_method_type(
     element: Option<&Type>,

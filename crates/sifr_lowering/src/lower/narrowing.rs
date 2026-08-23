@@ -1,8 +1,8 @@
-use super::flow_helpers::expr_to_literal_value;
 use super::LowerCtx;
+use super::flow_helpers::expr_to_literal_value;
 use sifr_python_ast::{BoolOp, CmpOp, Expr, UnaryOp};
-use sifr_type_system::infer::resolve_type_annotation;
 use sifr_type_system::NarrowingCondition;
+use sifr_type_system::infer::resolve_type_annotation;
 
 /// Detect a narrowing condition from an if-test expression.
 pub(in crate::lower) fn detect_narrowing_condition(

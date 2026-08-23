@@ -1,5 +1,5 @@
 use super::test_support::{request, valid_probe};
-use super::{probe_python_environment, validate_python_environment_probe, PythonImportProbe};
+use super::{PythonImportProbe, probe_python_environment, validate_python_environment_probe};
 use sifr_diagnostics::DiagnosticCode;
 use std::path::PathBuf;
 

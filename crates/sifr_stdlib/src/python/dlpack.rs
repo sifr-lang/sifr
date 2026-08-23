@@ -1,4 +1,4 @@
-use super::{object_bridge, take_resource, Handle, PythonError, PythonObject};
+use super::{Handle, PythonError, PythonObject, object_bridge, take_resource};
 use sifr_runtime::python;
 use std::marker::PhantomData;
 use std::rc::Rc;

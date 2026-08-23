@@ -1,4 +1,4 @@
-use super::{source_hash, DocumentVersion, SourceHash, SourcePath, SourceText};
+use super::{DocumentVersion, SourceHash, SourcePath, SourceText, source_hash};
 use std::collections::BTreeMap;
 use std::fmt;
 use std::path::{Path, PathBuf};

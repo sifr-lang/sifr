@@ -20,28 +20,28 @@ mod scope;
 
 pub use hir_nodes::*;
 pub use lower::{
+    ExternalDefs, LoweringOptions, LoweringSourceOrigin, PythonBridgeTargetAuthority,
+    PythonTrustPolicy, StructuralMethodExport, StructuralMethodExports,
     canonicalize_user_export_function_type, canonicalize_user_export_type,
     canonicalize_user_export_type_in_place, localize_user_import_function_type,
     localize_user_import_type, lower_module,
     lower_module_sysroot_private_declaration_with_externals, lower_module_sysroot_public_stdlib,
     lower_module_sysroot_public_stdlib_with_externals, lower_module_with_externals,
     lower_module_with_externals_and_name, lower_module_with_externals_name_and_options,
-    substitute_type_vars, substitute_type_vars_with_class_scopes, ExternalDefs, LoweringOptions,
-    LoweringSourceOrigin, PythonBridgeTargetAuthority, PythonTrustPolicy, StructuralMethodExport,
-    StructuralMethodExports,
+    substitute_type_vars, substitute_type_vars_with_class_scopes,
 };
 pub use scope::{NarrowingSnapshot, Scope};
 pub use sifr_ir::{
-    canonical_callable_identity, rust_opaque_close_method, rust_opaque_structural_mapping,
-    rust_opaque_type_path, AdapterFieldDefault, AdapterFieldPlan, AdapterHandlerPlan,
-    AppliedAdapterMetadata, AttachedApiDeclaration, AttachedApiReceiver, AttachedApiSetDeclaration,
-    AttachedApiSetIdentity, CallableIdentity, ClassAdapterMarkerDeclaration,
-    ClassAdapterProviderDeclaration, ClassAdapterSelection, ConstSpecializationRequest,
-    DeclarationDescriptorFunction, DeclarationDescriptorKind, DeclarationMetadataTargetKind,
-    HirDiagnostic, LoweringOutcome, LoweringResult, LoweringWarningDiagnostic,
-    PythonArrowSchemaMode, PythonDlpackStreamMode, PythonInteropDeclaration, RevealTypeDiagnostic,
-    RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
-    RustInteropEffect, RustInteropValue, RustTargetPath, SourceOriginId, StaticMethodParam,
-    StaticMethodSlot, StaticMethodSlotContext, StaticMethodSlotInputRole, StaticProgramValue,
-    StaticSpecializationOutput, TypedDeclarationDescriptor, TypedDeclarationMetadata,
+    AdapterFieldDefault, AdapterFieldPlan, AdapterHandlerPlan, AppliedAdapterMetadata,
+    AttachedApiDeclaration, AttachedApiReceiver, AttachedApiSetDeclaration, AttachedApiSetIdentity,
+    CallableIdentity, ClassAdapterMarkerDeclaration, ClassAdapterProviderDeclaration,
+    ClassAdapterSelection, ConstSpecializationRequest, DeclarationDescriptorFunction,
+    DeclarationDescriptorKind, DeclarationMetadataTargetKind, HirDiagnostic, LoweringOutcome,
+    LoweringResult, LoweringWarningDiagnostic, PythonArrowSchemaMode, PythonDlpackStreamMode,
+    PythonInteropDeclaration, RevealTypeDiagnostic, RustInteropAbiRequirements,
+    RustInteropDeclaration, RustInteropDecoratorKind, RustInteropEffect, RustInteropValue,
+    RustTargetPath, SourceOriginId, StaticMethodParam, StaticMethodSlot, StaticMethodSlotContext,
+    StaticMethodSlotInputRole, StaticProgramValue, StaticSpecializationOutput,
+    TypedDeclarationDescriptor, TypedDeclarationMetadata, canonical_callable_identity,
+    rust_opaque_close_method, rust_opaque_structural_mapping, rust_opaque_type_path,
 };

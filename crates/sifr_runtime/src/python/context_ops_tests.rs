@@ -2,8 +2,8 @@ use super::context_ops::*;
 use super::foreign_object::pending_release_count;
 use super::object_ops::{close_object, copy_list_bool, copy_list_str, store_object};
 use super::{
-    attach, initialize_runtime, reset_runtime_state_for_tests, resource_diagnostics, test_config,
-    test_guard, PythonError, PythonResourceDiagnostics,
+    PythonError, PythonResourceDiagnostics, attach, initialize_runtime,
+    reset_runtime_state_for_tests, resource_diagnostics, test_config, test_guard,
 };
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
@@ -153,9 +153,11 @@ fn failing_exit_poison_releases_manager_once_and_retains_cleanup_error() {
     let error = context_exit_normal(manager).expect_err("exit should fail");
     assert_eq!(error.exception_type, "RuntimeError");
     assert_eq!(error.context, "__exit__ normal");
-    assert!(copy_list_str(&log)
-        .expect("release log should copy")
-        .is_empty());
+    assert!(
+        copy_list_str(&log)
+            .expect("release log should copy")
+            .is_empty()
+    );
     assert_eq!(resource_diagnostics().expect("diagnostics").live_objects, 2);
     drop(error);
     attach(|_| ()).expect("attach should drain cleanup replay");

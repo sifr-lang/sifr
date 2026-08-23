@@ -1,14 +1,14 @@
 use super::{
-    generate_rust, generate_rust_with_stdlib_for_module_with_project_policy,
-    publicize_generated_module_source, HashMap, HashSet, HirModule, MultiModuleCodegenResult,
-    Renderer, RustFile, RustItem, StdlibCode,
+    HashMap, HashSet, HirModule, MultiModuleCodegenResult, Renderer, RustFile, RustItem,
+    StdlibCode, generate_rust, generate_rust_with_stdlib_for_module_with_project_policy,
+    publicize_generated_module_source,
 };
 use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
 use crate::project_stdlib_nominals::{
     project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
 };
 use crate::project_union_prelude::render_project_union_prelude;
-use sifr_stdlib_manifest::{try_generated_cargo_dependencies, StdlibFeature};
+use sifr_stdlib_manifest::{StdlibFeature, try_generated_cargo_dependencies};
 use sifr_type_system::source_class_rust_name;
 
 pub(crate) fn register_imported_union_types(
@@ -468,7 +468,7 @@ pub fn generate_project_with_deps_and_crates(
         r#"[package]
 name = "{project_name}"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [workspace]
 "#
@@ -621,9 +621,11 @@ mod tests {
             &StdlibCode::default(),
         );
 
-        assert!(generated
-            .project_union_prelude
-            .contains(&format!("enum {enum_name}")));
+        assert!(
+            generated
+                .project_union_prelude
+                .contains(&format!("enum {enum_name}"))
+        );
         assert!(
             generated.rust_files["support"].contains(&format!("use crate::{enum_name};")),
             "{}",

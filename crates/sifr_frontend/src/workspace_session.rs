@@ -1,11 +1,11 @@
 use super::{
-    dirty_scope_detail, source_path_detail, target_kind, DiskSourceProvider, DocumentVersion,
-    FrontendContext, FrontendInput, FrontendMode, ModuleGraphView, OverlayDocument,
-    OverlaySourceProvider, ProjectRoot, SifrBuildInfoCandidate, SifrBuildInfoVerification,
-    SourceDependency, SourceMapView, SourcePath, SourceText, TrackingSourceProvider,
-    WorkspaceAuxiliarySource, WorkspaceCacheStatus, WorkspaceDebugSnapshot,
+    DiskSourceProvider, DocumentVersion, FrontendContext, FrontendInput, FrontendMode,
+    ModuleGraphView, OverlayDocument, OverlaySourceProvider, ProjectRoot, SifrBuildInfoCandidate,
+    SifrBuildInfoVerification, SourceDependency, SourceMapView, SourcePath, SourceText,
+    TrackingSourceProvider, WorkspaceAuxiliarySource, WorkspaceCacheStatus, WorkspaceDebugSnapshot,
     WorkspaceIndexReadinessStatus, WorkspaceMemoryCounters, WorkspaceResidencySnapshot,
     WorkspaceResidencyState, WorkspaceStatusSnapshot, WorkspaceTracePhase, WorkspaceTraceState,
+    dirty_scope_detail, source_path_detail, target_kind,
 };
 use sifr_diagnostics::RenderedDiagnostic;
 use sifr_lowering::ExternalDefs;

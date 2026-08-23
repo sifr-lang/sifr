@@ -1,6 +1,6 @@
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
-use sifr_ir::{canonical_callable_identity, AdapterFieldDefault, TypedDeclarationMetadata};
+use sifr_ir::{AdapterFieldDefault, TypedDeclarationMetadata, canonical_callable_identity};
 
 pub(super) fn field_defaults(ctx: &LowerCtx, class_name: &str) -> Vec<(usize, HirExpr)> {
     ctx.class_field_defaults

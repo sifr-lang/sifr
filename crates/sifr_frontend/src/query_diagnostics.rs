@@ -2,8 +2,8 @@ use super::{
     DocumentVersion, FileId, FrontendDiagnosticStyle, FrontendSourceContext, ModuleId, ModuleState,
     SourceHash, SourcePath, SourceText, SymbolKind, SymbolView,
 };
-use crate::callable_exports::{exported_function_type, RustCallbackExports};
-use crate::class_method_exports::{structural_method_map, ClassMethodExports};
+use crate::callable_exports::{RustCallbackExports, exported_function_type};
+use crate::class_method_exports::{ClassMethodExports, structural_method_map};
 pub(crate) use crate::export_type_localization::should_export_callable;
 use crate::export_type_localization::{
     copy_class_generic_metadata, copy_function_generic_metadata, declared_generic_metadata,
@@ -14,8 +14,8 @@ use crate::module_signatures::ModuleSignature;
 use crate::{diagnostic_with_code, diagnostic_with_source_range_args_help};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
-    canonicalize_user_export_type, localize_user_import_function_type, localize_user_import_type,
     ExternalDefs, HirClassKind, HirDiagnostic, HirModule, LoweringResult,
+    canonicalize_user_export_type, localize_user_import_function_type, localize_user_import_type,
 };
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};

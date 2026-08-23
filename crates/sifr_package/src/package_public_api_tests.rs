@@ -1,10 +1,10 @@
+use crate::CargoPackageId;
 use crate::cargo::metadata::parse_metadata_json;
-use crate::graph::derive::{derive_package_graph, SifrPackageId};
+use crate::graph::derive::{SifrPackageId, derive_package_graph};
 use crate::imports::source_map::{
     DottedModulePath, PackageImportOrigin, PackageImportResolutionResult, PackageSourceMap,
 };
 use crate::manifest::sifr::SifrManifest;
-use crate::CargoPackageId;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::DiskSourceProvider;
 use std::fs;
@@ -123,9 +123,11 @@ fn duplicate_init_public_symbol_reports_0713() {
     let diagnostics = PackageSourceMap::build(&graph, &mut DiskSourceProvider::new())
         .expect_err("duplicate public symbol fails");
 
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.code == DiagnosticCode::PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL));
+    assert!(
+        diagnostics.iter().any(
+            |diagnostic| diagnostic.code == DiagnosticCode::PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL
+        )
+    );
 }
 
 #[test]
@@ -155,9 +157,11 @@ fn manifest_exports_use_normal_unsupported_field_diagnostic() {
         diagnostic.code,
         DiagnosticCode::PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST
     );
-    assert!(diagnostic
-        .message
-        .contains("invalid sifr.toml key 'exports'"));
+    assert!(
+        diagnostic
+            .message
+            .contains("invalid sifr.toml key 'exports'")
+    );
 }
 
 #[test]

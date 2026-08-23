@@ -1,4 +1,4 @@
-use crate::interop::{catch_rust_panic, RustPanicErrorBridge};
+use crate::interop::{RustPanicErrorBridge, catch_rust_panic};
 use std::fmt;
 use std::sync::Arc;
 

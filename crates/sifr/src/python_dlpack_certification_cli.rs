@@ -1,8 +1,8 @@
 use crate::cli_model_and_entrypoint::{
-    diagnostic_with_code, DiagnosticFormat, EXIT_SUCCESS, EXIT_USER_DIAGNOSTIC,
+    DiagnosticFormat, EXIT_SUCCESS, EXIT_USER_DIAGNOSTIC, diagnostic_with_code,
 };
 use crate::diagnostic_rendering_and_run::render_diagnostics;
-use crate::python_cli::{installed_distribution_version, validated_fixture, CertificationContext};
+use crate::python_cli::{CertificationContext, installed_distribution_version, validated_fixture};
 use serde::Deserialize;
 use std::io::{self, Write as _};
 use std::path::Path;

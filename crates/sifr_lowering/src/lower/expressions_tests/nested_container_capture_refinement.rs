@@ -1,4 +1,4 @@
-use super::{lower_source, HirStmt, Type};
+use super::{HirStmt, Type, lower_source};
 
 fn list_binding_type(source: &str, function_name: &str, binding: &str) -> Type {
     let module = lower_source(source).expect("source should lower");

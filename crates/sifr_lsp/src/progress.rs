@@ -1,4 +1,4 @@
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 const DIAGNOSTICS_PROGRESS_DOCUMENT_THRESHOLD: usize = 2;
 const REFERENCES_PROGRESS_LOCATION_THRESHOLD: usize = 8;

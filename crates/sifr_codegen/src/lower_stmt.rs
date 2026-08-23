@@ -9,8 +9,8 @@ use crate::hir_analysis::queries::{
     collect_referenced_vars_with_types,
 };
 use crate::{
-    try_lower_leaf_expr, try_lower_leaf_expr_result, CodegenError, RustExpr, RustLiteral,
-    RustMatchArm, RustParam, RustStmt, RustType, ScopeContext,
+    CodegenError, RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType, ScopeContext,
+    try_lower_leaf_expr, try_lower_leaf_expr_result,
 };
 use sifr_ir::{
     HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirPattern, HirStmt, MethodKind,
@@ -21,13 +21,13 @@ use std::collections::{HashMap, HashSet};
 mod candidate_and_validation;
 #[cfg(test)]
 use candidate_and_validation::try_lower_simple_stmt_with_scope_result;
+use candidate_and_validation::{SimpleStmtBindings, try_lower_expr_stmt_with_bindings};
+pub use candidate_and_validation::{
+    SimpleStmtLoweringCtx, try_lower_expr_stmt, try_lower_simple_stmt,
+};
 pub(crate) use candidate_and_validation::{
     is_simple_stmt_candidate, try_lower_simple_stmt_with_scope_result_and_bindings,
 };
-pub use candidate_and_validation::{
-    try_lower_expr_stmt, try_lower_simple_stmt, SimpleStmtLoweringCtx,
-};
-use candidate_and_validation::{try_lower_expr_stmt_with_bindings, SimpleStmtBindings};
 mod simple_dispatch_and_bindings;
 #[cfg(test)]
 use simple_dispatch_and_bindings::try_lower_simple_stmt_with_ctx;
@@ -44,7 +44,7 @@ use with_yield_and_match::{
     try_lower_simple_with_stmt, try_lower_simple_yield_stmt,
 };
 mod loop_lowering;
-use loop_lowering::{try_lower_simple_for_stmt, try_lower_simple_while_stmt, SimpleForStmtParts};
+use loop_lowering::{SimpleForStmtParts, try_lower_simple_for_stmt, try_lower_simple_while_stmt};
 mod condition_lowering;
 use condition_lowering::{try_lower_simple_condition_test_expr, try_lower_simple_if_stmt};
 mod condition_type_and_expr_helpers;

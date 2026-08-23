@@ -1,6 +1,6 @@
+use super::LowerCtx;
 use super::expression_diagnostics;
 use super::task_scope_calls::non_send_reason;
-use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;

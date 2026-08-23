@@ -145,19 +145,19 @@ mod rust_interop_direct_tests;
 mod rust_interop_panic;
 mod rust_interop_plan;
 pub use rust_interop_bridge_contract::{
-    is_rust_generated_bridge_type_path, rust_opaque_handle_type, RustBridgeContractPlan,
-    RustBridgeMethodSlotContract, RustBridgePanicErrorContract, RustBridgeParamContract,
-    RustBridgeParamConvention, RustBridgeSignatureContract, RustBridgeTypeContract,
-    RustBridgeTypeKind, RustGeneratedBridgeField, RustGeneratedBridgeType,
-    RustGeneratedBridgeTypeKind, RustGeneratedBridgeVariant,
+    RustBridgeContractPlan, RustBridgeMethodSlotContract, RustBridgePanicErrorContract,
+    RustBridgeParamContract, RustBridgeParamConvention, RustBridgeSignatureContract,
+    RustBridgeTypeContract, RustBridgeTypeKind, RustGeneratedBridgeField, RustGeneratedBridgeType,
+    RustGeneratedBridgeTypeKind, RustGeneratedBridgeVariant, is_rust_generated_bridge_type_path,
+    rust_opaque_handle_type,
 };
 pub use rust_interop_bridge_panic_contract::rust_bridge_panic_error_contract;
 pub use rust_interop_plan::{
-    interop_build_plan_for_named_modules, InteropBuildPlan, RustBridgeProbe, RustBridgeProbeKind,
-    RustBridgeProbePlan, RustBridgeSourceDigest, RustGeneratedBridgeModule, RustInteropCargoInputs,
-    RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration, RustInteropResolvedRoot,
+    InteropBuildPlan, RustBridgeProbe, RustBridgeProbeKind, RustBridgeProbePlan,
+    RustBridgeSourceDigest, RustGeneratedBridgeModule, RustInteropCargoInputs, RustInteropOwner,
+    RustInteropPlan, RustInteropPlanDeclaration, RustInteropResolvedRoot,
     RustInteropResolvedTarget, RustInteropTrustRequirement, RustInteropTrustRequirementKind,
-    RustStructuralShapeIdentity,
+    RustStructuralShapeIdentity, interop_build_plan_for_named_modules,
 };
 mod rust_ir;
 pub use rust_ir::*;

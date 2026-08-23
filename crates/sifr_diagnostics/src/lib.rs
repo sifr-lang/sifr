@@ -13,9 +13,9 @@ pub use model::{
     SifrDiagnostic, SourceDiagnostic, SuggestionApplicability, SuggestionEdit,
 };
 pub use render::{
-    render_compact_diagnostics, render_compact_envelope, render_human_diagnostics,
-    render_human_envelope, render_json_diagnostics, render_json_envelope, render_sink_compact,
-    render_sink_human, render_sink_json, DiagnosticEnvelope, DiagnosticSpan, DiagnosticSpanLine,
-    PresentationRenderError, RenderedDiagnostic,
+    DiagnosticEnvelope, DiagnosticSpan, DiagnosticSpanLine, PresentationRenderError,
+    RenderedDiagnostic, render_compact_diagnostics, render_compact_envelope,
+    render_human_diagnostics, render_human_envelope, render_json_diagnostics, render_json_envelope,
+    render_sink_compact, render_sink_human, render_sink_json,
 };
 pub use source_map::{SourceId, SourceMap, SourceMapError, SourceSpan};

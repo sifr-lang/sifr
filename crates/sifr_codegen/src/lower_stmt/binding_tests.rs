@@ -587,11 +587,13 @@ fn does_not_lower_assign_borrowed_typevar_name() {
         },
     };
 
-    assert!(try_lower_simple_stmt(
-        &assign_stmt,
-        false,
-        &HashSet::new(),
-        &HashSet::from(["param".to_string()]),
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_stmt(
+            &assign_stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::from(["param".to_string()]),
+        )
+        .is_none()
+    );
 }

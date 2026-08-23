@@ -1,6 +1,6 @@
 use super::{
-    first_yield_range_in_stmts, function_body_contains_yield, DiagnosticCode, HirParam, LowerCtx,
-    Ranged, StmtFunctionDef, TextRange, Type,
+    DiagnosticCode, HirParam, LowerCtx, Ranged, StmtFunctionDef, TextRange, Type,
+    first_yield_range_in_stmts, function_body_contains_yield,
 };
 
 pub(in crate::lower) fn reject_declared_async_generator_boundary(

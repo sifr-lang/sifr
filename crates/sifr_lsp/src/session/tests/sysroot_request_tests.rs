@@ -202,10 +202,12 @@ fn sysroot_request_handler_reports_expected_root_mismatch() {
             .and_then(serde_json::Value::as_str),
         Some("/tmp/not-the-lsp-sysroot")
     );
-    assert!(response
-        .pointer("/observedPaths/sysroot")
-        .and_then(serde_json::Value::as_str)
-        .is_some());
+    assert!(
+        response
+            .pointer("/observedPaths/sysroot")
+            .and_then(serde_json::Value::as_str)
+            .is_some()
+    );
     assert_eq!(
         response
             .pointer("/diagnostics/0/expectedToolchainId")
@@ -304,10 +306,12 @@ fn sysroot_request_handler_reports_expected_root_and_toolchain_mismatch() {
             .and_then(serde_json::Value::as_str),
         Some("0.1.0-release-aarch64-apple-darwin")
     );
-    assert!(response
-        .pointer("/diagnostics/0/observedRoot")
-        .and_then(serde_json::Value::as_str)
-        .is_some_and(|root| !root.is_empty()));
+    assert!(
+        response
+            .pointer("/diagnostics/0/observedRoot")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|root| !root.is_empty())
+    );
 }
 
 #[test]

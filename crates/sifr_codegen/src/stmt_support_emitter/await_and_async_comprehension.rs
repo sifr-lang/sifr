@@ -1,5 +1,5 @@
 use super::{
-    plain_call_target_for_ir, HirExpr, HirIteratorOp, RustEmitter, RustExpr, RustStmt, Type,
+    HirExpr, HirIteratorOp, RustEmitter, RustExpr, RustStmt, Type, plain_call_target_for_ir,
 };
 impl RustEmitter {
     pub(crate) fn lower_timeout_aware_await_future_for_ir(

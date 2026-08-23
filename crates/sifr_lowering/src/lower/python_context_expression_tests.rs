@@ -1,4 +1,4 @@
-use crate::{lower_module, HirDiagnostic};
+use crate::{HirDiagnostic, lower_module};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 

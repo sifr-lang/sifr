@@ -1,3 +1,4 @@
+use super::LowerCtx;
 use super::expressions::lower_expr;
 use super::python_interop::try_lower_python_async_with;
 use super::statement_diagnostics;
@@ -6,7 +7,6 @@ use super::task_context_keywords::lower_task_context_keyword;
 use super::task_owner_scope_state::{
     enter_task_owner_scope, exit_task_owner_scope, task_group_type, task_scope_type,
 };
-use super::LowerCtx;
 use crate::hir_nodes::{HirAsyncWithKind, HirStmt};
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
@@ -104,11 +104,7 @@ fn method_signature<'a>(
 ) -> Option<&'a FunctionType> {
     methods.iter().find_map(
         |(name, ft)| {
-            if name == method_name {
-                Some(ft)
-            } else {
-                None
-            }
+            if name == method_name { Some(ft) } else { None }
         },
     )
 }

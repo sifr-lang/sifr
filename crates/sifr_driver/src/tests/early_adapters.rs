@@ -4,6 +4,9 @@ use sifr_ir::{DeclarationMetadataTargetKind, StaticProgramValue};
 use sifr_type_system::Type;
 use std::collections::HashMap;
 
+#[path = "early_adapters/identity_tests.rs"]
+mod identity_tests;
+
 pub(super) const TYPES: &str = r#"
 class ContractDescriptor:
     kind: str
@@ -196,10 +199,11 @@ class Model(Contract):
     assert_eq!(model.parent_class, None);
     assert_eq!(model.fields.len(), 1);
     assert_eq!(model.fields[0].0, "value");
-    assert!(main
-        .imports
-        .iter()
-        .all(|import| import.names.iter().all(|name| name != "Contract")));
+    assert!(
+        main.imports
+            .iter()
+            .all(|import| import.names.iter().all(|name| name != "Contract"))
+    );
 
     let exported = compiled
         .external_defs
@@ -285,8 +289,10 @@ def main():
         .get("main")
         .expect("main module exists");
     let debug_hir = format!("{main:?}");
-    assert!(debug_hir
-        .contains("func: \"__sifr_attached_api_fixture_contract_describe\", type_args: [Class"));
+    assert!(
+        debug_hir
+            .contains("func: \"__sifr_attached_api_fixture_contract_describe\", type_args: [Class")
+    );
     assert!(
         debug_hir.contains(
             "func: \"__sifr_attached_api_fixture_contract_echo\", type_args: [Str, Class"
@@ -684,10 +690,12 @@ class Model(Contract):
         .hir_modules
         .get("fixture.facade")
         .expect("facade module exists");
-    assert!(facade
-        .imports
-        .iter()
-        .all(|import| import.names.iter().all(|name| name != "Contract")));
+    assert!(
+        facade
+            .imports
+            .iter()
+            .all(|import| import.names.iter().all(|name| name != "Contract"))
+    );
 }
 
 #[test]
@@ -854,44 +862,4 @@ class Invalid(_Contract):
         }),
         "{errors:#?}"
     );
-}
-
-#[test]
-fn adapter_edits_but_not_consumer_source_movement_invalidate_program_identity() {
-    fn identities(main: &str, contract: &str) -> ([u8; 32], [u8; 32]) {
-        let modules = project(main, contract);
-        let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
-        let compiled = collect_project_hir_modules(&modules, stdlib_defs)
-            .expect("adapter identity project should compile");
-        let invocation = compiled
-            .external_defs
-            .class_adapter_selections
-            .get("main")
-            .and_then(|classes| classes.get("Model"))
-            .expect("adapter selection exists")
-            .adapter_invocation_identity;
-        let program = compiled
-            .external_defs
-            .specialization_outputs
-            .get("main")
-            .and_then(|outputs| outputs.first())
-            .expect("adapter-requested program exists")
-            .program_identity;
-        (invocation, program)
-    }
-
-    let source = r#"
-from fixture.contract import Contract, contract_config
-class Model(Contract):
-    _config = contract_config(True)
-    value: int
-"#;
-    let moved = format!("\n\n{source}");
-    let edited = CONTRACT.replace(
-        "    fields: list[PlannedField] = []",
-        "    adapter_revision: int = 2\n    fields: list[PlannedField] = []",
-    );
-    let base = identities(source, CONTRACT);
-    assert_eq!(base, identities(&moved, CONTRACT));
-    assert_ne!(base, identities(source, &edited));
 }

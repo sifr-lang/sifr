@@ -1,4 +1,4 @@
-use crate::{lower_module, HirDiagnostic, HirModule, HirStmt};
+use crate::{HirDiagnostic, HirModule, HirStmt, lower_module};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;

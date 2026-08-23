@@ -1,4 +1,4 @@
-use sifr_type_system::{make_union, FunctionType, OwnershipKind, ParamConvention, Type};
+use sifr_type_system::{FunctionType, OwnershipKind, ParamConvention, Type, make_union};
 use std::collections::HashMap;
 
 pub(super) fn imported_constructor_function_type(class_ty: &Type) -> Option<FunctionType> {

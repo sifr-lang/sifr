@@ -1,6 +1,6 @@
-use super::{infer_type_var_bindings, LowerCtx};
+use super::{LowerCtx, infer_type_var_bindings};
 use sifr_diagnostics::DiagnosticCode;
-use sifr_type_system::{type_check_binary_op, type_check_comparison, type_check_unary_op, Type};
+use sifr_type_system::{Type, type_check_binary_op, type_check_comparison, type_check_unary_op};
 use std::collections::{HashMap, HashSet};
 
 fn type_mentions_param(ty: &Type, param: &str) -> bool {

@@ -1,10 +1,10 @@
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
+use syn::Token;
 use syn::ext::IdentExt;
 use syn::parse::Parser;
 use syn::punctuated::Punctuated;
-use syn::Token;
 use syn::{Attribute, Expr, Item, ItemMod, Lit, Meta};
 
 pub(super) fn reachable_rust_modules(backend_root: &Path) -> Vec<syn::File> {

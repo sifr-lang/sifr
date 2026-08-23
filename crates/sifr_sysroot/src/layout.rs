@@ -1,5 +1,5 @@
 use crate::error::{SysrootError, SysrootErrorKind};
-use crate::manifest::{read_sysroot_manifest, SysrootManifest};
+use crate::manifest::{SysrootManifest, read_sysroot_manifest};
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, PartialEq, Eq)]

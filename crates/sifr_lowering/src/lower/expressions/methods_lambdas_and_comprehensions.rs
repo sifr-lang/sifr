@@ -1,8 +1,8 @@
 use super::{
+    DiagnosticCode, Expr, ExprDictComp, ExprLambda, ExprListComp, ExprSetComp, FunctionType,
+    HirExpr, HirParam, LowerCtx, ParamConvention, Ranged, TextRange, Type,
     callable_builtin_element_type, container_literal_diagnostics, lower_expr,
-    lower_iterator_protocol_entry, resolve_annotation_expr, str, DiagnosticCode, Expr,
-    ExprDictComp, ExprLambda, ExprListComp, ExprSetComp, FunctionType, HirExpr, HirParam, LowerCtx,
-    ParamConvention, Ranged, TextRange, Type,
+    lower_iterator_protocol_entry, resolve_annotation_expr, str,
 };
 use crate::lower::{
     nested_function_inference::collect_referenced_names_in_expr, ownership_diagnostics,
@@ -207,8 +207,8 @@ pub(in crate::lower) fn lower_list_comp(
     let mut moved_before_loop = None;
     let result = (|| {
         // Process each generator: push scope, define var, lower iter
-        for gen in &comp.generators {
-            let var_name = match &gen.target {
+        for generator in &comp.generators {
+            let var_name = match &generator.target {
                 Expr::Name(n) => n.id.to_string(),
                 Expr::Tuple(tup) => {
                     let names: Vec<String> = tup
@@ -226,7 +226,7 @@ pub(in crate::lower) fn lower_list_comp(
                         reject_invalid_expression_target(
                             ctx,
                             "comprehension tuple target must contain only simple names",
-                            gen.target.range(),
+                            generator.target.range(),
                         );
                         return None;
                     }
@@ -236,20 +236,21 @@ pub(in crate::lower) fn lower_list_comp(
                     reject_invalid_expression_target(
                         ctx,
                         "comprehension target must be a simple name or tuple",
-                        gen.target.range(),
+                        generator.target.range(),
                     );
                     return None;
                 }
             };
 
-            let iter_source_expr = lower_expr(&gen.iter, ctx)?;
+            let iter_source_expr = lower_expr(&generator.iter, ctx)?;
             moved_before_loop.get_or_insert_with(|| ctx.scope.save_moved_state());
             let iter_ty = iter_source_expr.ty().clone();
             let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
-                reject_invalid_expression_iteration(ctx, &iter_ty, gen.iter.range());
+                reject_invalid_expression_iteration(ctx, &iter_ty, generator.iter.range());
                 return None;
             };
-            if statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, gen.iter.range()) {
+            if statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, generator.iter.range())
+            {
                 return None;
             }
 
@@ -283,15 +284,15 @@ pub(in crate::lower) fn lower_list_comp(
                 );
             }
 
-            let filter = if gen.ifs.is_empty() {
+            let filter = if generator.ifs.is_empty() {
                 None
             } else {
-                let first = lower_expr(&gen.ifs[0], ctx)?;
-                if gen.ifs.len() == 1 {
+                let first = lower_expr(&generator.ifs[0], ctx)?;
+                if generator.ifs.len() == 1 {
                     Some(first)
                 } else {
                     let mut combined = first;
-                    for cond in &gen.ifs[1..] {
+                    for cond in &generator.ifs[1..] {
                         let next = lower_expr(cond, ctx)?;
                         combined = HirExpr::BoolOp {
                             op: "and".to_string(),
@@ -343,25 +344,26 @@ pub(in crate::lower) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -
     let mut pushed_scopes = 0;
     let mut moved_before_loop = None;
     let result = (|| {
-        for gen in &comp.generators {
-            let var_name = if let Expr::Name(n) = &gen.target {
+        for generator in &comp.generators {
+            let var_name = if let Expr::Name(n) = &generator.target {
                 n.id.to_string()
             } else {
                 reject_invalid_expression_target(
                     ctx,
                     "set comprehension target must be a simple name",
-                    gen.target.range(),
+                    generator.target.range(),
                 );
                 return None;
             };
-            let iter_source_expr = lower_expr(&gen.iter, ctx)?;
+            let iter_source_expr = lower_expr(&generator.iter, ctx)?;
             moved_before_loop.get_or_insert_with(|| ctx.scope.save_moved_state());
             let iter_ty = iter_source_expr.ty().clone();
             let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
-                reject_invalid_expression_iteration(ctx, &iter_ty, gen.iter.range());
+                reject_invalid_expression_iteration(ctx, &iter_ty, generator.iter.range());
                 return None;
             };
-            if statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, gen.iter.range()) {
+            if statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, generator.iter.range())
+            {
                 return None;
             }
             ctx.scope.push();
@@ -371,10 +373,10 @@ pub(in crate::lower) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -
                 elem_ty.clone(),
                 crate::scope::EphemeralOrigin::Comprehension,
             );
-            let filter = if gen.ifs.is_empty() {
+            let filter = if generator.ifs.is_empty() {
                 None
             } else {
-                Some(lower_expr(&gen.ifs[0], ctx)?)
+                Some(lower_expr(&generator.ifs[0], ctx)?)
             };
             let iter_expr = lower_iterator_protocol_entry(iter_source_expr, elem_ty);
             generators.push((var_name, iter_expr, filter));
@@ -422,8 +424,8 @@ pub(in crate::lower) fn lower_dict_comp(
     let mut pushed_scopes = 0;
     let mut moved_before_loop = None;
     let result = (|| {
-        for gen in &comp.generators {
-            let var_name = match &gen.target {
+        for generator in &comp.generators {
+            let var_name = match &generator.target {
                 Expr::Name(n) => n.id.to_string(),
                 Expr::Tuple(tup) => {
                     let names: Vec<String> = tup
@@ -441,7 +443,7 @@ pub(in crate::lower) fn lower_dict_comp(
                         reject_invalid_expression_target(
                             ctx,
                             "dict comprehension tuple target must contain only simple names",
-                            gen.target.range(),
+                            generator.target.range(),
                         );
                         return None;
                     }
@@ -451,19 +453,20 @@ pub(in crate::lower) fn lower_dict_comp(
                     reject_invalid_expression_target(
                         ctx,
                         "dict comprehension target must be a simple name or tuple",
-                        gen.target.range(),
+                        generator.target.range(),
                     );
                     return None;
                 }
             };
-            let iter_source_expr = lower_expr(&gen.iter, ctx)?;
+            let iter_source_expr = lower_expr(&generator.iter, ctx)?;
             moved_before_loop.get_or_insert_with(|| ctx.scope.save_moved_state());
             let iter_ty = iter_source_expr.ty().clone();
             let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
-                reject_invalid_expression_iteration(ctx, &iter_ty, gen.iter.range());
+                reject_invalid_expression_iteration(ctx, &iter_ty, generator.iter.range());
                 return None;
             };
-            if statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, gen.iter.range()) {
+            if statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, generator.iter.range())
+            {
                 return None;
             }
             ctx.scope.push();
@@ -495,10 +498,10 @@ pub(in crate::lower) fn lower_dict_comp(
                     crate::scope::EphemeralOrigin::Comprehension,
                 );
             }
-            let filter = if gen.ifs.is_empty() {
+            let filter = if generator.ifs.is_empty() {
                 None
             } else {
-                Some(lower_expr(&gen.ifs[0], ctx)?)
+                Some(lower_expr(&generator.ifs[0], ctx)?)
             };
             let iter_expr = lower_iterator_protocol_entry(iter_source_expr, elem_ty);
             generators.push((var_name, iter_expr, filter));

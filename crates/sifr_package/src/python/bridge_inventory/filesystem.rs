@@ -1,6 +1,6 @@
+use crate::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::manifest::sifr::PackageSourceRoot;
-use crate::CargoPackageId;
 use sha2::{Digest as _, Sha256};
 use std::collections::BTreeSet;
 use std::fs;

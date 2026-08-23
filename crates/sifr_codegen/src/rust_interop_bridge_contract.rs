@@ -7,7 +7,7 @@ use type_shapes::{
 };
 
 use crate::rust_interop_bridge_callback_contract::{
-    bridge_call_scoped_callback_type, bridge_threadsafe_callback_type, CallbackSignature,
+    CallbackSignature, bridge_call_scoped_callback_type, bridge_threadsafe_callback_type,
 };
 pub(crate) use crate::rust_interop_bridge_contract_serialization::push_bridge_contract_plan;
 use crate::rust_interop_bridge_panic_contract::{
@@ -15,10 +15,10 @@ use crate::rust_interop_bridge_panic_contract::{
 };
 use crate::rust_interop_plan::{RustInteropOwner, RustInteropPlanDeclaration};
 use generated_types::{
-    absolute_runtime_target, bridge_type_definition_module, class_bridge_declaration_name,
-    class_bridge_definition_module, generated_bridge_type_path, generated_class_bridge_type_path,
-    is_generated_bridge_type_path, opaque_rust_structural_mapping_path, opaque_rust_type_path,
-    opaque_type_definition, GeneratedTypeCollector,
+    GeneratedTypeCollector, absolute_runtime_target, bridge_type_definition_module,
+    class_bridge_declaration_name, class_bridge_definition_module, generated_bridge_type_path,
+    generated_class_bridge_type_path, is_generated_bridge_type_path,
+    opaque_rust_structural_mapping_path, opaque_rust_type_path, opaque_type_definition,
 };
 use sifr_ir::HirModule;
 use sifr_type_system::{ParamConvention, ParamOwnership, Type};
@@ -547,12 +547,9 @@ pub(crate) fn bridge_type_contract(
             position,
             structural_type_params,
         ),
-        Type::Tuple(items) => bridge_tuple_type(
-            items,
-            ty.display_name(),
-            module_name,
-            module_catalogs,
-        ),
+        Type::Tuple(items) => {
+            bridge_tuple_type(items, ty.display_name(), module_name, module_catalogs)
+        }
         Type::Result(ok, err) => match position {
             BridgeTypePosition::Parameter(_) => unsupported_type(
                 ty,
@@ -601,11 +598,14 @@ pub(crate) fn bridge_type_contract(
             } else if let Err(reason) = opaque_target {
                 unsupported_type(ty, &reason)
             } else {
-                let declaration_module =
-                    match class_bridge_definition_module(class_type, module_name, module_catalogs) {
-                        Ok(module_name) => module_name,
-                        Err(reason) => return unsupported_type(ty, &reason),
-                    };
+                let declaration_module = match class_bridge_definition_module(
+                    class_type,
+                    module_name,
+                    module_catalogs,
+                ) {
+                    Ok(module_name) => module_name,
+                    Err(reason) => return unsupported_type(ty, &reason),
+                };
                 let is_error = parent_class.as_deref() == Some("Error")
                     || module_catalogs
                         .get(&declaration_module)
@@ -642,7 +642,9 @@ pub(crate) fn bridge_type_contract(
                     Ok(module_name) => module_name,
                     Err(reason) => return unsupported_type(ty, &reason),
                 };
-            if let Err(reason) = generated_types.insert_enum(declaration_module.as_ref(), name, variants) {
+            if let Err(reason) =
+                generated_types.insert_enum(declaration_module.as_ref(), name, variants)
+            {
                 return unsupported_type(ty, &reason);
             }
             let path = generated_bridge_type_path(declaration_module.as_ref(), name);
@@ -695,29 +697,31 @@ pub(crate) fn bridge_type_contract(
                 generated_types,
             )
         }
-        Type::Callable(..) => {
-            unsupported_type(ty, "call-scoped callbacks are valid only as top-level parameters")
-        }
+        Type::Callable(..) => unsupported_type(
+            ty,
+            "call-scoped callbacks are valid only as top-level parameters",
+        ),
         Type::AsyncCallable(..) => unsupported_type(
             ty,
             "async callbacks require explicit callback contract support before they are bridge-compatible",
         ),
         Type::Set(_) => unsupported_type(ty, "set[T] is not a supported Rust bridge container"),
-        Type::Any | Type::Unknown => {
-            unsupported_type(ty, "dynamic Any/Unknown values are not Rust bridge-compatible")
-        }
+        Type::Any | Type::Unknown => unsupported_type(
+            ty,
+            "dynamic Any/Unknown values are not Rust bridge-compatible",
+        ),
         Type::Never => unsupported_type(ty, "Never is not a Rust bridge value type"),
-        Type::TypeVar(name) if structural_type_params.contains(name) => {
-            RustBridgeTypeContract {
-                sifr_type: name.clone(),
-                rust_borrowed_type: Some(format!("&{name}")),
-                rust_owned_type: Some(name.clone()),
-                rust_return_type: Some(name.clone()),
-                kind: RustBridgeTypeKind::StructuralTypeParam,
-                unsupported_reason: None,
-            }
+        Type::TypeVar(name) if structural_type_params.contains(name) => RustBridgeTypeContract {
+            sifr_type: name.clone(),
+            rust_borrowed_type: Some(format!("&{name}")),
+            rust_owned_type: Some(name.clone()),
+            rust_return_type: Some(name.clone()),
+            kind: RustBridgeTypeKind::StructuralTypeParam,
+            unsupported_reason: None,
+        },
+        Type::TypeVar(_) => {
+            unsupported_type(ty, "unconstrained generics are not Rust bridge-compatible")
         }
-        Type::TypeVar(_) => unsupported_type(ty, "unconstrained generics are not Rust bridge-compatible"),
         Type::Function(_) | Type::AsyncFunction(_) => {
             unsupported_type(ty, "function values are not Rust bridge-compatible")
         }

@@ -1,20 +1,20 @@
 use super::abi::{
-    DLDataType, DLDevice, DLManagedTensor, DLManagedTensorVersioned, DLPackVersion, DLTensor,
-    DLTENSOR_NAME, DLTENSOR_VERSIONED_NAME, USED_DLTENSOR_NAME,
+    DLDataType, DLDevice, DLManagedTensor, DLManagedTensorVersioned, DLPackVersion, DLTENSOR_NAME,
+    DLTENSOR_VERSIONED_NAME, DLTensor, USED_DLTENSOR_NAME,
 };
 use super::{
-    acquire_dlpack_tensor, dlpack_stream, prepare_dlpack_argument, release_dlpack,
-    PythonDlpackStreamMetadata, PythonError, DEVICE_CPU,
+    DEVICE_CPU, PythonDlpackStreamMetadata, PythonError, acquire_dlpack_tensor, dlpack_stream,
+    prepare_dlpack_argument, release_dlpack,
 };
 use crate::python::object_ops::{clone_handle, store_object};
 use crate::python::{
-    close_object, initialize_runtime, reset_runtime_state_for_tests, test_config, test_guard,
-    ObjectHandle,
+    ObjectHandle, close_object, initialize_runtime, reset_runtime_state_for_tests, test_config,
+    test_guard,
 };
 use pyo3::ffi;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyDict};
-use std::ffi::{c_void, CStr};
+use std::ffi::{CStr, c_void};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 static LEGACY_RELEASES: AtomicUsize = AtomicUsize::new(0);

@@ -444,8 +444,7 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
     },
     DiagnosticFamily {
         name: "PYZC",
-        summary:
-            "Embedded Python zero-copy buffer, Arrow, DLPack, and array-interface diagnostics.",
+        summary: "Embedded Python zero-copy buffer, Arrow, DLPack, and array-interface diagnostics.",
         reserved_base: "SIFR-PYZC-0000",
     },
     DiagnosticFamily {

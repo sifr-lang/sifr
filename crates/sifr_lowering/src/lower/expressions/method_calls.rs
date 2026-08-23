@@ -1,4 +1,6 @@
 use super::{
+    DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS, DiagnosticCode,
+    ExprAttribute, ExprCall, HirExpr, LowerCtx, Ranged, TextRange, Type,
     canonicalize_class_surface_type, consume_affine_collection_method_arguments,
     consume_owned_method_arguments, invalidate_collection_flow_facts_for_method,
     is_task_handle_type, lower_expr, lower_task_handle_method_call, method_function_type,
@@ -11,8 +13,6 @@ use super::{
     resolve_python_arrow_method_type, resolve_python_buffer_method_type,
     resolve_python_dlpack_method_type, resolve_set_method_type, resolve_str_method_type,
     resolve_tuple_method_type, str, try_lower_class_method_call, try_lower_super_method_call, tsc,
-    DiagnosticCode, ExprAttribute, ExprCall, HirExpr, LowerCtx, Ranged, TextRange, Type,
-    DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
 use super::{method_call_arguments, python_raw_object_methods};
 use crate::lower::python_interop::callback_method_arg_ranges;

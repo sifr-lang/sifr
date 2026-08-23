@@ -1,5 +1,5 @@
-use super::task_scope_calls::{non_send_reason, non_share_safe_reason};
 use super::LowerCtx;
+use super::task_scope_calls::{non_send_reason, non_share_safe_reason};
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;

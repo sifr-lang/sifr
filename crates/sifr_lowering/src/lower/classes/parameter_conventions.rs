@@ -1,5 +1,5 @@
 use super::{
-    typing_and_functions::ast_convention_to_param, FunctionType, HirExpr, HirParam, LowerCtx,
+    FunctionType, HirExpr, HirParam, LowerCtx, typing_and_functions::ast_convention_to_param,
 };
 use crate::lower::{expressions::lower_expr, python_interop::is_python_omit};
 use sifr_python_ast::{AstParamConvention, Expr, Parameters};

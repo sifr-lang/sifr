@@ -9,7 +9,7 @@ use super::simple_expr::{
     integer_binop_source, lower_integer_const_expr_simple, negate_simple_expr,
 };
 use super::typing_and_functions::resolve_annotation_expr;
-use super::{expressions::lower_expr, fixed_width_fitting, LowerCtx};
+use super::{LowerCtx, expressions::lower_expr, fixed_width_fitting};
 
 pub(in crate::lower) fn collect_module_constants(
     stmts: &[Stmt],
@@ -285,7 +285,7 @@ fn negate_module_integer_const_expr(expr: HirExpr) -> Option<HirExpr> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{lower_module_sysroot_private_declaration_with_externals, ExternalDefs};
+    use crate::{ExternalDefs, lower_module_sysroot_private_declaration_with_externals};
     use sifr_diagnostics::DiagnosticCode;
     use sifr_python_parser::parse_module;
 

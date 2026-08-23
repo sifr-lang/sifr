@@ -1,3 +1,4 @@
+use super::LowerCtx;
 use super::async_for::lower_async_for;
 use super::async_generator_advances::finish_async_generator_advance_for_expr;
 use super::async_with::lower_async_with;
@@ -25,7 +26,6 @@ use super::typing_and_functions::{
     ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
     reject_unsupported_nested_async_generator,
 };
-use super::LowerCtx;
 use super::{
     lower_ann_assign, lower_assign, lower_aug_assign, lower_chained_assign, lower_for, lower_if,
     lower_while,
@@ -36,8 +36,8 @@ use crate::hir_nodes::{
 };
 use crate::lower::python_interop;
 use crate::lower::rust_interop::{
-    classify_rust_interop_stub_body, collect_rust_interop_declarations,
-    has_rust_interop_decorator_syntax, RustInteropOwner,
+    RustInteropOwner, classify_rust_interop_stub_body, collect_rust_interop_declarations,
+    has_rust_interop_decorator_syntax,
 };
 use crate::lower::type_bounds::reject_unavailable_dict_hash_key;
 use ruff_text_size::Ranged;

@@ -1,6 +1,6 @@
+use super::LowerCtx;
 use super::builtin_calls::callable_builtin_element_type;
 use super::type_bounds::supports_hash_key_in_context;
-use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use sifr_type_system::Type;
 

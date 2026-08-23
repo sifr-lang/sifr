@@ -670,20 +670,26 @@ pub(crate) fn test_expected_error_rules_rejects_malformed_grammar() {
     assert!(bracket_error.contains("expected canonical SIFR-<FAMILY>-dddd code"));
 
     let missing_close = parse_expect_error_line("# expect-error[col=12 SIFR-TYPE-0002").unwrap();
-    assert!(missing_close
-        .expect_err("malformed qualifier must be rejected")
-        .contains("expected expect-error qualifier syntax"));
+    assert!(
+        missing_close
+            .expect_err("malformed qualifier must be rejected")
+            .contains("expected expect-error qualifier syntax")
+    );
 
     let unknown_qualifier =
         parse_expect_error_line("# expect-error[line=3]: SIFR-TYPE-0002").unwrap();
-    assert!(unknown_qualifier
-        .expect_err("unknown qualifier must be rejected")
-        .contains("unknown expect-error qualifier"));
+    assert!(
+        unknown_qualifier
+            .expect_err("unknown qualifier must be rejected")
+            .contains("unknown expect-error qualifier")
+    );
 
     let invalid_column = parse_expect_error_line("# expect-error[col=0]: SIFR-TYPE-0002").unwrap();
-    assert!(invalid_column
-        .expect_err("non-positive column must be rejected")
-        .contains("invalid expect-error column"));
+    assert!(
+        invalid_column
+            .expect_err("non-positive column must be rejected")
+            .contains("invalid expect-error column")
+    );
 }
 
 #[test]

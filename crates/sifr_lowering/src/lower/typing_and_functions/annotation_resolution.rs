@@ -1,10 +1,10 @@
 use super::annotation_union_validation::has_conflicting_class_specializations;
 use super::{
-    format_type_name, invalid_type_annotation, is_valid_error_type, make_union,
-    reserved_integer_width_name, resolve_python_dlpack_tensor_annotation,
+    DiagnosticCode, Expr, FunctionType, HashMap, LowerCtx, Number, Operator, OwnershipKind,
+    ParamConvention, Ranged, Type, format_type_name, invalid_type_annotation, is_valid_error_type,
+    make_union, reserved_integer_width_name, resolve_python_dlpack_tensor_annotation,
     resolve_python_resource_attribute_annotation, resolve_type_annotation, substitute_type_vars,
-    unknown_type, DiagnosticCode, Expr, FunctionType, HashMap, LowerCtx, Number, Operator,
-    OwnershipKind, ParamConvention, Ranged, Type,
+    unknown_type,
 };
 
 pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx) -> Type {
@@ -347,7 +347,9 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                         if tuple.elts.len() != 2 {
                             invalid_type_annotation(
                                 ctx,
-                                format!("{label} type requires exactly 2 type parameters: [[param_types], return_type]"),
+                                format!(
+                                    "{label} type requires exactly 2 type parameters: [[param_types], return_type]"
+                                ),
                                 sub.slice.range(),
                             );
                             return Type::Any;
@@ -361,7 +363,9 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                         } else {
                             invalid_type_annotation(
                                 ctx,
-                                format!("{label} parameter types must be a list: {label}[[int, str], bool]"),
+                                format!(
+                                    "{label} parameter types must be a list: {label}[[int, str], bool]"
+                                ),
                                 tuple.elts[0].range(),
                             );
                             return Type::Any;
@@ -411,9 +415,9 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                             invalid_type_annotation(
                                 ctx,
                                 format!(
-                                "generic type alias '{base_name}' expects {} type argument(s), got {}",
-                                alias_params.len(),
-                                type_args.len()
+                                    "generic type alias '{base_name}' expects {} type argument(s), got {}",
+                                    alias_params.len(),
+                                    type_args.len()
                                 ),
                                 sub.slice.range(),
                             );
@@ -458,7 +462,7 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                                     invalid_type_annotation(
                                         ctx,
                                         format!(
-                                        "class '{base_name}' does not declare type parameters; use `class {base_name}[T]: ...`"
+                                            "class '{base_name}' does not declare type parameters; use `class {base_name}[T]: ...`"
                                         ),
                                         sub.value.range(),
                                     );
@@ -468,9 +472,9 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                                     invalid_type_annotation(
                                         ctx,
                                         format!(
-                                        "generic class '{base_name}' expects {} type argument(s), got {}",
-                                        class_type_params.len(),
-                                        type_args.len()
+                                            "generic class '{base_name}' expects {} type argument(s), got {}",
+                                            class_type_params.len(),
+                                            type_args.len()
                                         ),
                                         sub.slice.range(),
                                     );

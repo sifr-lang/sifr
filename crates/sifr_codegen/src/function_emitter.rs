@@ -1,7 +1,7 @@
 use crate::NestedFnCapture;
 use crate::{
-    body_contains_yield, collect_mutated_vars_with_sigs, RustEmitter, RustExpr, RustItem,
-    RustLiteral, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
+    RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
+    Visibility, body_contains_yield, collect_mutated_vars_with_sigs,
 };
 use crate::{
     helpers::{
@@ -10,7 +10,7 @@ use crate::{
     hir_analysis::traversal::{self, TraversalConfig},
 };
 use sifr_ir::{HirExpr, HirFunction, HirModule, HirParam, HirStmt};
-use sifr_type_system::{make_union, OwnershipKind, ParamConvention, Type};
+use sifr_type_system::{OwnershipKind, ParamConvention, Type, make_union};
 use std::collections::{HashMap, HashSet};
 
 mod generator_bodies;

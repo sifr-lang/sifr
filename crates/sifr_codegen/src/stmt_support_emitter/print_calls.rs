@@ -1,5 +1,5 @@
 use super::{
-    call_expr_parts, canonical_plain_call_name_for_ir, HirExpr, HirFStringPart, RustEmitter,
+    HirExpr, HirFStringPart, RustEmitter, call_expr_parts, canonical_plain_call_name_for_ir,
 };
 
 fn is_none_type(ty: &sifr_type_system::Type) -> bool {

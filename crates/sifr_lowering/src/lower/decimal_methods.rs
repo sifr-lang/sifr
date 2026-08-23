@@ -5,8 +5,8 @@ use sifr_python_ast::{Expr, ExprCall};
 use sifr_type_system::Type;
 use std::str::FromStr;
 
-use super::expressions::lower_expr;
 use super::LowerCtx;
+use super::expressions::lower_expr;
 
 const DECIMAL_MAX_SCALE: i64 = 28;
 

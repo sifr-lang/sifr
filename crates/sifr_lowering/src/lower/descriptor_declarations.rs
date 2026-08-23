@@ -1,6 +1,6 @@
 //! Canonical package declarations for typed class-adapter descriptors.
 
-use super::{str, Expr, HirModule, LowerCtx, Ranged, Stmt, Type};
+use super::{Expr, HirModule, LowerCtx, Ranged, Stmt, Type, str};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{
     ClassAdapterMarkerDeclaration, ClassAdapterProviderDeclaration, ClassAdapterSelection,

@@ -1,6 +1,6 @@
 use super::{
-    registry_option_inner_type, registry_uses_debug_display_format, HirExpr, RustEmitter, RustExpr,
-    Type,
+    HirExpr, RustEmitter, RustExpr, Type, registry_option_inner_type,
+    registry_uses_debug_display_format,
 };
 impl RustEmitter {
     pub(crate) fn try_lower_registry_numeric_builtin_call_expr(

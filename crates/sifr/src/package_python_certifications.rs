@@ -1,5 +1,5 @@
 use super::cli_model_and_entrypoint::{
-    diagnostic_with_code, DiagnosticFormat, EXIT_USER_DIAGNOSTIC,
+    DiagnosticFormat, EXIT_USER_DIAGNOSTIC, diagnostic_with_code,
 };
 use super::diagnostic_rendering_and_run::render_diagnostics;
 use std::path::Path;

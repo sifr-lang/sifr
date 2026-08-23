@@ -1,7 +1,7 @@
 use super::check_and_package_commands::declaration_python_requirements;
 use super::cli_model_and_entrypoint::{
-    diagnostic_with_code, package_diagnostic, DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
-    EXIT_USER_DIAGNOSTIC,
+    DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
+    diagnostic_with_code, package_diagnostic,
 };
 use super::diagnostic_rendering_and_run::{current_session_package_id, render_diagnostics};
 use super::package_graph_context::load_package_graph_context;

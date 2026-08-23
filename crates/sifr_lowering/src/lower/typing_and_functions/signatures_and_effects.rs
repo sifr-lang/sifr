@@ -8,9 +8,9 @@ use sifr_type_system::{
     FunctionType, OwnershipKind, ParamConvention, ParamMutability, ParamOwnership, Type,
 };
 
+use super::LowerCtx;
 use super::simple_expr::lower_expr_simple;
 use super::workload_annotations;
-use super::LowerCtx;
 use crate::hir_nodes::HirParam;
 
 pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {

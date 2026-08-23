@@ -48,11 +48,13 @@ impl ParentWatchdog {
         interval: std::time::Duration,
         on_missing_parent: impl FnOnce() + Send + 'static,
     ) -> std::thread::JoinHandle<()> {
-        std::thread::spawn(move || loop {
-            std::thread::sleep(interval);
-            if self.check().is_err() {
-                on_missing_parent();
-                break;
+        std::thread::spawn(move || {
+            loop {
+                std::thread::sleep(interval);
+                if self.check().is_err() {
+                    on_missing_parent();
+                    break;
+                }
             }
         })
     }
@@ -76,7 +78,7 @@ fn parent_is_alive(_parent_pid: u32) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{parent_is_alive, ParentWatchdog};
+    use super::{ParentWatchdog, parent_is_alive};
 
     #[test]
     fn missing_parent_pid_disables_watchdog() {

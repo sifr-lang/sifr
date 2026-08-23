@@ -1,6 +1,6 @@
 use super::text_edits::{fixed_source_edits, full_range, ranges_overlap, source_edit_to_text_edit};
 use crate::completion::{
-    rank_completion_candidates, rust_interop_completion_candidates, CompletionCandidate,
+    CompletionCandidate, rank_completion_candidates, rust_interop_completion_candidates,
 };
 use crate::editor::line_end_insert_range;
 use crate::queries::{

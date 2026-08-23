@@ -1,5 +1,5 @@
-use super::method_diagnostics::reject_no_method_args;
 use super::LowerCtx;
+use super::method_diagnostics::reject_no_method_args;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;

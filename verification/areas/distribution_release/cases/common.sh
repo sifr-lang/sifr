@@ -230,21 +230,21 @@ EOF
 [package]
 name = "sifr_runtime"
 version = "0.0.0-fixture"
-edition = "2021"
+edition = "2024"
 EOF
   printf '%s\n' 'pub fn fixture() {}' >"${root}/crates/sifr_runtime/src/lib.rs"
   cat >"${root}/crates/sifr_structural_identity/Cargo.toml" <<'EOF'
 [package]
 name = "sifr_structural_identity"
 version = "0.0.0-fixture"
-edition = "2021"
+edition = "2024"
 EOF
   printf '%s\n' 'pub fn fixture() {}' >"${root}/crates/sifr_structural_identity/src/lib.rs"
   cat >"${root}/crates/sifr_stdlib/Cargo.toml" <<'EOF'
 [package]
 name = "sifr_stdlib"
 version = "0.0.0-fixture"
-edition = "2021"
+edition = "2024"
 EOF
   printf '%s\n' 'pub fn fixture() {}' >"${root}/crates/sifr_stdlib/src/lib.rs"
   printf '%s\n' '# fixture public stdlib' >"${root}/stdlib/sifr/__init__.sifr"

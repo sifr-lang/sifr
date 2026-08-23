@@ -1,5 +1,5 @@
 use crate::{parse_module, parse_module_raw};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sifr_diagnostics::DiagnosticArg;
 use sifr_python_ast::Stmt;
 use std::collections::BTreeSet;

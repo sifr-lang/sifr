@@ -1,5 +1,5 @@
 use super::raw::OwnedPyBuffer;
-use super::{with_live_buffer, BufferAccessError, BufferHandle, PythonBufferElement, PythonError};
+use super::{BufferAccessError, BufferHandle, PythonBufferElement, PythonError, with_live_buffer};
 use std::ptr;
 
 macro_rules! typed_buffer_accessors {

@@ -1,9 +1,9 @@
 use crate::{
-    try_lower_simple_stmt_with_scope_result_and_bindings, ClassScope, RustEmitter, RustExpr,
-    RustItem, RustParam, RustStmt, RustType, ScopeContext, Visibility,
+    ClassScope, RustEmitter, RustExpr, RustItem, RustParam, RustStmt, RustType, ScopeContext,
+    Visibility, try_lower_simple_stmt_with_scope_result_and_bindings,
 };
 use sifr_ir::{HirClass, HirExpr, HirFunction, HirModule, HirStmt};
-use sifr_type_system::{source_class_rust_name, Type};
+use sifr_type_system::{Type, source_class_rust_name};
 use std::collections::{HashMap, HashSet};
 
 type OperatorBounds = HashMap<String, HashSet<String>>;

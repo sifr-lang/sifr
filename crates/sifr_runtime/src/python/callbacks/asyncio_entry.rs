@@ -1,5 +1,5 @@
 use super::state::CallbackAsyncEntryLease;
-use super::{errors, CallbackOwnerState};
+use super::{CallbackOwnerState, errors};
 use crate::cancellation::{CancellationBind, CancellationCarrier};
 use crate::python::PythonError;
 use pyo3::prelude::*;

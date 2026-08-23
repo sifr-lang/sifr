@@ -1,4 +1,4 @@
-use super::implementation::{unknown_file, AnalysisHost};
+use super::implementation::{AnalysisHost, unknown_file};
 use crate::snapshot::AnalysisError;
 use sifr_frontend::FileId;
 use std::path::Path;

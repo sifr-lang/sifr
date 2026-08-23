@@ -93,7 +93,7 @@ fn classify_non_trivial_marker(source: &str) -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use super::{validate_pure_marker_source, MarkerValidation};
+    use super::{MarkerValidation, validate_pure_marker_source};
 
     #[test]
     fn comment_only_marker_is_pure() {

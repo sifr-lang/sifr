@@ -27,11 +27,13 @@ pub(super) fn test_break_outside_loop() {
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("'break' outside of loop")
-            && e.code == Some(DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP)
-            && e.primary_range == Some(range_for(source, "break"))));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("'break' outside of loop")
+                && e.code == Some(DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP)
+                && e.primary_range == Some(range_for(source, "break")))
+    );
 }
 
 #[test]
@@ -40,11 +42,13 @@ pub(super) fn test_continue_outside_loop() {
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("'continue' outside of loop")
-            && e.code == Some(DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP)
-            && e.primary_range == Some(range_for(source, "continue"))));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("'continue' outside of loop")
+                && e.code == Some(DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP)
+                && e.primary_range == Some(range_for(source, "continue")))
+    );
 }
 
 #[test]
@@ -117,11 +121,13 @@ pub(super) fn test_tuple_unpack_wrong_count() {
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("expected 3 values, got 2")
-            && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
-            && e.primary_range == Some(range_for(source, "x, y, z"))));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("expected 3 values, got 2")
+                && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
+                && e.primary_range == Some(range_for(source, "x, y, z")))
+    );
 }
 
 #[test]
@@ -130,11 +136,13 @@ pub(super) fn test_tuple_unpack_non_tuple() {
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("cannot unpack non-tuple")
-            && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
-            && e.primary_range == Some(range_for_after(source, "a, b = ", "x"))));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("cannot unpack non-tuple")
+                && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
+                && e.primary_range == Some(range_for_after(source, "a, b = ", "x")))
+    );
 }
 
 #[test]
@@ -151,8 +159,7 @@ pub(super) fn test_tuple_unpack_invalid_target_has_unpack_code() {
 
 #[test]
 pub(super) fn test_tuple_unpack_reassignment_type_mismatch_has_primary_range() {
-    let source =
-        "def main():\n    left = 1\n    left, label = (\"not an int\", \"name\")\n    print(label)\n";
+    let source = "def main():\n    left = 1\n    left, label = (\"not an int\", \"name\")\n    print(label)\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected tuple unpack reassignment type mismatch");
     assert!(errors.iter().any(
@@ -266,17 +273,18 @@ pub(super) fn test_for_tuple_target_arity_mismatch_has_primary_range() {
     let source = "def main():\n    pairs: list[tuple[int, int, int]] = [(1, 2, 3)]\n    for a, b in pairs:\n        print(a)\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected for tuple target arity mismatch");
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("expects 2 element(s)")
-            && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
-            && e.primary_range == Some(range_for(source, "a, b"))));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("expects 2 element(s)")
+                && e.code == Some(DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH)
+                && e.primary_range == Some(range_for(source, "a, b")))
+    );
 }
 
 #[test]
 pub(super) fn test_generic_class_subscript_requires_declared_type_params() {
-    let source =
-        "T = TypeVar(\"T\")\nclass LegacyBox:\n    value: T\ndef f(x: LegacyBox[int]) -> int:\n    return 1\n";
+    let source = "T = TypeVar(\"T\")\nclass LegacyBox:\n    value: T\ndef f(x: LegacyBox[int]) -> int:\n    return 1\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -289,8 +297,7 @@ pub(super) fn test_generic_class_subscript_requires_declared_type_params() {
 
 #[test]
 pub(super) fn test_generic_class_subscript_arity_mismatch_errors() {
-    let source =
-        "class Pair[T]:\n    left: T\n    right: T\ndef f(x: Pair[int, str]) -> int:\n    return 1\n";
+    let source = "class Pair[T]:\n    left: T\n    right: T\ndef f(x: Pair[int, str]) -> int:\n    return 1\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -477,8 +484,7 @@ pub(super) fn test_auto_init_inheritance_missing_super_has_class_code() {
 
 #[test]
 pub(super) fn test_auto_init_required_after_default_has_class_code() {
-    let source =
-        "class BadConfig:\n    debug: bool = False\n    name: str\n\ndef main():\n    c: BadConfig = BadConfig(True, \"test\")\n";
+    let source = "class BadConfig:\n    debug: bool = False\n    name: str\n\ndef main():\n    c: BadConfig = BadConfig(True, \"test\")\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -607,9 +613,10 @@ pub(super) fn test_match_tuple_pattern_requires_tuple_subject() {
     );
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("tuple pattern requires subject of tuple type")));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("tuple pattern requires subject of tuple type")
+    }));
 }
 
 #[test]
@@ -619,9 +626,10 @@ pub(super) fn test_match_tuple_pattern_arity_mismatch_errors() {
     );
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("tuple pattern expects 3 element(s), subject has 2")));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("tuple pattern expects 3 element(s), subject has 2")
+    }));
 }
 
 #[test]
@@ -656,9 +664,11 @@ pub(super) fn test_protocol_bound_forwarding_rejects_non_conforming_typevar() {
         errors[0].code,
         Some(DiagnosticCode::PROTO_BOUND_NOT_SATISFIED)
     );
-    assert!(errors[0]
-        .message
-        .contains("does not implement protocol 'MissingBound'"));
+    assert!(
+        errors[0]
+            .message
+            .contains("does not implement protocol 'MissingBound'")
+    );
 }
 
 #[test]
@@ -697,9 +707,11 @@ pub(super) fn test_empty_dict_literal_conflicting_write_reports_deterministic_er
         lower_source("def main():\n    data = {}\n    data[1] = 10\n    data[\"x\"] = 20\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|error| error.message.contains("empty literal type conflict")));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("empty literal type conflict"))
+    );
 }
 
 #[test]

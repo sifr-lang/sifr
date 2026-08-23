@@ -1,10 +1,10 @@
 use crate::conversion;
 use crate::document_store::DiagnosticsMode;
 use crate::errors::LspResult;
-use crate::progress::{begin_notification, end_notification, ProgressKind};
+use crate::progress::{ProgressKind, begin_notification, end_notification};
 use crate::session::Session;
 use lsp_server::{Connection, Message, Notification};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sifr_analysis::WorkspaceTracePhase;
 
 #[derive(Default)]

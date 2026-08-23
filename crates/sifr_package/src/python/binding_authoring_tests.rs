@@ -43,29 +43,37 @@ fn binding_artifact_rejects_environment_generated_and_path_drift() {
     let artifact = artifact(&root);
     write_python_bindings(&root, &artifact).expect("artifact should write");
 
-    assert!(load_python_bindings(&root, "environment-b")
-        .expect_err("environment drift must fail")
-        .contains("environment digest"));
+    assert!(
+        load_python_bindings(&root, "environment-b")
+            .expect_err("environment drift must fail")
+            .contains("environment digest")
+    );
     fs::write(
         root.join("typing/math.pyi"),
         "def sqrt(value: int) -> int: ...\n",
     )
     .expect("mutate typing source");
-    assert!(load_python_bindings(&root, "environment-a")
-        .expect_err("typing source drift must fail")
-        .contains("typing source"));
+    assert!(
+        load_python_bindings(&root, "environment-a")
+            .expect_err("typing source drift must fail")
+            .contains("typing source")
+    );
     fs::write(root.join("typing/math.pyi"), "def sqrt() -> float: ...\n")
         .expect("restore typing source");
     fs::write(root.join("src/math_python.sifr"), "def changed(): ...\n").expect("mutate output");
-    assert!(load_python_bindings(&root, "environment-a")
-        .expect_err("generated drift must fail")
-        .contains("has drifted"));
+    assert!(
+        load_python_bindings(&root, "environment-a")
+            .expect_err("generated drift must fail")
+            .contains("has drifted")
+    );
 
     let mut escaping = artifact;
     escaping.bindings[0].output = "../escape.sifr".to_string();
-    assert!(validate_python_bindings(&root, "environment-a", &escaping)
-        .expect_err("escaping output must fail")
-        .contains("stay inside"));
+    assert!(
+        validate_python_bindings(&root, "environment-a", &escaping)
+            .expect_err("escaping output must fail")
+            .contains("stay inside")
+    );
     fs::remove_dir_all(root).expect("remove fixture");
 }
 

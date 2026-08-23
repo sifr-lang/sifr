@@ -1,4 +1,4 @@
-use super::{canonical_sifr_target_path, RustInteropResolver};
+use super::{RustInteropResolver, canonical_sifr_target_path};
 use sifr_codegen::{RustBridgeParamConvention, RustBridgeSignatureContract};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropValue};

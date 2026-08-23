@@ -70,9 +70,11 @@ fn explicit_initializer_does_not_erase_field_default_metadata() {
     let lowered = lower_module(&parsed).expect("fixture lowers");
     let class = lowered.module.classes.first().expect("class exists");
     let shape = describe_type("fixture.defaults", &class_type(class, Vec::new()), &lowered);
-    assert!(shape
-        .canonical_identity
-        .contains("retries:int:default=int:3"));
+    assert!(
+        shape
+            .canonical_identity
+            .contains("retries:int:default=int:3")
+    );
 }
 
 #[test]
@@ -167,16 +169,20 @@ class Port(int):
     let lowered = lower_module(&parsed).expect("fixture lowers");
     let color = &lowered.module.classes[0];
     let color_shape = describe_type("fixture.nominal", &class_type(color, Vec::new()), &lowered);
-    assert!(color_shape
-        .canonical_identity
-        .contains("enum:fixture.nominal.Color"));
+    assert!(
+        color_shape
+            .canonical_identity
+            .contains("enum:fixture.nominal.Color")
+    );
     assert!(color_shape.canonical_identity.contains("fixture.label"));
 
     let port = &lowered.module.classes[1];
     let port_shape = describe_type("fixture.nominal", &class_type(port, Vec::new()), &lowered);
-    assert!(port_shape
-        .canonical_identity
-        .contains("newtype:fixture.nominal.Port"));
+    assert!(
+        port_shape
+            .canonical_identity
+            .contains("newtype:fixture.nominal.Port")
+    );
     assert!(port_shape.canonical_identity.contains("fixture.kind"));
 }
 

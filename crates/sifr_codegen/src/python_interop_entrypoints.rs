@@ -1,8 +1,8 @@
+use crate::RustStmt;
 use crate::python_interop_direct::{
     python_interop_function_body_with_retained_errors,
     python_interop_method_body_with_retained_errors,
 };
-use crate::RustStmt;
 use sifr_ir::{HirFunction, PythonInteropDeclaration};
 use std::collections::HashMap;
 

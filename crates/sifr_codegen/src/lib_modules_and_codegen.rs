@@ -1,4 +1,5 @@
 use super::{
+    BUILTIN_ERROR_CLASSES, Renderer, RustEmitter, RustExpr, RustFile, RustItem, RustLiteral,
     annotate_async_main_entrypoint, build_async_exit_cause_type_items,
     build_async_generator_type_items, build_cancellation_error_type_items, build_cpu_offload_items,
     build_error_into_error_impl, build_error_type_items, build_failure_type_items,
@@ -14,9 +15,9 @@ use super::{
     module_uses_task_scope_process, module_uses_task_scope_spawn_cpu, module_uses_task_sleep,
     module_uses_timeout_result_type, replace_parallel_runtime_items,
     replace_sync_channel_runtime_items, scope_async_main_cancellation, sifr_type_to_rust_type,
-    sync_channel_runtime_needed, Renderer, RustEmitter, RustExpr, RustFile, RustItem, RustLiteral,
-    BUILTIN_ERROR_CLASSES,
+    sync_channel_runtime_needed,
 };
+use crate::StdlibCode;
 use crate::error_refs::collect_complete_referenced_builtin_error_classes;
 use crate::ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
 use crate::ir_optimize::{remove_trivial_clones_in_items, remove_unneeded_mutability_in_items};
@@ -26,7 +27,6 @@ use crate::stdlib_filter::{
     filter_canonical_stdlib_ir_to_needed, seal_canonical_stdlib_names,
 };
 use crate::stdlib_import_signatures::register_imported_stdlib_signature;
-use crate::StdlibCode;
 use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
 use sifr_type_system::{ParamConvention, Type};

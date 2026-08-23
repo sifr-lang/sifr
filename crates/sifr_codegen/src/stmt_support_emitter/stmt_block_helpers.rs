@@ -1,6 +1,6 @@
 use super::{
-    performance_lowering_gate::stmt_needs_performance_lowering, HirExpr, HirIteratorOp, HirStmt,
-    RustEmitter,
+    HirExpr, HirIteratorOp, HirStmt, RustEmitter,
+    performance_lowering_gate::stmt_needs_performance_lowering,
 };
 use sifr_type_system::Type;
 

@@ -1,8 +1,8 @@
 use super::test_support::package;
 use super::{
-    discover_python_bridge_inventory, required_python_bridge_archive_entries,
-    validate_python_bridge_inventory_manifest, write_python_bridge_inventory, PythonBridgeImport,
-    PYTHON_BRIDGE_INVENTORY,
+    PYTHON_BRIDGE_INVENTORY, PythonBridgeImport, discover_python_bridge_inventory,
+    required_python_bridge_archive_entries, validate_python_bridge_inventory_manifest,
+    write_python_bridge_inventory,
 };
 use crate::manifest::sifr::{PythonConfig, TrustPolicy};
 use sifr_diagnostics::DiagnosticCode;
@@ -170,18 +170,26 @@ fn invalid_module_paths_duplicates_and_relative_escape_are_distinct() {
     let diagnostics = discover_python_bridge_inventory(&fixture.package)
         .expect_err("invalid bridge module paths must fail");
 
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("root __init__.py is reserved")));
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("valid Python identifiers")));
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("is defined by both")));
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("from .. import outside")));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("root __init__.py is reserved"))
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("valid Python identifiers"))
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("is defined by both"))
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("from .. import outside"))
+    );
 }
 
 #[test]
@@ -266,12 +274,16 @@ fn misplaced_bridge_root_and_reserved_runtime_import_are_rejected() {
         .expect_err("misplaced and reserved bridge sources must fail");
 
     assert_eq!(diagnostics.len(), 2);
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("source root must be")));
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("reserved runtime namespace")));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("source root must be"))
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("reserved runtime namespace"))
+    );
 }
 
 #[test]
@@ -324,7 +336,9 @@ fn bridge_sources_and_generated_inventory_are_required_archive_entries() {
         &fixture.package,
         &crate::imports::source_map::PackageSourceMap::default(),
     );
-    assert!(package_required.contains(&PathBuf::from("src/python_bridges/__sifr_inventory__.json")));
+    assert!(
+        package_required.contains(&PathBuf::from("src/python_bridges/__sifr_inventory__.json"))
+    );
     assert!(package_required.contains(&PathBuf::from("src/python_bridges/adapter.py")));
 }
 

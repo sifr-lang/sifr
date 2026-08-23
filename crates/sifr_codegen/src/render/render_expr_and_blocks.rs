@@ -244,7 +244,10 @@ impl Renderer {
                 format_str,
                 args,
             } => {
-                if args.is_empty() && format_str.is_empty() && matches!(name.as_str(), "println" | "eprintln") {
+                if args.is_empty()
+                    && format_str.is_empty()
+                    && matches!(name.as_str(), "println" | "eprintln")
+                {
                     return format!("{name}!()");
                 }
                 let escaped = format!("\"{}\"", format_str.escape_default());
@@ -730,6 +733,7 @@ impl Renderer {
                 | "unsized"
                 | "virtual"
                 | "yield"
+                | "gen"
         )
     }
 

@@ -1,9 +1,9 @@
 use super::{
-    abandon_callback_owner_after_error, CallbackOwnerSlot, CallbackOwnerState, CallbackOwnerStatus,
+    CallbackOwnerSlot, CallbackOwnerState, CallbackOwnerStatus, abandon_callback_owner_after_error,
 };
-use crate::python::{test_guard, PythonError};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use crate::python::{PythonError, test_guard};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
 #[test]

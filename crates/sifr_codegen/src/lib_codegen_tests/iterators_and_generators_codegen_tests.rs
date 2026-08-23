@@ -166,6 +166,8 @@ fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
     };
 
     let rust_code = generate_rust(&module);
+    assert!(rust_code.contains("fn r#gen()"));
+    assert!(rust_code.contains("r#gen()"));
     assert!(rust_code.contains("if !__sifr_generator_initialized {"));
     assert!(rust_code.contains("_yields.push(1_i64);"));
     assert!(rust_code.contains("_yields.push(2_i64);"));
@@ -303,8 +305,10 @@ fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
         let rust_name = sifr_type_system::stdlib_class_rust_name("sifr.encoding", class_name);
         assert!(rust_code.contains(&format!("{rust_name}::new({argument})")));
     }
-    assert!(!rust_code
-        .contains("return Ok(FileHandle { _handle: __handle_id, _mode: __mode.to_string() });"));
+    assert!(
+        !rust_code
+            .contains("return Ok(FileHandle { _handle: __handle_id, _mode: __mode.to_string() });")
+    );
 }
 
 #[test]
@@ -513,19 +517,27 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
     };
 
     let result = generate_rust_test(&module, "main");
-    assert!(result
-        .rust_source
-        .contains("use ::std::collections::HashMap;"));
-    assert!(result
-        .rust_source
-        .contains("use ::std::collections::HashSet;"));
+    assert!(
+        result
+            .rust_source
+            .contains("use ::std::collections::HashMap;")
+    );
+    assert!(
+        result
+            .rust_source
+            .contains("use ::std::collections::HashSet;")
+    );
     assert!(!result.rust_source.contains("use ::sifr_runtime::SifrInt;"));
-    assert!(!result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::NumBigint));
-    assert!(!result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::NumTraits));
+    assert!(
+        !result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::NumBigint)
+    );
+    assert!(
+        !result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::NumTraits)
+    );
 }
 
 #[test]

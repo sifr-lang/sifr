@@ -26,10 +26,12 @@ fn package_rust_interop_rejects_untrusted_build_script() {
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
     assert!(diagnostics[0].message.contains("app.hash"));
-    assert!(diagnostics[0]
-        .children
-        .iter()
-        .any(|child| child.message.contains("[trust].rust-build-scripts")));
+    assert!(
+        diagnostics[0]
+            .children
+            .iter()
+            .any(|child| child.message.contains("[trust].rust-build-scripts"))
+    );
 }
 
 #[test]
@@ -71,10 +73,12 @@ fn package_rust_interop_rejects_untrusted_proc_macro_for_direct_root() {
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
     assert!(diagnostics[0].message.contains("app.hash"));
-    assert!(diagnostics[0]
-        .children
-        .iter()
-        .any(|child| child.message.contains("[trust].rust-proc-macros")));
+    assert!(
+        diagnostics[0]
+            .children
+            .iter()
+            .any(|child| child.message.contains("[trust].rust-proc-macros"))
+    );
 }
 
 #[test]
@@ -92,9 +96,11 @@ fn package_rust_interop_rejects_untrusted_proc_macro_for_local_bridge() {
     let diagnostics = interop_errors(generated, Some(context), "untrusted proc-macro must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("missing Rust interop trust declaration"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("missing Rust interop trust declaration")
+    );
     let rendered = format!("{diagnostics:#?}");
     assert!(
         rendered.contains("proc-macro target")

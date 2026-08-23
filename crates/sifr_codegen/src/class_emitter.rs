@@ -1,10 +1,10 @@
 use crate::{
-    class_trait_capabilities::supports_declaration_display,
-    helpers::collect_mutated_vars_with_sigs, RustEmitter, RustExpr, RustItem, RustLiteral,
-    RustParam, RustStmt, RustType, RustTypeParam, Visibility,
+    RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
+    Visibility, class_trait_capabilities::supports_declaration_display,
+    helpers::collect_mutated_vars_with_sigs,
 };
 use sifr_ir::{HirClass, HirFunction, HirModule};
-use sifr_type_system::{class_rust_name, source_class_rust_name, Type};
+use sifr_type_system::{Type, class_rust_name, source_class_rust_name};
 
 impl RustEmitter {
     fn process_child_drop_impl() -> RustItem {
