@@ -14,6 +14,10 @@ uv run --project verification python -m sifr_verify doctor
 uv lock --project verification --check
 ```
 
+All maintained first-party Python projects require the canonical GIL-enabled
+CPython 3.14.7 interpreter exactly. Install it with `uv python install 3.14.7`;
+`uv run` selects it from each project's exact `requires-python` pin.
+
 Required `uv` version: `0.12.5`. Every maintained uv project carries the exact
 native `required-version` pin, and CI reads the same pin from this project's
 `pyproject.toml`.
@@ -39,7 +43,7 @@ Compare local and CI plans with:
 uv run --project verification --locked python -m sifr_verify profiles compare-plans --local <local-plan.json> --ci <ci-plan.json>
 ```
 
-`sifr_verify doctor` checks required local prerequisites: Python version, Rust
+`sifr_verify doctor` checks required local prerequisites: exact Python version, Rust
 and Cargo availability, `uv` lock status, Cargo offline metadata resolution, and
 host metadata. Optional sanitizer tools are reported as pass or skip for broader
 lanes.

@@ -6,7 +6,6 @@ from typing import Any
 from env import RunnerPaths
 from example_packages import ExampleCase, build_examples_report, run_examples_self_tests
 
-
 DLPACK_EXAMPLE_CASES = {
     "torch-declaration": ExampleCase(
         case_id="torch-declaration",
@@ -16,22 +15,9 @@ DLPACK_EXAMPLE_CASES = {
             "one-shot=ok:resources=zero"
         ),
         import_roots=("torch",),
-        dlpack_certifications=(("torch.Tensor", "python_certifications/dlpack_evidence.py"),),
-    ),
-    "tensorflow-declaration": ExampleCase(
-        case_id="tensorflow-declaration",
-        relative_source="tensorflow_dlpack/dlpack_declaration_compiled.sifr",
-        stdout_marker=(
-            "sifr-python-interop:dlpack:tensorflow:pointer=stable:device=cpu:"
-            "bridge=versioned-call:resources=zero"
+        dlpack_certifications=(
+            ("torch.Tensor", "python_certifications/dlpack_evidence.py"),
         ),
-        import_roots=("ctypes", "tensorflow"),
-        native_roots=("tensorflow",),
-        bridge_files=("tensorflow_dlpack.py",),
-        dlpack_certifications=((
-            "bridge.tensorflow_dlpack.make",
-            "python_certifications/dlpack_evidence.py",
-        ),),
     ),
 }
 

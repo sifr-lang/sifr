@@ -376,7 +376,7 @@ mod environment_tests {
         fs::create_dir_all(&root).expect("create project");
         let pyproject = root.join("pyproject.toml");
         let lock = root.join("uv.lock");
-        fs::write(&pyproject, minimal_pyproject(">=3.13")).expect("write pyproject");
+        fs::write(&pyproject, minimal_pyproject("==3.14.7")).expect("write pyproject");
         let Some(lock_status) = crate::cargo::python_probe::generate_uv_lock_for_test(&root) else {
             fs::remove_dir_all(&root).expect("remove skipped uv fixture");
             return;
@@ -393,7 +393,7 @@ mod environment_tests {
         };
         validate_uv_lock_consistency(&request).expect("current uv lock should pass");
 
-        fs::write(&pyproject, minimal_pyproject(">=3.12")).expect("mutate pyproject");
+        fs::write(&pyproject, minimal_pyproject("==3.14.6")).expect("mutate pyproject");
         let error = validate_uv_lock_consistency(&request).expect_err("stale lock must fail");
         assert_eq!(error.code, DiagnosticCode::PYENV_LOCK_OR_PROJECT_STALE);
         fs::remove_dir_all(&root).expect("remove uv fixture");

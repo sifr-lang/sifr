@@ -44,7 +44,7 @@ impl TestPackage {
         .expect("secondary application source should be written");
         std::fs::write(
             package.root.join("pyproject.toml"),
-            "[project]\nname = \"sifr-python-readonly-app\"\nversion = \"0.1.0\"\nrequires-python = \">=3.11\"\ndependencies = []\n",
+            "[project]\nname = \"sifr-python-readonly-app\"\nversion = \"0.1.0\"\nrequires-python = \"==3.14.7\"\ndependencies = []\n",
         )
         .expect("pyproject should be written");
         let status = Command::new("uv")

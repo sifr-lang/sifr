@@ -535,13 +535,13 @@ cancellation, live-case, and profile drift. The compiled suite covers
 import-root, `Self`, package-bridge, affine-aggregate, and real NumPy ndarray
 producers. The bridge fixture proves shared mutation and post-release exporter
 resizability; the aggregate fixture proves that all six retained exporters are
-resizable after automatic aggregate drop. Python 3.11-compatible C-level
-runtime exporters independently prove pointer identity and exact release counts
-for explicit release, automatic drop, validation failure, admission conflict,
-and store-failure rollback. A blocking, minimal locked CPython 3.11 lane runs
-those five C-level tests and the same five compiled binaries in every delivery
-profile. The runnable typed-buffer example exposes the same five deterministic
-markers.
+resizable after automatic aggregate drop. C-level runtime exporters on the
+canonical GIL-enabled CPython 3.14.7 interpreter independently prove pointer
+identity and exact release counts for explicit release, automatic drop,
+validation failure, admission conflict, and store-failure rollback. The
+blocking `buffer-runtime` suite runs those five C-level tests and the same five
+compiled binaries in every delivery profile. The runnable typed-buffer example
+exposes the same five deterministic markers.
 
 ## Arrow C Data Interface
 

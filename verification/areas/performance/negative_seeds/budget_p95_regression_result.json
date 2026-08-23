@@ -8,7 +8,7 @@
     "cargo_lock_sha256": "01757d41af1080785f61382ecdbdbe4fac07975c2447d742bc03cc753c3719d7",
     "compiler_fingerprint": "{\"packages\":[{\"name\":\"sifr_diagnostics\",\"version\":\"0.0.0\",\"id\":\"",
     "host_os": "macOS-26.4.1-arm64-arm-64bit-Mach-O",
-    "python": "3.13.1",
+    "python": "3.14.7",
     "rustc": "rustc 1.94.0 (4a4ef493e 2026-03-02)"
   },
   "results": [

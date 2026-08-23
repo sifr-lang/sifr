@@ -12,7 +12,7 @@ pub(super) fn local_python_runtime_with_roots(
     let lock = project_root.join("uv.lock");
     std::fs::write(
         &pyproject,
-        "[project]\nname = \"sifr-bridge-test\"\nversion = \"0.0.0\"\nrequires-python = \">=3.11\"\n",
+        "[project]\nname = \"sifr-bridge-test\"\nversion = \"0.0.0\"\nrequires-python = \"==3.14.7\"\n",
     )
     .expect("test pyproject should be written");
     let uv = std::process::Command::new("uv")

@@ -6,10 +6,11 @@ import json
 import subprocess
 import sys
 import time
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from python_policy import validate_canonical_python
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 MANIFEST = (
@@ -49,29 +50,27 @@ def run_suite() -> list[str]:
     for case in manifest["cases"]:
         failures.extend(run_case(case))
     if not failures:
-        print(f"cpython differential hand-seeded smoke ok: cases={len(manifest['cases'])}")
+        print(
+            f"cpython differential hand-seeded smoke ok: cases={len(manifest['cases'])}"
+        )
     return failures
 
 
 def validate_python_version() -> list[str]:
-    pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
-    requires_python = pyproject["project"]["requires-python"]
-    if requires_python != ">=3.11":
-        return [f"unsupported requires-python policy {requires_python!r}; update runner parser"]
-    if sys.version_info < (3, 11):
-        return [f"python3 must satisfy {requires_python}, got {sys.version.split()[0]}"]
-    return []
+    return validate_canonical_python(PYPROJECT)
 
 
 def run_case(case: dict[str, Any]) -> list[str]:
     case_id = str(case["id"])
-    allowed_exit_codes = set(int(code) for code in case["allowed_exit_codes"])
+    allowed_exit_codes = {int(code) for code in case["allowed_exit_codes"]}
     python_path = REPO_ROOT / str(case["python"])
     sifr_path = REPO_ROOT / str(case["sifr"])
     failures: list[str] = []
 
     cpython = run_command([sys.executable, str(python_path)])
-    sifr = run_command(["cargo", "run", "-q", "-p", "sifr", "--", "run", str(sifr_path)])
+    sifr = run_command(
+        ["cargo", "run", "-q", "-p", "sifr", "--", "run", str(sifr_path)]
+    )
     print(
         f"[cpython-differential] case={case_id} "
         f"python_exit={cpython.exit_code} sifr_exit={sifr.exit_code} "
@@ -83,15 +82,23 @@ def run_case(case: dict[str, Any]) -> list[str]:
     if sifr.timed_out:
         failures.append(f"{case_id} Sifr timed out after {TIMEOUT_SECONDS}s")
     if cpython.exit_code not in allowed_exit_codes:
-        failures.append(f"{case_id} CPython exit {cpython.exit_code} not in {sorted(allowed_exit_codes)}")
+        failures.append(
+            f"{case_id} CPython exit {cpython.exit_code} not in {sorted(allowed_exit_codes)}"
+        )
     if sifr.exit_code not in allowed_exit_codes:
-        failures.append(f"{case_id} Sifr exit {sifr.exit_code} not in {sorted(allowed_exit_codes)}")
+        failures.append(
+            f"{case_id} Sifr exit {sifr.exit_code} not in {sorted(allowed_exit_codes)}"
+        )
     if cpython.exit_code != sifr.exit_code:
-        failures.append(f"{case_id} exit codes differ: CPython={cpython.exit_code} Sifr={sifr.exit_code}")
+        failures.append(
+            f"{case_id} exit codes differ: CPython={cpython.exit_code} Sifr={sifr.exit_code}"
+        )
     cpython_json = parse_exact_json_line(case_id, "CPython", cpython.stdout, failures)
     sifr_json = parse_exact_json_line(case_id, "Sifr", sifr.stdout, failures)
     if cpython_json is not None and sifr_json is not None and cpython_json != sifr_json:
-        failures.append(f"{case_id} JSON values differ: CPython={cpython_json!r} Sifr={sifr_json!r}")
+        failures.append(
+            f"{case_id} JSON values differ: CPython={cpython_json!r} Sifr={sifr_json!r}"
+        )
     if normalize_stdout(cpython.stdout) != normalize_stdout(sifr.stdout):
         failures.append(
             f"{case_id} canonical stdout differs: "
@@ -107,8 +114,7 @@ def run_command(argv: list[str]) -> RuntimeResult:
             argv,
             cwd=REPO_ROOT,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=TIMEOUT_SECONDS,
             check=False,
         )
@@ -150,7 +156,9 @@ def parse_exact_json_line(
         return None
     lines = normalized.splitlines()
     if len(lines) != 1:
-        failures.append(f"{case_id} {runtime} stdout must contain exactly one JSON line")
+        failures.append(
+            f"{case_id} {runtime} stdout must contain exactly one JSON line"
+        )
         return None
     try:
         return json.loads(lines[0])

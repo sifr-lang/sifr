@@ -5,15 +5,18 @@ from __future__ import annotations
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess
-import sys
+import sysconfig
 from dataclasses import dataclass
+
+import tomllib
 
 from .errors import VerificationError
 from .paths import REPO_ROOT
 
-MIN_PYTHON = (3, 11)
+PYPROJECT = REPO_ROOT / "verification" / "pyproject.toml"
 
 
 class DoctorError(VerificationError):
@@ -27,7 +30,9 @@ class CheckResult:
     detail: str
 
 
-def run_command(command: list[str], *, env: dict[str, str] | None = None) -> tuple[int, str]:
+def run_command(
+    command: list[str], *, env: dict[str, str] | None = None
+) -> tuple[int, str]:
     proc = subprocess.run(
         command,
         cwd=REPO_ROOT,
@@ -70,14 +75,30 @@ def run_doctor() -> int:
 
 
 def check_python_version() -> CheckResult:
-    actual = sys.version_info[:2]
-    if actual < MIN_PYTHON:
+    with PYPROJECT.open("rb") as project_file:
+        requirement = tomllib.load(project_file)["project"]["requires-python"]
+    if re.fullmatch(r"==\d+\.\d+\.\d+", requirement) is None:
         return CheckResult(
             "python-version",
             "fail",
-            f"requires >= {MIN_PYTHON[0]}.{MIN_PYTHON[1]}, found {platform.python_version()}",
+            "verification requires-python must be an exact == pin",
         )
-    return CheckResult("python-version", "pass", platform.python_version())
+    expected = requirement.removeprefix("==")
+    implementation = platform.python_implementation()
+    actual = platform.python_version()
+    if implementation != "CPython" or actual != expected:
+        return CheckResult(
+            "python-version",
+            "fail",
+            f"requires CPython {expected}, found {implementation} {actual}",
+        )
+    if sysconfig.get_config_var("Py_GIL_DISABLED"):
+        return CheckResult(
+            "python-version",
+            "fail",
+            "verification requires the canonical GIL-enabled CPython build",
+        )
+    return CheckResult("python-version", "pass", f"CPython {actual}")
 
 
 def check_tool(name: str, command: list[str]) -> CheckResult:
@@ -85,12 +106,16 @@ def check_tool(name: str, command: list[str]) -> CheckResult:
         return CheckResult(name, "fail", f"{command[0]} not found on PATH")
     code, output = run_command(command)
     status = "pass" if code == 0 else "fail"
-    return CheckResult(name, status, output.splitlines()[0] if output else f"exit={code}")
+    return CheckResult(
+        name, status, output.splitlines()[0] if output else f"exit={code}"
+    )
 
 
 def check_uv_lock() -> CheckResult:
     code, output = run_command(["uv", "lock", "--project", "verification", "--check"])
-    return CheckResult("uv-lock", "pass" if code == 0 else "fail", output or f"exit={code}")
+    return CheckResult(
+        "uv-lock", "pass" if code == 0 else "fail", output or f"exit={code}"
+    )
 
 
 def check_cargo_offline_metadata() -> CheckResult:
@@ -99,7 +124,9 @@ def check_cargo_offline_metadata() -> CheckResult:
         env={**os.environ, "CARGO_NET_OFFLINE": "true"},
     )
     if code == 0:
-        return CheckResult("cargo-offline-metadata", "pass", "cargo metadata --locked resolved offline")
+        return CheckResult(
+            "cargo-offline-metadata", "pass", "cargo metadata --locked resolved offline"
+        )
     return CheckResult("cargo-offline-metadata", "fail", output or f"exit={code}")
 
 
@@ -123,7 +150,9 @@ def check_host_metadata() -> CheckResult:
         "machine": platform.machine(),
     }
     if not host["system"] or not host["machine"]:
-        return CheckResult("host-metadata", "fail", "host system or machine is unavailable")
+        return CheckResult(
+            "host-metadata", "fail", "host system or machine is unavailable"
+        )
     return CheckResult("host-metadata", "pass", json.dumps(host, sort_keys=True))
 
 

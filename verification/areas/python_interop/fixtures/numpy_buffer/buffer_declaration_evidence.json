@@ -25,10 +25,10 @@
       "covers": ["builtins.bytearray import-root", "opaque mmap Self receiver", "package-local bridge producer", "real NumPy ndarray exporter", "affine record/Option/list/tuple/union/recursive aggregate"]
     },
     {
-      "id": "cpython-3.11-compatibility",
+      "id": "canonical-python-runtime",
       "layer": "runtime-native-binary",
-      "evidence": "buffer-cpython311 suite pinned to CPython 3.11",
-      "owners": [".github/workflows/local-first-validation.yml", "verification/areas/python_interop/cpython311/pyproject.toml", "verification/areas/python_interop/cpython311/uv.lock", "verification/areas/python_interop/runner/cpython311_buffer.py"],
+      "evidence": "buffer-runtime suite on the exact canonical CPython",
+      "owners": [".github/workflows/local-first-validation.yml", "verification/areas/python_interop/pyproject.toml", "verification/areas/python_interop/uv.lock", "verification/areas/python_interop/runner/buffer_runtime.py"],
       "covers": ["five C-level exact release and pointer tests", "five compiled declaration-first buffer fixtures"]
     }
   ],

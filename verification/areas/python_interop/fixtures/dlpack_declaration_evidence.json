@@ -50,11 +50,6 @@
       "id": "torch-declaration",
       "source": "torch_dlpack/dlpack_declaration_compiled.sifr",
       "stdout_marker": "sifr-python-interop:dlpack:torch:pointer=stable:device=cpu:one-shot=ok:resources=zero"
-    },
-    {
-      "id": "tensorflow-declaration",
-      "source": "tensorflow_dlpack/dlpack_declaration_compiled.sifr",
-      "stdout_marker": "sifr-python-interop:dlpack:tensorflow:pointer=stable:device=cpu:bridge=versioned-call:resources=zero"
     }
   ],
   "profiles": ["create-pr", "merge", "nightly", "release"]

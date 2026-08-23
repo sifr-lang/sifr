@@ -12,9 +12,9 @@
     "native_imports": [],
     "pyproject_digest": null,
     "site_packages": [
-      "/tmp/sifr-env/.venv/lib/python3.13/site-packages"
+      "/tmp/sifr-env/.venv/lib/python3.14/site-packages"
     ],
-    "sys_base_prefix": "/opt/python/3.13",
+    "sys_base_prefix": "/opt/python/3.14",
     "sys_prefix": "/tmp/sifr-env/.venv",
     "uv_lock_digest": null
   },

@@ -27,6 +27,26 @@ impl<T: PyReturnType, E> PyReturnType for Result<T, E> {
     const OUTPUT_TYPE: PyStaticExpr = T::OUTPUT_TYPE;
 }
 
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` cannot be converted to a Python object",
+    label = "required by `#[pyo3(get)]` to create a readable property from a field of type `{Self}`",
+    note = "implement `IntoPyObject` for `&{Self}` or `IntoPyObject + Clone` for `{Self}` to define the conversion"
+)]
+pub trait PyIntoPyObjectMaybeRefType<const REF_IMPL_EXISTS: bool> {
+    const OUTPUT_TYPE: PyStaticExpr;
+}
+
+impl<'a, 'py, T: 'a> PyIntoPyObjectMaybeRefType<true> for T
+where
+    &'a T: IntoPyObject<'py>,
+{
+    const OUTPUT_TYPE: PyStaticExpr = <&T as IntoPyObject<'_>>::OUTPUT_TYPE;
+}
+
+impl<'py, T: IntoPyObject<'py>> PyIntoPyObjectMaybeRefType<false> for T {
+    const OUTPUT_TYPE: PyStaticExpr = <T as IntoPyObject<'_>>::OUTPUT_TYPE;
+}
+
 #[repr(C)]
 pub struct SerializedIntrospectionFragment<const LEN: usize> {
     pub length: u32,
@@ -95,11 +115,11 @@ pub const fn escape_json_string(input: &str, output: &mut [u8]) -> usize {
                 output_i += 1;
                 output[output_i] = b'0' + (c / 16);
                 output_i += 1;
-                let remainer = c % 16;
-                output[output_i] = if remainer >= 10 {
-                    b'a' + remainer - 10
+                let remainder = c % 16;
+                output[output_i] = if remainder >= 10 {
+                    b'a' + remainder - 10
                 } else {
-                    b'0' + remainer
+                    b'0' + remainder
                 };
                 output_i += 1;
             }

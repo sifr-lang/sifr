@@ -16,7 +16,7 @@ suggestions are active on the same package/driver path used by compilation.
 
 ## Ownership Boundary
 
-Python interop is a separate lane from Sifr's Rust-backed packages and raw C ABI interop. The final root application owns one uv-created CPython virtual environment. Sifr verifies and consumes that environment; it never installs packages, runs `uv sync`, or searches host-global Python as a fallback.
+Python interop is a separate lane from Sifr's Rust-backed packages and raw C ABI interop. The maintained toolchain uses only GIL-enabled CPython 3.14.7. The final root application owns one uv-created CPython virtual environment. Sifr verifies and consumes that environment; it never installs packages, runs `uv sync`, or searches host-global Python as a fallback.
 
 Library packages may declare `[python].requires-imports` for underivable
 raw/dynamic imports, but only the root application may override
@@ -213,7 +213,7 @@ The public examples in `docs/python-interop.mdx` are intentionally backed by che
 | FastAPI app construction | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `fastapi_app_contract.json` remains the contract inventory. |
 | Pydantic / pydantic-core validation | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `pydantic_models_contract.json` remains the contract inventory. |
 | pandas / pyarrow / polars Arrow bridge | `arrow-examples` creates and read-only rechecks exact environment-bound certifications, then compiles and runs `pyarrow_capsule/arrow_declaration_compiled.sifr` against all three producers with zero residual resources. The lower-level dataframe/library examples remain dynamic API evidence. |
-| torch / TensorFlow DLPack | `dlpack-examples` compiles and runs declaration-first PyTorch and TensorFlow transfers, checks stable data pointers and zero residual resources, and exercises TensorFlow through an explicit complete-signature package bridge. `ml-examples` retains the lower-level raw PyTorch example. |
+| PyTorch DLPack | `dlpack-examples` compiles and runs the declaration-first PyTorch transfer and checks stable data pointers, exact one-shot cleanup, and zero residual resources. `ml-examples` retains the lower-level raw PyTorch example. |
 | Kafka / CFFI / asyncio / Pub/Sub callbacks | `callback-examples` compiles and runs all four offline examples, including foreign-thread CFFI and Kafka dispatch plus active retained Pub/Sub close/drain. |
 | cryptography / CFFI / certifi | `library-examples` runs `cryptography_tls/cryptography_cffi_full_example.sifr`; `cryptography_tls_contract.json` remains the contract inventory. |
 | boto3 / botocore cloud clients | `library-examples` runs `aws_sqs/boto3_botocore_full_example.sifr`; live LocalStack SNS/SQS examples cover service-backed delivery. |
