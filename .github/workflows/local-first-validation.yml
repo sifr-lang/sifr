@@ -7,9 +7,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-env:
-  SIFR_MIN_UV_VERSION: "0.9.28"
-
 jobs:
   lint-and-format:
     name: lint-and-format
@@ -43,9 +40,10 @@ jobs:
           fetch-depth: 0
           submodules: recursive
       - uses: dtolnay/rust-toolchain@1.98.0
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
-          version: ${{ env.SIFR_MIN_UV_VERSION }}
+          version-file: verification/pyproject.toml
+          checksum: 68a509da24b06b4223a1c0175fb5eb5bc79342b76cbeff0cfe51ac3f5b17b6b2
       - name: Install pinned buffer compatibility interpreter
         run: uv python install 3.11
       - name: Run local-first profile
@@ -60,9 +58,10 @@ jobs:
           fetch-depth: 0
           submodules: recursive
       - uses: dtolnay/rust-toolchain@1.98.0
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
-          version: ${{ env.SIFR_MIN_UV_VERSION }}
+          version-file: verification/pyproject.toml
+          checksum: 68a509da24b06b4223a1c0175fb5eb5bc79342b76cbeff0cfe51ac3f5b17b6b2
       - name: Run smoke fuzz/property checks
         run: uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke
 
@@ -76,8 +75,9 @@ jobs:
           fetch-depth: 0
           submodules: recursive
       - uses: dtolnay/rust-toolchain@1.98.0
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
-          version: ${{ env.SIFR_MIN_UV_VERSION }}
+          version-file: verification/pyproject.toml
+          checksum: 68a509da24b06b4223a1c0175fb5eb5bc79342b76cbeff0cfe51ac3f5b17b6b2
       - name: Verify deterministic report signature
         run: bash verification/runner/e2e/check_report_determinism.sh --profile merge
