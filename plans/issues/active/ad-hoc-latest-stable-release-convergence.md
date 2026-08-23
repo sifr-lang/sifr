@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-23. Items 0-1 are complete. Item 2 Rust edition
-2024 is next.
+Status: active on 2026-08-23. Items 0-2 are complete. Item 3 uv 0.12 is
+next.
 
 ## Objective
 
@@ -17,11 +17,14 @@ after a fresh registry audit finds no stale maintained surface.
 - Recheck the official source when an item starts. The versions below are the
   audited baseline from 2026-08-23, not permission to install a stale version
   if a newer stable release appears before that item starts.
-- Preserve an older version only when it is an intentional compatibility lane,
-  such as the CPython 3.11 interop lane. It does not replace the latest-stable
-  primary lane.
-- Do not add a compatibility implementation, version fallback, or parallel old
-  path. Migrate the canonical path.
+- Do not preserve an older version, compatibility lane, legacy API, version
+  fallback, or parallel old path. Migrate the canonical path and delete the
+  superseded surface.
+- Adopt relevant new stable features and APIs during each upgrade when they
+  simplify or strengthen the canonical design. A version-only change is not
+  sufficient when the new stable release makes obsolete code unnecessary.
+- Breaking changes are allowed. Update all maintained callers, fixtures,
+  generated artifacts, and documentation instead of adding shims.
 - Do not hand-update transitive Cargo or Python packages. Regenerate them from
   the updated direct graph and review the lock/vendor diff.
 - A compatibility unit may contain dependencies that cannot compile in
@@ -74,7 +77,7 @@ at most twice with fresh temporary directories and never counts as approval.
 | --- | --- | --- |
 | Rust compiler | `rust-version = "1.93"`; no pinned toolchain file | Rust 1.98.0 |
 | Rust edition | 2021 | 2024 |
-| Python primary lane | `>=3.11,<3.14` | Python 3.14.7 primary; retain exact 3.11 lane |
+| Python primary lane | `>=3.11,<3.14` | Python 3.14.7 only |
 | PyO3 | 0.29.0 | 0.29.2 |
 | Ruff fork | `sifr/0.15.12-maintenance` | upstream Ruff 0.16.4 plus replayed Sifr changes |
 | uv | minimum 0.9.28 | exact 0.12.5 |
@@ -127,14 +130,14 @@ certification fixtures, and regenerated `vendor/` content. A broad unconstrained
 | Crypto ABI | `cffi 1.17.1`, `cryptography 46.0.0` | `cffi 2.1.1`, then `cryptography 50.0.0` |
 | Web framework | `fastapi 0.138.0`, `starlette 0.52.1` | `fastapi 0.141.1`, then `starlette 1.6.0` |
 | Redis services | `redis 6.4.0`, `fakeredis 2.36.2`, `hiredis 3.4.0`, `testcontainers 4.13.3` | `8.1.0`, `2.37.1`, `3.4.1`, `4.15.0` |
-| Numeric/dataframe | `numpy 2.4.6/2.5.1`, `pandas 2.3.3` | NumPy 2.5.2 where Python >=3.12, retained latest compatible 2.4.x on 3.11, and Pandas 3.0.5 |
+| Numeric/dataframe | `numpy 2.4.6/2.5.1`, `pandas 2.3.3` | NumPy 2.5.2 and Pandas 3.0.5 on Python 3.14 |
 | Arrow Python | 22.0.0 | 25.0.1 |
 | Kafka Python | 2.3.2 | 3.0.11 |
 | Packaging/build | `packaging 25.0`, unbounded Hatchling | `packaging 26.3`, pinned Hatchling 1.32.0 |
 
 The seven current direct packages are still rechecked at closure. Python items
-own all eight `uv.lock` files affected by their marker ranges and both the
-primary Python 3.14 and retained CPython 3.11 evidence where applicable.
+own all eight `uv.lock` files affected by their marker ranges and the Python
+3.14 evidence.
 
 ### CI, actions, and editor
 
@@ -149,7 +152,7 @@ primary Python 3.14 and retained CPython 3.11 evidence where applicable.
 | `@types/node` | 22.10 line | latest Node 24-compatible line |
 | `@types/vscode` | 1.91 | 1.134.0 |
 | TypeScript | 5.7.3 | 7.0.2 |
-| VS Code engine | 1.91 | 1.134.0 unless the compatibility audit proves the older floor remains intentional |
+| VS Code engine | 1.91 | 1.134.0 |
 | Mint CLI | floating `@latest` | exact latest-stable pin captured when the item starts |
 
 The top-level submodule audit found every tracked remote branch current. Ruff
@@ -165,9 +168,9 @@ Only the first incomplete row may be active.
 | --- | --- | --- | --- |
 | 0 | complete | Phase and inventory lock | This active record and roadmap entry merge after exact-SHA Opus satisfaction; all maintained surfaces, compatibility units, gate rules, and closure rules are owned. |
 | 1 | complete | Rust 1.98 toolchain | Local and CI compiler selection is reproducibly 1.98; the latest-only policy replaces the 1.93 floor; edition remains 2021. |
-| 2 | pending | Rust edition 2024 | Every maintained manifest/template uses edition 2024; `gen` and other reserved syntax are correctly emitted/escaped; generated Rust compiles. |
+| 2 | complete | Rust edition 2024 | Every maintained manifest/template uses edition 2024; `gen` and other reserved syntax are correctly emitted/escaped; generated Rust compiles. |
 | 3 | pending | uv 0.12 | uv and setup policy are current; all affected locks are reproducible under the new resolver. |
-| 4 | pending | Python 3.14 and PyO3 | Python 3.14.7 is primary, PyO3 is current, and the explicit 3.11 compatibility lane still passes. |
+| 4 | pending | Python 3.14 and PyO3 | Python 3.14.7 is the only maintained Python lane, PyO3 is current, and older-lane configuration and evidence are removed. |
 | 5 | pending | Node 24 LTS | Release/tooling workflows use the latest Node 24 LTS and compatible npm behavior. |
 | 6 | pending | GitHub Actions | All maintained third-party actions use reviewed latest-stable immutable SHAs and workflow contract tests pass. |
 | 7 | pending | Ruff 0.16.4 fork | Sifr changes are replayed on the latest Ruff stable base; fork, gitlink, ownership, parser/formatter/linter evidence, and snapshots agree. |
@@ -283,6 +286,66 @@ nightly sanitizer lane; neither is an Item 1 mechanism defect.
 Next action: implement Item 2 Rust edition 2024 convergence from the Item 1
 record merge on `origin/main`.
 
+### Item 2 record
+
+State: complete
+
+PR: [#3493](https://github.com/sifr-lang/sifr/pull/3493)
+
+Base SHA: `8fe5328f0c6e19d31a9029fccc1d3596e7b70d2d`
+
+Candidate SHA: `d0fab13a90dede0c2cbc2290203f24fe91326513`
+
+Merge SHA: `1110f85684fc561b44b63c8d927a9a2316d7699c`
+
+Changed paths: every maintained Cargo manifest, generated-project template,
+Rust probe, and Rust fixture moved to Edition 2024 and resolver 3. Rust source
+was migrated for the new edition, including escaped `gen` identifiers and
+edition-sensitive semantics. The LeetCode nested repository migrated first and
+the root gitlink then advanced. `Cargo.lock` did not change.
+
+Forward-only result: sysroot validation now requires resolver 3 exactly. The
+Edition 2024 process-environment safety change exposed an unsound mutable API,
+so public `sifr.env.setenv` and `unsetenv`, private `env_set` and `env_unset`,
+their compiler/runtime paths, fixtures, demos, inventories, and documentation
+were deleted. Environment access is read-only; no unsafe wrapper, legacy shim,
+compatibility implementation, or fallback was added.
+
+Focused validation: workspace all-target/all-feature checking, Edition and
+resolver inventories, generated-manifest probes, codegen and driver ownership
+tests, read-only environment tests, four environment E2E fixtures, three native
+demos, parity and no-pre-v1 audits, formatting, maintainability checks, and the
+file-size guardrail passed. The create-PR gate exposed two package test modules
+over their stricter 420-line limit; they were split by archive/command-planning
+and inventory/dynamic-import responsibility without changing production code.
+The resulting package suites passed.
+
+Gate evidence: the sole final create-PR gate passed on the candidate SHA,
+including 143/143 create-PR E2E fixtures. The sole merge gate passed on the
+same SHA, including every blocking verification area, all crate suites, and
+698/698 merge E2E fixtures. The deliberately cold merge run followed the
+required private-target cleanup, took 6,797.57 seconds, and reported only the
+non-blocking warm-time and group-skew advisories. Evidence is retained in the
+[#3493 final validation comment](https://github.com/sifr-lang/sifr/pull/3493#issuecomment-5387964099).
+
+Review evidence: the final forward-only exact-SHA Claude Opus review returned
+`SATISFIED` with no blocking findings for candidate
+`833124c367f712814471a57cf6f1e623632f71c9`; see the
+[#3493 review comment](https://github.com/sifr-lang/sifr/pull/3493#issuecomment-5387069404).
+The only later change split oversized test modules. The one permitted
+remediation review returned `SATISFIED` for the final candidate; see the
+[#3493 remediation comment](https://github.com/sifr-lang/sifr/pull/3493#issuecomment-5387215942).
+
+Deferred follow-up: Item 35 owns a negative resolver-2/absent-resolver sysroot
+test, reconciliation of stale historical environment-mutation descriptions,
+explicit ambient-missing environment fixture setup, and replacement of one
+vacuous parity assertion. Opus classified these as non-blocking and found no
+new mechanism defect on the remediation review. A crate-wide test-module
+layout unification remains optional cosmetic work outside this phase.
+
+Next action: implement Item 3 uv 0.12 convergence from the Item 2 record merge
+on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -293,9 +356,8 @@ record merge on `origin/main`.
 - Ruff: fork-native parser/AST/formatter tests plus Sifr syntax, formatter,
   linter, ownership, and developer-tooling areas before the Sifr gates.
 - Python/uv: lock checks, environment probes, Python interop static suites, the
-  retained CPython 3.11 lane, the primary Python 3.14 lane, and live suites
-  owned by the package item. They do not trigger Sifr gates unless compiler
-  inputs also change.
+  Python 3.14 lane, and live suites owned by the package item. They do not
+  trigger Sifr gates unless compiler inputs also change.
 - Workflow/action/Node items: workflow structure, distribution-release,
   publication, artifact recovery, and release qualification contracts.
 - Editor: nested compile/lint/unit/package/VSIX tests, editor release
@@ -322,8 +384,9 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Item 0 is complete. Its implementation merged in PR #3489 as
-`873ddd3534e73ac533d6de1241ae4313b112d621` with exact-SHA Opus satisfaction.
+Current state: Items 0-2 are complete. Item 2 merged in PR #3493 as
+`1110f85684fc561b44b63c8d927a9a2316d7699c` with exact-SHA Opus satisfaction
+and passing exact-candidate create-PR and merge gates.
 
-Next action: merge this record-only update, then start Item 1 Rust 1.98
-toolchain convergence from the resulting `origin/main`.
+Next action: merge this record-only update, then start Item 3 uv 0.12
+convergence from the resulting `origin/main`.
