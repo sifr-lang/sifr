@@ -539,9 +539,10 @@ resizable after automatic aggregate drop. C-level runtime exporters on the
 canonical GIL-enabled CPython 3.14.7 interpreter independently prove pointer
 identity and exact release counts for explicit release, automatic drop,
 validation failure, admission conflict, and store-failure rollback. The
-blocking `buffer-runtime` suite runs those five C-level tests and the same five
-compiled binaries in every delivery profile. The runnable typed-buffer example
-exposes the same five deterministic markers.
+blocking `buffer-runtime` suite runs those five C-level tests on the canonical
+interpreter in every delivery profile. The separate `buffer-examples` suite
+owns the five compiled declaration-first binaries and their deterministic
+markers.
 
 ## Arrow C Data Interface
 

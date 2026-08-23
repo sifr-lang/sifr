@@ -172,8 +172,9 @@ mutation and post-release exporter resizability, the aggregate fixture checks
 that all six retained exporters are resizable after automatic drop, and NumPy
 mutation is checked through the retained producer. C-level runtime exporters
 independently prove pointer identity and exact release counts. The blocking
-`buffer-runtime` suite reruns all five C-level tests and all five compiled
-binaries in the canonical locked CPython 3.14.7 environment. The complete
+`buffer-runtime` suite runs all five C-level tests in the canonical locked
+CPython 3.14.7 environment; `buffer-examples` owns the five compiled binaries.
+The complete
 positive, negative, cleanup,
 cancellation disposition, live-source, and profile ownership matrix is locked
 in `fixtures/numpy_buffer/buffer_declaration_evidence.json` and validated by the
