@@ -1,6 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-23. Item 0 phase and inventory lock is in progress.
+Status: active on 2026-08-23. Item 0 phase and inventory lock is complete.
+Item 1 Rust 1.98 toolchain is next.
 
 ## Objective
 
@@ -162,7 +163,7 @@ Only the first incomplete row may be active.
 
 | Item | State | Scope | Acceptance criteria |
 | --- | --- | --- | --- |
-| 0 | in progress | Phase and inventory lock | This active record and roadmap entry merge after exact-SHA Opus satisfaction; all maintained surfaces, compatibility units, gate rules, and closure rules are owned. |
+| 0 | complete | Phase and inventory lock | This active record and roadmap entry merge after exact-SHA Opus satisfaction; all maintained surfaces, compatibility units, gate rules, and closure rules are owned. |
 | 1 | pending | Rust 1.98 toolchain | Local and CI compiler selection is reproducibly 1.98; the latest-only policy replaces the 1.93 floor; edition remains 2021. |
 | 2 | pending | Rust edition 2024 | Every maintained manifest/template uses edition 2024; `gen` and other reserved syntax are correctly emitted/escaped; generated Rust compiles. |
 | 3 | pending | uv 0.12 | uv and setup policy are current; all affected locks are reproducible under the new resolver. |
@@ -198,6 +199,38 @@ Only the first incomplete row may be active.
 | 33 | pending | VS Code extension toolchain | Node types, VS Code types/engine, TypeScript, package locks, VSIX qualification, and the three-repository pointer chain merge in order. |
 | 34 | pending | Mint exact pin | Documentation tooling uses a tested exact latest-stable Mint release and documentation checks pass. |
 | 35 | pending | Final registry audit and phase closure | Official-source audit finds no stale maintained surface; all item records are complete; one exact-SHA whole-phase Opus review is satisfied; closure docs merge and the record is archived. |
+
+### Item 0 record
+
+State: complete
+
+PR: [#3489](https://github.com/sifr-lang/sifr/pull/3489)
+
+Base SHA: `3b6a5a2d64a443860ac0166d8a78bee5ac99f209`
+
+Candidate SHA: `213df45177d610ad6f4e6e40974d922d0ae90d08`
+
+Merge SHA: `873ddd3534e73ac533d6de1241ae4313b112d621`
+
+Changed paths: this active phase record and its roadmap registration.
+
+Validation: `git diff --check` passed, the active record path resolved, and
+`python3 scripts/check_file_size_guardrails.py` passed across 3,232 files with
+the 900-line first-party source limit. Only Markdown planning files changed,
+so the user-authorized Sifr create-PR and merge gates did not apply.
+
+Review evidence: the one exact-candidate Claude Opus review returned
+`SATISFIED` with no blocking findings. The response is retained in the
+[#3489 review comment](https://github.com/sifr-lang/sifr/pull/3489#issuecomment-5385394818).
+
+Deferred follow-up: Opus suggested making the Rust surface count mechanically
+derivable and naming the `dtolnay/rust-toolchain` action owner more explicitly.
+The already-locked Item 24 and Item 35 graph audits own count reconciliation;
+Item 6 owns maintained third-party action SHAs. Neither suggestion identified a
+new mechanism defect or changed Item 0 acceptance.
+
+Next action: implement Item 1 Rust 1.98 toolchain convergence from the Item 0
+record merge on `origin/main`.
 
 ## Validation Ownership
 
@@ -238,9 +271,8 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Item 0 is active on branch
-`codex/latest-stable-upgrades-item-0` from base
-`3b6a5a2d64a443860ac0166d8a78bee5ac99f209`.
+Current state: Item 0 is complete. Its implementation merged in PR #3489 as
+`873ddd3534e73ac533d6de1241ae4313b112d621` with exact-SHA Opus satisfaction.
 
-Next action: validate and review the phase/inventory lock, merge it, record its
-evidence, then start Item 1 from the resulting `origin/main`.
+Next action: merge this record-only update, then start Item 1 Rust 1.98
+toolchain convergence from the resulting `origin/main`.
