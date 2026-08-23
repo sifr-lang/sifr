@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MIN_UV_VERSION="${SIFR_MIN_UV_VERSION:-0.9.28}"
+UV_PROJECT_FILE="${SCRIPT_DIR}/../verification/pyproject.toml"
 
 usage() {
   cat <<'EOF'
@@ -61,30 +61,27 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-version_gte() {
-  python3 - "$1" "$2" <<'PY'
+required_uv_version() {
+  python3 - "${UV_PROJECT_FILE}" <<'PY'
 import re
 import sys
+import tomllib
 
-
-def parse(value: str) -> tuple[int, ...]:
-    parts = [int(part) for part in re.findall(r"\d+", value)]
-    return tuple(parts)
-
-
-actual = parse(sys.argv[1])
-minimum = parse(sys.argv[2])
-width = max(len(actual), len(minimum))
-actual += (0,) * (width - len(actual))
-minimum += (0,) * (width - len(minimum))
-raise SystemExit(0 if actual >= minimum else 1)
+with open(sys.argv[1], "rb") as project_file:
+    requirement = tomllib.load(project_file)["tool"]["uv"]["required-version"]
+if re.fullmatch(r"==\d+\.\d+\.\d+", requirement) is None:
+    raise SystemExit("verification uv required-version must be an exact == pin")
+print(requirement.removeprefix("=="))
 PY
 }
 
 require_uv() {
+  local expected_version
+  expected_version="$(required_uv_version)"
+
   if ! command -v uv >/dev/null 2>&1; then
     cat >&2 <<EOF
-error: uv ${MIN_UV_VERSION} or newer is required for verification tooling.
+error: uv ${expected_version} is required for verification tooling.
 Install uv and re-run this facade; see verification/README.md.
 EOF
     exit 2
@@ -92,10 +89,10 @@ EOF
 
   local uv_version
   uv_version="$(uv --version | awk '{print $2}')"
-  if ! version_gte "${uv_version}" "${MIN_UV_VERSION}"; then
+  if [[ "${uv_version}" != "${expected_version}" ]]; then
     cat >&2 <<EOF
-error: uv ${MIN_UV_VERSION} or newer is required for verification tooling; found ${uv_version}.
-Upgrade uv and re-run this facade; see verification/README.md.
+error: uv ${expected_version} is required for verification tooling; found ${uv_version}.
+Install the exact uv release and re-run this facade; see verification/README.md.
 EOF
     exit 2
   fi

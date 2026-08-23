@@ -14,7 +14,9 @@ uv run --project verification python -m sifr_verify doctor
 uv lock --project verification --check
 ```
 
-Minimum supported `uv` version: `0.9.28`.
+Required `uv` version: `0.12.5`. Every maintained uv project carries the exact
+native `required-version` pin, and CI reads the same pin from this project's
+`pyproject.toml`.
 
 The public validation entrypoint remains:
 
@@ -25,7 +27,7 @@ scripts/run_all_tests.sh --profile merge --emit-plan
 
 `scripts/run_all_tests.sh` is a thin public facade over
 `uv run --project verification --locked python -m sifr_verify profiles run`.
-It fail-fasts when `uv` is missing or below the minimum version so profile
+It fail-fasts when `uv` is missing or differs from the exact version so profile
 execution stays reproducible for local and CI validation.
 
 `--emit-plan` prints the selected profile's machine-readable execution plan

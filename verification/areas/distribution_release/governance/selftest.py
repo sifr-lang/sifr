@@ -310,7 +310,7 @@ def valid_report() -> dict[str, Any]:
         "toolchain": {
             "rustc": "rustc 1.90.0",
             "cargo": "cargo 1.90.0",
-            "uv": "uv 0.9.28",
+            "uv": "uv 0.12.5",
             "python": "Python 3.13.0",
         },
         "overall_status": "pass",
