@@ -803,5 +803,18 @@ def subscribe(own callback: Callable[[int], None]) -> None:
     }));
 }
 
+#[test]
+fn rust_interop_rejects_string_target() {
+    let errors = lower_errors(
+        r#"
+@rust("bridge.hash.digest")
+def digest(input: bytes) -> bytes:
+    return input
+"#,
+    );
+
+    assert_malformed(&errors);
+}
+
 #[path = "rust_interop_tests/decorator_validation_tests.rs"]
 mod decorator_validation_tests;

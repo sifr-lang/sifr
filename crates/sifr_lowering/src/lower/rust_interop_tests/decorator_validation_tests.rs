@@ -1,19 +1,6 @@
 use super::{assert_malformed, lower_errors};
 
 #[test]
-fn rust_interop_rejects_string_target() {
-    let errors = lower_errors(
-        r#"
-@rust("bridge.hash.digest")
-def digest(input: bytes) -> bytes:
-    return input
-"#,
-    );
-
-    assert_malformed(&errors);
-}
-
-#[test]
 fn rust_interop_requires_the_canonical_positional_target() {
     let errors = lower_errors(
         r"
