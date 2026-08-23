@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-23. Items 0-2 are complete. Item 3 uv 0.12 is
-next.
+Status: active on 2026-08-23. Items 0-3 are complete. Item 4 Python 3.14 and
+PyO3 is next.
 
 ## Objective
 
@@ -136,8 +136,10 @@ certification fixtures, and regenerated `vendor/` content. A broad unconstrained
 | Packaging/build | `packaging 25.0`, unbounded Hatchling | `packaging 26.3`, pinned Hatchling 1.32.0 |
 
 The seven current direct packages are still rechecked at closure. Python items
-own all eight `uv.lock` files affected by their marker ranges and the Python
-3.14 evidence.
+own all maintained first-party `uv.lock` files affected by their marker ranges
+and the Python 3.14 evidence. The repository currently has seven such locks;
+the eighth lock found by a repository-wide search belongs to vendored PyO3 and
+is upstream-owned third-party content.
 
 ### CI, actions, and editor
 
@@ -169,7 +171,7 @@ Only the first incomplete row may be active.
 | 0 | complete | Phase and inventory lock | This active record and roadmap entry merge after exact-SHA Opus satisfaction; all maintained surfaces, compatibility units, gate rules, and closure rules are owned. |
 | 1 | complete | Rust 1.98 toolchain | Local and CI compiler selection is reproducibly 1.98; the latest-only policy replaces the 1.93 floor; edition remains 2021. |
 | 2 | complete | Rust edition 2024 | Every maintained manifest/template uses edition 2024; `gen` and other reserved syntax are correctly emitted/escaped; generated Rust compiles. |
-| 3 | pending | uv 0.12 | uv and setup policy are current; all affected locks are reproducible under the new resolver. |
+| 3 | complete | uv 0.12 | uv and setup policy are current; all affected locks are reproducible under the new resolver. |
 | 4 | pending | Python 3.14 and PyO3 | Python 3.14.7 is the only maintained Python lane, PyO3 is current, and older-lane configuration and evidence are removed. |
 | 5 | pending | Node 24 LTS | Release/tooling workflows use the latest Node 24 LTS and compatible npm behavior. |
 | 6 | pending | GitHub Actions | All maintained third-party actions use reviewed latest-stable immutable SHAs and workflow contract tests pass. |
@@ -346,6 +348,60 @@ layout unification remains optional cosmetic work outside this phase.
 Next action: implement Item 3 uv 0.12 convergence from the Item 2 record merge
 on `origin/main`.
 
+### Item 3 record
+
+State: complete
+
+PR: [#3495](https://github.com/sifr-lang/sifr/pull/3495)
+
+Base SHA: `bcf23bd476297661529ec24f4e81cba8c9042a24`
+
+Candidate SHA: `f25cc8a5190904a28637de75ef81e0211807592c`
+
+Merge SHA: `e1888408e1ab343c28e62f3547d804236d914f74`
+
+Changed paths: all seven maintained first-party uv project manifests, the
+local validation gate, the local-first workflow, verification documentation,
+and the distribution-release current-policy fixture. Every project now
+requires uv 0.12.5 exactly. All three workflow uses select that version from
+the canonical verification manifest, pin setup-uv v10.0.1 by immutable SHA,
+and verify the official Linux x86_64 release checksum.
+
+Stable-source result: the official uv release feed reported 0.12.5 as the
+latest stable release and the setup-uv release feed reported v10.0.1 at
+`20cfd1bf945f4377ade1205e4dbc17946fc9a30d`. The downloaded uv archive matched
+the official SHA-256 independently. A repository-wide audit found seven
+maintained project/lock pairs; `vendor/pyo3/uv.lock` is the only additional
+lock and remained untouched as upstream-owned content.
+
+Focused validation: all seven locks were regenerated sequentially with uv
+0.12.5 without dependency upgrades and remained byte-for-byte unchanged. All
+seven passed `uv lock --check --offline`. Exact project/action/checksum counts,
+Bash syntax, local gate plan emission, runner self-tests, profile and area
+checks, the uv-aware doctor, Python-interop environment/self-tests, diff
+checks, maintainability checks, and the file-size guardrail passed. The
+distribution-release representative suite passed 56/56 after remediation.
+
+Review evidence: the initial exact-SHA review returned `SATISFIED` with no
+blocking finding. The one permitted remediation added explicit uv artifact
+checksums, tightened exact-pin parsing, and updated the maintained current
+fixture. The final exact-SHA remediation review also returned `SATISFIED` with
+no blocking finding. Both results are retained in the
+[#3495 review comment](https://github.com/sifr-lang/sifr/pull/3495#issuecomment-5388085894).
+
+Gate evidence: no compiler input changed, so the phase rules prohibited the
+Sifr create-PR and merge gates for this item.
+
+Deferred follow-up: the second review identified a new non-blocking mechanism
+gap: the seven project pins, three `version-file` settings, and three
+platform-specific checksums are not yet governed by one automated invariant.
+Item 35 owns adding and exercising that invariant, including a clear failure
+when a future runner platform has no matching checksum. Historical uv version
+evidence remains intentionally unchanged.
+
+Next action: implement Item 4 Python 3.14-only and PyO3 convergence from the
+Item 3 record merge on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -384,9 +440,11 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-2 are complete. Item 2 merged in PR #3493 as
-`1110f85684fc561b44b63c8d927a9a2316d7699c` with exact-SHA Opus satisfaction
-and passing exact-candidate create-PR and merge gates.
+Current state: Items 0-3 are complete. Item 3 merged in PR #3495 as
+`e1888408e1ab343c28e62f3547d804236d914f74` with exact-SHA Opus satisfaction.
+All seven maintained uv projects require 0.12.5 exactly and all three setup-uv
+uses pin v10.0.1 by immutable SHA with the official archive checksum. No
+compiler input changed, so no Sifr gate applied.
 
-Next action: merge this record-only update, then start Item 3 uv 0.12
-convergence from the resulting `origin/main`.
+Next action: merge this record-only update, then start Item 4 Python 3.14-only
+and PyO3 convergence from the resulting `origin/main`.
