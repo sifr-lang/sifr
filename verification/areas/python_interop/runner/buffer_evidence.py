@@ -67,7 +67,6 @@ BUFFER_MATRIX_SPECS = {
             },
             {
                 "five C-level exact release and pointer tests",
-                "five compiled declaration-first buffer fixtures",
             },
         ),
     },

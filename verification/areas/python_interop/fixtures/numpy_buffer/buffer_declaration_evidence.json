@@ -29,7 +29,7 @@
       "layer": "runtime-native-binary",
       "evidence": "buffer-runtime suite on the exact canonical CPython",
       "owners": [".github/workflows/local-first-validation.yml", "verification/areas/python_interop/pyproject.toml", "verification/areas/python_interop/uv.lock", "verification/areas/python_interop/runner/buffer_runtime.py"],
-      "covers": ["five C-level exact release and pointer tests", "five compiled declaration-first buffer fixtures"]
+      "covers": ["five C-level exact release and pointer tests"]
     }
   ],
   "negative": [

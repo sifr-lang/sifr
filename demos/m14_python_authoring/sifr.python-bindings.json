@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "environment_digest": "93a723e0b371296f",
+  "environment_digest": "e07ab2f5ac5d720b",
   "bindings": [
     {
       "module": "math",
@@ -8,7 +8,7 @@
         "sqrt"
       ],
       "output": "src/math_python.sifr",
-      "soabi": "cpython-311-darwin",
+      "soabi": "cpython-314-darwin",
       "distribution": null,
       "overrides": [
         "typing/math_override.pyi"
@@ -23,8 +23,8 @@
           "digest": "4c6df2b9eaf6dc119d7b8bf60246db7f93c7b22486d56d7dca692f356f53c255"
         }
       ],
-      "source_fingerprint": "ea4c7da4af3a454ed14d00767755979fbe5fd5a1834217b1f58979185115064e",
-      "generated_digest": "e4930c565a8c5722a1b4e357d0f54b208304fc7dfdf2200db085ba46927533b2"
+      "source_fingerprint": "d8a9e123c451510a6a5d019dedff39a6733b98574e60aa62c719156bfb705e2d",
+      "generated_digest": "249bc6da527c09c13f2a7aef66d2d9e401d2a9e5bf9a69f3a263b4d4a9a38a14"
     }
   ]
 }
