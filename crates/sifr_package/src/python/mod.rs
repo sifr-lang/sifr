@@ -60,6 +60,8 @@ pub use selection::{PythonEnvironmentSelection, select_root_python_environment};
 mod arrow_certification_tests;
 #[cfg(test)]
 mod binding_authoring_tests;
+#[cfg(test)]
+mod bridge_inventory_dynamic_import_tests;
 #[cfg(all(test, unix))]
 mod bridge_inventory_symlink_tests;
 #[cfg(test)]
