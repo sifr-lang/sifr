@@ -410,13 +410,12 @@ pub(crate) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionM
                             "bool" => Type::Bool,
                             other => {
                                 // Check if it's a class type in the union members
-                                if let Some(class_ty) = members.iter().find(
-                                    |m| matches!(m, Type::Class { name, .. } if name == other),
-                                ) {
-                                    class_ty.clone()
-                                } else {
-                                    return None;
-                                }
+                                members
+                                    .iter()
+                                    .find(
+                                        |m| matches!(m, Type::Class { name, .. } if name == other),
+                                    )
+                                    .cloned()?
                             }
                         };
                         // Check that this type is a member of the union

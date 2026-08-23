@@ -14,7 +14,7 @@
       "status": "supported",
       "merge_requirement": "execute",
       "nightly_requirement": "execute",
-      "toolchain": "stable",
+      "toolchain": "1.98.0",
       "allowed_skips": [],
       "evidence_suites": [
         "platform-golden",
@@ -29,7 +29,7 @@
       "status": "supported",
       "merge_requirement": "execute",
       "nightly_requirement": "execute",
-      "toolchain": "stable",
+      "toolchain": "1.98.0",
       "allowed_skips": [],
       "evidence_suites": [
         "platform-golden",
@@ -44,7 +44,7 @@
       "status": "supported",
       "merge_requirement": "execute",
       "nightly_requirement": "execute",
-      "toolchain": "stable",
+      "toolchain": "1.98.0",
       "allowed_skips": [],
       "evidence_suites": [
         "platform-golden",
@@ -59,7 +59,7 @@
       "status": "supported",
       "merge_requirement": "execute",
       "nightly_requirement": "execute",
-      "toolchain": "stable",
+      "toolchain": "1.98.0",
       "allowed_skips": [],
       "evidence_suites": [
         "platform-golden",
@@ -74,7 +74,7 @@
       "status": "host-limited",
       "merge_requirement": "structured-skip",
       "nightly_requirement": "structured-skip",
-      "toolchain": "stable",
+      "toolchain": "1.98.0",
       "allowed_skips": [
         "symlink privileges are host-policy dependent",
         "POSIX signal delivery is not a Windows platform rules",
@@ -92,7 +92,7 @@
       "status": "host-limited",
       "merge_requirement": "structured-skip",
       "nightly_requirement": "structured-skip",
-      "toolchain": "stable",
+      "toolchain": "1.98.0",
       "allowed_skips": [
         "symlink privileges are host-policy dependent",
         "POSIX signal delivery is not a Windows platform rules",

@@ -269,15 +269,14 @@ fn decode_utf16(
 ) -> Result<(String, Vec<String>), String> {
     let mut units = Vec::with_capacity(data.len() / 2);
     let mut recoveries = Vec::new();
-    let mut chunks = data.chunks_exact(2);
-    for chunk in &mut chunks {
+    let (chunks, remainder) = data.as_chunks::<2>();
+    for chunk in chunks {
         let unit = match endian {
-            Endian::Little => u16::from_le_bytes([chunk[0], chunk[1]]),
-            Endian::Big => u16::from_be_bytes([chunk[0], chunk[1]]),
+            Endian::Little => u16::from_le_bytes(*chunk),
+            Endian::Big => u16::from_be_bytes(*chunk),
         };
         units.push(unit);
     }
-    let remainder = chunks.remainder();
     if !remainder.is_empty() {
         if handler == Handler::Strict {
             return Err("utf-16 input has trailing byte".to_string());
@@ -498,5 +497,26 @@ fn encode_handler(label: &str) -> Result<Handler, String> {
         "xmlcharrefreplace" | "xml-char-ref-replace" => Ok(Handler::XmlCharRefReplace),
         "namereplace" | "name-replace" => Ok(Handler::NameReplace),
         _ => Err(format!("unsupported encode error handler: {label}")),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::decode_text;
+
+    #[test]
+    fn utf16_decoding_preserves_units_and_trailing_byte_handling() {
+        assert_eq!(
+            decode_text(&[0x41, 0x00, 0x42, 0x00], "utf-16-le", "strict"),
+            Ok("AB".to_string())
+        );
+        assert_eq!(
+            decode_text(&[0x41, 0x00, 0x42], "utf-16-le", "strict"),
+            Err("utf-16 input has trailing byte".to_string())
+        );
+        assert_eq!(
+            decode_text(&[0x41, 0x00, 0x42], "utf-16-le", "replace"),
+            Ok("A\u{fffd}".to_string())
+        );
     }
 }

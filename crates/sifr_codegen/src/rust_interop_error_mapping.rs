@@ -49,12 +49,9 @@ fn bridge_error_expr_with_contract(
                     declared_error_contract,
                 )],
             }),
-        class @ Type::Class {
-            name,
-            fields,
-            parent_class: _,
-            ..
-        } if is_message_error_alias(name) && message_error_fields(fields).is_some() => {
+        class @ Type::Class { name, fields, .. }
+            if is_message_error_alias(name) && message_error_fields(fields).is_some() =>
+        {
             RustExpr::StructInit {
                 name: rust_type_name(class),
                 fields: message_error_fields(fields)

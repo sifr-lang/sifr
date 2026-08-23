@@ -22,7 +22,7 @@ impl RustEmitter {
             .iter()
             .take(hir_args.len())
             .zip(hir_args.iter())
-            .zip(lowered_args.into_iter())
+            .zip(lowered_args)
             .enumerate()
         {
             if matches!(

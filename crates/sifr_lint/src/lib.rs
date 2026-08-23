@@ -359,9 +359,7 @@ fn per_file_ignored(rule_id: &str, file: Option<&Path>, options: &LintOptions) -
     };
     options.per_file_ignores.iter().any(|ignore| {
         ignore.rules.iter().any(|rule| rule == rule_id)
-            && Glob::new(&ignore.pattern)
-                .ok()
-                .is_some_and(|glob| glob.compile_matcher().is_match(file))
+            && Glob::new(&ignore.pattern).is_ok_and(|glob| glob.compile_matcher().is_match(file))
     })
 }
 

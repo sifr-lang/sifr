@@ -207,11 +207,8 @@ pub(in crate::lower) fn lower_pattern(
             let mut elements = Vec::new();
             for (i, pat) in seq_pat.patterns.iter().enumerate() {
                 let elem_ty = elem_types[i].clone();
-                if let Some(lowered) = lower_pattern(pat, &elem_ty, ctx) {
-                    elements.push(lowered);
-                } else {
-                    return None;
-                }
+                let lowered = lower_pattern(pat, &elem_ty, ctx)?;
+                elements.push(lowered);
             }
             Some(HirPattern::Tuple { elements })
         }
