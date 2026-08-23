@@ -2,7 +2,7 @@
 members = [
   "rust/blake3_backend",
 ]
-resolver = "2"
+resolver = "3"
 
 [package]
 name = "local-blake3-bridge"

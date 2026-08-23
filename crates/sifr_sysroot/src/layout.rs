@@ -206,13 +206,13 @@ fn validate_workspace_manifest(
         "crates/sifr_structural_identity",
     )?;
     require_workspace_member(binary_path, root, manifest, members, "crates/sifr_stdlib")?;
-    if workspace.get("resolver").and_then(toml::Value::as_str) != Some("2") {
+    if workspace.get("resolver").and_then(toml::Value::as_str) != Some("3") {
         return Err(SysrootError::new(
             SysrootErrorKind::InvalidWorkspace,
             binary_path.to_path_buf(),
             root.to_path_buf(),
             Some(manifest.to_path_buf()),
-            "Sifr sysroot Cargo.toml must use workspace resolver \"2\"",
+            "Sifr sysroot Cargo.toml must use workspace resolver \"3\"",
         ));
     }
     Ok(())

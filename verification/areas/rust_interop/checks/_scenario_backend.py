@@ -157,8 +157,8 @@ def run_backend_self_test(
             (
                 "shadow member",
                 "Cargo.toml",
-                'resolver = "2"',
-                'members = ["rust/sqlx"]\nresolver = "2"',
+                'resolver = "3"',
+                'members = ["rust/sqlx"]\nresolver = "3"',
                 "must not retain shadow",
             ),
             (

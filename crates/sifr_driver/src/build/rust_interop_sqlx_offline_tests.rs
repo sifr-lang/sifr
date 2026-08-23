@@ -496,7 +496,7 @@ impl SqlxFixture {
         std::fs::create_dir_all(root.join("src")).expect("source directory should exist");
         std::fs::write(
             workspace.join("Cargo.toml"),
-            "[workspace]\nmembers = [\"member\"]\nresolver = \"2\"\n\n[workspace.dependencies]\ndatabase = { package = \"sqlx\", version = \"0.8\", features = [\"macros\"] }\n",
+            "[workspace]\nmembers = [\"member\"]\nresolver = \"3\"\n\n[workspace.dependencies]\ndatabase = { package = \"sqlx\", version = \"0.8\", features = [\"macros\"] }\n",
         )
         .expect("workspace manifest should be written");
         let fixture = Self(root);

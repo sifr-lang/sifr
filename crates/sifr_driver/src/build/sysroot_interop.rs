@@ -728,7 +728,7 @@ class FileHandle:\n\
             fs::create_dir_all(path.join("vendor")).expect("vendor dir");
             fs::write(
                 path.join("Cargo.toml"),
-                "[workspace]\nmembers = [\"crates/sifr_runtime\", \"crates/sifr_stdlib\"]\nresolver = \"2\"\n",
+                "[workspace]\nmembers = [\"crates/sifr_runtime\", \"crates/sifr_stdlib\"]\nresolver = \"3\"\n",
             )
             .expect("workspace manifest");
             fs::write(path.join("Cargo.lock"), "# test lock\n").expect("lockfile");

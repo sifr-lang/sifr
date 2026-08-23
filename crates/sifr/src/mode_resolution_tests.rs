@@ -408,7 +408,7 @@ pub(super) fn test_package_cli_run_selects_workspace_package_from_root() {
     let project = TestProject::new("package_cli_workspace_run_selection");
     project.write(
         "Cargo.toml",
-        "[workspace]\nmembers = [\"packages/app\"]\ndefault-members = [\"packages/app\"]\nresolver = \"2\"\n",
+        "[workspace]\nmembers = [\"packages/app\"]\ndefault-members = [\"packages/app\"]\nresolver = \"3\"\n",
         "workspace manifest should be written",
     );
     let app_root = project.dir.join("packages/app");

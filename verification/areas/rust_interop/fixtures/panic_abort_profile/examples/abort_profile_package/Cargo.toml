@@ -2,7 +2,7 @@
 members = [
   "rust/legacy_backend",
 ]
-resolver = "2"
+resolver = "3"
 
 [package]
 name = "abort-profile-package"

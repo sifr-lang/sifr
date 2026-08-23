@@ -2,7 +2,7 @@
 members = [
   "rust/sifr_shared_hash_bridge",
 ]
-resolver = "2"
+resolver = "3"
 
 [package]
 name = "shared-hash-consumer"

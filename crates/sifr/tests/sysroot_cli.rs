@@ -145,7 +145,7 @@ fn write_skeleton(root: &Path) {
         root.join("Cargo.toml"),
         r#"[workspace]
 members = ["crates/sifr_runtime", "crates/sifr_structural_identity", "crates/sifr_stdlib"]
-resolver = "2"
+resolver = "3"
 "#,
     )
     .expect("workspace manifest");

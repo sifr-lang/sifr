@@ -2,7 +2,7 @@
 members = [
   "rust/workspace_hash",
 ]
-resolver = "2"
+resolver = "3"
 
 [package]
 name = "workspace-hash-consumer"

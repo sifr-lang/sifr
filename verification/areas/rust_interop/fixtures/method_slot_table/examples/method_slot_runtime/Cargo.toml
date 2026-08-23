@@ -1,5 +1,5 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 
 [package]
 name = "method_slot_runtime"
@@ -11,4 +11,3 @@ sifr_runtime = { path = "../../../../../../../crates/sifr_runtime", features = [
 
 [package.metadata.sifr]
 manifest = "sifr.toml"
-

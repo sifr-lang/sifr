@@ -1,5 +1,5 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 
 [workspace.dependencies]
 axum = { version = "=0.8.9", default-features = false, features = ["http1", "tokio"] }

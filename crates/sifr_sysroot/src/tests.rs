@@ -218,7 +218,7 @@ fn workspace_validation_requires_generated_stdlib_member() {
         r#"
 [workspace]
 members = ["crates/sifr_runtime", "crates/sifr_structural_identity"]
-resolver = "2"
+resolver = "3"
 "#,
     )
     .expect("workspace manifest");
@@ -248,7 +248,7 @@ fn workspace_validation_requires_structural_identity_member() {
         r#"
 [workspace]
 members = ["crates/sifr_runtime", "crates/sifr_stdlib"]
-resolver = "2"
+resolver = "3"
 "#,
     )
     .expect("workspace manifest");
@@ -348,7 +348,7 @@ fn write_complete_sysroot(root: &Path, version: &str) {
         r#"
 [workspace]
 members = ["crates/sifr_runtime", "crates/sifr_structural_identity", "crates/sifr_stdlib"]
-resolver = "2"
+resolver = "3"
 "#,
     )
     .expect("workspace manifest");

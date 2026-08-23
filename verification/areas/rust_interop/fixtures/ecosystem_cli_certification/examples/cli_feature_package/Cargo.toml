@@ -1,6 +1,6 @@
 [workspace]
 members = ["rust/anyhow_surface"]
-resolver = "2"
+resolver = "3"
 
 [workspace.dependencies]
 anyhow = { version = "=1.0.102", default-features = true }
