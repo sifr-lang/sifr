@@ -1,4 +1,4 @@
-use super::{decorator_path, parameter_metadata, target, ExprCall, LowerCtx, Parameters, Ranged};
+use super::{ExprCall, LowerCtx, Parameters, Ranged, decorator_path, parameter_metadata, target};
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{

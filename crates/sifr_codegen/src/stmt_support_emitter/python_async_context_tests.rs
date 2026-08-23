@@ -95,7 +95,9 @@ fn async_python_context_emits_biased_cancellation_and_masked_exit() {
     assert!(rendered.contains("submit_async_context_exit"));
     assert!(rendered.contains("PythonAsyncExitCause::Python(replay.clone())"));
     assert!(rendered.contains("suppression_allowed"));
-    assert!(rendered.contains("record_context_ignored_suppression(\"ordinary-error:PythonError\")"));
+    assert!(
+        rendered.contains("record_context_ignored_suppression(\"ordinary-error:PythonError\")")
+    );
     assert!(rendered.contains("return Err(__sifr_python_async_context_body_error_0)"));
     assert!(rendered.contains("release_and_resume_parent"));
     assert!(rendered.contains("CancellationResume::Invoked"));

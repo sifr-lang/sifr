@@ -1,6 +1,6 @@
 use super::*;
 use sifr_frontend::DiskSourceProvider;
-use sifr_stdlib_manifest::{planned_sifr_stdlib_features, StdlibFeature};
+use sifr_stdlib_manifest::{StdlibFeature, planned_sifr_stdlib_features};
 
 fn mktemp_dir(name: &str) -> PathBuf {
     let unique = format!(
@@ -98,9 +98,11 @@ fn test_project_entrypoint_plan_reports_reachable_frontend_errors() {
         Err(errors) => errors,
     };
 
-    assert!(errors
-        .iter()
-        .any(|error| error.message.contains("[helper] return type mismatch")));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("[helper] return type mismatch"))
+    );
 
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -140,9 +142,11 @@ fn test_project_entrypoint_plan_aggregates_reachable_dependency_metadata() {
         .into_generated_binary_project()
         .expect("project metadata aggregation should succeed");
 
-    assert!(generated_project
-        .used_stdlib_modules
-        .contains("sifr.statistics"));
+    assert!(
+        generated_project
+            .used_stdlib_modules
+            .contains("sifr.statistics")
+    );
     assert!(generated_project.used_stdlib_modules.contains("sifr.math"));
     let stdlib_features = planned_sifr_stdlib_features(
         &generated_project.used_stdlib_modules,
@@ -150,12 +154,16 @@ fn test_project_entrypoint_plan_aggregates_reachable_dependency_metadata() {
     );
     assert!(stdlib_features.contains("math"));
     assert!(!stdlib_features.contains("numeric"));
-    assert!(!generated_project
-        .required_features
-        .contains(&StdlibFeature::NumTraits));
-    assert!(!generated_project
-        .required_features
-        .contains(&StdlibFeature::NumBigint));
+    assert!(
+        !generated_project
+            .required_features
+            .contains(&StdlibFeature::NumTraits)
+    );
+    assert!(
+        !generated_project
+            .required_features
+            .contains(&StdlibFeature::NumBigint)
+    );
 
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -191,9 +199,11 @@ fn test_project_entrypoint_plan_ignores_unreachable_dependency_metadata() {
         .expect("project metadata aggregation should succeed");
 
     assert!(!generated_project.used_stdlib_modules.contains("sifr.json"));
-    assert!(!generated_project
-        .required_features
-        .contains(&StdlibFeature::SerdeJson));
+    assert!(
+        !generated_project
+            .required_features
+            .contains(&StdlibFeature::SerdeJson)
+    );
 
     let _ = std::fs::remove_dir_all(dir);
 }

@@ -1,8 +1,8 @@
 use crate::python_interop_plan::{
-    push_python_plan_cache_key, python_interop_plan_for_named_modules, PythonInteropPlan,
+    PythonInteropPlan, push_python_plan_cache_key, python_interop_plan_for_named_modules,
 };
 use crate::rust_interop_bridge_contract::{
-    bridge_contract_plan_for_named_modules, push_bridge_contract_plan, RustBridgeContractPlan,
+    RustBridgeContractPlan, bridge_contract_plan_for_named_modules, push_bridge_contract_plan,
 };
 use sifr_ir::{
     HirClass, HirFunction, HirModule, RustInteropDeclaration, RustInteropValue, RustTargetPath,

@@ -538,12 +538,14 @@ mod tests {
             error: None,
         };
 
-        assert!(apply_python_target_inspection(
-            &mut generated.interop.python,
-            "pkg.Connection",
-            Ok(&inspection),
-        )
-        .is_empty());
+        assert!(
+            apply_python_target_inspection(
+                &mut generated.interop.python,
+                "pkg.Connection",
+                Ok(&inspection),
+            )
+            .is_empty()
+        );
         assert_eq!(
             generated.interop.python.target_probes[0].status,
             PythonTargetProbeStatus::Verified
@@ -649,9 +651,11 @@ mod tests {
         else {
             panic!("schema-mode mismatch must fail");
         };
-        assert!(diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.message.contains("schema-request mode")));
+        assert!(
+            diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.message.contains("schema-request mode"))
+        );
     }
 
     #[test]
@@ -666,9 +670,11 @@ mod tests {
         else {
             panic!("kind mismatch must fail");
         };
-        assert!(diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.message.contains("return kind")));
+        assert!(
+            diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.message.contains("return kind"))
+        );
     }
 
     #[test]
@@ -767,11 +773,7 @@ mod tests {
     }
 
     fn python() -> &'static str {
-        if cfg!(windows) {
-            "python"
-        } else {
-            "python3"
-        }
+        if cfg!(windows) { "python" } else { "python3" }
     }
 
     fn project(target: &str) -> GeneratedBinaryProject {

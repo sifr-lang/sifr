@@ -1,6 +1,6 @@
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
-    apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
+    PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
 };
 use crate::diagnostics::RenderedDiagnostic;
 use ruff_text_size::{TextRange, TextSize};
@@ -174,9 +174,11 @@ fn package_rust_interop_direct_non_result_requires_panic_policy() {
     let diagnostics = interop_errors(generated, Some(context), "missing panic policy must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("non-Result Rust interop declarations"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("non-Result Rust interop declarations")
+    );
 }
 
 #[test]
@@ -366,9 +368,11 @@ fn package_rust_interop_mapped_value_rejects_resource_clone_policy() {
     let diagnostics = interop_errors(generated, Some(context), "mapped clone policy must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-CONFIG-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("resource-sharing clone policies"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("resource-sharing clone policies")
+    );
 }
 
 #[test]
@@ -385,16 +389,18 @@ fn package_rust_interop_records_declared_transitive_bridge_native_links() {
     let generated = apply_package_rust_interop_metadata(generated, Some(context))
         .expect("declared transitive bridge native link should be recorded");
 
-    assert!(generated
-        .interop
-        .rust
-        .trust_requirements
-        .iter()
-        .any(|requirement| {
-            requirement.kind == RustInteropTrustRequirementKind::NativeLinks
-                && requirement.required_entry == "ring_core_0_17_14_"
-                && requirement.trusted
-        }));
+    assert!(
+        generated
+            .interop
+            .rust
+            .trust_requirements
+            .iter()
+            .any(|requirement| {
+                requirement.kind == RustInteropTrustRequirementKind::NativeLinks
+                    && requirement.required_entry == "ring_core_0_17_14_"
+                    && requirement.trusted
+            })
+    );
 }
 
 #[test]
@@ -416,16 +422,18 @@ fn package_rust_interop_records_declared_native_links_for_direct_crate_bindings(
     let generated = apply_package_rust_interop_metadata(generated, Some(context))
         .expect("package-scoped native-link trust should cover direct crate bindings");
 
-    assert!(generated
-        .interop
-        .rust
-        .trust_requirements
-        .iter()
-        .any(|requirement| {
-            requirement.kind == RustInteropTrustRequirementKind::NativeLinks
-                && requirement.required_entry == "psm_s"
-                && requirement.trusted
-        }));
+    assert!(
+        generated
+            .interop
+            .rust
+            .trust_requirements
+            .iter()
+            .any(|requirement| {
+                requirement.kind == RustInteropTrustRequirementKind::NativeLinks
+                    && requirement.required_entry == "psm_s"
+                    && requirement.trusted
+            })
+    );
 }
 
 pub(super) fn base_project_with_contracts(

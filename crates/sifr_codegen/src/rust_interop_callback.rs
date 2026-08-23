@@ -1,11 +1,10 @@
 use crate::rust_interop_direct_collections::{
     bridge_composite_to_sifr_expr, composite_conversion_required, sifr_composite_to_bridge_expr,
 };
-use crate::{render_expr, RustExpr};
+use crate::{RustExpr, render_expr};
 use sifr_ir::{
-    rust_threadsafe_callback_contract, HirFunction, HirParam, RustCallbackBackpressure,
-    RustCallbackOverflow, RustCallbackShutdown, RustInteropDecoratorKind,
-    RustThreadsafeCallbackContract,
+    HirFunction, HirParam, RustCallbackBackpressure, RustCallbackOverflow, RustCallbackShutdown,
+    RustInteropDecoratorKind, RustThreadsafeCallbackContract, rust_threadsafe_callback_contract,
 };
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 

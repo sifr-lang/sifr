@@ -1,6 +1,6 @@
 use serde_json::Value;
 use sifr_stdlib_manifest::{
-    feature_for_codegen_requirement, try_generated_cargo_dependencies, StdlibFeature,
+    StdlibFeature, feature_for_codegen_requirement, try_generated_cargo_dependencies,
 };
 use std::collections::HashSet;
 

@@ -3,7 +3,7 @@ use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_type_system::{FixedIntType, Type};
 
-use super::{expression_diagnostics, LowerCtx};
+use super::{LowerCtx, expression_diagnostics};
 
 pub(in crate::lower) fn resolve_fixed_width_method_type(
     fixed: FixedIntType,

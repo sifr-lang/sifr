@@ -3,7 +3,7 @@ members = [
   "rust/sifr_arrow_bridge",
   "rust/sifr_tensor_bridge",
 ]
-resolver = "2"
+resolver = "3"
 
 [workspace.dependencies]
 arrow = { version = "=58.3.0", default-features = true }
@@ -16,7 +16,7 @@ sifr_runtime = { path = "../../../../../../../crates/sifr_runtime" }
 [package]
 name = "advanced-data-runtime"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 sifr_arrow_bridge = { path = "rust/sifr_arrow_bridge" }

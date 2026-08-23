@@ -110,12 +110,14 @@ fn stale_snapshot_is_rejected_after_update() {
 
     assert_eq!(error.kind, AnalysisErrorKind::StaleSnapshot);
     let debug = host.debug_snapshot();
-    assert!(debug
-        .trace
-        .events
-        .iter()
-        .any(|event| event.phase == WorkspaceTracePhase::StaleRejection
-            && event.detail.contains("captured_workspace")));
+    assert!(
+        debug
+            .trace
+            .events
+            .iter()
+            .any(|event| event.phase == WorkspaceTracePhase::StaleRejection
+                && event.detail.contains("captured_workspace"))
+    );
 }
 
 #[test]
@@ -153,13 +155,15 @@ fn dependency_sensitive_invalidation_is_explained_in_trace() {
         sifr_frontend::WorkspaceDirtyScope::ReverseDependencies { .. }
     ));
     let debug = host.debug_snapshot();
-    assert!(debug
-        .trace
-        .events
-        .iter()
-        .any(|event| event.phase == WorkspaceTracePhase::Invalidation
-            && event.detail.contains("ReverseDependencies")
-            && event.detail.contains("ExportSignatureChanged")));
+    assert!(
+        debug
+            .trace
+            .events
+            .iter()
+            .any(|event| event.phase == WorkspaceTracePhase::Invalidation
+                && event.detail.contains("ReverseDependencies")
+                && event.detail.contains("ExportSignatureChanged"))
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -294,10 +298,12 @@ fn project_symbol_index_is_stable_for_workspace_queries() {
 
     assert_eq!(first.value(), second.value());
     assert_eq!(first.metadata().query, AnalysisQueryKind::WorkspaceSymbols);
-    assert!(first
-        .value()
-        .iter()
-        .any(|symbol| symbol.name == "helper_value"));
+    assert!(
+        first
+            .value()
+            .iter()
+            .any(|symbol| symbol.name == "helper_value")
+    );
 }
 
 #[test]

@@ -1,5 +1,5 @@
 use super::{
-    make_union, traversal, HashMap, HashSet, HirExpr, HirStmt, RustEmitter, TraversalConfig, Type,
+    HashMap, HashSet, HirExpr, HirStmt, RustEmitter, TraversalConfig, Type, make_union, traversal,
 };
 
 impl RustEmitter {

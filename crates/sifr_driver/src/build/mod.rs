@@ -71,7 +71,7 @@ pub use api::{
     emit_project,
 };
 #[doc(hidden)]
-pub use cargo_invocation_trace::{capture_cargo_invocations, CargoInvocation};
+pub use cargo_invocation_trace::{CargoInvocation, capture_cargo_invocations};
 pub use cargo_manifest::{
     generate_dependency_cargo_toml, sysroot_cargo_config_args,
     try_generate_standalone_dependency_plan,
@@ -83,8 +83,8 @@ pub use python_certification::{
     validate_protocol_certifications_for_plan,
 };
 pub use python_interop::{
-    apply_python_target_inspection, inspect_python_target, probe_python_interop_plan,
     PythonInteropPlanDiagnostic, PythonTargetInspection, PythonTargetParameter,
+    apply_python_target_inspection, inspect_python_target, probe_python_interop_plan,
 };
 pub use python_runtime::PackagePythonRuntime;
 pub use report::{
@@ -97,14 +97,14 @@ pub(crate) use cargo_manifest::{
     generate_dependency_cargo_toml_with_interop, try_generate_sysroot_dependency_plan,
 };
 pub(crate) use entrypoint::{
-    build_cached_package_project_binary, build_cached_project_binary,
+    RootedEntrypoint, build_cached_package_project_binary, build_cached_project_binary,
     build_cached_single_file_binary, build_rooted_entrypoint_binary_with_report,
     check_single_file_entrypoint, compile_single_file_entrypoint_with_metadata,
     compile_single_file_frontend, emit_project_entrypoint, resolve_package_project_entrypoint_plan,
-    resolve_project_entrypoint_plan, RootedEntrypoint,
+    resolve_project_entrypoint_plan,
 };
 pub(crate) use workspace::{
-    prepare_cached_artifact, ArtifactCacheReport, CachedArtifactEntry, PreparedArtifactCache,
+    ArtifactCacheReport, CachedArtifactEntry, PreparedArtifactCache, prepare_cached_artifact,
 };
 
 #[cfg(test)]

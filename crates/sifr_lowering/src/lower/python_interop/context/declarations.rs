@@ -1,8 +1,8 @@
 use super::{
+    ExprCall, HirFunction, HirParam, HirWithItemKind, LowerCtx, Parameters, PythonCleanupPolicy,
+    PythonInteropDeclaration, PythonInteropDecoratorKind, PythonInteropEffect, Type,
     invalid_context, is_direct_type, parameter_metadata, parse_method_target_path,
-    receiver_is_owned, ExprCall, HirFunction, HirParam, HirWithItemKind, LowerCtx, Parameters,
-    PythonCleanupPolicy, PythonInteropDeclaration, PythonInteropDecoratorKind, PythonInteropEffect,
-    Type,
+    receiver_is_owned,
 };
 
 pub(in crate::lower) fn python_context_item_kind(
@@ -297,7 +297,9 @@ pub(in crate::lower) fn validate_context_class_methods(
     if enter_methods.len() != 1 || exit_methods.len() != 1 {
         invalid_context(
             ctx,
-            &format!("`cleanup={cleanup_label}` requires exactly one matching context enter and one consuming context exit declaration"),
+            &format!(
+                "`cleanup={cleanup_label}` requires exactly one matching context enter and one consuming context exit declaration"
+            ),
             range,
         );
         return;

@@ -8,12 +8,6 @@ fn run_command(cmd: &String) -> Result<String, IOError> {
 fn env_get(key: &String) -> Option<String> {
     ::sifr_stdlib::sys::env_get(key)
 }
-fn env_set(key: &String, value: &String) {
-    ::sifr_stdlib::sys::env_set(key, value);
-}
-fn env_unset(key: &String) {
-    ::sifr_stdlib::sys::env_unset(key);
-}
 fn env_keys() -> Vec<String> {
     ::sifr_stdlib::sys::env_keys()
 }
@@ -75,11 +69,14 @@ fn getenv(key: &String, default_value: &String) -> String {
     };
     val
 }
-fn setenv(key: &String, value: &String) {
-    env_set(key, value);
+fn keys() -> Vec<String> {
+    env_keys()
 }
-fn unsetenv(key: &String) {
-    env_unset(key);
+fn values() -> Vec<String> {
+    env_values()
+}
+fn items() -> Vec<String> {
+    env_items()
 }
 
 // --- stdlib: sifr.test ---
@@ -146,21 +143,17 @@ fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
 }
 
 fn main() {
-    unsetenv(&"SIFR_ENV_SAMPLE".to_string());
-    setenv(&"SIFR_ENV_SAMPLE".to_string(), &"env".to_string());
-    let with_default: String = getenv(&"SIFR_ENV_SAMPLE".to_string(), &"fallback".to_string());
+    let with_default: String = getenv(&"SIFR_ENV_SAMPLE_MISSING".to_string(), &"fallback".to_string());
     println!("{}", with_default);
-    assert!((format!("{}", with_default) == "env"));
-    unsetenv(&"SIFR_ENV_SAMPLE".to_string());
-    let without_default: Option<String> = getenv_opt(&"SIFR_ENV_SAMPLE".to_string());
+    assert!((format!("{}", with_default) == "fallback"));
+    let without_default: Option<String> = getenv_opt(&"SIFR_ENV_SAMPLE_MISSING".to_string());
     assert!((format!("{}", without_default.is_none()) == "true"));
-    assert!((format!("{}", getenv(&"SIFR_ENV_SAMPLE".to_string(), &"fallback".to_string())) == "fallback"));
     let invalid_expected_lookup_found: Vec<bool> = vec![false, false];
     let mut invalid_actual_lookup_found: Vec<bool> = vec![];
-    setenv(&"".to_string(), &"x".to_string());
     invalid_actual_lookup_found.push(getenv_opt(&"".to_string()) != None);
-    setenv(&"A=B".to_string(), &"x".to_string());
     invalid_actual_lookup_found.push(getenv_opt(&"A=B".to_string()) != None);
     assert_bool_vector_eq(&invalid_actual_lookup_found, &invalid_expected_lookup_found);
-    println!("env env parity demo: pass");
+    assert!((format!("{}", (keys().len() as i64) == (values().len() as i64)) == "true"));
+    assert!((format!("{}", (keys().len() as i64) == (items().len() as i64)) == "true"));
+    println!("env read-only access demo: pass");
 }

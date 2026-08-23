@@ -78,9 +78,9 @@ fn lowers_simple_for_with_name_iter_using_copy_mode() {
             && matches!(
                 recv.as_ref(),
                 RustExpr::MethodCall {
-                    receiver: ref inner_recv,
-                    ref method,
-                    ref args,
+                    receiver: inner_recv,
+                    method,
+                    args,
                 } if matches!(inner_recv.as_ref(), RustExpr::Ident(name) if name == "items")
                     && method == "iter"
                     && args.is_empty()
@@ -154,9 +154,9 @@ fn lowers_simple_for_with_dict_iter_to_keys_cloned() {
         } if matches!(
             recv.as_ref(),
             RustExpr::MethodCall {
-                receiver: ref inner_recv,
-                ref method,
-                ref args,
+                receiver: inner_recv,
+                method,
+                args,
             } if matches!(inner_recv.as_ref(), RustExpr::Ident(name) if name == "m")
                 && method == "keys"
                 && args.is_empty()
@@ -235,9 +235,9 @@ fn lowers_simple_for_with_else_and_name_iter() {
         } if matches!(
             recv.as_ref(),
             RustExpr::MethodCall {
-                receiver: ref inner_recv,
-                ref method,
-                ref args,
+                receiver: inner_recv,
+                method,
+                args,
             } if matches!(inner_recv.as_ref(), RustExpr::Ident(name) if name == "items")
                 && method == "iter"
                 && args.is_empty()

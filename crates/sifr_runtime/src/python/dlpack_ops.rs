@@ -13,11 +13,11 @@ mod argument;
 #[cfg(test)]
 mod declaration_tests;
 
-pub use argument::{prepare_dlpack_argument, PythonDlpackArgument};
+pub use argument::{PythonDlpackArgument, prepare_dlpack_argument};
 
 use abi::{
-    metadata_for_managed_tensor, DLDataType, DLDevice, ManagedTensor, DLTENSOR_NAME,
-    DLTENSOR_VERSIONED_NAME,
+    DLDataType, DLDevice, DLTENSOR_NAME, DLTENSOR_VERSIONED_NAME, ManagedTensor,
+    metadata_for_managed_tensor,
 };
 #[cfg(test)]
 use abi::{DLManagedTensor, DLTensor, USED_DLTENSOR_NAME};
@@ -527,8 +527,8 @@ pub(super) fn reset_dlpack_store_for_tests() {
 mod tests {
     use super::*;
     use crate::python::{
-        close_object, initialize_runtime, reset_runtime_state_for_tests, resource_diagnostics,
-        test_config, test_guard, PythonResourceDiagnostics,
+        PythonResourceDiagnostics, close_object, initialize_runtime, reset_runtime_state_for_tests,
+        resource_diagnostics, test_config, test_guard,
     };
     use pyo3::types::PyDict;
     use std::sync::atomic::{AtomicUsize, Ordering};

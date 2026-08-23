@@ -1,7 +1,7 @@
 use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot};
 use sifr_stdlib_manifest::{
-    try_sysroot_dependency_plan, CargoVendorMode, StdlibFeature, SysrootCrate,
-    SysrootCrateDependency, SysrootDependencyPlan,
+    CargoVendorMode, StdlibFeature, SysrootCrate, SysrootCrateDependency, SysrootDependencyPlan,
+    try_sysroot_dependency_plan,
 };
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::fmt::Write as _;
@@ -81,7 +81,7 @@ fn render_dependency_cargo_toml(
         r#"[package]
 name = "{project_name}"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [workspace]
 "#
@@ -412,10 +412,12 @@ mod tests {
 
         add_sysroot_interop_crates(&mut dependency_plan, &interop);
 
-        assert!(dependency_plan
-            .crates
-            .iter()
-            .any(|dependency| dependency.krate == SysrootCrate::SifrRuntime));
+        assert!(
+            dependency_plan
+                .crates
+                .iter()
+                .any(|dependency| dependency.krate == SysrootCrate::SifrRuntime)
+        );
     }
 
     #[test]
@@ -484,7 +486,7 @@ mod tests {
             r#"[package]
 name = "sifr_output"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [workspace]
 

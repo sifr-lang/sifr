@@ -1,11 +1,11 @@
 use super::{
-    body_contains_yield, collect_mutated_vars_with_sigs, collect_reassigned_vars,
+    HirFunction, HirStmt, OwnershipKind, RustEmitter, RustExpr, RustItem, RustLiteral, RustParam,
+    RustStmt, RustType, Type, Visibility, body_contains_yield, collect_mutated_vars_with_sigs,
+    collect_reassigned_vars,
     python_callback_bounds::{
         python_callback_bound_param_names, python_callback_static_param_names,
         rust_callback_bound_param_names,
     },
-    HirFunction, HirStmt, OwnershipKind, RustEmitter, RustExpr, RustItem, RustLiteral, RustParam,
-    RustStmt, RustType, Type, Visibility,
 };
 use crate::python_interop_common::python_omit_parameter_indices;
 use crate::python_interop_direct::python_interop_function_body_with_retained_errors;

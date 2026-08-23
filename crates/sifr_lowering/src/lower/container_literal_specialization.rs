@@ -1,8 +1,8 @@
-use super::{type_bounds::reject_unavailable_hash_key, LowerCtx};
+use super::{LowerCtx, type_bounds::reject_unavailable_hash_key};
 use crate::hir_nodes::{HirExpr, HirStmt};
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_type_system::{type_check_binary_op, Type};
+use sifr_type_system::{Type, type_check_binary_op};
 use std::collections::HashMap;
 
 pub(in crate::lower) fn type_contains_unknown_or_any(ty: &Type) -> bool {

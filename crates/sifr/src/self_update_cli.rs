@@ -1,14 +1,14 @@
 use crate::cli_model_and_entrypoint::{
-    diagnostic_with_code, DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
-    EXIT_USER_DIAGNOSTIC,
+    DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
+    diagnostic_with_code,
 };
 use crate::diagnostic_rendering_and_run::render_diagnostics;
 use crate::self_update_metadata::{
-    fetch_channel_metadata, parse_channel, resolve_update_plan, PreviewChannel, PreviewVersion,
-    TargetRequest, UpdateAction, UpdatePlan,
+    PreviewChannel, PreviewVersion, TargetRequest, UpdateAction, UpdatePlan,
+    fetch_channel_metadata, parse_channel, resolve_update_plan,
 };
 use crate::self_update_receipt::{
-    discover_install_receipt, DiscoveredReceipt, ReceiptDiscoveryEnv,
+    DiscoveredReceipt, ReceiptDiscoveryEnv, discover_install_receipt,
 };
 use crate::self_update_runner::SelfUpdateRunner;
 use clap::{Args, Subcommand, ValueEnum};
@@ -351,9 +351,9 @@ fn self_update_diagnostic(message: impl Into<String>) -> Box<RenderedDiagnostic>
 #[cfg(test)]
 mod tests {
     use super::{
-        render_dry_run_json, render_dry_run_text, render_version_json, render_version_text,
-        update_args_diagnostic, version_args_diagnostic, SelfOutputFormat, SelfUpdateArgs,
-        SelfVersionArgs,
+        SelfOutputFormat, SelfUpdateArgs, SelfVersionArgs, render_dry_run_json,
+        render_dry_run_text, render_version_json, render_version_text, update_args_diagnostic,
+        version_args_diagnostic,
     };
     use crate::self_update_metadata::{PreviewChannel, PreviewVersion, UpdateAction, UpdatePlan};
     use crate::self_update_receipt::{DiscoveredReceipt, InstallReceipt};
@@ -497,10 +497,12 @@ mod tests {
             force: false,
         });
 
-        assert!(diagnostic
-            .expect("diagnostic")
-            .message
-            .contains("--channel"));
+        assert!(
+            diagnostic
+                .expect("diagnostic")
+                .message
+                .contains("--channel")
+        );
     }
 
     #[test]
@@ -513,10 +515,12 @@ mod tests {
             force: false,
         });
 
-        assert!(diagnostic
-            .expect("diagnostic")
-            .message
-            .contains("--dry-run"));
+        assert!(
+            diagnostic
+                .expect("diagnostic")
+                .message
+                .contains("--dry-run")
+        );
     }
 
     #[test]

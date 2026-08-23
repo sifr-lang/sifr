@@ -1,7 +1,7 @@
 use crate::CargoLockMode;
 use std::process::Command;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 static CAPTURE_SERIALIZER: Mutex<()> = Mutex::new(());
 static CAPTURED: Mutex<Vec<CargoInvocation>> = Mutex::new(Vec::new());

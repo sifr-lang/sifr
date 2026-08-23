@@ -1,15 +1,15 @@
 use super::{
-    call_arity_range, callable_builtin_element_type, decimal_conversion_error_type,
-    expression_diagnostics, first_call_keyword_range, float_sentinel_expr,
-    float_sentinel_kind_from_call, is_poisoned_binding_expr, lower_abs_call, lower_anext_call,
-    lower_bigdecimal_constructor_call, lower_bytes_constructor_call, lower_chr_call,
-    lower_decimal_constructor_call, lower_dict_constructor_call, lower_enumerate_call, lower_expr,
-    lower_isinstance_call, lower_len_call, lower_list_constructor_call, lower_ord_call,
-    lower_range_call, lower_reveal_type_call, lower_reversed_call, lower_set_constructor_call,
-    lower_sorted_call, lower_sum_call, lower_tuple_constructor_call, lower_zip_call,
+    DiagnosticCode, ExprCall, HirExpr, HirIteratorOp, LowerCtx, Ranged, Type, call_arity_range,
+    callable_builtin_element_type, decimal_conversion_error_type, expression_diagnostics,
+    first_call_keyword_range, float_sentinel_expr, float_sentinel_kind_from_call,
+    is_poisoned_binding_expr, lower_abs_call, lower_anext_call, lower_bigdecimal_constructor_call,
+    lower_bytes_constructor_call, lower_chr_call, lower_decimal_constructor_call,
+    lower_dict_constructor_call, lower_enumerate_call, lower_expr, lower_isinstance_call,
+    lower_len_call, lower_list_constructor_call, lower_ord_call, lower_range_call,
+    lower_reveal_type_call, lower_reversed_call, lower_set_constructor_call, lower_sorted_call,
+    lower_sum_call, lower_tuple_constructor_call, lower_zip_call,
     normalize_min_max_numeric_sentinels, str, supports_hash_key_in_context,
-    validate_variadic_min_max_operands, DiagnosticCode, ExprCall, HirExpr, HirIteratorOp, LowerCtx,
-    Ranged, Type,
+    validate_variadic_min_max_operands,
 };
 use crate::lower::type_bounds::supports_print_formatting;
 use sifr_type_system::safe_optional_result;
@@ -91,13 +91,13 @@ pub(super) fn lower_unshadowed_builtin_call(
         let iterable = lower_expr(&call.arguments.args[0], ctx)?;
         if matches!(iterable.ty().resolve_alias(), Type::Any | Type::Unknown) {
             expression_diagnostics::type_mismatch(
-                    ctx,
-                    format!(
-                        "iter() argument must be an iterable with a statically-known element type, got '{}'",
-                        iterable.ty().display_name()
-                    ),
-                    call.arguments.args[0].range(),
-                );
+                ctx,
+                format!(
+                    "iter() argument must be an iterable with a statically-known element type, got '{}'",
+                    iterable.ty().display_name()
+                ),
+                call.arguments.args[0].range(),
+            );
             return None;
         }
         let Some(elem_ty) = callable_builtin_element_type(iterable.ty()) else {
@@ -620,13 +620,13 @@ pub(super) fn lower_unshadowed_builtin_call(
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
             let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
                 expression_diagnostics::type_mismatch(
-                        ctx,
-                        format!(
-                            "min() argument must be an iterable with a statically-known element type, got '{}'",
-                            arg.ty().display_name()
-                        ),
-                        call.arguments.args[0].range(),
-                    );
+                    ctx,
+                    format!(
+                        "min() argument must be an iterable with a statically-known element type, got '{}'",
+                        arg.ty().display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
                 return None;
             };
             if super::super::statement_diagnostics::reject_affine_iterator_builtin(
@@ -693,13 +693,13 @@ pub(super) fn lower_unshadowed_builtin_call(
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
             let Some(elem_ty) = callable_builtin_element_type(arg.ty()) else {
                 expression_diagnostics::type_mismatch(
-                        ctx,
-                        format!(
-                            "max() argument must be an iterable with a statically-known element type, got '{}'",
-                            arg.ty().display_name()
-                        ),
-                        call.arguments.args[0].range(),
-                    );
+                    ctx,
+                    format!(
+                        "max() argument must be an iterable with a statically-known element type, got '{}'",
+                        arg.ty().display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
                 return None;
             };
             if super::super::statement_diagnostics::reject_affine_iterator_builtin(

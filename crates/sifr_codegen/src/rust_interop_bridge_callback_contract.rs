@@ -1,7 +1,7 @@
 use crate::rust_interop_bridge_contract::generated_types::GeneratedTypeCollector;
 use crate::rust_interop_bridge_contract::{
-    bridge_type_contract, unsupported_type, BridgeTypePosition, CallbackParameterMode,
-    ModuleCatalog, RustBridgeTypeContract, RustBridgeTypeKind,
+    BridgeTypePosition, CallbackParameterMode, ModuleCatalog, RustBridgeTypeContract,
+    RustBridgeTypeKind, bridge_type_contract, unsupported_type,
 };
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::BTreeMap;

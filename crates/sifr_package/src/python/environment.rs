@@ -1,7 +1,7 @@
 use crate::diag::PackageDiagnostic;
 use crate::graph::derive::{SifrPackageGraph, SifrPackageId};
 use crate::python::requirements::{
-    canonical_python_requirements, CanonicalPythonRequirements, PythonRequirementContribution,
+    CanonicalPythonRequirements, PythonRequirementContribution, canonical_python_requirements,
 };
 use crate::python::selection::{
     absolutize, non_root_environment_configuration, root_environment_selection, selects_environment,

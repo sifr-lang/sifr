@@ -145,7 +145,7 @@ fn write_skeleton(root: &Path) {
         root.join("Cargo.toml"),
         r#"[workspace]
 members = ["crates/sifr_runtime", "crates/sifr_structural_identity", "crates/sifr_stdlib"]
-resolver = "2"
+resolver = "3"
 "#,
     )
     .expect("workspace manifest");
@@ -161,7 +161,7 @@ fn write_minimal_crate(root: &Path, name: &str) {
     std::fs::create_dir_all(crate_dir.join("src")).expect("crate src dir");
     std::fs::write(
         crate_dir.join("Cargo.toml"),
-        format!("[package]\nname = \"{name}\"\nversion = \"0.0.0\"\nedition = \"2021\"\n"),
+        format!("[package]\nname = \"{name}\"\nversion = \"0.0.0\"\nedition = \"2024\"\n"),
     )
     .expect("crate manifest");
     std::fs::write(crate_dir.join("src/lib.rs"), "").expect("crate lib");

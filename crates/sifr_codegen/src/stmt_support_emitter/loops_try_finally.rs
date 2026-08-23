@@ -1,6 +1,7 @@
 use super::{
+    HirExceptHandler, HirStmt, RustEmitter, RustExpr, RustStmt, Type,
     declaration_only_try_bindings, first_try_error_type_in_stmts, queries, select_try_error_type,
-    successful_try_bindings, HirExceptHandler, HirStmt, RustEmitter, RustExpr, RustStmt, Type,
+    successful_try_bindings,
 };
 impl RustEmitter {
     pub(crate) fn lower_loop_control_stmt_for_ir(&self, stmt: &HirStmt) -> Option<RustStmt> {

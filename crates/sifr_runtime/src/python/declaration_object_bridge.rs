@@ -1,8 +1,8 @@
 //! Compiler-private conversion bridge for the sealed declaration `Object`.
 
 use super::{
-    async_from_object, async_to_object, temporary_argument_handle, ForeignObject, PythonAsyncValue,
-    PythonError,
+    ForeignObject, PythonAsyncValue, PythonError, async_from_object, async_to_object,
+    temporary_argument_handle,
 };
 use crate::interop::{Handle, HandleStateError};
 

@@ -1,8 +1,8 @@
 use crate::diagnostics::DiagnosticsController;
-use crate::errors::{optional_i32, required_string, LspError, LspResult};
+use crate::errors::{LspError, LspResult, optional_i32, required_string};
 use crate::session::Session;
 use lsp_server::{Connection, Message, Notification, RequestId};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sifr_analysis::WorkspaceTracePhase;
 use std::fmt::Write as _;
 

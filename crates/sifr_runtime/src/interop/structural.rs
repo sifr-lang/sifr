@@ -13,20 +13,20 @@ mod static_program;
 pub use arena::{ArenaNode, StructuralArena};
 pub use mapped::{MappedValue, StructuralMapping};
 pub use sifr_structural_identity::{
+    ALGORITHM_VERSION, METHOD_SLOT_TABLE_ALGORITHM_VERSION, NominalField,
+    STATIC_PROGRAM_ALGORITHM_VERSION, ShapeIdentity, SlotContextModeIdentity,
+    SlotIdentitySignature, SlotReceiverIdentity, SlotTableIdentity, StaticProgramIdentity,
     binary_container, enum_shape, metadata, nominal_record, primitive, recursive_reference,
     refined, slot_table_identity, static_program_identity, tuple, unary_container, union,
-    NominalField, ShapeIdentity, SlotContextModeIdentity, SlotIdentitySignature,
-    SlotReceiverIdentity, SlotTableIdentity, StaticProgramIdentity, ALGORITHM_VERSION,
-    METHOD_SLOT_TABLE_ALGORITHM_VERSION, STATIC_PROGRAM_ALGORITHM_VERSION,
 };
 pub use slots::{
     MethodSlotTable, NoContext, SharedContext, SlotError, SlotHandler, SlotHandlerSignature,
     SlotReceiver, SlotSignature, SlotSink, SlotSinkVisitor,
 };
 pub use static_program::{
-    StaticProgram, StaticProgramEnvelopeError, StaticProgramHeader, StaticProgramType,
-    StaticProgramValue, STATIC_PROGRAM_ENVELOPE_VERSION, STATIC_PROGRAM_FORMAT_VERSION,
-    STRUCTURAL_BRIDGE_CONTRACT_VERSION,
+    STATIC_PROGRAM_ENVELOPE_VERSION, STATIC_PROGRAM_FORMAT_VERSION,
+    STRUCTURAL_BRIDGE_CONTRACT_VERSION, StaticProgram, StaticProgramEnvelopeError,
+    StaticProgramHeader, StaticProgramType, StaticProgramValue,
 };
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]

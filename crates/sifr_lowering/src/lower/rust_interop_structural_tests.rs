@@ -1,4 +1,4 @@
-use crate::{lower_module_with_externals, ExternalDefs, HirDiagnostic, HirModule};
+use crate::{ExternalDefs, HirDiagnostic, HirModule, lower_module_with_externals};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{
     DeclarationMetadataTargetKind, HirExpr, RustInteropDecoratorKind, TypedDeclarationMetadata,
@@ -89,9 +89,11 @@ def decode[T: MethodSlots](value: T) -> Result[T, CodecError | RustPanicError]: 
         Ok(_) => panic!("method-slot bridge without context must fail"),
         Err(errors) => errors,
     };
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::RUST_SLOT_BOUND)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::RUST_SLOT_BOUND))
+    );
 }
 
 #[test]
@@ -412,9 +414,11 @@ fn lower_errors_without_marker_import(source: &str) -> Vec<HirDiagnostic> {
 }
 
 fn assert_malformed(errors: &[HirDiagnostic]) {
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR))
+    );
 }
 
 #[test]
@@ -526,7 +530,9 @@ fn structurally_mapped_rust_values_reject_fields_parents_and_generics() {
         let errors = lower_errors(&source);
         assert!(errors.iter().any(|error| {
             error.code == Some(DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR)
-                && error.message.contains("fieldless, non-generic root classes")
+                && error
+                    .message
+                    .contains("fieldless, non-generic root classes")
         }));
     }
 }
@@ -863,7 +869,9 @@ def encode[T: Structural](value: T) -> Result[bytes, RustPanicError]: ...
 def encode[T: Structural](value: list[T]) -> Result[bytes, RustPanicError]: ...
 ",
     );
-    assert!(nested_errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::RUST_TYPE_PROBE_FAILURE)));
+    assert!(
+        nested_errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::RUST_TYPE_PROBE_FAILURE))
+    );
 }

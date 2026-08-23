@@ -1,7 +1,7 @@
 use super::implementation::AnalysisHost;
 use crate::editor::{EditorFacts, EditorToken};
 use crate::snapshot::{AnalysisError, AnalysisErrorKind};
-use sifr_frontend::{parse_source_module, FileId};
+use sifr_frontend::{FileId, parse_source_module};
 
 impl AnalysisHost {
     pub(super) fn editor_facts(&mut self, file: FileId) -> Result<EditorFacts, AnalysisError> {

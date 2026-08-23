@@ -1,5 +1,5 @@
-use super::{update_object_count, PythonRuntimeError};
-use pyo3::{ffi, prelude::*, Py, PyAny};
+use super::{PythonRuntimeError, update_object_count};
+use pyo3::{Py, PyAny, ffi, prelude::*};
 use std::sync::{Arc, LazyLock, Mutex};
 
 static PENDING_RELEASES: LazyLock<Mutex<Vec<Py<PyAny>>>> = LazyLock::new(|| Mutex::new(Vec::new()));

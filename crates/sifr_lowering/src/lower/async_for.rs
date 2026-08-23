@@ -1,8 +1,8 @@
+use super::LowerCtx;
 use super::ownership_diagnostics;
 use super::python_interop::lower_python_context_owned_expr;
 use super::statement_diagnostics;
 use super::statements::lower_stmts;
-use super::LowerCtx;
 use crate::hir_nodes::HirStmt;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
@@ -15,11 +15,7 @@ fn method_signature<'a>(
 ) -> Option<&'a FunctionType> {
     methods.iter().find_map(
         |(name, ft)| {
-            if name == method_name {
-                Some(ft)
-            } else {
-                None
-            }
+            if name == method_name { Some(ft) } else { None }
         },
     )
 }

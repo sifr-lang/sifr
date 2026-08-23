@@ -1,4 +1,4 @@
-use crate::{lower_module, ExternalDefs, HirDiagnostic};
+use crate::{ExternalDefs, HirDiagnostic, lower_module};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 use sifr_type_system::Type;
@@ -356,7 +356,9 @@ fn callback_parameter_and_dispatch_shapes_are_validated() {
         ),
     ];
     for (declaration, message) in cases {
-        let source = format!("class PythonError(Error):\n    message: str\n    kind: str\n    exception_type: str\n    traceback: str\n    context: str\n\n{declaration}\n");
+        let source = format!(
+            "class PythonError(Error):\n    message: str\n    kind: str\n    exception_type: str\n    traceback: str\n    context: str\n\n{declaration}\n"
+        );
         assert_callback_error(&source, message);
     }
 }

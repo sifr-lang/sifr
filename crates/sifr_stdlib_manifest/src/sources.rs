@@ -588,8 +588,8 @@ fn module_path(root: &Path, module: &str, prefix: &str) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::{
-        load_stdlib_sources_from_sysroot, load_stdlib_tooling_sources_from_sysroot,
-        validate_stdlib_source_inventory, PRIVATE_STDLIB_MODULES, STDLIB_SOURCES,
+        PRIVATE_STDLIB_MODULES, STDLIB_SOURCES, load_stdlib_sources_from_sysroot,
+        load_stdlib_tooling_sources_from_sysroot, validate_stdlib_source_inventory,
     };
     use sifr_sysroot::{ResolvedSysroot, SysrootManifest, SysrootPaths};
     use std::fs;
@@ -660,9 +660,11 @@ mod tests {
         let error = validate_stdlib_source_inventory(&sysroot)
             .expect_err("missing public source should fail");
 
-        assert!(error
-            .message
-            .contains("missing stdlib source module sifr.json"));
+        assert!(
+            error
+                .message
+                .contains("missing stdlib source module sifr.json")
+        );
         assert_eq!(error.path, Some(root.path.join("stdlib/sifr/json.sifr")));
     }
 
@@ -675,9 +677,11 @@ mod tests {
         let error = validate_stdlib_source_inventory(&sysroot)
             .expect_err("missing private source should fail");
 
-        assert!(error
-            .message
-            .contains("missing stdlib source module _sifr.fs"));
+        assert!(
+            error
+                .message
+                .contains("missing stdlib source module _sifr.fs")
+        );
         assert_eq!(error.path, Some(root.path.join("stdlib/_sifr/fs.sifr")));
     }
 
@@ -691,9 +695,11 @@ mod tests {
         let error = validate_stdlib_source_inventory(&sysroot)
             .expect_err("stale private source should fail");
 
-        assert!(error
-            .message
-            .contains("stale stdlib source module _sifr.stale"));
+        assert!(
+            error
+                .message
+                .contains("stale stdlib source module _sifr.stale")
+        );
         assert_eq!(error.path, Some(root.path.join("stdlib/_sifr/stale.sifr")));
     }
 
@@ -708,9 +714,11 @@ mod tests {
         let error = load_stdlib_sources_from_sysroot(&sysroot)
             .expect_err("forward public stdlib import should fail");
 
-        assert!(error
-            .message
-            .contains("public stdlib module sifr.test imports sifr.json before it is available"));
+        assert!(
+            error.message.contains(
+                "public stdlib module sifr.test imports sifr.json before it is available"
+            )
+        );
         assert_eq!(error.path, Some(test_path));
     }
 
@@ -725,9 +733,11 @@ mod tests {
         let error = load_stdlib_sources_from_sysroot(&sysroot)
             .expect_err("unknown public stdlib import should fail");
 
-        assert!(error
-            .message
-            .contains("public stdlib module sifr.test imports unknown stdlib module sifr.missing"));
+        assert!(
+            error.message.contains(
+                "public stdlib module sifr.test imports unknown stdlib module sifr.missing"
+            )
+        );
         assert_eq!(error.path, Some(test_path));
     }
 
@@ -761,9 +771,11 @@ mod tests {
         let error = load_stdlib_tooling_sources_from_sysroot(&sysroot)
             .expect_err("private stdlib declaration import should fail");
 
-        assert!(error
-            .message
-            .contains("private stdlib declaration _sifr.math imports _sifr.fs"));
+        assert!(
+            error
+                .message
+                .contains("private stdlib declaration _sifr.math imports _sifr.fs")
+        );
         assert_eq!(error.path, Some(math_path));
     }
 
@@ -777,9 +789,11 @@ mod tests {
         let error = load_stdlib_tooling_sources_from_sysroot(&sysroot)
             .expect_err("private stdlib declaration public import should fail");
 
-        assert!(error
-            .message
-            .contains("private stdlib declaration _sifr.math imports sifr.encoding"));
+        assert!(
+            error
+                .message
+                .contains("private stdlib declaration _sifr.math imports sifr.encoding")
+        );
         assert_eq!(error.path, Some(math_path));
     }
 

@@ -1,6 +1,6 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
-use crate::manifest::sifr::{validate_relative_path, PackageSourceRoot};
+use crate::manifest::sifr::{PackageSourceRoot, validate_relative_path};
 use std::path::{Path, PathBuf};
 
 pub(super) fn parse_source_config(

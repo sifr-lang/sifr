@@ -2,7 +2,7 @@ use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_type_system::Type;
 
-use super::{decode_typevar_constraint, encode_typevar_constraint, LowerCtx};
+use super::{LowerCtx, decode_typevar_constraint, encode_typevar_constraint};
 
 fn lookup_named_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
     match name {

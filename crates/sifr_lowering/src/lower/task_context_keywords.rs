@@ -1,5 +1,5 @@
-use super::expressions::lower_expr;
 use super::LowerCtx;
+use super::expressions::lower_expr;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;

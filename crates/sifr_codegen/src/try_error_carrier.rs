@@ -1,5 +1,5 @@
 use sifr_ir::HirExceptHandler;
-use sifr_type_system::{make_union, Type};
+use sifr_type_system::{Type, make_union};
 
 pub(crate) fn timeout_error_type() -> Type {
     Type::Class {

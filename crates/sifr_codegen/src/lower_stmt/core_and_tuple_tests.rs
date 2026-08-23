@@ -24,9 +24,10 @@ fn scope_result_reports_invalid_scope_context() {
     )
     .expect_err("expected invalid scope context to return lowering error");
 
-    assert!(err
-        .message
-        .contains("display impl and generator closure cannot both be active"));
+    assert!(
+        err.message
+            .contains("display impl and generator closure cannot both be active")
+    );
 }
 
 #[test]

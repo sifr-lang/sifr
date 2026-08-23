@@ -1,6 +1,6 @@
 use super::cli_model_and_entrypoint::{
-    diagnostic_with_code, package_diagnostic, DiagnosticFormat, PackageGraphContext,
-    EXIT_USER_DIAGNOSTIC,
+    DiagnosticFormat, EXIT_USER_DIAGNOSTIC, PackageGraphContext, diagnostic_with_code,
+    package_diagnostic,
 };
 use super::diagnostic_rendering_and_run::{render_diagnostics, render_package_diagnostics};
 use super::package_graph_context::load_package_graph_context_from_root;

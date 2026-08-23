@@ -4,8 +4,8 @@ use super::rust_interop_callback_probe::{
 };
 use super::rust_interop_panic_probe::stderr_reports_invalid_panic_mapper;
 use super::rust_interop_probe::{
-    async_future_requires_send, canonical_sifr_target_path, PendingRustBridgeProbe,
-    ProbeExecutionFailure,
+    PendingRustBridgeProbe, ProbeExecutionFailure, async_future_requires_send,
+    canonical_sifr_target_path,
 };
 use crate::diagnostics::RenderedDiagnostic;
 use sifr_diagnostics::DiagnosticCode;
@@ -52,17 +52,17 @@ pub(super) fn classify_probe_failure(
             )
     } else if async_future_requires_send(probe) && stderr_reports_non_send_future(stderr) {
         (
-                DiagnosticCode::RUST_ASYNC_CONTRACT,
-                "invalid Rust async contract: {reason}",
-                vec![(
-                    "reason",
-                    format!(
-                        "future returned by `{}` must be Send or declare thread_affinity=tokio_current_thread",
-                        canonical_sifr_target_path(&probe.declaration)
-                    ),
-                )],
-                true,
-            )
+            DiagnosticCode::RUST_ASYNC_CONTRACT,
+            "invalid Rust async contract: {reason}",
+            vec![(
+                "reason",
+                format!(
+                    "future returned by `{}` must be Send or declare thread_affinity=tokio_current_thread",
+                    canonical_sifr_target_path(&probe.declaration)
+                ),
+            )],
+            true,
+        )
     } else if stderr_reports_slot_handler_escape(stderr) {
         (
             DiagnosticCode::RUST_SLOT_HANDLER,

@@ -1,6 +1,6 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::cargo::package::{
-    required_archive_entries, validate_package_archive, PackageArchiveEntry,
+    PackageArchiveEntry, required_archive_entries, validate_package_archive,
 };
 use crate::graph::derive::{SifrPackageId, SifrPackageMetadata};
 use crate::imports::source_map::{

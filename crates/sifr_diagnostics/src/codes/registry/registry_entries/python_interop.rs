@@ -61,7 +61,11 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_non_cpython_json_with_pyenv_0005",
         "unsupported Python interpreter: {implementation}",
         "sifr_package::python",
-        [arg!("implementation"), json_arg!("interpreter"), json_arg!("venv")],
+        [
+            arg!("implementation"),
+            json_arg!("interpreter"),
+            json_arg!("venv")
+        ],
         ["interpreter", "venv", "implementation"]
     ),
     active_entry!(
@@ -98,7 +102,11 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_missing_declared_import_with_pyenv_0008",
         "declared Python import root is missing: {import_root}",
         "sifr_package::python",
-        [arg!("import_root"), json_arg!("interpreter"), json_arg!("venv")],
+        [
+            arg!("import_root"),
+            json_arg!("interpreter"),
+            json_arg!("venv")
+        ],
         ["interpreter", "venv", "import_root"]
     ),
     active_entry!(

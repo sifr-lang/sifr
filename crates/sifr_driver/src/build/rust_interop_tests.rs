@@ -1,6 +1,6 @@
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
-    apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
+    PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
 };
 use super::rust_interop_test_support::span;
 use crate::diagnostics::RenderedDiagnostic;
@@ -45,9 +45,11 @@ fn package_rust_interop_rejects_private_stdlib_impersonation() {
     let diagnostics = interop_errors(generated, Some(context), "private module must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-CARGO-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("compiler-owned sysroot context"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("compiler-owned sysroot context")
+    );
 }
 
 #[test]
@@ -100,10 +102,12 @@ fn package_rust_interop_records_probe_plan() {
     assert_eq!(generated.interop.rust.trust_requirements.len(), 1);
     assert!(generated.interop.rust.trust_requirements[0].trusted);
     assert_eq!(generated.interop.rust.probe_plan.probes.len(), 1);
-    assert!(generated
-        .interop
-        .cache_key_fragment()
-        .contains("rust.probes=1"));
+    assert!(
+        generated
+            .interop
+            .cache_key_fragment()
+            .contains("rust.probes=1")
+    );
     assert!(generated.interop.rust.cargo_inputs.is_some());
 }
 
@@ -128,10 +132,12 @@ fn package_rust_interop_resolves_bridge_root() {
         generated.interop.rust.generated_bridge_modules[0].rust_module_path,
         ["__sifr_bridge".to_string(), "app".to_string()]
     );
-    assert!(generated
-        .interop
-        .cache_key_fragment()
-        .contains("__sifr_bridge_package_sifr_app"));
+    assert!(
+        generated
+            .interop
+            .cache_key_fragment()
+            .contains("__sifr_bridge_package_sifr_app")
+    );
 }
 
 #[test]
@@ -306,15 +312,17 @@ fn package_rust_interop_resolves_self_method_root() {
     let generated = apply_package_rust_interop_metadata(generated, Some(context))
         .expect("Self method root should resolve");
 
-    assert!(generated
-        .interop
-        .rust
-        .resolved_targets
-        .iter()
-        .any(|target| matches!(
-            target.root,
-            sifr_codegen::RustInteropResolvedRoot::SelfMethod { .. }
-        )));
+    assert!(
+        generated
+            .interop
+            .rust
+            .resolved_targets
+            .iter()
+            .any(|target| matches!(
+                target.root,
+                sifr_codegen::RustInteropResolvedRoot::SelfMethod { .. }
+            ))
+    );
 }
 
 #[test]
@@ -332,10 +340,12 @@ fn package_rust_interop_rejects_self_method_root_without_opaque_class() {
     );
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-RESOLVE-0001");
-    assert!(diagnostics[0]
-        .children
-        .iter()
-        .any(|child| child.message.contains("@rust.opaque")));
+    assert!(
+        diagnostics[0]
+            .children
+            .iter()
+            .any(|child| child.message.contains("@rust.opaque"))
+    );
 }
 
 #[test]
@@ -476,9 +486,11 @@ fn package_rust_interop_rejects_untrusted_panic_abort_policy() {
     let diagnostics = interop_errors(generated, Some(context), "untrusted panic-abort must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("missing Rust interop trust declaration"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("missing Rust interop trust declaration")
+    );
 }
 
 #[test]
@@ -523,10 +535,12 @@ fn package_rust_interop_records_lock_and_profile_cache_inputs() {
 
     assert!(cargo_inputs.cargo_lock_digest.is_some());
     assert_eq!(cargo_inputs.cargo_profile, "release");
-    assert!(cargo_inputs
-        .profile_codegen_settings
-        .iter()
-        .any(|(name, value)| name.ends_with(":lto") && value == "true"));
+    assert!(
+        cargo_inputs
+            .profile_codegen_settings
+            .iter()
+            .any(|(name, value)| name.ends_with(":lto") && value == "true")
+    );
     assert!(cargo_inputs.target_triple.is_some());
 }
 

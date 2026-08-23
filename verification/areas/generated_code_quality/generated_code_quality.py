@@ -587,7 +587,7 @@ def write_negative_clippy_crate(seed: Path, run_root: Path) -> Path:
     src = crate_root / "src"
     src.mkdir(parents=True, exist_ok=True)
     (crate_root / "Cargo.toml").write_text(
-        "[package]\nname = \"negative_clippy\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[workspace]\n",
+        "[package]\nname = \"negative_clippy\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[workspace]\n",
         encoding="utf-8",
     )
     shutil.copyfile(seed, src / "main.rs")

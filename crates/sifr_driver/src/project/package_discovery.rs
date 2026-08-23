@@ -1,6 +1,6 @@
 use super::discovery::{
-    bare_stdlib_help, diagnostic_with_source_range, diagnostic_with_source_range_help,
-    discovery_label, DiscoveryDiagnosticStyle, ParsedProjectModule, SourceDiagnosticExtras,
+    DiscoveryDiagnosticStyle, ParsedProjectModule, SourceDiagnosticExtras, bare_stdlib_help,
+    diagnostic_with_source_range, diagnostic_with_source_range_help, discovery_label,
 };
 use crate::diagnostics::RenderedDiagnostic;
 use ruff_text_size::{Ranged as _, TextRange};

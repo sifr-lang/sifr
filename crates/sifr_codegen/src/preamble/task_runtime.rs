@@ -1,6 +1,6 @@
 use super::{
-    task_context_label_capture_stmt, task_context_label_field, RustExpr, RustItem, RustParam,
-    RustStmt, RustType, Visibility,
+    RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility, task_context_label_capture_stmt,
+    task_context_label_field,
 };
 pub fn build_task_scope_items() -> Vec<RustItem> {
     vec![

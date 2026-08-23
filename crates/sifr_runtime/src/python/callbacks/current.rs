@@ -1,9 +1,9 @@
 use super::execution::{
-    collect_args, execution_error, python_error, result_object, validate_call_shape,
-    CallbackExecutionError,
+    CallbackExecutionError, collect_args, execution_error, python_error, result_object,
+    validate_call_shape,
 };
-use super::{errors, CallbackOwnerState};
-use crate::python::{object_ops, ObjectHandle, PythonError};
+use super::{CallbackOwnerState, errors};
+use crate::python::{ObjectHandle, PythonError, object_ops};
 use pyo3::prelude::*;
 use pyo3::types::{PyCFunction, PyDict, PyTuple};
 use std::cell::{Cell, RefCell};

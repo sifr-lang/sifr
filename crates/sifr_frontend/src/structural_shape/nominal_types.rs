@@ -1,4 +1,4 @@
-use super::{describe_node, metadata_for, ShapeEnumVariant, ShapeNode};
+use super::{ShapeEnumVariant, ShapeNode, describe_node, metadata_for};
 use sifr_lowering::{
     DeclarationMetadataTargetKind, ExternalDefs, LoweringResult, TypedDeclarationMetadata,
 };

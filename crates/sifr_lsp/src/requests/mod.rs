@@ -14,7 +14,7 @@ mod type_hierarchy;
 use crate::commands::CommandRegistry;
 use crate::errors::{LspError, LspResult};
 use crate::session::Session;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::path::Path;
 
 pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspResult<Value> {

@@ -6,7 +6,7 @@ use sifr_type_system::Type;
 use std::collections::BTreeSet;
 use std::fmt::Write;
 
-use crate::hir_analysis::traversal::{walk_stmts, TraversalConfig};
+use crate::hir_analysis::traversal::{TraversalConfig, walk_stmts};
 
 const PYTHON_BINDING_CONTRACT_VERSION: &str = "sifr-python-binding-v1";
 

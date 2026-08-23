@@ -1,4 +1,4 @@
-use super::digest::{digest_serializable, GraphDigest};
+use super::digest::{GraphDigest, digest_serializable};
 use crate::cargo::metadata::NormalizedCargoMetadata;
 use serde::Serialize;
 

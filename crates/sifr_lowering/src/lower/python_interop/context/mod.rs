@@ -1,5 +1,5 @@
 use super::{
-    is_direct_type, parameter_metadata, parse_method_target_path, receiver_is_owned, LowerCtx,
+    LowerCtx, is_direct_type, parameter_metadata, parse_method_target_path, receiver_is_owned,
 };
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;

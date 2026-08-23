@@ -24,14 +24,18 @@ fn artifact_binds_environment_fixture_and_no_copy_evidence() {
             PathBuf::from("fixtures/arrow.py"),
         ])
     );
-    assert!(load_python_certifications(&root, "environment-b")
-        .expect_err("environment mismatch must fail")
-        .contains("environment digest"));
+    assert!(
+        load_python_certifications(&root, "environment-b")
+            .expect_err("environment mismatch must fail")
+            .contains("environment digest")
+    );
 
     fs::write(&fixture, "print('changed')\n").expect("fixture mutation");
-    assert!(load_python_certifications(&root, "environment-a")
-        .expect_err("stale fixture must fail")
-        .contains("fixture digest is stale"));
+    assert!(
+        load_python_certifications(&root, "environment-a")
+            .expect_err("stale fixture must fail")
+            .contains("fixture digest is stale")
+    );
     assert!(
         load_python_certifications_for_update(&root, "environment-a", "pkg.make_array")
             .expect("the target being recertified may have a stale fixture")
@@ -87,8 +91,10 @@ fn dlpack_artifact_requires_within_run_identity_and_exact_deleter() {
         }],
     };
     write_python_certifications(&root, &artifact).expect("DLPack artifact should write");
-    assert!(required_python_certification_archive_entries(&root)
-        .contains(&PathBuf::from("fixtures/dlpack.py")));
+    assert!(
+        required_python_certification_archive_entries(&root)
+            .contains(&PathBuf::from("fixtures/dlpack.py"))
+    );
 
     artifact.dlpack[0].within_run_assertions = false;
     assert!(

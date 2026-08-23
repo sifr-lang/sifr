@@ -1,6 +1,6 @@
 use crate::{RustEmitter, RustExpr, RustType};
 use sifr_ir::{HirClass, HirModule};
-use sifr_type_system::{source_class_rust_name, Type};
+use sifr_type_system::{Type, source_class_rust_name};
 
 const CANONICAL_PYTHON_ERROR_IDENTITY: &str = "_sifr.python.PythonError";
 impl RustEmitter {

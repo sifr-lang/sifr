@@ -1,5 +1,5 @@
-use super::sequence_guards::{key_guard_token, SequenceGuard};
 use super::LowerCtx;
+use super::sequence_guards::{SequenceGuard, key_guard_token};
 use sifr_python_ast::Expr;
 use sifr_type_system::Type;
 

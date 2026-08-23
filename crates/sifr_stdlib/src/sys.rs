@@ -9,20 +9,6 @@ pub fn env_get(key: &str) -> Option<String> {
     std::env::var(key).ok()
 }
 
-pub fn env_set(key: &str, value: &str) {
-    if !is_valid_env_key(key) || value.as_bytes().contains(&0) {
-        return;
-    }
-    std::env::set_var(key, value);
-}
-
-pub fn env_unset(key: &str) {
-    if !is_valid_env_key(key) {
-        return;
-    }
-    std::env::remove_var(key);
-}
-
 #[must_use]
 pub fn env_keys() -> Vec<String> {
     std::env::vars_os()
@@ -125,30 +111,23 @@ fn is_valid_env_key(key: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        cpu_count, env_get, env_items, env_keys, env_set, env_unset, env_values, get_args, getpid,
-        os_linesep, os_name, os_sep, run_command, sys_maxsize, sys_platform, sys_version, which,
+        cpu_count, env_get, env_items, env_keys, env_values, get_args, getpid, os_linesep, os_name,
+        os_sep, run_command, sys_maxsize, sys_platform, sys_version, which,
     };
 
     #[test]
-    fn env_access_preserves_invalid_key_noop_policy() {
-        env_set("", "x");
-        env_set("A=B", "x");
-        env_set("NUL\0KEY", "x");
+    fn env_access_is_read_only_and_rejects_invalid_keys() {
         assert_eq!(env_get(""), None);
         assert_eq!(env_get("A=B"), None);
         assert_eq!(env_get("NUL\0KEY"), None);
-
-        let key = "SIFR_STDLIB_SYS_TEST_VALUE";
-        env_unset(key);
-        env_set(key, "active");
-        assert_eq!(env_get(key).as_deref(), Some("active"));
-        assert!(env_keys().iter().any(|candidate| candidate == key));
-        assert!(env_values().iter().any(|candidate| candidate == "active"));
-        assert!(env_items()
-            .iter()
-            .any(|candidate| candidate == "SIFR_STDLIB_SYS_TEST_VALUE=active"));
-        env_unset(key);
-        assert_eq!(env_get(key), None);
+        assert_eq!(env_get("PATH"), std::env::var("PATH").ok());
+        assert!(
+            env_keys()
+                .iter()
+                .all(|key| !key.is_empty() && !key.contains('='))
+        );
+        assert!(env_values().iter().all(|value| !value.contains('\0')));
+        assert!(env_items().iter().all(|item| item.contains('=')));
     }
 
     #[test]

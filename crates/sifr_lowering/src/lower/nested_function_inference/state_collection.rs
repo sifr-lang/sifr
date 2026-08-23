@@ -1,5 +1,5 @@
 use super::capture_collection::collect_nested_function_captures;
-use super::mutation_collection::{collect_mutated_binding_names, MutationCandidate};
+use super::mutation_collection::{MutationCandidate, collect_mutated_binding_names};
 use super::{
     analyze_assign, analyze_match_stmt, analyze_try_stmt, analyze_with_stmt,
     collect_compound_local_bindings, collect_compound_nonlocals,
@@ -14,8 +14,8 @@ use sifr_python_ast::{AstParamConvention, Expr, Stmt, StmtFunctionDef};
 use sifr_type_system::{FunctionType, Type};
 use std::collections::{HashMap, HashSet};
 
-use super::typing_and_functions::{ast_convention_to_param, resolve_annotation_expr};
 use super::LowerCtx;
+use super::typing_and_functions::{ast_convention_to_param, resolve_annotation_expr};
 
 const MAX_INFERENCE_PASSES: usize = 8;
 

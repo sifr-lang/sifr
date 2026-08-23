@@ -3,12 +3,12 @@ use crate::stdlib_filter::{
     strip_relocated_rust_items_by_name, strip_rust_items_by_name,
 };
 use crate::{
-    build_error_into_error_impl, generate_rust_with_stdlib_for_module_with_structural_policy,
-    publicize_generated_module_source, HirModule, Renderer, RustFile, StdlibCode,
+    HirModule, Renderer, RustFile, StdlibCode, build_error_into_error_impl,
+    generate_rust_with_stdlib_for_module_with_structural_policy, publicize_generated_module_source,
 };
 use sifr_ir::{HirExpr, HirFunction, HirImport, HirStmt, MethodKind};
 use sifr_stdlib_manifest::StdlibFeature;
-use sifr_type_system::{class_rust_name, is_crate_root_rust_nominal_identity, FunctionType, Type};
+use sifr_type_system::{FunctionType, Type, class_rust_name, is_crate_root_rust_nominal_identity};
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 const SHARED_STDLIB_NOMINAL_MODULE: &str = "__sifr_project_nominals";
@@ -620,9 +620,10 @@ mod tests {
         let plan = project_stdlib_nominal_plan(&unions, &StdlibCode::default(), &[], false);
 
         assert!(plan.prelude.contains("pub struct TimeoutError"));
-        assert!(plan
-            .prelude
-            .contains("pub use __sifr_project_nominals::TimeoutError"));
+        assert!(
+            plan.prelude
+                .contains("pub use __sifr_project_nominals::TimeoutError")
+        );
         assert!(!plan.prelude.contains("use crate::TimeoutError"));
         assert!(plan.registry.crate_root_rust_names.is_empty());
     }
@@ -666,9 +667,10 @@ mod tests {
         );
 
         assert!(plan.prelude.contains("impl From<ScopeFailure> for Error"));
-        assert!(plan
-            .prelude
-            .contains("pub use __sifr_project_nominals::ScopeFailure"));
+        assert!(
+            plan.prelude
+                .contains("pub use __sifr_project_nominals::ScopeFailure")
+        );
         assert_eq!(
             plan.registry.rust_paths.get("ScopeFailure"),
             Some(&"crate::__sifr_project_nominals::ScopeFailure".to_string())
@@ -714,9 +716,11 @@ mod tests {
 
         register_transitive_stdlib_nominals(shared_source, &stdlib, &mut registry);
 
-        assert!(registry
-            .shared_rust_names
-            .contains("__SifrIoBinaryFileHandle"));
+        assert!(
+            registry
+                .shared_rust_names
+                .contains("__SifrIoBinaryFileHandle")
+        );
         assert_eq!(
             registry.rust_paths.get("sifr.io.BinaryFileHandle"),
             Some(&"crate::__sifr_project_nominals::__SifrIoBinaryFileHandle".to_string())
@@ -758,10 +762,12 @@ mod tests {
 
         assert!(!plan.prelude.contains("FileNotFoundError"));
         assert!(!plan.registry.rust_paths.contains_key("FileNotFoundError"));
-        assert!(!plan
-            .registry
-            .rust_paths
-            .contains_key("sifr.builtin.FileNotFoundError"));
+        assert!(
+            !plan
+                .registry
+                .rust_paths
+                .contains_key("sifr.builtin.FileNotFoundError")
+        );
         syn::parse_file(&plan.prelude)
             .expect("project nominal prelude should not contain a dangling re-export");
     }
@@ -802,9 +808,11 @@ mod tests {
         let generated =
             crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default());
 
-        assert!(!generated
-            .project_union_prelude
-            .contains("FileNotFoundError"));
+        assert!(
+            !generated
+                .project_union_prelude
+                .contains("FileNotFoundError")
+        );
         syn::parse_file(&generated.project_union_prelude)
             .expect("project nominal prelude should not contain a dangling re-export");
     }

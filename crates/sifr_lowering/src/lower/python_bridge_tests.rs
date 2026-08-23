@@ -28,9 +28,11 @@ fn bridge_target_is_a_hard_error_without_package_authority() {
         panic!("bridge target without an owning inventory should fail");
     };
 
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYIMP_INVALID_TARGET)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYIMP_INVALID_TARGET))
+    );
 }
 
 #[test]
@@ -83,9 +85,11 @@ fn bridge_target_requires_an_inventoried_module() {
         panic!("missing bridge module should fail");
     };
 
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYIMP_INVALID_TARGET)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYIMP_INVALID_TARGET))
+    );
 }
 
 #[test]
@@ -106,9 +110,11 @@ fn reserved_bridge_target_cannot_be_reinterpreted_as_an_external_distribution() 
     let Err(errors) = result else {
         panic!("reserved bridge target must not fall through to an external distribution");
     };
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYIMP_INVALID_TARGET)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYIMP_INVALID_TARGET))
+    );
 
     let non_reserved = SOURCE.replace("bridge.pkg.compute", "external_bridge.pkg.compute");
     let parsed = parse_module(&non_reserved).expect("non-reserved source should parse");
@@ -153,9 +159,11 @@ fn bridge_authority_is_scoped_to_the_declaring_module() {
     let Err(errors) = result else {
         panic!("authority owned by another module must not activate this target");
     };
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYIMP_INVALID_TARGET)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYIMP_INVALID_TARGET))
+    );
 }
 
 #[test]

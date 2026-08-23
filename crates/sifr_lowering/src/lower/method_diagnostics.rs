@@ -1,5 +1,5 @@
-use super::expression_diagnostics;
 use super::LowerCtx;
+use super::expression_diagnostics;
 use ruff_text_size::TextRange;
 
 pub(in crate::lower) fn method_count_range(

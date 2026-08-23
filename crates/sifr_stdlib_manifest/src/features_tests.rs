@@ -1,6 +1,6 @@
 use super::{
-    feature_for_codegen_requirement, planned_sifr_stdlib_features,
-    try_generated_cargo_dependencies, try_sysroot_dependency_plan, CargoVendorMode, StdlibFeature,
+    CargoVendorMode, StdlibFeature, feature_for_codegen_requirement, planned_sifr_stdlib_features,
+    try_generated_cargo_dependencies, try_sysroot_dependency_plan,
 };
 use std::collections::HashSet;
 
@@ -177,9 +177,11 @@ fn unicode_intrinsic_features_enable_runtime_unicode_feature() {
         ]),
     );
 
-    assert!(deps
-        .iter()
-        .any(|dep| dep.starts_with("sifr_runtime = ") && dep.contains("features = [\"unicode\"]")));
+    assert!(
+        deps.iter()
+            .any(|dep| dep.starts_with("sifr_runtime = ")
+                && dep.contains("features = [\"unicode\"]"))
+    );
 }
 
 #[test]
@@ -213,18 +215,22 @@ fn runtime_dependency_can_enable_unicode_and_i18n_together() {
 fn python_runtime_feature_enables_sifr_runtime_python_feature() {
     let module_deps =
         generated_cargo_dependencies(&HashSet::from(["sifr.python".to_string()]), &HashSet::new());
-    assert!(module_deps
-        .iter()
-        .any(|dep| dep.starts_with("sifr_runtime = ") && dep.contains("features = [\"python\"]")));
+    assert!(
+        module_deps.iter().any(
+            |dep| dep.starts_with("sifr_runtime = ") && dep.contains("features = [\"python\"]")
+        )
+    );
 
     let deps = generated_cargo_dependencies(
         &HashSet::new(),
         &HashSet::from([StdlibFeature::PythonRuntime]),
     );
 
-    assert!(deps
-        .iter()
-        .any(|dep| dep.starts_with("sifr_runtime = ") && dep.contains("features = [\"python\"]")));
+    assert!(
+        deps.iter().any(
+            |dep| dep.starts_with("sifr_runtime = ") && dep.contains("features = [\"python\"]")
+        )
+    );
     assert_eq!(
         feature_for_codegen_requirement("python-runtime"),
         Some(StdlibFeature::PythonRuntime)
@@ -418,9 +424,10 @@ fn sysroot_dependency_plan_captures_identity_features_and_vendor_mode() {
     assert!(plan.cargo_config.ends_with(".cargo/config.toml"));
     assert!(plan.vendor_dir.ends_with("vendor"));
     assert!(plan.cache_fingerprint.contains("vendor_mode=sysroot-only"));
-    assert!(plan
-        .cache_fingerprint
-        .contains(&format!("content_sha256={}", plan.sysroot_content_sha256)));
+    assert!(
+        plan.cache_fingerprint
+            .contains(&format!("content_sha256={}", plan.sysroot_content_sha256))
+    );
     assert!(plan.cargo_dependency_lines().iter().any(|dep| {
         dep.starts_with("sifr_stdlib = ")
             && dep.contains("default-features = false")

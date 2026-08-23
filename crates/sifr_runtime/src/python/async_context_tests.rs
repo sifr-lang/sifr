@@ -33,12 +33,14 @@ fn async_context_enter_borrows_manager_and_exit_consumes_it_exactly_once() {
     assert_eq!(events(), vec!["normal:enter", "normal:exit:None"]);
     let closed = async_from_object(&alias).expect_err("terminal exit must close retained aliases");
     assert!(closed.message.contains("closed"), "{closed:?}");
-    assert!(block_on(submit_async_context_exit(
-        alias,
-        PythonAsyncExitCause::Normal,
-        None,
-    ))
-    .is_err());
+    assert!(
+        block_on(submit_async_context_exit(
+            alias,
+            PythonAsyncExitCause::Normal,
+            None,
+        ))
+        .is_err()
+    );
 
     shutdown_context_runtime();
 }

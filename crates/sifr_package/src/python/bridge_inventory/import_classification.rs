@@ -1,5 +1,5 @@
-use super::imports::RawImport;
 use super::PythonBridgeImport;
+use super::imports::RawImport;
 use std::collections::BTreeSet;
 
 pub(super) fn relative_import_escape(

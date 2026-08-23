@@ -3,9 +3,9 @@ use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::ExprCall;
 use sifr_type_system::Type;
 
+use super::LowerCtx;
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
-use super::LowerCtx;
 
 fn first_call_keyword_range(call: &ExprCall) -> TextRange {
     call.arguments

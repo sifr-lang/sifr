@@ -1,4 +1,4 @@
-use crate::{make_union, Type};
+use crate::{Type, make_union};
 
 /// Return the result type of an operation that can produce no value.
 ///

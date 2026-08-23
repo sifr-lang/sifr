@@ -1,10 +1,10 @@
 use crate::{
+    RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
+    Visibility,
     function_emitter::{is_result_int_type, result_int_return_type_to_sifr_int, result_method_key},
     helpers::collect_mutated_vars_with_sigs,
     python_interop_direct::python_interop_method_body_with_retained_errors,
     rust_interop_direct::rust_interop_method_body,
-    RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
-    Visibility,
 };
 use sifr_ir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};
 use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
@@ -484,12 +484,15 @@ impl RustEmitter {
             } else {
                 "from"
             };
-            let args = if constructor == "new" {
-                Vec::new()
-            } else {
-                vec![self
-                    .lower_class_expr_strict(value, "deque constructor _data field value lowering")]
-            };
+            let args =
+                if constructor == "new" {
+                    Vec::new()
+                } else {
+                    vec![self.lower_class_expr_strict(
+                        value,
+                        "deque constructor _data field value lowering",
+                    )]
+                };
             return RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
                     "VecDeque".to_string(),

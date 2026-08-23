@@ -1,11 +1,11 @@
 use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 
-use sifr_sysroot::{resolve_sysroot, ResolvedSysroot, SysrootError};
+use sifr_sysroot::{ResolvedSysroot, SysrootError, resolve_sysroot};
 
+use super::StdlibFeature;
 use super::generated_stdlib_features::planned_sifr_stdlib_features;
 use super::runtime_features::RuntimeFeatures;
-use super::StdlibFeature;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum SysrootCrate {
@@ -271,12 +271,12 @@ fn retained_dependency_specs(feature: StdlibFeature) -> &'static [&'static str] 
         StdlibFeature::NumBigint => &["num-bigint = \"=0.4.6\""],
         StdlibFeature::NumTraits => &["num-traits = \"=0.2.19\""],
         StdlibFeature::Rayon => &["rayon = \"=1.12.0\""],
-        StdlibFeature::RustDecimal => {
-            &["rust_decimal = { version = \"=1.41.0\", features = [\"maths\", \"serde-with-str\"] }"]
-        }
-        StdlibFeature::Tokio => {
-            &["tokio = { version = \"=1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"]
-        }
+        StdlibFeature::RustDecimal => &[
+            "rust_decimal = { version = \"=1.41.0\", features = [\"maths\", \"serde-with-str\"] }",
+        ],
+        StdlibFeature::Tokio => &[
+            "tokio = { version = \"=1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
+        ],
         _ => &[],
     }
 }
@@ -318,7 +318,7 @@ fn push_unicode_escape(output: &mut String, value: u32) {
 
 #[cfg(test)]
 mod tests {
-    use super::{retained_dependency_specs, StdlibFeature, SysrootCrate, SysrootCrateDependency};
+    use super::{StdlibFeature, SysrootCrate, SysrootCrateDependency, retained_dependency_specs};
     use std::collections::BTreeSet;
     use std::path::PathBuf;
 

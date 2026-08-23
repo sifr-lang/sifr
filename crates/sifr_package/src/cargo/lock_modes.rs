@@ -106,7 +106,7 @@ pub fn validate_offline_source_availability(
 
 #[cfg(test)]
 mod tests {
-    use super::{cargo_lock_failure_reason, CargoLockMode};
+    use super::{CargoLockMode, cargo_lock_failure_reason};
 
     #[test]
     fn lock_modes_expose_exact_cargo_arguments() {

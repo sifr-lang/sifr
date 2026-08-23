@@ -1,5 +1,5 @@
 use super::{
-    ipc_schema_extraction, ownership_diagnostics, task_scope_calls, ExprCall, HirExpr, LowerCtx,
+    ExprCall, HirExpr, LowerCtx, ipc_schema_extraction, ownership_diagnostics, task_scope_calls,
 };
 use ruff_text_size::{Ranged, TextRange};
 use sifr_type_system::Type;
@@ -239,11 +239,17 @@ mod tests {
             Type::Int,
         ));
 
-        assert!(non_ipc_serializable_reason(&process_reader)
-            .is_some_and(|reason| reason.contains("process-local process pipe handle")));
-        assert!(non_ipc_serializable_reason(&callable)
-            .is_some_and(|reason| reason.contains("callables are process-local code")));
-        assert!(non_ipc_serializable_reason(&function)
-            .is_some_and(|reason| reason.contains("callables are process-local code")));
+        assert!(
+            non_ipc_serializable_reason(&process_reader)
+                .is_some_and(|reason| reason.contains("process-local process pipe handle"))
+        );
+        assert!(
+            non_ipc_serializable_reason(&callable)
+                .is_some_and(|reason| reason.contains("callables are process-local code"))
+        );
+        assert!(
+            non_ipc_serializable_reason(&function)
+                .is_some_and(|reason| reason.contains("callables are process-local code"))
+        );
     }
 }

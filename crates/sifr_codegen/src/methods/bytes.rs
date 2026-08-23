@@ -255,9 +255,9 @@ pub(super) fn lower_find(object: &RustExpr, args: &[RustExpr]) -> Option<RustExp
                                     then_body: vec![RustStmt::Assign {
                                         target: RustExpr::Ident("__result".to_string()),
                                         value: RustExpr::FnCall {
-                                            func: Box::new(RustExpr::Path(
-                                                vec!["Some".to_string()],
-                                            )),
+                                            func: Box::new(RustExpr::Path(vec![
+                                                "Some".to_string(),
+                                            ])),
                                             args: vec![RustExpr::Ident("__i".to_string())],
                                         },
                                     }],

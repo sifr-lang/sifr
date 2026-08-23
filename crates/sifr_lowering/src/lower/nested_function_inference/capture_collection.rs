@@ -1,6 +1,6 @@
 use super::{
-    collect_assignment_target_names, collect_current_function_local_bindings,
-    collect_nonlocal_names, FunctionEnv,
+    FunctionEnv, collect_assignment_target_names, collect_current_function_local_bindings,
+    collect_nonlocal_names,
 };
 use sifr_python_ast::{Expr, InterpolatedStringElement, Parameters, Stmt, StmtFunctionDef};
 use sifr_type_system::Type;
@@ -243,8 +243,8 @@ pub(in crate::lower) fn collect_referenced_names_in_expr(expr: &Expr, names: &mu
                 &[comp.key.as_ref(), comp.value.as_ref()],
             );
         }
-        Expr::Generator(gen) => {
-            collect_comprehension_names(&gen.generators, names, &[gen.elt.as_ref()]);
+        Expr::Generator(generator) => {
+            collect_comprehension_names(&generator.generators, names, &[generator.elt.as_ref()]);
         }
         Expr::Lambda(lambda) => {
             if let Some(parameters) = lambda.parameters.as_deref() {

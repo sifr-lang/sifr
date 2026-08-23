@@ -1,9 +1,9 @@
+use super::LowerCtx;
 use super::builtin_calls::{DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
 use super::declaration_hint_safety::safe_direct_assignment_names;
-use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use sifr_python_ast::{Expr, Stmt};
-use sifr_type_system::{widen_literal, Type};
+use sifr_type_system::{Type, widen_literal};
 use std::collections::HashSet;
 
 pub(in crate::lower) fn safe_defaultdict_hint_names_for_block(stmts: &[Stmt]) -> HashSet<String> {

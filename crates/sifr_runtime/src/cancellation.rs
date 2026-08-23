@@ -157,11 +157,15 @@ impl CancellationCarrier {
                 state.requested = true;
                 if let Some(exact) = state.exact.as_ref() {
                     (CancellationRequest::Claimed, Some(Arc::clone(&exact.hook)))
-                } else if let Some(hook) = state.fallback.as_ref().map(Arc::clone) {
-                    state.fallback_resumed = true;
-                    (CancellationRequest::Fallback, Some(hook))
                 } else {
-                    (CancellationRequest::FallbackPending, None)
+                    let fallback = state.fallback.as_ref().map(Arc::clone);
+                    match fallback {
+                        Some(hook) => {
+                            state.fallback_resumed = true;
+                            (CancellationRequest::Fallback, Some(hook))
+                        }
+                        None => (CancellationRequest::FallbackPending, None),
+                    }
                 }
             }
             Err(_) => return CancellationRequest::StateUnavailable,
@@ -320,8 +324,8 @@ impl Default for CancellationCarrier {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Barrier;
+    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::task::{Wake, Waker};
 
     fn counting_hook(counter: &Arc<AtomicUsize>) -> CancellationHook {

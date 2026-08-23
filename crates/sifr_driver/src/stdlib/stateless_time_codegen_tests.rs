@@ -36,9 +36,11 @@ fn time_private_declarations_codegen_through_sifr_stdlib() {
             "{decl_name} should lower through _sifr.time private Rust interop declarations"
         );
     }
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.time")
-        .is_some_and(|deps| deps.contains("_sifr.time")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.time")
+            .is_some_and(|deps| deps.contains("_sifr.time"))
+    );
 }

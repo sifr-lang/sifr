@@ -1,16 +1,16 @@
 use crate::check_and_package_commands::{check_entrypoint, compile_entrypoint, emit_entrypoint};
 use crate::cli_model_and_entrypoint::{
-    diagnostic_exit_code, diagnostic_with_code, run_with_panic_boundary, Cli, CompilationMode,
-    DiagnosticFormat, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
-    EXIT_USER_DIAGNOSTIC,
+    Cli, CompilationMode, DiagnosticFormat, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS,
+    EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC, diagnostic_exit_code, diagnostic_with_code,
+    run_with_panic_boundary,
 };
 use crate::diagnostic_rendering_and_run::{canonical_diagnostic_stream, render_diagnostic_output};
-use crate::mode_resolution_tests::{mktemp_dir, resolved_mode, TestProject};
+use crate::mode_resolution_tests::{TestProject, mktemp_dir, resolved_mode};
 use crate::mode_resolution_tests::{primary_test_span, test_diagnostic};
 use clap::Parser;
 use sifr_diagnostics::{
-    render_compact_diagnostics, ChildSeverity, DiagnosticArg, DiagnosticCode, RenderedDiagnostic,
-    Severity,
+    ChildSeverity, DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severity,
+    render_compact_diagnostics,
 };
 use sifr_driver::CompileResult;
 use sifr_frontend::DiskSourceProvider;
@@ -209,9 +209,11 @@ pub(super) fn test_compile_entrypoint_manifestless_local_import_uses_single_file
     assert_eq!(messages(&run_errors), expected);
     assert_eq!(messages(&build_errors), expected);
     assert_eq!(messages(&emit_errors), expected);
-    assert!(check_errors
-        .iter()
-        .any(|error| { error.code == DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE.code() }));
+    assert!(
+        check_errors
+            .iter()
+            .any(|error| { error.code == DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE.code() })
+    );
 
     let _ = std::fs::remove_dir_all(run_out);
     let _ = std::fs::remove_dir_all(build_out);
@@ -624,9 +626,11 @@ pub(super) fn test_run_with_panic_boundary_converts_panic_to_internal_diagnostic
         || -> usize { panic!("boom") },
     )
     .expect_err("panic should convert to an internal compiler diagnostic");
-    assert!(error
-        .message
-        .contains("internal compiler panic during test boundary: boom"));
+    assert!(
+        error
+            .message
+            .contains("internal compiler panic during test boundary: boom")
+    );
     let error = *error;
     assert_eq!(
         diagnostic_exit_code(&[error]),
@@ -709,22 +713,28 @@ pub(super) fn test_diagnostic_formats_share_canonical_sorted_capped_stream() {
 
     let canonical = canonical_diagnostic_stream(&diagnostics);
     assert_eq!(canonical.len(), 50);
-    assert!(canonical
-        .iter()
-        .take(5)
-        .all(|diagnostic| diagnostic.code == "SIFR-TYPE-0002"
-            && diagnostic.message == "aaa repeated mismatch"));
+    assert!(
+        canonical
+            .iter()
+            .take(5)
+            .all(|diagnostic| diagnostic.code == "SIFR-TYPE-0002"
+                && diagnostic.message == "aaa repeated mismatch")
+    );
     assert_eq!(canonical[5].code, "SIFR-INTERNAL-0002");
     assert_eq!(
         canonical[5].message,
         "3 additional diagnostics omitted by recovery cap (similar-diagnostic group)"
     );
-    assert!(canonical
-        .iter()
-        .any(|diagnostic| diagnostic.message == "distinct diagnostic 42"));
-    assert!(!canonical
-        .iter()
-        .any(|diagnostic| diagnostic.message == "distinct diagnostic 43"));
+    assert!(
+        canonical
+            .iter()
+            .any(|diagnostic| diagnostic.message == "distinct diagnostic 42")
+    );
+    assert!(
+        !canonical
+            .iter()
+            .any(|diagnostic| diagnostic.message == "distinct diagnostic 43")
+    );
     assert_eq!(canonical[49].code, "SIFR-INTERNAL-0002");
     assert_eq!(
         canonical[49].message,

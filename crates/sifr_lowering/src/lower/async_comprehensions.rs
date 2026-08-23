@@ -1,5 +1,5 @@
 use super::expressions::lower_expr;
-use super::{ownership_diagnostics, LowerCtx};
+use super::{LowerCtx, ownership_diagnostics};
 use crate::hir_nodes::HirExpr;
 use crate::scope::MovedSnapshot;
 use ruff_text_size::Ranged;

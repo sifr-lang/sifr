@@ -91,12 +91,16 @@ mod tests {
         fs::write(&non_utf8, [0xff]).expect("write non-UTF-8 fixture");
         let result = read_fixture(&path).expect("read fixture");
         assert_eq!(result, "{\"schema_version\":2}\n");
-        assert!(read_fixture(root.path())
-            .expect_err("directory must fail")
-            .contains("regular file"));
-        assert!(read_fixture(&non_utf8)
-            .expect_err("non-UTF-8 must fail")
-            .contains("could not read"));
+        assert!(
+            read_fixture(root.path())
+                .expect_err("directory must fail")
+                .contains("regular file")
+        );
+        assert!(
+            read_fixture(&non_utf8)
+                .expect_err("non-UTF-8 must fail")
+                .contains("could not read")
+        );
     }
 
     #[cfg(unix)]
@@ -109,9 +113,11 @@ mod tests {
         let link = root.path().join("channels.json");
         fs::write(&target, "{}\n").expect("write target");
         symlink(&target, &link).expect("create symlink");
-        assert!(read_fixture(&link)
-            .expect_err("symlink must fail")
-            .contains("regular file"));
+        assert!(
+            read_fixture(&link)
+                .expect_err("symlink must fail")
+                .contains("regular file")
+        );
     }
 
     #[test]

@@ -1,8 +1,8 @@
+use super::LowerCtx;
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
 use super::ownership_diagnostics;
 use super::task_context_keywords::lower_task_context_keyword;
-use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::{ExprAttribute, ExprCall};

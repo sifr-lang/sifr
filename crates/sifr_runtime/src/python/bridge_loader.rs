@@ -276,10 +276,11 @@ mod tests {
                 install(py, &config.bridge_sources),
                 Err(ReservedBridgeCollision { .. })
             ));
-            assert!(py
-                .import("builtins")
-                .and_then(|builtins| builtins.hasattr("__sifr_bridge_finder__"))
-                .is_ok_and(|present| !present));
+            assert!(
+                py.import("builtins")
+                    .and_then(|builtins| builtins.hasattr("__sifr_bridge_finder__"))
+                    .is_ok_and(|present| !present)
+            );
             modules
                 .del_item(RUNTIME_ROOT)
                 .expect("collision fixture should clear");
@@ -357,10 +358,11 @@ mod tests {
             let error = install(py, &[duplicate.clone(), duplicate])
                 .expect_err("duplicate embedded module names must fail");
             assert!(matches!(error, ReservedBridgeCollision { .. }));
-            assert!(py
-                .import("builtins")
-                .and_then(|builtins| builtins.hasattr("__sifr_bridge_finder__"))
-                .is_ok_and(|present| !present));
+            assert!(
+                py.import("builtins")
+                    .and_then(|builtins| builtins.hasattr("__sifr_bridge_finder__"))
+                    .is_ok_and(|present| !present)
+            );
         })
         .expect("CPython should be attached");
     }

@@ -2,7 +2,7 @@ use crate::conversion;
 use crate::errors::{LspError, LspResult};
 use crate::requests::{document_position, text_document_uri};
 use crate::session::Session;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sifr_analysis::SymbolName;
 
 pub(crate) fn definition(session: &mut Session, params: Value) -> LspResult<Value> {

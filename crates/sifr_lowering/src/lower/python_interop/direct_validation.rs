@@ -1,6 +1,6 @@
 use super::{
-    arrow, buffer, dlpack, invalid_shape, is_direct_type, unsupported_conversion, HirParam,
-    LowerCtx, PythonInteropDeclaration, PythonInteropEffect, PythonParameterKind, Type,
+    HirParam, LowerCtx, PythonInteropDeclaration, PythonInteropEffect, PythonParameterKind, Type,
+    arrow, buffer, dlpack, invalid_shape, is_direct_type, unsupported_conversion,
 };
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;

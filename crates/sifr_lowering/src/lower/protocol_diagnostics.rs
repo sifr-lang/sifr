@@ -92,7 +92,7 @@ pub(in crate::lower) fn iterator_element_mismatch(
 
 #[cfg(test)]
 mod tests {
-    use crate::{lower_module, HirDiagnostic};
+    use crate::{HirDiagnostic, lower_module};
     use ruff_text_size::{TextRange, TextSize};
     use sifr_diagnostics::DiagnosticCode;
     use sifr_python_parser::parse_module;
@@ -146,8 +146,7 @@ mod tests {
 
     #[test]
     fn missing_context_manager_has_proto_code() {
-        let source =
-            "class PlainClass:\n    value: int\n\ndef main():\n    with PlainClass(42) as p:\n        print(p.value)\n";
+        let source = "class PlainClass:\n    value: int\n\ndef main():\n    with PlainClass(42) as p:\n        print(p.value)\n";
         let errors = lower_errors(source);
 
         assert!(errors.iter().any(|error| {

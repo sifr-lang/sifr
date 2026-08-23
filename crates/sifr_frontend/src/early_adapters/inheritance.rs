@@ -360,7 +360,7 @@ mod parent_selection_tests {
     use super::{
         canonical_parent_identity, parent_bindings, parent_method_contracts, parent_selection,
     };
-    use sifr_lowering::{lower_module, ClassAdapterSelection, ExternalDefs, LoweringResult};
+    use sifr_lowering::{ClassAdapterSelection, ExternalDefs, LoweringResult, lower_module};
     use sifr_syntax::parse_module_suite;
 
     fn selection(owner: &str, provider_module: &str) -> ClassAdapterSelection {

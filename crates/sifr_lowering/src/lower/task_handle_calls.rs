@@ -1,6 +1,6 @@
+use super::LowerCtx;
 use super::expression_diagnostics;
 use super::task_scope_calls::mark_task_handle_observed;
-use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::ExprCall;

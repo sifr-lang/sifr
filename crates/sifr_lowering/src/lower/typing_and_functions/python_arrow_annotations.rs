@@ -1,4 +1,4 @@
-use super::{invalid_type_annotation, LowerCtx, PythonArrowKind, TextRange, Type};
+use super::{LowerCtx, PythonArrowKind, TextRange, Type, invalid_type_annotation};
 
 pub(super) fn resolve_python_arrow_annotation(
     name: &str,

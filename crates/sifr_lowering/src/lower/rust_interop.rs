@@ -728,7 +728,7 @@ fn malformed(ctx: &mut LowerCtx, reason: impl std::fmt::Display, span: TextRange
 
 #[cfg(test)]
 mod prescan_tests {
-    use super::{collect_rust_opaque_close_methods, LowerCtx};
+    use super::{LowerCtx, collect_rust_opaque_close_methods};
     use sifr_python_parser::parse_module;
 
     fn prescan(source: &str) -> LowerCtx {

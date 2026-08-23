@@ -1,4 +1,4 @@
-use super::{type_bounds::supports_hash_key_in_context, LowerCtx};
+use super::{LowerCtx, type_bounds::supports_hash_key_in_context};
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_type_system::Type;

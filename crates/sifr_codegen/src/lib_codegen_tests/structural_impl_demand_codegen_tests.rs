@@ -4,7 +4,7 @@ use sifr_ir::{
     HirParam, MethodKind, RustInteropAbiRequirements, RustInteropDeclaration,
     RustInteropDecoratorKind, RustInteropEffect, TypedDeclarationMetadata,
 };
-use sifr_structural_identity::{metadata, nominal_record, primitive, NominalField};
+use sifr_structural_identity::{NominalField, metadata, nominal_record, primitive};
 use sifr_type_system::{ParamConvention, Type};
 
 #[test]
@@ -18,9 +18,11 @@ fn ordinary_class_codegen_skips_structural_impls() {
     assert!(!generated.contains("StructuralProject"));
 
     let metadata = crate::generate_rust_with_metadata(&module);
-    assert!(!metadata
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::StructuralRuntime));
+    assert!(
+        !metadata
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::StructuralRuntime)
+    );
 }
 
 #[test]
@@ -363,9 +365,11 @@ fn project_structural_demand_enables_implicit_classes_across_modules() {
         &[("models", &models), ("api", &api)],
         &crate::StdlibCode::default(),
     );
-    assert!(metadata
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::StructuralRuntime));
+    assert!(
+        metadata
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::StructuralRuntime)
+    );
 }
 
 #[test]

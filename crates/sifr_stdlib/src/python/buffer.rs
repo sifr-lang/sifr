@@ -1,4 +1,4 @@
-use super::{object_bridge, take_resource, PythonError, PythonObject, ResourceIdentity};
+use super::{PythonError, PythonObject, ResourceIdentity, object_bridge, take_resource};
 use sifr_runtime::{interop::Handle, python};
 
 mod sealed {

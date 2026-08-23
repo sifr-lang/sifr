@@ -17,9 +17,11 @@ fn test_task_timeout_context_manager_wraps_awaits() {
     assert!(result.rust_source.contains("match ::tokio::time::timeout"));
     assert!(result.rust_source.contains("return Err(TimeoutError::new"));
     assert!(result.rust_source.contains("struct TimeoutError"));
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
+    assert!(
+        result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio)
+    );
 }
 
 #[test]
@@ -85,9 +87,11 @@ fn test_try_finally_runs_cleanup_before_timeout_propagates() {
         .expect("try/finally should rethrow after cleanup");
 
     assert!(result.rust_source.contains("let __sifr_try_finally_res"));
-    assert!(result
-        .rust_source
-        .contains("Err(_) => return Err(TimeoutError::new"));
+    assert!(
+        result
+            .rust_source
+            .contains("Err(_) => return Err(TimeoutError::new")
+    );
     assert!(cleanup_pos < rethrow_pos);
 }
 
@@ -139,18 +143,24 @@ fn test_async_generated_errors_convert_to_error_return_type() {
         .module,
     );
 
-    assert!(result
-        .rust_source
-        .contains("impl From<TimeoutError> for Error"));
-    assert!(result
-        .rust_source
-        .contains("impl From<ScopeFailure> for Error"));
+    assert!(
+        result
+            .rust_source
+            .contains("impl From<TimeoutError> for Error")
+    );
+    assert!(
+        result
+            .rust_source
+            .contains("impl From<ScopeFailure> for Error")
+    );
     assert!(result.rust_source.contains(
         "return Err(::std::convert::Into::<Error>::into(TimeoutError::new(\"task timeout expired\""
     ));
-    assert!(result
-        .rust_source
-        .contains("return Err(__sifr_scope_failure.into());"));
+    assert!(
+        result
+            .rust_source
+            .contains("return Err(__sifr_scope_failure.into());")
+    );
 }
 
 #[test]
@@ -165,12 +175,16 @@ fn test_sync_main_does_not_require_tokio() {
         .module,
     );
 
-    assert!(!result
-        .rust_source
-        .contains("#[tokio::main(flavor = \"current_thread\")]"));
-    assert!(!result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
+    assert!(
+        !result
+            .rust_source
+            .contains("#[tokio::main(flavor = \"current_thread\")]")
+    );
+    assert!(
+        !result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio)
+    );
 }
 
 #[test]
@@ -195,8 +209,10 @@ fn test_module_constants_flow_through_assembled_body_items() {
     let entrypoints_src = include_str!("../entrypoints.rs");
 
     assert!(module_constants_src.contains("self.body_items.push(item);"));
-    assert!(module_constants_src
-        .contains("structured module constant emission missing for production path"));
+    assert!(
+        module_constants_src
+            .contains("structured module constant emission missing for production path")
+    );
     assert!(!module_constants_src.contains("push_syn_items_from_source"));
     assert!(!module_constants_src.contains("render_items(&[item])"));
 
@@ -223,12 +239,18 @@ fn test_generator_init_emission_is_structured_only() {
     let stmt_entrypoints_src = include_str!("../structured_stmt_entrypoints.rs");
     let statement_output_src = include_str!("../stmt_support_emitter/statement_output.rs");
     assert!(statement_output_src.contains("self.lower_stmt_expr_for_ir(value)"));
-    assert!(stmt_entrypoints_src
-        .contains("self.try_lower_structured_stmt_with_following(stmt, following_stmts)"));
-    assert!(statement_output_src
-        .contains("structured generator-init expression emission missing for production path"));
-    assert!(statement_output_src
-        .contains("structured generator-init statement emission missing for production path"));
+    assert!(
+        stmt_entrypoints_src
+            .contains("self.try_lower_structured_stmt_with_following(stmt, following_stmts)")
+    );
+    assert!(
+        statement_output_src
+            .contains("structured generator-init expression emission missing for production path")
+    );
+    assert!(
+        statement_output_src
+            .contains("structured generator-init statement emission missing for production path")
+    );
     assert!(!statement_output_src.contains("self.try_emit_expr_string_"));
     assert!(!statement_output_src.contains("self.try_emit_stmt_string_"));
     assert!(!statement_output_src.contains("self.emit_expr(value);"));

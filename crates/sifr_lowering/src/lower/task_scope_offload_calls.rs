@@ -1,3 +1,4 @@
+use super::LowerCtx;
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
 use super::offload_worker_captures::validate_offload_worker_captures;
@@ -6,7 +7,6 @@ use super::task_scope_calls::{
     is_task_scope_type, non_send_reason,
 };
 use super::workload_annotations::WorkloadKind;
-use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::ExprCall;
@@ -248,7 +248,9 @@ fn validate_sync_worker(call: &ExprCall, ctx: &mut LowerCtx, api_name: &str) -> 
     if !ft.params.is_empty() {
         expression_diagnostics::type_mismatch(
             ctx,
-            format!("{api_name} v1 requires a zero-argument function; wrap owned inputs in a dedicated helper before offloading"),
+            format!(
+                "{api_name} v1 requires a zero-argument function; wrap owned inputs in a dedicated helper before offloading"
+            ),
             call.arguments.args[0].range(),
         );
         return None;

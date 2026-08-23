@@ -1,4 +1,4 @@
-use super::{const_value_from_hir, validated_adapter_value, ShapeFieldDefault};
+use super::{ShapeFieldDefault, const_value_from_hir, validated_adapter_value};
 use sifr_lowering::{AdapterFieldDefault, AdapterFieldPlan, HirExpr};
 
 pub(super) fn shape_field_default(

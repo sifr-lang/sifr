@@ -1,6 +1,6 @@
 use sifr_lowering::{
-    canonicalize_user_export_type, substitute_type_vars, AdapterHandlerPlan,
-    DeclarationMetadataTargetKind, ExternalDefs, HirClass, MethodKind, StructuralMethodExport,
+    AdapterHandlerPlan, DeclarationMetadataTargetKind, ExternalDefs, HirClass, MethodKind,
+    StructuralMethodExport, canonicalize_user_export_type, substitute_type_vars,
 };
 use sifr_type_system::Type;
 use std::collections::{HashMap, HashSet};

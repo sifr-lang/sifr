@@ -1,4 +1,4 @@
-use super::{lower_stmts, FunctionType, HirStmt, LowerCtx};
+use super::{FunctionType, HirStmt, LowerCtx, lower_stmts};
 use sifr_python_ast::Stmt;
 
 pub(in crate::lower) fn lower_function_stmts(

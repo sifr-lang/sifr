@@ -1,5 +1,5 @@
 use crate::cargo::metadata::parse_metadata_json;
-use crate::graph::derive::{derive_package_graph, SifrPackageId};
+use crate::graph::derive::{SifrPackageId, derive_package_graph};
 use crate::graph::type_identity::{PackageTypeIdentity, TypeIdentityMismatch};
 use crate::manifest::sifr::ImportRoot;
 use sifr_diagnostics::DiagnosticCode;
@@ -96,9 +96,11 @@ fn direct_dependency_aliases_allow_same_export_root_in_one_scope() {
         .expect("aliases disambiguate");
     let app_scope = &graph.direct_dependency_scopes[&sifr_id(&app)];
 
-    assert!(!app_scope
-        .imports
-        .contains_key(&ImportRoot("math".to_string())));
+    assert!(
+        !app_scope
+            .imports
+            .contains_key(&ImportRoot("math".to_string()))
+    );
     assert_eq!(
         app_scope.imports[&ImportRoot("math_v1".to_string())].package_id,
         sifr_id(&math_v1)

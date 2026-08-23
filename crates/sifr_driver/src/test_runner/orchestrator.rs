@@ -1,15 +1,15 @@
 use super::execution::execute_test_runner_project;
-use crate::diagnostics::{run_codegen_with_boundary, write_stderr_line, RenderedDiagnostic};
+use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary, write_stderr_line};
 use crate::project::{
+    DiscoveryDiagnosticStyle, ModuleResolver, ParsedProjectModule,
     collect_project_hir_source_modules, discover_test_root_modules,
-    parse_import_closure_source_modules, DiscoveryDiagnosticStyle, ModuleResolver,
-    ParsedProjectModule,
+    parse_import_closure_source_modules,
 };
 use crate::stdlib::compile_stdlib;
 use sifr_codegen::generate_rust_test_project_with_metadata;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::{
-    compile_module_hir_with_source, FrontendDiagnosticStyle, FrontendSourceContext, SourceProvider,
+    FrontendDiagnosticStyle, FrontendSourceContext, SourceProvider, compile_module_hir_with_source,
 };
 use sifr_lowering::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;

@@ -1,26 +1,32 @@
-use super::{type_check_comparison, Type};
+use super::{Type, type_check_comparison};
 use sifr_diagnostics::DiagnosticCode;
 
 #[test]
 fn equality_rejects_container_any_shape_without_partial_eq() {
-    assert!(type_check_comparison(
-        &Type::List(Box::new(Type::Int)),
-        "==",
-        &Type::List(Box::new(Type::Any)),
-    )
-    .is_err());
-    assert!(type_check_comparison(
-        &Type::List(Box::new(Type::List(Box::new(Type::Int)))),
-        "==",
-        &Type::List(Box::new(Type::List(Box::new(Type::Any)))),
-    )
-    .is_err());
-    assert!(type_check_comparison(
-        &Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
-        "==",
-        &Type::Dict(Box::new(Type::Str), Box::new(Type::Any)),
-    )
-    .is_err());
+    assert!(
+        type_check_comparison(
+            &Type::List(Box::new(Type::Int)),
+            "==",
+            &Type::List(Box::new(Type::Any)),
+        )
+        .is_err()
+    );
+    assert!(
+        type_check_comparison(
+            &Type::List(Box::new(Type::List(Box::new(Type::Int)))),
+            "==",
+            &Type::List(Box::new(Type::List(Box::new(Type::Any)))),
+        )
+        .is_err()
+    );
+    assert!(
+        type_check_comparison(
+            &Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+            "==",
+            &Type::Dict(Box::new(Type::Str), Box::new(Type::Any)),
+        )
+        .is_err()
+    );
 }
 
 #[test]

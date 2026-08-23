@@ -1,7 +1,7 @@
 use crate::{
     HirAsyncWithKind, HirExpr, HirFStringPart, HirIteratorOp, HirPattern, HirTupleTargetBinding,
 };
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sifr_type_system::Type;
 
 pub(super) fn project_expr(expr: &HirExpr) -> Value {

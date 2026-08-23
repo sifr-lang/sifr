@@ -1,7 +1,7 @@
 use super::cli_model_and_entrypoint::{
-    diagnostic_with_code, package_diagnostic, read_source, resolve_compilation_mode,
-    run_with_panic_boundary, CompilationMode, DiagnosticFormat, PackageCompilerContext,
-    EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
+    CompilationMode, DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
+    PackageCompilerContext, diagnostic_with_code, package_diagnostic, read_source,
+    resolve_compilation_mode, run_with_panic_boundary,
 };
 use super::diagnostic_rendering_and_run::{
     current_session_package_id, execute_cargo_plan, render_diagnostics,
@@ -13,12 +13,12 @@ use super::python_runtime_context::{package_python_runtime, package_python_runti
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
-    build_cached_project, build_cached_single_file, build_package_project_report,
-    build_project_report, build_single_file_report, check_package_project, check_project,
-    check_single_file, compile, emit_project, run_tests, BuildReport, CachedBinaryArtifact,
-    CompileResult, PackageEntrypoint,
+    BuildReport, CachedBinaryArtifact, CompileResult, PackageEntrypoint, build_cached_project,
+    build_cached_single_file, build_package_project_report, build_project_report,
+    build_single_file_report, check_package_project, check_project, check_single_file, compile,
+    emit_project, run_tests,
 };
-use sifr_format::config::{effective_format_config, EffectiveFormatConfig, FormatConfigOverrides};
+use sifr_format::config::{EffectiveFormatConfig, FormatConfigOverrides, effective_format_config};
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use sifr_python_ast::{Expr, Stmt};
 use std::collections::hash_map::DefaultHasher;

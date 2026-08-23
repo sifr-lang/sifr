@@ -1,4 +1,4 @@
-use crate::{module_class_fields, module_func_signatures, HirModule, ModuleFuncSignatures};
+use crate::{HirModule, ModuleFuncSignatures, module_class_fields, module_func_signatures};
 use sifr_type_system::Type;
 use std::collections::HashMap;
 

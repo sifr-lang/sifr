@@ -1,4 +1,4 @@
-use super::{unify_matching_defaultdict_aliases, Type};
+use super::{Type, unify_matching_defaultdict_aliases};
 
 pub(super) fn has_conflicting_inference(current: &Type, incoming: &Type) -> bool {
     match (current, incoming) {

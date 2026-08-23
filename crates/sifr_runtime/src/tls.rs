@@ -4,8 +4,8 @@ use std::collections::{HashMap, HashSet};
 use std::future::Future;
 use std::io::Cursor;
 use std::sync::{
-    atomic::{AtomicI64, Ordering},
     Arc, LazyLock, Mutex, MutexGuard,
+    atomic::{AtomicI64, Ordering},
 };
 
 use rustls::pki_types::{CertificateDer, PrivateKeyDer, ServerName};
@@ -694,9 +694,11 @@ mod tests {
         tls_write_half_close_notify(server_write).await.unwrap();
         tls_write_half_flush(server_write).await.unwrap();
         let late_write = tls_write_half_write(server_write, b"!".to_vec()).await;
-        assert!(late_write
-            .unwrap_err()
-            .contains("TLS write side is already close-notified"));
+        assert!(
+            late_write
+                .unwrap_err()
+                .contains("TLS write side is already close-notified")
+        );
         assert_eq!(
             tls_stream_read_chunk(client_tls, 4).await.unwrap(),
             Some(b"pong".to_vec())

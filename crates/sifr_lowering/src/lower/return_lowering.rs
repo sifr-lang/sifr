@@ -5,10 +5,10 @@ use sifr_type_system::{FunctionType, OwnershipKind, Type};
 
 use crate::hir_nodes::{HirExpr, HirStmt};
 
+use super::LowerCtx;
 use super::expressions::lower_expr;
 use super::ownership_diagnostics;
 use super::task_scope_calls::sync_guard_type_label;
-use super::LowerCtx;
 
 pub(in crate::lower) fn lower_return(
     ret: &StmtReturn,

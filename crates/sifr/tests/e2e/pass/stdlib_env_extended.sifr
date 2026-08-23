@@ -1,44 +1,18 @@
-# Extended parity/safety checks for sifr.env
-from sifr.env import getenv, getenv_opt, setenv, unsetenv, keys, values, items
+# Extended read-only checks for sifr.env.
+from sifr.env import getenv, getenv_opt, keys, values, items
 
 def main():
-    # Baseline set/get
-    setenv("SIFR_ENV_EXT_A", "1")
-    assert str(getenv("SIFR_ENV_EXT_A", "x")) == '1'
+    missing: str | None = getenv_opt("SIFR_ENV_EXT_MISSING")
+    assert str(missing is None) == "true"
+    assert getenv("SIFR_ENV_EXT_MISSING", "fallback") == "fallback"
 
-    # Unset and fallback behavior
-    unsetenv("SIFR_ENV_EXT_A")
-    missing: str | None = getenv_opt("SIFR_ENV_EXT_A")
-    if missing is None:
-        assert str("unset ok") == 'unset ok'
-
-    # Invalid key should be handled safely (no panic, no set)
-    bad: str | None = getenv_opt("BAD=KEY")
-    if bad is None:
-        assert str("invalid safe") == 'invalid safe'
-    setenv("BAD=KEY", "blocked")
-    bad_after: str | None = getenv_opt("BAD=KEY")
-    if bad_after is None:
-        assert str("invalid set blocked") == 'invalid set blocked'
-
-    # CPython-style wrappers
-    setenv("SIFR_ENV_EXT_B", "2")
-    assert str(getenv("SIFR_ENV_EXT_B", "x")) == '2'
-    unsetenv("SIFR_ENV_EXT_B")
-    assert str(getenv("SIFR_ENV_EXT_B", "fallback")) == 'fallback'
+    bad_empty: str | None = getenv_opt("")
+    bad_equals: str | None = getenv_opt("BAD=KEY")
+    assert str(bad_empty is None) == "true"
+    assert str(bad_equals is None) == "true"
 
     k: list[str] = keys()
     v: list[str] = values()
     it: list[str] = items()
-    assert str(len(k) == len(v)) == 'true'
-    assert str(len(k) == len(it)) == 'true'
-
-    # Confirm keys() contains the variable we just set
-    setenv("SIFR_ENV_EXT_C", "3")
-    found: bool = False
-    names: list[str] = keys()
-    for name in names:
-        if name == "SIFR_ENV_EXT_C":
-            found = True
-    assert str(found) == 'true'
-    unsetenv("SIFR_ENV_EXT_C")
+    assert str(len(k) == len(v)) == "true"
+    assert str(len(k) == len(it)) == "true"

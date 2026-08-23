@@ -1,4 +1,4 @@
-use super::{infer_type_var_bindings, substitute_type_vars, LowerCtx};
+use super::{LowerCtx, infer_type_var_bindings, substitute_type_vars};
 use crate::hir_nodes::HirExpr;
 use sifr_type_system::Type;
 use std::collections::HashMap;

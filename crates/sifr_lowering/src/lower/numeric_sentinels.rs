@@ -332,7 +332,7 @@ pub(in crate::lower) fn numeric_domain_for_type(ty: &Type) -> Option<NumericSent
 
 #[cfg(test)]
 mod tests {
-    use crate::{lower_module, HirDiagnostic, HirExpr, HirModule, HirStmt};
+    use crate::{HirDiagnostic, HirExpr, HirModule, HirStmt, lower_module};
     use sifr_python_parser::parse_module;
     use sifr_type_system::Type;
 

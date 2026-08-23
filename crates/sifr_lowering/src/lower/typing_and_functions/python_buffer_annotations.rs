@@ -1,4 +1,4 @@
-use super::{invalid_type_annotation, resolve_annotation_expr, Expr, LowerCtx, Ranged, Type};
+use super::{Expr, LowerCtx, Ranged, Type, invalid_type_annotation, resolve_annotation_expr};
 
 pub(super) fn resolve_python_buffer_annotation(slice: &Expr, ctx: &mut LowerCtx) -> Type {
     if matches!(slice, Expr::Tuple(_)) {

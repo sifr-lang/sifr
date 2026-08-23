@@ -43,7 +43,7 @@ STDLIB_FEATURE_PAIR_RE = re.compile(
     r'Self::([A-Za-z0-9_]+)\s*=>\s*"([A-Za-z0-9_-]+)"'
 )
 DEPENDENCY_FEATURE_RE = re.compile(
-    r'StdlibFeature::([A-Za-z0-9_]+)\s*=>\s*(?:\{\s*)?&\["([A-Za-z0-9_-]+)\s+=',
+    r'StdlibFeature::([A-Za-z0-9_]+)\s*=>\s*(?:\{\s*)?&\[\s*"([A-Za-z0-9_-]+)\s+=',
     re.DOTALL,
 )
 CODEGEN_FEATURE_RE = re.compile(r"StdlibFeature::([A-Za-z0-9_]+)")
@@ -503,6 +503,30 @@ def _compare_sets(
 
 
 def _self_test() -> int:
+    dependency_plan_fixture = r"""
+        StdlibFeature::Alpha => &["alpha-dep = \"=1.0.0\""],
+        StdlibFeature::Beta => &[
+            "beta-dep = \"=1.0.0\"",
+        ],
+        StdlibFeature::Gamma => {
+            &[
+                "gamma-dep = \"=1.0.0\"",
+            ]
+        }
+    """
+    dependency_pairs = set(DEPENDENCY_FEATURE_RE.findall(dependency_plan_fixture))
+    expected_dependency_pairs = {
+        ("Alpha", "alpha-dep"),
+        ("Beta", "beta-dep"),
+        ("Gamma", "gamma-dep"),
+    }
+    if dependency_pairs != expected_dependency_pairs:
+        print(
+            "self-test retained dependency parser rejected rustfmt layouts",
+            file=sys.stderr,
+        )
+        return 1
+
     observed = {
         "exact_intrinsics": {"alpha"},
         "dispatch_intrinsics": {"alpha"},

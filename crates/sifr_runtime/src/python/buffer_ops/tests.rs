@@ -1,16 +1,17 @@
 use super::*;
 use crate::python::{
-    close_object, from_bytes, from_int, initialize_runtime, reset_runtime_state_for_tests,
-    resource_diagnostics, test_config, test_guard, PythonResourceDiagnostics,
-    PythonResourceIdentity,
+    PythonResourceDiagnostics, PythonResourceIdentity, close_object, from_bytes, from_int,
+    initialize_runtime, reset_runtime_state_for_tests, resource_diagnostics, test_config,
+    test_guard,
 };
 use pyo3::types::PyAnyMethods;
-use pyo3::{ffi, Bound};
+use pyo3::{Bound, ffi};
 use std::{mem::size_of, ptr};
 use std::{
     sync::{
+        Arc, Barrier,
         atomic::{AtomicBool, Ordering},
-        mpsc, Arc, Barrier,
+        mpsc,
     },
     time::Duration,
 };

@@ -1,6 +1,6 @@
 use crate::hir_nodes::{HirExpr, HirStmt};
 use sifr_python_ast::{Expr, Stmt, StmtIf};
-use sifr_type_system::{make_union, Type};
+use sifr_type_system::{Type, make_union};
 
 use super::LowerCtx;
 

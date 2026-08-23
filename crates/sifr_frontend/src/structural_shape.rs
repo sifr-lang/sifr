@@ -10,8 +10,8 @@ use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod methods;
-use methods::{described_exported_methods, described_methods};
 pub use methods::{ShapeMethod, ShapeParameter};
+use methods::{described_exported_methods, described_methods};
 mod nominal_types;
 use nominal_types::{describe_enum, describe_newtype};
 mod canonical_helpers;

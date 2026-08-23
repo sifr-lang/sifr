@@ -82,7 +82,7 @@ def validate_cli_scenario(
         "package": {
             "name": "sifr-anyhow-surface-probe",
             "version": "0.1.0",
-            "edition": "2021",
+            "edition": "2024",
         },
         "lib": {"path": "src/lib.rs"},
         "dependencies": {"anyhow": {"workspace": True}},

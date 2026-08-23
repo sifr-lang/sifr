@@ -65,7 +65,7 @@ fn validate_all(items: &[IpcSchemaType]) -> Result<(), IpcPayloadEligibilityErro
 
 #[cfg(test)]
 mod tests {
-    use super::{validate_ipc_payload_type, IpcPayloadEligibilityError};
+    use super::{IpcPayloadEligibilityError, validate_ipc_payload_type};
     use crate::{IpcSchemaField, IpcSchemaType, IpcSchemaVariant};
 
     #[test]

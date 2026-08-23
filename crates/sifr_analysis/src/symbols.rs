@@ -452,27 +452,35 @@ mod tests {
         let index = SymbolIndex::build(revision(1, 1), &graph(), &analysis("main", "helper"));
         let readiness = index.bucket_readiness();
 
-        assert!(readiness
-            .iter()
-            .any(|bucket| bucket.id.kind == SymbolBucketKind::Workspace
-                && bucket.state == SymbolBucketReadinessState::Exact));
-        assert!(readiness
-            .iter()
-            .any(|bucket| bucket.id.kind == SymbolBucketKind::Package
-                && bucket.state == SymbolBucketReadinessState::Unavailable));
-        assert!(readiness
-            .iter()
-            .any(|bucket| bucket.id.kind == SymbolBucketKind::Stdlib
-                && bucket.state == SymbolBucketReadinessState::Unavailable));
+        assert!(
+            readiness
+                .iter()
+                .any(|bucket| bucket.id.kind == SymbolBucketKind::Workspace
+                    && bucket.state == SymbolBucketReadinessState::Exact)
+        );
+        assert!(
+            readiness
+                .iter()
+                .any(|bucket| bucket.id.kind == SymbolBucketKind::Package
+                    && bucket.state == SymbolBucketReadinessState::Unavailable)
+        );
+        assert!(
+            readiness
+                .iter()
+                .any(|bucket| bucket.id.kind == SymbolBucketKind::Stdlib
+                    && bucket.state == SymbolBucketReadinessState::Unavailable)
+        );
         assert!(readiness.iter().any(|bucket| {
             bucket.id.kind == SymbolBucketKind::Workspace
                 && bucket.id.module == Some(ModuleId::new(1))
                 && bucket.state == SymbolBucketReadinessState::Exact
         }));
-        assert!(readiness
-            .iter()
-            .any(|bucket| bucket.id.kind == SymbolBucketKind::Workspace
-                && bucket.import_entry_count > 0));
+        assert!(
+            readiness
+                .iter()
+                .any(|bucket| bucket.id.kind == SymbolBucketKind::Workspace
+                    && bucket.import_entry_count > 0)
+        );
         assert_eq!(index.workspace_import_symbols("helper").len(), 1);
     }
 

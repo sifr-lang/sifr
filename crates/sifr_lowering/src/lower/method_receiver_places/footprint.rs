@@ -1,6 +1,6 @@
 use super::{
-    extract_place, resolve_field_identity, root_binding_id, HirExpr, LowerCtx, Place,
-    PlaceProjection,
+    HirExpr, LowerCtx, Place, PlaceProjection, extract_place, resolve_field_identity,
+    root_binding_id,
 };
 use crate::hir_nodes::HirFStringPart;
 use sifr_ir::{BindingId, FieldIdentity};

@@ -298,9 +298,9 @@ pub fn decode_frame(bytes: &[u8], max_frame_bytes: u32) -> Result<IpcEnvelope, I
 #[cfg(test)]
 mod tests {
     use super::{
-        decode_frame, encode_frame, IpcEnvelope, IpcFrameError, IpcMalformedKind, IpcRejectReason,
+        IPC_DEFAULT_MAX_FRAME_BYTES, IpcEnvelope, IpcFrameError, IpcMalformedKind, IpcRejectReason,
         IpcShutdownMode, IpcTerminationReason, IpcWireFrameKind, IpcWireSchema, IpcWorkerState,
-        IPC_DEFAULT_MAX_FRAME_BYTES,
+        decode_frame, encode_frame,
     };
 
     fn sample_schema() -> IpcWireSchema {

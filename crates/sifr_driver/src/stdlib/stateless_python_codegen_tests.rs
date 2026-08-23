@@ -31,16 +31,20 @@ fn python_primitive_constructors_codegen_through_sifr_stdlib() {
         );
     }
     assert!(private_code.rust.contains("PythonError { message: __sifr_bridge_error.message.to_string(), kind: __sifr_bridge_error.kind.to_string(), exception_type: __sifr_bridge_error.exception_type.to_string(), traceback: __sifr_bridge_error.traceback.to_string(), context: __sifr_bridge_error.context.to_string(), __sifr_python_error: Some(__sifr_bridge_error) }"));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.python_core")
-        .is_some_and(|deps| deps.contains("_sifr.python")));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.python")
-        .is_some_and(|deps| deps.contains("_sifr.python")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.python_core")
+            .is_some_and(|deps| deps.contains("_sifr.python"))
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.python")
+            .is_some_and(|deps| deps.contains("_sifr.python"))
+    );
 }
 
 #[test]
@@ -76,12 +80,16 @@ fn python_primitive_extractors_codegen_through_sifr_stdlib() {
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::python::py_to_int(object)"));
-    assert!(private_code
-        .rust
-        .contains("__sifr_bridge_ok.to_i64_saturating()"));
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::python::py_to_int(object)")
+    );
+    assert!(
+        private_code
+            .rust
+            .contains("__sifr_bridge_ok.to_i64_saturating()")
+    );
 }
 
 #[test]
@@ -106,9 +114,11 @@ fn python_object_core_codegen_through_sifr_stdlib() {
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::python::py_get_attr(object, name)"));
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::python::py_get_attr(object, name)")
+    );
     assert!(!private_code.rust.contains("SifrIntBridge::from(handle)"));
     assert!(!private_code.rust.contains("SifrIntBridge::from(token)"));
 }
@@ -300,9 +310,11 @@ fn python_callback_helpers_codegen_through_sifr_stdlib() {
         );
     }
     assert!(private_code.rust.contains("handler(&__sifr_callback_arg)"));
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::python::PythonError"));
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::python::PythonError")
+    );
     let compact_private: String = private_code
         .rust
         .chars()

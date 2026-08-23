@@ -1,7 +1,7 @@
 use sifr_ir::HirExpr;
 
 use crate::{
-    resolve_alias_type_for_plain_call, RustEmitter, RustExpr, RustParam, RustStmt, RustType, Type,
+    RustEmitter, RustExpr, RustParam, RustStmt, RustType, Type, resolve_alias_type_for_plain_call,
 };
 
 impl RustEmitter {

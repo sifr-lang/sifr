@@ -2,9 +2,9 @@
 #![allow(clippy::expect_used)]
 
 use sifr_ipc::{
-    read_frame, write_frame, IpcConnectionConfig, IpcConnectionState, IpcEnvelope,
-    IpcMalformedKind, IpcShutdownMode, IpcTerminationReason, IpcWireSchema,
-    IPC_DEFAULT_MAX_FRAME_BYTES,
+    IPC_DEFAULT_MAX_FRAME_BYTES, IpcConnectionConfig, IpcConnectionState, IpcEnvelope,
+    IpcMalformedKind, IpcShutdownMode, IpcTerminationReason, IpcWireSchema, read_frame,
+    write_frame,
 };
 use std::io::Write;
 use std::path::{Path, PathBuf};

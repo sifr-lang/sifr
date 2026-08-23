@@ -1,5 +1,5 @@
-use super::typing_and_functions::resolve_annotation_expr;
 use super::LowerCtx;
+use super::typing_and_functions::resolve_annotation_expr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Stmt, TypeParam};

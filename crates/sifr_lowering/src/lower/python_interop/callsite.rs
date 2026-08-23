@@ -1,4 +1,4 @@
-use super::{callbacks, decorator_path, parameter_metadata, LowerCtx};
+use super::{LowerCtx, callbacks, decorator_path, parameter_metadata};
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{HirExpr, PythonCallbackConcurrency, PythonCallbackDispatch, PythonCallbackLifetime};

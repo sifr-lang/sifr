@@ -1,7 +1,7 @@
 use super::{
+    ChannelMetadata, PreviewChannel, PreviewVersion, TargetRequest, UpdateAction,
     resolve_update_plan,
     tests::{active_metadata, digest_evidence, metadata_payload, release},
-    ChannelMetadata, PreviewChannel, PreviewVersion, TargetRequest, UpdateAction,
 };
 use serde_json::json;
 

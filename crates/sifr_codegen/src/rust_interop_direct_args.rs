@@ -1,3 +1,4 @@
+use crate::RustExpr;
 use crate::rust_interop_callback::{
     call_scoped_callback_adapter_expr, call_scoped_callbacks, threadsafe_callback_adapter_expr,
 };
@@ -5,7 +6,6 @@ use crate::rust_interop_direct::{i64_vec_to_bridge_int_vec_expr, sifr_int_bridge
 use crate::rust_interop_direct_collections::{
     argument_composite_conversion_required, sifr_composite_to_bridge_expr,
 };
-use crate::RustExpr;
 use sifr_ir::{HirFunction, HirParam, RustTargetPath};
 use sifr_type_system::Type;
 

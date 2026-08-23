@@ -1,6 +1,6 @@
 use crate::{
-    hir_analysis::traversal::{self, TraversalConfig},
     RustEmitter,
+    hir_analysis::traversal::{self, TraversalConfig},
 };
 use sifr_ir::{HirExpr, HirStmt};
 use sifr_type_system::Type;

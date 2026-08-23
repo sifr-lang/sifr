@@ -1,11 +1,11 @@
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
-    apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
+    PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
 };
 use super::rust_interop_contract_tests::{
     interop_errors, package_context, set_bridge_roots, temp_package_root,
 };
-use sifr_codegen::{generate_rust_multi_with_metadata, StdlibCode};
+use sifr_codegen::{StdlibCode, generate_rust_multi_with_metadata};
 use sifr_package::TrustPolicy;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -99,9 +99,11 @@ fn package_rust_interop_rejects_callback_policy_without_rust_target() {
         "callback metadata without target should fail",
     );
     assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("must accompany a `@rust(...)` target declaration"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("must accompany a `@rust(...)` target declaration")
+    );
 }
 
 #[test]
@@ -134,9 +136,11 @@ fn package_rust_interop_rejects_call_scoped_callback_across_async_boundary() {
         "call-scoped callback across async boundary should fail",
     );
     assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("cannot cross an async boundary"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("cannot cross an async boundary")
+    );
 }
 
 #[test]
@@ -156,9 +160,11 @@ fn package_rust_interop_rejects_call_scoped_callback_with_async_policy() {
         "explicit async callback policy should fail",
     );
     assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("cannot cross an async boundary"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("cannot cross an async boundary")
+    );
 }
 
 #[test]
@@ -185,9 +191,11 @@ fn package_rust_interop_rejects_call_scoped_callback_without_panic_boundary() {
         "callback without recoverable panic boundary should fail",
     );
     assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("recoverable outer panic boundary"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("recoverable outer panic boundary")
+    );
 }
 
 #[test]
@@ -345,9 +353,11 @@ fn package_rust_interop_rejects_mutable_call_scoped_callback_parameter() {
         "mutable callback parameter should fail",
     );
     assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("cannot be declared `mut`; remove `mut`"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("cannot be declared `mut`; remove `mut`")
+    );
 }
 
 #[test]
@@ -422,9 +432,11 @@ fn package_rust_interop_rejects_duplicate_callback_contracts() {
         "duplicate callback contract should fail",
     );
     assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("only one `@rust.callback(...)` contract"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("only one `@rust.callback(...)` contract")
+    );
 }
 
 fn generated_from_source(source: &str) -> GeneratedBinaryProject {

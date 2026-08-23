@@ -1,7 +1,7 @@
+use super::LowerCtx;
 use super::sequence_guard_detection::detect_range_sequence_guards;
 use super::sequence_guards::SequenceGuard;
 use super::sequence_shapes::SequenceShapeFact;
-use super::LowerCtx;
 use sifr_python_ast::{Expr, Stmt, StmtFor};
 
 pub(in crate::lower) fn record_append_growth_sequence_shape_fact(

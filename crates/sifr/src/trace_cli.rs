@@ -1,6 +1,6 @@
 use crate::cli_model_and_entrypoint::{
-    read_source, resolve_compilation_mode, run_with_panic_boundary, CompilationMode,
-    DiagnosticFormat, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS,
+    CompilationMode, DiagnosticFormat, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS, read_source,
+    resolve_compilation_mode, run_with_panic_boundary,
 };
 use crate::diagnostic_rendering_and_run::render_diagnostics;
 use sifr_frontend::{

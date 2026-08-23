@@ -1,8 +1,8 @@
 use super::builtin_calls::{DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
-use super::{infer_type_var_bindings, substitute_type_vars, LowerCtx};
+use super::{LowerCtx, infer_type_var_bindings, substitute_type_vars};
 use super::{str, typing_and_functions};
 use sifr_python_ast::{CmpOp, Expr, ExprCall, Operator};
-use sifr_type_system::{type_check_binary_op, FunctionType, Type};
+use sifr_type_system::{FunctionType, Type, type_check_binary_op};
 use std::collections::HashMap;
 
 mod state_collection;
@@ -14,9 +14,9 @@ use expression_inference::{
 };
 mod defaultdict_inference;
 use defaultdict_inference::{
-    defaultdict_shape_expr_is_lowering_exact, infer_defaultdict_call_type,
+    DefaultdictMethodCall, defaultdict_shape_expr_is_lowering_exact, infer_defaultdict_call_type,
     is_unresolved_defaultdict_inference_type, refine_defaultdict_method_call,
-    refine_defaultdict_subscript, unify_matching_defaultdict_aliases, DefaultdictMethodCall,
+    refine_defaultdict_subscript, unify_matching_defaultdict_aliases,
 };
 mod type_unification;
 use type_unification::{

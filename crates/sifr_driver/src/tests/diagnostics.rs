@@ -226,10 +226,12 @@ fn test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics() {
     }
     let bounded = apply_diagnostic_recovery_limits(&diagnostics);
     assert_eq!(bounded.len(), 6);
-    assert!(bounded
-        .iter()
-        .take(5)
-        .all(|diag| diag.message == "type mismatch: expected 'int', got 'str'"));
+    assert!(
+        bounded
+            .iter()
+            .take(5)
+            .all(|diag| diag.message == "type mismatch: expected 'int', got 'str'")
+    );
     assert_eq!(bounded[5].code, "SIFR-INTERNAL-0002");
     assert_eq!(bounded[5].severity, Severity::Note);
     assert_eq!(
@@ -272,7 +274,9 @@ fn test_apply_diagnostic_recovery_limits_keeps_distinct_reveal_types_until_top_l
     );
     assert_eq!(
         bounded.last().map(|diagnostic| diagnostic.message.as_str()),
-        Some("11 additional reveal_type results omitted by recovery cap (top-level diagnostic stream)")
+        Some(
+            "11 additional reveal_type results omitted by recovery cap (top-level diagnostic stream)"
+        )
     );
 }
 

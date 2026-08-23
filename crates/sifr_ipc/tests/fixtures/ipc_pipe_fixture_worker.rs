@@ -1,10 +1,10 @@
 use sifr_ipc::{
-    read_frame, write_frame, IpcConnectionConfig, IpcConnectionError, IpcConnectionState,
+    IPC_DEFAULT_MAX_FRAME_BYTES, IpcConnectionConfig, IpcConnectionError, IpcConnectionState,
     IpcEnvelope, IpcHandshakeDecision, IpcMalformedKind, IpcRequestTrackerError, IpcShutdownMode,
-    IpcTerminationReason, IpcWireSchema, IPC_DEFAULT_MAX_FRAME_BYTES,
+    IpcTerminationReason, IpcWireSchema, read_frame, write_frame,
 };
 use std::env;
-use std::io::{stdin, stdout, StdinLock, StdoutLock};
+use std::io::{StdinLock, StdoutLock, stdin, stdout};
 
 const UNSUPPORTED_PREFIX: &[u8] = b"unsupported:";
 const DEFAULT_SCHEMA_HASH: [u8; 16] = 0x4733_c89f_b23a_40ec_b5f3_bcda_99fb_34da_u128.to_be_bytes();

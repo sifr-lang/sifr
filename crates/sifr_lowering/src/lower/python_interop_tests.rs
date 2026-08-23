@@ -1,4 +1,4 @@
-use crate::{lower_module, HirDiagnostic, HirExpr, HirModule, HirStmt};
+use crate::{HirDiagnostic, HirExpr, HirModule, HirStmt, lower_module};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{
     HirClassKind, HirWithItemKind, PythonCleanupPolicy, PythonInteropEffect, PythonParameterKind,
@@ -77,9 +77,11 @@ class PythonError(Error):
 def compute(value: int) -> Result[int, PythonError]: ...
 "#,
     );
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYIMP_INVALID_TARGET)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYIMP_INVALID_TARGET))
+    );
 }
 
 #[test]
@@ -97,9 +99,11 @@ class PythonError(Error):
 def compute(value: int) -> Result[int, PythonError]: ...
 ",
     );
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE))
+    );
 }
 
 #[test]
@@ -233,9 +237,11 @@ fn context_opaque_retains_protocol_declarations_and_context_only_obligation() {
 #[test]
 fn invalid_python_context_declaration_reports_pyctx_0001() {
     let errors = lower_errors(&CONTEXT_OPAQUE_PREFIX.replace("cause: ExitCause", "cause: int"));
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYCTX_INVALID_DECLARATION)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYCTX_INVALID_DECLARATION))
+    );
 }
 
 #[test]
@@ -776,9 +782,11 @@ def compute(value: int) -> Result[int, PythonError]:
     return Ok(value)
 ",
     );
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE))
+    );
 }
 
 #[test]
@@ -800,9 +808,11 @@ async def use_sqrt():
     await sleep(0.0)
 ",
     );
-    assert!(errors
-        .iter()
-        .any(|error| { error.code == Some(DiagnosticCode::ASYNC_DIRECT_BLOCKING_IO_CALL) }));
+    assert!(
+        errors
+            .iter()
+            .any(|error| { error.code == Some(DiagnosticCode::ASYNC_DIRECT_BLOCKING_IO_CALL) })
+    );
 }
 
 #[test]

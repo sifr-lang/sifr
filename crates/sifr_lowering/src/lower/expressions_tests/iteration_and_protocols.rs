@@ -1,5 +1,5 @@
 use super::*;
-use crate::lower::{expressions::lower_named_expr, LowerCtx};
+use crate::lower::{LowerCtx, expressions::lower_named_expr};
 #[test]
 pub(super) fn test_iter_rejects_heterogeneous_tuple_argument() {
     let result = lower_source(
@@ -23,8 +23,9 @@ pub(super) fn test_for_accepts_homogeneous_tuple_iterable() {
 
 #[test]
 pub(super) fn test_for_rejects_heterogeneous_tuple_iterable() {
-    let result =
-        lower_source("def main():\n    values: tuple[int, str] = (1, \"x\")\n    for value in values:\n        print(value)\n");
+    let result = lower_source(
+        "def main():\n    values: tuple[int, str] = (1, \"x\")\n    for value in values:\n        print(value)\n",
+    );
     assert!(result.is_err());
     let errors = result.unwrap_err();
     assert!(errors.iter().any(|e| {
@@ -38,9 +39,11 @@ pub(super) fn test_next_rejects_plain_iterable_argument() {
     let result = lower_source("def main():\n    values: list[int] = [1, 2, 3]\n    next(values)\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("next() argument must be an iterator")));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("next() argument must be an iterator"))
+    );
 }
 
 #[test]
@@ -112,8 +115,7 @@ pub(super) fn test_generator_function_infers_iterator_return_type() {
 
 #[test]
 pub(super) fn test_generator_function_rejects_non_iterator_annotation() {
-    let source =
-        "def count_up(n: int) -> list[int]:\n    i: int = 0\n    while i < n:\n        yield i\n        i = i + 1\n";
+    let source = "def count_up(n: int) -> list[int]:\n    i: int = 0\n    while i < n:\n        yield i\n        i = i + 1\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -329,8 +331,7 @@ def main():
 
 #[test]
 pub(super) fn test_reversed_rejects_non_reversible_iterator_argument() {
-    let source =
-        "def main():\n    nums: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(nums)\n    _rev = reversed(it)\n";
+    let source = "def main():\n    nums: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(nums)\n    _rev = reversed(it)\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -419,8 +420,7 @@ pub(super) fn test_enumerate_arity_and_unpacked_keyword_errors_have_codes() {
                 ))
     }));
 
-    let unpacked_source =
-        "def main():\n    nums: list[int] = [1, 2]\n    kwargs: dict[str, int] = {\"start\": 1}\n    _items = enumerate(nums, **kwargs)\n";
+    let unpacked_source = "def main():\n    nums: list[int] = [1, 2]\n    kwargs: dict[str, int] = {\"start\": 1}\n    _items = enumerate(nums, **kwargs)\n";
     let unpacked_result = lower_source(unpacked_source);
     assert!(unpacked_result.is_err());
     let unpacked_errors = unpacked_result.unwrap_err();
@@ -448,9 +448,10 @@ pub(super) fn test_reversible_annotation_accepts_list_and_rejects_set() {
     );
     assert!(err.is_err());
     let errors = err.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("expected 'Reversible[int]', got 'set[int]'")));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("expected 'Reversible[int]', got 'set[int]'")
+    }));
 }
 
 #[test]
@@ -635,9 +636,10 @@ pub(super) fn test_map_rejects_plain_list_annotation_without_materialization() {
     );
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("expected 'list[int]', got 'Iterator[int]'")));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("expected 'list[int]', got 'Iterator[int]'")
+    }));
 }
 
 #[test]
@@ -718,9 +720,10 @@ pub(super) fn test_filter_rejects_plain_list_annotation_without_materialization(
     );
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("expected 'list[int]', got 'Iterator[int]'")));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("expected 'list[int]', got 'Iterator[int]'")
+    }));
 }
 
 #[test]
@@ -749,8 +752,7 @@ pub(super) fn test_filter_argument_errors_have_codes() {
             && error.primary_range == Some(range_for_after_anchor(arity_source, "filter(", "pred"))
     }));
 
-    let iterable_source =
-        "def pred(x: int) -> bool:\n    return x > 0\n\ndef main():\n    _filtered = filter(pred, 1)\n";
+    let iterable_source = "def pred(x: int) -> bool:\n    return x > 0\n\ndef main():\n    _filtered = filter(pred, 1)\n";
     let iterable_result = lower_source(iterable_source);
     assert!(iterable_result.is_err());
     let iterable_errors = iterable_result.unwrap_err();
@@ -773,8 +775,7 @@ pub(super) fn test_filter_argument_errors_have_codes() {
             && error.primary_range == Some(range_for_after_anchor(callable_source, "filter(", "1"))
     }));
 
-    let return_source =
-        "def ident(x: int) -> int:\n    return x\n\ndef main():\n    nums: list[int] = [1, 2]\n    _filtered = filter(ident, nums)\n";
+    let return_source = "def ident(x: int) -> int:\n    return x\n\ndef main():\n    nums: list[int] = [1, 2]\n    _filtered = filter(ident, nums)\n";
     let return_result = lower_source(return_source);
     assert!(return_result.is_err());
     let return_errors = return_result.unwrap_err();

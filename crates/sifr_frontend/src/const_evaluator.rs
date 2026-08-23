@@ -664,7 +664,7 @@ fn len(arguments: &[ConstValue]) -> Result<ConstValue, ConstEvalError> {
             return error(
                 ConstEvalErrorKind::TypeMismatch,
                 "const value has no length",
-            )
+            );
         }
     };
     Ok(ConstValue::Integer(BigInt::from(length)))
@@ -686,7 +686,7 @@ fn stringify(arguments: &[ConstValue]) -> Result<ConstValue, ConstEvalError> {
             return error(
                 ConstEvalErrorKind::TypeMismatch,
                 "const value cannot be converted to str",
-            )
+            );
         }
     };
     Ok(ConstValue::String(value))

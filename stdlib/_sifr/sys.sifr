@@ -8,14 +8,6 @@ def run_command(cmd: str) -> Result[str, IOError]:
 def env_get(key: str) -> str | None:
     ...
 
-@rust(sifr_stdlib.sys.env_set)
-def env_set(key: str, value: str) -> None:
-    ...
-
-@rust(sifr_stdlib.sys.env_unset)
-def env_unset(key: str) -> None:
-    ...
-
 @rust(sifr_stdlib.sys.env_keys)
 def env_keys() -> list[str]:
     ...

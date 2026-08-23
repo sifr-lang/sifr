@@ -1,5 +1,5 @@
 use super::*;
-use crate::lower::{expressions::resolve_method_type, LowerCtx};
+use crate::lower::{LowerCtx, expressions::resolve_method_type};
 #[test]
 pub(super) fn test_min_max_missing_args_have_call_code() {
     let cases = [
@@ -91,8 +91,7 @@ pub(super) fn test_min_max_single_non_iterable_has_type_code() {
 
 #[test]
 pub(super) fn test_max_two_arg_rejects_optional_operand() {
-    let source =
-        "def pick(d: dict[str, int], k: str) -> int:\n    best = 0\n    best = max(best, d[k])\n    return best\n";
+    let source = "def pick(d: dict[str, int], k: str) -> int:\n    best = 0\n    best = max(best, d[k])\n    return best\n";
     let result = lower_source(source);
     assert!(result.is_err(), "max(i64, i64|None) should be rejected");
     let errors = result.unwrap_err();
@@ -242,8 +241,7 @@ pub(super) fn test_sorted_positional_and_duplicate_errors_have_codes() {
 
 #[test]
 pub(super) fn test_sorted_rejects_duplicate_iterable_argument() {
-    let source =
-        "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(nums, iterable=nums)\n";
+    let source = "def main():\n    nums: list[int] = [3, 1, 2]\n    ordered: list[int] = sorted(nums, iterable=nums)\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -352,18 +350,20 @@ pub(super) fn test_index_optional_keyword_duplicate_forms_are_rejected() {
         lower_source("def main():\n    xs: list[int] = [1, 2, 3]\n    xs.index(2, 0, start=1)\n");
     assert!(list_result.is_err());
     let list_errors = list_result.unwrap_err();
-    assert!(list_errors.iter().any(|e| e
-        .message
-        .contains("index() got multiple values for argument 'start'")));
+    assert!(list_errors.iter().any(|e| {
+        e.message
+            .contains("index() got multiple values for argument 'start'")
+    }));
 
     let tuple_result = lower_source(
         "def main():\n    pair: tuple[int, int, int] = (1, 2, 3)\n    pair.index(2, 0, 2, stop=3)\n",
     );
     assert!(tuple_result.is_err());
     let tuple_errors = tuple_result.unwrap_err();
-    assert!(tuple_errors.iter().any(|e| e
-        .message
-        .contains("index() got multiple values for argument 'stop'")));
+    assert!(tuple_errors.iter().any(|e| {
+        e.message
+            .contains("index() got multiple values for argument 'stop'")
+    }));
 }
 
 #[test]
@@ -503,8 +503,7 @@ pub(super) fn test_dict_method_type_mismatch_has_type_code() {
 
 #[test]
 pub(super) fn test_dict_get_default_keyword_type_mismatch_has_type_code_and_range() {
-    let source =
-        "def main():\n    data: dict[int, int] = {0: 1}\n    value = data.get(0, default=\"bad\")\n";
+    let source = "def main():\n    data: dict[int, int] = {0: 1}\n    value = data.get(0, default=\"bad\")\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -518,8 +517,7 @@ pub(super) fn test_dict_get_default_keyword_type_mismatch_has_type_code_and_rang
 
 #[test]
 pub(super) fn test_dict_pop_default_keyword_type_mismatch_has_type_code_and_range() {
-    let source =
-        "def main():\n    data: dict[int, int] = {0: 1}\n    value = data.pop(0, default=\"bad\")\n";
+    let source = "def main():\n    data: dict[int, int] = {0: 1}\n    value = data.pop(0, default=\"bad\")\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();

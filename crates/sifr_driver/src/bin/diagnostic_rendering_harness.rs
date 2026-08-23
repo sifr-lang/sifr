@@ -2,9 +2,9 @@
 
 use serde_json::Value;
 use sifr_diagnostics::RenderedDiagnostic;
-use sifr_driver::{check_package_project, check_project, check_single_file, PackageEntrypoint};
+use sifr_driver::{PackageEntrypoint, check_package_project, check_project, check_single_file};
 use sifr_package::{
-    derive_package_graph, parse_metadata_json, CargoCommandPlan, CargoLockMode, PackageSourceMap,
+    CargoCommandPlan, CargoLockMode, PackageSourceMap, derive_package_graph, parse_metadata_json,
 };
 use std::collections::BTreeSet;
 use std::env;

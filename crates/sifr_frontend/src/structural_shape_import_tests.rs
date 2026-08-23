@@ -1,6 +1,6 @@
 use crate::{
-    collect_module_exports, compile_module_hir, describe_type_with_externals,
-    FrontendDiagnosticStyle, ShapeNode,
+    FrontendDiagnosticStyle, ShapeNode, collect_module_exports, compile_module_hir,
+    describe_type_with_externals,
 };
 use sifr_lowering::{
     AdapterFieldDefault, AdapterFieldPlan, AdapterHandlerPlan, CallableIdentity,
@@ -451,14 +451,16 @@ class Parent[U](Grand[list[U]]):
         });
     }
     collect_module_exports("models", &models, &mut external_defs);
-    assert!(external_defs
-        .structural_methods_for("models")
-        .and_then(|classes| classes.get("Parent"))
-        .is_some_and(|methods| {
-            methods
-                .iter()
-                .any(|method| method.handler_target.as_ref() == Some(&callable))
-        }));
+    assert!(
+        external_defs
+            .structural_methods_for("models")
+            .and_then(|classes| classes.get("Parent"))
+            .is_some_and(|methods| {
+                methods
+                    .iter()
+                    .any(|method| method.handler_target.as_ref() == Some(&callable))
+            })
+    );
     external_defs.class_adapter_selections.remove("models");
 
     let mut consumer = compile(
@@ -682,9 +684,11 @@ class LocalUse:
     );
     collect_module_exports("models", &models, &mut external_defs);
     assert!(!external_defs.classes["models"].contains_key("_Hidden"));
-    assert!(external_defs
-        .structural_methods_for("models")
-        .is_some_and(|classes| classes.contains_key("_Hidden")));
+    assert!(
+        external_defs
+            .structural_methods_for("models")
+            .is_some_and(|classes| classes.contains_key("_Hidden"))
+    );
 
     let consumer = compile(
         "consumer",

@@ -9,7 +9,7 @@ use sifr_stdlib_manifest::StdlibFeature;
 use std::any::Any;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::io::Write;
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 
 #[derive(Debug)]
 pub enum CompileResult {

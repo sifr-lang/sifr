@@ -7,15 +7,14 @@ use std::str::FromStr;
 mod translation;
 
 use icu_collator::{
-    options::{CollatorOptions, Strength},
     Collator,
+    options::{CollatorOptions, Strength},
 };
 use icu_datetime::{
-    fieldsets,
+    DateTimeFormatter, fieldsets,
     input::{Date, DateTime, Time},
-    DateTimeFormatter,
 };
-use icu_decimal::{input::Decimal, DecimalFormatter};
+use icu_decimal::{DecimalFormatter, input::Decimal};
 use icu_locale::{Locale, LocaleCanonicalizer, LocaleExpander};
 use icu_plurals::{
     PluralCategory, PluralOperands, PluralRuleType, PluralRules, PluralRulesOptions,

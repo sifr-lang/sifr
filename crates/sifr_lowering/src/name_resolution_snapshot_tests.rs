@@ -1,5 +1,5 @@
-use crate::{lower_module, HirExpr, HirFunction, HirModule, HirStmt};
-use serde_json::{json, Value};
+use crate::{HirExpr, HirFunction, HirModule, HirStmt, lower_module};
+use serde_json::{Value, json};
 use sifr_python_parser::parse_module;
 use sifr_type_system::Type;
 use std::{fs, path::PathBuf};

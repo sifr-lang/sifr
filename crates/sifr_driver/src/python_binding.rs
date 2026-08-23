@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use sifr_package::{
-    python_binding_source_fingerprint, PythonBindingDistribution, PythonBindingSource,
-    PythonBindingSourceKind,
+    PythonBindingDistribution, PythonBindingSource, PythonBindingSourceKind,
+    python_binding_source_fingerprint,
 };
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
@@ -544,9 +544,11 @@ mod tests {
         };
         let errors = render_python_binding_scaffold("sample", &["pow".to_string()], &report)
             .expect_err("optional positional-only declarations must fail closed");
-        assert!(errors
-            .iter()
-            .any(|error| { error.contains("optional positional-only parameter 'exponent'") }));
+        assert!(
+            errors
+                .iter()
+                .any(|error| { error.contains("optional positional-only parameter 'exponent'") })
+        );
     }
 
     #[test]
@@ -585,9 +587,11 @@ mod tests {
             &report,
         )
         .expect("same-module annotations should render");
-        assert!(scaffold
-            .source
-            .contains("def use_client(client: Client) -> Result[list[Client], PythonError]: ..."));
+        assert!(
+            scaffold.source.contains(
+                "def use_client(client: Client) -> Result[list[Client], PythonError]: ..."
+            )
+        );
     }
 
     #[test]

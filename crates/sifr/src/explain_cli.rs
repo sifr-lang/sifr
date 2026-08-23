@@ -1,9 +1,9 @@
 use super::cli_model_and_entrypoint::{
-    diagnostic_with_code, DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
+    DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, diagnostic_with_code,
 };
 use super::diagnostic_rendering_and_run::render_diagnostics;
-use sifr_diagnostics::codes::registry_entry;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::codes::registry_entry;
 #[cfg(debug_assertions)]
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use std::io::{self, Write as _};

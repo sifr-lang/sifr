@@ -1,6 +1,6 @@
 use sifr_type_system::Type;
 
-use crate::{render_expr, RustExpr};
+use crate::{RustExpr, render_expr};
 
 pub(super) fn argument_composite_conversion_required(ty: &Type) -> bool {
     matches!(ty.resolve_alias(), Type::Union(members) if optional_inner(members).is_some())

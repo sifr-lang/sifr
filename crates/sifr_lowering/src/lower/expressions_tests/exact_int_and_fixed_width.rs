@@ -651,8 +651,8 @@ def main() -> None:
 }
 
 #[test]
-pub(super) fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_generic_specialization(
-) {
+pub(super) fn test_promoted_fixed_width_result_is_not_implicitly_narrowed_in_generic_specialization()
+ {
     let source = "\
 class Box[T]:
     value: T
@@ -685,11 +685,12 @@ pub(super) fn test_reassignment_type_mismatch_has_primary_range() {
     let source = "def main():\n    value = 1\n    value = \"not an int\"\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected reassignment type mismatch");
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("cannot assign 'str' to variable 'value'")
-        && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
-        && e.primary_range == Some(range_for(source, "\"not an int\""))));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("cannot assign 'str' to variable 'value'")
+            && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && e.primary_range == Some(range_for(source, "\"not an int\""))
+    }));
 }
 
 #[test]
@@ -697,11 +698,13 @@ pub(super) fn test_return_type_mismatch_has_primary_range() {
     let source = "def main() -> int:\n    return \"no\"\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected return type mismatch");
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("return type mismatch")
-            && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
-            && e.primary_range == Some(range_for(source, "\"no\""))));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("return type mismatch")
+                && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && e.primary_range == Some(range_for(source, "\"no\"")))
+    );
 }
 
 #[test]
@@ -709,11 +712,12 @@ pub(super) fn test_function_argument_type_mismatch_has_primary_range() {
     let source = "def takes_int(value: int) -> int:\n    return value\n\ndef main():\n    result: int = takes_int(\"bad\")\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected argument type mismatch");
-    assert!(errors.iter().any(|e| e
-        .message
-        .contains("argument 1 ('value') of function 'takes_int'")
-        && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
-        && e.primary_range == Some(range_for(source, "\"bad\""))));
+    assert!(errors.iter().any(|e| {
+        e.message
+            .contains("argument 1 ('value') of function 'takes_int'")
+            && e.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && e.primary_range == Some(range_for(source, "\"bad\""))
+    }));
 }
 
 #[test]
@@ -731,10 +735,12 @@ pub(super) fn test_if_expression_branch_mismatch_has_primary_range() {
     let source = "def main():\n    x: str | int = \"yes\" if True else 42\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected if-expression branch mismatch");
-    assert!(errors
-        .iter()
-        .any(|e| e.code == Some(DiagnosticCode::TYPE_IF_BRANCH_MISMATCH)
-            && e.primary_range == Some(range_for(source, "42"))));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.code == Some(DiagnosticCode::TYPE_IF_BRANCH_MISMATCH)
+                && e.primary_range == Some(range_for(source, "42")))
+    );
 }
 
 #[test]
@@ -753,9 +759,11 @@ pub(super) fn test_undefined_variable() {
     let result = lower_source("def main():\n    print(x)\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("undefined variable")));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("undefined variable"))
+    );
 }
 
 #[test]
@@ -764,9 +772,11 @@ pub(super) fn test_failed_assignment_rhs_still_seeds_followup_binding() {
         lower_source("def main(xs: list[int]) -> int:\n    s = xs[0] + xs[0]\n    return s\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("unsupported operand type(s) for +")));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("unsupported operand type(s) for +"))
+    );
     assert!(
         !errors
             .iter()
@@ -788,9 +798,11 @@ pub(super) fn test_failed_annotated_assignment_rhs_still_seeds_followup_binding(
         lower_source("def main(xs: list[int]) -> int:\n    s: int = xs[0] + xs[0]\n    return s\n");
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|e| e.message.contains("unsupported operand type(s) for +")));
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.message.contains("unsupported operand type(s) for +"))
+    );
     assert!(
         !errors
             .iter()

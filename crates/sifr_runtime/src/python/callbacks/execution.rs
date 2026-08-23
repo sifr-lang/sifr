@@ -1,4 +1,4 @@
-use super::super::{object_ops, ObjectHandle, PythonError};
+use super::super::{ObjectHandle, PythonError, object_ops};
 use super::CallbackOwnerState;
 use pyo3::exceptions::{PyRuntimeError, PyTypeError};
 use pyo3::prelude::*;

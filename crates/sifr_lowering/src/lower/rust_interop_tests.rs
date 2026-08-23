@@ -1,4 +1,4 @@
-use crate::{lower_module, HirDiagnostic, HirModule, HirStmt};
+use crate::{HirDiagnostic, HirModule, HirStmt, lower_module};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropEffect, RustInteropValue};
 use sifr_python_parser::parse_module;
@@ -20,9 +20,11 @@ fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
 }
 
 fn assert_malformed(errors: &[HirDiagnostic]) {
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR))
+    );
 }
 
 #[test]
@@ -155,9 +157,11 @@ def digest(input: bytes) -> int:
     );
 
     assert_malformed(&errors);
-    assert!(errors.iter().all(|error| !error
-        .message
-        .contains("complete body of a Rust interop declaration")));
+    assert!(errors.iter().all(|error| {
+        !error
+            .message
+            .contains("complete body of a Rust interop declaration")
+    }));
 }
 
 #[test]
@@ -295,10 +299,12 @@ async def fetch(url: str) -> str:
 
     let function = &module.functions[0];
     assert_eq!(function.rust_interop.len(), 2);
-    assert!(function
-        .rust_interop
-        .iter()
-        .all(|declaration| { declaration.effect == RustInteropEffect::Async }));
+    assert!(
+        function
+            .rust_interop
+            .iter()
+            .all(|declaration| { declaration.effect == RustInteropEffect::Async })
+    );
     assert!(function.rust_interop.iter().any(|declaration| {
         declaration.kind == RustInteropDecoratorKind::Function
             && declaration.abi_requirements.async_boundary
@@ -329,9 +335,11 @@ async def query() -> int:
 ",
     );
 
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::RUST_ASYNC_CONTRACT)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::RUST_ASYNC_CONTRACT))
+    );
 }
 
 #[test]
@@ -724,11 +732,13 @@ def digest(input: bytes) -> int:
 ",
     );
 
-    assert!(module.functions[0].rust_interop[0]
-        .arguments
-        .iter()
-        .any(|arg| arg.name.as_deref() == Some("retry")
-            && arg.value == RustInteropValue::Integer(-1)));
+    assert!(
+        module.functions[0].rust_interop[0]
+            .arguments
+            .iter()
+            .any(|arg| arg.name.as_deref() == Some("retry")
+                && arg.value == RustInteropValue::Integer(-1))
+    );
 }
 
 #[test]
@@ -741,16 +751,20 @@ def tensor(input: bytes) -> int:
 ",
     );
 
-    assert!(module.functions[0].rust_interop[0]
-        .arguments
-        .iter()
-        .any(|arg| arg.name.as_deref() == Some("shape")
-            && arg.value == RustInteropValue::IntegerList(vec![2, 3])));
-    assert!(module.functions[0].rust_interop[0]
-        .arguments
-        .iter()
-        .any(|arg| arg.name.as_deref() == Some("strides")
-            && arg.value == RustInteropValue::IntegerList(vec![3, 1])));
+    assert!(
+        module.functions[0].rust_interop[0]
+            .arguments
+            .iter()
+            .any(|arg| arg.name.as_deref() == Some("shape")
+                && arg.value == RustInteropValue::IntegerList(vec![2, 3]))
+    );
+    assert!(
+        module.functions[0].rust_interop[0]
+            .arguments
+            .iter()
+            .any(|arg| arg.name.as_deref() == Some("strides")
+                && arg.value == RustInteropValue::IntegerList(vec![3, 1]))
+    );
 }
 
 #[test]
@@ -801,93 +815,6 @@ def digest(input: bytes) -> bytes:
 
     assert_malformed(&errors);
 }
-#[test]
-fn rust_interop_requires_the_canonical_positional_target() {
-    let errors = lower_errors(
-        r"
-@rust(crate=crc32fast, path=hash)
-def digest(input: bytes) -> bytes:
-    return input
-",
-    );
 
-    assert_malformed(&errors);
-}
-
-#[test]
-fn rust_interop_rejects_self_target_outside_methods() {
-    let errors = lower_errors(
-        r"
-@rust(Self.poll)
-def poll() -> int:
-    return 1
-",
-    );
-
-    assert_malformed(&errors);
-}
-
-#[test]
-fn rust_interop_rejects_opaque_on_functions() {
-    let errors = lower_errors(
-        r"
-@rust.opaque(type=bridge.kafka.Consumer)
-def digest(input: bytes) -> bytes:
-    return input
-",
-    );
-
-    assert_malformed(&errors);
-}
-
-#[test]
-fn rust_interop_rejects_function_decorators_on_classes() {
-    let errors = lower_errors(
-        r"
-@rust.async()
-class Consumer:
-    pass
-",
-    );
-
-    assert_malformed(&errors);
-}
-
-#[test]
-fn rust_interop_rejects_unknown_decorator_names() {
-    let errors = lower_errors(
-        r"
-@rust.unknown()
-def digest(input: bytes) -> bytes:
-    return input
-",
-    );
-
-    assert_malformed(&errors);
-}
-
-#[test]
-fn rust_interop_rejects_double_star_keyword_splat() {
-    let errors = lower_errors(
-        r"
-@rust(bridge.hash.digest, **options)
-def digest(input: bytes) -> bytes:
-    return input
-",
-    );
-
-    assert_malformed(&errors);
-}
-
-#[test]
-fn rust_interop_rejects_bare_rust_decorators() {
-    let errors = lower_errors(
-        r"
-@rust
-def digest(input: bytes) -> bytes:
-    return input
-",
-    );
-
-    assert_malformed(&errors);
-}
+#[path = "rust_interop_tests/decorator_validation_tests.rs"]
+mod decorator_validation_tests;

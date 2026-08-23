@@ -6,12 +6,12 @@ use super::parameter_conventions::{
 };
 use super::rust_opaque_validation as opaque;
 use super::{
-    collect_enum_variants, constructor_uninitialized_storage_at_first_self_use,
-    function_body_contains_yield, get_newtype_inner, has_decorator, is_enum_class,
-    is_operator_dunder, is_protocol_class, lower_function_stmts, missing_method_param_annotation,
-    resolve_annotation_expr, unsupported_class_declaration, Expr, FunctionType, HirClass,
-    HirClassKind, HirFunction, HirParam, LowerCtx, MethodKind, ParamConvention, Ranged, Stmt,
-    StmtClassDef, Type,
+    Expr, FunctionType, HirClass, HirClassKind, HirFunction, HirParam, LowerCtx, MethodKind,
+    ParamConvention, Ranged, Stmt, StmtClassDef, Type, collect_enum_variants,
+    constructor_uninitialized_storage_at_first_self_use, function_body_contains_yield,
+    get_newtype_inner, has_decorator, is_enum_class, is_operator_dunder, is_protocol_class,
+    lower_function_stmts, missing_method_param_annotation, resolve_annotation_expr,
+    unsupported_class_declaration,
 };
 use crate::lower::ownership_diagnostics;
 use crate::lower::python_interop::{
@@ -19,8 +19,8 @@ use crate::lower::python_interop::{
     has_python_interop_decorator_syntax, receiver_is_owned, validate_python_interop_signature,
 };
 use crate::lower::rust_interop::{
-    classify_rust_interop_stub_body, collect_rust_interop_declarations,
-    has_rust_interop_decorator_syntax, RustInteropOwner,
+    RustInteropOwner, classify_rust_interop_stub_body, collect_rust_interop_declarations,
+    has_rust_interop_decorator_syntax,
 };
 use sifr_type_system::ReceiverConvention;
 

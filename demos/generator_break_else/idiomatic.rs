@@ -1,4 +1,4 @@
-fn gen(flag: bool) -> impl Iterator<Item = i64> {
+fn r#gen(flag: bool) -> impl Iterator<Item = i64> {
     let mut i = 0_i64;
     let mut emitted_else = false;
 
@@ -25,10 +25,10 @@ fn gen(flag: bool) -> impl Iterator<Item = i64> {
 
 fn main() {
     println!("generator_break_else yield/loop-path coverage demo:");
-    for value in gen(false) {
+    for value in r#gen(false) {
         println!("{value}");
     }
-    for value in gen(true) {
+    for value in r#gen(true) {
         println!("{value}");
     }
 }

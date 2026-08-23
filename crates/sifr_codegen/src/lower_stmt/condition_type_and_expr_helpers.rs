@@ -1,6 +1,6 @@
 use super::{
-    try_lower_leaf_expr, HirExpr, RustExpr, RustLiteral, RustParam, RustStmt, RustType,
-    SimpleStmtBindings, Type,
+    HirExpr, RustExpr, RustLiteral, RustParam, RustStmt, RustType, SimpleStmtBindings, Type,
+    try_lower_leaf_expr,
 };
 pub(super) fn resolve_alias_type(ty: &Type) -> &Type {
     match ty {

@@ -1,6 +1,6 @@
 use crate::{
-    lower_module, ExternalDefs, HirDiagnostic, HirModule, LoweringOptions,
-    PythonBridgeTargetAuthority,
+    ExternalDefs, HirDiagnostic, HirModule, LoweringOptions, PythonBridgeTargetAuthority,
+    lower_module,
 };
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{PythonArrowSchemaMode, PythonInteropDecoratorKind, PythonParameterKind};
@@ -250,9 +250,11 @@ fn plain_method_move_parameters_follow_borrow_by_default() {
     let module = lower_ok(
         "class Sink[T]:\n    def send(self, value: T) -> None:\n        return None\n\ndef send_int(sink: Sink[int]) -> None:\n    sink.send(1)\n",
     );
-    assert!(module.classes[0].methods[0].params[0]
-        .convention
-        .is_borrowed());
+    assert!(
+        module.classes[0].methods[0].params[0]
+            .convention
+            .is_borrowed()
+    );
     let module = lower_ok(
         "class Sink[T]:\n    def send(self, own value: T) -> None:\n        return None\n",
     );
@@ -323,7 +325,9 @@ fn static_super_and_buffer_method_calls_consume_owned_arguments() {
     ] {
         let errors = lower_errors(&source);
         assert!(
-            errors.iter().any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
             "{source}: {errors:?}"
         );
     }

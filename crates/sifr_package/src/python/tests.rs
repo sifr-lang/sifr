@@ -1,6 +1,6 @@
 use super::test_support::{cargo_id, graph, package, package_id};
 use super::{
-    resolve_python_environment, resolve_python_environment_for_check, PythonEnvironmentResolution,
+    PythonEnvironmentResolution, resolve_python_environment, resolve_python_environment_for_check,
 };
 use crate::manifest::sifr::{PythonConfig, SifrManifest, TrustPolicy};
 use sifr_diagnostics::DiagnosticCode;

@@ -24,6 +24,7 @@ changes include:
 - Use `random.randint`, `random.random`, and `random.uniform`.
 - Use `platform.system`, `platform.machine`, `platform.node`, `platform.release`, `platform.version`, and `platform.processor`.
 - Use `time.time`, `time.strftime`, `sys.argv`, `sys.exit`, and the documented `sifr.env` names.
+- `sifr.env` is read-only. The former `setenv` and `unsetenv` functions are removed because process-wide environment mutation cannot satisfy Rust 2024 safety requirements in a concurrent native program. Configure the environment before starting Sifr instead.
 - Use `json.loads`, `json.dumps`, `tomllib.loads`, `fnmatch.filter`, `html.escape`, and `html.unescape`.
 - Use `calendar.isleap`, `calendar.weekday`, `calendar.monthrange`, `url.parse`, and `url.build`.
 - Use first-class `bytes` methods and bytes-native hashing. Encode text before hashing it.

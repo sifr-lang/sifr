@@ -1,8 +1,8 @@
+use super::LowerCtx;
 use super::classes::collect_literal_coverage;
 use super::expressions::lower_expr;
 use super::match_diagnostics;
 use super::statements::{bind_pattern_vars, lower_pattern, lower_stmts};
-use super::LowerCtx;
 use crate::hir_nodes::{HirMatchArm, HirPattern, HirStmt};
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;

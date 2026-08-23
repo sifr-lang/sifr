@@ -3,10 +3,10 @@ use ruff_text_size::{Ranged, TextRange};
 use sifr_python_ast::ExprCall;
 use sifr_type_system::Type;
 
+use super::LowerCtx;
 use super::builtin_calls::{callable_builtin_element_type, reject_zip_keywords_if_present};
 use super::expression_diagnostics;
 use super::expressions::{callable_signature, lower_expr, lower_lambda_with_context};
-use super::LowerCtx;
 
 fn first_keyword_range(call: &ExprCall) -> TextRange {
     call.arguments

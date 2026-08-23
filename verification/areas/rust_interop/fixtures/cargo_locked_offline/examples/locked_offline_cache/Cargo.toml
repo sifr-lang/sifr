@@ -2,12 +2,12 @@
 members = [
   "rust/locked_bridge",
 ]
-resolver = "2"
+resolver = "3"
 
 [package]
 name = "locked-offline-cache"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 locked_bridge = { path = "rust/locked_bridge" }

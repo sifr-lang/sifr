@@ -2,8 +2,8 @@ use crate::hir_snapshot_expr_projection::{
     async_with_kind_name, pattern_kind_name, project_expr, project_named_type, project_named_types,
     tuple_target_binding_name, type_name,
 };
-use crate::{lower_module, HirModule, HirStmt, HirWithItemKind};
-use serde_json::{json, Value};
+use crate::{HirModule, HirStmt, HirWithItemKind, lower_module};
+use serde_json::{Value, json};
 use sifr_python_parser::parse_module;
 use sifr_type_system::Type;
 use std::{fs, path::PathBuf};

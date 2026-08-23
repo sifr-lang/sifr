@@ -1,8 +1,8 @@
 //! Canonical identities for compiler-checked callable const values.
 
 use sifr_lowering::{
-    canonicalize_user_export_function_type, CallableIdentity, ExternalDefs, HirClass, HirClassKind,
-    HirFunction, LoweringResult, MethodKind,
+    CallableIdentity, ExternalDefs, HirClass, HirClassKind, HirFunction, LoweringResult,
+    MethodKind, canonicalize_user_export_function_type,
 };
 use sifr_python_ast::Expr;
 use sifr_type_system::{FunctionType, ParamConvention, Type};

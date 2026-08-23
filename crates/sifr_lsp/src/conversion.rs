@@ -1,7 +1,7 @@
 use crate::capabilities::{SEMANTIC_TOKEN_MODIFIERS, SEMANTIC_TOKEN_TYPES};
 use crate::errors::{LspError, LspResult};
 use ruff_text_size::{TextRange, TextSize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sifr_analysis::{
     CodeAction, CompletionItem, DeferredCodeAction, DiagnosticClass, DiagnosticId,
     DocumentHighlight, DocumentSymbol, FileId, FileTextEdits, FoldingRange, GeneratedRustPreview,

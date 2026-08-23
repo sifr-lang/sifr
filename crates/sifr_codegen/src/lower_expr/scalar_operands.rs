@@ -1,8 +1,9 @@
 use super::{
+    HirExpr, RustExpr, RustType,
     collections_and_comprehensions::{
         is_fixed_width_int_like_simple, is_int_like_simple, is_numeric_simple,
     },
-    try_lower_leaf_expr, HirExpr, RustExpr, RustType,
+    try_lower_leaf_expr,
 };
 
 pub(super) fn try_lower_simple_range_operand_expr(expr: &HirExpr) -> Option<RustExpr> {

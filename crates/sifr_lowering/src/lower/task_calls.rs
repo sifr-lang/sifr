@@ -1,3 +1,4 @@
+use super::LowerCtx;
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
 use super::offload_worker_captures::validate_offload_worker_captures;
@@ -5,7 +6,6 @@ use super::task_scope_calls::lower_task_scope_spawn_from_object_allowing_reserve
 use super::task_scope_calls::mark_task_handle_observed;
 use super::task_scope_calls::non_send_reason;
 use super::workload_annotations::WorkloadKind;
-use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;

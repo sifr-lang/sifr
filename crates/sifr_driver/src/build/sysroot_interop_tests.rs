@@ -3,7 +3,7 @@ use super::cargo_manifest::{
 };
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
-    apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
+    PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
 };
 use super::sysroot_interop::attach_stdlib_rust_interop;
 use crate::stdlib::{StdlibRustInterop, StdlibRustInteropModuleSource};
@@ -15,8 +15,8 @@ use sifr_package::{
 };
 use sifr_stdlib_manifest::{CargoVendorMode, SysrootCrate};
 use sifr_sysroot::{
-    ResolvedSysroot, SysrootManifest, SysrootPaths, COMPILER_SIFR_VERSION,
-    SUPPORTED_SYSROOT_SCHEMA_VERSION,
+    COMPILER_SIFR_VERSION, ResolvedSysroot, SUPPORTED_SYSROOT_SCHEMA_VERSION, SysrootManifest,
+    SysrootPaths,
 };
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::PathBuf;
@@ -64,9 +64,11 @@ fn private_stdlib_interop_rejects_omitted_policy_for_runtime_target() {
     };
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("canonical private `sifr_stdlib.*` targets"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("canonical private `sifr_stdlib.*` targets")
+    );
 }
 
 #[test]
@@ -106,13 +108,15 @@ fn sysroot_interop_dependency_plan_keeps_sysroot_vendor_mode() {
     .expect("source-tree sysroot resolves");
 
     assert_eq!(plan.cargo_vendor_mode, CargoVendorMode::SysrootOnly);
-    assert!(plan
-        .crates
-        .iter()
-        .any(|dependency| dependency.krate == SysrootCrate::SifrStdlib));
-    assert!(plan
-        .cache_fingerprint
-        .contains("[sysroot-interop-crates]\nsifr_stdlib\n"));
+    assert!(
+        plan.crates
+            .iter()
+            .any(|dependency| dependency.krate == SysrootCrate::SifrStdlib)
+    );
+    assert!(
+        plan.cache_fingerprint
+            .contains("[sysroot-interop-crates]\nsifr_stdlib\n")
+    );
     let trust = generated
         .interop
         .rust
@@ -146,23 +150,27 @@ fn merged_user_and_private_stdlib_interop_both_resolve() {
         apply_package_rust_interop_metadata(generated, context).expect("merged interop resolves");
 
     assert_eq!(generated.interop.rust.resolved_targets.len(), 2);
-    assert!(generated
-        .interop
-        .rust
-        .resolved_targets
-        .iter()
-        .any(|target| target.written_path == "bridge.user_noop"));
-    assert!(generated
-        .interop
-        .rust
-        .resolved_targets
-        .iter()
-        .any(|target| matches!(
-            &target.root,
-            RustInteropResolvedRoot::SysrootCrate {
-                dependency_name, ..
-            } if dependency_name == "sifr_stdlib"
-        )));
+    assert!(
+        generated
+            .interop
+            .rust
+            .resolved_targets
+            .iter()
+            .any(|target| target.written_path == "bridge.user_noop")
+    );
+    assert!(
+        generated
+            .interop
+            .rust
+            .resolved_targets
+            .iter()
+            .any(|target| matches!(
+                &target.root,
+                RustInteropResolvedRoot::SysrootCrate {
+                    dependency_name, ..
+                } if dependency_name == "sifr_stdlib"
+            ))
+    );
 }
 
 #[test]

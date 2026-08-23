@@ -1,7 +1,7 @@
-use super::{lower_source, lower_source_with_stdlib_collections, DiagnosticCode, HirStmt, Type};
+use super::{DiagnosticCode, HirStmt, Type, lower_source, lower_source_with_stdlib_collections};
+use crate::lower::LowerCtx;
 use crate::lower::builtin_calls::{DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
 use crate::lower::defaultdict_refinement::refine_defaultdict_int_augassign_key;
-use crate::lower::LowerCtx;
 
 fn defaultdict_binding_types(source: &str, binding: &str) -> (Type, Type) {
     let module = lower_source_with_stdlib_collections(source).expect("source should lower");

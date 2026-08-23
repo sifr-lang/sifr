@@ -1,6 +1,6 @@
 use crate::{
-    try_lower_leaf_expr, try_lower_leaf_expr_result, CodegenError, RustExpr, RustItem, RustLiteral,
-    RustMatchArm, RustStmt, RustType, Visibility,
+    CodegenError, RustExpr, RustItem, RustLiteral, RustMatchArm, RustStmt, RustType, Visibility,
+    try_lower_leaf_expr, try_lower_leaf_expr_result,
 };
 use sifr_ir::HirExpr;
 use sifr_type_system::Type;
@@ -247,9 +247,7 @@ pub(super) fn lower_large_module_int_const_item(
                         pattern: "Ok(value)".to_string(),
                         bindings: vec![],
                         guard: None,
-                        body: vec![RustStmt::Return(Some(RustExpr::Ident(
-                            "value".to_string(),
-                        )))],
+                        body: vec![RustStmt::Return(Some(RustExpr::Ident("value".to_string())))],
                     },
                     RustMatchArm {
                         pattern: "Err(err)".to_string(),

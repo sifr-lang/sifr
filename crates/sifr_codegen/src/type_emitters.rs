@@ -3,7 +3,7 @@ use crate::{
     Visibility,
 };
 use sifr_ir::{HirClass, HirFunction, MethodKind};
-use sifr_type_system::{source_class_rust_name, Type};
+use sifr_type_system::{Type, source_class_rust_name};
 
 impl RustEmitter {
     pub(crate) fn emit_protocol_trait(&mut self, class: &HirClass, _module_public: bool) {

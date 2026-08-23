@@ -1,8 +1,8 @@
 use super::{
-    apply_narrowing, detect_narrowing_condition, detect_true_nonzero_integer_guards,
-    detect_while_sequence_guards, lower_expr, lower_stmts, ownership_diagnostics,
-    restore_const_integer_state_after_branches, validate_control_flow_condition, FunctionType,
-    HirStmt, LowerCtx, Ranged, StmtWhile,
+    FunctionType, HirStmt, LowerCtx, Ranged, StmtWhile, apply_narrowing,
+    detect_narrowing_condition, detect_true_nonzero_integer_guards, detect_while_sequence_guards,
+    lower_expr, lower_stmts, ownership_diagnostics, restore_const_integer_state_after_branches,
+    validate_control_flow_condition,
 };
 
 pub(in crate::lower) fn lower_while(

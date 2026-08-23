@@ -4,13 +4,13 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, ExprCall};
 use sifr_type_system::Type;
 
+use super::LowerCtx;
 use super::builtin_calls::{callable_builtin_element_type, callable_builtin_list_output_type};
 use super::expression_diagnostics;
 use super::expressions::{
     callable_signature, consume_owned_value, lower_expr, lower_lambda_with_context,
 };
 use super::type_bounds::supports_total_order_in_context;
-use super::LowerCtx;
 
 fn first_call_keyword_range(call: &ExprCall) -> TextRange {
     call.arguments

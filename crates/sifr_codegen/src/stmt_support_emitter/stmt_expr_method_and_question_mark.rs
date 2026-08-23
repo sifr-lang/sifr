@@ -1,8 +1,8 @@
 use super::{
-    call_expr_parts, can_construct_error_from_message_for_ir, canonical_constructor_class_name,
+    HirExpr, HirFStringPart, RustEmitter, Type, call_expr_parts,
+    can_construct_error_from_message_for_ir, canonical_constructor_class_name,
     canonical_plain_call_name_for_ir, generic_call_target_for_ir,
     is_result_int_division_error_type, unwrap_compiler_verified_nonempty_pop_result_for_ir,
-    HirExpr, HirFStringPart, RustEmitter, Type,
 };
 
 fn is_imported_project_call_for_ir(

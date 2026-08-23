@@ -1,8 +1,8 @@
 use serde::Serialize;
 
 pub use super::digest_build_cache::{
-    digest_package_build_cache_inputs, digest_python_authoring_environment_probe,
-    digest_python_environment_probe, PackageBuildCacheInputs,
+    PackageBuildCacheInputs, digest_package_build_cache_inputs,
+    digest_python_authoring_environment_probe, digest_python_environment_probe,
 };
 pub use super::digest_cargo_metadata::digest_graph_inputs;
 pub use super::digest_package_graph::digest_package_graph;

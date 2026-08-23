@@ -1,8 +1,8 @@
 //! Concrete field types selected by finalized adapted generic declarations.
 
 use sifr_lowering::{
-    substitute_type_vars_with_class_scopes, AdapterFieldPlan, ExternalDefs, HirClass,
-    LoweringResult,
+    AdapterFieldPlan, ExternalDefs, HirClass, LoweringResult,
+    substitute_type_vars_with_class_scopes,
 };
 use sifr_type_system::Type;
 use std::collections::HashMap;

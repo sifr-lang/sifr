@@ -1,11 +1,11 @@
 use super::async_await::coroutine_result_type;
 use super::async_generator_advances::lower_anext_call;
 use super::builtin_calls::{
+    DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
     callable_builtin_element_type, lower_bytes_constructor_call, lower_chr_call,
     lower_dict_constructor_call, lower_isinstance_call, lower_len_call,
     lower_list_constructor_call, lower_ord_call, lower_range_call, lower_reveal_type_call,
-    lower_set_constructor_call, lower_tuple_constructor_call, DEFAULTDICT_INT_ALIAS,
-    DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+    lower_set_constructor_call, lower_tuple_constructor_call,
 };
 use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::call_argument_ranges::{call_argument_ranges_by_param, type_param_argument_range};
@@ -58,14 +58,14 @@ use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typevar_shape_compat::is_compatible_with_unresolved_typevars;
 use super::typing_and_functions::resolve_annotation_expr;
 use super::{
-    async_await, async_comprehension_diagnostics, async_comprehensions, async_generator_methods,
-    attribute_access, blocking_executor_calls, builtin_calls, collect_type_vars,
-    container_literal_diagnostics, decode_typevar_constraint, expression_operators,
-    fstring_support, if_expression, infer_type_var_bindings, integer_literals,
-    sequence_guard_detection, str, subscript_type, substitute_type_vars, task_calls, tuple_unpack,
-    workload_annotations, DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprLambda,
-    ExprListComp, ExprNamed, ExprSetComp, FunctionType, HashMap, HirExpr, HirIteratorOp, HirParam,
-    LowerCtx, ParamConvention, Ranged, TextRange, Type,
+    DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprLambda, ExprListComp,
+    ExprNamed, ExprSetComp, FunctionType, HashMap, HirExpr, HirIteratorOp, HirParam, LowerCtx,
+    ParamConvention, Ranged, TextRange, Type, async_await, async_comprehension_diagnostics,
+    async_comprehensions, async_generator_methods, attribute_access, blocking_executor_calls,
+    builtin_calls, collect_type_vars, container_literal_diagnostics, decode_typevar_constraint,
+    expression_operators, fstring_support, if_expression, infer_type_var_bindings,
+    integer_literals, sequence_guard_detection, str, subscript_type, substitute_type_vars,
+    task_calls, tuple_unpack, workload_annotations,
 };
 
 mod core_and_calls;
@@ -79,7 +79,7 @@ pub(in crate::lower) use generator_expression::lower_generator_expr;
 mod iterator_protocol_entry;
 pub(in crate::lower) use iterator_protocol_entry::lower_iterator_protocol_entry;
 mod call_builtins;
-use call_builtins::{lower_unshadowed_builtin_call, CallLowering};
+use call_builtins::{CallLowering, lower_unshadowed_builtin_call};
 mod call_shadowable_builtins;
 use call_shadowable_builtins::lower_shadowable_builtin_call;
 mod regular_calls;

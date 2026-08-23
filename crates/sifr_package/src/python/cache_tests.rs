@@ -1,7 +1,7 @@
 use super::test_support::{request, valid_probe};
 use crate::{
-    digest_package_build_cache_inputs, digest_python_authoring_environment_probe,
-    digest_python_environment_probe, PackageBuildCacheInputs, PythonDistributionProbe,
+    PackageBuildCacheInputs, PythonDistributionProbe, digest_package_build_cache_inputs,
+    digest_python_authoring_environment_probe, digest_python_environment_probe,
 };
 
 #[test]

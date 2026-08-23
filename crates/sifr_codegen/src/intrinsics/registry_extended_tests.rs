@@ -1,5 +1,5 @@
 use super::registry_core_tests::lower_intrinsic;
-use crate::{render_expr, RustExpr};
+use crate::{RustExpr, render_expr};
 use sifr_ir::CompilerIntrinsicId;
 
 #[test]
@@ -469,11 +469,13 @@ pub(crate) fn lowers_html_intrinsics_via_registry() {
 #[test]
 pub(crate) fn lowers_calendar_intrinsics_via_registry() {
     assert!(lower_intrinsic("calendar_isleap", &["year".to_string()]).is_none());
-    assert!(lower_intrinsic(
-        "calendar_weekday",
-        &["y".to_string(), "m".to_string(), "d".to_string()],
-    )
-    .is_none());
+    assert!(
+        lower_intrinsic(
+            "calendar_weekday",
+            &["y".to_string(), "m".to_string(), "d".to_string()],
+        )
+        .is_none()
+    );
     assert!(lower_intrinsic("calendar_monthrange", &["y".to_string(), "m".to_string()]).is_none());
 }
 

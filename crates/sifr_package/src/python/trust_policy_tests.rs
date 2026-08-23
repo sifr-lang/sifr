@@ -1,7 +1,7 @@
 use super::test_support::{graph, package, package_id};
 use super::{
-    resolve_python_environment, resolve_python_environment_with_requirements,
-    PythonRequirementContribution, PythonRequirementKind,
+    PythonRequirementContribution, PythonRequirementKind, resolve_python_environment,
+    resolve_python_environment_with_requirements,
 };
 use crate::manifest::sifr::{PythonConfig, TrustPolicy};
 use sifr_diagnostics::DiagnosticCode;
@@ -30,9 +30,11 @@ fn dependency_python_requirement_wildcard_is_rejected() {
     let diagnostics = resolve_python_environment(&graph, &package_id("app"))
         .expect_err("dependency wildcard must fail");
 
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.code == DiagnosticCode::PYTRUST_WILDCARD_REJECTED));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == DiagnosticCode::PYTRUST_WILDCARD_REJECTED)
+    );
 }
 
 #[test]
@@ -167,9 +169,11 @@ fn dependency_cannot_authorize_its_python_requirement() {
     let diagnostics = resolve_python_environment(&graph, &package_id("app"))
         .expect_err("dependency authorization must fail");
 
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.code == DiagnosticCode::PYENV_INVALID_CONFIG));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == DiagnosticCode::PYENV_INVALID_CONFIG)
+    );
 }
 
 #[test]

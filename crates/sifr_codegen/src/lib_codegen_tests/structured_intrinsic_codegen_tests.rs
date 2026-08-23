@@ -47,9 +47,11 @@ fn structured_intrinsic_supports_nested_intrinsic_arguments() {
 
     let generated = generate_rust_with_metadata(&module);
     assert!(generated.rust_source.contains("assert_eq!("));
-    assert!(generated
-        .rust_source
-        .contains("bytes(size) requires a non-negative size"));
+    assert!(
+        generated
+            .rust_source
+            .contains("bytes(size) requires a non-negative size")
+    );
     assert!(generated.lowering_stats.expr_structured > 0);
 }
 
@@ -74,8 +76,10 @@ fn structured_intrinsic_supports_typed_method_call_arguments() {
 
     let generated = generate_rust_with_metadata(&module);
     assert!(generated.rust_source.contains(".to_lowercase()"));
-    assert!(generated
-        .rust_source
-        .contains("u8::from_str_radix(pair_str, 16)"));
+    assert!(
+        generated
+            .rust_source
+            .contains("u8::from_str_radix(pair_str, 16)")
+    );
     assert!(generated.lowering_stats.expr_structured > 0);
 }

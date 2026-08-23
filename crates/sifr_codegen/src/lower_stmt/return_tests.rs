@@ -59,19 +59,21 @@ fn lowers_simple_bare_return_to_none_in_alias_option_context() {
 #[test]
 fn does_not_lower_bare_return_in_display_impl_context() {
     let stmt = HirStmt::Return { value: None };
-    assert!(try_lower_simple_stmt_with_ctx(
-        &stmt,
-        false,
-        &HashSet::new(),
-        &HashSet::new(),
-        SimpleStmtLoweringCtx {
-            return_type: None,
-            in_display_impl: true,
-            in_class_scope: false,
-            in_generator_closure: false,
-        },
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: None,
+                in_display_impl: true,
+                in_class_scope: false,
+                in_generator_closure: false,
+            },
+        )
+        .is_none()
+    );
 }
 
 #[test]
@@ -265,19 +267,21 @@ fn does_not_lower_non_leaf_option_return_passthrough_context() {
         }),
     };
     let option_ret = Type::Union(vec![Type::Int, Type::None]);
-    assert!(try_lower_simple_stmt_with_ctx(
-        &stmt,
-        false,
-        &HashSet::new(),
-        &HashSet::new(),
-        SimpleStmtLoweringCtx {
-            return_type: Some(&option_ret),
-            in_display_impl: false,
-            in_class_scope: false,
-            in_generator_closure: false,
-        },
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+                in_generator_closure: false,
+            },
+        )
+        .is_none()
+    );
 }
 
 #[test]
@@ -378,19 +382,21 @@ fn does_not_lower_non_leaf_none_typed_return_with_option_return_context() {
         }),
     };
     let option_ret = Type::Union(vec![Type::Int, Type::None]);
-    assert!(try_lower_simple_stmt_with_ctx(
-        &stmt,
-        false,
-        &HashSet::new(),
-        &HashSet::new(),
-        SimpleStmtLoweringCtx {
-            return_type: Some(&option_ret),
-            in_display_impl: false,
-            in_class_scope: false,
-            in_generator_closure: false,
-        },
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+                in_generator_closure: false,
+            },
+        )
+        .is_none()
+    );
 }
 
 #[test]
@@ -405,19 +411,21 @@ fn does_not_lower_non_leaf_alias_none_typed_return_with_option_return_context() 
         }),
     };
     let option_ret = Type::Union(vec![Type::Int, Type::None]);
-    assert!(try_lower_simple_stmt_with_ctx(
-        &stmt,
-        false,
-        &HashSet::new(),
-        &HashSet::new(),
-        SimpleStmtLoweringCtx {
-            return_type: Some(&option_ret),
-            in_display_impl: false,
-            in_class_scope: false,
-            in_generator_closure: false,
-        },
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+                in_generator_closure: false,
+            },
+        )
+        .is_none()
+    );
 }
 
 #[test]
@@ -557,19 +565,21 @@ fn does_not_lower_non_leaf_return_with_non_option_union_return_context() {
         }),
     };
     let union_ret = Type::Union(vec![Type::Int, Type::Str]);
-    assert!(try_lower_simple_stmt_with_ctx(
-        &stmt,
-        false,
-        &HashSet::new(),
-        &HashSet::new(),
-        SimpleStmtLoweringCtx {
-            return_type: Some(&union_ret),
-            in_display_impl: false,
-            in_class_scope: false,
-            in_generator_closure: false,
-        },
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&union_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+                in_generator_closure: false,
+            },
+        )
+        .is_none()
+    );
 }
 
 #[test]
@@ -577,19 +587,21 @@ fn lowers_return_in_class_scope() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::IntLiteral(5)),
     };
-    assert!(try_lower_simple_stmt_with_ctx(
-        &stmt,
-        false,
-        &HashSet::new(),
-        &HashSet::new(),
-        SimpleStmtLoweringCtx {
-            return_type: Some(&Type::Int),
-            in_display_impl: false,
-            in_class_scope: true,
-            in_generator_closure: false,
-        },
-    )
-    .is_some());
+    assert!(
+        try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&Type::Int),
+                in_display_impl: false,
+                in_class_scope: true,
+                in_generator_closure: false,
+            },
+        )
+        .is_some()
+    );
 }
 
 #[test]
@@ -650,17 +662,19 @@ fn does_not_lower_non_leaf_return_with_option_return_context() {
         }),
     };
     let option_ret = Type::Union(vec![Type::Int, Type::None]);
-    assert!(try_lower_simple_stmt_with_ctx(
-        &stmt,
-        false,
-        &HashSet::new(),
-        &HashSet::new(),
-        SimpleStmtLoweringCtx {
-            return_type: Some(&option_ret),
-            in_display_impl: false,
-            in_class_scope: false,
-            in_generator_closure: false,
-        },
-    )
-    .is_none());
+    assert!(
+        try_lower_simple_stmt_with_ctx(
+            &stmt,
+            false,
+            &HashSet::new(),
+            &HashSet::new(),
+            SimpleStmtLoweringCtx {
+                return_type: Some(&option_ret),
+                in_display_impl: false,
+                in_class_scope: false,
+                in_generator_closure: false,
+            },
+        )
+        .is_none()
+    );
 }

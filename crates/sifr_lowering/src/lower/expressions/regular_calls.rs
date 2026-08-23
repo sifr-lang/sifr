@@ -1,13 +1,13 @@
 use super::consume_owned_method_arguments;
 use super::{
+    DiagnosticCode, Expr, ExprCall, HashMap, HirExpr, LowerCtx, ParamConvention, Ranged, Type,
     call_argument_ranges_by_param, collect_type_vars, consume_owned_value, coroutine_result_type,
     decode_typevar_constraint, expression_diagnostics, infer_type_var_bindings,
     is_compatible_with_unresolved_typevars, is_poisoned_binding_expr, lower_expr,
     lower_function_call_args, lower_name, lower_python_function_call_args,
     lower_signature_call_args, name_diagnostics, ownership_diagnostics, protocol_diagnostics,
     refine_constructor_return_type_from_args, substitute_type_vars, tsc, type_param_argument_range,
-    type_satisfies_bound, type_satisfies_constraint, DiagnosticCode, Expr, ExprCall, HashMap,
-    HirExpr, LowerCtx, ParamConvention, Ranged, Type,
+    type_satisfies_bound, type_satisfies_constraint,
 };
 use crate::lower::type_bounds::supports_print_formatting;
 use crate::lower::{ipc_payload_calls, parallel_calls, python_interop};

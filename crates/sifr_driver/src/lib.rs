@@ -19,43 +19,43 @@ mod test_runner;
 mod workspace;
 
 pub use build::{
-    apply_python_target_inspection, build, build_cached_package_project, build_cached_project,
-    build_cached_single_file, build_package_project_report, build_project, build_project_report,
-    build_single_file_report, capture_cargo_invocations, check_package_project,
-    check_package_python_interop, check_project, check_single_file, emit_project,
-    generate_dependency_cargo_toml, inspect_python_target, probe_python_interop_plan,
-    sysroot_cargo_config_args, try_generate_standalone_dependency_plan,
-    validate_binding_distributions, validate_certification_distributions,
-    validate_protocol_certifications_for_plan, BuildCompilationMode, BuildReport, BuildReportInput,
-    BuildStageReport, BuildSysrootReport, CachedBinaryArtifact, CargoInvocation, PackageEntrypoint,
-    PackagePythonRuntime, PythonDeclarationCheck, PythonEnvironmentCheck, PythonInteropCheckReport,
+    BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport, BuildSysrootReport,
+    CachedBinaryArtifact, CargoInvocation, PackageEntrypoint, PackagePythonRuntime,
+    PythonDeclarationCheck, PythonEnvironmentCheck, PythonInteropCheckReport,
     PythonInteropPlanDiagnostic, PythonTargetCheck, PythonTargetCheckStatus,
-    PythonTargetInspection, PythonTargetParameter,
+    PythonTargetInspection, PythonTargetParameter, apply_python_target_inspection, build,
+    build_cached_package_project, build_cached_project, build_cached_single_file,
+    build_package_project_report, build_project, build_project_report, build_single_file_report,
+    capture_cargo_invocations, check_package_project, check_package_python_interop, check_project,
+    check_single_file, emit_project, generate_dependency_cargo_toml, inspect_python_target,
+    probe_python_interop_plan, sysroot_cargo_config_args, try_generate_standalone_dependency_plan,
+    validate_binding_distributions, validate_certification_distributions,
+    validate_protocol_certifications_for_plan,
 };
 pub use diagnostics::{
-    apply_diagnostic_recovery_limits, diagnostic_label_for_code, render_package_diagnostic,
-    CompileResult, CompileResultFull, GeneratedSourceMapFile,
+    CompileResult, CompileResultFull, GeneratedSourceMapFile, apply_diagnostic_recovery_limits,
+    diagnostic_label_for_code, render_package_diagnostic,
 };
 pub use frontend::{
     check, compile, compile_with_metadata, lower_source, parse_source, type_check_source,
 };
 pub use python_binding::{
-    render_python_binding_scaffold, PythonBindingDeclaration, PythonBindingDeclarationKind,
-    PythonBindingParameter, PythonBindingParameterKind, PythonBindingProbeError,
-    PythonBindingProbeReport, PythonBindingProbeSource, PythonBindingProbeSymbol,
-    PythonBindingScaffold,
+    PythonBindingDeclaration, PythonBindingDeclarationKind, PythonBindingParameter,
+    PythonBindingParameterKind, PythonBindingProbeError, PythonBindingProbeReport,
+    PythonBindingProbeSource, PythonBindingProbeSymbol, PythonBindingScaffold,
+    render_python_binding_scaffold,
 };
 pub use sifr_codegen::{
-    interop_build_plan_for_named_modules, InteropBuildPlan, LoweringStats, PythonInteropPlan,
-    PythonInteropPlanDeclaration, PythonTargetProbe, PythonTargetProbeStatus,
+    InteropBuildPlan, LoweringStats, PythonInteropPlan, PythonInteropPlanDeclaration,
+    PythonTargetProbe, PythonTargetProbeStatus, interop_build_plan_for_named_modules,
 };
 pub use stdlib::{
+    ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus,
     external_defs as stdlib_external_defs, sysroot_probe as stdlib_tooling_sysroot_probe,
     sysroot_status as stdlib_tooling_sysroot_status, tooling_sources as stdlib_tooling_sources,
-    ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus,
 };
 pub use test_runner::run_tests;
-pub use workspace::{find_workspace_root, SifrWorkspaceConfig, WorkspaceRoot};
+pub use workspace::{SifrWorkspaceConfig, WorkspaceRoot, find_workspace_root};
 
 #[cfg(test)]
 pub(crate) use build::create_invocation_workspace;
@@ -65,9 +65,9 @@ pub(crate) use diagnostics::run_codegen_with_boundary;
 pub(crate) use frontend::FrontendDiagnosticStyle;
 #[cfg(test)]
 pub(crate) use project::{
-    assemble_project_main_rs, collect_project_hir_modules, compile_frontend_modules,
-    compute_module_compile_order, discover_test_root_modules, parse_import_closure_modules,
-    DiscoveryDiagnosticStyle, ModuleResolver,
+    DiscoveryDiagnosticStyle, ModuleResolver, assemble_project_main_rs,
+    collect_project_hir_modules, compile_frontend_modules, compute_module_compile_order,
+    discover_test_root_modules, parse_import_closure_modules,
 };
 #[cfg(test)]
 pub(crate) use stdlib::compile_stdlib;

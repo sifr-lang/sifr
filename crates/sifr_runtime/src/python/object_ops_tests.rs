@@ -1,7 +1,8 @@
 use super::object_ops::*;
 use super::{
-    initialize_runtime, list_items, record_field, reset_runtime_state_for_tests, semantic_close,
-    shutdown_diagnostics, test_config, test_guard, tuple_items_exact, PythonRuntimeDiagnostics,
+    PythonRuntimeDiagnostics, initialize_runtime, list_items, record_field,
+    reset_runtime_state_for_tests, semantic_close, shutdown_diagnostics, test_config, test_guard,
+    tuple_items_exact,
 };
 
 #[test]

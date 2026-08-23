@@ -524,12 +524,14 @@ fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated
-        .rust_source
-        .contains("let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();"));
-    assert!(generated
-        .rust_source
-        .contains("let Some(__indexed_char) = __sifr_chars_text.get(j as usize).map(|c| c.to_string()) else {"));
+    assert!(
+        generated
+            .rust_source
+            .contains("let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();")
+    );
+    assert!(generated.rust_source.contains(
+        "let Some(__indexed_char) = __sifr_chars_text.get(j as usize).map(|c| c.to_string()) else {"
+    ));
     assert!(generated.rust_source.contains(";\n    __indexed_char\n}"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
@@ -691,7 +693,9 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
         .map(|offset| emit_stmt_start + offset)
         .expect("emit_stmt wrapper should end before impl close");
     let emit_stmt_wrapper = &stmt_entrypoints_src[emit_stmt_start..impl_end];
-    assert!(emit_stmt_wrapper.contains("structured statement emission missing for production path"));
+    assert!(
+        emit_stmt_wrapper.contains("structured statement emission missing for production path")
+    );
     assert!(!emit_stmt_wrapper.contains("self.try_emit_stmt_string_"));
     assert!(
         !emit_stmt_wrapper.contains("match stmt"),

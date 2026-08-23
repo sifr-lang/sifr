@@ -1,10 +1,10 @@
 use super::{
-    codegen_body_always_exits, detect_and_not_none_vars, detect_is_none_var,
-    detect_is_not_none_var, detect_option_truthiness_alias, detect_or_is_none_vars, is_none_type,
-    is_option_like_type, lower_if_not_none_chain, option_binding_pattern, resolve_alias_type,
-    try_lower_leaf_expr, try_lower_leaf_or_name_expr, try_lower_simple_stmt_block, HashSet,
-    HirExpr, HirStmt, RustExpr, RustLiteral, RustParam, RustStmt, RustType, SimpleStmtBindings,
-    SimpleStmtLoweringCtx, Type,
+    HashSet, HirExpr, HirStmt, RustExpr, RustLiteral, RustParam, RustStmt, RustType,
+    SimpleStmtBindings, SimpleStmtLoweringCtx, Type, codegen_body_always_exits,
+    detect_and_not_none_vars, detect_is_none_var, detect_is_not_none_var,
+    detect_option_truthiness_alias, detect_or_is_none_vars, is_none_type, is_option_like_type,
+    lower_if_not_none_chain, option_binding_pattern, resolve_alias_type, try_lower_leaf_expr,
+    try_lower_leaf_or_name_expr, try_lower_simple_stmt_block,
 };
 pub(super) fn try_lower_simple_if_stmt(
     condition: &HirExpr,

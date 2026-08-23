@@ -1,9 +1,9 @@
 use serde_json::{Map, Number, Value};
-use sifr_runtime::json::{
-    encode_integer_for_profile, validate_json_integer_digit_limits, JsonIntegerProfile,
-    JsonIntegerRangeError, JsonLimitError, DEFAULT_JSON_INTEGER_DIGIT_LIMIT,
-};
 use sifr_runtime::SifrInt;
+use sifr_runtime::json::{
+    DEFAULT_JSON_INTEGER_DIGIT_LIMIT, JsonIntegerProfile, JsonIntegerRangeError, JsonLimitError,
+    encode_integer_for_profile, validate_json_integer_digit_limits,
+};
 use std::fmt;
 
 const ROOT_PATH: &str = "$";

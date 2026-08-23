@@ -1,6 +1,6 @@
 use super::{
-    generic_method_requirements, lower_class, lower_function,
-    module_function_registry::ModuleFunctionRegistry, LowerCtx, Stmt,
+    LowerCtx, Stmt, generic_method_requirements, lower_class, lower_function,
+    module_function_registry::ModuleFunctionRegistry,
 };
 use sifr_ir::{HirClass, HirFunction};
 

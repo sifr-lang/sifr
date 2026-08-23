@@ -2,9 +2,9 @@ use super::async_context::PythonAsyncExitCause;
 use super::foreign_object::ForeignObjectLease;
 use super::object_ops::{clone_handle, store_object};
 use super::{ObjectHandle, PythonError};
+use pyo3::IntoPyObjectExt;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyList, PyTuple};
-use pyo3::IntoPyObjectExt;
 
 /// Compiler-private owned value transported to and from the asyncio loop.
 ///

@@ -290,8 +290,8 @@ fn rust_interop_policy_key_candidates(
 #[cfg(test)]
 mod tests {
     use super::{
-        evaluate_completion_ranking, rank_completion_candidates,
-        rust_interop_completion_candidates, CompletionCandidate,
+        CompletionCandidate, evaluate_completion_ranking, rank_completion_candidates,
+        rust_interop_completion_candidates,
     };
     use sifr_syntax::TextPosition;
 
@@ -442,14 +442,16 @@ mod tests {
     #[test]
     fn rust_interop_completion_waits_for_function_target_separator() {
         let before_target_separator = "@rust()";
-        assert!(rust_interop_completion_candidates(
-            before_target_separator,
-            &TextPosition {
-                line: 0,
-                character: 6,
-            },
-        )
-        .is_empty());
+        assert!(
+            rust_interop_completion_candidates(
+                before_target_separator,
+                &TextPosition {
+                    line: 0,
+                    character: 6,
+                },
+            )
+            .is_empty()
+        );
 
         let after_target_separator = "@rust(bridge.hash, )";
         let labels = rust_interop_completion_candidates(

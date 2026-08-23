@@ -1,6 +1,6 @@
 use crate::cli_model_and_entrypoint::{
-    diagnostic_with_code, DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
-    EXIT_USER_DIAGNOSTIC,
+    DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
+    diagnostic_with_code,
 };
 use crate::diagnostic_rendering_and_run::render_diagnostics;
 use crate::python_runtime_context::package_python_authoring_context;

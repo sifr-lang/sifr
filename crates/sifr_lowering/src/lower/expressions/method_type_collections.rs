@@ -1,9 +1,9 @@
 use super::{
-    container_literal_diagnostics, expression_diagnostics, list_append_argument_type_mismatch,
-    method_count_range, reject_exact_method_arg_count, reject_max_method_arg_count,
-    reject_method_arg_count, reject_no_method_args, str, validate_dict_update_arg,
-    validate_list_extend_arg, validate_set_iterable_arg, DiagnosticCode, HirExpr, LowerCtx,
-    TextRange, Type,
+    DiagnosticCode, HirExpr, LowerCtx, TextRange, Type, container_literal_diagnostics,
+    expression_diagnostics, list_append_argument_type_mismatch, method_count_range,
+    reject_exact_method_arg_count, reject_max_method_arg_count, reject_method_arg_count,
+    reject_no_method_args, str, validate_dict_update_arg, validate_list_extend_arg,
+    validate_set_iterable_arg,
 };
 use crate::lower::type_bounds::{
     supports_structural_equality_in_context, supports_total_order_in_context,
@@ -469,14 +469,14 @@ pub(super) fn resolve_dict_method_type(
             if args.len() == 2 {
                 if !args[1].ty().is_assignable_to(val_ty) {
                     expression_diagnostics::type_mismatch(
-                            ctx,
-                            format!(
-                                "dict.get() default type '{}' is not compatible with dict value type '{}'",
-                                args[1].ty().display_name(),
-                                val_ty.display_name()
-                            ),
-                            arg_ranges[1],
-                        );
+                        ctx,
+                        format!(
+                            "dict.get() default type '{}' is not compatible with dict value type '{}'",
+                            args[1].ty().display_name(),
+                            val_ty.display_name()
+                        ),
+                        arg_ranges[1],
+                    );
                 }
                 // When V is still unknown/Any (e.g. empty literal before specialization),
                 // preserve precision from the provided default instead of leaking `Any`.
@@ -514,14 +514,14 @@ pub(super) fn resolve_dict_method_type(
             if args.len() == 2 {
                 if !args[1].ty().is_assignable_to(val_ty) {
                     expression_diagnostics::type_mismatch(
-                            ctx,
-                            format!(
-                                "dict.pop() default type '{}' is not compatible with dict value type '{}'",
-                                args[1].ty().display_name(),
-                                val_ty.display_name()
-                            ),
-                            arg_ranges[1],
-                        );
+                        ctx,
+                        format!(
+                            "dict.pop() default type '{}' is not compatible with dict value type '{}'",
+                            args[1].ty().display_name(),
+                            val_ty.display_name()
+                        ),
+                        arg_ranges[1],
+                    );
                 }
                 Some(val_ty.clone())
             } else {
@@ -554,14 +554,14 @@ pub(super) fn resolve_dict_method_type(
             }
             if !args[1].ty().is_assignable_to(val_ty) {
                 expression_diagnostics::type_mismatch(
-                        ctx,
-                        format!(
-                            "dict.setdefault() default type '{}' is not compatible with dict value type '{}'",
-                            args[1].ty().display_name(),
-                            val_ty.display_name()
-                        ),
-                        arg_ranges[1],
-                    );
+                    ctx,
+                    format!(
+                        "dict.setdefault() default type '{}' is not compatible with dict value type '{}'",
+                        args[1].ty().display_name(),
+                        val_ty.display_name()
+                    ),
+                    arg_ranges[1],
+                );
             }
             Some(val_ty.clone())
         }

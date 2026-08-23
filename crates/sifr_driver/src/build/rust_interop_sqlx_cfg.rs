@@ -1,4 +1,4 @@
-use super::{sqlx_query_text, SqlxQueryVisitor};
+use super::{SqlxQueryVisitor, sqlx_query_text};
 use crate::build::rust_interop_sqlx_modules::has_conditional_compilation_attribute;
 use syn::visit::Visit;
 use syn::{Attribute, Expr, ForeignItem, ImplItem, Item, Macro, Stmt, TraitItem};

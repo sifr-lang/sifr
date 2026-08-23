@@ -4,13 +4,13 @@ use std::collections::{HashMap, HashSet};
 use std::future::Future;
 use std::net::SocketAddr;
 use std::sync::{
-    atomic::{AtomicI64, Ordering},
     Arc, LazyLock, Mutex, MutexGuard,
+    atomic::{AtomicI64, Ordering},
 };
 
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
-use tokio::net::{lookup_host, TcpListener, TcpSocket, TcpStream};
+use tokio::net::{TcpListener, TcpSocket, TcpStream, lookup_host};
 
 use crate::timeouts::timeout_duration;
 

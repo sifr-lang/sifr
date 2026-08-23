@@ -552,10 +552,11 @@ mod tests {
                 value: RustExpr::Literal(RustLiteral::Int(7)),
             },
             RustStmt::LetPattern {
-                pattern: "(mut res, mod)".to_string(),
+                pattern: "(mut res, mod, gen)".to_string(),
                 value: RustExpr::Tuple(vec![
                     RustExpr::Literal(RustLiteral::Int(1)),
                     RustExpr::Literal(RustLiteral::Int(2)),
+                    RustExpr::Literal(RustLiteral::Int(3)),
                 ]),
             },
             RustStmt::Expr(RustExpr::BinOp {
@@ -568,7 +569,7 @@ mod tests {
         let rendered = render_stmts(&stmts);
         assert_snapshot!(rendered, @r###"
         let mut r#mod: i64 = 7;
-        let (mut res, r#mod) = (1, 2);
+        let (mut res, r#mod, r#gen) = (1, 2, 3);
         res % r#mod;
         "###);
     }

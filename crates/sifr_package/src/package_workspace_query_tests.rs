@@ -11,7 +11,7 @@ use crate::manifest::sifr::{
     CompilerRequirement, PackageSourceRoot, PythonConfig, RustInteropConfig, SifrEdition,
     SifrManifest, SifrPackageName, TrustPolicy,
 };
-use crate::ops::read::{outdated_query_report, OutdatedPackageSource};
+use crate::ops::read::{OutdatedPackageSource, outdated_query_report};
 use sifr_diagnostics::DiagnosticCode;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -191,12 +191,16 @@ fn outdated_query_classifies_path_registry_and_git_sources_read_only() {
     let graph = graph_and_metadata().0;
     let reports = outdated_query_report(&graph, false).expect("known sources classify");
 
-    assert!(reports
-        .iter()
-        .any(|report| matches!(report.source, OutdatedPackageSource::PathPinned)));
-    assert!(reports
-        .iter()
-        .any(|report| matches!(report.source, OutdatedPackageSource::Registry { .. })));
+    assert!(
+        reports
+            .iter()
+            .any(|report| matches!(report.source, OutdatedPackageSource::PathPinned))
+    );
+    assert!(
+        reports
+            .iter()
+            .any(|report| matches!(report.source, OutdatedPackageSource::Registry { .. }))
+    );
     assert!(reports.iter().any(|report| {
         matches!(
             report.source,

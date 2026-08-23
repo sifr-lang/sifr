@@ -1,6 +1,6 @@
 //! Concrete generic bindings from an adapted class to a checked handler owner.
 
-use sifr_lowering::{substitute_type_vars, ExternalDefs, HirClass, LoweringResult};
+use sifr_lowering::{ExternalDefs, HirClass, LoweringResult, substitute_type_vars};
 use sifr_type_system::Type;
 use std::collections::{BTreeSet, HashMap};
 
@@ -114,9 +114,9 @@ fn bind_exact(
 
 #[cfg(test)]
 mod tests {
-    use super::{resolve, HandlerAncestry};
-    use crate::{collect_module_exports, compile_module_hir, FrontendDiagnosticStyle};
-    use sifr_lowering::{lower_module, ExternalDefs, LoweringResult};
+    use super::{HandlerAncestry, resolve};
+    use crate::{FrontendDiagnosticStyle, collect_module_exports, compile_module_hir};
+    use sifr_lowering::{ExternalDefs, LoweringResult, lower_module};
     use sifr_syntax::parse_module_suite;
     use sifr_type_system::Type;
 
@@ -164,15 +164,17 @@ mod tests {
         let lowered = generic_chain();
         let child = &lowered.module.classes[1];
 
-        assert!(resolve(
-            "fixture",
-            child,
-            &[],
-            "fixture.Base",
-            &lowered,
-            &ExternalDefs::default(),
-        )
-        .is_none());
+        assert!(
+            resolve(
+                "fixture",
+                child,
+                &[],
+                "fixture.Base",
+                &lowered,
+                &ExternalDefs::default(),
+            )
+            .is_none()
+        );
     }
 
     #[test]
@@ -193,14 +195,16 @@ mod tests {
             .push("V".to_string());
         let child = &consumer.module.classes[0];
 
-        assert!(resolve(
-            "consumer",
-            child,
-            &[Type::TypeVar("U".to_string())],
-            "models.Base",
-            &consumer,
-            &external_defs,
-        )
-        .is_none());
+        assert!(
+            resolve(
+                "consumer",
+                child,
+                &[Type::TypeVar("U".to_string())],
+                "models.Base",
+                &consumer,
+                &external_defs,
+            )
+            .is_none()
+        );
     }
 }

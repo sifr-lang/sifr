@@ -1,9 +1,9 @@
 use super::{
-    arity_range, dict_constructor_output_type, first_keyword_range,
+    DiagnosticCode, Expr, ExprAttribute, ExprCall, HirExpr, IterationCapability, LowerCtx, Ranged,
+    RevealTypeDiagnostic, Type, arity_range, dict_constructor_output_type, first_keyword_range,
     iterable_element_type_for_builtin, list_constructor_output_type, lower_expr, parse_error_type,
     reject_keywords, reject_type_mismatch, reject_unpacked_keyword_at,
-    reject_wrong_positional_count, str, value_error_type, DiagnosticCode, Expr, ExprAttribute,
-    ExprCall, HirExpr, IterationCapability, LowerCtx, Ranged, RevealTypeDiagnostic, Type,
+    reject_wrong_positional_count, str, value_error_type,
 };
 use crate::lower::typing_and_functions::resolve_annotation_expr;
 use sifr_ir::CompilerIntrinsicId;

@@ -5,10 +5,10 @@ use super::diagnostics::{
 use super::protocol_diagnostics;
 use super::statements::lower_function_stmts;
 use super::typing_and_functions::{function_body_contains_yield, resolve_annotation_expr};
+use super::{LowerCtx, parse_typevar_bound_expr};
 use super::{
     async_await, class_field_inference, diagnostics, simple_expr, str, typing_and_functions,
 };
-use super::{parse_typevar_bound_expr, LowerCtx};
 use crate::hir_nodes::{
     HirClass, HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt,
     HirTupleTargetBinding, MethodKind,

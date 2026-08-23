@@ -15,8 +15,8 @@ mod symbols;
 mod worker_lanes;
 
 pub use completion::{
-    evaluate_completion_ranking, rank_completion_candidates, CompletionCandidate,
-    CompletionEvaluation, CompletionRankingResult,
+    CompletionCandidate, CompletionEvaluation, CompletionRankingResult,
+    evaluate_completion_ranking, rank_completion_candidates,
 };
 pub use host::{AnalysisHost, PythonInteropAnalysisPlan};
 pub use queries::{
@@ -36,7 +36,7 @@ pub use symbols::{
     SymbolIndex, SymbolIndexEntry,
 };
 pub use worker_lanes::{
-    ApprovedWorkerLane, SingleOwnerCompilerPhase, APPROVED_WORKER_LANES, SINGLE_OWNER_PHASES,
+    APPROVED_WORKER_LANES, ApprovedWorkerLane, SINGLE_OWNER_PHASES, SingleOwnerCompilerPhase,
 };
 
 pub use sifr_frontend::{
@@ -48,8 +48,8 @@ pub use sifr_syntax::TextPosition;
 
 pub use sifr_driver::{ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus};
 
-pub fn tooling_sysroot_status(
-) -> Result<ToolingSysrootStatus, Vec<sifr_diagnostics::RenderedDiagnostic>> {
+pub fn tooling_sysroot_status()
+-> Result<ToolingSysrootStatus, Vec<sifr_diagnostics::RenderedDiagnostic>> {
     sifr_driver::stdlib_tooling_sysroot_status()
 }
 

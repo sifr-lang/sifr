@@ -1,6 +1,6 @@
 //! Type-variable substitution across nested nominal declaration scopes.
 
-use crate::{make_union, FunctionType, Type};
+use crate::{FunctionType, Type, make_union};
 use std::collections::{HashMap, HashSet};
 
 /// Substitute type variables without declaration-scope metadata.
@@ -276,8 +276,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::{
-        substitute_type_vars_with_class_scopes, substitution_preserves_union_structure,
-        substitution_preserves_union_structure_with_class_scopes, UnionStructureClassScope,
+        UnionStructureClassScope, substitute_type_vars_with_class_scopes,
+        substitution_preserves_union_structure,
+        substitution_preserves_union_structure_with_class_scopes,
     };
     use crate::Type;
     use std::collections::HashMap;

@@ -1,4 +1,4 @@
-use super::{registry_iterable_to_owned_iter_expr_from_lowered, HirExpr, RustEmitter, Type};
+use super::{HirExpr, RustEmitter, Type, registry_iterable_to_owned_iter_expr_from_lowered};
 
 impl RustEmitter {
     fn try_lower_defaultdict_iterable_collection(

@@ -1,6 +1,6 @@
 use super::{
-    collect_locally_defined_vars, collect_referenced_vars_with_types, traversal, HashMap, HashSet,
-    HirExpr, HirFunction, HirStmt, RustType, TraversalConfig, Type,
+    HashMap, HashSet, HirExpr, HirFunction, HirStmt, RustType, TraversalConfig, Type,
+    collect_locally_defined_vars, collect_referenced_vars_with_types, traversal,
 };
 pub(super) fn hir_function_returns_sifr_int(
     func: &HirFunction,

@@ -624,11 +624,7 @@ impl RustEmitter {
             }
             vars.push(name.clone());
         }
-        if vars.len() >= 2 {
-            Some(vars)
-        } else {
-            None
-        }
+        if vars.len() >= 2 { Some(vars) } else { None }
     }
 }
 

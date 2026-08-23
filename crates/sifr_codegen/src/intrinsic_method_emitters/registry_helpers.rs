@@ -154,11 +154,7 @@ pub(super) fn registry_class_method_signature<'a>(
 ) -> Option<&'a FunctionType> {
     methods.iter().find_map(
         |(name, ft)| {
-            if name == method_name {
-                Some(ft)
-            } else {
-                None
-            }
+            if name == method_name { Some(ft) } else { None }
         },
     )
 }
@@ -707,12 +703,14 @@ mod tests {
         };
         let mut emitter = RustEmitter::new();
 
-        assert!(registry_call_callable_with_owned_args(
-            &mut emitter,
-            &callable,
-            &[("value".to_string(), source)],
-        )
-        .is_none());
+        assert!(
+            registry_call_callable_with_owned_args(
+                &mut emitter,
+                &callable,
+                &[("value".to_string(), source)],
+            )
+            .is_none()
+        );
     }
 
     #[test]

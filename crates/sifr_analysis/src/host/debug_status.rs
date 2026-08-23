@@ -1,6 +1,6 @@
 use super::implementation::AnalysisHost;
-use crate::symbols::{SymbolBucketKind, SymbolBucketReadinessState};
 use crate::AnalysisRevision;
+use crate::symbols::{SymbolBucketKind, SymbolBucketReadinessState};
 use sifr_frontend::{WorkspaceDebugSnapshot, WorkspaceIndexReadinessStatus};
 
 impl AnalysisHost {

@@ -1,4 +1,4 @@
-use crate::{is_simple_stmt_candidate, HirStmt, RustEmitter, RustExpr, RustLiteral, RustStmt};
+use crate::{HirStmt, RustEmitter, RustExpr, RustLiteral, RustStmt, is_simple_stmt_candidate};
 
 impl RustEmitter {
     pub(crate) fn emit_stmt(&mut self, stmt: &HirStmt) {

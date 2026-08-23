@@ -1,10 +1,10 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 
 [package]
 name = "bridge-type-roundtrip"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 bytes = "=1.11.1"

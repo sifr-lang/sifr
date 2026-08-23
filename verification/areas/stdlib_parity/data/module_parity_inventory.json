@@ -30,7 +30,8 @@
       "command": "check",
       "supported_apis": [
         {"name": "getenv_opt", "tokens": ["getenv_opt("]},
-        {"name": "setenv", "tokens": ["setenv("]}
+        {"name": "getenv", "tokens": ["getenv("]},
+        {"name": "items", "tokens": ["items("]}
       ]
     },
     {

@@ -1,7 +1,7 @@
 use super::*;
 use sifr_lowering::{
-    lower_module, AdapterHandlerPlan, CallableIdentity, ClassAdapterSelection, SourceOriginId,
-    StaticProgramValue,
+    AdapterHandlerPlan, CallableIdentity, ClassAdapterSelection, SourceOriginId,
+    StaticProgramValue, lower_module,
 };
 use sifr_syntax::parse_module_suite;
 use sifr_type_system::FunctionType;

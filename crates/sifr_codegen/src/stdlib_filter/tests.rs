@@ -349,19 +349,27 @@ fn keep_me() {
             .file_handles
             .provides_file_handle_struct
     );
-    assert!(!prepared
-        .stripped_code
-        .contains("use std::collections::HashMap;"));
+    assert!(
+        !prepared
+            .stripped_code
+            .contains("use std::collections::HashMap;")
+    );
     assert!(!prepared.stripped_code.contains("enum SifrFileHandle"));
-    assert!(!prepared
-        .stripped_code
-        .contains("static __SIFR_FILE_HANDLES"));
-    assert!(!prepared
-        .stripped_code
-        .contains("static __SIFR_NEXT_FILE_HANDLE_ID"));
-    assert!(!prepared
-        .stripped_code
-        .contains("fn __sifr_next_file_handle_id"));
+    assert!(
+        !prepared
+            .stripped_code
+            .contains("static __SIFR_FILE_HANDLES")
+    );
+    assert!(
+        !prepared
+            .stripped_code
+            .contains("static __SIFR_NEXT_FILE_HANDLE_ID")
+    );
+    assert!(
+        !prepared
+            .stripped_code
+            .contains("fn __sifr_next_file_handle_id")
+    );
     assert!(prepared.stripped_code.contains("fn keep_me()"));
 }
 
@@ -387,9 +395,11 @@ use std::sync::Mutex;
 fn keep_me() {}
 "#;
     let prepared = collect_and_strip_shared_prelude(input);
-    assert!(!prepared
-        .stripped_code
-        .contains("std::collections::{HashMap, HashSet, VecDeque}"));
+    assert!(
+        !prepared
+            .stripped_code
+            .contains("std::collections::{HashMap, HashSet, VecDeque}")
+    );
     assert!(!prepared.stripped_code.contains("use std::sync::Mutex;"));
     assert!(prepared.stripped_code.contains("fn keep_me()"));
 }
@@ -404,12 +414,16 @@ fn keep_me(value: Decimal) -> (BigInt, BigDecimal) { todo!() }
 "#;
     let prepared = collect_and_strip_shared_prelude(input);
     assert!(!prepared.stripped_code.contains("use num_bigint::BigInt;"));
-    assert!(!prepared
-        .stripped_code
-        .contains("use rust_decimal::Decimal;"));
-    assert!(!prepared
-        .stripped_code
-        .contains("use bigdecimal::BigDecimal;"));
+    assert!(
+        !prepared
+            .stripped_code
+            .contains("use rust_decimal::Decimal;")
+    );
+    assert!(
+        !prepared
+            .stripped_code
+            .contains("use bigdecimal::BigDecimal;")
+    );
     assert!(prepared.stripped_code.contains("fn keep_me"));
 }
 

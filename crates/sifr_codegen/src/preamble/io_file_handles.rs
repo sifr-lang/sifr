@@ -1,7 +1,7 @@
 use super::{
+    RustExpr, RustItem, RustMatchArm, RustParam, RustStmt, RustType, Visibility,
     build_error_type_items, file_handle_read_bytes_method, file_handle_readlines_method,
-    file_handle_write_bytes_method, RustExpr, RustItem, RustMatchArm, RustParam, RustStmt,
-    RustType, Visibility,
+    file_handle_write_bytes_method,
 };
 use crate::RustTypeParam;
 pub fn build_io_error_items() -> Vec<RustItem> {

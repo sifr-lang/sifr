@@ -3,8 +3,8 @@ use std::{
     io::{self, Read as _, Write as _},
     process::{Child, Stdio},
     sync::{
-        atomic::{AtomicI64, Ordering},
         LazyLock, Mutex, MutexGuard,
+        atomic::{AtomicI64, Ordering},
     },
 };
 

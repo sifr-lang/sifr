@@ -247,7 +247,7 @@ pub trait MethodSlotTable<Context: StructuralType>: StaticProgramType {
 mod tests {
     use super::*;
     use crate::interop::__generated_glue;
-    use crate::interop::structural::{primitive, StructuralProject};
+    use crate::interop::structural::{StructuralProject, primitive};
 
     #[derive(Default)]
     struct RecordingSink {

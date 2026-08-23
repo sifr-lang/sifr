@@ -1,4 +1,4 @@
-use crate::{SifrInt, DEFAULT_MAX_INTEGER_DIGITS};
+use crate::{DEFAULT_MAX_INTEGER_DIGITS, SifrInt};
 use num_traits::ToPrimitive;
 use std::fmt;
 

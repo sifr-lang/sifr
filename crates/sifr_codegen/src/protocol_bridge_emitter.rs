@@ -1,6 +1,6 @@
 use crate::{RustEmitter, RustExpr, RustItem, RustParam, RustStmt, Visibility};
 use sifr_ir::{HirClass, HirModule};
-use sifr_type_system::{source_class_rust_name, Type};
+use sifr_type_system::{Type, source_class_rust_name};
 use std::collections::{HashMap, HashSet};
 
 type OperatorBounds = HashMap<String, HashSet<String>>;

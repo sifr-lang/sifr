@@ -1,6 +1,6 @@
 use super::{
-    close_callback, release_arrow, release_buffer, release_dlpack, ArrowHandle, BufferHandle,
-    CallbackHandle, DlpackHandle, PythonError,
+    ArrowHandle, BufferHandle, CallbackHandle, DlpackHandle, PythonError, close_callback,
+    release_arrow, release_buffer, release_dlpack,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

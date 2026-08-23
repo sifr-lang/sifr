@@ -10,9 +10,9 @@ use std::collections::BTreeMap;
 mod presentation;
 
 pub use presentation::{
-    render_compact_diagnostics, render_compact_envelope, render_human_diagnostics,
-    render_human_envelope, render_json_diagnostics, render_json_envelope, render_sink_compact,
-    render_sink_human, render_sink_json, PresentationRenderError,
+    PresentationRenderError, render_compact_diagnostics, render_compact_envelope,
+    render_human_diagnostics, render_human_envelope, render_json_diagnostics, render_json_envelope,
+    render_sink_compact, render_sink_human, render_sink_json,
 };
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -358,9 +358,9 @@ fn char_column(text: &str, byte_offset: usize) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::render_sink;
+    use crate::DiagnosticCode;
     use crate::model::{DiagnosticBuilder, DiagnosticSink, Severity};
     use crate::source_map::{SourceMap, SourceSpan};
-    use crate::DiagnosticCode;
     use ruff_text_size::{TextRange, TextSize};
 
     fn source_map_with_text(text: &str) -> (SourceMap, crate::SourceId) {

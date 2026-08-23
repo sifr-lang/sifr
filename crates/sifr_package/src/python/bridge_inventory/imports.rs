@@ -1,4 +1,4 @@
-use sifr_python_ast::visitor::{walk_expr, walk_stmt, Visitor};
+use sifr_python_ast::visitor::{Visitor, walk_expr, walk_stmt};
 use sifr_python_ast::{Expr, Stmt};
 use std::collections::BTreeSet;
 

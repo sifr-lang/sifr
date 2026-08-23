@@ -1,7 +1,7 @@
+use super::LowerCtx;
 use super::class_type_collection::class_method_signature;
 use super::class_type_helpers::option_member_type;
 use super::protocol_diagnostics;
-use super::LowerCtx;
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 

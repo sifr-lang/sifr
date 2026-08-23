@@ -1,4 +1,4 @@
-use crate::{LintOptions, LintResult, RuleMetadata, RULES};
+use crate::{LintOptions, LintResult, RULES, RuleMetadata};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_frontend::SourceProvider;
 use std::path::{Path, PathBuf};

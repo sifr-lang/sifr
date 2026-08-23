@@ -1,6 +1,6 @@
 [workspace]
 members = ["rust/cc", "rust/bindgen", "rust/cxx", "rust/zstd"]
-resolver = "2"
+resolver = "3"
 
 [workspace.dependencies]
 bindgen_upstream = { package = "bindgen", version = "=0.72.1", default-features = true }
@@ -11,7 +11,7 @@ zstd_upstream = { package = "zstd", version = "=0.13.3", default-features = true
 [package]
 name = "native-trust-package"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 bindgen = { package = "sifr-bindgen-probe", path = "rust/bindgen" }

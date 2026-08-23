@@ -195,8 +195,8 @@ fn push_escaped(output: &mut String, value: &str) {
 #[cfg(test)]
 mod tests {
     use super::{
-        canonical_schema_descriptor, schema_hash_hex_v1, IpcSchemaDescriptor, IpcSchemaField,
-        IpcSchemaType, IpcSchemaVariant,
+        IpcSchemaDescriptor, IpcSchemaField, IpcSchemaType, IpcSchemaVariant,
+        canonical_schema_descriptor, schema_hash_hex_v1,
     };
 
     fn sample_descriptor() -> IpcSchemaDescriptor {

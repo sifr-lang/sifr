@@ -1,4 +1,4 @@
-use crate::{lower_module, HirDiagnostic, HirExpr, HirModule, HirStmt};
+use crate::{HirDiagnostic, HirExpr, HirModule, HirStmt, lower_module};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
@@ -72,9 +72,11 @@ fn test_missing_forward_local_helper_still_errors_explicitly() {
     );
     assert!(result.is_err());
     let errors = result.unwrap_err();
-    assert!(errors
-        .iter()
-        .any(|error| error.message == "undefined variable: 'missing'"));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message == "undefined variable: 'missing'")
+    );
 }
 
 #[test]
@@ -138,12 +140,16 @@ fn shadowed_nested_helper_does_not_inherit_outer_default_or_vararg() {
     )
     .expect_err("the inner helper must retain its required fixed-arity signature");
 
-    assert!(errors
-        .iter()
-        .any(|error| error.message == "helper() missing required argument 'value'"));
-    assert!(errors
-        .iter()
-        .any(|error| error.message == "helper() takes at most 1 argument(s), got 2"));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message == "helper() missing required argument 'value'")
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message == "helper() takes at most 1 argument(s), got 2")
+    );
 }
 
 #[test]
@@ -200,8 +206,7 @@ fn test_nonlocal_tuple_unpack_fails_explicitly() {
 
 #[test]
 fn test_augassign_to_capture_requires_nonlocal() {
-    let source =
-        "def outer() -> int:\n    total = 0\n    def apply() -> None:\n        total += 1\n    apply()\n    return total\n";
+    let source = "def outer() -> int:\n    total = 0\n    def apply() -> None:\n        total += 1\n    apply()\n    return total\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -243,8 +248,7 @@ fn test_top_level_nonlocal_requires_enclosing_binding_code() {
 
 #[test]
 fn test_unresolved_nonlocal_has_flow_code() {
-    let source =
-        "def outer() -> int:\n    def inner() -> None:\n        nonlocal missing\n    inner()\n    return 0\n";
+    let source = "def outer() -> int:\n    def inner() -> None:\n        nonlocal missing\n    inner()\n    return 0\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();
@@ -257,8 +261,7 @@ fn test_unresolved_nonlocal_has_flow_code() {
 
 #[test]
 fn test_nonlocal_current_binding_conflict_has_flow_code() {
-    let source =
-        "def outer(value: int) -> int:\n    def inner(value: int) -> None:\n        nonlocal value\n    inner(1)\n    return value\n";
+    let source = "def outer(value: int) -> int:\n    def inner(value: int) -> None:\n        nonlocal value\n    inner(1)\n    return value\n";
     let result = lower_source(source);
     assert!(result.is_err());
     let errors = result.unwrap_err();

@@ -1,19 +1,20 @@
-use crate::diagnostics::{run_codegen_with_boundary, RenderedDiagnostic};
+use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary};
 use crate::export_policy::should_export_callable;
-use crate::stdlib::cache::{get_or_init_stdlib_cache, STDLIB_COMPILED_CACHE};
+use crate::stdlib::cache::{STDLIB_COMPILED_CACHE, get_or_init_stdlib_cache};
 use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
-use crate::stdlib::re_exports::{re_export_stdlib_imports, ReExportMaps};
+use crate::stdlib::re_exports::{ReExportMaps, re_export_stdlib_imports};
 use crate::stdlib::types::StdlibCompiled;
 use sha2::{Digest, Sha256};
 use sifr_codegen::{StdlibCode, StdlibRustSource};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{
-    canonicalize_user_export_type, canonicalize_user_export_type_in_place,
+    ExternalDefs, HirFunction, HirParam, canonicalize_user_export_type,
+    canonicalize_user_export_type_in_place,
     lower_module_sysroot_private_declaration_with_externals,
-    lower_module_sysroot_public_stdlib_with_externals, ExternalDefs, HirFunction, HirParam,
+    lower_module_sysroot_public_stdlib_with_externals,
 };
 use sifr_stdlib_manifest::{
-    load_stdlib_tooling_sources_from_sysroot, LoadedStdlibSource, LoadedStdlibSourceKind,
+    LoadedStdlibSource, LoadedStdlibSourceKind, load_stdlib_tooling_sources_from_sysroot,
 };
 use sifr_syntax::parse_module_raw;
 use sifr_sysroot::ResolvedSysroot;

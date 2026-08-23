@@ -1,6 +1,6 @@
+use super::LowerCtx;
 use super::expressions::lower_expr;
 use super::sequence_guard_detection::detect_true_sequence_guards;
-use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;

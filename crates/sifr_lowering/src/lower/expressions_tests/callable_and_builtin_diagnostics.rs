@@ -86,9 +86,11 @@ pub(super) fn test_async_callable_rejects_borrowed_async_function_boundary() {
     let borrowed_source = "async def apply(f: AsyncCallable[[str], str]) -> str:\n    return await f(\"hello\")\n\nasync def echo(value: str) -> str:\n    await task.sleep(0.0)\n    return \"ok\"\n\nasync def main() -> None:\n    result = await apply(echo)\n    return None\n";
     let errors = lower_source(borrowed_source)
         .expect_err("borrowed async function must not satisfy an owning AsyncCallable");
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH))
+    );
 
     let owned_source = borrowed_source.replace("echo(value: str)", "echo(own value: str)");
     lower_source(&owned_source).expect("owned async function should satisfy AsyncCallable");

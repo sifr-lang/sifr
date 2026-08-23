@@ -1,5 +1,5 @@
 use super::{
-    is_none_like_result_value, queries, HirExpr, HirStmt, RustEmitter, RustExpr, RustStmt, Type,
+    HirExpr, HirStmt, RustEmitter, RustExpr, RustStmt, Type, is_none_like_result_value, queries,
 };
 impl RustEmitter {
     pub(crate) fn try_lower_structured_return_stmt(

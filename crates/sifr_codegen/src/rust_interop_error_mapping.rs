@@ -288,7 +288,7 @@ fn to_string_expr(expr: RustExpr) -> RustExpr {
 #[cfg(test)]
 mod tests {
     use super::{bridge_error_contract_expr, bridge_error_expr};
-    use crate::{render_expr, RustExpr};
+    use crate::{RustExpr, render_expr};
     use sifr_type_system::Type;
 
     #[test]

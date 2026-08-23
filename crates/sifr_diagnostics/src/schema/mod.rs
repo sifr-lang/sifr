@@ -1,5 +1,5 @@
 use crate::render::DiagnosticEnvelope;
-use schemars::{schema_for, Schema};
+use schemars::{Schema, schema_for};
 
 #[must_use]
 pub fn diagnostic_schema() -> Schema {

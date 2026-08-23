@@ -11,8 +11,8 @@ use std::path::{Path, PathBuf};
 use family_docs::family_docs;
 use serde_json::{Map, Value};
 use sifr_diagnostics::codes::{
-    active_registry_entries, DiagnosticRegistryEntry, DiagnosticState, DIAGNOSTIC_FAMILIES,
-    DIAGNOSTIC_REGISTRY,
+    DIAGNOSTIC_FAMILIES, DIAGNOSTIC_REGISTRY, DiagnosticRegistryEntry, DiagnosticState,
+    active_registry_entries,
 };
 
 struct GeneratedDocument {

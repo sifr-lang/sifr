@@ -1,21 +1,21 @@
 use super::{
+    CacheFamily, CacheKeyContext, DiagnosticsCacheKey, DocumentVersion, FileId,
+    HirLoweringCacheKey, ModuleAnalysisView, ParseCacheKey, ProjectAnalysisView, SourceFileView,
+    SourceHash, SourceMapCacheKey, SourceMapView, SourceOrigin, SourcePath, SourceProvider,
+    SourceRevision, SourceText, SymbolBucketScope, SymbolBucketsCacheKey, WorkspaceAuxiliarySource,
+    WorkspaceCompilerOptions, WorkspaceDirtyReason, WorkspaceDirtyScope, WorkspaceDirtyScopeReport,
+    WorkspacePackageConfigIdentity, WorkspaceSessionTarget, WorkspaceSingleFileTarget,
     collect_module_exports, diagnostic_with_code, editor_semantics_from_module,
     hir_diagnostic_to_rendered, local_import_dependencies, module_state, reveal_type_diagnostics,
-    source_hash, symbols_from_hir, warning_diagnostics, CacheFamily, CacheKeyContext,
-    DiagnosticsCacheKey, DocumentVersion, FileId, HirLoweringCacheKey, ModuleAnalysisView,
-    ParseCacheKey, ProjectAnalysisView, SourceFileView, SourceHash, SourceMapCacheKey,
-    SourceMapView, SourceOrigin, SourcePath, SourceProvider, SourceRevision, SourceText,
-    SymbolBucketScope, SymbolBucketsCacheKey, WorkspaceAuxiliarySource, WorkspaceCompilerOptions,
-    WorkspaceDirtyReason, WorkspaceDirtyScope, WorkspaceDirtyScopeReport,
-    WorkspacePackageConfigIdentity, WorkspaceSessionTarget, WorkspaceSingleFileTarget,
+    source_hash, symbols_from_hir, warning_diagnostics,
 };
 use crate::frontend_reuse::FrontendReuseCaches;
-use crate::module_signatures::{module_signature, ModuleSignature};
+use crate::module_signatures::{ModuleSignature, module_signature};
 use crate::source_maps::AuxiliarySourceState;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
-    lower_module_with_externals_name_and_options, ExternalDefs, HirModule, LoweringOptions,
-    LoweringResult, LoweringWarningDiagnostic, RevealTypeDiagnostic,
+    ExternalDefs, HirModule, LoweringOptions, LoweringResult, LoweringWarningDiagnostic,
+    RevealTypeDiagnostic, lower_module_with_externals_name_and_options,
 };
 use sifr_python_ast::Stmt;
 use sifr_syntax::ParsedModule;
@@ -816,9 +816,9 @@ impl FrontendContext {
         let mut edges = BTreeSet::new();
         for index in 0..self.modules.len() {
             let module = &self.modules[index];
-            if let Ok(parsed) =
-                sifr_syntax::parse_module(module.source.as_str(), Some(&module.module_name))
-            {
+            let parsed =
+                sifr_syntax::parse_module(module.source.as_str(), Some(&module.module_name));
+            if let Ok(parsed) = parsed {
                 self.modules[index].signature = module_signature(parsed.suite());
                 for import in local_import_dependencies(parsed.suite(), &module_names) {
                     edges.insert((self.modules[index].id, import));

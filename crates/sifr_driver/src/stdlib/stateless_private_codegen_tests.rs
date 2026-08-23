@@ -16,14 +16,18 @@ fn platform_private_declarations_codegen_through_sifr_stdlib() {
         private_code.source_sha256,
         sha256_hex(include_str!("../../../../stdlib/_sifr/platform.sifr"))
     );
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::platform::platform_system()"));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.platform")
-        .is_some_and(|deps| deps.contains("_sifr.platform")));
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::platform::platform_system()")
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.platform")
+            .is_some_and(|deps| deps.contains("_sifr.platform"))
+    );
 }
 
 #[test]
@@ -44,8 +48,6 @@ fn sys_private_declarations_codegen_through_sifr_stdlib() {
     for name in [
         "run_command",
         "env_get",
-        "env_set",
-        "env_unset",
         "env_keys",
         "env_values",
         "env_items",
@@ -68,26 +70,34 @@ fn sys_private_declarations_codegen_through_sifr_stdlib() {
             "{name} should lower through _sifr.sys private Rust interop declarations"
         );
     }
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.env")
-        .is_some_and(|deps| deps.contains("_sifr.sys")));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.sys")
-        .is_some_and(|deps| deps.contains("_sifr.sys")));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.os")
-        .is_some_and(|deps| deps.contains("_sifr.sys")));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.shutil")
-        .is_some_and(|deps| deps.contains("_sifr.sys")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.env")
+            .is_some_and(|deps| deps.contains("_sifr.sys"))
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.sys")
+            .is_some_and(|deps| deps.contains("_sifr.sys"))
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.os")
+            .is_some_and(|deps| deps.contains("_sifr.sys"))
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.shutil")
+            .is_some_and(|deps| deps.contains("_sifr.sys"))
+    );
 }
 
 fn sha256_hex(source: &str) -> String {
@@ -105,14 +115,18 @@ fn html_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.html")
         .expect("_sifr.html should generate private Rust code");
 
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::html::html_escape(s)"));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.html")
-        .is_some_and(|deps| deps.contains("_sifr.html")));
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::html::html_escape(s)")
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.html")
+            .is_some_and(|deps| deps.contains("_sifr.html"))
+    );
 }
 
 #[test]
@@ -130,11 +144,13 @@ fn calendar_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code.rust.contains(
         "::sifr_stdlib::calendar::calendar_monthrange(::sifr_runtime::interop::SifrIntBridge::from(year), ::sifr_runtime::interop::SifrIntBridge::from(month)).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
     ));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.calendar")
-        .is_some_and(|deps| deps.contains("_sifr.calendar")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.calendar")
+            .is_some_and(|deps| deps.contains("_sifr.calendar"))
+    );
 }
 
 #[test]
@@ -147,17 +163,23 @@ fn uuid_private_declarations_codegen_through_sifr_stdlib() {
         .expect("_sifr.uuid should generate private Rust code");
 
     assert!(private_code.rust.contains("::sifr_stdlib::uuid::uuid4()"));
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::uuid::uuid3_text(namespace, name)"));
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::uuid::uuid5_text(namespace, name)"));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.uuid")
-        .is_some_and(|deps| deps.contains("_sifr.uuid")));
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::uuid::uuid3_text(namespace, name)")
+    );
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::uuid::uuid5_text(namespace, name)")
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.uuid")
+            .is_some_and(|deps| deps.contains("_sifr.uuid"))
+    );
 }
 
 #[test]
@@ -172,12 +194,16 @@ fn regex_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code.rust.contains(
         "type __SifrStdlib___sifr_x2eregex_x2eCompiledPattern = ::sifr_runtime::interop::Handle<::sifr_stdlib::regex::CompiledPattern>;"
     ));
-    assert!(private_code
-        .rust
-        .contains("trait __SifrOpaque__SifrStdlib___sifr_x2eregex_x2eCompiledPatternMethods"));
-    assert!(!private_code
-        .rust
-        .contains("pub trait __SifrOpaque__SifrStdlib___sifr_x2eregex_x2eCompiledPatternMethods"));
+    assert!(
+        private_code
+            .rust
+            .contains("trait __SifrOpaque__SifrStdlib___sifr_x2eregex_x2eCompiledPatternMethods")
+    );
+    assert!(
+        !private_code.rust.contains(
+            "pub trait __SifrOpaque__SifrStdlib___sifr_x2eregex_x2eCompiledPatternMethods"
+        )
+    );
 
     for name in [
         "re_match",
@@ -203,14 +229,18 @@ fn regex_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| RegexError { message: __sifr_bridge_error.to_string(), detail: __sifr_bridge_error.to_string() })"
     ));
-    assert!(private_code
-        .rust
-        .contains("::sifr_runtime::interop::SifrIntBridge::from(flags)"));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.re")
-        .is_some_and(|deps| deps.contains("_sifr.regex")));
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_runtime::interop::SifrIntBridge::from(flags)")
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.re")
+            .is_some_and(|deps| deps.contains("_sifr.regex"))
+    );
     let exports = compiled
         .defs
         .functions
@@ -248,17 +278,21 @@ fn url_private_declarations_codegen_through_sifr_stdlib() {
             "{name} should lower through _sifr.url private Rust interop declarations"
         );
     }
-    assert!(private_code
-        .rust
-        .contains("port.map(::sifr_runtime::interop::SifrIntBridge::from)"));
+    assert!(
+        private_code
+            .rust
+            .contains("port.map(::sifr_runtime::interop::SifrIntBridge::from)")
+    );
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.url")
-        .is_some_and(|deps| deps.contains("_sifr.url")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.url")
+            .is_some_and(|deps| deps.contains("_sifr.url"))
+    );
     let exports = compiled
         .defs
         .functions
@@ -280,17 +314,21 @@ fn toml_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.toml")
         .expect("_sifr.toml should generate private Rust code");
 
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::toml::toml_parse_tokens(text)"));
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::toml::toml_parse_tokens(text)")
+    );
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.tomllib")
-        .is_some_and(|deps| deps.contains("_sifr.toml")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.tomllib")
+            .is_some_and(|deps| deps.contains("_sifr.toml"))
+    );
     let exports = compiled
         .defs
         .functions
@@ -328,11 +366,13 @@ fn json_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code.rust.contains("JSONDecodeError { message: __sifr_bridge_error.message().to_string(), line: __sifr_bridge_error.line() as i64, column: __sifr_bridge_error.column() as i64 }"));
     assert!(private_code.rust.contains("JsonLimitError { message: __sifr_bridge_error.message().to_string(), limit: __sifr_bridge_error.limit() as i64 }"));
     assert!(private_code.rust.contains("JsonIntegerRangeError { message: __sifr_bridge_error.message().to_string(), path: __sifr_bridge_error.path().to_string(), profile: __sifr_bridge_error.profile().to_string() }"));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.json")
-        .is_some_and(|deps| deps.contains("_sifr.json")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.json")
+            .is_some_and(|deps| deps.contains("_sifr.json"))
+    );
     let exports = compiled
         .defs
         .functions
@@ -376,11 +416,13 @@ fn encoding_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.encoding")
-        .is_some_and(|deps| deps.contains("_sifr.encoding")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.encoding")
+            .is_some_and(|deps| deps.contains("_sifr.encoding"))
+    );
     let exports = compiled
         .defs
         .functions
@@ -434,11 +476,13 @@ fn unicode_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.unicode")
-        .is_some_and(|deps| deps.contains("_sifr.unicode")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.unicode")
+            .is_some_and(|deps| deps.contains("_sifr.unicode"))
+    );
     let exports = compiled
         .defs
         .functions
@@ -477,28 +521,40 @@ fn compression_private_declarations_codegen_through_sifr_stdlib() {
             "{name} should lower through _sifr.compress private Rust interop declarations"
         );
     }
-    assert!(private_code
-        .rust
-        .contains("::sifr_stdlib::gzip::gzip_compress_bytes(data)"));
-    assert!(private_code
-        .rust
-        .contains("fn __io_err<E: ::std::fmt::Display + 'static>"));
-    assert!(private_code
-        .rust
-        .contains(".map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))"));
-    assert!(!private_code
-        .rust
-        .contains("kind: __sifr_bridge_error.to_string()"));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.gzip")
-        .is_some_and(|deps| deps.contains("_sifr.compress")));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.zipfile")
-        .is_some_and(|deps| deps.contains("_sifr.compress")));
+    assert!(
+        private_code
+            .rust
+            .contains("::sifr_stdlib::gzip::gzip_compress_bytes(data)")
+    );
+    assert!(
+        private_code
+            .rust
+            .contains("fn __io_err<E: ::std::fmt::Display + 'static>")
+    );
+    assert!(
+        private_code
+            .rust
+            .contains(".map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))")
+    );
+    assert!(
+        !private_code
+            .rust
+            .contains("kind: __sifr_bridge_error.to_string()")
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.gzip")
+            .is_some_and(|deps| deps.contains("_sifr.compress"))
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.zipfile")
+            .is_some_and(|deps| deps.contains("_sifr.compress"))
+    );
 
     let gzip_exports = compiled
         .defs
@@ -552,11 +608,13 @@ fn datetime_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ValueError { message: __sifr_bridge_error.to_string() })"
     ));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.datetime")
-        .is_some_and(|deps| deps.contains("_sifr.datetime")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.datetime")
+            .is_some_and(|deps| deps.contains("_sifr.datetime"))
+    );
     let exports = compiled
         .defs
         .functions
@@ -614,11 +672,13 @@ fn i18n_private_declarations_codegen_through_sifr_stdlib() {
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.i18n")
-        .is_some_and(|deps| deps.contains("_sifr.i18n")));
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.i18n")
+            .is_some_and(|deps| deps.contains("_sifr.i18n"))
+    );
     let exports = compiled
         .defs
         .functions

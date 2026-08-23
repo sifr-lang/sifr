@@ -1,4 +1,4 @@
-use flate2::{read::GzDecoder, write::GzEncoder, Compression};
+use flate2::{Compression, read::GzDecoder, write::GzEncoder};
 use std::io::{Read, Write};
 
 pub fn gzip_compress_bytes(data: &str) -> Vec<u8> {

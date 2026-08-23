@@ -1,6 +1,6 @@
 use super::{
-    is_result_int_division_error_type, HirExpr, RecursiveOptionConstructorArgContext, RustEmitter,
-    Type,
+    HirExpr, RecursiveOptionConstructorArgContext, RustEmitter, Type,
+    is_result_int_division_error_type,
 };
 impl RustEmitter {
     pub(crate) fn adapt_plain_call_args_with_signature_for_ir(

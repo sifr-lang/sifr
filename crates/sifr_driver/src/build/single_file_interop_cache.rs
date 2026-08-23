@@ -1,4 +1,4 @@
-use super::project_codegen::{generated_single_file_binary_project, GeneratedBinaryProject};
+use super::project_codegen::{GeneratedBinaryProject, generated_single_file_binary_project};
 use super::rust_interop::PackageRustInteropContext;
 use super::rust_interop_resolution::resolve_package_rust_interop_metadata;
 use super::sysroot_interop::attach_stdlib_rust_interop;

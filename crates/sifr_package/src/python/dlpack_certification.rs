@@ -1,5 +1,5 @@
 use super::arrow_certification::{
-    is_dotted_target, validate_distributions, validate_fixture, DlpackCertification,
+    DlpackCertification, is_dotted_target, validate_distributions, validate_fixture,
 };
 use std::path::Path;
 

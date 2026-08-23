@@ -331,9 +331,11 @@ fn test_list_builtin_uses_owned_collection_for_unknown_set_with_list_hint() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated
-        .rust_source
-        .contains(".iter().cloned().collect::<Vec<_>>()"));
+    assert!(
+        generated
+            .rust_source
+            .contains(".iter().cloned().collect::<Vec<_>>()")
+    );
 }
 
 #[test]
@@ -389,9 +391,11 @@ fn test_set_builtin_with_generator_lowers_to_collect_not_plain_set_call() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated
-        .rust_source
-        .contains("collect::<std::collections::HashSet<_>>()"));
+    assert!(
+        generated
+            .rust_source
+            .contains("collect::<std::collections::HashSet<_>>()")
+    );
     assert!(!generated.rust_source.contains("return set("));
 }
 
@@ -665,13 +669,17 @@ fn test_async_main_entrypoint_gets_tokio_bootstrap_dependency() {
         .module,
     );
 
-    assert!(result
-        .rust_source
-        .contains("#[::tokio::main(flavor = \"current_thread\")]"));
+    assert!(
+        result
+            .rust_source
+            .contains("#[::tokio::main(flavor = \"current_thread\")]")
+    );
     assert!(result.rust_source.contains("async fn main()"));
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
+    assert!(
+        result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio)
+    );
 }
 
 #[test]
@@ -688,16 +696,22 @@ fn test_async_result_main_entrypoint_keeps_result_return() {
         .module,
     );
 
-    assert!(result
-        .rust_source
-        .contains("#[::tokio::main(flavor = \"current_thread\")]"));
-    assert!(result
-        .rust_source
-        .contains("async fn main() -> Result<(), ValueError>"));
+    assert!(
+        result
+            .rust_source
+            .contains("#[::tokio::main(flavor = \"current_thread\")]")
+    );
+    assert!(
+        result
+            .rust_source
+            .contains("async fn main() -> Result<(), ValueError>")
+    );
     assert!(result.rust_source.contains("Ok(())"));
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
+    assert!(
+        result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio)
+    );
 }
 
 #[test]
@@ -713,12 +727,16 @@ fn test_task_sleep_lowers_to_tokio_sleep_and_requires_tokio() {
     );
 
     assert!(result.rust_source.contains("tokio::time::sleep"));
-    assert!(result
-        .rust_source
-        .contains("std::time::Duration::from_secs_f64"));
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
+    assert!(
+        result
+            .rust_source
+            .contains("std::time::Duration::from_secs_f64")
+    );
+    assert!(
+        result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio)
+    );
 }
 
 #[test]
@@ -735,12 +753,16 @@ fn test_task_sleep_requires_tokio_without_async_main() {
         .module,
     );
 
-    assert!(!result
-        .rust_source
-        .contains("#[tokio::main(flavor = \"current_thread\")]"));
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
+    assert!(
+        !result
+            .rust_source
+            .contains("#[tokio::main(flavor = \"current_thread\")]")
+    );
+    assert!(
+        result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio)
+    );
 }
 
 #[test]
@@ -759,15 +781,21 @@ fn test_task_scope_context_materializes_runtime_container() {
 
     assert!(result.rust_source.contains("struct __SifrTaskScope"));
     assert!(result.rust_source.contains("impl __SifrTaskScope"));
-    assert!(result
-        .rust_source
-        .contains("let mut scope = __SifrTaskScope::new();"));
-    assert!(result
-        .rust_source
-        .contains("scope.__sifr_join_all().await;"));
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
+    assert!(
+        result
+            .rust_source
+            .contains("let mut scope = __SifrTaskScope::new();")
+    );
+    assert!(
+        result
+            .rust_source
+            .contains("scope.__sifr_join_all().await;")
+    );
+    assert!(
+        result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio)
+    );
 }
 
 #[test]
@@ -788,15 +816,21 @@ fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
     assert!(result.rust_source.contains("fn __sifr_spawn_infallible<"));
     assert!(result.rust_source.contains("struct __SifrScopeChild"));
     assert!(result.rust_source.contains("tokio::sync::oneshot::channel"));
-    assert!(result
-        .rust_source
-        .contains("scope.__sifr_spawn_infallible(worker());"));
-    assert!(result
-        .rust_source
-        .contains("if let Err(__sifr_scope_failure) = scope.__sifr_join_all().await"));
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
+    assert!(
+        result
+            .rust_source
+            .contains("scope.__sifr_spawn_infallible(worker());")
+    );
+    assert!(
+        result
+            .rust_source
+            .contains("if let Err(__sifr_scope_failure) = scope.__sifr_join_all().await")
+    );
+    assert!(
+        result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio)
+    );
 }
 
 #[test]
@@ -813,85 +847,29 @@ fn test_spawn_blocking_lowers_to_distinct_blocking_task_substrate() {
         .module,
     );
 
-    assert!(result
-        .rust_source
-        .contains("struct __SifrBlockingTask<T, E>"));
-    assert!(result
-        .rust_source
-        .contains("fn __sifr_spawn_blocking_infallible<"));
-    assert!(result
-        .rust_source
-        .contains("tokio::task::spawn_blocking(move || __SifrTaskResult::Ok(work()))"));
-    assert!(result
-        .rust_source
-        .contains("__sifr_spawn_blocking_infallible(compute_value);"));
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
-}
-
-#[test]
-fn test_thread_pool_executor_submit_reuses_blocking_task_substrate() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "class ThreadPoolExecutor:\n    pass\n\n\n@cpu_heavy\ndef compute_value() -> int:\n    return 42\n\nasync def main() -> Result[None, ScopeFailure]:\n    executor: ThreadPoolExecutor = ThreadPoolExecutor()\n    handle = executor.submit(compute_value)\n    result = await handle\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
+    assert!(
+        result
+            .rust_source
+            .contains("struct __SifrBlockingTask<T, E>")
     );
-
-    assert!(result
-        .rust_source
-        .contains("struct __SifrBlockingTask<T, E>"));
-    assert!(result
-        .rust_source
-        .contains("fn __sifr_spawn_blocking_infallible<"));
-    assert!(result
-        .rust_source
-        .contains("__sifr_spawn_blocking_infallible(compute_value);"));
-    assert!(result
-        .required_features
-        .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
-}
-
-#[test]
-fn test_scope_spawn_lowers_owned_coroutine_arguments() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def worker(value: int) -> int:\n    await task.sleep(0.0)\n    return value\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        value: int = 41\n        handle = scope.spawn(worker(value))\n        result = await handle\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
+    assert!(
+        result
+            .rust_source
+            .contains("fn __sifr_spawn_blocking_infallible<")
     );
-
-    assert!(result
-        .rust_source
-        .contains("scope.__sifr_spawn_infallible(worker(value));"));
-}
-
-#[test]
-fn test_scope_spawn_lowers_owned_move_coroutine_arguments() {
-    let result = generate_rust_with_metadata(
-        &lower_module(
-            parse_module(
-                "async def worker(own items: list[int]) -> int:\n    await task.sleep(0.0)\n    return len(items)\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker([1, 2]))\n        result = await handle\n    return None\n",
-            )
-            .expect("parse failed")
-            .suite(),
-        )
-        .expect("lowering failed")
-        .module,
+    assert!(
+        result
+            .rust_source
+            .contains("tokio::task::spawn_blocking(move || __SifrTaskResult::Ok(work()))")
     );
-
-    assert!(result
-        .rust_source
-        .contains("scope.__sifr_spawn_infallible(worker(vec![1_i64, 2_i64]));"));
+    assert!(
+        result
+            .rust_source
+            .contains("__sifr_spawn_blocking_infallible(compute_value);")
+    );
+    assert!(
+        result
+            .required_features
+            .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio)
+    );
 }

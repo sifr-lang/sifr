@@ -1,8 +1,8 @@
 //! Signature-aware argument lowering for method calls.
 
 use super::{
-    lower_method_call_args, lower_signature_call_args, ExprCall, FunctionType, HirExpr, LowerCtx,
-    Type,
+    ExprCall, FunctionType, HirExpr, LowerCtx, Type, lower_method_call_args,
+    lower_signature_call_args,
 };
 
 pub(super) fn lower(

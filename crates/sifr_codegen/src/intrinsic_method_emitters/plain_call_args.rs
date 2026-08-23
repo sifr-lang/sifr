@@ -1,7 +1,7 @@
 use super::{
+    HirExpr, ParamConvention, RustEmitter, RustExpr, Type,
     registry_can_construct_error_from_message, registry_is_box_new_ctor,
     registry_is_string_like_type, registry_iterable_to_vec_expr, registry_option_inner_type,
-    HirExpr, ParamConvention, RustEmitter, RustExpr, Type,
 };
 impl RustEmitter {
     pub(crate) fn flatten_option_argument_for_ir(

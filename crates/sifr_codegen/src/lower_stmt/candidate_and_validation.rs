@@ -1,8 +1,8 @@
 use super::{
-    resolve_alias_type, try_lower_leaf_expr, try_lower_leaf_expr_result,
-    try_lower_leaf_or_name_expr, try_lower_simple_stmt_with_ctx_and_bindings, CodegenError,
-    HashMap, HashSet, HirExpr, HirFStringPart, HirPattern, HirStmt, RustExpr, RustStmt,
-    ScopeContext, Type,
+    CodegenError, HashMap, HashSet, HirExpr, HirFStringPart, HirPattern, HirStmt, RustExpr,
+    RustStmt, ScopeContext, Type, resolve_alias_type, try_lower_leaf_expr,
+    try_lower_leaf_expr_result, try_lower_leaf_or_name_expr,
+    try_lower_simple_stmt_with_ctx_and_bindings,
 };
 pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
     match stmt {

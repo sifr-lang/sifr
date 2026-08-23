@@ -1,6 +1,6 @@
 use super::super::rust_interop_probe::PendingRustBridgeProbe;
-use super::bridge_aliases::package_bridge_dependency_name;
 use super::RustInteropResolver;
+use super::bridge_aliases::package_bridge_dependency_name;
 use crate::build::sysroot_interop::SysrootRustInteropTrust;
 use sifr_codegen::{RustBridgeProbeKind, RustInteropOwner, RustInteropPlanDeclaration};
 use sifr_diagnostics::DiagnosticCode;

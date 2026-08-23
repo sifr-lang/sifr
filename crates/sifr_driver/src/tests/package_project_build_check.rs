@@ -1,5 +1,5 @@
 use super::project_build_check::mktemp_dir;
-use crate::{build_cached_package_project, check_package_project, PackageEntrypoint};
+use crate::{PackageEntrypoint, build_cached_package_project, check_package_project};
 use sifr_diagnostics::DiagnosticCode;
 use std::path::{Path, PathBuf};
 
@@ -49,7 +49,7 @@ fn production_package_version(
     std::fs::write(
         root.join("Cargo.toml"),
         format!(
-            "[package]\nname = \"{cargo_name}\"\nversion = \"{version}\"\nedition = \"2021\"\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n"
+            "[package]\nname = \"{cargo_name}\"\nversion = \"{version}\"\nedition = \"2024\"\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n"
         ),
     )
     .expect("cargo manifest should be written");
@@ -76,7 +76,7 @@ fn backend_rust_package(workspace: &Path, dir_name: &str, cargo_name: &str) -> T
     std::fs::write(root.join("src/lib.rs"), "").expect("backend marker should be written");
     std::fs::write(
         root.join("Cargo.toml"),
-        format!("[package]\nname = \"{cargo_name}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n"),
+        format!("[package]\nname = \"{cargo_name}\"\nversion = \"0.1.0\"\nedition = \"2024\"\n"),
     )
     .expect("backend cargo manifest should be written");
     TestPackage {

@@ -1,7 +1,7 @@
 use super::target_resolution::{trust_allowlist_name, trust_kind_name};
 use super::{
-    canonical_sifr_target_path, canonical_trust_target_path, declaration_paths,
-    is_trusted_sysroot_package, unsafe_bridge_files, uses_bridge_root, RustInteropResolver,
+    RustInteropResolver, canonical_sifr_target_path, canonical_trust_target_path,
+    declaration_paths, is_trusted_sysroot_package, unsafe_bridge_files, uses_bridge_root,
 };
 use sifr_codegen::{
     RustInteropPlanDeclaration, RustInteropTrustRequirement, RustInteropTrustRequirementKind,

@@ -2,52 +2,14 @@ use super::narrowing_helpers::{
     is_narrowable_pop_call_for_codegen, supports_nonempty_pop_narrowing_type_for_codegen,
 };
 use super::{
-    methods, registry_box_iterator_expr, registry_defaultdict_alias_parts,
-    registry_defaultdict_default_expr, registry_defaultdict_key_arg, registry_expr_is_vec_like,
-    registry_iterable_to_owned_iter_expr, registry_iterable_to_set_expr, HirExpr, RustEmitter,
-    RustExpr, Type,
+    HirExpr, RustEmitter, RustExpr, Type, methods, registry_box_iterator_expr,
+    registry_defaultdict_alias_parts, registry_defaultdict_default_expr,
+    registry_defaultdict_key_arg, registry_expr_is_vec_like, registry_iterable_to_owned_iter_expr,
+    registry_iterable_to_set_expr,
 };
 use crate::place_emitter::MethodCallPlaces;
 use sifr_ir::MutableReceiverTarget;
 impl RustEmitter {
-    pub(crate) fn effective_method_object_ty(&self, object: &HirExpr) -> Type {
-        if let HirExpr::Name { name, ty, .. } = object {
-            if self.none_widened_local_bindings.contains(name) {
-                if let Some(bound_ty) = self.local_binding_types.get(name) {
-                    return bound_ty.clone();
-                }
-            }
-            if matches!(
-                crate::resolve_alias_type_for_plain_call(ty),
-                Type::Any | Type::Unknown
-            ) {
-                if let Some(bound_ty) = self.local_binding_types.get(name) {
-                    return bound_ty.clone();
-                }
-            }
-        }
-        object.ty().clone()
-    }
-
-    pub(crate) fn effective_registry_expr_ty(&self, expr: &HirExpr) -> Type {
-        if let HirExpr::Name { name, ty, .. } = expr {
-            if self.none_widened_local_bindings.contains(name) {
-                if let Some(bound_ty) = self.local_binding_types.get(name) {
-                    return bound_ty.clone();
-                }
-            }
-            if matches!(
-                crate::resolve_alias_type_for_plain_call(ty),
-                Type::Any | Type::Unknown
-            ) {
-                if let Some(bound_ty) = self.local_binding_types.get(name) {
-                    return bound_ty.clone();
-                }
-            }
-        }
-        expr.ty().clone()
-    }
-
     pub(crate) fn try_lower_registry_method_call_expr(
         &mut self,
         object: &HirExpr,
@@ -442,8 +404,10 @@ impl RustEmitter {
                     stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                         receiver: Box::new(object_expr.clone()),
                         method: "extend".to_string(),
-                        args: vec![registry_iterable_to_owned_iter_expr(self, arg)
-                            .map(|expr| crate::RustExpr::Paren(Box::new(expr)))?],
+                        args: vec![
+                            registry_iterable_to_owned_iter_expr(self, arg)
+                                .map(|expr| crate::RustExpr::Paren(Box::new(expr)))?,
+                        ],
                     }));
                 }
                 return Some(crate::RustExpr::Block {
@@ -466,8 +430,10 @@ impl RustEmitter {
                     stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Ident("__result".to_string())),
                         method: "extend".to_string(),
-                        args: vec![registry_iterable_to_owned_iter_expr(self, arg)
-                            .map(|expr| crate::RustExpr::Paren(Box::new(expr)))?],
+                        args: vec![
+                            registry_iterable_to_owned_iter_expr(self, arg)
+                                .map(|expr| crate::RustExpr::Paren(Box::new(expr)))?,
+                        ],
                     }));
                 }
                 return Some(crate::RustExpr::Block {

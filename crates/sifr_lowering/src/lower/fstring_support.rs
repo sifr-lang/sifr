@@ -1,6 +1,6 @@
+use super::LowerCtx;
 use super::expressions::{is_poisoned_binding_expr, lower_expr};
 use super::type_bounds::supports_print_formatting;
-use super::LowerCtx;
 use crate::hir_nodes::{HirExpr, HirFStringPart};
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;

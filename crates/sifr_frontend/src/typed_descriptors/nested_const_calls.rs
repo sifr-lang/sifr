@@ -1,6 +1,6 @@
 use super::{
-    boxed_malformed, const_value_assignable, diagnostic, ConstValue, DescriptorCollector,
-    DescriptorResult, DeterministicConstEvaluator, DiagnosticCode, Expr, ExprCall, Ranged, Type,
+    ConstValue, DescriptorCollector, DescriptorResult, DeterministicConstEvaluator, DiagnosticCode,
+    Expr, ExprCall, Ranged, Type, boxed_malformed, const_value_assignable, diagnostic,
 };
 
 impl DescriptorCollector<'_> {

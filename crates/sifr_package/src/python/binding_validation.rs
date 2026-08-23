@@ -1,6 +1,6 @@
 use super::binding_authoring::{
+    PYTHON_BINDING_SCHEMA_VERSION, PythonBinding, PythonBindingArtifact, PythonBindingSourceKind,
     python_binding_generated_digest, python_binding_source_fingerprint, safe_package_path,
-    PythonBinding, PythonBindingArtifact, PythonBindingSourceKind, PYTHON_BINDING_SCHEMA_VERSION,
 };
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};

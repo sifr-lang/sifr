@@ -1,5 +1,5 @@
-use crate::{build_cached_project, build_project, check_project, emit_project, CompileResult};
-use sifr_diagnostics::{render_compact_diagnostics, DiagnosticCode};
+use crate::{CompileResult, build_cached_project, build_project, check_project, emit_project};
+use sifr_diagnostics::{DiagnosticCode, render_compact_diagnostics};
 
 pub(super) fn mktemp_dir(name: &str) -> std::path::PathBuf {
     let unique = format!(
@@ -683,9 +683,11 @@ def render() -> str:\n    try:\n        parsed: TomlValue = loads(\"name = \\\"f
         .expect("cargo manifest should be written");
     assert!(cargo_toml.contains("sifr_stdlib = { path = "));
     assert!(cargo_toml.contains("default-features = false"));
-    assert!(cargo_toml
-        .lines()
-        .any(|line| line.starts_with("sifr_stdlib = ") && line.contains("\"toml\"")));
+    assert!(
+        cargo_toml
+            .lines()
+            .any(|line| line.starts_with("sifr_stdlib = ") && line.contains("\"toml\""))
+    );
     assert!(!cargo_toml.contains("toml = { version"));
 
     let _ = std::fs::remove_dir_all(dir);
@@ -724,7 +726,9 @@ def unused() -> str:\n    try:\n        parsed: str = loads(\"name = \\\"unused\
 
     let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
         .expect("cargo manifest should be written");
-    assert!(!cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }"));
+    assert!(
+        !cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }")
+    );
 
     let _ = std::fs::remove_dir_all(dir);
 }

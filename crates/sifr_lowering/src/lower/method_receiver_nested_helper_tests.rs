@@ -1,4 +1,4 @@
-use crate::{lower_module, HirExpr, HirFunction, HirModule, HirStmt};
+use crate::{HirExpr, HirFunction, HirModule, HirStmt, lower_module};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 use sifr_type_system::ReceiverConvention;

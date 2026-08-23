@@ -128,8 +128,8 @@ impl<T, M: StructuralMapping<T>> StructuralProject for MappedValue<T, M> {
 mod tests {
     use super::*;
     use crate::interop::structural::{
-        primitive, structural_construct, ArenaNode, StructuralArena, StructuralKind,
-        StructuralScalar, StructuralScalarRef,
+        ArenaNode, StructuralArena, StructuralKind, StructuralScalar, StructuralScalarRef,
+        primitive, structural_construct,
     };
 
     struct StringMapping;

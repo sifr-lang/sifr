@@ -21,8 +21,8 @@ pub use config::effective_lint_config;
 pub use discovery::{collect_sifr_files, collect_sifr_files_for_targets};
 pub use engine::{LintPhase, LintRun, LintRunner, PhaseExecution};
 pub use fixes::{
-    collect_fixes, fix_rule_allowed, fix_source, FixOptions, FixedSource, LintFix, SourceEdit,
-    UnsafeFixPolicy,
+    FixOptions, FixedSource, LintFix, SourceEdit, UnsafeFixPolicy, collect_fixes, fix_rule_allowed,
+    fix_source,
 };
 pub use suppression::ParserAwareSuppressions;
 
@@ -699,10 +699,12 @@ mod tests {
     fn suppression_only_suppresses_matching_policy_rule() {
         let source = "def main():  # sifr: ignore[trailing-whitespace]  \n    pass\n";
         let result = lint_source(source, None, &LintOptions::default());
-        assert!(result
-            .diagnostics
-            .iter()
-            .all(|diagnostic| diagnostic.code != "SIFR-LINT-0004"));
+        assert!(
+            result
+                .diagnostics
+                .iter()
+                .all(|diagnostic| diagnostic.code != "SIFR-LINT-0004")
+        );
     }
 
     #[test]

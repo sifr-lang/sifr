@@ -1,6 +1,6 @@
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
-use sifr_type_system::{make_union, Type};
+use sifr_type_system::{Type, make_union};
 
 pub(in crate::lower) fn refine_nonempty_method_return_type(
     object_ty: &Type,

@@ -1,7 +1,7 @@
 use super::{
-    resolve_alias_type, try_lower_leaf_or_name_expr, try_lower_simple_stmt_block, HashSet, HirExpr,
-    HirPattern, HirStmt, RustExpr, RustLiteral, RustMatchArm, RustStmt, SimpleStmtBindings,
-    SimpleStmtLoweringCtx, Type,
+    HashSet, HirExpr, HirPattern, HirStmt, RustExpr, RustLiteral, RustMatchArm, RustStmt,
+    SimpleStmtBindings, SimpleStmtLoweringCtx, Type, resolve_alias_type,
+    try_lower_leaf_or_name_expr, try_lower_simple_stmt_block,
 };
 pub(super) fn try_lower_loop_else_stmts(
     loop_stmt: RustStmt,

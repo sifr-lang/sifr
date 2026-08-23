@@ -21,7 +21,7 @@ use super::parameter_conventions::{
 use super::simple_expr::lower_expr_simple;
 use super::typing_and_functions::resolve_annotation_expr;
 use super::validate_iteration_protocol_methods;
-use super::{parse_typevar_bound_expr, LowerCtx};
+use super::{LowerCtx, parse_typevar_bound_expr};
 use crate::lower::workload_annotations;
 
 pub(super) fn class_method_signature<'a>(
@@ -30,11 +30,7 @@ pub(super) fn class_method_signature<'a>(
 ) -> Option<&'a FunctionType> {
     methods.iter().find_map(
         |(name, ft)| {
-            if name == method_name {
-                Some(ft)
-            } else {
-                None
-            }
+            if name == method_name { Some(ft) } else { None }
         },
     )
 }

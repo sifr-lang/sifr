@@ -1,4 +1,4 @@
-use crate::{describe_type_with_externals, ShapeNode, StructuralShape};
+use crate::{ShapeNode, StructuralShape, describe_type_with_externals};
 use sifr_lowering::{
     AdapterHandlerPlan, CallableIdentity, ExternalDefs, LoweringResult, StaticMethodParam,
     StaticMethodSlot, StaticMethodSlotContext, StaticMethodSlotInputRole,

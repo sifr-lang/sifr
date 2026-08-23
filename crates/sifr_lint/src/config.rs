@@ -1,6 +1,6 @@
 use crate::{
-    lint_config_diagnostic, rule_metadata, EffectiveLintConfig, LintConfigOverrides, LintOptions,
-    PerFileIgnore, RuleSeverity, UnsafeFixPolicy, RULES,
+    EffectiveLintConfig, LintConfigOverrides, LintOptions, PerFileIgnore, RULES, RuleSeverity,
+    UnsafeFixPolicy, lint_config_diagnostic, rule_metadata,
 };
 use sifr_diagnostics::RenderedDiagnostic;
 use sifr_frontend::SourceProvider;

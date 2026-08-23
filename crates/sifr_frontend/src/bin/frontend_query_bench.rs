@@ -280,7 +280,7 @@ fn run_iteration(
         other => {
             return Err(format!(
                 "unknown frontend query benchmark scenario: {other}"
-            ))
+            ));
         }
     }
     Ok(())

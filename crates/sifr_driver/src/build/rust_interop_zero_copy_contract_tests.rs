@@ -1,14 +1,14 @@
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
-    apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
+    PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
 };
 use super::rust_interop_contract_tests::{
     interop_errors, package_context, param_contract, result_contract, set_bridge_roots,
     signature_contract,
 };
 use sifr_codegen::{
-    generate_rust_multi_with_metadata, RustBridgeParamConvention, RustBridgeSignatureContract,
-    RustBridgeTypeContract, RustBridgeTypeKind, StdlibCode,
+    RustBridgeParamConvention, RustBridgeSignatureContract, RustBridgeTypeContract,
+    RustBridgeTypeKind, StdlibCode, generate_rust_multi_with_metadata,
 };
 use sifr_package::TrustPolicy;
 use std::collections::BTreeMap;
@@ -115,13 +115,15 @@ fn package_rust_interop_accepts_async_static_lifetime_view() {
     generated = apply_package_rust_interop_metadata(generated, Some(context))
         .expect("async static-lifetime view contract should pass");
 
-    assert!(generated
-        .interop
-        .rust
-        .probe_plan
-        .probes
-        .iter()
-        .any(|probe| probe.kind == sifr_codegen::RustBridgeProbeKind::View));
+    assert!(
+        generated
+            .interop
+            .rust
+            .probe_plan
+            .probes
+            .iter()
+            .any(|probe| probe.kind == sifr_codegen::RustBridgeProbeKind::View)
+    );
 }
 
 #[test]
@@ -239,12 +241,16 @@ fn package_rust_interop_preserves_unsupported_return_diagnostic() {
     let diagnostics = interop_errors(generated, Some(context), "unsupported return must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("unsupported Rust bridge type"));
-    assert!(!diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.code == "SIFR-RUST-ZC-0001"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("unsupported Rust bridge type")
+    );
+    assert!(
+        !diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "SIFR-RUST-ZC-0001")
+    );
 }
 
 #[test]
@@ -278,9 +284,11 @@ fn package_rust_interop_rejects_legacy_mutable_bool_key() {
     let diagnostics = interop_errors(generated, Some(context), "legacy mutable key must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-ZC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("unsupported `@rust.view(...)` key `mutable`"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("unsupported `@rust.view(...)` key `mutable`")
+    );
     assert_eq!(diagnostics.len(), 1);
 }
 
@@ -305,9 +313,11 @@ fn package_rust_interop_rejects_zero_copy_copy_fallback() {
     let diagnostics = interop_errors(generated, Some(context), "copy fallback must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-ZC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("unsupported `@rust.zero_copy(...)` key `copy_fallback`"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("unsupported `@rust.zero_copy(...)` key `copy_fallback`")
+    );
 }
 
 #[test]

@@ -1,6 +1,6 @@
 use crate::{
-    IpcEnvelope, IpcMalformedKind, IpcRejectReason, IpcRequestTracker, IpcRequestTrackerError,
-    IpcWireFrameKind, IpcWireSchema, IPC_DEFAULT_MAX_FRAME_BYTES,
+    IPC_DEFAULT_MAX_FRAME_BYTES, IpcEnvelope, IpcMalformedKind, IpcRejectReason, IpcRequestTracker,
+    IpcRequestTrackerError, IpcWireFrameKind, IpcWireSchema,
 };
 use std::fmt::{Display, Formatter};
 
@@ -433,9 +433,9 @@ fn version_in_range(version: u16, min: u16, max: u16) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        negotiate_protocol_version, schema_ranges_overlap, schemas_match_exact,
         IpcConnectionConfig, IpcConnectionError, IpcConnectionPhase, IpcConnectionState,
-        IpcHandshakeDecision,
+        IpcHandshakeDecision, negotiate_protocol_version, schema_ranges_overlap,
+        schemas_match_exact,
     };
     use crate::{
         IpcEnvelope, IpcMalformedKind, IpcRejectReason, IpcShutdownMode, IpcTerminationReason,

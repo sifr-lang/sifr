@@ -1,9 +1,9 @@
 use super::{
-    diagnostic_with_code, module_state, AuxiliarySourceState, BTreeMap, BTreeSet, DiagnosticCode,
-    ExternalDefs, FileId, FrontendContext, FrontendInput, FrontendMode, FrontendReuseCaches,
-    GraphRevision, ModuleId, ProjectRoot, RenderedDiagnostic, SourcePath, SourceProvider,
-    SourceRevision, WorkspaceAuxiliarySource, WorkspaceCompilerOptions,
-    WorkspacePackageConfigIdentity, WorkspaceSessionTarget, WorkspaceSingleFileTarget,
+    AuxiliarySourceState, BTreeMap, BTreeSet, DiagnosticCode, ExternalDefs, FileId,
+    FrontendContext, FrontendInput, FrontendMode, FrontendReuseCaches, GraphRevision, ModuleId,
+    ProjectRoot, RenderedDiagnostic, SourcePath, SourceProvider, SourceRevision,
+    WorkspaceAuxiliarySource, WorkspaceCompilerOptions, WorkspacePackageConfigIdentity,
+    WorkspaceSessionTarget, WorkspaceSingleFileTarget, diagnostic_with_code, module_state,
 };
 
 fn auxiliary_source_states(

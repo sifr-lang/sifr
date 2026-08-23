@@ -186,8 +186,10 @@ mod tests {
         assert_eq!(facts.unreachable_top_level_stmt_indices(), &[1]);
         assert_eq!(facts.reachable_return_types(), &[Type::Int]);
         assert!(facts.flow_graph_fingerprint().contains("define value: int"));
-        assert!(facts
-            .flow_graph_debug_trace()
-            .contains("effect exit Return"));
+        assert!(
+            facts
+                .flow_graph_debug_trace()
+                .contains("effect exit Return")
+        );
     }
 }

@@ -3208,12 +3208,6 @@ fn run_command(cmd: &String) -> Result<String, IOError> {
 fn env_get(key: &String) -> Option<String> {
     ::sifr_stdlib::sys::env_get(key)
 }
-fn env_set(key: &String, value: &String) {
-    ::sifr_stdlib::sys::env_set(key, value);
-}
-fn env_unset(key: &String) {
-    ::sifr_stdlib::sys::env_unset(key);
-}
 fn env_keys() -> Vec<String> {
     ::sifr_stdlib::sys::env_keys()
 }
@@ -3269,12 +3263,6 @@ fn getenv(key: &String, default_value: &String) -> String {
         };
     };
     val
-}
-fn setenv(key: &String, value: &String) {
-    env_set(key, value);
-}
-fn unsetenv(key: &String) {
-    env_unset(key);
 }
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
@@ -4660,14 +4648,12 @@ fn main() {
             .message.clone()).as_str()); __sifr_concat }
         );
     }
-    setenv(&"SIFR_SYSTEM_TOOLS_DEMO".to_string(), &"ok".to_string());
     println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(13usize + 0usize);
-        __sifr_concat.push_str("env getenv = "); __sifr_concat.push_str((getenv(&
-        "SIFR_SYSTEM_TOOLS_DEMO".to_string(), & "fallback".to_string())).as_str());
-        __sifr_concat }
+        "{}", { let mut __sifr_concat : String = String::with_capacity(21usize + 0usize);
+        __sifr_concat.push_str("env PATH available = "); __sifr_concat
+        .push_str((format!("{}", (getenv(& "PATH".to_string(), & "".to_string()).chars()
+        .count() as i64) > (0_i64))).as_str()); __sifr_concat }
     );
-    unsetenv(&"SIFR_SYSTEM_TOOLS_DEMO".to_string());
     println!(
         "{}", { let mut __sifr_concat : String = String::with_capacity(15usize + 0usize);
         __sifr_concat.push_str("sys.argv len = "); __sifr_concat.push_str((format!("{}",

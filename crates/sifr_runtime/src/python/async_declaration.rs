@@ -1,11 +1,12 @@
 use super::async_runtime::{
-    finish_submission, register_submission, release_pending_submission, reserve_cleanup_submission,
-    reserve_submission, terminal_for_submission, SubmissionCancellationBridge,
+    SubmissionCancellationBridge, finish_submission, register_submission,
+    release_pending_submission, reserve_cleanup_submission, reserve_submission,
+    terminal_for_submission,
 };
 use super::async_terminal::{
     PythonTerminal, PythonTerminalError, PythonTerminalOutcome, PythonTerminalValue,
 };
-use super::async_value::{materialize, PythonAsyncRequest, PythonAsyncTarget, PythonAsyncValue};
+use super::async_value::{PythonAsyncRequest, PythonAsyncTarget, PythonAsyncValue, materialize};
 use super::context_ops::PythonExitDecision;
 use super::object_ops::clone_handle;
 use super::{PythonError, PythonRuntimeError};
@@ -13,7 +14,7 @@ use crate::cancellation::CancellationCarrier;
 use pyo3::prelude::*;
 use pyo3::types::{PyCFunction, PyDict, PyTuple};
 use std::collections::HashSet;
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::Arc;
 
 /// Submit one generated typed declaration operation to the application-owned

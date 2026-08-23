@@ -1,5 +1,5 @@
 use super::*;
-use crate::{lower_module, HirExpr, HirStmt};
+use crate::{HirExpr, HirStmt, lower_module};
 use sifr_python_parser::parse_module;
 
 fn lower_source(source: &str) -> crate::LoweringResult {

@@ -439,18 +439,26 @@ pub(crate) fn test_batch_group_dispatch_uses_entry_termination_trait() {
     );
     let group = build_group_sources(vec![compiled]).expect("batch group");
 
-    assert!(group
-        .generated_main
-        .contains("impl<E: std::fmt::Debug> __SifrBatchTermination for Result<(), E>"));
-    assert!(group
-        .generated_main
-        .contains("=> __SifrBatchTermination::__sifr_finish("));
-    assert!(group
-        .generated_main
-        .contains("pub fn sifr_case_async_result_fixture_0_"));
-    assert!(group
-        .generated_main
-        .contains("super::__SifrBatchTermination::__sifr_finish("));
+    assert!(
+        group
+            .generated_main
+            .contains("impl<E: std::fmt::Debug> __SifrBatchTermination for Result<(), E>")
+    );
+    assert!(
+        group
+            .generated_main
+            .contains("=> __SifrBatchTermination::__sifr_finish(")
+    );
+    assert!(
+        group
+            .generated_main
+            .contains("pub fn sifr_case_async_result_fixture_0_")
+    );
+    assert!(
+        group
+            .generated_main
+            .contains("super::__SifrBatchTermination::__sifr_finish(")
+    );
     assert!(!group.generated_main.contains("pub async fn"));
 }
 

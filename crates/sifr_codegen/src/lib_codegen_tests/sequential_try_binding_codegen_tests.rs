@@ -564,7 +564,9 @@ def classify() -> Result[str, IOError]:
 "#,
     );
 
-    assert!(generated.contains("Err(__sifr_try_err) => {\n            return Err(__sifr_try_err);"));
+    assert!(
+        generated.contains("Err(__sifr_try_err) => {\n            return Err(__sifr_try_err);")
+    );
     assert!(!generated.contains("structured statement emission missing"));
     syn::parse_file(&generated).expect("branchless residual Rust should parse");
 }

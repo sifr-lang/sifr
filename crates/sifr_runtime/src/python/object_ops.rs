@@ -1,7 +1,7 @@
-use super::{runtime_config, ForeignObject, PythonError, PythonRuntimeError};
+use super::{ForeignObject, PythonError, PythonRuntimeError, runtime_config};
+use pyo3::IntoPyObjectExt;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyList, PyTuple};
-use pyo3::IntoPyObjectExt;
 use std::collections::HashMap;
 
 pub type ObjectHandle = ForeignObject;

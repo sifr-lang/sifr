@@ -13,8 +13,8 @@ use sifr_diagnostics::{
 use sifr_python_ast::token::TokenKind;
 use sifr_python_ast::{ModModule, PythonVersion, Stmt};
 use sifr_python_parser::{
-    parse_unchecked, InterpolatedStringErrorType, LexicalErrorType, Mode, ParseError,
-    ParseErrorType, ParseOptions, Parsed, UnsupportedSyntaxError,
+    InterpolatedStringErrorType, LexicalErrorType, Mode, ParseError, ParseErrorType, ParseOptions,
+    Parsed, UnsupportedSyntaxError, parse_unchecked,
 };
 pub use sifr_source::{SourceText, TextPosition, TextRangeUtf};
 use std::collections::BTreeMap;
@@ -481,8 +481,8 @@ mod syntax_matrix_tests;
 #[cfg(test)]
 mod tests {
     use super::{
-        expected_details, parse_diagnostic, parse_module, parse_module_raw, SourceText,
-        TextPosition,
+        SourceText, TextPosition, expected_details, parse_diagnostic, parse_module,
+        parse_module_raw,
     };
     use ruff_text_size::{TextRange, TextSize};
 
@@ -492,10 +492,12 @@ mod tests {
             .expect("valid module should parse");
 
         assert_eq!(parsed.suite().len(), 1);
-        assert!(parsed
-            .tokens()
-            .iter()
-            .any(|token| token.kind.as_str() == "Def"));
+        assert!(
+            parsed
+                .tokens()
+                .iter()
+                .any(|token| token.kind.as_str() == "Def")
+        );
     }
 
     #[test]
@@ -595,9 +597,11 @@ mod tests {
         );
 
         assert_eq!(diagnostic.code, "SIFR-INTERNAL-0001");
-        assert!(diagnostic
-            .message
-            .contains("invalid parser diagnostic span"));
+        assert!(
+            diagnostic
+                .message
+                .contains("invalid parser diagnostic span")
+        );
         assert!(diagnostic.spans.is_empty());
     }
 

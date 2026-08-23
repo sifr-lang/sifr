@@ -1,12 +1,12 @@
 use super::python_bridges::embedded_bridge_sources;
-use super::python_runtime::{inject_python_runtime_bootstrap, PackagePythonRuntime};
-use crate::diagnostics::{run_codegen_with_boundary, RenderedDiagnostic};
+use super::python_runtime::{PackagePythonRuntime, inject_python_runtime_bootstrap};
+use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary};
 use crate::frontend::FrontendCompiled;
 use crate::project::{
-    assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path, ProjectLowering,
+    ProjectLowering, assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path,
 };
 use sifr_codegen::{
-    generate_rust_multi_with_metadata, generate_rust_with_stdlib_for_module, StdlibCode,
+    StdlibCode, generate_rust_multi_with_metadata, generate_rust_with_stdlib_for_module,
 };
 use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
@@ -287,16 +287,20 @@ mod tests {
         let generated = apply_package_runtime_metadata(base_project(), Some(metadata))
             .expect("metadata should apply");
 
-        assert!(generated
-            .required_features
-            .contains(&StdlibFeature::PythonRuntime));
+        assert!(
+            generated
+                .required_features
+                .contains(&StdlibFeature::PythonRuntime)
+        );
         assert_eq!(
             generated.cache_key_fragment.as_deref(),
             Some("[python-runtime]\ndigest-a\n")
         );
-        assert!(generated
-            .main_rs
-            .contains("__sifr_initialize_python_runtime"));
+        assert!(
+            generated
+                .main_rs
+                .contains("__sifr_initialize_python_runtime")
+        );
         assert!(generated.python_runtime.is_some());
     }
 
@@ -370,10 +374,12 @@ mod tests {
         let second = apply_package_runtime_metadata(base_project(), Some(second))
             .expect("second metadata should apply");
         assert_ne!(first.cache_key_fragment, second.cache_key_fragment);
-        assert!(first
-            .cache_key_fragment
-            .as_deref()
-            .is_some_and(|value| value.contains("[python-bindings]\nbinding-a")));
+        assert!(
+            first
+                .cache_key_fragment
+                .as_deref()
+                .is_some_and(|value| value.contains("[python-bindings]\nbinding-a"))
+        );
     }
 
     #[test]

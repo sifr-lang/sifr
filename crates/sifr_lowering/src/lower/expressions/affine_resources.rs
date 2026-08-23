@@ -1,4 +1,4 @@
-use super::{consume_owned_value, HirExpr, LowerCtx, TextRange, Type};
+use super::{HirExpr, LowerCtx, TextRange, Type, consume_owned_value};
 
 pub(in crate::lower) fn affine_value_references_name(expr: &HirExpr, target: &str) -> bool {
     if !expr.ty().contains_affine_resource() {

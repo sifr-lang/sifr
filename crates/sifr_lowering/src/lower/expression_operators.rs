@@ -1,3 +1,4 @@
+use super::LowerCtx;
 use super::arithmetic_warnings::check_int_overflow_risk;
 use super::contextual_list_literal_specialization::specialize_empty_list_literal;
 use super::empty_collection_refinement::{
@@ -12,12 +13,11 @@ use super::numeric_sentinels::{
     retag_numeric_sentinel_name_expr,
 };
 use super::type_bounds::{supports_hash_key_in_context, supports_structural_equality_in_context};
-use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use num_bigint::BigInt;
 use ruff_text_size::Ranged;
 use sifr_python_ast::{CmpOp, ExprBinOp, ExprCompare, ExprUnaryOp, Operator, UnaryOp};
-use sifr_type_system::{type_check_binary_op, type_check_comparison, type_check_unary_op, Type};
+use sifr_type_system::{Type, type_check_binary_op, type_check_comparison, type_check_unary_op};
 
 fn is_none_identity_comparison(left: &Type, right: &Type) -> bool {
     matches!(left.resolve_alias(), Type::None) || matches!(right.resolve_alias(), Type::None)

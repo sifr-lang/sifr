@@ -1,4 +1,4 @@
-use super::{descriptor_declarations::malformed, Expr, LowerCtx, Ranged, Stmt, Type};
+use super::{Expr, LowerCtx, Ranged, Stmt, Type, descriptor_declarations::malformed};
 use sifr_ir::{
     AttachedApiDeclaration, AttachedApiReceiver, AttachedApiSetDeclaration, AttachedApiSetIdentity,
 };

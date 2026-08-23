@@ -1,6 +1,6 @@
 use crate::ir_imports::collect_import_needs_from_items;
 use crate::lib_project_codegen::ProjectUnionUsage;
-use crate::{publicize_generated_module_source, HashMap, Renderer, RustFile, RustItem};
+use crate::{HashMap, Renderer, RustFile, RustItem, publicize_generated_module_source};
 use std::fmt::Write;
 
 const PROJECT_UNION_MODULE: &str = "__sifr_project_unions";

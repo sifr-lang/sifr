@@ -1,6 +1,6 @@
 use crate::{
-    intersect_with_union, remove_none_from_union, subtract_from_union, union_contains,
-    union_contains_none, Type,
+    Type, intersect_with_union, remove_none_from_union, subtract_from_union, union_contains,
+    union_contains_none,
 };
 
 #[test]

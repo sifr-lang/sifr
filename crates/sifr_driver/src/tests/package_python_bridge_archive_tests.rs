@@ -33,10 +33,12 @@ fn archived_biip_bridge_builds_and_runs_without_checkout_or_extraction() {
     sifr_package::write_python_bridge_inventory(package, &inventory)
         .expect("bridge inventory should be written");
     let installed_app = package_and_unpack(&dir, &app);
-    assert!(installed_app
-        .root
-        .join("src/python_bridges/__sifr_inventory__.json")
-        .is_file());
+    assert!(
+        installed_app
+            .root
+            .join("src/python_bridges/__sifr_inventory__.json")
+            .is_file()
+    );
     std::fs::remove_dir_all(&app.root).expect("source checkout should be removed before build");
 
     let graph = package_graph(&dir, &[&installed_app], &[]);

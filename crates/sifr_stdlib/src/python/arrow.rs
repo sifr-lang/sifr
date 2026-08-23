@@ -1,4 +1,4 @@
-use super::{object_bridge, resource_value, take_resource, Handle, PythonError, PythonObject};
+use super::{Handle, PythonError, PythonObject, object_bridge, resource_value, take_resource};
 use sifr_runtime::python;
 
 type ResourceIdentity = Handle<python::PythonResourceIdentity>;

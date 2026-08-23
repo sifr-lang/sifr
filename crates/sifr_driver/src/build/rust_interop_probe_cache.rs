@@ -186,8 +186,8 @@ fn nearest_ancestor_file(start: &Path, file_name: &str) -> Option<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::{
-        artifact_cache_root, probe_cache_file_with_env, probe_cache_root, ProbeCacheKeyCache,
-        RUST_BRIDGE_PROBE_CACHE_DIR,
+        ProbeCacheKeyCache, RUST_BRIDGE_PROBE_CACHE_DIR, artifact_cache_root,
+        probe_cache_file_with_env, probe_cache_root,
     };
     use std::ffi::OsString;
     use std::path::{Path, PathBuf};

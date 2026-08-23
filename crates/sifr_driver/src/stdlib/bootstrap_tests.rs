@@ -350,23 +350,8 @@ fn runtime_information_modules_export_only_canonical_operation_names() {
         ),
         (
             "sifr.env",
-            &[
-                "getenv_opt",
-                "getenv",
-                "setenv",
-                "unsetenv",
-                "keys",
-                "values",
-                "items",
-            ][..],
-            &[
-                "env_get",
-                "env_set",
-                "env_unset",
-                "env_keys",
-                "env_values",
-                "env_items",
-            ][..],
+            &["getenv_opt", "getenv", "keys", "values", "items"][..],
+            &["env_get", "env_keys", "env_values", "env_items"][..],
         ),
     ] {
         let functions = compiled
@@ -821,16 +806,20 @@ fn private_stdlib_imports_resolve_only_from_compiled_source_exports() {
     ];
 
     let compiled = compile_fixture_sources(&sources).expect("source-backed import should compile");
-    assert!(compiled
-        .defs
-        .functions
-        .get("sifr.fixture")
-        .is_some_and(|functions| functions.contains_key("forwarded")));
-    assert!(compiled
-        .code
-        .transitive_deps
-        .get("sifr.fixture")
-        .is_some_and(|deps| deps.contains("_sifr.fixture")));
+    assert!(
+        compiled
+            .defs
+            .functions
+            .get("sifr.fixture")
+            .is_some_and(|functions| functions.contains_key("forwarded"))
+    );
+    assert!(
+        compiled
+            .code
+            .transitive_deps
+            .get("sifr.fixture")
+            .is_some_and(|deps| deps.contains("_sifr.fixture"))
+    );
 }
 
 #[test]
@@ -850,9 +839,11 @@ fn missing_private_stdlib_member_is_a_structured_bootstrap_failure() {
 
     let diagnostics = fixture_diagnostics(&sources);
     assert!(!diagnostics.is_empty());
-    assert!(diagnostics
-        .iter()
-        .all(|diagnostic| diagnostic.code == DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE.code()));
+    assert!(
+        diagnostics
+            .iter()
+            .all(|diagnostic| diagnostic.code == DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE.code())
+    );
     assert!(diagnostics.iter().any(|diagnostic| {
         diagnostic.message.contains("_sifr.fixture") && diagnostic.message.contains("absent")
     }));
@@ -868,10 +859,14 @@ fn missing_private_stdlib_module_is_a_structured_bootstrap_failure() {
 
     let diagnostics = fixture_diagnostics(&sources);
     assert!(!diagnostics.is_empty());
-    assert!(diagnostics
-        .iter()
-        .all(|diagnostic| diagnostic.code == DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE.code()));
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("_sifr.missing")));
+    assert!(
+        diagnostics
+            .iter()
+            .all(|diagnostic| diagnostic.code == DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE.code())
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("_sifr.missing"))
+    );
 }

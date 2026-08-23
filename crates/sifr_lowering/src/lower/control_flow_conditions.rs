@@ -1,7 +1,7 @@
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::TextRange;
-use sifr_type_system::{union_contains_none, Type};
+use sifr_type_system::{Type, union_contains_none};
 
 pub(in crate::lower) fn validate_control_flow_condition(
     condition: &HirExpr,

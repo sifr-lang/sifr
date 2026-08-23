@@ -1,15 +1,15 @@
 use super::*;
 use crate::python::{
-    close_object, initialize_runtime, reset_runtime_state_for_tests, test_config, test_guard,
-    PythonResourceIdentity,
+    PythonResourceIdentity, close_object, initialize_runtime, reset_runtime_state_for_tests,
+    test_config, test_guard,
 };
 use pyo3::exceptions::PyBufferError;
 use pyo3::ffi;
 use pyo3::prelude::*;
 use std::ffi::{c_char, c_int, c_void};
 use std::ptr;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 const BUFFER_FORMAT: &[u8; 2] = b"B\0";
 

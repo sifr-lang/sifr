@@ -1,6 +1,6 @@
 use super::{
-    generate_rust_with_stdlib_for_module_with_project_policy, publicize_generated_module_source,
     HashMap, HashSet, HirModule, StdlibCode,
+    generate_rust_with_stdlib_for_module_with_project_policy, publicize_generated_module_source,
 };
 use crate::entrypoints::generate_rust_test_with_project_policy;
 use crate::lib_project_codegen::{

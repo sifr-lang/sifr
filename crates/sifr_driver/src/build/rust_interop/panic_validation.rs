@@ -1,5 +1,5 @@
-use super::{canonical_sifr_target_path, canonical_trust_target_path, RustInteropResolver};
-use crate::build::rust_interop_trust::{effective_panic_policy, EffectivePanicPolicy};
+use super::{RustInteropResolver, canonical_sifr_target_path, canonical_trust_target_path};
+use crate::build::rust_interop_trust::{EffectivePanicPolicy, effective_panic_policy};
 use sifr_codegen::{RustBridgePanicErrorContract, RustBridgeSignatureContract, RustBridgeTypeKind};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropEffect};

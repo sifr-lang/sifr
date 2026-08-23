@@ -408,12 +408,16 @@ fn test_run_tests_frontend_type_errors_use_single_path_prefix() {
     let errors = run_tests(&test_dir, &mut DiskSourceProvider::new())
         .expect_err("type errors in test module should fail frontend");
     let messages: Vec<String> = errors.iter().map(|error| error.message.clone()).collect();
-    assert!(messages
-        .iter()
-        .all(|message| message.contains("test_bad.sifr")));
-    assert!(messages
-        .iter()
-        .all(|message| !message.contains("] [test_bad] invalid condition type")));
+    assert!(
+        messages
+            .iter()
+            .all(|message| message.contains("test_bad.sifr"))
+    );
+    assert!(
+        messages
+            .iter()
+            .all(|message| !message.contains("] [test_bad] invalid condition type"))
+    );
     assert!(
         errors
             .iter()

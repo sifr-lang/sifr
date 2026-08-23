@@ -1,7 +1,7 @@
 //! Rendering for non-fatal lowering diagnostics shared by CLI and editor analysis.
 
 use crate::{
-    diagnostic_with_source_range, diagnostic_with_source_ranges_args_help, FrontendSourceContext,
+    FrontendSourceContext, diagnostic_with_source_range, diagnostic_with_source_ranges_args_help,
 };
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{LoweringWarningDiagnostic, RevealTypeDiagnostic};

@@ -1,13 +1,13 @@
 use super::{
-    async_effects, collect_class_type, collect_function_defaults, collect_type_alias_decls,
-    collect_type_vars, compiler_intrinsics, extract_function_type, function_body_contains_yield,
-    import_diagnostics, import_resolution, imported_class_identity, imported_defaults, imports,
-    integer_literal_diagnostics, module_constants_lowering, module_function_registry,
-    name_diagnostics, parse_typevar_bound_expr, parse_typevar_declaration_specs,
-    predeclare_type_aliases, private_stdlib_imports, python_interop, register_builtins,
-    resolve_imports_early, resolve_type_aliases, rust_callback_callsite, rust_interop, str,
-    workload_annotations, Expr, ExternalDefs, HirDiagnostic, HirExpr, HirImport, HirModule,
-    LowerCtx, Ranged, Stmt, TextRange, Type,
+    Expr, ExternalDefs, HirDiagnostic, HirExpr, HirImport, HirModule, LowerCtx, Ranged, Stmt,
+    TextRange, Type, async_effects, collect_class_type, collect_function_defaults,
+    collect_type_alias_decls, collect_type_vars, compiler_intrinsics, extract_function_type,
+    function_body_contains_yield, import_diagnostics, import_resolution, imported_class_identity,
+    imported_defaults, imports, integer_literal_diagnostics, module_constants_lowering,
+    module_function_registry, name_diagnostics, parse_typevar_bound_expr,
+    parse_typevar_declaration_specs, predeclare_type_aliases, private_stdlib_imports,
+    python_interop, register_builtins, resolve_imports_early, resolve_type_aliases,
+    rust_callback_callsite, rust_interop, str, workload_annotations,
 };
 use sifr_ir::LoweringResult;
 pub(in crate::lower) fn lower_module_impl(

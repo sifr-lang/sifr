@@ -1,6 +1,6 @@
 use super::bridge_resolution::{
-    resolve_python_bridge_graph, resolved_python_bridge_package_key,
-    resolved_python_bridge_runtime_package, ResolvedPythonBridgeImport,
+    ResolvedPythonBridgeImport, resolve_python_bridge_graph, resolved_python_bridge_package_key,
+    resolved_python_bridge_runtime_package,
 };
 use super::requirements::canonical_python_requirements;
 use super::test_support::{graph, package, package_id};
@@ -28,9 +28,11 @@ fn resolved_package_key_is_stable_distinct_and_a_valid_identifier_segment() {
     assert!(key.bytes().all(|byte| byte.is_ascii_hexdigit()));
     let runtime_package = resolved_python_bridge_runtime_package(&first);
     assert!(runtime_package.starts_with("__sifr_bridge__.p_"));
-    assert!(runtime_package
-        .split('.')
-        .all(|component| component.starts_with('_') || component.starts_with('p')));
+    assert!(
+        runtime_package
+            .split('.')
+            .all(|component| component.starts_with('_') || component.starts_with('p'))
+    );
 }
 
 #[test]
@@ -39,9 +41,11 @@ fn missing_root_package_is_a_structured_graph_error() {
         .expect_err("missing bridge root package must fail");
 
     assert_eq!(diagnostics[0].code, DiagnosticCode::PACKAGE_METADATA_PARSE);
-    assert!(diagnostics[0]
-        .message
-        .contains("missing from the package graph"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("missing from the package graph")
+    );
 }
 
 #[test]
@@ -82,10 +86,12 @@ fn selected_bridge_graph_rewrites_package_edges_and_derives_external_requirement
             .collect::<Vec<_>>(),
         ["numpy", "requests"]
     );
-    assert!(!resolved
-        .requirements
-        .iter()
-        .any(|requirement| requirement.root == "pandas"));
+    assert!(
+        !resolved
+            .requirements
+            .iter()
+            .any(|requirement| requirement.root == "pandas")
+    );
     let app = resolved
         .packages
         .iter()

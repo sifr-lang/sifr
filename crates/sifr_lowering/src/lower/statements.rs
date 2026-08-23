@@ -1,3 +1,4 @@
+use super::LowerCtx;
 use super::assignment_widening::reconcile_optional_reassignment;
 use super::async_generator_advances::{
     finish_async_generator_advance_for_expr, record_async_generator_advance_binding,
@@ -9,7 +10,7 @@ use super::container_literal_specialization::validate_subscript_assignment_targe
 use super::control_flow_conditions::validate_control_flow_condition;
 use super::expressions::{lower_expr, lower_star_unpack_assign, lower_tuple_unpack_assign};
 use super::fixed_width_class_payload::class_specialization_payload_conflicts;
-use super::fixed_width_fitting::{validate_fixed_width_initializer, FixedWidthInitializerFit};
+use super::fixed_width_fitting::{FixedWidthInitializerFit, validate_fixed_width_initializer};
 use super::flow_helpers::{body_always_leaves_current_path, then_body_always_exits};
 use super::for_loop_safety::{is_collection_backed_iter_source, loop_body_mutates_iter_source};
 use super::if_branch_bindings::{
@@ -43,7 +44,6 @@ use super::sequence_shapes::sequence_shape_fact;
 use super::statement_diagnostics;
 use super::task_scope_calls::task_group_spawn_owner;
 use super::typing_and_functions::resolve_annotation_expr;
-use super::LowerCtx;
 use super::{
     append_growth_shapes, async_for, async_generator_advances, async_with,
     container_literal_specialization, diagnostics, expressions, fallback_error_type,
@@ -57,7 +57,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
     Expr, Pattern, Singleton, StmtAnnAssign, StmtAssign, StmtFor, StmtIf, StmtWhile,
 };
-use sifr_type_system::{make_union, FunctionType, NarrowingCondition, Type};
+use sifr_type_system::{FunctionType, NarrowingCondition, Type, make_union};
 
 mod statement_dispatch;
 pub(in crate::lower) use statement_dispatch::*;

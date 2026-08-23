@@ -1,4 +1,4 @@
-use super::{intrinsics, HirExpr, RustEmitter, Type};
+use super::{HirExpr, RustEmitter, Type, intrinsics};
 use sifr_ir::CompilerIntrinsicId;
 
 impl RustEmitter {

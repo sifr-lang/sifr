@@ -404,7 +404,7 @@ def write_manifest(crate_root: Path, name: str, deps: list[str] | None = None) -
         f"""[package]
 name = "{name}"
 version = "0.0.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 {dependency_lines}""",

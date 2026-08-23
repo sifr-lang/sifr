@@ -1,5 +1,5 @@
 use super::{
-    import_resolution, imported_defaults, name_diagnostics, ExternalDefs, LowerCtx, TextRange, Type,
+    ExternalDefs, LowerCtx, TextRange, Type, import_resolution, imported_defaults, name_diagnostics,
 };
 
 pub(in crate::lower) fn resolve_compiled_private_imports(

@@ -1,8 +1,8 @@
 use super::test_support::package;
 use super::{
-    discover_python_bridge_inventory, required_python_bridge_archive_entries,
-    validate_python_bridge_inventory_manifest, write_python_bridge_inventory, PythonBridgeImport,
-    PYTHON_BRIDGE_INVENTORY,
+    PYTHON_BRIDGE_INVENTORY, PythonBridgeImport, discover_python_bridge_inventory,
+    required_python_bridge_archive_entries, validate_python_bridge_inventory_manifest,
+    write_python_bridge_inventory,
 };
 use crate::manifest::sifr::{PythonConfig, TrustPolicy};
 use sifr_diagnostics::DiagnosticCode;
@@ -75,90 +75,6 @@ fn invalid_python_bridge_source_reports_pyimp_0002() {
 }
 
 #[test]
-fn dynamic_import_calls_and_aliases_are_rejected() {
-    for (case, source, call) in [
-        ("builtin", "value = __import__('json')\n", "__import__"),
-        (
-            "module_alias",
-            "import importlib as loader\nvalue = loader.import_module('json')\n",
-            "loader.import_module",
-        ),
-        (
-            "function_alias",
-            "from importlib import import_module as load\nvalue = load('json')\n",
-            "load",
-        ),
-        (
-            "module_assignment",
-            "import importlib\nloader = importlib\nvalue = loader.import_module('json')\n",
-            "loader.import_module",
-        ),
-        (
-            "function_assignment",
-            "import importlib\nload = importlib.import_module\nvalue = load('json')\n",
-            "load",
-        ),
-        (
-            "tuple_assignment",
-            "import importlib\nloader, load = importlib, importlib.import_module\nvalue = load('json')\n",
-            "load",
-        ),
-        (
-            "getattr_dispatch",
-            "import importlib\nvalue = getattr(importlib, 'import_module')('json')\n",
-            "getattr(importlib, import_module)",
-        ),
-        (
-            "importlib_dunder",
-            "import importlib\nvalue = importlib.__import__('json')\n",
-            "importlib.__import__",
-        ),
-        (
-            "importlib_dunder_alias",
-            "from importlib import __import__ as load\nvalue = load('json')\n",
-            "load",
-        ),
-        (
-            "builtin_assignment",
-            "load = __import__\nvalue = load('json')\n",
-            "load",
-        ),
-        (
-            "importlib_star",
-            "from importlib import *\nvalue = import_module('json')\n",
-            "import_module",
-        ),
-        (
-            "builtins_star",
-            "from builtins import *\nvalue = __import__('json')\n",
-            "__import__",
-        ),
-    ] {
-        let fixture = BridgeFixture::new(case);
-        fixture.write("dynamic.py", source);
-        let diagnostics = discover_python_bridge_inventory(&fixture.package)
-            .expect_err("dynamic import calls must fail inventory");
-        assert!(diagnostics[0].message.contains(call));
-        assert_eq!(
-            diagnostics[0].code,
-            DiagnosticCode::PYIMP_INVALID_BRIDGE_SOURCE
-        );
-    }
-}
-
-#[test]
-fn dynamic_import_callable_reference_without_a_call_is_allowed() {
-    let fixture = BridgeFixture::new("dynamic_reference");
-    fixture.write(
-        "reference.py",
-        "import importlib\nresolver = importlib.import_module\nNAME = resolver.__name__\n",
-    );
-
-    discover_python_bridge_inventory(&fixture.package)
-        .expect("a callable reference without a dynamic import call is valid");
-}
-
-#[test]
 fn invalid_module_paths_duplicates_and_relative_escape_are_distinct() {
     let fixture = BridgeFixture::new("invalid_modules");
     fixture.write("__init__.py", "VALUE = 1\n");
@@ -170,18 +86,26 @@ fn invalid_module_paths_duplicates_and_relative_escape_are_distinct() {
     let diagnostics = discover_python_bridge_inventory(&fixture.package)
         .expect_err("invalid bridge module paths must fail");
 
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("root __init__.py is reserved")));
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("valid Python identifiers")));
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("is defined by both")));
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("from .. import outside")));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("root __init__.py is reserved"))
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("valid Python identifiers"))
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("is defined by both"))
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("from .. import outside"))
+    );
 }
 
 #[test]
@@ -266,12 +190,16 @@ fn misplaced_bridge_root_and_reserved_runtime_import_are_rejected() {
         .expect_err("misplaced and reserved bridge sources must fail");
 
     assert_eq!(diagnostics.len(), 2);
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("source root must be")));
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.message.contains("reserved runtime namespace")));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("source root must be"))
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("reserved runtime namespace"))
+    );
 }
 
 #[test]
@@ -324,7 +252,9 @@ fn bridge_sources_and_generated_inventory_are_required_archive_entries() {
         &fixture.package,
         &crate::imports::source_map::PackageSourceMap::default(),
     );
-    assert!(package_required.contains(&PathBuf::from("src/python_bridges/__sifr_inventory__.json")));
+    assert!(
+        package_required.contains(&PathBuf::from("src/python_bridges/__sifr_inventory__.json"))
+    );
     assert!(package_required.contains(&PathBuf::from("src/python_bridges/adapter.py")));
 }
 
@@ -394,7 +324,7 @@ impl BridgeFixture {
         Self { root, package }
     }
 
-    fn write(&self, relative: &str, source: &str) {
+    pub(super) fn write(&self, relative: &str, source: &str) {
         self.write_at(&format!("src/python_bridges/{relative}"), source);
     }
 

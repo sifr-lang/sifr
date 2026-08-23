@@ -3222,12 +3222,6 @@ fn run_command(cmd: &String) -> Result<String, IOError> {
 fn env_get(key: &String) -> Option<String> {
     ::sifr_stdlib::sys::env_get(key)
 }
-fn env_set(key: &String, value: &String) {
-    ::sifr_stdlib::sys::env_set(key, value);
-}
-fn env_unset(key: &String) {
-    ::sifr_stdlib::sys::env_unset(key);
-}
 fn env_keys() -> Vec<String> {
     ::sifr_stdlib::sys::env_keys()
 }
@@ -3272,9 +3266,6 @@ fn os_name() -> String {
 }
 fn getenv_opt(key: &String) -> Option<String> {
     env_get(key)
-}
-fn setenv(key: &String, value: &String) {
-    env_set(key, value);
 }
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
@@ -5280,10 +5271,9 @@ fn main() {
         println!("json error: {}", err.message.clone());
     }
     println!("=== sifr.env ===");
-    let _ = setenv(&"SIFR_DEMO".to_string(), &"active".to_string());
-    let val: Option<String> = getenv_opt(&"SIFR_DEMO".to_string());
+    let val: Option<String> = getenv_opt(&"PATH".to_string());
     if let Some(val) = val {
-        println!("SIFR_DEMO = {}", val);
+        println!("PATH available = {}", ((val.chars().count() as i64) > (0_i64)));
     }
     let missing: Option<String> = getenv_opt(&"SIFR_NONEXISTENT".to_string());
     if missing.is_none() {

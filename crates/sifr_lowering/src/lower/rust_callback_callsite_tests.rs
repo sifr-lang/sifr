@@ -1,5 +1,5 @@
-use crate::lower_module;
 use crate::HirStmt;
+use crate::lower_module;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 

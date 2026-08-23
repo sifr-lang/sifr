@@ -1,7 +1,7 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::manifest::package_sections::{
-    parse_dependencies, parse_scripts, SifrDependency, SifrScript,
+    SifrDependency, SifrScript, parse_dependencies, parse_scripts,
 };
 use crate::manifest::production::{parse_source_config, validate_manifest_shape};
 use crate::manifest::sifr_fields::{

@@ -1,7 +1,7 @@
 use super::{
-    lookup_name_type, unify_name_binding, unify_types, Expr, ExprCall, FunctionEnv, HashMap,
-    LocalFunctionState, LowerCtx, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
-    DEFAULTDICT_SET_ALIAS,
+    DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS, Expr, ExprCall,
+    FunctionEnv, HashMap, LocalFunctionState, LowerCtx, Type, lookup_name_type, unify_name_binding,
+    unify_types,
 };
 use sifr_python_ast::visitor::{self, Visitor};
 

@@ -1,5 +1,5 @@
 use super::{
-    invalid_type_annotation, resolve_annotation_expr, Expr, LowerCtx, Ranged, TextRange, Type,
+    Expr, LowerCtx, Ranged, TextRange, Type, invalid_type_annotation, resolve_annotation_expr,
 };
 
 pub(super) fn resolve_python_resource_attribute_annotation(

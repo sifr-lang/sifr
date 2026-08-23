@@ -163,10 +163,11 @@ fn runtime_crate_inference_rule_is_a_typed_production_feature() {
         &sifr_driver::InteropBuildPlan::default(),
     )
     .expect("runtime dependency plan should resolve");
-    assert!(plan
-        .cargo_dependency_lines()
-        .iter()
-        .any(|line| line.starts_with("sifr_runtime = ")));
+    assert!(
+        plan.cargo_dependency_lines()
+            .iter()
+            .any(|line| line.starts_with("sifr_runtime = "))
+    );
 }
 
 #[test]

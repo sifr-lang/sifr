@@ -5,7 +5,7 @@ use sifr_python_ast::Stmt;
 use super::imported_defaults::{
     import_callable_vararg, import_callable_workload, import_python_call_shape,
 };
-use super::{import_diagnostics, name_diagnostics, ExternalDefs, LowerCtx};
+use super::{ExternalDefs, LowerCtx, import_diagnostics, name_diagnostics};
 use std::collections::HashMap;
 
 pub(in crate::lower) fn runtime_hir_import(

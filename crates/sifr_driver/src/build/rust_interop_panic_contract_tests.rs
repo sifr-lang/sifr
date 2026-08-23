@@ -94,9 +94,11 @@ fn package_rust_interop_rejects_map_error_without_representable_fallback() {
     );
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("representable redacted fallback"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("representable redacted fallback")
+    );
 }
 
 #[test]
@@ -121,9 +123,11 @@ fn package_rust_interop_rejects_map_error_without_a_mapped_error_member() {
     );
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("reserved for generated wrapper failures"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("reserved for generated wrapper failures")
+    );
 }
 
 #[test]
@@ -148,9 +152,11 @@ fn package_rust_interop_rejects_wrapper_only_error_channel() {
     );
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("reserved for generated wrapper failures"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("reserved for generated wrapper failures")
+    );
 }
 
 #[test]
@@ -175,9 +181,11 @@ fn package_rust_interop_rejects_similarly_named_panic_error() {
     );
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("must expose `RustPanicError`"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("must expose `RustPanicError`")
+    );
 }
 
 #[test]
@@ -205,9 +213,11 @@ fn package_rust_interop_rejects_async_map_error_until_async_wrapper_certificatio
     );
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("async panic-wrapper certification"));
+    assert!(
+        diagnostics[0]
+            .message
+            .contains("async panic-wrapper certification")
+    );
 }
 
 #[test]

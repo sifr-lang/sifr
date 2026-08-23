@@ -1,17 +1,17 @@
 //! Sifr-owned formatter API backed by the Sifr-aware Ruff formatter.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
-use ruff_formatter::printer::LineEnding;
 use ruff_formatter::LineWidth;
+use ruff_formatter::printer::LineEnding;
 use ruff_python_formatter::{
-    format_sifr_module_source, format_sifr_range as ruff_format_sifr_range, DocstringCode,
-    DocstringCodeLineWidth as RuffDocstringCodeLineWidth, FormatModuleError, PreviewMode,
-    PyFormatOptions,
+    DocstringCode, DocstringCodeLineWidth as RuffDocstringCodeLineWidth, FormatModuleError,
+    PreviewMode, PyFormatOptions, format_sifr_module_source,
+    format_sifr_range as ruff_format_sifr_range,
 };
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic};
 use sifr_frontend::SourceProvider;
-use sifr_syntax::{parse_module, SourceText};
+use sifr_syntax::{SourceText, parse_module};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};

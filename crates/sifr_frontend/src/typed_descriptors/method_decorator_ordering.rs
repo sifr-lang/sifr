@@ -1,4 +1,4 @@
-use super::{diagnostic, DescriptorResolver};
+use super::{DescriptorResolver, diagnostic};
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{DeclarationDescriptorKind, HirDiagnostic};

@@ -1,7 +1,7 @@
+use crate::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::graph::derive::SifrPackageMetadata;
 use crate::manifest::sifr::{PackageSourceRoot, SifrManifest};
-use crate::CargoPackageId;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -15,7 +15,7 @@ use filesystem::{
     path_string, sha256_hex,
 };
 use import_classification::{classify_imports, relative_import_escape};
-use imports::{collect_imports, RawImport};
+use imports::{RawImport, collect_imports};
 
 pub const PYTHON_BRIDGE_ROOT: &str = "src/python_bridges";
 pub const PYTHON_BRIDGE_INVENTORY: &str = "src/python_bridges/__sifr_inventory__.json";

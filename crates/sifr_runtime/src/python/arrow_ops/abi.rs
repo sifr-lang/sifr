@@ -1,4 +1,4 @@
-use super::{arrow_error, PythonError};
+use super::{PythonError, arrow_error};
 use std::ffi::{c_char, c_void};
 use std::ptr::NonNull;
 
@@ -379,10 +379,12 @@ mod tests {
         let mut schema = schema();
         let mut array = array();
         schema.release = None;
-        assert!(validate_schema(pointer(&mut schema), "test")
-            .expect_err("release is required")
-            .message
-            .contains("release callback"));
+        assert!(
+            validate_schema(pointer(&mut schema), "test")
+                .expect_err("release is required")
+                .message
+                .contains("release callback")
+        );
 
         schema.release = Some(release_schema);
         schema.n_children = 1;
@@ -442,14 +444,18 @@ mod tests {
                 .cast::<c_void>(),
         )
         .expect("offset pointer");
-        assert!(validate_schema(pointer, "test")
-            .expect_err("misaligned schema must fail before dereference")
-            .message
-            .contains("aligned"));
-        assert!(schema_consumption(pointer)
-            .expect_err("misaligned schema must fail during finalization")
-            .message
-            .contains("aligned"));
+        assert!(
+            validate_schema(pointer, "test")
+                .expect_err("misaligned schema must fail before dereference")
+                .message
+                .contains("aligned")
+        );
+        assert!(
+            schema_consumption(pointer)
+                .expect_err("misaligned schema must fail during finalization")
+                .message
+                .contains("aligned")
+        );
         for reserved in [5, 6] {
             assert!(validate_device_type(reserved, "test").is_err());
         }

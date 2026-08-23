@@ -1,10 +1,10 @@
 use super::{
-    body_contains_await, collect_locally_defined_vars, collect_mutated_vars_with_sigs,
-    collect_referenced_vars_with_types, default_param_convention, hir_analysis,
-    resolve_alias_type_for_plain_call, try_lower_simple_stmt_with_scope_result_and_bindings, Cell,
-    ClassScope, HashMap, HashSet, HirExpr, HirFunction, HirModule, HirStmt, LoweringStats,
+    Cell, ClassScope, HashMap, HashSet, HirExpr, HirFunction, HirModule, HirStmt, LoweringStats,
     NestedFnCapture, ParamConvention, RefCell, RustExpr, RustItem, RustStmt, RustType,
-    ScopeContext, Type,
+    ScopeContext, Type, body_contains_await, collect_locally_defined_vars,
+    collect_mutated_vars_with_sigs, collect_referenced_vars_with_types, default_param_convention,
+    hir_analysis, resolve_alias_type_for_plain_call,
+    try_lower_simple_stmt_with_scope_result_and_bindings,
 };
 use crate::stmt_support_emitter::performance_lowering_gate::stmt_needs_performance_lowering;
 pub struct RustEmitter {

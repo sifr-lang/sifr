@@ -150,10 +150,12 @@ class Model(Contract):
         .get("main")
         .and_then(|classes| classes.get("Model"))
         .expect("adapted model is finalized");
-    assert!(selection
-        .field_plans
-        .iter()
-        .all(|field| matches!(field.default, AdapterFieldDefault::Required)));
+    assert!(
+        selection
+            .field_plans
+            .iter()
+            .all(|field| matches!(field.default, AdapterFieldDefault::Required))
+    );
 }
 
 #[test]
@@ -536,19 +538,23 @@ class Model(Contract):
         .and_then(|classes| classes.get("Model"))
         .expect("factory plans are retained")
         .field_plans;
-    assert!(fields
-        .iter()
-        .all(|field| matches!(field.default, AdapterFieldDefault::Factory(_))));
+    assert!(
+        fields
+            .iter()
+            .all(|field| matches!(field.default, AdapterFieldDefault::Factory(_)))
+    );
     let model = compiled
         .hir_modules
         .get("main")
         .and_then(|module| module.classes.iter().find(|class| class.name == "Model"))
         .expect("adapted model HIR exists");
     assert_eq!(model.field_default_identities.len(), 3);
-    assert!(model
-        .field_default_identities
-        .iter()
-        .all(|(_, identity)| identity.starts_with("callable[")));
+    assert!(
+        model
+            .field_default_identities
+            .iter()
+            .all(|(_, identity)| identity.starts_with("callable["))
+    );
 }
 
 #[test]

@@ -1,5 +1,5 @@
 use super::cli_model_and_entrypoint::{
-    diagnostic_with_code, DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
+    DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, diagnostic_with_code,
 };
 use super::diagnostic_rendering_and_run::render_diagnostics;
 use clap::ValueEnum;

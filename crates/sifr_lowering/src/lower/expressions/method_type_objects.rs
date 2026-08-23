@@ -1,8 +1,8 @@
 use super::{
+    DiagnosticCode, FunctionType, HirExpr, LowerCtx, TextRange, Type,
     canonicalize_class_surface_type, coroutine_result_type, expression_diagnostics,
     method_count_range, reject_exact_method_arg_count, reject_method_arg_count,
     reject_no_method_args, resolve_method_type, resolve_str_encode_method_type, str,
-    DiagnosticCode, FunctionType, HirExpr, LowerCtx, TextRange, Type,
 };
 pub(super) fn resolve_str_method_type(
     method: &str,

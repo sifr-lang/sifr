@@ -1,6 +1,6 @@
 use super::expressions::lower_expr;
-use super::{expressions, str};
 use super::{LowerCtx, RevealTypeDiagnostic};
+use super::{expressions, str};
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;

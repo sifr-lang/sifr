@@ -129,14 +129,16 @@ fn url_leaf_matches_public_url_helpers() {
 
     assert!(sifr_stdlib::url::url_percent_decode("%zz").is_err());
     assert!(sifr_stdlib::url::url_parse_parts("https://é.example/").is_err());
-    assert!(sifr_stdlib::url::url_build_parts(
-        "https",
-        "example.com",
-        "/",
-        None,
-        Some(SifrIntBridge::from(70_000)),
-    )
-    .is_err());
+    assert!(
+        sifr_stdlib::url::url_build_parts(
+            "https",
+            "example.com",
+            "/",
+            None,
+            Some(SifrIntBridge::from(70_000)),
+        )
+        .is_err()
+    );
 }
 
 #[cfg(feature = "html")]
@@ -548,13 +550,15 @@ fn regex_leaf_matches_public_re_helpers() {
 #[cfg(feature = "runtime-observability")]
 #[test]
 fn runtime_observability_emits_diagnostic_without_subscriber() {
-    assert!(sifr_stdlib::runtime_observability::emit_diagnostic(
-        "info",
-        "test-target",
-        "test-diagnostic",
-        "test message"
-    )
-    .is_ok());
+    assert!(
+        sifr_stdlib::runtime_observability::emit_diagnostic(
+            "info",
+            "test-target",
+            "test-diagnostic",
+            "test message"
+        )
+        .is_ok()
+    );
     assert_eq!(
         sifr_stdlib::runtime_observability::emit_diagnostic(
             "verbose",
@@ -599,12 +603,14 @@ fn random_helpers_and_module_state_round_trip_without_panicking() {
         sifr_stdlib::random::random_int(SifrIntBridge::from(2), SifrIntBridge::from(4))
             .to_i64_saturating();
     assert!((2..=4).contains(&random_int));
-    assert!(sifr_stdlib::random::random_randrange(
-        SifrIntBridge::from(0),
-        SifrIntBridge::from(10),
-        SifrIntBridge::from(0),
-    )
-    .is_err());
+    assert!(
+        sifr_stdlib::random::random_randrange(
+            SifrIntBridge::from(0),
+            SifrIntBridge::from(10),
+            SifrIntBridge::from(0),
+        )
+        .is_err()
+    );
 
     let words = (0..624).map(SifrIntBridge::from).collect::<Vec<_>>();
     sifr_stdlib::random::random_module_set_state(&words, SifrIntBridge::from(17), Some(1.25))
@@ -618,12 +624,14 @@ fn random_helpers_and_module_state_round_trip_without_panicking() {
         sifr_stdlib::random::random_module_state_gauss_next(),
         Some(1.25)
     );
-    assert!(sifr_stdlib::random::random_module_set_state(
-        &[SifrIntBridge::from(1)],
-        SifrIntBridge::from(0),
-        None,
-    )
-    .is_err());
+    assert!(
+        sifr_stdlib::random::random_module_set_state(
+            &[SifrIntBridge::from(1)],
+            SifrIntBridge::from(0),
+            None,
+        )
+        .is_err()
+    );
 }
 
 #[cfg(feature = "time")]

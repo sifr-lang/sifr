@@ -1,8 +1,8 @@
 use super::CallbackOwnerState;
 use crate::cancellation::{CancellationCarrier, CancellationResume, CancellationScopeLease};
 use crate::python::{
-    context_exit_normal, context_exit_python_error, context_exit_sifr_cause, object_ops,
-    semantic_close, ObjectHandle, PythonError, PythonExitDecision, SifrExitCause,
+    ObjectHandle, PythonError, PythonExitDecision, SifrExitCause, context_exit_normal,
+    context_exit_python_error, context_exit_sifr_cause, object_ops, semantic_close,
 };
 use std::fmt;
 use std::sync::{Arc, Mutex};

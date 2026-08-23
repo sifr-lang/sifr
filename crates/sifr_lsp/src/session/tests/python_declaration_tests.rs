@@ -32,10 +32,11 @@ fn python_declaration_completion_hover_and_navigation_share_compiler_status() {
             .and_then(serde_json::Value::as_str),
         Some("verified")
     );
-    assert!(item
-        .get("detail")
-        .and_then(serde_json::Value::as_str)
-        .is_some_and(|detail| detail.contains("math.sqrt") && detail.contains("verified")));
+    assert!(
+        item.get("detail")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|detail| detail.contains("math.sqrt") && detail.contains("verified"))
+    );
 
     let hover = request(&mut session, "textDocument/hover", &uri, 6, 13);
     let hover = hover
@@ -103,10 +104,12 @@ def main() -> int:
         })
         .expect("sqrt_table completion");
     assert!(item.pointer("/data/pythonStatus").is_none());
-    assert!(!item
-        .get("detail")
-        .and_then(serde_json::Value::as_str)
-        .is_some_and(|detail| detail.contains("math.sqrt")));
+    assert!(
+        !item
+            .get("detail")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|detail| detail.contains("math.sqrt"))
+    );
 
     let hover = request(&mut session, "textDocument/hover", &uri, 9, 16);
     let markdown = hover

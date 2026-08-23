@@ -1,4 +1,4 @@
-use crate::{decode_frame, encode_frame, IpcEnvelope, IpcFrameError, IPC_LENGTH_PREFIX_BYTES};
+use crate::{IPC_LENGTH_PREFIX_BYTES, IpcEnvelope, IpcFrameError, decode_frame, encode_frame};
 use std::io::{Read, Write};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -106,10 +106,10 @@ fn read_payload<R: Read>(
 
 #[cfg(test)]
 mod tests {
-    use super::{read_frame, write_frame, IpcTransportError};
+    use super::{IpcTransportError, read_frame, write_frame};
     use crate::{
-        IpcEnvelope, IpcFrameError, IpcWireSchema, IPC_DEFAULT_MAX_FRAME_BYTES,
-        IPC_LENGTH_PREFIX_BYTES,
+        IPC_DEFAULT_MAX_FRAME_BYTES, IPC_LENGTH_PREFIX_BYTES, IpcEnvelope, IpcFrameError,
+        IpcWireSchema,
     };
     use std::io::{Cursor, Error, ErrorKind, Write};
 

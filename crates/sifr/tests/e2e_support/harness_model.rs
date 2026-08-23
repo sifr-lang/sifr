@@ -1,6 +1,6 @@
 use super::*;
 use serde::{Deserialize, Serialize};
-use sifr_diagnostics::codes::{active_registry_entries, registry_entry, DiagnosticState};
+use sifr_diagnostics::codes::{DiagnosticState, active_registry_entries, registry_entry};
 
 pub(crate) const E2E_CACHE_DIR: &str = "target/sifr_e2e_cache";
 pub(crate) const E2E_CACHE_MANIFEST: &str = "manifest.json";

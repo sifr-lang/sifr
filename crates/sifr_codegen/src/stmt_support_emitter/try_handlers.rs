@@ -1,6 +1,6 @@
 use super::{
-    io_error_kind_for_handler, HandlerMatchCondition, HirExceptHandler, RustEmitter, RustExpr,
-    RustStmt,
+    HandlerMatchCondition, HirExceptHandler, RustEmitter, RustExpr, RustStmt,
+    io_error_kind_for_handler,
 };
 use sifr_type_system::Type;
 

@@ -4,13 +4,13 @@ use super::cargo_manifest::{
     try_generate_sysroot_dependency_plan,
 };
 use super::cargo_resolution::{
-    cargo_lock_mode_diagnostic, prepare_cargo_resolution, CargoResolutionPolicy,
+    CargoResolutionPolicy, cargo_lock_mode_diagnostic, prepare_cargo_resolution,
 };
 use super::project_codegen::GeneratedBinaryProject;
 use super::report::BuildSysrootReport;
 use super::rust_interop_bridge_sources::generated_bridge_sources;
 use super::rust_interop_sqlx_offline::configure_hermetic_build_environment;
-use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache};
+use super::{CachedArtifactEntry, PreparedArtifactCache, prepare_cached_artifact};
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::{namespace_module_files, rust_module_file_path};
 use sifr_codegen::RustInteropTrustRequirementKind;
@@ -445,7 +445,10 @@ fn binary_project_cache_key(
         support_modules,
         dependency_plan.dependency_input_fingerprint(),
         generated_project.interop.cache_key_fragment(),
-        generated_project.cache_key_fragment.as_deref().unwrap_or(""),
+        generated_project
+            .cache_key_fragment
+            .as_deref()
+            .unwrap_or(""),
         dependency_plan.cache_fingerprint
     )
 }

@@ -4,7 +4,7 @@ use crate::queries::Location;
 use crate::snapshot::AnalysisError;
 use crate::symbols::StdlibSymbolInput;
 use ruff_text_size::{Ranged as _, TextRange};
-use sifr_frontend::{parse_source, FileId, SourceFileView, SourceOrigin};
+use sifr_frontend::{FileId, SourceFileView, SourceOrigin, parse_source};
 use sifr_python_ast::{Expr, Stmt};
 
 impl AnalysisHost {

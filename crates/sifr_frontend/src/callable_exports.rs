@@ -1,6 +1,6 @@
 use sifr_lowering::{
-    canonicalize_user_export_function_type, ExternalDefs, HirClass, HirFunction,
-    RustInteropDecoratorKind,
+    ExternalDefs, HirClass, HirFunction, RustInteropDecoratorKind,
+    canonicalize_user_export_function_type,
 };
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;

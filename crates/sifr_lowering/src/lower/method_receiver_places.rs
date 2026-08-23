@@ -1,6 +1,6 @@
 use super::{
-    classes::fixed_trait_receiver_convention, method_receiver_analysis::method_signature,
-    ownership_diagnostics, LowerCtx,
+    LowerCtx, classes::fixed_trait_receiver_convention, method_receiver_analysis::method_signature,
+    ownership_diagnostics,
 };
 use crate::hir_nodes::{HirExpr, HirFunction};
 use crate::scope::{BindingKind, BindingMutability};
