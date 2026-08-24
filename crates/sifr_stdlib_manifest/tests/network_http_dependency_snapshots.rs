@@ -5,6 +5,8 @@ use std::collections::HashSet;
 const SNAPSHOT_JSON: &str = include_str!(
     "../../../verification/areas/stdlib_parity/data/network_http_dependency_snapshots.json"
 );
+const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
+const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
 
 fn normalize_sysroot_paths(dependency: String) -> String {
     normalize_path_dependency(
@@ -78,6 +80,46 @@ fn snapshot_field_strings(payload: &Value, snapshot_id: &str, field: &str) -> Ve
 
 fn snapshot_dependencies(payload: &Value, snapshot_id: &str) -> Vec<String> {
     snapshot_field_strings(payload, snapshot_id, "production_dependencies")
+}
+
+#[test]
+fn network_http_tls_versions_match_latest_stable_locks() {
+    let manifest: toml::Value =
+        toml::from_str(WORKSPACE_MANIFEST).expect("workspace manifest must parse");
+    let dependencies = manifest
+        .get("workspace")
+        .and_then(|workspace| workspace.get("dependencies"))
+        .and_then(toml::Value::as_table)
+        .expect("workspace dependencies must be a table");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("workspace lock must parse");
+    let locked_packages = lock
+        .get("package")
+        .and_then(toml::Value::as_array)
+        .expect("workspace lock packages must be an array");
+
+    for (package, manifest_version, locked_version) in [
+        ("rustls", "=0.23.43", "0.23.43"),
+        ("rcgen", "0.14.9", "0.14.9"),
+    ] {
+        assert_eq!(
+            dependencies
+                .get(package)
+                .and_then(|dependency| dependency.get("version"))
+                .and_then(toml::Value::as_str),
+            Some(manifest_version),
+            "workspace dependency {package} must select the latest stable version"
+        );
+        let locked_versions = locked_packages
+            .iter()
+            .filter(|entry| entry.get("name").and_then(toml::Value::as_str) == Some(package))
+            .filter_map(|entry| entry.get("version").and_then(toml::Value::as_str))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            locked_versions,
+            vec![locked_version],
+            "workspace lock must contain exactly one {package} version"
+        );
+    }
 }
 
 #[test]
