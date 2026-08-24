@@ -237,11 +237,11 @@ pub(in crate::lower) fn collect_referenced_names_in_expr(expr: &Expr, names: &mu
             collect_comprehension_names(&comp.generators, names, &[comp.elt.as_ref()]);
         }
         Expr::DictComp(comp) => {
-            collect_comprehension_names(
-                &comp.generators,
-                names,
-                &[comp.key.as_ref(), comp.value.as_ref()],
-            );
+            if let Some(key) = comp.key.as_deref() {
+                collect_comprehension_names(&comp.generators, names, &[key, comp.value.as_ref()]);
+            } else {
+                collect_comprehension_names(&comp.generators, names, &[comp.value.as_ref()]);
+            }
         }
         Expr::Generator(generator) => {
             collect_comprehension_names(&generator.generators, names, &[generator.elt.as_ref()]);

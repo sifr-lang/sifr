@@ -273,7 +273,7 @@ fn classify_rust_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<RustInterop
                     malformed(
                         ctx,
                         "`@rust.structural` is a bare marker and takes no arguments",
-                        call.range,
+                        call.range(),
                     );
                     return None;
                 }
@@ -307,7 +307,7 @@ fn parse_declaration(
         kind,
         target,
         arguments,
-        span: call.range,
+        span: call.range(),
         effect: RustInteropEffect::Sync,
         abi_requirements: abi_requirements(kind, is_async_decl),
         consumes_receiver: false,
@@ -317,7 +317,7 @@ fn parse_declaration(
             ctx.error_with_code_at(
                 DiagnosticCode::RUST_CALLBACK_CONTRACT,
                 format!("invalid Rust callback contract: {reason}"),
-                call.range,
+                call.range(),
             );
             return None;
         }
@@ -337,7 +337,7 @@ fn parse_positional_target(
                 malformed(
                     ctx,
                     "`@rust(...)` requires exactly one dotted Rust target path".to_string(),
-                    call.range,
+                    call.range(),
                 );
                 return None;
             }
@@ -538,7 +538,7 @@ fn parse_policy_call(
         malformed(
             ctx,
             "policy calls accept exactly one positional argument".to_string(),
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -559,7 +559,7 @@ fn parse_policy_call(
     Some(RustInteropValue::PolicyCall {
         name: name.id.to_string(),
         argument: Box::new(argument),
-        span: call.range,
+        span: call.range(),
     })
 }
 

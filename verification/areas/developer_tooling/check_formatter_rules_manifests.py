@@ -31,22 +31,22 @@ REQUIRED_AST_ROWS = {
     "docstring_code_snippets",
 }
 RUFF_FORMAT_COMMAND_MARKERS = {
-    "`--check`": "pub check: bool",
-    "`--diff`": "pub diff: bool",
-    "`--no-cache`": "pub no_cache: bool",
-    "`--cache-dir <path>`": "pub cache_dir: Option<PathBuf>",
-    "`--respect-gitignore`": "respect_gitignore: bool",
-    "`--no-respect-gitignore`": "no_respect_gitignore: bool",
-    "`--exclude <pattern[,pattern...]>`": "pub exclude: Option<Vec<FilePattern>>",
-    "`--force-exclude`": "force_exclude: bool",
-    "`--no-force-exclude`": "no_force_exclude: bool",
-    "`--line-length <n>`": "pub line_length: Option<LineLength>",
-    "`--stdin-filename <path>`": "pub stdin_filename: Option<PathBuf>",
-    "`--extension <ext:language>`": "pub extension: Option<Vec<ExtensionPair>>",
-    "`--target-version <version>`": "pub target_version: Option<PythonVersion>",
-    "`--preview`": "preview: bool",
-    "`--no-preview`": "no_preview: bool",
-    "`--range <range>`": "pub range: Option<FormatRange>",
+    "`--check`": "check: bool,",
+    "`--diff`": "diff: bool,",
+    "`--no-cache`": "no_cache: bool,",
+    "`--cache-dir <path>`": "cache_dir: Option<PathBuf>,",
+    "`--respect-gitignore`": "respect_gitignore: bool,",
+    "`--no-respect-gitignore`": "no_respect_gitignore: bool,",
+    "`--exclude <pattern[,pattern...]>`": "exclude: Option<Vec<FilePattern>>,",
+    "`--force-exclude`": "force_exclude: bool,",
+    "`--no-force-exclude`": "no_force_exclude: bool,",
+    "`--line-length <n>`": "line_length: Option<LineLength>,",
+    "`--stdin-filename <path>`": "stdin_filename: Option<PathBuf>,",
+    "`--extension <ext:language>`": "extension: Option<Vec<ExtensionPair>>,",
+    "`--target-version <version>`": "target_version: Option<PythonVersion>,",
+    "`--preview`": "preview: bool,",
+    "`--no-preview`": "no_preview: bool,",
+    "`--range <range>`": "range: Option<FormatRange>,",
 }
 
 
@@ -67,6 +67,21 @@ def run(command: list[str], *, cwd: Path = REPO_ROOT) -> str:
 def require(condition: bool, message: str, failures: list[str]) -> None:
     if not condition:
         failures.append(message)
+
+
+def rust_struct_block(source: str, declaration: str) -> str:
+    start = source.index(declaration)
+    opening_brace = source.index("{", start)
+    depth = 0
+    for index in range(opening_brace, len(source)):
+        character = source[index]
+        if character == "{":
+            depth += 1
+        elif character == "}":
+            depth -= 1
+            if depth == 0:
+                return source[start : index + 1]
+    raise ValueError(f"unterminated Rust declaration: {declaration}")
 
 
 def check_capability_manifest(failures: list[str], rules_text: str) -> None:
@@ -112,6 +127,8 @@ def check_cli_manifest(failures: list[str], rules_text: str) -> None:
     args_rs = (REPO_ROOT / "third_party" / "ruff" / "crates" / "ruff" / "src" / "args.rs").read_text(
         encoding="utf-8"
     )
+    format_command = rust_struct_block(args_rs, "pub struct FormatCommand")
+    format_command_lines = {line.strip() for line in format_command.splitlines()}
     for index, row in enumerate(rows):
         ruff_surface = row.get("ruff_surface")
         classification = row.get("classification")
@@ -135,7 +152,7 @@ def check_cli_manifest(failures: list[str], rules_text: str) -> None:
         marker = RUFF_FORMAT_COMMAND_MARKERS.get(ruff_surface)
         if marker is not None:
             require(
-                marker in args_rs,
+                marker in format_command_lines,
                 f"Ruff FormatCommand marker for {ruff_surface} is missing: {marker}",
                 failures,
             )

@@ -542,6 +542,19 @@ pub(super) fn test_dict_comprehension_non_iterable_has_flow_code() {
 }
 
 #[test]
+pub(super) fn test_dict_unpacking_comprehension_is_rejected_without_a_panic() {
+    let source = "def main():\n    items: list[dict[int, int]] = [{1: 2}]\n    out: dict[int, int] = {**item for item in items}\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.message == "dictionary unpacking comprehensions are not supported in Sifr"
+            && error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM)
+            && error.primary_range == Some(range_for(source, "{**item for item in items}"))
+    }));
+}
+
+#[test]
 pub(super) fn test_generator_expression_multi_generator_has_type_code() {
     let source = "def main():\n    xs: list[int] = [1]\n    ys: list[int] = [2]\n    out: Iterator[int] = (x for x in xs for y in ys)\n";
     let result = lower_source(source);

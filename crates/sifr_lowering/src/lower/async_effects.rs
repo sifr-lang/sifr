@@ -300,7 +300,7 @@ fn summarize_expr(
         ),
         Expr::DictComp(comp) => summarize_comprehension(
             &comp.generators,
-            Some(comp.key.as_ref()),
+            comp.key.as_deref(),
             Some(comp.value.as_ref()),
             async_functions,
             summaries,

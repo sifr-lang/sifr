@@ -18,7 +18,7 @@ pub(super) fn parse_declaration(
         invalid(
             ctx,
             "`@python.arrow` requires exactly one producer target",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -44,7 +44,7 @@ pub(super) fn parse_declaration(
     Some(PythonInteropDeclaration {
         kind: PythonInteropDecoratorKind::Arrow,
         target: Some(target),
-        span: call.range,
+        span: call.range(),
         effect: PythonInteropEffect::BlockingIo,
         cleanup: None,
         consumes_receiver: false,
@@ -187,7 +187,7 @@ fn parse_schema_mode(
         invalid(
             ctx,
             "`@python.arrow` requires explicit `schema=omitted` or `schema=parameter(name)`",
-            call.range,
+            call.range(),
         );
         return None;
     };
@@ -272,7 +272,7 @@ fn receiver_target(
         invalid(
             ctx,
             "`Self` Arrow acquisition is valid only on a `@python.opaque` class",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -290,7 +290,7 @@ fn receiver_target(
         invalid(
             ctx,
             "a `@python.arrow(Self, ...)` declaration takes only its receiver and optional requested-schema parameter",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -298,7 +298,7 @@ fn receiver_target(
         invalid(
             ctx,
             "an Arrow receiver declaration requires `self`",
-            call.range,
+            call.range(),
         );
         return None;
     };

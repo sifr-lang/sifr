@@ -25,7 +25,7 @@ pub(super) fn parse_declaration(
         invalid(
             ctx,
             &format!("{label} requires exactly one producer target"),
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -55,7 +55,7 @@ pub(super) fn parse_declaration(
             PythonInteropDecoratorKind::Dlpack
         },
         target: Some(target),
-        span: call.range,
+        span: call.range(),
         effect: PythonInteropEffect::BlockingIo,
         cleanup: None,
         consumes_receiver: false,
@@ -212,7 +212,7 @@ fn parse_policies(
         invalid(
             ctx,
             "DLPack declarations require explicit `device=cpu | cuda | any`",
-            call.range,
+            call.range(),
         );
         return None;
     };
@@ -221,7 +221,7 @@ fn parse_policies(
             invalid(
                 ctx,
                 "`@python.dlpack.stream` requires a concrete `cpu` or `cuda` device family",
-                call.range,
+                call.range(),
             );
             return None;
         }
@@ -231,7 +231,7 @@ fn parse_policies(
         invalid(
             ctx,
             "`@python.dlpack` requires explicit `stream=none | parameter(name)`",
-            call.range,
+            call.range(),
         );
         return None;
     };
@@ -239,7 +239,7 @@ fn parse_policies(
         invalid(
             ctx,
             "non-CPU and `device=any` DLPack declarations require `stream=parameter(name)`",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -348,7 +348,7 @@ fn receiver_target(
         invalid(
             ctx,
             "`Self` DLPack acquisition is valid only on a `@python.opaque` class",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -365,7 +365,7 @@ fn receiver_target(
         invalid(
             ctx,
             "a DLPack `Self` declaration takes only its receiver and optional stream parameter",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -373,7 +373,7 @@ fn receiver_target(
         invalid(
             ctx,
             "a DLPack receiver declaration requires `self`",
-            call.range,
+            call.range(),
         );
         return None;
     };

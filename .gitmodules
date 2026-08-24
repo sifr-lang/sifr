@@ -1,7 +1,7 @@
 [submodule "third_party/ruff"]
 	path = third_party/ruff
 	url = https://github.com/sifr-lang/ruff.git
-	branch = sifr/0.15.12-maintenance
+	branch = sifr/0.16.4-maintenance
 [submodule "editor_integrations"]
 	path = editor_integrations
 	url = https://github.com/sifr-lang/editor-integrations.git

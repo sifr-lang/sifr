@@ -11,7 +11,7 @@ use sifr_diagnostics::{
     RenderedDiagnostic, Severity, SourceMap, SourceSpan,
 };
 use sifr_python_ast::token::TokenKind;
-use sifr_python_ast::{ModModule, PythonVersion, Stmt};
+use sifr_python_ast::{ModModule, PythonVersion, Stmt, Suite};
 use sifr_python_parser::{
     InterpolatedStringErrorType, LexicalErrorType, Mode, ParseError, ParseErrorType, ParseOptions,
     Parsed, UnsupportedSyntaxError, parse_unchecked,
@@ -21,7 +21,7 @@ use std::collections::BTreeMap;
 
 #[derive(Clone, Debug)]
 pub struct ParsedModule {
-    suite: Vec<Stmt>,
+    suite: Suite,
     tokens: Vec<SyntaxToken>,
 }
 
@@ -29,7 +29,7 @@ impl ParsedModule {
     #[must_use]
     pub fn empty() -> Self {
         Self {
-            suite: Vec::new(),
+            suite: Suite::new(),
             tokens: Vec::new(),
         }
     }
@@ -40,7 +40,7 @@ impl ParsedModule {
     }
 
     #[must_use]
-    pub fn into_suite(self) -> Vec<Stmt> {
+    pub fn into_suite(self) -> Suite {
         self.suite
     }
 
@@ -94,7 +94,7 @@ pub fn parse_module(
 pub fn parse_module_suite(
     source: &str,
     context: Option<&str>,
-) -> Result<Vec<Stmt>, Vec<RenderedDiagnostic>> {
+) -> Result<Suite, Vec<RenderedDiagnostic>> {
     parse_module_raw(source, context).map(Parsed::into_suite)
 }
 
@@ -227,6 +227,9 @@ fn parse_diagnostic(
 
 fn parse_error_details(error: &ParseErrorType) -> ParseDiagnosticDetails {
     match error {
+        ParseErrorType::StringAnnotationError(reason) => {
+            expected_details(*reason, "invalid_string_annotation")
+        }
         ParseErrorType::Lexical(reason) => lexical_or_string_details(reason),
         ParseErrorType::FStringError(reason) => interpolated_string_details("f_string", reason),
         ParseErrorType::TStringError(reason) => interpolated_string_details("t_string", reason),
@@ -258,10 +261,6 @@ fn parse_error_details(error: &ParseErrorType) -> ParseDiagnosticDetails {
         ParseErrorType::InvalidStarredExpressionUsage => {
             invalid_target_details("starred expression", "invalid_starred_expression")
         }
-        ParseErrorType::DuplicateKeywordArgumentError(name) => invalid_call_details(
-            format!("duplicate keyword argument {name:?}"),
-            "duplicate_keyword_argument",
-        ),
         ParseErrorType::PositionalAfterKeywordArgument => invalid_call_details(
             "positional argument after keyword argument",
             "positional_after_keyword_argument",
@@ -296,6 +295,9 @@ fn parse_error_details(error: &ParseErrorType) -> ParseDiagnosticDetails {
         }
         ParseErrorType::InvalidStarPatternUsage => {
             invalid_pattern_details("star pattern outside a sequence pattern")
+        }
+        ParseErrorType::InvalidMatchPatternTarget => {
+            invalid_pattern_details("invalid match pattern target")
         }
         ParseErrorType::ExpectedRealNumber => {
             invalid_pattern_details("expected real number in complex literal pattern")

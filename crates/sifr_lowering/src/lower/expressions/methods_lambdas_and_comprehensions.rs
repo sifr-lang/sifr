@@ -506,7 +506,8 @@ pub(in crate::lower) fn lower_dict_comp(
             let iter_expr = lower_iterator_protocol_entry(iter_source_expr, elem_ty);
             generators.push((var_name, iter_expr, filter));
         }
-        let key_expr = lower_expr(&comp.key, ctx)?;
+        let key = container_literal_diagnostics::require_dict_comprehension_key(comp, ctx)?;
+        let key_expr = lower_expr(key, ctx)?;
         let val_expr = lower_expr(&comp.value, ctx)?;
         let key_ty = key_expr.ty().clone();
         let val_ty = val_expr.ty().clone();
@@ -514,7 +515,7 @@ pub(in crate::lower) fn lower_dict_comp(
             ctx,
             "dict comprehension key",
             &key_ty,
-            comp.key.range(),
+            key.range(),
         ) || statement_diagnostics::reject_affine_comprehension_value(
             ctx,
             &val_ty,

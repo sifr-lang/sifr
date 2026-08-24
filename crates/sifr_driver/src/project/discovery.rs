@@ -6,13 +6,13 @@ use sifr_diagnostics::{
     SourceMap, SourceSpan,
 };
 use sifr_frontend::SourceProvider;
-use sifr_python_ast::Stmt;
+use sifr_python_ast::{Stmt, Suite};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug)]
 pub(crate) struct ParsedProjectModule {
-    pub(crate) suite: Vec<Stmt>,
+    pub(crate) suite: Suite,
     pub(crate) source: String,
     pub(crate) display_path: String,
 }
@@ -604,7 +604,7 @@ pub(crate) fn parse_import_closure_modules(
     root_modules: &BTreeSet<String>,
     diagnostic_style: DiscoveryDiagnosticStyle,
     provider: &mut dyn SourceProvider,
-) -> Result<HashMap<String, Vec<Stmt>>, Vec<RenderedDiagnostic>> {
+) -> Result<HashMap<String, Suite>, Vec<RenderedDiagnostic>> {
     parse_import_closure_source_modules(resolver, root_modules, diagnostic_style, provider).map(
         |modules| {
             modules

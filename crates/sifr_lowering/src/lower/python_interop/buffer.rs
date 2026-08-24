@@ -19,7 +19,7 @@ pub(super) fn parse_declaration(
         invalid(
             ctx,
             "`@python.buffer` requires exactly one producer target",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -36,7 +36,7 @@ pub(super) fn parse_declaration(
     Some(PythonInteropDeclaration {
         kind: PythonInteropDecoratorKind::Buffer,
         target: Some(target),
-        span: call.range,
+        span: call.range(),
         effect: PythonInteropEffect::BlockingIo,
         cleanup: None,
         consumes_receiver: false,
@@ -153,7 +153,7 @@ fn receiver_target(
         invalid(
             ctx,
             "`Self` buffer acquisition is valid only on a `@python.opaque` class",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -170,7 +170,7 @@ fn receiver_target(
         invalid(
             ctx,
             "a writable `Self` buffer cannot exclusively freeze its opaque owner; use a producer that returns a fresh exporter",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -178,7 +178,7 @@ fn receiver_target(
         invalid(
             ctx,
             "a `@python.buffer(Self, ...)` declaration takes only its receiver",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -186,7 +186,7 @@ fn receiver_target(
         invalid(
             ctx,
             "a receiver buffer declaration requires `self`",
-            call.range,
+            call.range(),
         );
         return None;
     };
@@ -276,11 +276,11 @@ fn parse_policy(
         }
     }
     let Some(access) = access else {
-        invalid(ctx, "`@python.buffer` requires `access=`", call.range);
+        invalid(ctx, "`@python.buffer` requires `access=`", call.range());
         return None;
     };
     let Some(layout) = layout else {
-        invalid(ctx, "`@python.buffer` requires `layout=`", call.range);
+        invalid(ctx, "`@python.buffer` requires `layout=`", call.range());
         return None;
     };
     Some((access, layout))

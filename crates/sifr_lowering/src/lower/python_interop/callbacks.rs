@@ -73,7 +73,7 @@ pub(super) fn parse(
         invalid(
             ctx,
             "`@python.callback` requires exactly one callback parameter name",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -189,16 +189,16 @@ pub(super) fn parse(
         }
     }
     let Some(lifetime) = lifetime else {
-        return invalid_none(ctx, "`@python.callback` requires `lifetime=`", call.range);
+        return invalid_none(ctx, "`@python.callback` requires `lifetime=`", call.range());
     };
     let Some(dispatch) = dispatch else {
-        return invalid_none(ctx, "`@python.callback` requires `dispatch=`", call.range);
+        return invalid_none(ctx, "`@python.callback` requires `dispatch=`", call.range());
     };
     if lifetime == PythonCallbackLifetime::Receiver && !has_receiver {
         return invalid_none(
             ctx,
             "`lifetime=Self` is valid only on an opaque receiver method",
-            call.range,
+            call.range(),
         );
     }
     if dispatch == PythonCallbackDispatch::Current {
@@ -206,27 +206,27 @@ pub(super) fn parse(
             return invalid_none(
                 ctx,
                 "`dispatch=current` requires `lifetime=call`",
-                call.range,
+                call.range(),
             );
         }
         if concurrency.is_some() {
             return invalid_none(
                 ctx,
                 "`dispatch=current` does not accept `concurrency=`",
-                call.range,
+                call.range(),
             );
         }
     } else if concurrency.is_none() {
         return invalid_none(
             ctx,
             "foreign and asyncio callbacks require `concurrency=serial | parallel`",
-            call.range,
+            call.range(),
         );
     }
 
     Some(PythonCallbackDeclaration {
         parameter_name: parameter_name.clone(),
-        span: call.range,
+        span: call.range(),
         lifetime,
         dispatch,
         concurrency,
