@@ -18,7 +18,6 @@
 //! This module also declares various constants that are also used
 //! by the `comparison` module.
 
-use core::char::REPLACEMENT_CHARACTER;
 use icu_collections::char16trie::TrieResult;
 use icu_collections::codepointtrie::CodePointTrie;
 use icu_normalizer::provider::DecompositionData;
@@ -27,7 +26,7 @@ use icu_properties::props::CanonicalCombiningClass;
 use smallvec::SmallVec;
 use zerovec::ule::AsULE;
 use zerovec::ule::RawBytesULE;
-use zerovec::{zeroslice, ZeroSlice};
+use zerovec::{ZeroSlice, zeroslice};
 
 use crate::provider::CollationData;
 
@@ -146,7 +145,7 @@ fn decomposition_starts_with_non_starter(trie_value: u32) -> bool {
 /// See components/normalizer/trie-value-format.md
 fn ccc_from_trie_value(trie_value: u32) -> CanonicalCombiningClass {
     if trie_value_has_ccc(trie_value) {
-        CanonicalCombiningClass::from_icu4c_value(trie_value as u8)
+        CanonicalCombiningClass(trie_value as u8)
     } else {
         CanonicalCombiningClass::NotReordered
     }
@@ -203,7 +202,7 @@ const CONTRACT_HAS_STARTER: u32 = 0x800;
 // constants named NO_CE* : End of input. Only used in runtime code, not stored in data.
 pub(crate) const NO_CE: CollationElement = CollationElement::default();
 pub(crate) const NO_CE_PRIMARY: u32 = 1; // not a left-adjusted weight
-                                         // const NO_CE_NON_PRIMARY: NonPrimary = NonPrimary::default();
+// const NO_CE_NON_PRIMARY: NonPrimary = NonPrimary::default();
 pub(crate) const NO_CE_SECONDARY: u16 = 0x0100;
 pub(crate) const NO_CE_TERTIARY: u16 = 0x0100;
 pub(crate) const NO_CE_QUATERNARY: u16 = 0x0100;
@@ -219,11 +218,11 @@ pub(crate) const FFFD_CE32: CollationElement32 = CollationElement32(FFFD_CE32_VA
 
 pub(crate) const EMPTY_U16: &ZeroSlice<u16> = zeroslice![];
 const SINGLE_REPLACEMENT_CHARACTER_U16: &ZeroSlice<u16> =
-    zeroslice!(u16; <u16 as AsULE>::ULE::from_unsigned; [REPLACEMENT_CHARACTER as u16]);
+    zeroslice!(u16; <u16 as AsULE>::ULE::from_unsigned; [char::REPLACEMENT_CHARACTER as u16]);
 
 pub(crate) const EMPTY_CHAR: &ZeroSlice<char> = zeroslice![];
 const SINGLE_REPLACEMENT_CHARACTER_CHAR: &ZeroSlice<char> =
-    zeroslice!(char; <char as AsULE>::ULE::from_aligned; [REPLACEMENT_CHARACTER]);
+    zeroslice!(char; <char as AsULE>::ULE::from_aligned; [char::REPLACEMENT_CHARACTER]);
 
 /// If `opt` is `Some`, unwrap it. If `None`, panic if debug assertions
 /// are enabled and return `default` if debug assertions are not enabled.
@@ -244,7 +243,7 @@ pub(crate) fn unwrap_or_gigo<T>(opt: Option<T>, default: T) -> T {
 /// Convert a `u32` _obtained from data provider data_ to `char`.
 #[inline(always)]
 pub(crate) fn char_from_u32(u: u32) -> char {
-    unwrap_or_gigo(core::char::from_u32(u), REPLACEMENT_CHARACTER)
+    unwrap_or_gigo(char::from_u32(u), char::REPLACEMENT_CHARACTER)
 }
 
 /// Convert a `u16` _obtained from data provider data_ to `char`.
@@ -727,7 +726,7 @@ impl CharacterAndClassAndTrieValue {
     pub fn new_with_non_zero_ccc(c: char, ccc: CanonicalCombiningClass) -> Self {
         CharacterAndClassAndTrieValue {
             c_and_c: CharacterAndClass::new(c, ccc),
-            trie_val: 0xD800 | u32::from(ccc.to_icu4c_value()),
+            trie_val: 0xD800 | u32::from(ccc.0),
         }
     }
     pub fn new_with_non_special_decomposition_trie_val(c: char, trie_val: u32) -> Self {
@@ -747,7 +746,7 @@ impl CharacterAndClassAndTrieValue {
             }
         } else {
             CharacterAndClassAndTrieValue {
-                c_and_c: CharacterAndClass::new(c, CanonicalCombiningClass::from_icu4c_value(0xFF)),
+                c_and_c: CharacterAndClass::new(c, CanonicalCombiningClass(0xFF)),
                 trie_val,
             }
         }
@@ -763,7 +762,7 @@ impl CharacterAndClassAndTrieValue {
 
     fn ccc(&self) -> CanonicalCombiningClass {
         let ret = self.c_and_c.ccc();
-        debug_assert_ne!(ret, CanonicalCombiningClass::from_icu4c_value(0xFF));
+        debug_assert_ne!(ret, CanonicalCombiningClass(0xFF));
         ret
     }
 }
@@ -798,7 +797,7 @@ impl CharacterAndClass {
     pub fn new(c: char, ccc: CanonicalCombiningClass) -> Self {
         // Safety invariant upheld here: the first half is a valid char
         // and the second half does not affect the low 24 bits
-        CharacterAndClass(u32::from(c) | (u32::from(ccc.to_icu4c_value()) << 24))
+        CharacterAndClass(u32::from(c) | (u32::from(ccc.0) << 24))
     }
     pub fn new_with_placeholder(c: char) -> Self {
         // Safety invariant upheld here: the first half is a valid char
@@ -815,7 +814,7 @@ impl CharacterAndClass {
     pub fn ccc(&self) -> CanonicalCombiningClass {
         // Safety invariant upheld here: The argument is outside of the low 24 bits,
         // and \0 is a valid character
-        CanonicalCombiningClass::from_icu4c_value((self.0 >> 24) as u8)
+        CanonicalCombiningClass((self.0 >> 24) as u8)
     }
     pub fn character_and_ccc(&self) -> (char, CanonicalCombiningClass) {
         (self.character(), self.ccc())
@@ -827,8 +826,7 @@ impl CharacterAndClass {
         let scalar = self.0 & 0xFF_FFFF;
         // Safety invariant upheld here: The first half doesn't affect the lower 24 bits,
         // and the second half was taken from the old `self` which had these invariants upheld already.
-        self.0 =
-            ((ccc_from_trie_value(trie.get32_u32(scalar)).to_icu4c_value() as u32) << 24) | scalar;
+        self.0 = ((ccc_from_trie_value(trie.get32_u32(scalar)).0 as u32) << 24) | scalar;
     }
 }
 
@@ -977,32 +975,32 @@ where
 
         // Ensure the last item is a starter (unless)
         // iter exhausted.
-        if let Some(last) = self.upcoming.last() {
-            if last.decomposition_starts_with_non_starter() {
-                // Not using `while let` to be able to set `iter_exhausted`
-                loop {
-                    if let Some(ch) = self.iter_next() {
-                        let starter = !ch.decomposition_starts_with_non_starter();
-                        self.upcoming.push(ch);
-                        if starter {
-                            break;
-                        }
-                    } else {
-                        #[cfg(debug_assertions)]
-                        {
-                            self.iter_exhausted = true;
-                        }
+        if let Some(last) = self.upcoming.last()
+            && last.decomposition_starts_with_non_starter()
+        {
+            // Not using `while let` to be able to set `iter_exhausted`
+            loop {
+                if let Some(ch) = self.iter_next() {
+                    let starter = !ch.decomposition_starts_with_non_starter();
+                    self.upcoming.push(ch);
+                    if starter {
                         break;
                     }
+                } else {
+                    #[cfg(debug_assertions)]
+                    {
+                        self.iter_exhausted = true;
+                    }
+                    break;
                 }
             }
         }
 
         let mut starts_with_starter = false;
-        if let Some(first) = self.upcoming.first() {
-            if !first.decomposition_starts_with_non_starter() {
-                starts_with_starter = true;
-            }
+        if let Some(first) = self.upcoming.first()
+            && !first.decomposition_starts_with_non_starter()
+        {
+            starts_with_starter = true;
         }
         if !starts_with_starter {
             self.upcoming.insert(
@@ -1502,16 +1500,7 @@ where
                 if (decomposition & !(BACKWARD_COMBINING_MARKER | NON_ROUND_TRIP_MARKER)) == 0 {
                     // The character is its own decomposition
                     let jamo_index = (c as usize).wrapping_sub(HANGUL_L_BASE as usize);
-                    // Attribute belongs on an inner expression, but
-                    // https://github.com/rust-lang/rust/issues/15701
-                    #[expect(clippy::indexing_slicing)]
-                    if jamo_index >= self.jamo.len() {
-                        ce32 = data.ce32_for_char(c);
-                        if ce32 == FALLBACK_CE32 {
-                            data = self.root;
-                            ce32 = data.ce32_for_char(c);
-                        }
-                    } else {
+                    if let Some(&jamo) = self.jamo.get(jamo_index) {
                         // The purpose of reading the CE32 from the jamo table instead
                         // of the trie even in this case is to make it unnecessary
                         // for all search collation tries to carry a copy of the Hangul
@@ -1531,7 +1520,13 @@ where
                         data = self.root;
                         // Index in range by construction above. Not using `get` with
                         // `if let` in order to put the likely branch first.
-                        ce32 = CollationElement32::new_from_ule(self.jamo[jamo_index]);
+                        ce32 = CollationElement32::new_from_ule(jamo);
+                    } else {
+                        ce32 = data.ce32_for_char(c);
+                        if ce32 == FALLBACK_CE32 {
+                            data = self.root;
+                            ce32 = data.ce32_for_char(c);
+                        }
                     }
                     if self.is_next_decomposition_starts_with_starter() {
                         if let Some(ce) = ce32.to_ce_simple_or_long_primary() {
@@ -1568,7 +1563,10 @@ where
                             let diacritic_index =
                                 (combining as usize).wrapping_sub(COMBINING_DIACRITICS_BASE);
                             if let Some(secondary) = self.diacritics.get(diacritic_index) {
-                                debug_assert_ne!(combining, '\u{0344}', "Should never have COMBINING GREEK DIALYTIKA TONOS here, since it should have decomposed further.");
+                                debug_assert_ne!(
+                                    combining, '\u{0344}',
+                                    "Should never have COMBINING GREEK DIALYTIKA TONOS here, since it should have decomposed further."
+                                );
                                 if let Some(ce) = ce32.to_ce_simple_or_long_primary() {
                                     let ce_for_combining =
                                         CollationElement::new_from_secondary(secondary);
@@ -1593,14 +1591,13 @@ where
                                             }
                                         }
                                         TrieResult::Intermediate(trie_ce32) => {
-                                            if !ce32.at_least_one_suffix_contains_starter() {
-                                                if let Some(ce) =
+                                            if !ce32.at_least_one_suffix_contains_starter()
+                                                && let Some(ce) =
                                                     CollationElement32::new(trie_ce32 as u32)
                                                         .to_ce_simple_or_long_primary()
-                                                {
-                                                    self.mark_prefix_unmatchable();
-                                                    return ce;
-                                                }
+                                            {
+                                                self.mark_prefix_unmatchable();
+                                                return ce;
                                             }
                                         }
                                         TrieResult::FinalValue(trie_ce32) => {
@@ -1631,11 +1628,11 @@ where
                             data = self.root;
                             ce32 = data.ce32_for_char(c);
                         }
-                        if self.is_next_decomposition_starts_with_starter() {
-                            if let Some(ce) = ce32.to_ce_simple_or_long_primary() {
-                                self.prefix_push(c);
-                                return ce;
-                            }
+                        if self.is_next_decomposition_starts_with_starter()
+                            && let Some(ce) = ce32.to_ce_simple_or_long_primary()
+                        {
+                            self.prefix_push(c);
+                            return ce;
                         }
                     } else {
                         debug_assert!(low_zeros);
@@ -1654,7 +1651,7 @@ where
                                     || {
                                         // GIGO case
                                         debug_assert!(false);
-                                        (REPLACEMENT_CHARACTER, EMPTY_U16)
+                                        (char::REPLACEMENT_CHARACTER, EMPTY_U16)
                                     },
                                     |(first, tail)| (char_from_u16(first), tail),
                                 );
@@ -1705,7 +1702,7 @@ where
                                 .unwrap_or_else(|| {
                                     // GIGO case
                                     debug_assert!(false);
-                                    (REPLACEMENT_CHARACTER, EMPTY_CHAR)
+                                    (char::REPLACEMENT_CHARACTER, EMPTY_CHAR)
                                 });
 
                             c = starter;
@@ -1800,7 +1797,7 @@ where
                         // Safety: HANGUL_T_BASE is 0x11A7, t is < HANGUL_T_COUNT = 28, so this is definitely
                         // in range for a char (≤ 0xD800)
                         CharacterAndClassAndTrieValue::new_with_non_decomposing_starter(unsafe {
-                            core::char::from_u32_unchecked(HANGUL_T_BASE + t)
+                            char::from_u32_unchecked(HANGUL_T_BASE + t)
                         }),
                     );
                 } else {
@@ -1809,7 +1806,7 @@ where
                         // Safety: HANGUL_V_BASE is 0x1161, v is < HANGUL_N_COUNT = 588, so this is definitely
                         // in range for a char (≤ 0xD800)
                         CharacterAndClassAndTrieValue::new_with_non_decomposing_starter(unsafe {
-                            core::char::from_u32_unchecked(HANGUL_V_BASE + v)
+                            char::from_u32_unchecked(HANGUL_V_BASE + v)
                         }),
                     );
                 }
@@ -2292,22 +2289,20 @@ where
                         let diacritic_index = (c as usize).wrapping_sub(COMBINING_DIACRITICS_BASE);
                         if let Some(secondary) = self.diacritics.get(diacritic_index) {
                             // TODO(#2006): unlikely annotation
-                            if c == '\u{0307}' && self.lithuanian_dot_above {
-                                if let Some(next_c) =
+                            if c == '\u{0307}'
+                                && self.lithuanian_dot_above
+                                && let Some(next_c) =
                                     combining_characters.get(i + 1).map(|c| c.character())
-                                {
-                                    if next_c == '\u{0300}'
-                                        || next_c == '\u{0301}'
-                                        || next_c == '\u{0303}'
-                                    {
-                                        // Lithuanian contracts COMBINING DOT ABOVE with three other diacritics of the
-                                        // same combining class such that the COMBINING DOT ABOVE is ignored for
-                                        // collation. Since the combining class is the same, it's valid to simply
-                                        // look at the next character in `combining_characters`.
-                                        i += 1;
-                                        continue 'combining;
-                                    }
-                                }
+                                && (next_c == '\u{0300}'
+                                    || next_c == '\u{0301}'
+                                    || next_c == '\u{0303}')
+                            {
+                                // Lithuanian contracts COMBINING DOT ABOVE with three other diacritics of the
+                                // same combining class such that the COMBINING DOT ABOVE is ignored for
+                                // collation. Since the combining class is the same, it's valid to simply
+                                // look at the next character in `combining_characters`.
+                                i += 1;
+                                continue 'combining;
                             }
                             self.pending
                                 .push(CollationElement::new_from_secondary(secondary));
@@ -2366,6 +2361,7 @@ where
                             // non-starters in order to maintain the invariant of
                             // `upcoming` on the next call to `next()`.
                             drain_from_upcoming = 0;
+                            looked_ahead = 0;
                             self.collect_combining(&mut combining_characters);
                             continue 'combining_outer;
                         }

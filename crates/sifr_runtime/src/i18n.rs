@@ -241,6 +241,11 @@ mod tests {
         assert_eq!(canonicalize_locale("EN-US").as_deref(), Ok("en-US"));
         assert_eq!(maximize_locale("zh-CN").as_deref(), Ok("zh-Hans-CN"));
         assert_eq!(minimize_locale("zh-Hans-CN").as_deref(), Ok("zh"));
+        assert_eq!(maximize_locale("und").as_deref(), Ok("und"));
+        assert_eq!(
+            canonicalize_locale("en-1-foobar").as_deref(),
+            Ok("en-1-foobar")
+        );
         assert!(canonicalize_locale("not a locale").is_err());
     }
 
@@ -283,6 +288,14 @@ mod tests {
             collate("en", "primary", "pollo", "polvo")
                 .expect("English primary collation should compare")
                 < 0
+        );
+    }
+
+    #[test]
+    fn burmese_non_starter_contractions_do_not_panic() {
+        assert_eq!(
+            collate("my", "tertiary", "", "\u{102d}\u{102f}\u{1037}"),
+            Ok(-1)
         );
     }
 

@@ -316,8 +316,8 @@ impl ConvertCalendar for time::UtcOffset {
 
 #[test]
 fn time() {
-    use crate::{fieldsets, DateTimeFormatter};
-    use icu_locale::locale;
+    use crate::{DateTimeFormatter, fieldsets};
+    use icu_locale_core::locale;
     use writeable::assert_writeable_eq;
 
     let time = time::OffsetDateTime::from_unix_timestamp_nanos(1726011440123456789)
@@ -364,8 +364,8 @@ fn time() {
 
 #[test]
 fn time_fixed_calendar() {
-    use crate::{fieldsets, DateTimeFormatter, FixedCalendarDateTimeFormatter};
-    use icu_locale::locale;
+    use crate::{DateTimeFormatter, FixedCalendarDateTimeFormatter, fieldsets};
+    use icu_locale_core::locale;
     use writeable::assert_writeable_eq;
 
     let time = time::OffsetDateTime::from_unix_timestamp_nanos(1726011440123456789)
@@ -412,8 +412,8 @@ fn time_fixed_calendar() {
 
 #[test]
 fn time_no_calendar() {
-    use crate::{fieldsets, NoCalendarFormatter};
-    use icu_locale::locale;
+    use crate::{NoCalendarFormatter, fieldsets};
+    use icu_locale_core::locale;
     use writeable::assert_writeable_eq;
 
     let time = time::OffsetDateTime::from_unix_timestamp_nanos(1726011440123456789)

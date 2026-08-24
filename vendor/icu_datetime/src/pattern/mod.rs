@@ -19,8 +19,8 @@ pub use crate::error::ErrorField;
 use crate::unchecked::MissingInputFieldKind;
 pub use formatter::DateTimePatternFormatter;
 pub use formatter::FormattedDateTimePattern;
-use icu_calendar::types::MonthCode;
 use icu_calendar::AnyCalendarKind;
+use icu_calendar::types::MonthCode;
 use icu_pattern::SinglePlaceholderPattern;
 pub use names::DateTimeNames;
 pub(crate) use names::DateTimeNamesMetadata;
@@ -73,7 +73,7 @@ pub(crate) enum GetNameForDayPeriodError {
 pub(crate) enum MonthPlaceholderValue<'a> {
     PlainString(&'a str),
     Numeric,
-    NumericPattern(&'a SinglePlaceholderPattern),
+    NumericPattern(&'a SinglePlaceholderPattern, i8),
     StringPattern(&'a str, &'a SinglePlaceholderPattern),
 }
 

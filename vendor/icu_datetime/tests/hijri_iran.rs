@@ -5,8 +5,8 @@
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
-use icu_calendar::cal::{hijri, Hijri};
 use icu_calendar::Date;
+use icu_calendar::cal::{Hijri, hijri};
 
 #[derive(Clone, Copy, Debug)]
 struct IranSighting;
@@ -108,6 +108,8 @@ impl icu_datetime::scaffold::FormattableHijriRules for IranSighting {
         <hijri::TabularAlgorithm as icu_datetime::scaffold::FormattableHijriRules>::YearNamesV1;
     type SkeletaV1 =
         <hijri::TabularAlgorithm as icu_datetime::scaffold::FormattableHijriRules>::SkeletaV1;
+    type RangeSkeletaV1 =
+        <hijri::TabularAlgorithm as icu_datetime::scaffold::FormattableHijriRules>::RangeSkeletaV1;
 }
 
 #[test]
@@ -134,8 +136,8 @@ fn test_conversion() {
 #[test]
 #[ignore]
 fn test_format() {
-    use icu_datetime::{fieldsets, FixedCalendarDateTimeFormatter};
-    use icu_locale::locale;
+    use icu_datetime::{FixedCalendarDateTimeFormatter, fieldsets};
+    use icu_locale_core::locale;
 
     let formatter =
         FixedCalendarDateTimeFormatter::try_new(locale!("fa").into(), fieldsets::YMD::long())

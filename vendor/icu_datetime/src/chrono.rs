@@ -333,8 +333,8 @@ impl ConvertCalendar for chrono::FixedOffset {
 
 #[test]
 fn chrono() {
-    use crate::{fieldsets, DateTimeFormatter};
-    use icu_locale::locale;
+    use crate::{DateTimeFormatter, fieldsets};
+    use icu_locale_core::locale;
     use writeable::assert_writeable_eq;
 
     let chrono = chrono::DateTime::from_timestamp_nanos(1726011440123456789)
@@ -387,8 +387,8 @@ fn chrono() {
 
 #[test]
 fn chrono_fixed_calendar() {
-    use crate::{fieldsets, DateTimeFormatter, FixedCalendarDateTimeFormatter};
-    use icu_locale::locale;
+    use crate::{DateTimeFormatter, FixedCalendarDateTimeFormatter, fieldsets};
+    use icu_locale_core::locale;
     use writeable::assert_writeable_eq;
 
     let chrono = chrono::DateTime::from_timestamp_nanos(1726011440123456789)
@@ -447,8 +447,8 @@ fn chrono_fixed_calendar() {
 
 #[test]
 fn chrono_no_calendar() {
-    use crate::{fieldsets, NoCalendarFormatter};
-    use icu_locale::locale;
+    use crate::{NoCalendarFormatter, fieldsets};
+    use icu_locale_core::locale;
     use writeable::assert_writeable_eq;
 
     let chrono = chrono::DateTime::from_timestamp_nanos(1726011440123456789)

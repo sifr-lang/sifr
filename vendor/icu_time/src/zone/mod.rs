@@ -52,8 +52,8 @@ mod offset;
 pub mod windows;
 mod zone_name_timestamp;
 
-use icu_calendar::types::RataDie;
 use icu_calendar::AsCalendar;
+use icu_calendar::types::RataDie;
 #[cfg(feature = "compiled_data")]
 use icu_locale_core::subtags::Region;
 #[doc(inline)]
@@ -72,13 +72,13 @@ pub use windows::{WindowsParser, WindowsParserBorrowed};
 
 pub use zone_name_timestamp::ZoneNameTimestamp;
 
-use crate::scaffold::IntoOption;
 use crate::DateTime;
 use crate::Time;
+use crate::scaffold::IntoOption;
 use core::fmt;
 use core::ops::Deref;
 use icu_calendar::Iso;
-use icu_locale_core::subtags::{subtag, Subtag};
+use icu_locale_core::subtags::{Subtag, subtag};
 use icu_provider::prelude::yoke;
 use zerovec::ule::{AsULE, ULE};
 
@@ -264,12 +264,12 @@ impl<'a> zerovec::maps::ZeroMapKV<'a> for TimeZone {
 /// ```
 /// use icu::calendar::Date;
 /// use icu::locale::subtags::subtag;
-/// use icu::time::zone::TimeZoneVariant;
-/// use icu::time::zone::UtcOffset;
-/// use icu::time::zone::ZoneNameTimestamp;
 /// use icu::time::DateTime;
 /// use icu::time::Time;
 /// use icu::time::TimeZone;
+/// use icu::time::zone::TimeZoneVariant;
+/// use icu::time::zone::UtcOffset;
+/// use icu::time::zone::ZoneNameTimestamp;
 ///
 /// // Parse the IANA ID
 /// let id = TimeZone::from_iana_id("America/Chicago");
@@ -509,13 +509,13 @@ impl TimeZoneInfo<models::AtTime> {
     /// # Example
     /// ```
     /// use icu::calendar::Date;
+    /// use icu::time::DateTime;
+    /// use icu::time::Time;
+    /// use icu::time::TimeZone;
     /// use icu::time::zone::TimeZoneVariant;
     /// use icu::time::zone::UtcOffset;
     /// use icu::time::zone::VariantOffsetsCalculator;
     /// use icu::time::zone::ZoneNameTimestamp;
-    /// use icu::time::DateTime;
-    /// use icu::time::Time;
-    /// use icu::time::TimeZone;
     ///
     /// // Chicago at UTC-6
     /// let info = TimeZone::from_iana_id("America/Chicago")

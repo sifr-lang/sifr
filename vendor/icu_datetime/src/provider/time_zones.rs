@@ -7,7 +7,7 @@
 use alloc::borrow::Cow;
 use icu_pattern::{DoublePlaceholderPattern, SinglePlaceholderPattern};
 use icu_provider::prelude::*;
-use icu_time::{zone::TimeZoneVariant, TimeZone};
+use icu_time::{TimeZone, zone::TimeZoneVariant};
 use zerovec::{ZeroMap, ZeroVec};
 
 pub use icu_time::provider::MetazoneId;
@@ -110,29 +110,78 @@ icu_provider::data_marker!(
 /// to be stable, their Rust representation might not be. Use with caution.
 /// </div>
 #[derive(PartialEq, Debug, Clone, Default, yoke::Yokeable, zerofrom::ZeroFrom)]
-#[cfg_attr(feature = "datagen", derive(serde::Serialize, databake::Bake))]
+#[cfg_attr(feature = "datagen", derive(databake::Bake))]
 #[cfg_attr(feature = "datagen", databake(path = icu_datetime::provider::time_zones))]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[yoke(prove_covariance_manually)]
 pub struct TimeZoneEssentials<'data> {
     /// The separator sign
-    #[cfg_attr(feature = "serde", serde(borrow,))]
     pub offset_separator: Cow<'data, str>,
     /// The localized offset format.
-    #[cfg_attr(
-        feature = "serde",
-        serde(
-            borrow,
-            deserialize_with = "icu_pattern::deserialize_borrowed_cow::<icu_pattern::SinglePlaceholder, _>"
-        )
-    )]
     pub offset_pattern: Cow<'data, SinglePlaceholderPattern>,
-    /// The localized zero-offset format.
-    #[cfg_attr(feature = "serde", serde(borrow))]
-    pub offset_zero: Cow<'data, str>,
     /// The localized unknown-offset format.
-    #[cfg_attr(feature = "serde", serde(borrow))]
     pub offset_unknown: Cow<'data, str>,
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for TimeZoneEssentials<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(serde::Deserialize)]
+        struct Raw<'data> {
+            #[cfg_attr(feature = "serde", serde(borrow))]
+            offset_separator: Cow<'data, str>,
+            #[cfg_attr(
+                feature = "serde",
+                serde(
+                    borrow,
+                    deserialize_with = "icu_pattern::deserialize_borrowed_cow::<icu_pattern::SinglePlaceholder, _>"
+                )
+            )]
+            offset_pattern: Cow<'data, SinglePlaceholderPattern>,
+            #[cfg_attr(feature = "serde", serde(borrow))]
+            offset_zero: Cow<'data, str>,
+            #[cfg_attr(feature = "serde", serde(borrow))]
+            offset_unknown: Cow<'data, str>,
+        }
+
+        let Raw {
+            offset_separator,
+            offset_pattern,
+            offset_unknown,
+            offset_zero: _offset_zero,
+        } = Raw::deserialize(deserializer)?;
+        Ok(TimeZoneEssentials {
+            offset_separator,
+            offset_pattern,
+            offset_unknown,
+        })
+    }
+}
+
+#[cfg(feature = "datagen")]
+impl serde::Serialize for TimeZoneEssentials<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(serde::Serialize)]
+        struct Raw<'data> {
+            offset_separator: Cow<'data, str>,
+            offset_pattern: Cow<'data, SinglePlaceholderPattern>,
+            offset_zero: Cow<'data, str>,
+            offset_unknown: Cow<'data, str>,
+        }
+
+        Raw {
+            offset_separator: Cow::Borrowed(&self.offset_separator),
+            offset_pattern: Cow::Borrowed(&self.offset_pattern),
+            offset_zero: Cow::Borrowed(""),
+            offset_unknown: Cow::Borrowed(&self.offset_unknown),
+        }
+        .serialize(serializer)
+    }
 }
 
 icu_provider::data_struct!(
@@ -289,8 +338,8 @@ icu_provider::data_struct!(
 pub(crate) mod legacy {
     use super::*;
     use icu_time::zone::ZoneNameTimestamp;
-    use zerovec::ule::NichedOption;
     use zerovec::ZeroMap2d;
+    use zerovec::ule::NichedOption;
 
     icu_provider::data_marker!(
         /// `TimezoneMetazonePeriodsV1`
@@ -333,8 +382,8 @@ pub(crate) mod legacy {
         use icu_time::provider::Timestamp24;
         use icu_time::provider::TimezonePeriods;
         use zerotrie::ZeroTrieSimpleAscii;
-        use zerovec::ule::vartuple::VarTuple;
         use zerovec::ule::AsULE;
+        use zerovec::ule::vartuple::VarTuple;
         use zerovec::vecs::VarZeroVecOwned;
 
         let DataResponse::<TimezoneMetazonePeriodsV1> {

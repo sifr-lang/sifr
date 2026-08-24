@@ -35,7 +35,7 @@ Sentence boundaries and streaming segmentation cursors are deferred.
 
 ## Locale And Formatting
 
-Locale IDs, canonicalization, likely-subtag expansion/minimization, number formatting, date/time formatting, plural rules, and collation are object-scoped `sifr.i18n` APIs backed by ICU4X 2.2 compiled data.
+ICU4X 2.3 backs the object-scoped `sifr.i18n` locale and formatting APIs. The surface includes locale IDs, canonicalization, likely-subtag operations, number and date/time formatting, plural rules, and collation.
 
 `host_locale()` is host-limited and read-only. It may observe host environment locale values, but it does not mutate process-global state and cannot provide default text encodings.
 

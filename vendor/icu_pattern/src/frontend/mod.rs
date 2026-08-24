@@ -9,18 +9,18 @@ pub(crate) mod serde;
 #[cfg(feature = "zerovec")]
 mod zerovec;
 
-use crate::common::*;
 use crate::Error;
 #[cfg(feature = "alloc")]
 use crate::Parser;
 #[cfg(feature = "alloc")]
 use crate::ParserOptions;
+use crate::common::*;
 #[cfg(feature = "alloc")]
 use alloc::{borrow::ToOwned, boxed::Box, string::String};
 #[cfg(feature = "alloc")]
 use core::str::FromStr;
 use core::{convert::Infallible, fmt, marker::PhantomData};
-use writeable::{adapters::TryWriteableInfallibleAsWriteable, PartsWrite, TryWriteable, Writeable};
+use writeable::{PartsWrite, TryWriteable, Writeable, adapters::TryWriteableInfallibleAsWriteable};
 
 /// A string pattern with placeholders.
 ///
@@ -143,9 +143,10 @@ where
 
 impl<B: PatternBackend> Pattern<B> {
     #[cfg(feature = "alloc")]
-    pub(crate) const fn from_boxed_store_unchecked(store: Box<B::Store>) -> Box<Self> {
-        // Safety: Pattern is repr(transparent) over B::Store
-        unsafe { core::mem::transmute::<Box<B::Store>, Box<Self>>(store) }
+    pub(crate) fn from_boxed_store_unchecked(store: Box<B::Store>) -> Box<Self> {
+        // Safety: Box::into_raw fulfils Box::from_raw's requirements, as Pattern<B> is
+        // repr(transparent) over B::Store, and does not have further validity constraints
+        unsafe { Box::from_raw(Box::into_raw(store) as *mut Self) }
     }
 
     #[doc(hidden)] // databake
@@ -257,9 +258,9 @@ where
     pub fn try_interpolate<'a, P>(
         &'a self,
         value_provider: P,
-    ) -> impl TryWriteable<Error = B::Error<'a>> + fmt::Display + 'a
+    ) -> impl TryWriteable<Error = P::Error> + fmt::Display + 'a
     where
-        P: PlaceholderValueProvider<B::PlaceholderKey<'a>, Error = B::Error<'a>> + 'a,
+        P: PlaceholderValueProvider<B::PlaceholderKey<'a>> + 'a,
     {
         WriteablePattern::<B, P> {
             store: &self.store,
@@ -276,26 +277,23 @@ where
     pub fn try_interpolate_to_string<'a, P>(
         &'a self,
         value_provider: P,
-    ) -> Result<String, (B::Error<'a>, String)>
+    ) -> Result<String, (P::Error, String)>
     where
-        P: PlaceholderValueProvider<B::PlaceholderKey<'a>, Error = B::Error<'a>> + 'a,
+        P: PlaceholderValueProvider<B::PlaceholderKey<'a>> + 'a,
     {
         self.try_interpolate(value_provider)
             .try_write_to_string()
             .map(|s| s.into_owned())
             .map_err(|(e, s)| (e, s.into_owned()))
     }
-}
 
-impl<B> Pattern<B>
-where
-    for<'b> B: PatternBackend<Error<'b> = Infallible>,
-{
     /// Returns a [`Writeable`] that interpolates items from the given replacement provider
     /// into this pattern string.
+    ///
+    /// This is defined only on infallible inputs.
     pub fn interpolate<'a, P>(&'a self, value_provider: P) -> impl Writeable + fmt::Display + 'a
     where
-        P: PlaceholderValueProvider<B::PlaceholderKey<'a>, Error = B::Error<'a>> + 'a,
+        P: PlaceholderValueProvider<B::PlaceholderKey<'a>, Error = Infallible> + 'a,
     {
         TryWriteableInfallibleAsWriteable(WriteablePattern::<B, P> {
             store: &self.store,
@@ -306,10 +304,12 @@ where
     #[cfg(feature = "alloc")]
     /// Interpolates the pattern directly to a string.
     ///
+    /// This is defined only on infallible inputs.
+    ///
     /// ✨ *Enabled with the `alloc` Cargo feature.*
     pub fn interpolate_to_string<'a, P>(&'a self, value_provider: P) -> String
     where
-        P: PlaceholderValueProvider<B::PlaceholderKey<'a>, Error = B::Error<'a>> + 'a,
+        P: PlaceholderValueProvider<B::PlaceholderKey<'a>, Error = Infallible> + 'a,
     {
         self.interpolate(value_provider)
             .write_to_string()
@@ -325,9 +325,9 @@ struct WriteablePattern<'a, B: PatternBackend, P> {
 impl<'a, B, P> TryWriteable for WriteablePattern<'a, B, P>
 where
     B: PatternBackend,
-    P: PlaceholderValueProvider<B::PlaceholderKey<'a>, Error = B::Error<'a>>,
+    P: PlaceholderValueProvider<B::PlaceholderKey<'a>>,
 {
-    type Error = B::Error<'a>;
+    type Error = P::Error;
 
     fn try_write_to_parts<S: PartsWrite + ?Sized>(
         &self,
@@ -368,17 +368,145 @@ where
             Ok(Ok(()))
         }
     }
+
+    fn writeable_length_hint(&self) -> writeable::LengthHint {
+        let mut length_hint = writeable::LengthHint::exact(0);
+        let it = B::iter_items(self.store);
+        for item in it {
+            match item {
+                PatternItem::Literal(s) => {
+                    length_hint += self.value_provider.map_literal(s).writeable_length_hint();
+                }
+                PatternItem::Placeholder(key) => {
+                    length_hint += self.value_provider.value_for(key).writeable_length_hint();
+                }
+            }
+        }
+        length_hint
+    }
 }
 
 impl<'a, B, P> fmt::Display for WriteablePattern<'a, B, P>
 where
     B: PatternBackend,
-    P: PlaceholderValueProvider<B::PlaceholderKey<'a>, Error = B::Error<'a>>,
+    P: PlaceholderValueProvider<B::PlaceholderKey<'a>>,
 {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Discard the TryWriteable error (lossy mode)
         self.try_write_to(f).map(|_| ())
+    }
+}
+
+/// A structure containing the extracted placeholder values.
+///
+/// Query it using [`Self::get()`].
+///
+/// <div class="stab unstable">
+/// 🚧 This code is considered unstable; it may change at any time, in breaking or non-breaking ways,
+/// including in SemVer minor releases. If you find this useful, please comment on the
+/// [tracking issue #8331](https://github.com/unicode-org/icu4x/issues/8331).
+/// </div>
+///
+/// ✨ *Enabled with the `unstable` Cargo feature.*
+#[cfg(feature = "unstable")]
+pub struct PlaceholderMatches<'p, 'a, B: ExtractionBackend> {
+    pub(crate) store: B::DecodedMatchesUnstable<'p, 'a>,
+}
+
+#[cfg(feature = "unstable")]
+impl<'p, 'a, B: ExtractionBackend> PlaceholderMatches<'p, 'a, B> {
+    /// Gets the matched substring for the given placeholder key.
+    ///
+    /// Returns `None` if the placeholder was not present in the pattern.
+    ///
+    /// <div class="stab unstable">
+    /// 🚧 This code is considered unstable; it may change at any time, in breaking or non-breaking ways,
+    /// including in SemVer minor releases. If you find this useful, please comment on the
+    /// [tracking issue #8331](https://github.com/unicode-org/icu4x/issues/8331).
+    /// </div>
+    ///
+    /// ✨ *Enabled with the `unstable` Cargo feature.*
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use icu_pattern::{DoublePlaceholder, DoublePlaceholderKey, Pattern};
+    ///
+    /// let pattern = Pattern::<DoublePlaceholder>::try_from_str(
+    ///     "Hello, {0} and {1}!",
+    ///     Default::default(),
+    /// )
+    /// .unwrap();
+    /// let matches = pattern.extract_values("Hello, Alice and Bob!").unwrap();
+    /// assert_eq!(matches.get(DoublePlaceholderKey::Place0), Some("Alice"));
+    /// assert_eq!(matches.get(DoublePlaceholderKey::Place1), Some("Bob"));
+    /// ```
+    pub fn get(&self, key: B::PlaceholderKey<'_>) -> Option<&'a str> {
+        B::get_match_unstable(&self.store, key)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<'p, B: ExtractionBackend> fmt::Debug for PlaceholderMatches<'p, '_, B>
+where
+    for<'a> B::DecodedMatchesUnstable<'p, 'a>: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PlaceholderMatches")
+            .field("store", &self.store)
+            .finish()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<'p, B: ExtractionBackend> PartialEq for PlaceholderMatches<'p, '_, B>
+where
+    for<'a> B::DecodedMatchesUnstable<'p, 'a>: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.store == other.store
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<'p, B: ExtractionBackend> Eq for PlaceholderMatches<'p, '_, B> where
+    for<'a> B::DecodedMatchesUnstable<'p, 'a>: Eq
+{
+}
+
+#[cfg(feature = "unstable")]
+impl<B: ExtractionBackend> Pattern<B> {
+    /// Extracts placeholder values from the formatted string.
+    ///
+    /// Returns `None` if the input string does not match the pattern.
+    ///
+    /// <div class="stab unstable">
+    /// 🚧 This code is considered unstable; it may change at any time, in breaking or non-breaking ways,
+    /// including in SemVer minor releases. If you find this useful, please comment on the
+    /// [tracking issue #8331](https://github.com/unicode-org/icu4x/issues/8331).
+    /// </div>
+    ///
+    /// ✨ *Enabled with the `unstable` Cargo feature.*
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use icu_pattern::{Pattern, SinglePlaceholder, SinglePlaceholderKey};
+    ///
+    /// let pattern = Pattern::<SinglePlaceholder>::try_from_str(
+    ///     "Hello, {0}!",
+    ///     Default::default(),
+    /// )
+    /// .unwrap();
+    /// let matches = pattern.extract_values("Hello, Alice!").unwrap();
+    /// assert_eq!(matches.get(SinglePlaceholderKey::Singleton), Some("Alice"));
+    /// ```
+    pub fn extract_values<'p, 'a>(
+        &'p self,
+        input: &'a str,
+    ) -> Option<PlaceholderMatches<'p, 'a, B>> {
+        B::extract_unstable(&self.store, input).map(|store| PlaceholderMatches { store })
     }
 }
 

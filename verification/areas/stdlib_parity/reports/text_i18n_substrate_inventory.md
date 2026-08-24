@@ -91,12 +91,12 @@ Accepted static aliases are canonical labels plus WHATWG labels covered by `enco
 | --- | --- | --- | --- | --- |
 | Web encodings | `encoding_rs` | `0.8.35` | default `alloc`; no CJK fast legacy encode features in text encoding capability | accepted for text encoding capability |
 | Unicode normalization | `unicode-normalization` | `0.1.25` | default `std` | accepted for Unicode core capability |
-| Unicode segmentation | `unicode-segmentation` | `1.13.3` | default | accepted for Unicode segmentation capability; MSRV 1.85 is compatible with local Rust 1.94 |
-| Locale IDs | `icu_locale` / `icu_locale_core` | `2.2.0` | default off unless required by selected components; compiled data through component crates | accepted for locale-formatting capability |
-| Number formatting | `icu_decimal` + `icu_decimal_data` | `2.2.0` | `compiled_data` | accepted for locale-formatting capability |
-| Date/time formatting | `icu_datetime` + data | `2.2.0` | `compiled_data`, `ixdtf` only if required by formatter input type | accepted for locale-formatting capability |
-| Plural rules | `icu_plurals` + data | `2.2.0` | `compiled_data` | accepted for locale-formatting capability/translation-catalog capability |
-| Collation | `icu_collator` + data | `2.2.0` | `compiled_data` | accepted for locale-formatting capability |
+| Unicode segmentation | `unicode-segmentation` | `1.13.3` | default | accepted for Unicode segmentation capability; MSRV 1.85 is compatible with workspace Rust 1.98 |
+| Locale IDs | `icu_locale` / `icu_locale_core` | `2.3.1` / `2.3.0` | default off unless required by selected components; compiled data through component crates | accepted for locale-formatting capability |
+| Number formatting | `icu_decimal` + `icu_decimal_data` | `2.3.0` | `compiled_data` | accepted for locale-formatting capability |
+| Date/time formatting | `icu_datetime` + data | `2.3.0` | `compiled_data`, `ixdtf` only if required by formatter input type | accepted for locale-formatting capability |
+| Plural rules | `icu_plurals` + data | `2.3.0` | `compiled_data` | accepted for locale-formatting capability/translation-catalog capability |
+| Collation | `icu_collator` + data | `2.3.1` | `compiled_data` | accepted for locale-formatting capability |
 | Translation catalogs | local audited `.mo` parser | n/a | n/a | accepted for translation-catalog capability |
 | Fluent / ICU message format | none | n/a | n/a | `deferred-to-message-format-backends-capability` |
 

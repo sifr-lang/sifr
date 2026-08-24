@@ -5,7 +5,7 @@
 use core::cmp::{Ord, PartialOrd};
 use core::fmt;
 use displaydoc::Display;
-use zerovec::ule::{AsULE, UleError, ULE};
+use zerovec::ule::{AsULE, ULE, UleError};
 
 /// An error relating to the length of a field within a date pattern.
 #[derive(Display, Debug, PartialEq, Copy, Clone)]
@@ -168,6 +168,7 @@ unsafe impl ULE for FieldLengthULE {
 
 /// Various numeric overrides for datetime patterns
 /// as found in CLDR
+// Formatting code for this is in `format/numeric_overrides.rs`
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
 #[cfg_attr(feature = "datagen", derive(serde::Serialize, databake::Bake))]
 #[cfg_attr(feature = "datagen", databake(path = icu_datetime::fields))]

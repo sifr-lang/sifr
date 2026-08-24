@@ -4,10 +4,10 @@
 
 use super::time_zone::{FormatTimeZone, FormatTimeZoneError, Iso8601Format, TimeZoneFormatterUnit};
 use crate::error::ErrorField;
-use crate::format::DateTimeInputUnchecked;
+use crate::format::{DateTimeInputUnchecked, numeric_override};
 use crate::provider::fields::{self, FieldLength, FieldSymbol, Second, Year};
-use crate::provider::pattern::runtime::PatternMetadata;
 use crate::provider::pattern::PatternItem;
+use crate::provider::pattern::runtime::PatternMetadata;
 use crate::unchecked::MissingInputFieldKind;
 use crate::{parts, pattern::*};
 
@@ -34,6 +34,7 @@ where
         w.with_part(part, |w| fdf.format(&num).write_to_parts(w))?;
         Ok(Ok(()))
     } else {
+        // Fallback behavior in the error case.
         w.with_part(part, |w| {
             w.with_part(Part::ERROR, |r| num.write_to_parts(r))
         })?;
@@ -60,6 +61,7 @@ where
         fdf.format(&num).write_to(w)?;
         Ok(Ok(()))
     } else {
+        // Fallback behavior in the error case.
         w.with_part(Part::ERROR, |r| num.write_to(r))?;
         Ok(Err(
             FormattedDateTimePatternError::DecimalFormatterNotLoaded,
@@ -102,7 +104,7 @@ where
 //
 // When modifying the list of fields using symbols,
 // update the matching query in `analyze_pattern` function.
-fn try_write_field<W>(
+pub(crate) fn try_write_field<W>(
     field: fields::Field,
     pattern_metadata: PatternMetadata,
     input: &DateTimeInputUnchecked,
@@ -165,12 +167,24 @@ where
         (FieldSymbol::Year(Year::Calendar), l) => {
             const PART: Part = parts::YEAR;
             input!(PART, Year, year = input.year);
-            let mut year = Decimal::from(year.era_year_or_related_iso());
-            if matches!(l, FieldLength::Two) {
-                // 'yy' and 'YY' truncate
-                year.set_max_position(2);
+
+            let year_val = year.era_year_or_related_iso();
+            match l {
+                // We only support overriding for positive numbers.
+                // For negative numbers RBNF coverage is spotty and often not actually
+                // what you want in years, so we fall back.
+                FieldLength::NumericOverride(o) if year_val >= 0 => {
+                    numeric_override::format(PART, w, year_val as u32, o)?
+                }
+                _ => {
+                    let mut year = Decimal::from(year.era_year_or_related_iso());
+                    if matches!(l, FieldLength::Two) {
+                        // 'yy' and 'YY' truncate
+                        year.set_max_position(2);
+                    }
+                    try_write_number(PART, w, decimal_formatter, year, l)?
+                }
             }
-            try_write_number(PART, w, decimal_formatter, year, l)?
         }
         (FieldSymbol::Year(Year::Cyclic), l) => {
             const PART: Part = parts::YEAR_NAME;
@@ -241,10 +255,10 @@ where
             let extended = year.extended_year();
             try_write_number(PART, w, decimal_formatter, extended.into(), l)?
         }
-        (FieldSymbol::Month(_), l @ (FieldLength::One | FieldLength::Two)) => {
+        (FieldSymbol::Month(_), FieldLength::NumericOverride(o)) => {
             const PART: Part = parts::MONTH;
             input!(PART, Month, month = input.month);
-            try_write_number(PART, w, decimal_formatter, month.number().into(), l)?
+            numeric_override::format(PART, w, u32::from(month.number()), o)?
         }
         (FieldSymbol::Month(symbol), l) => {
             const PART: Part = parts::MONTH;
@@ -255,13 +269,11 @@ where
                     Ok(())
                 }
                 Ok(MonthPlaceholderValue::Numeric) => {
-                    debug_assert!(l == FieldLength::One);
                     try_write_number(PART, w, decimal_formatter, month.number().into(), l)?
                 }
-                Ok(MonthPlaceholderValue::NumericPattern(substitution_pattern)) => {
-                    debug_assert!(l == FieldLength::One);
+                Ok(MonthPlaceholderValue::NumericPattern(substitution_pattern, offset)) => {
                     if let Some(formatter) = decimal_formatter {
-                        let mut num = Decimal::from(month.number());
+                        let mut num = Decimal::from(month.number().saturating_add_signed(offset));
                         num.pad_start(l.to_len() as i16);
                         w.with_part(PART, |w| {
                             substitution_pattern
@@ -341,6 +353,11 @@ where
                 Ok(s) => Ok(w.with_part(PART, |w| w.write_str(s))?),
             }
         }
+        (FieldSymbol::Day(fields::Day::DayOfMonth), FieldLength::NumericOverride(o)) => {
+            const PART: Part = parts::DAY;
+            input!(PART, DayOfMonth, day_of_month = input.day_of_month);
+            numeric_override::format(PART, w, u32::from(day_of_month.0), o)?
+        }
         (FieldSymbol::Day(fields::Day::DayOfMonth), l) => {
             const PART: Part = parts::DAY;
             input!(PART, DayOfMonth, day_of_month = input.day_of_month);
@@ -374,11 +391,7 @@ where
                 fields::Hour::H11 => h % 12,
                 fields::Hour::H12 => {
                     let v = h % 12;
-                    if v == 0 {
-                        12
-                    } else {
-                        v
-                    }
+                    if v == 0 { 12 } else { v }
                 }
                 fields::Hour::H23 => h,
             };
@@ -673,7 +686,7 @@ mod tests {
 
     #[test]
     fn julian_day() {
-        let locale = icu_locale::locale!("en");
+        let locale = icu_locale_core::locale!("en");
         let parsed_pattern = DateTimePattern::try_from_pattern_str("g").unwrap();
         let mut names = FixedCalendarDateTimeNames::<
             icu_calendar::cal::Gregorian,
@@ -689,7 +702,7 @@ mod tests {
 
     #[test]
     fn extended_year() {
-        let locale = icu_locale::locale!("en");
+        let locale = icu_locale_core::locale!("en");
         let parsed_pattern = DateTimePattern::try_from_pattern_str("u").unwrap();
         let mut names = FixedCalendarDateTimeNames::<
             icu_calendar::cal::Ethiopian,

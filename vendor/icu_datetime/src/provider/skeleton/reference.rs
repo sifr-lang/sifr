@@ -91,10 +91,9 @@ impl From<&Pattern> for Skeleton {
                     // Only flexible day periods are used in skeletons, ignore all others.
                     FieldSymbol::DayPeriod(fields::DayPeriod::AmPm)
                     | FieldSymbol::DayPeriod(fields::DayPeriod::NoonMidnight) => continue,
-                    // TODO(#487) - Flexible day periods should be included here.
-                    // FieldSymbol::DayPeriod(fields::DayPeriod::Flexible) => {
-                    //     FieldSymbol::DayPeriod(fields::DayPeriod::Flexible)
-                    // }
+                    FieldSymbol::DayPeriod(fields::DayPeriod::Flexible) => {
+                        FieldSymbol::DayPeriod(fields::DayPeriod::Flexible)
+                    }
 
                     // Only the H12 and H23 symbols are used in skeletons, while the patterns may
                     // contain H11 or H23 depending on the localization.
@@ -162,7 +161,17 @@ impl TryFrom<&str> for Skeleton {
             } else {
                 FieldSymbol::try_from(ch)?
             };
-            let field = Field::from((field_symbol, FieldLength::from_idx(field_length)?));
+            let mut field = Field::from((field_symbol, FieldLength::from_idx(field_length)?));
+
+            // CLDR skeletons in 48.2 use 'c' instead of 'E' (e.g. in Finnish).
+            // We treat them as equivalent for matching purposes by normalizing 'c' to 'E' here.
+            // This avoids missing matches when we request 'E' via synthesis in datagen.
+            //
+            // This will be obsoleted by future CLDR releases
+            // <https://github.com/unicode-org/cldr/pull/5524>
+            if let FieldSymbol::Weekday(fields::Weekday::StandAlone) = field.symbol {
+                field.symbol = FieldSymbol::Weekday(fields::Weekday::Format);
+            }
 
             match fields.binary_search(&field) {
                 Ok(_) => return Err(SkeletonError::DuplicateField),

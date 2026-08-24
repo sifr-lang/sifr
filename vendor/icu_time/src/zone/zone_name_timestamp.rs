@@ -9,7 +9,7 @@ use icu_calendar::{AsCalendar, Iso};
 use zerovec::ule::AsULE;
 
 use crate::Time;
-use crate::{zone::UtcOffset, DateTime, ZonedDateTime};
+use crate::{DateTime, ZonedDateTime, zone::UtcOffset};
 
 /// The moment in time for resolving a time zone name.
 ///
@@ -31,12 +31,12 @@ use crate::{zone::UtcOffset, DateTime, ZonedDateTime};
 ///
 /// ```
 /// use icu::calendar::Iso;
-/// use icu::datetime::fieldsets::zone::GenericLong;
 /// use icu::datetime::NoCalendarFormatter;
+/// use icu::datetime::fieldsets::zone::GenericLong;
 /// use icu::locale::locale;
+/// use icu::time::ZonedDateTime;
 /// use icu::time::zone::TimeZone;
 /// use icu::time::zone::ZoneNameTimestamp;
-/// use icu::time::ZonedDateTime;
 /// use writeable::assert_writeable_eq;
 ///
 /// let metlakatla = TimeZone::from_iana_id("America/Metlakatla");

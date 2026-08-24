@@ -3,22 +3,22 @@
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
 #[cfg(feature = "unstable")]
-use crate::zone::ZoneNameTimestamp;
-#[cfg(feature = "unstable")]
 use crate::ZonedTime;
+#[cfg(feature = "unstable")]
+use crate::zone::ZoneNameTimestamp;
 use crate::{
-    zone::{iana::IanaParserBorrowed, models, InvalidOffsetError, UtcOffset},
     DateTime, Time, TimeZoneInfo, ZonedDateTime,
+    zone::{InvalidOffsetError, UtcOffset, iana::IanaParserBorrowed, models},
 };
 use core::str::FromStr;
 use icu_calendar::{AnyCalendarKind, AsCalendar, Date, DateError, Iso, RangeError};
 use ixdtf::{
+    ParseError as Rfc9557ParseError,
     encoding::Utf8,
     parsers::IxdtfParser,
     records::{
         IxdtfParseRecord, TimeZoneAnnotation, TimeZoneRecord, UtcOffsetRecord, UtcOffsetRecordOrZ,
     },
-    ParseError as Rfc9557ParseError,
 };
 
 /// The error type for parsing RFC 9557 strings.
@@ -245,10 +245,10 @@ impl<'a> Intermediate<'a> {
             return Err(ParseError::MismatchedTimeZoneFields);
         };
         if self.is_z {
-            if let Some(offset) = self.offset {
-                if offset != UtcOffsetRecord::zero() {
-                    return Err(ParseError::RequiresCalculation);
-                }
+            if let Some(offset) = self.offset
+                && offset != UtcOffsetRecord::zero()
+            {
+                return Err(ParseError::RequiresCalculation);
             }
             return Ok(UtcOffset::zero());
         }
@@ -423,8 +423,8 @@ impl<A: AsCalendar> ZonedDateTime<A, TimeZoneInfo<models::AtTime>> {
     /// use icu::calendar::cal::Hebrew;
     /// use icu::locale::subtags::subtag;
     /// use icu::time::{
-    ///     zone::{IanaParser, TimeZoneVariant, UtcOffset},
     ///     TimeZone, TimeZoneInfo, ZonedDateTime,
+    ///     zone::{IanaParser, TimeZoneVariant, UtcOffset},
     /// };
     ///
     /// let zoneddatetime = ZonedDateTime::try_strict_from_str(
@@ -468,7 +468,7 @@ impl<A: AsCalendar> ZonedDateTime<A, TimeZoneInfo<models::AtTime>> {
     ///
     /// ```
     /// use icu::calendar::Iso;
-    /// use icu::time::{zone::UtcOffset, TimeZoneInfo, ZonedDateTime};
+    /// use icu::time::{TimeZoneInfo, ZonedDateTime, zone::UtcOffset};
     ///
     /// let tz_from_offset = ZonedDateTime::try_offset_only_from_str(
     ///     "2024-08-08T12:08:19-05:00",
@@ -490,8 +490,8 @@ impl<A: AsCalendar> ZonedDateTime<A, TimeZoneInfo<models::AtTime>> {
     /// use icu::calendar::Iso;
     /// use icu::locale::subtags::subtag;
     /// use icu::time::{
-    ///     zone::{IanaParser, TimeZoneVariant, UtcOffset},
     ///     TimeZone, TimeZoneInfo, ZonedDateTime,
+    ///     zone::{IanaParser, TimeZoneVariant, UtcOffset},
     /// };
     ///
     /// let tz_from_offset_annotation = ZonedDateTime::try_offset_only_from_str(
@@ -530,7 +530,7 @@ impl<A: AsCalendar> ZonedDateTime<A, TimeZoneInfo<models::AtTime>> {
     /// ```
     /// use icu::calendar::Iso;
     /// use icu::time::{
-    ///     zone::UtcOffset, ParseError, TimeZone, TimeZoneInfo, ZonedDateTime,
+    ///     ParseError, TimeZone, TimeZoneInfo, ZonedDateTime, zone::UtcOffset,
     /// };
     /// use tinystr::tinystr;
     ///
@@ -708,8 +708,8 @@ impl ZonedTime<TimeZoneInfo<models::AtTime>> {
     /// use icu::calendar::cal::Hebrew;
     /// use icu::locale::subtags::subtag;
     /// use icu::time::{
-    ///     zone::{IanaParser, TimeZoneVariant, UtcOffset},
     ///     TimeZone, TimeZoneInfo, ZonedTime,
+    ///     zone::{IanaParser, TimeZoneVariant, UtcOffset},
     /// };
     ///
     /// let zonedtime = ZonedTime::try_strict_from_str(
@@ -742,7 +742,7 @@ impl ZonedTime<TimeZoneInfo<models::AtTime>> {
     ///
     /// ```
     /// use icu::calendar::Iso;
-    /// use icu::time::{zone::UtcOffset, TimeZoneInfo, ZonedTime};
+    /// use icu::time::{TimeZoneInfo, ZonedTime, zone::UtcOffset};
     ///
     /// let tz_from_offset =
     ///     ZonedTime::try_offset_only_from_str("T12:08:19-05:00").unwrap();
@@ -761,8 +761,8 @@ impl ZonedTime<TimeZoneInfo<models::AtTime>> {
     /// use icu::calendar::Iso;
     /// use icu::locale::subtags::subtag;
     /// use icu::time::{
-    ///     zone::{IanaParser, TimeZoneVariant, UtcOffset},
     ///     TimeZone, TimeZoneInfo, ZonedTime,
+    ///     zone::{IanaParser, TimeZoneVariant, UtcOffset},
     /// };
     ///
     /// let tz_from_offset_annotation =
@@ -797,7 +797,7 @@ impl ZonedTime<TimeZoneInfo<models::AtTime>> {
     /// ```
     /// use icu::calendar::Iso;
     /// use icu::time::{
-    ///     zone::UtcOffset, ParseError, TimeZone, TimeZoneInfo, ZonedTime,
+    ///     ParseError, TimeZone, TimeZoneInfo, ZonedTime, zone::UtcOffset,
     /// };
     /// use tinystr::tinystr;
     ///
