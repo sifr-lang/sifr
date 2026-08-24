@@ -160,7 +160,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: editor_integrations/vscode/.node-version
           cache: npm
           cache-dependency-path: editor_integrations/vscode/package-lock.json
 
@@ -179,7 +179,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "${SOURCE_COMMIT}"
-          npm ci --prefix editor_integrations/vscode
+          npm ci --ignore-scripts --include=dev --prefix editor_integrations/vscode
           for script in lint typecheck test test:extension package; do
             npm run --prefix editor_integrations/vscode "${script}"
           done
