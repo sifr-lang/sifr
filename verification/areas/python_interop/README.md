@@ -5,6 +5,10 @@ separate from CPython source-parity checks: source parity compares Sifr language
 behavior to CPython, while this area verifies Sifr programs calling packages in a
 selected uv-created CPython environment.
 
+The single maintained interpreter is GIL-enabled CPython 3.14.7. The area
+project pins it exactly; there is no older compatibility project or fallback
+interpreter lane.
+
 The canonical entrypoint is:
 
 ```bash
@@ -132,7 +136,7 @@ default; live suites must declare their own `network_mode` and resource classes.
 - `arrow`: Arrow PyCapsule schema/array/stream and zero-copy-vs-copy diagnostics.
 - `dlpack`: one-shot tensor capsules, dtype/device/stride handling.
 - `dataframes`: pandas/polars/pyarrow dataframe interop.
-- `tensors`: NumPy/torch/tensorflow tensor interop.
+- `tensors`: NumPy and PyTorch tensor interop.
 - `databases`: SQLAlchemy, psycopg, asyncpg, pymongo, motor, redis.
 - `brokers`: confluent-kafka, aiokafka, kafka-python, SQS/SNS, Pub/Sub-style callbacks.
 - `cloud`: AWS/Google/OpenAI SDK import and auth surface checks without live credentials in the default gate.
@@ -168,9 +172,10 @@ mutation and post-release exporter resizability, the aggregate fixture checks
 that all six retained exporters are resizable after automatic drop, and NumPy
 mutation is checked through the retained producer. C-level runtime exporters
 independently prove pointer identity and exact release counts. The blocking
-`buffer-cpython311` suite reruns all five C-level tests and all five compiled
-binaries in a minimal locked CPython 3.11 environment. The complete positive,
-negative, cleanup,
+`buffer-runtime` suite runs all five C-level tests in the canonical locked
+CPython 3.14.7 environment; `buffer-examples` owns the five compiled binaries.
+The complete
+positive, negative, cleanup,
 cancellation disposition, live-source, and profile ownership matrix is locked
 in `fixtures/numpy_buffer/buffer_declaration_evidence.json` and validated by the
 runner self-test.
@@ -184,14 +189,11 @@ predictions/classes. Both compiled Sifr callers require resource diagnostics to
 return to their baseline and emit deterministic markers.
 
 DLPack declaration examples are offline, compiled, and blocking in every
-delivery profile. The `dlpack-examples` suite runs real PyTorch and TensorFlow
-CPU transfers, verifies stable data pointers, exact device metadata, owned
-one-shot consumption, an instrumented exact producer-deleter call, and zero
-residual resources. PyTorch exercises direct
-import-root and `Self` acquisition. TensorFlow exercises an explicit
-package-local bridge that adapts its capsule API to the complete versioned
-`__dlpack__` call shape without copying.
-The companion `dlpack-cpython311` suite runs the exact Python-feature runtime
+delivery profile. The `dlpack-examples` suite runs real PyTorch CPU transfers,
+verifies stable data pointers, exact device metadata, owned one-shot
+consumption, an instrumented exact producer-deleter call, and zero residual
+resources. PyTorch exercises direct import-root and `Self` acquisition.
+The companion `dlpack-runtime` suite runs the exact Python-feature runtime
 test inventory, so malformed capsules, copied flags, no-retry behavior,
 stream/device mismatches, attach-failure ownership, and exact-once cleanup
 remain blocking evidence.
@@ -217,8 +219,7 @@ and verifies that ordinary object/leak diagnostics return to their baseline:
 
 Service-backed libraries remain in `live-examples`: Redis, Postgres/psycopg,
 Kafka, Pub/Sub-style SNS fanout, SNS, and SQS are exercised with testcontainers
-when Docker is available. TensorFlow CPU DLPack is covered by the locked
-offline `dlpack-examples` suite.
+when Docker is available.
 
 Package certification records include:
 

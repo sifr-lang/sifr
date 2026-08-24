@@ -286,7 +286,7 @@
         {"kind": "negative", "status": "passing", "owner": "validated declaration, capsule, version, copy, dtype, shape, stride, device, and one-shot failures"},
         {"kind": "cleanup", "status": "passing", "owner": "instrumented consumed, unconsumed, mismatch, shutdown, and exact-once deleter counters"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "DLPack transfer is synchronous"},
-        {"kind": "live", "status": "passing", "owner": "blocking compiled PyTorch and TensorFlow pointer-identity binaries"}
+        {"kind": "live", "status": "passing", "owner": "blocking compiled PyTorch pointer-identity binary"}
       ],
       "compiled_evidence": [
         {
@@ -296,16 +296,6 @@
           "case": "torch-declaration",
           "sifr_source": "torch_dlpack/dlpack_declaration_compiled.sifr",
           "stdout_marker": "sifr-python-interop:dlpack:torch:pointer=stable:device=cpu:one-shot=ok:resources=zero",
-          "requires_resource_zero": true,
-          "minimum_certification_commands": 2
-        },
-        {
-          "id": "dlpack-tensorflow-resource-zero",
-          "suite": "dlpack-examples",
-          "report": "target/verification/areas/python_interop/dlpack-examples.latest.json",
-          "case": "tensorflow-declaration",
-          "sifr_source": "tensorflow_dlpack/dlpack_declaration_compiled.sifr",
-          "stdout_marker": "sifr-python-interop:dlpack:tensorflow:pointer=stable:device=cpu:bridge=versioned-call:resources=zero",
           "requires_resource_zero": true,
           "minimum_certification_commands": 2
         }

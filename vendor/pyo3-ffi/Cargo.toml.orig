@@ -1,6 +1,6 @@
 [package]
 name = "pyo3-ffi"
-version = "0.29.0"
+version = "0.29.2"
 description = "Python-API bindings for the PyO3 ecosystem"
 authors = ["PyO3 Project and Contributors <https://github.com/PyO3>"]
 keywords = ["pyo3", "python", "cpython", "ffi"]
@@ -18,9 +18,6 @@ libc = "0.2.62"
 [features]
 
 default = []
-
-# deprecated
-extension-module = ["pyo3-build-config/extension-module"]
 
 # Use the Python limited API. See https://www.python.org/dev/peps/pep-0384/ for more.
 abi3 = []
@@ -40,14 +37,15 @@ abi3-py315 = ["abi3"]
 
 abi3t-py315 = ["abi3t"]
 
-# deprecated: no longer needed, raw-dylib is used instead
+# deprecated
+extension-module = ["pyo3-build-config/extension-module"]
 generate-import-lib = ["pyo3-build-config/generate-import-lib"]
 
 [dev-dependencies]
 paste = "1"
 
 [build-dependencies]
-pyo3-build-config = { path = "../pyo3-build-config", version = "=0.29.0" }
+pyo3-build-config = { path = "../pyo3-build-config", version = "=0.29.2" }
 
 [lints]
 workspace = true
@@ -59,3 +57,7 @@ max-version = "3.15" # inclusive
 [package.metadata.pypy]
 min-version = "3.11"
 max-version = "3.11" # inclusive
+
+[package.metadata.graalpy]
+min-version = "3.12"
+max-version = "3.13" # inclusive

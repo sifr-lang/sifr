@@ -15,12 +15,6 @@
       "operations": ["zero_copy_dlpack_tensor", "release_dlpack"],
       "expected_device_type": 1,
       "expected_stream_sync_required": false
-    },
-    {
-      "name": "tensorflow_cpu_tensor_supported_dtype",
-      "operations": ["zero_copy_dlpack_tensor", "release_dlpack"],
-      "expected_device_type": 1,
-      "expected_stream_sync_required": false
     }
   ],
   "negative_cases": [

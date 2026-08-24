@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from arrow_examples import ARROW_EXAMPLE_CASES
@@ -39,9 +40,11 @@ def validate_arrow_declaration_evidence(payload: object, fixtures_root: Path) ->
     repo_root = fixtures_root.parents[3]
     for matrix_name, ids in expected_ids.items():
         matrix = payload.get(matrix_name)
-        observed_ids = {
-            row.get("id") for row in matrix if isinstance(row, dict)
-        } if isinstance(matrix, list) else set()
+        observed_ids = (
+            {row.get("id") for row in matrix if isinstance(row, dict)}
+            if isinstance(matrix, list)
+            else set()
+        )
         if observed_ids != ids:
             raise SystemExit(f"Arrow evidence {matrix_name} row id drift")
         for row in matrix:
@@ -76,9 +79,8 @@ def validate_arrow_declaration_evidence(payload: object, fixtures_root: Path) ->
     if set(row) != {"id", "source", "fixture", "targets", "stdout_marker"}:
         raise SystemExit("Arrow live evidence row schema drift")
     case = ARROW_EXAMPLE_CASES.get(row.get("id"))
-    if (
-        case is None
-        or case.relative_source.removeprefix("pyarrow_capsule/") != row.get("source")
+    if case is None or case.relative_source.removeprefix("pyarrow_capsule/") != row.get(
+        "source"
     ):
         raise SystemExit("Arrow live evidence is not registered")
     if case.stdout_marker != row.get("stdout_marker"):
@@ -92,9 +94,8 @@ def validate_arrow_declaration_evidence(payload: object, fixtures_root: Path) ->
         raise SystemExit("Arrow live evidence certification target drift")
     source = fixtures_root / "pyarrow_capsule" / row["source"]
     fixture = fixtures_root / "pyarrow_capsule" / row["fixture"]
-    if (
-        not source.is_file()
-        or row["stdout_marker"] not in source.read_text(encoding="utf-8")
+    if not source.is_file() or row["stdout_marker"] not in source.read_text(
+        encoding="utf-8"
     ):
         raise SystemExit("Arrow live evidence source/marker is missing")
     fixture_text = fixture.read_text(encoding="utf-8")
@@ -111,4 +112,38 @@ def validate_arrow_declaration_evidence(payload: object, fixtures_root: Path) ->
                 f"Arrow executable evidence is missing measurement: {required}"
             )
     if payload.get("profiles") != ["create-pr", "merge", "nightly", "release"]:
-        raise SystemExit("Arrow evidence must remain blocking in every delivery profile")
+        raise SystemExit(
+            "Arrow evidence must remain blocking in every delivery profile"
+        )
+    manifest = json.loads(
+        (repo_root / "verification/areas/python_interop/manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    required_suites = {
+        "arrow-examples": "python-interop-arrow-examples",
+        "arrow-runtime": "python-interop-arrow-runtime",
+    }
+    for suite_name, command in required_suites.items():
+        suites = [suite for suite in manifest["suites"] if suite["name"] == suite_name]
+        if (
+            len(suites) != 1
+            or suites[0].get("kind") != "adapter"
+            or suites[0].get("cases", [{}])[0].get("command") != command
+        ):
+            raise SystemExit(f"{suite_name} manifest ownership drift")
+    for profile in payload["profiles"]:
+        profile_payload = json.loads(
+            (repo_root / f"verification/profiles/{profile}.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        python_areas = [
+            area
+            for area in profile_payload["selected_areas"]
+            if area["area"] == "python_interop"
+        ]
+        if len(python_areas) != 1 or not set(required_suites).issubset(
+            python_areas[0]["suites"]
+        ):
+            raise SystemExit(f"Arrow evidence suites are not blocking in {profile}")

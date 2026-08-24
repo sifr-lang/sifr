@@ -8,27 +8,36 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from async_declaration_examples import (
-    build_async_declaration_examples_report,
-    run_async_declaration_examples_self_tests,
-)
+from arrow_evidence import validate_arrow_declaration_evidence
+from arrow_examples import build_arrow_examples_report, run_arrow_examples_self_tests
 from async_context_examples import (
     build_async_context_examples_report,
     run_async_context_examples_self_tests,
 )
-from arrow_evidence import validate_arrow_declaration_evidence
-from arrow_examples import build_arrow_examples_report, run_arrow_examples_self_tests
+from async_declaration_examples import (
+    build_async_declaration_examples_report,
+    run_async_declaration_examples_self_tests,
+)
+from buffer_evidence import BUFFER_MATRIX_SPECS
 from buffer_examples import (
     BUFFER_EXAMPLE_CASES,
     build_buffer_examples_report,
     run_buffer_examples_self_tests,
 )
-from buffer_evidence import BUFFER_MATRIX_SPECS
-from callback_examples import build_callback_examples_report, run_callback_examples_self_tests
+from callback_examples import (
+    build_callback_examples_report,
+    run_callback_examples_self_tests,
+)
 from certification_ledger import run_compiled_certification_self_tests
-from certification_matrix import build_certification_report, validate_certification_policy
+from certification_matrix import (
+    build_certification_report,
+    validate_certification_policy,
+)
 from cli_args import parse_args
-from dataframe_examples import build_dataframe_examples_report, run_dataframe_examples_self_tests
+from dataframe_examples import (
+    build_dataframe_examples_report,
+    run_dataframe_examples_self_tests,
+)
 from declaration_capabilities import (
     load_and_validate_capabilities,
     run_declaration_capability_self_tests,
@@ -38,147 +47,22 @@ from dlpack_examples import build_dlpack_examples_report, run_dlpack_examples_se
 from env import discover_paths
 from env_probe import run_env_probe
 from example_packages import run_sifr_launcher_self_test
+from fixture_inventory import (
+    MATRIX_FILES,
+    REQUIRED_FIXTURE_FILES,
+    REQUIRED_FIXTURES,
+    REQUIRED_SOURCE_FIXTURES,
+)
 from import_matrix import PackageEntry, load_matrix
-from library_examples import build_library_examples_report, run_library_examples_self_tests
+from library_examples import (
+    build_library_examples_report,
+    run_library_examples_self_tests,
+)
 from live_examples import build_live_examples_report, run_live_examples_self_tests
 from live_policy import build_live_policy_report, run_live_policy_self_tests
 from ml_examples import build_ml_examples_report, run_ml_examples_self_tests
 from report import write_report
 from smoke_matrix import KNOWN_GATES, KNOWN_GROUPS, KNOWN_TIERS
-
-MATRIX_FILES = (
-    "tier1.toml",
-    "tier2.toml",
-    "tier3.toml",
-    "tier4.toml",
-    "native.toml",
-    "async.toml",
-    "data.toml",
-    "cloud.toml",
-    "brokers.toml",
-)
-
-REQUIRED_FIXTURES = (
-    "declaration_sync",
-    "async_declaration",
-    "async_context",
-    "simple_import",
-    "primitive_conversion",
-    "pydantic_models",
-    "async_blocking",
-    "async_http",
-    "fastapi_app",
-    "sqlalchemy_psycopg",
-    "redis",
-    "kafka",
-    "pubsub",
-    "aws_sqs",
-    "aws_sns",
-    "aws_sns_sqs_subscription",
-    "pandas_arrow",
-    "polars_arrow",
-    "pyarrow_capsule",
-    "numpy_buffer",
-    "torch_dlpack",
-    "tensorflow_dlpack",
-    "sklearn",
-    "cffi_callback",
-    "cryptography_tls",
-    "resource_cleanup",
-    "sqlite_context",
-    "package_bridge_archive",
-    "env_probe",
-)
-
-REQUIRED_FIXTURE_FILES = (
-    "declaration_sync/sync_declaration_contract.json",
-    "async_declaration/async_declaration_evidence.json",
-    "async_context/async_context_evidence.json",
-    "simple_import/opaque_object_operations.json",
-    "primitive_conversion/primitive_roundtrip.json",
-    "async_blocking/async_blocking_contract.json",
-    "async_http/async_http_contract.json",
-    "aws_sns/aws_sns_contract.json",
-    "aws_sns_sqs_subscription/aws_sns_sqs_subscription_contract.json",
-    "aws_sqs/aws_sqs_contract.json",
-    "cryptography_tls/cryptography_tls_contract.json",
-    "fastapi_app/fastapi_app_contract.json",
-    "kafka/kafka_contract.json",
-    "numpy_buffer/py_buffer_contract.json",
-    "numpy_buffer/buffer_declaration_evidence.json",
-    "pandas_arrow/pandas_arrow_contract.json",
-    "polars_arrow/polars_arrow_contract.json",
-    "pubsub/pubsub_contract.json",
-    "pyarrow_capsule/arrow_capsule_contract.json",
-    "pyarrow_capsule/arrow_declaration_evidence.json",
-    "dlpack_declaration_evidence.json",
-    "pydantic_models/pydantic_models_contract.json",
-    "redis/redis_contract.json",
-    "torch_dlpack/dlpack_tensor_contract.json",
-    "cffi_callback/callback_contract.json",
-    "sqlalchemy_psycopg/sqlalchemy_psycopg_contract.json",
-    "tensorflow_dlpack/tensorflow_dlpack_contract.json",
-    "resource_cleanup/context_manager_cleanup.json",
-    "sqlite_context/sync_context_evidence.json",
-    "package_bridge_archive/package_bridge_evidence.json",
-)
-
-REQUIRED_SOURCE_FIXTURES = (
-    "declaration_sync/complete_call_shapes.sifr",
-    "declaration_sync/pure_and_native.sifr",
-    "async_declaration/httpx_client.sifr",
-    "async_context/aiosqlite_session.sifr",
-    "async_blocking/direct_python_call_rejected.sifr",
-    "async_blocking/object_crossing_rejected.sifr",
-    "async_blocking/offloaded_python_calls.sifr",
-    "async_blocking/unclassified_offload_rejected.sifr",
-    "simple_import/biip_schwifty_full_example.sifr",
-    "primitive_conversion/primitive_roundtrip.sifr",
-    "primitive_conversion/raw_typed_ergonomics.sifr",
-    "numpy_buffer/py_buffer_readonly_failure.sifr",
-    "numpy_buffer/py_buffer_memoryview.sifr",
-    "numpy_buffer/numpy_full_example.sifr",
-    "numpy_buffer/py_buffer_roundtrip.sifr",
-    "numpy_buffer/buffer_declaration_codegen_smoke.sifr",
-    "numpy_buffer/buffer_declaration_self.sifr",
-    "numpy_buffer/buffer_declaration_bridge.sifr",
-    "numpy_buffer/buffer_affine_aggregate_codegen.sifr",
-    "numpy_buffer/buffer_declaration_numpy.sifr",
-    "numpy_buffer/buffer_comparison_rejected.sifr",
-    "pandas_arrow/pandas_full_example.sifr",
-    "polars_arrow/polars_full_example.sifr",
-    "pyarrow_capsule/arrow_capsule_copy_possible.sifr",
-    "pyarrow_capsule/arrow_capsule_roundtrip.sifr",
-    "pyarrow_capsule/arrow_capsule_zero_copy.sifr",
-    "pyarrow_capsule/arrow_declaration_compiled.sifr",
-    "pyarrow_capsule/python_certifications/arrow_evidence.py",
-    "pyarrow_capsule/pyarrow_full_example.sifr",
-    "torch_dlpack/dlpack_declaration_compiled.sifr",
-    "fastapi_app/fastapi_pydantic_full_example.sifr",
-    "cryptography_tls/cryptography_cffi_full_example.sifr",
-    "aws_sqs/boto3_botocore_full_example.sifr",
-    "redis/redis_fakeredis_full_example.sifr",
-    "sqlalchemy_psycopg/sqlalchemy_psycopg_full_example.sifr",
-    "torch_dlpack/dlpack_tensor_device_failure.sifr",
-    "torch_dlpack/dlpack_tensor_roundtrip.sifr",
-    "torch_dlpack/torch_full_example.sifr",
-    "tensorflow_dlpack/dlpack_declaration_compiled.sifr",
-    "tensorflow_dlpack/python_bridges/tensorflow_dlpack.py",
-    "sklearn/sklearn_full_example.sifr",
-    "cffi_callback/callback_roundtrip.sifr",
-    "resource_cleanup/context_manager_body_failure.sifr",
-    "resource_cleanup/context_manager_failure.sifr",
-    "resource_cleanup/context_manager_success.sifr",
-    "resource_cleanup/resource_diagnostics.sifr",
-    "sqlite_context/context_codegen_smoke.sifr",
-    "package_bridge_archive/main.sifr",
-    "redis/redis_live_roundtrip.sifr",
-    "sqlalchemy_psycopg/postgres_live_roundtrip.sifr",
-    "kafka/kafka_live_roundtrip.sifr",
-    "pubsub/pubsub_live_callback_roundtrip.sifr",
-    "aws_sns/sns_live_callback_roundtrip.sifr",
-    "aws_sqs/sqs_live_callback_roundtrip.sifr",
-)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -204,7 +88,9 @@ def main(argv: list[str] | None = None) -> int:
         payload = build_live_policy_report(paths)
         report_path = (paths.area_root / args.report).resolve()
         write_report(report_path, payload)
-        print(f"python interop live-policy ok: report={report_path.relative_to(paths.repo_root)}")
+        print(
+            f"python interop live-policy ok: report={report_path.relative_to(paths.repo_root)}"
+        )
         return 0
     if args.live_examples:
         payload = build_live_examples_report(paths)
@@ -303,7 +189,9 @@ def main(argv: list[str] | None = None) -> int:
     matrices = load_matrices(paths.packages_root)
     validate_matrix_entries(matrices)
     validate_certification_policy(matrices)
-    declaration_capabilities = load_and_validate_capabilities(paths.area_root, paths.repo_root)
+    declaration_capabilities = load_and_validate_capabilities(
+        paths.area_root, paths.repo_root
+    )
     validate_fixtures(paths.fixtures_root)
     validate_fixture_files(paths.fixtures_root)
 
@@ -329,7 +217,8 @@ def main(argv: list[str] | None = None) -> int:
         ),
         "groups": selected_groups or ["scaffold"],
         "tiers": selected_tiers,
-        "gates": selected_gates or sorted({entry.gate for entry in selected if entry.gate is not None}),
+        "gates": selected_gates
+        or sorted({entry.gate for entry in selected if entry.gate is not None}),
         "packages": sorted({entry.name for entry in selected}),
         "matrix_files": list(MATRIX_FILES),
         "matrix_entries": len(matrices),
@@ -370,7 +259,9 @@ def main(argv: list[str] | None = None) -> int:
 def validate_filters(label: str, values: list[str], known: set[str]) -> list[str]:
     unknown = sorted(set(values).difference(known))
     if unknown:
-        raise SystemExit(f"unknown python interop {label} filter(s): {', '.join(unknown)}")
+        raise SystemExit(
+            f"unknown python interop {label} filter(s): {', '.join(unknown)}"
+        )
     return sorted(set(values))
 
 
@@ -391,27 +282,43 @@ def validate_matrix_entries(entries: list[PackageEntry]) -> None:
             raise SystemExit(f"unknown package tier for {entry.name}: {entry.tier}")
         unknown_groups = sorted(set(entry.groups).difference(KNOWN_GROUPS))
         if unknown_groups:
-            raise SystemExit(f"unknown group(s) for {entry.name}: {', '.join(unknown_groups)}")
+            raise SystemExit(
+                f"unknown group(s) for {entry.name}: {', '.join(unknown_groups)}"
+            )
         if entry.gate is not None and entry.gate not in KNOWN_GATES:
-            raise SystemExit(f"unknown certification gate for {entry.name}: {entry.gate}")
+            raise SystemExit(
+                f"unknown certification gate for {entry.name}: {entry.gate}"
+            )
         if entry.tier == "tier1" and entry.gate is None:
-            raise SystemExit(f"tier1 package {entry.name} must declare gate = \"tier1a\" or \"tier1b\"")
+            raise SystemExit(
+                f'tier1 package {entry.name} must declare gate = "tier1a" or "tier1b"'
+            )
         if entry.tier != "tier1" and entry.gate is not None:
-            raise SystemExit(f"non-tier1 package {entry.name} must not declare certification gate")
+            raise SystemExit(
+                f"non-tier1 package {entry.name} must not declare certification gate"
+            )
         key = (entry.name, entry.tier)
         if key in seen:
-            raise SystemExit(f"duplicate package matrix entry: {entry.name} in {entry.tier}")
+            raise SystemExit(
+                f"duplicate package matrix entry: {entry.name} in {entry.tier}"
+            )
         seen.add(key)
 
 
 def validate_fixtures(fixtures_root: Path) -> None:
-    missing = [name for name in REQUIRED_FIXTURES if not (fixtures_root / name).is_dir()]
+    missing = [
+        name for name in REQUIRED_FIXTURES if not (fixtures_root / name).is_dir()
+    ]
     if missing:
-        raise SystemExit(f"missing python interop fixture directories: {', '.join(missing)}")
+        raise SystemExit(
+            f"missing python interop fixture directories: {', '.join(missing)}"
+        )
 
 
 def validate_fixture_files(fixtures_root: Path) -> None:
-    missing = [name for name in REQUIRED_FIXTURE_FILES if not (fixtures_root / name).is_file()]
+    missing = [
+        name for name in REQUIRED_FIXTURE_FILES if not (fixtures_root / name).is_file()
+    ]
     if missing:
         raise SystemExit(f"missing python interop fixture files: {', '.join(missing)}")
     for name in REQUIRED_FIXTURE_FILES:
@@ -419,7 +326,9 @@ def validate_fixture_files(fixtures_root: Path) -> None:
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as error:
-            raise SystemExit(f"invalid python interop fixture JSON {path}: {error}") from error
+            raise SystemExit(
+                f"invalid python interop fixture JSON {path}: {error}"
+            ) from error
         if name == "sqlite_context/sync_context_evidence.json":
             validate_sync_context_evidence(payload)
         if name == "package_bridge_archive/package_bridge_evidence.json":
@@ -435,15 +344,21 @@ def validate_fixture_files(fixtures_root: Path) -> None:
         if name == "dlpack_declaration_evidence.json":
             validate_dlpack_declaration_evidence(payload, fixtures_root)
     missing_sources = [
-        name for name in REQUIRED_SOURCE_FIXTURES if not (fixtures_root / name).is_file()
+        name
+        for name in REQUIRED_SOURCE_FIXTURES
+        if not (fixtures_root / name).is_file()
     ]
     if missing_sources:
-        raise SystemExit(f"missing python interop source fixtures: {', '.join(missing_sources)}")
+        raise SystemExit(
+            f"missing python interop source fixtures: {', '.join(missing_sources)}"
+        )
 
 
 def validate_sync_context_evidence(payload: object) -> None:
     if not isinstance(payload, dict) or payload.get("capability") != "sync-context":
-        raise SystemExit("sync context evidence must identify the sync-context capability")
+        raise SystemExit(
+            "sync context evidence must identify the sync-context capability"
+        )
     required_causes = {
         "normal",
         "return",
@@ -454,28 +369,42 @@ def validate_sync_context_evidence(payload: object) -> None:
         "timeout, cancellation, or runtime fault",
     }
     outcomes = payload.get("outcome_matrix")
-    observed_causes = {
-        item.get("cause") for item in outcomes if isinstance(item, dict)
-    } if isinstance(outcomes, list) else set()
+    observed_causes = (
+        {item.get("cause") for item in outcomes if isinstance(item, dict)}
+        if isinstance(outcomes, list)
+        else set()
+    )
     missing_causes = sorted(required_causes - observed_causes)
     if missing_causes:
-        raise SystemExit(f"sync context evidence is missing causes: {', '.join(missing_causes)}")
+        raise SystemExit(
+            f"sync context evidence is missing causes: {', '.join(missing_causes)}"
+        )
     for matrix_name, minimum in (("cleanup_matrix", 3), ("negative_matrix", 3)):
         matrix = payload.get(matrix_name)
         if not isinstance(matrix, list) or len(matrix) < minimum:
-            raise SystemExit(f"sync context evidence requires at least {minimum} {matrix_name} rows")
-        if any(not isinstance(item, dict) or not item.get("evidence") for item in matrix):
-            raise SystemExit(f"sync context evidence {matrix_name} rows require evidence owners")
+            raise SystemExit(
+                f"sync context evidence requires at least {minimum} {matrix_name} rows"
+            )
+        if any(
+            not isinstance(item, dict) or not item.get("evidence") for item in matrix
+        ):
+            raise SystemExit(
+                f"sync context evidence {matrix_name} rows require evidence owners"
+            )
     live = payload.get("live_example")
     if not isinstance(live, dict) or live.get("stdout_marker") != (
         "sifr-python-interop:sqlite-context:total=71"
     ):
-        raise SystemExit("sync context live evidence must lock the SQLite transaction marker")
+        raise SystemExit(
+            "sync context live evidence must lock the SQLite transaction marker"
+        )
 
 
 def validate_package_bridge_evidence(payload: object) -> None:
     if not isinstance(payload, dict) or payload.get("capability") != "package-bridge":
-        raise SystemExit("package bridge evidence must identify the package-bridge capability")
+        raise SystemExit(
+            "package bridge evidence must identify the package-bridge capability"
+        )
     for matrix_name, minimum in (("positive", 3), ("negative", 3), ("cleanup", 3)):
         matrix = payload.get(matrix_name)
         if not isinstance(matrix, list) or len(matrix) < minimum:
@@ -483,17 +412,26 @@ def validate_package_bridge_evidence(payload: object) -> None:
                 f"package bridge evidence requires at least {minimum} {matrix_name} rows"
             )
         if any(not isinstance(item, str) or not item for item in matrix):
-            raise SystemExit(f"package bridge evidence {matrix_name} rows require owners")
+            raise SystemExit(
+                f"package bridge evidence {matrix_name} rows require owners"
+            )
     live = payload.get("live")
     if not isinstance(live, dict) or live.get("stdout_marker") != (
         "sifr-python-interop:package-bridge:gtin=7032069804988:format=13:check=8"
     ):
-        raise SystemExit("package bridge live evidence must lock the biip archive marker")
+        raise SystemExit(
+            "package bridge live evidence must lock the biip archive marker"
+        )
 
 
 def validate_async_declaration_evidence(payload: object) -> None:
-    if not isinstance(payload, dict) or payload.get("capability") != "coroutine-declaration":
-        raise SystemExit("async declaration evidence must identify coroutine-declaration")
+    if (
+        not isinstance(payload, dict)
+        or payload.get("capability") != "coroutine-declaration"
+    ):
+        raise SystemExit(
+            "async declaration evidence must identify coroutine-declaration"
+        )
     for matrix_name, minimum in (
         ("positive", 3),
         ("negative", 3),
@@ -506,14 +444,18 @@ def validate_async_declaration_evidence(payload: object) -> None:
                 f"async declaration evidence requires at least {minimum} {matrix_name} rows"
             )
         if any(not isinstance(item, str) or not item for item in matrix):
-            raise SystemExit(f"async declaration {matrix_name} rows require evidence owners")
+            raise SystemExit(
+                f"async declaration {matrix_name} rows require evidence owners"
+            )
     live = payload.get("live")
     expected = (
         "sifr-python-interop:async-declaration:status=207:message=async-ready:"
         "close=1:loop=shared:failure=covered:conversion=covered"
     )
     if not isinstance(live, dict) or live.get("stdout_marker") != expected:
-        raise SystemExit("async declaration live evidence must lock the httpx client marker")
+        raise SystemExit(
+            "async declaration live evidence must lock the httpx client marker"
+        )
 
 
 def validate_async_context_evidence(payload: object) -> None:
@@ -531,7 +473,9 @@ def validate_async_context_evidence(payload: object) -> None:
                 f"async context evidence requires at least {minimum} {matrix_name} rows"
             )
         if any(not isinstance(item, str) or not item for item in matrix):
-            raise SystemExit(f"async context {matrix_name} rows require evidence owners")
+            raise SystemExit(
+                f"async context {matrix_name} rows require evidence owners"
+            )
     live = payload.get("live")
     expected = (
         "sifr-python-interop:async-context:value=sqlite-ready:enter=8:exit=8:"
@@ -563,7 +507,10 @@ def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -
         raise SystemExit("buffer evidence schema_version must be 1")
     if payload.get("capability") != "buffer-protocol-declaration":
         raise SystemExit("buffer evidence must identify buffer-protocol-declaration")
-    if payload.get("surface") != "@python.buffer -> Result[python.Buffer[T], PythonError]":
+    if (
+        payload.get("surface")
+        != "@python.buffer -> Result[python.Buffer[T], PythonError]"
+    ):
         raise SystemExit("buffer evidence surface drift")
     repo_root = fixtures_root.parents[3]
     for matrix_name, expected_rows in BUFFER_MATRIX_SPECS.items():
@@ -571,20 +518,28 @@ def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -
         if not isinstance(matrix, list) or len(matrix) != len(expected_rows):
             raise SystemExit(f"buffer evidence requires exact {matrix_name} rows")
         ids = [item.get("id") for item in matrix if isinstance(item, dict)]
-        if len(ids) != len(matrix) or len(set(ids)) != len(ids) or set(ids) != set(expected_rows):
+        if (
+            len(ids) != len(matrix)
+            or len(set(ids)) != len(ids)
+            or set(ids) != set(expected_rows)
+        ):
             raise SystemExit(f"buffer evidence {matrix_name} row id drift")
         for item in matrix:
             if set(item) != {"id", "layer", "evidence", "owners", "covers"}:
                 raise SystemExit(f"buffer evidence {matrix_name} row schema drift")
-            expected_layer, expected_evidence, expected_owners, expected_coverage = expected_rows[
-                item["id"]
-            ]
+            expected_layer, expected_evidence, expected_owners, expected_coverage = (
+                expected_rows[item["id"]]
+            )
             if item.get("layer") != expected_layer:
                 raise SystemExit(f"buffer evidence layer drift: {item['id']}")
             if item.get("evidence") != expected_evidence:
                 raise SystemExit(f"buffer evidence description drift: {item['id']}")
             covers = item.get("covers")
-            if not isinstance(covers, list) or len(covers) != len(set(covers)) or set(covers) != expected_coverage:
+            if (
+                not isinstance(covers, list)
+                or len(covers) != len(set(covers))
+                or set(covers) != expected_coverage
+            ):
                 raise SystemExit(f"buffer evidence coverage drift: {item['id']}")
             owners = item.get("owners")
             if (
@@ -601,13 +556,17 @@ def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -
                 if not owner_path.is_file():
                     raise SystemExit(f"buffer evidence owner is missing: {owner}")
                 if separator and symbol not in owner_path.read_text(encoding="utf-8"):
-                    raise SystemExit(f"buffer evidence owner symbol is missing: {owner}")
+                    raise SystemExit(
+                        f"buffer evidence owner symbol is missing: {owner}"
+                    )
     cancellation = payload.get("cancellation")
     if cancellation != {
         "status": "not-applicable",
         "reason": "buffer acquisition and access are synchronous blocking boundaries",
     }:
-        raise SystemExit("buffer evidence must record synchronous cancellation as not applicable")
+        raise SystemExit(
+            "buffer evidence must record synchronous cancellation as not applicable"
+        )
     live = payload.get("live")
     required_live_ids = {
         "import-root-bytearray",
@@ -618,13 +577,18 @@ def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -
     }
     if not isinstance(live, list) or len(live) != len(required_live_ids):
         raise SystemExit("buffer live evidence requires exactly five rows")
-    if any(not isinstance(item, dict) or set(item) != {"id", "source", "stdout_marker"} for item in live):
+    if any(
+        not isinstance(item, dict) or set(item) != {"id", "source", "stdout_marker"}
+        for item in live
+    ):
         raise SystemExit("buffer live evidence row schema drift")
     observed_live_ids = {item.get("id") for item in live}
     if observed_live_ids != required_live_ids:
         missing = sorted(required_live_ids - observed_live_ids)
         extra = sorted(observed_live_ids - required_live_ids)
-        raise SystemExit(f"buffer live evidence drift: missing={missing}, extra={extra}")
+        raise SystemExit(
+            f"buffer live evidence drift: missing={missing}, extra={extra}"
+        )
     registered_cases = {
         (case.relative_source.removeprefix("numpy_buffer/"), case.stdout_marker)
         for case in BUFFER_EXAMPLE_CASES.values()
@@ -633,28 +597,34 @@ def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -
     for item in live:
         source = item.get("source")
         marker = item.get("stdout_marker")
-        source_path = fixtures_root / "numpy_buffer" / source if isinstance(source, str) else None
+        source_path = (
+            fixtures_root / "numpy_buffer" / source if isinstance(source, str) else None
+        )
         if source_path is None or not source_path.is_file():
             raise SystemExit(f"buffer live evidence source is missing: {source}")
         if not isinstance(marker, str) or not marker:
             raise SystemExit(f"buffer live evidence marker is missing: {source}")
         if marker not in source_path.read_text(encoding="utf-8"):
-            raise SystemExit(f"buffer live evidence marker is absent from source: {source}")
+            raise SystemExit(
+                f"buffer live evidence marker is absent from source: {source}"
+            )
         observed_cases.add((source, marker))
     if observed_cases != registered_cases:
         raise SystemExit("buffer live evidence must match the executable case registry")
     profiles = payload.get("profiles")
     required_profiles = ["create-pr", "merge", "nightly", "release"]
     if profiles != required_profiles:
-        raise SystemExit("buffer evidence must remain blocking in every delivery profile")
-    manifest_payload = json.loads(
-        (repo_root / "verification" / "areas" / "python_interop" / "manifest.json").read_text(
-            encoding="utf-8"
+        raise SystemExit(
+            "buffer evidence must remain blocking in every delivery profile"
         )
+    manifest_payload = json.loads(
+        (
+            repo_root / "verification" / "areas" / "python_interop" / "manifest.json"
+        ).read_text(encoding="utf-8")
     )
     required_suites = {
         "buffer-examples": "python-interop-buffer-examples",
-        "buffer-cpython311": "python-interop-buffer-cpython311",
+        "buffer-runtime": "python-interop-buffer-runtime",
     }
     for suite_name, expected_command in required_suites.items():
         manifest_suites = [
@@ -676,7 +646,9 @@ def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -
             )
         )
         python_areas = [
-            area for area in profile_payload["selected_areas"] if area["area"] == "python_interop"
+            area
+            for area in profile_payload["selected_areas"]
+            if area["area"] == "python_interop"
         ]
         if len(python_areas) != 1:
             raise SystemExit(f"python interop profile ownership drift in {profile}")
@@ -748,11 +720,13 @@ def run_self_tests(area_root: Path) -> None:
         if "missing causes: normal" not in str(error):
             raise
     else:
-        raise SystemExit("sync context evidence self-test accepted a missing normal outcome")
-    buffer_evidence = json.loads(
-        (area_root / "fixtures/numpy_buffer/buffer_declaration_evidence.json").read_text(
-            encoding="utf-8"
+        raise SystemExit(
+            "sync context evidence self-test accepted a missing normal outcome"
         )
+    buffer_evidence = json.loads(
+        (
+            area_root / "fixtures/numpy_buffer/buffer_declaration_evidence.json"
+        ).read_text(encoding="utf-8")
     )
     buffer_mutations = []
     invalid_schema = json.loads(json.dumps(buffer_evidence))
@@ -786,11 +760,13 @@ def run_self_tests(area_root: Path) -> None:
             if expected_error not in str(error):
                 raise
         else:
-            raise SystemExit(f"buffer evidence self-test accepted mutation: {expected_error}")
+            raise SystemExit(
+                f"buffer evidence self-test accepted mutation: {expected_error}"
+            )
     arrow_evidence = json.loads(
-        (area_root / "fixtures/pyarrow_capsule/arrow_declaration_evidence.json").read_text(
-            encoding="utf-8"
-        )
+        (
+            area_root / "fixtures/pyarrow_capsule/arrow_declaration_evidence.json"
+        ).read_text(encoding="utf-8")
     )
     arrow_mutations = []
     invalid_arrow_schema = json.loads(json.dumps(arrow_evidence))
@@ -812,7 +788,9 @@ def run_self_tests(area_root: Path) -> None:
             if expected_error not in str(error):
                 raise
         else:
-            raise SystemExit(f"Arrow evidence self-test accepted mutation: {expected_error}")
+            raise SystemExit(
+                f"Arrow evidence self-test accepted mutation: {expected_error}"
+            )
     run_env_probe(area_root)
     try:
         validate_filters("group", ["not-a-group"], KNOWN_GROUPS)
@@ -837,29 +815,43 @@ def run_self_tests(area_root: Path) -> None:
     except SystemExit:
         pass
     else:
-        raise SystemExit("negative self-test failed: tier1 package without gate was accepted")
+        raise SystemExit(
+            "negative self-test failed: tier1 package without gate was accepted"
+        )
     try:
-        validate_matrix_entries([PackageEntry("bad-tier2", "tier2", ("imports",), "tier1a")])
+        validate_matrix_entries(
+            [PackageEntry("bad-tier2", "tier2", ("imports",), "tier1a")]
+        )
     except SystemExit:
         pass
     else:
-        raise SystemExit("negative self-test failed: non-tier1 package with gate was accepted")
+        raise SystemExit(
+            "negative self-test failed: non-tier1 package with gate was accepted"
+        )
     try:
-        validate_certification_policy([PackageEntry("bad-tier4", "tier4", ("imports",))])
+        validate_certification_policy(
+            [PackageEntry("bad-tier4", "tier4", ("imports",))]
+        )
     except SystemExit:
         pass
     else:
-        raise SystemExit("negative self-test failed: tier4 package without skip was accepted")
-    payload = build_certification_report([
-        PackageEntry(name="requests", tier="tier1", groups=("imports",), gate="tier1a"),
-        PackageEntry(
-            name="watchdog",
-            tier="tier4",
-            groups=("imports",),
-            host_dependent=True,
-            skip_reason="requires host filesystem event backend",
-        ),
-    ])
+        raise SystemExit(
+            "negative self-test failed: tier4 package without skip was accepted"
+        )
+    payload = build_certification_report(
+        [
+            PackageEntry(
+                name="requests", tier="tier1", groups=("imports",), gate="tier1a"
+            ),
+            PackageEntry(
+                name="watchdog",
+                tier="tier4",
+                groups=("imports",),
+                host_dependent=True,
+                skip_reason="requires host filesystem event backend",
+            ),
+        ]
+    )
     if payload["certified_packages"] != 1 or payload["host_dependent_skips"] != 1:
         raise SystemExit("negative self-test failed: package status counts drifted")
 

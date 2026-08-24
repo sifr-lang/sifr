@@ -24,7 +24,9 @@ from declaration_capabilities import load_and_validate_capabilities
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
-RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "python-interop-results.json"
+RESULT_JSON = (
+    REPO_ROOT / "target" / "verification" / "areas" / "python-interop-results.json"
+)
 
 COMMAND_ARGS: dict[str, list[str]] = {
     "python-interop-self-test": ["--self-test"],
@@ -104,9 +106,9 @@ COMMAND_ARGS: dict[str, list[str]] = {
         "--report",
         "../../../target/verification/areas/python_interop/dlpack-examples.latest.json",
     ],
-    "python-interop-buffer-cpython311": [],
-    "python-interop-arrow-cpython311": [],
-    "python-interop-dlpack-cpython311": [],
+    "python-interop-buffer-runtime": [],
+    "python-interop-arrow-runtime": [],
+    "python-interop-dlpack-runtime": [],
     "python-interop-ml-examples": [
         "--ml-examples",
         "--report",
@@ -153,23 +155,25 @@ AREA_PROJECT_COMMANDS = {
     "python-interop-buffer-examples",
     "python-interop-arrow-examples",
     "python-interop-dlpack-examples",
+    "python-interop-buffer-runtime",
+    "python-interop-arrow-runtime",
+    "python-interop-dlpack-runtime",
     "python-interop-library-examples",
     "python-interop-async-declaration-examples",
     "python-interop-async-context-examples",
     "python-interop-ml-examples",
     "python-interop-live-examples",
 }
-CPYTHON311_PROJECT_COMMANDS = {
-    "python-interop-arrow-cpython311",
-    "python-interop-dlpack-cpython311",
-    "python-interop-buffer-cpython311",
-}
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--suite", action="append", default=[], help="Suite filter; can repeat.")
-    parser.add_argument("--bless", action="store_true", help="Accepted for area runner parity; unused.")
+    parser.add_argument(
+        "--suite", action="append", default=[], help="Suite filter; can repeat."
+    )
+    parser.add_argument(
+        "--bless", action="store_true", help="Accepted for area runner parity; unused."
+    )
     parser.add_argument(
         "--allow-partial-certification",
         action="store_true",
@@ -225,7 +229,9 @@ def main(argv: list[str] | None = None) -> int:
     }
     result_path = REPO_ROOT / args.result_json
     result_path.parent.mkdir(parents=True, exist_ok=True)
-    result_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    result_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
+    )
     print(f"result_json={result_path.relative_to(REPO_ROOT)}", flush=True)
 
     if total_failures:
@@ -252,14 +258,22 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def select_suites(manifest: dict[str, Any], requested: set[str]) -> list[dict[str, Any]]:
+def select_suites(
+    manifest: dict[str, Any], requested: set[str]
+) -> list[dict[str, Any]]:
     suites = manifest.get("suites", [])
-    selected = [suite for suite in suites if not requested or str(suite.get("name")) in requested]
+    selected = [
+        suite
+        for suite in suites
+        if not requested or str(suite.get("name")) in requested
+    ]
     if requested:
         present = {str(suite.get("name")) for suite in selected}
         missing = sorted(requested.difference(present))
         if missing:
-            raise SystemExit(f"unknown python_interop suite filter(s): {', '.join(missing)}")
+            raise SystemExit(
+                f"unknown python_interop suite filter(s): {', '.join(missing)}"
+            )
     if not selected:
         raise SystemExit("no python_interop suites selected")
     return selected
@@ -269,7 +283,9 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
     suite_name = str(suite["name"])
     cases = suite.get("cases", [])
     if not isinstance(cases, list) or not cases:
-        raise SystemExit(f"python_interop {suite_name} suite must contain at least one case")
+        raise SystemExit(
+            f"python_interop {suite_name} suite must contain at least one case"
+        )
     case_results = [run_case(case) for case in cases]
     failures = sum(1 for variant in case_results if variant["status"] == "fail")
     return {
@@ -301,24 +317,7 @@ def run_case(case: dict[str, Any]) -> dict[str, Any]:
         raise SystemExit(f"python_interop case entry does not exist: {entry}")
     expected_exit = int(case["expect_exit_code"])
     env = None
-    if command in CPYTHON311_PROJECT_COMMANDS:
-        argv = [
-            "uv",
-            "run",
-            "--project",
-            str(AREA_ROOT / "cpython311"),
-            "--locked",
-            "--python",
-            "3.11",
-            "--managed-python",
-            "--no-python-downloads",
-            "python",
-            str(entry),
-            *COMMAND_ARGS[command],
-        ]
-        env = os.environ.copy()
-        env.pop("VIRTUAL_ENV", None)
-    elif command in AREA_PROJECT_COMMANDS:
+    if command in AREA_PROJECT_COMMANDS:
         argv = [
             "uv",
             "run",

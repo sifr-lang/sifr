@@ -609,9 +609,9 @@
         "buffer-examples",
         "arrow-examples",
         "dlpack-examples",
-        "arrow-cpython311",
-        "dlpack-cpython311",
-        "buffer-cpython311",
+        "arrow-runtime",
+        "dlpack-runtime",
+        "buffer-runtime",
         "async-declaration-examples",
         "async-context-examples",
         "cloud-boto3"

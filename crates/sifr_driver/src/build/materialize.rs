@@ -590,7 +590,7 @@ mod tests {
         let mut project = base_project();
         let mut python_runtime =
             PackagePythonRuntime::for_tests("/tmp/sifr-py/bin/python", "digest-a");
-        python_runtime.set_libpython_for_tests("/opt/python/lib/libpython3.13.dylib");
+        python_runtime.set_libpython_for_tests("/opt/python/lib/libpython3.14.dylib");
         project.python_runtime = Some(python_runtime);
         project
             .interop
@@ -604,7 +604,7 @@ mod tests {
                 evidence: "links=ssl".to_string(),
             });
 
-        let stdout = br#"{"reason":"build-script-executed","linked_libs":["dylib=python3.13"]}"#;
+        let stdout = br#"{"reason":"build-script-executed","linked_libs":["dylib=python3.14"]}"#;
         validate_native_link_evidence(
             stdout,
             &trusted_native_links(&project, &test_dependency_plan("fingerprint-a")),

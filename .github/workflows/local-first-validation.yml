@@ -44,8 +44,8 @@ jobs:
         with:
           version-file: verification/pyproject.toml
           checksum: 68a509da24b06b4223a1c0175fb5eb5bc79342b76cbeff0cfe51ac3f5b17b6b2
-      - name: Install pinned buffer compatibility interpreter
-        run: uv python install 3.11
+      - name: Install canonical Python interpreter
+        run: uv python install 3.14.7
       - name: Run local-first profile
         run: bash scripts/run_all_tests.sh --profile "${{ matrix.profile }}"
 

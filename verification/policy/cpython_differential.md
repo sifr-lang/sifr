@@ -4,7 +4,10 @@ Schema version: 1
 
 This policy defines the first merge-blocking CPython differential subset. It is intentionally narrow: every generated or hand-seeded oracle program must stay inside the supported constructs table and must avoid every excluded divergence unless a later policy revision explicitly moves that behavior into the supported subset.
 
-The supported CPython interpreter is the local `python3` satisfying `verification/pyproject.toml`'s `requires-python` range. Oracle reports must include the exact `sys.version`. Generated-corpus results are not comparable across Python minor versions unless a later policy revision lists the program id in the exit-code-stable table with a cross-minor rationale.
+The supported oracle is the GIL-enabled CPython 3.14.7 interpreter selected by
+the exact `verification/pyproject.toml` `requires-python` pin. The runners reject
+any other implementation or version, and oracle reports include the exact
+`sys.version`. There is no cross-version comparison or compatibility lane.
 
 Every accepted oracle program prints exactly one JSON line. The accepted value grammar is version 1: `null`, booleans, strings, bounded integers, homogeneous lists, and string-keyed dictionaries whose keys are canonicalized before output unless the program explicitly tests insertion order. Strings are compared as Unicode scalar value sequences after source-level NFC normalization; the runner performs only CRLF-to-LF line-ending normalization. Integers must stay within `[-1000000, 1000000]`. Recursive/container depth is limited to 4.
 

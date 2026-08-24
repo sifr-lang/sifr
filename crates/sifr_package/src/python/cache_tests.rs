@@ -47,7 +47,7 @@ fn python_probe_digest_includes_resolved_distribution_versions_and_abi() {
     let mut distribution_changed = first.clone();
     distribution_changed.imports[0].distributions[0].version = "1.0.1".to_string();
     let mut abi_changed = first.clone();
-    abi_changed.soabi = Some("cpython-314-darwin".to_string());
+    abi_changed.soabi = Some("cpython-314t-darwin".to_string());
 
     assert_ne!(
         digest_python_environment_probe(&request, &first),

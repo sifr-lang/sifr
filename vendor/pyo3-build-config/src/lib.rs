@@ -164,34 +164,6 @@ pub fn print_expected_cfgs() {
     for i in impl_::MINIMUM_SUPPORTED_VERSION.minor..=impl_::STABLE_ABI_MAX_MINOR + 1 {
         println!("cargo:rustc-check-cfg=cfg(Py_3_{i})");
     }
-
-    // pyo3_dll cfg for raw-dylib linking on Windows
-    let mut dll_names = vec![
-        "python3".to_string(),
-        "python3_d".to_string(),
-        "python3t".to_string(),
-        "python3t_d".to_string(),
-    ];
-    for i in impl_::MINIMUM_SUPPORTED_VERSION.minor..=impl_::STABLE_ABI_MAX_MINOR + 1 {
-        dll_names.push(format!("python3{i}"));
-        dll_names.push(format!("python3{i}_d"));
-        if i >= 13 {
-            dll_names.push(format!("python3{i}t"));
-            dll_names.push(format!("python3{i}t_d"));
-        }
-    }
-    // PyPy DLL names (libpypy3.X-c.dll)
-    for i in
-        impl_::MINIMUM_SUPPORTED_VERSION_PYPY.minor..=impl_::MAXIMUM_SUPPORTED_VERSION_PYPY.minor
-    {
-        dll_names.push(format!("libpypy3.{i}-c"));
-    }
-    let values = dll_names
-        .iter()
-        .map(|n| format!("\"{n}\""))
-        .collect::<Vec<_>>()
-        .join(", ");
-    println!("cargo:rustc-check-cfg=cfg(pyo3_dll, values({values}))");
 }
 
 /// Private exports used in PyO3's build.rs
@@ -324,10 +296,12 @@ pub mod pyo3_build_script_impl {
             target.architecture,
             Architecture::Wasm32 | Architecture::Wasm64
         );
-        let is_emscripten = target.operating_system == target_lexicon::OperatingSystem::Emscripten;
+        let is_emscripten = target.operating_system == OperatingSystem::Emscripten;
+        let is_cygwin = target.operating_system == OperatingSystem::Cygwin;
+        let is_windows = target.operating_system == OperatingSystem::Windows;
         // webassembly targets generally don't support rpath, emscripten is the only exception currently aware of:
         // https://github.com/emscripten-core/emscripten/issues/22126
-        if is_linking_libpython && (!is_wasm || is_emscripten) {
+        if is_linking_libpython && !is_windows && !is_cygwin && (!is_wasm || is_emscripten) {
             if let Some(lib_dir) = interpreter_config.lib_dir() {
                 println!("cargo:rustc-link-arg=-Wl,-rpath,{lib_dir}");
             }

@@ -344,42 +344,42 @@
       ]
     },
     {
-      "name": "buffer-cpython311",
+      "name": "buffer-runtime",
       "kind": "adapter",
       "timeout_seconds": 900,
       "cases": [
         {
-          "id": "buffer-cpython311",
-          "entry": "verification/areas/python_interop/runner/cpython311_buffer.py",
-          "command": "python-interop-buffer-cpython311",
+          "id": "buffer-runtime",
+          "entry": "verification/areas/python_interop/runner/buffer_runtime.py",
+          "command": "python-interop-buffer-runtime",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }
       ]
     },
     {
-      "name": "arrow-cpython311",
+      "name": "arrow-runtime",
       "kind": "adapter",
       "timeout_seconds": 900,
       "cases": [
         {
-          "id": "arrow-cpython311",
-          "entry": "verification/areas/python_interop/runner/cpython311_arrow.py",
-          "command": "python-interop-arrow-cpython311",
+          "id": "arrow-runtime",
+          "entry": "verification/areas/python_interop/runner/arrow_runtime.py",
+          "command": "python-interop-arrow-runtime",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }
       ]
     },
     {
-      "name": "dlpack-cpython311",
+      "name": "dlpack-runtime",
       "kind": "adapter",
       "timeout_seconds": 900,
       "cases": [
         {
-          "id": "dlpack-cpython311",
-          "entry": "verification/areas/python_interop/runner/cpython311_dlpack.py",
-          "command": "python-interop-dlpack-cpython311",
+          "id": "dlpack-runtime",
+          "entry": "verification/areas/python_interop/runner/dlpack_runtime.py",
+          "command": "python-interop-dlpack-runtime",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

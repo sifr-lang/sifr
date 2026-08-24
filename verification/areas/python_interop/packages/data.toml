@@ -13,13 +13,6 @@ native = true
 import-roots = ["PIL"]
 
 [[packages]]
-name = "tensorflow"
-tier = "tier1"
-gate = "tier1b"
-groups = ["imports", "native", "dlpack", "tensors"]
-native = true
-
-[[packages]]
 name = "scikit-learn"
 tier = "tier1"
 gate = "tier1b"

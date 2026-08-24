@@ -66,7 +66,7 @@ fn probe_rejects_missing_site_packages_with_pyenv_0007() {
 fn probe_rejects_site_packages_outside_venv_with_pyenv_0007() {
     let request = request();
     let mut probe = valid_probe();
-    probe.site_packages = vec!["/usr/local/lib/python3.13/site-packages".to_string()];
+    probe.site_packages = vec!["/usr/local/lib/python3.14/site-packages".to_string()];
 
     let diagnostic = validate_python_environment_probe(&request, probe)
         .expect_err("system site-packages must fail venv isolation");

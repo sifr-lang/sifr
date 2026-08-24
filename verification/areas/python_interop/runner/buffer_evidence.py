@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 BUFFER_MATRIX_SPECS = {
     "positive": {
         "typed-runtime-matrix": (
@@ -57,18 +56,17 @@ BUFFER_MATRIX_SPECS = {
                 "affine record/Option/list/tuple/union/recursive aggregate",
             },
         ),
-        "cpython-3.11-compatibility": (
+        "canonical-python-runtime": (
             "runtime-native-binary",
-            "buffer-cpython311 suite pinned to CPython 3.11",
+            "buffer-runtime suite on the exact canonical CPython",
             {
                 ".github/workflows/local-first-validation.yml",
-                "verification/areas/python_interop/cpython311/pyproject.toml",
-                "verification/areas/python_interop/cpython311/uv.lock",
-                "verification/areas/python_interop/runner/cpython311_buffer.py",
+                "verification/areas/python_interop/pyproject.toml",
+                "verification/areas/python_interop/uv.lock",
+                "verification/areas/python_interop/runner/buffer_runtime.py",
             },
             {
                 "five C-level exact release and pointer tests",
-                "five compiled declaration-first buffer fixtures",
             },
         ),
     },

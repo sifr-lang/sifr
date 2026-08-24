@@ -6,13 +6,14 @@ import copy
 import importlib.util
 import json
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from .artifact_index import validate_qualification_artifact_index
 from .common import (
-    GovernanceError,
     TARGETS,
+    GovernanceError,
     load_json_strict,
 )
 from .evidence_custody_selftest import run_evidence_custody_mutations
@@ -30,12 +31,12 @@ from .release_plan import (
 from .release_report import validate_release_profile_report
 from .release_signoff_selftest import test_release_signoff_mutations
 from .schema_contracts import qualification_index, validate_schema_contracts
+from .stable_gate_inventory_selftest import test_stable_gate_inventory
 from .surface_contracts import (
     validate_install_receipt,
     validate_self_update_plan,
     validate_self_version,
 )
-from .stable_gate_inventory_selftest import test_stable_gate_inventory
 
 AREA_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = AREA_ROOT.parents[2]
@@ -200,7 +201,9 @@ def valid_attempt() -> dict[str, Any]:
         "mode": "initial",
         "approver": "release-reviewer",
         "status": "completed",
-        "mutations": [{"kind": "release-index", "identity": "generation-8", "sha256": SHA_A}],
+        "mutations": [
+            {"kind": "release-index", "identity": "generation-8", "sha256": SHA_A}
+        ],
     }
 
 
@@ -220,7 +223,13 @@ def valid_report() -> dict[str, Any]:
     suite_map = {
         "area_rust_interop": [
             ("rust_interop", suite)
-            for suite in ("matrix", "tiers", "compatibility-matrix", "stale-drafts", "stable-candidate")
+            for suite in (
+                "matrix",
+                "tiers",
+                "compatibility-matrix",
+                "stale-drafts",
+                "stable-candidate",
+            )
         ],
         "area_developer_tooling": [
             ("developer_tooling", "full"),
@@ -285,7 +294,13 @@ def valid_report() -> dict[str, Any]:
                 for area, suites in (
                     (
                         "rust_interop",
-                        {"matrix", "tiers", "compatibility-matrix", "stale-drafts", "stable-candidate"},
+                        {
+                            "matrix",
+                            "tiers",
+                            "compatibility-matrix",
+                            "stale-drafts",
+                            "stable-candidate",
+                        },
                     ),
                     ("developer_tooling", {"full", "editor-release"}),
                     ("documentation", {"structure", "ga-release"}),
@@ -311,7 +326,7 @@ def valid_report() -> dict[str, Any]:
             "rustc": "rustc 1.90.0",
             "cargo": "cargo 1.90.0",
             "uv": "uv 0.12.5",
-            "python": "Python 3.13.0",
+            "python": "Python 3.14.7",
         },
         "overall_status": "pass",
         "steps": steps,
@@ -331,12 +346,16 @@ def expect_rejected(
         validator(payload)
     except GovernanceError as exc:
         if contains is not None and contains not in str(exc):
-            raise AssertionError(f"expected error containing {contains!r}, got {exc}") from exc
+            raise AssertionError(
+                f"expected error containing {contains!r}, got {exc}"
+            ) from exc
         return
     raise AssertionError("invalid mutation unexpectedly passed")
 
 
-def mutate(payload: dict[str, Any], callback: Callable[[dict[str, Any]], None]) -> dict[str, Any]:
+def mutate(
+    payload: dict[str, Any], callback: Callable[[dict[str, Any]], None]
+) -> dict[str, Any]:
     changed = copy.deepcopy(payload)
     callback(changed)
     return changed
@@ -365,7 +384,9 @@ def test_schemas_use_epoch_two() -> None:
 
 def test_release_tooling_expansion() -> None:
     profile = json.loads(
-        (REPO_ROOT / "verification" / "profiles" / "release.json").read_text(encoding="utf-8")
+        (REPO_ROOT / "verification" / "profiles" / "release.json").read_text(
+            encoding="utf-8"
+        )
     )
     selections = [
         selection
@@ -374,18 +395,24 @@ def test_release_tooling_expansion() -> None:
     ]
     suites = selections[0].get("suites", []) if len(selections) == 1 else []
     if suites.count("full") != 1:
-        raise AssertionError("release profile must select developer_tooling:full exactly once")
+        raise AssertionError(
+            "release profile must select developer_tooling:full exactly once"
+        )
     runner_path = (
         REPO_ROOT / "verification" / "areas" / "developer_tooling" / "runner.py"
     )
-    spec = importlib.util.spec_from_file_location("release_developer_tooling_runner", runner_path)
+    spec = importlib.util.spec_from_file_location(
+        "release_developer_tooling_runner", runner_path
+    )
     if spec is None or spec.loader is None:
         raise AssertionError("could not load developer tooling runner")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     full_suites = getattr(module, "FULL_SUITES", [])
     if full_suites.count("editor-release") != 1:
-        raise AssertionError("developer_tooling:full must expand editor-release exactly once")
+        raise AssertionError(
+            "developer_tooling:full must expand editor-release exactly once"
+        )
 
 
 def test_release_index_mutations() -> None:
@@ -403,10 +430,14 @@ def test_release_index_mutations() -> None:
         lambda item: item["channels"].update({"stable": "0.1.0"}),
         lambda item: item["channels"].update({"alpha": "0.1.0-beta.2"}),
         lambda item: item["releases"]["0.1.0-alpha.2"]["targets"].pop(TARGETS[0]),
-        lambda item: item["releases"]["0.1.0-alpha.2"].update({"installer_sha256": "0" * 64}),
+        lambda item: item["releases"]["0.1.0-alpha.2"].update(
+            {"installer_sha256": "0" * 64}
+        ),
         lambda item: item["releases"]["0.1.0-alpha.2"].update({"channel": "beta"}),
         lambda item: item["releases"]["0.1.0-alpha.2"].update({"status": []}),
-        lambda item: item["releases"]["0.1.0-alpha.2"].update({"incident_id": "inc-invalid"}),
+        lambda item: item["releases"]["0.1.0-alpha.2"].update(
+            {"incident_id": "inc-invalid"}
+        ),
     ]
     for callback in mutations:
         expect_rejected(validate_release_index, mutate(valid, callback))
@@ -491,9 +522,16 @@ def test_release_plan_mutations() -> None:
     )
     expect_rejected(
         validate_release_plan,
-        mutate(ga, lambda item: item["rust_interop"].update({"advertised_claim_ids": [[]]})),
+        mutate(
+            ga, lambda item: item["rust_interop"].update({"advertised_claim_ids": [[]]})
+        ),
     )
-    bad_ga = mutate(ga, lambda item: item.update({"rollback_target": {"version": "0.0.9", "plan_sha256": SHA_A}}))
+    bad_ga = mutate(
+        ga,
+        lambda item: item.update(
+            {"rollback_target": {"version": "0.0.9", "plan_sha256": SHA_A}}
+        ),
+    )
     expect_rejected(validate_release_plan, bad_ga)
     normal = valid_plan(transition="normal")
     live = active_index()
@@ -502,11 +540,15 @@ def test_release_plan_mutations() -> None:
     validate_release_plan(normal, active_index=live)
     expect_rejected(
         validate_release_plan,
-        mutate(normal, lambda item: item.update({"expected_stable_predecessor": "none"})),
+        mutate(
+            normal, lambda item: item.update({"expected_stable_predecessor": "none"})
+        ),
     )
     expect_rejected(
         validate_release_plan,
-        mutate(normal, lambda item: item["rollback_target"].update({"plan_sha256": SHA_A})),
+        mutate(
+            normal, lambda item: item["rollback_target"].update({"plan_sha256": SHA_A})
+        ),
     )
     incident = valid_plan(transition="incident-roll-forward")
     validate_release_plan(incident, incident_request_sha256=SHA_D)
@@ -516,7 +558,12 @@ def test_release_plan_mutations() -> None:
     )
     expect_rejected(
         validate_release_plan,
-        mutate(incident, lambda item: item.update({"rollback_target": {"version": "0.0.9", "plan_sha256": SHA_A}})),
+        mutate(
+            incident,
+            lambda item: item.update(
+                {"rollback_target": {"version": "0.0.9", "plan_sha256": SHA_A}}
+            ),
+        ),
     )
     expect_rejected(
         lambda value: validate_release_plan(value, incident_request_sha256=SHA_B),
@@ -543,9 +590,16 @@ def test_incident_mutations() -> None:
     )
     expect_rejected(
         lambda value: validate_incident_request(value, live_index=live),
-        mutate(request, lambda item: item["affected_release"].update({"version": "0.0.8"})),
+        mutate(
+            request, lambda item: item["affected_release"].update({"version": "0.0.8"})
+        ),
     )
-    inactive = mutate(live, lambda item: item["releases"]["0.0.9"].update({"status": "withdrawn", "incident_id": "inc-old"}))
+    inactive = mutate(
+        live,
+        lambda item: item["releases"]["0.0.9"].update(
+            {"status": "withdrawn", "incident_id": "inc-old"}
+        ),
+    )
     expect_rejected(
         lambda value: validate_incident_request(value, live_index=inactive),
         request,
@@ -620,15 +674,16 @@ def test_artifact_index_mutations() -> None:
     )
     expect_rejected(
         validate_qualification_artifact_index,
-        mutate(payload, lambda item: item["workflow"].update({"expires_at": "not-a-timestamp"})),
+        mutate(
+            payload,
+            lambda item: item["workflow"].update({"expires_at": "not-a-timestamp"}),
+        ),
     )
     expect_rejected(
         validate_qualification_artifact_index,
         mutate(
             payload,
-            lambda item: item["workflow"].update(
-                {"expires_at": "2026-08-01T00:00:00"}
-            ),
+            lambda item: item["workflow"].update({"expires_at": "2026-08-01T00:00:00"}),
         ),
     )
     expect_rejected(
@@ -637,7 +692,7 @@ def test_artifact_index_mutations() -> None:
     )
     expect_rejected(
         validate_qualification_artifact_index,
-        mutate(payload, lambda item: item["artifacts"][0].update({"id": " " })),
+        mutate(payload, lambda item: item["artifacts"][0].update({"id": " "})),
     )
     expect_rejected(
         validate_qualification_artifact_index,
@@ -778,14 +833,20 @@ def test_release_report_mutations() -> None:
     ]
     for index, callback in enumerate(mutations):
         validator = (
-            (lambda value: validate_release_profile_report(value, expected_profile_sha256=SHA_A))
+            (
+                lambda value: validate_release_profile_report(
+                    value, expected_profile_sha256=SHA_A
+                )
+            )
             if index == 2
             else validate_release_profile_report
         )
         expect_rejected(validator, mutate(report, callback))
     noncanonical = json.dumps(report, indent=2).encode()
     expect_rejected(
-        lambda value: validate_release_profile_report(value, canonical_bytes=noncanonical),
+        lambda value: validate_release_profile_report(
+            value, canonical_bytes=noncanonical
+        ),
         report,
     )
 

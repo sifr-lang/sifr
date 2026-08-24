@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from generated_programs import generate_program, minimized_candidate
+from python_policy import validate_canonical_python
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 MANIFEST = (
@@ -32,7 +33,14 @@ MINIMIZED_FAILURES = (
     / "minimized_failures.json"
 )
 PYPROJECT = REPO_ROOT / "verification" / "pyproject.toml"
-ACTUAL_ROOT = REPO_ROOT / "target" / "verification" / "actual" / "cpython_differential" / "generated"
+ACTUAL_ROOT = (
+    REPO_ROOT
+    / "target"
+    / "verification"
+    / "actual"
+    / "cpython_differential"
+    / "generated"
+)
 INTEGER_MIN = -1_000_000
 INTEGER_MAX = 1_000_000
 MAX_DEPTH = 4
@@ -78,33 +86,37 @@ def run_suite(suite_name: str) -> list[str]:
     minimized_failures: list[dict[str, Any]] = []
     for case in suite["cases"]:
         if time.monotonic() >= deadline:
-            failures.append(f"{suite_name} exceeded overall timeout {suite['overall_timeout_seconds']}s")
+            failures.append(
+                f"{suite_name} exceeded overall timeout {suite['overall_timeout_seconds']}s"
+            )
             break
         case_failures = run_case(suite_name, case, suite, build_info, suite_actual_root)
         failures.extend(case_failures)
         if case_failures:
-            minimized_failures.append(write_minimized_candidate(suite_name, case, suite_actual_root, case_failures))
+            minimized_failures.append(
+                write_minimized_candidate(
+                    suite_name, case, suite_actual_root, case_failures
+                )
+            )
     if minimized_failures:
         minimized_path = suite_actual_root / "minimized_failures.actual.json"
-        minimized_path.write_text(json.dumps(minimized_failures, indent=2, sort_keys=True), encoding="utf-8")
+        minimized_path.write_text(
+            json.dumps(minimized_failures, indent=2, sort_keys=True), encoding="utf-8"
+        )
     if not failures:
-        print(f"cpython generated differential ok: suite={suite_name} cases={len(suite['cases'])}")
+        print(
+            f"cpython generated differential ok: suite={suite_name} cases={len(suite['cases'])}"
+        )
     return failures
 
 
 def validate_python_version() -> list[str]:
-    if sys.version_info < (3, 11):
-        return [f"python3 must be >=3.11 to read verification/pyproject.toml, got {sys.version.split()[0]}"]
-    import tomllib
-
-    pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
-    requires_python = pyproject["project"]["requires-python"]
-    if requires_python != ">=3.11":
-        return [f"unsupported requires-python policy {requires_python!r}; update generated runner parser"]
-    return []
+    return validate_canonical_python(PYPROJECT)
 
 
-def build_release_binary(manifest: dict[str, Any], failures: list[str]) -> dict[str, str]:
+def build_release_binary(
+    manifest: dict[str, Any], failures: list[str]
+) -> dict[str, str]:
     release = manifest["release_binary"]
     build_command = [str(part) for part in release["build_command"]]
     timeout = int(release["build_timeout_seconds"])
@@ -117,8 +129,7 @@ def build_release_binary(manifest: dict[str, Any], failures: list[str]) -> dict[
             cwd=REPO_ROOT,
             env=env,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=timeout,
             check=False,
         )
@@ -144,7 +155,9 @@ def build_release_binary(manifest: dict[str, Any], failures: list[str]) -> dict[
         failures.append(f"release binary build failed with exit {completed.returncode}")
     binary = REPO_ROOT / str(release["path"])
     if not binary.is_file():
-        failures.append(f"release binary missing after build: {binary.relative_to(REPO_ROOT)}")
+        failures.append(
+            f"release binary missing after build: {binary.relative_to(REPO_ROOT)}"
+        )
         binary_sha = "missing"
     else:
         binary_sha = sha256_file(binary)
@@ -243,11 +256,15 @@ def compare_runtime(
     expected_bucket = str(case["expected_exit_bucket"])
     actual_bucket = exit_bucket(result.exit_code)
     if actual_bucket != expected_bucket:
-        failures.append(f"{case_id} {runtime} exit bucket {actual_bucket} != expected {expected_bucket}")
+        failures.append(
+            f"{case_id} {runtime} exit bucket {actual_bucket} != expected {expected_bucket}"
+        )
     expected_presence = str(case["expected_error_presence"])
     actual_presence = error_presence(runtime, result)
     if actual_presence != expected_presence:
-        failures.append(f"{case_id} {runtime} error presence {actual_presence} != expected {expected_presence}")
+        failures.append(
+            f"{case_id} {runtime} error presence {actual_presence} != expected {expected_presence}"
+        )
 
 
 def run_command(argv: list[str], timeout: int) -> RuntimeResult:
@@ -257,8 +274,7 @@ def run_command(argv: list[str], timeout: int) -> RuntimeResult:
             argv,
             cwd=REPO_ROOT,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             timeout=timeout,
             check=False,
         )
@@ -278,14 +294,18 @@ def run_command(argv: list[str], timeout: int) -> RuntimeResult:
     )
 
 
-def parse_exact_json_line(case_id: str, runtime: str, stdout: str, failures: list[str]) -> Any | None:
+def parse_exact_json_line(
+    case_id: str, runtime: str, stdout: str, failures: list[str]
+) -> Any | None:
     normalized = normalize_stdout(stdout)
     if not normalized.endswith("\n"):
         failures.append(f"{case_id} {runtime} stdout must end with one newline")
         return None
     lines = normalized.splitlines()
     if len(lines) != 1:
-        failures.append(f"{case_id} {runtime} stdout must contain exactly one JSON line")
+        failures.append(
+            f"{case_id} {runtime} stdout must contain exactly one JSON line"
+        )
         return None
     try:
         return json.loads(lines[0])
@@ -300,7 +320,9 @@ def validate_value_grammar(case_id: str, runtime: str, value: Any) -> list[str]:
     return failures
 
 
-def validate_value(case_id: str, runtime: str, value: Any, depth: int, failures: list[str]) -> str:
+def validate_value(
+    case_id: str, runtime: str, value: Any, depth: int, failures: list[str]
+) -> str:
     if depth > MAX_DEPTH:
         failures.append(f"{case_id} {runtime} JSON value exceeds depth {MAX_DEPTH}")
         return "invalid"
@@ -310,7 +332,9 @@ def validate_value(case_id: str, runtime: str, value: Any, depth: int, failures:
         return "bool"
     if isinstance(value, int):
         if not INTEGER_MIN <= value <= INTEGER_MAX:
-            failures.append(f"{case_id} {runtime} integer {value} outside [{INTEGER_MIN}, {INTEGER_MAX}]")
+            failures.append(
+                f"{case_id} {runtime} integer {value} outside [{INTEGER_MIN}, {INTEGER_MAX}]"
+            )
         return "int"
     if isinstance(value, float):
         failures.append(f"{case_id} {runtime} floats are outside value grammar v1")
@@ -318,7 +342,10 @@ def validate_value(case_id: str, runtime: str, value: Any, depth: int, failures:
     if isinstance(value, str):
         return "str"
     if isinstance(value, list):
-        element_types = {validate_value(case_id, runtime, item, depth + 1, failures) for item in value}
+        element_types = {
+            validate_value(case_id, runtime, item, depth + 1, failures)
+            for item in value
+        }
         if len(element_types - {"invalid"}) > 1:
             failures.append(f"{case_id} {runtime} list is not homogeneous")
         return f"list:{next(iter(element_types), 'empty')}"
@@ -327,12 +354,19 @@ def validate_value(case_id: str, runtime: str, value: Any, depth: int, failures:
         if not all(isinstance(key, str) for key in keys):
             failures.append(f"{case_id} {runtime} dict keys must be strings")
         if keys != sorted(keys):
-            failures.append(f"{case_id} {runtime} dict keys are not canonical sorted order")
-        value_types = {validate_value(case_id, runtime, item, depth + 1, failures) for item in value.values()}
+            failures.append(
+                f"{case_id} {runtime} dict keys are not canonical sorted order"
+            )
+        value_types = {
+            validate_value(case_id, runtime, item, depth + 1, failures)
+            for item in value.values()
+        }
         if len(value_types - {"invalid"}) > 1:
             failures.append(f"{case_id} {runtime} dict values are not homogeneous")
         return f"dict:{next(iter(value_types), 'empty')}"
-    failures.append(f"{case_id} {runtime} unsupported JSON value type {type(value).__name__}")
+    failures.append(
+        f"{case_id} {runtime} unsupported JSON value type {type(value).__name__}"
+    )
     return "invalid"
 
 
@@ -358,7 +392,9 @@ def write_minimized_candidate(
         "minimized_python": str((minimized_root / "case.py").relative_to(REPO_ROOT)),
         "minimized_sifr": str((minimized_root / "main.sifr").relative_to(REPO_ROOT)),
     }
-    (minimized_root / "metadata.json").write_text(json.dumps(metadata, indent=2, sort_keys=True), encoding="utf-8")
+    (minimized_root / "metadata.json").write_text(
+        json.dumps(metadata, indent=2, sort_keys=True), encoding="utf-8"
+    )
     return metadata
 
 

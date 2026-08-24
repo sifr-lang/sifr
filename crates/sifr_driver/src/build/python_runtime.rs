@@ -177,8 +177,8 @@ impl PackagePythonRuntime {
             probe_digest: probe_digest.to_string(),
             authoring_environment_digest: probe_digest.to_string(),
             implementation_name: "cpython".to_string(),
-            implementation_version: "3.13.1".to_string(),
-            cpython_version_tuple: vec![3, 13, 1],
+            implementation_version: "3.14.7".to_string(),
+            cpython_version_tuple: vec![3, 14, 7],
             sys_path: vec!["/tmp/sifr-py/lib".to_string()],
             site_packages: vec!["/tmp/sifr-py/site-packages".to_string()],
             required_import_roots: vec!["math".to_string()],
@@ -451,7 +451,7 @@ mod tests {
 
         assert!(rendered.contains("PythonRuntimeConfig"));
         assert!(rendered.contains("\"/tmp/sifr py/bin/python\".to_string()"));
-        assert!(rendered.contains("cpython_version_tuple: vec![3, 13, 1]"));
+        assert!(rendered.contains("cpython_version_tuple: vec![3, 14, 7]"));
     }
 
     #[test]
@@ -467,15 +467,15 @@ mod tests {
         };
         let probe = sifr_package::PythonEnvironmentProbe {
             implementation_name: "CPython".to_string(),
-            implementation_version: "3.13.1".to_string(),
-            cpython_version_tuple: vec![3, 13, 1],
+            implementation_version: "3.14.7".to_string(),
+            cpython_version_tuple: vec![3, 14, 7],
             executable: "/tmp/sifr-py/bin/python".to_string(),
             sys_prefix: "/tmp/sifr-py".to_string(),
             sys_base_prefix: "/opt/python".to_string(),
             site_packages: vec!["/tmp/sifr-py/site-packages".to_string()],
             sys_path: vec!["/tmp/sifr-py/lib".to_string()],
-            soabi: Some("cpython-313-darwin".to_string()),
-            extension_suffixes: vec![".cpython-313-darwin.so".to_string()],
+            soabi: Some("cpython-314-darwin".to_string()),
+            extension_suffixes: vec![".cpython-314-darwin.so".to_string()],
             pointer_width: 64,
             platform: "macOS".to_string(),
             machine: "arm64".to_string(),
@@ -485,7 +485,7 @@ mod tests {
                 root: "numpy".to_string(),
                 ok: true,
                 origin: Some(
-                    "/tmp/sifr-py/site-packages/numpy/_core.cpython-313-darwin.so".to_string(),
+                    "/tmp/sifr-py/site-packages/numpy/_core.cpython-314-darwin.so".to_string(),
                 ),
                 distributions: vec![sifr_package::python::PythonDistributionProbe {
                     name: "numpy".to_string(),
@@ -514,26 +514,26 @@ mod tests {
     #[test]
     fn trusted_native_link_names_include_selected_libpython() {
         let mut metadata = metadata();
-        metadata.set_libpython_for_tests("/opt/python/lib/libpython3.13.dylib");
+        metadata.set_libpython_for_tests("/opt/python/lib/libpython3.14.dylib");
 
-        assert_eq!(metadata.trusted_native_link_names(), ["python3.13"]);
+        assert_eq!(metadata.trusted_native_link_names(), ["python3.14"]);
     }
 
     #[test]
     fn trusted_native_link_names_include_cpython_framework_version() {
         let mut metadata = metadata();
         metadata.set_libpython_for_tests(
-            "/opt/homebrew/Frameworks/Python.framework/Versions/3.13/Python",
+            "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/Python",
         );
 
-        assert_eq!(metadata.trusted_native_link_names(), ["python3.13"]);
+        assert_eq!(metadata.trusted_native_link_names(), ["python3.14"]);
     }
 
     #[test]
     fn trusted_native_link_names_fall_back_to_cpython_version() {
         let metadata = metadata();
 
-        assert_eq!(metadata.trusted_native_link_names(), ["python3.13"]);
+        assert_eq!(metadata.trusted_native_link_names(), ["python3.14"]);
     }
 
     #[test]

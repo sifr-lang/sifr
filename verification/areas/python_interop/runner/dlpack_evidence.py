@@ -44,9 +44,17 @@ def validate_dlpack_declaration_evidence(payload: object, fixtures_root: Path) -
                 raise SystemExit(f"DLPack evidence {matrix_name} row schema drift")
             owners = row.get("owners")
             covers = row.get("covers")
-            if not isinstance(owners, list) or not owners or len(owners) != len(set(owners)):
+            if (
+                not isinstance(owners, list)
+                or not owners
+                or len(owners) != len(set(owners))
+            ):
                 raise SystemExit(f"DLPack evidence owner drift: {row['id']}")
-            if not isinstance(covers, list) or not covers or len(covers) != len(set(covers)):
+            if (
+                not isinstance(covers, list)
+                or not covers
+                or len(covers) != len(set(covers))
+            ):
                 raise SystemExit(f"DLPack evidence coverage drift: {row['id']}")
             for owner in owners:
                 if not isinstance(owner, str) or not (repo_root / owner).is_file():
@@ -68,20 +76,28 @@ def validate_dlpack_declaration_evidence(payload: object, fixtures_root: Path) -
         if not isinstance(row, dict) or set(row) != {"id", "source", "stdout_marker"}:
             raise SystemExit("DLPack live evidence row schema drift")
         source = fixtures_root / row["source"]
-        if not source.is_file() or row["stdout_marker"] not in source.read_text(encoding="utf-8"):
-            raise SystemExit(f"DLPack live evidence source/marker is missing: {row['id']}")
+        if not source.is_file() or row["stdout_marker"] not in source.read_text(
+            encoding="utf-8"
+        ):
+            raise SystemExit(
+                f"DLPack live evidence source/marker is missing: {row['id']}"
+            )
         observed.add((row["id"], row["source"], row["stdout_marker"]))
     if observed != registered:
         raise SystemExit("DLPack live evidence must match its executable case registry")
     required_profiles = ["create-pr", "merge", "nightly", "release"]
     if payload.get("profiles") != required_profiles:
-        raise SystemExit("DLPack evidence must remain blocking in every delivery profile")
+        raise SystemExit(
+            "DLPack evidence must remain blocking in every delivery profile"
+        )
     manifest = json.loads(
         (repo_root / "verification/areas/python_interop/manifest.json").read_text(
             encoding="utf-8"
         )
     )
-    suites = [suite for suite in manifest["suites"] if suite["name"] == "dlpack-examples"]
+    suites = [
+        suite for suite in manifest["suites"] if suite["name"] == "dlpack-examples"
+    ]
     if (
         len(suites) != 1
         or suites[0].get("kind") != "adapter"
@@ -90,25 +106,27 @@ def validate_dlpack_declaration_evidence(payload: object, fixtures_root: Path) -
     ):
         raise SystemExit("DLPack example manifest ownership drift")
     runtime_suites = [
-        suite for suite in manifest["suites"] if suite["name"] == "dlpack-cpython311"
+        suite for suite in manifest["suites"] if suite["name"] == "dlpack-runtime"
     ]
     if (
         len(runtime_suites) != 1
         or runtime_suites[0].get("kind") != "adapter"
         or runtime_suites[0].get("cases", [{}])[0].get("command")
-        != "python-interop-dlpack-cpython311"
+        != "python-interop-dlpack-runtime"
     ):
         raise SystemExit("DLPack runtime test manifest ownership drift")
     for profile in required_profiles:
         profile_payload = json.loads(
-            (repo_root / f"verification/profiles/{profile}.json").read_text(encoding="utf-8")
+            (repo_root / f"verification/profiles/{profile}.json").read_text(
+                encoding="utf-8"
+            )
         )
         python_areas = [
             area
             for area in profile_payload["selected_areas"]
             if area["area"] == "python_interop"
         ]
-        required_suites = {"dlpack-examples", "dlpack-cpython311"}
+        required_suites = {"dlpack-examples", "dlpack-runtime"}
         if len(python_areas) != 1 or not required_suites.issubset(
             python_areas[0]["suites"]
         ):

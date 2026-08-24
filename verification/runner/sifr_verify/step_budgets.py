@@ -60,7 +60,14 @@ def prepare_step_budget(
         suites=suites,
         sifr_binary=binary,
     )
-    receipt_path = repo_root / "target" / "verification" / "cache-receipts" / profile_name / f"{name}.json"
+    receipt_path = (
+        repo_root
+        / "target"
+        / "verification"
+        / "cache-receipts"
+        / profile_name
+        / f"{name}.json"
+    )
     required_paths = required_cache_paths(repo_root, name, binary)
     if not eligible:
         state, reason = "cold", ineligible_reason
@@ -85,7 +92,9 @@ def prepare_step_budget(
     env["SIFR_VERIFY_STEP_CACHE_STATE"] = state
     if name == "python_interop":
         env["SIFR_PYTHON_INTEROP_CACHE_STATE"] = state
-    print(f"[sifr-lane-step-cache] name={name} state={state} reason={reason} fingerprint={fingerprint[:16]}")
+    print(
+        f"[sifr-lane-step-cache] name={name} state={state} reason={reason} fingerprint={fingerprint[:16]}"
+    )
     return context
 
 
@@ -131,7 +140,9 @@ def record_step_success(context: StepBudgetContext | None) -> None:
     atomic_write_json(context.receipt_path, payload)
 
 
-def classify_receipt(*, receipt_path: Path, fingerprint: str, required_paths: tuple[Path, ...]) -> tuple[str, str]:
+def classify_receipt(
+    *, receipt_path: Path, fingerprint: str, required_paths: tuple[Path, ...]
+) -> tuple[str, str]:
     missing_cache = [path for path in required_paths if not cache_path_available(path)]
     if missing_cache:
         return "cold", "required-cache-missing"
@@ -143,7 +154,10 @@ def classify_receipt(*, receipt_path: Path, fingerprint: str, required_paths: tu
         return "cold", "receipt-invalid"
     if not isinstance(payload, dict):
         return "cold", "receipt-invalid"
-    if payload.get("schema_version") != RECEIPT_SCHEMA_VERSION or payload.get("classifier") != CACHE_CLASSIFIER:
+    if (
+        payload.get("schema_version") != RECEIPT_SCHEMA_VERSION
+        or payload.get("classifier") != CACHE_CLASSIFIER
+    ):
         return "cold", "receipt-invalid"
     if payload.get("input_fingerprint") != fingerprint:
         return "cold", "input-changed"
@@ -158,12 +172,17 @@ def input_fingerprint(
     suites: list[str],
     sifr_binary: Path,
 ) -> tuple[str, bool, str]:
-    tracked_state = command_output(["git", "status", "--porcelain", "--untracked-files=no"], repo_root)
+    tracked_state = command_output(
+        ["git", "status", "--porcelain", "--untracked-files=no"], repo_root
+    )
     source_commit = command_output(["git", "rev-parse", "HEAD"], repo_root)
     cargo_lock_digest = file_digest(repo_root / "Cargo.lock")
     rustc_version = command_output(["rustc", "-vV"], repo_root)
     binary_digest = file_digest(sifr_binary)
-    unavailable_inputs = "unavailable" in {source_commit, rustc_version} or "missing" in {
+    unavailable_inputs = "unavailable" in {
+        source_commit,
+        rustc_version,
+    } or "missing" in {
         cargo_lock_digest,
         binary_digest,
     }
@@ -183,7 +202,11 @@ def input_fingerprint(
     return (
         hashlib.sha256(encoded).hexdigest(),
         eligible,
-        "eligible" if eligible else "input-unavailable" if unavailable_inputs else "tracked-worktree-dirty",
+        "eligible"
+        if eligible
+        else "input-unavailable"
+        if unavailable_inputs
+        else "tracked-worktree-dirty",
     )
 
 
@@ -197,9 +220,11 @@ def selected_suites(profile: dict[str, Any], step_name: str) -> list[str]:
     ]
 
 
-def required_cache_paths(repo_root: Path, step_name: str, binary: Path) -> tuple[Path, ...]:
+def required_cache_paths(
+    repo_root: Path, step_name: str, binary: Path
+) -> tuple[Path, ...]:
     if step_name == "python_interop":
-        return (binary, repo_root / "target" / "cpython311" / "debug")
+        return (binary, repo_root / "target" / "python" / "debug")
     return (binary,)
 
 
@@ -239,7 +264,9 @@ def command_output(command: list[str], cwd: Path) -> str:
 def atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     encoded = json.dumps(payload, indent=2, sort_keys=True) + "\n"
-    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as handle:
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", dir=path.parent, delete=False
+    ) as handle:
         handle.write(encoded)
         temporary = Path(handle.name)
     os.replace(temporary, path)
@@ -252,7 +279,9 @@ def run_self_test() -> None:
         required = root / "cache"
         required.mkdir()
         (required / "artifact").write_text("cached\n", encoding="utf-8")
-        state, reason = classify_receipt(receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,))
+        state, reason = classify_receipt(
+            receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)
+        )
         if (state, reason) != ("cold", "receipt-missing"):
             raise AssertionError("missing cache receipt was not classified cold")
         context = StepBudgetContext(
@@ -267,29 +296,41 @@ def run_self_test() -> None:
             required_cache_paths=(required,),
         )
         record_step_success(context)
-        if classify_receipt(receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)) != (
+        if classify_receipt(
+            receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)
+        ) != (
             "warm",
             "successful-input-receipt",
         ):
-            raise AssertionError("successful exact-input receipt was not classified warm")
-        if classify_receipt(receipt_path=receipt, fingerprint="b" * 64, required_paths=(required,)) != (
+            raise AssertionError(
+                "successful exact-input receipt was not classified warm"
+            )
+        if classify_receipt(
+            receipt_path=receipt, fingerprint="b" * 64, required_paths=(required,)
+        ) != (
             "cold",
             "input-changed",
         ):
             raise AssertionError("changed input did not invalidate the cache receipt")
         receipt.write_text("{\n", encoding="utf-8")
-        if classify_receipt(receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)) != (
+        if classify_receipt(
+            receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)
+        ) != (
             "cold",
             "receipt-invalid",
         ):
             raise AssertionError("invalid cache receipt was not classified cold")
         record_step_success(context)
         (required / "artifact").unlink()
-        if classify_receipt(receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)) != (
+        if classify_receipt(
+            receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)
+        ) != (
             "cold",
             "required-cache-missing",
         ):
-            raise AssertionError("missing cache artifacts did not invalidate the receipt")
+            raise AssertionError(
+                "missing cache artifacts did not invalidate the receipt"
+            )
         output = io.StringIO()
         with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
             overrun_status = enforce_step_budget(context, 1_200_001)
