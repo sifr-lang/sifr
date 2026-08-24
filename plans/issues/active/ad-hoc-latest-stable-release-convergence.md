@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-24. Items 0-6 are complete. Item 7 Ruff 0.16.4 fork
-is next.
+Status: active on 2026-08-24. Items 0-7 are complete. Item 8 Rust
+utility/foundation train is next.
 
 ## Objective
 
@@ -175,7 +175,7 @@ Only the first incomplete row may be active.
 | 4 | complete | Python 3.14 and PyO3 | Python 3.14.7 is the only maintained Python lane, PyO3 is current, and older-lane configuration and evidence are removed. |
 | 5 | complete | Node 24 LTS | Release/tooling workflows use the latest Node 24 LTS and compatible npm behavior. |
 | 6 | complete | GitHub Actions | All maintained third-party actions use reviewed latest-stable immutable SHAs and workflow contract tests pass. |
-| 7 | pending | Ruff 0.16.4 fork | Sifr changes are replayed on the latest Ruff stable base; fork, gitlink, ownership, parser/formatter/linter evidence, and snapshots agree. |
+| 7 | complete | Ruff 0.16.4 fork | Sifr changes are replayed on the latest Ruff stable base; fork, gitlink, ownership, parser/formatter/linter evidence, and snapshots agree. |
 | 8 | pending | Rust utility/foundation train | Each listed utility dependency is advanced sequentially; all direct declarations converge and generated/vendor evidence agrees. |
 | 9 | pending | Rust async foundation | Bytes, Futures, and Tokio converge with runtime/concurrency validation. |
 | 10 | pending | Rust HTTP stack | HTTP, body, H2, and Hyper converge with network/HTTP validation. |
@@ -627,6 +627,93 @@ the maintained fork. Neither finding is an Item 6 regression or omission.
 Next action: implement Item 7 Ruff 0.16.4 fork convergence from the Item 6
 record merge on `origin/main`.
 
+### Item 7 record
+
+State: complete
+
+PR: [#3503](https://github.com/sifr-lang/sifr/pull/3503)
+
+Base SHA: `99dcc86ac37a4676be2e130f21b9d0913a649429`
+
+Candidate SHA: `dfcbcdef62ee7888483a14308b8b9a9d47bd17d4`
+
+Merge SHA: `dd55520413fc792d1f59eea0a70b374bb9a8cd81`
+
+Fork merge: [sifr-lang/ruff #4](https://github.com/sifr-lang/ruff/pull/4)
+merged the `sifr/0.16.4-maintenance` candidate as
+`f19957111640fdee8055bfe5b6aa854259344473`. The root gitlink advances to
+that exact fork commit.
+
+Changed paths: the Ruff gitlink, fork ownership and version policy, the
+parser/AST/formatter/linter migration and fork snapshots, root parser and
+formatter consumers, and five driver test/support modules whose parse-tree
+boundaries now consume Ruff's `Suite` directly.
+
+Stable-source result: the official Ruff v0.16.4 tag resolves to
+`11c76bf48fdac06b2f240cba502eda96da4dce77`. The maintained Sifr patches were
+replayed on that base and merged into the fork's single
+`sifr/0.16.4-maintenance` branch. No v0.15 branch, compatibility parser path,
+AST conversion shim, or fallback remains in maintained root consumers.
+
+Forward-only result: Sifr now uses Ruff's current `Suite` parse root and
+current string-annotation AST form. Dependency-graph construction accepts
+borrowed statement slices from suites, and source-aware frontend paths avoid
+cloning suites back into legacy `Vec<Stmt>` boundaries. All maintained driver
+test helpers and maps use `Suite`; the migration does not preserve an old
+shape behind an adapter.
+
+Focused validation: the fork passed 251 parser unit tests and 554 parser
+fixtures, 56 formatter unit tests with two expected ignores and 377 formatter
+fixtures, plus all-target Clippy. The root passed all 19 Python-interop driver
+tests, 556 active driver tests with 76 expected slow ignores, workspace
+Clippy with warnings denied, formatting, HIR maintainability, diff checks, and
+the 3,243-file first-party size guardrail.
+
+Review evidence: the initial exact-SHA Opus review is retained in the
+[#3503 review comment](https://github.com/sifr-lang/sifr/pull/3503#issuecomment-5389964080).
+Its blocking findings were repaired together, and the permitted remediation
+review returned `SATISFIED` in the
+[#3503 remediation comment](https://github.com/sifr-lang/sifr/pull/3503#issuecomment-5390161266).
+The first compiler gate then exposed stale `Vec<Stmt>` test-only boundaries
+outside the reviewed diff. With the user's explicit exception authorization,
+the repaired exact candidate received one final read-only Opus review; it
+returned `SATISFIED` with no blocker in the
+[#3503 final review comment](https://github.com/sifr-lang/sifr/pull/3503#issuecomment-5391225255).
+
+Gate evidence: the first create-PR attempt on superseded candidate
+`ca11e75a` failed compilation with 44 `E0308` mismatches and is recorded in
+the [failure comment](https://github.com/sifr-lang/sifr/pull/3503#issuecomment-5390238802)
+and [scope audit](https://github.com/sifr-lang/sifr/pull/3503#issuecomment-5390246625).
+The user explicitly authorized a replacement budget for the complete
+mechanism repair. On exact final candidate
+`dfcbcdef62ee7888483a14308b8b9a9d47bd17d4`, every functional create-PR check
+passed; its first post-clean performance observation timed out only because a
+cold runtime-platform build took 208.645 seconds against the 120-second warm
+budget. Repository policy excludes a first cold-cache run as performance
+evidence, so the authorized warm observation passed: runtime platform 28/28,
+Python interop 19/19, driver 556 active tests, and E2E 143/143. The evidence is
+retained in the [cold](https://github.com/sifr-lang/sifr/pull/3503#issuecomment-5391306587)
+and [warm](https://github.com/sifr-lang/sifr/pull/3503#issuecomment-5391457972)
+comments.
+
+The single merge gate on the same final candidate passed in 6,793.50 seconds
+after the required private-target clean. It passed all areas and crate tests,
+76/76 explicit driver generated builds, 1,140/1,140 codegen tests, and
+698/698 merge E2E fixtures with report signature `127353b213e16688`.
+Installed/source sysroot equivalence passed on Rust 1.98.0. The complete
+metrics and report digest are retained in the
+[#3503 merge-gate comment](https://github.com/sifr-lang/sifr/pull/3503#issuecomment-5392466081).
+
+Deferred follow-up: Item 8 owns the dependency graph and can remove the
+pre-existing suite clone in `graph_cache_and_queries.rs` if its touched
+mechanism makes that appropriate. The fork's cosmetic inherited commit title
+and the string-annotation arm comment do not affect behavior. Item 35 owns
+final confirmation that no stale Ruff branch, version, workflow, or fork
+surface remains.
+
+Next action: implement Item 8 Rust utility/foundation train from the Item 7
+record merge on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -665,12 +752,12 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-6 are complete. Item 6 merged in PR #3501 as
-`d0d57243c4c371aa1d17d57cb92380c2981a0933` after the leaf and intermediate
-editor pointer PRs merged in order. All 56 maintained external action refs now
-use six reviewed current commits. Download-artifact v8 fails closed on digest
-mismatch. The exact final candidate has Opus satisfaction and changed no
-compiler input, so no Sifr gate applied.
+Current state: Items 0-7 are complete. Item 7 merged in PR #3503 as
+`dd55520413fc792d1f59eea0a70b374bb9a8cd81` after fork PR #4 merged Ruff
+v0.16.4 plus the maintained Sifr patches as
+`f19957111640fdee8055bfe5b6aa854259344473`. The final root candidate has
+exact-SHA Opus satisfaction, passing replacement create-PR evidence, and one
+passing merge gate across all 698 E2E fixtures.
 
-Next action: merge this record-only update, then start Item 7 Ruff 0.16.4 fork
-convergence from the resulting `origin/main`.
+Next action: merge this record-only update, then start Item 8 Rust
+utility/foundation train from the resulting `origin/main`.
