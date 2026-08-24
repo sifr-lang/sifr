@@ -5,20 +5,37 @@
 //! Tools for locale fallback, enabling arbitrary input locales to be mapped into the nearest
 //! locale with data.
 
+// https://github.com/unicode-org/icu4x/blob/main/documents/process/boilerplate.md#library-annotations
+#![cfg_attr(not(any(test, doc)), no_std)]
+#![cfg_attr(
+    not(test),
+    deny(
+        clippy::indexing_slicing,
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+    )
+)]
+#![warn(missing_docs)]
+
 use crate::provider::*;
-use icu_locale_core::subtags::*;
+use icu_locale_core::subtags::{Language, Region, Script, Subtag, Variant, region, script};
 use icu_provider::prelude::*;
 
 #[doc(inline)]
 pub use icu_provider::fallback::{LocaleFallbackConfig, LocaleFallbackPriority};
 
 mod algorithms;
+pub mod provider;
 
 /// Implements the algorithm defined in *[UTS #35: Locale Inheritance and Matching]*.
 ///
 /// Note that this implementation performs some additional steps compared to the *UTS #35*
 /// algorithm. See *[the design doc]* for a detailed description and [#2243](
 /// https://github.com/unicode-org/icu4x/issues/2243) to track alignment with *UTS #35*.
+///
+/// While the first element produced here is *usually* the input locale,
+/// the fallback iterator normalizes the input locale first, which may strip implied subtags.
 ///
 /// If running fallback in a loop, use [`DataLocale::is_unknown()`] to break from the loop.
 ///
@@ -51,9 +68,27 @@ mod algorithms;
 /// assert_eq!(fallback_iterator.get(), &locale!("und").into());
 /// ```
 ///
+/// `zh-Hans` normalizes to `zh` because `Hans` is the default script for `zh`:
+///
+/// ```
+/// use icu::locale::fallback::LocaleFallbacker;
+/// use icu::locale::locale;
+///
+/// // Set up a LocaleFallbacker with data.
+/// let fallbacker = LocaleFallbacker::new();
+///
+/// let mut fallback_iterator = fallbacker
+///     .for_config(Default::default())
+///     .fallback_for(locale!("zh-Hans").into());
+///
+/// // The origin "zh-Hans" is normalized to "zh" because Hans is the default script.
+/// assert_eq!(fallback_iterator.get(), &locale!("zh").into());
+/// fallback_iterator.step();
+/// assert_eq!(fallback_iterator.get(), &locale!("und").into());
+/// ```
+///
 /// [UTS #35: Locale Inheritance and Matching]: https://www.unicode.org/reports/tr35/#Locale_Inheritance
 /// [the design doc]: https://docs.google.com/document/d/1Mp7EUyl-sFh_HZYgyeVwj88vJGpCBIWxzlCwGgLCDwM/edit
-#[doc(hidden)] // canonical location in super
 #[derive(Debug, Clone, PartialEq)]
 pub struct LocaleFallbacker {
     likely_subtags: DataPayload<LocaleLikelySubtagsLanguageV1>,
@@ -148,11 +183,7 @@ impl LocaleFallbacker {
                 language_region: Default::default(),
                 language_script: Default::default(),
                 // Unused
-                und: (
-                    Language::UNKNOWN,
-                    crate::subtags::script!("Zzzz"),
-                    crate::subtags::region!("ZZ"),
-                ),
+                und: (Language::UNKNOWN, script!("Zzzz"), region!("ZZ")),
             }),
             parents: DataPayload::from_owned(Default::default()),
         }
@@ -237,6 +268,11 @@ impl<'a> LocaleFallbackerWithConfig<'a> {
                 max_script,
             },
         }
+    }
+
+    /// Returns this fallbacker's configuration.
+    pub fn config(&self) -> LocaleFallbackConfig {
+        self.config
     }
 }
 

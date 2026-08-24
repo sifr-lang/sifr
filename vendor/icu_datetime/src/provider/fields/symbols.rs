@@ -2,17 +2,17 @@
 // called LICENSE at the top level of the ICU4X source tree
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
+use crate::DateTimeFormatterPreferences;
 use crate::options::SubsecondDigits;
 #[cfg(feature = "datagen")]
 use crate::provider::fields::FieldLength;
-use crate::DateTimeFormatterPreferences;
 use core::{cmp::Ordering, convert::TryFrom};
 use displaydoc::Display;
 use icu_locale_core::preferences::extensions::unicode::keywords::HourCycle;
-use icu_locale_core::subtags::region;
 use icu_locale_core::subtags::Region;
+use icu_locale_core::subtags::region;
 use icu_provider::prelude::*;
-use zerovec::ule::{AsULE, UleError, ULE};
+use zerovec::ule::{AsULE, ULE, UleError};
 
 /// An error relating to the field symbol for a date pattern field.
 #[derive(Display, Debug, PartialEq, Copy, Clone)]
@@ -149,6 +149,13 @@ impl FieldSymbol {
         })
     }
 
+    /// Returns the high 4 bits of `idx()`, representing the field type category
+    /// (e.g., Year, Month, Day, Hour).
+    #[inline]
+    pub(crate) fn type_idx(self) -> u8 {
+        self.idx() >> 4
+    }
+
     /// Returns the index associated with this [`FieldSymbol`].
     #[cfg(feature = "datagen")]
     fn idx_for_skeleton(self) -> u8 {
@@ -253,9 +260,12 @@ unsafe impl ULE for FieldSymbolULE {
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 #[allow(clippy::exhaustive_enums)] // used in data struct
+/// Categorization of field symbols as text or numeric.
 #[cfg(feature = "datagen")]
-pub(crate) enum TextOrNumeric {
+pub enum TextOrNumeric {
+    /// The field is represented by text.
     Text,
+    /// The field is represented by numeric digits.
     Numeric,
 }
 
@@ -298,12 +308,13 @@ impl FieldSymbol {
             Self::Weekday(Weekday::StandAlone) => 15,
             Self::DayPeriod(DayPeriod::AmPm) => 16,
             Self::DayPeriod(DayPeriod::NoonMidnight) => 17,
-            Self::Hour(Hour::H11) => 18,
-            Self::Hour(Hour::H12) => 19,
-            Self::Hour(Hour::H23) => 20,
-            Self::Minute => 22,
-            Self::Second(Second::Second) => 23,
-            Self::Second(Second::MillisInDay) => 24,
+            Self::DayPeriod(DayPeriod::Flexible) => 18,
+            Self::Hour(Hour::H11) => 20,
+            Self::Hour(Hour::H12) => 21,
+            Self::Hour(Hour::H23) => 22,
+            Self::Minute => 25,
+            Self::Second(Second::Second) => 26,
+            Self::Second(Second::MillisInDay) => 27,
             Self::DecimalSecond(DecimalSecond::Subsecond1) => 31,
             Self::DecimalSecond(DecimalSecond::Subsecond2) => 32,
             Self::DecimalSecond(DecimalSecond::Subsecond3) => 33,
@@ -835,6 +846,8 @@ field_type!(
         'a' => AmPm = 0,
         /// Field symbol for the am, pm, noon, midnight day period.
         'b' => NoonMidnight = 1,
+        /// Field symbol for the flexible day period.
+        'B' => Flexible = 2,
     };
     Text;
     DayPeriodULE

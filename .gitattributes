@@ -1,4 +1,6 @@
 verification/areas/diagnostics/fixtures/diagnostics/lint_trailing_whitespace/main.sifr whitespace=-blank-at-eol
 verification/areas/diagnostics/fixtures/diagnostics/workspace_malformed_manifest/baselines/check-compact.stderr.txt whitespace=-blank-at-eof
 vendor/** whitespace=cr-at-eol
+vendor/icu_properties/src/unicodeset_parse/parse.rs whitespace=-blank-at-eol,cr-at-eol
+vendor/icu_properties/tests/data/PropertyDiscriminants.txt whitespace=-blank-at-eol,cr-at-eol
 vendor/*/Cargo.lock whitespace=-blank-at-eof

@@ -21,19 +21,19 @@
 use icu_collections::char16trie::Char16TrieIterator;
 use icu_collections::codepointtrie::CodePointTrie;
 use icu_provider::prelude::*;
-use zerovec::ule::AsULE;
 use zerovec::ZeroVec;
-use zerovec::{zeroslice, ZeroSlice};
+use zerovec::ule::AsULE;
+use zerovec::{ZeroSlice, zeroslice};
 
 use crate::elements::CollationElement;
 use crate::elements::CollationElement32;
-use crate::elements::Tag;
 use crate::elements::EMPTY_U16;
 use crate::elements::FFFD_CE;
+use crate::elements::FFFD_CE_VALUE;
 use crate::elements::FFFD_CE32;
 use crate::elements::FFFD_CE32_VALUE;
-use crate::elements::FFFD_CE_VALUE;
 use crate::elements::NO_CE_PRIMARY;
+use crate::elements::Tag;
 use crate::preferences::CollationCaseFirst;
 
 use crate::options::MaxVariable;
@@ -50,13 +50,12 @@ use crate::options::MaxVariable;
 pub struct Baked;
 
 #[cfg(feature = "compiled_data")]
-#[allow(unused_imports)]
+#[allow(unused_imports, missing_docs)]
 const _: () = {
     use icu_collator_data::*;
     pub mod icu {
         pub use crate as collator;
         pub use icu_collections as collections;
-        pub use icu_locale as locale;
     }
     make_provider!(Baked);
     impl_collation_root_v1!(Baked);
@@ -98,6 +97,8 @@ icu_provider::data_marker!(
     fallback_config = SCRIPT_FALLBACK,
     #[cfg(feature = "datagen")]
     attributes_domain = "collator",
+    #[cfg(feature = "datagen")]
+    expose_baked_consts = true,
 );
 icu_provider::data_marker!(
     /// Data marker for collation jamo data.
@@ -123,6 +124,8 @@ icu_provider::data_marker!(
     fallback_config = SCRIPT_FALLBACK,
     #[cfg(feature = "datagen")]
     attributes_domain = "collator",
+    #[cfg(feature = "datagen")]
+    expose_baked_consts = true,
 );
 icu_provider::data_marker!(
     /// Data marker for collcation special primaries data.
@@ -221,20 +224,20 @@ impl<'data> CollationData<'data> {
         })
     }
     pub(crate) fn get_ce32s(&'data self, index: usize, len: usize) -> &'data ZeroSlice<u32> {
-        if len > 0 {
-            if let Some(slice) = self.ce32s.get_subslice(index..index + len) {
-                return slice;
-            }
+        if len > 0
+            && let Some(slice) = self.ce32s.get_subslice(index..index + len)
+        {
+            return slice;
         }
         // GIGO case
         debug_assert!(false);
         SINGLE_U32
     }
     pub(crate) fn get_ces(&'data self, index: usize, len: usize) -> &'data ZeroSlice<u64> {
-        if len > 0 {
-            if let Some(slice) = self.ces.get_subslice(index..index + len) {
-                return slice;
-            }
+        if len > 0
+            && let Some(slice) = self.ces.get_subslice(index..index + len)
+        {
+            return slice;
         }
         // GIGO case
         debug_assert!(false);
@@ -323,12 +326,48 @@ icu_provider::data_struct!(
 #[derive(Debug, PartialEq, Clone, yoke::Yokeable, zerofrom::ZeroFrom)]
 #[cfg_attr(feature = "datagen", derive(serde::Serialize, databake::Bake))]
 #[cfg_attr(feature = "datagen", databake(path = icu_collator::provider))]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 pub struct CollationJamo<'data> {
     /// `CollationElement32`s (as `u32`s) for the Hangul Jamo Unicode Block.
     /// The length must be equal to the size of the block (256).
-    #[cfg_attr(feature = "serde", serde(borrow))]
     pub ce32s: ZeroVec<'data, u32>,
+}
+
+impl<'data> CollationJamo<'data> {
+    pub(crate) fn as_array(
+        &'data self,
+    ) -> &'data [<u32 as AsULE>::ULE; crate::elements::JAMO_COUNT] {
+        #[allow(clippy::unwrap_used)] // by invariant
+        self.ce32s.as_ule_slice().try_into().unwrap()
+    }
+}
+
+// TODO: redesign Korean search collation handling
+
+#[cfg(feature = "compiled_data")]
+const _: () = assert!(
+    Baked::SINGLETON_COLLATION_JAMO_V1.ce32s.as_slice().len() == crate::elements::JAMO_COUNT
+);
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for CollationJamo<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(serde::Deserialize)]
+        struct Raw<'data> {
+            #[cfg_attr(feature = "serde", serde(borrow))]
+            ce32s: ZeroVec<'data, u32>,
+        }
+
+        let Raw { ce32s } = Raw::deserialize(deserializer)?;
+
+        if ce32s.len() != crate::elements::JAMO_COUNT {
+            return Err(serde::de::Error::custom("invalid"));
+        }
+
+        Ok(Self { ce32s })
+    }
 }
 
 icu_provider::data_struct!(
@@ -466,7 +505,7 @@ impl CollationMetadata {
     const UPPER_FIRST_MASK: u32 = 1 << 10;
 
     #[inline(always)]
-    pub(crate) fn max_variable(self) -> MaxVariable {
+    pub(crate) const fn max_variable(self) -> MaxVariable {
         // Safety: the possible numeric values for `MaxVariable` are from 0 to 3, inclusive,
         // and it is repr(u8). MAX_VARIABLE_MASK here ensures our values have most 2 bits, which produces
         // the same range.
@@ -478,41 +517,41 @@ impl CollationMetadata {
     }
 
     #[inline(always)]
-    pub(crate) fn tailored(self) -> bool {
+    pub(crate) const fn tailored(self) -> bool {
         self.bits & CollationMetadata::TAILORED_MASK != 0
     }
 
     /// Vietnamese and Ewe
     #[inline(always)]
-    pub(crate) fn tailored_diacritics(self) -> bool {
+    pub(crate) const fn tailored_diacritics(self) -> bool {
         self.bits & CollationMetadata::TAILORED_DIACRITICS_MASK != 0
     }
 
     /// Lithuanian
     #[inline(always)]
-    pub(crate) fn lithuanian_dot_above(self) -> bool {
+    pub(crate) const fn lithuanian_dot_above(self) -> bool {
         self.bits & CollationMetadata::LITHUANIAN_DOT_ABOVE_MASK != 0
     }
 
     /// Canadian French
     #[inline(always)]
-    pub(crate) fn backward_second_level(self) -> bool {
+    pub(crate) const fn backward_second_level(self) -> bool {
         self.bits & CollationMetadata::BACWARD_SECOND_LEVEL_MASK != 0
     }
 
     #[inline(always)]
-    pub(crate) fn reordering(self) -> bool {
+    pub(crate) const fn reordering(self) -> bool {
         self.bits & CollationMetadata::REORDERING_MASK != 0
     }
 
     /// Thai
     #[inline(always)]
-    pub(crate) fn alternate_shifted(self) -> bool {
+    pub(crate) const fn alternate_shifted(self) -> bool {
         self.bits & CollationMetadata::ALTERNATE_SHIFTED_MASK != 0
     }
 
     #[inline(always)]
-    pub(crate) fn case_first(self) -> CollationCaseFirst {
+    pub(crate) const fn case_first(self) -> CollationCaseFirst {
         if self.bits & CollationMetadata::CASE_FIRST_MASK != 0 {
             if self.bits & CollationMetadata::UPPER_FIRST_MASK != 0 {
                 CollationCaseFirst::Upper
@@ -552,26 +591,9 @@ impl CollationMetadata {
 /// to be stable, their Rust representation might not be. Use with caution.
 /// </div>
 #[derive(Debug, PartialEq, Clone, yoke::Yokeable, zerofrom::ZeroFrom)]
-#[cfg_attr(feature = "datagen", derive(serde::Serialize, databake::Bake))]
+#[cfg_attr(feature = "datagen", derive(databake::Bake))]
 #[cfg_attr(feature = "datagen", databake(path = icu_collator::provider))]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 pub struct CollationSpecialPrimaries<'data> {
-    /// The primaries corresponding to `MaxVariable`
-    /// character classes packed so that each fits in
-    /// 16 bits. Length must match the number of enum
-    /// variants in `MaxVariable`, currently 4.
-    ///
-    /// This is potentially followed by 256 bits
-    /// (packed in 16 u16s) to classify every possible
-    /// byte into compressible or non-compressible.
-    #[cfg_attr(feature = "serde", serde(borrow))]
-    pub last_primaries: ZeroVec<'data, u16>,
-    /// The high 8 bits of the numeric primary
-    pub numeric_primary: u8,
-}
-
-#[derive(Debug, PartialEq, Clone, yoke::Yokeable, zerofrom::ZeroFrom)]
-pub(crate) struct CollationSpecialPrimariesValidated<'data> {
     /// The primaries corresponding to `MaxVariable`
     /// character classes packed so that each fits in
     /// 16 bits. Length must match the number of enum
@@ -581,28 +603,99 @@ pub(crate) struct CollationSpecialPrimariesValidated<'data> {
     pub numeric_primary: u8,
     /// 256 bits (packed in 16 u16s) to classify every possible
     /// byte into compressible or non-compressible.
-    pub compressible_bytes: &'data [<u16 as AsULE>::ULE; 16],
+    ///
+    /// In the serde encoding, this is appended to `last_primaries`,
+    /// or might be missing.
+    pub compressible_bytes: ZeroVec<'data, u16>,
 }
 
-impl CollationSpecialPrimariesValidated<'static> {
-    pub(crate) const HARDCODED_COMPRESSIBLE_BYTES_FALLBACK: &'static [<u16 as AsULE>::ULE; 16] = &[
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0000),
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0000),
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0000),
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0000),
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0000),
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0000),
-        <u16 as AsULE>::ULE::from_unsigned(0b1111_1111_1111_1110),
-        <u16 as AsULE>::ULE::from_unsigned(0b1111_1111_1111_1111),
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0001),
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0000),
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0000),
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0000),
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0000),
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0000),
-        <u16 as AsULE>::ULE::from_unsigned(0b0000_0000_0000_0000),
-        <u16 as AsULE>::ULE::from_unsigned(0b0100_0000_0000_0000),
-    ];
+#[cfg(feature = "serde")]
+impl CollationSpecialPrimaries<'_> {
+    /// The length of the compressible bytes array (256 bits packed in `u16`s).
+    pub(crate) const COMPRESSIBLE_BYTES_LEN: usize = 256 / (u16::BITS as usize);
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for CollationSpecialPrimaries<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(serde::Deserialize)]
+        struct Raw<'data> {
+            #[cfg_attr(feature = "serde", serde(borrow))]
+            concatenated: &'data ZeroSlice<u16>,
+            numeric_primary: u8,
+        }
+
+        let Raw {
+            concatenated,
+            numeric_primary,
+        } = Raw::deserialize(deserializer)?;
+
+        let Some((l, c)) = concatenated
+            .as_ule_slice()
+            .split_at_checked(MaxVariable::VARIANT_COUNT)
+        else {
+            return Err(serde::de::Error::custom("invalid"));
+        };
+
+        let last_primaries = ZeroSlice::from_ule_slice(l).as_zerovec();
+        let mut compressible_bytes = ZeroSlice::from_ule_slice(c).as_zerovec();
+
+        if c.len() != CollationSpecialPrimaries::COMPRESSIBLE_BYTES_LEN {
+            compressible_bytes = zerovec::zerovec!(
+                u16; <u16 as AsULE>::ULE::from_unsigned; [
+                0b0000_0000_0000_0000,
+                0b0000_0000_0000_0000,
+                0b0000_0000_0000_0000,
+                0b0000_0000_0000_0000,
+                0b0000_0000_0000_0000,
+                0b0000_0000_0000_0000,
+                0b1111_1111_1111_1110,
+                0b1111_1111_1111_1111,
+                0b0000_0000_0000_0001,
+                0b0000_0000_0000_0000,
+                0b0000_0000_0000_0000,
+                0b0000_0000_0000_0000,
+                0b0000_0000_0000_0000,
+                0b0000_0000_0000_0000,
+                0b0000_0000_0000_0000,
+                0b0100_0000_0000_0000,
+            ]);
+        }
+
+        Ok(Self {
+            last_primaries,
+            numeric_primary,
+            compressible_bytes,
+        })
+    }
+}
+
+#[cfg(feature = "datagen")]
+impl serde::Serialize for CollationSpecialPrimaries<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(serde::Serialize)]
+        struct Raw {
+            #[serde(rename = "last_primaries")]
+            concatenated: ZeroVec<'static, u16>,
+            numeric_primary: u8,
+        }
+
+        Raw {
+            concatenated: self
+                .last_primaries
+                .iter()
+                .chain(self.compressible_bytes.iter())
+                .collect(),
+            numeric_primary: self.numeric_primary,
+        }
+        .serialize(serializer)
+    }
 }
 
 icu_provider::data_struct!(
@@ -610,7 +703,7 @@ icu_provider::data_struct!(
     #[cfg(feature = "datagen")]
 );
 
-impl CollationSpecialPrimariesValidated<'_> {
+impl CollationSpecialPrimaries<'_> {
     #[expect(clippy::unwrap_used)]
     pub(crate) fn last_primary_for_group(&self, max_variable: MaxVariable) -> u32 {
         // `unwrap` is OK, because `Collator::try_new` validates the length.
@@ -622,11 +715,10 @@ impl CollationSpecialPrimariesValidated<'_> {
 
     #[allow(dead_code)]
     pub(crate) fn is_compressible(&self, b: u8) -> bool {
-        // Indexing slicing OK by construction and pasting this
-        // into Compiler Explorer shows that the panic
-        // is optimized away.
-        #[expect(clippy::indexing_slicing)]
-        let field = u16::from_unaligned(self.compressible_bytes[usize::from(b >> 4)]);
+        let field = self
+            .compressible_bytes
+            .get(usize::from(b >> 4))
+            .unwrap_or_default();
         let mask = 1 << (b & 0b1111);
         (field & mask) != 0
     }

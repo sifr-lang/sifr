@@ -4,8 +4,8 @@
 
 use super::names::RawDateTimeNamesBorrowed;
 use super::pattern::DateTimePatternBorrowed;
-use crate::format::datetime::try_write_pattern_items;
 use crate::format::DateTimeInputUnchecked;
+use crate::format::datetime::try_write_pattern_items;
 use crate::pattern::FormattedDateTimePatternError;
 use crate::scaffold::*;
 use crate::scaffold::{
@@ -260,7 +260,7 @@ mod tests {
     use crate::provider::fields::Field;
 
     use super::super::*;
-    use icu_calendar::{cal::KoreanTraditional, Date, Gregorian};
+    use icu_calendar::{Date, Gregorian, cal::KoreanTraditional};
     use icu_locale_core::locale;
     use icu_time::{DateTime, Time};
     use writeable::assert_try_writeable_eq;
@@ -649,5 +649,72 @@ mod tests {
             "gui-mao",
             Ok(()),
         );
+    }
+
+    #[test]
+    fn test_hebrew_numeric_override() {
+        use crate::provider::fields::{
+            Day, Field, FieldLength, FieldNumericOverrides, FieldSymbol,
+        };
+        use crate::provider::pattern::PatternItem;
+        use crate::provider::pattern::runtime::Pattern;
+
+        let locale = icu_locale_core::locale!("he").into();
+
+        let field = Field {
+            symbol: FieldSymbol::Day(Day::DayOfMonth),
+            length: FieldLength::NumericOverride(FieldNumericOverrides::Hebr),
+        };
+        let item = PatternItem::Field(field);
+        let pattern = DateTimePattern::from(Pattern::from(vec![item]));
+
+        let names: FixedCalendarDateTimeNames<Gregorian> =
+            FixedCalendarDateTimeNames::try_new(locale).unwrap();
+
+        let datetime = DateTime {
+            date: Date::try_new_gregorian(2023, 10, 28).unwrap(),
+            time: Time::try_new(15, 0, 55, 0).unwrap(),
+        };
+
+        let formatted_pattern = names.with_pattern_unchecked(&pattern).format(&datetime);
+
+        assert_try_writeable_eq!(formatted_pattern, "כ״ח", Ok(()),);
+    }
+
+    // Unfortunately we do not datagen `haw` in our default data set.
+    // So this is a manual test.
+    #[test]
+    fn manual_romanlow_month() {
+        use crate::fieldsets::enums::DateFieldSet;
+        use crate::provider::fields::{
+            Field, FieldLength, FieldNumericOverrides, FieldSymbol, Month,
+        };
+        use crate::provider::pattern::PatternItem;
+        use crate::provider::pattern::runtime::Pattern;
+        use icu_calendar::Date;
+        use icu_calendar::cal::Gregorian;
+
+        let items = vec![PatternItem::Field(Field {
+            symbol: FieldSymbol::Month(Month::Format),
+            length: FieldLength::NumericOverride(FieldNumericOverrides::Romanlow),
+        })];
+        let pattern = Pattern::from(items);
+        let datetime_pattern = DateTimePattern::from(pattern);
+
+        let mut names_formatter = FixedCalendarDateTimeNames::<Gregorian, DateFieldSet>::try_new(
+            icu_locale_core::locale!("haw").into(),
+        )
+        .unwrap();
+
+        let date = Date::try_new_iso(2020, 1, 21)
+            .unwrap()
+            .to_calendar(Gregorian);
+
+        let formatted = names_formatter
+            .include_for_pattern(&datetime_pattern)
+            .unwrap()
+            .format(&date);
+
+        writeable::assert_try_writeable_eq!(formatted, "i", Ok(()));
     }
 }

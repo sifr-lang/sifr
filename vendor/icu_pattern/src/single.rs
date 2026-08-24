@@ -7,10 +7,10 @@
 use core::convert::Infallible;
 use core::{cmp::Ordering, str::FromStr};
 use writeable::adapters::WriteableAsTryWriteableInfallible;
-use writeable::Writeable;
+use writeable::{TryWriteable, Writeable};
 
-use crate::common::*;
 use crate::Error;
+use crate::common::*;
 
 #[cfg(feature = "alloc")]
 use alloc::{boxed::Box, string::String};
@@ -104,6 +104,32 @@ where
     fn value_for(&self, _key: SinglePlaceholderKey) -> Self::W<'_> {
         let [value] = self;
         WriteableAsTryWriteableInfallible(value)
+    }
+    #[inline]
+    fn map_literal<'a, 'l>(&'a self, literal: &'l str) -> Self::L<'a, 'l> {
+        literal
+    }
+}
+
+impl<W> PlaceholderValueProvider<SinglePlaceholderKey> for TryWrap<W>
+where
+    W: TryWriteable,
+{
+    type Error = W::Error;
+
+    type W<'a>
+        = &'a W
+    where
+        Self: 'a;
+
+    type L<'a, 'l>
+        = &'l str
+    where
+        Self: 'a;
+
+    #[inline]
+    fn value_for(&self, _key: SinglePlaceholderKey) -> Self::W<'_> {
+        &self.0
     }
     #[inline]
     fn map_literal<'a, 'l>(&'a self, literal: &'l str) -> Self::L<'a, 'l> {
@@ -209,7 +235,6 @@ impl PatternBackend for SinglePlaceholder {
     type PlaceholderKey<'a> = SinglePlaceholderKey;
     #[cfg(feature = "alloc")]
     type PlaceholderKeyCow<'a> = SinglePlaceholderKey;
-    type Error<'a> = Infallible;
     type Store = str;
     type Iter<'a> = SinglePlaceholderPatternIterator<'a>;
 
@@ -279,6 +304,63 @@ impl PatternBackend for SinglePlaceholder {
 
     fn empty() -> &'static Self::Store {
         "\0"
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl ExtractionBackend for SinglePlaceholder {
+    type DecodedMatchesUnstable<'p, 'a> = Option<&'a str>;
+
+    fn extract_unstable<'p, 'a>(
+        store: &'p Self::Store,
+        input: &'a str,
+    ) -> Option<Self::DecodedMatchesUnstable<'p, 'a>> {
+        let mut prefix = None;
+        let mut ph = None;
+        let mut suffix = None;
+
+        // Get the parts from the pattern
+        for item in Self::iter_items(store) {
+            match item {
+                PatternItem::Literal(s) => {
+                    if ph.is_none() {
+                        debug_assert!(prefix.is_none());
+                        prefix = Some(s);
+                    } else {
+                        debug_assert!(suffix.is_none());
+                        suffix = Some(s);
+                    }
+                }
+                PatternItem::Placeholder(p) => {
+                    debug_assert!(ph.is_none());
+                    ph = Some(p);
+                }
+            }
+        }
+
+        // Strip prefix and suffix from input
+        let val = input
+            .strip_prefix(prefix.unwrap_or(""))?
+            .strip_suffix(suffix.unwrap_or(""))?;
+
+        // Return the match
+        match ph {
+            Some(_) => Some(Some(val)),
+            None => {
+                if val.is_empty() {
+                    Some(None)
+                } else {
+                    None
+                }
+            }
+        }
+    }
+
+    fn get_match_unstable<'p, 'b>(
+        store: &Self::DecodedMatchesUnstable<'p, 'b>,
+        _key: Self::PlaceholderKey<'_>,
+    ) -> Option<&'b str> {
+        *store
     }
 }
 

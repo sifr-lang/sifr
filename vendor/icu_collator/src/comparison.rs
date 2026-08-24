@@ -12,50 +12,46 @@
 use alloc::collections::VecDeque;
 use alloc::vec::Vec;
 
-use crate::elements::CharacterAndClassAndTrieValue;
-use crate::elements::CollationElement32;
-use crate::elements::Tag;
 use crate::elements::BACKWARD_COMBINING_MARKER;
 use crate::elements::CE_BUFFER_SIZE;
+use crate::elements::CharacterAndClassAndTrieValue;
+use crate::elements::CollationElement32;
 use crate::elements::FALLBACK_CE32;
 use crate::elements::NON_ROUND_TRIP_MARKER;
+use crate::elements::Tag;
 use crate::elements::{
-    char_from_u32, CollationElement, CollationElements, NonPrimary, FFFD_CE32,
-    HANGUL_SYLLABLE_MARKER, HIGH_ZEROS_MASK, JAMO_COUNT, LOW_ZEROS_MASK, NO_CE, NO_CE_PRIMARY,
-    NO_CE_QUATERNARY, NO_CE_SECONDARY, NO_CE_TERTIARY, OPTIMIZED_DIACRITICS_MAX_COUNT,
-    QUATERNARY_MASK,
+    CollationElement, CollationElements, FFFD_CE32, HANGUL_SYLLABLE_MARKER, HIGH_ZEROS_MASK,
+    LOW_ZEROS_MASK, NO_CE, NO_CE_PRIMARY, NO_CE_QUATERNARY, NO_CE_SECONDARY, NO_CE_TERTIARY,
+    NonPrimary, OPTIMIZED_DIACRITICS_MAX_COUNT, QUATERNARY_MASK, char_from_u32,
 };
 use crate::options::CollatorOptionsBitField;
-use crate::options::{
-    AlternateHandling, CollatorOptions, MaxVariable, ResolvedCollatorOptions, Strength,
-};
+use crate::options::{AlternateHandling, CollatorOptions, ResolvedCollatorOptions, Strength};
 use crate::preferences::{CollationCaseFirst, CollationNumericOrdering, CollationType};
 use crate::provider::CollationData;
 use crate::provider::CollationDiacritics;
 use crate::provider::CollationDiacriticsV1;
 use crate::provider::CollationJamo;
 use crate::provider::CollationJamoV1;
+use crate::provider::CollationMetadata;
 use crate::provider::CollationMetadataV1;
 use crate::provider::CollationReordering;
 use crate::provider::CollationReorderingV1;
 use crate::provider::CollationRootV1;
+use crate::provider::CollationSpecialPrimaries;
 use crate::provider::CollationSpecialPrimariesV1;
-use crate::provider::CollationSpecialPrimariesValidated;
 use crate::provider::CollationTailoringV1;
 use core::cmp::Ordering;
-use core::convert::{Infallible, TryFrom};
+use core::convert::Infallible;
+use icu_normalizer::DecomposingNormalizerBorrowed;
+use icu_normalizer::Decomposition;
 use icu_normalizer::provider::DecompositionData;
 use icu_normalizer::provider::DecompositionTables;
 use icu_normalizer::provider::NormalizerNfdDataV1;
 use icu_normalizer::provider::NormalizerNfdTablesV1;
-use icu_normalizer::DecomposingNormalizerBorrowed;
-use icu_normalizer::Decomposition;
-use icu_provider::marker::ErasedMarker;
 use icu_provider::prelude::*;
 use smallvec::SmallVec;
-use utf16_iter::Utf16CharsEx;
 use utf8_iter::Utf8CharsEx;
-use zerovec::ule::AsULE;
+use utf16_iter::Utf16CharsEx;
 
 // Special sort key bytes for all levels.
 const LEVEL_SEPARATOR_BYTE: u8 = 1;
@@ -163,6 +159,27 @@ const SLOPE_START_POS_3: i32 = SLOPE_START_POS_2 + SLOPE_LEAD_2;
 const SLOPE_START_NEG_2: i32 = SLOPE_MIDDLE + SLOPE_REACH_NEG_1;
 const SLOPE_START_NEG_3: i32 = SLOPE_START_NEG_2 - SLOPE_LEAD_2;
 
+trait Reorder: Copy {
+    fn reorder(self, p: u32) -> u32;
+}
+
+#[derive(Clone, Copy)]
+struct NoReorder;
+
+impl Reorder for NoReorder {
+    #[inline(always)]
+    fn reorder(self, p: u32) -> u32 {
+        p
+    }
+}
+
+impl Reorder for &CollationReordering<'_> {
+    #[inline(always)]
+    fn reorder(self, p: u32) -> u32 {
+        CollationReordering::reorder(self, p)
+    }
+}
+
 struct AnyQuaternaryAccumulator(u32);
 
 impl AnyQuaternaryAccumulator {
@@ -216,10 +233,10 @@ fn split_prefix_latin1<'a, 'b>(left: &'a [u8], right: &'b [u8]) -> (&'a [u8], &'
         .zip(right.iter())
         .take_while(|(l, r)| l == r)
         .count();
-    if let Some((head, left_tail)) = left.split_at_checked(i) {
-        if let Some(right_tail) = right.get(i..) {
-            return (head, left_tail, right_tail);
-        }
+    if let Some((head, left_tail)) = left.split_at_checked(i)
+        && let Some(right_tail) = right.get(i..)
+    {
+        return (head, left_tail, right_tail);
     }
     (&[], left, right)
 }
@@ -241,10 +258,10 @@ fn split_prefix_latin1_utf16<'a, 'b>(
         .zip(right.iter())
         .take_while(|(l, r)| u16::from(**l) == **r)
         .count();
-    if let Some((head, left_tail)) = left.split_at_checked(i) {
-        if let Some(right_tail) = right.get(i..) {
-            return (head, left_tail, right_tail);
-        }
+    if let Some((head, left_tail)) = left.split_at_checked(i)
+        && let Some(right_tail) = right.get(i..)
+    {
+        return (head, left_tail, right_tail);
     }
     (&[], left, right)
 }
@@ -265,16 +282,16 @@ fn split_prefix_u16<'a, 'b>(
         .zip(right.iter())
         .take_while(|(l, r)| l == r)
         .count();
-    if i != 0 {
-        if let Some(&last) = left.get(i.wrapping_sub(1)) {
-            if in_inclusive_range16(last, 0xD800, 0xDBFF) {
-                i -= 1;
-            }
-            if let Some((head, left_tail)) = left.split_at_checked(i) {
-                if let Some(right_tail) = right.get(i..) {
-                    return (head, left_tail, right_tail);
-                }
-            }
+    if i != 0
+        && let Some(&last) = left.get(i.wrapping_sub(1))
+    {
+        if in_inclusive_range16(last, 0xD800, 0xDBFF) {
+            i -= 1;
+        }
+        if let Some((head, left_tail)) = left.split_at_checked(i)
+            && let Some(right_tail) = right.get(i..)
+        {
+            return (head, left_tail, right_tail);
         }
     }
     (&[], left, right)
@@ -301,24 +318,24 @@ fn split_prefix_u8<'a, 'b>(left: &'a [u8], right: &'b [u8]) -> (&'a [u8], &'a [u
         // First, left and right differ, but since they
         // are the same afterwards, one of them needs checking
         // only once.
-        if let Some(right_first) = right.get(i) {
-            if (right_first & 0b1100_0000) == 0b1000_0000 {
-                i -= 1;
-            }
+        if let Some(right_first) = right.get(i)
+            && (right_first & 0b1100_0000) == 0b1000_0000
+        {
+            i -= 1;
         }
         while i != 0 {
-            if let Some(left_first) = left.get(i) {
-                if (left_first & 0b1100_0000) == 0b1000_0000 {
-                    i -= 1;
-                    continue;
-                }
+            if let Some(left_first) = left.get(i)
+                && (left_first & 0b1100_0000) == 0b1000_0000
+            {
+                i -= 1;
+                continue;
             }
             break;
         }
-        if let Some((head, left_tail)) = left.split_at_checked(i) {
-            if let Some(right_tail) = right.get(i..) {
-                return (head, left_tail, right_tail);
-            }
+        if let Some((head, left_tail)) = left.split_at_checked(i)
+            && let Some(right_tail) = right.get(i..)
+        {
+            return (head, left_tail, right_tail);
         }
     }
     (&[], left, right)
@@ -355,21 +372,21 @@ fn split_prefix<'a, 'b>(left: &'a str, right: &'b str) -> (&'a str, &'a str, &'b
         // Therefore, it's sufficient to examine only one of
         // the sides.
         loop {
-            if let Some(left_first) = left_bytes.get(i) {
-                if (left_first & 0b1100_0000) == 0b1000_0000 {
-                    i -= 1;
-                    continue;
-                }
+            if let Some(left_first) = left_bytes.get(i)
+                && (left_first & 0b1100_0000) == 0b1000_0000
+            {
+                i -= 1;
+                continue;
             }
             break;
         }
         // The methods below perform useless UTF-8 boundary checks,
         // since we just checked. However, avoiding `unsafe` to
         // make this code easier to audit.
-        if let Some((head, left_tail)) = left.split_at_checked(i) {
-            if let Some(right_tail) = right.get(i..) {
-                return (head, left_tail, right_tail);
-            }
+        if let Some((head, left_tail)) = left.split_at_checked(i)
+            && let Some(right_tail) = right.get(i..)
+        {
+            return (head, left_tail, right_tail);
         }
     }
     ("", left, right)
@@ -382,8 +399,7 @@ struct LocaleSpecificDataHolder {
     tailoring: Option<DataPayload<CollationTailoringV1>>,
     diacritics: DataPayload<CollationDiacriticsV1>,
     reordering: Option<DataPayload<CollationReorderingV1>>,
-    merged_options: CollatorOptionsBitField,
-    lithuanian_dot_above: bool,
+    metadata: CollationMetadata,
 }
 
 icu_locale_core::preferences::define_preferences!(
@@ -422,11 +438,7 @@ icu_locale_core::preferences::define_preferences!(
 
 impl LocaleSpecificDataHolder {
     /// The constructor code reused between owned and borrowed cases.
-    fn try_new_unstable_internal<D>(
-        provider: &D,
-        prefs: CollatorPreferences,
-        options: CollatorOptions,
-    ) -> Result<Self, DataError>
+    fn try_new_unstable<D>(provider: &D, prefs: CollatorPreferences) -> Result<Self, DataError>
     where
         D: DataProvider<CollationTailoringV1>
             + DataProvider<CollationDiacriticsV1>
@@ -467,7 +479,7 @@ impl LocaleSpecificDataHolder {
             .or_else(|_| provider.load(fallback_req))?
             .payload;
 
-        let metadata = metadata_payload.get();
+        let metadata = *metadata_payload.get();
 
         let tailoring: Option<DataPayload<CollationTailoringV1>> = if metadata.tailored() {
             Some(
@@ -491,10 +503,10 @@ impl LocaleSpecificDataHolder {
             None
         };
 
-        if let Some(reordering) = &reordering {
-            if reordering.get().reorder_table.len() != 256 {
-                return Err(DataError::custom("invalid").with_marker(CollationReorderingV1::INFO));
-            }
+        if let Some(reordering) = &reordering
+            && reordering.get().reorder_table.len() != 256
+        {
+            return Err(DataError::custom("invalid").with_marker(CollationReorderingV1::INFO));
         }
 
         let tailored_diacritics = metadata.tailored_diacritics();
@@ -519,29 +531,11 @@ impl LocaleSpecificDataHolder {
             return Err(DataError::custom("invalid").with_marker(CollationDiacriticsV1::INFO));
         }
 
-        let mut altered_defaults = CollatorOptionsBitField::default();
-
-        if metadata.alternate_shifted() {
-            altered_defaults.set_alternate_handling(Some(AlternateHandling::Shifted));
-        }
-        if metadata.backward_second_level() {
-            altered_defaults.set_backward_second_level(Some(true));
-        }
-
-        altered_defaults.set_case_first(Some(metadata.case_first()));
-        altered_defaults.set_max_variable(Some(metadata.max_variable()));
-
-        let mut merged_options = CollatorOptionsBitField::from(options);
-        merged_options.set_case_first(prefs.case_first);
-        merged_options.set_numeric_from_enum(prefs.numeric_ordering);
-        merged_options.set_defaults(altered_defaults);
-
         Ok(LocaleSpecificDataHolder {
             tailoring,
             diacritics,
-            merged_options,
+            metadata,
             reordering,
-            lithuanian_dot_above: metadata.lithuanian_dot_above(),
         })
     }
 }
@@ -549,7 +543,7 @@ impl LocaleSpecificDataHolder {
 /// Compares strings according to culturally-relevant ordering.
 #[derive(Debug)]
 pub struct Collator {
-    special_primaries: DataPayload<ErasedMarker<CollationSpecialPrimariesValidated<'static>>>,
+    special_primaries: DataPayload<CollationSpecialPrimariesV1>,
     root: DataPayload<CollationRootV1>,
     tailoring: Option<DataPayload<CollationTailoringV1>>,
     jamo: DataPayload<CollationJamoV1>,
@@ -558,7 +552,6 @@ pub struct Collator {
     reordering: Option<DataPayload<CollationReorderingV1>>,
     decompositions: DataPayload<NormalizerNfdDataV1>,
     tables: DataPayload<NormalizerNfdTablesV1>,
-    lithuanian_dot_above: bool,
 }
 
 impl Collator {
@@ -574,7 +567,6 @@ impl Collator {
             reordering: self.reordering.as_ref().map(|s| s.get()),
             decompositions: self.decompositions.get(),
             tables: self.tables.get(),
-            lithuanian_dot_above: self.lithuanian_dot_above,
         }
     }
 
@@ -615,84 +607,29 @@ impl Collator {
             + DataProvider<NormalizerNfdTablesV1>
             + ?Sized,
     {
-        Self::try_new_unstable_internal(
-            provider,
-            provider.load(Default::default())?.payload,
-            provider.load(Default::default())?.payload,
-            provider.load(Default::default())?.payload,
-            provider.load(Default::default())?.payload,
-            provider.load(Default::default())?.payload,
-            prefs,
-            options,
-        )
-    }
+        let root = provider.load(Default::default())?.payload;
+        let decompositions = provider.load(Default::default())?.payload;
+        let tables = provider.load(Default::default())?.payload;
+        let jamo = provider.load(Default::default())?.payload;
+        let special_primaries = provider.load(Default::default())?.payload;
 
-    #[expect(clippy::too_many_arguments)]
-    fn try_new_unstable_internal<D>(
-        provider: &D,
-        root: DataPayload<CollationRootV1>,
-        decompositions: DataPayload<NormalizerNfdDataV1>,
-        tables: DataPayload<NormalizerNfdTablesV1>,
-        jamo: DataPayload<CollationJamoV1>,
-        special_primaries: DataPayload<CollationSpecialPrimariesV1>,
-        prefs: CollatorPreferences,
-        options: CollatorOptions,
-    ) -> Result<Self, DataError>
-    where
-        D: DataProvider<CollationRootV1>
-            + DataProvider<CollationTailoringV1>
-            + DataProvider<CollationDiacriticsV1>
-            + DataProvider<CollationMetadataV1>
-            + DataProvider<CollationReorderingV1>
-            + ?Sized,
-    {
-        let locale_dependent =
-            LocaleSpecificDataHolder::try_new_unstable_internal(provider, prefs, options)?;
-
-        // TODO: redesign Korean search collation handling
-        if jamo.get().ce32s.len() != JAMO_COUNT {
-            return Err(DataError::custom("invalid").with_marker(CollationJamoV1::INFO));
-        }
-
-        // `variant_count` isn't stable yet:
-        // https://github.com/rust-lang/rust/issues/73662
-        if special_primaries.get().last_primaries.len() <= (MaxVariable::Currency as usize) {
-            return Err(DataError::custom("invalid").with_marker(CollationSpecialPrimariesV1::INFO));
-        }
-        let special_primaries = special_primaries.map_project(|csp, _| {
-            let compressible_bytes = (csp.last_primaries.len()
-                == MaxVariable::Currency as usize + 16)
-                .then(|| {
-                    csp.last_primaries
-                        .as_maybe_borrowed()?
-                        .as_ule_slice()
-                        .get((MaxVariable::Currency as usize)..)?
-                        .try_into()
-                        .ok()
-                })
-                .flatten()
-                .unwrap_or(
-                    CollationSpecialPrimariesValidated::HARDCODED_COMPRESSIBLE_BYTES_FALLBACK,
-                );
-
-            CollationSpecialPrimariesValidated {
-                last_primaries: csp.last_primaries.truncated(MaxVariable::Currency as usize),
-                numeric_primary: csp.numeric_primary,
-                compressible_bytes,
-            }
-        });
+        let LocaleSpecificDataHolder {
+            tailoring,
+            diacritics,
+            reordering,
+            metadata,
+        } = LocaleSpecificDataHolder::try_new_unstable(provider, prefs)?;
 
         Ok(Collator {
             special_primaries,
             root,
-            tailoring: locale_dependent.tailoring,
+            tailoring,
             jamo,
-            diacritics: locale_dependent.diacritics,
-            options: locale_dependent.merged_options,
-            reordering: locale_dependent.reordering,
+            diacritics,
+            options: options.resolve(metadata, prefs.case_first, prefs.numeric_ordering),
+            reordering,
             decompositions,
             tables,
-            lithuanian_dot_above: locale_dependent.lithuanian_dot_above,
         })
     }
 }
@@ -727,7 +664,7 @@ macro_rules! compare {
 /// borrowed version.
 #[derive(Debug)]
 pub struct CollatorBorrowed<'a> {
-    special_primaries: &'a CollationSpecialPrimariesValidated<'a>,
+    special_primaries: &'a CollationSpecialPrimaries<'a>,
     root: &'a CollationData<'a>,
     tailoring: Option<&'a CollationData<'a>>,
     jamo: &'a CollationJamo<'a>,
@@ -736,7 +673,6 @@ pub struct CollatorBorrowed<'a> {
     reordering: Option<&'a CollationReordering<'a>>,
     decompositions: &'a DecompositionData<'a>,
     tables: &'a DecompositionTables<'a>,
-    lithuanian_dot_above: bool,
 }
 
 impl CollatorBorrowed<'static> {
@@ -746,102 +682,74 @@ impl CollatorBorrowed<'static> {
         prefs: CollatorPreferences,
         options: CollatorOptions,
     ) -> Result<Self, DataError> {
-        // These are assigned to locals in order to keep the code after these assignments
-        // copypaste-compatible with `Collator::try_new_unstable_internal`.
-
         let provider = &crate::provider::Baked;
+
         let decompositions = icu_normalizer::provider::Baked::SINGLETON_NORMALIZER_NFD_DATA_V1;
         let tables = icu_normalizer::provider::Baked::SINGLETON_NORMALIZER_NFD_TABLES_V1;
         let root = crate::provider::Baked::SINGLETON_COLLATION_ROOT_V1;
         let jamo = crate::provider::Baked::SINGLETON_COLLATION_JAMO_V1;
+        let special_primaries = crate::provider::Baked::SINGLETON_COLLATION_SPECIAL_PRIMARIES_V1;
 
-        let locale_dependent =
-            LocaleSpecificDataHolder::try_new_unstable_internal(provider, prefs, options)?;
+        let locale_dependent = LocaleSpecificDataHolder::try_new_unstable(provider, prefs)?;
+        #[expect(clippy::unwrap_used)] // baked provider
+        let tailoring = locale_dependent.tailoring.map(|s| s.get_static().unwrap());
+        #[expect(clippy::unwrap_used)] // baked provider
+        let diacritics = locale_dependent.diacritics.get_static().unwrap();
+        #[expect(clippy::unwrap_used)] // baked provider
+        let reordering = locale_dependent.reordering.map(|s| s.get_static().unwrap());
+        let metadata = locale_dependent.metadata;
 
-        // TODO: redesign Korean search collation handling
-        const _: () = assert!(
-            crate::provider::Baked::SINGLETON_COLLATION_JAMO_V1
-                .ce32s
-                .as_slice()
-                .len()
-                == JAMO_COUNT
-        );
-
-        // `variant_count` isn't stable yet:
-        // https://github.com/rust-lang/rust/issues/73662
-        const _: () = assert!(
-            crate::provider::Baked::SINGLETON_COLLATION_SPECIAL_PRIMARIES_V1
-                .last_primaries
-                .as_slice()
-                .len()
-                > (MaxVariable::Currency as usize)
-        );
-
-        let special_primaries = const {
-            &CollationSpecialPrimariesValidated {
-                last_primaries: zerovec::ZeroSlice::from_ule_slice(
-                    crate::provider::Baked::SINGLETON_COLLATION_SPECIAL_PRIMARIES_V1
-                        .last_primaries
-                        .as_slice()
-                        .as_ule_slice()
-                        .split_at(MaxVariable::Currency as usize)
-                        .0,
-                )
-                .as_zerovec(),
-                numeric_primary: crate::provider::Baked::SINGLETON_COLLATION_SPECIAL_PRIMARIES_V1
-                    .numeric_primary,
-                compressible_bytes: {
-                    const C: &[<u16 as AsULE>::ULE] =
-                        crate::provider::Baked::SINGLETON_COLLATION_SPECIAL_PRIMARIES_V1
-                            .last_primaries
-                            .as_slice()
-                            .as_ule_slice();
-                    if C.len() == MaxVariable::Currency as usize + 16 {
-                        let i = MaxVariable::Currency as usize;
-                        #[allow(clippy::indexing_slicing)] // protected, const
-                        &[
-                            C[i],
-                            C[i + 1],
-                            C[i + 2],
-                            C[i + 3],
-                            C[i + 4],
-                            C[i + 5],
-                            C[i + 6],
-                            C[i + 7],
-                            C[i + 8],
-                            C[i + 9],
-                            C[i + 10],
-                            C[i + 11],
-                            C[i + 12],
-                            C[i + 13],
-                            C[i + 14],
-                            C[i + 15],
-                        ]
-                    } else {
-                        CollationSpecialPrimariesValidated::HARDCODED_COMPRESSIBLE_BYTES_FALLBACK
-                    }
-                },
-            }
-        };
-
-        // Attribute belongs closer to `unwrap`, but
-        // https://github.com/rust-lang/rust/issues/15701
-        #[expect(clippy::unwrap_used)]
         Ok(CollatorBorrowed {
             special_primaries,
             root,
-            // Unwrap is OK, because we know we have the baked provider.
-            tailoring: locale_dependent.tailoring.map(|s| s.get_static().unwrap()),
+            tailoring,
             jamo,
-            // Unwrap is OK, because we know we have the baked provider.
-            diacritics: locale_dependent.diacritics.get_static().unwrap(),
-            options: locale_dependent.merged_options,
-            // Unwrap is OK, because we know we have the baked provider.
-            reordering: locale_dependent.reordering.map(|s| s.get_static().unwrap()),
+            diacritics,
+            options: options.resolve(metadata, prefs.case_first, prefs.numeric_ordering),
+            reordering,
             decompositions,
             tables,
-            lithuanian_dot_above: locale_dependent.lithuanian_dot_above,
         })
+    }
+
+    /// This creates a root collator using baked data only.
+    ///
+    /// ✨ *Enabled with the `unstable` and `compiled_data` Cargo features.*
+    #[cfg(feature = "compiled_data")]
+    #[cfg(feature = "unstable")]
+    pub const fn new_root(options: CollatorOptions) -> Self {
+        let decompositions = icu_normalizer::provider::Baked::SINGLETON_NORMALIZER_NFD_DATA_V1;
+        let tables = icu_normalizer::provider::Baked::SINGLETON_NORMALIZER_NFD_TABLES_V1;
+        let root = crate::provider::Baked::SINGLETON_COLLATION_ROOT_V1;
+        let jamo = crate::provider::Baked::SINGLETON_COLLATION_JAMO_V1;
+        let special_primaries = crate::provider::Baked::SINGLETON_COLLATION_SPECIAL_PRIMARIES_V1;
+
+        const METADATA: CollationMetadata = *crate::provider::Baked::COLLATION_METADATA_V1_UND;
+        const _: () = assert!(!METADATA.tailored());
+        let tailoring = None;
+        const _: () = assert!(!METADATA.tailored_diacritics());
+        const _: () = assert!(
+            crate::provider::Baked::COLLATION_DIACRITICS_V1_UND
+                .secondaries
+                .as_slice()
+                .len()
+                == OPTIMIZED_DIACRITICS_MAX_COUNT
+        );
+        let diacritics = crate::provider::Baked::COLLATION_DIACRITICS_V1_UND;
+        const _: () = assert!(!METADATA.reordering());
+        let reordering = None;
+
+        Self {
+            special_primaries,
+            root,
+            tailoring,
+            jamo,
+            diacritics,
+            options: options.resolve(METADATA, None, None),
+            reordering,
+            decompositions,
+            tables,
+        }
     }
 
     /// Cheaply converts a [`CollatorBorrowed<'static>`] into a [`Collator`].
@@ -869,32 +777,11 @@ impl CollatorBorrowed<'static> {
             },
             decompositions: DataPayload::from_static_ref(self.decompositions),
             tables: DataPayload::from_static_ref(self.tables),
-            lithuanian_dot_above: self.lithuanian_dot_above,
         }
     }
 }
 
-macro_rules! collation_elements {
-    ($self:expr, $chars:expr, $tailoring:expr, $numeric_primary:expr) => {{
-        let jamo = <&[<u32 as AsULE>::ULE; JAMO_COUNT]>::try_from($self.jamo.ce32s.as_ule_slice());
-
-        let jamo = jamo.unwrap();
-
-        CollationElements::new(
-            $chars,
-            $self.root,
-            $tailoring,
-            jamo,
-            &$self.diacritics.secondaries,
-            $self.decompositions,
-            $self.tables,
-            $numeric_primary,
-            $self.lithuanian_dot_above,
-        )
-    }};
-}
-
-impl CollatorBorrowed<'_> {
+impl<'a> CollatorBorrowed<'a> {
     /// The resolved options showing how the default options, the requested options,
     /// and the options from locale data were combined.
     pub fn resolved_options(&self) -> ResolvedCollatorOptions {
@@ -971,7 +858,7 @@ impl CollatorBorrowed<'_> {
     );
 
     #[inline(always)]
-    fn tailoring_or_root(&self) -> &CollationData<'_> {
+    fn tailoring_or_root(&self) -> &'a CollationData<'a> {
         if let Some(tailoring) = &self.tailoring {
             tailoring
         } else {
@@ -1052,8 +939,30 @@ impl CollatorBorrowed<'_> {
 
         let tailoring = self.tailoring_or_root();
         let numeric_primary = self.numeric_primary();
-        let mut left = collation_elements!(self, left_chars, tailoring, numeric_primary);
-        let mut right = collation_elements!(self, right_chars, tailoring, numeric_primary);
+        let jamo = self.jamo.as_array();
+        let lithuanian_dot_above = self.options.lithuanian_dot_above();
+        let mut left = CollationElements::new(
+            left_chars,
+            self.root,
+            tailoring,
+            jamo,
+            &self.diacritics.secondaries,
+            self.decompositions,
+            self.tables,
+            numeric_primary,
+            lithuanian_dot_above,
+        );
+        let mut right = CollationElements::new(
+            right_chars,
+            self.root,
+            tailoring,
+            jamo,
+            &self.diacritics.secondaries,
+            self.decompositions,
+            self.tables,
+            numeric_primary,
+            lithuanian_dot_above,
+        );
 
         // Start identical prefix
 
@@ -1831,11 +1740,11 @@ impl CollatorBorrowed<'_> {
     /// # Example
     ///
     /// ```
-    /// use icu_collator::{
-    ///     options::{CollatorOptions, Strength},
+    /// use icu::collator::{
     ///     Collator,
+    ///     options::{CollatorOptions, Strength},
     /// };
-    /// use icu_locale::locale;
+    /// use icu::locale::locale;
     /// let locale = locale!("utf").into();
     /// let mut options = CollatorOptions::default();
     /// options.strength = Some(Strength::Primary);
@@ -1890,7 +1799,10 @@ impl CollatorBorrowed<'_> {
         };
 
         let mut state = S::State::default();
-        self.write_sort_key_up_to_quaternary(iter, sink, &mut state)?;
+        match self.reordering {
+            Some(r) => self.write_sort_key_up_to_quaternary(iter, sink, &mut state, r)?,
+            None => self.write_sort_key_up_to_quaternary(iter, sink, &mut state, NoReorder)?,
+        }
 
         if let Some(iter) = identical {
             let nfd =
@@ -1908,21 +1820,32 @@ impl CollatorBorrowed<'_> {
     ///
     /// Optionally write the case level.  Separate levels with the `LEVEL_SEPARATOR_BYTE`, but
     /// do not write a terminating zero as with a C string.
-    fn write_sort_key_up_to_quaternary<I, S>(
+    fn write_sort_key_up_to_quaternary<I, S, R>(
         &self,
         iter: I,
         sink: &mut S,
         state: &mut S::State,
+        reorder: R,
     ) -> Result<(), S::Error>
     where
         I: Iterator<Item = char>,
         S: CollationKeySink + ?Sized,
+        R: Reorder,
     {
         // This algorithm comes from `CollationKeys::writeSortKeyUpToQuaternary` in ICU4C.
         let levels = self.sort_key_levels();
 
-        let mut iter =
-            collation_elements!(self, iter, self.tailoring_or_root(), self.numeric_primary());
+        let mut iter = CollationElements::new(
+            iter,
+            self.root,
+            self.tailoring_or_root(),
+            self.jamo.as_array(),
+            &self.diacritics.secondaries,
+            self.decompositions,
+            self.tables,
+            self.numeric_primary(),
+            self.options.lithuanian_dot_above(),
+        );
         iter.init();
         let variable_top = self.variable_top();
 
@@ -1960,9 +1883,7 @@ impl CollatorBorrowed<'_> {
 
                 loop {
                     if levels & QUATERNARY_LEVEL_FLAG != 0 {
-                        if let Some(reordering) = &self.reordering {
-                            p = reordering.reorder(p);
-                        }
+                        p = reorder.reorder(p);
                         if (p >> 24) as u8 >= QUAT_SHIFTED_LIMIT_BYTE {
                             // Prevent shifted primary lead bytes from overlapping with the
                             // common compression range.
@@ -1989,9 +1910,7 @@ impl CollatorBorrowed<'_> {
             if p > NO_CE_PRIMARY && levels & PRIMARY_LEVEL_FLAG != 0 {
                 // Test the un-reordered primary for compressibility.
                 let is_compressible = self.special_primaries.is_compressible((p >> 24) as _);
-                if let Some(reordering) = &self.reordering {
-                    p = reordering.reorder(p);
-                }
+                p = reorder.reorder(p);
                 let p1 = (p >> 24) as u8;
                 if !is_compressible || p1 != (prev_reordered_primary >> 24) as u8 {
                     if prev_reordered_primary != 0 {
@@ -2086,8 +2005,9 @@ impl CollatorBorrowed<'_> {
                         // The backwards secondary level compares secondary weights backwards
                         // within segments separated by the merge separator (U+FFFE).
                         let secs = &mut secondaries.buf;
-                        let last = secs.len() - 1;
-                        if sec_segment_start < last {
+                        if let Some(last) = secs.len().checked_sub(1)
+                            && sec_segment_start < last
+                        {
                             let mut q = sec_segment_start;
                             let mut r = last;
 
@@ -2589,7 +2509,7 @@ where
     let mut prev = 0i32;
 
     for c in iter {
-        if !(0x4e00..=0xa000).contains(&prev) {
+        if !(0x4e00..0xa000).contains(&prev) {
             prev = (prev & !0x7f) - SLOPE_REACH_NEG_1;
         } else {
             // Unihan U+4e00..U+9fa5:  double-bytes down from the upper end
@@ -2611,7 +2531,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use icu_locale::locale;
+    use icu_locale_core::locale;
 
     type Key = Vec<u8>;
 
@@ -2838,6 +2758,16 @@ mod test {
         let mut bk = Vec::new();
         let Ok(()) = collator.write_sort_key_utf16_to(b, &mut bk);
         assert!(ak < bk, "failed: {a:04x?} - {b:04x?}");
+    }
+
+    #[test]
+    fn sort_key_backward_second_level_empty() {
+        let locale = locale!("fr-CA").into();
+        let mut options = CollatorOptions::default();
+        options.strength = Some(Strength::Tertiary);
+        let collator = Collator::try_new(locale, options).unwrap();
+        let mut k = Vec::new();
+        let Ok(()) = collator.write_sort_key_to("", &mut k);
     }
 
     #[test]

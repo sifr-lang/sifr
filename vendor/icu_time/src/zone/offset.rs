@@ -4,10 +4,10 @@
 
 use core::str::FromStr;
 
+use crate::TimeZone;
 #[cfg(feature = "alloc")]
 use crate::provider::legacy::TimezoneVariantsOffsetsV1;
 use crate::provider::{TimezonePeriods, TimezonePeriodsV1};
-use crate::TimeZone;
 use icu_provider::prelude::*;
 
 use displaydoc::Display;
@@ -333,11 +333,11 @@ impl VariantOffsetsCalculatorBorrowed<'_> {
     /// ```
     /// use icu::calendar::Date;
     /// use icu::locale::subtags::subtag;
+    /// use icu::time::Time;
+    /// use icu::time::TimeZone;
     /// use icu::time::zone::UtcOffset;
     /// use icu::time::zone::VariantOffsetsCalculator;
     /// use icu::time::zone::ZoneNameTimestamp;
-    /// use icu::time::Time;
-    /// use icu::time::TimeZone;
     ///
     /// let zoc = VariantOffsetsCalculator::new();
     ///

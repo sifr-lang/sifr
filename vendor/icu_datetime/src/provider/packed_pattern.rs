@@ -5,39 +5,23 @@
 //! Data structures for packing of datetime patterns.
 
 use super::pattern::{
-    runtime::{Pattern, PatternBorrowed, PatternMetadata},
     PatternItem,
+    runtime::{Pattern, PatternBorrowed, PatternMetadata},
 };
 use crate::{options::Length, size_test_macro::size_test};
 use alloc::vec::Vec;
 use icu_plurals::{
-    provider::{FourBitMetadata, PluralElementsPackedULE},
     PluralElements,
+    provider::{FourBitMetadata, PluralElementsPackedULE},
 };
 use icu_provider::prelude::*;
-use zerovec::{VarZeroVec, ZeroSlice};
+use zerovec::{VarZeroVec, ZeroSlice, ule::VarULE};
 
 /// A field of [`PackedPatternsBuilder`].
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LengthPluralElements<T> {
-    /// The "long" length pattern plural elements.
-    pub long: PluralElements<T>,
-    /// The "medium" length pattern plural elements.
-    pub medium: PluralElements<T>,
-    /// The "short" length pattern plural elements.
-    pub short: PluralElements<T>,
-}
+pub type LengthPluralElements<T> = GenericLengthElements<PluralElements<T>>;
 
 /// A builder for a [`PackedPatterns`].
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PackedPatternsBuilder<'a> {
-    /// Patterns always available.
-    pub standard: LengthPluralElements<Pattern<'a>>,
-    /// Patterns for variant 0. If `None`, falls back to standard.
-    pub variant0: Option<LengthPluralElements<Pattern<'a>>>,
-    /// Patterns for variant 1. If `None`, falls back to standard.
-    pub variant1: Option<LengthPluralElements<Pattern<'a>>>,
-}
+pub type PackedPatternsBuilder<'a> = GenericPackedPatternsBuilder<PluralElements<Pattern<'a>>>;
 
 size_test!(PackedPatterns, packed_skeleton_data_size, 32);
 
@@ -116,17 +100,51 @@ size_test!(PackedPatterns, packed_skeleton_data_size, 32);
 /// postcard and other size-optimized serialization formats.
 ///
 /// [`YearStyle::Auto`]: crate::options::YearStyle::Auto
-#[derive(Debug, PartialEq, Eq, Clone, yoke::Yokeable, zerofrom::ZeroFrom)]
+#[derive(Debug, PartialEq, Eq, yoke::Yokeable, zerofrom::ZeroFrom)]
 #[cfg_attr(feature = "datagen", derive(databake::Bake))]
 #[cfg_attr(feature = "datagen", databake(path = icu_datetime::provider::packed_pattern))]
-pub struct PackedPatterns<'data> {
+pub struct GenericPackedPatterns<'data, T: VarULE + ?Sized> {
     /// An encoding of which standard/variant cell corresponds to which entry
     /// in the patterns table. See class docs.
     pub header: u32,
     /// The list of patterns. Length should be between 1 and 9,
     /// depending on the header.
-    pub elements: VarZeroVec<'data, PluralElementsPackedULE<ZeroSlice<PatternItem>>>,
+    pub elements: VarZeroVec<'data, T>,
 }
+
+impl<'data, T: VarULE + ?Sized> Clone for GenericPackedPatterns<'data, T> {
+    fn clone(&self) -> Self {
+        Self {
+            header: self.header,
+            elements: self.elements.clone(),
+        }
+    }
+}
+
+impl<'data, T: VarULE + ?Sized> GenericPackedPatterns<'data, T> {
+    /// Returns the variant indices for this packed pattern.
+    #[cfg(feature = "datagen")]
+    pub(crate) fn variant_indices(&self) -> VariantIndices {
+        if (self.header & constants::Q_BIT) != 0 {
+            VariantIndices::OnePatternPerVariant
+        } else {
+            VariantIndices::IndicesPerVariant([
+                VariantPatternIndex::from_header_with_shift(self.header, 3),
+                VariantPatternIndex::from_header_with_shift(self.header, 6),
+                VariantPatternIndex::from_header_with_shift(self.header, 9),
+                VariantPatternIndex::from_header_with_shift(self.header, 12),
+                VariantPatternIndex::from_header_with_shift(self.header, 15),
+                VariantPatternIndex::from_header_with_shift(self.header, 18),
+            ])
+        }
+    }
+}
+
+/// The main data structure for packed datetime patterns.
+///
+/// For detailed information, see [`GenericPackedPatterns`].
+pub type PackedPatterns<'data> =
+    GenericPackedPatterns<'data, PluralElementsPackedULE<ZeroSlice<PatternItem>>>;
 
 icu_provider::data_struct!(
     PackedPatterns<'_>,
@@ -135,35 +153,36 @@ icu_provider::data_struct!(
 
 pub(crate) type ErasedPackedPatterns = icu_provider::marker::ErasedMarker<PackedPatterns<'static>>;
 
-mod constants {
+pub(crate) mod constants {
     /// Value when standard long, medium, and short are all the same
-    pub(super) const LMS: u32 = 0;
+    pub(crate) const LMS: u32 = 0;
     /// Value when standard medium is the same as short but not long
-    pub(super) const L_MS: u32 = 1;
+    pub(crate) const L_MS: u32 = 1;
     /// Value when standard medium is the same as long but not short
-    pub(super) const LM_S: u32 = 2;
+    pub(crate) const LM_S: u32 = 2;
     /// Bit that indicates that standard medium differs from standard long
-    pub(super) const M_DIFFERS: u32 = 0x1;
+    pub(crate) const M_DIFFERS: u32 = 0x1;
     /// Bit that indicates that standard short differs from standard medium
-    pub(super) const S_DIFFERS: u32 = 0x2;
+    pub(crate) const S_DIFFERS: u32 = 0x2;
     /// Bitmask over all LMS values
-    pub(super) const LMS_MASK: u32 = 0x3;
+    pub(crate) const LMS_MASK: u32 = 0x3;
     /// Bit that indicates whether there are per-cell chunks
-    pub(super) const Q_BIT: u32 = 0x4;
+    pub(crate) const Q_BIT: u32 = 0x4;
     /// A mask applied to individual chunks (the largest possible chunk)
-    pub(super) const CHUNK_MASK: u32 = 0x7;
+    pub(crate) const CHUNK_MASK: u32 = 0x7;
 }
 
-struct UnpackedPatterns<'a> {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct GenericUnpackedPatterns<T> {
     pub(super) has_explicit_medium: bool,
     pub(super) has_explicit_short: bool,
     pub(super) variant_indices: VariantIndices,
-    pub(super) elements: Vec<PluralElements<Pattern<'a>>>,
+    pub(super) elements: Vec<T>,
 }
 
 #[repr(u8)]
-#[derive(Copy, Clone)]
-enum VariantPatternIndex {
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub(crate) enum VariantPatternIndex {
     Inherit = 0,
     I0 = 1,
     I1 = 2,
@@ -220,13 +239,31 @@ impl VariantPatternIndex {
     }
 }
 
-enum VariantIndices {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum VariantIndices {
     OnePatternPerVariant,
     IndicesPerVariant([VariantPatternIndex; 6]),
 }
 
-impl<'a> UnpackedPatterns<'a> {
-    pub(super) fn build(&self) -> PackedPatterns<'static> {
+pub(crate) trait PackedPatternsBuilderHelper: VarULE {
+    type Unpacked<'a>;
+    fn pack(unpacked: &[Self::Unpacked<'_>]) -> VarZeroVec<'static, Self>;
+    #[cfg(feature = "datagen")]
+    fn unpack<'a>(
+        packed: &'a GenericPackedPatterns<Self>,
+    ) -> GenericUnpackedPatterns<Self::Unpacked<'a>>;
+}
+
+impl<'a, T> GenericUnpackedPatterns<T>
+where
+    T: 'a,
+{
+    /// Generically builds a `GenericPackedPatterns` structure, using a caller-supplied
+    /// closure to pack the elements into a `VarZeroVec`.
+    pub(crate) fn build<U>(&self) -> GenericPackedPatterns<'static, U>
+    where
+        U: PackedPatternsBuilderHelper<Unpacked<'a> = T> + VarULE + ?Sized,
+    {
         let mut header = 0u32;
         if self.has_explicit_medium {
             header |= constants::M_DIFFERS;
@@ -247,8 +284,23 @@ impl<'a> UnpackedPatterns<'a> {
                 }
             }
         }
-        let elements: Vec<PluralElements<(FourBitMetadata, &ZeroSlice<PatternItem>)>> = self
-            .elements
+        let elements = U::pack(&self.elements);
+        GenericPackedPatterns { header, elements }
+    }
+
+    #[cfg(feature = "datagen")]
+    fn from_packed<U>(packed: &'a GenericPackedPatterns<'a, U>) -> Self
+    where
+        U: PackedPatternsBuilderHelper<Unpacked<'a> = T> + VarULE + ?Sized,
+    {
+        U::unpack(packed)
+    }
+}
+
+impl PackedPatternsBuilderHelper for PluralElementsPackedULE<ZeroSlice<PatternItem>> {
+    type Unpacked<'a> = PluralElements<Pattern<'a>>;
+    fn pack(elements: &[Self::Unpacked<'_>]) -> VarZeroVec<'static, Self> {
+        let elements: Vec<PluralElements<(FourBitMetadata, &ZeroSlice<PatternItem>)>> = elements
             .iter()
             .map(|plural_elements| {
                 plural_elements.as_ref().map(|pattern| {
@@ -259,26 +311,14 @@ impl<'a> UnpackedPatterns<'a> {
                 })
             })
             .collect();
-        PackedPatterns {
-            header,
-            elements: elements.as_slice().into(),
-        }
+        elements.as_slice().into()
     }
 
     #[cfg(feature = "datagen")]
-    pub(super) fn from_packed(packed: &'a PackedPatterns<'_>) -> Self {
-        let variant_indices = if (packed.header & constants::Q_BIT) != 0 {
-            VariantIndices::OnePatternPerVariant
-        } else {
-            VariantIndices::IndicesPerVariant([
-                VariantPatternIndex::from_header_with_shift(packed.header, 3),
-                VariantPatternIndex::from_header_with_shift(packed.header, 6),
-                VariantPatternIndex::from_header_with_shift(packed.header, 9),
-                VariantPatternIndex::from_header_with_shift(packed.header, 12),
-                VariantPatternIndex::from_header_with_shift(packed.header, 15),
-                VariantPatternIndex::from_header_with_shift(packed.header, 18),
-            ])
-        };
+    fn unpack<'a>(
+        packed: &'a GenericPackedPatterns<Self>,
+    ) -> GenericUnpackedPatterns<Self::Unpacked<'a>> {
+        let variant_indices = packed.variant_indices();
         let elements = packed
             .elements
             .iter()
@@ -292,7 +332,7 @@ impl<'a> UnpackedPatterns<'a> {
                 })
             })
             .collect();
-        Self {
+        GenericUnpackedPatterns {
             has_explicit_medium: (packed.header & constants::M_DIFFERS) != 0,
             has_explicit_short: (packed.header & constants::S_DIFFERS) != 0,
             variant_indices,
@@ -301,24 +341,57 @@ impl<'a> UnpackedPatterns<'a> {
     }
 }
 
-impl PackedPatternsBuilder<'_> {
-    /// Builds a packed pattern representation from the builder.
-    pub fn build(mut self) -> PackedPatterns<'static> {
+/// Three per-length elements for a given variant column.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GenericLengthElements<T> {
+    /// The "long" length element.
+    pub long: T,
+    /// The "medium" length element.
+    pub medium: T,
+    /// The "short" length element.
+    pub short: T,
+}
+
+/// A generic builder for a [`GenericPackedPatterns`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GenericPackedPatternsBuilder<T> {
+    /// Elements always available.
+    pub standard: GenericLengthElements<T>,
+    /// Elements for variant 0. If `None`, falls back to standard.
+    pub variant0: Option<GenericLengthElements<T>>,
+    /// Elements for variant 1. If `None`, falls back to standard.
+    pub variant1: Option<GenericLengthElements<T>>,
+}
+
+impl<T: PartialEq> GenericPackedPatternsBuilder<T> {
+    fn simplify(&mut self) {
+        if self.variant0.as_ref() == Some(&self.standard) {
+            self.variant0 = None;
+        }
+        if self.variant1.as_ref() == Some(&self.standard) {
+            self.variant1 = None;
+        }
+    }
+
+    pub(crate) fn build_unpacked<'b, U>(&'b mut self) -> GenericUnpackedPatterns<U>
+    where
+        U: zerofrom::ZeroFrom<'b, T> + PartialEq<T>,
+    {
         self.simplify();
 
         // Initialize the elements vector with the standard patterns.
         let mut elements = Vec::new();
         let mut has_explicit_medium = false;
         let mut has_explicit_short = false;
-        elements.push(self.standard.long.as_ref().map(Pattern::as_ref));
+        elements.push(zerofrom::ZeroFrom::zero_from(&self.standard.long));
         let mut s_offset = 0;
         if self.standard.medium != self.standard.long {
-            elements.push(self.standard.medium.as_ref().map(Pattern::as_ref));
+            elements.push(zerofrom::ZeroFrom::zero_from(&self.standard.medium));
             has_explicit_medium = true;
             s_offset += 1;
         }
         if self.standard.short != self.standard.medium {
-            elements.push(self.standard.short.as_ref().map(Pattern::as_ref));
+            elements.push(zerofrom::ZeroFrom::zero_from(&self.standard.short));
             has_explicit_short = true;
             s_offset += 1;
         }
@@ -346,14 +419,14 @@ impl PackedPatternsBuilder<'_> {
             .zip(fallbacks.iter())
             .zip(chunks.iter_mut())
         {
-            if let Some(pattern) = pattern {
-                if pattern != fallback {
-                    *chunk = match elements.iter().position(|p| p == *pattern) {
-                        Some(i) => i as u32 + 1,
-                        None => {
-                            elements.push(pattern.as_ref().map(Pattern::as_ref));
-                            elements.len() as u32
-                        }
+            if let Some(pattern) = pattern
+                && pattern != fallback
+            {
+                *chunk = match elements.iter().position(|p| p == *pattern) {
+                    Some(i) => i as u32 + 1,
+                    None => {
+                        elements.push(zerofrom::ZeroFrom::zero_from(*pattern));
+                        elements.len() as u32
                     }
                 }
             }
@@ -369,28 +442,27 @@ impl PackedPatternsBuilder<'_> {
             // one pattern per table cell
             elements.truncate(s_offset + 1);
             elements.extend(variant_patterns.into_iter().zip(fallbacks.iter()).map(
-                |(pattern, fallback)| pattern.unwrap_or(fallback).as_ref().map(Pattern::as_ref),
+                |(pattern, fallback)| zerofrom::ZeroFrom::zero_from(pattern.unwrap_or(fallback)),
             ));
             VariantIndices::OnePatternPerVariant
         };
 
-        // Now we can build the data representation
-        let unpacked = UnpackedPatterns {
+        GenericUnpackedPatterns {
             has_explicit_medium,
             has_explicit_short,
             variant_indices,
             elements,
-        };
-        unpacked.build()
+        }
     }
+}
 
-    fn simplify(&mut self) {
-        if self.variant0.as_ref() == Some(&self.standard) {
-            self.variant0 = None;
-        }
-        if self.variant1.as_ref() == Some(&self.standard) {
-            self.variant1 = None;
-        }
+impl<'a> GenericPackedPatternsBuilder<PluralElements<Pattern<'a>>> {
+    /// Builds a packed pattern representation from the builder.
+    pub fn build(self) -> PackedPatterns<'static> {
+        let mut builder = self;
+        let unpacked: GenericUnpackedPatterns<PluralElements<Pattern<'_>>> =
+            builder.build_unpacked();
+        unpacked.build()
     }
 }
 
@@ -404,12 +476,8 @@ pub(crate) enum PackedSkeletonVariant {
     Variant1,
 }
 
-impl PackedPatterns<'_> {
-    pub(crate) fn get(
-        &self,
-        length: Length,
-        variant: PackedSkeletonVariant,
-    ) -> PatternBorrowed<'_> {
+impl<'data, T: VarULE + ?Sized> GenericPackedPatterns<'data, T> {
+    pub(crate) fn get_element(&self, length: Length, variant: PackedSkeletonVariant) -> Option<&T> {
         use Length::*;
         use PackedSkeletonVariant::*;
         let lms = self.header & constants::LMS_MASK;
@@ -441,13 +509,13 @@ impl PackedPatterns<'_> {
                     (Short, Variant1) => self.header >> 18,
                     (_, Standard) => {
                         debug_assert!(false, "unreachable");
-                        return PatternBorrowed::DEFAULT;
+                        return None;
                     }
                 };
                 let chunk = chunk_in_low_bits & constants::CHUNK_MASK;
                 if chunk == 0 {
                     // Fall back to standard with the same length
-                    return self.get(length, Standard);
+                    return self.get_element(length, Standard);
                 }
                 chunk - 1
             } else {
@@ -461,13 +529,23 @@ impl PackedPatterns<'_> {
                     (Short, Variant1) => 6,
                     (_, Standard) => {
                         debug_assert!(false, "unreachable");
-                        return PatternBorrowed::DEFAULT;
+                        return None;
                     }
                 };
                 s_offset + additional_offset
             }
         };
-        let Some(plural_elements) = self.elements.get(pattern_index as usize) else {
+        self.elements.get(pattern_index as usize)
+    }
+}
+
+impl<'data> GenericPackedPatterns<'data, PluralElementsPackedULE<ZeroSlice<PatternItem>>> {
+    pub(crate) fn get(
+        &self,
+        length: Length,
+        variant: PackedSkeletonVariant,
+    ) -> PatternBorrowed<'_> {
+        let Some(plural_elements) = self.get_element(length, variant) else {
             debug_assert!(false, "unreachable");
             return PatternBorrowed::DEFAULT;
         };
@@ -513,23 +591,24 @@ impl PackedPatterns<'_> {
 }
 
 #[cfg(feature = "serde")]
-mod _serde {
+pub(crate) mod _serde {
     use super::*;
     use crate::provider::pattern::reference;
-    use zerovec::VarZeroSlice;
+    use zerovec::{VarZeroSlice, ule::VarULE};
 
     #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
     #[cfg_attr(feature = "datagen", derive(serde::Serialize))]
-    struct PackedPatternsMachine<'data> {
+    struct GenericPackedPatternsMachine<'data, T: VarULE + ?Sized> {
         pub header: u32,
         #[serde(borrow)]
-        pub elements: &'data VarZeroSlice<PluralElementsPackedULE<ZeroSlice<PatternItem>>>,
+        #[serde(bound(deserialize = ""))]
+        pub elements: &'data VarZeroSlice<T>,
     }
 
     #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
     #[cfg_attr(feature = "datagen", derive(serde::Serialize))]
     #[derive(Default)]
-    struct PackedPatternsHuman {
+    struct GenericPackedPatternsHuman<T> {
         #[cfg_attr(
             feature = "serde",
             serde(default, skip_serializing_if = "core::ops::Not::not")
@@ -550,20 +629,51 @@ mod _serde {
             serde(default, skip_serializing_if = "Option::is_none")
         )]
         pub(super) variant_pattern_indices: Option<[u32; 6]>,
-        pub(super) elements: Vec<reference::Pattern>,
+        pub(super) elements: Vec<T>,
     }
 
-    impl<'de, 'data> serde::Deserialize<'de> for PackedPatterns<'data>
+    /// Should be implemented on the Machine generic. Associates the Human type.
+    pub(crate) trait PackedPatternsSerdeHelper: PackedPatternsBuilderHelper {
+        type Human;
+        fn human_to_unpacked_element<'a>(human: &'a Self::Human) -> Self::Unpacked<'a>;
+        #[cfg(feature = "datagen")]
+        fn unpacked_element_to_human<S: serde::Serializer>(
+            element: Self::Unpacked<'_>,
+        ) -> Result<Self::Human, S::Error>;
+    }
+
+    impl PackedPatternsSerdeHelper for PluralElementsPackedULE<ZeroSlice<PatternItem>> {
+        type Human = reference::Pattern;
+        fn human_to_unpacked_element<'a>(human: &'a Self::Human) -> Self::Unpacked<'a> {
+            let runtime_pattern = human.to_runtime_pattern();
+            PluralElements::new(runtime_pattern)
+        }
+        #[cfg(feature = "datagen")]
+        fn unpacked_element_to_human<S: serde::Serializer>(
+            element: Self::Unpacked<'_>,
+        ) -> Result<Self::Human, S::Error> {
+            let runtime_pattern = element.try_into_other().ok_or_else(|| {
+                <S::Error as serde::ser::Error>::custom("cannot yet serialize plural patterns")
+            })?;
+            Ok(reference::Pattern::from(&runtime_pattern))
+        }
+    }
+
+    #[allow(private_bounds)] // https://github.com/rust-lang/rust/issues/139158
+    impl<'de, 'data, T> GenericPackedPatterns<'data, T>
     where
         'de: 'data,
+        T: VarULE + PackedPatternsSerdeHelper + ?Sized,
+        T::Human: serde::Deserialize<'de>,
     {
-        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        pub(crate) fn deserialize_impl<D>(deserializer: D) -> Result<Self, D::Error>
         where
             D: serde::Deserializer<'de>,
         {
             use serde::de::Error as _;
             if deserializer.is_human_readable() {
-                let human = <PackedPatternsHuman>::deserialize(deserializer)?;
+                let human: GenericPackedPatternsHuman<T::Human> =
+                    serde::Deserialize::deserialize(deserializer)?;
                 let variant_indices = match (
                     human.has_one_pattern_per_variant,
                     human.variant_pattern_indices,
@@ -577,15 +687,15 @@ mod _serde {
                     _ => {
                         return Err(D::Error::custom(
                             "must have either one pattern per variant or indices",
-                        ))
+                        ));
                     }
                 };
                 let elements = human
                     .elements
                     .iter()
-                    .map(|pattern| PluralElements::new(pattern.to_runtime_pattern()))
+                    .map(T::human_to_unpacked_element)
                     .collect();
-                let unpacked = UnpackedPatterns {
+                let unpacked = GenericUnpackedPatterns {
                     has_explicit_medium: human.has_explicit_medium,
                     has_explicit_short: human.has_explicit_short,
                     variant_indices,
@@ -593,7 +703,8 @@ mod _serde {
                 };
                 Ok(unpacked.build())
             } else {
-                let machine = <PackedPatternsMachine>::deserialize(deserializer)?;
+                let machine: GenericPackedPatternsMachine<T> =
+                    serde::Deserialize::deserialize(deserializer)?;
                 Ok(Self {
                     header: machine.header,
                     elements: machine.elements.as_varzerovec(),
@@ -602,16 +713,33 @@ mod _serde {
         }
     }
 
+    impl<'de, 'data> serde::Deserialize<'de>
+        for GenericPackedPatterns<'data, PluralElementsPackedULE<ZeroSlice<PatternItem>>>
+    where
+        'de: 'data,
+    {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            Self::deserialize_impl(deserializer)
+        }
+    }
+
+    #[allow(private_bounds)] // https://github.com/rust-lang/rust/issues/139158
     #[cfg(feature = "datagen")]
-    impl serde::Serialize for PackedPatterns<'_> {
-        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    impl<T> GenericPackedPatterns<'_, T>
+    where
+        T: VarULE + PackedPatternsSerdeHelper + serde::Serialize + ?Sized,
+        T::Human: serde::Serialize + Default,
+    {
+        pub(crate) fn serialize_impl<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: serde::Serializer,
         {
-            use serde::ser::Error as _;
             if serializer.is_human_readable() {
-                let unpacked = UnpackedPatterns::from_packed(self);
-                let mut human = PackedPatternsHuman {
+                let unpacked = GenericUnpackedPatterns::from_packed(self);
+                let mut human = GenericPackedPatternsHuman::<T::Human> {
                     has_explicit_medium: unpacked.has_explicit_medium,
                     has_explicit_short: unpacked.has_explicit_short,
                     ..Default::default()
@@ -627,19 +755,30 @@ mod _serde {
                 }
                 human.elements = Vec::with_capacity(unpacked.elements.len());
                 for pattern_elements in unpacked.elements.into_iter() {
-                    let pattern = pattern_elements
-                        .try_into_other()
-                        .ok_or_else(|| S::Error::custom("cannot yet serialize plural patterns"))?;
-                    human.elements.push(reference::Pattern::from(&pattern));
+                    human
+                        .elements
+                        .push(T::unpacked_element_to_human::<S>(pattern_elements)?);
                 }
-                human.serialize(serializer)
+                serde::Serialize::serialize(&human, serializer)
             } else {
-                let machine = PackedPatternsMachine {
+                let machine = GenericPackedPatternsMachine::<T> {
                     header: self.header,
-                    elements: &self.elements,
+                    elements: self.elements.as_slice(),
                 };
-                machine.serialize(serializer)
+                serde::Serialize::serialize(&machine, serializer)
             }
+        }
+    }
+
+    #[cfg(feature = "datagen")]
+    impl serde::Serialize
+        for GenericPackedPatterns<'_, PluralElementsPackedULE<ZeroSlice<PatternItem>>>
+    {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            self.serialize_impl(serializer)
         }
     }
 }
@@ -824,7 +963,10 @@ mod tests {
         assert_eq!(builder, bincode_recovered.to_builder());
 
         let json_str = serde_json::to_string(&packed).unwrap();
-        assert_eq!(json_str, "{\"has_explicit_short\":true,\"variant_pattern_indices\":[3,4,5,0,0,0],\"elements\":[\"M/d/y\",\"HH:mm\",\"E\",\"E MMM d\",\"dd.MM.yy\"]}");
+        assert_eq!(
+            json_str,
+            "{\"has_explicit_short\":true,\"variant_pattern_indices\":[3,4,5,0,0,0],\"elements\":[\"M/d/y\",\"HH:mm\",\"E\",\"E MMM d\",\"dd.MM.yy\"]}"
+        );
         let json_recovered = serde_json::from_str::<PackedPatterns>(&json_str).unwrap();
         assert_eq!(builder, json_recovered.to_builder());
     }

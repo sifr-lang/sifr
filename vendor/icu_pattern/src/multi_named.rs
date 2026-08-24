@@ -13,8 +13,8 @@ use core::str::FromStr;
 use litemap::LiteMap;
 use writeable::Writeable;
 
-use crate::common::*;
 use crate::Error;
+use crate::common::*;
 
 /// A string wrapper for the [`MultiNamedPlaceholder`] pattern backend.
 ///
@@ -326,7 +326,6 @@ impl PatternBackend for MultiNamedPlaceholder {
     type PlaceholderKey<'a> = MultiNamedPlaceholderKey<'a>;
     #[cfg(feature = "alloc")]
     type PlaceholderKeyCow<'a> = MultiNamedPlaceholderKeyCow<'a>;
-    type Error<'a> = MissingNamedPlaceholderError<'a>;
     type Store = str;
     type Iter<'a> = MultiNamedPlaceholderPatternIterator<'a>;
 
