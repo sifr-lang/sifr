@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-23. Items 0-3 are complete. Item 4 Python 3.14 and
-PyO3 is next.
+Status: active on 2026-08-24. Items 0-4 are complete. Item 5 Node 24 LTS is
+next.
 
 ## Objective
 
@@ -172,7 +172,7 @@ Only the first incomplete row may be active.
 | 1 | complete | Rust 1.98 toolchain | Local and CI compiler selection is reproducibly 1.98; the latest-only policy replaces the 1.93 floor; edition remains 2021. |
 | 2 | complete | Rust edition 2024 | Every maintained manifest/template uses edition 2024; `gen` and other reserved syntax are correctly emitted/escaped; generated Rust compiles. |
 | 3 | complete | uv 0.12 | uv and setup policy are current; all affected locks are reproducible under the new resolver. |
-| 4 | pending | Python 3.14 and PyO3 | Python 3.14.7 is the only maintained Python lane, PyO3 is current, and older-lane configuration and evidence are removed. |
+| 4 | complete | Python 3.14 and PyO3 | Python 3.14.7 is the only maintained Python lane, PyO3 is current, and older-lane configuration and evidence are removed. |
 | 5 | pending | Node 24 LTS | Release/tooling workflows use the latest Node 24 LTS and compatible npm behavior. |
 | 6 | pending | GitHub Actions | All maintained third-party actions use reviewed latest-stable immutable SHAs and workflow contract tests pass. |
 | 7 | pending | Ruff 0.16.4 fork | Sifr changes are replayed on the latest Ruff stable base; fork, gitlink, ownership, parser/formatter/linter evidence, and snapshots agree. |
@@ -402,6 +402,80 @@ evidence remains intentionally unchanged.
 Next action: implement Item 4 Python 3.14-only and PyO3 convergence from the
 Item 3 record merge on `origin/main`.
 
+### Item 4 record
+
+State: complete
+
+PR: [#3497](https://github.com/sifr-lang/sifr/pull/3497)
+
+Base SHA: `5cbf633e2a54b710669d2a8ee05660a619d89f2b`
+
+Candidate SHA: `a91bc52b5beea93c28c331ae6b6506265d83e77e`
+
+Merge SHA: `a4723c2f6e0d10bbb516e8b2b01a817c20f69bfe`
+
+Changed paths: all six maintained first-party Python project/lock pairs,
+Python-interop policy and runtime suites, CPython differential policy, PyO3
+compiler/runtime/package paths, the root Cargo graph, the three checked-in
+PyO3 vendor crates, generated binding evidence, workflows, fixtures, and
+Python-interop documentation. A fixture-inventory module keeps the maintained
+runner below the 900-line source limit.
+
+Stable-source result: the official Python release feed reported CPython 3.14.7
+and the official crates.io graph reported PyO3 0.29.2. Every maintained Python
+project and lock now selects exactly CPython 3.14.7. The old `cpython311`
+environment and named runtime lanes were deleted in favor of canonical
+buffer, Arrow, and DLPack runtime suites. PyO3, `pyo3-ffi`, and
+`pyo3-build-config` are vendored exactly at 0.29.2 with independently verified
+crate archives and checksums.
+
+Forward-only result: the environment and differential checks reject any
+interpreter other than GIL-enabled CPython 3.14.7. TensorFlow 2.21.0 publishes
+no stable CPython 3.14 wheel, so its maintained dependency, bridge,
+certification, fixtures, and documentation were deleted. No older Python lane,
+free-threaded interpreter, TensorFlow fallback, compatibility shim, or legacy
+runtime name remains. Touched Python sources also adopted Ruff 0.16.4 fixes;
+the fork-wide Ruff migration remains owned by Item 7.
+
+Focused validation: all six locks passed exact CPython 3.14.7 offline checks;
+the Python-interop runtime and example suites, CPython differential checks,
+PyO3 runtime/package/driver/CLI tests, distribution-release representative
+suite, workspace Clippy and formatting, verification self-tests, profile and
+area checks, doctor, maintainability checks, diff checks, and the file-size
+guardrail passed.
+
+Review evidence: the initial exact-SHA Claude Opus review returned `SATISFIED`
+for candidate `2fd344776aae2364da6b0f2730e7d5bc74b3e3a1` with no blocking finding and
+three valid follow-ups were applied. The one permitted remediation review of
+`0c2ccec2a92924d0a2089ebacf6f4444d9139da2` found only two stale documentation
+claims about example execution, not a new mechanism defect. Those claims were
+corrected in the final candidate. The phase's two-review cap prohibited a
+third review for that documentation-only correction. Both review results and
+the final correction are retained in the
+[#3497 review comment](https://github.com/sifr-lang/sifr/pull/3497#issuecomment-5389268108).
+
+Gate evidence: required private-target cleanup made the first create-PR run a
+cold-cache run; it timed out only because `runtime-platform` took 207.29
+seconds against its 120-second warm budget while all completed correctness
+checks passed. The repository policy prohibits using that run as
+host-sensitive performance evidence, so the user explicitly authorized one
+warm create-PR rerun. That run passed on the final candidate with
+`runtime-platform` at 24.4 seconds, 19/19 Python-interop cases, and 143/143 E2E
+fixtures. The sole merge gate then passed on the same SHA, including 25/25
+Python-interop cases, 76/76 generated builds, 1,140/1,140 codegen tests, and
+698/698 E2E fixtures. Both long runs exceeded only advisory warm-time budgets;
+full reports are retained in the
+[#3497 final validation comment](https://github.com/sifr-lang/sifr/pull/3497#issuecomment-5389268108).
+
+Deferred follow-up: historical performance negative seeds retain their actual
+Python 3.13.1 evidence and are not rewritten as if they ran on 3.14.7. Item 35
+owns the final historical-evidence reconciliation. The remaining maintained
+Ruff fork and its full parser/formatter/linter migration remain owned by Item
+7; Item 4 introduced no parallel old path for either surface.
+
+Next action: implement Item 5 Node 24 LTS convergence from the Item 4 record
+merge on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -440,11 +514,12 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-3 are complete. Item 3 merged in PR #3495 as
-`e1888408e1ab343c28e62f3547d804236d914f74` with exact-SHA Opus satisfaction.
-All seven maintained uv projects require 0.12.5 exactly and all three setup-uv
-uses pin v10.0.1 by immutable SHA with the official archive checksum. No
-compiler input changed, so no Sifr gate applied.
+Current state: Items 0-4 are complete. Item 4 merged in PR #3497 as
+`a4723c2f6e0d10bbb516e8b2b01a817c20f69bfe`. CPython 3.14.7 is the only
+maintained Python lane, the checked-in PyO3 graph is 0.29.2, and unsupported
+TensorFlow interop and older-lane runtime surfaces are deleted. The exact
+final candidate passed the authorized warm create-PR gate and the sole merge
+gate.
 
-Next action: merge this record-only update, then start Item 4 Python 3.14-only
-and PyO3 convergence from the resulting `origin/main`.
+Next action: merge this record-only update, then start Item 5 Node 24 LTS
+convergence from the resulting `origin/main`.
