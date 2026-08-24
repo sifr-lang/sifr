@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-24. Items 0-9 are complete. Item 10 Rust HTTP stack
+Status: active on 2026-08-24. Items 0-10 are complete. Item 11 Rust TLS stack
 is next.
 
 ## Objective
@@ -178,7 +178,7 @@ Only the first incomplete row may be active.
 | 7 | complete | Ruff 0.16.4 fork | Sifr changes are replayed on the latest Ruff stable base; fork, gitlink, ownership, parser/formatter/linter evidence, and snapshots agree. |
 | 8 | complete | Rust utility/foundation train | Each listed utility dependency is advanced sequentially; all direct declarations converge and generated/vendor evidence agrees. |
 | 9 | complete | Rust async foundation | Bytes, Futures, and Tokio converge with runtime/concurrency validation. |
-| 10 | pending | Rust HTTP stack | HTTP, body, H2, and Hyper converge with network/HTTP validation. |
+| 10 | complete | Rust HTTP stack | HTTP, body, H2, and Hyper converge with network/HTTP validation. |
 | 11 | pending | Rust TLS stack | Rustls and rcgen converge with certificate, TLS, and provider validation. |
 | 12 | pending | ICU family | All five ICU4X crates converge together and text/i18n behavior passes. |
 | 13 | pending | SHA-2 consolidation | One SHA-2 0.11 dependency remains and all digest evidence passes. |
@@ -882,6 +882,95 @@ Item 9 mechanism defect.
 Next action: implement Item 10 Rust HTTP stack from the Item 9 record merge on
 `origin/main`.
 
+### Item 10 record
+
+State: complete
+
+PR: [#3509](https://github.com/sifr-lang/sifr/pull/3509)
+
+Base SHA: `6f678957045af607ab382e9620f0e426f31bfcec`
+
+Candidate SHA: `dc6dda859ef8b2cb2de0ada6346a6559500f40ac`
+
+Merge SHA: `1ece067abd79262dfb5610e508610e76fc3b3670`
+
+Stable-source result: the official crates.io release feeds reported
+`http 1.5.0`, `http-body 1.1.0`, `http-body-util 0.1.5`, `h2 0.4.19`, and
+`hyper 1.11.0` as the newest stable releases when Item 10 started. The H2
+target advanced from the phase baseline's `0.4.18` to the same-day stable
+`0.4.19` before implementation. Root and maintained Rust-interop manifests
+and locks, generated dependency snapshots, exact-version evidence, and the
+package-owned sysroot vendor copies now agree with the rechecked versions.
+All 207 non-checksum files across the five replaced vendor packages match
+their Cargo checksum manifests, package checksums match the root lock, and no
+Cargo extraction marker remains.
+
+Forward-only result: the canonical runtime uses Hyper's H2 automatic
+data-frame budget and has a deterministic loopback test that exhausts a
+one-frame server budget and observes `ENHANCE_YOUR_CALM` on both ends. The
+HTTP/1 regression suite verifies Hyper 1.11's rule that Transfer-Encoding
+overrides an earlier Content-Length, and the HTTP registry test consumes the
+new `Method::QUERY` constant from HTTP 1.5. The new `http-body` and
+`http-body-util` combinators and additive `SizeHint` APIs had no maintained
+production caller that they could simplify, so no ceremonial wrapper,
+compatibility path, legacy pin, or fallback was added.
+
+Changed paths: the root workspace manifest and lock; the Rust-interop catalog
+and four maintained fixture locks; generated HTTP dependency snapshots,
+feature-tree evidence, and network traceability records; the canonical HTTP
+runtime implementation and tests; and the package-owned `http`, `http-body`,
+`http-body-util`, `h2`, and `hyper` vendor packages. Demo-repository gitlinks
+and their independently owned locks did not change.
+
+Focused validation: HTTP dependency snapshots passed 8/8; the all-feature
+runtime passed 292/292 unit tests and 3/3 HTTP loopbacks; the all-feature
+stdlib passed 53/53 tests; seven focused HTTP runtime tests passed; and the
+stdlib parity audit passed all ten HTTP fixtures. Rust interop passed both
+matrix variants and 237 self-tests. Generated Reqwest loopback, resource
+lifecycle, Axum/SQLx backend, and Arrow/DataFusion/Polars scenarios passed
+4/4. Workspace Clippy with warnings denied, formatting, HIR maintainability,
+the 3,243-file first-party size guardrail, feature-tree equality, vendor
+checksums, and first-party diff checks passed. A supplemental non-canonical
+all-feature runtime Clippy probe exposed 515 pre-existing broad-feature
+diagnostics in generated Unicode, Python ABI, TLS, and existing HTTP
+signatures; canonical workspace Clippy passed, and Item 10 did not absorb that
+separate backlog.
+
+Review evidence: the initial exact-SHA Opus review returned `SATISFIED` with
+no blocking finding in the
+[#3509 review comment](https://github.com/sifr-lang/sifr/pull/3509#issuecomment-5398353457).
+Its non-blocking suggestion asked the new H2 frame budget to be exercised
+directly. The remediation candidate added the deterministic exhaustion test.
+The one allowed remediation review found no new mechanism defect and requested
+only a one-line traceability correction; the disposition and exact correction
+are retained in the
+[#3509 remediation comment](https://github.com/sifr-lang/sifr/pull/3509#issuecomment-5398353697).
+The final Markdown-only correction did not trigger a forbidden third review.
+
+Gate evidence: the one create-PR invocation passed every functional step it
+reached and stopped only when the cold runtime-platform area took 205.464
+seconds against its 120-second blocking budget; the cold
+`binary_file_io_capability.sifr` build took 160.097 seconds. Before the long
+gates, the mandatory private-target cleanup removed 40.7 GiB because the
+unused target exceeded the 20 GiB limit. The one merge gate on the same exact
+candidate completed with exit 0. Every functional area passed, including
+performance 12/12, distribution/release 68/68, sysroot release 2/2, all
+workspace crate members, 76/76 generated driver builds, and 698/698 E2E
+fixtures with report signature `127353b213e16688`. Its only result was a
+non-blocking warm-wall-time advisory after the intentional cold-cache cleanup.
+Neither gate was rerun. Exact command results and SHA-256 evidence digests are
+retained in the
+[#3509 gate comment](https://github.com/sifr-lang/sifr/pull/3509#issuecomment-5399834340).
+
+Deferred follow-up: the pre-existing non-canonical all-feature Clippy backlog
+remains with its owning broad-feature surfaces. Item 11 owns the independently
+audited Rustls and rcgen upgrade, including TLS provider and certificate
+behavior. The second Item 10 review found no new mechanism defect, so no later
+corrective item was added.
+
+Next action: implement Item 11 Rust TLS stack from the Item 10 record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -920,12 +1009,12 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-9 are complete. Item 9 merged in PR #3507 as
-`d17997a998bea31df41ae509df216b2055769a33`. Its exact candidate
-`1c46c2ddf641b9b407da6f4c78360414c6c0d1c3` has Opus satisfaction, one
-cold-cache create-PR budget observation, one merge performance-control host
-observation, complete direct supplemental coverage, and 698/698 passing merge
-E2E fixtures. Neither one-shot gate was rerun.
+Current state: Items 0-10 are complete. Item 10 merged in PR #3509 as
+`1ece067abd79262dfb5610e508610e76fc3b3670`. Its exact candidate
+`dc6dda859ef8b2cb2de0ada6346a6559500f40ac` has one initial and one
+remediation Opus review, one cold-cache create-PR budget observation, one fully
+passing merge gate, and 698/698 passing merge E2E fixtures. Neither one-shot
+gate was rerun, and the remediation review found no new mechanism defect.
 
-Next action: merge this record-only update, then start Item 10 Rust HTTP stack
+Next action: merge this record-only update, then start Item 11 Rust TLS stack
 from the resulting `origin/main`.
