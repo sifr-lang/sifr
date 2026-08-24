@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-24. Items 0-8 are complete. Item 9 Rust async
-foundation is next.
+Status: active on 2026-08-24. Items 0-9 are complete. Item 10 Rust HTTP stack
+is next.
 
 ## Objective
 
@@ -177,7 +177,7 @@ Only the first incomplete row may be active.
 | 6 | complete | GitHub Actions | All maintained third-party actions use reviewed latest-stable immutable SHAs and workflow contract tests pass. |
 | 7 | complete | Ruff 0.16.4 fork | Sifr changes are replayed on the latest Ruff stable base; fork, gitlink, ownership, parser/formatter/linter evidence, and snapshots agree. |
 | 8 | complete | Rust utility/foundation train | Each listed utility dependency is advanced sequentially; all direct declarations converge and generated/vendor evidence agrees. |
-| 9 | pending | Rust async foundation | Bytes, Futures, and Tokio converge with runtime/concurrency validation. |
+| 9 | complete | Rust async foundation | Bytes, Futures, and Tokio converge with runtime/concurrency validation. |
 | 10 | pending | Rust HTTP stack | HTTP, body, H2, and Hyper converge with network/HTTP validation. |
 | 11 | pending | Rust TLS stack | Rustls and rcgen converge with certificate, TLS, and provider validation. |
 | 12 | pending | ICU family | All five ICU4X crates converge together and text/i18n behavior passes. |
@@ -795,6 +795,93 @@ mechanism defects.
 Next action: implement Item 9 Rust async foundation from the Item 8 record
 merge on `origin/main`.
 
+### Item 9 record
+
+State: complete
+
+PR: [#3507](https://github.com/sifr-lang/sifr/pull/3507)
+
+Base SHA: `689a886181cc0e132b6d73c2ae99242ae5705826`
+
+Candidate SHA: `1c46c2ddf641b9b407da6f4c78360414c6c0d1c3`
+
+Merge SHA: `d17997a998bea31df41ae509df216b2055769a33`
+
+Stable-source result: the official crates.io release feeds still reported
+`bytes 1.12.1`, the complete `futures 0.3.34` family, and `tokio 1.53.1` as
+the newest stable releases when Item 9 started. Root and maintained fixture
+manifests and locks, generated dependency snapshots, exact-version tests, and
+the package-owned sysroot vendor copies now agree with those versions. The
+vendor replacement was selective: it updated `bytes`, `futures-channel`,
+`futures-core`, `futures-sink`, and `tokio` without absorbing package-owned
+interop graphs. All 644 files across the five replaced vendor packages match
+their Cargo checksum manifests, and no Cargo extraction marker remains.
+
+Forward-only result: the canonical runtime keeps its intentionally minimal
+Tokio feature set. Tokio's new file-descriptor APIs require the unused `fs`
+feature, its new runtime scheduling histogram is an unused observability
+surface, and its Unix socket address additions have no maintained caller.
+Bytes' new `BytesMut` APIs likewise have no first-party `BytesMut` call site.
+No speculative feature, compatibility path, legacy pin, or fallback was
+added. Existing runtime, task-scope, async code-generation, signal, process,
+and HTTP-loopback paths consume the upstream correctness fixes directly.
+
+Changed paths: active workspace, generated-runtime, Rust-interop, and direct
+fixture manifests and locks; generated dependency/version evidence; stdlib
+feature-tree and audit snapshots; exact Tokio source tests; and the five
+package-owned sysroot vendor packages. No first-party compiler algorithm or
+runtime API implementation changed.
+
+Focused validation: locked/offline metadata and a generated task-scope project
+compiled from the checked-in vendor. Rust interop passed 10/10 variants;
+runtime passed 290/290 all-feature tests and 3/3 HTTP loopbacks; focused
+process, signal, HTTP, Python, async-codegen, driver, and CLI suites passed.
+Workspace Clippy with warnings denied, formatting, HIR maintainability, the
+3,243-file first-party size guardrail, submodule ownership, first-party diff
+checks, and all vendor checksum files passed. Full stdlib parity passed 411
+LeetCode cases and every module, dependency, and audit check. Its only demo
+failure was the pre-existing `m16_raw_api` Python-math canonical requirement
+already recorded by Item 8 and owned outside this item.
+
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking finding in the
+[#3507 review comment](https://github.com/sifr-lang/sifr/pull/3507#issuecomment-5395780334).
+No remediation review was needed.
+
+Gate evidence: the one create-PR invocation passed every functional step it
+reached and stopped only when the cold runtime-platform area took 202.431
+seconds against its 120-second blocking budget; the cold
+`binary_file_io_capability.sifr` build took 157.560 seconds. The one merge gate
+on the same exact candidate passed all guardrails and its first ten selected
+areas, including the warmed runtime-platform area in 24.848 seconds, then
+stopped fail-closed in performance control. Three instruction-CV samples for
+`formatter-corpus-001-project-check` were 3.1346%, 3.4252%, and 3.0516%
+against a 2% stability limit under recorded unrelated desktop CPU pressure.
+Five other representative benchmarks and the frontend syntax guardrails
+passed. Per the one-shot rule, neither gate was rerun.
+
+The eight merge-profile areas not reached after that host-control stop were
+run directly with their canonical locked/offline selections: 146 variants
+passed with zero failures across distribution release, sysroot release,
+project workspace, package management, stdlib parity, regression,
+fuzz/property, and ecosystem compatibility. All 26 canonical full-mode crate
+members passed, including both serialized generated-build suites. The
+merge-profile E2E suite passed 698/698 fixtures with report signature
+`127353b213e16688`. Create-PR, merge, full-crate, and E2E evidence digests and
+the no-rerun disposition are retained in the
+[#3507 gate comment](https://github.com/sifr-lang/sifr/pull/3507#issuecomment-5397724184).
+
+Deferred follow-up: the new optional Tokio schedule-latency histogram remains
+out of the deliberately minimal runtime feature set unless an observability
+owner adopts it. `futures-macro 0.3.34` consumes Syn 3, while the existing
+workspace still legitimately contains multiple Syn majors; Items 16, 24, and
+35 own syntax-stack convergence and final graph reconciliation. Archived
+historical network plans retain their contemporaneous Tokio text. None is an
+Item 9 mechanism defect.
+
+Next action: implement Item 10 Rust HTTP stack from the Item 9 record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -833,11 +920,12 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-8 are complete. Item 8 merged in PR #3505 as
-`a57da8f7208bede1dd67849606e21ba3612497e7`. Its exact candidate
-`53320be497f298800c8f1d9001c22faa7a6acbe4` has Opus satisfaction, one
-cold-cache create-PR timing observation with no functional failure, and one
-passing merge gate across all 698 E2E fixtures.
+Current state: Items 0-9 are complete. Item 9 merged in PR #3507 as
+`d17997a998bea31df41ae509df216b2055769a33`. Its exact candidate
+`1c46c2ddf641b9b407da6f4c78360414c6c0d1c3` has Opus satisfaction, one
+cold-cache create-PR budget observation, one merge performance-control host
+observation, complete direct supplemental coverage, and 698/698 passing merge
+E2E fixtures. Neither one-shot gate was rerun.
 
-Next action: merge this record-only update, then start Item 9 Rust async
-foundation from the resulting `origin/main`.
+Next action: merge this record-only update, then start Item 10 Rust HTTP stack
+from the resulting `origin/main`.
