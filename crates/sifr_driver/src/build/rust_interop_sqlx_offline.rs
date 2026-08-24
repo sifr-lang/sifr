@@ -2,8 +2,8 @@ use self::cfg_filter::{has_cfg_attribute, item_has_cfg_attribute};
 use super::rust_interop_digest::digest_path;
 use super::rust_interop_probe::{PendingRustBridgeProbe, ProbeExecutionFailure};
 use super::rust_interop_sqlx_modules::reachable_rust_modules;
-use sha2::{Digest as _, Sha256};
 use sifr_diagnostics::DiagnosticCode;
+use sifr_sysroot::sha256_hex;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -645,16 +645,6 @@ fn validate_query_metadata(metadata_roots: &[PathBuf], query: &str) -> Result<()
         ));
     }
     Ok(())
-}
-
-fn sha256_hex(bytes: &[u8]) -> String {
-    let digest = Sha256::digest(bytes);
-    let mut hex = String::with_capacity(digest.len() * 2);
-    for byte in digest {
-        use std::fmt::Write as _;
-        let _ = write!(hex, "{byte:02x}");
-    }
-    hex
 }
 
 #[path = "rust_interop_sqlx_cfg.rs"]

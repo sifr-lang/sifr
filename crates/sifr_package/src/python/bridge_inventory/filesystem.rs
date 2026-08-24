@@ -1,7 +1,6 @@
 use crate::CargoPackageId;
 use crate::diag::PackageDiagnostic;
 use crate::manifest::sifr::PackageSourceRoot;
-use sha2::{Digest as _, Sha256};
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
@@ -221,8 +220,4 @@ pub(super) fn path_string(path: &Path) -> String {
         })
         .collect::<Vec<_>>()
         .join("/")
-}
-
-pub(super) fn sha256_hex(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
 }

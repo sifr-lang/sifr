@@ -1,3 +1,4 @@
+use crate::digest::{lower_hex, sha256_hex};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest as _, Sha256};
 use std::collections::BTreeSet;
@@ -99,12 +100,12 @@ pub fn python_binding_source_fingerprint(
         digest.update([0]);
         digest.update(source.digest.as_bytes());
     }
-    format!("{:x}", digest.finalize())
+    lower_hex(&digest.finalize())
 }
 
 #[must_use]
 pub fn python_binding_generated_digest(source: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(source))
+    sha256_hex(source)
 }
 
 pub fn load_python_bindings(

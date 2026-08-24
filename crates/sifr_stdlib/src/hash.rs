@@ -1,6 +1,6 @@
 #[must_use]
 pub fn sha256_bytes(data: &[u8]) -> Vec<u8> {
-    <sha2_0_11::Sha256 as sha2_0_11::Digest>::digest(data).to_vec()
+    <sha2::Sha256 as sha2::Digest>::digest(data).to_vec()
 }
 
 #[must_use]
@@ -15,17 +15,17 @@ pub fn sha1_bytes(data: &[u8]) -> Vec<u8> {
 
 #[must_use]
 pub fn sha224_bytes(data: &[u8]) -> Vec<u8> {
-    <sha2_0_11::Sha224 as sha2_0_11::Digest>::digest(data).to_vec()
+    <sha2::Sha224 as sha2::Digest>::digest(data).to_vec()
 }
 
 #[must_use]
 pub fn sha384_bytes(data: &[u8]) -> Vec<u8> {
-    <sha2_0_11::Sha384 as sha2_0_11::Digest>::digest(data).to_vec()
+    <sha2::Sha384 as sha2::Digest>::digest(data).to_vec()
 }
 
 #[must_use]
 pub fn sha512_bytes(data: &[u8]) -> Vec<u8> {
-    <sha2_0_11::Sha512 as sha2_0_11::Digest>::digest(data).to_vec()
+    <sha2::Sha512 as sha2::Digest>::digest(data).to_vec()
 }
 
 #[must_use]

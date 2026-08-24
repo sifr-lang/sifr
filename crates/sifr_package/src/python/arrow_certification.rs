@@ -1,5 +1,5 @@
+use crate::digest::sha256_hex;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest as _, Sha256};
 use std::path::{Path, PathBuf};
 
 pub const PYTHON_CERTIFICATIONS_FILE: &str = "sifr.python-certifications.json";
@@ -281,7 +281,7 @@ pub fn validate_python_certifications(
         }
         let bytes = std::fs::read(&fixture)
             .map_err(|error| format!("could not read fixture '{}': {error}", fixture.display()))?;
-        let digest = format!("{:x}", Sha256::digest(bytes));
+        let digest = sha256_hex(&bytes);
         if digest != certification.fixture_digest {
             return Err(format!(
                 "Arrow certification fixture digest is stale for '{}'",
@@ -347,7 +347,7 @@ pub(super) fn validate_fixture(
     }
     let bytes = std::fs::read(&fixture)
         .map_err(|error| format!("could not read fixture '{}': {error}", fixture.display()))?;
-    let digest = format!("{:x}", Sha256::digest(bytes));
+    let digest = sha256_hex(&bytes);
     if digest != expected_digest {
         return Err(format!(
             "{protocol} certification fixture digest is stale for '{target}'"
@@ -369,7 +369,7 @@ pub(super) fn is_dotted_target(target: &str) -> bool {
 pub fn fixture_digest(path: &Path) -> Result<String, String> {
     let bytes = std::fs::read(path)
         .map_err(|error| format!("could not read fixture '{}': {error}", path.display()))?;
-    Ok(format!("{:x}", Sha256::digest(bytes)))
+    Ok(sha256_hex(&bytes))
 }
 
 pub fn safe_fixture_path(package_root: &Path, fixture: &str) -> Result<PathBuf, String> {

@@ -1,5 +1,5 @@
 use super::compile_stdlib_uncached;
-use sha2::{Digest, Sha256};
+use sifr_sysroot::sha256_hex;
 
 #[test]
 fn python_primitive_constructors_codegen_through_sifr_stdlib() {
@@ -13,7 +13,7 @@ fn python_primitive_constructors_codegen_through_sifr_stdlib() {
     assert_eq!(private_code.source_path, "stdlib/_sifr/python.sifr");
     assert_eq!(
         private_code.source_sha256,
-        sha256_hex(include_str!("../../../../stdlib/_sifr/python.sifr"))
+        sha256_hex(include_bytes!("../../../../stdlib/_sifr/python.sifr"))
     );
     for name in [
         "py_from_none",
@@ -337,10 +337,4 @@ fn python_callback_helpers_codegen_through_sifr_stdlib() {
         .collect();
     assert!(compact_public.contains("py_local_callback(handler)?"));
     assert!(!compact_public.contains("_call_object_callback"));
-}
-
-fn sha256_hex(source: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(source.as_bytes());
-    format!("{:x}", hasher.finalize())
 }

@@ -3219,9 +3219,9 @@ checksum = "15cdd26707701c53297e2fa6afb323d55fbc1d0810c3aec078ae3ef0424c3c15"
 
 [[package]]
 name = "hybrid-array"
-version = "0.4.12"
+version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9155a582abd142abc056962c29e3ce5ff2ad5469f4246b537ed42c5deba857da"
+checksum = "707114b52a152fa7bdb290cd7cd5912d9467273b6d74e21b8d81aca1f8533f6b"
 dependencies = [
  "typenum",
 ]
@@ -6948,7 +6948,6 @@ dependencies = [
  "ruff_text_size",
  "serde",
  "serde_json",
- "sha2 0.10.9",
  "sifr_diagnostics",
  "sifr_driver",
  "sifr_format",
@@ -7015,7 +7014,7 @@ dependencies = [
  "ruff_text_size",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "sifr_codegen",
  "sifr_diagnostics",
  "sifr_frontend",
@@ -7137,7 +7136,7 @@ dependencies = [
  "ruff_python_ast",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "sifr_diagnostics",
  "sifr_frontend",
  "sifr_syntax",
@@ -7214,7 +7213,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "sqlx",
  "thiserror 2.0.20",
  "tokio",
@@ -7300,7 +7299,7 @@ dependencies = [
 name = "sifr_structural_identity"
 version = "0.0.0"
 dependencies = [
- "sha2 0.10.9",
+ "sha2 0.11.0",
 ]
 
 [[package]]
@@ -7320,7 +7319,7 @@ name = "sifr_sysroot"
 version = "0.0.0"
 dependencies = [
  "serde",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "toml",
 ]
 

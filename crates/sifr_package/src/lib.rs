@@ -1,5 +1,6 @@
 pub mod cargo;
 pub mod diag;
+mod digest;
 pub mod graph;
 pub mod imports;
 pub mod manifest;

@@ -1,5 +1,5 @@
 use super::compile_stdlib_uncached;
-use sha2::{Digest, Sha256};
+use sifr_sysroot::sha256_hex;
 
 #[test]
 fn platform_private_declarations_codegen_through_sifr_stdlib() {
@@ -14,7 +14,7 @@ fn platform_private_declarations_codegen_through_sifr_stdlib() {
     assert_eq!(private_code.source_path, "stdlib/_sifr/platform.sifr");
     assert_eq!(
         private_code.source_sha256,
-        sha256_hex(include_str!("../../../../stdlib/_sifr/platform.sifr"))
+        sha256_hex(include_bytes!("../../../../stdlib/_sifr/platform.sifr"))
     );
     assert!(
         private_code
@@ -43,7 +43,7 @@ fn sys_private_declarations_codegen_through_sifr_stdlib() {
     assert_eq!(private_code.source_path, "stdlib/_sifr/sys.sifr");
     assert_eq!(
         private_code.source_sha256,
-        sha256_hex(include_str!("../../../../stdlib/_sifr/sys.sifr"))
+        sha256_hex(include_bytes!("../../../../stdlib/_sifr/sys.sifr"))
     );
     for name in [
         "run_command",
@@ -98,12 +98,6 @@ fn sys_private_declarations_codegen_through_sifr_stdlib() {
             .get("sifr.shutil")
             .is_some_and(|deps| deps.contains("_sifr.sys"))
     );
-}
-
-fn sha256_hex(source: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(source.as_bytes());
-    format!("{:x}", hasher.finalize())
 }
 
 #[test]
