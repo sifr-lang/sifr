@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-24. Items 0-10 are complete. Item 11 Rust TLS stack
-is next.
+Status: active on 2026-08-25. Items 0-11 are complete. Item 12 ICU family is
+next.
 
 ## Objective
 
@@ -179,7 +179,7 @@ Only the first incomplete row may be active.
 | 8 | complete | Rust utility/foundation train | Each listed utility dependency is advanced sequentially; all direct declarations converge and generated/vendor evidence agrees. |
 | 9 | complete | Rust async foundation | Bytes, Futures, and Tokio converge with runtime/concurrency validation. |
 | 10 | complete | Rust HTTP stack | HTTP, body, H2, and Hyper converge with network/HTTP validation. |
-| 11 | pending | Rust TLS stack | Rustls and rcgen converge with certificate, TLS, and provider validation. |
+| 11 | complete | Rust TLS stack | Rustls and rcgen converge with certificate, TLS, and provider validation. |
 | 12 | pending | ICU family | All five ICU4X crates converge together and text/i18n behavior passes. |
 | 13 | pending | SHA-2 consolidation | One SHA-2 0.11 dependency remains and all digest evidence passes. |
 | 14 | pending | Base64 0.23 | Base64 is current without an unapproved unsafe default feature and parity/error tests pass. |
@@ -971,6 +971,84 @@ corrective item was added.
 Next action: implement Item 11 Rust TLS stack from the Item 10 record merge on
 `origin/main`.
 
+### Item 11 record
+
+Implementation [PR #3511](https://github.com/sifr-lang/sifr/pull/3511) started
+from base `ebace873a977ff8e82bde5d55d06e3865e64b288`. The exact candidate was
+`f432ab8d88d44b21bd193bca66d5deaa38ac1102`. It merged as
+`8d433b6135c344d3bd0d77e6e825a1ea6ae00cbd`.
+
+The official registry audit confirmed Rustls 0.23.43 and rcgen 0.14.9 as the
+latest stable releases. Rustls 0.24 development releases were prereleases and
+were not eligible. The root manifest and lock now select these versions.
+
+The package-owned vendor copies are byte-identical to the official crate
+archives. All 119 Rustls files and 22 rcgen files match their checksum
+manifests. Their package checksums also match the root lock. No extraction
+marker remains.
+
+Four independent Rust-interop locks contained Rustls and now select 0.23.43.
+Cargo also unified existing Windows target edges in three locks. One lock also
+unified the existing tempfile `getrandom` edge. These changes added no package
+node, and native scenarios for all four locks passed.
+
+The canonical TLS runtime adopts the stable RFC 9149 ticket-request API. All
+three client constructors request two new-session tickets and two resumption
+tickets. Both server constructors emit two tickets and limit request-driven
+responses to two. Sifr does not expose tickets or key material.
+
+The rcgen 0.14.9 test proves canonical RFC 5280 BasicConstraints DER for
+`ExplicitNoCa`. It rejects the old explicit-false encoding. No legacy
+provider, fallback trust store, compatibility API, or parallel dependency path
+was added.
+
+Changed surfaces:
+
+- The root Cargo manifest and lock.
+- The Rustls and rcgen package-owned vendor copies.
+- Four maintained Rust-interop locks.
+- The TLS runtime policy and its tests.
+- Exact dependency certification and the HTTP feature-tree snapshot.
+- The network dependency audit and TLS traceability record.
+
+Focused validation passed the sequential Rustls and rcgen tests and checks.
+The all-feature runtime passed 295 unit tests and three HTTP loopbacks. The
+all-feature stdlib passed 53 tests. The canonical Rust-interop area passed ten
+variants. Four generated native lock scenarios also passed.
+
+The public TLS loopback and configuration-error fixtures passed. Workspace
+Clippy denied all warnings. Formatting, HIR maintainability, stdlib audit
+fixtures, vendor checksums, diff hygiene, and the 3,243-file size guardrail
+also passed. `crates/sifr_runtime/src/tls.rs` remains below the limit at 860
+lines.
+
+The exact-SHA Opus review returned `SATISFIED` with no blocking finding. The
+full review is in the
+[#3511 review comment](https://github.com/sifr-lang/sifr/pull/3511#issuecomment-5400449823).
+Its seven notes were non-blocking coverage, documentation, and maintenance
+suggestions. No remediation review or later corrective item was required.
+
+The one create-PR gate ran after the required private-target cleanup. It passed
+every functional step that it reached. Its runtime-platform area passed 28
+variants but took 204.735 seconds against a 120-second cold budget. The gate
+was not rerun. The exact evidence is in the
+[#3511 create-PR comment](https://github.com/sifr-lang/sifr/pull/3511#issuecomment-5400708720).
+
+The one merge gate ran on the same reviewed SHA and passed every blocking
+lane. The warm runtime-platform area passed 30 variants in 24.656 seconds.
+The gate also passed 1,140 codegen tests and 1,043 lowering tests. One lowering
+test had its expected ignore.
+
+All 76 driver generated-build integrations passed. The native E2E suite passed
+698 of 698 fixtures with report signature `127353b213e16688`. The final report
+contained only advisory wall-time and fixture-group-skew notes. The exact
+evidence is in the
+[#3511 merge comment](https://github.com/sifr-lang/sifr/pull/3511#issuecomment-5401929969).
+Neither gate was rerun.
+
+Next action: implement Item 12 ICU family from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1009,12 +1087,12 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-10 are complete. Item 10 merged in PR #3509 as
-`1ece067abd79262dfb5610e508610e76fc3b3670`. Its exact candidate
-`dc6dda859ef8b2cb2de0ada6346a6559500f40ac` has one initial and one
-remediation Opus review, one cold-cache create-PR budget observation, one fully
-passing merge gate, and 698/698 passing merge E2E fixtures. Neither one-shot
-gate was rerun, and the remediation review found no new mechanism defect.
+Current state: Items 0-11 are complete. Item 11 merged in PR #3511 as
+`8d433b6135c344d3bd0d77e6e825a1ea6ae00cbd`. Its exact candidate
+`f432ab8d88d44b21bd193bca66d5deaa38ac1102` has one satisfied Opus review.
+The one create-PR gate recorded a cold runtime-platform budget observation.
+The one merge gate passed every blocking lane and 698 of 698 E2E fixtures.
+Neither one-shot gate was rerun.
 
-Next action: merge this record-only update, then start Item 11 Rust TLS stack
-from the resulting `origin/main`.
+Next action: merge this record-only update, then start Item 12 ICU family from
+the resulting `origin/main`.
