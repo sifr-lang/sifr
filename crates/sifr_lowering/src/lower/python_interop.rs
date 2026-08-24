@@ -374,7 +374,7 @@ fn parse_method(
         invalid_shape(
             ctx,
             "`@python(Self.method)` requires one target",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -382,7 +382,7 @@ fn parse_method(
     Some(PythonInteropDeclaration {
         kind,
         target: Some(target),
-        span: call.range,
+        span: call.range(),
         effect,
         cleanup: None,
         consumes_receiver: receiver_is_owned(parameters),
@@ -404,7 +404,7 @@ fn parse_attribute_method(
         invalid_shape(
             ctx,
             "`@python.attr(Self.name)` requires one target",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -418,14 +418,14 @@ fn parse_attribute_method(
         invalid_shape(
             ctx,
             "a Python attribute declaration takes no parameters",
-            call.range,
+            call.range(),
         );
         return None;
     }
     Some(PythonInteropDeclaration {
         kind: PythonInteropDecoratorKind::Attribute,
         target: Some(target),
-        span: call.range,
+        span: call.range(),
         effect: PythonInteropEffect::BlockingIo,
         cleanup: None,
         consumes_receiver,
@@ -487,7 +487,7 @@ pub(in crate::lower) fn collect_python_opaque_declaration(
             invalid_shape(
                 ctx,
                 "a class may have only one `@python.opaque` declaration",
-                call.range,
+                call.range(),
             );
             continue;
         }
@@ -585,11 +585,11 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
         }
     }
     let Some(target) = target else {
-        invalid_shape(ctx, "`@python.opaque` requires `type=`", call.range);
+        invalid_shape(ctx, "`@python.opaque` requires `type=`", call.range());
         return None;
     };
     let Some(cleanup) = cleanup else {
-        invalid_shape(ctx, "`@python.opaque` requires `cleanup=`", call.range);
+        invalid_shape(ctx, "`@python.opaque` requires `cleanup=`", call.range());
         return None;
     };
     if target.root() == Some("bridge") {
@@ -612,7 +612,7 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
         kind: PythonInteropDecoratorKind::Opaque,
         required_import_root: target.root().map(str::to_string),
         target: Some(target),
-        span: call.range,
+        span: call.range(),
         effect: PythonInteropEffect::BlockingIo,
         cleanup: Some(cleanup),
         consumes_receiver: false,
@@ -758,7 +758,7 @@ fn parse_function(
         invalid_shape(
             ctx,
             "`@python(...)` requires exactly one dotted target path and no keyword arguments",
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -770,7 +770,7 @@ fn parse_function(
     Some(PythonInteropDeclaration {
         kind,
         target: Some(target),
-        span: call.range,
+        span: call.range(),
         effect,
         cleanup: None,
         consumes_receiver: false,

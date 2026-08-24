@@ -292,8 +292,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "diagnostic-baseline-catalog-pr",
+      "bless_reason": "Ruff 0.16.4 parser recovery convergence.",
+      "bless_reference": "latest-stable-item-7-ruff-0.16.4",
       "fixture_id": "parser_invalid_layout",
       "normalizers": [
         "workspace-path",
@@ -307,8 +307,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "diagnostic-baseline-catalog-pr",
+      "bless_reason": "Ruff 0.16.4 parser recovery convergence.",
+      "bless_reference": "latest-stable-item-7-ruff-0.16.4",
       "fixture_id": "parser_invalid_layout",
       "normalizers": [
         "workspace-path",
@@ -323,8 +323,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "diagnostic-baseline-catalog-pr",
+      "bless_reason": "Ruff 0.16.4 parser recovery convergence.",
+      "bless_reference": "latest-stable-item-7-ruff-0.16.4",
       "fixture_id": "parser_invalid_layout",
       "normalizers": [
         "workspace-path",
@@ -430,8 +430,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "diagnostic-baseline-catalog-pr",
+      "bless_reason": "Ruff 0.16.4 parser recovery convergence.",
+      "bless_reference": "latest-stable-item-7-ruff-0.16.4",
       "fixture_id": "parser_multi_error_recovery",
       "normalizers": [
         "workspace-path",
@@ -445,8 +445,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "diagnostic-baseline-catalog-pr",
+      "bless_reason": "Ruff 0.16.4 parser recovery convergence.",
+      "bless_reference": "latest-stable-item-7-ruff-0.16.4",
       "fixture_id": "parser_multi_error_recovery",
       "normalizers": [
         "workspace-path",
@@ -461,8 +461,8 @@
       "suite": "baselines"
     },
     {
-      "bless_reason": "Rendered diagnostic baseline coverage and metadata lock.",
-      "bless_reference": "diagnostic-baseline-catalog-pr",
+      "bless_reason": "Ruff 0.16.4 parser recovery convergence.",
+      "bless_reference": "latest-stable-item-7-ruff-0.16.4",
       "fixture_id": "parser_multi_error_recovery",
       "normalizers": [
         "workspace-path",

@@ -315,12 +315,23 @@ fn collect_mutated_binding_names_in_expr(
             candidate_names,
             mutated,
         ),
-        Expr::DictComp(comp) => collect_comprehension_mutations(
-            &comp.generators,
-            &[comp.key.as_ref(), comp.value.as_ref()],
-            candidate_names,
-            mutated,
-        ),
+        Expr::DictComp(comp) => {
+            if let Some(key) = comp.key.as_deref() {
+                collect_comprehension_mutations(
+                    &comp.generators,
+                    &[key, comp.value.as_ref()],
+                    candidate_names,
+                    mutated,
+                );
+            } else {
+                collect_comprehension_mutations(
+                    &comp.generators,
+                    &[comp.value.as_ref()],
+                    candidate_names,
+                    mutated,
+                );
+            }
+        }
         Expr::Generator(generator) => collect_comprehension_mutations(
             &generator.generators,
             &[generator.elt.as_ref()],

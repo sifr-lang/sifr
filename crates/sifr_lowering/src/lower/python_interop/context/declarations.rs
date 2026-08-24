@@ -4,6 +4,7 @@ use super::{
     invalid_context, is_direct_type, parameter_metadata, parse_method_target_path,
     receiver_is_owned,
 };
+use ruff_text_size::Ranged;
 
 pub(in crate::lower) fn python_context_item_kind(
     manager_type: &Type,
@@ -101,7 +102,7 @@ pub(in crate::lower) fn parse_context_method(
         invalid_context(
             ctx,
             &format!("`@{label}(Self.{member})` requires exactly one target"),
-            call.range,
+            call.range(),
         );
         return None;
     }
@@ -124,14 +125,14 @@ pub(in crate::lower) fn parse_context_method(
         invalid_context(
             ctx,
             &format!("`@{label}` requires receiver `{expected}`"),
-            call.range,
+            call.range(),
         );
         return None;
     }
     Some(PythonInteropDeclaration {
         kind,
         target: Some(target),
-        span: call.range,
+        span: call.range(),
         effect,
         cleanup: None,
         consumes_receiver,

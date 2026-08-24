@@ -2,51 +2,6 @@
   {
     "code": "SIFR-PARSE-0002",
     "severity": "Error",
-    "message": "syntax error: expected a statement",
-    "message_template": "syntax error: expected {expected}",
-    "args": {
-      "expected": {
-        "kind": "string",
-        "value": "a statement"
-      },
-      "parser_category": {
-        "kind": "string",
-        "value": "parser_recovery"
-      }
-    },
-    "url": "https://docs.sifr.sh/errors/SIFR-PARSE-0002",
-    "spans": [
-      {
-        "file": "main",
-        "byte_start": 42,
-        "byte_end": 42,
-        "line": 4,
-        "column": 1,
-        "end_line": 4,
-        "end_column": 1,
-        "is_primary": true,
-        "label": null,
-        "lines": [
-          {
-            "text": "",
-            "highlight_start": 1,
-            "highlight_end": 1
-          }
-        ]
-      }
-    ],
-    "children": [
-      {
-        "severity": "Note",
-        "message": "while parsing main"
-      }
-    ],
-    "help": null,
-    "suggestions": []
-  },
-  {
-    "code": "SIFR-PARSE-0002",
-    "severity": "Error",
     "message": "syntax error: expected an indented block after function definition",
     "message_template": "syntax error: expected {expected}",
     "args": {

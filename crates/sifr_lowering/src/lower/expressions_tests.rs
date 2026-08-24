@@ -12,6 +12,7 @@ pub(crate) use support::{
 
 mod algorithmic_corpus_regressions;
 mod basics_and_literals;
+mod call_argument_diagnostics;
 mod callable_and_builtin_diagnostics;
 mod collections_and_generics;
 mod contextual_empty_list_equality;

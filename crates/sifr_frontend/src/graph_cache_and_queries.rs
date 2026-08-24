@@ -17,7 +17,7 @@ use sifr_lowering::{
     ExternalDefs, HirModule, LoweringOptions, LoweringResult, LoweringWarningDiagnostic,
     RevealTypeDiagnostic, lower_module_with_externals_name_and_options,
 };
-use sifr_python_ast::Stmt;
+use sifr_python_ast::{Stmt, Suite};
 use sifr_syntax::ParsedModule;
 use std::collections::{BTreeMap, BTreeSet};
 use std::hash::Hash;
@@ -251,10 +251,7 @@ pub struct FrontendContext {
     lowering_modules: BTreeSet<ModuleId>,
 }
 
-pub fn parse_source(
-    source: &str,
-    context: Option<&str>,
-) -> Result<Vec<Stmt>, Vec<RenderedDiagnostic>> {
+pub fn parse_source(source: &str, context: Option<&str>) -> Result<Suite, Vec<RenderedDiagnostic>> {
     sifr_syntax::parse_module_suite(source, context)
 }
 

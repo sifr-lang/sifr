@@ -24,7 +24,7 @@ EXPECTED_SUBMODULES = [
     ExpectedSubmodule(
         "third_party/ruff",
         "https://github.com/sifr-lang/ruff.git",
-        "sifr/0.15.12-maintenance",
+        "sifr/0.16.4-maintenance",
     ),
     ExpectedSubmodule(
         "editor_integrations",

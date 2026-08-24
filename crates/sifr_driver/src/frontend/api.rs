@@ -7,14 +7,14 @@ use sifr_frontend::{
     FrontendSourceContext, SourceOrigin, reveal_type_diagnostics, warning_diagnostics,
 };
 use sifr_lowering::LoweringResult;
-use sifr_python_ast::Stmt;
+use sifr_python_ast::Suite;
 
 pub(crate) struct FrontendCompiled {
     pub(crate) stdlib: StdlibCompiled,
     pub(crate) lowering_result: LoweringResult,
 }
 
-pub fn parse_source(source: &str) -> Result<Vec<Stmt>, Vec<RenderedDiagnostic>> {
+pub fn parse_source(source: &str) -> Result<Suite, Vec<RenderedDiagnostic>> {
     sifr_frontend::parse_source(source, None)
 }
 

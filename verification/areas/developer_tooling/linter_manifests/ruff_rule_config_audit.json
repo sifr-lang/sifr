@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "ruff_fork_pin": "8b95ca3d888910aa39632cd9873c05de5121ab67",
+  "ruff_fork_pin": "f19957111640fdee8055bfe5b6aa854259344473",
   "rule_family_source": "third_party/ruff/crates/ruff_linter/src/rules",
   "rule_families": [
     {"name": "airflow", "directory": "airflow", "disposition": "reject", "rationale": "Airflow framework rules do not apply to Sifr.", "sifr_requirement_note": "No Sifr lint feature may expose Airflow policy."},

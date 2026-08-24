@@ -11,7 +11,7 @@ use sifr_diagnostics::{
     RenderedDiagnostic, Severity, SourceMap, SourceSpan,
 };
 use sifr_python_ast::token::TokenKind;
-use sifr_python_ast::{ModModule, PythonVersion, Stmt};
+use sifr_python_ast::{ModModule, PythonVersion, Stmt, Suite};
 use sifr_python_parser::{
     InterpolatedStringErrorType, LexicalErrorType, Mode, ParseError, ParseErrorType, ParseOptions,
     Parsed, UnsupportedSyntaxError, parse_unchecked,
@@ -21,7 +21,7 @@ use std::collections::BTreeMap;
 
 #[derive(Clone, Debug)]
 pub struct ParsedModule {
-    suite: Vec<Stmt>,
+    suite: Suite,
     tokens: Vec<SyntaxToken>,
 }
 
@@ -29,7 +29,7 @@ impl ParsedModule {
     #[must_use]
     pub fn empty() -> Self {
         Self {
-            suite: Vec::new(),
+            suite: Suite::new(),
             tokens: Vec::new(),
         }
     }
@@ -40,7 +40,7 @@ impl ParsedModule {
     }
 
     #[must_use]
-    pub fn into_suite(self) -> Vec<Stmt> {
+    pub fn into_suite(self) -> Suite {
         self.suite
     }
 
@@ -94,7 +94,7 @@ pub fn parse_module(
 pub fn parse_module_suite(
     source: &str,
     context: Option<&str>,
-) -> Result<Vec<Stmt>, Vec<RenderedDiagnostic>> {
+) -> Result<Suite, Vec<RenderedDiagnostic>> {
     parse_module_raw(source, context).map(Parsed::into_suite)
 }
 
@@ -227,6 +227,7 @@ fn parse_diagnostic(
 
 fn parse_error_details(error: &ParseErrorType) -> ParseDiagnosticDetails {
     match error {
+        ParseErrorType::StringAnnotationError(reason) => string_annotation_details(*reason),
         ParseErrorType::Lexical(reason) => lexical_or_string_details(reason),
         ParseErrorType::FStringError(reason) => interpolated_string_details("f_string", reason),
         ParseErrorType::TStringError(reason) => interpolated_string_details("t_string", reason),
@@ -258,10 +259,6 @@ fn parse_error_details(error: &ParseErrorType) -> ParseDiagnosticDetails {
         ParseErrorType::InvalidStarredExpressionUsage => {
             invalid_target_details("starred expression", "invalid_starred_expression")
         }
-        ParseErrorType::DuplicateKeywordArgumentError(name) => invalid_call_details(
-            format!("duplicate keyword argument {name:?}"),
-            "duplicate_keyword_argument",
-        ),
         ParseErrorType::PositionalAfterKeywordArgument => invalid_call_details(
             "positional argument after keyword argument",
             "positional_after_keyword_argument",
@@ -296,6 +293,9 @@ fn parse_error_details(error: &ParseErrorType) -> ParseDiagnosticDetails {
         }
         ParseErrorType::InvalidStarPatternUsage => {
             invalid_pattern_details("star pattern outside a sequence pattern")
+        }
+        ParseErrorType::InvalidMatchPatternTarget => {
+            invalid_pattern_details("`_` cannot be used as a capture target")
         }
         ParseErrorType::ExpectedRealNumber => {
             invalid_pattern_details("expected real number in complex literal pattern")
@@ -393,6 +393,16 @@ fn lexical_or_string_details(reason: &LexicalErrorType) -> ParseDiagnosticDetail
     }
 }
 
+fn string_annotation_details(reason: impl Into<String>) -> ParseDiagnosticDetails {
+    ParseDiagnosticDetails {
+        code: DiagnosticCode::PARSE_LEXICAL_OR_STRING,
+        template: "{reason}",
+        arg_name: "reason",
+        arg_value: reason.into(),
+        parser_category: "invalid_string_annotation",
+    }
+}
+
 fn interpolated_string_details(
     string_kind: &'static str,
     reason: &InterpolatedStringErrorType,
@@ -481,11 +491,11 @@ mod syntax_matrix_tests;
 #[cfg(test)]
 mod tests {
     use super::{
-        SourceText, TextPosition, expected_details, parse_diagnostic, parse_module,
-        parse_module_raw,
+        SourceText, TextPosition, expected_details, parse_diagnostic, parse_error_details,
+        parse_module, parse_module_raw,
     };
     use ruff_text_size::{TextRange, TextSize};
-
+    use sifr_python_parser::ParseErrorType;
     #[test]
     fn parse_module_exposes_suite_and_tokens() {
         let parsed = parse_module("def main():\n    return 1\n", Some("main"))
@@ -535,6 +545,37 @@ mod tests {
         assert_eq!(span.column, Some(1));
         assert_eq!(span.lines[0].text, "print('bad indent')");
         assert_eq!(span.lines[0].highlight_start, 1);
+    }
+
+    #[test]
+    fn invalid_match_pattern_target_names_the_rejected_capture() {
+        let source = "match 1:\n    case 1 as _:\n        pass\n";
+        let diagnostics =
+            parse_module_raw(source, Some("match.sifr")).expect_err("source must fail");
+
+        assert!(diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "SIFR-PARSE-0008"
+                && diagnostic.message
+                    == "invalid match pattern: `_` cannot be used as a capture target"
+        }));
+    }
+
+    #[test]
+    fn string_annotation_error_preserves_the_parser_reason() {
+        let details = parse_error_details(&ParseErrorType::StringAnnotationError(
+            "nested string annotations are not supported",
+        ));
+
+        assert_eq!(
+            details.code,
+            sifr_diagnostics::DiagnosticCode::PARSE_LEXICAL_OR_STRING
+        );
+        assert_eq!(details.template, "{reason}");
+        assert_eq!(
+            details.arg_value,
+            "nested string annotations are not supported"
+        );
+        assert_eq!(details.parser_category, "invalid_string_annotation");
     }
 
     #[test]

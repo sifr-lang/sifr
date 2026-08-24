@@ -180,7 +180,7 @@ not top-level demos or process history.
 ### Restore maintenance submodules
 
 Sifr keeps a fork of Ruff at `third_party/ruff` for parser and AST maintenance.
-The submodule tracks the `sifr/0.15.12-maintenance` branch. To restore only the
+The submodule tracks the `sifr/0.16.4-maintenance` branch. To restore only the
 Ruff fork without touching verification corpora or editor integrations:
 
 ```bash

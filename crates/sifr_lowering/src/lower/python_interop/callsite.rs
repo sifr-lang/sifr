@@ -1,5 +1,5 @@
 use super::{LowerCtx, callbacks, decorator_path, parameter_metadata};
-use ruff_text_size::TextRange;
+use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{HirExpr, PythonCallbackConcurrency, PythonCallbackDispatch, PythonCallbackLifetime};
 use sifr_python_ast::{Decorator, Expr, ExprCall, Parameters};
@@ -160,14 +160,14 @@ pub(in crate::lower) fn callback_method_arg_ranges(
             args,
             &ranges.iter().copied().map(Some).collect::<Vec<_>>(),
             receiver_name,
-            call.range,
+            call.range(),
             ctx,
         );
         crate::lower::rust_callback_callsite::validate_threadsafe_callback_captures(
             &callable,
             args,
             &ranges.iter().copied().map(Some).collect::<Vec<_>>(),
-            call.range,
+            call.range(),
             ctx,
         );
     }

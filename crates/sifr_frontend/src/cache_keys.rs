@@ -6,7 +6,7 @@ use super::{
 const CACHE_KEY_SCHEMA_VERSION: &str = "frontend-cache-key-v1";
 const SOURCE_HASH_SCHEMA_VERSION: &str = "source-text-fnv1a64-v1";
 const SOURCE_MAP_ALGORITHM_VERSION: &str = "source-map-line-index-v1";
-const PARSER_OPTIONS_VERSION: &str = "ruff-0.15.12-sifr-parser-v1";
+const PARSER_OPTIONS_VERSION: &str = "ruff-0.16.4-sifr-parser-v1";
 const LOWERING_OPTIONS_VERSION: &str = "sifr-hir-lowering-v1";
 const DIAGNOSTIC_POLICY_VERSION: &str = "sifr-diagnostics-v1";
 const LINT_POLICY_VERSION: &str = "sifr-lint-v1";

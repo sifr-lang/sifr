@@ -1,6 +1,7 @@
 use super::support::parse_suite;
 use crate::{collect_project_hir_modules, compile_stdlib};
 use sifr_ir::{MethodKind, StaticMethodSlotContext, StaticProgramValue};
+use sifr_python_ast::Suite;
 use sifr_type_system::ReceiverConvention;
 use std::collections::HashMap;
 
@@ -50,7 +51,7 @@ def specialize(shape: ShapeInput[HandlerDescriptor]) -> ConstSpecializationOutco
     return ConstSpecializationOutcome("produced", HandlerProgram(slots), [])
 "#;
 
-fn project(main: &str) -> HashMap<String, Vec<sifr_python_ast::Stmt>> {
+fn project(main: &str) -> HashMap<String, Suite> {
     HashMap::from([
         ("fixture.handler_types".to_string(), parse_suite(TYPES)),
         ("fixture.handlers".to_string(), parse_suite(CONTRACT)),

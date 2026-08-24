@@ -1,7 +1,23 @@
 use super::{LowerCtx, type_bounds::supports_hash_key_in_context};
-use ruff_text_size::TextRange;
+use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
+use sifr_python_ast::{Expr, ExprDictComp};
 use sifr_type_system::Type;
+
+pub(in crate::lower) fn require_dict_comprehension_key<'a>(
+    comp: &'a ExprDictComp,
+    ctx: &mut LowerCtx,
+) -> Option<&'a Expr> {
+    let Some(key) = comp.key.as_deref() else {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
+            "dictionary unpacking comprehensions are not supported in Sifr".to_string(),
+            comp.range(),
+        );
+        return None;
+    };
+    Some(key)
+}
 
 pub(in crate::lower) fn container_literal_type_conflict(
     ctx: &mut LowerCtx,

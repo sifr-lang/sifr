@@ -1,3 +1,2 @@
-2 errors, 0 warnings, 0 notes
-E SIFR-PARSE-0002 main:2:1 syntax error: expected a statement
+1 error, 0 warnings, 0 notes
 E SIFR-PARSE-0004 main:1:1 invalid layout: unexpected indentation

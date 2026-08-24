@@ -1,5 +1,5 @@
 use super::expressions::lower_expr;
-use super::{LowerCtx, ownership_diagnostics};
+use super::{LowerCtx, container_literal_diagnostics, ownership_diagnostics};
 use crate::hir_nodes::HirExpr;
 use crate::scope::MovedSnapshot;
 use ruff_text_size::Ranged;
@@ -196,7 +196,8 @@ pub(in crate::lower) fn lower_dict_comp(
         crate::scope::EphemeralOrigin::Comprehension,
     );
     let result = (|| {
-        let key_expr = lower_expr(&comp.key, ctx)?;
+        let key = container_literal_diagnostics::require_dict_comprehension_key(comp, ctx)?;
+        let key_expr = lower_expr(key, ctx)?;
         let val_expr = lower_expr(&comp.value, ctx)?;
         let key_ty = key_expr.ty().clone();
         let val_ty = val_expr.ty().clone();
@@ -204,7 +205,7 @@ pub(in crate::lower) fn lower_dict_comp(
             ctx,
             "dict comprehension key",
             &key_ty,
-            comp.key.range(),
+            key.range(),
         ) || super::statement_diagnostics::reject_affine_comprehension_value(
             ctx,
             &val_ty,

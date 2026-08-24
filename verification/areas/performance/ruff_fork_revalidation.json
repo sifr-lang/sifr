@@ -1,6 +1,6 @@
 {
-  "ruff_fork_revision": "e024f2a4870568734a3b215226570aab87e396a2",
+  "ruff_fork_revision": "f19957111640fdee8055bfe5b6aa854259344473",
   "validated_by": "verification/areas/performance/check_ruff_fork_update_rules.py",
   "fixture_directory": "verification/areas/performance/sifr_syntax_token_fixtures",
-  "rationale": "Formatter AST coverage revalidation for the checked-in Sifr Ruff fork. Commit e024f2a4870568734a3b215226570aab87e396a2 is a rustfmt-only adjustment to the rust.async decorator parser guard; the focused parser test passes and representative Sifr token fixture expectations remain unchanged."
+  "rationale": "Parser and formatter revalidation for the Sifr extensions replayed on Ruff 0.16.4. The complete Ruff parser and formatter suites pass on Rust 1.98, and representative Sifr token fixture expectations remain unchanged."
 }
