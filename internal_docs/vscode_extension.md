@@ -110,6 +110,7 @@ Before VS Code extension layer closes, the extension must document whether its v
 `verification/areas/developer_tooling/check_vscode_extension_rules.py` validates the main-repo rules and, once extension validation is active, checks the extension repository manifest, commands, settings, launch command, package scripts, and forbidden semantic behavior.
 
 `verification/areas/developer_tooling/check_vscode_extension.py` runs VS Code extension layer build/test/package
-validation against the real extension checkout: `npm ci` when dependencies are
-missing, `npm run lint`, `npm run typecheck`, `npm test`,
+validation against the real extension checkout:
+`npm ci --ignore-scripts --include=dev` when dependencies are missing,
+`npm run lint`, `npm run typecheck`, `npm test`,
 `npm run test:extension`, and `npm run package`.

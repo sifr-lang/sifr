@@ -82,6 +82,8 @@ required = (
     "contents: read",
     "actions: read",
     "submodules: recursive",
+    "node-version-file: editor_integrations/vscode/.node-version",
+    "npm ci --ignore-scripts --include=dev --prefix editor_integrations/vscode",
     "scripts/distribution/build_release_artifacts.sh",
     "--cargo-build",
     "scripts/distribution/qualify_stable_target.py",

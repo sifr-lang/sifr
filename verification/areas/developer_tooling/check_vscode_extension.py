@@ -144,7 +144,10 @@ def validate(require_commands: bool = True) -> list[str]:
         return failures
 
     if not (repo_path / "node_modules").exists():
-        failure = run_command(repo_path, ["npm", "ci"])
+        failure = run_command(
+            repo_path,
+            ["npm", "ci", "--ignore-scripts", "--include=dev"],
+        )
         if failure:
             failures.append(failure)
             return failures

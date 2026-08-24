@@ -663,9 +663,11 @@ bytes. The recorded VSIX is verified locally, then the raw
 `Microsoft.VisualStudio.Services.VSIXPackage` Gallery asset is reused only when
 its digest and package publisher/name/version match; otherwise the absent
 version is published once with `vsce publish --packagePath` and re-downloaded.
-The protected job installs Node 22 and runs `npm ci --ignore-scripts` against
-the exact candidate submodule lockfile before secrets enter the publication
-step, then invokes that pinned local `vsce` executable. The orchestrator
+The protected job installs exact Node 24.19.0 with bundled npm 11.17.0 from the
+candidate extension's `.node-version`. It runs
+`npm ci --ignore-scripts --include=dev` against the exact candidate submodule
+lockfile before secrets enter the publication step, then invokes that pinned
+local `vsce` executable. The orchestrator
 unexports the site and Marketplace secrets after capturing them in shell-local
 variables, exposes each only to its intended command, and clears all
 publication tokens before executing the public dispatcher and installed binary.

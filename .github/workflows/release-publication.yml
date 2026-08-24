@@ -196,7 +196,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         if: env.STABLE_CANDIDATE_OPERATION == 'true'
         with:
-          node-version: 22
+          node-version-file: stable-source/editor_integrations/vscode/.node-version
           cache: npm
           cache-dependency-path: stable-source/editor_integrations/vscode/package-lock.json
       - name: Provision pinned Marketplace publisher
@@ -204,7 +204,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ""
-        run: npm ci --ignore-scripts --prefix stable-source/editor_integrations/vscode
+        run: npm ci --ignore-scripts --include=dev --prefix stable-source/editor_integrations/vscode
       - name: Revalidate prepare summary and protected approver
         if: env.STABLE_MUTATION_OPERATION != 'true'
         id: approval

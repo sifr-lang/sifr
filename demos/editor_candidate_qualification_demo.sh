@@ -66,7 +66,8 @@ candidate_binary="${work_root}/installed-candidate/bin/sifr"
 target_report="${work_root}/target-qualification/qualification-${host_target}.json"
 test "$("${candidate_binary}" --version)" = "sifr 0.1.0"
 
-npm ci --prefix "${repo_root}/editor_integrations/vscode"
+npm ci --ignore-scripts --include=dev \
+  --prefix "${repo_root}/editor_integrations/vscode"
 for script in lint typecheck test test:extension package; do
   npm run --prefix "${repo_root}/editor_integrations/vscode" "${script}"
 done
