@@ -1,5 +1,4 @@
-4 errors, 0 warnings, 0 notes
-E SIFR-PARSE-0002 main:4:1 syntax error: expected a statement
+3 errors, 0 warnings, 0 notes
 E SIFR-PARSE-0002 main:2:1 syntax error: expected an indented block after function definition
 E SIFR-PARSE-0004 main:3:1 invalid layout: unexpected indentation
 E SIFR-PARSE-0005 main:3:5 invalid target: assignment target

@@ -69,9 +69,13 @@ def require(condition: bool, message: str, failures: list[str]) -> None:
         failures.append(message)
 
 
-def rust_struct_block(source: str, declaration: str) -> str:
-    start = source.index(declaration)
-    opening_brace = source.index("{", start)
+def rust_struct_block(source: str, declaration: str) -> str | None:
+    start = source.find(declaration)
+    if start < 0:
+        return None
+    opening_brace = source.find("{", start)
+    if opening_brace < 0:
+        return None
     depth = 0
     for index in range(opening_brace, len(source)):
         character = source[index]
@@ -81,7 +85,7 @@ def rust_struct_block(source: str, declaration: str) -> str:
             depth -= 1
             if depth == 0:
                 return source[start : index + 1]
-    raise ValueError(f"unterminated Rust declaration: {declaration}")
+    return None
 
 
 def check_capability_manifest(failures: list[str], rules_text: str) -> None:
@@ -128,6 +132,13 @@ def check_cli_manifest(failures: list[str], rules_text: str) -> None:
         encoding="utf-8"
     )
     format_command = rust_struct_block(args_rs, "pub struct FormatCommand")
+    require(
+        format_command is not None,
+        "Ruff FormatCommand declaration is missing or malformed",
+        failures,
+    )
+    if format_command is None:
+        return
     format_command_lines = {line.strip() for line in format_command.splitlines()}
     for index, row in enumerate(rows):
         ruff_surface = row.get("ruff_surface")

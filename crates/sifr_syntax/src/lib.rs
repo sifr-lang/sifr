@@ -227,9 +227,7 @@ fn parse_diagnostic(
 
 fn parse_error_details(error: &ParseErrorType) -> ParseDiagnosticDetails {
     match error {
-        ParseErrorType::StringAnnotationError(reason) => {
-            expected_details(*reason, "invalid_string_annotation")
-        }
+        ParseErrorType::StringAnnotationError(reason) => string_annotation_details(*reason),
         ParseErrorType::Lexical(reason) => lexical_or_string_details(reason),
         ParseErrorType::FStringError(reason) => interpolated_string_details("f_string", reason),
         ParseErrorType::TStringError(reason) => interpolated_string_details("t_string", reason),
@@ -297,7 +295,7 @@ fn parse_error_details(error: &ParseErrorType) -> ParseDiagnosticDetails {
             invalid_pattern_details("star pattern outside a sequence pattern")
         }
         ParseErrorType::InvalidMatchPatternTarget => {
-            invalid_pattern_details("invalid match pattern target")
+            invalid_pattern_details("`_` cannot be used as a capture target")
         }
         ParseErrorType::ExpectedRealNumber => {
             invalid_pattern_details("expected real number in complex literal pattern")
@@ -395,6 +393,16 @@ fn lexical_or_string_details(reason: &LexicalErrorType) -> ParseDiagnosticDetail
     }
 }
 
+fn string_annotation_details(reason: impl Into<String>) -> ParseDiagnosticDetails {
+    ParseDiagnosticDetails {
+        code: DiagnosticCode::PARSE_LEXICAL_OR_STRING,
+        template: "{reason}",
+        arg_name: "reason",
+        arg_value: reason.into(),
+        parser_category: "invalid_string_annotation",
+    }
+}
+
 fn interpolated_string_details(
     string_kind: &'static str,
     reason: &InterpolatedStringErrorType,
@@ -483,11 +491,11 @@ mod syntax_matrix_tests;
 #[cfg(test)]
 mod tests {
     use super::{
-        SourceText, TextPosition, expected_details, parse_diagnostic, parse_module,
-        parse_module_raw,
+        SourceText, TextPosition, expected_details, parse_diagnostic, parse_error_details,
+        parse_module, parse_module_raw,
     };
     use ruff_text_size::{TextRange, TextSize};
-
+    use sifr_python_parser::ParseErrorType;
     #[test]
     fn parse_module_exposes_suite_and_tokens() {
         let parsed = parse_module("def main():\n    return 1\n", Some("main"))
@@ -537,6 +545,37 @@ mod tests {
         assert_eq!(span.column, Some(1));
         assert_eq!(span.lines[0].text, "print('bad indent')");
         assert_eq!(span.lines[0].highlight_start, 1);
+    }
+
+    #[test]
+    fn invalid_match_pattern_target_names_the_rejected_capture() {
+        let source = "match 1:\n    case 1 as _:\n        pass\n";
+        let diagnostics =
+            parse_module_raw(source, Some("match.sifr")).expect_err("source must fail");
+
+        assert!(diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "SIFR-PARSE-0008"
+                && diagnostic.message
+                    == "invalid match pattern: `_` cannot be used as a capture target"
+        }));
+    }
+
+    #[test]
+    fn string_annotation_error_preserves_the_parser_reason() {
+        let details = parse_error_details(&ParseErrorType::StringAnnotationError(
+            "nested string annotations are not supported",
+        ));
+
+        assert_eq!(
+            details.code,
+            sifr_diagnostics::DiagnosticCode::PARSE_LEXICAL_OR_STRING
+        );
+        assert_eq!(details.template, "{reason}");
+        assert_eq!(
+            details.arg_value,
+            "nested string annotations are not supported"
+        );
+        assert_eq!(details.parser_category, "invalid_string_annotation");
     }
 
     #[test]
