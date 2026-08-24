@@ -801,6 +801,7 @@ class FileHandle:\n\
                             .to_string(),
                 },
                 paths: SysrootPaths::from_root(&self.path),
+                cargo_lock_content_sha256: "2".repeat(64),
             }
         }
     }

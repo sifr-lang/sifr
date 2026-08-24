@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BSD-2-Clause OR Apache-2.0 OR MIT
+//
 // Copyright 2019 The Fuchsia Authors
 //
 // Licensed under a BSD-style license <LICENSE-BSD>, Apache License, Version 2.0
@@ -11,9 +13,9 @@ use std::num::NonZeroU32;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
-    parse_quote, spanned::Spanned as _, Data, DataEnum, DataStruct, DataUnion, DeriveInput, Error,
-    Expr, ExprLit, Field, GenericParam, Ident, Index, Lit, LitStr, Meta, Path, Type, Variant,
-    Visibility, WherePredicate,
+    parse::ParseBuffer, parse_quote, spanned::Spanned as _, token::PathSep, Data, DataEnum,
+    DataStruct, DataUnion, DeriveInput, Error, Expr, ExprLit, Field, GenericParam, Ident, Index,
+    Lit, LitStr, Meta, Path, Type, Variant, Visibility, WherePredicate,
 };
 
 use crate::repr::{CompoundRepr, EnumRepr, PrimitiveRepr, Repr, Spanned};
@@ -30,6 +32,56 @@ pub(crate) struct Ctx {
     pub(crate) on_error_span: Option<proc_macro2::Span>,
 }
 
+#[derive(Eq, PartialEq)]
+enum CratePath {
+    External,
+    CrateRelative,
+    ModuleRelative,
+}
+
+fn validate_crate_path(path: &Path) -> Result<CratePath, ()> {
+    if path.segments.is_empty() {
+        return Err(());
+    }
+
+    enum ModuleRelative {
+        Yes,
+        No,
+    }
+    let first = path.segments[0].ident.to_string();
+    let (mut prev_segment, path_type) = match first.as_str() {
+        "Self" => return Err(()),
+        "crate" => {
+            if path.leading_colon.is_some() {
+                return Err(());
+            }
+            (ModuleRelative::No, CratePath::CrateRelative)
+        }
+        "self" | "super" => {
+            if path.leading_colon.is_some() {
+                return Err(());
+            }
+            (ModuleRelative::Yes, CratePath::ModuleRelative)
+        }
+        _ => (ModuleRelative::No, CratePath::External),
+    };
+
+    for seg in path.segments.iter().skip(1) {
+        let ident = seg.ident.to_string();
+        match ident.as_str() {
+            "Self" | "crate" | "self" => return Err(()),
+            "super" => match prev_segment {
+                ModuleRelative::Yes => {}
+                ModuleRelative::No => return Err(()),
+            },
+            _ => {
+                prev_segment = ModuleRelative::No;
+            }
+        }
+    }
+    Ok(path_type)
+}
+
 impl Ctx {
     /// Attempt to extract a crate path from the provided attributes. Defaults to
     /// `::zerocopy` if not found.
@@ -43,16 +95,32 @@ impl Ctx {
                 if meta_list.path.is_ident("zerocopy") {
                     attr.parse_nested_meta(|meta| {
                         if meta.path.is_ident("crate") {
-                            let expr = meta.value().and_then(|value| value.parse());
+                            let expr = meta.value().and_then(ParseBuffer::parse);
                             if let Ok(Expr::Lit(ExprLit { lit: Lit::Str(lit), .. })) = expr {
-                                if let Ok(path_lit) = lit.parse::<Ident>() {
-                                    path = parse_quote!(::#path_lit);
-                                    return Ok(());
+                                if let Ok(mut path_lit) = lit.parse_with(Path::parse_mod_style) {
+                                    if let Ok(crate_path) = validate_crate_path(&path_lit) {
+                                        // If not expressly relative, absolutize.
+                                        if path_lit.leading_colon.is_none() && crate_path == CratePath::External {
+                                            path_lit.leading_colon = Some(PathSep::default());
+                                        }
+                                        path = path_lit;
+                                        return Ok(());
+                                    }
+
+                                    return Err(Error::new(
+                                        lit.span(),
+                                        "`crate` attribute requires a valid module path",
+                                    ));
                                 }
+
+                                return Err(Error::new(
+                                    lit.span(),
+                                    "`crate` attribute requires a path as the value",
+                                ));
                             }
 
                             return Err(Error::new(
-                                Span::call_site(),
+                                meta.path.span(),
                                 "`crate` attribute requires a path as the value",
                             ));
                         }
@@ -96,6 +164,11 @@ impl Ctx {
         }
     }
 
+    pub(crate) fn skip_on_error(mut self) -> Self {
+        self.skip_on_error = true;
+        self
+    }
+
     pub(crate) fn core_path(&self) -> TokenStream {
         let zerocopy_crate = &self.zerocopy_crate;
         quote!(#zerocopy_crate::util::macro_util::core_reexport)
@@ -104,20 +177,21 @@ impl Ctx {
     pub(crate) fn cfg_compile_error(&self) -> TokenStream {
         // By checking both during the compilation of the proc macro *and* in
         // the generated code, we ensure that `--cfg
-        // zerocopy_unstable_derive_on_error` need only be passed *either* when
+        // zerocopy_unstable_linux` need only be passed *either* when
         // compiling this crate *or* when compiling the user's crate. The former
         // is preferable, but in some situations (such as when cross-compiling
         // using `cargo build --target`), it doesn't get propagated to this
         // crate's build by default.
-        if cfg!(zerocopy_unstable_derive_on_error) {
+        if cfg!(zerocopy_unstable_linux) {
             quote!()
         } else if let Some(span) = self.on_error_span {
             let core = self.core_path();
-            let error_message = "`on_error` is experimental; pass '--cfg zerocopy_unstable_derive_on_error' to enable";
+            let error_message =
+                "`on_error` is experimental; pass '--cfg zerocopy_unstable_linux' to enable";
             quote::quote_spanned! {span=>
                 #[allow(unused_attributes, unexpected_cfgs)]
                 const _: () = {
-                    #[cfg(not(zerocopy_unstable_derive_on_error))]
+                    #[cfg(not(zerocopy_unstable_linux))]
                     #core::compile_error!(#error_message);
                 };
             }
@@ -610,6 +684,20 @@ impl<'a> ImplBlockBuilder<'a> {
             }
         };
 
+        let zerocopy_bounds =
+            field_type_bounds
+                .into_iter()
+                .chain(padding_check_bound)
+                .chain(self_bounds)
+                .map(|bound| {
+                    if self.ctx.skip_on_error {
+                        parse_quote!(for<'zc> #bound)
+                    } else {
+                        bound.clone()
+                    }
+                })
+                .collect::<Vec<_>>();
+
         let bounds = self
             .ctx
             .ast
@@ -619,9 +707,7 @@ impl<'a> ImplBlockBuilder<'a> {
             .map(|where_clause| where_clause.predicates.iter())
             .into_iter()
             .flatten()
-            .chain(field_type_bounds.iter())
-            .chain(padding_check_bound.iter())
-            .chain(self_bounds.iter());
+            .chain(zerocopy_bounds.iter());
 
         // The parameters with trait bounds, but without type defaults.
         let mut params: Vec<_> = self
@@ -839,5 +925,59 @@ pub(crate) mod testutil {
                 let _ = Self::Ambiguous;
             }
         });
+    }
+
+    #[test]
+    fn test_validate_crate_path() {
+        use syn::parse_str;
+
+        let valid = [
+            "zerocopy",
+            "crate",
+            "crate::foo::bar",
+            "self",
+            "self::foo",
+            "self::super::foo",
+            "super",
+            "super::foo",
+            "super::super::foo",
+            "super::super::super",
+            "foo::bar::baz",
+            "::foo::bar",
+        ];
+
+        for path_str in valid {
+            let path = parse_str::<syn::Path>(path_str).unwrap();
+            assert!(
+                super::validate_crate_path(&path).is_ok(),
+                "expected valid path for `{}`",
+                path_str
+            );
+        }
+
+        let invalid = [
+            "::crate::foo",
+            "::self::foo",
+            "::super::foo",
+            "Self",
+            "Self::foo",
+            "foo::Self::bar",
+            "foo::crate::bar",
+            "foo::super::bar",
+            "foo::self",
+            "super::foo::super",
+            "super::crate::foo",
+            "crate::super::foo",
+            "self::self::foo",
+        ];
+
+        for path_str in invalid {
+            let path = parse_str::<syn::Path>(path_str).unwrap();
+            assert!(
+                super::validate_crate_path(&path).is_err(),
+                "expected invalid path for `{}`",
+                path_str
+            );
+        }
     }
 }

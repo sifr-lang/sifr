@@ -339,5 +339,6 @@ fn fake_sysroot() -> ResolvedSysroot {
             cargo_lock_sha256: "1".repeat(64),
         },
         paths: SysrootPaths::from_root(&root),
+        cargo_lock_content_sha256: "2".repeat(64),
     }
 }

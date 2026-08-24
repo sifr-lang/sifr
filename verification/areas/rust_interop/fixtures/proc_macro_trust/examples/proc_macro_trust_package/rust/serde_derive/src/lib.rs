@@ -10,7 +10,7 @@ pub fn sifr_generated(input: TokenStream) -> TokenStream {
         let sentinel = wrapper_root.join("PROC_MACRO_EXECUTED");
         if std::fs::write(
             sentinel,
-            "serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed",
+            "serde_derive=1.0.229;upstream=compiled;sifr_wrapper_macro=executed",
         )
         .is_err()
         {
@@ -23,7 +23,7 @@ pub fn sifr_generated(input: TokenStream) -> TokenStream {
         return compile_error("SifrGenerated requires a struct or enum");
     };
     let output = format!(
-        "impl {type_name} {{ pub fn sifr_proc_macro_marker() -> &'static str {{ \"serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed\" }} }}"
+        "impl {type_name} {{ pub fn sifr_proc_macro_marker() -> &'static str {{ \"serde_derive=1.0.229;upstream=compiled;sifr_wrapper_macro=executed\" }} }}"
     );
     output
         .parse()

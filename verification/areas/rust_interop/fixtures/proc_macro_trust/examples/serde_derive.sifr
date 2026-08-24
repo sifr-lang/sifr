@@ -12,7 +12,7 @@ def decode_generated_record(input: bytes) -> str: ...
 def verify_serde_derive_package() -> Result[str, PackageExampleError | RustPanicError]:
     try:
         marker: str = decode_generated_record(b"sifr-rust-interop")
-        assert "serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed" in marker
+        assert "serde_derive=1.0.229;upstream=compiled;sifr_wrapper_macro=executed" in marker
         return marker
     except PackageExampleError as error:
         raise error

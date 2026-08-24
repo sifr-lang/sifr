@@ -16,7 +16,7 @@ sifr_type_system = { workspace = true }
 ruff_text_size = { workspace = true }
 syn = { version = "2.0.117", features = ["full", "visit", "visit-mut"] }
 prettyplease = "0.2.37"
-proc-macro2 = "1.0.106"
+proc-macro2 = "1.0.107"
 
 [dev-dependencies]
 sifr_lowering = { workspace = true }

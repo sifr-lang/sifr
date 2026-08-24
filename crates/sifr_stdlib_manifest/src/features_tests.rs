@@ -428,6 +428,12 @@ fn sysroot_dependency_plan_captures_identity_features_and_vendor_mode() {
         plan.cache_fingerprint
             .contains(&format!("content_sha256={}", plan.sysroot_content_sha256))
     );
+    let live_lock_sha256 = sifr_sysroot::sha256_file(&plan.sysroot_root.join("Cargo.lock"))
+        .expect("resolved source-tree Cargo.lock must remain readable");
+    assert!(
+        plan.cache_fingerprint
+            .contains(&format!("cargo_lock_content_sha256={live_lock_sha256}"))
+    );
     assert!(plan.cargo_dependency_lines().iter().any(|dep| {
         dep.starts_with("sifr_stdlib = ")
             && dep.contains("default-features = false")

@@ -9,18 +9,18 @@ publish = false
 # workspace lockfile and `cargo fetch --locked` cache without compiling it in
 # ordinary development lanes. Row PRs enable only their owning dependencies.
 [dependencies]
-anyhow = { version = "=1.0.102", default-features = true, optional = true }
+anyhow = { version = "=1.0.104", default-features = true, optional = true }
 arrow = { version = "=58.3.0", default-features = true, optional = true }
 axum = { version = "=0.8.9", default-features = true, optional = true }
 bindgen = { version = "=0.72.1", default-features = true, optional = true }
-blake3 = { version = "=1.8.5", default-features = true, optional = true }
+blake3 = { version = "=1.8.7", default-features = true, optional = true }
 bytemuck = { version = "=1.25.2", default-features = true, optional = true }
 bytes = { version = "=1.11.1", default-features = true, optional = true }
 candle = { package = "candle-core", version = "=0.11.0", default-features = false, optional = true }
-cc = { version = "=1.2.63", default-features = true, optional = true }
-clap = { version = "=4.6.1", default-features = true, optional = true }
-crc32fast = { version = "=1.5.0", default-features = true, optional = true }
-cxx = { version = "=1.0.198", default-features = true, optional = true }
+cc = { version = "=1.4.4", default-features = true, optional = true }
+clap = { version = "=4.6.6", default-features = true, optional = true }
+crc32fast = { version = "=1.5.1", default-features = true, optional = true }
+cxx = { version = "=1.0.199", default-features = true, optional = true }
 datafusion = { version = "=54.1.0", default-features = true, optional = true }
 flate2 = { version = "=1.1.9", default-features = false, features = ["rust_backend"], optional = true }
 futures = { version = "=0.3.33", default-features = true, optional = true }
@@ -34,15 +34,15 @@ polars = { version = "=0.54.4", default-features = true, optional = true }
 prost-build = { version = "=0.14.4", default-features = true, optional = true }
 rayon = { version = "=1.12.0", default-features = true, optional = true }
 redis = { version = "=1.4.1", default-features = false, features = ["tokio-comp"], optional = true }
-regex = { version = "=1.12.3", default-features = true, optional = true }
+regex = { version = "=1.13.1", default-features = true, optional = true }
 reqwest = { version = "=0.12.28", default-features = false, features = ["rustls-tls", "json"], optional = true }
 rusqlite = { version = "=0.39.0", default-features = true, features = ["bundled"], optional = true }
-serde = { version = "=1.0.228", default-features = true, optional = true }
-serde_derive = { version = "=1.0.228", default-features = true, optional = true }
-serde_json = { version = "=1.0.149", default-features = true, optional = true }
+serde = { version = "=1.0.229", default-features = true, optional = true }
+serde_derive = { version = "=1.0.229", default-features = true, optional = true }
+serde_json = { version = "=1.0.151", default-features = true, optional = true }
 sha2 = { version = "=0.10.9", default-features = true, optional = true }
 sqlx = { version = "=0.8.6", default-features = false, features = ["runtime-tokio-rustls", "postgres", "macros"], optional = true }
-thiserror = { version = "=2.0.18", default-features = true, optional = true }
+thiserror = { version = "=2.0.20", default-features = true, optional = true }
 tokio = { version = "=1.52.3", default-features = true, optional = true }
 tokio-postgres = { version = "=0.7.18", default-features = false, features = ["runtime"], optional = true }
 tokio-tungstenite = { version = "=0.30.0", default-features = false, optional = true }
@@ -50,8 +50,8 @@ tower = { version = "=0.5.3", default-features = true, optional = true }
 tower-http = { version = "=0.7.0", default-features = true, optional = true }
 tracing = { version = "=0.1.44", default-features = true, optional = true }
 tracing-subscriber = { version = "=0.3.23", default-features = true, features = ["env-filter"], optional = true }
-uuid = { version = "=1.23.1", default-features = true, optional = true }
-zerocopy = { version = "=0.8.48", default-features = true, features = ["derive"], optional = true }
+uuid = { version = "=1.25.0", default-features = true, optional = true }
+zerocopy = { version = "=0.8.56", default-features = true, features = ["derive"], optional = true }
 zstd = { version = "=0.13.3", default-features = true, optional = true }
 
 [package.metadata.sifr-rust-interop]

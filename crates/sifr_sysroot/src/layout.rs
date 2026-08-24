@@ -1,5 +1,6 @@
 use crate::error::{SysrootError, SysrootErrorKind};
 use crate::manifest::{SysrootManifest, read_sysroot_manifest};
+use crate::sha256_file;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -7,6 +8,7 @@ pub struct ResolvedSysroot {
     pub root: PathBuf,
     pub manifest: SysrootManifest,
     pub paths: SysrootPaths,
+    pub cargo_lock_content_sha256: String,
 }
 
 impl ResolvedSysroot {
@@ -14,10 +16,20 @@ impl ResolvedSysroot {
         let manifest = read_sysroot_manifest(&root, binary_path)?;
         let paths = SysrootPaths::from_root(&root);
         paths.validate(binary_path, &root)?;
+        let cargo_lock_content_sha256 = sha256_file(&paths.cargo_lock).map_err(|error| {
+            SysrootError::new(
+                SysrootErrorKind::MissingAsset,
+                binary_path.to_path_buf(),
+                root.clone(),
+                Some(paths.cargo_lock.clone()),
+                format!("failed to read Cargo.lock identity: {error}"),
+            )
+        })?;
         Ok(Self {
             root,
             manifest,
             paths,
+            cargo_lock_content_sha256,
         })
     }
 

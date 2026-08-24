@@ -2,6 +2,11 @@ use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::Path;
 
+pub fn sha256_file(path: &Path) -> std::io::Result<String> {
+    let bytes = fs::read(path)?;
+    Ok(format!("{:x}", Sha256::digest(bytes)))
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CanonicalDigestPolicy {
     pub include_extensions: Vec<String>,

@@ -86,7 +86,7 @@ fn execute_cli_probe(args: &[String]) -> anyhow::Result<String> {
     );
 
     Ok(format!(
-        "clap=4.6.1;mode={mode};tracing=0.1.44;subscriber=0.3.23;env-filter=enabled;event=observed;anyhow=1.0.102;adapter=CliError"
+        "clap=4.6.6;mode={mode};tracing=0.1.44;subscriber=0.3.23;env-filter=enabled;event=observed;anyhow=1.0.104;adapter=CliError"
     ))
 }
 

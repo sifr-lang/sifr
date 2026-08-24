@@ -118,6 +118,10 @@ fn resolver_prefers_explicit_then_environment_then_installed_then_development() 
     fs::create_dir_all(&input.current_dir).expect("nested current dir");
     let resolved = resolve_sysroot_with(&input).expect("explicit sysroot should resolve");
     assert_eq!(resolved.root, explicit.path);
+    assert_eq!(
+        resolved.cargo_lock_content_sha256,
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    );
 
     let input_without_explicit = SysrootResolutionInput {
         explicit_sysroot: None,

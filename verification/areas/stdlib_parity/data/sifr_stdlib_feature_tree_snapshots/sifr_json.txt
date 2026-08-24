@@ -1,34 +1,95 @@
 sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
-└── sifr_runtime v0.0.0 (<repo>/crates/sifr_runtime)
-    ├── encoding_rs feature "default"
-    │   ├── encoding_rs v0.8.35
-    │   │   └── cfg-if feature "default"
-    │   │       └── cfg-if v1.0.4
-    │   └── encoding_rs feature "alloc"
-    │       └── encoding_rs v0.8.35 (*)
-    ├── indexmap feature "default"
-    │   ├── indexmap v2.14.0
-    │   │   ├── equivalent v1.0.2
-    │   │   └── hashbrown v0.17.0
-    │   └── indexmap feature "std"
-    │       └── indexmap v2.14.0 (*)
-    ├── num-bigint feature "default"
-    │   ├── num-bigint v0.4.6
-    │   │   ├── num-integer feature "i128"
-    │   │   │   └── num-integer v0.1.46
-    │   │   │       └── num-traits feature "i128"
-    │   │   │           └── num-traits v0.2.19
-    │   │   │               [build-dependencies]
-    │   │   │               └── autocfg feature "default"
-    │   │   │                   └── autocfg v1.5.0
-    │   │   └── num-traits feature "i128" (*)
-    │   └── num-bigint feature "std"
-    │       ├── num-bigint v0.4.6 (*)
-    │       ├── num-integer feature "std"
-    │       │   ├── num-integer v0.1.46 (*)
-    │       │   └── num-traits feature "std"
-    │       │       └── num-traits v0.2.19 (*)
-    │       └── num-traits feature "std" (*)
-    └── num-traits feature "default"
-        ├── num-traits v0.2.19 (*)
-        └── num-traits feature "std" (*)
+├── sifr_runtime v0.0.0 (<repo>/crates/sifr_runtime)
+│   ├── indexmap feature "default"
+│   │   ├── indexmap v2.14.0
+│   │   │   ├── equivalent v1.0.2
+│   │   │   └── hashbrown v0.17.1
+│   │   └── indexmap feature "std"
+│   │       └── indexmap v2.14.0 (*)
+│   ├── encoding_rs feature "default"
+│   │   ├── encoding_rs v0.8.35
+│   │   │   └── cfg-if feature "default"
+│   │   │       └── cfg-if v1.0.4
+│   │   └── encoding_rs feature "alloc"
+│   │       └── encoding_rs v0.8.35 (*)
+│   ├── num-bigint feature "default"
+│   │   ├── num-bigint v0.4.6
+│   │   │   ├── num-integer feature "i128"
+│   │   │   │   └── num-integer v0.1.46
+│   │   │   │       └── num-traits feature "i128"
+│   │   │   │           └── num-traits v0.2.19
+│   │   │   │               [build-dependencies]
+│   │   │   │               └── autocfg feature "default"
+│   │   │   │                   └── autocfg v1.5.0
+│   │   │   └── num-traits feature "i128" (*)
+│   │   └── num-bigint feature "std"
+│   │       ├── num-bigint v0.4.6 (*)
+│   │       ├── num-integer feature "std"
+│   │       │   ├── num-integer v0.1.46 (*)
+│   │       │   └── num-traits feature "std"
+│   │       │       └── num-traits v0.2.19 (*)
+│   │       └── num-traits feature "std" (*)
+│   └── num-traits feature "default"
+│       ├── num-traits v0.2.19 (*)
+│       └── num-traits feature "std" (*)
+├── serde feature "default"
+│   ├── serde v1.0.229
+│   │   ├── serde_core feature "result"
+│   │   │   └── serde_core v1.0.229
+│   │   └── serde_derive feature "default"
+│   │       └── serde_derive v1.0.229 (proc-macro)
+│   │           ├── proc-macro2 feature "proc-macro"
+│   │           │   └── proc-macro2 v1.0.107
+│   │           │       └── unicode-ident feature "default"
+│   │           │           └── unicode-ident v1.0.24
+│   │           ├── quote feature "proc-macro"
+│   │           │   ├── quote v1.0.45
+│   │           │   │   └── proc-macro2 v1.0.107 (*)
+│   │           │   └── proc-macro2 feature "proc-macro" (*)
+│   │           ├── syn feature "clone-impls"
+│   │           │   └── syn v3.0.3
+│   │           │       ├── proc-macro2 v1.0.107 (*)
+│   │           │       ├── quote v1.0.45 (*)
+│   │           │       └── unicode-ident feature "default" (*)
+│   │           ├── syn feature "derive"
+│   │           │   └── syn v3.0.3 (*)
+│   │           ├── syn feature "parsing"
+│   │           │   └── syn v3.0.3 (*)
+│   │           ├── syn feature "printing"
+│   │           │   └── syn v3.0.3 (*)
+│   │           └── syn feature "proc-macro"
+│   │               ├── syn v3.0.3 (*)
+│   │               ├── proc-macro2 feature "proc-macro" (*)
+│   │               └── quote feature "proc-macro" (*)
+│   └── serde feature "std"
+│       ├── serde v1.0.229 (*)
+│       └── serde_core feature "std"
+│           └── serde_core v1.0.229
+├── serde feature "derive"
+│   ├── serde v1.0.229 (*)
+│   └── serde feature "serde_derive"
+│       └── serde v1.0.229 (*)
+├── serde_json feature "default"
+│   ├── serde_json v1.0.151
+│   │   ├── memchr v2.8.3
+│   │   ├── serde_core v1.0.229
+│   │   ├── indexmap feature "default" (*)
+│   │   ├── itoa feature "default"
+│   │   │   └── itoa v1.0.18
+│   │   └── zmij feature "default"
+│   │       └── zmij v1.0.21
+│   └── serde_json feature "std"
+│       ├── serde_json v1.0.151 (*)
+│       ├── serde_core feature "std" (*)
+│       └── memchr feature "std"
+│           ├── memchr v2.8.3
+│           └── memchr feature "alloc"
+│               └── memchr v2.8.3
+└── serde_json feature "preserve_order"
+    ├── serde_json v1.0.151 (*)
+    ├── serde_json feature "indexmap"
+    │   └── serde_json v1.0.151 (*)
+    └── serde_json feature "std" (*)
+[dev-dependencies]
+└── static_assertions feature "default"
+    └── static_assertions v1.1.0

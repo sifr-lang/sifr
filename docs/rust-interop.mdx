@@ -220,7 +220,7 @@ working C/C++ compiler plus a `libclang` installation discoverable by bindgen;
 it does not advertise an MSVC build-script envelope.
 
 `proc_macro_trust` is a locked `cargo-probe` claim for exact-pinned
-`serde_derive 1.0.228` and `prost-build 0.14.4`. A trusted direct derive
+`serde_derive 1.0.229` and `prost-build 0.14.4`. A trusted direct derive
 wrapper executes its own `SifrGenerated` macro in generated package code and
 separately proves its exact upstream `serde_derive` dependency compiled. A
 trusted build-script wrapper runs prost-build over an in-memory descriptor
@@ -243,8 +243,8 @@ entry. Missing locks and selected version, source, checksum, or feature drift
 are rejected without network access as `SIFR-RUST-CARGO-0001`.
 
 The `ecosystem_cli_certification` evidence builds and runs an exact-pinned
-generated package with `clap 4.6.1`, `tracing 0.1.44`,
-`tracing-subscriber 0.3.23` using `env-filter`, and `anyhow 1.0.102`.
+generated package with `clap 4.6.6`, `tracing 0.1.44`,
+`tracing-subscriber 0.3.23` using `env-filter`, and `anyhow 1.0.104`.
 The package-local bridge parses a real command and observes a filtered tracing
 event. `anyhow::Error` remains internal: the bridge maps its context chain into
 the declared `CliError`, while a direct function returning `anyhow::Error` is

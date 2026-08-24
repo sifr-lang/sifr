@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BSD-2-Clause OR Apache-2.0 OR MIT
+//
 // Copyright 2019 The Fuchsia Authors
 //
 // Licensed under a BSD-style license <LICENSE-BSD>, Apache License, Version 2.0
@@ -26,6 +28,10 @@
 #![allow(clippy::type_complexity)]
 // Inlining format args isn't supported on our MSRV.
 #![allow(clippy::uninlined_format_args)]
+// `cargo-zerocopy` supplies this cfg for pinned-nightly tests. During UI tests,
+// `testutil::UiTestRunner` explicitly supplies it to the host-built proc macro;
+// ordinary `RUSTFLAGS` are not sufficient when Cargo receives `--target`.
+#![cfg_attr(__ZEROCOPY_INTERNAL_USE_ONLY_NIGHTLY_FEATURES_IN_TESTS, feature(proc_macro_def_site))]
 #![deny(
     rustdoc::bare_urls,
     rustdoc::broken_intra_doc_links,
@@ -126,6 +132,81 @@ derive!(Unaligned => derive_unaligned => crate::derive::unaligned::derive_unalig
 derive!(ByteHash => derive_hash => crate::derive::derive_hash);
 derive!(ByteEq => derive_eq => crate::derive::derive_eq);
 derive!(SplitAt => derive_split_at => crate::derive::derive_split_at);
+
+/// Generates a struct whose two identically-printed field types resolve to
+/// different types. This is used to test that derives preserve type identity
+/// across macro hygiene contexts.
+#[cfg(__ZEROCOPY_INTERNAL_USE_ONLY_NIGHTLY_FEATURES_IN_TESTS)]
+#[doc(hidden)]
+#[proc_macro]
+pub fn __test_hygienically_mixed_into_bytes(
+    _input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    use proc_macro::{Group, Ident, Span, TokenStream, TokenTree};
+
+    fn rewrite(input: TokenStream) -> TokenStream {
+        input
+            .into_iter()
+            .map(|token| match token {
+                TokenTree::Ident(ident) if ident.to_string() == "CallT" => {
+                    TokenTree::Ident(Ident::new("T", Span::call_site()))
+                }
+                TokenTree::Ident(ident) if ident.to_string() == "DefT" => {
+                    TokenTree::Ident(Ident::new("T", Span::def_site()))
+                }
+                TokenTree::Group(group) => {
+                    let mut rewritten = Group::new(group.delimiter(), rewrite(group.stream()));
+                    rewritten.set_span(group.span());
+                    TokenTree::Group(rewritten)
+                }
+                token => token,
+            })
+            .collect()
+    }
+
+    rewrite(
+        "#[derive(zerocopy_renamed::IntoBytes)] \
+         #[zerocopy(crate = \"zerocopy_renamed\")] \
+         #[repr(C)] \
+         struct IntoBytes15<DefT>(CallT, DefT);"
+            .parse()
+            .expect("test input must parse"),
+    )
+}
+
+#[cfg_attr(not(zerocopy_unstable_linux), doc(hidden))]
+#[proc_macro_derive(most_traits, attributes(zerocopy))]
+pub fn most_traits(ts: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let ast = syn::parse_macro_input!(ts as DeriveInput);
+    let ctx = match Ctx::try_from_derive_input(ast) {
+        Ok(ctx) => ctx,
+        Err(e) => return e.into_compile_error().into(),
+    }
+    .skip_on_error();
+
+    // top-level traits for which to attempt a derive
+    let derives: [(fn(&Ctx, Trait) -> _, _); 6] = [
+        (crate::derive::known_layout::derive, Trait::KnownLayout),
+        (crate::derive::derive_immutable, Trait::Immutable),
+        (crate::derive::from_bytes::derive_from_bytes, Trait::FromBytes),
+        (crate::derive::into_bytes::derive_into_bytes, Trait::IntoBytes),
+        (crate::derive::derive_split_at, Trait::SplitAt),
+        (crate::derive::unaligned::derive_unaligned, Trait::Unaligned),
+    ];
+
+    let mut tokens = proc_macro2::TokenStream::new();
+    for (derive, t) in derives {
+        tokens.extend(derive(&ctx, t))
+    }
+
+    // We wrap in `const_block` as a backstop in case any derive fails
+    // to wrap its output in `const_block` (and thus fails to annotate)
+    // with the full set of `#[allow(...)]` attributes).
+    let ts = const_block([Some(tokens)]);
+    #[cfg(test)]
+    crate::util::testutil::check_hygiene(ts.clone());
+    ts.into()
+}
 
 /// Deprecated: prefer [`FromZeros`] instead.
 #[deprecated(since = "0.8.0", note = "`FromZeroes` was renamed to `FromZeros`")]

@@ -232,6 +232,9 @@ fn cache_fingerprint(
     fingerprint.push_str("cargo_lock_sha256=");
     fingerprint.push_str(&sysroot.manifest.cargo_lock_sha256);
     fingerprint.push('\n');
+    fingerprint.push_str("cargo_lock_content_sha256=");
+    fingerprint.push_str(&sysroot.cargo_lock_content_sha256);
+    fingerprint.push('\n');
     fingerprint.push_str("vendor_mode=");
     fingerprint.push_str(cargo_vendor_mode.as_str());
     fingerprint.push('\n');
@@ -272,7 +275,7 @@ fn retained_dependency_specs(feature: StdlibFeature) -> &'static [&'static str] 
         StdlibFeature::NumTraits => &["num-traits = \"=0.2.19\""],
         StdlibFeature::Rayon => &["rayon = \"=1.12.0\""],
         StdlibFeature::RustDecimal => &[
-            "rust_decimal = { version = \"=1.41.0\", features = [\"maths\", \"serde-with-str\"] }",
+            "rust_decimal = { version = \"=1.42.1\", features = [\"maths\", \"serde-with-str\"] }",
         ],
         StdlibFeature::Tokio => &[
             "tokio = { version = \"=1.52.3\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }",
