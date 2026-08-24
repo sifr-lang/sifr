@@ -2,7 +2,7 @@
 # scenario-example: proc_macro_trust_package
 
 This locked/offline scenario certifies package-level trust for a direct derive
-wrapper compiling exact `serde_derive 1.0.228` and a direct build-script
+wrapper compiling exact `serde_derive 1.0.229` and a direct build-script
 wrapper running exact `prost-build 0.14.4`. Prost generation uses an in-memory
 descriptor set, writes only beneath `OUT_DIR`, compiles the generated message,
 and needs no `protoc` installation.

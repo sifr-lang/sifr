@@ -1,8 +1,8 @@
 # ecosystem_cli_certification
 
 This fixture family certifies an exact-pinned package-local bridge for
-`clap 4.6.1`, `tracing 0.1.44`, `tracing-subscriber 0.3.23`, and
-`anyhow 1.0.102`.
+`clap 4.6.6`, `tracing 0.1.44`, `tracing-subscriber 0.3.23`, and
+`anyhow 1.0.104`.
 
 - Positive evidence: `cli_tooling_probe_coverage` parses a real `clap`
   command, observes a filtered `tracing` event through

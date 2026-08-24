@@ -727,7 +727,7 @@ def unused() -> str:\n    try:\n        parsed: str = loads(\"name = \\\"unused\
     let cargo_toml = std::fs::read_to_string(build_out.join("sifr_output").join("Cargo.toml"))
         .expect("cargo manifest should be written");
     assert!(
-        !cargo_toml.contains("toml = { version = \"1.1.2\", features = [\"preserve_order\"] }")
+        !cargo_toml.contains("toml = { version = \"1.1.4\", features = [\"preserve_order\"] }")
     );
 
     let _ = std::fs::remove_dir_all(dir);

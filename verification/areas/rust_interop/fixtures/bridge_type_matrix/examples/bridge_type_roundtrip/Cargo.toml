@@ -9,9 +9,9 @@ edition = "2024"
 [dependencies]
 bytes = "=1.11.1"
 indexmap = "=2.14.0"
-serde = { version = "=1.0.228", features = ["derive"] }
-serde_json = "=1.0.149"
-thiserror = "=2.0.18"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+thiserror = "=2.0.20"
 
 [package.metadata.sifr]
 manifest = "sifr.toml"

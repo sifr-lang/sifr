@@ -462,8 +462,8 @@ fn test_generate_test_runner_cargo_toml_includes_required_features() {
     assert!(cargo_toml.contains("sifr_runtime = { path = "));
     assert!(cargo_toml.contains("sifr_stdlib = { path = "));
     assert!(cargo_toml.contains("features = [\"random\", \"regex\"]"));
-    assert!(!cargo_toml.contains("regex = \"1.12.3\""));
-    assert!(!cargo_toml.contains("rand = \"0.10.1\""));
+    assert!(!cargo_toml.contains("regex = \"1.13.1\""));
+    assert!(!cargo_toml.contains("rand = \"0.10.2\""));
     assert!(!cargo_toml.contains("rand_distr = \"0.6.0\""));
 }
 

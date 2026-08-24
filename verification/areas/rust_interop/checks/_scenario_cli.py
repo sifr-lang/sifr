@@ -11,8 +11,8 @@ from typing import Any, Callable
 ScenarioValidator = Callable[[list[str], str, Path, dict[str, Any]], int]
 
 EXPECTED_WORKSPACE_DEPENDENCIES = {
-    "anyhow": {"version": "=1.0.102", "default-features": True},
-    "clap": {"version": "=4.6.1", "default-features": True},
+    "anyhow": {"version": "=1.0.104", "default-features": True},
+    "clap": {"version": "=4.6.6", "default-features": True},
     "tracing": {"version": "=0.1.44", "default-features": True},
     "tracing-subscriber": {
         "version": "=0.3.23",
@@ -108,7 +108,7 @@ def validate_cli_scenario(
             ".context(\"clap parse failed\")",
             "CliErrorBridge",
             "RustPanicErrorBridge",
-            "anyhow=1.0.102;adapter=CliError",
+            "anyhow=1.0.104;adapter=CliError",
         ),
     )
     _require_source_tokens(
@@ -150,15 +150,15 @@ def run_cli_self_test(
             (
                 "anyhow pin drift",
                 "examples/cli_feature_package/Cargo.toml",
-                'version = "=1.0.102"',
-                'version = "1.0.102"',
+                'version = "=1.0.104"',
+                'version = "1.0.104"',
                 "workspace dependencies must exact-pin",
             ),
             (
                 "clap pin drift",
                 "examples/cli_feature_package/Cargo.toml",
-                'version = "=4.6.1"',
-                'version = "4.6.1"',
+                'version = "=4.6.6"',
+                'version = "4.6.6"',
                 "workspace dependencies must exact-pin",
             ),
             (

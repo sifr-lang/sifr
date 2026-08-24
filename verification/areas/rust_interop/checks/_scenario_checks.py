@@ -237,8 +237,8 @@ def run_self_test() -> tuple[int, str | None]:
             (
                 "root lock drift",
                 "examples/bridge_type_roundtrip/Cargo.lock",
-                'version = "2.8.0"',
                 'version = "2.8.3"',
+                'version = "99.99.99"',
                 "not present in root Cargo.lock",
             ),
         )
@@ -535,9 +535,9 @@ def _validate_scenario_manifests(
         for dependency, version in (
             ("bytes", "=1.11.1"),
             ("indexmap", "=2.14.0"),
-            ("serde", "=1.0.228"),
-            ("serde_json", "=1.0.149"),
-            ("thiserror", "=2.0.18"),
+            ("serde", "=1.0.229"),
+            ("serde_json", "=1.0.151"),
+            ("thiserror", "=2.0.20"),
         ):
             _require_exact_dependency(
                 failures,

@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR")?);
     std::fs::write(
         out_dir.join("sifr-cc-evidence.txt"),
-        "cc=1.2.63;compiled=sifr_cc_probe",
+        "cc=1.4.4;compiled=sifr_cc_probe",
     )?;
     Ok(())
 }

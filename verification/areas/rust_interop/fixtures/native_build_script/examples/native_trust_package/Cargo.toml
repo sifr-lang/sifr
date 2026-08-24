@@ -4,8 +4,8 @@ resolver = "3"
 
 [workspace.dependencies]
 bindgen_upstream = { package = "bindgen", version = "=0.72.1", default-features = true }
-cc_upstream = { package = "cc", version = "=1.2.63", default-features = true }
-cxx = { version = "=1.0.198", default-features = true }
+cc_upstream = { package = "cc", version = "=1.4.4", default-features = true }
+cxx = { version = "=1.0.199", default-features = true }
 zstd_upstream = { package = "zstd", version = "=0.13.3", default-features = true }
 
 [package]

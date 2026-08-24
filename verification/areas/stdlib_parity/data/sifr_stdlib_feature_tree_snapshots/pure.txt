@@ -1,1 +1,4 @@
 sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
+[dev-dependencies]
+└── static_assertions feature "default"
+    └── static_assertions v1.1.0

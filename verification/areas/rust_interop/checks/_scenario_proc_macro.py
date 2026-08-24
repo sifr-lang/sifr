@@ -24,7 +24,7 @@ EXPECTED_WORKSPACE_DEPENDENCIES = {
     },
     "serde_derive_upstream": {
         "package": "serde_derive",
-        "version": "=1.0.228",
+        "version": "=1.0.229",
         "default-features": True,
     },
 }
@@ -137,8 +137,8 @@ def run_proc_macro_self_test(
             (
                 "serde pin drift",
                 "examples/proc_macro_trust_package/Cargo.toml",
-                'version = "=1.0.228"',
-                'version = "1.0.228"',
+                'version = "=1.0.229"',
+                'version = "1.0.229"',
                 "workspace dependencies must exact-pin",
             ),
             (
@@ -200,7 +200,7 @@ def run_proc_macro_self_test(
             (
                 "macro version evidence drift",
                 "examples/proc_macro_trust_package/rust/serde_derive/src/lib.rs",
-                "serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed",
+                "serde_derive=1.0.229;upstream=compiled;sifr_wrapper_macro=executed",
                 "serde_derive=0.0.0;upstream=compiled;sifr_wrapper_macro=executed",
                 "must contain two exact serde_derive version markers",
             ),
@@ -321,7 +321,7 @@ def _validate_sources(
             "#[proc_macro_derive(SifrGenerated)]",
             "ARM_PROC_MACRO_SENTINEL",
             "PROC_MACRO_EXECUTED",
-            "serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed",
+            "serde_derive=1.0.229;upstream=compiled;sifr_wrapper_macro=executed",
         ),
         "rust/prost_build/build.rs": (
             "prost_build_upstream::Config::new()",
@@ -358,7 +358,7 @@ def _validate_sources(
         if (
             relative_path == "rust/serde_derive/src/lib.rs"
             and source.count(
-                "serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed"
+                "serde_derive=1.0.229;upstream=compiled;sifr_wrapper_macro=executed"
             )
             != 2
         ):

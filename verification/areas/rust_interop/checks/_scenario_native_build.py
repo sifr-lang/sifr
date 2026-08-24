@@ -12,8 +12,8 @@ ScenarioValidator = Callable[[list[str], str, Path, dict[str, Any]], int]
 
 NATIVE_BUILD_SCENARIO_TOKENS = (
     'bindgen_upstream = { package = "bindgen", version = "=0.72.1"',
-    'cc_upstream = { package = "cc", version = "=1.2.63"',
-    'cxx = { version = "=1.0.198"',
+    'cc_upstream = { package = "cc", version = "=1.4.4"',
+    'cxx = { version = "=1.0.199"',
     'zstd_upstream = { package = "zstd", version = "=0.13.3"',
     "cc_upstream::Build::new()",
     '.compile("sifr_cc_probe")',
@@ -99,10 +99,10 @@ def validate_native_build_scenario(
         },
         "cc_upstream": {
             "package": "cc",
-            "version": "=1.2.63",
+            "version": "=1.4.4",
             "default-features": True,
         },
-        "cxx": {"version": "=1.0.198", "default-features": True},
+        "cxx": {"version": "=1.0.199", "default-features": True},
         "zstd_upstream": {
             "package": "zstd",
             "version": "=0.13.3",
@@ -188,8 +188,8 @@ def run_native_build_self_test(
             (
                 "cc pin drift",
                 "examples/native_trust_package/Cargo.toml",
-                'version = "=1.2.63"',
-                'version = "1.2.63"',
+                'version = "=1.4.4"',
+                'version = "1.4.4"',
                 "workspace dependencies must exact-pin",
             ),
             (
@@ -265,9 +265,9 @@ def run_native_build_self_test(
             (
                 "artifact version drift",
                 "examples/native_trust_package/rust/cc/build.rs",
-                "cc=1.2.63;compiled=sifr_cc_probe",
+                "cc=1.4.4;compiled=sifr_cc_probe",
                 "cc=0.0.0;compiled=sifr_cc_probe",
-                "must contain cc=1.2.63;compiled=sifr_cc_probe",
+                "must contain cc=1.4.4;compiled=sifr_cc_probe",
             ),
             (
                 "source-tree artifact drift",
@@ -349,7 +349,7 @@ def _validate_build_sources(
             "cc_upstream::Build::new()",
             '.compile("sifr_cc_probe")',
             "sifr-cc-evidence.txt",
-            "cc=1.2.63;compiled=sifr_cc_probe",
+            "cc=1.4.4;compiled=sifr_cc_probe",
         ),
         "rust/bindgen/build.rs": (
             "bindgen_upstream::Builder::default()",
@@ -360,7 +360,7 @@ def _validate_build_sources(
         ),
         "rust/cxx/build.rs": (
             "sifr-cxx-evidence.txt",
-            "cxx=1.0.198;bridge=sifr_cxx_probe",
+            "cxx=1.0.199;bridge=sifr_cxx_probe",
         ),
         "rust/cxx/src/lib.rs": ("#[cxx::bridge]", "sifr_cxx_probe_value"),
         "rust/zstd/build.rs": (

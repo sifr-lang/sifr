@@ -1523,7 +1523,7 @@ Cargo does not package those host-toolchain components.
 `proc_macro_trust` is the tier-3 `cargo-probe` claim for proc-macro and
 build-script execution. Its locked scenario uses direct wrapper crates whose
 Cargo metadata exposes a proc-macro target and a custom build target before
-execution. The wrappers compile exact root-lock `serde_derive = 1.0.228` and
+execution. The wrappers compile exact root-lock `serde_derive = 1.0.229` and
 `prost-build = 0.14.4`; the latter consumes an in-memory protobuf descriptor
 set through `Config::compile_fds`, so the proof does not depend on `protoc`.
 The direct derive wrapper executes its own `SifrGenerated` macro and reports

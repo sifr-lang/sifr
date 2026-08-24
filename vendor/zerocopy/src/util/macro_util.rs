@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BSD-2-Clause OR Apache-2.0 OR MIT
+//
 // Copyright 2022 The Fuchsia Authors
 //
 // Licensed under a BSD-style license <LICENSE-BSD>, Apache License, Version 2.0
@@ -942,6 +944,22 @@ pub mod core_reexport {
     pub mod mem {
         pub use core::mem::*;
     }
+}
+
+/// Projects `Self` to itself.
+///
+/// This is used by macros to have the compiler verify that two syntactically
+/// similar types actually resolve to the same type. The blanket implementation
+/// ensures that no other implementation can project a type to anything other
+/// than itself.
+#[doc(hidden)]
+pub trait Identity {
+    /// `Self`.
+    type Type: ?Sized;
+}
+
+impl<T: ?Sized> Identity for T {
+    type Type = T;
 }
 
 #[cfg(test)]

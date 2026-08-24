@@ -1,411 +1,437 @@
 sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
-└── sifr_runtime v0.0.0 (<repo>/crates/sifr_runtime)
-    ├── http-body-util v0.1.3
-    │   ├── futures-core v0.3.32
-    │   ├── bytes feature "default"
-    │   │   ├── bytes v1.11.1
-    │   │   └── bytes feature "std"
-    │   │       └── bytes v1.11.1
-    │   ├── http feature "default"
-    │   │   ├── http v1.4.2
-    │   │   │   ├── bytes feature "default" (*)
-    │   │   │   └── itoa feature "default"
-    │   │   │       └── itoa v1.0.18
-    │   │   └── http feature "std"
-    │   │       └── http v1.4.2 (*)
-    │   ├── pin-project-lite feature "default"
-    │   │   └── pin-project-lite v0.2.17
-    │   └── http-body feature "default"
-    │       └── http-body v1.0.1
-    │           ├── bytes feature "default" (*)
-    │           └── http feature "default" (*)
-    ├── rustls-platform-verifier v0.7.0
-    │   ├── rustls feature "std"
-    │   │   ├── rustls v0.23.35
-    │   │   │   ├── aws-lc-rs v1.17.0
-    │   │   │   │   ├── aws-lc-sys v0.41.0
-    │   │   │   │   │   [build-dependencies]
-    │   │   │   │   │   ├── cc feature "default"
-    │   │   │   │   │   │   └── cc v1.2.63
-    │   │   │   │   │   │       ├── jobserver v0.1.34
-    │   │   │   │   │   │       │   └── libc feature "default"
-    │   │   │   │   │   │       │       ├── libc v0.2.186
-    │   │   │   │   │   │       │       └── libc feature "std"
-    │   │   │   │   │   │       │           └── libc v0.2.186
-    │   │   │   │   │   │       ├── libc v0.2.186
-    │   │   │   │   │   │       ├── find-msvc-tools feature "default"
-    │   │   │   │   │   │       │   └── find-msvc-tools v0.1.9
-    │   │   │   │   │   │       └── shlex feature "default"
-    │   │   │   │   │   │           ├── shlex v2.0.1
-    │   │   │   │   │   │           └── shlex feature "std"
-    │   │   │   │   │   │               └── shlex v2.0.1
-    │   │   │   │   │   ├── cc feature "parallel"
-    │   │   │   │   │   │   └── cc v1.2.63 (*)
-    │   │   │   │   │   ├── cmake feature "default"
-    │   │   │   │   │   │   └── cmake v0.1.58
-    │   │   │   │   │   │       └── cc feature "default" (*)
-    │   │   │   │   │   ├── dunce feature "default"
-    │   │   │   │   │   │   └── dunce v1.0.5
-    │   │   │   │   │   └── fs_extra feature "default"
-    │   │   │   │   │       └── fs_extra v1.3.0
-    │   │   │   │   └── zeroize feature "default"
-    │   │   │   │       ├── zeroize v1.8.2
-    │   │   │   │       └── zeroize feature "alloc"
-    │   │   │   │           └── zeroize v1.8.2
-    │   │   │   ├── subtle v2.6.1
-    │   │   │   ├── once_cell feature "alloc"
-    │   │   │   │   ├── once_cell v1.21.4
-    │   │   │   │   └── once_cell feature "race"
-    │   │   │   │       └── once_cell v1.21.4
-    │   │   │   ├── once_cell feature "race" (*)
-    │   │   │   ├── zeroize feature "default" (*)
-    │   │   │   ├── log feature "default"
-    │   │   │   │   └── log v0.4.29
-    │   │   │   ├── rustls-pki-types feature "alloc"
-    │   │   │   │   └── rustls-pki-types v1.14.1
-    │   │   │   │       └── zeroize feature "default" (*)
-    │   │   │   ├── rustls-pki-types feature "default"
-    │   │   │   │   ├── rustls-pki-types v1.14.1 (*)
-    │   │   │   │   └── rustls-pki-types feature "alloc" (*)
-    │   │   │   └── rustls-webpki feature "alloc"
-    │   │   │       ├── rustls-webpki v0.103.13
-    │   │   │       │   ├── aws-lc-rs v1.17.0 (*)
-    │   │   │       │   ├── rustls-pki-types v1.14.1 (*)
-    │   │   │       │   └── untrusted feature "default"
-    │   │   │       │       └── untrusted v0.9.0
-    │   │   │       └── rustls-pki-types feature "alloc" (*)
-    │   │   ├── once_cell feature "std"
-    │   │   │   ├── once_cell v1.21.4
-    │   │   │   └── once_cell feature "alloc" (*)
-    │   │   ├── rustls-pki-types feature "std"
-    │   │   │   ├── rustls-pki-types v1.14.1 (*)
-    │   │   │   └── rustls-pki-types feature "alloc" (*)
-    │   │   └── rustls-webpki feature "std"
-    │   │       ├── rustls-webpki v0.103.13 (*)
-    │   │       ├── rustls-pki-types feature "std" (*)
-    │   │       └── rustls-webpki feature "alloc" (*)
-    │   ├── log feature "default" (*)
-    │   ├── core-foundation feature "default"
-    │   │   ├── core-foundation v0.10.1
-    │   │   │   ├── core-foundation-sys v0.8.7
-    │   │   │   └── libc feature "default" (*)
-    │   │   └── core-foundation feature "link"
-    │   │       ├── core-foundation v0.10.1 (*)
-    │   │       └── core-foundation-sys feature "link"
-    │   │           └── core-foundation-sys v0.8.7
-    │   ├── core-foundation-sys feature "default"
-    │   │   ├── core-foundation-sys v0.8.7
-    │   │   └── core-foundation-sys feature "link" (*)
-    │   ├── security-framework feature "default"
-    │   │   ├── security-framework v3.7.0
-    │   │   │   ├── security-framework-sys v2.17.0
-    │   │   │   │   ├── libc feature "default" (*)
-    │   │   │   │   └── core-foundation-sys feature "default" (*)
-    │   │   │   ├── libc feature "default" (*)
-    │   │   │   ├── core-foundation feature "default" (*)
-    │   │   │   ├── core-foundation-sys feature "default" (*)
-    │   │   │   └── bitflags feature "default"
-    │   │   │       └── bitflags v2.11.1
-    │   │   ├── security-framework feature "OSX_10_14"
-    │   │   │   └── security-framework v3.7.0 (*)
-    │   │   ├── security-framework feature "alpn"
-    │   │   │   └── security-framework v3.7.0 (*)
-    │   │   └── security-framework feature "session-tickets"
-    │   │       └── security-framework v3.7.0 (*)
-    │   └── security-framework-sys feature "default"
-    │       ├── security-framework-sys v2.17.0 (*)
-    │       └── security-framework-sys feature "OSX_10_13"
-    │           └── security-framework-sys v2.17.0 (*)
-    ├── bytes feature "default" (*)
-    ├── encoding_rs feature "default"
-    │   ├── encoding_rs v0.8.35
-    │   │   └── cfg-if feature "default"
-    │   │       └── cfg-if v1.0.4
-    │   └── encoding_rs feature "alloc"
-    │       └── encoding_rs v0.8.35 (*)
-    ├── h2 feature "default"
-    │   └── h2 v0.4.14
-    │       ├── futures-core v0.3.32
-    │       ├── futures-sink v0.3.32
-    │       ├── bytes feature "default" (*)
-    │       ├── atomic-waker feature "default"
-    │       │   └── atomic-waker v1.1.2
-    │       ├── fnv feature "default"
-    │       │   ├── fnv v1.0.7
-    │       │   └── fnv feature "std"
-    │       │       └── fnv v1.0.7
-    │       ├── http feature "default" (*)
-    │       ├── indexmap feature "default"
-    │       │   ├── indexmap v2.14.0
-    │       │   │   ├── equivalent v1.0.2
-    │       │   │   └── hashbrown v0.17.0
-    │       │   └── indexmap feature "std"
-    │       │       └── indexmap v2.14.0 (*)
-    │       ├── indexmap feature "std" (*)
-    │       ├── slab feature "default"
-    │       │   ├── slab v0.4.12
-    │       │   └── slab feature "std"
-    │       │       └── slab v0.4.12
-    │       ├── tokio feature "default"
-    │       │   └── tokio v1.52.3
-    │       │       ├── mio v1.2.1
-    │       │       │   └── libc feature "default" (*)
-    │       │       ├── bytes feature "default" (*)
-    │       │       ├── libc feature "default" (*)
-    │       │       ├── pin-project-lite feature "default" (*)
-    │       │       ├── signal-hook-registry feature "default"
-    │       │       │   └── signal-hook-registry v1.4.8
-    │       │       │       ├── libc feature "default" (*)
-    │       │       │       └── errno feature "default"
-    │       │       │           ├── errno v0.3.14
-    │       │       │           │   └── libc v0.2.186
-    │       │       │           └── errno feature "std"
-    │       │       │               ├── errno v0.3.14 (*)
-    │       │       │               └── libc feature "std" (*)
-    │       │       ├── socket2 feature "all"
-    │       │       │   └── socket2 v0.6.4
-    │       │       │       └── libc feature "default" (*)
-    │       │       ├── socket2 feature "default"
-    │       │       │   └── socket2 v0.6.4 (*)
-    │       │       └── tokio-macros feature "default"
-    │       │           └── tokio-macros v2.7.0 (proc-macro)
-    │       │               ├── proc-macro2 feature "default"
-    │       │               │   ├── proc-macro2 v1.0.106
-    │       │               │   │   └── unicode-ident feature "default"
-    │       │               │   │       └── unicode-ident v1.0.24
-    │       │               │   └── proc-macro2 feature "proc-macro"
-    │       │               │       └── proc-macro2 v1.0.106 (*)
-    │       │               ├── quote feature "default"
-    │       │               │   ├── quote v1.0.45
-    │       │               │   │   └── proc-macro2 v1.0.106 (*)
-    │       │               │   └── quote feature "proc-macro"
-    │       │               │       ├── quote v1.0.45 (*)
-    │       │               │       └── proc-macro2 feature "proc-macro" (*)
-    │       │               ├── syn feature "default"
-    │       │               │   ├── syn v2.0.117
-    │       │               │   │   ├── proc-macro2 v1.0.106 (*)
-    │       │               │   │   ├── quote v1.0.45 (*)
-    │       │               │   │   └── unicode-ident feature "default" (*)
-    │       │               │   ├── syn feature "clone-impls"
-    │       │               │   │   └── syn v2.0.117 (*)
-    │       │               │   ├── syn feature "derive"
-    │       │               │   │   └── syn v2.0.117 (*)
-    │       │               │   ├── syn feature "parsing"
-    │       │               │   │   └── syn v2.0.117 (*)
-    │       │               │   ├── syn feature "printing"
-    │       │               │   │   └── syn v2.0.117 (*)
-    │       │               │   └── syn feature "proc-macro"
-    │       │               │       ├── syn v2.0.117 (*)
-    │       │               │       ├── proc-macro2 feature "proc-macro" (*)
-    │       │               │       └── quote feature "proc-macro" (*)
-    │       │               └── syn feature "full"
-    │       │                   └── syn v2.0.117 (*)
-    │       ├── tokio feature "io-util"
-    │       │   ├── tokio v1.52.3 (*)
-    │       │   └── tokio feature "bytes"
-    │       │       └── tokio v1.52.3 (*)
-    │       ├── tokio-util feature "codec"
-    │       │   └── tokio-util v0.7.18
-    │       │       ├── bytes feature "default" (*)
-    │       │       ├── futures-core feature "default"
-    │       │       │   ├── futures-core v0.3.32
-    │       │       │   └── futures-core feature "std"
-    │       │       │       ├── futures-core v0.3.32
-    │       │       │       └── futures-core feature "alloc"
-    │       │       │           └── futures-core v0.3.32
-    │       │       ├── futures-sink feature "default"
-    │       │       │   ├── futures-sink v0.3.32
-    │       │       │   └── futures-sink feature "std"
-    │       │       │       ├── futures-sink v0.3.32
-    │       │       │       └── futures-sink feature "alloc"
-    │       │       │           └── futures-sink v0.3.32
-    │       │       ├── tokio feature "default" (*)
-    │       │       ├── tokio feature "sync"
-    │       │       │   └── tokio v1.52.3 (*)
-    │       │       └── pin-project-lite feature "default" (*)
-    │       ├── tokio-util feature "default"
-    │       │   └── tokio-util v0.7.18 (*)
-    │       ├── tokio-util feature "io"
-    │       │   └── tokio-util v0.7.18 (*)
-    │       └── tracing feature "std"
-    │           ├── tracing v0.1.44
-    │           │   ├── tracing-core v0.1.36
-    │           │   │   └── once_cell feature "default"
-    │           │   │       ├── once_cell v1.21.4
-    │           │   │       └── once_cell feature "std" (*)
-    │           │   └── pin-project-lite feature "default" (*)
-    │           └── tracing-core feature "std"
-    │               ├── tracing-core v0.1.36 (*)
-    │               └── tracing-core feature "once_cell"
-    │                   └── tracing-core v0.1.36 (*)
-    ├── http feature "default" (*)
-    ├── indexmap feature "default" (*)
-    ├── tokio feature "default" (*)
-    ├── tokio feature "io-util" (*)
-    ├── tokio feature "macros"
-    │   ├── tokio v1.52.3 (*)
-    │   └── tokio feature "tokio-macros"
-    │       └── tokio v1.52.3 (*)
-    ├── tokio feature "net"
-    │   ├── tokio v1.52.3 (*)
-    │   ├── tokio feature "libc"
-    │   │   └── tokio v1.52.3 (*)
-    │   ├── tokio feature "mio"
-    │   │   └── tokio v1.52.3 (*)
-    │   ├── tokio feature "socket2"
-    │   │   └── tokio v1.52.3 (*)
-    │   ├── mio feature "net"
-    │   │   └── mio v1.2.1 (*)
-    │   ├── mio feature "os-ext"
-    │   │   ├── mio v1.2.1 (*)
-    │   │   └── mio feature "os-poll"
-    │   │       └── mio v1.2.1 (*)
-    │   └── mio feature "os-poll" (*)
-    ├── tokio feature "process"
-    │   ├── tokio v1.52.3 (*)
-    │   ├── tokio feature "bytes" (*)
-    │   ├── tokio feature "libc" (*)
-    │   ├── tokio feature "mio" (*)
-    │   ├── tokio feature "signal-hook-registry"
-    │   │   └── tokio v1.52.3 (*)
-    │   ├── mio feature "net" (*)
-    │   ├── mio feature "os-ext" (*)
-    │   └── mio feature "os-poll" (*)
-    ├── tokio feature "rt"
-    │   └── tokio v1.52.3 (*)
-    ├── tokio feature "signal"
-    │   ├── tokio v1.52.3 (*)
-    │   ├── tokio feature "libc" (*)
-    │   ├── tokio feature "mio" (*)
-    │   ├── tokio feature "signal-hook-registry" (*)
-    │   ├── mio feature "net" (*)
-    │   ├── mio feature "os-ext" (*)
-    │   └── mio feature "os-poll" (*)
-    ├── tokio feature "sync" (*)
-    ├── tokio feature "time"
-    │   └── tokio v1.52.3 (*)
-    ├── http-body feature "default" (*)
-    ├── hyper feature "client"
-    │   └── hyper v1.10.1
-    │       ├── bytes feature "default" (*)
-    │       ├── h2 feature "default" (*)
-    │       ├── atomic-waker feature "default" (*)
-    │       ├── futures-core feature "default" (*)
-    │       ├── http feature "default" (*)
-    │       ├── itoa feature "default" (*)
-    │       ├── tokio feature "default" (*)
-    │       ├── tokio feature "sync" (*)
-    │       ├── pin-project-lite feature "default" (*)
-    │       ├── http-body feature "default" (*)
-    │       ├── futures-channel feature "default"
-    │       │   ├── futures-channel v0.3.32
-    │       │   │   └── futures-core v0.3.32
-    │       │   └── futures-channel feature "std"
-    │       │       ├── futures-channel v0.3.32 (*)
-    │       │       ├── futures-core feature "std" (*)
-    │       │       └── futures-channel feature "alloc"
-    │       │           ├── futures-channel v0.3.32 (*)
-    │       │           └── futures-core feature "alloc" (*)
-    │       ├── httparse feature "default"
-    │       │   ├── httparse v1.10.1
-    │       │   └── httparse feature "std"
-    │       │       └── httparse v1.10.1
-    │       ├── httpdate feature "default"
-    │       │   └── httpdate v1.0.3
-    │       ├── smallvec feature "const_generics"
-    │       │   └── smallvec v1.15.1
-    │       ├── smallvec feature "const_new"
-    │       │   ├── smallvec v1.15.1
-    │       │   └── smallvec feature "const_generics" (*)
-    │       ├── smallvec feature "default"
-    │       │   └── smallvec v1.15.1
-    │       └── want feature "default"
-    │           └── want v0.3.1
-    │               └── try-lock feature "default"
-    │                   └── try-lock v0.2.5
-    ├── hyper feature "http1"
-    │   └── hyper v1.10.1 (*)
-    ├── hyper feature "http2"
-    │   └── hyper v1.10.1 (*)
-    ├── hyper feature "server"
-    │   └── hyper v1.10.1 (*)
-    ├── hyper-util feature "tokio"
-    │   ├── hyper-util v0.1.20
-    │   │   ├── tokio v1.52.3 (*)
-    │   │   ├── bytes feature "default" (*)
-    │   │   ├── http feature "default" (*)
-    │   │   ├── pin-project-lite feature "default" (*)
-    │   │   ├── http-body feature "default" (*)
-    │   │   └── hyper feature "default"
-    │   │       └── hyper v1.10.1 (*)
-    │   ├── tokio feature "rt" (*)
-    │   ├── tokio feature "time" (*)
-    │   └── hyper-util feature "tokio" (*)
-    ├── num-bigint feature "default"
-    │   ├── num-bigint v0.4.6
-    │   │   ├── num-integer feature "i128"
-    │   │   │   └── num-integer v0.1.46
-    │   │   │       └── num-traits feature "i128"
-    │   │   │           └── num-traits v0.2.19
-    │   │   │               [build-dependencies]
-    │   │   │               └── autocfg feature "default"
-    │   │   │                   └── autocfg v1.5.0
-    │   │   └── num-traits feature "i128" (*)
-    │   └── num-bigint feature "std"
-    │       ├── num-bigint v0.4.6 (*)
-    │       ├── num-integer feature "std"
-    │       │   ├── num-integer v0.1.46 (*)
-    │       │   └── num-traits feature "std"
-    │       │       └── num-traits v0.2.19 (*)
-    │       └── num-traits feature "std" (*)
-    ├── num-traits feature "default"
-    │   ├── num-traits v0.2.19 (*)
-    │   └── num-traits feature "std" (*)
-    ├── rustls feature "default"
-    │   ├── rustls v0.23.35 (*)
-    │   ├── rustls feature "aws_lc_rs"
-    │   │   ├── rustls v0.23.35 (*)
-    │   │   ├── rustls feature "aws-lc-rs"
-    │   │   │   └── rustls v0.23.35 (*)
-    │   │   ├── aws-lc-rs feature "aws-lc-sys"
-    │   │   │   └── aws-lc-rs v1.17.0 (*)
-    │   │   ├── aws-lc-rs feature "prebuilt-nasm"
-    │   │   │   ├── aws-lc-rs v1.17.0 (*)
-    │   │   │   └── aws-lc-sys feature "prebuilt-nasm"
-    │   │   │       └── aws-lc-sys v0.41.0 (*)
-    │   │   └── rustls-webpki feature "aws-lc-rs"
-    │   │       ├── rustls-webpki v0.103.13 (*)
-    │   │       ├── aws-lc-rs feature "aws-lc-sys" (*)
-    │   │       ├── aws-lc-rs feature "prebuilt-nasm" (*)
-    │   │       └── rustls-webpki feature "aws-lc-rs" (*)
-    │   ├── rustls feature "logging"
-    │   │   ├── rustls v0.23.35 (*)
-    │   │   └── rustls feature "log"
-    │   │       └── rustls v0.23.35 (*)
-    │   ├── rustls feature "prefer-post-quantum"
-    │   │   ├── rustls v0.23.35 (*)
-    │   │   └── rustls feature "aws_lc_rs" (*)
-    │   ├── rustls feature "std" (*)
-    │   └── rustls feature "tls12"
-    │       └── rustls v0.23.35 (*)
-    ├── rustls-pemfile feature "default"
-    │   ├── rustls-pemfile v2.2.0
-    │   │   └── rustls-pki-types feature "default" (*)
-    │   └── rustls-pemfile feature "std"
-    │       ├── rustls-pemfile v2.2.0 (*)
-    │       └── rustls-pki-types feature "std" (*)
-    ├── tokio-rustls feature "default"
-    │   ├── tokio-rustls v0.26.4
-    │   │   ├── tokio feature "default" (*)
-    │   │   └── rustls feature "std" (*)
-    │   ├── tokio-rustls feature "aws_lc_rs"
-    │   │   ├── tokio-rustls v0.26.4 (*)
-    │   │   └── rustls feature "aws_lc_rs" (*)
-    │   ├── tokio-rustls feature "logging"
-    │   │   ├── tokio-rustls v0.26.4 (*)
-    │   │   └── rustls feature "logging" (*)
-    │   └── tokio-rustls feature "tls12"
-    │       ├── tokio-rustls v0.26.4 (*)
-    │       └── rustls feature "tls12" (*)
-    └── tower-service feature "default"
-        └── tower-service v0.3.3
+├── http-body-util v0.1.3
+│   ├── futures-core v0.3.33
+│   ├── bytes feature "default"
+│   │   ├── bytes v1.11.1
+│   │   └── bytes feature "std"
+│   │       └── bytes v1.11.1
+│   ├── http feature "default"
+│   │   ├── http v1.4.2
+│   │   │   ├── bytes feature "default" (*)
+│   │   │   └── itoa feature "default"
+│   │   │       └── itoa v1.0.18
+│   │   └── http feature "std"
+│   │       └── http v1.4.2 (*)
+│   ├── pin-project-lite feature "default"
+│   │   └── pin-project-lite v0.2.17
+│   └── http-body feature "default"
+│       └── http-body v1.0.1
+│           ├── bytes feature "default" (*)
+│           └── http feature "default" (*)
+├── rustls-platform-verifier v0.7.0
+│   ├── rustls feature "std"
+│   │   ├── rustls v0.23.35
+│   │   │   ├── aws-lc-rs v1.17.0
+│   │   │   │   ├── aws-lc-sys v0.41.0
+│   │   │   │   │   [build-dependencies]
+│   │   │   │   │   ├── cc feature "default"
+│   │   │   │   │   │   └── cc v1.4.4
+│   │   │   │   │   │       ├── jobserver v0.1.34
+│   │   │   │   │   │       │   └── libc feature "default"
+│   │   │   │   │   │       │       ├── libc v0.2.189
+│   │   │   │   │   │       │       └── libc feature "std"
+│   │   │   │   │   │       │           └── libc v0.2.189
+│   │   │   │   │   │       ├── libc v0.2.189
+│   │   │   │   │   │       ├── find-msvc-tools feature "default"
+│   │   │   │   │   │       │   └── find-msvc-tools v0.1.11
+│   │   │   │   │   │       └── shlex feature "default"
+│   │   │   │   │   │           ├── shlex v2.0.1
+│   │   │   │   │   │           └── shlex feature "std"
+│   │   │   │   │   │               └── shlex v2.0.1
+│   │   │   │   │   ├── cc feature "parallel"
+│   │   │   │   │   │   └── cc v1.4.4 (*)
+│   │   │   │   │   ├── cmake feature "default"
+│   │   │   │   │   │   └── cmake v0.1.58
+│   │   │   │   │   │       └── cc feature "default" (*)
+│   │   │   │   │   ├── dunce feature "default"
+│   │   │   │   │   │   └── dunce v1.0.5
+│   │   │   │   │   └── fs_extra feature "default"
+│   │   │   │   │       └── fs_extra v1.3.0
+│   │   │   │   └── zeroize feature "default"
+│   │   │   │       ├── zeroize v1.8.2
+│   │   │   │       └── zeroize feature "alloc"
+│   │   │   │           └── zeroize v1.8.2
+│   │   │   ├── subtle v2.6.1
+│   │   │   ├── once_cell feature "alloc"
+│   │   │   │   ├── once_cell v1.21.4
+│   │   │   │   └── once_cell feature "race"
+│   │   │   │       └── once_cell v1.21.4
+│   │   │   ├── once_cell feature "race" (*)
+│   │   │   ├── zeroize feature "default" (*)
+│   │   │   ├── log feature "default"
+│   │   │   │   └── log v0.4.29
+│   │   │   ├── rustls-pki-types feature "alloc"
+│   │   │   │   └── rustls-pki-types v1.14.1
+│   │   │   │       └── zeroize feature "default" (*)
+│   │   │   ├── rustls-pki-types feature "default"
+│   │   │   │   ├── rustls-pki-types v1.14.1 (*)
+│   │   │   │   └── rustls-pki-types feature "alloc" (*)
+│   │   │   └── rustls-webpki feature "alloc"
+│   │   │       ├── rustls-webpki v0.103.13
+│   │   │       │   ├── aws-lc-rs v1.17.0 (*)
+│   │   │       │   ├── rustls-pki-types v1.14.1 (*)
+│   │   │       │   └── untrusted feature "default"
+│   │   │       │       └── untrusted v0.9.0
+│   │   │       └── rustls-pki-types feature "alloc" (*)
+│   │   ├── once_cell feature "std"
+│   │   │   ├── once_cell v1.21.4
+│   │   │   └── once_cell feature "alloc" (*)
+│   │   ├── rustls-pki-types feature "std"
+│   │   │   ├── rustls-pki-types v1.14.1 (*)
+│   │   │   └── rustls-pki-types feature "alloc" (*)
+│   │   └── rustls-webpki feature "std"
+│   │       ├── rustls-webpki v0.103.13 (*)
+│   │       ├── rustls-pki-types feature "std" (*)
+│   │       └── rustls-webpki feature "alloc" (*)
+│   ├── log feature "default" (*)
+│   ├── core-foundation feature "default"
+│   │   ├── core-foundation v0.10.1
+│   │   │   ├── core-foundation-sys v0.8.7
+│   │   │   └── libc feature "default" (*)
+│   │   └── core-foundation feature "link"
+│   │       ├── core-foundation v0.10.1 (*)
+│   │       └── core-foundation-sys feature "link"
+│   │           └── core-foundation-sys v0.8.7
+│   ├── core-foundation-sys feature "default"
+│   │   ├── core-foundation-sys v0.8.7
+│   │   └── core-foundation-sys feature "link" (*)
+│   ├── security-framework feature "default"
+│   │   ├── security-framework v3.7.0
+│   │   │   ├── security-framework-sys v2.17.0
+│   │   │   │   ├── libc feature "default" (*)
+│   │   │   │   └── core-foundation-sys feature "default" (*)
+│   │   │   ├── libc feature "default" (*)
+│   │   │   ├── core-foundation feature "default" (*)
+│   │   │   ├── core-foundation-sys feature "default" (*)
+│   │   │   └── bitflags feature "default"
+│   │   │       └── bitflags v2.13.1
+│   │   ├── security-framework feature "OSX_10_14"
+│   │   │   └── security-framework v3.7.0 (*)
+│   │   ├── security-framework feature "alpn"
+│   │   │   └── security-framework v3.7.0 (*)
+│   │   └── security-framework feature "session-tickets"
+│   │       └── security-framework v3.7.0 (*)
+│   └── security-framework-sys feature "default"
+│       ├── security-framework-sys v2.17.0 (*)
+│       └── security-framework-sys feature "OSX_10_13"
+│           └── security-framework-sys v2.17.0 (*)
+├── sifr_runtime v0.0.0 (<repo>/crates/sifr_runtime)
+│   ├── http-body-util v0.1.3 (*)
+│   ├── rustls-platform-verifier v0.7.0 (*)
+│   ├── h2 feature "default"
+│   │   └── h2 v0.4.14
+│   │       ├── futures-core v0.3.33
+│   │       ├── futures-sink v0.3.33
+│   │       ├── atomic-waker feature "default"
+│   │       │   └── atomic-waker v1.1.2
+│   │       ├── bytes feature "default" (*)
+│   │       ├── fnv feature "default"
+│   │       │   ├── fnv v1.0.7
+│   │       │   └── fnv feature "std"
+│   │       │       └── fnv v1.0.7
+│   │       ├── http feature "default" (*)
+│   │       ├── indexmap feature "default"
+│   │       │   ├── indexmap v2.14.0
+│   │       │   │   ├── equivalent v1.0.2
+│   │       │   │   └── hashbrown v0.17.1
+│   │       │   └── indexmap feature "std"
+│   │       │       └── indexmap v2.14.0 (*)
+│   │       ├── indexmap feature "std" (*)
+│   │       ├── slab feature "default"
+│   │       │   ├── slab v0.4.12
+│   │       │   └── slab feature "std"
+│   │       │       └── slab v0.4.12
+│   │       ├── tokio feature "default"
+│   │       │   └── tokio v1.52.3
+│   │       │       ├── mio v1.2.1
+│   │       │       │   └── libc feature "default" (*)
+│   │       │       ├── bytes feature "default" (*)
+│   │       │       ├── libc feature "default" (*)
+│   │       │       ├── pin-project-lite feature "default" (*)
+│   │       │       ├── signal-hook-registry feature "default"
+│   │       │       │   └── signal-hook-registry v1.4.8
+│   │       │       │       ├── libc feature "default" (*)
+│   │       │       │       └── errno feature "default"
+│   │       │       │           ├── errno v0.3.14
+│   │       │       │           │   └── libc v0.2.189
+│   │       │       │           └── errno feature "std"
+│   │       │       │               ├── errno v0.3.14 (*)
+│   │       │       │               └── libc feature "std" (*)
+│   │       │       ├── socket2 feature "all"
+│   │       │       │   └── socket2 v0.6.4
+│   │       │       │       └── libc feature "default" (*)
+│   │       │       ├── socket2 feature "default"
+│   │       │       │   └── socket2 v0.6.4 (*)
+│   │       │       └── tokio-macros feature "default"
+│   │       │           └── tokio-macros v2.7.0 (proc-macro)
+│   │       │               ├── proc-macro2 feature "default"
+│   │       │               │   ├── proc-macro2 v1.0.107
+│   │       │               │   │   └── unicode-ident feature "default"
+│   │       │               │   │       └── unicode-ident v1.0.24
+│   │       │               │   └── proc-macro2 feature "proc-macro"
+│   │       │               │       └── proc-macro2 v1.0.107 (*)
+│   │       │               ├── quote feature "default"
+│   │       │               │   ├── quote v1.0.45
+│   │       │               │   │   └── proc-macro2 v1.0.107 (*)
+│   │       │               │   └── quote feature "proc-macro"
+│   │       │               │       ├── quote v1.0.45 (*)
+│   │       │               │       └── proc-macro2 feature "proc-macro" (*)
+│   │       │               ├── syn feature "default"
+│   │       │               │   ├── syn v2.0.117
+│   │       │               │   │   ├── proc-macro2 v1.0.107 (*)
+│   │       │               │   │   ├── quote v1.0.45 (*)
+│   │       │               │   │   └── unicode-ident feature "default" (*)
+│   │       │               │   ├── syn feature "clone-impls"
+│   │       │               │   │   └── syn v2.0.117 (*)
+│   │       │               │   ├── syn feature "derive"
+│   │       │               │   │   └── syn v2.0.117 (*)
+│   │       │               │   ├── syn feature "parsing"
+│   │       │               │   │   └── syn v2.0.117 (*)
+│   │       │               │   ├── syn feature "printing"
+│   │       │               │   │   └── syn v2.0.117 (*)
+│   │       │               │   └── syn feature "proc-macro"
+│   │       │               │       ├── syn v2.0.117 (*)
+│   │       │               │       ├── proc-macro2 feature "proc-macro" (*)
+│   │       │               │       └── quote feature "proc-macro" (*)
+│   │       │               └── syn feature "full"
+│   │       │                   └── syn v2.0.117 (*)
+│   │       ├── tokio feature "io-util"
+│   │       │   ├── tokio v1.52.3 (*)
+│   │       │   └── tokio feature "bytes"
+│   │       │       └── tokio v1.52.3 (*)
+│   │       ├── tokio-util feature "codec"
+│   │       │   └── tokio-util v0.7.18
+│   │       │       ├── bytes feature "default" (*)
+│   │       │       ├── futures-core feature "default"
+│   │       │       │   ├── futures-core v0.3.33
+│   │       │       │   └── futures-core feature "std"
+│   │       │       │       ├── futures-core v0.3.33
+│   │       │       │       └── futures-core feature "alloc"
+│   │       │       │           └── futures-core v0.3.33
+│   │       │       ├── futures-sink feature "default"
+│   │       │       │   ├── futures-sink v0.3.33
+│   │       │       │   └── futures-sink feature "std"
+│   │       │       │       ├── futures-sink v0.3.33
+│   │       │       │       └── futures-sink feature "alloc"
+│   │       │       │           └── futures-sink v0.3.33
+│   │       │       ├── tokio feature "default" (*)
+│   │       │       ├── tokio feature "sync"
+│   │       │       │   └── tokio v1.52.3 (*)
+│   │       │       └── pin-project-lite feature "default" (*)
+│   │       ├── tokio-util feature "default"
+│   │       │   └── tokio-util v0.7.18 (*)
+│   │       ├── tokio-util feature "io"
+│   │       │   └── tokio-util v0.7.18 (*)
+│   │       └── tracing feature "std"
+│   │           ├── tracing v0.1.44
+│   │           │   ├── tracing-core v0.1.36
+│   │           │   │   └── once_cell feature "default"
+│   │           │   │       ├── once_cell v1.21.4
+│   │           │   │       └── once_cell feature "std" (*)
+│   │           │   └── pin-project-lite feature "default" (*)
+│   │           └── tracing-core feature "std"
+│   │               ├── tracing-core v0.1.36 (*)
+│   │               └── tracing-core feature "once_cell"
+│   │                   └── tracing-core v0.1.36 (*)
+│   ├── bytes feature "default" (*)
+│   ├── http feature "default" (*)
+│   ├── indexmap feature "default" (*)
+│   ├── tokio feature "default" (*)
+│   ├── tokio feature "io-util" (*)
+│   ├── tokio feature "macros"
+│   │   ├── tokio v1.52.3 (*)
+│   │   └── tokio feature "tokio-macros"
+│   │       └── tokio v1.52.3 (*)
+│   ├── tokio feature "net"
+│   │   ├── tokio v1.52.3 (*)
+│   │   ├── tokio feature "libc"
+│   │   │   └── tokio v1.52.3 (*)
+│   │   ├── tokio feature "mio"
+│   │   │   └── tokio v1.52.3 (*)
+│   │   ├── tokio feature "socket2"
+│   │   │   └── tokio v1.52.3 (*)
+│   │   ├── mio feature "net"
+│   │   │   └── mio v1.2.1 (*)
+│   │   ├── mio feature "os-ext"
+│   │   │   ├── mio v1.2.1 (*)
+│   │   │   └── mio feature "os-poll"
+│   │   │       └── mio v1.2.1 (*)
+│   │   └── mio feature "os-poll" (*)
+│   ├── tokio feature "process"
+│   │   ├── tokio v1.52.3 (*)
+│   │   ├── tokio feature "bytes" (*)
+│   │   ├── tokio feature "libc" (*)
+│   │   ├── tokio feature "mio" (*)
+│   │   ├── tokio feature "signal-hook-registry"
+│   │   │   └── tokio v1.52.3 (*)
+│   │   ├── mio feature "net" (*)
+│   │   ├── mio feature "os-ext" (*)
+│   │   └── mio feature "os-poll" (*)
+│   ├── tokio feature "rt"
+│   │   └── tokio v1.52.3 (*)
+│   ├── tokio feature "signal"
+│   │   ├── tokio v1.52.3 (*)
+│   │   ├── tokio feature "libc" (*)
+│   │   ├── tokio feature "mio" (*)
+│   │   ├── tokio feature "signal-hook-registry" (*)
+│   │   ├── mio feature "net" (*)
+│   │   ├── mio feature "os-ext" (*)
+│   │   └── mio feature "os-poll" (*)
+│   ├── tokio feature "sync" (*)
+│   ├── tokio feature "time"
+│   │   └── tokio v1.52.3 (*)
+│   ├── http-body feature "default" (*)
+│   ├── hyper feature "client"
+│   │   └── hyper v1.10.1
+│   │       ├── h2 feature "default" (*)
+│   │       ├── atomic-waker feature "default" (*)
+│   │       ├── bytes feature "default" (*)
+│   │       ├── futures-core feature "default" (*)
+│   │       ├── http feature "default" (*)
+│   │       ├── itoa feature "default" (*)
+│   │       ├── tokio feature "default" (*)
+│   │       ├── tokio feature "sync" (*)
+│   │       ├── pin-project-lite feature "default" (*)
+│   │       ├── http-body feature "default" (*)
+│   │       ├── futures-channel feature "default"
+│   │       │   ├── futures-channel v0.3.33
+│   │       │   │   └── futures-core v0.3.33
+│   │       │   └── futures-channel feature "std"
+│   │       │       ├── futures-channel v0.3.33 (*)
+│   │       │       ├── futures-core feature "std" (*)
+│   │       │       └── futures-channel feature "alloc"
+│   │       │           ├── futures-channel v0.3.33 (*)
+│   │       │           └── futures-core feature "alloc" (*)
+│   │       ├── httparse feature "default"
+│   │       │   ├── httparse v1.10.1
+│   │       │   └── httparse feature "std"
+│   │       │       └── httparse v1.10.1
+│   │       ├── httpdate feature "default"
+│   │       │   └── httpdate v1.0.3
+│   │       ├── smallvec feature "const_generics"
+│   │       │   └── smallvec v1.15.1
+│   │       ├── smallvec feature "const_new"
+│   │       │   ├── smallvec v1.15.1
+│   │       │   └── smallvec feature "const_generics" (*)
+│   │       ├── smallvec feature "default"
+│   │       │   └── smallvec v1.15.1
+│   │       └── want feature "default"
+│   │           └── want v0.3.1
+│   │               └── try-lock feature "default"
+│   │                   └── try-lock v0.2.5
+│   ├── hyper feature "http1"
+│   │   └── hyper v1.10.1 (*)
+│   ├── hyper feature "http2"
+│   │   └── hyper v1.10.1 (*)
+│   ├── hyper feature "server"
+│   │   └── hyper v1.10.1 (*)
+│   ├── hyper-util feature "tokio"
+│   │   ├── hyper-util v0.1.20
+│   │   │   ├── tokio v1.52.3 (*)
+│   │   │   ├── bytes feature "default" (*)
+│   │   │   ├── http feature "default" (*)
+│   │   │   ├── pin-project-lite feature "default" (*)
+│   │   │   ├── http-body feature "default" (*)
+│   │   │   └── hyper feature "default"
+│   │   │       └── hyper v1.10.1 (*)
+│   │   ├── tokio feature "rt" (*)
+│   │   ├── tokio feature "time" (*)
+│   │   └── hyper-util feature "tokio" (*)
+│   ├── rustls feature "default"
+│   │   ├── rustls v0.23.35 (*)
+│   │   ├── rustls feature "aws_lc_rs"
+│   │   │   ├── rustls v0.23.35 (*)
+│   │   │   ├── rustls feature "aws-lc-rs"
+│   │   │   │   └── rustls v0.23.35 (*)
+│   │   │   ├── aws-lc-rs feature "aws-lc-sys"
+│   │   │   │   └── aws-lc-rs v1.17.0 (*)
+│   │   │   ├── aws-lc-rs feature "prebuilt-nasm"
+│   │   │   │   ├── aws-lc-rs v1.17.0 (*)
+│   │   │   │   └── aws-lc-sys feature "prebuilt-nasm"
+│   │   │   │       └── aws-lc-sys v0.41.0 (*)
+│   │   │   └── rustls-webpki feature "aws-lc-rs"
+│   │   │       ├── rustls-webpki v0.103.13 (*)
+│   │   │       ├── aws-lc-rs feature "aws-lc-sys" (*)
+│   │   │       ├── aws-lc-rs feature "prebuilt-nasm" (*)
+│   │   │       └── rustls-webpki feature "aws-lc-rs" (*)
+│   │   ├── rustls feature "logging"
+│   │   │   ├── rustls v0.23.35 (*)
+│   │   │   └── rustls feature "log"
+│   │   │       └── rustls v0.23.35 (*)
+│   │   ├── rustls feature "prefer-post-quantum"
+│   │   │   ├── rustls v0.23.35 (*)
+│   │   │   └── rustls feature "aws_lc_rs" (*)
+│   │   ├── rustls feature "std" (*)
+│   │   └── rustls feature "tls12"
+│   │       └── rustls v0.23.35 (*)
+│   ├── rustls-pemfile feature "default"
+│   │   ├── rustls-pemfile v2.2.0
+│   │   │   └── rustls-pki-types feature "default" (*)
+│   │   └── rustls-pemfile feature "std"
+│   │       ├── rustls-pemfile v2.2.0 (*)
+│   │       └── rustls-pki-types feature "std" (*)
+│   ├── encoding_rs feature "default"
+│   │   ├── encoding_rs v0.8.35
+│   │   │   └── cfg-if feature "default"
+│   │   │       └── cfg-if v1.0.4
+│   │   └── encoding_rs feature "alloc"
+│   │       └── encoding_rs v0.8.35 (*)
+│   ├── num-bigint feature "default"
+│   │   ├── num-bigint v0.4.6
+│   │   │   ├── num-integer feature "i128"
+│   │   │   │   └── num-integer v0.1.46
+│   │   │   │       └── num-traits feature "i128"
+│   │   │   │           └── num-traits v0.2.19
+│   │   │   │               [build-dependencies]
+│   │   │   │               └── autocfg feature "default"
+│   │   │   │                   └── autocfg v1.5.0
+│   │   │   └── num-traits feature "i128" (*)
+│   │   └── num-bigint feature "std"
+│   │       ├── num-bigint v0.4.6 (*)
+│   │       ├── num-integer feature "std"
+│   │       │   ├── num-integer v0.1.46 (*)
+│   │       │   └── num-traits feature "std"
+│   │       │       └── num-traits v0.2.19 (*)
+│   │       └── num-traits feature "std" (*)
+│   ├── num-traits feature "default"
+│   │   ├── num-traits v0.2.19 (*)
+│   │   └── num-traits feature "std" (*)
+│   ├── tokio-rustls feature "default"
+│   │   ├── tokio-rustls v0.26.4
+│   │   │   ├── tokio feature "default" (*)
+│   │   │   └── rustls feature "std" (*)
+│   │   ├── tokio-rustls feature "aws_lc_rs"
+│   │   │   ├── tokio-rustls v0.26.4 (*)
+│   │   │   └── rustls feature "aws_lc_rs" (*)
+│   │   ├── tokio-rustls feature "logging"
+│   │   │   ├── tokio-rustls v0.26.4 (*)
+│   │   │   └── rustls feature "logging" (*)
+│   │   └── tokio-rustls feature "tls12"
+│   │       ├── tokio-rustls v0.26.4 (*)
+│   │       └── rustls feature "tls12" (*)
+│   └── tower-service feature "default"
+│       └── tower-service v0.3.3
+├── h2 feature "default" (*)
+├── http feature "default" (*)
+├── tokio feature "default" (*)
+├── tokio feature "io-util" (*)
+├── tokio feature "macros" (*)
+├── tokio feature "net" (*)
+├── tokio feature "process" (*)
+├── tokio feature "rt" (*)
+├── tokio feature "signal" (*)
+├── tokio feature "sync" (*)
+├── tokio feature "time" (*)
+├── http-body feature "default" (*)
+├── hyper feature "client" (*)
+├── hyper feature "http1" (*)
+├── hyper feature "http2" (*)
+├── hyper feature "server" (*)
+├── hyper-util feature "tokio" (*)
+├── rustls feature "default" (*)
+├── rustls-pemfile feature "default" (*)
+├── tokio-rustls feature "default" (*)
+└── tower-service feature "default" (*)
+[dev-dependencies]
+└── static_assertions feature "default"
+    └── static_assertions v1.1.0

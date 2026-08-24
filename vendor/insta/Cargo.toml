@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.66.0"
 name = "insta"
-version = "1.47.2"
+version = "1.48.0"
 authors = ["Armin Ronacher <armin.ronacher@active-4.com>"]
 build = false
 exclude = ["assets/*"]
@@ -50,7 +50,10 @@ csv = [
     "serde",
 ]
 default = ["colors"]
-filters = ["regex"]
+filters = [
+    "regex",
+    "strip-ansi-escapes",
+]
 glob = [
     "walkdir",
     "globset",
@@ -165,6 +168,10 @@ optional = true
 [dependencies.similar]
 version = "2.1.0"
 features = ["inline"]
+
+[dependencies.strip-ansi-escapes]
+version = "0.2"
+optional = true
 
 [dependencies.tempfile]
 version = "3"

@@ -307,7 +307,7 @@ class PackageExampleError(Error):
 def decode(input: bytes) -> str: ...
 def verify_serde_derive_package() -> str:
     marker: str = decode(b"sifr")
-    assert "serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed" in marker
+    assert "serde_derive=1.0.229;upstream=compiled;sifr_wrapper_macro=executed" in marker
     return marker
 """
     proc_macro_failures: list[str] = []
@@ -334,7 +334,7 @@ def verify_serde_derive_package() -> str:
         "proc_macro_trust",
         "examples/serde_derive.sifr",
         proc_macro_example.replace(
-            "serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed",
+            "serde_derive=1.0.229;upstream=compiled;sifr_wrapper_macro=executed",
             "missing",
         ),
         "serde_derive",
@@ -726,7 +726,7 @@ def _validate_package_example_text(
     if fixture_id == "proc_macro_trust":
         marker = {
             "serde_derive": (
-                "serde_derive=1.0.228;"
+                "serde_derive=1.0.229;"
                 "upstream=compiled;sifr_wrapper_macro=executed"
             ),
             "prost-build": "prost-build=0.14.4;message=sifr.probe.Probe",

@@ -35,7 +35,7 @@ fn test_build_cli_tooling_probe_and_anyhow_adapter() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         stdout.contains(
-            "clap=4.6.1;mode=check;tracing=0.1.44;subscriber=0.3.23;env-filter=enabled;event=observed;anyhow=1.0.102;adapter=CliError"
+            "clap=4.6.6;mode=check;tracing=0.1.44;subscriber=0.3.23;env-filter=enabled;event=observed;anyhow=1.0.104;adapter=CliError"
         ),
         "real CLI/tooling execution marker must be observed: {stdout}"
     );
@@ -123,8 +123,8 @@ fn assert_exact_cli_dependency_graph(package_root: &Path) {
     );
     let tree = String::from_utf8_lossy(&output.stdout);
     for package in [
-        "anyhow v1.0.102",
-        "clap v4.6.1",
+        "anyhow v1.0.104",
+        "clap v4.6.6",
         "tracing v0.1.44",
         "tracing-subscriber v0.3.23",
         "tracing-subscriber feature \"env-filter\"",

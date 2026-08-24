@@ -23,7 +23,7 @@ sifr_package = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_sysroot = { workspace = true }
 sifr_syntax = { workspace = true }
-clap = { version = "4.6.1", features = ["derive"] }
+clap = { version = "4.6.6", features = ["derive"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
@@ -31,7 +31,7 @@ sha2 = { workspace = true }
 [dev-dependencies]
 serde_json = { workspace = true }
 sifr_stdlib_manifest = { workspace = true }
-tempfile = "3.23.0"
+tempfile = "3.27.0"
 
 [lints]
 workspace = true

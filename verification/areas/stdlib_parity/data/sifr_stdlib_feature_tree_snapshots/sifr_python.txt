@@ -1,10 +1,10 @@
 sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 └── sifr_runtime v0.0.0 (<repo>/crates/sifr_runtime)
-    ├── pyo3 v0.29.0
+    ├── pyo3 v0.29.2
     │   ├── libc feature "default"
-    │   │   ├── libc v0.2.186
+    │   │   ├── libc v0.2.189
     │   │   └── libc feature "std"
-    │   │       └── libc v0.2.186
+    │   │       └── libc v0.2.189
     │   ├── once_cell feature "default"
     │   │   ├── once_cell v1.21.4
     │   │   └── once_cell feature "std"
@@ -14,11 +14,11 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
     │   │           └── once_cell feature "race"
     │   │               └── once_cell v1.21.4
     │   └── pyo3-ffi feature "default"
-    │       └── pyo3-ffi v0.29.0
+    │       └── pyo3-ffi v0.29.2
     │           └── libc feature "default" (*)
     │           [build-dependencies]
     │           └── pyo3-build-config feature "default"
-    │               └── pyo3-build-config v0.29.0
+    │               └── pyo3-build-config v0.29.2
     │                   └── target-lexicon feature "default"
     │                       └── target-lexicon v0.13.5
     │                   [build-dependencies]
@@ -34,7 +34,7 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
     ├── indexmap feature "default"
     │   ├── indexmap v2.14.0
     │   │   ├── equivalent v1.0.2
-    │   │   └── hashbrown v0.17.0
+    │   │   └── hashbrown v0.17.1
     │   └── indexmap feature "std"
     │       └── indexmap v2.14.0 (*)
     ├── libc feature "default" (*)
@@ -55,6 +55,114 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
     │       │   └── num-traits feature "std"
     │       │       └── num-traits v0.2.19 (*)
     │       └── num-traits feature "std" (*)
-    └── num-traits feature "default"
-        ├── num-traits v0.2.19 (*)
-        └── num-traits feature "std" (*)
+    ├── num-traits feature "default"
+    │   ├── num-traits v0.2.19 (*)
+    │   └── num-traits feature "std" (*)
+    ├── tokio feature "default"
+    │   └── tokio v1.52.3
+    │       ├── mio v1.2.1
+    │       │   └── libc feature "default" (*)
+    │       ├── libc feature "default" (*)
+    │       ├── bytes feature "default"
+    │       │   ├── bytes v1.11.1
+    │       │   └── bytes feature "std"
+    │       │       └── bytes v1.11.1
+    │       ├── pin-project-lite feature "default"
+    │       │   └── pin-project-lite v0.2.17
+    │       ├── signal-hook-registry feature "default"
+    │       │   └── signal-hook-registry v1.4.8
+    │       │       ├── libc feature "default" (*)
+    │       │       └── errno feature "default"
+    │       │           ├── errno v0.3.14
+    │       │           │   └── libc v0.2.189
+    │       │           └── errno feature "std"
+    │       │               ├── errno v0.3.14 (*)
+    │       │               └── libc feature "std" (*)
+    │       ├── socket2 feature "all"
+    │       │   └── socket2 v0.6.4
+    │       │       └── libc feature "default" (*)
+    │       ├── socket2 feature "default"
+    │       │   └── socket2 v0.6.4 (*)
+    │       └── tokio-macros feature "default"
+    │           └── tokio-macros v2.7.0 (proc-macro)
+    │               ├── proc-macro2 feature "default"
+    │               │   ├── proc-macro2 v1.0.107
+    │               │   │   └── unicode-ident feature "default"
+    │               │   │       └── unicode-ident v1.0.24
+    │               │   └── proc-macro2 feature "proc-macro"
+    │               │       └── proc-macro2 v1.0.107 (*)
+    │               ├── quote feature "default"
+    │               │   ├── quote v1.0.45
+    │               │   │   └── proc-macro2 v1.0.107 (*)
+    │               │   └── quote feature "proc-macro"
+    │               │       ├── quote v1.0.45 (*)
+    │               │       └── proc-macro2 feature "proc-macro" (*)
+    │               ├── syn feature "default"
+    │               │   ├── syn v2.0.117
+    │               │   │   ├── proc-macro2 v1.0.107 (*)
+    │               │   │   ├── quote v1.0.45 (*)
+    │               │   │   └── unicode-ident feature "default" (*)
+    │               │   ├── syn feature "clone-impls"
+    │               │   │   └── syn v2.0.117 (*)
+    │               │   ├── syn feature "derive"
+    │               │   │   └── syn v2.0.117 (*)
+    │               │   ├── syn feature "parsing"
+    │               │   │   └── syn v2.0.117 (*)
+    │               │   ├── syn feature "printing"
+    │               │   │   └── syn v2.0.117 (*)
+    │               │   └── syn feature "proc-macro"
+    │               │       ├── syn v2.0.117 (*)
+    │               │       ├── proc-macro2 feature "proc-macro" (*)
+    │               │       └── quote feature "proc-macro" (*)
+    │               └── syn feature "full"
+    │                   └── syn v2.0.117 (*)
+    ├── tokio feature "io-util"
+    │   ├── tokio v1.52.3 (*)
+    │   └── tokio feature "bytes"
+    │       └── tokio v1.52.3 (*)
+    ├── tokio feature "macros"
+    │   ├── tokio v1.52.3 (*)
+    │   └── tokio feature "tokio-macros"
+    │       └── tokio v1.52.3 (*)
+    ├── tokio feature "net"
+    │   ├── tokio v1.52.3 (*)
+    │   ├── tokio feature "libc"
+    │   │   └── tokio v1.52.3 (*)
+    │   ├── tokio feature "mio"
+    │   │   └── tokio v1.52.3 (*)
+    │   ├── tokio feature "socket2"
+    │   │   └── tokio v1.52.3 (*)
+    │   ├── mio feature "net"
+    │   │   └── mio v1.2.1 (*)
+    │   ├── mio feature "os-ext"
+    │   │   ├── mio v1.2.1 (*)
+    │   │   └── mio feature "os-poll"
+    │   │       └── mio v1.2.1 (*)
+    │   └── mio feature "os-poll" (*)
+    ├── tokio feature "process"
+    │   ├── tokio v1.52.3 (*)
+    │   ├── tokio feature "bytes" (*)
+    │   ├── tokio feature "libc" (*)
+    │   ├── tokio feature "mio" (*)
+    │   ├── tokio feature "signal-hook-registry"
+    │   │   └── tokio v1.52.3 (*)
+    │   ├── mio feature "net" (*)
+    │   ├── mio feature "os-ext" (*)
+    │   └── mio feature "os-poll" (*)
+    ├── tokio feature "rt"
+    │   └── tokio v1.52.3 (*)
+    ├── tokio feature "signal"
+    │   ├── tokio v1.52.3 (*)
+    │   ├── tokio feature "libc" (*)
+    │   ├── tokio feature "mio" (*)
+    │   ├── tokio feature "signal-hook-registry" (*)
+    │   ├── mio feature "net" (*)
+    │   ├── mio feature "os-ext" (*)
+    │   └── mio feature "os-poll" (*)
+    ├── tokio feature "sync"
+    │   └── tokio v1.52.3 (*)
+    └── tokio feature "time"
+        └── tokio v1.52.3 (*)
+[dev-dependencies]
+└── static_assertions feature "default"
+    └── static_assertions v1.1.0

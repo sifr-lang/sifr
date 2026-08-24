@@ -12,11 +12,7 @@
 [package]
 edition = "2021"
 name = "zerocopy-derive"
-version = "0.8.48"
-authors = [
-    "Joshua Liebow-Feeser <joshlf@google.com>",
-    "Jack Wrenn <jswrenn@amazon.com>",
-]
+version = "0.8.56"
 build = false
 exclude = [
     ".*",
@@ -188,7 +184,7 @@ features = ["full"]
 version = "1.0.9"
 
 [dev-dependencies.prettyplease]
-version = "=0.2.17"
+version = "0.2.17"
 
 [dev-dependencies.rustversion]
 version = "1.0"
@@ -204,6 +200,7 @@ features = ["visit"]
 level = "warn"
 priority = 0
 check-cfg = [
+    "cfg(__ZEROCOPY_INTERNAL_USE_ONLY_NIGHTLY_FEATURES_IN_TESTS)",
     "cfg(zerocopy_derive_union_into_bytes)",
-    "cfg(zerocopy_unstable_derive_on_error)",
+    "cfg(zerocopy_unstable_linux)",
 ]

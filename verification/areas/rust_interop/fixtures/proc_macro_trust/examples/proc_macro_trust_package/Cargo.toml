@@ -6,7 +6,7 @@ resolver = "3"
 prost = { version = "=0.14.4", default-features = true }
 prost_build_upstream = { package = "prost-build", version = "=0.14.4", default-features = true }
 prost_types = { package = "prost-types", version = "=0.14.4", default-features = true }
-serde_derive_upstream = { package = "serde_derive", version = "=1.0.228", default-features = true }
+serde_derive_upstream = { package = "serde_derive", version = "=1.0.229", default-features = true }
 
 [package]
 name = "proc-macro-trust-package"

@@ -8,6 +8,19 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.10.2] — 2026-07-02
+
+### Fixes
+- Fix possible memory safety violation due to deserialization of `UniformChar` from bad source ([#1790])
+
+### Changes
+- Document required output order of fn `partial_shuffle` and apply `#[must_use]` ([#1769])
+- Avoid usage of `unsafe` in contexts where non-local memory corruption could invalidate contract ([#1791])
+
+[#1769]: https://github.com/rust-random/rand/pull/1769
+[#1790]: https://github.com/rust-random/rand/pull/1790
+[#1791]: https://github.com/rust-random/rand/pull/1791
+
 ## [0.10.1] — 2026-02-11
 This release includes a fix for a soundness bug; see [#1763].
 
@@ -1156,7 +1169,7 @@ Code replaced with a compatibility layer over rand 0.4.
 ### Added
 - Separate `rand` out of the standard library
 
-[Unreleased]: https://github.com/rust-random/rand/compare/0.10.0...HEAD
+[Unreleased]: https://github.com/rust-random/rand/compare/0.10.1...HEAD
 [0.10.1]: https://github.com/rust-random/rand/compare/0.10.0...0.10.1
 [0.10.0]: https://github.com/rust-random/rand/compare/0.9.2...0.10.0
 [0.9.2]: https://github.com/rust-random/rand/compare/0.9.1...0.9.2

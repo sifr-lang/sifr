@@ -12,8 +12,9 @@
 [package]
 edition = "2021"
 name = "md5"
-version = "0.8.0"
+version = "0.8.1"
 authors = [
+    "Daniel McKenna <danielmckenna93@gmail.com>",
     "Ivan Ukhov <ivan.ukhov@gmail.com>",
     "Kamal Ahmad <shibe@openmailbox.org>",
     "Konstantin Stepanov <milezv@gmail.com>",
@@ -44,7 +45,7 @@ categories = [
     "algorithms",
     "cryptography",
 ]
-license = "Apache-2.0/MIT"
+license = "Apache-2.0 OR MIT"
 repository = "https://github.com/stainless-steel/md5"
 
 [features]

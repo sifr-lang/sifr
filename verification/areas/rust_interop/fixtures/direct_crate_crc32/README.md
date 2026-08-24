@@ -12,7 +12,7 @@ package-local bridge module.
   rejects a direct non-`Result` Rust binding unless the declaration supplies an
   explicit panic policy and matching trust evidence.
 - Manual smoke evidence for the registry crate: `cargo run -q -p sifr --
-  run src/main.sifr` from a temporary package using `crc32fast = "1.5.0"`
+  run src/main.sifr` from a temporary package using `crc32fast = "1.5.1"`
   printed `3421780262` for `b"123456789"` with explicit
   `rust-build-scripts = ["crc32fast"]` and
   `rust-no-panic = ["crc32fast.hash"]` trust entries.

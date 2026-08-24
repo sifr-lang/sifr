@@ -1,1 +1,188 @@
 sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
+├── sifr_runtime v0.0.0 (<repo>/crates/sifr_runtime)
+│   ├── encoding_rs feature "default"
+│   │   ├── encoding_rs v0.8.35
+│   │   │   └── cfg-if feature "default"
+│   │   │       └── cfg-if v1.0.4
+│   │   └── encoding_rs feature "alloc"
+│   │       └── encoding_rs v0.8.35 (*)
+│   ├── indexmap feature "default"
+│   │   ├── indexmap v2.14.0
+│   │   │   ├── equivalent v1.0.2
+│   │   │   └── hashbrown v0.17.1
+│   │   └── indexmap feature "std"
+│   │       └── indexmap v2.14.0 (*)
+│   ├── num-bigint feature "default"
+│   │   ├── num-bigint v0.4.6
+│   │   │   ├── num-integer feature "i128"
+│   │   │   │   └── num-integer v0.1.46
+│   │   │   │       └── num-traits feature "i128"
+│   │   │   │           └── num-traits v0.2.19
+│   │   │   │               [build-dependencies]
+│   │   │   │               └── autocfg feature "default"
+│   │   │   │                   └── autocfg v1.5.0
+│   │   │   └── num-traits feature "i128" (*)
+│   │   └── num-bigint feature "std"
+│   │       ├── num-bigint v0.4.6 (*)
+│   │       ├── num-integer feature "std"
+│   │       │   ├── num-integer v0.1.46 (*)
+│   │       │   └── num-traits feature "std"
+│   │       │       └── num-traits v0.2.19 (*)
+│   │       └── num-traits feature "std" (*)
+│   └── num-traits feature "default"
+│       ├── num-traits v0.2.19 (*)
+│       └── num-traits feature "std" (*)
+└── regex feature "default"
+    ├── regex v1.13.1
+    │   ├── aho-corasick v1.1.5
+    │   │   └── memchr v2.8.3
+    │   ├── memchr v2.8.3
+    │   ├── regex-syntax v0.8.11
+    │   ├── regex-automata feature "alloc"
+    │   │   └── regex-automata v0.4.18
+    │   │       ├── aho-corasick v1.1.5 (*)
+    │   │       ├── memchr v2.8.3
+    │   │       └── regex-syntax v0.8.11
+    │   ├── regex-automata feature "meta"
+    │   │   ├── regex-automata v0.4.18 (*)
+    │   │   ├── regex-automata feature "nfa-pikevm"
+    │   │   │   ├── regex-automata v0.4.18 (*)
+    │   │   │   └── regex-automata feature "nfa-thompson"
+    │   │   │       ├── regex-automata v0.4.18 (*)
+    │   │   │       └── regex-automata feature "alloc" (*)
+    │   │   └── regex-automata feature "syntax"
+    │   │       ├── regex-automata v0.4.18 (*)
+    │   │       └── regex-automata feature "alloc" (*)
+    │   ├── regex-automata feature "nfa-pikevm" (*)
+    │   └── regex-automata feature "syntax" (*)
+    ├── regex feature "perf"
+    │   ├── regex v1.13.1 (*)
+    │   ├── regex feature "perf-backtrack"
+    │   │   ├── regex v1.13.1 (*)
+    │   │   └── regex-automata feature "nfa-backtrack"
+    │   │       ├── regex-automata v0.4.18 (*)
+    │   │       └── regex-automata feature "nfa-thompson" (*)
+    │   ├── regex feature "perf-cache"
+    │   │   └── regex v1.13.1 (*)
+    │   ├── regex feature "perf-dfa"
+    │   │   ├── regex v1.13.1 (*)
+    │   │   └── regex-automata feature "hybrid"
+    │   │       ├── regex-automata v0.4.18 (*)
+    │   │       ├── regex-automata feature "alloc" (*)
+    │   │       └── regex-automata feature "nfa-thompson" (*)
+    │   ├── regex feature "perf-inline"
+    │   │   ├── regex v1.13.1 (*)
+    │   │   └── regex-automata feature "perf-inline"
+    │   │       └── regex-automata v0.4.18 (*)
+    │   ├── regex feature "perf-literal"
+    │   │   ├── regex v1.13.1 (*)
+    │   │   └── regex-automata feature "perf-literal"
+    │   │       ├── regex-automata v0.4.18 (*)
+    │   │       ├── regex-automata feature "perf-literal-multisubstring"
+    │   │       │   └── regex-automata v0.4.18 (*)
+    │   │       └── regex-automata feature "perf-literal-substring"
+    │   │           ├── regex-automata v0.4.18 (*)
+    │   │           └── aho-corasick feature "perf-literal"
+    │   │               └── aho-corasick v1.1.5 (*)
+    │   └── regex feature "perf-onepass"
+    │       ├── regex v1.13.1 (*)
+    │       └── regex-automata feature "dfa-onepass"
+    │           ├── regex-automata v0.4.18 (*)
+    │           └── regex-automata feature "nfa-thompson" (*)
+    ├── regex feature "std"
+    │   ├── regex v1.13.1 (*)
+    │   ├── aho-corasick feature "std"
+    │   │   ├── aho-corasick v1.1.5 (*)
+    │   │   └── memchr feature "std"
+    │   │       ├── memchr v2.8.3
+    │   │       └── memchr feature "alloc"
+    │   │           └── memchr v2.8.3
+    │   ├── memchr feature "std" (*)
+    │   ├── regex-automata feature "std"
+    │   │   ├── regex-automata v0.4.18 (*)
+    │   │   ├── aho-corasick feature "std" (*)
+    │   │   ├── memchr feature "std" (*)
+    │   │   ├── regex-automata feature "alloc" (*)
+    │   │   └── regex-syntax feature "std"
+    │   │       └── regex-syntax v0.8.11
+    │   └── regex-syntax feature "std" (*)
+    ├── regex feature "unicode"
+    │   ├── regex v1.13.1 (*)
+    │   ├── regex feature "unicode-age"
+    │   │   ├── regex v1.13.1 (*)
+    │   │   ├── regex-automata feature "unicode-age"
+    │   │   │   ├── regex-automata v0.4.18 (*)
+    │   │   │   └── regex-syntax feature "unicode-age"
+    │   │   │       └── regex-syntax v0.8.11
+    │   │   └── regex-syntax feature "unicode-age" (*)
+    │   ├── regex feature "unicode-bool"
+    │   │   ├── regex v1.13.1 (*)
+    │   │   ├── regex-automata feature "unicode-bool"
+    │   │   │   ├── regex-automata v0.4.18 (*)
+    │   │   │   └── regex-syntax feature "unicode-bool"
+    │   │   │       └── regex-syntax v0.8.11
+    │   │   └── regex-syntax feature "unicode-bool" (*)
+    │   ├── regex feature "unicode-case"
+    │   │   ├── regex v1.13.1 (*)
+    │   │   ├── regex-automata feature "unicode-case"
+    │   │   │   ├── regex-automata v0.4.18 (*)
+    │   │   │   └── regex-syntax feature "unicode-case"
+    │   │   │       └── regex-syntax v0.8.11
+    │   │   └── regex-syntax feature "unicode-case" (*)
+    │   ├── regex feature "unicode-gencat"
+    │   │   ├── regex v1.13.1 (*)
+    │   │   ├── regex-automata feature "unicode-gencat"
+    │   │   │   ├── regex-automata v0.4.18 (*)
+    │   │   │   └── regex-syntax feature "unicode-gencat"
+    │   │   │       └── regex-syntax v0.8.11
+    │   │   └── regex-syntax feature "unicode-gencat" (*)
+    │   ├── regex feature "unicode-perl"
+    │   │   ├── regex v1.13.1 (*)
+    │   │   ├── regex-automata feature "unicode-perl"
+    │   │   │   ├── regex-automata v0.4.18 (*)
+    │   │   │   └── regex-syntax feature "unicode-perl"
+    │   │   │       └── regex-syntax v0.8.11
+    │   │   ├── regex-automata feature "unicode-word-boundary"
+    │   │   │   └── regex-automata v0.4.18 (*)
+    │   │   └── regex-syntax feature "unicode-perl" (*)
+    │   ├── regex feature "unicode-script"
+    │   │   ├── regex v1.13.1 (*)
+    │   │   ├── regex-automata feature "unicode-script"
+    │   │   │   ├── regex-automata v0.4.18 (*)
+    │   │   │   └── regex-syntax feature "unicode-script"
+    │   │   │       └── regex-syntax v0.8.11
+    │   │   └── regex-syntax feature "unicode-script" (*)
+    │   ├── regex feature "unicode-segment"
+    │   │   ├── regex v1.13.1 (*)
+    │   │   ├── regex-automata feature "unicode-segment"
+    │   │   │   ├── regex-automata v0.4.18 (*)
+    │   │   │   └── regex-syntax feature "unicode-segment"
+    │   │   │       └── regex-syntax v0.8.11
+    │   │   └── regex-syntax feature "unicode-segment" (*)
+    │   ├── regex-automata feature "unicode"
+    │   │   ├── regex-automata v0.4.18 (*)
+    │   │   ├── regex-automata feature "unicode-age" (*)
+    │   │   ├── regex-automata feature "unicode-bool" (*)
+    │   │   ├── regex-automata feature "unicode-case" (*)
+    │   │   ├── regex-automata feature "unicode-gencat" (*)
+    │   │   ├── regex-automata feature "unicode-perl" (*)
+    │   │   ├── regex-automata feature "unicode-script" (*)
+    │   │   ├── regex-automata feature "unicode-segment" (*)
+    │   │   ├── regex-automata feature "unicode-word-boundary" (*)
+    │   │   └── regex-syntax feature "unicode"
+    │   │       ├── regex-syntax v0.8.11
+    │   │       ├── regex-syntax feature "unicode-age" (*)
+    │   │       ├── regex-syntax feature "unicode-bool" (*)
+    │   │       ├── regex-syntax feature "unicode-case" (*)
+    │   │       ├── regex-syntax feature "unicode-gencat" (*)
+    │   │       ├── regex-syntax feature "unicode-perl" (*)
+    │   │       ├── regex-syntax feature "unicode-script" (*)
+    │   │       └── regex-syntax feature "unicode-segment" (*)
+    │   └── regex-syntax feature "unicode" (*)
+    └── regex-syntax feature "default"
+        ├── regex-syntax v0.8.11
+        ├── regex-syntax feature "std" (*)
+        └── regex-syntax feature "unicode" (*)
+[dev-dependencies]
+└── static_assertions feature "default"
+    └── static_assertions v1.1.0

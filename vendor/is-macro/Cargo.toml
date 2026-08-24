@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "is-macro"
-version = "0.3.7"
+version = "0.3.8"
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
 build = false
 autobins = false
@@ -63,13 +63,13 @@ path = "tests/usage.rs"
 version = "0.5.0"
 
 [dependencies.proc-macro2]
-version = "1.0.70"
+version = "1.0.94"
 
 [dependencies.quote]
-version = "1.0.33"
+version = "1.0.40"
 
 [dependencies.syn]
-version = "2.0.39"
+version = "2.0.100"
 features = [
     "fold",
     "full",
@@ -77,3 +77,6 @@ features = [
     "extra-traits",
     "fold",
 ]
+
+[features]
+small-panic = []

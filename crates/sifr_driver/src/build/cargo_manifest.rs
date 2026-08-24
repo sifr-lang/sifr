@@ -472,7 +472,7 @@ mod tests {
             features: ["json".to_string()].into_iter().collect(),
         }];
         dependency_plan.retained_direct_dependencies = vec![
-            "serde_json = { version = \"1.0.149\", features = [\"preserve_order\"] }".to_string(),
+            "serde_json = { version = \"1.0.151\", features = [\"preserve_order\"] }".to_string(),
         ];
 
         let cargo_toml = generate_dependency_cargo_toml_with_interop(
@@ -492,7 +492,7 @@ edition = "2024"
 
 [dependencies]
 sifr_stdlib = { path = "/opt/sifr/crates/sifr_stdlib", default-features = false, features = ["json"] }
-serde_json = { version = "1.0.149", features = ["preserve_order"] }
+serde_json = { version = "1.0.151", features = ["preserve_order"] }
 "#
         );
     }

@@ -15,7 +15,7 @@ def decode(input: bytes) -> str: ...
 def verify_trusted_proc_macro() -> Result[str, DecodeError | RustPanicError]:
     try:
         decoded: str = decode(b"sifr-rust-interop")
-        assert decoded == "id=1404|payload=sifr-rust-interop|serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed|prost-build=0.14.4;message=sifr.probe.Probe"
+        assert decoded == "id=1404|payload=sifr-rust-interop|serde_derive=1.0.229;upstream=compiled;sifr_wrapper_macro=executed|prost-build=0.14.4;message=sifr.probe.Probe"
         return decoded
     except DecodeError as error:
         raise error

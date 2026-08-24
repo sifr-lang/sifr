@@ -834,6 +834,7 @@ mod tests {
                     "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
             },
             paths: SysrootPaths::from_root(root),
+            cargo_lock_content_sha256: "2".repeat(64),
         }
     }
 
