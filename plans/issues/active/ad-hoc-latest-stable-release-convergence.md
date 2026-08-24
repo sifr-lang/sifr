@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-24. Items 0-4 are complete. Item 5 Node 24 LTS is
+Status: active on 2026-08-24. Items 0-5 are complete. Item 6 GitHub Actions is
 next.
 
 ## Objective
@@ -173,7 +173,7 @@ Only the first incomplete row may be active.
 | 2 | complete | Rust edition 2024 | Every maintained manifest/template uses edition 2024; `gen` and other reserved syntax are correctly emitted/escaped; generated Rust compiles. |
 | 3 | complete | uv 0.12 | uv and setup policy are current; all affected locks are reproducible under the new resolver. |
 | 4 | complete | Python 3.14 and PyO3 | Python 3.14.7 is the only maintained Python lane, PyO3 is current, and older-lane configuration and evidence are removed. |
-| 5 | pending | Node 24 LTS | Release/tooling workflows use the latest Node 24 LTS and compatible npm behavior. |
+| 5 | complete | Node 24 LTS | Release/tooling workflows use the latest Node 24 LTS and compatible npm behavior. |
 | 6 | pending | GitHub Actions | All maintained third-party actions use reviewed latest-stable immutable SHAs and workflow contract tests pass. |
 | 7 | pending | Ruff 0.16.4 fork | Sifr changes are replayed on the latest Ruff stable base; fork, gitlink, ownership, parser/formatter/linter evidence, and snapshots agree. |
 | 8 | pending | Rust utility/foundation train | Each listed utility dependency is advanced sequentially; all direct declarations converge and generated/vendor evidence agrees. |
@@ -476,6 +476,78 @@ Ruff fork and its full parser/formatter/linter migration remain owned by Item
 Next action: implement Item 5 Node 24 LTS convergence from the Item 4 record
 merge on `origin/main`.
 
+### Item 5 record
+
+State: complete
+
+PR: [#3499](https://github.com/sifr-lang/sifr/pull/3499)
+
+Base SHA: `f4da1f0dc308a4b243b7aa6ae52f826431ccc2d8`
+
+Candidate SHA: `e9225ac561fc27a65c8cd8d5f4619b8e8ab3df06`
+
+Merge SHA: `c68af27e89d269e6d1a7aef7b1a1dad78f3c6936`
+
+Nested merges: [sifr-vscode #13](https://github.com/sifr-lang/sifr-vscode/pull/13)
+merged leaf candidate `09ff33c69928f4d7be3ccf108576354981c1b1d1` as
+`7bf12ce026dcbe13679211a06caa76a61e84760a`;
+[editor-integrations #11](https://github.com/sifr-lang/editor-integrations/pull/11)
+merged pointer candidate `a174b94f40dff84348229bc54d0c9e8d2ddf1dce` as
+`b42360d0bbc99c45f625db67ff9a1cb4afdfeaa1`. The root then advanced only the
+resolved editor-integrations pointer.
+
+Changed paths: the extension's exact Node selector, package and lock metadata,
+CI workflow, and developer documentation; both editor pointers; the root
+qualification and publication workflows; current distribution/editor
+documentation and demo; the extension validation command; and executable
+Node, qualification, and publication workflow contracts.
+
+Stable-source result: the official Node distribution index reported
+v24.19.0, released on 2026-08-03 as Krypton LTS, with bundled npm 11.17.0. The
+official Darwin arm64 archive SHA-256 was independently verified before the
+exact runtime was used. The extension `.node-version` is now the one canonical
+selector consumed by extension CI, stable qualification, and protected stable
+publication.
+
+Forward-only result: npm 11 `devEngines`, exact `engines`, and the exact
+`packageManager` selection reject any other Node or npm development toolchain.
+All maintained installs use `npm ci --ignore-scripts --include=dev`, so release
+tooling consumes the complete locked development graph without dependency
+lifecycle scripts. No Node 22 selector, mutable Node major, compatibility lane,
+fallback, or parallel local selector remains in maintained operational paths.
+
+Focused validation: the official Node archive checksum and exact Node/npm
+probes passed. Exact npm lock regeneration and clean installation changed no
+dependency version. Extension lint, typecheck, unit tests, extension smoke,
+and VSIX packaging passed. A negative probe proved ambient Node 24.16.0 and
+npm 11.13.0 fail with `EBADDEVENGINES`. The Node toolchain, release
+qualification, protected publication, YAML, developer-tooling, Bash, diff,
+and file-size checks passed. The complete distribution-release representative
+suite passed 57/57.
+
+Review evidence: the one exact-SHA Claude Opus review returned `SATISFIED` for
+the final candidate with no blocking findings. It independently confirmed all
+three workflow consumers, publication checkout ordering, automatic contract
+discovery, exact metadata agreement, the sequential pointer chain, and the
+absence of maintained Node 22 documentation. The response is retained in the
+[#3499 review comment](https://github.com/sifr-lang/sifr/pull/3499#issuecomment-5389377400).
+The candidate did not change after review, so no remediation review applied.
+
+Gate evidence: only workflows, verification tooling, documentation, a demo,
+package metadata, and editor gitlinks changed. No compiler input changed, so
+the phase rules prohibited the Sifr create-PR and merge gates.
+
+Deferred follow-up: Item 6 owns immutable current `actions/setup-node`
+selections. Item 33 owns the Node 24 type declarations and the extension's
+three existing high-severity dependency advisories. Item 35 owns final
+reconciliation of the explicit Node/npm bundled-major invariant and clearer
+diagnostics when the demo uses a mismatched ambient toolchain or the nested
+extension checkout is absent. Opus classified each as non-blocking; none is an
+Item 5 mechanism defect.
+
+Next action: implement Item 6 GitHub Actions convergence from the Item 5 record
+merge on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -514,12 +586,12 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-4 are complete. Item 4 merged in PR #3497 as
-`a4723c2f6e0d10bbb516e8b2b01a817c20f69bfe`. CPython 3.14.7 is the only
-maintained Python lane, the checked-in PyO3 graph is 0.29.2, and unsupported
-TensorFlow interop and older-lane runtime surfaces are deleted. The exact
-final candidate passed the authorized warm create-PR gate and the sole merge
-gate.
+Current state: Items 0-5 are complete. Item 5 merged in PR #3499 as
+`c68af27e89d269e6d1a7aef7b1a1dad78f3c6936` after the leaf and intermediate
+editor pointer PRs merged in order. Node 24.19.0 and bundled npm 11.17.0 are
+exactly selected and enforced across extension CI, stable qualification, and
+protected publication. The exact final candidate has Opus satisfaction and
+changed no compiler input, so no Sifr gate applied.
 
-Next action: merge this record-only update, then start Item 5 Node 24 LTS
+Next action: merge this record-only update, then start Item 6 GitHub Actions
 convergence from the resulting `origin/main`.
