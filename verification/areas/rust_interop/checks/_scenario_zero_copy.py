@@ -75,7 +75,7 @@ def validate_zero_copy_scenario(
     )
     for name, version, features in (
         ("bytemuck", "=1.25.2", None),
-        ("bytes", "=1.11.1", None),
+        ("bytes", "=1.12.1", None),
         ("memmap2", "=0.9.11", None),
         ("zerocopy", "=0.8.56", ["derive"]),
     ):
@@ -157,9 +157,9 @@ def run_zero_copy_self_test(
             (
                 "bytes pin drift",
                 "examples/crate_backed_view_runtime/Cargo.toml",
-                'version = "=1.11.1"',
-                'version = "1.11.1"',
-                "must pin version =1.11.1",
+                'version = "=1.12.1"',
+                'version = "1.12.1"',
+                "must pin version =1.12.1",
             ),
             (
                 "zerocopy derive drift",

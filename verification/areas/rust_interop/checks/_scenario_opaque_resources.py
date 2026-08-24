@@ -69,7 +69,7 @@ def validate_opaque_resource_scenario(
         ("redis", "=1.4.1", ["tokio-comp"], False),
         ("reqwest", "=0.12.28", ["rustls-tls", "json"], False),
         ("rusqlite", "=0.39.0", ["bundled"], None),
-        ("tokio", "=1.52.3", ["io-util", "net", "rt", "sync", "time"], None),
+        ("tokio", "=1.53.1", ["io-util", "net", "rt", "sync", "time"], None),
         ("tokio-postgres", "=0.7.18", ["runtime"], False),
     ):
         _require_dependency(

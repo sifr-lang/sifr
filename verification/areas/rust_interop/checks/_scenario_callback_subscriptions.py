@@ -58,12 +58,12 @@ def validate_callback_subscription_scenario(
         "../../../../../../../crates/sifr_runtime",
     )
     for name, version, features, default_features in (
-        ("futures", "=0.3.33", None, None),
+        ("futures", "=0.3.34", None, None),
         ("notify", "=8.2.0", None, None),
         ("redis", "=1.4.1", ["tokio-comp"], False),
         (
             "tokio",
-            "=1.52.3",
+            "=1.53.1",
             ["io-util", "net", "rt", "sync", "time"],
             None,
         ),

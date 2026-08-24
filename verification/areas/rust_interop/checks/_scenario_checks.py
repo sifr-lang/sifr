@@ -181,9 +181,9 @@ def run_self_test() -> tuple[int, str | None]:
             (
                 "dependency pin drift",
                 "examples/bridge_type_roundtrip/Cargo.toml",
-                '=1.11.1"',
-                '1.11.1"',
-                "must pin =1.11.1",
+                '=1.12.1"',
+                '1.12.1"',
+                "must pin =1.12.1",
             ),
             (
                 "serde feature drift",
@@ -533,7 +533,7 @@ def _validate_scenario_manifests(
                 '[rust] bridges = ["src/bridges"]'
             )
         for dependency, version in (
-            ("bytes", "=1.11.1"),
+            ("bytes", "=1.12.1"),
             ("indexmap", "=2.14.0"),
             ("serde", "=1.0.229"),
             ("serde_json", "=1.0.151"),

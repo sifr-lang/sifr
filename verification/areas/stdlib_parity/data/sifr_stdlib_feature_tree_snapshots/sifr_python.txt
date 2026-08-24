@@ -59,14 +59,14 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
     │   ├── num-traits v0.2.19 (*)
     │   └── num-traits feature "std" (*)
     ├── tokio feature "default"
-    │   └── tokio v1.52.3
+    │   └── tokio v1.53.1
     │       ├── mio v1.2.1
     │       │   └── libc feature "default" (*)
     │       ├── libc feature "default" (*)
     │       ├── bytes feature "default"
-    │       │   ├── bytes v1.11.1
+    │       │   ├── bytes v1.12.1
     │       │   └── bytes feature "std"
-    │       │       └── bytes v1.11.1
+    │       │       └── bytes v1.12.1
     │       ├── pin-project-lite feature "default"
     │       │   └── pin-project-lite v0.2.17
     │       ├── signal-hook-registry feature "default"
@@ -117,21 +117,21 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
     │               └── syn feature "full"
     │                   └── syn v2.0.117 (*)
     ├── tokio feature "io-util"
-    │   ├── tokio v1.52.3 (*)
+    │   ├── tokio v1.53.1 (*)
     │   └── tokio feature "bytes"
-    │       └── tokio v1.52.3 (*)
+    │       └── tokio v1.53.1 (*)
     ├── tokio feature "macros"
-    │   ├── tokio v1.52.3 (*)
+    │   ├── tokio v1.53.1 (*)
     │   └── tokio feature "tokio-macros"
-    │       └── tokio v1.52.3 (*)
+    │       └── tokio v1.53.1 (*)
     ├── tokio feature "net"
-    │   ├── tokio v1.52.3 (*)
+    │   ├── tokio v1.53.1 (*)
     │   ├── tokio feature "libc"
-    │   │   └── tokio v1.52.3 (*)
+    │   │   └── tokio v1.53.1 (*)
     │   ├── tokio feature "mio"
-    │   │   └── tokio v1.52.3 (*)
+    │   │   └── tokio v1.53.1 (*)
     │   ├── tokio feature "socket2"
-    │   │   └── tokio v1.52.3 (*)
+    │   │   └── tokio v1.53.1 (*)
     │   ├── mio feature "net"
     │   │   └── mio v1.2.1 (*)
     │   ├── mio feature "os-ext"
@@ -140,19 +140,19 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
     │   │       └── mio v1.2.1 (*)
     │   └── mio feature "os-poll" (*)
     ├── tokio feature "process"
-    │   ├── tokio v1.52.3 (*)
+    │   ├── tokio v1.53.1 (*)
     │   ├── tokio feature "bytes" (*)
     │   ├── tokio feature "libc" (*)
     │   ├── tokio feature "mio" (*)
     │   ├── tokio feature "signal-hook-registry"
-    │   │   └── tokio v1.52.3 (*)
+    │   │   └── tokio v1.53.1 (*)
     │   ├── mio feature "net" (*)
     │   ├── mio feature "os-ext" (*)
     │   └── mio feature "os-poll" (*)
     ├── tokio feature "rt"
-    │   └── tokio v1.52.3 (*)
+    │   └── tokio v1.53.1 (*)
     ├── tokio feature "signal"
-    │   ├── tokio v1.52.3 (*)
+    │   ├── tokio v1.53.1 (*)
     │   ├── tokio feature "libc" (*)
     │   ├── tokio feature "mio" (*)
     │   ├── tokio feature "signal-hook-registry" (*)
@@ -160,9 +160,9 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
     │   ├── mio feature "os-ext" (*)
     │   └── mio feature "os-poll" (*)
     ├── tokio feature "sync"
-    │   └── tokio v1.52.3 (*)
+    │   └── tokio v1.53.1 (*)
     └── tokio feature "time"
-        └── tokio v1.52.3 (*)
+        └── tokio v1.53.1 (*)
 [dev-dependencies]
 └── static_assertions feature "default"
     └── static_assertions v1.1.0

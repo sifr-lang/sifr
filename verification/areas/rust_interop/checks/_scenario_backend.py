@@ -33,7 +33,7 @@ EXPECTED_WORKSPACE_DEPENDENCIES = {
         "features": ["set-header"],
     },
     "tokio": {
-        "version": "=1.52.3",
+        "version": "=1.53.1",
         "default-features": False,
         "features": ["io-util", "net", "rt", "sync", "time"],
     },
@@ -139,7 +139,7 @@ def run_backend_self_test(
             ("axum pin", "Cargo.toml", '"=0.8.9"', '"0.8.9"', "exact-pin"),
             ("sqlx pin", "Cargo.toml", '"=0.8.6"', '"0.8.6"', "exact-pin"),
             ("tower pin", "Cargo.toml", '"=0.7.0"', '"0.7.0"', "exact-pin"),
-            ("tokio pin", "Cargo.toml", '"=1.52.3"', '"1.52.3"', "exact-pin"),
+            ("tokio pin", "Cargo.toml", '"=1.53.1"', '"1.53.1"', "exact-pin"),
             (
                 "SQLx feature",
                 "Cargo.toml",
