@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-24. Items 0-7 are complete. Item 8 Rust
-utility/foundation train is next.
+Status: active on 2026-08-24. Items 0-8 are complete. Item 9 Rust async
+foundation is next.
 
 ## Objective
 
@@ -176,7 +176,7 @@ Only the first incomplete row may be active.
 | 5 | complete | Node 24 LTS | Release/tooling workflows use the latest Node 24 LTS and compatible npm behavior. |
 | 6 | complete | GitHub Actions | All maintained third-party actions use reviewed latest-stable immutable SHAs and workflow contract tests pass. |
 | 7 | complete | Ruff 0.16.4 fork | Sifr changes are replayed on the latest Ruff stable base; fork, gitlink, ownership, parser/formatter/linter evidence, and snapshots agree. |
-| 8 | pending | Rust utility/foundation train | Each listed utility dependency is advanced sequentially; all direct declarations converge and generated/vendor evidence agrees. |
+| 8 | complete | Rust utility/foundation train | Each listed utility dependency is advanced sequentially; all direct declarations converge and generated/vendor evidence agrees. |
 | 9 | pending | Rust async foundation | Bytes, Futures, and Tokio converge with runtime/concurrency validation. |
 | 10 | pending | Rust HTTP stack | HTTP, body, H2, and Hyper converge with network/HTTP validation. |
 | 11 | pending | Rust TLS stack | Rustls and rcgen converge with certificate, TLS, and provider validation. |
@@ -714,6 +714,87 @@ surface remains.
 Next action: implement Item 8 Rust utility/foundation train from the Item 7
 record merge on `origin/main`.
 
+### Item 8 record
+
+State: complete
+
+PR: [#3505](https://github.com/sifr-lang/sifr/pull/3505)
+
+Base SHA: `e747a20f06584d184d95bac10ee842136eea391c`
+
+Candidate SHA: `53320be497f298800c8f1d9001c22faa7a6acbe4`
+
+Merge SHA: `a57da8f7208bede1dd67849606e21ba3612497e7`
+
+Stable-source result: the train converged to `aho-corasick 1.1.5`,
+`annotate-snippets 0.12.16`, `anyhow 1.0.104`, `bitflags 2.13.1`,
+`blake3 1.8.7`, `bstr 1.13.1`, `cc 1.4.4`, `chrono 0.4.45`, `clap 4.6.6`,
+`cookie 0.18.2`, `crc32fast 1.5.1`, `cxx 1.0.199`, `globset 0.4.20`,
+`ignore 0.4.33`, `indexmap 2.14.0`, `insta 1.48.0`, `is-macro 0.3.8`,
+`libc 0.2.189`, `md5 0.8.1`, `memchr 2.8.3`, `proc-macro2 1.0.107`,
+`rand 0.10.2`, `regex 1.13.1`, `rust_decimal 1.42.1`, `rustc-hash 2.1.3`,
+`schemars 1.2.2`, `serde`/`serde_derive 1.0.229`, `serde_json 1.0.151`,
+`tempfile 3.27.0`, `thiserror 2.0.20`, `toml 1.1.4+spec-1.1.0`,
+`uuid 1.25.0`, and `zerocopy 0.8.56`. `libc 1.0` prereleases were excluded.
+Every active direct declaration, catalog literal, maintained fixture marker,
+lock identity, and owned vendor package agrees with those stable releases.
+
+Forward-only result: generated-project cache identity now incorporates the
+SHA-256 of the live sysroot `Cargo.lock`. Source-tree development therefore
+invalidates generated workspaces when the live lock changes even though the
+development `sysroot.toml` intentionally contains zero release placeholders.
+A missing or unreadable lock fails closed as `MissingAsset`; no compatibility
+key, legacy cache path, or fallback was added. The train also adopts the
+upstream `cc` trim-path behavior. The new Regex compile-time macro was audited,
+but all maintained first-party patterns are dynamic and have no correct
+compile-time conversion.
+
+Changed paths: active Cargo manifests and catalogs, root and maintained
+fixture lockfiles, generated dependency snapshots and version evidence,
+package-owned sysroot vendor crates, stdlib feature trees, Rust interop
+documentation/evidence, and the sysroot/driver cache-key implementation and
+tests. Vendor replacement stayed selective; package-owned interop graphs were
+not absorbed into the sysroot.
+
+Focused validation: locked metadata and workspace checks passed, as did
+workspace Clippy with warnings denied, formatting, HIR maintainability, the
+3,243-file first-party size guardrail, first-party diff checks, offline direct
+vendor and sysroot feature probes, 10/10 Rust interop variants, and the focused
+compiler/stdlib/package suites. The full stdlib parity run passed all 411
+LeetCode cases and every module/dependency-tree check. Its only demo failure,
+`demos/m16_raw_api/src/main.sifr`, is the pre-existing canonical-requirement
+defect already owned by Item 13 of the pre-v1 compatibility-removal phase.
+
+Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+blocking finding in the
+[#3505 review comment](https://github.com/sifr-lang/sifr/pull/3505#issuecomment-5393608119).
+No remediation review was needed.
+
+Gate evidence: the one create-PR invocation passed every functional check it
+reached and exited `124` only when the first post-clean runtime-platform build
+took 203.977 seconds against its 120-second warm budget; the cold
+`binary_file_io_capability.sifr` build accounted for 159.454 seconds. The one
+merge gate on the same exact candidate exited `0`. The same runtime-platform
+case then took 3.656 seconds, and all verification areas, all crate tests,
+76/76 explicit driver generated builds, and 698/698 merge E2E fixtures passed.
+The create-PR and merge reports have SHA-256 digests
+`2f3704905d1bdb1a6b2a4a7604cd01ee8912e2cb4c11afcc9c1a5fa4540abd0a`
+and `d95e756ed094799314d05641c6bd88e21496216a7a7a3a63515596f17d5e2fb9`
+respectively. Exact metrics and the no-rerun disposition are retained in the
+[#3505 gate comment](https://github.com/sifr-lang/sifr/pull/3505#issuecomment-5394946937).
+
+Deferred follow-up: the misleading `cxx` probe value marker is already owned
+by the active Rust-interop drift-hardening review. Item 9 owns the pre-existing
+Futures vendor/root skew when it upgrades the async foundation. Item 35 owns
+the final vendor/root completeness audit, the pre-existing core-language
+fixture-lock subset gap, and confirmation that unused workspace declarations
+such as `annotate-snippets` and `cookie` either have a maintained owner or are
+removed. These are pre-existing issues or cleanup suggestions, not Item 8
+mechanism defects.
+
+Next action: implement Item 9 Rust async foundation from the Item 8 record
+merge on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -752,12 +833,11 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-7 are complete. Item 7 merged in PR #3503 as
-`dd55520413fc792d1f59eea0a70b374bb9a8cd81` after fork PR #4 merged Ruff
-v0.16.4 plus the maintained Sifr patches as
-`f19957111640fdee8055bfe5b6aa854259344473`. The final root candidate has
-exact-SHA Opus satisfaction, passing replacement create-PR evidence, and one
+Current state: Items 0-8 are complete. Item 8 merged in PR #3505 as
+`a57da8f7208bede1dd67849606e21ba3612497e7`. Its exact candidate
+`53320be497f298800c8f1d9001c22faa7a6acbe4` has Opus satisfaction, one
+cold-cache create-PR timing observation with no functional failure, and one
 passing merge gate across all 698 E2E fixtures.
 
-Next action: merge this record-only update, then start Item 8 Rust
-utility/foundation train from the resulting `origin/main`.
+Next action: merge this record-only update, then start Item 9 Rust async
+foundation from the resulting `origin/main`.
