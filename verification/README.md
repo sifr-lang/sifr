@@ -71,6 +71,11 @@ lanes.
   `diagnostics` is migrated and can be run with
   `uv run --project verification python -m sifr_verify areas run --area diagnostics`.
 - `policy/` contains machine-facing runner policy such as guardrail mappings.
+  `github_actions.json` owns the exact release label and commit for each
+  external action in maintained workflows. Use
+  `python3 scripts/check_github_action_pins.py` to validate all references.
+  The validator rejects mutable refs, unknown actions, label drift, and weak
+  artifact-digest behavior.
 
 ## Profile Ownership
 

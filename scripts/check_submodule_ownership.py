@@ -10,7 +10,6 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -22,8 +21,16 @@ class ExpectedSubmodule:
 
 
 EXPECTED_SUBMODULES = [
-    ExpectedSubmodule("third_party/ruff", "https://github.com/sifr-lang/ruff.git", "sifr/0.15.12-maintenance"),
-    ExpectedSubmodule("editor_integrations", "https://github.com/sifr-lang/editor-integrations.git", "main"),
+    ExpectedSubmodule(
+        "third_party/ruff",
+        "https://github.com/sifr-lang/ruff.git",
+        "sifr/0.15.12-maintenance",
+    ),
+    ExpectedSubmodule(
+        "editor_integrations",
+        "https://github.com/sifr-lang/editor-integrations.git",
+        "main",
+    ),
     ExpectedSubmodule(
         "verification/areas/algorithmic_compatibility/corpora/leetcode",
         "https://github.com/sifr-lang/leetcode.git",
@@ -74,7 +81,9 @@ STALE_SUBMODULE_PATHS = {
 }
 
 WORKFLOW_STEP_RE = re.compile(r"(?ms)^(\s*)-\s+(?P<body>.*?)(?=^\1-\s+|\Z)")
-CHECKOUT_USES_RE = re.compile(r"(?m)^\s*uses:\s+actions/checkout@\S+\s*$")
+CHECKOUT_USES_RE = re.compile(
+    r"(?m)^\s*uses:\s+actions/checkout@[^\s#]+(?:\s+#.*)?\s*$"
+)
 SUBMODULES_RECURSIVE_RE = re.compile(r"(?m)^\s+submodules:\s+[\"']?recursive[\"']?\s*$")
 
 
@@ -108,7 +117,9 @@ def validate_gitmodules(text: str) -> list[str]:
             failures.append(f"missing submodule entry: {expected.path}")
             continue
         if actual["url"] != expected.url:
-            failures.append(f"submodule {expected.path} has unexpected url: {actual['url']}")
+            failures.append(
+                f"submodule {expected.path} has unexpected url: {actual['url']}"
+            )
         if actual["branch"] != expected.branch:
             failures.append(f"submodule {expected.path} must track {expected.branch}")
 
@@ -136,7 +147,9 @@ def validate_clone_script(text: str) -> list[str]:
 def validate_workflow(path: Path, text: str) -> list[str]:
     failures: list[str] = []
     checkout_blocks = [
-        match for match in WORKFLOW_STEP_RE.finditer(text) if CHECKOUT_USES_RE.search(match.group("body"))
+        match
+        for match in WORKFLOW_STEP_RE.finditer(text)
+        if CHECKOUT_USES_RE.search(match.group("body"))
     ]
     if not checkout_blocks:
         return failures
@@ -147,14 +160,22 @@ def validate_workflow(path: Path, text: str) -> list[str]:
         pass
     for index, match in enumerate(checkout_blocks, start=1):
         if not SUBMODULES_RECURSIVE_RE.search(match.group("body")):
-            failures.append(f"{display_path} checkout #{index} does not initialize submodules recursively")
+            failures.append(
+                f"{display_path} checkout #{index} does not initialize submodules recursively"
+            )
     return failures
 
 
 def validate_repo(root: Path) -> list[str]:
     failures: list[str] = []
-    failures.extend(validate_gitmodules((root / ".gitmodules").read_text(encoding="utf-8")))
-    failures.extend(validate_clone_script((root / "scripts" / "clone_subrepos.sh").read_text(encoding="utf-8")))
+    failures.extend(
+        validate_gitmodules((root / ".gitmodules").read_text(encoding="utf-8"))
+    )
+    failures.extend(
+        validate_clone_script(
+            (root / "scripts" / "clone_subrepos.sh").read_text(encoding="utf-8")
+        )
+    )
     workflow_paths = sorted((root / ".github" / "workflows").glob("*.yml"))
     workflow_paths.extend(sorted((root / ".github" / "workflows").glob("*.yaml")))
     for path in workflow_paths:
@@ -171,7 +192,9 @@ def run_self_test() -> None:
         for entry in EXPECTED_SUBMODULES
     )
     if validate_gitmodules(valid_gitmodules):
-        raise SystemExit("submodule ownership self-test failed: valid metadata rejected")
+        raise SystemExit(
+            "submodule ownership self-test failed: valid metadata rejected"
+        )
     missing_entry = valid_gitmodules.replace(
         f'[submodule "{EXPECTED_SUBMODULES[0].path}"]\n'
         f"\tpath = {EXPECTED_SUBMODULES[0].path}\n"
@@ -179,21 +202,34 @@ def run_self_test() -> None:
         f"\tbranch = {EXPECTED_SUBMODULES[0].branch}\n",
         "",
     )
-    if not any("missing submodule entry" in failure for failure in validate_gitmodules(missing_entry)):
+    if not any(
+        "missing submodule entry" in failure
+        for failure in validate_gitmodules(missing_entry)
+    ):
         raise SystemExit("submodule ownership self-test failed: missing entry accepted")
-    wrong_url = valid_gitmodules.replace(EXPECTED_SUBMODULES[0].url, "https://example.invalid/ruff.git", 1)
-    if not any("unexpected url" in failure for failure in validate_gitmodules(wrong_url)):
+    wrong_url = valid_gitmodules.replace(
+        EXPECTED_SUBMODULES[0].url, "https://example.invalid/ruff.git", 1
+    )
+    if not any(
+        "unexpected url" in failure for failure in validate_gitmodules(wrong_url)
+    ):
         raise SystemExit("submodule ownership self-test failed: wrong url accepted")
     missing_branch = valid_gitmodules.replace("\tbranch = main\n", "", 1)
-    if not any("must track" in failure for failure in validate_gitmodules(missing_branch)):
-        raise SystemExit("submodule ownership self-test failed: missing branch accepted")
+    if not any(
+        "must track" in failure for failure in validate_gitmodules(missing_branch)
+    ):
+        raise SystemExit(
+            "submodule ownership self-test failed: missing branch accepted"
+        )
     stale_path = valid_gitmodules + (
         '[submodule "audits/leetcode"]\n'
         "\tpath = audits/leetcode\n"
         "\turl = https://github.com/sifr-lang/leetcode.git\n"
         "\tbranch = main\n"
     )
-    if not any("stale submodule path" in failure for failure in validate_gitmodules(stale_path)):
+    if not any(
+        "stale submodule path" in failure for failure in validate_gitmodules(stale_path)
+    ):
         raise SystemExit("submodule ownership self-test failed: stale path accepted")
     unclassified_path = valid_gitmodules + (
         '[submodule "verification/new-corpus"]\n'
@@ -201,32 +237,62 @@ def run_self_test() -> None:
         "\turl = https://github.com/sifr-lang/new-corpus.git\n"
         "\tbranch = main\n"
     )
-    if not any("unclassified submodule path" in failure for failure in validate_gitmodules(unclassified_path)):
-        raise SystemExit("submodule ownership self-test failed: unclassified path accepted")
-    valid_clone_script = "\n".join(
-        [
-            "git submodule sync --recursive",
-            "git submodule update --init --recursive",
-            "git submodule update --init --recursive --remote",
-            "git submodule status --recursive",
-        ]
+    if not any(
+        "unclassified submodule path" in failure
+        for failure in validate_gitmodules(unclassified_path)
+    ):
+        raise SystemExit(
+            "submodule ownership self-test failed: unclassified path accepted"
+        )
+    valid_clone_script = (
+        "git submodule sync --recursive\n"
+        "git submodule update --init --recursive\n"
+        "git submodule update --init --recursive --remote\n"
+        "git submodule status --recursive"
     )
     if validate_clone_script(valid_clone_script):
-        raise SystemExit("submodule ownership self-test failed: valid clone script rejected")
-    invalid_clone_script = valid_clone_script.replace("git submodule status --recursive", "")
-    if not any("missing" in failure for failure in validate_clone_script(invalid_clone_script)):
-        raise SystemExit("submodule ownership self-test failed: incomplete clone script accepted")
+        raise SystemExit(
+            "submodule ownership self-test failed: valid clone script rejected"
+        )
+    invalid_clone_script = valid_clone_script.replace(
+        "git submodule status --recursive", ""
+    )
+    if not any(
+        "missing" in failure for failure in validate_clone_script(invalid_clone_script)
+    ):
+        raise SystemExit(
+            "submodule ownership self-test failed: incomplete clone script accepted"
+        )
     workflow = "- uses: actions/checkout@v5\n"
     with tempfile.TemporaryDirectory() as tmpdir:
         path = Path(tmpdir) / "workflow.yml"
         if not validate_workflow(path, workflow):
-            raise SystemExit("submodule ownership self-test failed: checkout without submodules accepted")
+            raise SystemExit(
+                "submodule ownership self-test failed: checkout without submodules accepted"
+            )
+        pinned_checkout = (
+            "- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 "
+            "# v7.0.1\n"
+        )
+        if not validate_workflow(path, pinned_checkout):
+            raise SystemExit(
+                "submodule ownership self-test failed: commented pin bypassed validation"
+            )
         named_checkout = "- name: Checkout\n  uses: actions/checkout@0123456789abcdef\n"
         if not validate_workflow(path, named_checkout):
-            raise SystemExit("submodule ownership self-test failed: named checkout without submodules accepted")
-        valid_workflow = "- name: Checkout\n  uses: actions/checkout@v5\n  with:\n    submodules: 'recursive'\n"
+            raise SystemExit(
+                "submodule ownership self-test failed: named checkout without submodules accepted"
+            )
+        valid_workflow = (
+            "- name: Checkout\n"
+            "  uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1\n"
+            "  with:\n"
+            "    submodules: 'recursive'\n"
+        )
         if validate_workflow(path, valid_workflow):
-            raise SystemExit("submodule ownership self-test failed: valid workflow rejected")
+            raise SystemExit(
+                "submodule ownership self-test failed: valid workflow rejected"
+            )
     print("submodule ownership self-test: PASS")
 
 

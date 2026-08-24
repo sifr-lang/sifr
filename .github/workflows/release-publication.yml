@@ -150,18 +150,18 @@ jobs:
       SINGLE_MAINTAINER_APPROVAL_WAIVER: plans/releases/single-maintainer-approval-waiver.json
       SINGLE_MAINTAINER_APPROVAL_WAIVER_SHA256: b9630cc060ca281946da76a9cb9bc67564759c8d5446b6a33157a7d138080008
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: env.STABLE_MUTATION_OPERATION != 'true'
         with:
           ref: ${{ inputs.source_commit }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: env.STABLE_MUTATION_OPERATION == 'true'
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: env.STABLE_CANDIDATE_OPERATION == 'true'
         with:
           ref: ${{ needs.prepare.outputs.source_commit }}
@@ -169,31 +169,33 @@ jobs:
           path: stable-source
           submodules: recursive
           persist-credentials: false
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: env.STABLE_CANDIDATE_OPERATION == 'true'
         with:
           ref: ${{ inputs.evidence_commit }}
           fetch-depth: 0
           path: stable-evidence
           persist-credentials: false
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: env.INCIDENT_OPERATION == 'true'
         with:
           ref: ${{ inputs.incident_commit }}
           fetch-depth: 0
           path: incident-evidence
           persist-credentials: false
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         if: env.STABLE_MUTATION_OPERATION != 'true'
         with:
           pattern: sifr-${{ inputs.version }}-*
           path: release-assets
           merge-multiple: true
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+          digest-mismatch: error
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ needs.prepare.outputs.summary_artifact_name }}
           path: protected-prepare
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+          digest-mismatch: error
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         if: env.STABLE_CANDIDATE_OPERATION == 'true'
         with:
           node-version-file: stable-source/editor_integrations/vscode/.node-version

@@ -81,9 +81,10 @@ jobs:
       ORIGINAL_PREPARE_SUMMARY: plans/releases/schema-bootstrap-recovery/prepare-summary-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}.json
       WAIVER_SHA256: b9630cc060ca281946da76a9cb9bc67564759c8d5446b6a33157a7d138080008
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          submodules: recursive
           persist-credentials: false
 
       - name: Validate failed mutation run and exact source identity
@@ -190,7 +191,7 @@ jobs:
             echo "This recovery performs no release, tag, snapshot, or index mutation."
           } >>"${GITHUB_STEP_SUMMARY}"
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.summary.outputs.summary_artifact_name }}
           path: recovery/summary.json
@@ -230,15 +231,17 @@ jobs:
       SITE_WORKFLOW_SHA256: a9360c82395f6e9d9822f201e56cc0f2eabab1bacda01c31e4e9f22d0202b3af
       WAIVER_SHA256: b9630cc060ca281946da76a9cb9bc67564759c8d5446b6a33157a7d138080008
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          submodules: recursive
           persist-credentials: false
 
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ needs.prepare.outputs.summary_artifact_name }}
           path: protected-prepare
+          digest-mismatch: error
 
       - name: Revalidate both protected approvals and failed site identity
         shell: bash
@@ -495,7 +498,7 @@ jobs:
             exit 2
           }
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: bootstrap-recovery-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
