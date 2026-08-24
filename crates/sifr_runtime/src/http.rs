@@ -714,19 +714,9 @@ mod tests {
     #[tokio::test(flavor = "current_thread")]
     async fn http2_settings_hpack_and_goaway_loopback() {
         let (client_io, server_io) = tokio::io::duplex(8192);
-        let mut client_builder = h2::client::Builder::new();
-        client_builder.data_frame_budget(128);
-        let (mut client, client_connection) = client_builder
-            .handshake::<_, Bytes>(client_io)
-            .await
-            .unwrap();
+        let (mut client, client_connection) = h2::client::handshake(client_io).await.unwrap();
         let client_driver = tokio::spawn(async move { client_connection.await });
-        let mut server_builder = h2::server::Builder::new();
-        server_builder.data_frame_budget(128);
-        let mut server = server_builder
-            .handshake::<_, Bytes>(server_io)
-            .await
-            .unwrap();
+        let mut server = h2::server::handshake(server_io).await.unwrap();
 
         let server_task = tokio::spawn(async move {
             let (request, mut respond) = server
@@ -764,6 +754,43 @@ mod tests {
                 "GOAWAY shutdown must not map to a stream error reason: {error}"
             );
         }
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn http2_small_data_frame_budget_closes_connection() {
+        let (client_io, server_io) = tokio::io::duplex(8192);
+        let (mut client, client_connection) = h2::client::handshake(client_io).await.unwrap();
+        let client_driver = tokio::spawn(async move { client_connection.await });
+        let mut server_builder = h2::server::Builder::new();
+        server_builder.data_frame_budget(1);
+        let mut server = server_builder
+            .handshake::<_, Bytes>(server_io)
+            .await
+            .unwrap();
+
+        let server_task = tokio::spawn(async move {
+            let error = server
+                .accept()
+                .await
+                .expect("frame-budget exhaustion must produce a connection error")
+                .expect_err("the request must not escape the exhausted frame budget");
+            assert_eq!(error.reason(), Some(Reason::ENHANCE_YOUR_CALM));
+        });
+
+        client = client.ready().await.unwrap();
+        let request = Request::builder()
+            .uri("https://localhost/h2/frame-budget")
+            .body(())
+            .unwrap();
+        let (_response, mut body) = client.send_request(request, false).unwrap();
+        body.send_data(Bytes::from_static(b"x"), false).unwrap();
+
+        let client_error = client_driver
+            .await
+            .unwrap()
+            .expect_err("frame-budget exhaustion must send GOAWAY");
+        assert_eq!(client_error.reason(), Some(Reason::ENHANCE_YOUR_CALM));
+        server_task.await.unwrap();
     }
 
     #[tokio::test(flavor = "current_thread")]
