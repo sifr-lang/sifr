@@ -1,10 +1,10 @@
 sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 ├── http-body-util v0.1.3
-│   ├── futures-core v0.3.33
+│   ├── futures-core v0.3.34
 │   ├── bytes feature "default"
-│   │   ├── bytes v1.11.1
+│   │   ├── bytes v1.12.1
 │   │   └── bytes feature "std"
-│   │       └── bytes v1.11.1
+│   │       └── bytes v1.12.1
 │   ├── http feature "default"
 │   │   ├── http v1.4.2
 │   │   │   ├── bytes feature "default" (*)
@@ -120,8 +120,8 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   ├── rustls-platform-verifier v0.7.0 (*)
 │   ├── h2 feature "default"
 │   │   └── h2 v0.4.14
-│   │       ├── futures-core v0.3.33
-│   │       ├── futures-sink v0.3.33
+│   │       ├── futures-core v0.3.34
+│   │       ├── futures-sink v0.3.34
 │   │       ├── atomic-waker feature "default"
 │   │       │   └── atomic-waker v1.1.2
 │   │       ├── bytes feature "default" (*)
@@ -142,7 +142,7 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │       │   └── slab feature "std"
 │   │       │       └── slab v0.4.12
 │   │       ├── tokio feature "default"
-│   │       │   └── tokio v1.52.3
+│   │       │   └── tokio v1.53.1
 │   │       │       ├── mio v1.2.1
 │   │       │       │   └── libc feature "default" (*)
 │   │       │       ├── bytes feature "default" (*)
@@ -196,27 +196,27 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │       │               └── syn feature "full"
 │   │       │                   └── syn v2.0.117 (*)
 │   │       ├── tokio feature "io-util"
-│   │       │   ├── tokio v1.52.3 (*)
+│   │       │   ├── tokio v1.53.1 (*)
 │   │       │   └── tokio feature "bytes"
-│   │       │       └── tokio v1.52.3 (*)
+│   │       │       └── tokio v1.53.1 (*)
 │   │       ├── tokio-util feature "codec"
 │   │       │   └── tokio-util v0.7.18
 │   │       │       ├── bytes feature "default" (*)
 │   │       │       ├── futures-core feature "default"
-│   │       │       │   ├── futures-core v0.3.33
+│   │       │       │   ├── futures-core v0.3.34
 │   │       │       │   └── futures-core feature "std"
-│   │       │       │       ├── futures-core v0.3.33
+│   │       │       │       ├── futures-core v0.3.34
 │   │       │       │       └── futures-core feature "alloc"
-│   │       │       │           └── futures-core v0.3.33
+│   │       │       │           └── futures-core v0.3.34
 │   │       │       ├── futures-sink feature "default"
-│   │       │       │   ├── futures-sink v0.3.33
+│   │       │       │   ├── futures-sink v0.3.34
 │   │       │       │   └── futures-sink feature "std"
-│   │       │       │       ├── futures-sink v0.3.33
+│   │       │       │       ├── futures-sink v0.3.34
 │   │       │       │       └── futures-sink feature "alloc"
-│   │       │       │           └── futures-sink v0.3.33
+│   │       │       │           └── futures-sink v0.3.34
 │   │       │       ├── tokio feature "default" (*)
 │   │       │       ├── tokio feature "sync"
-│   │       │       │   └── tokio v1.52.3 (*)
+│   │       │       │   └── tokio v1.53.1 (*)
 │   │       │       └── pin-project-lite feature "default" (*)
 │   │       ├── tokio-util feature "default"
 │   │       │   └── tokio-util v0.7.18 (*)
@@ -239,17 +239,17 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   ├── tokio feature "default" (*)
 │   ├── tokio feature "io-util" (*)
 │   ├── tokio feature "macros"
-│   │   ├── tokio v1.52.3 (*)
+│   │   ├── tokio v1.53.1 (*)
 │   │   └── tokio feature "tokio-macros"
-│   │       └── tokio v1.52.3 (*)
+│   │       └── tokio v1.53.1 (*)
 │   ├── tokio feature "net"
-│   │   ├── tokio v1.52.3 (*)
+│   │   ├── tokio v1.53.1 (*)
 │   │   ├── tokio feature "libc"
-│   │   │   └── tokio v1.52.3 (*)
+│   │   │   └── tokio v1.53.1 (*)
 │   │   ├── tokio feature "mio"
-│   │   │   └── tokio v1.52.3 (*)
+│   │   │   └── tokio v1.53.1 (*)
 │   │   ├── tokio feature "socket2"
-│   │   │   └── tokio v1.52.3 (*)
+│   │   │   └── tokio v1.53.1 (*)
 │   │   ├── mio feature "net"
 │   │   │   └── mio v1.2.1 (*)
 │   │   ├── mio feature "os-ext"
@@ -258,19 +258,19 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │   │       └── mio v1.2.1 (*)
 │   │   └── mio feature "os-poll" (*)
 │   ├── tokio feature "process"
-│   │   ├── tokio v1.52.3 (*)
+│   │   ├── tokio v1.53.1 (*)
 │   │   ├── tokio feature "bytes" (*)
 │   │   ├── tokio feature "libc" (*)
 │   │   ├── tokio feature "mio" (*)
 │   │   ├── tokio feature "signal-hook-registry"
-│   │   │   └── tokio v1.52.3 (*)
+│   │   │   └── tokio v1.53.1 (*)
 │   │   ├── mio feature "net" (*)
 │   │   ├── mio feature "os-ext" (*)
 │   │   └── mio feature "os-poll" (*)
 │   ├── tokio feature "rt"
-│   │   └── tokio v1.52.3 (*)
+│   │   └── tokio v1.53.1 (*)
 │   ├── tokio feature "signal"
-│   │   ├── tokio v1.52.3 (*)
+│   │   ├── tokio v1.53.1 (*)
 │   │   ├── tokio feature "libc" (*)
 │   │   ├── tokio feature "mio" (*)
 │   │   ├── tokio feature "signal-hook-registry" (*)
@@ -279,7 +279,7 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │   └── mio feature "os-poll" (*)
 │   ├── tokio feature "sync" (*)
 │   ├── tokio feature "time"
-│   │   └── tokio v1.52.3 (*)
+│   │   └── tokio v1.53.1 (*)
 │   ├── http-body feature "default" (*)
 │   ├── hyper feature "client"
 │   │   └── hyper v1.10.1
@@ -294,13 +294,13 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │       ├── pin-project-lite feature "default" (*)
 │   │       ├── http-body feature "default" (*)
 │   │       ├── futures-channel feature "default"
-│   │       │   ├── futures-channel v0.3.33
-│   │       │   │   └── futures-core v0.3.33
+│   │       │   ├── futures-channel v0.3.34
+│   │       │   │   └── futures-core v0.3.34
 │   │       │   └── futures-channel feature "std"
-│   │       │       ├── futures-channel v0.3.33 (*)
+│   │       │       ├── futures-channel v0.3.34 (*)
 │   │       │       ├── futures-core feature "std" (*)
 │   │       │       └── futures-channel feature "alloc"
-│   │       │           ├── futures-channel v0.3.33 (*)
+│   │       │           ├── futures-channel v0.3.34 (*)
 │   │       │           └── futures-core feature "alloc" (*)
 │   │       ├── httparse feature "default"
 │   │       │   ├── httparse v1.10.1
@@ -327,7 +327,7 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │   └── hyper v1.10.1 (*)
 │   ├── hyper-util feature "tokio"
 │   │   ├── hyper-util v0.1.20
-│   │   │   ├── tokio v1.52.3 (*)
+│   │   │   ├── tokio v1.53.1 (*)
 │   │   │   ├── bytes feature "default" (*)
 │   │   │   ├── http feature "default" (*)
 │   │   │   ├── pin-project-lite feature "default" (*)

@@ -50,7 +50,7 @@ def validate_async_reqwest_scenario(
         raw_path,
         dependencies,
         "tokio",
-        "=1.52.3",
+        "=1.53.1",
         ["io-util", "net", "rt", "sync", "time"],
     )
     _require_trust(

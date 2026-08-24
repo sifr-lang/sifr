@@ -56,9 +56,9 @@ Platform rules: [platform_rules.md](../platform/platform_rules.md).
 
 | Capability | Crate decision | State | Public hiding rule |
 | --- | --- | --- | --- |
-| async sockets/timers/I/O | `tokio` 1.52.3 with `macros`, `rt`, `sync`, `time`, `net`, `io-util` | accepted | No Tokio handles or types in public APIs. Full audit: `network_http_dependency_audit.md`. |
+| async sockets/timers/I/O | `tokio` 1.53.1 with `macros`, `rt`, `sync`, `time`, `net`, `io-util` | accepted | No Tokio handles or types in public APIs. Full audit: `network_http_dependency_audit.md`. |
 | cancellation/I/O helpers | `tokio-util` 0.7.18 conditional | internal-only | Only behind Sifr stream/cancellation internals. |
-| byte buffers | `bytes` 1.11.1 | accepted | Public APIs expose Sifr byte buffers, never `bytes::Bytes`. |
+| byte buffers | `bytes` 1.12.1 | accepted | Public APIs expose Sifr byte buffers, never `bytes::Bytes`. |
 | lifecycle tracing | `tracing` 0.1.44 `std` | accepted | Events/spans only; no subscriber/exporter type leaks. |
 | socket options | `socket2` 0.6.4 conditional | host-limited where needed | Only accepted option set; no raw socket constants. |
 | metrics | `metrics` 0.24.6 conditional | deferred-to-future-capability until schema approval | No recorder/exporter setup. |
