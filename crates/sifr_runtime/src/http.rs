@@ -600,6 +600,20 @@ mod tests {
     use h2::Reason;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
+    #[test]
+    fn query_method_uses_the_current_http_registry_constant() {
+        let request = build_request(
+            Method::QUERY.as_str().to_string(),
+            "/search".to_string(),
+            Vec::new(),
+            Vec::new(),
+            Version::HTTP_11,
+        )
+        .unwrap();
+
+        assert_eq!(request.method(), Method::QUERY);
+    }
+
     #[tokio::test(flavor = "current_thread")]
     async fn http1_malformed_response_maps_to_typed_error() {
         let (client_io, mut server_io) = tokio::io::duplex(4096);
@@ -628,6 +642,35 @@ mod tests {
                 || error.contains("failed to read HTTP body frame"),
             "{error}"
         );
+        server.await.unwrap();
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn http1_transfer_encoding_overrides_an_earlier_content_length() {
+        let (client_io, mut server_io) = tokio::io::duplex(4096);
+        let server = tokio::spawn(async move {
+            let mut buffer = [0_u8; 256];
+            let _ = server_io.read(&mut buffer).await.unwrap();
+            server_io
+                .write_all(
+                    b"HTTP/1.1 200 OK\r\nContent-Length: 999\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n4\r\nsifr\r\n0\r\n\r\n",
+                )
+                .await
+                .unwrap();
+        });
+
+        let response = http1_client_request(
+            client_io,
+            "GET".to_string(),
+            "/framing".to_string(),
+            Vec::new(),
+            Vec::new(),
+            1024,
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(response.body, b"sifr");
         server.await.unwrap();
     }
 
@@ -711,6 +754,43 @@ mod tests {
                 "GOAWAY shutdown must not map to a stream error reason: {error}"
             );
         }
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn http2_small_data_frame_budget_closes_connection() {
+        let (client_io, server_io) = tokio::io::duplex(8192);
+        let (mut client, client_connection) = h2::client::handshake(client_io).await.unwrap();
+        let client_driver = tokio::spawn(async move { client_connection.await });
+        let mut server_builder = h2::server::Builder::new();
+        server_builder.data_frame_budget(1);
+        let mut server = server_builder
+            .handshake::<_, Bytes>(server_io)
+            .await
+            .unwrap();
+
+        let server_task = tokio::spawn(async move {
+            let error = server
+                .accept()
+                .await
+                .expect("frame-budget exhaustion must produce a connection error")
+                .expect_err("the request must not escape the exhausted frame budget");
+            assert_eq!(error.reason(), Some(Reason::ENHANCE_YOUR_CALM));
+        });
+
+        client = client.ready().await.unwrap();
+        let request = Request::builder()
+            .uri("https://localhost/h2/frame-budget")
+            .body(())
+            .unwrap();
+        let (_response, mut body) = client.send_request(request, false).unwrap();
+        body.send_data(Bytes::from_static(b"x"), false).unwrap();
+
+        let client_error = client_driver
+            .await
+            .unwrap()
+            .expect_err("frame-budget exhaustion must send GOAWAY");
+        assert_eq!(client_error.reason(), Some(Reason::ENHANCE_YOUR_CALM));
+        server_task.await.unwrap();
     }
 
     #[tokio::test(flavor = "current_thread")]

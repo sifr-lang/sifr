@@ -1,21 +1,21 @@
 sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
-├── http-body-util v0.1.3
+├── http-body-util v0.1.5
 │   ├── futures-core v0.3.34
 │   ├── bytes feature "default"
 │   │   ├── bytes v1.12.1
 │   │   └── bytes feature "std"
 │   │       └── bytes v1.12.1
 │   ├── http feature "default"
-│   │   ├── http v1.4.2
+│   │   ├── http v1.5.0
 │   │   │   ├── bytes feature "default" (*)
 │   │   │   └── itoa feature "default"
 │   │   │       └── itoa v1.0.18
 │   │   └── http feature "std"
-│   │       └── http v1.4.2 (*)
+│   │       └── http v1.5.0 (*)
 │   ├── pin-project-lite feature "default"
 │   │   └── pin-project-lite v0.2.17
 │   └── http-body feature "default"
-│       └── http-body v1.0.1
+│       └── http-body v1.1.0
 │           ├── bytes feature "default" (*)
 │           └── http feature "default" (*)
 ├── rustls-platform-verifier v0.7.0
@@ -116,10 +116,10 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │       └── security-framework-sys feature "OSX_10_13"
 │           └── security-framework-sys v2.17.0 (*)
 ├── sifr_runtime v0.0.0 (<repo>/crates/sifr_runtime)
-│   ├── http-body-util v0.1.3 (*)
+│   ├── http-body-util v0.1.5 (*)
 │   ├── rustls-platform-verifier v0.7.0 (*)
 │   ├── h2 feature "default"
-│   │   └── h2 v0.4.14
+│   │   └── h2 v0.4.19
 │   │       ├── futures-core v0.3.34
 │   │       ├── futures-sink v0.3.34
 │   │       ├── atomic-waker feature "default"
@@ -282,7 +282,7 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │   └── tokio v1.53.1 (*)
 │   ├── http-body feature "default" (*)
 │   ├── hyper feature "client"
-│   │   └── hyper v1.10.1
+│   │   └── hyper v1.11.0
 │   │       ├── h2 feature "default" (*)
 │   │       ├── atomic-waker feature "default" (*)
 │   │       ├── bytes feature "default" (*)
@@ -320,11 +320,11 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │               └── try-lock feature "default"
 │   │                   └── try-lock v0.2.5
 │   ├── hyper feature "http1"
-│   │   └── hyper v1.10.1 (*)
+│   │   └── hyper v1.11.0 (*)
 │   ├── hyper feature "http2"
-│   │   └── hyper v1.10.1 (*)
+│   │   └── hyper v1.11.0 (*)
 │   ├── hyper feature "server"
-│   │   └── hyper v1.10.1 (*)
+│   │   └── hyper v1.11.0 (*)
 │   ├── hyper-util feature "tokio"
 │   │   ├── hyper-util v0.1.20
 │   │   │   ├── tokio v1.53.1 (*)
@@ -333,7 +333,7 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │   │   ├── pin-project-lite feature "default" (*)
 │   │   │   ├── http-body feature "default" (*)
 │   │   │   └── hyper feature "default"
-│   │   │       └── hyper v1.10.1 (*)
+│   │   │       └── hyper v1.11.0 (*)
 │   │   ├── tokio feature "rt" (*)
 │   │   ├── tokio feature "time" (*)
 │   │   └── hyper-util feature "tokio" (*)

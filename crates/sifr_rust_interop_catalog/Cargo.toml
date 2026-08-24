@@ -24,8 +24,8 @@ cxx = { version = "=1.0.199", default-features = true, optional = true }
 datafusion = { version = "=54.1.0", default-features = true, optional = true }
 flate2 = { version = "=1.1.9", default-features = false, features = ["rust_backend"], optional = true }
 futures = { version = "=0.3.34", default-features = true, optional = true }
-http = { version = "=1.4.2", default-features = true, optional = true }
-http-body = { version = "=1.0.1", default-features = true, optional = true }
+http = { version = "=1.5.0", default-features = true, optional = true }
+http-body = { version = "=1.1.0", default-features = true, optional = true }
 indexmap = { version = "=2.14.0", default-features = true, optional = true }
 memmap2 = { version = "=0.9.11", default-features = true, optional = true }
 ndarray = { version = "=0.17.2", default-features = true, optional = true }
