@@ -14,6 +14,8 @@ use sifr_frontend::{
 use sifr_ir::FlowGraph;
 use sifr_lowering::{ExternalDefs, HirModule, LoweringOptions, LoweringResult};
 use sifr_python_ast::Stmt;
+#[cfg(test)]
+use sifr_python_ast::Suite;
 use std::collections::HashMap;
 
 pub(crate) struct ProjectLowering {
@@ -26,7 +28,7 @@ pub(crate) struct ProjectLowering {
 
 #[cfg(test)]
 pub(crate) fn compile_frontend_modules(
-    parsed_modules: &HashMap<String, Vec<Stmt>>,
+    parsed_modules: &HashMap<String, Suite>,
     mut external_defs: ExternalDefs,
     diagnostic_style: FrontendDiagnosticStyle,
 ) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
@@ -209,7 +211,7 @@ pub(crate) fn compile_single_frontend_module_with_source_and_options(
 
 #[cfg(test)]
 pub(crate) fn collect_project_hir_modules(
-    parsed_modules: &HashMap<String, Vec<Stmt>>,
+    parsed_modules: &HashMap<String, Suite>,
     external_defs: ExternalDefs,
 ) -> Result<ProjectLowering, Vec<RenderedDiagnostic>> {
     compile_frontend_modules(

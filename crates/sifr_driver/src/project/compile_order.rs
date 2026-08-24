@@ -5,6 +5,8 @@ use sifr_diagnostics::{
     SourceMap, SourceSpan,
 };
 use sifr_python_ast::Stmt;
+#[cfg(test)]
+use sifr_python_ast::Suite;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 struct ModuleDependencyGraph {
@@ -102,14 +104,18 @@ fn dependency_candidates(current_module: &str, module_name: &str, level: u32) ->
     candidates
 }
 
-fn build_module_dependency_graph(
-    parsed_modules: &HashMap<String, Vec<Stmt>>,
+fn build_module_dependency_graph<'a>(
+    parsed_modules: impl IntoIterator<Item = (&'a str, &'a [Stmt])>,
 ) -> ModuleDependencyGraph {
-    let local_modules: BTreeSet<String> = parsed_modules.keys().cloned().collect();
+    let parsed_modules: BTreeMap<&str, &[Stmt]> = parsed_modules.into_iter().collect();
+    let local_modules: BTreeSet<String> = parsed_modules
+        .keys()
+        .map(|module_name| (*module_name).to_string())
+        .collect();
     let mut dependencies: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for module_name in &local_modules {
         let module_deps = parsed_modules
-            .get(module_name)
+            .get(&module_name.as_str())
             .map(|stmts| collect_local_module_dependencies(module_name, stmts, &local_modules))
             .unwrap_or_default();
         dependencies.insert(module_name.clone(), module_deps);
@@ -207,9 +213,13 @@ fn find_dependency_cycle_path(
 
 #[cfg(test)]
 pub(crate) fn compute_module_compile_order(
-    parsed_modules: &HashMap<String, Vec<Stmt>>,
+    parsed_modules: &HashMap<String, Suite>,
 ) -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
-    let graph = build_module_dependency_graph(parsed_modules);
+    let graph = build_module_dependency_graph(
+        parsed_modules
+            .iter()
+            .map(|(module_name, suite)| (module_name.as_str(), suite.as_slice())),
+    );
     let mut indegree: BTreeMap<String, usize> = graph
         .dependencies
         .iter()
@@ -274,11 +284,11 @@ pub(crate) struct CompileOrderSourceModule<'a> {
 pub(crate) fn compute_module_compile_order_with_sources(
     parsed_modules: &HashMap<String, CompileOrderSourceModule<'_>>,
 ) -> Result<Vec<String>, Vec<RenderedDiagnostic>> {
-    let suites = parsed_modules
-        .iter()
-        .map(|(module, input)| (module.clone(), input.suite.to_vec()))
-        .collect::<HashMap<_, _>>();
-    let graph = build_module_dependency_graph(&suites);
+    let graph = build_module_dependency_graph(
+        parsed_modules
+            .iter()
+            .map(|(module_name, input)| (module_name.as_str(), input.suite)),
+    );
     let mut indegree: BTreeMap<String, usize> = graph
         .dependencies
         .iter()

@@ -1,6 +1,7 @@
 use super::support::parse_suite;
 use crate::{collect_project_hir_modules, compile_stdlib};
 use sifr_ir::{DeclarationMetadataTargetKind, StaticProgramValue};
+use sifr_python_ast::Suite;
 use sifr_type_system::Type;
 use std::collections::HashMap;
 
@@ -64,7 +65,7 @@ def specialize(shape: ShapeInput[ContractDescriptor]) -> ConstSpecializationOutc
     raise ValueError("adapter metadata was not applied")
 "#;
 
-pub(super) fn project(main: &str, contract: &str) -> HashMap<String, Vec<sifr_python_ast::Stmt>> {
+pub(super) fn project(main: &str, contract: &str) -> HashMap<String, Suite> {
     HashMap::from([
         ("fixture.contract_types".to_string(), parse_suite(TYPES)),
         ("fixture.contract".to_string(), parse_suite(contract)),
@@ -73,7 +74,7 @@ pub(super) fn project(main: &str, contract: &str) -> HashMap<String, Vec<sifr_py
 }
 
 pub(super) fn compile_errors(
-    modules: &HashMap<String, Vec<sifr_python_ast::Stmt>>,
+    modules: &HashMap<String, Suite>,
     message: &str,
 ) -> Vec<sifr_diagnostics::RenderedDiagnostic> {
     let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;

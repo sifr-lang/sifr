@@ -1,9 +1,10 @@
 use super::support::parse_suite;
 use crate::{collect_project_hir_modules, compile_stdlib};
 use sifr_ir::{DeclarationDescriptorKind, StaticProgramValue};
+use sifr_python_ast::Suite;
 use std::collections::HashMap;
 
-fn descriptor_project(main: &str) -> HashMap<String, Vec<sifr_python_ast::Stmt>> {
+fn descriptor_project(main: &str) -> HashMap<String, Suite> {
     let mut modules = HashMap::new();
     modules.insert(
         "fixture.contract_types".to_string(),
