@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-24. Items 0-5 are complete. Item 6 GitHub Actions is
-next.
+Status: active on 2026-08-24. Items 0-6 are complete. Item 7 Ruff 0.16.4 fork
+is next.
 
 ## Objective
 
@@ -174,7 +174,7 @@ Only the first incomplete row may be active.
 | 3 | complete | uv 0.12 | uv and setup policy are current; all affected locks are reproducible under the new resolver. |
 | 4 | complete | Python 3.14 and PyO3 | Python 3.14.7 is the only maintained Python lane, PyO3 is current, and older-lane configuration and evidence are removed. |
 | 5 | complete | Node 24 LTS | Release/tooling workflows use the latest Node 24 LTS and compatible npm behavior. |
-| 6 | pending | GitHub Actions | All maintained third-party actions use reviewed latest-stable immutable SHAs and workflow contract tests pass. |
+| 6 | complete | GitHub Actions | All maintained third-party actions use reviewed latest-stable immutable SHAs and workflow contract tests pass. |
 | 7 | pending | Ruff 0.16.4 fork | Sifr changes are replayed on the latest Ruff stable base; fork, gitlink, ownership, parser/formatter/linter evidence, and snapshots agree. |
 | 8 | pending | Rust utility/foundation train | Each listed utility dependency is advanced sequentially; all direct declarations converge and generated/vendor evidence agrees. |
 | 9 | pending | Rust async foundation | Bytes, Futures, and Tokio converge with runtime/concurrency validation. |
@@ -548,6 +548,85 @@ Item 5 mechanism defect.
 Next action: implement Item 6 GitHub Actions convergence from the Item 5 record
 merge on `origin/main`.
 
+### Item 6 record
+
+State: complete
+
+PR: [#3501](https://github.com/sifr-lang/sifr/pull/3501)
+
+Base SHA: `e73fd79fae641b96fce0de32046cba2dabd1df04`
+
+Candidate SHA: `c08ac5567d6acb64bbc76c731a6471806bc46b3a`
+
+Merge SHA: `d0d57243c4c371aa1d17d57cb92380c2981a0933`
+
+Nested merges: [sifr-vscode #14](https://github.com/sifr-lang/sifr-vscode/pull/14)
+merged leaf candidate `cde0ef12602a19af1cd0805f79e119613f64de99` as
+`732bcdc3ae2a494753025710dd138aa23a39b6e4`.
+[editor-integrations #12](https://github.com/sifr-lang/editor-integrations/pull/12)
+merged pointer candidate `2edb4f9746ea8d11f72380fc10411e694def9aa6` as
+`d202b8c60240b6d2897c9deeda59be899bf47e24`. The root then advanced only the
+resolved editor-integrations pointer.
+
+Changed paths: all seven root workflow files that use external actions, the
+extension CI workflow, both editor pointers, the immutable-action policy and
+validator, the distribution case and current workflow contracts, the
+submodule ownership guardrail, and the verification README.
+
+Stable-source result: official GitHub releases and tag refs gave these exact
+results:
+
+- checkout v7.0.1: `3d3c42e5aac5ba805825da76410c181273ba90b1`.
+- setup-node v7.0.0: `820762786026740c76f36085b0efc47a31fe5020`.
+- upload-artifact v7.0.1: `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a`.
+- download-artifact v8.0.1: `3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c`.
+- setup-uv v10.0.1: `20cfd1bf945f4377ade1205e4dbc17946fc9a30d`.
+- Rust toolchain 1.98.0: `f8be11a05b1d4f3fcebe6410cc16743212b999b0`.
+
+Forward-only result: all 56 maintained external action references use one of
+the six reviewed exact commits and carry the matching release label. The
+policy validator rejects mutable refs, stale or unknown actions, label drift,
+and download steps without `digest-mismatch: error`. All ten
+download-artifact v8 steps explicitly use fail-closed digest validation. No
+mutable tag, version branch, stale immutable SHA, compatibility selection, or
+parallel old action path remains.
+
+The submodule guardrail now recognizes immutable checkout refs with release
+comments. Its negative self-test prevents that comment form from bypassing
+validation. Seven formerly skipped checkout steps now initialize recursive
+submodules. Ruff 0.16.4 reformatted the touched guardrail source. The
+verification README now gives one direct command for the action policy.
+
+Focused validation: GitHub release and ref checks matched all policy entries.
+The immutable-action policy and negative self-test passed with six actions and
+56 references. The submodule ownership guardrail and negative self-test
+passed. Every root and leaf workflow parsed as YAML. Exact download-artifact
+metadata confirmed Node 24 and the digest-mismatch error input. Verification
+runner self-tests, all profiles, all area manifests, Ruff check and format,
+Bash syntax, diff checks, and the file-size guardrail passed. The final-state
+distribution-release representative suite passed 58/58.
+
+Review evidence: the one exact-SHA Claude Opus review returned `SATISFIED` for
+the final candidate with no blocking findings. It independently confirmed all
+56 refs, exact policy agreement, ten fail-closed download steps, complete
+maintained-workflow inventory, automatic case discovery, contract literals,
+and the sequential pointer chain. The response is retained in the
+[#3501 review comment](https://github.com/sifr-lang/sifr/pull/3501#issuecomment-5389488025).
+The candidate did not change after review, so no remediation review applied.
+
+Gate evidence: only workflows, workflow verification, documentation, and
+editor gitlinks changed. No compiler input changed, so the phase rules
+prohibited the Sifr create-PR and merge gates.
+
+Deferred follow-up: Opus confirmed a pre-existing step-splitting defect in the
+submodule ownership guardrail. Item 35 owns replacing that parser with a
+YAML-based step boundary and defining an explicit policy for evidence-only
+checkouts. Item 7 owns the Ruff fork's internal workflow audit while it replays
+the maintained fork. Neither finding is an Item 6 regression or omission.
+
+Next action: implement Item 7 Ruff 0.16.4 fork convergence from the Item 6
+record merge on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -586,12 +665,12 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-5 are complete. Item 5 merged in PR #3499 as
-`c68af27e89d269e6d1a7aef7b1a1dad78f3c6936` after the leaf and intermediate
-editor pointer PRs merged in order. Node 24.19.0 and bundled npm 11.17.0 are
-exactly selected and enforced across extension CI, stable qualification, and
-protected publication. The exact final candidate has Opus satisfaction and
-changed no compiler input, so no Sifr gate applied.
+Current state: Items 0-6 are complete. Item 6 merged in PR #3501 as
+`d0d57243c4c371aa1d17d57cb92380c2981a0933` after the leaf and intermediate
+editor pointer PRs merged in order. All 56 maintained external action refs now
+use six reviewed current commits. Download-artifact v8 fails closed on digest
+mismatch. The exact final candidate has Opus satisfaction and changed no
+compiler input, so no Sifr gate applied.
 
-Next action: merge this record-only update, then start Item 6 GitHub Actions
+Next action: merge this record-only update, then start Item 7 Ruff 0.16.4 fork
 convergence from the resulting `origin/main`.
