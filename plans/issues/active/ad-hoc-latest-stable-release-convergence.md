@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-25. Items 0-11 are complete. Item 12 ICU family is
-next.
+Status: active on 2026-08-25. Items 0-12 are complete. Item 13 SHA-2
+consolidation is next.
 
 ## Objective
 
@@ -180,7 +180,7 @@ Only the first incomplete row may be active.
 | 9 | complete | Rust async foundation | Bytes, Futures, and Tokio converge with runtime/concurrency validation. |
 | 10 | complete | Rust HTTP stack | HTTP, body, H2, and Hyper converge with network/HTTP validation. |
 | 11 | complete | Rust TLS stack | Rustls and rcgen converge with certificate, TLS, and provider validation. |
-| 12 | pending | ICU family | All five ICU4X crates converge together and text/i18n behavior passes. |
+| 12 | complete | ICU family | All five ICU4X crates converge together and text/i18n behavior passes. |
 | 13 | pending | SHA-2 consolidation | One SHA-2 0.11 dependency remains and all digest evidence passes. |
 | 14 | pending | Base64 0.23 | Base64 is current without an unapproved unsafe default feature and parity/error tests pass. |
 | 15 | pending | Num BigInt 0.5 | Exact integer behavior, serialization, limits, and generated code pass. |
@@ -1049,6 +1049,85 @@ Neither gate was rerun.
 Next action: implement Item 12 ICU family from this record merge on
 `origin/main`.
 
+### Item 12 record
+
+Implementation [PR #3513](https://github.com/sifr-lang/sifr/pull/3513) started
+from base `483519ceec4250436dcd69c9d06d31c123930a91`. The final candidate was
+`d95f5b665fb33945985b1931132f109091215d4b`. It merged as
+`643018175fdbc82412b789cda6a171b793858749`.
+
+The official registry audit confirmed these latest stable direct releases:
+ICU Collator 2.3.1, ICU DateTime 2.3.0, ICU Decimal 2.3.0, ICU Locale 2.3.1,
+and ICU Plurals 2.3.0. The root manifest, lock, generated dependency
+snapshots, and exact-version certification now agree. The complete ICU graph
+was regenerated from official archives with Cargo rather than edited by hand.
+The 30 changed or added packages and all 1,176 package file checksums match the
+official checksum manifests.
+
+The upgrade adopts the ICU Locale 2.3 split: locale fallback code and data now
+use their dedicated packages. The runtime tests also certify three changed
+stable behaviors: `und` maximization remains `und`, a digit singleton starts a
+private-use locale extension, and the Burmese collation regression no longer
+panics. No old package path, legacy adapter, version fallback, or parallel ICU
+graph remains.
+
+Five maintained Rust-interop fixture locks shared ICU package identities with
+the root graph. They now select the same ICU Locale, Provider, and Normalizer
+versions. The complete targeted Rust-interop matrix passed 40 fixtures, 11
+diagnostics, 44 crates, 61 package examples, 21 scenario examples, and 237
+self-tests.
+
+Changed surfaces:
+
+- The root Cargo manifest and lock.
+- The regenerated ICU package-owned vendor copies.
+- Five maintained Rust-interop locks.
+- The locale and collation runtime behavior tests.
+- Exact dependency certification and generated dependency snapshots.
+- The coverage classification, inventory, and dependency audit records.
+
+Focused validation passed all five direct dependency checks in order. The
+all-feature runtime passed 296 tests. The all-feature stdlib passed 53 tests.
+The five targeted text and internationalization E2E fixtures passed with
+signature `b3333f3bdb8a0884`.
+
+Workspace Clippy denied all warnings. Formatting, HIR maintainability, vendor
+archive identity, checksum verification, diff hygiene, and the 3,244-file size
+guardrail passed. The broad stdlib parity runner passed 283 of 284 demos,
+including `demos/text_i18n`. Its sole failure was the recorded pre-existing
+`demos/m16_raw_api` dependency on canonical Python `math`; Item 12 did not
+absorb that separately owned issue.
+
+The initial Opus review of exact SHA
+`cf22e08a5320999a80ff6b0c40a31549495eb589` returned `SATISFIED` with no
+blocking finding. Its non-blocking maintenance notes produced one consolidated
+refinement. The evidence is in the
+[#3513 initial review comment](https://github.com/sifr-lang/sifr/pull/3513#issuecomment-5402371882).
+The one allowed remediation review of exact SHA
+`a9ac93764c66666291fe95da2cde9f867ef2d687` also returned `SATISFIED` and found
+no new mechanism defect. Its evidence is in the
+[#3513 remediation review comment](https://github.com/sifr-lang/sifr/pull/3513#issuecomment-5402416921).
+No third review ran.
+
+The one create-PR gate ran on the reviewed candidate. It passed every earlier
+blocking guardrail and stopped in the Rust-interop matrix when five maintained
+fixture locks exposed their old ICU shared package identities. After those
+locks were regenerated, the full targeted matrix passed. The gate was not
+rerun. Its exact evidence is in the
+[#3513 create-PR comment](https://github.com/sifr-lang/sifr/pull/3513#issuecomment-5402493589).
+
+The one merge gate ran after the fixture-lock correction. It passed every
+earlier blocking guardrail and the complete Rust-interop area. It then stopped
+because the new exact-version test target lacked coverage classification. The
+final mechanical correction classified it as a merge-profile test fixture.
+The complete targeted coverage-matrix readiness suite then passed all four
+variants with no failure. The merge gate was not rerun. Its final lane report
+had no advisory. The exact one-shot evidence and final focused result are in
+the [#3513 final gate comment](https://github.com/sifr-lang/sifr/pull/3513#issuecomment-5402534557).
+
+Next action: implement Item 13 SHA-2 consolidation from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1087,12 +1166,12 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-11 are complete. Item 11 merged in PR #3511 as
-`8d433b6135c344d3bd0d77e6e825a1ea6ae00cbd`. Its exact candidate
-`f432ab8d88d44b21bd193bca66d5deaa38ac1102` has one satisfied Opus review.
-The one create-PR gate recorded a cold runtime-platform budget observation.
-The one merge gate passed every blocking lane and 698 of 698 E2E fixtures.
+Current state: Items 0-12 are complete. Item 12 merged in PR #3513 as
+`643018175fdbc82412b789cda6a171b793858749`. Its initial and remediation review
+SHAs each have one satisfied Opus review. The one create-PR gate exposed five
+stale fixture-lock identities. The one merge gate exposed one missing coverage
+classification. Each correction passed its complete targeted owner suite.
 Neither one-shot gate was rerun.
 
-Next action: merge this record-only update, then start Item 12 ICU family from
-the resulting `origin/main`.
+Next action: merge this record-only update, then start Item 13 SHA-2
+consolidation from the resulting `origin/main`.
