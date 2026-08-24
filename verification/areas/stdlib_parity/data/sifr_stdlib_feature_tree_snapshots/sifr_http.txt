@@ -20,7 +20,7 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │           └── http feature "default" (*)
 ├── rustls-platform-verifier v0.7.0
 │   ├── rustls feature "std"
-│   │   ├── rustls v0.23.35
+│   │   ├── rustls v0.23.43
 │   │   │   ├── aws-lc-rs v1.17.0
 │   │   │   │   ├── aws-lc-sys v0.41.0
 │   │   │   │   │   [build-dependencies]
@@ -338,11 +338,11 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │   ├── tokio feature "time" (*)
 │   │   └── hyper-util feature "tokio" (*)
 │   ├── rustls feature "default"
-│   │   ├── rustls v0.23.35 (*)
+│   │   ├── rustls v0.23.43 (*)
 │   │   ├── rustls feature "aws_lc_rs"
-│   │   │   ├── rustls v0.23.35 (*)
+│   │   │   ├── rustls v0.23.43 (*)
 │   │   │   ├── rustls feature "aws-lc-rs"
-│   │   │   │   └── rustls v0.23.35 (*)
+│   │   │   │   └── rustls v0.23.43 (*)
 │   │   │   ├── aws-lc-rs feature "aws-lc-sys"
 │   │   │   │   └── aws-lc-rs v1.17.0 (*)
 │   │   │   ├── aws-lc-rs feature "prebuilt-nasm"
@@ -355,15 +355,15 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │   │       ├── aws-lc-rs feature "prebuilt-nasm" (*)
 │   │   │       └── rustls-webpki feature "aws-lc-rs" (*)
 │   │   ├── rustls feature "logging"
-│   │   │   ├── rustls v0.23.35 (*)
+│   │   │   ├── rustls v0.23.43 (*)
 │   │   │   └── rustls feature "log"
-│   │   │       └── rustls v0.23.35 (*)
+│   │   │       └── rustls v0.23.43 (*)
 │   │   ├── rustls feature "prefer-post-quantum"
-│   │   │   ├── rustls v0.23.35 (*)
+│   │   │   ├── rustls v0.23.43 (*)
 │   │   │   └── rustls feature "aws_lc_rs" (*)
 │   │   ├── rustls feature "std" (*)
 │   │   └── rustls feature "tls12"
-│   │       └── rustls v0.23.35 (*)
+│   │       └── rustls v0.23.43 (*)
 │   ├── rustls-pemfile feature "default"
 │   │   ├── rustls-pemfile v2.2.0
 │   │   │   └── rustls-pki-types feature "default" (*)

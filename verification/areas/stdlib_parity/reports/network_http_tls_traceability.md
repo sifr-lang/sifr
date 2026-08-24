@@ -1,6 +1,8 @@
 # Network HTTP TLS capability Traceability: TLS Runtime
 
-Status: merged in PR #2496 at `742ea9f33dcac821d5abb644156d97dd2d7876cc`.
+Status: the initial capability merged in PR #2496 at
+`742ea9f33dcac821d5abb644156d97dd2d7876cc`. This living traceability record
+also tracks its latest-stable dependency refreshes.
 
 TLS capability implements the Sifr-native TLS substrate over the async-network capability TCP runtime. It keeps Rustls and Tokio-Rustls private, exposes `sifr.tls` as the public module, and leaves CPython-shaped `SSLContext` / `SSLSocket` APIs rejected by the baseline namespace and unsupported-import fixtures.
 
@@ -8,16 +10,27 @@ TLS capability implements the Sifr-native TLS substrate over the async-network c
 | --- | --- | --- |
 | `sifr.tls` public module and config types | `production-public`, stable public Sifr API; Rustls types hidden. | `stdlib/sifr/tls.sifr`; private `_sifr.tls` Rust interop declarations in `stdlib/_sifr/tls.sifr`; generated-program wrappers in `crates/sifr_stdlib/src/tls.rs`; runtime module gate in `crates/sifr_runtime/src/lib.rs`; TLS substrate in `crates/sifr_runtime/src/tls.rs`. |
 | Safe client verification defaults | Platform verification is the default production client strategy; no fallback root store. | `client_config_platform(...)` uses `rustls-platform-verifier`; dependency snapshot asserts `rustls-platform-verifier = { version = "0.7.0", default-features = false }`; no `webpki-roots` is emitted. |
-| Deterministic test roots | Explicit in-memory roots for tests; `rcgen` is dev/test only. | `client_config_with_roots(...)` and mTLS config helpers parse PEM through `rustls-pemfile`; runtime tests generate deterministic CA/server/client material with dev-only `rcgen`; generated dependency snapshot asserts no `rcgen`, `webpki-roots`, or `x509-parser` in production deps. |
+| Deterministic test roots | Tests use explicit in-memory roots. `rcgen` is only a development and test dependency. | `client_config_with_roots(...)` and the mTLS config helpers parse PEM through `rustls-pemfile`. Runtime tests use rcgen 0.14.9 to generate deterministic CA, server, and client material. They assert its canonical RFC 5280 `ExplicitNoCa` DER. The generated dependency snapshot contains no production `rcgen`, `webpki-roots`, or `x509-parser` dependency. |
 | TLS client/server streams | Async-native over async-network capability TCP and `tokio-rustls`; TCP handles are consumed into TLS handles. | `crates/sifr_runtime/src/tls.rs`; `crates/sifr_runtime/src/net.rs` exposes internal `consume_stream_for_tls(...)`; public fixture `crates/sifr/tests/e2e/pass/network_http_tls_loopback_split.sifr` performs real loopback client/server handshakes. |
 | SNI and ALPN | accepted substrate. | Public `connect_tls(..., server_name, ...)` passes SNI; config constructors accept ALPN byte protocol lists; runtime and e2e loopbacks assert selected ALPN. |
+| TLS 1.3 session tickets | Resumption stays internal. Sifr does not expose tickets or key material. | Rustls 0.23.43 client configs request two tickets for new and resumed sessions through RFC 9149. Server configs emit two tickets and limit extension responses to two. `tls_configs_use_bounded_rfc9149_ticket_requests` asserts both policies. |
 | mTLS | accepted TLS capability substrate with success and rejection evidence. | Runtime test `tls_loopback_split_close_notify_and_alpn` covers client-auth success; runtime test `mtls_rejects_missing_client_certificate` covers missing-client-cert rejection. |
 | TLS full-duplex split | Owned affine read/write halves; no borrowed split views or recombine. | `TlsStream.split()` in `stdlib/sifr/tls.sifr`; runtime split handles in `crates/sifr_runtime/src/tls.rs`; e2e fixture `network_http_tls_loopback_split.sifr` splits the client stream, exchanges bytes, and preserves read-half ownership after write-side `close_notify()`. |
 | `flush`, `close_notify`, `close` | `close_notify()` is the TLS write-side close operation; write-after-close-notify must be typed and deterministic. | Runtime close-notify state in `crates/sifr_runtime/src/tls.rs`; e2e fixture validates `flush`, `close_notify`, protocol version recording, and write-after-close-notify as `TlsError`; runtime tests cover EOF and close-notify handling. |
 | Typed TLS and certificate errors | Public Sifr errors wrap TLS/certificate/config failures; lower-layer network evidence is preserved in TLS error text. | `TlsError` in `stdlib/_sifr/tls.sifr` and `CertificateError` in `stdlib/sifr/tls.sifr`; Rust interop maps runtime strings into typed `TlsError`; public config-error fixture maps malformed PEM to `CertificateError`; runtime invalid-root test covers certificate verification failure. |
 | Build and host evidence | TLS deps are feature-gated; non-TLS generated programs do not build crypto providers; host platform verification behavior is matrixed. | `crates/sifr_stdlib_manifest/src/features.rs`; `crates/sifr_stdlib_manifest/tests/network_http_dependency_snapshots.rs`; `verification/areas/stdlib_parity/reports/network_http_dependency_audit.md`; `verification/areas/runtime_platform/supported_host_matrix.md`. |
 
-## Validation Evidence
+## Latest-stable Refresh Evidence
+
+The latest-stable convergence refresh selects Rustls 0.23.43 and rcgen 0.14.9.
+The refresh adds exact manifest and lock certification. It also adds bounded
+RFC 9149 ticket-request policy coverage and canonical `ExplicitNoCa` DER
+coverage. The independent Rust-interop locks contain the new versions. Vendor
+checksums, TLS and HTTP loopbacks, and public Sifr TLS fixtures pass. No legacy
+provider, fallback trust store, compatibility API, or parallel old dependency
+path remains.
+
+## Initial Capability Validation Evidence
 
 Focused validation completed for the TLS capability candidate:
 

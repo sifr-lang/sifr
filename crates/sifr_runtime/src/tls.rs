@@ -8,6 +8,7 @@ use std::sync::{
     atomic::{AtomicI64, Ordering},
 };
 
+use rustls::client::TicketRequest;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer, ServerName};
 use rustls::server::WebPkiClientVerifier;
 use rustls::{ClientConfig, RootCertStore, ServerConfig};
@@ -19,6 +20,7 @@ use tokio_rustls::{TlsAcceptor, TlsConnector, TlsStream};
 use crate::timeouts::timeout_duration;
 
 const MAX_READ_BYTES: i64 = 1_048_576;
+const TLS13_SESSION_TICKET_COUNT: u8 = 2;
 
 type RuntimeTlsStream = TlsStream<TcpStream>;
 type SharedReadHalf = Arc<tokio::sync::Mutex<ReadHalf<RuntimeTlsStream>>>;
@@ -119,12 +121,19 @@ fn root_store_from_pem(pem: &[u8], label: &str) -> Result<RootCertStore, String>
     Ok(store)
 }
 
-fn apply_alpn_to_client(config: &mut ClientConfig, alpn_protocols: Vec<Vec<u8>>) {
+fn apply_client_policy(config: &mut ClientConfig, alpn_protocols: Vec<Vec<u8>>) {
     config.alpn_protocols = alpn_protocols;
+    config.send_ticket_request = Some(TicketRequest {
+        new_session_count: TLS13_SESSION_TICKET_COUNT,
+        resumption_count: TLS13_SESSION_TICKET_COUNT,
+    });
 }
 
-fn apply_alpn_to_server(config: &mut ServerConfig, alpn_protocols: Vec<Vec<u8>>) {
+fn apply_server_policy(config: &mut ServerConfig, alpn_protocols: Vec<Vec<u8>>) {
     config.alpn_protocols = alpn_protocols;
+    let ticket_count = usize::from(TLS13_SESSION_TICKET_COUNT);
+    config.send_tls13_tickets = ticket_count;
+    config.max_tls13_tickets = ticket_count;
 }
 
 fn insert_client_config(config: ClientConfig) -> Result<i64, String> {
@@ -196,7 +205,7 @@ fn validate_read_size(max_bytes: i64) -> Result<usize, String> {
 pub fn client_config_platform(alpn_protocols: Vec<Vec<u8>>) -> Result<i64, String> {
     let mut config = ClientConfig::with_platform_verifier()
         .map_err(|error| format!("failed to configure platform TLS verifier: {error}"))?;
-    apply_alpn_to_client(&mut config, alpn_protocols);
+    apply_client_policy(&mut config, alpn_protocols);
     insert_client_config(config)
 }
 
@@ -208,7 +217,7 @@ pub fn client_config_with_roots(
     let mut config = ClientConfig::builder()
         .with_root_certificates(roots)
         .with_no_client_auth();
-    apply_alpn_to_client(&mut config, alpn_protocols);
+    apply_client_policy(&mut config, alpn_protocols);
     insert_client_config(config)
 }
 
@@ -225,7 +234,7 @@ pub fn client_config_with_roots_and_client_auth(
         .with_root_certificates(roots)
         .with_client_auth_cert(certs, key)
         .map_err(|error| format!("failed to configure TLS client certificate: {error}"))?;
-    apply_alpn_to_client(&mut config, alpn_protocols);
+    apply_client_policy(&mut config, alpn_protocols);
     insert_client_config(config)
 }
 
@@ -240,7 +249,7 @@ pub fn server_config(
         .with_no_client_auth()
         .with_single_cert(certs, key)
         .map_err(|error| format!("failed to configure TLS server certificate: {error}"))?;
-    apply_alpn_to_server(&mut config, alpn_protocols);
+    apply_server_policy(&mut config, alpn_protocols);
     insert_server_config(config)
 }
 
@@ -260,7 +269,7 @@ pub fn server_config_require_client_auth(
         .with_client_cert_verifier(verifier)
         .with_single_cert(certs, key)
         .map_err(|error| format!("failed to configure TLS server certificate: {error}"))?;
-    apply_alpn_to_server(&mut config, alpn_protocols);
+    apply_server_policy(&mut config, alpn_protocols);
     insert_server_config(config)
 }
 
@@ -558,8 +567,8 @@ pub async fn tls_write_half_close(handle: i64) -> Result<(), String> {
 mod tests {
     use super::*;
     use rcgen::{
-        BasicConstraints, CertificateParams, CertifiedIssuer, ExtendedKeyUsagePurpose, IsCa,
-        KeyPair, KeyUsagePurpose,
+        BasicConstraints, Certificate, CertificateParams, CertifiedIssuer, ExtendedKeyUsagePurpose,
+        IsCa, KeyPair, KeyUsagePurpose,
     };
 
     struct TlsMaterials {
@@ -586,7 +595,7 @@ mod tests {
         names: Vec<String>,
         usage: ExtendedKeyUsagePurpose,
         issuer: &CertifiedIssuer<'static, KeyPair>,
-    ) -> (Vec<u8>, Vec<u8>) {
+    ) -> (Certificate, KeyPair) {
         let mut params = CertificateParams::new(names).unwrap();
         params.is_ca = IsCa::ExplicitNoCa;
         params.key_usages = vec![
@@ -596,29 +605,29 @@ mod tests {
         params.extended_key_usages = vec![usage];
         let key = KeyPair::generate().unwrap();
         let cert = params.signed_by(&key, issuer).unwrap();
-        (cert.pem().into_bytes(), key.serialize_pem().into_bytes())
+        (cert, key)
     }
 
     fn materials() -> TlsMaterials {
         let server_ca = ca("sifr-tls-server-ca.local");
         let client_ca = ca("sifr-tls-client-ca.local");
-        let (server_cert_pem, server_key_pem) = signed_leaf(
+        let (server_cert, server_key) = signed_leaf(
             vec!["localhost".to_string()],
             ExtendedKeyUsagePurpose::ServerAuth,
             &server_ca,
         );
-        let (client_cert_pem, client_key_pem) = signed_leaf(
+        let (client_cert, client_key) = signed_leaf(
             vec!["sifr-tls-client.local".to_string()],
             ExtendedKeyUsagePurpose::ClientAuth,
             &client_ca,
         );
         TlsMaterials {
             server_ca_pem: server_ca.pem().into_bytes(),
-            server_cert_pem,
-            server_key_pem,
+            server_cert_pem: server_cert.pem().into_bytes(),
+            server_key_pem: server_key.serialize_pem().into_bytes(),
             client_ca_pem: client_ca.pem().into_bytes(),
-            client_cert_pem,
-            client_key_pem,
+            client_cert_pem: client_cert.pem().into_bytes(),
+            client_key_pem: client_key.serialize_pem().into_bytes(),
         }
     }
 
@@ -635,6 +644,62 @@ mod tests {
         let (server, _) = crate::net::accept_tcp(listener).await.unwrap();
         crate::net::close_tcp_listener(listener).unwrap();
         (client.await.unwrap(), server)
+    }
+
+    #[test]
+    fn tls_configs_use_bounded_rfc9149_ticket_requests() {
+        let materials = materials();
+        let client_handle = client_config_with_roots(materials.server_ca_pem, Vec::new()).unwrap();
+        let server_handle = server_config(
+            materials.server_cert_pem,
+            materials.server_key_pem,
+            Vec::new(),
+        )
+        .unwrap();
+
+        let client = client_config(client_handle).unwrap();
+        assert_eq!(
+            client.send_ticket_request,
+            Some(TicketRequest {
+                new_session_count: TLS13_SESSION_TICKET_COUNT,
+                resumption_count: TLS13_SESSION_TICKET_COUNT,
+            })
+        );
+        let server = get_server_config(server_handle).unwrap();
+        let ticket_count = usize::from(TLS13_SESSION_TICKET_COUNT);
+        assert_eq!(server.send_tls13_tickets, ticket_count);
+        assert_eq!(server.max_tls13_tickets, ticket_count);
+
+        close_client_config(client_handle).unwrap();
+        close_server_config(server_handle).unwrap();
+    }
+
+    #[test]
+    fn rcgen_explicit_no_ca_uses_canonical_der_default() {
+        const CANONICAL_BASIC_CONSTRAINTS: &[u8] = &[
+            0x06, 0x03, 0x55, 0x1d, 0x13, 0x01, 0x01, 0xff, 0x04, 0x02, 0x30, 0x00,
+        ];
+        const LEGACY_EXPLICIT_FALSE: &[u8] = &[
+            0x06, 0x03, 0x55, 0x1d, 0x13, 0x01, 0x01, 0xff, 0x04, 0x05, 0x30, 0x03, 0x01, 0x01,
+            0x00,
+        ];
+
+        let issuer = ca("sifr-tls-der-ca.local");
+        let (leaf, _) = signed_leaf(
+            vec!["localhost".to_string()],
+            ExtendedKeyUsagePurpose::ServerAuth,
+            &issuer,
+        );
+        let der = leaf.der();
+
+        assert!(
+            der.windows(CANONICAL_BASIC_CONSTRAINTS.len())
+                .any(|window| window == CANONICAL_BASIC_CONSTRAINTS)
+        );
+        assert!(
+            !der.windows(LEGACY_EXPLICIT_FALSE.len())
+                .any(|window| window == LEGACY_EXPLICIT_FALSE)
+        );
     }
 
     #[tokio::test(flavor = "current_thread")]
