@@ -54,7 +54,7 @@ jobs:
       governance_mode: ${{ steps.validate.outputs.governance_mode }}
       bootstrap_alpha_version: ${{ steps.validate.outputs.bootstrap_alpha_version }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.base_ref || 'main' }}
           fetch-depth: 0
@@ -150,13 +150,13 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.validate.outputs.source_sha }}
           submodules: recursive
           persist-credentials: false
 
-      - uses: dtolnay/rust-toolchain@1.98.0
+      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0 # Rust 1.98.0
         with:
           targets: ${{ matrix.target }}
 
@@ -175,7 +175,7 @@ jobs:
             --binary "target/${{ matrix.target }}/release/sifr" \
             --target "${{ matrix.target }}"
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: sifr-${{ needs.validate.outputs.version }}-${{ matrix.target }}
           path: dist/*

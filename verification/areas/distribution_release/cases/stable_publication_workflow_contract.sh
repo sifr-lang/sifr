@@ -44,7 +44,7 @@ for fragment in (
     "path: stable-source",
     "path: stable-evidence",
     "submodules: recursive",
-    "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+    "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
     "node-version-file: stable-source/editor_integrations/vscode/.node-version",
     "npm ci --ignore-scripts --include=dev --prefix stable-source/editor_integrations/vscode",
     "node_modules/.bin/vsce",

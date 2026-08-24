@@ -48,7 +48,7 @@ unless editor_env["ROLLBACK_VERSION"] == "${{ needs.validate.outputs.rollback_ve
 end
 
 uploads = jobs.values.flat_map { |job| job.fetch("steps", []) }.select {
-  |step| step["uses"] == "actions/upload-artifact@v4"
+  |step| step["uses"] == "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
 }
 abort "release qualification upload step count drifted" unless uploads.length == 4
 uploads.each do |upload|
