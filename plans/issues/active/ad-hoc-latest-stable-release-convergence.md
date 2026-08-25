@@ -1,7 +1,6 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-25. Items 0-18 are complete. Item 19 Rusqlite 0.40 is
-next.
+Status: active on 2026-08-25. Items 0-19 are complete. Item 20 SQLx 0.9 is next.
 
 ## Objective
 
@@ -187,7 +186,7 @@ Only the first incomplete row may be active.
 | 16 | complete | Syn 3 and Prettyplease 0.3 | The single syntax-AST compatibility unit is current and code generation/SQLx scanning passes. |
 | 17 | complete | LSP Server 0.10 | Response handling and editor protocol smoke tests pass. |
 | 18 | complete | Reqwest 0.13 | Canonical features/provider selection and HTTP client loopback behavior pass. |
-| 19 | pending | Rusqlite 0.40 | SQLite interop and exact catalog/fixture locks pass. |
+| 19 | complete | Rusqlite 0.40 | SQLite interop and exact catalog/fixture locks pass. |
 | 20 | pending | SQLx 0.9 | Runtime/TLS features and checked/offline query contracts pass. |
 | 21 | pending | Itertools 0.15 | Iterator compilation and parity pass before DataFusion consumes this line. |
 | 22 | pending | Arrow 59 and DataFusion 55 | The coupled analytical stack, Rust/Python bridge fixtures, and locks pass. |
@@ -1556,6 +1555,78 @@ Reqwest vendor anchor. No fallback or parallel provider path was added.
 Next action: implement Item 19 Rusqlite 0.40 from this record merge on
 `origin/main`.
 
+### Item 19 record
+
+Implementation [PR #3527](https://github.com/sifr-lang/sifr/pull/3527) started
+from base `4c1aaf088d76723074f519ebec1d9fe62c7813d6`. The final candidate was
+`dd1e9b55c88ae60d21fea4335f155fe08cde53b4`. It merged as
+`fa1d792ccc5395b6451430fcae79aee1cddb4900`.
+
+The official registry audit confirmed Rusqlite 0.40.2 as the latest stable
+release. The registry archive matched checksum
+`23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3`.
+Its source metadata matched upstream tag commit
+`e88f112bef7899234a497baed5cc3c3d553deeb8`.
+
+Maintained declarations now use exact Rusqlite 0.40.2 without default features.
+They enable only `bundled`. This removes the default cache and WebAssembly VFS
+graph from the native fixture.
+
+Libsqlite3 Sys advanced to 0.38.2. Its registry archive matched checksum
+`f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8`.
+The fixture graph no longer contains Hashlink 0.11.1, SQLite WASM RS 0.5.5, or
+RS SQLite VFS 0.1.1.
+
+The runtime fixture now creates and commits a savepoint with the name
+`sifr; DROP TABLE evidence; --`. A later query proves that the table survives.
+This certifies the Rusqlite 0.40 safe savepoint-name API against a real negative
+control. Native trust still names only the exact `libsqlite3-sys` build script
+and `sqlite3` link.
+
+Changed surfaces:
+
+- The root and fixture locks, catalog manifest, and opaque-runtime manifest.
+- Exact Rusqlite version, feature, lock, runtime, and native-trust certification.
+- The opaque-runtime source, README, fixture policy, and metadata.
+- Rust-interop checks, compatibility notes, coverage metadata, architecture,
+  and feature-phase documentation.
+
+The three exact dependency certification tests passed. The full stdlib
+manifest test suite passed. All ten Rust-interop variants passed, and its
+matrix self-test passed 239 tests.
+
+The generated lifecycle and alias-rejection runtimes passed. Package,
+coverage, offline metadata, locked fixture, feature-tree, formatting, Clippy,
+documentation-link, HIR, and file-size checks passed.
+
+The initial Opus review of exact SHA
+`dd1e9b55c88ae60d21fea4335f155fe08cde53b4` returned `SATISFIED`. It found no
+blocking finding. The evidence is in the
+[#3527 exact-SHA review comment](https://github.com/sifr-lang/sifr/pull/3527#issuecomment-5414072098).
+No remediation review ran.
+
+The one create-PR gate completed every functional step through the
+runtime-platform area. That area passed all 28 variants with one expected skip.
+Its first cold-cache run took 232.147 seconds against the 120-second blocking
+budget. The gate exited 124 and was not rerun.
+
+The one merge gate ran on the final SHA and exited 0. All functional steps
+passed. All 698 E2E fixtures passed with signature `127353b213e16688`.
+
+The merge gate took 7,097.75 seconds after the required 49 GiB target cleanup.
+It reported advisory wall-time, cache-footprint, and fixture-group-skew
+observations. The exact one-shot results are in the
+[#3527 gate comment](https://github.com/sifr-lang/sifr/pull/3527#issuecomment-5415741575).
+Neither gate was rerun.
+
+Deferred follow-ups: Item 35 owns a uniqueness assertion for the maintained
+Rusqlite lock edge. It will also recheck whether the architecture overview must
+name the savepoint behavior. The Item 19 record preserves the upstream tag
+commit. Older archived rationale remains historical evidence and is not
+rewritten.
+
+Next action: implement Item 20 SQLx 0.9 from this record merge on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1594,13 +1665,13 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-18 are complete. Item 18 merged in PR #3525 as
-`ce11458ae2b1d76b9c2ff5f4cd691cde94619281`. The initial review approved the
+Current state: Items 0-19 are complete. Item 19 merged in PR #3527 as
+`fa1d792ccc5395b6451430fcae79aee1cddb4900`. The initial review approved the
 final SHA. No remediation review was required.
 
 The create-PR gate stopped only on a cold runtime-platform time budget. The
 merge gate exited 0 and passed all functional steps. Neither one-shot gate was
 rerun.
 
-Next action: merge this record-only update. Then start Item 19 Rusqlite 0.40
+Next action: merge this record-only update. Then start Item 20 SQLx 0.9
 from the resulting `origin/main`.
