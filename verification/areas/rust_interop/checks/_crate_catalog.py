@@ -9,6 +9,10 @@ from pathlib import Path
 from typing import Any
 
 EXPECTED_PACKAGE_ALIASES = {"candle": "candle-core"}
+# The independent backend fixture owns SQLx query-macro activation.
+CATALOG_FEATURE_OVERRIDES = {
+    "sqlx": ["runtime-tokio", "tls-rustls-ring-webpki", "postgres"],
+}
 
 
 def validate_crate_catalog(
@@ -47,7 +51,9 @@ def validate_crate_catalog(
     )
     if proc.returncode != 0:
         detail = proc.stderr.strip() or proc.stdout.strip()
-        failures.append(f"Rust interop crate catalog is not cacheable offline: {detail}")
+        failures.append(
+            f"Rust interop crate catalog is not cacheable offline: {detail}"
+        )
 
 
 def _validate_catalog_data(
@@ -99,7 +105,9 @@ def _validate_dependency(
     policy: dict[str, Any],
 ) -> None:
     if not isinstance(dependency, dict):
-        failures.append(f"Rust interop crate catalog {crate} must use a dependency table")
+        failures.append(
+            f"Rust interop crate catalog {crate} must use a dependency table"
+        )
         return
     if dependency.get("optional") is not True:
         failures.append(f"Rust interop crate catalog {crate} must be optional")
@@ -122,7 +130,10 @@ def _validate_dependency(
         failures.append(
             f"Rust interop crate catalog {crate} default-features must be {expected_default}"
         )
-    expected_features = policy.get("features", [])
+    expected_features = CATALOG_FEATURE_OVERRIDES.get(
+        crate,
+        policy.get("features", []),
+    )
     if dependency.get("features", []) != expected_features:
         failures.append(
             f"Rust interop crate catalog {crate} features must be {expected_features!r}"
@@ -154,13 +165,22 @@ def _validate_non_cargo_policies(
 
 def run_self_test() -> tuple[int, str | None]:
     """Mutation-test exact catalog membership, pinning, and lockfile binding."""
-    required = {"candle", "prost-build", "reqwest"}
+    required = {"candle", "prost-build", "reqwest", "sqlx"}
     policies = {
         "candle": {"backend": "cpu-only", "default_features": False},
         "prost-build": {"generated_output": "deterministic"},
         "reqwest": {
             "default_features": False,
             "features": ["rustls", "json"],
+        },
+        "sqlx": {
+            "default_features": False,
+            "features": [
+                "runtime-tokio",
+                "tls-rustls-ring-webpki",
+                "postgres",
+                "macros",
+            ],
         },
     }
     catalog = {
@@ -182,6 +202,16 @@ def run_self_test() -> tuple[int, str | None]:
                 "features": ["rustls", "json"],
                 "optional": True,
             },
+            "sqlx": {
+                "version": "=0.9.0",
+                "default-features": False,
+                "features": [
+                    "runtime-tokio",
+                    "tls-rustls-ring-webpki",
+                    "postgres",
+                ],
+                "optional": True,
+            },
         },
         "package": {
             "metadata": {
@@ -198,6 +228,7 @@ def run_self_test() -> tuple[int, str | None]:
             {"name": "candle-core", "version": "0.11.0"},
             {"name": "prost-build", "version": "0.14.4"},
             {"name": "reqwest", "version": "0.13.4"},
+            {"name": "sqlx", "version": "0.9.0"},
         ]
     }
     control: list[str] = []
@@ -243,7 +274,7 @@ def run_self_test() -> tuple[int, str | None]:
                         **catalog["dependencies"]["reqwest"],
                         "version": "0.13.4",
                     },
-                }
+                },
             },
             lock,
             "must pin an exact version",
@@ -266,6 +297,25 @@ def run_self_test() -> tuple[int, str | None]:
             },
             lock,
             "features must be",
+        ),
+        (
+            {
+                **catalog,
+                "dependencies": {
+                    **catalog["dependencies"],
+                    "sqlx": {
+                        **catalog["dependencies"]["sqlx"],
+                        "features": [
+                            "runtime-tokio",
+                            "tls-rustls-ring-webpki",
+                            "postgres",
+                            "macros",
+                        ],
+                    },
+                },
+            },
+            lock,
+            "sqlx features must be",
         ),
         (
             {

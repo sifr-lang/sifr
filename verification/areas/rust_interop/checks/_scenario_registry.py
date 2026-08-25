@@ -58,7 +58,8 @@ REQUIRED_SCENARIO_EXAMPLES = {
     "ecosystem_backend_certification": {
         "backend_feature_package": {
             "tokens": (
-                "runtime-tokio-rustls",
+                "runtime-tokio",
+                "tls-rustls-ring-webpki",
                 "postgres",
                 "macros",
                 "tower-http",

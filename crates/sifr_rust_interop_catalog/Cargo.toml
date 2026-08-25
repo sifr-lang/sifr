@@ -41,7 +41,9 @@ serde = { version = "=1.0.229", default-features = true, optional = true }
 serde_derive = { version = "=1.0.229", default-features = true, optional = true }
 serde_json = { version = "=1.0.151", default-features = true, optional = true }
 sha2 = { version = "=0.11.0", default-features = true, optional = true }
-sqlx = { version = "=0.8.6", default-features = false, features = ["runtime-tokio-rustls", "postgres", "macros"], optional = true }
+# The backend fixture owns query-macro certification. Enabling `macros` here
+# would lock SQLx's inactive SQLite driver beside the catalog's Rusqlite line.
+sqlx = { version = "=0.9.0", default-features = false, features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres"], optional = true }
 thiserror = { version = "=2.0.20", default-features = true, optional = true }
 tokio = { version = "=1.53.1", default-features = true, optional = true }
 tokio-postgres = { version = "=0.7.18", default-features = false, features = ["runtime"], optional = true }

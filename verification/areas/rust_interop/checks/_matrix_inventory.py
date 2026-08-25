@@ -134,7 +134,12 @@ EXPECTED_FEATURE_POLICIES = {
     "rusqlite": {"default_features": False, "features": ["bundled"]},
     "sqlx": {
         "default_features": False,
-        "features": ["runtime-tokio-rustls", "postgres", "macros"],
+        "features": [
+            "runtime-tokio",
+            "tls-rustls-ring-webpki",
+            "postgres",
+            "macros",
+        ],
     },
     "tokio-postgres": {"default_features": False, "features": ["runtime"]},
     "tokio-tungstenite": {"default_features": False},

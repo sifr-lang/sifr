@@ -37,7 +37,7 @@ fn test_build_backend_loopback_and_sqlx_offline_metadata() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         stdout.contains(
-            "axum=0.8.9;loopback=127.0.0.1:ephemeral;status=200;tower-http=0.7.0;middleware=response-header;sqlx=0.8.6;offline=true;query-value=13;query-hash=f2d6fe08dd19c716c98c45307c0649a03c0bf6d52c5d16c2375913d7a0f2f508;shutdown=clean"
+            "axum=0.8.9;loopback=127.0.0.1:ephemeral;status=200;tower-http=0.7.0;middleware=response-header;sqlx=0.9.0;runtime=tokio;tls=rustls-ring-webpki;offline=true;query-value=13;query-hash=f2d6fe08dd19c716c98c45307c0649a03c0bf6d52c5d16c2375913d7a0f2f508;shutdown=clean"
         ),
         "real backend execution marker must be observed: {stdout}"
     );
@@ -292,14 +292,27 @@ fn assert_exact_backend_dependency_graph(package_root: &Path) {
         "axum v0.8.9",
         "tower-http v0.7.0",
         "tower-http feature \"set-header\"",
-        "sqlx v0.8.6",
-        "sqlx feature \"runtime-tokio-rustls\"",
+        "sqlx v0.9.0",
+        "sqlx feature \"runtime-tokio\"",
+        "sqlx feature \"tls-rustls-ring-webpki\"",
         "sqlx feature \"postgres\"",
         "sqlx feature \"macros\"",
     ] {
         assert!(
             tree.contains(package),
             "locked graph must contain {package}: {tree}"
+        );
+    }
+    for inactive in [
+        "sqlx feature \"runtime-tokio-rustls\"",
+        "sqlx feature \"tls-rustls\"",
+        "sqlx feature \"tls-rustls-ring\"",
+        "sqlx-mysql v",
+        "sqlx-sqlite v",
+    ] {
+        assert!(
+            !tree.contains(inactive),
+            "locked graph must not activate {inactive}: {tree}"
         );
     }
 }

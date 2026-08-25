@@ -8,6 +8,42 @@ from pathlib import Path
 from typing import Any
 
 
+# SQLx 0.9 query macros lock weak MySQL and SQLite edges. The exact backend
+# fixture owns these entries because SQLite cannot share the Rusqlite lock.
+SQLX_QUERY_MACRO_FIXTURE_ONLY_LOCK_PACKAGES = {
+    (
+        "flume",
+        "0.12.0",
+        "registry+https://github.com/rust-lang/crates.io-index",
+        "5e139bc46ca777eb5efaf62df0ab8cc5fd400866427e56c68b22e414e53bd3be",
+    ),
+    (
+        "libsqlite3-sys",
+        "0.37.0",
+        "registry+https://github.com/rust-lang/crates.io-index",
+        "b1f111c8c41e7c61a49cd34e44c7619462967221a6443b0ec299e0ac30cfb9b1",
+    ),
+    (
+        "spin",
+        "0.9.9",
+        "registry+https://github.com/rust-lang/crates.io-index",
+        "3763264f6b73151db08c50ff20d7d8a0b8796e021cdea7ceedad07b80155fa0e",
+    ),
+    (
+        "sqlx-mysql",
+        "0.9.0",
+        "registry+https://github.com/rust-lang/crates.io-index",
+        "90b8020fe17c5f2c245bfa2505d7ef59c5604839527c740266ad2214acebea27",
+    ),
+    (
+        "sqlx-sqlite",
+        "0.9.0",
+        "registry+https://github.com/rust-lang/crates.io-index",
+        "488e99c397a62007e4229aec669a179816339afc6d2620ca6fa420dbee2e982c",
+    ),
+}
+
+
 @lru_cache(maxsize=1)
 def _load_root_lock(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     if not path.is_file():
@@ -50,6 +86,27 @@ def require_root_lock_subset(
         for package in root_lock.get("package", [])
         if isinstance(package, dict) and package.get("source")
     }
+    scenario_packages = {
+        (
+            str(package.get("name")),
+            str(package.get("version")),
+            str(package.get("source")),
+            str(package.get("checksum")),
+        )
+        for package in scenario_lock.get("package", [])
+        if isinstance(package, dict) and package.get("source")
+    }
+    allowed_fixture_only = (
+        SQLX_QUERY_MACRO_FIXTURE_ONLY_LOCK_PACKAGES
+        if fixture_id == "ecosystem_backend_certification"
+        and raw_path == "examples/backend_feature_package"
+        else set()
+    )
+    for identity in sorted(allowed_fixture_only - scenario_packages):
+        failures.append(
+            f"{fixture_id}: {raw_path}/Cargo.lock no longer contains allowed "
+            f"fixture-only package {identity[0]} {identity[1]} with the exact identity"
+        )
     for package in scenario_lock.get("package", []):
         if not isinstance(package, dict) or not package.get("source"):
             continue
@@ -59,7 +116,7 @@ def require_root_lock_subset(
             str(package.get("source")),
             str(package.get("checksum")),
         )
-        if identity not in root_packages:
+        if identity not in root_packages and identity not in allowed_fixture_only:
             failures.append(
                 f"{fixture_id}: {raw_path}/Cargo.lock package "
                 f"{identity[0]} {identity[1]} is not present in root Cargo.lock "

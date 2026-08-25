@@ -41,7 +41,7 @@ fn real_dependency_table_controls_sqlx_preflight() {
     assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
 
     fixture
-        .write_manifest("[dependencies]\ndatabase = { package = \"sqlx\", version = \"0.8\" }\n");
+        .write_manifest("[dependencies]\ndatabase = { package = \"sqlx\", version = \"0.9\" }\n");
     fixture.write_source("fn query() { let _ = database::query!(\"SELECT 13\"); }\n");
     assert!(
         validate_sqlx_offline_metadata(&fixture.0)
@@ -388,7 +388,7 @@ mod r#type {
 fn cargo_entrypoint_selection_follows_lib_path_then_main_fallback() {
     let library_fixture = SqlxFixture::new();
     library_fixture.write_manifest(
-        "[lib]\npath = \"source/entry.rs\"\n\n[dependencies]\nsqlx = { version = \"0.8\", features = [\"macros\"] }\n",
+        "[lib]\npath = \"source/entry.rs\"\n\n[dependencies]\nsqlx = { version = \"0.9\", features = [\"macros\"] }\n",
     );
     library_fixture.write_rust_file(
         "source/entry.rs",
@@ -503,7 +503,7 @@ impl SqlxFixture {
         let fixture = Self(root);
         fixture.write_source("fn query() { let _ = sqlx::query!(\"SELECT 13\"); }\n");
         fixture.write_manifest(
-            "[dependencies]\nsqlx = { version = \"0.8\", features = [\"macros\"] }\n",
+            "[dependencies]\nsqlx = { version = \"0.9\", features = [\"macros\"] }\n",
         );
         fixture
     }
@@ -518,7 +518,7 @@ impl SqlxFixture {
         std::fs::create_dir_all(root.join("src")).expect("source directory should exist");
         std::fs::write(
             workspace.join("Cargo.toml"),
-            "[workspace]\nmembers = [\"member\"]\nresolver = \"3\"\n\n[workspace.dependencies]\ndatabase = { package = \"sqlx\", version = \"0.8\", features = [\"macros\"] }\n",
+            "[workspace]\nmembers = [\"member\"]\nresolver = \"3\"\n\n[workspace.dependencies]\ndatabase = { package = \"sqlx\", version = \"0.9\", features = [\"macros\"] }\n",
         )
         .expect("workspace manifest should be written");
         let fixture = Self(root);

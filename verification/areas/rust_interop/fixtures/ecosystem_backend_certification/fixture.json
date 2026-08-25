@@ -35,7 +35,8 @@
     "sqlx": {
       "default_features": false,
       "features": [
-        "runtime-tokio-rustls",
+        "runtime-tokio",
+        "tls-rustls-ring-webpki",
         "postgres",
         "macros"
       ]

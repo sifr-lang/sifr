@@ -360,7 +360,7 @@
       "capability": "backend/service ecosystem certification",
       "required_crates": ["axum", "tower-http", "sqlx"],
       "features": {
-        "sqlx": {"default_features": false, "features": ["runtime-tokio-rustls", "postgres", "macros"]},
+        "sqlx": {"default_features": false, "features": ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "macros"]},
         "tower-http": {"default_features": false, "features": ["set-header"]}
       },
       "execution_kind": "cargo-probe",
