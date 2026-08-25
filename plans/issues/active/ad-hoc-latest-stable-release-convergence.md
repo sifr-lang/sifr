@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-25. Items 0-13 are complete. Item 14 Base64 0.23 is
-next.
+Status: active on 2026-08-25. Items 0-14 are complete. Item 15 Num BigInt 0.5
+is next.
 
 ## Objective
 
@@ -182,7 +182,7 @@ Only the first incomplete row may be active.
 | 11 | complete | Rust TLS stack | Rustls and rcgen converge with certificate, TLS, and provider validation. |
 | 12 | complete | ICU family | All five ICU4X crates converge together and text/i18n behavior passes. |
 | 13 | complete | SHA-2 consolidation | One SHA-2 0.11 dependency remains and all digest evidence passes. |
-| 14 | pending | Base64 0.23 | Base64 is current without an unapproved unsafe default feature and parity/error tests pass. |
+| 14 | complete | Base64 0.23 | Base64 is current without an unapproved unsafe default feature and parity/error tests pass. |
 | 15 | pending | Num BigInt 0.5 | Exact integer behavior, serialization, limits, and generated code pass. |
 | 16 | pending | Syn 3 and Prettyplease 0.3 | The single syntax-AST compatibility unit is current and code generation/SQLx scanning passes. |
 | 17 | pending | LSP Server 0.10 | Response handling and editor protocol smoke tests pass. |
@@ -1202,6 +1202,79 @@ Neither gate was rerun.
 Next action: implement Item 14 Base64 0.23 from this record merge on
 `origin/main`.
 
+### Item 14 record
+
+Implementation [PR #3517](https://github.com/sifr-lang/sifr/pull/3517) started
+from base `da4228e41d7a3c8c656a190d97b9e8548c013dc4`. The final candidate was
+`96e6a72f18be675080fa2ed020d898712ef73a1c`. It merged as
+`da9420e807bf6132ae326b5e2fb96a4078fbf022`.
+
+The official audit confirmed Base64 0.23.1 as the latest stable release. The
+workspace now selects `std` without the default `simd-unsafe` feature. The
+stdlib uses the canonical 0.23 prelude engine constants.
+
+Strict trailing-bit and padding error tests passed. The Base64 API tests also
+passed all RFC vectors and URL-safe behavior. No compatibility adapter, legacy
+path, fallback, or unsafe Base64 feature was added.
+
+The official Base64 0.23.1 archive replaced the primary vendor package. The
+official 0.22.1 package remains as `vendor/base64-0.22.1`. Vendored external
+packages still require that release.
+
+Both archive package hashes match the registry. Every recorded vendor file
+checksum passed. A new certification derives the required Base64 versions from
+first-party and vendored lock edges. It then makes sure that both packages
+exist in the vendor tree.
+
+Changed surfaces:
+
+- The root Cargo manifest and lock.
+- The Base64 stdlib implementation and behavior tests.
+- The Base64 dependency and vendor-closure certification.
+- The official Base64 0.23.1 and 0.22.1 vendor packages.
+- The coverage-matrix classification for the new certification target.
+
+The manifest suite passed all tests, including all three Base64 certification
+tests. The focused generated E2E set passed all 14 fixtures. Coverage readiness
+passed all four variants.
+
+Workspace Clippy denied all warnings. The changed certification test also
+passed targeted Clippy. Formatting, HIR maintainability, diff hygiene, vendor
+verification, and the 3,247-file first-party size guard passed.
+
+The initial Opus review of exact SHA
+`e31728a4a91911b0ec9fe7d2609bf9f31151e097` found two blocking omissions. The
+primary vendor replacement removed a required 0.22.1 package. The certification
+also did not prove full Base64 vendor coverage. The evidence is in the
+[#3517 initial review comment](https://github.com/sifr-lang/sifr/pull/3517#issuecomment-5404197232).
+
+The one allowed remediation review of exact SHA
+`96e6a72f18be675080fa2ed020d898712ef73a1c` returned `SATISFIED`. It confirmed
+both corrections and found no new mechanism defect. The evidence is in the
+[#3517 remediation review comment](https://github.com/sifr-lang/sifr/pull/3517#issuecomment-5404304751).
+No third review ran.
+
+The one create-PR gate completed every functional step that it reached. The
+cold runtime-platform area passed all variants. It took 206.884 seconds against
+its 120-second blocking budget, so the gate exited 124. It was not rerun.
+
+The one merge gate ran on the final SHA and exited 0. All functional steps
+passed. The gate passed both Base64 versions, offline lock-mode builds, and
+installed/source sysroot boundary equivalence. It also passed all 1,140 codegen
+tests and all 698 E2E fixtures.
+
+The merge gate took 6,522.67 seconds after the required target cleanup. It
+reported advisory wall-time and fixture-group-skew observations. The exact
+one-shot results are in the
+[#3517 gate comment](https://github.com/sifr-lang/sifr/pull/3517#issuecomment-5405327400).
+Neither gate was rerun.
+
+Deferred follow-up: Item 35 owns the audit for a generic vendor-closure
+guardrail. Item 14 supplies the dependency-specific Base64 closure check.
+
+Next action: implement Item 15 Num BigInt 0.5 from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1240,12 +1313,13 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-13 are complete. Item 13 merged in PR #3515 as
-`8eb8408d1f19c62ed1439a9172afed54b4d8c8a6`. Its initial and remediation review
-SHAs each have one satisfied Opus review. The create-PR gate stopped only on a
-cold runtime-platform time budget. The merge gate passed all functional steps
-on the final SHA and confirmed the warmed runtime-platform result. Neither
-one-shot gate was rerun.
+Current state: Items 0-14 are complete. Item 14 merged in PR #3517 as
+`da9420e807bf6132ae326b5e2fb96a4078fbf022`. The remediation review approved
+the final SHA and found no new mechanism defect.
 
-Next action: merge this record-only update, then start Item 14 Base64 0.23 from
-the resulting `origin/main`.
+The create-PR gate stopped only on a cold runtime-platform time budget. The
+merge gate exited 0 and passed all functional steps. Neither one-shot gate was
+rerun.
+
+Next action: merge this record-only update. Then start Item 15 Num BigInt 0.5
+from the resulting `origin/main`.
