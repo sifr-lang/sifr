@@ -2025,7 +2025,7 @@ Feature-sensitive fixtures must pin Cargo features in `rust_interop_fixture_matr
 
 - `reqwest`: `default-features = false`, `features = ["rustls", "json"]`; do not enable `blocking` in async fixtures.
 - `tokio-postgres`: `default-features = false`, `features = ["runtime"]`; TLS is not part of the primary opaque-resource fixture.
-- `rusqlite`: `features = ["bundled"]`; the unbundled system-sqlite variant is intentionally not certified in the Rust interop scope.
+- `rusqlite`: `default-features = false`, `features = ["bundled"]`; the Rust interop scope certifies only the bundled native SQLite provider.
 - `redis`: `default-features = false`, `features = ["tokio-comp"]`; pub/sub fixtures use loopback service infrastructure.
 - `tokio-tungstenite`: `default-features = false`; add `features = ["rustls-tls-webpki-roots"]` only for explicit network/TLS coverage.
 - `sqlx`: `default-features = false`, `features = ["runtime-tokio-rustls", "postgres", "macros"]`; query-macro fixtures must use checked-in `.sqlx/` offline artifacts instead of requiring `DATABASE_URL` during Cargo execution.

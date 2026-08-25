@@ -131,7 +131,7 @@ EXPECTED_FEATURE_POLICIES = {
     "prost-build": {"generated_output": "deterministic"},
     "redis": {"default_features": False, "features": ["tokio-comp"]},
     "reqwest": {"default_features": False, "features": ["rustls", "json"]},
-    "rusqlite": {"features": ["bundled"]},
+    "rusqlite": {"default_features": False, "features": ["bundled"]},
     "sqlx": {
         "default_features": False,
         "features": ["runtime-tokio-rustls", "postgres", "macros"],

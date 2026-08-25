@@ -5,6 +5,9 @@ local resources: an HTTP loopback served to `reqwest`, a temporary `rusqlite`
 database, and deterministic RESP/PostgreSQL protocol loopbacks used by
 `redis` and `tokio-postgres`.
 
+The SQLite setup opens a savepoint with a SQL-shaped name. The later query
+proves that Rusqlite quoted the identifier and preserved the table.
+
 The protocol servers implement only the frames used by this scenario. Every
 accept, read, write, client operation, and task join is bounded. Cleanup
 handles are owned before a task starts, and drop guards abort unfinished tasks

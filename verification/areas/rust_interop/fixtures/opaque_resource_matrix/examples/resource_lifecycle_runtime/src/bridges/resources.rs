@@ -2,13 +2,13 @@ use std::cell::RefCell;
 use std::fmt;
 use std::path::PathBuf;
 use std::rc::Rc;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
 use redis::IntoConnectionInfo;
 use rusqlite::Connection;
-use sifr_runtime::interop::{catch_unwind_silently, Handle, HandleStateError, PoisonOnPanic};
+use sifr_runtime::interop::{Handle, HandleStateError, PoisonOnPanic, catch_unwind_silently};
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 
@@ -366,7 +366,7 @@ async fn open_clients(
         .map_err(|error| ResourceError::context("reqwest client", error))?;
 
     let sqlite_file = TemporaryDatabase::create()?;
-    let sqlite = Connection::open(sqlite_file.path()?)
+    let mut sqlite = Connection::open(sqlite_file.path()?)
         .map_err(|error| ResourceError::context("SQLite open", error))?;
     sqlite
         .execute_batch(
@@ -374,6 +374,10 @@ async fn open_clients(
              INSERT INTO evidence(value) VALUES ('sqlite');",
         )
         .map_err(|error| ResourceError::context("SQLite setup", error))?;
+    sqlite
+        .savepoint_with_name("sifr; DROP TABLE evidence; --")
+        .and_then(rusqlite::Savepoint::commit)
+        .map_err(|error| ResourceError::context("SQLite savepoint", error))?;
 
     let redis_client = redis_client(redis_address, "Redis")?;
     let redis_config = redis_connection_config();
@@ -561,18 +565,17 @@ async fn close_handle(resource: &mut Handle<ResourceMatrix>) -> Result<String, R
     }
     let mut cleanup_error = None;
     for task in &mut tasks {
-        if let Err(error) = task.finish().await {
-            if cleanup_error.is_none() {
-                cleanup_error = Some(error);
-            }
+        if let Err(error) = task.finish().await
+            && cleanup_error.is_none()
+        {
+            cleanup_error = Some(error);
         }
     }
-    if let Some(file) = sqlite_file {
-        if let Err(error) = file.remove() {
-            if cleanup_error.is_none() {
-                cleanup_error = Some(error);
-            }
-        }
+    if let Some(file) = sqlite_file
+        && let Err(error) = file.remove()
+        && cleanup_error.is_none()
+    {
+        cleanup_error = Some(error);
     }
     resource.mark_closed(sifr_runtime::interop::__generated_glue::token());
     if ACTIVE_TASKS.load(Ordering::SeqCst) != 0 && cleanup_error.is_none() {
