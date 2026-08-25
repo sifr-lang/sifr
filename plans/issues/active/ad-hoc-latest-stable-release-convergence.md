@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-25. Items 0-17 are complete. Item 18 Reqwest 0.13 is
+Status: active on 2026-08-25. Items 0-18 are complete. Item 19 Rusqlite 0.40 is
 next.
 
 ## Objective
@@ -186,7 +186,7 @@ Only the first incomplete row may be active.
 | 15 | complete | Num BigInt 0.5 | Exact integer behavior, serialization, limits, and generated code pass. |
 | 16 | complete | Syn 3 and Prettyplease 0.3 | The single syntax-AST compatibility unit is current and code generation/SQLx scanning passes. |
 | 17 | complete | LSP Server 0.10 | Response handling and editor protocol smoke tests pass. |
-| 18 | pending | Reqwest 0.13 | Canonical features/provider selection and HTTP client loopback behavior pass. |
+| 18 | complete | Reqwest 0.13 | Canonical features/provider selection and HTTP client loopback behavior pass. |
 | 19 | pending | Rusqlite 0.40 | SQLite interop and exact catalog/fixture locks pass. |
 | 20 | pending | SQLx 0.9 | Runtime/TLS features and checked/offline query contracts pass. |
 | 21 | pending | Itertools 0.15 | Iterator compilation and parity pass before DataFusion consumes this line. |
@@ -1475,6 +1475,87 @@ for the request-cancelled protocol code `-32800`.
 Next action: implement Item 18 Reqwest 0.13 from this record merge on
 `origin/main`.
 
+### Item 18 record
+
+Implementation [PR #3525](https://github.com/sifr-lang/sifr/pull/3525) started
+from base `3e66f509b94277a420e784ae4f4a2432c67aabd7`. The final candidate was
+`f465070e6432e2c4210d335c95b3f6a4d49534d0`. It merged as
+`ce11458ae2b1d76b9c2ff5f4cd691cde94619281`.
+
+The HTTP demo [PR #3](https://github.com/sifr-lang/sifr-demo-http/pull/3)
+started from `4a9128427fb4f87bf4fbc8f499a00e96eb24a021`. Its reviewed candidate was
+`2aef5c21c843b86a5cf4094cef24e54a639ce8ab`. It merged as
+`61b94722c1b2a66dd022522a0f373d88dbec3b8b`.
+
+The application demo
+[PR #3](https://github.com/sifr-lang/sifr-demo-app/pull/3) started from
+`3a9e2ef3bb648125f9be7cc538722be537cbb7f0`. Its reviewed candidate was
+`d611cba90be1ba20d043ce8f14aa5feb27641855`. It merged as
+`a7c342a18f5166b4e3a433d302274685cfedc232`.
+
+Both nested repositories used merge commits. Their main branches contain the
+reviewed candidates. The root gitlinks still name those exact candidates.
+
+The official audit confirmed Reqwest 0.13.4 as the latest stable release. The
+registry archive matched checksum
+`219c5811de6525e5416c7d5d53bb656d3afdbc6c5af816e0802bcfa42dbdc1c3`.
+Its source metadata matched upstream release commit
+`11489b34eda6d32b15ad4033e62beba2ee401350`.
+
+Reqwest 0.13 removed the old `rustls-tls` feature. Maintained declarations now
+use its canonical `rustls` and `json` features without defaults.
+
+The regenerated graph uses AWS-LC RS 1.18.0 and AWS-LC Sys 0.44.0. Native-link
+trust now names the exact `aws_lc_0_44_0_crypto` library.
+
+Changed surfaces:
+
+- Direct manifests, catalogs, locks, fixtures, and both maintained demos.
+- Reqwest, AWS-LC, and pkg-config vendor packages with registry checksums.
+- Generated dependency snapshots and package demo digests.
+- Exact version, feature, provider, vendor, lock, and native-link certification.
+- Network, HTTP, TLS, Rust-interop, coverage, and phase documentation.
+
+Three exact dependency certification tests passed. All ten Rust-interop area
+variants passed, and its matrix self-test passed 237 tests.
+
+All four package-management variants passed. Three Reqwest runtime tests and
+two opaque-runtime tests passed. Both demos passed locked checks.
+
+The driver library passed 557 tests with 76 expected ignored tests. Formatting,
+Clippy, HIR maintainability, links, checksums, and file-size checks passed.
+
+The initial Opus review of exact SHA
+`f465070e6432e2c4210d335c95b3f6a4d49534d0` returned `SATISFIED`. It found no
+blocking finding. The evidence is in the
+[#3525 exact-SHA review comment](https://github.com/sifr-lang/sifr/pull/3525#issuecomment-5411848269).
+No remediation review ran.
+
+The one create-PR gate completed every functional step. The cold
+runtime-platform area passed all 28 variants.
+
+That area took 226.293 seconds against its 120-second blocking budget. The gate
+exited nonzero and was not rerun.
+
+The one merge gate ran on the final SHA and exited 0. All functional steps
+passed. All 698 E2E fixtures passed with signature `127353b213e16688`.
+
+The merge gate took 6,929.77 seconds after the required target cleanup. It
+reported advisory wall-time, cache-footprint, and fixture-group-skew observations.
+
+The exact one-shot results are in the
+[#3525 gate comment](https://github.com/sifr-lang/sifr/pull/3525#issuecomment-5413666709).
+Neither gate was rerun.
+
+Deferred follow-ups: Item 23 owns the Reqwest 0.12 edge required by Polars and
+Object Store. Item 35 owns a fresh trust-policy audit for documentation examples.
+
+Item 35 will also recheck AWS-LC environment autodetection and the standalone
+Reqwest vendor anchor. No fallback or parallel provider path was added.
+
+Next action: implement Item 19 Rusqlite 0.40 from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1513,13 +1594,13 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-17 are complete. Item 17 merged in PR #3523 as
-`2b6d5053becabaa9a05e390b7263c59aac542734`. The initial review approved the
+Current state: Items 0-18 are complete. Item 18 merged in PR #3525 as
+`ce11458ae2b1d76b9c2ff5f4cd691cde94619281`. The initial review approved the
 final SHA. No remediation review was required.
 
 The create-PR gate stopped only on a cold runtime-platform time budget. The
 merge gate exited 0 and passed all functional steps. Neither one-shot gate was
 rerun.
 
-Next action: merge this record-only update. Then start Item 18 Reqwest 0.13
+Next action: merge this record-only update. Then start Item 19 Rusqlite 0.40
 from the resulting `origin/main`.
