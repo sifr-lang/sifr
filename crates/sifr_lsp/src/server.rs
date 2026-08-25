@@ -1,5 +1,5 @@
 use crate::capabilities;
-use crate::errors::{LspError, ServerResult};
+use crate::errors::{LspError, LspResult, ServerResult};
 use crate::notifications;
 use crate::request_queue;
 use crate::request_queue::CancellationTarget;
@@ -7,7 +7,8 @@ use crate::requests;
 use crate::scheduler::Scheduler;
 use crate::session::Session;
 use crate::watchdog::{LspServerOptions, ParentWatchdog};
-use lsp_server::{Connection, IoThreads, Message, Request, Response};
+use lsp_server::{Connection, IoThreads, Message, Request, RequestId, Response, ResponseError};
+use serde_json::Value;
 use sifr_analysis::WorkspaceTracePhase;
 use std::collections::BTreeMap;
 
@@ -70,7 +71,7 @@ impl LspServer {
             match message {
                 Message::Request(request) => {
                     if request.method == "shutdown" {
-                        let response = Response::new_ok(request.id, ());
+                        let response = response_from_result(request.id, Ok(Value::Null));
                         self.connection.sender.send(Message::Response(response))?;
                         self.session.begin_shutdown();
                         continue;
@@ -121,7 +122,7 @@ impl LspServer {
         let lane = Scheduler::lane_for_method(&request.method);
         if let Err(error) = self.session.enqueue_request(&id, &request.method, lane) {
             let error = LspError::request_cancelled(error);
-            let response = Response::new_err(id, error.code(), error.message());
+            let response = response_from_result(id, Err(error));
             self.connection
                 .sender
                 .send(Message::Response(response))
@@ -160,7 +161,7 @@ impl LspServer {
                     "scheduled request body was missing for key {}",
                     scheduled.key()
                 ));
-                let response = Response::new_err(id, error.code(), error.message());
+                let response = response_from_result(id, Err(error));
                 self.connection
                     .sender
                     .send(Message::Response(response))
@@ -179,10 +180,7 @@ impl LspServer {
                     Ok(result)
                 });
             self.session.finish_request(&id);
-            let response = match result {
-                Ok(result) => Response::new_ok(id, result),
-                Err(error) => Response::new_err(id, error.code(), error.message()),
-            };
+            let response = response_from_result(id, result);
             self.connection
                 .sender
                 .send(Message::Response(response))
@@ -199,7 +197,7 @@ impl LspServer {
         message: String,
     ) -> ServerResult<()> {
         let error = LspError::request_cancelled(message);
-        let response = Response::new_err(id, error.code(), error.message());
+        let response = response_from_result(id, Err(error));
         self.connection
             .sender
             .send(Message::Response(response))
@@ -218,5 +216,64 @@ impl LspServer {
         drop(connection);
         io_threads.join()?;
         Ok(())
+    }
+}
+
+fn response_from_result(id: RequestId, result: LspResult<Value>) -> Response {
+    let response_result = result.map_err(|error| ResponseError {
+        code: error.code(),
+        message: error.message(),
+        data: None,
+    });
+    Response {
+        id,
+        response_result,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::response_from_result;
+    use crate::errors::LspError;
+    use lsp_server::RequestId;
+    use serde_json::json;
+
+    #[test]
+    fn responses_use_the_typed_result_model() {
+        let success = response_from_result(RequestId::from(1), Ok(json!({"ready": true})));
+        assert_eq!(
+            success.response_result.expect("success response"),
+            json!({"ready": true})
+        );
+
+        let failure = response_from_result(
+            RequestId::from(2),
+            Err(LspError::invalid_params("invalid request")),
+        );
+        let error = failure.response_result.expect_err("error response");
+        assert_eq!(error.code, -32602);
+        assert_eq!(error.message, "invalid request");
+        assert_eq!(error.data, None);
+    }
+
+    #[test]
+    fn typed_responses_serialize_one_protocol_outcome() {
+        let success = response_from_result(RequestId::from(1), Ok(json!(null)));
+        assert_eq!(
+            serde_json::to_value(success).expect("success response must serialize"),
+            json!({"id": 1, "result": null})
+        );
+
+        let failure = response_from_result(
+            RequestId::from(2),
+            Err(LspError::internal("request failed")),
+        );
+        assert_eq!(
+            serde_json::to_value(failure).expect("error response must serialize"),
+            json!({
+                "id": 2,
+                "error": {"code": -32603, "message": "request failed"}
+            })
+        );
     }
 }

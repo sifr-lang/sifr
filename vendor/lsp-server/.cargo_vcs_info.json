@@ -1,6 +1,6 @@
 {
   "git": {
-    "sha1": "8d75311400a108d7ffe17dc9c38182c566952e6e",
+    "sha1": "1b7da4272d8d27c78774f42a6e1ea66a4c1fe984",
     "dirty": true
   },
   "path_in_vcs": "lib/lsp-server"
