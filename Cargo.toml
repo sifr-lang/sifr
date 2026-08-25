@@ -103,7 +103,7 @@ insta = { version = "1.48.0" }
 is-macro = { version = "0.3.8" }
 itertools = { version = "0.14.0" }
 indexmap = { version = "2.14.0" }
-lsp-server = { version = "0.7.8" }
+lsp-server = { version = "0.10.0" }
 lsp-types = { version = "0.97.0" }
 libc = { version = "0.2.189" }
 md5 = { version = "0.8.1" }

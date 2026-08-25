@@ -12,7 +12,7 @@
 [package]
 edition = "2024"
 name = "lsp-server"
-version = "0.7.9"
+version = "0.10.0"
 build = false
 autolib = false
 autobins = false
@@ -47,18 +47,6 @@ version = "1.0.219"
 
 [dependencies.serde_json]
 version = "1.0.140"
-
-[dev-dependencies.anyhow]
-version = "1.0.98"
-
-[dev-dependencies.ctrlc]
-version = "3.4.7"
-
-[dev-dependencies.lsp-types]
-version = "=0.95"
-
-[dev-dependencies.rustc-hash]
-version = "2.1.1"
 
 [lints.clippy]
 assigning_clones = "allow"
@@ -117,4 +105,7 @@ unused_lifetimes = "warn"
 [lints.rust.unexpected_cfgs]
 level = "warn"
 priority = 0
-check-cfg = ["cfg(bootstrap)"]
+check-cfg = [
+    "cfg(bootstrap)",
+    "cfg(no_salsa_async_drops)",
+]
