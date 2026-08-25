@@ -336,6 +336,9 @@ fn base64_leaf_matches_rfc_vectors_and_error_paths() {
         b"foo".to_vec()
     );
     assert!(sifr_stdlib::base64::base64_decode("@@@@").is_err());
+    assert!(sifr_stdlib::base64::base64_decode("Zh==").is_err());
+    assert!(sifr_stdlib::base64::base64_decode("Zg=").is_err());
+    assert!(sifr_stdlib::base64::base64_decode("Zg===").is_err());
     assert_eq!(
         sifr_stdlib::base64::base64_encode_opts("foo", "-_", wrapcol(0)).expect("alt encode"),
         "Zm9v"
@@ -357,6 +360,7 @@ fn base64_leaf_matches_rfc_vectors_and_error_paths() {
         sifr_stdlib::base64::urlsafe_b64decode("aGVsbG8=").expect("urlsafe decode"),
         "hello"
     );
+    assert!(sifr_stdlib::base64::urlsafe_b64decode("aGVsbG8==").is_err());
     assert_eq!(sifr_stdlib::base64::b32encode("foo"), "MZXW6===");
     assert_eq!(
         sifr_stdlib::base64::b32decode("mzxw6===").expect("base32 casefold"),

@@ -1,24 +1,24 @@
-use base64::{Engine as _, engine::general_purpose};
+use base64::prelude::{BASE64_STANDARD, BASE64_URL_SAFE, Engine as _};
 use sifr_runtime::interop::SifrIntBridge;
 use std::collections::HashSet;
 
 pub fn base64_encode(input: &str) -> String {
-    general_purpose::STANDARD.encode(input.as_bytes())
+    BASE64_STANDARD.encode(input.as_bytes())
 }
 
 pub fn base64_encode_bytes(data: &[u8]) -> Vec<u8> {
-    general_purpose::STANDARD.encode(data).into_bytes()
+    BASE64_STANDARD.encode(data).into_bytes()
 }
 
 pub fn base64_decode(input: &str) -> Result<String, String> {
-    let bytes = general_purpose::STANDARD
+    let bytes = BASE64_STANDARD
         .decode(input.as_bytes())
         .map_err(|error| error.to_string())?;
     String::from_utf8(bytes).map_err(|error| error.to_string())
 }
 
 pub fn base64_decode_bytes(data: &[u8]) -> Result<Vec<u8>, String> {
-    general_purpose::STANDARD
+    BASE64_STANDARD
         .decode(data)
         .map_err(|error| error.to_string())
 }
@@ -99,22 +99,22 @@ pub fn base64_decode_opts(
 }
 
 pub fn urlsafe_b64encode(input: &str) -> String {
-    general_purpose::URL_SAFE.encode(input.as_bytes())
+    BASE64_URL_SAFE.encode(input.as_bytes())
 }
 
 pub fn urlsafe_b64encode_bytes(data: &[u8]) -> Vec<u8> {
-    general_purpose::URL_SAFE.encode(data).into_bytes()
+    BASE64_URL_SAFE.encode(data).into_bytes()
 }
 
 pub fn urlsafe_b64decode(input: &str) -> Result<String, String> {
-    let bytes = general_purpose::URL_SAFE
+    let bytes = BASE64_URL_SAFE
         .decode(input.as_bytes())
         .map_err(|error| error.to_string())?;
     String::from_utf8(bytes).map_err(|error| error.to_string())
 }
 
 pub fn urlsafe_b64decode_bytes(data: &[u8]) -> Result<Vec<u8>, String> {
-    general_purpose::URL_SAFE
+    BASE64_URL_SAFE
         .decode(data)
         .map_err(|error| error.to_string())
 }
