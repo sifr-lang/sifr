@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-25. Items 0-12 are complete. Item 13 SHA-2
-consolidation is next.
+Status: active on 2026-08-25. Items 0-13 are complete. Item 14 Base64 0.23 is
+next.
 
 ## Objective
 
@@ -181,7 +181,7 @@ Only the first incomplete row may be active.
 | 10 | complete | Rust HTTP stack | HTTP, body, H2, and Hyper converge with network/HTTP validation. |
 | 11 | complete | Rust TLS stack | Rustls and rcgen converge with certificate, TLS, and provider validation. |
 | 12 | complete | ICU family | All five ICU4X crates converge together and text/i18n behavior passes. |
-| 13 | pending | SHA-2 consolidation | One SHA-2 0.11 dependency remains and all digest evidence passes. |
+| 13 | complete | SHA-2 consolidation | One SHA-2 0.11 dependency remains and all digest evidence passes. |
 | 14 | pending | Base64 0.23 | Base64 is current without an unapproved unsafe default feature and parity/error tests pass. |
 | 15 | pending | Num BigInt 0.5 | Exact integer behavior, serialization, limits, and generated code pass. |
 | 16 | pending | Syn 3 and Prettyplease 0.3 | The single syntax-AST compatibility unit is current and code generation/SQLx scanning passes. |
@@ -1128,6 +1128,80 @@ the [#3513 final gate comment](https://github.com/sifr-lang/sifr/pull/3513#issue
 Next action: implement Item 13 SHA-2 consolidation from this record merge on
 `origin/main`.
 
+### Item 13 record
+
+Implementation [PR #3515](https://github.com/sifr-lang/sifr/pull/3515) started
+from base `524835c29cad0a22b69922bcef2fdfd038118463`. The final candidate was
+`b992ace751235b69ade3acd6ff6038de32e0d2e6`. It merged as
+`8eb8408d1f19c62ed1439a9172afed54b4d8c8a6`.
+
+The official RustCrypto audit confirmed SHA-2 0.11.0 as the latest stable
+release. Version 0.11.1 was still unreleased. The root workspace and generated
+runtime catalog now declare one canonical SHA-2 0.11 dependency. The old
+version-named alias and every maintained first-party SHA-2 0.10 edge are gone.
+
+The migration adopts the SHA-2 0.11 digest output newtypes. First-party callers
+encode digest bytes as explicit lowercase hexadecimal text. SHA-224, SHA-256,
+SHA-384, and SHA-512 exact known-answer vectors passed. The shared digest owner
+is in `sifr_sysroot`; package-private code retains its private owner.
+
+The root lock and all maintained fixture locks now use the SHA-2 0.11 line for
+first-party edges. A new regression check certifies direct declarations and
+lock edges. The remaining SHA-2 0.10 lock node belongs only to external SQLx
+0.8 and Polars 0.54.4 dependencies. Items 20 and 23 own those upgrades.
+
+The official `hybrid-array` 0.4.14 archive replaced the older vendored copy.
+Its archive digest and all 24 vendored file checksums passed. No compatibility
+adapter, legacy path, fallback, or parallel first-party SHA-2 dependency was
+added.
+
+Changed surfaces:
+
+- The root Cargo manifest and lock.
+- The generated Rust-interop dependency catalog and maintained fixture locks.
+- Digest runtime, sysroot, package, and compiler callers.
+- SHA-2 behavior and dependency-graph certification tests.
+- The official `hybrid-array` vendor copy and dependency snapshots.
+
+Focused manifest, stdlib, sysroot, package, structural-identity, CLI,
+fixture-lock, and Rust-interop tests passed. The complete targeted Rust-interop
+matrix passed 40 fixtures, 11 diagnostics, 44 crates, 61 package examples, 21
+scenario examples, and 237 self-tests. Coverage readiness passed all four
+variants.
+
+Workspace Clippy denied all warnings. Formatting, HIR maintainability, diff
+hygiene, vendor verification, and the first-party file-size guardrail passed.
+
+The initial Opus review of exact SHA
+`7e5cb3609dac1efd74f7b2d82e2a028fba298ead` returned `SATISFIED`. Its evidence
+is in the [#3515 initial review comment](https://github.com/sifr-lang/sifr/pull/3515#issuecomment-5402953717).
+The one allowed remediation review of exact SHA
+`24b6369835ec2cab7594370a36e7883acadf606c` also returned `SATISFIED` and found
+no new mechanism defect. Its evidence is in the
+[#3515 remediation review comment](https://github.com/sifr-lang/sifr/pull/3515#issuecomment-5402987650).
+The final mechanical cleanup removed a phantom direct dependency and made the
+lock assertion self-contained. Its disposition is in the
+[#3515 review disposition comment](https://github.com/sifr-lang/sifr/pull/3515#issuecomment-5402996312).
+No third review ran.
+
+The one create-PR gate completed every functional step that it reached. The
+cold runtime-platform area passed functionally but took 227.896 seconds against
+its 120-second blocking budget. The gate stopped there and was not rerun.
+
+The one merge gate ran on final SHA
+`b992ace751235b69ade3acd6ff6038de32e0d2e6` and exited 0. All 35 lane steps
+passed. The warmed runtime-platform area completed in 24.251 seconds, and its
+slowest case completed in 3.651 seconds. The gate also passed all 76 ignored
+generated-build tests, all 1,140 codegen tests, and all 698 E2E fixtures.
+
+The merge gate took 6,459.31 seconds. It reported advisory wall-time and
+fixture-group-skew observations. The exact one-shot results are in the
+[#3515 final gate comment](https://github.com/sifr-lang/sifr/pull/3515#issuecomment-5404000545).
+Neither gate was rerun.
+
+Next action: implement Item 14 Base64 0.23 from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1166,12 +1240,12 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-12 are complete. Item 12 merged in PR #3513 as
-`643018175fdbc82412b789cda6a171b793858749`. Its initial and remediation review
-SHAs each have one satisfied Opus review. The one create-PR gate exposed five
-stale fixture-lock identities. The one merge gate exposed one missing coverage
-classification. Each correction passed its complete targeted owner suite.
-Neither one-shot gate was rerun.
+Current state: Items 0-13 are complete. Item 13 merged in PR #3515 as
+`8eb8408d1f19c62ed1439a9172afed54b4d8c8a6`. Its initial and remediation review
+SHAs each have one satisfied Opus review. The create-PR gate stopped only on a
+cold runtime-platform time budget. The merge gate passed all functional steps
+on the final SHA and confirmed the warmed runtime-platform result. Neither
+one-shot gate was rerun.
 
-Next action: merge this record-only update, then start Item 13 SHA-2
-consolidation from the resulting `origin/main`.
+Next action: merge this record-only update, then start Item 14 Base64 0.23 from
+the resulting `origin/main`.
