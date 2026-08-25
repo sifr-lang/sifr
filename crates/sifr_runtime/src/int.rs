@@ -231,7 +231,7 @@ fn floor_div_bigint(left: &BigInt, right: &BigInt) -> BigInt {
     let quotient = left / right;
     let remainder = left % right;
     if needs_floor_adjustment(&remainder, right) {
-        quotient - BigInt::from(1_i8)
+        quotient - BigInt::ONE
     } else {
         quotient
     }
@@ -562,7 +562,7 @@ mod tests {
     #[test]
     fn equality_ordering_and_hashing_are_normalized() {
         let small = SifrInt::Small(1);
-        let big = SifrInt::Big(Box::new(BigInt::from(1_i64)));
+        let big = SifrInt::Big(Box::new(BigInt::ONE));
 
         assert_eq!(small, big);
         assert_eq!(small.cmp(&big), Ordering::Equal);

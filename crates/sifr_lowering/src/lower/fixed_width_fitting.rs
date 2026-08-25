@@ -155,7 +155,7 @@ fn evaluate_integer_binop(
     right: &BigInt,
     range: TextRange,
 ) -> ConstIntegerValue {
-    let zero = BigInt::from(0);
+    let zero = BigInt::ZERO;
     match op {
         "+" => ConstIntegerValue::Value(left + right),
         "-" => ConstIntegerValue::Value(left - right),
@@ -180,7 +180,7 @@ fn evaluate_integer_binop(
 }
 
 fn python_floor_div(left: &BigInt, right: &BigInt) -> BigInt {
-    let zero = BigInt::from(0);
+    let zero = BigInt::ZERO;
     let quotient = left / right;
     let remainder = left % right;
     if remainder != zero && ((left < &zero) != (right < &zero)) {
@@ -203,7 +203,7 @@ fn evaluate_left_shift(
     let Some(shift) = non_negative_u32(right) else {
         return ConstIntegerValue::Unsupported;
     };
-    if shift > MAX_EXACT_SHIFT_OR_EXPONENT && left != &BigInt::from(0) {
+    if shift > MAX_EXACT_SHIFT_OR_EXPONENT && left != &BigInt::ZERO {
         emit_budget_exceeded(ctx, approximate_left_shift_digits(left, shift), range);
         return ConstIntegerValue::Rejected;
     }
@@ -226,12 +226,12 @@ fn evaluate_pow(
     let Some(exponent) = non_negative_u32(right) else {
         return ConstIntegerValue::Unsupported;
     };
-    let abs_left = if left < &BigInt::from(0) {
+    let abs_left = if left < &BigInt::ZERO {
         -left
     } else {
         left.clone()
     };
-    if exponent > MAX_EXACT_SHIFT_OR_EXPONENT && abs_left > BigInt::from(1) {
+    if exponent > MAX_EXACT_SHIFT_OR_EXPONENT && abs_left > BigInt::ONE {
         emit_budget_exceeded(ctx, approximate_pow_digits(&abs_left, exponent), range);
         return ConstIntegerValue::Rejected;
     }
@@ -248,7 +248,7 @@ fn is_shadowed_by_inner_scope(ctx: &LowerCtx, name: &str) -> bool {
 }
 
 fn non_negative_u32(value: &BigInt) -> Option<u32> {
-    if value < &BigInt::from(0) {
+    if value < &BigInt::ZERO {
         return None;
     }
     u32::try_from(value.clone()).ok()

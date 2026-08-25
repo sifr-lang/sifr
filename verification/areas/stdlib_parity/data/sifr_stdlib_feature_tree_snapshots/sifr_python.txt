@@ -38,8 +38,8 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
     │   └── indexmap feature "std"
     │       └── indexmap v2.14.0 (*)
     ├── libc feature "default" (*)
-    ├── num-bigint feature "default"
-    │   ├── num-bigint v0.4.6
+    ├── num-bigint feature "std"
+    │   ├── num-bigint v0.5.1
     │   │   ├── num-integer feature "i128"
     │   │   │   └── num-integer v0.1.46
     │   │   │       └── num-traits feature "i128"
@@ -48,13 +48,11 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
     │   │   │               └── autocfg feature "default"
     │   │   │                   └── autocfg v1.5.0
     │   │   └── num-traits feature "i128" (*)
-    │   └── num-bigint feature "std"
-    │       ├── num-bigint v0.4.6 (*)
-    │       ├── num-integer feature "std"
-    │       │   ├── num-integer v0.1.46 (*)
-    │       │   └── num-traits feature "std"
-    │       │       └── num-traits v0.2.19 (*)
-    │       └── num-traits feature "std" (*)
+    │   ├── num-integer feature "std"
+    │   │   ├── num-integer v0.1.46 (*)
+    │   │   └── num-traits feature "std"
+    │   │       └── num-traits v0.2.19 (*)
+    │   └── num-traits feature "std" (*)
     ├── num-traits feature "default"
     │   ├── num-traits v0.2.19 (*)
     │   └── num-traits feature "std" (*)

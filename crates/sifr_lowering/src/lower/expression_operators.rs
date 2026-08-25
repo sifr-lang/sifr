@@ -269,7 +269,7 @@ fn exact_int_true_division_result_type(
     }
     let left_value = proven_exact_integer_value(left, ctx)?;
     let right_value = proven_exact_integer_value(right, ctx)?;
-    if right_value == BigInt::from(0) {
+    if right_value == BigInt::ZERO {
         return None;
     }
     (is_exactly_representable_as_float(&left_value)

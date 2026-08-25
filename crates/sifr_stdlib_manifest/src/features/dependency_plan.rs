@@ -271,7 +271,9 @@ fn retained_dependency_specs(feature: StdlibFeature) -> &'static [&'static str] 
         StdlibFeature::BigDecimal => {
             &["bigdecimal = { version = \"=0.4.10\", features = [\"serde\"] }"]
         }
-        StdlibFeature::NumBigint => &["num-bigint = \"=0.4.6\""],
+        StdlibFeature::NumBigint => &[
+            "num-bigint = { version = \"=0.5.1\", default-features = false, features = [\"std\"] }",
+        ],
         StdlibFeature::NumTraits => &["num-traits = \"=0.2.19\""],
         StdlibFeature::Rayon => &["rayon = \"=1.12.0\""],
         StdlibFeature::RustDecimal => &[
