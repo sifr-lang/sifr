@@ -2023,7 +2023,7 @@ of the Rust interop scope.
 
 Feature-sensitive fixtures must pin Cargo features in `rust_interop_fixture_matrix.json`:
 
-- `reqwest`: `default-features = false`, `features = ["rustls-tls", "json"]`; do not enable `blocking` in async fixtures.
+- `reqwest`: `default-features = false`, `features = ["rustls", "json"]`; do not enable `blocking` in async fixtures.
 - `tokio-postgres`: `default-features = false`, `features = ["runtime"]`; TLS is not part of the primary opaque-resource fixture.
 - `rusqlite`: `features = ["bundled"]`; the unbundled system-sqlite variant is intentionally not certified in the Rust interop scope.
 - `redis`: `default-features = false`, `features = ["tokio-comp"]`; pub/sub fixtures use loopback service infrastructure.

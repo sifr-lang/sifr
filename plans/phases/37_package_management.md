@@ -54,7 +54,7 @@ manifest = "sifr.toml"
 
 [dependencies]
 sifr-json = "1.4"
-reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+reqwest = { version = "0.13", features = ["json", "rustls"], default-features = false }
 ```
 
 Sifr metadata:
@@ -74,7 +74,7 @@ modules = ["http"]
 
 [features]
 default = ["tls"]
-tls = { cargo-package = "reqwest", cargo-feature = "rustls-tls" }
+tls = { cargo-package = "reqwest", cargo-feature = "rustls" }
 json = { cargo-package = "reqwest", cargo-feature = "json" }
 
 [trust]
@@ -282,7 +282,7 @@ Example:
 # sifr.toml
 [features]
 default = ["tls"]
-tls = { cargo-package = "reqwest", cargo-feature = "rustls-tls" }
+tls = { cargo-package = "reqwest", cargo-feature = "rustls" }
 json = { cargo-package = "reqwest", cargo-feature = "json" }
 ```
 
@@ -700,7 +700,7 @@ manifest = "sifr.toml"
 
 [dependencies]
 sifr-demo-json = { git = "https://github.com/sifr-lang/sifr-demo-json", tag = "v0.1.0" }
-reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+reqwest = { version = "0.13", features = ["json", "rustls"], default-features = false }
 ```
 
 ```toml

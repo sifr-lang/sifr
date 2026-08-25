@@ -18,5 +18,5 @@ rust-no-panic = [
   "bridge.http.request_roundtrip",
   "bridge.http.runtime_snapshot",
 ]
-rust-build-scripts = ["ring"]
-native-links = ["ring_core_0_17_14_", "ring_core_0_17_14__test"]
+rust-build-scripts = ["aws-lc-sys"]
+native-links = ["aws_lc_0_44_0_crypto"]

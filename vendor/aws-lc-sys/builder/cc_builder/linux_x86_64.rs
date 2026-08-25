@@ -1,8 +1,16 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0 OR ISC
-// Fri May  8 22:13:15 UTC 2026
+// Wed Aug  5 20:40:42 UTC 2026
 
 pub(super) const CRYPTO_LIBRARY: &[&str] = &[
+    "crypto/fipsmodule/ml_dsa/mldsa/native/x86_64/src/intt_avx2_asm.S",
+    "crypto/fipsmodule/ml_dsa/mldsa/native/x86_64/src/nttunpack_avx2_asm.S",
+    "crypto/fipsmodule/ml_dsa/mldsa/native/x86_64/src/ntt_avx2_asm.S",
+    "crypto/fipsmodule/ml_dsa/mldsa/native/x86_64/src/pointwise_acc_l4_avx2_asm.S",
+    "crypto/fipsmodule/ml_dsa/mldsa/native/x86_64/src/pointwise_acc_l5_avx2_asm.S",
+    "crypto/fipsmodule/ml_dsa/mldsa/native/x86_64/src/pointwise_acc_l7_avx2_asm.S",
+    "crypto/fipsmodule/ml_dsa/mldsa/native/x86_64/src/pointwise_avx2_asm.S",
+    "crypto/fipsmodule/ml_dsa/mldsa/native/x86_64/src/poly_caddq_avx2_asm.S",
     "crypto/fipsmodule/ml_kem/mlkem/native/x86_64/src/intt.S",
     "crypto/fipsmodule/ml_kem/mlkem/native/x86_64/src/mulcache_compute.S",
     "crypto/fipsmodule/ml_kem/mlkem/native/x86_64/src/ntt.S",
@@ -23,6 +31,7 @@ pub(super) const CRYPTO_LIBRARY: &[&str] = &[
     "crypto/fipsmodule/ml_kem/mlkem/native/x86_64/src/reduce.S",
     "crypto/fipsmodule/ml_kem/mlkem/native/x86_64/src/rej_uniform_asm.S",
     "crypto/fipsmodule/ml_kem/mlkem/native/x86_64/src/tomont.S",
+    "crypto/hrss/asm/poly_rq_mul.S",
     "generated-src/linux-x86_64/crypto/chacha/chacha-x86_64.S",
     "generated-src/linux-x86_64/crypto/cipher_extra/aes128gcmsiv-x86_64.S",
     "generated-src/linux-x86_64/crypto/cipher_extra/aesni-sha1-x86_64.S",

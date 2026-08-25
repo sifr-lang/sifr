@@ -130,7 +130,7 @@ EXPECTED_FEATURE_POLICIES = {
     "flate2": {"default_features": False, "features": ["rust_backend"]},
     "prost-build": {"generated_output": "deterministic"},
     "redis": {"default_features": False, "features": ["tokio-comp"]},
-    "reqwest": {"default_features": False, "features": ["rustls-tls", "json"]},
+    "reqwest": {"default_features": False, "features": ["rustls", "json"]},
     "rusqlite": {"features": ["bundled"]},
     "sqlx": {
         "default_features": False,

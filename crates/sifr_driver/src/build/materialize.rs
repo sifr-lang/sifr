@@ -335,7 +335,7 @@ fn sysroot_trusted_native_links(dependency_plan: &SysrootDependencyPlan) -> BTre
         ) && (dependency.features.contains("tls") || dependency.features.contains("http"))
     });
     if tls_selected {
-        return BTreeSet::from(["aws_lc_0_41_0_crypto".to_string()]);
+        return BTreeSet::from(["aws_lc_0_44_0_crypto".to_string()]);
     }
     BTreeSet::new()
 }
@@ -626,11 +626,11 @@ mod tests {
         let trusted = sysroot_trusted_native_links(&dependency_plan);
         assert_eq!(
             trusted,
-            BTreeSet::from(["aws_lc_0_41_0_crypto".to_string()])
+            BTreeSet::from(["aws_lc_0_44_0_crypto".to_string()])
         );
 
         let stdout =
-            br#"{"reason":"build-script-executed","linked_libs":["static=aws_lc_0_41_0_crypto"]}"#;
+            br#"{"reason":"build-script-executed","linked_libs":["static=aws_lc_0_44_0_crypto"]}"#;
         validate_native_link_evidence(stdout, &trusted)
             .expect("sysroot-selected TLS provider link should pass");
 
@@ -653,7 +653,7 @@ mod tests {
         let trusted = sysroot_trusted_native_links(&dependency_plan);
         assert_eq!(
             trusted,
-            BTreeSet::from(["aws_lc_0_41_0_crypto".to_string()])
+            BTreeSet::from(["aws_lc_0_44_0_crypto".to_string()])
         );
     }
 

@@ -7,7 +7,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-reqwest = { version = "=0.12.28", default-features = false, features = ["rustls-tls", "json"] }
+reqwest = { version = "=0.13.4", default-features = false, features = ["rustls", "json"] }
 sifr_runtime = { path = "../../../../../../../crates/sifr_runtime" }
 tokio = { version = "=1.53.1", features = ["io-util", "net", "rt", "sync", "time"] }
 

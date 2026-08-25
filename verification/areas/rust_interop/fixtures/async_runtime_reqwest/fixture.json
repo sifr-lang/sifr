@@ -35,7 +35,7 @@
     "reqwest": {
       "default_features": false,
       "features": [
-        "rustls-tls",
+        "rustls",
         "json"
       ]
     }

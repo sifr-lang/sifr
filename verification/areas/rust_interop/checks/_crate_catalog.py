@@ -160,7 +160,7 @@ def run_self_test() -> tuple[int, str | None]:
         "prost-build": {"generated_output": "deterministic"},
         "reqwest": {
             "default_features": False,
-            "features": ["rustls-tls", "json"],
+            "features": ["rustls", "json"],
         },
     }
     catalog = {
@@ -177,9 +177,9 @@ def run_self_test() -> tuple[int, str | None]:
                 "optional": True,
             },
             "reqwest": {
-                "version": "=0.12.28",
+                "version": "=0.13.4",
                 "default-features": False,
-                "features": ["rustls-tls", "json"],
+                "features": ["rustls", "json"],
                 "optional": True,
             },
         },
@@ -197,7 +197,7 @@ def run_self_test() -> tuple[int, str | None]:
         "package": [
             {"name": "candle-core", "version": "0.11.0"},
             {"name": "prost-build", "version": "0.14.4"},
-            {"name": "reqwest", "version": "0.12.28"},
+            {"name": "reqwest", "version": "0.13.4"},
         ]
     }
     control: list[str] = []
@@ -228,7 +228,7 @@ def run_self_test() -> tuple[int, str | None]:
                 **catalog,
                 "dependencies": {
                     **catalog["dependencies"],
-                    "reqwest": "=0.12.28",
+                    "reqwest": "=0.13.4",
                 },
             },
             lock,
@@ -241,7 +241,7 @@ def run_self_test() -> tuple[int, str | None]:
                     **catalog["dependencies"],
                     "reqwest": {
                         **catalog["dependencies"]["reqwest"],
-                        "version": "0.12.28",
+                        "version": "0.13.4",
                     },
                 }
             },

@@ -127,7 +127,7 @@
       "required_crates": ["reqwest", "rusqlite", "tokio-postgres", "redis"],
       "features": {
         "redis": {"default_features": false, "features": ["tokio-comp"]},
-        "reqwest": {"default_features": false, "features": ["rustls-tls", "json"]},
+        "reqwest": {"default_features": false, "features": ["rustls", "json"]},
         "rusqlite": {"features": ["bundled"]},
         "tokio-postgres": {"default_features": false, "features": ["runtime"]}
       },
@@ -212,7 +212,7 @@
       "tier": 2,
       "capability": "async Rust bridge on Sifr Tokio runtime",
       "required_crates": ["tokio", "reqwest"],
-      "features": {"reqwest": {"default_features": false, "features": ["rustls-tls", "json"]}},
+      "features": {"reqwest": {"default_features": false, "features": ["rustls", "json"]}},
       "execution_kind": "runtime-observed",
       "positive_evidence": {"id": "async_reqwest_loopback", "status": "passing"},
       "negative_evidence": {"id": "hidden_block_on_rejected", "status": "passing"}

@@ -363,7 +363,7 @@ product-level web framework support.
 
 Pinned fixture feature policy:
 
-- `reqwest`: `default-features = false`, `features = ["rustls-tls", "json"]`; do not enable `blocking` in async fixtures.
+- `reqwest`: `default-features = false`, `features = ["rustls", "json"]`; do not enable `blocking` in async fixtures.
 - `tokio-postgres`: `default-features = false`, `features = ["runtime"]`; TLS is not part of the primary opaque-resource fixture.
 - `rusqlite`: `features = ["bundled"]`; the unbundled system-sqlite variant is intentionally not certified in Phase 39.
 - `redis`: `default-features = false`, `features = ["tokio-comp"]`; pub/sub fixtures use loopback service infrastructure.

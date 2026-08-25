@@ -40,8 +40,8 @@ def validate_async_reqwest_scenario(
         raw_path,
         dependencies,
         "reqwest",
-        "=0.12.28",
-        ["rustls-tls", "json"],
+        "=0.13.4",
+        ["rustls", "json"],
         default_features=False,
     )
     _require_dependency(
@@ -67,7 +67,7 @@ def validate_async_reqwest_scenario(
         raw_path,
         trust,
         "rust-build-scripts",
-        ["ring"],
+        ["aws-lc-sys"],
     )
     _require_trust(
         failures,
@@ -75,7 +75,7 @@ def validate_async_reqwest_scenario(
         raw_path,
         trust,
         "native-links",
-        ["ring_core_0_17_14_", "ring_core_0_17_14__test"],
+        ["aws_lc_0_44_0_crypto"],
     )
 
 
@@ -108,9 +108,9 @@ def run_async_reqwest_self_test(
             (
                 "reqwest pin drift",
                 "examples/reqwest_loopback_runtime/Cargo.toml",
-                'version = "=0.12.28"',
-                'version = "0.12.28"',
-                "must pin version =0.12.28",
+                'version = "=0.13.4"',
+                'version = "0.13.4"',
+                "must pin version =0.13.4",
             ),
             (
                 "tokio feature drift",
@@ -122,14 +122,14 @@ def run_async_reqwest_self_test(
             (
                 "build-script trust drift",
                 "examples/reqwest_loopback_runtime/sifr.toml",
-                'rust-build-scripts = ["ring"]',
+                'rust-build-scripts = ["aws-lc-sys"]',
                 "rust-build-scripts = []",
                 "trust.rust-build-scripts",
             ),
             (
                 "native-link trust drift",
                 "examples/reqwest_loopback_runtime/sifr.toml",
-                'native-links = ["ring_core_0_17_14_", "ring_core_0_17_14__test"]',
+                'native-links = ["aws_lc_0_44_0_crypto"]',
                 "native-links = []",
                 "trust.native-links",
             ),
