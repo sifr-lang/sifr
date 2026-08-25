@@ -78,7 +78,7 @@ sifr_driver = { path = "crates/sifr_driver" }
 aho-corasick = { version = "1.1.5" }
 annotate-snippets = { version = "0.12.16", features = ["color"] }
 anyhow = { version = "1.0.104" }
-base64 = { version = "0.22.1" }
+base64 = { version = "0.23.1", default-features = false, features = ["std"] }
 bigdecimal = { version = "0.4.10", features = ["serde"] }
 bitflags = { version = "2.13.1" }
 blake2 = { version = "0.10.6" }
