@@ -128,7 +128,7 @@
       "features": {
         "redis": {"default_features": false, "features": ["tokio-comp"]},
         "reqwest": {"default_features": false, "features": ["rustls", "json"]},
-        "rusqlite": {"features": ["bundled"]},
+        "rusqlite": {"default_features": false, "features": ["bundled"]},
         "tokio-postgres": {"default_features": false, "features": ["runtime"]}
       },
       "execution_kind": "runtime-observed",
@@ -240,7 +240,7 @@
       "tier": 0,
       "capability": "blocking I/O and CPU-heavy classification",
       "required_crates": ["rusqlite", "rayon", "flate2"],
-      "features": {"rusqlite": {"features": ["bundled"]}, "flate2": {"default_features": false, "features": ["rust_backend"]}},
+      "features": {"rusqlite": {"default_features": false, "features": ["bundled"]}, "flate2": {"default_features": false, "features": ["rust_backend"]}},
       "execution_kind": "compiler-diagnostic",
       "diagnostic_crate_rationale": {
         "purpose": "rusqlite, rayon, and flate2 supply blocking-I/O and CPU-heavy classification examples used only to exercise SIFR-RUST-ASYNC diagnostics",

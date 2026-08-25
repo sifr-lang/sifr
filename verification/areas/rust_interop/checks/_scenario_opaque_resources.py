@@ -23,6 +23,7 @@ OPAQUE_RESOURCE_SCENARIO_TOKENS = (
     "reqwest::Client",
     ".no_proxy()",
     "Connection::open",
+    'savepoint_with_name("sifr; DROP TABLE evidence; --")',
     "redis::Client",
     "tokio_postgres::Config",
     'TcpListener::bind(("127.0.0.1", 0))',
@@ -68,7 +69,7 @@ def validate_opaque_resource_scenario(
     for name, version, features, default_features in (
         ("redis", "=1.4.1", ["tokio-comp"], False),
         ("reqwest", "=0.13.4", ["rustls", "json"], False),
-        ("rusqlite", "=0.39.0", ["bundled"], None),
+        ("rusqlite", "=0.40.2", ["bundled"], False),
         ("tokio", "=1.53.1", ["io-util", "net", "rt", "sync", "time"], None),
         ("tokio-postgres", "=0.7.18", ["runtime"], False),
     ):
@@ -148,9 +149,23 @@ def run_opaque_resource_self_test(
             (
                 "rusqlite pin drift",
                 "examples/resource_lifecycle_runtime/Cargo.toml",
-                'version = "=0.39.0"',
-                'version = "0.39.0"',
-                "must pin version =0.39.0",
+                'version = "=0.40.2"',
+                'version = "0.40.2"',
+                "must pin version =0.40.2",
+            ),
+            (
+                "Rusqlite default feature drift",
+                "examples/resource_lifecycle_runtime/Cargo.toml",
+                'rusqlite = { version = "=0.40.2", default-features = false, features = ["bundled"] }',
+                'rusqlite = { version = "=0.40.2", default-features = true, features = ["bundled"] }',
+                "rusqlite must set default-features = false",
+            ),
+            (
+                "SQLite savepoint identifier safety drift",
+                "examples/resource_lifecycle_runtime/src/bridges/resources.rs",
+                'savepoint_with_name("sifr; DROP TABLE evidence; --")',
+                'savepoint_with_name("sifr")',
+                "missing scenario token",
             ),
             (
                 "Redis feature drift",

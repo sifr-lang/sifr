@@ -258,6 +258,7 @@
         {"name": "network_http_dependency_snapshots", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "num_bigint_dependency_versions", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "reqwest_dependency_version", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "rusqlite_dependency_version", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "syn_prettyplease_dependency_versions", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "text_i18n_icu_dependency_versions", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "text_i18n_dependency_snapshots", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}

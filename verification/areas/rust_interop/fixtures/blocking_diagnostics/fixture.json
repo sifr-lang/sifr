@@ -44,6 +44,7 @@
       ]
     },
     "rusqlite": {
+      "default_features": false,
       "features": [
         "bundled"
       ]
