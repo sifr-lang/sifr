@@ -1802,11 +1802,18 @@ isolate the representation diagnostic.
 
 `ecosystem_backend_certification` is a tier-4 `cargo-probe` claim scoped to an
 exact package-local bridge. Its authoritative package lock builds
-`axum 0.8.9`, `tower-http 0.7.0` with only `set-header`, and `sqlx 0.8.6`
-with default features disabled and only
-`runtime-tokio-rustls`/`postgres`/`macros`. Executable evidence binds an Axum
+`axum 0.8.9`, `tower-http 0.7.0` with only `set-header`, and `sqlx 0.9.0`.
+SQLx disables default features. It uses separate `runtime-tokio` and
+`tls-rustls-ring-webpki` features plus `postgres` and `macros`. Executable
+evidence binds an Axum
 listener to `127.0.0.1:0`, sends a raw HTTP request, observes the tower-http
 response header and body, and completes graceful shutdown.
+
+The workspace catalog locks the SQLx PostgreSQL runtime without `macros`.
+SQLx 0.9 query macros add inactive MySQL and SQLite offline edges to a lock.
+The SQLite edge cannot share a Cargo lock with the current Rusqlite native
+link. The backend fixture has an independent lock and owns the complete query
+macro graph and executable evidence.
 
 The same bridge expands a real SQLx query macro from one checked-in `.sqlx/`
 file. The validator binds the filename, SQL text, PostgreSQL description, and
@@ -2028,7 +2035,7 @@ Feature-sensitive fixtures must pin Cargo features in `rust_interop_fixture_matr
 - `rusqlite`: `default-features = false`, `features = ["bundled"]`; the Rust interop scope certifies only the bundled native SQLite provider.
 - `redis`: `default-features = false`, `features = ["tokio-comp"]`; pub/sub fixtures use loopback service infrastructure.
 - `tokio-tungstenite`: `default-features = false`; add `features = ["rustls-tls-webpki-roots"]` only for explicit network/TLS coverage.
-- `sqlx`: `default-features = false`, `features = ["runtime-tokio-rustls", "postgres", "macros"]`; query-macro fixtures must use checked-in `.sqlx/` offline artifacts instead of requiring `DATABASE_URL` during Cargo execution.
+- `sqlx`: `default-features = false`, `features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "macros"]`; query-macro fixtures must use checked-in `.sqlx/` offline artifacts instead of requiring `DATABASE_URL` during Cargo execution.
 - `axum`: the backend certification uses only `http1` and `tokio`.
 - `tower-http`: the backend certification disables defaults and uses only
   `set-header` so middleware execution is directly observable.

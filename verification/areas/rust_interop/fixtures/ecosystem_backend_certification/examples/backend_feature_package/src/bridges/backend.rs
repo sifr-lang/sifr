@@ -98,7 +98,7 @@ async fn execute_loopback(path: &str) -> Result<String, BackendErrorBridge> {
     }
     let offline_value = query_compile_time()?;
     Ok(format!(
-        "axum=0.8.9;loopback=127.0.0.1:ephemeral;status=200;tower-http=0.7.0;middleware=response-header;sqlx=0.8.6;offline=true;query-value={offline_value};query-hash={QUERY_HASH};shutdown=clean"
+        "axum=0.8.9;loopback=127.0.0.1:ephemeral;status=200;tower-http=0.7.0;middleware=response-header;sqlx=0.9.0;runtime=tokio;tls=rustls-ring-webpki;offline=true;query-value={offline_value};query-hash={QUERY_HASH};shutdown=clean"
     ))
 }
 

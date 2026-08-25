@@ -368,7 +368,7 @@ Pinned fixture feature policy:
 - `rusqlite`: `default-features = false`, `features = ["bundled"]`; Phase 39 certifies only the bundled native SQLite provider.
 - `redis`: `default-features = false`, `features = ["tokio-comp"]`; pub/sub fixtures use loopback service infrastructure.
 - `tokio-tungstenite`: `default-features = false`; add `features = ["rustls-tls-webpki-roots"]` only for explicit network/TLS coverage.
-- `sqlx`: `default-features = false`, `features = ["runtime-tokio-rustls", "postgres", "macros"]`; this is ecosystem certification, not the primary opaque-resource fixture, and query-macro fixtures must use checked-in `.sqlx/` offline artifacts instead of requiring `DATABASE_URL` during Cargo execution.
+- `sqlx`: `default-features = false`, `features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "macros"]`; this is ecosystem certification, not the primary opaque-resource fixture, and query-macro fixtures must use checked-in `.sqlx/` offline artifacts instead of requiring `DATABASE_URL` during Cargo execution.
 - `axum`: the backend certification uses only `http1` and `tokio`.
 - `tower-http`: the backend certification disables defaults and uses only
   `set-header` so middleware execution is directly observable.

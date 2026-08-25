@@ -9,6 +9,10 @@ from pathlib import Path
 from typing import Any
 
 EXPECTED_PACKAGE_ALIASES = {"candle": "candle-core"}
+# The independent backend fixture owns SQLx query-macro activation.
+CATALOG_FEATURE_OVERRIDES = {
+    "sqlx": ["runtime-tokio", "tls-rustls-ring-webpki", "postgres"],
+}
 
 
 def validate_crate_catalog(
@@ -47,7 +51,9 @@ def validate_crate_catalog(
     )
     if proc.returncode != 0:
         detail = proc.stderr.strip() or proc.stdout.strip()
-        failures.append(f"Rust interop crate catalog is not cacheable offline: {detail}")
+        failures.append(
+            f"Rust interop crate catalog is not cacheable offline: {detail}"
+        )
 
 
 def _validate_catalog_data(
@@ -99,7 +105,9 @@ def _validate_dependency(
     policy: dict[str, Any],
 ) -> None:
     if not isinstance(dependency, dict):
-        failures.append(f"Rust interop crate catalog {crate} must use a dependency table")
+        failures.append(
+            f"Rust interop crate catalog {crate} must use a dependency table"
+        )
         return
     if dependency.get("optional") is not True:
         failures.append(f"Rust interop crate catalog {crate} must be optional")
@@ -122,7 +130,10 @@ def _validate_dependency(
         failures.append(
             f"Rust interop crate catalog {crate} default-features must be {expected_default}"
         )
-    expected_features = policy.get("features", [])
+    expected_features = CATALOG_FEATURE_OVERRIDES.get(
+        crate,
+        policy.get("features", []),
+    )
     if dependency.get("features", []) != expected_features:
         failures.append(
             f"Rust interop crate catalog {crate} features must be {expected_features!r}"
@@ -243,7 +254,7 @@ def run_self_test() -> tuple[int, str | None]:
                         **catalog["dependencies"]["reqwest"],
                         "version": "0.13.4",
                     },
-                }
+                },
             },
             lock,
             "must pin an exact version",

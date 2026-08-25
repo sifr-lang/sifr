@@ -253,8 +253,9 @@ rejected as `SIFR-RUST-TYPE-0001`. This is
 support for arbitrary CLI crate APIs or `anyhow::Error` values.
 
 The `ecosystem_backend_certification` evidence builds and runs an exact-pinned
-generated package with `axum 0.8.9`, `tower-http 0.7.0`, and `sqlx 0.8.6`
-using only `runtime-tokio-rustls`, `postgres`, and `macros` for SQLx. The
+generated package with `axum 0.8.9`, `tower-http 0.7.0`, and `sqlx 0.9.0`.
+SQLx uses separate `runtime-tokio` and `tls-rustls-ring-webpki` features. It
+also uses `postgres` and `macros`, with default features disabled. The
 package binds an Axum server to `127.0.0.1:0`, observes a tower-http response
 header through a raw loopback request, and shuts the task down cleanly. Its
 SQLx query macro compiles from a checked-in `.sqlx/` artifact whose query and

@@ -23,9 +23,14 @@ EXPECTED_WORKSPACE_DEPENDENCIES = {
         "features": ["http1", "tokio"],
     },
     "sqlx": {
-        "version": "=0.8.6",
+        "version": "=0.9.0",
         "default-features": False,
-        "features": ["runtime-tokio-rustls", "postgres", "macros"],
+        "features": [
+            "runtime-tokio",
+            "tls-rustls-ring-webpki",
+            "postgres",
+            "macros",
+        ],
     },
     "tower-http": {
         "version": "=0.7.0",
@@ -86,8 +91,7 @@ def validate_backend_scenario(
         )
     if trust != EXPECTED_TRUST:
         failures.append(
-            f"{fixture_id}: {raw_path}/sifr.toml trust must equal "
-            f"{EXPECTED_TRUST!r}"
+            f"{fixture_id}: {raw_path}/sifr.toml trust must equal {EXPECTED_TRUST!r}"
         )
 
     _validate_cargo_environment(failures, fixture_id, raw_path, example_dir)
@@ -137,14 +141,21 @@ def run_backend_self_test(
 
         mutations = (
             ("axum pin", "Cargo.toml", '"=0.8.9"', '"0.8.9"', "exact-pin"),
-            ("sqlx pin", "Cargo.toml", '"=0.8.6"', '"0.8.6"', "exact-pin"),
+            ("sqlx pin", "Cargo.toml", '"=0.9.0"', '"0.9.0"', "exact-pin"),
             ("tower pin", "Cargo.toml", '"=0.7.0"', '"0.7.0"', "exact-pin"),
             ("tokio pin", "Cargo.toml", '"=1.53.1"', '"1.53.1"', "exact-pin"),
             (
-                "SQLx feature",
+                "inactive SQLx driver lock identity",
+                "Cargo.lock",
+                "488e99c397a62007e4229aec669a179816339afc6d2620ca6fa420dbee2e982c",
+                "0000000000000000000000000000000000000000000000000000000000000000",
+                "not present in root Cargo.lock",
+            ),
+            (
+                "SQLx TLS provider feature",
                 "Cargo.toml",
-                '"runtime-tokio-rustls", "postgres", "macros"',
-                '"runtime-tokio", "postgres", "macros"',
+                '"runtime-tokio", "tls-rustls-ring-webpki", "postgres", "macros"',
+                '"runtime-tokio", "tls-rustls", "postgres", "macros"',
                 "exact-pin",
             ),
             (
@@ -309,9 +320,7 @@ def _validate_query_metadata(
         )
         return
     if data.get("query") != QUERY:
-        failures.append(
-            f"{fixture_id}: {raw_path}/.sqlx query must equal {QUERY!r}"
-        )
+        failures.append(f"{fixture_id}: {raw_path}/.sqlx query must equal {QUERY!r}")
     if data.get("hash") != QUERY_HASH:
         failures.append(
             f"{fixture_id}: {raw_path}/.sqlx hash must equal SHA-256 {QUERY_HASH}"
