@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-25. Items 0-16 are complete. Item 17 LSP Server 0.10
-is next.
+Status: active on 2026-08-25. Items 0-17 are complete. Item 18 Reqwest 0.13 is
+next.
 
 ## Objective
 
@@ -185,7 +185,7 @@ Only the first incomplete row may be active.
 | 14 | complete | Base64 0.23 | Base64 is current without an unapproved unsafe default feature and parity/error tests pass. |
 | 15 | complete | Num BigInt 0.5 | Exact integer behavior, serialization, limits, and generated code pass. |
 | 16 | complete | Syn 3 and Prettyplease 0.3 | The single syntax-AST compatibility unit is current and code generation/SQLx scanning passes. |
-| 17 | pending | LSP Server 0.10 | Response handling and editor protocol smoke tests pass. |
+| 17 | complete | LSP Server 0.10 | Response handling and editor protocol smoke tests pass. |
 | 18 | pending | Reqwest 0.13 | Canonical features/provider selection and HTTP client loopback behavior pass. |
 | 19 | pending | Rusqlite 0.40 | SQLite interop and exact catalog/fixture locks pass. |
 | 20 | pending | SQLx 0.9 | Runtime/TLS features and checked/offline query contracts pass. |
@@ -1413,6 +1413,68 @@ lock scan to require a Syn edge in each lock.
 Next action: implement Item 17 LSP Server 0.10 from this record merge on
 `origin/main`.
 
+### Item 17 record
+
+Implementation [PR #3523](https://github.com/sifr-lang/sifr/pull/3523) started
+from base `67f613e1b808f829292570afc563ab692a6ae3e6`. The final candidate was
+`42f0dcf15048171376ccdd4124001b1b215dfa09`. It merged as
+`2b6d5053becabaa9a05e390b7263c59aac542734`.
+
+The official audit confirmed LSP Server 0.10.0 as the latest stable release.
+The registry archive matched checksum
+`3ee25a31f2e571e426eef2896179450cafc7e2f5be00d8a93b1c2d21c0ff7656`.
+Its source metadata matched upstream release commit
+`1b7da4272d8d27c78774f42a6e1ea66a4c1fe984`.
+
+The migration uses the new typed `Result<Value, ResponseError>` response
+model. One response constructor now owns success and error serialization.
+Shutdown, queue rejection, cancellation, missing work, and normal completion
+all use this canonical path. The old response constructors are absent.
+
+Changed surfaces:
+
+- The root Cargo manifest and lock.
+- The LSP server response construction and protocol tests.
+- Exact-version, lock-edge, archive, source, and vendor certification.
+- The official LSP Server 0.10.0 vendor package.
+- Coverage classification for the new certification target.
+
+All 77 LSP tests passed. Three dependency certification tests passed. The LSP
+protocol, transcript, marker, semantic-editor, and self-test variants passed.
+All five coverage variants passed.
+
+Workspace Clippy denied all warnings. Production LSP Clippy and certification
+Clippy also passed. Formatting, HIR maintainability, diff hygiene, vendor
+checksums, and the 3,250-file first-party size guard passed.
+
+The initial Opus review of exact SHA
+`42f0dcf15048171376ccdd4124001b1b215dfa09` returned `SATISFIED`. It found no
+blocking finding. The evidence is in the
+[#3523 exact-SHA review comment](https://github.com/sifr-lang/sifr/pull/3523#issuecomment-5409418083).
+No remediation review ran.
+
+The one create-PR gate completed every functional step. The cold
+runtime-platform area passed all 28 variants. It took 210.102 seconds against
+its 120-second blocking budget, so the gate exited 124. It was not rerun.
+
+The one merge gate ran on the final SHA and exited 0. All functional steps
+passed. The gate passed all 1,142 codegen tests, all 76 generated-build
+integrations, and all 698 E2E fixtures. Its E2E signature was
+`127353b213e16688`.
+
+The merge gate took 6,662.74 seconds. It reported advisory wall-time,
+cache-footprint, and fixture-group-skew observations. The exact one-shot results
+are in the
+[#3523 gate comment](https://github.com/sifr-lang/sifr/pull/3523#issuecomment-5410886213).
+Neither gate was rerun.
+
+Deferred follow-ups: Item 35 owns two protocol assertions. Certify strict
+response handling before Sifr adds outbound LSP requests. Add a local assertion
+for the request-cancelled protocol code `-32800`.
+
+Next action: implement Item 18 Reqwest 0.13 from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1451,13 +1513,13 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-16 are complete. Item 16 merged in PR #3521 as
-`5d3d474027efc8c66fda66058127756be0eb56f9`. The initial review approved the
+Current state: Items 0-17 are complete. Item 17 merged in PR #3523 as
+`2b6d5053becabaa9a05e390b7263c59aac542734`. The initial review approved the
 final SHA. No remediation review was required.
 
 The create-PR gate stopped only on a cold runtime-platform time budget. The
 merge gate exited 0 and passed all functional steps. Neither one-shot gate was
 rerun.
 
-Next action: merge this record-only update. Then start Item 17 LSP Server 0.10
+Next action: merge this record-only update. Then start Item 18 Reqwest 0.13
 from the resulting `origin/main`.
