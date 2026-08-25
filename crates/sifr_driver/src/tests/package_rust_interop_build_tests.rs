@@ -606,7 +606,7 @@ fn test_build_async_reqwest_rejects_undeclared_native_link() {
     let manifest =
         std::fs::read_to_string(&manifest_path).expect("scenario manifest should be readable");
     let untrusted = manifest.replace(
-        "native-links = [\"ring_core_0_17_14_\", \"ring_core_0_17_14__test\"]",
+        "native-links = [\"aws_lc_0_44_0_crypto\"]",
         "native-links = []",
     );
     assert_ne!(
@@ -630,7 +630,7 @@ fn test_build_async_reqwest_rejects_undeclared_native_link() {
         errors.iter().any(|error| {
             error.code == DiagnosticCode::RUST_TRUST_MISSING.code()
                 && error.message.contains("untrusted native link evidence")
-                && error.message.contains("ring_core_0_17_14_")
+                && error.message.contains("aws_lc_0_44_0_crypto")
         }),
         "undeclared transitive native link must be rejected: {errors:#?}"
     );

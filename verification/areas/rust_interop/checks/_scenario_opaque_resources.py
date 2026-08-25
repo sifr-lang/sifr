@@ -67,7 +67,7 @@ def validate_opaque_resource_scenario(
     )
     for name, version, features, default_features in (
         ("redis", "=1.4.1", ["tokio-comp"], False),
-        ("reqwest", "=0.12.28", ["rustls-tls", "json"], False),
+        ("reqwest", "=0.13.4", ["rustls", "json"], False),
         ("rusqlite", "=0.39.0", ["bundled"], None),
         ("tokio", "=1.53.1", ["io-util", "net", "rt", "sync", "time"], None),
         ("tokio-postgres", "=0.7.18", ["runtime"], False),
@@ -103,7 +103,7 @@ def validate_opaque_resource_scenario(
         raw_path,
         trust,
         "rust-build-scripts",
-        ["libsqlite3-sys", "ring"],
+        ["aws-lc-sys", "libsqlite3-sys"],
     )
     _require_trust(
         failures,
@@ -111,7 +111,7 @@ def validate_opaque_resource_scenario(
         raw_path,
         trust,
         "native-links",
-        ["ring_core_0_17_14_", "ring_core_0_17_14__test", "sqlite3"],
+        ["aws_lc_0_44_0_crypto", "sqlite3"],
     )
 
 
@@ -162,15 +162,15 @@ def run_opaque_resource_self_test(
             (
                 "SQLite build trust drift",
                 "examples/resource_lifecycle_runtime/sifr.toml",
-                'rust-build-scripts = ["libsqlite3-sys", "ring"]',
-                'rust-build-scripts = ["ring"]',
+                'rust-build-scripts = ["aws-lc-sys", "libsqlite3-sys"]',
+                'rust-build-scripts = ["aws-lc-sys"]',
                 "trust.rust-build-scripts",
             ),
             (
                 "SQLite native link drift",
                 "examples/resource_lifecycle_runtime/sifr.toml",
-                '"ring_core_0_17_14__test", "sqlite3"',
-                '"ring_core_0_17_14__test"',
+                '"aws_lc_0_44_0_crypto", "sqlite3"',
+                '"aws_lc_0_44_0_crypto"',
                 "trust.native-links",
             ),
             (

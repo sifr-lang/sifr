@@ -22,5 +22,5 @@ rust-no-panic = [
   "bridge.resources.open",
   "bridge.resources.run",
 ]
-rust-build-scripts = ["libsqlite3-sys", "ring"]
-native-links = ["ring_core_0_17_14_", "ring_core_0_17_14__test", "sqlite3"]
+rust-build-scripts = ["aws-lc-sys", "libsqlite3-sys"]
+native-links = ["aws_lc_0_44_0_crypto", "sqlite3"]

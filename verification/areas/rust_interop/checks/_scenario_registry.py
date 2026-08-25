@@ -20,7 +20,7 @@ REQUIRED_SCENARIO_EXAMPLES = {
                 "task.timeout",
                 "runtime_reused",
                 "handle.id()",
-                "ring_core_0_17_14_",
+                "aws_lc_0_44_0_crypto",
             ),
         },
     },

@@ -572,7 +572,7 @@ to the interpreter selected by the Python runtime probe and does not make
 arbitrary Rust build-script native links trusted.
 When generated code selects the sysroot TLS stack, the compiler-owned native
 link trust set includes the exact Rustls provider link emitted by the locked
-`aws-lc-sys` dependency: `aws_lc_0_41_0_crypto`. This is dependency-plan gated;
+`aws-lc-sys` dependency: `aws_lc_0_44_0_crypto`. This is dependency-plan gated;
 stdlib `http` selection inherits the same trust because the shipped stdlib
 `http` feature enables TLS. Unrelated build-script native links remain
 rejected.
