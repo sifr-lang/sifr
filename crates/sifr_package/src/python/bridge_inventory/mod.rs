@@ -1,5 +1,6 @@
 use crate::CargoPackageId;
 use crate::diag::PackageDiagnostic;
+use crate::digest::sha256_hex;
 use crate::graph::derive::SifrPackageMetadata;
 use crate::manifest::sifr::{PackageSourceRoot, SifrManifest};
 use serde::{Deserialize, Serialize};
@@ -12,7 +13,7 @@ mod import_classification;
 mod imports;
 use filesystem::{
     collect_python_paths, discover_source_paths, misplaced_root_diagnostics, module_name,
-    path_string, sha256_hex,
+    path_string,
 };
 use import_classification::{classify_imports, relative_import_escape};
 use imports::{RawImport, collect_imports};

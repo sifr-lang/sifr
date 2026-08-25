@@ -34,7 +34,7 @@ rustls-platform-verifier = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 sha1 = { workspace = true, optional = true }
-sha2_0_11 = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
 sifr_runtime = { path = "../sifr_runtime", default-features = false, optional = true }
 tokio = { workspace = true, optional = true }
 tokio-rustls = { workspace = true, optional = true }
@@ -50,7 +50,7 @@ default = []
 json = ["dep:serde", "dep:serde_json", "dep:sifr_runtime"]
 regex = ["dep:regex", "dep:sifr_runtime"]
 uuid = ["dep:uuid"]
-hash = ["dep:blake2", "dep:md5", "dep:sha1", "dep:sha2_0_11"]
+hash = ["dep:blake2", "dep:md5", "dep:sha1", "dep:sha2"]
 base64 = ["dep:base64", "dep:sifr_runtime"]
 toml = ["dep:toml"]
 url = ["dep:percent-encoding", "dep:sifr_runtime", "dep:url"]

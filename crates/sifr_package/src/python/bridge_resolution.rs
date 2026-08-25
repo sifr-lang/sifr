@@ -3,6 +3,7 @@ use super::bridge_inventory::{
 };
 use super::requirements::{PythonRequirementContribution, PythonRequirementKind};
 use crate::diag::PackageDiagnostic;
+use crate::digest::{lower_hex, sha256_hex};
 use crate::graph::derive::{SifrPackageGraph, SifrPackageId, SifrPackageMetadata};
 use sha2::{Digest as _, Sha256};
 use std::collections::BTreeSet;
@@ -52,7 +53,7 @@ pub fn resolved_python_bridge_package_key(package_id: &SifrPackageId) -> String 
     let mut hasher = Sha256::new();
     hasher.update(b"sifr-python-bridge-package-v1\0");
     hasher.update(package_id.0.as_bytes());
-    format!("{:x}", hasher.finalize())
+    lower_hex(&hasher.finalize())
 }
 
 #[must_use]
@@ -134,7 +135,7 @@ fn resolve_package(
                     return None;
                 }
             };
-            let source_digest = format!("{:x}", Sha256::digest(source.as_bytes()));
+            let source_digest = sha256_hex(source.as_bytes());
             if source_digest != module.source_digest {
                 diagnostics.push(PackageDiagnostic::invalid_python_bridge_source(
                     &package.cargo_package_id,

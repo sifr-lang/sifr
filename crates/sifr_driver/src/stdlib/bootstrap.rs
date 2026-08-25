@@ -4,7 +4,6 @@ use crate::stdlib::cache::{STDLIB_COMPILED_CACHE, get_or_init_stdlib_cache};
 use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
 use crate::stdlib::re_exports::{ReExportMaps, re_export_stdlib_imports};
 use crate::stdlib::types::StdlibCompiled;
-use sha2::{Digest, Sha256};
 use sifr_codegen::{StdlibCode, StdlibRustSource};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{
@@ -18,6 +17,7 @@ use sifr_stdlib_manifest::{
 };
 use sifr_syntax::parse_module_raw;
 use sifr_sysroot::ResolvedSysroot;
+use sifr_sysroot::sha256_hex;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -596,9 +596,7 @@ fn canonical_stdlib_source_path(
 }
 
 fn source_sha256(source: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(source.as_bytes());
-    format!("{:x}", hasher.finalize())
+    sha256_hex(source.as_bytes())
 }
 
 fn normalized_path_string(path: &Path) -> String {

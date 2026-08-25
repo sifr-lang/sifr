@@ -4,7 +4,12 @@ use std::path::Path;
 
 pub fn sha256_file(path: &Path) -> std::io::Result<String> {
     let bytes = fs::read(path)?;
-    Ok(format!("{:x}", Sha256::digest(bytes)))
+    Ok(sha256_hex(&bytes))
+}
+
+#[must_use]
+pub fn sha256_hex(bytes: &[u8]) -> String {
+    lower_hex(&Sha256::digest(bytes))
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -65,9 +70,20 @@ pub fn canonical_sysroot_tree_digest(
     }
     Ok(CanonicalTreeDigest {
         algorithm: "sha256",
-        hex: format!("{:x}", hasher.finalize()),
+        hex: lower_hex(&hasher.finalize()),
         entries,
     })
+}
+
+fn lower_hex(bytes: &[u8]) -> String {
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+
+    let mut encoded = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        encoded.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        encoded.push(char::from(DIGITS[usize::from(byte & 0x0f)]));
+    }
+    encoded
 }
 
 fn collect_entries(

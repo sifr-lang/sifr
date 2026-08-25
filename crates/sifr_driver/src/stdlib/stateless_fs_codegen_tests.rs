@@ -1,5 +1,5 @@
 use super::compile_stdlib_uncached;
-use sha2::{Digest, Sha256};
+use sifr_sysroot::sha256_hex;
 
 #[test]
 fn fs_private_declarations_codegen_through_sifr_stdlib() {
@@ -14,7 +14,7 @@ fn fs_private_declarations_codegen_through_sifr_stdlib() {
     assert_eq!(private_code.source_path, "stdlib/_sifr/fs.sifr");
     assert_eq!(
         private_code.source_sha256,
-        sha256_hex(include_str!("../../../../stdlib/_sifr/fs.sifr"))
+        sha256_hex(include_bytes!("../../../../stdlib/_sifr/fs.sifr"))
     );
     for name in [
         "read_text",
@@ -87,10 +87,4 @@ fn fs_private_declarations_codegen_through_sifr_stdlib() {
             .get("sifr.io")
             .is_some_and(|deps| deps.contains("_sifr.fs"))
     );
-}
-
-fn sha256_hex(source: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(source.as_bytes());
-    format!("{:x}", hasher.finalize())
 }

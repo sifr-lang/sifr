@@ -1,8 +1,8 @@
 use crate::cli_model_and_entrypoint::{EXIT_USER_DIAGNOSTIC, diagnostic_with_code};
 use crate::self_update_metadata::{UpdateAction, UpdatePlan};
 use crate::self_update_receipt::DiscoveredReceipt;
-use sha2::{Digest as _, Sha256};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
+use sifr_sysroot::sha256_hex;
 use std::fs;
 use std::io::{self, BufRead as _};
 use std::path::{Path, PathBuf};
@@ -173,7 +173,7 @@ fn validate_installer(path: &Path, expected_sha256: &str) -> Result<(), RunnerEr
             path.display()
         ))
     })?;
-    let actual_sha256 = format!("{:x}", Sha256::digest(bytes));
+    let actual_sha256 = sha256_hex(&bytes);
     if actual_sha256 != expected_sha256 {
         return Err(runner_error(format!(
             "downloaded self-update installer SHA-256 mismatch: expected {expected_sha256}, got {actual_sha256}"
@@ -345,7 +345,6 @@ mod tests {
     use super::SelfUpdateRunner;
     use crate::self_update_metadata::{PreviewChannel, PreviewVersion, UpdateAction, UpdatePlan};
     use crate::self_update_receipt::{DiscoveredReceipt, InstallReceipt};
-    use sha2::{Digest as _, Sha256};
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::thread;
@@ -399,10 +398,8 @@ mod tests {
 
     fn plan_for_installer(force: bool, installer: &Path) -> UpdatePlan {
         let mut plan = plan(force);
-        plan.installer_sha256 = format!(
-            "{:x}",
-            Sha256::digest(fs::read(installer).expect("read installer fixture"))
-        );
+        plan.installer_sha256 =
+            sifr_sysroot::sha256_hex(&fs::read(installer).expect("read installer fixture"));
         plan
     }
 

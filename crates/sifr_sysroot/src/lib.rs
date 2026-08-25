@@ -9,7 +9,7 @@ mod resolve;
 
 pub use digest::{
     CanonicalDigestPolicy, CanonicalTreeDigest, CanonicalTreeDigestEntry,
-    canonical_sysroot_tree_digest, sha256_file,
+    canonical_sysroot_tree_digest, sha256_file, sha256_hex,
 };
 pub use error::{SysrootError, SysrootErrorKind};
 pub use layout::{ResolvedSysroot, SysrootPaths};
