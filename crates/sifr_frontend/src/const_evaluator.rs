@@ -577,7 +577,7 @@ fn binary(op: &str, left: ConstValue, right: ConstValue) -> Result<ConstValue, C
             Ok(ConstValue::Integer(left * right))
         }
         ("//" | "%", ConstValue::Integer(_), ConstValue::Integer(ref right))
-            if right == &BigInt::from(0) =>
+            if right == &BigInt::ZERO =>
         {
             error(
                 ConstEvalErrorKind::DivisionByZero,
@@ -607,7 +607,7 @@ fn binary(op: &str, left: ConstValue, right: ConstValue) -> Result<ConstValue, C
 }
 
 fn floor_div_mod(left: &BigInt, right: BigInt) -> (BigInt, BigInt) {
-    let zero = BigInt::from(0);
+    let zero = BigInt::ZERO;
     let mut quotient = left / &right;
     let mut remainder = left % &right;
     if remainder != zero && ((remainder < zero) != (right < zero)) {
@@ -734,7 +734,7 @@ fn truthy(value: &ConstValue) -> bool {
     match value {
         ConstValue::None => false,
         ConstValue::Bool(value) => *value,
-        ConstValue::Integer(value) => value != &BigInt::from(0),
+        ConstValue::Integer(value) => value != &BigInt::ZERO,
         ConstValue::FloatBits(value) => f64::from_bits(*value) != 0.0,
         ConstValue::String(value) => !value.is_empty(),
         ConstValue::Bytes(value) => !value.is_empty(),
@@ -846,7 +846,7 @@ mod tests {
             .evaluate_function("kind", vec![ConstValue::String("value".to_string())])
             .expect("string branch evaluates");
         let integer = DeterministicConstEvaluator::new(&lowered.module)
-            .evaluate_function("kind", vec![ConstValue::Integer(BigInt::from(1))])
+            .evaluate_function("kind", vec![ConstValue::Integer(BigInt::ONE)])
             .expect("integer branch evaluates");
         assert_eq!(text, ConstValue::String("text".to_string()));
         assert_eq!(integer, ConstValue::String("integer".to_string()));

@@ -220,7 +220,7 @@ fn compiled_fixture_plan_matches_production_build_report() {
 
 #[test]
 fn missing_metadata_is_not_repaired_from_generated_rust() {
-    let rust_source = "use num_bigint::BigInt;\nfn main() { let _ = BigInt::from(1); }\n";
+    let rust_source = "use num_bigint::BigInt;\nfn main() { let _ = BigInt::ONE; }\n";
     let error = build_and_run_capture_with_deps(
         rust_source,
         "missing_dependency_metadata",
@@ -238,7 +238,7 @@ fn missing_metadata_is_not_repaired_from_generated_rust() {
 fn fixtures_with_different_production_plans_cannot_repair_each_other() {
     let missing = case_with_plan(
         "missing_metadata",
-        "use num_bigint::BigInt;\nfn main() { let _ = BigInt::from(1); }",
+        "use num_bigint::BigInt;\nfn main() { let _ = BigInt::ONE; }",
         HashSet::new(),
     );
     let declared = case_with_plan(

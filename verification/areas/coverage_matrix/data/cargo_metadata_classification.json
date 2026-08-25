@@ -255,6 +255,7 @@
         {"name": "concurrency_runtime_dependency_snapshots", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "hash_sha2_dependency_versions", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "network_http_dependency_snapshots", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "num_bigint_dependency_versions", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "text_i18n_icu_dependency_versions", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "text_i18n_dependency_snapshots", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
       ],

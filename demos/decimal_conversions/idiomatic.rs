@@ -1,4 +1,4 @@
-use bigdecimal::BigDecimal;
+use bigdecimal::{num_bigint::BigInt as BigDecimalInt, BigDecimal};
 use num_bigint::BigInt;
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
@@ -43,12 +43,12 @@ fn truncated_bigint_from_decimal(value: Decimal) -> BigInt {
     BigInt::from(value.mantissa()) / divisor
 }
 
-fn truncated_bigint_from_bigdecimal(value: &BigDecimal) -> BigInt {
+fn truncated_bigint_from_bigdecimal(value: &BigDecimal) -> BigDecimalInt {
     let (digits, exponent) = value.as_bigint_and_exponent();
     if exponent <= 0 {
-        digits * BigInt::from(10_u32).pow((-exponent) as u32)
+        digits * BigDecimalInt::from(10_u32).pow((-exponent) as u32)
     } else {
-        digits / BigInt::from(10_u32).pow(exponent as u32)
+        digits / BigDecimalInt::from(10_u32).pow(exponent as u32)
     }
 }
 
