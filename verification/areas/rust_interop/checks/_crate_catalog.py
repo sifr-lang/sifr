@@ -165,13 +165,22 @@ def _validate_non_cargo_policies(
 
 def run_self_test() -> tuple[int, str | None]:
     """Mutation-test exact catalog membership, pinning, and lockfile binding."""
-    required = {"candle", "prost-build", "reqwest"}
+    required = {"candle", "prost-build", "reqwest", "sqlx"}
     policies = {
         "candle": {"backend": "cpu-only", "default_features": False},
         "prost-build": {"generated_output": "deterministic"},
         "reqwest": {
             "default_features": False,
             "features": ["rustls", "json"],
+        },
+        "sqlx": {
+            "default_features": False,
+            "features": [
+                "runtime-tokio",
+                "tls-rustls-ring-webpki",
+                "postgres",
+                "macros",
+            ],
         },
     }
     catalog = {
@@ -193,6 +202,16 @@ def run_self_test() -> tuple[int, str | None]:
                 "features": ["rustls", "json"],
                 "optional": True,
             },
+            "sqlx": {
+                "version": "=0.9.0",
+                "default-features": False,
+                "features": [
+                    "runtime-tokio",
+                    "tls-rustls-ring-webpki",
+                    "postgres",
+                ],
+                "optional": True,
+            },
         },
         "package": {
             "metadata": {
@@ -209,6 +228,7 @@ def run_self_test() -> tuple[int, str | None]:
             {"name": "candle-core", "version": "0.11.0"},
             {"name": "prost-build", "version": "0.14.4"},
             {"name": "reqwest", "version": "0.13.4"},
+            {"name": "sqlx", "version": "0.9.0"},
         ]
     }
     control: list[str] = []
@@ -277,6 +297,25 @@ def run_self_test() -> tuple[int, str | None]:
             },
             lock,
             "features must be",
+        ),
+        (
+            {
+                **catalog,
+                "dependencies": {
+                    **catalog["dependencies"],
+                    "sqlx": {
+                        **catalog["dependencies"]["sqlx"],
+                        "features": [
+                            "runtime-tokio",
+                            "tls-rustls-ring-webpki",
+                            "postgres",
+                            "macros",
+                        ],
+                    },
+                },
+            },
+            lock,
+            "sqlx features must be",
         ),
         (
             {

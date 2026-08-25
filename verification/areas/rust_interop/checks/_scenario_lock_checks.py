@@ -12,18 +12,6 @@ from typing import Any
 # fixture owns these entries because SQLite cannot share the Rusqlite lock.
 SQLX_QUERY_MACRO_FIXTURE_ONLY_LOCK_PACKAGES = {
     (
-        "chacha20",
-        "0.10.1",
-        "registry+https://github.com/rust-lang/crates.io-index",
-        "d524456ba66e72eb8b115ff89e01e497f8e6d11d78b70b1aa13c0fbd97540a81",
-    ),
-    (
-        "getrandom",
-        "0.4.3",
-        "registry+https://github.com/rust-lang/crates.io-index",
-        "300e883d756b2e4ec94e02791f39b04b522276138852cfc41d9fb7e904106099",
-    ),
-    (
         "flume",
         "0.12.0",
         "registry+https://github.com/rust-lang/crates.io-index",
@@ -52,12 +40,6 @@ SQLX_QUERY_MACRO_FIXTURE_ONLY_LOCK_PACKAGES = {
         "0.9.0",
         "registry+https://github.com/rust-lang/crates.io-index",
         "488e99c397a62007e4229aec669a179816339afc6d2620ca6fa420dbee2e982c",
-    ),
-    (
-        "whoami",
-        "2.1.3",
-        "registry+https://github.com/rust-lang/crates.io-index",
-        "626c4bac6755d76ffc12cb01b2eac751db1996b9e0041de9aa02c8c211ddc82c",
     ),
 }
 
@@ -104,12 +86,27 @@ def require_root_lock_subset(
         for package in root_lock.get("package", [])
         if isinstance(package, dict) and package.get("source")
     }
+    scenario_packages = {
+        (
+            str(package.get("name")),
+            str(package.get("version")),
+            str(package.get("source")),
+            str(package.get("checksum")),
+        )
+        for package in scenario_lock.get("package", [])
+        if isinstance(package, dict) and package.get("source")
+    }
     allowed_fixture_only = (
         SQLX_QUERY_MACRO_FIXTURE_ONLY_LOCK_PACKAGES
         if fixture_id == "ecosystem_backend_certification"
         and raw_path == "examples/backend_feature_package"
         else set()
     )
+    for identity in sorted(allowed_fixture_only - scenario_packages):
+        failures.append(
+            f"{fixture_id}: {raw_path}/Cargo.lock no longer contains allowed "
+            f"fixture-only package {identity[0]} {identity[1]} with the exact identity"
+        )
     for package in scenario_lock.get("package", []):
         if not isinstance(package, dict) or not package.get("source"):
             continue

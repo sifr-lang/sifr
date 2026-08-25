@@ -144,12 +144,6 @@ fn assert_dependency(label: &str, dependency: &toml::Value, expected_features: &
         .filter_map(toml::Value::as_str)
         .collect::<Vec<_>>();
     assert_eq!(features, expected_features, "{label} SQLx features");
-    for legacy in ["runtime-tokio-rustls", "tls-rustls", "tls-rustls-ring"] {
-        assert!(
-            !features.contains(&legacy),
-            "{label} must not use legacy feature {legacy}"
-        );
-    }
 }
 
 fn assert_json_policy(label: &str, policy: &serde_json::Value) {

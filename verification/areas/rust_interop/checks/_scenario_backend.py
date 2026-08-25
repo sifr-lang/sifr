@@ -149,7 +149,7 @@ def run_backend_self_test(
                 "Cargo.lock",
                 "488e99c397a62007e4229aec669a179816339afc6d2620ca6fa420dbee2e982c",
                 "0000000000000000000000000000000000000000000000000000000000000000",
-                "not present in root Cargo.lock",
+                "no longer contains allowed fixture-only package",
             ),
             (
                 "SQLx TLS provider feature",
