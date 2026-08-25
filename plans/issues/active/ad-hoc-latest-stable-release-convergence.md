@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-25. Items 0-14 are complete. Item 15 Num BigInt 0.5
-is next.
+Status: active on 2026-08-25. Items 0-15 are complete. Item 16 Syn 3 and
+Prettyplease 0.3 is next.
 
 ## Objective
 
@@ -183,7 +183,7 @@ Only the first incomplete row may be active.
 | 12 | complete | ICU family | All five ICU4X crates converge together and text/i18n behavior passes. |
 | 13 | complete | SHA-2 consolidation | One SHA-2 0.11 dependency remains and all digest evidence passes. |
 | 14 | complete | Base64 0.23 | Base64 is current without an unapproved unsafe default feature and parity/error tests pass. |
-| 15 | pending | Num BigInt 0.5 | Exact integer behavior, serialization, limits, and generated code pass. |
+| 15 | complete | Num BigInt 0.5 | Exact integer behavior, serialization, limits, and generated code pass. |
 | 16 | pending | Syn 3 and Prettyplease 0.3 | The single syntax-AST compatibility unit is current and code generation/SQLx scanning passes. |
 | 17 | pending | LSP Server 0.10 | Response handling and editor protocol smoke tests pass. |
 | 18 | pending | Reqwest 0.13 | Canonical features/provider selection and HTTP client loopback behavior pass. |
@@ -1275,6 +1275,76 @@ guardrail. Item 14 supplies the dependency-specific Base64 closure check.
 Next action: implement Item 15 Num BigInt 0.5 from this record merge on
 `origin/main`.
 
+### Item 15 record
+
+Implementation [PR #3519](https://github.com/sifr-lang/sifr/pull/3519) started
+from base `c0e2a66f4537bd70f36addbb17b0567715fc8ba4`. The final candidate was
+`037b24c64c5ac5ac516efbac6d86b3e0c3154a0b`. It merged as
+`6301c73867685e2cf9680ecc8aeba1df094478ae`.
+
+The official audit confirmed Num BigInt 0.5.1 as the latest stable release.
+The direct Sifr graph now uses that exact release with its explicit `std`
+feature. BigDecimal still requires the Num BigInt 0.4 line, so its external
+graph uses the latest compatible 0.4.8 release. This is upstream dependency
+isolation, not a Sifr compatibility path.
+
+The maintained Sifr implementation now uses the stable `BigInt::ZERO` and
+`BigInt::ONE` constants. The idiomatic decimal demo names BigDecimal's integer
+type explicitly. No conversion shim, legacy path, fallback, or parallel Sifr
+API was added.
+
+Both official registry archives replaced their vendor packages. Their package
+hashes match the registry, and every recorded vendor file checksum passed. The
+root lock and each tracked first-party fixture lock agree with the split graph.
+A new certification checks the first-party Num BigInt selection and the
+external BigDecimal edge.
+
+Changed surfaces:
+
+- The root Cargo manifest and lock.
+- The generated dependency plan and tracked first-party fixture locks.
+- Exact-integer compiler, runtime, stdlib, and demo callers.
+- Num BigInt dependency and vendor certification.
+- The official Num BigInt 0.5.1 and 0.4.8 vendor packages.
+- Dependency feature snapshots and coverage classification.
+
+Focused frontend, lowering, runtime, manifest, stdlib, demo, generated-build,
+and dependency-plan tests passed. Num BigInt certification passed all three
+tests. The standalone idiomatic decimal demo also compiled with the exact
+dependency split.
+
+Workspace Clippy denied all warnings. Formatting, HIR maintainability, diff
+hygiene, snapshot equality, advanced lock metadata, coverage readiness, and
+the first-party file-size guard passed.
+
+The initial Opus review of exact SHA
+`037b24c64c5ac5ac516efbac6d86b3e0c3154a0b` returned `SATISFIED`. Its evidence
+is in the [#3519 exact-SHA review comment](https://github.com/sifr-lang/sifr/pull/3519#issuecomment-5405668574).
+No remediation review ran.
+
+The one create-PR gate completed every functional step that it reached. The
+cold runtime-platform area passed all variants. It took 204.572 seconds against
+its 120-second blocking budget, so the gate stopped after that area. It was not
+rerun.
+
+The one merge gate ran on the final SHA and exited 0. All functional steps
+passed. The gate passed the split Num BigInt graph, full workspace tests, all
+1,140 codegen tests, and all 698 E2E fixtures. Its E2E signature was
+`127353b213e16688`.
+
+The merge gate took 6,539.20 seconds. It reported advisory wall-time and
+fixture-group-skew observations. The exact one-shot results are in the
+[#3519 gate comment](https://github.com/sifr-lang/sifr/pull/3519#issuecomment-5406964129).
+Neither gate was rerun.
+
+Deferred follow-ups: Item 35 owns three audit improvements. Restrict generic
+lock discovery to tracked maintained locks. Require the first-party Num BigInt
+lock version to equal 0.5.1, not only to be unique. Add a maintained compile
+gate for idiomatic Rust demos.
+
+Next action: implement Item 16 Syn 3 and Prettyplease 0.3 from this record merge
+on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1313,13 +1383,13 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-14 are complete. Item 14 merged in PR #3517 as
-`da9420e807bf6132ae326b5e2fb96a4078fbf022`. The remediation review approved
-the final SHA and found no new mechanism defect.
+Current state: Items 0-15 are complete. Item 15 merged in PR #3519 as
+`6301c73867685e2cf9680ecc8aeba1df094478ae`. The initial review approved the
+final SHA. No remediation review was required.
 
 The create-PR gate stopped only on a cold runtime-platform time budget. The
 merge gate exited 0 and passed all functional steps. Neither one-shot gate was
 rerun.
 
-Next action: merge this record-only update. Then start Item 15 Num BigInt 0.5
-from the resulting `origin/main`.
+Next action: merge this record-only update. Then start Item 16 Syn 3 and
+Prettyplease 0.3 from the resulting `origin/main`.
