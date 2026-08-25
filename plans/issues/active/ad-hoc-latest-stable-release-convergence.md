@@ -1,6 +1,6 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-25. Items 0-19 are complete. Item 20 SQLx 0.9 is next.
+Status: active on 2026-08-26. Items 0-20 are complete. Item 21 Itertools 0.15 is next.
 
 ## Objective
 
@@ -187,7 +187,7 @@ Only the first incomplete row may be active.
 | 17 | complete | LSP Server 0.10 | Response handling and editor protocol smoke tests pass. |
 | 18 | complete | Reqwest 0.13 | Canonical features/provider selection and HTTP client loopback behavior pass. |
 | 19 | complete | Rusqlite 0.40 | SQLite interop and exact catalog/fixture locks pass. |
-| 20 | pending | SQLx 0.9 | Runtime/TLS features and checked/offline query contracts pass. |
+| 20 | complete | SQLx 0.9 | Runtime/TLS features and checked/offline query contracts pass. |
 | 21 | pending | Itertools 0.15 | Iterator compilation and parity pass before DataFusion consumes this line. |
 | 22 | pending | Arrow 59 and DataFusion 55 | The coupled analytical stack, Rust/Python bridge fixtures, and locks pass. |
 | 23 | pending | Polars 0.55 | Rust dataframe fixtures and exact catalog evidence pass. |
@@ -1627,6 +1627,91 @@ rewritten.
 
 Next action: implement Item 20 SQLx 0.9 from this record merge on `origin/main`.
 
+### Item 20 record
+
+State: complete
+
+Implementation [PR #3529](https://github.com/sifr-lang/sifr/pull/3529) started
+from base `4f0bba8fbb6938792188141cad81089a468264b0`. The final candidate was
+`ff2c7c093214d80d5146497b1cf795d68c0f00f7`. It merged as
+`e58082628f4439b50a972c5fcbcbe3838ca8ecfb`.
+
+The official registry audit confirmed SQLx 0.9.0 as the latest stable release.
+The SQLx archive matched checksum
+`378620ccc25c62c89d8be1c819e76a88d59bdcc3304733330788948e619bfd71`.
+The Core, Macros, Macros Core, and Postgres archives matched their recorded
+registry checksums. The release tag resolved to upstream commit
+`75bc0487eb661da811bb7a3c5d158f1bd463fef4`.
+
+The canonical feature policy now uses the split `runtime-tokio` and
+`tls-rustls-ring-webpki` features. It also enables only Postgres. It does not
+keep the removed combined runtime/TLS feature or another compatibility alias.
+
+SQLx 0.9 macros retain inactive MySQL and SQLite lock identities. Rusqlite 0.40
+requires a different `libsqlite3-sys` release with the same native link name.
+Cargo cannot place both releases in the root lock. The workspace catalog
+therefore owns the production Postgres graph without macros. A separately
+locked backend fixture owns compile-time query certification and its checked
+metadata. The fixture feature tree proves that MySQL and SQLite are inactive.
+
+The fixture lock is aligned with the root cache identities for every active
+package. Its exact inactive-lock allowlist contains only Flume 0.12,
+Libsqlite3 Sys 0.37, Spin 0.9.9, SQLx MySQL 0.9, and SQLx SQLite 0.9. The policy
+test rejects both missing and stale allowlist entries.
+
+The real backend fixture compiles a checked SQLx query from maintained offline
+metadata. Runtime evidence records SQLx 0.9.0, Tokio, the ring WebPKI TLS
+provider, and the Postgres backend. Negative tests reject missing or stale
+query metadata before network access.
+
+Changed surfaces:
+
+- The root and backend fixture locks, workspace catalog, and fixture manifest.
+- SQLx version, feature, lock, cache-identity, runtime, and query certification.
+- Rust-interop matrices, fixture policy, metadata, and documentation.
+- The exact dependency test and its coverage classification.
+
+Focused SQLx, backend, scanner, manifest, policy, formatting, Clippy,
+maintainability, and file-size checks passed. The broader Sifr test suite also
+passed before the one-shot gates.
+
+The initial Opus review of exact SHA
+`fa88364ba1e39186d2af70a929d7c5df205c9144` found that the fixture allowed
+active patch-version drift for Chacha20, Getrandom, and Whoami. The finding is
+in the [initial review comment](https://github.com/sifr-lang/sifr/pull/3529#issuecomment-5416597745).
+
+The remediation aligned every active cache identity and added negative policy
+tests. The one allowed remediation review of exact SHA
+`d727e73c3870851ac1a8dce4c797b995c3737d4d` returned `SATISFIED`. Its evidence
+is in the [remediation review comment](https://github.com/sifr-lang/sifr/pull/3529#issuecomment-5416597701).
+
+The one create-PR gate ran on the remediated SHA. All ten Rust-interop variants
+passed. The coverage matrix then rejected the new dependency test because its
+target classification was absent. The gate exited 1 after 174.45 seconds and
+was not rerun.
+
+The final commit added only the missing coverage classification. The
+Rust-interop matrix and all 241 policy self-tests passed on the final SHA. The
+two-review limit prohibited a third review.
+
+The one merge gate ran on the final SHA and exited 0. All functional steps
+passed. All 698 E2E fixtures passed with signature `127353b213e16688` across
+173 cold-cache groups.
+
+The merge gate took 7,531.60 seconds. It reported advisory warm wall-time and
+fixture-group-skew observations. The exact one-shot results are in the
+[#3529 gate comment](https://github.com/sifr-lang/sifr/pull/3529#issuecomment-5418080254).
+Neither gate was rerun.
+
+Deferred follow-up: Item 35 owns a clean-`CARGO_HOME` sparse-index experiment
+for the five inactive fixture-lock identities. This checks whether a root
+`cargo fetch` also caches the inactive package summaries needed by the
+separately locked fixture. This mechanism concern came from the second review,
+so it was recorded instead of starting a third review round.
+
+Next action: implement Item 21 Itertools 0.15 from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1665,13 +1750,14 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-19 are complete. Item 19 merged in PR #3527 as
-`fa1d792ccc5395b6451430fcae79aee1cddb4900`. The initial review approved the
-final SHA. No remediation review was required.
+Current state: Items 0-20 are complete. Item 20 merged in PR #3529 as
+`e58082628f4439b50a972c5fcbcbe3838ca8ecfb`. The remediation review approved
+the implementation SHA. The final commit changed only coverage classification
+metadata, and the two-review limit prohibited a third review.
 
-The create-PR gate stopped only on a cold runtime-platform time budget. The
-merge gate exited 0 and passed all functional steps. Neither one-shot gate was
-rerun.
+The create-PR gate stopped on the missing test-target classification and was
+not rerun. The one merge gate ran on the final SHA, exited 0, and passed all
+functional steps. All 698 E2E fixtures passed.
 
-Next action: merge this record-only update. Then start Item 20 SQLx 0.9
+Next action: merge this record-only update. Then start Item 21 Itertools 0.15
 from the resulting `origin/main`.
