@@ -1,3 +1,7 @@
+use std::collections::BTreeSet;
+use std::fs;
+use std::path::Path;
+
 const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
 const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
 const STDLIB_MANIFEST: &str = include_str!("../../sifr_stdlib/Cargo.toml");
@@ -109,4 +113,108 @@ fn first_party_lock_edges_use_base64_0_23_1() {
             .all(|dependency| *dependency == "base64 0.23.1"),
         "all first-party Base64 edges must use 0.23.1: {first_party_edges:?}"
     );
+}
+
+#[test]
+fn vendored_base64_packages_cover_vendored_and_first_party_lock_edges() {
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("workspace lock must parse");
+    let packages = lock
+        .get("package")
+        .and_then(toml::Value::as_array)
+        .expect("workspace lock packages must be an array");
+    let locked_base64_versions = packages
+        .iter()
+        .filter(|package| package.get("name").and_then(toml::Value::as_str) == Some("base64"))
+        .filter_map(|package| package.get("version").and_then(toml::Value::as_str))
+        .collect::<BTreeSet<_>>();
+
+    let vendor_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../vendor");
+    let mut vendored_packages = BTreeSet::new();
+    for entry in fs::read_dir(&vendor_root).expect("vendor directory must be readable") {
+        let entry = entry.expect("vendor entry must be readable");
+        if !entry
+            .file_type()
+            .expect("vendor entry type must be readable")
+            .is_dir()
+        {
+            continue;
+        }
+        let manifest_path = entry.path().join("Cargo.toml");
+        if !manifest_path.is_file() {
+            continue;
+        }
+        let manifest = fs::read_to_string(&manifest_path).unwrap_or_else(|error| {
+            panic!(
+                "vendored manifest {} must be readable: {error}",
+                manifest_path.display()
+            )
+        });
+        let manifest: toml::Value = toml::from_str(&manifest).unwrap_or_else(|error| {
+            panic!(
+                "vendored manifest {} must parse: {error}",
+                manifest_path.display()
+            )
+        });
+        let package = manifest
+            .get("package")
+            .expect("vendored manifest must contain package metadata");
+        let name = package
+            .get("name")
+            .and_then(toml::Value::as_str)
+            .expect("vendored package must have a string name");
+        let version = package
+            .get("version")
+            .and_then(toml::Value::as_str)
+            .expect("vendored package must have a string version");
+        vendored_packages.insert((name.to_string(), version.to_string()));
+    }
+
+    let mut required_base64_versions = BTreeSet::new();
+    for package in packages {
+        let Some(name) = package.get("name").and_then(toml::Value::as_str) else {
+            continue;
+        };
+        let Some(version) = package.get("version").and_then(toml::Value::as_str) else {
+            continue;
+        };
+        let is_owned_package = name == "sifr" || name.starts_with("sifr_");
+        let is_vendored_package =
+            vendored_packages.contains(&(name.to_string(), version.to_string()));
+        if !is_owned_package && !is_vendored_package {
+            continue;
+        }
+
+        for dependency in package
+            .get("dependencies")
+            .and_then(toml::Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(toml::Value::as_str)
+        {
+            let mut components = dependency.split_whitespace();
+            if components.next() != Some("base64") {
+                continue;
+            }
+            let dependency_version = components.next().unwrap_or_else(|| {
+                assert_eq!(
+                    locked_base64_versions.len(),
+                    1,
+                    "an unqualified Base64 lock edge requires one locked version"
+                );
+                locked_base64_versions
+                    .first()
+                    .copied()
+                    .expect("the Base64 lock version must exist")
+            });
+            required_base64_versions.insert(dependency_version);
+        }
+    }
+
+    assert_eq!(required_base64_versions, ["0.22.1", "0.23.1"].into());
+    for version in required_base64_versions {
+        assert!(
+            vendored_packages.contains(&("base64".to_string(), version.to_string())),
+            "vendor must contain the Base64 {version} package required by a vendored or first-party lock edge"
+        );
+    }
 }
