@@ -33,7 +33,10 @@ fn is_local_child_into_relocated_parent(
     let Item::Impl(item_impl) = item else {
         return false;
     };
-    let Some((_, trait_path, _)) = &item_impl.trait_ else {
+    if item_impl.modifiers.require_empty().is_err() {
+        return false;
+    }
+    let Some((trait_path, _)) = &item_impl.trait_ else {
         return false;
     };
     let Some(segment) = trait_path

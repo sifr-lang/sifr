@@ -14,8 +14,8 @@ sifr_stdlib_manifest = { workspace = true }
 sifr_structural_identity = { workspace = true }
 sifr_type_system = { workspace = true }
 ruff_text_size = { workspace = true }
-syn = { version = "2.0.117", features = ["full", "visit", "visit-mut"] }
-prettyplease = "0.2.37"
+syn = { workspace = true, features = ["visit-mut"] }
+prettyplease = "0.3.0"
 proc-macro2 = "1.0.107"
 
 [dev-dependencies]

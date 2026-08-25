@@ -42,6 +42,26 @@ impl From<LocalChild> for Parent {
 }
 
 #[test]
+fn relocation_rejects_modified_impls_as_canonical_conversions() {
+    let code = r#"
+struct Parent {}
+struct LocalChild {}
+
+impl !From<LocalChild> for Parent {}
+"#;
+    let relocated = HashSet::from(["Parent"]);
+
+    let stripped = strip_relocated_rust_items_by_name(
+        code,
+        &relocated,
+        &HashSet::from(["LocalChild".to_string()]),
+    );
+
+    assert!(stripped.contains("struct LocalChild"));
+    assert!(!stripped.contains("impl !From<LocalChild> for Parent"));
+}
+
+#[test]
 fn filter_keeps_transitive_dependencies_in_item_order() {
     let code = r#"
 use std::collections::HashMap;
@@ -308,6 +328,23 @@ impl std::fmt::Display for Item {
     assert!(once.contains("fn b(&self)"));
     assert!(once.contains("impl std::fmt::Display for Item"));
     assert!(twice.trim().is_empty());
+}
+
+#[test]
+fn dedup_distinguishes_syn_3_impl_modifiers() {
+    let code = r#"
+struct Item {}
+trait Marker {}
+
+impl Marker for Item {}
+impl !Marker for Item {}
+"#;
+    let mut emitted = HashSet::new();
+
+    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());
+
+    assert!(deduplicated.contains("impl Marker for Item"));
+    assert!(deduplicated.contains("impl !Marker for Item"));
 }
 
 #[test]
