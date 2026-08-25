@@ -674,7 +674,7 @@ impl<'a> ItemRefCollector<'a> {
 
 impl<'ast> Visit<'ast> for ItemRefCollector<'_> {
     fn visit_item_impl(&mut self, node: &'ast syn::ItemImpl) {
-        if let Some((_, trait_path, _)) = &node.trait_ {
+        if let Some((trait_path, _)) = &node.trait_ {
             if let Some(first) = trait_path.segments.first() {
                 self.try_insert_ref(&first.ident.to_string());
             }
@@ -810,8 +810,22 @@ pub(super) fn dedup_item_key(item: &Item) -> String {
 
 pub(super) fn dedup_impl_key(item_impl: &ItemImpl) -> String {
     let self_ty = dedup_type_key(item_impl.self_ty.as_ref());
-    if let Some((_, trait_path, _)) = &item_impl.trait_ {
-        format!("impl {} for {}", dedup_path_key(trait_path), self_ty)
+    if let Some((trait_path, _)) = &item_impl.trait_ {
+        let defaultness = if item_impl.modifiers.defaultness.is_some() {
+            "default "
+        } else {
+            ""
+        };
+        let polarity = if item_impl.modifiers.polarity.is_some() {
+            "!"
+        } else {
+            ""
+        };
+        format!(
+            "{defaultness}impl {polarity}{} for {}",
+            dedup_path_key(trait_path),
+            self_ty
+        )
     } else {
         let item_names = item_impl
             .items
@@ -866,6 +880,7 @@ pub(super) fn render_items(items: &[Item]) -> String {
 
     prettyplease::unparse(&syn::File {
         shebang: None,
+        frontmatter: None,
         attrs: Vec::new(),
         items: items.to_vec(),
     })

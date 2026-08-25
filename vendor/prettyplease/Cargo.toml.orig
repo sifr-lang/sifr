@@ -1,6 +1,6 @@
 [package]
 name = "prettyplease"
-version = "0.2.37"
+version = "0.3.0"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 autoexamples = false
 categories = ["development-tools"]
@@ -10,27 +10,28 @@ edition = "2021"
 exclude = ["cargo-expand"]
 keywords = ["rustfmt"]
 license = "MIT OR Apache-2.0"
-links = "prettyplease02"
+links = "prettyplease03"
 repository = "https://github.com/dtolnay/prettyplease"
-rust-version = "1.62"
+rust-version = "1.71"
 
 [features]
 verbatim = ["syn/parsing"]
 
 [dependencies]
 proc-macro2 = { version = "1.0.80", default-features = false }
-syn = { version = "2.0.105", default-features = false, features = ["full"] }
+syn = { version = "3", default-features = false, features = ["full"] }
 
 [dev-dependencies]
 indoc = "2"
 proc-macro2 = { version = "1.0.80", default-features = false }
 quote = { version = "1.0.35", default-features = false }
-syn = { version = "2.0.105", default-features = false, features = ["clone-impls", "extra-traits", "parsing", "printing", "visit-mut"] }
+syn = { version = "3", default-features = false, features = ["clone-impls", "extra-traits", "parsing", "printing", "visit-mut"] }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 rustdoc-args = [
     "--generate-link-to-definition",
+    "--generate-macro-expansion",
     "--extern-html-root-url=core=https://doc.rust-lang.org",
     "--extern-html-root-url=alloc=https://doc.rust-lang.org",
     "--extern-html-root-url=std=https://doc.rust-lang.org",

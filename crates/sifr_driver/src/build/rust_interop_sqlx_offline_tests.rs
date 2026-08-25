@@ -96,6 +96,28 @@ fn queries(value: i32) {
 }
 
 #[test]
+fn syn_3_safe_foreign_items_do_not_hide_sqlx_queries() {
+    let fixture = SqlxFixture::new();
+    fixture.write_source(
+        r#"
+unsafe extern "C" {
+    safe fn host_callback();
+}
+
+fn query() {
+    let _ = sqlx::query!("SELECT 27");
+}
+"#,
+    );
+    let crate_names = sqlx_dependency_crate_names(&fixture.0).expect("manifest should parse");
+
+    assert_eq!(
+        collect_sqlx_queries(&fixture.0, &crate_names),
+        vec!["SELECT 27".to_string()]
+    );
+}
+
+#[test]
 fn syntax_outside_preflight_understanding_falls_through_to_cargo() {
     let fixture = SqlxFixture::new();
     fixture.write_source(

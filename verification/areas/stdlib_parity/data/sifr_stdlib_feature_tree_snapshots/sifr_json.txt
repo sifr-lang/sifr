@@ -45,18 +45,18 @@ sifr_stdlib v0.0.0 (<repo>/crates/sifr_stdlib)
 │   │           │   │   └── proc-macro2 v1.0.107 (*)
 │   │           │   └── proc-macro2 feature "proc-macro" (*)
 │   │           ├── syn feature "clone-impls"
-│   │           │   └── syn v3.0.3
+│   │           │   └── syn v3.0.4
 │   │           │       ├── proc-macro2 v1.0.107 (*)
 │   │           │       ├── quote v1.0.45 (*)
 │   │           │       └── unicode-ident feature "default" (*)
 │   │           ├── syn feature "derive"
-│   │           │   └── syn v3.0.3 (*)
+│   │           │   └── syn v3.0.4 (*)
 │   │           ├── syn feature "parsing"
-│   │           │   └── syn v3.0.3 (*)
+│   │           │   └── syn v3.0.4 (*)
 │   │           ├── syn feature "printing"
-│   │           │   └── syn v3.0.3 (*)
+│   │           │   └── syn v3.0.4 (*)
 │   │           └── syn feature "proc-macro"
-│   │               ├── syn v3.0.3 (*)
+│   │               ├── syn v3.0.4 (*)
 │   │               ├── proc-macro2 feature "proc-macro" (*)
 │   │               └── quote feature "proc-macro" (*)
 │   └── serde feature "std"
