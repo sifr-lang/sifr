@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-25. Items 0-15 are complete. Item 16 Syn 3 and
-Prettyplease 0.3 is next.
+Status: active on 2026-08-25. Items 0-16 are complete. Item 17 LSP Server 0.10
+is next.
 
 ## Objective
 
@@ -103,7 +103,7 @@ compiler crates, generated-runtime catalog, and Rust-interop catalog:
 | SHA-2 consolidation | workspace/catalog 0.10.9 plus 0.11 alias | one canonical 0.11.0 dependency |
 | Base64 | 0.22.1 | 0.23.1 with an explicit safe feature policy |
 | Exact integer | `num-bigint 0.4.6` | 0.5.1 |
-| Rust syntax renderer | `syn 2.0.117`, `prettyplease 0.2.37` | `syn 3.0.3`, `prettyplease 0.3.0` together |
+| Rust syntax renderer | `syn 2.0.117`, `prettyplease 0.2.37` | `syn 3.0.4`, `prettyplease 0.3.0` together |
 | Language server transport | `lsp-server 0.7.8` | 0.10.0 |
 | HTTP client | `reqwest 0.12.28` | 0.13.4 and canonical `rustls` feature |
 | SQLite | `rusqlite 0.39.0` | 0.40.2 |
@@ -184,7 +184,7 @@ Only the first incomplete row may be active.
 | 13 | complete | SHA-2 consolidation | One SHA-2 0.11 dependency remains and all digest evidence passes. |
 | 14 | complete | Base64 0.23 | Base64 is current without an unapproved unsafe default feature and parity/error tests pass. |
 | 15 | complete | Num BigInt 0.5 | Exact integer behavior, serialization, limits, and generated code pass. |
-| 16 | pending | Syn 3 and Prettyplease 0.3 | The single syntax-AST compatibility unit is current and code generation/SQLx scanning passes. |
+| 16 | complete | Syn 3 and Prettyplease 0.3 | The single syntax-AST compatibility unit is current and code generation/SQLx scanning passes. |
 | 17 | pending | LSP Server 0.10 | Response handling and editor protocol smoke tests pass. |
 | 18 | pending | Reqwest 0.13 | Canonical features/provider selection and HTTP client loopback behavior pass. |
 | 19 | pending | Rusqlite 0.40 | SQLite interop and exact catalog/fixture locks pass. |
@@ -1345,6 +1345,74 @@ gate for idiomatic Rust demos.
 Next action: implement Item 16 Syn 3 and Prettyplease 0.3 from this record merge
 on `origin/main`.
 
+### Item 16 record
+
+Implementation [PR #3521](https://github.com/sifr-lang/sifr/pull/3521) started
+from base `fbf09e1b5cf703c5a43484be01bad4399da8cbf4`. The final candidate was
+`797d5be4501821adaa52b40aa1fcd2dd4bd2177d`. It merged as
+`5d3d474027efc8c66fda66058127756be0eb56f9`.
+
+The official audit confirmed Syn 3.0.4 and Prettyplease 0.3.0 as the latest
+stable releases. The target changed from Syn 3.0.3 after its 2026-08-24 stable
+release. Maintained Sifr dependencies now use Syn 3.0.4 and Prettyplease 0.3.0.
+
+The migration uses Syn 3 impl modifiers and file frontmatter directly. Impl
+deduplication now distinguishes ordinary, default, and negative impls.
+Canonical `From` relocation accepts only impls with no modifiers. The SQLx
+scanner now certifies the Syn 3.0.4 safe-function syntax in an unsafe extern
+block.
+
+External packages still require Syn 2.0.117 and Prettyplease 0.2.37. These
+packages use isolated vendor entries. They do not add a Sifr compatibility
+path, adapter, fallback, or legacy API.
+
+Changed surfaces:
+
+- The root Cargo manifest and lock.
+- The codegen dependency features and Syn 3 callers.
+- The SQLx scanner regression tests.
+- Eight tracked Rust-interop fixture locks.
+- The JSON feature snapshot and coverage classification.
+- Exact-version, lock-edge, and vendor certification.
+- Official vendor packages for both required dependency lines.
+
+Focused codegen, driver, SQLx, dependency-plan, and certification tests passed.
+All eight affected fixture locks passed locked offline Cargo metadata. All four
+vendor package hashes and every recorded vendor file checksum matched.
+
+Workspace Clippy denied all warnings. Formatting, HIR maintainability, diff
+hygiene, snapshot equality, coverage readiness, and the 3,249-file first-party
+size guard passed.
+
+The initial Opus review of exact SHA
+`797d5be4501821adaa52b40aa1fcd2dd4bd2177d` returned `SATISFIED`. It found no
+blocking finding. The evidence is in the
+[#3521 exact-SHA review comment](https://github.com/sifr-lang/sifr/pull/3521#issuecomment-5407626475).
+No remediation review ran.
+
+The one create-PR gate completed every functional step. The cold
+runtime-platform area passed all 28 variants. It took 206.898 seconds against
+its 120-second blocking budget, so the gate exited 124. It was not rerun.
+
+The one merge gate ran on the final SHA and exited 0. All functional steps
+passed. The gate passed the split Syn and Prettyplease graph, all 1,142 codegen
+tests, all 76 generated-build integrations, and all 698 E2E fixtures. Its E2E
+signature was `127353b213e16688`.
+
+The merge gate took 6,446.20 seconds. It reported advisory wall-time,
+cache-footprint, and fixture-group-skew observations. The exact one-shot results
+are in the
+[#3521 gate comment](https://github.com/sifr-lang/sifr/pull/3521#issuecomment-5409218627).
+Neither gate was rerun.
+
+Deferred follow-ups: Item 35 owns four audit improvements. Include impl safety
+in the deduplication key. Require exclusive first-party Syn and Prettyplease
+lock edges. Reject stale versioned vendor directories. Simplify the maintained
+lock scan to require a Syn edge in each lock.
+
+Next action: implement Item 17 LSP Server 0.10 from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1383,13 +1451,13 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-15 are complete. Item 15 merged in PR #3519 as
-`6301c73867685e2cf9680ecc8aeba1df094478ae`. The initial review approved the
+Current state: Items 0-16 are complete. Item 16 merged in PR #3521 as
+`5d3d474027efc8c66fda66058127756be0eb56f9`. The initial review approved the
 final SHA. No remediation review was required.
 
 The create-PR gate stopped only on a cold runtime-platform time budget. The
 merge gate exited 0 and passed all functional steps. Neither one-shot gate was
 rerun.
 
-Next action: merge this record-only update. Then start Item 16 Syn 3 and
-Prettyplease 0.3 from the resulting `origin/main`.
+Next action: merge this record-only update. Then start Item 17 LSP Server 0.10
+from the resulting `origin/main`.
