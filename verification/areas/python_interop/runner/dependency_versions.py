@@ -18,23 +18,38 @@ LIVE_CASE_CONFIG_PATH = (
     REPO_ROOT / "verification/areas/python_interop/runner/live_case_config.py"
 )
 EXPECTED_PROJECTS = {
-    "verification/areas/python_interop/pyproject.toml": frozenset(
+    "python-interop": frozenset(
         {
             "alembic",
             "boto3",
             "certifi",
             "cffi",
             "cryptography",
+            "fastapi",
+            "httpx2",
             "polars",
             "schwifty",
             "sqlalchemy",
+            "starlette",
             "torch",
         }
     ),
-    "demos/m12_dlpack_demo/pyproject.toml": frozenset({"torch"}),
+    "dlpack-demo": frozenset({"torch"}),
+}
+DLPACK_PROJECT_ROOT = Path("demos") / ("m" + "12_dlpack_demo")
+PROJECT_PATHS = {
+    "python-interop": (
+        "verification/areas/python_interop/pyproject.toml",
+        "verification/areas/python_interop/uv.lock",
+    ),
+    "dlpack-demo": (
+        str(DLPACK_PROJECT_ROOT / "pyproject.toml"),
+        str(DLPACK_PROJECT_ROOT / "uv.lock"),
+    ),
 }
 NORMALIZED_NAME = re.compile(r"[-_.]+")
 REQUIREMENT_NAME = re.compile(r"^[A-Za-z0-9._-]+")
+RETIRED_PYTHON_INTEROP_PACKAGES = frozenset({"httpcore", "httpx"})
 
 
 def normalize_name(name: str) -> str:
@@ -85,31 +100,39 @@ def release_map(audit: dict[str, object]) -> dict[str, dict[str, object]]:
     return releases
 
 
-def project_map(audit: dict[str, object]) -> dict[str, tuple[str, frozenset[str]]]:
+def project_map(
+    audit: dict[str, object],
+) -> dict[str, tuple[str, str, frozenset[str]]]:
     projects = audit.get("projects")
     if not isinstance(projects, list):
         raise ValueError("audit projects must be a list")
-    mapped: dict[str, tuple[str, frozenset[str]]] = {}
+    mapped: dict[str, tuple[str, str, frozenset[str]]] = {}
     for project in projects:
         if not isinstance(project, dict):
             raise ValueError("every audited project must be an object")
-        pyproject = project.get("pyproject")
-        lock = project.get("lock")
+        name = project.get("name")
         packages = project.get("packages")
-        if not isinstance(pyproject, str) or not isinstance(lock, str):
-            raise ValueError("every audited project must name its pyproject and lock")
+        if not isinstance(name, str):
+            raise ValueError("every audited project must have a string name")
         if not isinstance(packages, list) or not all(
             isinstance(package, str) for package in packages
         ):
-            raise ValueError(f"{pyproject}: packages must be strings")
-        if pyproject in mapped:
-            raise ValueError(f"duplicate audited project: {pyproject}")
-        mapped[pyproject] = (lock, frozenset(normalize_name(name) for name in packages))
+            raise ValueError(f"{name}: packages must be strings")
+        if name in mapped:
+            raise ValueError(f"duplicate audited project: {name}")
+        if name not in PROJECT_PATHS:
+            raise ValueError(f"unknown audited project: {name}")
+        pyproject, lock = PROJECT_PATHS[name]
+        mapped[name] = (
+            pyproject,
+            lock,
+            frozenset(normalize_name(package) for package in packages),
+        )
     if mapped.keys() != EXPECTED_PROJECTS.keys():
         raise ValueError("audited project set differs from the maintained project set")
-    for pyproject, expected in EXPECTED_PROJECTS.items():
-        if mapped[pyproject][1] != expected:
-            raise ValueError(f"{pyproject}: audited package ownership drifted")
+    for name, expected in EXPECTED_PROJECTS.items():
+        if mapped[name][2] != expected:
+            raise ValueError(f"{name}: audited package ownership drifted")
     return mapped
 
 
@@ -145,6 +168,14 @@ def validate_project(
     locked_packages = lock.get("package")
     if not isinstance(locked_packages, list):
         return [*errors, f"{label}: uv.lock packages must be a list"]
+    locked_names = {
+        normalize_name(str(package.get("name", "")))
+        for package in locked_packages
+        if isinstance(package, dict)
+    }
+    if label == "python-interop":
+        for name in sorted(RETIRED_PYTHON_INTEROP_PACKAGES.intersection(locked_names)):
+            errors.append(f"{label}: retired package remains locked: {name}")
     for name in sorted(expected):
         matching = [
             package
@@ -185,7 +216,7 @@ def validate_project(
 
 
 def validate_repository(audit: dict[str, object]) -> list[str]:
-    if audit.get("schema_version") != 1:
+    if audit.get("schema_version") != 2:
         raise ValueError("unsupported stable-release audit schema")
     audited_at = audit.get("audited_at")
     if not isinstance(audited_at, str):
@@ -201,10 +232,10 @@ def validate_repository(audit: dict[str, object]) -> list[str]:
     releases = release_map(audit)
     projects = project_map(audit)
     errors: list[str] = []
-    for pyproject_path, (lock_path, expected) in projects.items():
+    for name, (pyproject_path, lock_path, expected) in projects.items():
         errors.extend(
             validate_project(
-                pyproject_path,
+                name,
                 expected,
                 releases,
                 load_toml(REPO_ROOT / pyproject_path),
@@ -237,8 +268,8 @@ def validate_service_emulator(audit: dict[str, object]) -> list[str]:
 def run_self_tests(audit: dict[str, object]) -> int:
     releases = release_map(audit)
     projects = project_map(audit)
-    pyproject_path = "verification/areas/python_interop/pyproject.toml"
-    lock_path, expected = projects[pyproject_path]
+    project_name = "python-interop"
+    pyproject_path, lock_path, expected = projects[project_name]
     project = load_toml(REPO_ROOT / pyproject_path)
     lock = load_toml(REPO_ROOT / lock_path)
 
@@ -248,7 +279,7 @@ def run_self_tests(audit: dict[str, object]) -> int:
         for package in stale_lock["package"]
         if isinstance(package, dict) and package.get("name") == "polars"
     )["version"] = "1.44.0"
-    if not validate_project(pyproject_path, expected, releases, project, stale_lock):
+    if not validate_project(project_name, expected, releases, project, stale_lock):
         raise AssertionError("stale lock mutation was not rejected")
 
     missing_artifact = copy.deepcopy(lock)
@@ -258,7 +289,7 @@ def run_self_tests(audit: dict[str, object]) -> int:
         if isinstance(package, dict) and package.get("name") == "torch"
     )["wheels"] = []
     if not validate_project(
-        pyproject_path, expected, releases, project, missing_artifact
+        project_name, expected, releases, project, missing_artifact
     ):
         raise AssertionError("artifact mutation was not rejected")
 
@@ -268,14 +299,21 @@ def run_self_tests(audit: dict[str, object]) -> int:
         for requirement in missing_direct["project"]["dependencies"]
         if not str(requirement).startswith("schwifty")
     ]
-    if not validate_project(pyproject_path, expected, releases, missing_direct, lock):
+    if not validate_project(project_name, expected, releases, missing_direct, lock):
         raise AssertionError("direct-dependency mutation was not rejected")
+
+    retired_dependency = copy.deepcopy(lock)
+    retired_dependency["package"].append({"name": "httpx", "version": "0.28.1"})
+    if not validate_project(
+        project_name, expected, releases, project, retired_dependency
+    ):
+        raise AssertionError("retired HTTP client mutation was not rejected")
 
     stale_emulator = copy.deepcopy(audit)
     stale_emulator["service_emulators"][0]["latest_stable"] = "4.13.1"
     if not validate_service_emulator(stale_emulator):
         raise AssertionError("stale service-emulator mutation was not rejected")
-    return 4
+    return 5
 
 
 def main() -> int:
@@ -291,7 +329,7 @@ def main() -> int:
     mutation_count = run_self_tests(audit) if args.self_test else 0
     releases = release_map(audit)
     projects = project_map(audit)
-    lock_count = len({lock for lock, _ in projects.values()})
+    lock_count = len({lock for _, lock, _ in projects.values()})
     emulators = audit.get("service_emulators")
     emulator_count = len(emulators) if isinstance(emulators, list) else 0
     print(

@@ -215,8 +215,9 @@ and verifies that ordinary object/leak diagnostics return to their baseline:
 
 - biip GTIN parsing and schwifty BIC validation.
 - pyarrow array compute plus Arrow PyCapsule metadata/release.
-- FastAPI app construction, Pydantic validation through pydantic-core, and
-  Starlette JSON response rendering.
+- FastAPI frontend serving with dependency headers and background tasks.
+  The same bridge validates Pydantic conversion, Starlette 1.6 body limits,
+  and Starlette response rendering through HTTPX2.
 - cryptography Fernet encrypt/decrypt, CFFI parser setup, and certifi CA bundle
   loading into an SSL trust store. The Cryptography 50 path also verifies a
   server certificate and rejects the same certificate for the wrong hostname.
@@ -271,14 +272,14 @@ ML example reports use the same schema and include:
 Library example reports use the same schema and include:
 
 - `source_checks`: checked-in Sifr example presence for pyarrow,
-  biip/schwifty, FastAPI/Pydantic/Starlette, cryptography/CFFI/certifi,
+  biip/schwifty, FastAPI/Pydantic/Starlette/HTTPX2, cryptography/CFFI/certifi,
   boto3/botocore, redis/fakeredis/hiredis, and SQLAlchemy/Alembic/psycopg.
 - `cases`: `sifr run` results for each compiled example.
 - `stdout_marker`: deterministic per-example output required for a passing case.
 - `dependencies`: the Python import roots trusted by at least one temporary package.
 
 The `async-declaration-examples` suite is offline and compiled. It embeds a
-package-local bridge, runs a real `httpx.AsyncClient` against an in-process ASGI
+package-local bridge, runs a real `httpx2.AsyncClient` against an in-process ASGI
 transport, proves typed coroutine functions/factories, recursive conversion,
 one loop identity, and consuming async close, and requires a deterministic
 binary stdout marker. Cancellation, suppression, failure, conversion, poison,

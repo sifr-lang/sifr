@@ -13,7 +13,7 @@ native = true
 import-roots = ["pydantic_core"]
 
 [[packages]]
-name = "httpx"
+name = "httpx2"
 tier = "tier1"
 gate = "tier1a"
 groups = ["imports", "async"]

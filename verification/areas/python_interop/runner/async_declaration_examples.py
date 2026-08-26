@@ -8,14 +8,14 @@ from example_packages import ExampleCase, build_examples_report, run_examples_se
 
 
 ASYNC_DECLARATION_CASES = {
-    "httpx-client": ExampleCase(
-        case_id="httpx-client",
-        relative_source="async_declaration/httpx_client.sifr",
+    "httpx2-client": ExampleCase(
+        case_id="httpx2-client",
+        relative_source="async_declaration/httpx2_client.sifr",
         stdout_marker=(
             "sifr-python-interop:async-declaration:status=207:message=async-ready:"
             "close=1:loop=shared:failure=covered:conversion=covered"
         ),
-        import_roots=("asyncio", "fastapi", "httpx", "threading"),
+        import_roots=("asyncio", "fastapi", "httpx2", "threading"),
         native_roots=(),
     ),
 }

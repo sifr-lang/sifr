@@ -25,8 +25,21 @@ LIBRARY_EXAMPLE_CASES = {
     "fastapi-pydantic": ExampleCase(
         case_id="fastapi-pydantic",
         relative_source="fastapi_app/fastapi_pydantic_full_example.sifr",
-        stdout_marker="sifr-python-interop:fastapi-pydantic:value=42:title=Sifr API:status=201",
-        import_roots=("builtins", "fastapi", "pydantic", "pydantic_core", "starlette"),
+        stdout_marker=(
+            "sifr-python-interop:fastapi-pydantic:value=42:title=Sifr API:status=201:"
+            "frontend=served:dependency=applied:max-body=413"
+        ),
+        import_roots=(
+            "builtins",
+            "fastapi",
+            "httpcore2",
+            "httpx2",
+            "pathlib",
+            "pydantic",
+            "pydantic_core",
+            "starlette",
+            "tempfile",
+        ),
         native_roots=("pydantic_core",),
         bridge_files=("fastapi_pydantic_example.py",),
     ),

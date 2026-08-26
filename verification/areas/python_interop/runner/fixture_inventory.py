@@ -78,7 +78,7 @@ REQUIRED_FIXTURE_FILES = (
 REQUIRED_SOURCE_FIXTURES = (
     "declaration_sync/complete_call_shapes.sifr",
     "declaration_sync/pure_and_native.sifr",
-    "async_declaration/httpx_client.sifr",
+    "async_declaration/httpx2_client.sifr",
     "async_context/aiosqlite_session.sifr",
     "async_blocking/direct_python_call_rejected.sifr",
     "async_blocking/object_crossing_rejected.sifr",

@@ -4,7 +4,7 @@
   "positive": [
     "compiled async function, factory, borrowed method, and recursive record result",
     "two typed declarations report one application loop and thread identity",
-    "real httpx.AsyncClient request over an offline ASGI transport"
+    "real httpx2.AsyncClient request over an offline ASGI transport"
   ],
   "negative": [
     "sync/async declaration shape lowering matrix",
@@ -22,7 +22,7 @@
     "suppressed cancellation return and later exception outcome tests"
   ],
   "live": {
-    "source": "httpx_client.sifr",
+    "source": "httpx2_client.sifr",
     "bridge": "python_bridges/client.py",
     "network": "offline in-process ASGI transport",
     "stdout_marker": "sifr-python-interop:async-declaration:status=207:message=async-ready:close=1:loop=shared:failure=covered:conversion=covered"

@@ -1,7 +1,7 @@
 import asyncio
 import threading
 
-import httpx
+import httpx2
 from fastapi import FastAPI
 
 
@@ -15,10 +15,10 @@ async def _status():
     return {"status": 207, "message": "async-ready"}
 
 
-class Client(httpx.AsyncClient):
+class Client(httpx2.AsyncClient):
     def __init__(self):
         super().__init__(
-            transport=httpx.ASGITransport(app=_app),
+            transport=httpx2.ASGITransport(app=_app),
             base_url="http://sifr.invalid",
         )
 

@@ -11,7 +11,7 @@ gate = "tier1b"
 groups = ["imports", "async", "web"]
 
 [[packages]]
-name = "httpcore"
+name = "httpcore2"
 tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "async"]

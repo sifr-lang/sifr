@@ -2,11 +2,11 @@
   "schema_version": 1,
   "fixture": "async_http",
   "groups": ["async", "web", "imports"],
-  "packages": ["httpx", "httpcore", "aiohttp", "anyio", "h11", "sniffio"],
+  "packages": ["httpx2", "httpcore2", "aiohttp", "anyio", "h11", "sniffio"],
   "default_gate": "import_and_inprocess_smoke",
   "host_policy": "no external network; loopback-only clients in live gates",
   "cases": [
-    "httpx_client_runs_through_typed_coroutine_declarations_on_the_owned_loop",
+    "httpx2_client_runs_through_typed_coroutine_declarations_on_the_owned_loop",
     "aiohttp_client_session_imports_under_blocking_boundary",
     "raw_coroutine_objects_remain_explicitly_blocking_while_typed_coroutines_are_async"
   ]
