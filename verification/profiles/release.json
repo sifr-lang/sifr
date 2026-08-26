@@ -516,6 +516,7 @@
         "minor-train-features",
         "crypto-abi-features",
         "redis-service-features",
+        "numeric-dataframe-features",
         "readonly-check-doctor",
         "binding-authoring",
         "lsp-declaration-authoring",

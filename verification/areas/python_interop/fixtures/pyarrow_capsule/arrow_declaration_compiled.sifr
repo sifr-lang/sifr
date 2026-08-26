@@ -93,7 +93,7 @@ def main() -> Result[None, PythonError]:
         array_names: list[str] = array.capsule_names()
         pandas_names: list[str] = pandas_stream.capsule_names()
         polars_names: list[str] = polars_stream.capsule_names()
-        metadata_ok: bool = len(array_names) == 2 and array_names[0] == "arrow_schema" and array_names[1] == "arrow_array" and len(pandas_names) == 1 and pandas_names[0] == "arrow_array_stream" and len(polars_names) == 1 and polars_names[0] == "arrow_array_stream" and array.producer_module() == "pyarrow.lib" and pandas_stream.producer_module() == "pandas.core.frame" and polars_stream.producer_module() == "polars.series.series"
+        metadata_ok: bool = len(array_names) == 2 and array_names[0] == "arrow_schema" and array_names[1] == "arrow_array" and len(pandas_names) == 1 and pandas_names[0] == "arrow_array_stream" and len(polars_names) == 1 and polars_names[0] == "arrow_array_stream" and array.producer_module() == "pyarrow.lib" and pandas_stream.producer_module() == "pandas" and polars_stream.producer_module() == "polars.series.series"
         released_array: None = array.release()
         released_pandas: None = pandas_stream.release()
         released_polars: None = polars_stream.release()

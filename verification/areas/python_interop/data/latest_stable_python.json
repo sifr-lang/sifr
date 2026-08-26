@@ -6,11 +6,11 @@
   "projects": [
     {
       "name": "python-interop",
-      "packages": ["alembic", "boto3", "certifi", "cffi", "cryptography", "fakeredis", "fastapi", "hiredis", "httpx2", "polars", "redis", "schwifty", "sqlalchemy", "starlette", "testcontainers", "torch"]
+      "packages": ["alembic", "boto3", "certifi", "cffi", "cryptography", "fakeredis", "fastapi", "hiredis", "httpx2", "numpy", "pandas", "polars", "redis", "schwifty", "sqlalchemy", "starlette", "testcontainers", "torch"]
     },
     {
       "name": "dlpack-demo",
-      "packages": ["torch"]
+      "packages": ["numpy", "torch"]
     }
   ],
   "service_images": [
@@ -129,6 +129,28 @@
       "artifact": {
         "filename": "httpx2-2.12.0-py3-none-any.whl",
         "sha256": "cc8b6eecb8661c146b8f89a60e97456ee086e91a784ed31ac450c3a9e613dd36"
+      }
+    },
+    {
+      "name": "numpy",
+      "latest_stable": "2.5.2",
+      "released_at": "2026-08-09T13:46:07.045979Z",
+      "requires_python": ">=3.12",
+      "official_release": "https://pypi.org/project/numpy/2.5.2/",
+      "artifact": {
+        "filename": "numpy-2.5.2-cp314-cp314-macosx_11_0_arm64.whl",
+        "sha256": "24b9dc2e3d84aa58523798805194e23e736f3f6ce2d1a5b92583ae734e6dbda8"
+      }
+    },
+    {
+      "name": "pandas",
+      "latest_stable": "3.0.5",
+      "released_at": "2026-07-22T22:18:52.249314Z",
+      "requires_python": ">=3.11",
+      "official_release": "https://pypi.org/project/pandas/3.0.5/",
+      "artifact": {
+        "filename": "pandas-3.0.5-cp314-cp314-macosx_11_0_arm64.whl",
+        "sha256": "53730687fcd161883b24e10411c06d6a4c0f2275d2faf3bb2bc25deb4ba8007c"
       }
     },
     {

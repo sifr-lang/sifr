@@ -131,14 +131,16 @@ default; live suites must declare their own `network_mode` and resource classes.
   report output.
 - `env`: interpreter, venv, ABI, platform, lock/env freshness, and probe rejection fixture coverage.
 - `dependency-versions`: exact PyPI stable versions and audited artifact hashes
-  for the maintained Python lock owners. Five mutations cover a stale version,
-  a missing artifact, a missing declaration, retired HTTP client packages, and
-  a stale service image.
+  for the maintained Python lock owners. Six mutations cover stale versions in
+  both locks, a missing artifact, a missing declaration, retired HTTP client
+  packages, and a stale service image.
 - `minor-train-features`: direct runtime coverage for the new Schwifty 2026.7
   checksum-solving `BBAN.random` implementation.
 - `crypto-abi-features`: CFFI 2.1 source generation through `cffi.gen_src`.
 - `redis-service-features`: Redis 8.1 commands, Fakeredis RESP3 behavior,
   Hiredis RESP3 parsing, and Testcontainers 4.15 community APIs.
+- `numeric-dataframe-features`: NumPy 2.5 descending sorts and Pandas 3 string
+  dtype, copy-on-write, and column expressions.
 - `imports`: root imports and native extension load diagnostics.
 - `native`: trusted native Python package load/use smoke.
 - `async`: Python event-loop/client behavior under Sifr blocking semantics.
@@ -168,7 +170,9 @@ real Sifr programs for NumPy, pandas, and Polars. The Polars 1.44 path also
 uses strict `struct.drop` projection on the live sorted dataframe. These
 examples cover array or dataframe construction through hermetic package-local
 bridges. The checks include typed declaration results, resource diagnostics,
-library operations, and deterministic output markers. The examples are separate
+library operations, and deterministic output markers. The NumPy bridge uses a
+descending sort. The Pandas bridge uses the dedicated string dtype,
+copy-on-write, and a `pd.col` expression. The examples are separate
 from the dataframes matrix case. This separation distinguishes certification
 metadata from compiled Sifr execution evidence. Runner self-tests validate
 report aggregation and fixture drift. The `--dataframe-examples` option covers
