@@ -5,3 +5,4 @@ vendor/icu_properties/src/unicodeset_parse/parse.rs whitespace=-blank-at-eol,cr-
 vendor/icu_properties/tests/data/PropertyDiscriminants.txt whitespace=-blank-at-eol,cr-at-eol
 vendor/*/Cargo.lock whitespace=-blank-at-eof
 vendor/aws-lc-sys/** whitespace=-blank-at-eol,cr-at-eol
+vendor/itertools-0.14.0/.github/workflows/coverage.yml whitespace=-blank-at-eol,cr-at-eol

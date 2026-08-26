@@ -7304,6 +7304,7 @@ dependencies = [
 name = "sifr_stdlib_manifest"
 version = "0.0.0"
 dependencies = [
+ "itertools 0.15.0",
  "serde_json",
  "sifr_sysroot",
  "toml",
