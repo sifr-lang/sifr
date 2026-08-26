@@ -1,6 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-26. Items 0-20 are complete. Item 21 Itertools 0.15 is next.
+Status: active on 2026-08-26. Items 0-21 are complete. Item 22 Arrow 59 and
+DataFusion 55 is next.
 
 ## Objective
 
@@ -188,7 +189,7 @@ Only the first incomplete row may be active.
 | 18 | complete | Reqwest 0.13 | Canonical features/provider selection and HTTP client loopback behavior pass. |
 | 19 | complete | Rusqlite 0.40 | SQLite interop and exact catalog/fixture locks pass. |
 | 20 | complete | SQLx 0.9 | Runtime/TLS features and checked/offline query contracts pass. |
-| 21 | pending | Itertools 0.15 | Iterator compilation and parity pass before DataFusion consumes this line. |
+| 21 | complete | Itertools 0.15 | Iterator compilation and parity pass before DataFusion consumes this line. |
 | 22 | pending | Arrow 59 and DataFusion 55 | The coupled analytical stack, Rust/Python bridge fixtures, and locks pass. |
 | 23 | pending | Polars 0.55 | Rust dataframe fixtures and exact catalog evidence pass. |
 | 24 | pending | Rust Redis 1.6 and graph reconciliation | Redis passes and an official-registry check confirms every maintained Rust direct declaration is current. |
@@ -1712,6 +1713,83 @@ so it was recorded instead of starting a third review round.
 Next action: implement Item 21 Itertools 0.15 from this record merge on
 `origin/main`.
 
+### Item 21 record
+
+State: complete
+
+Implementation [PR #3531](https://github.com/sifr-lang/sifr/pull/3531) started
+from base `01456f392d51ff611890d543e870ed3837fe4fb6`. The final candidate was
+`946a9cfcce5767a09ff5d269f647d73f8e9b27e1`. It merged as
+`5f4f6e3068a62d6e7230e97a2e23469d39f13903`.
+
+The official registry audit confirmed Itertools 0.15.0 as the latest stable
+release. The archive matched checksum
+`8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc`.
+The release tag resolved to upstream commit
+`37bd72aa6d58e594711d127b52418ca5e58b6091`.
+
+The workspace now declares Itertools 0.15.0 without default features and with
+only `use_std`. The maintained Ruff fork already used this release. The old
+root 0.14 declaration had no direct caller, so the change did not keep an old
+first-party API or compatibility path.
+
+The certification test compiles the new `array_windows`,
+`array_combinations_with_replacement`, and `strip_prefix` APIs. It also checks
+the new `Position` structure and the canonical `AllEqualValueError` type. The
+test proves the exact first-party lock edge and the official vendor checksum.
+
+DataFusion 54 still owns a transitive Itertools 0.14 edge. Item 22 owns its
+removal as part of the coupled Arrow and DataFusion update. Bindgen owns an
+external Itertools 0.13 edge. Neither edge is a maintained direct declaration
+or a reason to add a fallback.
+
+Changed surfaces:
+
+- The root catalog, workspace lock, and stdlib manifest test dependency.
+- Exact Itertools version, feature, lock, API, and checksum certification.
+- The official Itertools 0.15 vendor tree and the versioned 0.14 tree that
+  remains for the DataFusion 54 graph.
+- Coverage classification and a narrow checksum-preserving whitespace rule for
+  one upstream workflow file.
+
+The stdlib manifest suite, formatter tests, and the broad non-pass Sifr test
+suite passed. Ten iterator E2E fixtures passed with signature
+`909ec704ebb3cab2`. Workspace Clippy, formatting, HIR maintainability,
+file-size, and diff checks passed. An extra all-targets Clippy probe found only
+pre-existing warnings in untouched test files; it was not an item-owned
+failure.
+
+The initial Opus review of exact SHA
+`946a9cfcce5767a09ff5d269f647d73f8e9b27e1` returned `SATISFIED`. It found no
+blocking finding. It independently confirmed both vendor trees, their
+checksums, the feature graph, and the absence of a dangling first-party
+consumer. The evidence is in the
+[#3531 exact-SHA review comment](https://github.com/sifr-lang/sifr/pull/3531#issuecomment-5418474451).
+No remediation review ran.
+
+The one create-PR gate completed every functional step through the
+runtime-platform area. That area passed all 28 variants with no failure. Its
+first cold-cache run took 217.291 seconds against the 120-second blocking
+budget. The gate exited 124 and was not rerun. The exact evidence is in the
+[#3531 create-PR gate comment](https://github.com/sifr-lang/sifr/pull/3531#issuecomment-5418670731).
+
+The one merge gate ran on the final SHA and exited 0. All functional steps
+passed. All 698 E2E fixtures passed with signature `127353b213e16688` across
+173 cold-cache groups. The gate took 6,840.87 seconds and reported advisory
+wall-time, cache-footprint, and fixture-group-skew observations. The exact
+one-shot result is in the
+[#3531 merge gate comment](https://github.com/sifr-lang/sifr/pull/3531#issuecomment-5419518706).
+Neither gate was rerun.
+
+Deferred follow-ups: Item 35 owns a possible loosening of the exact
+first-party edge-set assertion if a later maintained consumer legitimately
+uses Itertools. It also owns the external Bindgen 0.13 audit and the
+pre-existing all-targets Clippy warnings if they remain. These findings did not
+block the Item 21 mechanism.
+
+Next action: implement Item 22 Arrow 59 and DataFusion 55 from this record
+merge on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1750,14 +1828,14 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-20 are complete. Item 20 merged in PR #3529 as
-`e58082628f4439b50a972c5fcbcbe3838ca8ecfb`. The remediation review approved
-the implementation SHA. The final commit changed only coverage classification
-metadata, and the two-review limit prohibited a third review.
+Current state: Items 0-21 are complete. Item 21 merged in PR #3531 as
+`5f4f6e3068a62d6e7230e97a2e23469d39f13903`. The initial exact-SHA Opus review
+returned `SATISFIED`, and no remediation review ran.
 
-The create-PR gate stopped on the missing test-target classification and was
-not rerun. The one merge gate ran on the final SHA, exited 0, and passed all
-functional steps. All 698 E2E fixtures passed.
+The one create-PR gate stopped on a cold-cache runtime-platform timing budget
+after all 28 variants passed. It was not rerun. The one merge gate ran on the
+same final SHA, exited 0, and passed all functional steps. All 698 E2E fixtures
+passed.
 
-Next action: merge this record-only update. Then start Item 21 Itertools 0.15
-from the resulting `origin/main`.
+Next action: merge this record-only update. Then start Item 22 Arrow 59 and
+DataFusion 55 from the resulting `origin/main`.
