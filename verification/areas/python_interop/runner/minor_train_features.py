@@ -7,12 +7,15 @@ from schwifty import BBAN
 
 def main() -> int:
     random.seed(25)
-    generated = [BBAN.random("DE") for _ in range(16)]
+    country_codes = ("BE", "DE", "ES", "FR", "IT", "NL", "NO", "PL")
+    generated = [
+        BBAN.random(country_code) for country_code in country_codes for _ in range(4)
+    ]
     if not all(bban.validate_national_checksum() for bban in generated):
         raise RuntimeError(
             "Schwifty generated a BBAN with an invalid national checksum"
         )
-    print("python minor train features ok: schwifty-bban-checksums=16")
+    print("python minor train features ok: countries=8 schwifty-bban-checksums=32")
     return 0
 
 

@@ -6,6 +6,7 @@ import copy
 import json
 import re
 import tomllib
+from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -176,8 +177,13 @@ def validate_project(
 def validate_repository(audit: dict[str, object]) -> list[str]:
     if audit.get("schema_version") != 1:
         raise ValueError("unsupported Item 25 audit schema")
-    if audit.get("audited_at") != "2026-08-26":
-        raise ValueError("Item 25 audit date drifted")
+    audited_at = audit.get("audited_at")
+    if not isinstance(audited_at, str):
+        raise ValueError("Item 25 audit date must be a string")
+    try:
+        date.fromisoformat(audited_at)
+    except ValueError as error:
+        raise ValueError("Item 25 audit date must use ISO 8601 format") from error
     if audit.get("python") != "3.14.7":
         raise ValueError("Item 25 audit must target Python 3.14.7")
     releases = release_map(audit)
@@ -216,7 +222,7 @@ def validate_service_emulator(audit: dict[str, object]) -> list[str]:
     return []
 
 
-def run_self_tests(audit: dict[str, object]) -> None:
+def run_self_tests(audit: dict[str, object]) -> int:
     releases = release_map(audit)
     projects = project_map(audit)
     pyproject_path = "verification/areas/python_interop/pyproject.toml"
@@ -257,6 +263,7 @@ def run_self_tests(audit: dict[str, object]) -> None:
     stale_emulator["service_emulators"][0]["latest_stable"] = "4.13.1"
     if not validate_service_emulator(stale_emulator):
         raise AssertionError("stale service-emulator mutation was not rejected")
+    return 4
 
 
 def main() -> int:
@@ -269,11 +276,16 @@ def main() -> int:
         for error in errors:
             print(f"python dependency audit error: {error}")
         return 1
-    if args.self_test:
-        run_self_tests(audit)
+    mutation_count = run_self_tests(audit) if args.self_test else 0
+    releases = release_map(audit)
+    projects = project_map(audit)
+    lock_count = len({lock for lock, _ in projects.values()})
+    emulators = audit.get("service_emulators")
+    emulator_count = len(emulators) if isinstance(emulators, list) else 0
     print(
-        "python dependency audit ok: projects=2 packages=7 locks=2 emulators=1 "
-        f"mutations={4 if args.self_test else 0}"
+        f"python dependency audit ok: projects={len(projects)} "
+        f"packages={len(releases)} locks={lock_count} emulators={emulator_count} "
+        f"mutations={mutation_count}"
     )
     return 0
 

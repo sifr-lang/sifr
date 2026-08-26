@@ -129,8 +129,8 @@ default; live suites must declare their own `network_mode` and resource classes.
   report output.
 - `env`: interpreter, venv, ABI, platform, lock/env freshness, and probe rejection fixture coverage.
 - `dependency-versions`: exact PyPI stable versions and audited artifact hashes
-  for the two Item 25 lock owners, plus stale-version, missing-artifact, and
-  missing-declaration mutation checks.
+  for the two Item 25 lock owners. Four mutations cover a stale version, a
+  missing artifact, a missing declaration, and a stale service emulator.
 - `minor-train-features`: direct runtime coverage for the new Schwifty 2026.7
   checksum-solving `BBAN.random` implementation.
 - `imports`: root imports and native extension load diagnostics.
