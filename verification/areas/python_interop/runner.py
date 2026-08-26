@@ -44,6 +44,7 @@ COMMAND_ARGS: dict[str, list[str]] = {
     ],
     "python-interop-dependency-versions": ["--self-test"],
     "python-interop-minor-train-features": [],
+    "python-interop-crypto-abi-features": [],
     "python-interop-readonly-check-doctor": [],
     "python-interop-binding-authoring": [],
     "python-interop-lsp-declaration-authoring": [],
@@ -153,6 +154,7 @@ COMMAND_ARGS: dict[str, list[str]] = {
 
 AREA_PROJECT_COMMANDS = {
     "python-interop-minor-train-features",
+    "python-interop-crypto-abi-features",
     "python-interop-callback-examples",
     "python-interop-dataframe-examples",
     "python-interop-buffer-examples",

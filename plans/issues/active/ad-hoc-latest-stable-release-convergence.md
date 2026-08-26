@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
 Status: active on 2026-08-26. Items 0-25 are complete. Item 26 CFFI 2 and
-Cryptography 50 is next.
+Cryptography 50 is active.
 
 ## Objective
 
@@ -128,7 +128,7 @@ certification fixtures, and regenerated `vendor/` content. A broad unconstrained
 | --- | --- | --- |
 | Minor train | `alembic 1.18.4`, `boto3 1.43.33`, `certifi 2026.6.17`, `polars 1.41.2`, `schwifty 2026.3.0`, `sqlalchemy 2.0.51`, `torch 2.12.1` | `1.19.1`, `1.43.80`, `2026.7.22`, `1.44.1`, `2026.7.3`, `2.0.52`, `2.13.0` |
 | Boto3 service emulator | `localstack/localstack:2.0.1` | `localstack/localstack:4.14.0` at manifest digest `sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a` |
-| Crypto ABI | `cffi 1.17.1`, `cryptography 46.0.0` | `cffi 2.1.1`, then `cryptography 50.0.0` |
+| Crypto ABI | `cffi 1.17.1`, `cryptography 45.0.7` | `cffi 2.1.1`, then `cryptography 50.0.1` |
 | Web framework | `fastapi 0.138.0`, `starlette 0.52.1` | `fastapi 0.141.1`, then `starlette 1.6.0` |
 | Redis services | `redis 6.4.0`, `fakeredis 2.36.2`, `hiredis 3.4.0`, `testcontainers 4.13.3` | `8.1.0`, `2.37.1`, `3.4.1`, `4.15.0` |
 | Numeric/dataframe | `numpy 2.4.6/2.5.1`, `pandas 2.3.3` | NumPy 2.5.2 and Pandas 3.0.5 on Python 3.14 |

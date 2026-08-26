@@ -129,10 +129,11 @@ default; live suites must declare their own `network_mode` and resource classes.
   report output.
 - `env`: interpreter, venv, ABI, platform, lock/env freshness, and probe rejection fixture coverage.
 - `dependency-versions`: exact PyPI stable versions and audited artifact hashes
-  for the two Item 25 lock owners. Four mutations cover a stale version, a
-  missing artifact, a missing declaration, and a stale service emulator.
+  for the maintained Python lock owners. Four mutations cover a stale version,
+  a missing artifact, a missing declaration, and a stale service emulator.
 - `minor-train-features`: direct runtime coverage for the new Schwifty 2026.7
   checksum-solving `BBAN.random` implementation.
+- `crypto-abi-features`: CFFI 2.1 source generation through `cffi.gen_src`.
 - `imports`: root imports and native extension load diagnostics.
 - `native`: trusted native Python package load/use smoke.
 - `async`: Python event-loop/client behavior under Sifr blocking semantics.
@@ -217,7 +218,8 @@ and verifies that ordinary object/leak diagnostics return to their baseline:
 - FastAPI app construction, Pydantic validation through pydantic-core, and
   Starlette JSON response rendering.
 - cryptography Fernet encrypt/decrypt, CFFI parser setup, and certifi CA bundle
-  loading into an SSL trust store.
+  loading into an SSL trust store. The Cryptography 50 path also verifies a
+  server certificate and rejects the same certificate for the wrong hostname.
 - boto3 SQS client calls through botocore Stubber with no AWS credentials or
   network access.
 - redis client import, fakeredis in-process round trip, and hiredis RESP

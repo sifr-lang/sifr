@@ -77,6 +77,19 @@
       ]
     },
     {
+      "name": "crypto-abi-features",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "crypto-abi-features",
+          "entry": "verification/areas/python_interop/runner/crypto_abi_features.py",
+          "command": "python-interop-crypto-abi-features",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "readonly-check-doctor",
       "kind": "adapter",
       "cases": [
