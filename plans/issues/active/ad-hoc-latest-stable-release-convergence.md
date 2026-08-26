@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-26. Items 0-27 are complete. Item 28 Python Redis
-services is next.
+Status: active on 2026-08-26. Items 0-28 are complete. Item 29 NumPy and Pandas
+is next.
 
 ## Objective
 
@@ -197,7 +197,7 @@ Only the first incomplete row may be active.
 | 25 | complete | Python minor train | Listed non-coupled Python releases advance sequentially and both environment lanes resolve. |
 | 26 | complete | CFFI 2 and Cryptography 50 | CFFI advances first; cryptography then advances; ABI, certificate, and error paths pass. |
 | 27 | complete | FastAPI and Starlette | FastAPI advances first; Starlette then advances; web bridge fixtures pass. |
-| 28 | pending | Python Redis services | Redis advances before its fake/client/container companions; compiled live-service certification passes or records only the pre-approved structured Docker skip. |
+| 28 | complete | Python Redis services | Redis advances before its fake/client/container companions; compiled live-service certification passes or records only the pre-approved structured Docker skip. |
 | 29 | pending | NumPy and Pandas | Marker-split NumPy remains current for both Python floors and Pandas 3 behavior passes. |
 | 30 | pending | PyArrow 25 | Both Python lanes and affine Arrow transfer/certification pass. |
 | 31 | pending | Kafka Python 3 | Kafka bridge and compiled service-client evidence pass. |
@@ -2196,6 +2196,78 @@ HTTPX mentions, including the tier-two `pytest-httpx` package.
 Next action: implement Item 28 Python Redis services from this record merge on
 `origin/main`.
 
+### Item 28 record
+
+State: complete
+
+Implementation [PR #3545](https://github.com/sifr-lang/sifr/pull/3545) started
+from base `eaa3b18320e86a41d432c1dc8f390818f0b96e63`. Its exact approved candidate
+was `5f368cb97c2dfca80a1ef544c806408e90548466`. It merged as
+`96bda0982f1b53595d1f7da1aeb3ed643a6129bf`.
+
+Official sources confirmed Redis 8.1.0, Fakeredis 2.37.1, Hiredis 3.4.1, and
+Testcontainers 4.15.0 as the latest stable releases. The official Redis server
+release was 8.10.1. Its Alpine OCI index digest is
+`sha256:becdda6c7f4b3fb42e42fd7f120bbf5c54c4caaaf16f26da24e4563d2c1f0576`.
+
+Redis advanced first from 6.4.0 to 8.1.0. All three companion packages stayed
+fixed. The Redis 8.1 command-surface probe and compiled library suite passed.
+
+Fakeredis then advanced from 2.36.2 to 2.37.1. The corrected RESP3 `ZPOPMIN`
+shape and final-key cleanup passed. The compiled library suite also passed.
+
+Hiredis then advanced from 3.4.0 to 3.4.1. The release contains bundled-parser
+security fixes. RESP3 map parsing and the compiled library suite passed.
+
+Testcontainers advanced last from 4.13.3 to 4.15.0. The item removed all old
+service import paths. The runner now uses community imports and structured wait
+strategies. No compatibility path, legacy import, or fallback remains.
+
+The live Redis bridge now executes Redis 8 `SDIFFCARD` and `SUNIONCARD` against
+the digest-pinned Redis 8.10.1 service. The offline feature suite covers the
+four exact package versions without contacting Docker.
+
+The stable audit now owns 16 Python packages and two service images. It checks
+two lock owners, selected PyPI artifact hashes, exact image digests, and five
+negative mutations. The new Redis feature suite runs in all four offline
+delivery profiles.
+
+Focused validation passed for every sequential state. The final lock, audit,
+environment, package, tier-one, feature, policy, and compiled library checks
+passed. The real Docker suite built and executed all six native binaries. It
+reported zero skips and zero failures with deprecations treated as errors.
+
+Runner self-tests, profile schema checks, Ruff, JSON, HIR, coverage, taxonomy,
+file-size, and diff checks passed. Official PyPI hashes and the Redis image
+digest matched the recorded values.
+
+The first exact-SHA Opus review found one blocking mechanism. The offline
+feature suite constructed a Docker client and therefore depended on the host.
+The remediation changed it to inspect stable class APIs without construction.
+The suite then passed with an intentionally unreachable Docker socket.
+
+The permitted remediation review returned `SATISFIED`. It reproduced the old
+failure, verified the fix, and found no new mechanism defect. The evidence is
+in the
+[#3545 first review](https://github.com/sifr-lang/sifr/pull/3545#issuecomment-5428693676)
+and
+[#3545 remediation review](https://github.com/sifr-lang/sifr/pull/3545#issuecomment-5428734463)
+comments. No third review ran.
+
+No compiler input changed. The phase rules therefore prohibited the Sifr
+create-PR and merge gates.
+
+Deferred follow-up: Item 35 will derive feature-suite versions from the stable
+audit. It will audit the floating Postgres and Redpanda service images. It will
+also scan every runner module for legacy Testcontainers APIs and add mutation
+coverage for every forbidden import and wait helper. The final audit will
+separate Redis release identity from its Alpine image variant. It will review
+the runner bootstrap `E402` suppressions and derive Redis `numkeys` from the key
+list.
+
+Next action: implement Item 29 NumPy and Pandas from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -2234,13 +2306,13 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-27 are complete. Item 27 merged in PR #3543 as
-`16dbb1b3d4656618d2a90abfc7c3ba949f9fdf13`. Its remediation Opus review
+Current state: Items 0-28 are complete. Item 28 merged in PR #3545 as
+`96bda0982f1b53595d1f7da1aeb3ed643a6129bf`. Its remediation Opus review
 returned `SATISFIED` with no blocker.
 
-FastAPI 0.141.1, Starlette 1.6.0, HTTPX2 2.12.0, and HTTPcore2 2.12.0 are
-installed. All focused framework and client checks pass. The one merge gate
-passed on the exact approved SHA. The cold create-PR timing failure is recorded.
+Redis 8.1.0, Fakeredis 2.37.1, Hiredis 3.4.1, and Testcontainers 4.15.0 are
+installed. All focused and live service checks pass. No compiler input changed,
+so no Sifr gate ran.
 
-Next action: merge this record-only update. Then start Item 28 Python Redis
-services from the resulting `origin/main`.
+Next action: merge this record-only update. Then start Item 29 NumPy and Pandas
+from the resulting `origin/main`.
