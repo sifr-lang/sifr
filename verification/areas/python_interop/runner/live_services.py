@@ -48,7 +48,7 @@ def _timed_case(
 
 
 def _run_redis(binary: BuiltLiveBinary) -> dict[str, Any]:
-    from testcontainers.redis import RedisContainer
+    from testcontainers.community.redis import RedisContainer
 
     with RedisContainer(LIVE_IMAGES["redis"]) as container:
         endpoint = (
@@ -59,7 +59,7 @@ def _run_redis(binary: BuiltLiveBinary) -> dict[str, Any]:
 
 
 def _run_postgres(binary: BuiltLiveBinary) -> dict[str, Any]:
-    from testcontainers.postgres import PostgresContainer
+    from testcontainers.community.postgres import PostgresContainer
 
     with PostgresContainer(LIVE_IMAGES["postgres"], driver=None) as container:
         return execute_live_binary(
@@ -69,7 +69,7 @@ def _run_postgres(binary: BuiltLiveBinary) -> dict[str, Any]:
 
 
 def _run_kafka(binary: BuiltLiveBinary) -> dict[str, Any]:
-    from testcontainers.kafka import RedpandaContainer
+    from testcontainers.community.kafka import RedpandaContainer
 
     with RedpandaContainer(LIVE_IMAGES["kafka"]) as container:
         return execute_live_binary(
@@ -82,14 +82,29 @@ def _run_localstack(
     binary: BuiltLiveBinary,
     services: tuple[str, ...],
 ) -> dict[str, Any]:
-    from testcontainers.localstack import LocalStackContainer
+    from testcontainers.core.container import DockerContainer
+    from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 
-    container = LocalStackContainer(
-        image=LIVE_IMAGES["localstack"],
-        region_name="us-east-1",
-    ).with_services(*services)
+    edge_port = 4566
+    container = (
+        DockerContainer(LIVE_IMAGES["localstack"])
+        .with_exposed_ports(edge_port)
+        .with_envs(
+            AWS_DEFAULT_REGION="us-east-1",
+            AWS_ACCESS_KEY_ID="testcontainers-localstack",
+            AWS_SECRET_ACCESS_KEY="testcontainers-localstack",
+            SERVICES=",".join(services),
+        )
+        .waiting_for(
+            LogMessageWaitStrategy(r"Ready\.\n").with_startup_timeout(60)
+        )
+    )
     with container:
-        return execute_live_binary(binary, _live_environment(container.get_url()))
+        endpoint = (
+            f"http://{container.get_container_host_ip()}:"
+            f"{container.get_exposed_port(edge_port)}"
+        )
+        return execute_live_binary(binary, _live_environment(endpoint))
 
 
 def _live_environment(endpoint: str) -> dict[str, str]:
