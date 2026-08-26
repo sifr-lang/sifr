@@ -308,9 +308,9 @@ mod tests {
     fn certified_distribution_versions_fail_closed_on_drift_and_probe_failure() {
         let expected = [ArrowCertifiedDistribution {
             name: "pyarrow".to_string(),
-            version: "22.0.0".to_string(),
+            version: "25.0.1".to_string(),
         }];
-        validate_distribution_versions(&expected, |_| Ok("22.0.0".to_string()))
+        validate_distribution_versions(&expected, |_| Ok("25.0.1".to_string()))
             .expect("matching installed version should pass");
         assert!(
             validate_distribution_versions(&expected, |_| Ok("23.0.0".to_string()))

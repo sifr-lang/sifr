@@ -17,7 +17,10 @@ LIBRARY_EXAMPLE_CASES = {
     "pyarrow": ExampleCase(
         case_id="pyarrow",
         relative_source="pyarrow_capsule/pyarrow_full_example.sifr",
-        stdout_marker="sifr-python-interop:pyarrow:sum=10:kind=array:producer=pyarrow.lib",
+        stdout_marker=(
+            "sifr-python-interop:pyarrow:sum=10:hypot=5:table-tensor=2x2:"
+            "kind=array:producer=pyarrow.lib"
+        ),
         import_roots=("pyarrow",),
         native_roots=("pyarrow",),
         bridge_files=("pyarrow_example.py",),

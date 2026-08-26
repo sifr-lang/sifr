@@ -32,6 +32,7 @@ EXPECTED_PROJECTS = {
             "numpy",
             "pandas",
             "polars",
+            "pyarrow",
             "redis",
             "schwifty",
             "sqlalchemy",
@@ -324,6 +325,15 @@ def run_self_tests(audit: dict[str, object]) -> int:
     ):
         raise AssertionError("stale secondary lock mutation was not rejected")
 
+    stale_pyarrow = copy.deepcopy(lock)
+    next(
+        package
+        for package in stale_pyarrow["package"]
+        if isinstance(package, dict) and package.get("name") == "pyarrow"
+    )["version"] = "25.0.0"
+    if not validate_project(project_name, expected, releases, project, stale_pyarrow):
+        raise AssertionError("stale PyArrow mutation was not rejected")
+
     missing_artifact = copy.deepcopy(lock)
     next(
         package
@@ -355,7 +365,7 @@ def run_self_tests(audit: dict[str, object]) -> int:
     stale_image["service_images"][0]["latest_stable"] = "4.13.1"
     if not validate_service_images(stale_image):
         raise AssertionError("stale service-image mutation was not rejected")
-    return 6
+    return 7
 
 
 def main() -> int:
