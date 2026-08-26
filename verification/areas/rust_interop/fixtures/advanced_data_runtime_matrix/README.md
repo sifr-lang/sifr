@@ -3,7 +3,8 @@
 This runtime-observed fixture certifies generated package exchange through the
 exact root-lock versions of Arrow, DataFusion, Polars, ndarray, and CPU-only
 Candle. The positive direction observes Arrow/DataFusion/Polars schema
-identity, ndarray and Candle dtype/rank/shape/layout/stride/device identity,
+identity, DataFusion 55 NaN-fill planning through its borrowed API, ndarray and
+Candle dtype/rank/shape/layout/stride/device identity,
 allocation-preserving owned inputs, one-shot DLPack-style transfer, and
 deterministic cleanup before and after consuming close. The Polars dataframe
 is derived from the crossed Arrow values through an explicit copy; no
@@ -17,4 +18,5 @@ The existing `arrow_record_batch`, `tensor_dlpack_bridge`, and
 runtime evidence. The generated scenario's shared bridges use only safe Rust
 and its manifest grants only the seven-entry native-link envelope covering the
 locked default-feature graph on the supported arm64 and x86_64 validation
-hosts.
+hosts. DataFusion catalog errors remain typed failures; the bridge does not
+convert them to a missing-table value.

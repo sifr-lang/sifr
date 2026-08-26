@@ -23,6 +23,8 @@ ADVANCED_DATA_SCENARIO_TOKENS = (
     "let polars_values = array.values().to_vec();",
     "MemTable::try_new",
     '.register_table("input"',
+    'fill_nan(&ScalarValue::from(0.0), &["value"])',
+    'map_err(display_error)?',
     "DataFrame::new",
     "Array2::from_shape_vec",
     "Tensor::from_vec",
@@ -90,7 +92,7 @@ def validate_advanced_data_scenario(
         raw_path,
         workspace_dependencies,
         "arrow",
-        {"version": "=58.3.0", "default-features": True},
+        {"version": "=59.2.0", "default-features": True},
     )
     _require_dependency_entry(
         failures,
@@ -98,7 +100,7 @@ def validate_advanced_data_scenario(
         raw_path,
         workspace_dependencies,
         "datafusion",
-        {"version": "=54.1.0", "default-features": True},
+        {"version": "=55.0.0", "default-features": True},
     )
     _require_dependency_entry(
         failures,
@@ -218,8 +220,8 @@ def run_advanced_data_self_test(
             (
                 "Arrow pin drift",
                 "examples/advanced_data_runtime/Cargo.toml",
-                'arrow = { version = "=58.3.0", default-features = true }',
-                'arrow = { version = "58.3.0", default-features = true }',
+                'arrow = { version = "=59.2.0", default-features = true }',
+                'arrow = { version = "59.2.0", default-features = true }',
                 "workspace dependency arrow",
             ),
             (
@@ -249,6 +251,14 @@ def run_advanced_data_self_test(
                 '.register_table("input"',
                 '.deregister_table("input"',
                 "missing scenario token '.register_table(\"input\"'",
+            ),
+            (
+                "DataFusion 55 NaN-fill planning drift",
+                "examples/advanced_data_runtime/rust/sifr_arrow_bridge/src/record_batch.rs",
+                'fill_nan(&ScalarValue::from(0.0), &["value"])',
+                'fill_null(&ScalarValue::from(0.0), &["value"])',
+                "missing scenario token 'fill_nan(&ScalarValue::from(0.0), "
+                '&["value"])\'',
             ),
             (
                 "Polars crossed-data derivation drift",
