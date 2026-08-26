@@ -192,7 +192,7 @@ Only the first incomplete row may be active.
 | 21 | complete | Itertools 0.15 | Iterator compilation and parity pass before DataFusion consumes this line. |
 | 22 | complete | Arrow 59 and DataFusion 55 | The coupled analytical stack, Rust/Python bridge fixtures, and locks pass. |
 | 23 | complete | Polars 0.55 | Rust dataframe fixtures and exact catalog evidence pass. |
-| 24 | pending | Rust Redis 1.6 and graph reconciliation | Redis passes and an official-registry check confirms every maintained Rust direct declaration is current. |
+| 24 | complete | Rust Redis 1.6 and graph reconciliation | Redis passes and an official-registry check confirms every maintained Rust direct declaration is current. |
 | 25 | pending | Python minor train | Listed non-coupled Python releases advance sequentially and both environment lanes resolve. |
 | 26 | pending | CFFI 2 and Cryptography 50 | CFFI advances first; cryptography then advances; ABI, certificate, and error paths pass. |
 | 27 | pending | FastAPI and Starlette | FastAPI advances first; Starlette then advances; web bridge fixtures pass. |
@@ -1933,6 +1933,79 @@ it improves mechanism-level evidence.
 Next action: implement Item 24 Rust Redis 1.6 and graph reconciliation from
 this record merge on `origin/main`.
 
+### Item 24 record
+
+State: complete
+
+Implementation [PR #3537](https://github.com/sifr-lang/sifr/pull/3537) started
+from base `953df53fb312a47383978b9957584b7aa0f3b4c6`. The final candidate was
+`814bf2559c0ca44e611984d07fd9ddefbf170079`. It merged as
+`9e12539abe98a7fecd6f043bcf1e81b860fc68d9`.
+
+The official crates.io audit confirmed Redis 1.6.0 as the latest stable
+release, published on 2026-08-15 with checksum
+`e37a4ca5c6ca42aa3e6df2fd32b987a65d32a4c2159a6f3fe0fd1df306a2658f`.
+The upstream `redis-1.6.0` release tag resolved to commit
+`20f68ee5a0e50a45c403ddb0d93dbe2838dd3aba`. A final live crates.io pass
+checked all 109 maintained direct registry packages across 168 declarations
+in 113 manifests and found zero stale packages.
+
+All three maintained Redis declarations and locks now select Redis 1.6.0.
+The canonical feature policy enables `connection-manager` and `tokio-comp`.
+The opaque-resource bridge adopts Redis 1.6's `ConnectionManager`, bounds
+reconnects to two attempts, retains connection and response timeouts, and
+observes that bound in generated-runtime output. The separate malformed-RESP
+probe continues to use a direct multiplexed connection because retries would
+weaken that negative protocol test; it is not a fallback for the primary
+connection path. Fixture metadata, locks, scenario mutations, matrix policy,
+generated-runtime assertions, coverage classifications, architecture, and
+public documentation were reconciled together. No legacy or compatibility
+path was added.
+
+The item also added a checked-in official-registry audit snapshot and exact-set
+tests for the maintained Cargo manifest inventory, direct declaration count,
+latest-stable requirements, and registry checksums. Focused dependency tests,
+the complete stdlib-manifest suite, exact-test Clippy, both standalone Redis
+fixture checks and Clippy, the complete 10-variant Rust-interop area, all 40
+matrix fixtures and 243 mutation/self-test cases, four ignored generated
+Redis runtime tests, the broad non-pass Sifr suite, workspace Clippy,
+formatting, HIR maintainability, the 3,258-file size guard, JSON, offline-lock,
+coverage-matrix, and diff checks passed.
+
+The first exact-SHA Opus review found two in-scope omissions: the new test
+targets lacked coverage-matrix classifications, and two canonical feature
+policy lines still named the old Redis feature set. The remediation added both
+classifications and updated both policy lines. The single remediation review
+returned `SATISFIED`, confirmed both blockers fixed, and found no new mechanism
+defect. The review evidence is in the
+[#3537 first review](https://github.com/sifr-lang/sifr/pull/3537#issuecomment-5423317420)
+and
+[#3537 remediation review](https://github.com/sifr-lang/sifr/pull/3537#issuecomment-5423384023)
+comments. No third review ran.
+
+The one create-PR gate passed every executed functional step. Python interop
+passed all 19 variants, runtime platform passed all 28 variants with one
+declared skip, and Rust interop and diagnostics passed. The runtime-platform
+area took 212.313 seconds against its 120-second cold-cache budget, primarily
+because `binary_file_io_capability.sifr` took 166.065 seconds. The gate exited
+124 after 1,100 seconds and was not rerun. The exact evidence is in the
+[#3537 create-PR gate comment](https://github.com/sifr-lang/sifr/pull/3537#issuecomment-5423609456).
+
+The one merge gate ran on the same approved candidate and exited 0. Every
+blocking area passed. The generated-build driver batch passed 76 tests,
+including the Redis callback and opaque-resource lifecycle paths. All 698 E2E
+fixtures passed across 173 groups with signature `127353b213e16688`. The lane
+took 6,936.72 seconds, used 2.3 GiB peak RSS with zero swaps, and reported only
+advisory warm-wall-time and group-skew observations. Its exact evidence is in
+the
+[#3537 merge gate comment](https://github.com/sifr-lang/sifr/pull/3537#issuecomment-5424851098).
+Neither gate was rerun.
+
+Deferred follow-up: none. The remediation review found no new mechanism defect.
+
+Next action: implement Item 25 Python minor train from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1971,14 +2044,15 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-23 are complete. Item 23 merged in PR #3535 as
-`02a2429ae30fd2c48baa4165e32a1fb13e88ecae`. Its one exact-SHA Opus review
-returned `SATISFIED`, and no remediation review ran.
+Current state: Items 0-24 are complete. Item 24 merged in PR #3537 as
+`9e12539abe98a7fecd6f043bcf1e81b860fc68d9`. Its remediation Opus review
+returned `SATISFIED` after the two first-review omissions were fixed, and no
+new mechanism defect was found.
 
-The one create-PR gate stopped on a clean-cache runtime-platform timing budget
-after all 28 variants passed. It was not rerun. The one merge gate ran on the
-same final SHA, exited 0, and passed all functional steps. All 698 E2E fixtures
-passed with signature `127353b213e16688`.
+The one create-PR gate stopped on a cold-cache runtime-platform timing budget
+after every executed functional case passed. It was not rerun. The one merge
+gate ran on the same final SHA, exited 0, and passed all functional steps. All
+698 E2E fixtures passed with signature `127353b213e16688`.
 
-Next action: merge this record-only update. Then start Item 24 Rust Redis 1.6
-and graph reconciliation from the resulting `origin/main`.
+Next action: merge this record-only update. Then start Item 25 Python minor
+train from the resulting `origin/main`.
