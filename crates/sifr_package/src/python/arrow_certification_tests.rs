@@ -141,7 +141,7 @@ fn artifact(fixture: &Path) -> PythonCertificationArtifact {
             producer_type: "Int64Array".to_string(),
             distributions: vec![ArrowCertifiedDistribution {
                 name: "pyarrow".to_string(),
-                version: "22.0.0".to_string(),
+                version: "25.0.1".to_string(),
             }],
             schema_mode: ArrowCertifiedSchemaMode::Omitted,
             identity_method: ArrowCertifiedIdentityMethod::BufferAddress,

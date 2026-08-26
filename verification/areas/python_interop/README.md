@@ -223,7 +223,8 @@ object graphs stay in hermetic bridges; compiled Sifr calls typed declarations
 and verifies that ordinary object/leak diagnostics return to their baseline:
 
 - biip GTIN parsing and schwifty BIC validation.
-- pyarrow array compute plus Arrow PyCapsule metadata/release.
+- PyArrow 25 array compute, the `hypot` kernel, table-to-tensor conversion,
+  and Arrow PyCapsule metadata/release.
 - FastAPI frontend serving with dependency headers and background tasks.
   The same bridge validates Pydantic conversion, Starlette 1.6 body limits,
   and Starlette response rendering through HTTPX2.

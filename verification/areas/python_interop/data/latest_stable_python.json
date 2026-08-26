@@ -6,7 +6,7 @@
   "projects": [
     {
       "name": "python-interop",
-      "packages": ["alembic", "boto3", "certifi", "cffi", "cryptography", "fakeredis", "fastapi", "hiredis", "httpx2", "numpy", "pandas", "polars", "redis", "schwifty", "sqlalchemy", "starlette", "testcontainers", "torch"]
+      "packages": ["alembic", "boto3", "certifi", "cffi", "cryptography", "fakeredis", "fastapi", "hiredis", "httpx2", "numpy", "pandas", "polars", "pyarrow", "redis", "schwifty", "sqlalchemy", "starlette", "testcontainers", "torch"]
     },
     {
       "name": "dlpack-demo",
@@ -162,6 +162,17 @@
       "artifact": {
         "filename": "polars-1.44.1-py3-none-any.whl",
         "sha256": "1fa62fc1c88fba77a68b28291b5aabdd69e5f38b34e59721a064ae3169b59bb5"
+      }
+    },
+    {
+      "name": "pyarrow",
+      "latest_stable": "25.0.1",
+      "released_at": "2026-08-10T12:39:32.366162Z",
+      "requires_python": ">=3.10",
+      "official_release": "https://pypi.org/project/pyarrow/25.0.1/",
+      "artifact": {
+        "filename": "pyarrow-25.0.1-cp314-cp314-macosx_12_0_arm64.whl",
+        "sha256": "bf0b672390cdcb640d7288f96b826d71ff4e9abb254a86c89890baf51a29cee6"
       }
     },
     {

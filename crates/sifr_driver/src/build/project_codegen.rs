@@ -340,7 +340,7 @@ mod tests {
             producer_type: producer_type.to_string(),
             distributions: vec![sifr_package::ArrowCertifiedDistribution {
                 name: "pyarrow".to_string(),
-                version: "22.0.0".to_string(),
+                version: "25.0.1".to_string(),
             }],
             schema_mode: sifr_package::ArrowCertifiedSchemaMode::Omitted,
             identity_method: sifr_package::ArrowCertifiedIdentityMethod::BufferAddress,
