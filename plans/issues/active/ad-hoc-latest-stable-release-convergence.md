@@ -1,6 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-26. Items 0-29 are complete. Item 30 PyArrow is next.
+Status: active on 2026-08-27. Items 0-30 are complete. Item 31 Kafka Python is
+next.
 
 ## Objective
 
@@ -198,7 +199,7 @@ Only the first incomplete row may be active.
 | 27 | complete | FastAPI and Starlette | FastAPI advances first; Starlette then advances; web bridge fixtures pass. |
 | 28 | complete | Python Redis services | Redis advances before its fake/client/container companions; compiled live-service certification passes or records only the pre-approved structured Docker skip. |
 | 29 | complete | NumPy and Pandas | NumPy 2.5.2 and Pandas 3.0.5 are exact, and their new stable APIs and breaking behavior pass. |
-| 30 | pending | PyArrow 25 | Both Python lanes and affine Arrow transfer/certification pass. |
+| 30 | complete | PyArrow 25 | The maintained Python 3.14 lane and affine Arrow transfer/certification pass. |
 | 31 | pending | Kafka Python 3 | Kafka bridge and compiled service-client evidence pass. |
 | 32 | pending | Packaging and Hatchling | Packaging is current, Hatchling is explicitly pinned, and builds/locks are reproducible. |
 | 33 | pending | VS Code extension toolchain | Node types, VS Code types/engine, TypeScript, package locks, VSIX qualification, and the three-repository pointer chain merge in order. |
@@ -2336,6 +2337,76 @@ machine-checked minimum-Python assertion to the stable audit.
 
 Next action: implement Item 30 PyArrow from this record merge on `origin/main`.
 
+### Item 30 record
+
+State: complete
+
+Implementation [PR #3549](https://github.com/sifr-lang/sifr/pull/3549) started
+from base `b4c5678ebdc5104355f8792e9fc2a95038fd4625`. Its exact approved candidate
+was `57ee3fa7b7d05f08016d1c5dfbad5e4896be3303`. It merged as
+`aa2e528e3e814e266a57ece4d1cc760f2d47ab40`.
+
+The official Apache Arrow release index confirmed PyArrow 25.0.1 as the latest
+stable release. It was released on 2026-08-10. The selected Python 3.14 macOS
+ARM64 wheel hash is
+`bf0b672390cdcb640d7288f96b826d71ff4e9abb254a86c89890baf51a29cee6`.
+
+PyArrow advanced from 22.0.0 to 25.0.1. Before feature changes, the unchanged
+affine Arrow suite and all 13 Arrow runtime tests passed with 25.0.1. The item
+then adopted `pyarrow.compute.hypot` and `Table.to_tensor`. The canonical
+compiled library example verifies their results and reports the exact PyArrow
+version. The live capsule probes also confirmed that `pyarrow.lib` remains the
+producer module and that the Arrow capsule names did not change.
+
+The stable-release audit now owns 19 Python packages, two lock owners, two
+service images, and seven negative mutations. It checks the exact PyArrow
+version, both lock owners, the selected PyPI hash, and rejection of a stale
+PyArrow 25.0.0 lock.
+
+The final affected Python matrix passed 10 variants with no failures. It
+covered runner self-tests, environment checks, the stable audit, Tier 1,
+dataframes, dataframe examples, buffer examples, Arrow examples, library
+examples, and Arrow runtime tests. Both locks passed frozen checks. Ruff,
+format, HIR, file-size, and diff checks passed. The affected Rust certification
+tests also passed.
+
+Item 4 deleted the old Python 3.11 lane. Item 30 did not recreate it. The
+maintained Python 3.14 lane passed both the affine transfer mechanism and the
+compiled examples.
+
+The one exact-SHA Opus review returned `SATISFIED`. It verified the release and
+wheel hash, lock and audit ownership, compiled new API use, real Arrow
+behavior, Rust certification, and the absence of fallback code. No remediation
+review ran. The evidence is in the
+[#3549 review comment](https://github.com/sifr-lang/sifr/pull/3549#issuecomment-5430683895).
+
+Compiler fixtures changed, so both Sifr gates applied to the approved SHA. The
+create-PR gate ran once. Every functional check passed, including all 24 Python
+interop variants and all 28 runtime-platform variants. The cold
+runtime-platform area took 186.906 seconds. This exceeded its 120-second warm
+budget, so the command exited 124. The log hash is
+`f4aeba90f096a196ab52c66310e4248b41150f42ce073fa06eb0eab88d3ff99e`,
+and the report hash is
+`5c34b48a3cb86ace742df8ddd60fd9fcbc00b38f6c9b5205ec2aea35db352456`.
+
+The merge gate ran once and exited successfully. Every validation area and
+full crate suite passed. The E2E corpus passed 698 of 698 fixtures with report
+signature `127353b213e16688`. The cold lane took 6,772.15 seconds, used 2.3 GiB
+maximum RSS, and used no swap. Its log hash is
+`4aa53c8b432525d03a2935667389adcbe47cd263554b7220743ba36b15b1b4c8`,
+and its report hash is
+`32413e33563e59b21b746468ac2454bb2936d2fc1329a68af2267e1a9e35beea`.
+Neither gate was rerun. The exact evidence is in the
+[#3549 gate comment](https://github.com/sifr-lang/sifr/pull/3549#issuecomment-5431925913).
+
+Deferred follow-up: Item 35 will distinguish features introduced in the Arrow
+25 release line from fixes introduced in patch release 25.0.1. It will also
+review the duplicated exact-version assertion and the merge-only library suite
+placement. These observations did not identify a mechanism defect.
+
+Next action: implement Item 31 Kafka Python from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -2374,13 +2445,15 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-29 are complete. Item 29 merged in PR #3547 as
-`964d66d22dbfc5bc2c8750a2b089811d23dd16b2`. Its exact-SHA Opus review returned
+Current state: Items 0-30 are complete. Item 30 merged in PR #3549 as
+`aa2e528e3e814e266a57ece4d1cc760f2d47ab40`. Its exact-SHA Opus review returned
 `SATISFIED` with no blocker.
 
-NumPy 2.5.2 and Pandas 3.0.5 are installed in both maintained lock owners. All
-focused checks passed. The single merge gate also passed every lane and all 698
-E2E fixtures. Neither gate was rerun.
+PyArrow 25.0.1 is installed in both maintained lock owners. The maintained
+Python 3.14 lane passed the affine transfer, runtime, and compiled new-feature
+checks. The single merge gate passed every lane and all 698 E2E fixtures.
+Neither gate was rerun.
 
-Next action: merge this record-only update. Then start Item 30 PyArrow from the
 resulting `origin/main`.
+Next action: merge this record-only update. Then start Item 31 Kafka Python
+from the resulting `origin/main`.
