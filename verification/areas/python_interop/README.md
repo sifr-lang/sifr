@@ -129,8 +129,9 @@ default; live suites must declare their own `network_mode` and resource classes.
   report output.
 - `env`: interpreter, venv, ABI, platform, lock/env freshness, and probe rejection fixture coverage.
 - `dependency-versions`: exact PyPI stable versions and audited artifact hashes
-  for the maintained Python lock owners. Four mutations cover a stale version,
-  a missing artifact, a missing declaration, and a stale service emulator.
+  for the maintained Python lock owners. Five mutations cover a stale version,
+  a missing artifact, a missing declaration, retired HTTP client packages, and
+  a stale service emulator.
 - `minor-train-features`: direct runtime coverage for the new Schwifty 2026.7
   checksum-solving `BBAN.random` implementation.
 - `crypto-abi-features`: CFFI 2.1 source generation through `cffi.gen_src`.

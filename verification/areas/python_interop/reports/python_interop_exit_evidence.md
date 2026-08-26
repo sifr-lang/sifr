@@ -120,7 +120,7 @@ partial close, duplicate close, and reuse rejection.
 
 The capability ledger points to
 `fixtures/async_declaration/async_declaration_evidence.json`. Its compiled
-httpx-style client uses a real `httpx.AsyncClient` with an offline ASGI
+HTTPX2 client uses a real `httpx2.AsyncClient` with an offline ASGI
 transport and requires the marker
 `sifr-python-interop:async-declaration:status=207:message=async-ready:close=1:loop=shared:failure=covered:conversion=covered`.
 The `async-declaration-examples` suite is a blocking selection in every required
