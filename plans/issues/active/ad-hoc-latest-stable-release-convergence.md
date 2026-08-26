@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-26. Items 0-26 are complete. Item 27 FastAPI and
-Starlette is next.
+Status: active on 2026-08-26. Items 0-27 are complete. Item 28 Python Redis
+services is next.
 
 ## Objective
 
@@ -196,7 +196,7 @@ Only the first incomplete row may be active.
 | 24 | complete | Rust Redis 1.6 and graph reconciliation | Redis passes and an official-registry check confirms every maintained Rust direct declaration is current. |
 | 25 | complete | Python minor train | Listed non-coupled Python releases advance sequentially and both environment lanes resolve. |
 | 26 | complete | CFFI 2 and Cryptography 50 | CFFI advances first; cryptography then advances; ABI, certificate, and error paths pass. |
-| 27 | pending | FastAPI and Starlette | FastAPI advances first; Starlette then advances; web bridge fixtures pass. |
+| 27 | complete | FastAPI and Starlette | FastAPI advances first; Starlette then advances; web bridge fixtures pass. |
 | 28 | pending | Python Redis services | Redis advances before its fake/client/container companions; compiled live-service certification passes or records only the pre-approved structured Docker skip. |
 | 29 | pending | NumPy and Pandas | Marker-split NumPy remains current for both Python floors and Pandas 3 behavior passes. |
 | 30 | pending | PyArrow 25 | Both Python lanes and affine Arrow transfer/certification pass. |
@@ -2129,6 +2129,73 @@ package `requires_python` value against both owned Python lanes.
 Next action: implement Item 27 FastAPI and Starlette from this record merge on
 `origin/main`.
 
+### Item 27 record
+
+State: complete
+
+Implementation [PR #3543](https://github.com/sifr-lang/sifr/pull/3543) started
+from base `30f5a798ec9ccc20eda8b34eca45ab16c5f96721`. Its exact approved candidate
+was `1b4d5d1425c2e1750e2baf77a63bd092055adbf8`. It merged as
+`16dbb1b3d4656618d2a90abfc7c3ba949f9fdf13`.
+
+The official source audit confirmed FastAPI 0.141.1 and Starlette 1.6.0 as the
+latest stable releases. It also identified HTTPX2 2.12.0 and HTTPcore2 2.12.0
+as the canonical stable client stack.
+
+FastAPI advanced first while Starlette stayed at 0.52.1. The compiled library
+suite passed before the Starlette constraint changed. Starlette then advanced
+to 1.6.0, and the suite passed again.
+
+Starlette TestClient reported its old HTTPX backend as deprecated. The item
+removed the old `httpx` and `httpcore` distributions. It migrated maintained
+callers to HTTPX2 and HTTPcore2 without a compatibility path or fallback.
+
+The bridge now uses `app.frontend` for static frontend mounting. It verifies
+that dependency headers and background tasks survive FastAPI response handling.
+The Starlette bridge also enforces `max_body_size` and verifies the 413 response.
+The HTTPX2 fixture uses `ASGITransport` and the new async client identity.
+
+The stable-release audit now owns 12 Python packages and five mutations. It
+checks exact versions, selected PyPI hashes, constraints, owner environments,
+and rejection of the retired HTTPX distributions.
+
+Focused validation passed for both sequential framework states. The final
+library, feature, environment, dependency, tier-one, and HTTPX2 suites passed.
+Ruff, JSON, documentation, HIR, coverage, taxonomy, file-size, and diff checks
+also passed.
+
+The first exact-SHA Opus review found three documentation omissions. The
+remediation corrected the mutation count and two stale HTTPX client names.
+The permitted remediation review returned `SATISFIED` with no blocking finding.
+The evidence is in the
+[#3543 first review](https://github.com/sifr-lang/sifr/pull/3543#issuecomment-5426675197)
+and
+[#3543 remediation review](https://github.com/sifr-lang/sifr/pull/3543#issuecomment-5426675612)
+comments. No third review ran.
+
+A compiler fixture changed, so both Sifr gates applied to the approved SHA.
+The create-PR gate ran once after the required private-target cleanup. Every
+reached check passed, but the cold runtime-platform area took 185.842 seconds.
+This exceeded its 120-second warm budget and stopped the lane. The report hash
+is `dcd81f6e8721509ddff159e5bc9e3648f44c469fe970a04adfe370568596ceb0`.
+
+The merge gate ran once and exited successfully. Every validation area and
+full crate suite passed. The E2E corpus passed 698 of 698 fixtures with report
+signature `127353b213e16688`. The cold lane took 6,852.80 seconds, used 2.4 GiB
+maximum RSS, and used no swap. Its report hash is
+`e13aeda8e58d53217059ae1f1ef0fe4dc3c5b95c3bfb5d7153ac7cfe79688c68`.
+Neither gate was rerun. The exact gate evidence is in the
+[#3543 gate comment](https://github.com/sifr-lang/sifr/pull/3543#issuecomment-5428136428).
+
+Deferred follow-up: Item 35 will decouple the retired-distribution guard from
+the owner label. It will reconcile taxonomy with runtime topology paths. It
+will also update current protocol documentation from HTTPX to HTTPX2. Frozen
+historical evidence will remain unchanged. The final audit will classify other
+HTTPX mentions, including the tier-two `pytest-httpx` package.
+
+Next action: implement Item 28 Python Redis services from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -2167,13 +2234,13 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-26 are complete. Item 26 merged in PR #3541 as
-`daf6c293237a6b3e5d6e1e2b1759eccbe6133b75`. Its exact-SHA Opus review
+Current state: Items 0-27 are complete. Item 27 merged in PR #3543 as
+`16dbb1b3d4656618d2a90abfc7c3ba949f9fdf13`. Its remediation Opus review
 returned `SATISFIED` with no blocker.
 
-CFFI 2.1.1 and Cryptography 50.0.1 are installed. Both Python environment
-lanes resolve, and all focused ABI, callback, certificate, and library checks
-pass. No compiler input changed, so no Sifr gate ran.
+FastAPI 0.141.1, Starlette 1.6.0, HTTPX2 2.12.0, and HTTPcore2 2.12.0 are
+installed. All focused framework and client checks pass. The one merge gate
+passed on the exact approved SHA. The cold create-PR timing failure is recorded.
 
-Next action: merge this record-only update. Then start Item 27 FastAPI and
-Starlette from the resulting `origin/main`.
+Next action: merge this record-only update. Then start Item 28 Python Redis
+services from the resulting `origin/main`.
