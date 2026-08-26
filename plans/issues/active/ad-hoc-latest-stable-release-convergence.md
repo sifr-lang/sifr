@@ -1,7 +1,6 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-26. Items 0-28 are complete. Item 29 NumPy and Pandas
-is next.
+Status: active on 2026-08-26. Items 0-29 are complete. Item 30 PyArrow is next.
 
 ## Objective
 
@@ -198,7 +197,7 @@ Only the first incomplete row may be active.
 | 26 | complete | CFFI 2 and Cryptography 50 | CFFI advances first; cryptography then advances; ABI, certificate, and error paths pass. |
 | 27 | complete | FastAPI and Starlette | FastAPI advances first; Starlette then advances; web bridge fixtures pass. |
 | 28 | complete | Python Redis services | Redis advances before its fake/client/container companions; compiled live-service certification passes or records only the pre-approved structured Docker skip. |
-| 29 | pending | NumPy and Pandas | Marker-split NumPy remains current for both Python floors and Pandas 3 behavior passes. |
+| 29 | complete | NumPy and Pandas | NumPy 2.5.2 and Pandas 3.0.5 are exact, and their new stable APIs and breaking behavior pass. |
 | 30 | pending | PyArrow 25 | Both Python lanes and affine Arrow transfer/certification pass. |
 | 31 | pending | Kafka Python 3 | Kafka bridge and compiled service-client evidence pass. |
 | 32 | pending | Packaging and Hatchling | Packaging is current, Hatchling is explicitly pinned, and builds/locks are reproducible. |
@@ -2268,6 +2267,75 @@ list.
 Next action: implement Item 29 NumPy and Pandas from this record merge on
 `origin/main`.
 
+### Item 29 record
+
+State: complete
+
+Implementation [PR #3547](https://github.com/sifr-lang/sifr/pull/3547) started
+from base `6811b6725f6352b78f4de910a420bdb712a12657`. Its exact approved candidate
+was `6c2a6ac7f577d60e9858d77efa46c3f3d5787145`. It merged as
+`964d66d22dbfc5bc2c8750a2b089811d23dd16b2`.
+
+Official sources confirmed NumPy 2.5.2 and Pandas 3.0.5 as the latest stable
+releases. Their selected Python 3.14 macOS ARM64 wheel hashes are
+`24b9dc2e3d84aa58523798805194e23e736f3f6ce2d1a5b92583ae734e6dbda8`
+and `53730687fcd161883b24e10411c06d6a4c0f2275d2faf3bb2bc25deb4ba8007c`.
+
+NumPy advanced first while Pandas stayed at 2.3.3. Descending sort and argsort,
+NumPy-to-Torch DLPack transfer, and the compiled numeric suites passed. Pandas
+then advanced from 2.3.3 to 3.0.5. Its old `pytz` dependency left the lock.
+
+The maintained examples and feature suite now use NumPy's direct descending
+sort API. They also use the Pandas 3 string dtype, copy-on-write behavior, and
+`pd.col` expressions. The copy-on-write test performs a real shared-view
+mutation and verifies that the source frame does not change.
+
+Pandas 3 reports DataFrame ownership through the public module name `pandas`.
+The item changed the compiled affine Arrow fixture from the removed internal
+name `pandas.core.frame` to `pandas`. It did not add an alias, fallback, or
+legacy branch.
+
+The stable-release audit now owns 18 Python packages, two lock owners, two
+service images, and six negative mutations. It checks exact NumPy and Pandas
+versions, both lock owners, selected PyPI hashes, and rejection of a stale
+secondary NumPy lock.
+
+Both locks passed frozen checks. The sequential probes, runner self-tests,
+environment checks, stable audit, feature suite, dataframe suite, buffer suite,
+Arrow capsule suite, and DLPack suite passed. Ruff, JSON, HIR, profile schema,
+coverage, taxonomy, file-size, and diff checks also passed.
+
+The one exact-SHA Opus review returned `SATISFIED`. It verified both lock
+owners, negative mutation coverage, real copy-on-write behavior, exact hashes,
+and the public Pandas module identity. No remediation review ran. The evidence
+is in the
+[#3547 review comment](https://github.com/sifr-lang/sifr/pull/3547#issuecomment-5429039400).
+
+A compiler fixture changed, so both Sifr gates applied to the approved SHA.
+The create-PR gate ran once. Every functional check passed, including all 24
+Python interop variants. The cold runtime-platform area took 178.734 seconds
+after the required private-target cleanup. This exceeded its 120-second warm
+budget, so the command exited 124. The log hash is
+`281f61dfb4504535456666f6dcae12a247006476ce2661a8777073f862d52677`,
+and the report hash is
+`aaf1055ec7bc3ec6ab690dec8e23ab82ae03977483b83f2f429bfd160bf75fe3`.
+
+The merge gate ran once and exited successfully. Every validation area and
+full crate suite passed. The E2E corpus passed 698 of 698 fixtures with report
+signature `127353b213e16688`. The cold lane took 6,475.94 seconds, used 2.5 GiB
+maximum RSS, and used no swap. Its log hash is
+`cc62e3fd564a07d76c08194f53d7fa54429ec17630f42c58377db1a974c7fc8f`,
+and its report hash is
+`0972960098cb50be748d9b4e66f2ee91e8af8dd618a4364554b940cdc9c883de`.
+Neither gate was rerun. The exact evidence is in the
+[#3547 gate comment](https://github.com/sifr-lang/sifr/pull/3547#issuecomment-5430443345).
+
+Deferred follow-up: Item 35 will make the feature suite check the public Pandas
+module identity directly. It will review the warning filter and add a
+machine-checked minimum-Python assertion to the stable audit.
+
+Next action: implement Item 30 PyArrow from this record merge on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -2306,13 +2374,13 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-28 are complete. Item 28 merged in PR #3545 as
-`96bda0982f1b53595d1f7da1aeb3ed643a6129bf`. Its remediation Opus review
-returned `SATISFIED` with no blocker.
+Current state: Items 0-29 are complete. Item 29 merged in PR #3547 as
+`964d66d22dbfc5bc2c8750a2b089811d23dd16b2`. Its exact-SHA Opus review returned
+`SATISFIED` with no blocker.
 
-Redis 8.1.0, Fakeredis 2.37.1, Hiredis 3.4.1, and Testcontainers 4.15.0 are
-installed. All focused and live service checks pass. No compiler input changed,
-so no Sifr gate ran.
+NumPy 2.5.2 and Pandas 3.0.5 are installed in both maintained lock owners. All
+focused checks passed. The single merge gate also passed every lane and all 698
+E2E fixtures. Neither gate was rerun.
 
-Next action: merge this record-only update. Then start Item 29 NumPy and Pandas
-from the resulting `origin/main`.
+Next action: merge this record-only update. Then start Item 30 PyArrow from the
+resulting `origin/main`.
