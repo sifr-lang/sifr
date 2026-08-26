@@ -26,6 +26,7 @@ ADVANCED_DATA_SCENARIO_TOKENS = (
     'fill_nan(&ScalarValue::from(0.0), &["value"])',
     'map_err(display_error)?',
     "DataFrame::new",
+    '.is_sorted(&["value".into()], &[false], &[false])',
     "Array2::from_shape_vec",
     "Tensor::from_vec",
     "storage_and_layout",
@@ -108,7 +109,7 @@ def validate_advanced_data_scenario(
         raw_path,
         workspace_dependencies,
         "polars",
-        {"version": "=0.54.4", "default-features": True},
+        {"version": "=0.55.2", "default-features": True},
     )
     _require_dependency_entry(
         failures,
@@ -266,6 +267,14 @@ def run_advanced_data_self_test(
                 "let polars_values = array.values().to_vec();",
                 "let polars_values = vec![1.0_f64; array.len()];",
                 "missing scenario token 'let polars_values = array.values().to_vec();'",
+            ),
+            (
+                "Polars 0.55 dataframe sortedness drift",
+                "examples/advanced_data_runtime/rust/sifr_arrow_bridge/src/record_batch.rs",
+                '.is_sorted(&["value".into()], &[false], &[false])',
+                '.is_unique(&["value".into()], &[false], &[false])',
+                "missing scenario token '.is_sorted(&[\"value\".into()], "
+                '&[false], &[false])\'',
             ),
             (
                 "ndarray allocation identity drift",

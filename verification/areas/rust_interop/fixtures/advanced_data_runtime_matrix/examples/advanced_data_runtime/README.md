@@ -8,8 +8,10 @@ The Arrow path moves the owned Sifr floating-point vector into an Arrow array
 without changing its address, preserves schema identity in a record batch
 registered with DataFusion, plans DataFusion 55's borrowed `fill_nan`
 operation, and derives the corresponding Polars dataframe through an explicit
-copy. Catalog lookup errors propagate as typed bridge errors. The tensor path
-moves two owned vectors into ndarray and Candle
+copy. Polars 0.55's dataframe-level `is_sorted` API verifies that the crossed
+values retain their ascending order. Catalog lookup and sortedness failures
+propagate as typed bridge errors. The tensor path moves two owned vectors into
+ndarray and Candle
 without changing either allocation, then transfers the ndarray owner into a
 one-shot, DLPack-style managed capsule without copying. Pre-close and
 post-close observations prove deterministic owner cleanup.

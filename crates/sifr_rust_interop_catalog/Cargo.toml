@@ -30,7 +30,7 @@ indexmap = { version = "=2.14.0", default-features = true, optional = true }
 memmap2 = { version = "=0.9.11", default-features = true, optional = true }
 ndarray = { version = "=0.17.2", default-features = true, optional = true }
 notify = { version = "=8.2.0", default-features = true, optional = true }
-polars = { version = "=0.54.4", default-features = true, optional = true }
+polars = { version = "=0.55.2", default-features = true, optional = true }
 prost-build = { version = "=0.14.4", default-features = true, optional = true }
 rayon = { version = "=1.12.0", default-features = true, optional = true }
 redis = { version = "=1.4.1", default-features = false, features = ["tokio-comp"], optional = true }

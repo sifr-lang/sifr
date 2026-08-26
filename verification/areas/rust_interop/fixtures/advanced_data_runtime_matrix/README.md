@@ -4,7 +4,8 @@ This runtime-observed fixture certifies generated package exchange through the
 exact root-lock versions of Arrow, DataFusion, Polars, ndarray, and CPU-only
 Candle. The positive direction observes Arrow/DataFusion/Polars schema
 identity, DataFusion 55 NaN-fill planning through its borrowed API, ndarray and
-Candle dtype/rank/shape/layout/stride/device identity,
+Polars 0.55 dataframe-level sortedness, Candle and ndarray
+dtype/rank/shape/layout/stride/device identity,
 allocation-preserving owned inputs, one-shot DLPack-style transfer, and
 deterministic cleanup before and after consuming close. The Polars dataframe
 is derived from the crossed Arrow values through an explicit copy; no
