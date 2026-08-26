@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-26. Items 0-25 are complete. Item 26 CFFI 2 and
-Cryptography 50 is active.
+Status: active on 2026-08-26. Items 0-26 are complete. Item 27 FastAPI and
+Starlette is next.
 
 ## Objective
 
@@ -195,7 +195,7 @@ Only the first incomplete row may be active.
 | 23 | complete | Polars 0.55 | Rust dataframe fixtures and exact catalog evidence pass. |
 | 24 | complete | Rust Redis 1.6 and graph reconciliation | Redis passes and an official-registry check confirms every maintained Rust direct declaration is current. |
 | 25 | complete | Python minor train | Listed non-coupled Python releases advance sequentially and both environment lanes resolve. |
-| 26 | pending | CFFI 2 and Cryptography 50 | CFFI advances first; cryptography then advances; ABI, certificate, and error paths pass. |
+| 26 | complete | CFFI 2 and Cryptography 50 | CFFI advances first; cryptography then advances; ABI, certificate, and error paths pass. |
 | 27 | pending | FastAPI and Starlette | FastAPI advances first; Starlette then advances; web bridge fixtures pass. |
 | 28 | pending | Python Redis services | Redis advances before its fake/client/container companions; compiled live-service certification passes or records only the pre-approved structured Docker skip. |
 | 29 | pending | NumPy and Pandas | Marker-split NumPy remains current for both Python floors and Pandas 3 behavior passes. |
@@ -2081,6 +2081,54 @@ supports that change.
 Next action: implement Item 26 CFFI 2 and Cryptography 50 from this record
 merge on `origin/main`.
 
+### Item 26 record
+
+State: complete
+
+Implementation [PR #3541](https://github.com/sifr-lang/sifr/pull/3541) started
+from base `4065d05db13529ae280a1194148fb84340da4819`. Its exact candidate was
+`0ac31643c4e7b2357694836980f5f15c97bc83d5`. It merged as
+`daf6c293237a6b3e5d6e1e2b1759eccbe6133b75`.
+
+The official source audit confirmed CFFI 2.1.1 and Cryptography 50.0.1 as the
+latest stable releases. Cryptography 50.0.1 was newer than the phase baseline.
+The audit also corrected the installed Cryptography baseline to 45.0.7.
+
+The CFFI upgrade ran first. CFFI advanced from 1.17.1 to 2.1.1 while
+Cryptography stayed at 45.0.7. The callback examples and full library suite
+passed before the Cryptography constraint changed.
+
+Cryptography then advanced to 50.0.1 while CFFI stayed at 2.1.1. The selected
+wheels match their exact PyPI SHA-256 values. The installed Cryptography wheel
+uses OpenSSL 4.0.2.
+
+The CFFI feature suite now exercises the stable `cffi.gen_src` command. The
+Cryptography bridge builds a root and leaf certificate chain. The stable X.509
+verification API accepts the correct DNS name and rejects a wrong name.
+Certifi SSL trust and Fernet encryption also pass. No compatibility path or
+fallback was added.
+
+The stable-release audit now owns nine Python packages. It checks exact lock
+versions, selected artifact hashes, constraints, and both Python environment
+owners. The new CFFI suite runs in all four delivery profiles.
+
+Focused validation passed for the environment, dependency, ABI, tier-one,
+callback, and compiled library suites. Direct feature probes also passed.
+Ruff, JSON, lock, profile, HIR maintainability, file-size, and diff checks
+passed. No compiler input changed, so no Sifr gate ran.
+
+The one exact-SHA Opus review returned `SATISFIED` with no blocking finding.
+The evidence is in the
+[#3541 review comment](https://github.com/sifr-lang/sifr/pull/3541#issuecomment-5426226282).
+No remediation review was needed.
+
+Deferred follow-up: Item 35 owns two final audit improvements. It will compile
+and load the source emitted by `cffi.gen_src`. It will also verify each recorded
+package `requires_python` value against both owned Python lanes.
+
+Next action: implement Item 27 FastAPI and Starlette from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -2119,13 +2167,13 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-25 are complete. Item 25 merged in PR #3539 as
-`154fcd7d20c8139f5ac833d5c5da38dfd8871c12`. Its remediation Opus review
-returned `SATISFIED` after both new suites entered all four delivery profiles.
+Current state: Items 0-26 are complete. Item 26 merged in PR #3541 as
+`daf6c293237a6b3e5d6e1e2b1759eccbe6133b75`. Its exact-SHA Opus review
+returned `SATISFIED` with no blocker.
 
-Both Python environment lanes resolve at their exact stable versions. The
-compiled feature fixtures and the six-case live-service suite pass. No compiler
-input changed, so no Sifr gate ran.
+CFFI 2.1.1 and Cryptography 50.0.1 are installed. Both Python environment
+lanes resolve, and all focused ABI, callback, certificate, and library checks
+pass. No compiler input changed, so no Sifr gate ran.
 
-Next action: merge this record-only update. Then start Item 26 CFFI 2 and
-Cryptography 50 from the resulting `origin/main`.
+Next action: merge this record-only update. Then start Item 27 FastAPI and
+Starlette from the resulting `origin/main`.
