@@ -35,6 +35,7 @@
     "redis": {
       "default_features": false,
       "features": [
+        "connection-manager",
         "tokio-comp"
       ]
     },

@@ -126,7 +126,7 @@
       "capability": "resource-shaped opaque handles",
       "required_crates": ["reqwest", "rusqlite", "tokio-postgres", "redis"],
       "features": {
-        "redis": {"default_features": false, "features": ["tokio-comp"]},
+        "redis": {"default_features": false, "features": ["connection-manager", "tokio-comp"]},
         "reqwest": {"default_features": false, "features": ["rustls", "json"]},
         "rusqlite": {"default_features": false, "features": ["bundled"]},
         "tokio-postgres": {"default_features": false, "features": ["runtime"]}
@@ -282,7 +282,7 @@
       "tier": 2,
       "capability": "callback subscriptions and shutdown",
       "required_crates": ["tokio-tungstenite", "redis", "notify"],
-      "features": {"redis": {"default_features": false, "features": ["tokio-comp"]}, "tokio-tungstenite": {"default_features": false}},
+      "features": {"redis": {"default_features": false, "features": ["connection-manager", "tokio-comp"]}, "tokio-tungstenite": {"default_features": false}},
       "execution_kind": "runtime-observed",
       "positive_evidence": {"id": "subscription_cancel_shutdown", "status": "passing"},
       "negative_evidence": {"id": "invalid_thread_capture_rejected", "status": "passing"}

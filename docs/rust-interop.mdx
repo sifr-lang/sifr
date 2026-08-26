@@ -137,7 +137,8 @@ redaction, bounded cleanup of every harness-owned tracked task, and observed
 temporary database removal. The bridge-local alias shares the resource
 identity; no Sifr-level clone policy is claimed. The certified alias rejection
 is the shared resource's closed-state check. The Redis client metadata handshake is disabled,
-so the RESP harness certifies only the exercised connection and `PING` frames.
+and Redis 1.6's connection manager limits reconnects to two attempts, so the RESP harness
+certifies only the exercised connection and `PING` frames.
 Client-library-internal tasks are outside the harness counter. This does not
 claim general Redis or PostgreSQL server compliance.
 

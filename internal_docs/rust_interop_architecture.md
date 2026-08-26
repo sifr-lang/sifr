@@ -1374,8 +1374,9 @@ shutdown of every harness-owned tracked task, and observed database removal.
 The bridge-local aliased `ResourceMatrix` values share one resource state; this
 row does not declare or certify a Sifr-level clone policy.
 Client-library-internal tasks are not included in the harness activity counter.
-The Redis client disables its library-metadata `CLIENT SETINFO` handshake, so
-the RESP harness certifies only the exercised connection and `PING` frames.
+The Redis client disables its library-metadata `CLIENT SETINFO` handshake and
+uses Redis 1.6's connection manager with two bounded reconnect attempts. The
+RESP harness certifies only the exercised connection and `PING` frames.
 The Redis and PostgreSQL harnesses certify only the handshake and
 request/response frames exercised by this package, not general server
 compliance.
@@ -2033,7 +2034,7 @@ Feature-sensitive fixtures must pin Cargo features in `rust_interop_fixture_matr
 - `reqwest`: `default-features = false`, `features = ["rustls", "json"]`; do not enable `blocking` in async fixtures.
 - `tokio-postgres`: `default-features = false`, `features = ["runtime"]`; TLS is not part of the primary opaque-resource fixture.
 - `rusqlite`: `default-features = false`, `features = ["bundled"]`; the Rust interop scope certifies only the bundled native SQLite provider.
-- `redis`: `default-features = false`, `features = ["tokio-comp"]`; pub/sub fixtures use loopback service infrastructure.
+- `redis`: `default-features = false`, `features = ["connection-manager", "tokio-comp"]`; the opaque-resource fixture exercises the bounded connection manager, and pub/sub fixtures use loopback service infrastructure.
 - `tokio-tungstenite`: `default-features = false`; add `features = ["rustls-tls-webpki-roots"]` only for explicit network/TLS coverage.
 - `sqlx`: `default-features = false`, `features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "macros"]`; query-macro fixtures must use checked-in `.sqlx/` offline artifacts instead of requiring `DATABASE_URL` during Cargo execution.
 - `axum`: the backend certification uses only `http1` and `tokio`.

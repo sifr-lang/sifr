@@ -15,7 +15,7 @@ use tokio::task::JoinHandle;
 use super::protocols;
 
 const OPERATION_TIMEOUT: Duration = Duration::from_secs(3);
-const RESOURCE_SUMMARY: &str = "http=echo:reqwest;sqlite=sqlite;redis=PONG;postgres=1";
+const REDIS_RECONNECT_ATTEMPTS: usize = 2;
 static NEXT_DATABASE_ID: AtomicUsize = AtomicUsize::new(0);
 static ACTIVE_TASKS: AtomicUsize = AtomicUsize::new(0);
 thread_local! {
@@ -66,7 +66,7 @@ struct ResourceState {
     http_client: Option<reqwest::Client>,
     sqlite: Option<Connection>,
     sqlite_file: Option<TemporaryDatabase>,
-    redis: Option<redis::aio::MultiplexedConnection>,
+    redis: Option<redis::aio::ConnectionManager>,
     postgres: Option<Arc<tokio_postgres::Client>>,
     tasks: Vec<TrackedTask>,
 }
@@ -255,7 +255,7 @@ pub async fn invalid_aliasing(
     mut resource: Handle<ResourceMatrix>,
 ) -> Result<String, ResourceError> {
     let lifecycle = verify_lifecycle(&resource).await?;
-    if lifecycle != RESOURCE_SUMMARY {
+    if lifecycle != resource_summary("echo:reqwest", "sqlite", "PONG", "1") {
         return Err(ResourceError::new(format!(
             "unexpected pre-close resource summary: {lifecycle}"
         )));
@@ -380,10 +380,10 @@ async fn open_clients(
         .map_err(|error| ResourceError::context("SQLite savepoint", error))?;
 
     let redis_client = redis_client(redis_address, "Redis")?;
-    let redis_config = redis_connection_config();
+    let redis_config = redis_connection_manager_config();
     let redis = tokio::time::timeout(
         OPERATION_TIMEOUT,
-        redis_client.get_multiplexed_async_connection_with_config(&redis_config),
+        redis_client.get_connection_manager_with_config(redis_config),
     )
     .await
     .map_err(|_| ResourceError::new("Redis connect timed out"))?
@@ -490,8 +490,11 @@ pub async fn verify_lifecycle(resource: &Handle<ResourceMatrix>) -> Result<Strin
         })
         .await
         .map_err(|_| ResourceError::new("resource operations timed out"))??;
-    Ok(format!(
-        "http={http_value};sqlite={sqlite_value};redis={redis_value};postgres={postgres_value}"
+    Ok(resource_summary(
+        &http_value,
+        &sqlite_value,
+        &redis_value,
+        &postgres_value,
     ))
 }
 
@@ -622,6 +625,19 @@ fn redis_connection_config() -> redis::AsyncConnectionConfig {
     redis::AsyncConnectionConfig::new()
         .set_connection_timeout(Some(OPERATION_TIMEOUT))
         .set_response_timeout(Some(OPERATION_TIMEOUT))
+}
+
+fn redis_connection_manager_config() -> redis::aio::ConnectionManagerConfig {
+    redis::aio::ConnectionManagerConfig::new()
+        .set_number_of_retries(REDIS_RECONNECT_ATTEMPTS)
+        .set_connection_timeout(Some(OPERATION_TIMEOUT))
+        .set_response_timeout(Some(OPERATION_TIMEOUT))
+}
+
+fn resource_summary(http: &str, sqlite: &str, redis: &str, postgres: &str) -> String {
+    format!(
+        "http={http};sqlite={sqlite};redis={redis}/retries={REDIS_RECONNECT_ATTEMPTS};postgres={postgres}"
+    )
 }
 
 fn postgres_config(address: std::net::SocketAddr) -> tokio_postgres::Config {

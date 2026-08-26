@@ -60,7 +60,12 @@ def validate_callback_subscription_scenario(
     for name, version, features, default_features in (
         ("futures", "=0.3.34", None, None),
         ("notify", "=8.2.0", None, None),
-        ("redis", "=1.4.1", ["tokio-comp"], False),
+        (
+            "redis",
+            "=1.6.0",
+            ["connection-manager", "tokio-comp"],
+            False,
+        ),
         (
             "tokio",
             "=1.53.1",
@@ -150,7 +155,7 @@ def run_callback_subscription_self_test(
             (
                 "Redis feature drift",
                 "examples/subscription_lifecycle_runtime/Cargo.toml",
-                'features = ["tokio-comp"]',
+                'features = ["connection-manager", "tokio-comp"]',
                 "features = []",
                 "must declare features",
             ),
