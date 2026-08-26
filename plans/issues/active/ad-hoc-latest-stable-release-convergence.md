@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-26. Items 0-24 are complete. Item 25 Python minor
-train is active.
+Status: active on 2026-08-26. Items 0-25 are complete. Item 26 CFFI 2 and
+Cryptography 50 is next.
 
 ## Objective
 
@@ -194,7 +194,7 @@ Only the first incomplete row may be active.
 | 22 | complete | Arrow 59 and DataFusion 55 | The coupled analytical stack, Rust/Python bridge fixtures, and locks pass. |
 | 23 | complete | Polars 0.55 | Rust dataframe fixtures and exact catalog evidence pass. |
 | 24 | complete | Rust Redis 1.6 and graph reconciliation | Redis passes and an official-registry check confirms every maintained Rust direct declaration is current. |
-| 25 | pending | Python minor train | Listed non-coupled Python releases advance sequentially and both environment lanes resolve. |
+| 25 | complete | Python minor train | Listed non-coupled Python releases advance sequentially and both environment lanes resolve. |
 | 26 | pending | CFFI 2 and Cryptography 50 | CFFI advances first; cryptography then advances; ABI, certificate, and error paths pass. |
 | 27 | pending | FastAPI and Starlette | FastAPI advances first; Starlette then advances; web bridge fixtures pass. |
 | 28 | pending | Python Redis services | Redis advances before its fake/client/container companions; compiled live-service certification passes or records only the pre-approved structured Docker skip. |
@@ -2007,6 +2007,80 @@ Deferred follow-up: none. The remediation review found no new mechanism defect.
 Next action: implement Item 25 Python minor train from this record merge on
 `origin/main`.
 
+### Item 25 record
+
+State: complete
+
+Implementation [PR #3539](https://github.com/sifr-lang/sifr/pull/3539) started
+from base `bc9423835afe0af060b5c2bd03620cd1525bd774`. The final candidate was
+`6c590146d31b18361594f7a50ed8ad896107abff`. It merged as
+`154fcd7d20c8139f5ac833d5c5da38dfd8871c12`.
+
+The official PyPI audit confirmed these latest stable releases:
+
+- Alembic 1.19.1
+- Boto3 and Botocore 1.43.80
+- Certifi 2026.7.22
+- Polars and Polars Runtime 1.44.1
+- Schwifty 2026.7.3
+- SQLAlchemy 2.0.52
+- Torch 2.13.0
+
+The audit checked all seven selected artifacts against their PyPI SHA-256
+values. Both affected locks resolve with Python 3.14.7 and uv 0.12.5.
+
+The Boto3 upgrade exposed a real protocol incompatibility in the maintained
+LocalStack 2.0.1 emulator. The current Botocore SQS client no longer works
+with that legacy service. The item replaced it with LocalStack Community
+4.14.0, the latest stable open-source release. The image uses the immutable
+multi-platform manifest digest
+`sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a`.
+No old protocol, compatibility path, or fallback remains.
+
+The executable fixtures use current stable APIs. The Polars bridge uses
+`struct.drop`. The Torch bridge uses `LinearCrossEntropyLoss`. The Alembic
+bridge checks named CHECK-constraint autogeneration. The Certifi bridge loads
+the CA bundle into an SSL trust store. A direct Schwifty suite generates and
+validates 32 BBANs across eight national checksum algorithms.
+
+The item added a machine-checked stable-release record. It verifies both lock
+owners, exact versions, selected artifact hashes, and the LocalStack image
+digest. Four negative mutations cover stale versions, missing artifacts,
+missing declarations, and a stale service emulator. All four delivery profiles
+now execute both new suites.
+
+Focused validation passed after each sequential upgrade. Both lock checks,
+the dependency audit, the feature suite, the DLPack demo, and the compiled
+dataframe, ML, and library suites passed. The complete Python-interop area
+passed every offline, compiled, and native case. Its first live pass identified
+the old LocalStack protocol failure. The final focused live-service run passed
+all six cases with the exact LocalStack 4.14.0 digest.
+
+Ruff format and lint checks passed. JSON, runner and profile self-tests, profile
+membership checks, HIR maintainability, file-size, and diff checks also passed.
+No compiler input changed, so the phase rules prohibited the Sifr create-PR
+and merge gates.
+
+The first exact-SHA Opus review found one in-scope omission. The new stable
+audit and feature suites were absent from all four delivery profiles. The
+remediation added both suites to create-PR, merge, nightly, and release.
+The one permitted remediation review returned `SATISFIED` with no blocking
+finding. The evidence is in the
+[#3539 first review](https://github.com/sifr-lang/sifr/pull/3539#issuecomment-5425832691)
+and
+[#3539 remediation review](https://github.com/sifr-lang/sifr/pull/3539#issuecomment-5425833075)
+comments. No third review ran.
+
+Deferred follow-up: Item 35 owns a reverse profile-coverage invariant. This
+check must require each non-live manifest suite in at least one delivery
+profile. Item 35 also owns reconciliation of the pre-existing release-profile
+custody digests. The final audit can also derive the Schwifty output count and
+mutation count, and can relax the cross-platform Torch tolerance if evidence
+supports that change.
+
+Next action: implement Item 26 CFFI 2 and Cryptography 50 from this record
+merge on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -2045,15 +2119,13 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-24 are complete. Item 24 merged in PR #3537 as
-`9e12539abe98a7fecd6f043bcf1e81b860fc68d9`. Its remediation Opus review
-returned `SATISFIED` after the two first-review omissions were fixed, and no
-new mechanism defect was found.
+Current state: Items 0-25 are complete. Item 25 merged in PR #3539 as
+`154fcd7d20c8139f5ac833d5c5da38dfd8871c12`. Its remediation Opus review
+returned `SATISFIED` after both new suites entered all four delivery profiles.
 
-The one create-PR gate stopped on a cold-cache runtime-platform timing budget
-after every executed functional case passed. It was not rerun. The one merge
-gate ran on the same final SHA, exited 0, and passed all functional steps. All
-698 E2E fixtures passed with signature `127353b213e16688`.
+Both Python environment lanes resolve at their exact stable versions. The
+compiled feature fixtures and the six-case live-service suite pass. No compiler
+input changed, so no Sifr gate ran.
 
-Next action: merge this record-only update. Then start Item 25 Python minor
-train from the resulting `origin/main`.
+Next action: merge this record-only update. Then start Item 26 CFFI 2 and
+Cryptography 50 from the resulting `origin/main`.
