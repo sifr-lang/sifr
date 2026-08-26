@@ -129,7 +129,10 @@ EXPECTED_FEATURE_POLICIES = {
     "candle": {"backend": "cpu-only", "default_features": False},
     "flate2": {"default_features": False, "features": ["rust_backend"]},
     "prost-build": {"generated_output": "deterministic"},
-    "redis": {"default_features": False, "features": ["tokio-comp"]},
+    "redis": {
+        "default_features": False,
+        "features": ["connection-manager", "tokio-comp"],
+    },
     "reqwest": {"default_features": False, "features": ["rustls", "json"]},
     "rusqlite": {"default_features": False, "features": ["bundled"]},
     "sqlx": {

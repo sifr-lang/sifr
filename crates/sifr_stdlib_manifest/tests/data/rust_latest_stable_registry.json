@@ -1,0 +1,554 @@
+{
+  "schema_version": 1,
+  "audited_at": "2026-08-26",
+  "source": "https://crates.io/api/v1/crates/{crate}",
+  "maintained_manifests": 113,
+  "direct_declarations": 168,
+  "packages": [
+    {
+      "name": "aho-corasick",
+      "latest_stable": "1.1.5",
+      "checksum": "c982642fa9e8606056828ee9a8505737230110bb1099153c79efe865c59d12ba"
+    },
+    {
+      "name": "annotate-snippets",
+      "latest_stable": "0.12.16",
+      "checksum": "f211a51805bc641f3ad5b7664c77d2547af685cc33b4cd8d31964027a46f13f1"
+    },
+    {
+      "name": "anyhow",
+      "latest_stable": "1.0.104",
+      "checksum": "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
+    },
+    {
+      "name": "arrow",
+      "latest_stable": "59.2.0",
+      "checksum": "61d285d16bce7d0be61912f7928342b673067b6b7d7ef6cc179258ba7de1fecf"
+    },
+    {
+      "name": "axum",
+      "latest_stable": "0.8.9",
+      "checksum": "31b698c5f9a010f6573133b09e0de5408834d0c82f8d7475a89fc1867a71cd90"
+    },
+    {
+      "name": "base64",
+      "latest_stable": "0.23.1",
+      "checksum": "ac07cdecf99051d9a5238b80f35af32cdeba5b336e55d957b318b50137e18da5"
+    },
+    {
+      "name": "bigdecimal",
+      "latest_stable": "0.4.10",
+      "checksum": "4d6867f1565b3aad85681f1015055b087fcfd840d6aeee6eee7f2da317603695"
+    },
+    {
+      "name": "bindgen",
+      "latest_stable": "0.72.1",
+      "checksum": "993776b509cfb49c750f11b8f07a46fa23e0a1386ffc01fb1e7d343efc387895"
+    },
+    {
+      "name": "bitflags",
+      "latest_stable": "2.13.1",
+      "checksum": "b588b76d00fde79687d7646a9b5bdf3cc0f655e0bbd080335a95d7e96f3587da"
+    },
+    {
+      "name": "blake2",
+      "latest_stable": "0.10.6",
+      "checksum": "46502ad458c9a52b69d4d4d32775c788b7a1b85e8bc9d482d92250fc0e3f8efe"
+    },
+    {
+      "name": "blake3",
+      "latest_stable": "1.8.7",
+      "checksum": "6d9e454fc11f76977dc803893aff6304ed33d6a26efae8696573bea74baa27ae"
+    },
+    {
+      "name": "bstr",
+      "latest_stable": "1.13.1",
+      "checksum": "6bb31b46c14244e20ee9984b11bf5c992b91fb6939fea616e3512c8baecdbe5f"
+    },
+    {
+      "name": "bytemuck",
+      "latest_stable": "1.25.2",
+      "checksum": "95832e849adfb21180ccb6826a99da14e5d266ae5c2e668e1602cf234f153797"
+    },
+    {
+      "name": "bytes",
+      "latest_stable": "1.12.1",
+      "checksum": "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
+    },
+    {
+      "name": "candle-core",
+      "latest_stable": "0.11.0",
+      "checksum": "5ecb245093b0f791b89d3420c3df9c6d49c60ab63ba54db896bf8a3baf486706"
+    },
+    {
+      "name": "cc",
+      "latest_stable": "1.4.4",
+      "checksum": "0ad534f4357a5264cce5019c989cf66a4f0dc4e0d1b1d15f8aacec0ff7360273"
+    },
+    {
+      "name": "chrono",
+      "latest_stable": "0.4.45",
+      "checksum": "1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327"
+    },
+    {
+      "name": "clap",
+      "latest_stable": "4.6.6",
+      "checksum": "473c7e07f409a8d772161724aa8db6a765a2532a70f9667eeb7b49d3d02fbdca"
+    },
+    {
+      "name": "cookie",
+      "latest_stable": "0.18.2",
+      "checksum": "1a373e3602691c3cdea496d2f0ee5935151e6168fe87739483c463db1b2f2f87"
+    },
+    {
+      "name": "crc32fast",
+      "latest_stable": "1.5.1",
+      "checksum": "8498c871161e1742aaa9d52551b2d6ebdd4c3d45a3be423e3728f33b955be550"
+    },
+    {
+      "name": "cxx",
+      "latest_stable": "1.0.199",
+      "checksum": "824894a4a85dca76d4c95c2b9098c036f5a29f627b30c12780774f6654e60974"
+    },
+    {
+      "name": "datafusion",
+      "latest_stable": "55.0.0",
+      "checksum": "96f76f0167ed0842b29a3d1e41be3c034c0a46409a3a703cc4cc84ee8c24abf4"
+    },
+    {
+      "name": "encoding_rs",
+      "latest_stable": "0.8.35",
+      "checksum": "75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3"
+    },
+    {
+      "name": "flate2",
+      "latest_stable": "1.1.9",
+      "checksum": "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
+    },
+    {
+      "name": "futures",
+      "latest_stable": "0.3.34",
+      "checksum": "9a31d2a3fbaaeb2af2368bbdd904aa8e812d3c04a1ee10d3171f52d556e5d0a3"
+    },
+    {
+      "name": "globset",
+      "latest_stable": "0.4.20",
+      "checksum": "07c34a9410465b45bd9787443bc7370f37735bad04b0f0cd57ff1a3186c98988"
+    },
+    {
+      "name": "h2",
+      "latest_stable": "0.4.19",
+      "checksum": "ef8e5e5a340588f4452631496976cf8636d4a7ecf600239fdc27615d2530bc16"
+    },
+    {
+      "name": "http",
+      "latest_stable": "1.5.0",
+      "checksum": "918d3568bebf352712bc2ef3d46a8bcf1a75b373be6539de198e9105cbbf9ce0"
+    },
+    {
+      "name": "http-body",
+      "latest_stable": "1.1.0",
+      "checksum": "ca2a8f2913ee65f60facd6a5905613afaa448497a0230cc41ce022d93290bc2c"
+    },
+    {
+      "name": "http-body-util",
+      "latest_stable": "0.1.5",
+      "checksum": "23169fe34a5fbcdd3f3862e78fb9b6fccd5f02a6dc6f732547005d45631ce71c"
+    },
+    {
+      "name": "hyper",
+      "latest_stable": "1.11.0",
+      "checksum": "d22053281f852e11534f5198498373cbb59295120a20771d90f7ed1897490a72"
+    },
+    {
+      "name": "hyper-util",
+      "latest_stable": "0.1.20",
+      "checksum": "96547c2556ec9d12fb1578c4eaf448b04993e7fb79cbaad930a656880a6bdfa0"
+    },
+    {
+      "name": "icu_collator",
+      "latest_stable": "2.3.1",
+      "checksum": "08984ed58ac439ebf3e13d2cf26b0c46a60afcd21721c1d14087c0b240344dda"
+    },
+    {
+      "name": "icu_datetime",
+      "latest_stable": "2.3.0",
+      "checksum": "c44df99c4c5297b05653d1a1629f13bdc9fd4044acfbbaf30b15194a1eed4cd6"
+    },
+    {
+      "name": "icu_decimal",
+      "latest_stable": "2.3.0",
+      "checksum": "9eb8f655bba2d0c0459e43a5b0e6cd3cd388109898fb3d85d048165e8b0abd08"
+    },
+    {
+      "name": "icu_locale",
+      "latest_stable": "2.3.1",
+      "checksum": "785f595c61ef57169a467eeed7b4b6936a66f6cacbb116a96ee86da983251bf4"
+    },
+    {
+      "name": "icu_plurals",
+      "latest_stable": "2.3.0",
+      "checksum": "e475e6766ef87b1d3c1f97be6363995b0bfaeddbc789671615df598a97ff0593"
+    },
+    {
+      "name": "ignore",
+      "latest_stable": "0.4.33",
+      "checksum": "00b69833ed729dc5aa7d19541d96d6cf8e9137194207a04916d658e43168402f"
+    },
+    {
+      "name": "indexmap",
+      "latest_stable": "2.14.0",
+      "checksum": "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9"
+    },
+    {
+      "name": "insta",
+      "latest_stable": "1.48.0",
+      "checksum": "86f0f8fee8c926415c58d6ae43a08523a26faccb2323f5e6b644fe7dd4ef6b82"
+    },
+    {
+      "name": "is-macro",
+      "latest_stable": "0.3.8",
+      "checksum": "8267aa6001e25494f3015f9663bbd88a18240c74483afa5f0934a1b3e4c388e9"
+    },
+    {
+      "name": "itertools",
+      "latest_stable": "0.15.0",
+      "checksum": "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc"
+    },
+    {
+      "name": "libc",
+      "latest_stable": "0.2.189",
+      "checksum": "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
+    },
+    {
+      "name": "lsp-server",
+      "latest_stable": "0.10.0",
+      "checksum": "3ee25a31f2e571e426eef2896179450cafc7e2f5be00d8a93b1c2d21c0ff7656"
+    },
+    {
+      "name": "lsp-types",
+      "latest_stable": "0.97.0",
+      "checksum": "53353550a17c04ac46c585feb189c2db82154fc84b79c7a66c96c2c644f66071"
+    },
+    {
+      "name": "md5",
+      "latest_stable": "0.8.1",
+      "checksum": "7ebb8d8732c6a6df3d8f032a82911cfc747e00efb95cc46e8d0acd5b5b88570c"
+    },
+    {
+      "name": "memchr",
+      "latest_stable": "2.8.3",
+      "checksum": "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
+    },
+    {
+      "name": "memmap2",
+      "latest_stable": "0.9.11",
+      "checksum": "d1219ed1b7f229ee7104d281dd01d6802fe28bb6e95d292942c4daacdeb798c0"
+    },
+    {
+      "name": "metrics",
+      "latest_stable": "0.24.6",
+      "checksum": "89550ee9f79e88fef3119de263694973a8adb26c21d75322164fb8c493039fe2"
+    },
+    {
+      "name": "ndarray",
+      "latest_stable": "0.17.2",
+      "checksum": "520080814a7a6b4a6e9070823bb24b4531daac8c4627e08ba5de8c5ef2f2752d"
+    },
+    {
+      "name": "notify",
+      "latest_stable": "8.2.0",
+      "checksum": "4d3d07927151ff8575b7087f245456e549fea62edf0ec4e565a5ee50c8402bc3"
+    },
+    {
+      "name": "num-bigint",
+      "latest_stable": "0.5.1",
+      "checksum": "93e7820bc0a80a0238e650327316f929ba18d5be054b647490a3a6a339f3e7c0"
+    },
+    {
+      "name": "num-traits",
+      "latest_stable": "0.2.19",
+      "checksum": "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
+    },
+    {
+      "name": "once_cell",
+      "latest_stable": "1.21.4",
+      "checksum": "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
+    },
+    {
+      "name": "percent-encoding",
+      "latest_stable": "2.3.2",
+      "checksum": "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
+    },
+    {
+      "name": "polars",
+      "latest_stable": "0.55.2",
+      "checksum": "d52d3ed4e6b3917427f6d3c43edbd2740babe228bb4ccfa3431eac105844045d"
+    },
+    {
+      "name": "postcard",
+      "latest_stable": "1.1.3",
+      "checksum": "6764c3b5dd454e283a30e6dfe78e9b31096d9e32036b5d1eaac7a6119ccb9a24"
+    },
+    {
+      "name": "prettyplease",
+      "latest_stable": "0.3.0",
+      "checksum": "2bfe0f4c752e450fc2faf62654f1c134747922825d5b04ca717b8874f41a40c0"
+    },
+    {
+      "name": "proc-macro2",
+      "latest_stable": "1.0.107",
+      "checksum": "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
+    },
+    {
+      "name": "prost",
+      "latest_stable": "0.14.4",
+      "checksum": "528ac67416ff8646872a3c02cad9cc4ee5dc9f9540c9b10771855c95cb2e5ae1"
+    },
+    {
+      "name": "prost-build",
+      "latest_stable": "0.14.4",
+      "checksum": "03da047801ff44bb6a4d407d4860c05fd70bb81714e6b2f3812603d5b145b042"
+    },
+    {
+      "name": "prost-types",
+      "latest_stable": "0.14.4",
+      "checksum": "f94967dc7688f3054c7fac87473ffae4cc4c3904800e2d9f5b857246d8963b0a"
+    },
+    {
+      "name": "pyo3",
+      "latest_stable": "0.29.2",
+      "checksum": "4688ddedf473e32662b9b067670129a8afb8c18e351482c70d62ba4a88171e8b"
+    },
+    {
+      "name": "rand",
+      "latest_stable": "0.10.2",
+      "checksum": "c7f5fa3a058cd35567ef9bfa5e75732bee0f9e4c55fa90477bef2dfcdbc4be80"
+    },
+    {
+      "name": "rand_distr",
+      "latest_stable": "0.6.0",
+      "checksum": "4d431c2703ccf129de4d45253c03f49ebb22b97d6ad79ee3ecfc7e3f4862c1d8"
+    },
+    {
+      "name": "rayon",
+      "latest_stable": "1.12.0",
+      "checksum": "fb39b166781f92d482534ef4b4b1b2568f42613b53e5b6c160e24cfbfa30926d"
+    },
+    {
+      "name": "rcgen",
+      "latest_stable": "0.14.9",
+      "checksum": "091e7a8e7d86e6feb87a27ce8e2cba29d49eff9507afeebefab7eeb2ca667fb4"
+    },
+    {
+      "name": "redis",
+      "latest_stable": "1.6.0",
+      "checksum": "e37a4ca5c6ca42aa3e6df2fd32b987a65d32a4c2159a6f3fe0fd1df306a2658f"
+    },
+    {
+      "name": "regex",
+      "latest_stable": "1.13.1",
+      "checksum": "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d"
+    },
+    {
+      "name": "reqwest",
+      "latest_stable": "0.13.4",
+      "checksum": "219c5811de6525e5416c7d5d53bb656d3afdbc6c5af816e0802bcfa42dbdc1c3"
+    },
+    {
+      "name": "rusqlite",
+      "latest_stable": "0.40.2",
+      "checksum": "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3"
+    },
+    {
+      "name": "rust_decimal",
+      "latest_stable": "1.42.1",
+      "checksum": "be2a24f50780bc85f09cc6ac299bdf1424302742d77221106859c9d8b102126a"
+    },
+    {
+      "name": "rustc-hash",
+      "latest_stable": "2.1.3",
+      "checksum": "6b1e7f9a428571be2dc5bc0505c13fb6bf936822b894ec87abf8a08a4e51742d"
+    },
+    {
+      "name": "rustls",
+      "latest_stable": "0.23.43",
+      "checksum": "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06"
+    },
+    {
+      "name": "rustls-pemfile",
+      "latest_stable": "2.2.0",
+      "checksum": "dce314e5fee3f39953d46bb63bb8a46d40c2f8fb7cc5a3b6cab2bde9721d6e50"
+    },
+    {
+      "name": "rustls-platform-verifier",
+      "latest_stable": "0.7.0",
+      "checksum": "26d1e2536ce4f35f4846aa13bff16bd0ff40157cdb14cc056c7b14ba41233ba0"
+    },
+    {
+      "name": "schemars",
+      "latest_stable": "1.2.2",
+      "checksum": "687274d293b6cdc6e73e0fee520bf2049650090d7164f87672d212a3c530cf4a"
+    },
+    {
+      "name": "serde",
+      "latest_stable": "1.0.229",
+      "checksum": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba"
+    },
+    {
+      "name": "serde_derive",
+      "latest_stable": "1.0.229",
+      "checksum": "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
+    },
+    {
+      "name": "serde_json",
+      "latest_stable": "1.0.151",
+      "checksum": "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14"
+    },
+    {
+      "name": "serde_test",
+      "latest_stable": "1.0.177",
+      "checksum": "7f901ee573cab6b3060453d2d5f0bae4e6d628c23c0a962ff9b5f1d7c8d4f1ed"
+    },
+    {
+      "name": "sha1",
+      "latest_stable": "0.11.0",
+      "checksum": "aacc4cc499359472b4abe1bf11d0b12e688af9a805fa5e3016f9a386dc2d0214"
+    },
+    {
+      "name": "sha2",
+      "latest_stable": "0.11.0",
+      "checksum": "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4"
+    },
+    {
+      "name": "sqlx",
+      "latest_stable": "0.9.0",
+      "checksum": "378620ccc25c62c89d8be1c819e76a88d59bdcc3304733330788948e619bfd71"
+    },
+    {
+      "name": "static_assertions",
+      "latest_stable": "1.1.0",
+      "checksum": "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+    },
+    {
+      "name": "syn",
+      "latest_stable": "3.0.4",
+      "checksum": "e6275cddf4610d1775e6d1fe9469b2e77d0f39fd98fb7450901b821e0c53649f"
+    },
+    {
+      "name": "tempfile",
+      "latest_stable": "3.27.0",
+      "checksum": "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
+    },
+    {
+      "name": "thiserror",
+      "latest_stable": "2.0.20",
+      "checksum": "ec86235f5fcc2a73650310756d2ac5b138a5780bbbdfae3eeccec992c435ba4f"
+    },
+    {
+      "name": "tokio",
+      "latest_stable": "1.53.1",
+      "checksum": "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed"
+    },
+    {
+      "name": "tokio-postgres",
+      "latest_stable": "0.7.18",
+      "checksum": "a528f7d280f6d5b9cd149635c8705b0dd049754bc67d81d31fa25169a93809d3"
+    },
+    {
+      "name": "tokio-rustls",
+      "latest_stable": "0.26.4",
+      "checksum": "1729aa945f29d91ba541258c8df89027d5792d85a8841fb65e8bf0f4ede4ef61"
+    },
+    {
+      "name": "tokio-tungstenite",
+      "latest_stable": "0.30.0",
+      "checksum": "17a073bfed563fa236697a068031408a93cd9522e08abf9933ead3e73411bd71"
+    },
+    {
+      "name": "toml",
+      "latest_stable": "1.1.4+spec-1.1.0",
+      "checksum": "3aace63f4bbcdfc2c965b059de67119c89c4017a70d633be6c104910f67056f5"
+    },
+    {
+      "name": "tower",
+      "latest_stable": "0.5.3",
+      "checksum": "ebe5ef63511595f1344e2d5cfa636d973292adc0eec1f0ad45fae9f0851ab1d4"
+    },
+    {
+      "name": "tower-http",
+      "latest_stable": "0.7.0",
+      "checksum": "b11f75e912b0c2be01b63d8cf8057b8c3f97cf34abb3d431a3a4c8675498e233"
+    },
+    {
+      "name": "tower-service",
+      "latest_stable": "0.3.3",
+      "checksum": "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3"
+    },
+    {
+      "name": "tracing",
+      "latest_stable": "0.1.44",
+      "checksum": "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100"
+    },
+    {
+      "name": "tracing-subscriber",
+      "latest_stable": "0.3.23",
+      "checksum": "cb7f578e5945fb242538965c2d0b04418d38ec25c79d160cd279bf0731c8d319"
+    },
+    {
+      "name": "unic-ucd-category",
+      "latest_stable": "0.9.0",
+      "checksum": "1b8d4591f5fcfe1bd4453baaf803c40e1b1e69ff8455c47620440b46efef91c0"
+    },
+    {
+      "name": "unicode-ident",
+      "latest_stable": "1.0.24",
+      "checksum": "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
+    },
+    {
+      "name": "unicode-normalization",
+      "latest_stable": "0.1.25",
+      "checksum": "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8"
+    },
+    {
+      "name": "unicode-segmentation",
+      "latest_stable": "1.13.3",
+      "checksum": "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8"
+    },
+    {
+      "name": "unicode_names2",
+      "latest_stable": "3.1.0",
+      "checksum": "82c3e18d850bb6ebd57735e5654f0af65e572b05c2397e7b2b1a7c6a792cc29c"
+    },
+    {
+      "name": "url",
+      "latest_stable": "2.5.8",
+      "checksum": "ff67a8a4397373c3ef660812acab3268222035010ab8680ec4215f38ba3d0eed"
+    },
+    {
+      "name": "uuid",
+      "latest_stable": "1.25.0",
+      "checksum": "f053576934f05a761a402421fbbe3d425d9366f75f978806a037b3ca481abecc"
+    },
+    {
+      "name": "walkdir",
+      "latest_stable": "2.5.0",
+      "checksum": "29790946404f91d9c5d06f9874efddea1dc06c5efe94541a7d6863108e3a5e4b"
+    },
+    {
+      "name": "zerocopy",
+      "latest_stable": "0.8.56",
+      "checksum": "556764e583adb45a9f8d413c2a147fa7e8d821e48e12b14fd560b607998b75eb"
+    },
+    {
+      "name": "zip",
+      "latest_stable": "8.6.0",
+      "checksum": "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"
+    },
+    {
+      "name": "zstd",
+      "latest_stable": "0.13.3",
+      "checksum": "e91ee311a569c327171651566e07972200e76fcfe2242a4fa446149a3881c08a"
+    }
+  ]
+}

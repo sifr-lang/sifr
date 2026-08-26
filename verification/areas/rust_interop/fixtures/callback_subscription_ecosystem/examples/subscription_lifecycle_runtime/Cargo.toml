@@ -9,7 +9,7 @@ edition = "2024"
 [dependencies]
 futures = { version = "=0.3.34", default-features = true }
 notify = { version = "=8.2.0", default-features = true }
-redis = { version = "=1.4.1", default-features = false, features = ["tokio-comp"] }
+redis = { version = "=1.6.0", default-features = false, features = ["connection-manager", "tokio-comp"] }
 sifr_runtime = { path = "../../../../../../../crates/sifr_runtime" }
 tokio = { version = "=1.53.1", features = ["io-util", "net", "rt", "sync", "time"] }
 tokio-tungstenite = { version = "=0.30.0", default-features = false }

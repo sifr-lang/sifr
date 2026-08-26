@@ -15,5 +15,6 @@ and remove the temporary database on every exit path. The positive path uses a
 borrowed generated operation bridge followed by an owned generated
 `close=async_close` member routed to the package bridge. The distinct negative path closes the real
 four-resource identity and then retries an operation through its bridge-local
-shared alias. The Redis client disables library-metadata `CLIENT SETINFO`; the
+shared alias. The Redis client disables library-metadata `CLIENT SETINFO` and
+uses Redis 1.6's connection manager with two bounded reconnect attempts. The
 minimal RESP server covers only the exercised connection and `PING` frames.

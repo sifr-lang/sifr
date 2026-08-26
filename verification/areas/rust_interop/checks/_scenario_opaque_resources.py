@@ -67,7 +67,12 @@ def validate_opaque_resource_scenario(
         "../../../../../../../crates/sifr_runtime",
     )
     for name, version, features, default_features in (
-        ("redis", "=1.4.1", ["tokio-comp"], False),
+        (
+            "redis",
+            "=1.6.0",
+            ["connection-manager", "tokio-comp"],
+            False,
+        ),
         ("reqwest", "=0.13.4", ["rustls", "json"], False),
         ("rusqlite", "=0.40.2", ["bundled"], False),
         ("tokio", "=1.53.1", ["io-util", "net", "rt", "sync", "time"], None),
@@ -170,7 +175,7 @@ def run_opaque_resource_self_test(
             (
                 "Redis feature drift",
                 "examples/resource_lifecycle_runtime/Cargo.toml",
-                'features = ["tokio-comp"]',
+                'features = ["connection-manager", "tokio-comp"]',
                 "features = []",
                 "must declare features",
             ),

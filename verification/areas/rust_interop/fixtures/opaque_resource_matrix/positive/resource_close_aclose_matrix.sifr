@@ -45,7 +45,7 @@ async def verify_resource_close_aclose_matrix() -> Result[str, ResourceError]:
         _closed: None = await resource.aclose()
         closed: str = resource_close_observation()
         verified: str = summary + ";close=" + closed
-        assert verified == "http=echo:reqwest;sqlite=sqlite;redis=PONG;postgres=1;protocol-negatives=redis-malformed/postgres-early-close;poison=Rust bridge panicked;close=closed/already-closed"
+        assert verified == "http=echo:reqwest;sqlite=sqlite;redis=PONG/retries=2;postgres=1;protocol-negatives=redis-malformed/postgres-early-close;poison=Rust bridge panicked;close=closed/already-closed"
         return verified
     except ResourceError as error:
         raise error

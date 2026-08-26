@@ -451,7 +451,7 @@ fn test_build_opaque_resource_lifecycle_runtime() {
 
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
-        "http=echo:reqwest;sqlite=sqlite;redis=PONG;postgres=1;protocol-negatives=redis-malformed/postgres-early-close;poison=Rust bridge panicked;close=closed/already-closed"
+        "http=echo:reqwest;sqlite=sqlite;redis=PONG/retries=2;postgres=1;protocol-negatives=redis-malformed/postgres-early-close;poison=Rust bridge panicked;close=closed/already-closed"
     );
     assert!(
         output.stderr.is_empty(),
