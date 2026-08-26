@@ -103,6 +103,19 @@
       ]
     },
     {
+      "name": "numeric-dataframe-features",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "numeric-dataframe-features",
+          "entry": "verification/areas/python_interop/runner/numeric_dataframe_features.py",
+          "command": "python-interop-numeric-dataframe-features",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "readonly-check-doctor",
       "kind": "adapter",
       "cases": [

@@ -29,6 +29,8 @@ EXPECTED_PROJECTS = {
             "fastapi",
             "hiredis",
             "httpx2",
+            "numpy",
+            "pandas",
             "polars",
             "redis",
             "schwifty",
@@ -38,7 +40,7 @@ EXPECTED_PROJECTS = {
             "torch",
         }
     ),
-    "dlpack-demo": frozenset({"torch"}),
+    "dlpack-demo": frozenset({"numpy", "torch"}),
 }
 DLPACK_PROJECT_ROOT = Path("demos") / ("m" + "12_dlpack_demo")
 PROJECT_PATHS = {
@@ -301,6 +303,27 @@ def run_self_tests(audit: dict[str, object]) -> int:
     if not validate_project(project_name, expected, releases, project, stale_lock):
         raise AssertionError("stale lock mutation was not rejected")
 
+    secondary_name = "dlpack-demo"
+    secondary_pyproject_path, secondary_lock_path, secondary_expected = projects[
+        secondary_name
+    ]
+    secondary_project = load_toml(REPO_ROOT / secondary_pyproject_path)
+    secondary_lock = load_toml(REPO_ROOT / secondary_lock_path)
+    stale_secondary_lock = copy.deepcopy(secondary_lock)
+    next(
+        package
+        for package in stale_secondary_lock["package"]
+        if isinstance(package, dict) and package.get("name") == "numpy"
+    )["version"] = "2.5.1"
+    if not validate_project(
+        secondary_name,
+        secondary_expected,
+        releases,
+        secondary_project,
+        stale_secondary_lock,
+    ):
+        raise AssertionError("stale secondary lock mutation was not rejected")
+
     missing_artifact = copy.deepcopy(lock)
     next(
         package
@@ -332,7 +355,7 @@ def run_self_tests(audit: dict[str, object]) -> int:
     stale_image["service_images"][0]["latest_stable"] = "4.13.1"
     if not validate_service_images(stale_image):
         raise AssertionError("stale service-image mutation was not rejected")
-    return 5
+    return 6
 
 
 def main() -> int:
