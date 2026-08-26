@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-26. Items 0-22 are complete. Item 23 Polars 0.55 is
-next.
+Status: active on 2026-08-26. Items 0-23 are complete. Item 24 Rust Redis 1.6
+and graph reconciliation is next.
 
 ## Objective
 
@@ -191,7 +191,7 @@ Only the first incomplete row may be active.
 | 20 | complete | SQLx 0.9 | Runtime/TLS features and checked/offline query contracts pass. |
 | 21 | complete | Itertools 0.15 | Iterator compilation and parity pass before DataFusion consumes this line. |
 | 22 | complete | Arrow 59 and DataFusion 55 | The coupled analytical stack, Rust/Python bridge fixtures, and locks pass. |
-| 23 | pending | Polars 0.55 | Rust dataframe fixtures and exact catalog evidence pass. |
+| 23 | complete | Polars 0.55 | Rust dataframe fixtures and exact catalog evidence pass. |
 | 24 | pending | Rust Redis 1.6 and graph reconciliation | Redis passes and an official-registry check confirms every maintained Rust direct declaration is current. |
 | 25 | pending | Python minor train | Listed non-coupled Python releases advance sequentially and both environment lanes resolve. |
 | 26 | pending | CFFI 2 and Cryptography 50 | CFFI advances first; cryptography then advances; ABI, certificate, and error paths pass. |
@@ -1869,6 +1869,70 @@ dead-code warning; it did not affect Item 22 or workspace Clippy.
 Next action: implement Item 23 Polars 0.55 from this record merge on
 `origin/main`.
 
+### Item 23 record
+
+State: complete
+
+Implementation [PR #3535](https://github.com/sifr-lang/sifr/pull/3535) started
+from base `4f5432bdc7080811f0ab376d6be516def5cc784a`. The final candidate was
+`4051c44442b607c2800dafb0975a3e1b6dd4abd3`. It merged as
+`02a2429ae30fd2c48baa4165e32a1fb13e88ecae`.
+
+The official crates.io and upstream release audit confirmed Polars 0.55.2 as
+the latest stable release. The crate archive matched checksum
+`d52d3ed4e6b3917427f6d3c43edbd2740babe228bb4ccfa3431eac105844045d`, and
+the `rs-0.55.2` release tag resolved to upstream commit
+`d7488c71ecfbc77790292ff5b365b991c08380ce`.
+
+The exact generated-runtime catalog and advanced-data fixture now require
+Polars 0.55.2. Both maintained locks were regenerated as a coherent 23-crate
+Polars family. The advanced-data bridge adopts the stable
+`DataFrameIsSorted::is_sorted` API from the Polars prelude and observes
+sortedness on the live dataframe. It propagates Polars errors through the
+typed bridge result and gates the runtime observation on that live result. No
+stored compatibility value, legacy path, or fallback remains.
+
+Exact dependency/checksum certification, capability classification, policy
+mutation coverage, fixture output, and documentation were updated together.
+Focused validation passed the three Polars certification tests, the complete
+stdlib-manifest suite, the locked advanced-data Cargo check and Clippy, both
+advanced-data Rust-interop variants and all 243 mutation/self-test cases, the
+complete 10-variant Rust-interop area, the exact positive runtime and negative
+mismatch cases, the five-variant coverage area, and the focused Python Arrow
+and runtime tests. The broad non-pass Sifr suite, workspace Clippy, formatting,
+HIR maintainability, file-size, offline-fetch, and diff checks also passed.
+
+The one exact-SHA Opus review returned `SATISFIED` with no blocking finding.
+It independently confirmed the exact release, coherent locks, live sortedness
+observation, typed error propagation, and absence of compatibility behavior.
+The evidence is in the
+[#3535 review comment](https://github.com/sifr-lang/sifr/pull/3535#issuecomment-5421287214).
+No remediation review ran.
+
+The one create-PR gate passed every functional step. Its runtime-platform area
+passed all 28 variants with one declared capability skip, but the clean-cache
+area took 212.673 seconds against its 120-second blocking wall-time budget.
+The gate therefore exited 124 after 1,181 seconds and was not rerun. The exact
+result is in the
+[#3535 create-PR gate comment](https://github.com/sifr-lang/sifr/pull/3535#issuecomment-5421459671).
+
+The one merge gate ran on the same approved candidate and exited 0. Every
+blocking area passed, including the fresh Polars/Arrow generated-project
+runtime and mismatch paths. All 698 E2E fixtures passed across 173 groups with
+signature `127353b213e16688`. The lane took 6,882.03 seconds, used
+2,412,740,608 bytes peak RSS with zero swaps, and reported only advisory
+wall-time and group-skew observations. Its exact result is in the
+[#3535 merge gate comment](https://github.com/sifr-lang/sifr/pull/3535#issuecomment-5422596718).
+Neither gate was rerun.
+
+Deferred follow-up: Item 35 owns the review suggestion to replace the
+file-wide textual `unwrap_or` absence assertion with a structural assertion
+anchored to the exact sortedness observation if the final audit confirms that
+it improves mechanism-level evidence.
+
+Next action: implement Item 24 Rust Redis 1.6 and graph reconciliation from
+this record merge on `origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1907,8 +1971,8 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-22 are complete. Item 22 merged in PR #3533 as
-`92430c5e52042b82567e3798045d5a3414a42676`. Its one exact-SHA Opus review
+Current state: Items 0-23 are complete. Item 23 merged in PR #3535 as
+`02a2429ae30fd2c48baa4165e32a1fb13e88ecae`. Its one exact-SHA Opus review
 returned `SATISFIED`, and no remediation review ran.
 
 The one create-PR gate stopped on a clean-cache runtime-platform timing budget
@@ -1916,5 +1980,5 @@ after all 28 variants passed. It was not rerun. The one merge gate ran on the
 same final SHA, exited 0, and passed all functional steps. All 698 E2E fixtures
 passed with signature `127353b213e16688`.
 
-Next action: merge this record-only update. Then start Item 23 Polars 0.55 from
-the resulting `origin/main`.
+Next action: merge this record-only update. Then start Item 24 Rust Redis 1.6
+and graph reconciliation from the resulting `origin/main`.
