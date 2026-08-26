@@ -601,6 +601,7 @@
         "env",
         "dependency-versions",
         "minor-train-features",
+        "crypto-abi-features",
         "readonly-check-doctor",
         "binding-authoring",
         "lsp-declaration-authoring",

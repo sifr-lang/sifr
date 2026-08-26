@@ -12,14 +12,24 @@ from urllib.parse import urlparse
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 AUDIT_PATH = (
-    REPO_ROOT / "verification/areas/python_interop/data/latest_stable_minor_train.json"
+    REPO_ROOT / "verification/areas/python_interop/data/latest_stable_python.json"
 )
 LIVE_CASE_CONFIG_PATH = (
     REPO_ROOT / "verification/areas/python_interop/runner/live_case_config.py"
 )
 EXPECTED_PROJECTS = {
     "verification/areas/python_interop/pyproject.toml": frozenset(
-        {"alembic", "boto3", "certifi", "polars", "schwifty", "sqlalchemy", "torch"}
+        {
+            "alembic",
+            "boto3",
+            "certifi",
+            "cffi",
+            "cryptography",
+            "polars",
+            "schwifty",
+            "sqlalchemy",
+            "torch",
+        }
     ),
     "demos/m12_dlpack_demo/pyproject.toml": frozenset({"torch"}),
 }
@@ -71,7 +81,7 @@ def release_map(audit: dict[str, object]) -> dict[str, dict[str, object]]:
         releases[name] = package
     expected = frozenset().union(*EXPECTED_PROJECTS.values())
     if releases.keys() != expected:
-        raise ValueError("audited package set differs from the Item 25 package set")
+        raise ValueError("audited package set differs from the maintained package set")
     return releases
 
 
@@ -96,7 +106,7 @@ def project_map(audit: dict[str, object]) -> dict[str, tuple[str, frozenset[str]
             raise ValueError(f"duplicate audited project: {pyproject}")
         mapped[pyproject] = (lock, frozenset(normalize_name(name) for name in packages))
     if mapped.keys() != EXPECTED_PROJECTS.keys():
-        raise ValueError("audited project set differs from the Item 25 project set")
+        raise ValueError("audited project set differs from the maintained project set")
     for pyproject, expected in EXPECTED_PROJECTS.items():
         if mapped[pyproject][1] != expected:
             raise ValueError(f"{pyproject}: audited package ownership drifted")
@@ -176,16 +186,18 @@ def validate_project(
 
 def validate_repository(audit: dict[str, object]) -> list[str]:
     if audit.get("schema_version") != 1:
-        raise ValueError("unsupported Item 25 audit schema")
+        raise ValueError("unsupported stable-release audit schema")
     audited_at = audit.get("audited_at")
     if not isinstance(audited_at, str):
-        raise ValueError("Item 25 audit date must be a string")
+        raise ValueError("stable-release audit date must be a string")
     try:
         date.fromisoformat(audited_at)
     except ValueError as error:
-        raise ValueError("Item 25 audit date must use ISO 8601 format") from error
+        raise ValueError(
+            "stable-release audit date must use ISO 8601 format"
+        ) from error
     if audit.get("python") != "3.14.7":
-        raise ValueError("Item 25 audit must target Python 3.14.7")
+        raise ValueError("stable-release audit must target Python 3.14.7")
     releases = release_map(audit)
     projects = project_map(audit)
     errors: list[str] = []

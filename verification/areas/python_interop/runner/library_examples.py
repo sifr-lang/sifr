@@ -35,9 +35,9 @@ LIBRARY_EXAMPLE_CASES = {
         relative_source="cryptography_tls/cryptography_cffi_full_example.sifr",
         stdout_marker=(
             "sifr-python-interop:cryptography-cffi:roundtrip=sifr-secret:"
-            "certifi=ca-store"
+            "certifi=ca-store:x509=verified:wrong-host=rejected"
         ),
-        import_roots=("certifi", "cffi", "cryptography", "ssl"),
+        import_roots=("certifi", "cffi", "cryptography", "datetime", "ssl"),
         native_roots=("cffi", "cryptography"),
         bridge_files=("cryptography_cffi_example.py",),
     ),
