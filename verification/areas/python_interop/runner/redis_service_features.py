@@ -40,11 +40,13 @@ def main() -> int:
 
         if RedisContainer.__module__ != "testcontainers.community.redis":
             raise RuntimeError("Testcontainers Redis import is not canonical")
-        container = DockerContainer("redis:8.10.1-alpine").waiting_for(
-            LogMessageWaitStrategy("Ready")
-        )
-        if container.image != "redis:8.10.1-alpine":
-            raise RuntimeError("Testcontainers stable wait strategy was not configured")
+        if not callable(DockerContainer.with_envs) or not callable(
+            DockerContainer.waiting_for
+        ):
+            raise RuntimeError("Testcontainers stable container API is unavailable")
+        strategy = LogMessageWaitStrategy("Ready")
+        if strategy.with_startup_timeout(60) is not strategy:
+            raise RuntimeError("Testcontainers wait strategy configuration drifted")
 
     print(
         "python Redis service features ok: redis=8.1.0 fakeredis=2.37.1 "
