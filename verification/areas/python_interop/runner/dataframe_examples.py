@@ -24,7 +24,7 @@ DATAFRAME_EXAMPLE_CASES = {
     "polars": ExampleCase(
         case_id="polars",
         relative_source="polars_arrow/polars_full_example.sifr",
-        stdout_marker="sifr-python-interop:polars:sum=10:first-city=oslo",
+        stdout_marker="sifr-python-interop:polars:sum=10:first-city=oslo:struct-drop=ok",
         import_roots=("polars",),
         bridge_files=("polars_example.py",),
     ),
@@ -50,7 +50,12 @@ def run_dataframe_examples_self_tests(paths: RunnerPaths) -> None:
         cases_by_id=DATAFRAME_EXAMPLE_CASES,
     )
     observed_policy = {
-        case_id: (case.import_roots, case.native_roots, case.copy_bridges, case.bridge_files)
+        case_id: (
+            case.import_roots,
+            case.native_roots,
+            case.copy_bridges,
+            case.bridge_files,
+        )
         for case_id, case in DATAFRAME_EXAMPLE_CASES.items()
     }
     expected_policy = {

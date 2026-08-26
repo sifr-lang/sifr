@@ -10,7 +10,9 @@ ML_EXAMPLE_CASES = {
     "torch": ExampleCase(
         case_id="torch",
         relative_source="torch_dlpack/torch_full_example.sifr",
-        stdout_marker="sifr-python-interop:torch:sum=42.0:shape=2x3:dtype=float32",
+        stdout_marker=(
+            "sifr-python-interop:torch:sum=42.0:shape=2x3:dtype=float32:linear-xent=ok"
+        ),
         import_roots=("torch",),
         bridge_files=("torch_example.py",),
     ),
