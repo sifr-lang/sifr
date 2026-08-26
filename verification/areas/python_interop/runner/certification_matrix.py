@@ -13,7 +13,7 @@ CORE_TIER1A_PACKAGES = {
     "confluent-kafka",
     "cryptography",
     "google-genai",
-    "httpx",
+    "httpx2",
     "numpy",
     "openai",
     "pandas",
@@ -29,8 +29,13 @@ CORE_TIER1A_PACKAGES = {
     "torch",
 }
 
+
 def validate_certification_policy(entries: list[PackageEntry]) -> None:
-    tier1a = {entry.name for entry in entries if entry.tier == "tier1" and entry.gate == "tier1a"}
+    tier1a = {
+        entry.name
+        for entry in entries
+        if entry.tier == "tier1" and entry.gate == "tier1a"
+    }
     missing = sorted(CORE_TIER1A_PACKAGES.difference(tier1a))
     extra = sorted(tier1a.difference(CORE_TIER1A_PACKAGES))
     if missing or extra:
@@ -43,15 +48,21 @@ def validate_certification_policy(entries: list[PackageEntry]) -> None:
 
     for entry in entries:
         if entry.native and "native" not in entry.groups:
-            raise SystemExit(f"native package {entry.name} must include the native group")
+            raise SystemExit(
+                f"native package {entry.name} must include the native group"
+            )
         if entry.host_dependent and not entry.skip_reason:
-            raise SystemExit(f"host-dependent package {entry.name} must declare skip-reason")
+            raise SystemExit(
+                f"host-dependent package {entry.name} must declare skip-reason"
+            )
         if entry.tier == "tier4" and not entry.host_dependent:
             raise SystemExit(f"tier4 package {entry.name} must be host-dependent")
         if entry.tier in {"tier2", "tier3"} and entry.host_dependent:
             raise SystemExit(f"{entry.tier} package {entry.name} must be deterministic")
         if not entry.import_roots:
-            raise SystemExit(f"package {entry.name} must expose at least one import root")
+            raise SystemExit(
+                f"package {entry.name} must expose at least one import root"
+            )
 
 
 def build_certification_report(entries: list[PackageEntry]) -> dict[str, Any]:
@@ -68,7 +79,9 @@ def build_certification_report(entries: list[PackageEntry]) -> dict[str, Any]:
         "tier_counts": dict(sorted(tier_counts.items())),
         "gate_counts": dict(sorted(gate_counts.items())),
         "group_counts": dict(sorted(group_counts.items())),
-        "packages": [package_payload(entry) for entry in sorted(entries, key=entry_sort_key)],
+        "packages": [
+            package_payload(entry) for entry in sorted(entries, key=entry_sort_key)
+        ],
     }
 
 

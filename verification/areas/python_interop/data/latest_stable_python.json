@@ -1,17 +1,15 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "audited_at": "2026-08-26",
   "source": "https://pypi.org/pypi/{project}/{version}/json",
   "python": "3.14.7",
   "projects": [
     {
-      "pyproject": "verification/areas/python_interop/pyproject.toml",
-      "lock": "verification/areas/python_interop/uv.lock",
-      "packages": ["alembic", "boto3", "certifi", "cffi", "cryptography", "polars", "schwifty", "sqlalchemy", "torch"]
+      "name": "python-interop",
+      "packages": ["alembic", "boto3", "certifi", "cffi", "cryptography", "fastapi", "httpx2", "polars", "schwifty", "sqlalchemy", "starlette", "torch"]
     },
     {
-      "pyproject": "demos/m12_dlpack_demo/pyproject.toml",
-      "lock": "demos/m12_dlpack_demo/uv.lock",
+      "name": "dlpack-demo",
       "packages": ["torch"]
     }
   ],
@@ -82,6 +80,28 @@
       }
     },
     {
+      "name": "fastapi",
+      "latest_stable": "0.141.1",
+      "released_at": "2026-07-29T17:18:04.364385Z",
+      "requires_python": ">=3.10",
+      "official_release": "https://pypi.org/project/fastapi/0.141.1/",
+      "artifact": {
+        "filename": "fastapi-0.141.1-py3-none-any.whl",
+        "sha256": "bfb91aa2d334c61cb35ba9a116fc123b3d3df31640b801cf57a7a78ec3f603b3"
+      }
+    },
+    {
+      "name": "httpx2",
+      "latest_stable": "2.12.0",
+      "released_at": "2026-08-18T13:22:06.834669Z",
+      "requires_python": ">=3.10",
+      "official_release": "https://pypi.org/project/httpx2/2.12.0/",
+      "artifact": {
+        "filename": "httpx2-2.12.0-py3-none-any.whl",
+        "sha256": "cc8b6eecb8661c146b8f89a60e97456ee086e91a784ed31ac450c3a9e613dd36"
+      }
+    },
+    {
       "name": "polars",
       "latest_stable": "1.44.1",
       "released_at": "2026-08-26T07:07:44.646805Z",
@@ -112,6 +132,17 @@
       "artifact": {
         "filename": "sqlalchemy-2.0.52-cp314-cp314-macosx_11_0_arm64.whl",
         "sha256": "410d52be41d17f1a236d19520fbe776257dc16516ed06bd16d433311842aefd9"
+      }
+    },
+    {
+      "name": "starlette",
+      "latest_stable": "1.6.0",
+      "released_at": "2026-08-08T18:27:56.196765Z",
+      "requires_python": ">=3.10",
+      "official_release": "https://pypi.org/project/starlette/1.6.0/",
+      "artifact": {
+        "filename": "starlette-1.6.0-py3-none-any.whl",
+        "sha256": "a86dd39d14bb45f85a3d18525215a9ef0cfd1f192ac793220e72598c90335f0c"
       }
     },
     {

@@ -6,7 +6,7 @@ class Response:
     message: str
 
 
-@python.opaque(type=httpx.AsyncClient, cleanup=async_close)
+@python.opaque(type=httpx2.AsyncClient, cleanup=async_close)
 class Client:
     @python.coroutine(Self.aclose)
     async def aclose(own self) -> Result[None, PythonError]: ...

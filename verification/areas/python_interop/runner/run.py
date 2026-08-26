@@ -454,7 +454,7 @@ def validate_async_declaration_evidence(payload: object) -> None:
     )
     if not isinstance(live, dict) or live.get("stdout_marker") != expected:
         raise SystemExit(
-            "async declaration live evidence must lock the httpx client marker"
+            "async declaration live evidence must lock the HTTPX2 client marker"
         )
 
 
