@@ -7,7 +7,8 @@
   "host_policy": "live Redis requires external integration gate",
   "cases": [
     "redis_client_imports",
-    "fakeredis_roundtrip_shape",
-    "hiredis_native_import_is_trusted"
+    "fakeredis_resp3_zpop_shape_and_key_cleanup",
+    "hiredis_resp3_map_parser_is_trusted",
+    "redis_8_cardinality_commands_run_against_live_service"
   ]
 }

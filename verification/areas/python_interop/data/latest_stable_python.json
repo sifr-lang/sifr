@@ -1,26 +1,34 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "audited_at": "2026-08-26",
   "source": "https://pypi.org/pypi/{project}/{version}/json",
   "python": "3.14.7",
   "projects": [
     {
       "name": "python-interop",
-      "packages": ["alembic", "boto3", "certifi", "cffi", "cryptography", "fastapi", "httpx2", "polars", "schwifty", "sqlalchemy", "starlette", "torch"]
+      "packages": ["alembic", "boto3", "certifi", "cffi", "cryptography", "fakeredis", "fastapi", "hiredis", "httpx2", "polars", "redis", "schwifty", "sqlalchemy", "starlette", "testcontainers", "torch"]
     },
     {
       "name": "dlpack-demo",
       "packages": ["torch"]
     }
   ],
-  "service_emulators": [
+  "service_images": [
     {
-      "name": "localstack-community",
+      "name": "localstack",
       "image": "localstack/localstack",
       "latest_stable": "4.14.0",
       "released_at": "2026-02-26T16:57:42Z",
       "official_release": "https://github.com/localstack/localstack/releases/tag/v4.14.0",
       "manifest_digest": "sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a"
+    },
+    {
+      "name": "redis",
+      "image": "redis",
+      "latest_stable": "8.10.1-alpine",
+      "released_at": "2026-08-17T16:44:04Z",
+      "official_release": "https://github.com/redis/redis/releases/tag/8.10.1",
+      "manifest_digest": "sha256:becdda6c7f4b3fb42e42fd7f120bbf5c54c4caaaf16f26da24e4563d2c1f0576"
     }
   ],
   "packages": [
@@ -80,6 +88,17 @@
       }
     },
     {
+      "name": "fakeredis",
+      "latest_stable": "2.37.1",
+      "released_at": "2026-08-18T15:22:00.100350Z",
+      "requires_python": ">=3.8",
+      "official_release": "https://pypi.org/project/fakeredis/2.37.1/",
+      "artifact": {
+        "filename": "fakeredis-2.37.1-py3-none-any.whl",
+        "sha256": "f15c41be151c1e9206416dece764369a4dedb6b1341df3734c3c2c000e405508"
+      }
+    },
+    {
       "name": "fastapi",
       "latest_stable": "0.141.1",
       "released_at": "2026-07-29T17:18:04.364385Z",
@@ -88,6 +107,17 @@
       "artifact": {
         "filename": "fastapi-0.141.1-py3-none-any.whl",
         "sha256": "bfb91aa2d334c61cb35ba9a116fc123b3d3df31640b801cf57a7a78ec3f603b3"
+      }
+    },
+    {
+      "name": "hiredis",
+      "latest_stable": "3.4.1",
+      "released_at": "2026-08-07T10:21:56.171259Z",
+      "requires_python": ">=3.8",
+      "official_release": "https://pypi.org/project/hiredis/3.4.1/",
+      "artifact": {
+        "filename": "hiredis-3.4.1-cp314-cp314-macosx_11_0_arm64.whl",
+        "sha256": "d151dd3d715cb62dcc09132e4a8f16c9ec0b0874ab9c6fca3b2cbdc09d52660f"
       }
     },
     {
@@ -110,6 +140,17 @@
       "artifact": {
         "filename": "polars-1.44.1-py3-none-any.whl",
         "sha256": "1fa62fc1c88fba77a68b28291b5aabdd69e5f38b34e59721a064ae3169b59bb5"
+      }
+    },
+    {
+      "name": "redis",
+      "latest_stable": "8.1.0",
+      "released_at": "2026-07-30T08:50:58.497552Z",
+      "requires_python": ">=3.10",
+      "official_release": "https://pypi.org/project/redis/8.1.0/",
+      "artifact": {
+        "filename": "redis-8.1.0-py3-none-any.whl",
+        "sha256": "a4fe1aac3d3b3cc791d4b3d5931c5a956045dc951ee74d1c913ee3ac4d2ee9fb"
       }
     },
     {
@@ -143,6 +184,17 @@
       "artifact": {
         "filename": "starlette-1.6.0-py3-none-any.whl",
         "sha256": "a86dd39d14bb45f85a3d18525215a9ef0cfd1f192ac793220e72598c90335f0c"
+      }
+    },
+    {
+      "name": "testcontainers",
+      "latest_stable": "4.15.0",
+      "released_at": "2026-07-24T23:08:00.130940Z",
+      "requires_python": ">=3.10",
+      "official_release": "https://pypi.org/project/testcontainers/4.15.0/",
+      "artifact": {
+        "filename": "testcontainers-4.15.0-py3-none-any.whl",
+        "sha256": "8796c14e76604031ad39cf0ed3b8e9806283a1fbf5270965c2b1c594caa31b74"
       }
     },
     {

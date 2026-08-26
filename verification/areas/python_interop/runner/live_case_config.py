@@ -15,7 +15,10 @@ class LiveCase:
 
 
 LIVE_IMAGES = {
-    "redis": "redis:7.2-alpine",
+    "redis": (
+        "redis:8.10.1-alpine@"
+        "sha256:becdda6c7f4b3fb42e42fd7f120bbf5c54c4caaaf16f26da24e4563d2c1f0576"
+    ),
     "postgres": "postgres:16-alpine",
     "kafka": "docker.redpanda.com/redpandadata/redpanda:v23.1.13",
     "localstack": (
@@ -31,7 +34,10 @@ LIVE_CASES = {
         bridge_file="live_services/python_bridges/redis_live.py",
         import_roots=("redis",),
         native_roots=(),
-        stdout_marker="sifr-python-interop:live:redis:roundtrip=ok:resources=zero",
+        stdout_marker=(
+            "sifr-python-interop:live:redis:roundtrip=ok:"
+            "difference=1:union=3:resources=zero"
+        ),
         image_key="redis",
     ),
     "postgres": LiveCase(

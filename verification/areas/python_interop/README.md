@@ -110,6 +110,8 @@ and endpoint discovery only; each compiled Sifr binary invokes its hermetic
 bridge to own every service-client operation. Kafka, Pub/Sub-style, SNS, and
 SQS deliveries cross a foreign-thread typed Sifr callback and must return a
 typed acknowledgement before the binary can report `live-passed`.
+The runner uses Testcontainers 4.15 community imports and structured wait
+strategies. Redis runs from the audited Redis 8.10.1 Alpine image digest.
 Declaration-first callback evidence is also compiled offline with
 `runner/run.py --callback-examples`: separate real CFFI caller-thread and
 worker-thread fixtures for current and foreign dispatch, kafka-python
@@ -131,10 +133,12 @@ default; live suites must declare their own `network_mode` and resource classes.
 - `dependency-versions`: exact PyPI stable versions and audited artifact hashes
   for the maintained Python lock owners. Five mutations cover a stale version,
   a missing artifact, a missing declaration, retired HTTP client packages, and
-  a stale service emulator.
+  a stale service image.
 - `minor-train-features`: direct runtime coverage for the new Schwifty 2026.7
   checksum-solving `BBAN.random` implementation.
 - `crypto-abi-features`: CFFI 2.1 source generation through `cffi.gen_src`.
+- `redis-service-features`: Redis 8.1 commands, Fakeredis RESP3 behavior,
+  Hiredis RESP3 parsing, and Testcontainers 4.15 community APIs.
 - `imports`: root imports and native extension load diagnostics.
 - `native`: trusted native Python package load/use smoke.
 - `async`: Python event-loop/client behavior under Sifr blocking semantics.
@@ -224,8 +228,8 @@ and verifies that ordinary object/leak diagnostics return to their baseline:
   server certificate and rejects the same certificate for the wrong hostname.
 - boto3 SQS client calls through botocore Stubber with no AWS credentials or
   network access.
-- redis client import, fakeredis in-process round trip, and hiredis RESP
-  parsing.
+- Redis 8 client import, Fakeredis RESP3 sorted-set cleanup, and Hiredis RESP3
+  map parsing. The live suite verifies Redis set-cardinality commands.
 - SQLAlchemy in-memory query execution plus Alembic 1.19 named CHECK-constraint
   autogeneration and psycopg conninfo construction.
 
