@@ -1,9 +1,10 @@
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use arrow::array::{Array, ArrayRef, Float64Array};
 use arrow::datatypes::{DataType as ArrowDataType, Field, Schema};
 use arrow::record_batch::RecordBatch;
+use datafusion::common::ScalarValue;
 use datafusion::datasource::MemTable;
 use datafusion::execution::context::SessionContext;
 use polars::prelude::{DataFrame, DataType as PolarsDataType, IntoColumn, NamedFrom, Series};
@@ -31,6 +32,7 @@ pub struct RecordBatchView {
 struct ArrowRuntimeState {
     record_batch: RecordBatch,
     datafusion: SessionContext,
+    datafusion_nan_fill_plan: String,
     polars: DataFrame,
     input_pointer: usize,
 }
@@ -40,6 +42,7 @@ impl std::fmt::Debug for ArrowRuntimeState {
         formatter
             .debug_struct("ArrowRuntimeState")
             .field("record_batch", &self.record_batch)
+            .field("datafusion_nan_fill_plan", &self.datafusion_nan_fill_plan)
             .field("polars", &self.polars)
             .field("input_pointer", &self.input_pointer)
             .finish_non_exhaustive()
@@ -103,6 +106,16 @@ fn build_state(input: Vec<f64>, input_pointer: usize) -> Result<ArrowRuntimeStat
     datafusion
         .register_table("input", Arc::new(table))
         .map_err(display_error)?;
+    let datafusion_nan_fill_plan = datafusion
+        .read_batch(record_batch.clone())
+        .and_then(|frame| frame.fill_nan(&ScalarValue::from(0.0), &["value"]))
+        .map_err(display_error)?
+        .logical_plan()
+        .display_indent()
+        .to_string();
+    if !datafusion_nan_fill_plan.contains("nanvl") {
+        return Err("DataFusion did not plan the requested NaN fill".to_string());
+    }
 
     let series = Series::new("value".into(), polars_values);
     let polars = DataFrame::new(record_batch.num_rows(), vec![series.into_column()])
@@ -111,6 +124,7 @@ fn build_state(input: Vec<f64>, input_pointer: usize) -> Result<ArrowRuntimeStat
     Ok(ArrowRuntimeState {
         record_batch,
         datafusion,
+        datafusion_nan_fill_plan,
         polars,
         input_pointer,
     })
@@ -133,18 +147,22 @@ fn observe_state(state: &ArrowRuntimeState) -> Result<String, String> {
     let Some(polars_column) = state.polars.columns().first() else {
         return Err("Polars dataframe lost its column".to_string());
     };
-    let datafusion_registered = state.datafusion.table_exist("input").unwrap_or(false);
+    let datafusion_registered = state
+        .datafusion
+        .table_exist("input")
+        .map_err(display_error)?;
     if arrow_field.name() != "value"
         || arrow_field.data_type() != &ArrowDataType::Float64
         || polars_column.name().as_str() != "value"
         || polars_column.dtype() != &PolarsDataType::Float64
         || state.polars.height() != state.record_batch.num_rows()
         || !datafusion_registered
+        || !state.datafusion_nan_fill_plan.contains("nanvl")
     {
         return Err("crate-backed schema identity mismatch".to_string());
     }
     Ok(format!(
-        "schema=value:float64;rows={};datafusion=registered;polars=value:float64x{};polars-copy=explicit;copy=input->arrow:none",
+        "schema=value:float64;rows={};datafusion=registered+fill-nan-planned;polars=value:float64x{};polars-copy=explicit;copy=input->arrow:none",
         state.record_batch.num_rows(),
         state.polars.height()
     ))

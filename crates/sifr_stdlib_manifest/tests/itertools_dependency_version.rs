@@ -6,8 +6,8 @@ use itertools::{Itertools, Position};
 const ITERTOOLS_VERSION: &str = "0.15.0";
 const ITERTOOLS_PACKAGE_HASH: &str =
     "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc";
-const DATAFUSION_ITERTOOLS_VERSION: &str = "0.14.0";
-const DATAFUSION_ITERTOOLS_PACKAGE_HASH: &str =
+const TRANSITIVE_ITERTOOLS_VERSION: &str = "0.14.0";
+const TRANSITIVE_ITERTOOLS_PACKAGE_HASH: &str =
     "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285";
 
 const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
@@ -17,9 +17,9 @@ const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
 const ITERTOOLS_VENDOR_MANIFEST: &str = include_str!("../../../vendor/itertools/Cargo.toml");
 const ITERTOOLS_VENDOR_CHECKSUM: &str =
     include_str!("../../../vendor/itertools/.cargo-checksum.json");
-const DATAFUSION_ITERTOOLS_VENDOR_MANIFEST: &str =
+const TRANSITIVE_ITERTOOLS_VENDOR_MANIFEST: &str =
     include_str!("../../../vendor/itertools-0.14.0/Cargo.toml");
-const DATAFUSION_ITERTOOLS_VENDOR_CHECKSUM: &str =
+const TRANSITIVE_ITERTOOLS_VENDOR_CHECKSUM: &str =
     include_str!("../../../vendor/itertools-0.14.0/.cargo-checksum.json");
 
 #[test]
@@ -168,7 +168,7 @@ fn first_party_lock_edges_use_itertools_0_15() {
 }
 
 #[test]
-fn vendor_contains_current_and_datafusion_owned_itertools_releases() {
+fn vendor_contains_current_and_external_transitive_itertools_releases() {
     assert_vendor_release(
         ITERTOOLS_VENDOR_MANIFEST,
         ITERTOOLS_VENDOR_CHECKSUM,
@@ -176,10 +176,10 @@ fn vendor_contains_current_and_datafusion_owned_itertools_releases() {
         ITERTOOLS_PACKAGE_HASH,
     );
     assert_vendor_release(
-        DATAFUSION_ITERTOOLS_VENDOR_MANIFEST,
-        DATAFUSION_ITERTOOLS_VENDOR_CHECKSUM,
-        DATAFUSION_ITERTOOLS_VERSION,
-        DATAFUSION_ITERTOOLS_PACKAGE_HASH,
+        TRANSITIVE_ITERTOOLS_VENDOR_MANIFEST,
+        TRANSITIVE_ITERTOOLS_VENDOR_CHECKSUM,
+        TRANSITIVE_ITERTOOLS_VERSION,
+        TRANSITIVE_ITERTOOLS_PACKAGE_HASH,
     );
 
     let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("Cargo.lock must parse");
@@ -198,8 +198,23 @@ fn vendor_contains_current_and_datafusion_owned_itertools_releases() {
         .collect::<Vec<_>>();
     assert_eq!(
         dependencies,
-        ["itertools 0.14.0"],
-        "Item 22 owns the upstream DataFusion transition to Itertools 0.15"
+        ["itertools 0.15.0"],
+        "DataFusion 55 must use the maintained Itertools line directly"
+    );
+
+    let object_store = packages
+        .iter()
+        .find(|package| package_name(package) == Some("object_store"))
+        .expect("Cargo.lock must contain Object Store");
+    assert!(
+        object_store
+            .get("dependencies")
+            .and_then(toml::Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(toml::Value::as_str)
+            .any(|dependency| dependency == "itertools 0.14.0"),
+        "Object Store retains the external Itertools 0.14 edge"
     );
 }
 

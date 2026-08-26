@@ -4,10 +4,12 @@ This locked/offline package is the runtime-observed scenario for
 `advanced_data_runtime_matrix`. Two shared bridge crates use the exact root
 lock versions of Arrow, DataFusion, Polars, ndarray, and CPU-only Candle.
 
-The Arrow path moves the owned Sifr floating-point vector into an Arrow array without
-changing its address, preserves schema identity in a record batch registered
-with DataFusion, and derives the corresponding Polars dataframe through an
-explicit copy. The tensor path moves two owned vectors into ndarray and Candle
+The Arrow path moves the owned Sifr floating-point vector into an Arrow array
+without changing its address, preserves schema identity in a record batch
+registered with DataFusion, plans DataFusion 55's borrowed `fill_nan`
+operation, and derives the corresponding Polars dataframe through an explicit
+copy. Catalog lookup errors propagate as typed bridge errors. The tensor path
+moves two owned vectors into ndarray and Candle
 without changing either allocation, then transfers the ndarray owner into a
 one-shot, DLPack-style managed capsule without copying. Pre-close and
 post-close observations prove deterministic owner cleanup.

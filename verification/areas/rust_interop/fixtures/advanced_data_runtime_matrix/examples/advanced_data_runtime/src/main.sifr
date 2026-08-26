@@ -72,7 +72,7 @@ def verify_advanced_data_runtime() -> Result[str, DataExchangeError]:
         arrow_after_close: str = arrow_release_observation()
         tensor_after_close: str = tensor_release_observation()
         summary: str = "arrow=" + arrow_summary + ";tensor=" + tensor_summary + ";dlpack=" + dlpack_summary + ";cleanup-before=" + arrow_before_close + ";" + tensor_before_close + ";cleanup-after=" + arrow_after_close + ";" + tensor_after_close
-        assert summary == "arrow=schema=value:float64;rows=6;datafusion=registered;polars=value:float64x6;polars-copy=explicit;copy=input->arrow:none;tensor=dtype=f64;rank=2;shape=2x3;layout=c;strides=3x1;device=cpu;ndarray-copy=none;candle-copy=none;dlpack=protocol=managed-tensor;ownership=transferred;dtype=f64;rank=2;shape=2x3;strides=3x1;device=cpu;copy=none;cleanup-before=arrow-released=0;active=1;tensor-released=0;active=1;cleanup-after=arrow-released=1;active=0;tensor-released=1;active=0"
+        assert summary == "arrow=schema=value:float64;rows=6;datafusion=registered+fill-nan-planned;polars=value:float64x6;polars-copy=explicit;copy=input->arrow:none;tensor=dtype=f64;rank=2;shape=2x3;layout=c;strides=3x1;device=cpu;ndarray-copy=none;candle-copy=none;dlpack=protocol=managed-tensor;ownership=transferred;dtype=f64;rank=2;shape=2x3;strides=3x1;device=cpu;copy=none;cleanup-before=arrow-released=0;active=1;tensor-released=0;active=1;cleanup-after=arrow-released=1;active=0;tensor-released=1;active=0"
         return summary
     except DataExchangeError as error:
         raise error
