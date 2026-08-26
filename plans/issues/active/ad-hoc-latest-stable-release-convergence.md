@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
-Status: active on 2026-08-26. Items 0-21 are complete. Item 22 Arrow 59 and
-DataFusion 55 is next.
+Status: active on 2026-08-26. Items 0-22 are complete. Item 23 Polars 0.55 is
+next.
 
 ## Objective
 
@@ -190,7 +190,7 @@ Only the first incomplete row may be active.
 | 19 | complete | Rusqlite 0.40 | SQLite interop and exact catalog/fixture locks pass. |
 | 20 | complete | SQLx 0.9 | Runtime/TLS features and checked/offline query contracts pass. |
 | 21 | complete | Itertools 0.15 | Iterator compilation and parity pass before DataFusion consumes this line. |
-| 22 | pending | Arrow 59 and DataFusion 55 | The coupled analytical stack, Rust/Python bridge fixtures, and locks pass. |
+| 22 | complete | Arrow 59 and DataFusion 55 | The coupled analytical stack, Rust/Python bridge fixtures, and locks pass. |
 | 23 | pending | Polars 0.55 | Rust dataframe fixtures and exact catalog evidence pass. |
 | 24 | pending | Rust Redis 1.6 and graph reconciliation | Redis passes and an official-registry check confirms every maintained Rust direct declaration is current. |
 | 25 | pending | Python minor train | Listed non-coupled Python releases advance sequentially and both environment lanes resolve. |
@@ -1790,6 +1790,85 @@ block the Item 21 mechanism.
 Next action: implement Item 22 Arrow 59 and DataFusion 55 from this record
 merge on `origin/main`.
 
+### Item 22 record
+
+State: complete
+
+Implementation [PR #3533](https://github.com/sifr-lang/sifr/pull/3533) started
+from base `67a9061d03a2d1d7730287a9141dfacb8829053b`. The final candidate was
+`61392c034d6c30216cc5a6bd2ceb67cfa01e925b`. It merged as
+`92430c5e52042b82567e3798045d5a3414a42676`.
+
+The official registry and upstream release audit confirmed Arrow 59.2.0 and
+DataFusion 55.0.0 as their latest stable releases. The Arrow archive matched
+checksum
+`61d285d16bce7d0be61912f7928342b673067b6b7d7ef6cc179258ba7de1fecf`,
+and its release tag resolved to upstream commit
+`782e5a685501a9db6cc8e9a3b7cbff894940c47a`. The DataFusion archive matched
+checksum
+`96f76f0167ed0842b29a3d1e41be3c034c0a46409a3a703cc4cc84ee8c24abf4`,
+and its release tag resolved to upstream commit
+`d5552342012888b7d1a3ab88d92e3d292fc0cde0`. DataFusion 55 requires Rust
+1.94, which is below Sifr's pinned Rust 1.98 compiler.
+
+Arrow advanced first inside the compatibility unit. The intermediate root
+check passed while DataFusion 54 temporarily retained Arrow 58. DataFusion
+then advanced and collapsed both maintained locks onto one coherent family:
+all 14 Arrow crates and Parquet use 59.2.0, and all 31 DataFusion crates use
+55.0.0. DataFusion's direct Itertools edge now uses 0.15.0. Object Store still
+owns an external transitive Itertools 0.14 edge; the certification names that
+owner instead of preserving an old first-party compatibility lane.
+
+The canonical advanced-data bridge adopts DataFusion 55's borrowed
+`DataFrame::fill_nan(&ScalarValue, &[&str])` API. It registers the Arrow record
+batch, builds and observes the NaN-fill logical plan, and propagates catalog
+lookup failures as typed bridge errors. It no longer converts a catalog error
+to a missing-table value. Runtime summaries, Sifr fixtures, driver assertions,
+policy mutation coverage, exact family/checksum tests, and documentation agree
+with that behavior.
+
+Focused validation passed: the new Arrow/DataFusion certification passed all
+3 tests; Itertools ownership certification passed all 4 tests; the locked
+advanced-data Cargo workspace checked; the advanced-data Rust-interop matrix
+passed both variants and all 242 mutation cases; its generated positive runtime
+and negative mismatch tests passed; and the complete stdlib-manifest, coverage,
+Rust-interop, and focused Python Arrow suites passed. The broad non-pass Sifr
+test suite, workspace Clippy, formatting, HIR maintainability, file-size,
+offline-fetch, and diff checks also passed.
+
+The one exact-SHA Opus review returned `SATISFIED` with no blocking finding.
+It independently confirmed the two lock families, checksums, new API, error
+propagation, and absence of an Item 22 compatibility path. The evidence is in
+the [#3533 review comment](https://github.com/sifr-lang/sifr/pull/3533#issuecomment-5419899447).
+No remediation review ran.
+
+The one create-PR gate passed every functional step. Its runtime-platform area
+passed all 28 variants with one declared capability skip, but the clean-cache
+area took 219.467 seconds against its 120-second blocking wall-time budget.
+The gate therefore exited 124 after 1,152.22 seconds and was not rerun. The
+exact result is in the
+[#3533 create-PR gate comment](https://github.com/sifr-lang/sifr/pull/3533#issuecomment-5420042818).
+
+The one merge gate ran on the same approved candidate and exited 0. All
+functional steps passed, including all 76 generated-build integrations and the
+exact advanced-data runtime fixture. All 698 E2E fixtures passed across 173
+cold-cache groups with signature `127353b213e16688`. The gate took 6,809.08
+seconds and reported only advisory wall-time, cache-footprint, and fixture-group
+skew observations. Its exact result is in the
+[#3533 merge gate comment](https://github.com/sifr-lang/sifr/pull/3533#issuecomment-5420864905).
+Neither gate was rerun.
+
+Deferred follow-up: Item 35 owns the review suggestions to anchor the catalog
+error-propagation source assertion to the exact `table_exist` chain, add the
+corresponding mutation case, and remove one redundant stored-plan `nanvl`
+check if the final audit confirms that simplification preserves the evidence.
+The external Itertools 0.13 edge remains owned by the Item 21 closure audit.
+An untouched all-feature Python Arrow wrapper also emitted its pre-existing
+dead-code warning; it did not affect Item 22 or workspace Clippy.
+
+Next action: implement Item 23 Polars 0.55 from this record merge on
+`origin/main`.
+
 ## Validation Ownership
 
 - Planning, record, and documentation-only items: `git diff --check`, link/path
@@ -1828,14 +1907,14 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-21 are complete. Item 21 merged in PR #3531 as
-`5f4f6e3068a62d6e7230e97a2e23469d39f13903`. The initial exact-SHA Opus review
+Current state: Items 0-22 are complete. Item 22 merged in PR #3533 as
+`92430c5e52042b82567e3798045d5a3414a42676`. Its one exact-SHA Opus review
 returned `SATISFIED`, and no remediation review ran.
 
-The one create-PR gate stopped on a cold-cache runtime-platform timing budget
+The one create-PR gate stopped on a clean-cache runtime-platform timing budget
 after all 28 variants passed. It was not rerun. The one merge gate ran on the
 same final SHA, exited 0, and passed all functional steps. All 698 E2E fixtures
-passed.
+passed with signature `127353b213e16688`.
 
-Next action: merge this record-only update. Then start Item 22 Arrow 59 and
-DataFusion 55 from the resulting `origin/main`.
+Next action: merge this record-only update. Then start Item 23 Polars 0.55 from
+the resulting `origin/main`.
