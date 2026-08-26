@@ -1,12 +1,12 @@
 {
   "schema_version": 3,
-  "audited_at": "2026-08-26",
+  "audited_at": "2026-08-27",
   "source": "https://pypi.org/pypi/{project}/{version}/json",
   "python": "3.14.7",
   "projects": [
     {
       "name": "python-interop",
-      "packages": ["alembic", "boto3", "certifi", "cffi", "cryptography", "fakeredis", "fastapi", "hiredis", "httpx2", "numpy", "pandas", "polars", "pyarrow", "redis", "schwifty", "sqlalchemy", "starlette", "testcontainers", "torch"]
+      "packages": ["alembic", "boto3", "certifi", "cffi", "cryptography", "fakeredis", "fastapi", "hiredis", "httpx2", "kafka-python", "numpy", "pandas", "polars", "pyarrow", "redis", "schwifty", "sqlalchemy", "starlette", "testcontainers", "torch"]
     },
     {
       "name": "dlpack-demo",
@@ -129,6 +129,17 @@
       "artifact": {
         "filename": "httpx2-2.12.0-py3-none-any.whl",
         "sha256": "cc8b6eecb8661c146b8f89a60e97456ee086e91a784ed31ac450c3a9e613dd36"
+      }
+    },
+    {
+      "name": "kafka-python",
+      "latest_stable": "3.0.11",
+      "released_at": "2026-08-16T16:46:13.54Z",
+      "requires_python": ">=3.8",
+      "official_release": "https://pypi.org/project/kafka-python/3.0.11/",
+      "artifact": {
+        "filename": "kafka_python-3.0.11-py3-none-any.whl",
+        "sha256": "9d10cab4e11e02545d82c7e5af5702da5aa46dd4eccd11ad92a50bf6dbbecd14"
       }
     },
     {

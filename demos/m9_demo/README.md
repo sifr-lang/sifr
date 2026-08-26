@@ -17,7 +17,7 @@ The command must finish with all four markers:
 
 ```text
 sifr-python-interop:callback:cffi=42
-sifr-python-interop:callback:kafka=42
+sifr-python-interop:callback:kafka=version=3.0.11:schema=DescribeClusterRequest-v2:fields=3:ack=42
 sifr-python-interop:callback:asyncio=42
 sifr-python-interop:callback:pubsub=42:close=drained
 ```

@@ -46,7 +46,7 @@
       "source": "../kafka/declaration_callback.sifr",
       "bridge": "../kafka/python_bridges/kafka_declaration.py",
       "network": "offline kafka-python object and Python foreign thread",
-      "stdout_marker": "sifr-python-interop:callback:kafka=42"
+      "stdout_marker": "sifr-python-interop:callback:kafka=version=3.0.11:schema=DescribeClusterRequest-v2:fields=3:ack=42"
     },
     {
       "source": "asyncio_roundtrip.sifr",

@@ -131,8 +131,8 @@ default; live suites must declare their own `network_mode` and resource classes.
   report output.
 - `env`: interpreter, venv, ABI, platform, lock/env freshness, and probe rejection fixture coverage.
 - `dependency-versions`: exact PyPI stable versions and audited artifact hashes
-  for the maintained Python lock owners. Six mutations cover stale versions in
-  both locks, a missing artifact, a missing declaration, retired HTTP client
+  for the maintained Python lock owners. Eight mutations cover stale versions
+  in both locks, a missing artifact, a missing declaration, retired HTTP client
   packages, and a stale service image.
 - `minor-train-features`: direct runtime coverage for the new Schwifty 2026.7
   checksum-solving `BBAN.random` implementation.
@@ -151,7 +151,8 @@ default; live suites must declare their own `network_mode` and resource classes.
 - `dataframes`: pandas/polars/pyarrow dataframe interop.
 - `tensors`: NumPy and PyTorch tensor interop.
 - `databases`: SQLAlchemy, psycopg, asyncpg, pymongo, motor, redis.
-- `brokers`: confluent-kafka, aiokafka, kafka-python, SQS/SNS, Pub/Sub-style callbacks.
+- `brokers`: confluent-kafka, aiokafka, kafka-python 3 generated protocol
+  schemas, SQS/SNS, and Pub/Sub-style callbacks.
 - `cloud`: AWS/Google/OpenAI SDK import and auth surface checks without live credentials in the default gate.
 - `web`: FastAPI/Starlette/Django/Sanic import and in-process smoke fixtures.
 - `cleanup`: close/context-manager/callback release/leak diagnostics.

@@ -6,7 +6,6 @@ from typing import Any
 from env import RunnerPaths
 from example_packages import ExampleCase, build_examples_report, run_examples_self_tests
 
-
 CALLBACK_CASES = {
     "cffi-current-thread": ExampleCase(
         case_id="cffi-current-thread",
@@ -25,7 +24,10 @@ CALLBACK_CASES = {
     "kafka-foreign": ExampleCase(
         case_id="kafka-foreign",
         relative_source="kafka/declaration_callback.sifr",
-        stdout_marker="sifr-python-interop:callback:kafka=42",
+        stdout_marker=(
+            "sifr-python-interop:callback:kafka=version=3.0.11:"
+            "schema=DescribeClusterRequest-v2:fields=3:ack=42"
+        ),
         import_roots=("kafka", "threading"),
         native_roots=(),
     ),
