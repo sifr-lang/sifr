@@ -65,7 +65,10 @@ LIBRARY_EXAMPLE_CASES = {
     "redis-fakeredis": ExampleCase(
         case_id="redis-fakeredis",
         relative_source="redis/redis_fakeredis_full_example.sifr",
-        stdout_marker="sifr-python-interop:redis-fakeredis:value=ready:reply=PONG",
+        stdout_marker=(
+            "sifr-python-interop:redis-fakeredis:value=ready:"
+            "zpop=first:key-removed=true:map-count=2"
+        ),
         import_roots=("fakeredis", "hiredis", "redis"),
         native_roots=("hiredis",),
         bridge_files=("redis_fakeredis_example.py",),

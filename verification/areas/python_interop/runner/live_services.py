@@ -12,12 +12,30 @@ from live_packages import BuiltLiveBinary, execute_live_binary
 
 def run_live_cases(binaries: dict[str, BuiltLiveBinary]) -> list[dict[str, Any]]:
     return [
-        _timed_case("redis", "redis" in binaries, lambda: _run_redis(binaries["redis"])),
-        _timed_case("postgres", "postgres" in binaries, lambda: _run_postgres(binaries["postgres"])),
-        _timed_case("kafka", "kafka" in binaries, lambda: _run_kafka(binaries["kafka"])),
-        _timed_case("pubsub", "pubsub" in binaries, lambda: _run_localstack(binaries["pubsub"], ("sqs", "sns"))),
-        _timed_case("sns", "sns" in binaries, lambda: _run_localstack(binaries["sns"], ("sqs", "sns"))),
-        _timed_case("sqs", "sqs" in binaries, lambda: _run_localstack(binaries["sqs"], ("sqs",))),
+        _timed_case(
+            "redis", "redis" in binaries, lambda: _run_redis(binaries["redis"])
+        ),
+        _timed_case(
+            "postgres",
+            "postgres" in binaries,
+            lambda: _run_postgres(binaries["postgres"]),
+        ),
+        _timed_case(
+            "kafka", "kafka" in binaries, lambda: _run_kafka(binaries["kafka"])
+        ),
+        _timed_case(
+            "pubsub",
+            "pubsub" in binaries,
+            lambda: _run_localstack(binaries["pubsub"], ("sqs", "sns")),
+        ),
+        _timed_case(
+            "sns",
+            "sns" in binaries,
+            lambda: _run_localstack(binaries["sns"], ("sqs", "sns")),
+        ),
+        _timed_case(
+            "sqs", "sqs" in binaries, lambda: _run_localstack(binaries["sqs"], ("sqs",))
+        ),
     ]
 
 
@@ -95,9 +113,7 @@ def _run_localstack(
             AWS_SECRET_ACCESS_KEY="testcontainers-localstack",
             SERVICES=",".join(services),
         )
-        .waiting_for(
-            LogMessageWaitStrategy(r"Ready\.\n").with_startup_timeout(60)
-        )
+        .waiting_for(LogMessageWaitStrategy(r"Ready\.\n").with_startup_timeout(60))
     )
     with container:
         endpoint = (

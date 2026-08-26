@@ -179,6 +179,10 @@ acknowledgement. Docker absence is reported as `structured-skip` only after all
 binaries build; with Docker available every binary must execute and produce
 `live-passed` plus its resource-zero marker.
 
+The runner uses Testcontainers community imports and structured wait strategies.
+Redis runs from the audited Redis 8.10.1 Alpine image digest. Its compiled
+bridge verifies the Redis 8 set-cardinality command surface.
+
 Report status values are intentional:
 
 - `passed`: live environment execution ran.

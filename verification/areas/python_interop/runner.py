@@ -18,8 +18,8 @@ RUNNER_MODULE_ROOT = str(Path(__file__).resolve().parent / "runner")
 if RUNNER_MODULE_ROOT not in sys.path:
     sys.path.insert(0, RUNNER_MODULE_ROOT)
 
-from certification_ledger import build_compiled_certification
-from declaration_capabilities import load_and_validate_capabilities
+from certification_ledger import build_compiled_certification  # noqa: E402
+from declaration_capabilities import load_and_validate_capabilities  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
@@ -45,6 +45,7 @@ COMMAND_ARGS: dict[str, list[str]] = {
     "python-interop-dependency-versions": ["--self-test"],
     "python-interop-minor-train-features": [],
     "python-interop-crypto-abi-features": [],
+    "python-interop-redis-service-features": [],
     "python-interop-readonly-check-doctor": [],
     "python-interop-binding-authoring": [],
     "python-interop-lsp-declaration-authoring": [],
@@ -155,6 +156,7 @@ COMMAND_ARGS: dict[str, list[str]] = {
 AREA_PROJECT_COMMANDS = {
     "python-interop-minor-train-features",
     "python-interop-crypto-abi-features",
+    "python-interop-redis-service-features",
     "python-interop-callback-examples",
     "python-interop-dataframe-examples",
     "python-interop-buffer-examples",

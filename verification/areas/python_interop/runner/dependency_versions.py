@@ -25,12 +25,16 @@ EXPECTED_PROJECTS = {
             "certifi",
             "cffi",
             "cryptography",
+            "fakeredis",
             "fastapi",
+            "hiredis",
             "httpx2",
             "polars",
+            "redis",
             "schwifty",
             "sqlalchemy",
             "starlette",
+            "testcontainers",
             "torch",
         }
     ),
@@ -50,6 +54,7 @@ PROJECT_PATHS = {
 NORMALIZED_NAME = re.compile(r"[-_.]+")
 REQUIREMENT_NAME = re.compile(r"^[A-Za-z0-9._-]+")
 RETIRED_PYTHON_INTEROP_PACKAGES = frozenset({"httpcore", "httpx"})
+EXPECTED_SERVICE_IMAGES = frozenset({"localstack", "redis"})
 
 
 def normalize_name(name: str) -> str:
@@ -216,7 +221,7 @@ def validate_project(
 
 
 def validate_repository(audit: dict[str, object]) -> list[str]:
-    if audit.get("schema_version") != 2:
+    if audit.get("schema_version") != 3:
         raise ValueError("unsupported stable-release audit schema")
     audited_at = audit.get("audited_at")
     if not isinstance(audited_at, str):
@@ -242,27 +247,41 @@ def validate_repository(audit: dict[str, object]) -> list[str]:
                 load_toml(REPO_ROOT / lock_path),
             )
         )
-    errors.extend(validate_service_emulator(audit))
+    errors.extend(validate_service_images(audit))
     return errors
 
 
-def validate_service_emulator(audit: dict[str, object]) -> list[str]:
-    emulators = audit.get("service_emulators")
-    if not isinstance(emulators, list) or len(emulators) != 1:
-        return ["audit must contain one service emulator"]
-    emulator = emulators[0]
-    if not isinstance(emulator, dict) or emulator.get("name") != "localstack-community":
-        return ["audit service emulator must be localstack-community"]
-    image = emulator.get("image")
-    version = emulator.get("latest_stable")
-    digest = emulator.get("manifest_digest")
-    if not all(isinstance(value, str) for value in (image, version, digest)):
-        return ["LocalStack audit must contain image, version, and digest strings"]
-    expected = f"{image}:{version}@{digest}"
+def validate_service_images(audit: dict[str, object]) -> list[str]:
+    images = audit.get("service_images")
+    if not isinstance(images, list):
+        return ["audit service_images must be a list"]
+    mapped = {
+        image.get("name"): image
+        for image in images
+        if isinstance(image, dict) and isinstance(image.get("name"), str)
+    }
+    if len(mapped) != len(images) or mapped.keys() != EXPECTED_SERVICE_IMAGES:
+        return ["audit service image set differs from the maintained image set"]
     live_images = load_literal_assignment(LIVE_CASE_CONFIG_PATH, "LIVE_IMAGES")
-    if not isinstance(live_images, dict) or live_images.get("localstack") != expected:
-        return [f"LocalStack image pin does not match audited stable image {expected}"]
-    return []
+    if not isinstance(live_images, dict):
+        return ["live service image mapping must be a dictionary"]
+    errors = []
+    for name, image in mapped.items():
+        repository = image.get("image")
+        version = image.get("latest_stable")
+        digest = image.get("manifest_digest")
+        if not all(isinstance(value, str) for value in (repository, version, digest)):
+            errors.append(f"{name}: image audit fields must be strings")
+            continue
+        if not digest.startswith("sha256:") or len(digest) != 71:
+            errors.append(f"{name}: manifest digest must be a SHA-256 value")
+            continue
+        expected = f"{repository}:{version}@{digest}"
+        if live_images.get(name) != expected:
+            errors.append(
+                f"{name}: live image pin does not match audited stable image {expected}"
+            )
+    return errors
 
 
 def run_self_tests(audit: dict[str, object]) -> int:
@@ -309,10 +328,10 @@ def run_self_tests(audit: dict[str, object]) -> int:
     ):
         raise AssertionError("retired HTTP client mutation was not rejected")
 
-    stale_emulator = copy.deepcopy(audit)
-    stale_emulator["service_emulators"][0]["latest_stable"] = "4.13.1"
-    if not validate_service_emulator(stale_emulator):
-        raise AssertionError("stale service-emulator mutation was not rejected")
+    stale_image = copy.deepcopy(audit)
+    stale_image["service_images"][0]["latest_stable"] = "4.13.1"
+    if not validate_service_images(stale_image):
+        raise AssertionError("stale service-image mutation was not rejected")
     return 5
 
 
@@ -330,11 +349,11 @@ def main() -> int:
     releases = release_map(audit)
     projects = project_map(audit)
     lock_count = len({lock for _, lock, _ in projects.values()})
-    emulators = audit.get("service_emulators")
-    emulator_count = len(emulators) if isinstance(emulators, list) else 0
+    images = audit.get("service_images")
+    image_count = len(images) if isinstance(images, list) else 0
     print(
         f"python dependency audit ok: projects={len(projects)} "
-        f"packages={len(releases)} locks={lock_count} emulators={emulator_count} "
+        f"packages={len(releases)} locks={lock_count} images={image_count} "
         f"mutations={mutation_count}"
     )
     return 0

@@ -90,6 +90,19 @@
       ]
     },
     {
+      "name": "redis-service-features",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "redis-service-features",
+          "entry": "verification/areas/python_interop/runner/redis_service_features.py",
+          "command": "python-interop-redis-service-features",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "readonly-check-doctor",
       "kind": "adapter",
       "cases": [
