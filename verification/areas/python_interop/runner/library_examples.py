@@ -33,8 +33,11 @@ LIBRARY_EXAMPLE_CASES = {
     "cryptography-cffi": ExampleCase(
         case_id="cryptography-cffi",
         relative_source="cryptography_tls/cryptography_cffi_full_example.sifr",
-        stdout_marker="sifr-python-interop:cryptography-cffi:roundtrip=sifr-secret:certifi=ok",
-        import_roots=("certifi", "cffi", "cryptography"),
+        stdout_marker=(
+            "sifr-python-interop:cryptography-cffi:roundtrip=sifr-secret:"
+            "certifi=ca-store"
+        ),
+        import_roots=("certifi", "cffi", "cryptography", "ssl"),
         native_roots=("cffi", "cryptography"),
         bridge_files=("cryptography_cffi_example.py",),
     ),
@@ -57,7 +60,10 @@ LIBRARY_EXAMPLE_CASES = {
     "sqlalchemy-psycopg": ExampleCase(
         case_id="sqlalchemy-psycopg",
         relative_source="sqlalchemy_psycopg/sqlalchemy_psycopg_full_example.sifr",
-        stdout_marker="sifr-python-interop:sqlalchemy-psycopg:scalar=42:dialect=sqlite:conninfo=ok",
+        stdout_marker=(
+            "sifr-python-interop:sqlalchemy-psycopg:scalar=42:dialect=sqlite:"
+            "named-check=add:conninfo=ok"
+        ),
         import_roots=("alembic", "psycopg", "sqlalchemy"),
         native_roots=("psycopg", "sqlalchemy"),
         bridge_files=("sqlalchemy_psycopg_example.py",),

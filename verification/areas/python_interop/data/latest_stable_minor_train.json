@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "audited_at": "2026-08-26",
+  "source": "https://pypi.org/pypi/{project}/{version}/json",
+  "python": "3.14.7",
+  "projects": [
+    {
+      "pyproject": "verification/areas/python_interop/pyproject.toml",
+      "lock": "verification/areas/python_interop/uv.lock",
+      "packages": ["alembic", "boto3", "certifi", "polars", "schwifty", "sqlalchemy", "torch"]
+    },
+    {
+      "pyproject": "demos/m12_dlpack_demo/pyproject.toml",
+      "lock": "demos/m12_dlpack_demo/uv.lock",
+      "packages": ["torch"]
+    }
+  ],
+  "service_emulators": [
+    {
+      "name": "localstack-community",
+      "image": "localstack/localstack",
+      "latest_stable": "4.14.0",
+      "released_at": "2026-02-26T16:57:42Z",
+      "official_release": "https://github.com/localstack/localstack/releases/tag/v4.14.0",
+      "manifest_digest": "sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a"
+    }
+  ],
+  "packages": [
+    {
+      "name": "alembic",
+      "latest_stable": "1.19.1",
+      "released_at": "2026-08-08T16:32:01.565070Z",
+      "requires_python": ">=3.10",
+      "official_release": "https://pypi.org/project/alembic/1.19.1/",
+      "artifact": {
+        "filename": "alembic-1.19.1-py3-none-any.whl",
+        "sha256": "b39018cb3d9413a19cbd54cf3c02ad33998641f0538eb77413a488a21c3e14be"
+      }
+    },
+    {
+      "name": "boto3",
+      "latest_stable": "1.43.80",
+      "released_at": "2026-08-25T20:38:33.021775Z",
+      "requires_python": ">=3.10",
+      "official_release": "https://pypi.org/project/boto3/1.43.80/",
+      "artifact": {
+        "filename": "boto3-1.43.80-py3-none-any.whl",
+        "sha256": "26afe3b950ca1cc722c7fa5544991c222919c98355f82300a55b6315a2c4995e"
+      }
+    },
+    {
+      "name": "certifi",
+      "latest_stable": "2026.7.22",
+      "released_at": "2026-07-22T03:35:11.276376Z",
+      "requires_python": ">=3.7",
+      "official_release": "https://pypi.org/project/certifi/2026.7.22/",
+      "artifact": {
+        "filename": "certifi-2026.7.22-py3-none-any.whl",
+        "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775"
+      }
+    },
+    {
+      "name": "polars",
+      "latest_stable": "1.44.1",
+      "released_at": "2026-08-26T07:07:44.646805Z",
+      "requires_python": ">=3.10",
+      "official_release": "https://pypi.org/project/polars/1.44.1/",
+      "artifact": {
+        "filename": "polars-1.44.1-py3-none-any.whl",
+        "sha256": "1fa62fc1c88fba77a68b28291b5aabdd69e5f38b34e59721a064ae3169b59bb5"
+      }
+    },
+    {
+      "name": "schwifty",
+      "latest_stable": "2026.7.3",
+      "released_at": "2026-07-23T09:35:13.488528Z",
+      "requires_python": ">=3.10",
+      "official_release": "https://pypi.org/project/schwifty/2026.7.3/",
+      "artifact": {
+        "filename": "schwifty-2026.7.3-py3-none-any.whl",
+        "sha256": "795d51771dbc79a2eeb3e1784d94a60426eda316141acebdea1a1207ddff9daa"
+      }
+    },
+    {
+      "name": "sqlalchemy",
+      "latest_stable": "2.0.52",
+      "released_at": "2026-08-11T19:07:09.829565Z",
+      "requires_python": ">=3.7",
+      "official_release": "https://pypi.org/project/sqlalchemy/2.0.52/",
+      "artifact": {
+        "filename": "sqlalchemy-2.0.52-cp314-cp314-macosx_11_0_arm64.whl",
+        "sha256": "410d52be41d17f1a236d19520fbe776257dc16516ed06bd16d433311842aefd9"
+      }
+    },
+    {
+      "name": "torch",
+      "latest_stable": "2.13.0",
+      "released_at": "2026-07-08T16:01:59.348299Z",
+      "requires_python": ">=3.10",
+      "official_release": "https://pypi.org/project/torch/2.13.0/",
+      "artifact": {
+        "filename": "torch-2.13.0-cp314-cp314-macosx_14_0_arm64.whl",
+        "sha256": "d849b390e07d8d333ce8ecaf91b273c656c598379a19c9acf1318a883f6b391c"
+      }
+    }
+  ]
+}

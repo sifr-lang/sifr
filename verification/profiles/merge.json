@@ -514,6 +514,8 @@
         "self-test",
         "scaffold",
         "env",
+        "dependency-versions",
+        "minor-train-features",
         "readonly-check-doctor",
         "binding-authoring",
         "lsp-declaration-authoring",

@@ -51,6 +51,32 @@
       ]
     },
     {
+      "name": "dependency-versions",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "dependency-versions",
+          "entry": "verification/areas/python_interop/runner/dependency_versions.py",
+          "command": "python-interop-dependency-versions",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "minor-train-features",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "minor-train-features",
+          "entry": "verification/areas/python_interop/runner/minor_train_features.py",
+          "command": "python-interop-minor-train-features",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "readonly-check-doctor",
       "kind": "adapter",
       "cases": [

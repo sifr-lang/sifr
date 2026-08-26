@@ -128,6 +128,11 @@ default; live suites must declare their own `network_mode` and resource classes.
 - `scaffold`: validates matrix files, fixture directories, runner modules, and
   report output.
 - `env`: interpreter, venv, ABI, platform, lock/env freshness, and probe rejection fixture coverage.
+- `dependency-versions`: exact PyPI stable versions and audited artifact hashes
+  for the two Item 25 lock owners. Four mutations cover a stale version, a
+  missing artifact, a missing declaration, and a stale service emulator.
+- `minor-train-features`: direct runtime coverage for the new Schwifty 2026.7
+  checksum-solving `BBAN.random` implementation.
 - `imports`: root imports and native extension load diagnostics.
 - `native`: trusted native Python package load/use smoke.
 - `async`: Python event-loop/client behavior under Sifr blocking semantics.
@@ -153,14 +158,15 @@ package execution gates exist.
 
 Dataframe examples are offline but executable. The `dataframe-examples` case
 links a temporary Sifr package to the area-local locked uv environment and runs
-real Sifr programs for NumPy, pandas, and Polars. These examples cover array or
-dataframe construction and library operations behind hermetic package-local
-bridges, typed declaration results, resource-diagnostic equality, and
-deterministic stdout markers checked by the runner. They are separate from the
-dataframes matrix case so reviewers can
-distinguish package-certification metadata from compiled Sifr execution
-evidence. Runner self-tests validate report aggregation and fixture drift; the
-actual Cargo/Sifr/venv execution path is covered by `--dataframe-examples`.
+real Sifr programs for NumPy, pandas, and Polars. The Polars 1.44 path also
+uses strict `struct.drop` projection on the live sorted dataframe. These
+examples cover array or dataframe construction through hermetic package-local
+bridges. The checks include typed declaration results, resource diagnostics,
+library operations, and deterministic output markers. The examples are separate
+from the dataframes matrix case. This separation distinguishes certification
+metadata from compiled Sifr execution evidence. Runner self-tests validate
+report aggregation and fixture drift. The `--dataframe-examples` option covers
+the actual Cargo, Sifr, and environment execution path.
 
 Typed buffer examples are offline, compiled, and blocking in every delivery
 profile. The `buffer-examples` suite runs declaration-first binaries for a
@@ -183,10 +189,12 @@ runner self-test.
 ML examples are offline but executable. The `ml-examples` suite uses the same
 temporary-package execution path and runs real Sifr programs for torch and
 scikit-learn through typed declarations over hermetic bridges. The torch bridge
-constructs a CPU `float32` tensor and validates tensor math and shape metadata;
-the scikit-learn bridge trains a deterministic decision tree and checks its
-predictions/classes. Both compiled Sifr callers require resource diagnostics to
-return to their baseline and emit deterministic markers.
+constructs a CPU `float32` tensor and validates tensor math and shape metadata.
+It also executes the fused PyTorch 2.13 `LinearCrossEntropyLoss` with fixed
+weights.
+The scikit-learn bridge trains a deterministic decision tree and validates its
+predictions and classes. Both compiled Sifr callers require resource diagnostics
+to return to their baseline and emit deterministic markers.
 
 DLPack declaration examples are offline, compiled, and blocking in every
 delivery profile. The `dlpack-examples` suite runs real PyTorch CPU transfers,
@@ -209,13 +217,13 @@ and verifies that ordinary object/leak diagnostics return to their baseline:
 - FastAPI app construction, Pydantic validation through pydantic-core, and
   Starlette JSON response rendering.
 - cryptography Fernet encrypt/decrypt, CFFI parser setup, and certifi CA bundle
-  discovery.
+  loading into an SSL trust store.
 - boto3 SQS client calls through botocore Stubber with no AWS credentials or
   network access.
 - redis client import, fakeredis in-process round trip, and hiredis RESP
   parsing.
-- SQLAlchemy in-memory query execution plus Alembic migration-context
-  construction and psycopg conninfo construction.
+- SQLAlchemy in-memory query execution plus Alembic 1.19 named CHECK-constraint
+  autogeneration and psycopg conninfo construction.
 
 Service-backed libraries remain in `live-examples`: Redis, Postgres/psycopg,
 Kafka, Pub/Sub-style SNS fanout, SNS, and SQS are exercised with testcontainers

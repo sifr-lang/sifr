@@ -18,7 +18,10 @@ LIVE_IMAGES = {
     "redis": "redis:7.2-alpine",
     "postgres": "postgres:16-alpine",
     "kafka": "docker.redpanda.com/redpandadata/redpanda:v23.1.13",
-    "localstack": "localstack/localstack:2.0.1",
+    "localstack": (
+        "localstack/localstack:4.14.0@"
+        "sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a"
+    ),
 }
 
 LIVE_CASES = {
