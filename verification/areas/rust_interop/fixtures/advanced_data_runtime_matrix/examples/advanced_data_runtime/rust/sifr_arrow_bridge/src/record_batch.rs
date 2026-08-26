@@ -7,7 +7,9 @@ use arrow::record_batch::RecordBatch;
 use datafusion::common::ScalarValue;
 use datafusion::datasource::MemTable;
 use datafusion::execution::context::SessionContext;
-use polars::prelude::{DataFrame, DataType as PolarsDataType, IntoColumn, NamedFrom, Series};
+use polars::prelude::{
+    DataFrame, DataFrameIsSorted, DataType as PolarsDataType, IntoColumn, NamedFrom, Series,
+};
 use sifr_runtime::interop::{Handle, HandleStateError};
 
 static ACTIVE_VIEWS: AtomicUsize = AtomicUsize::new(0);
@@ -151,18 +153,23 @@ fn observe_state(state: &ArrowRuntimeState) -> Result<String, String> {
         .datafusion
         .table_exist("input")
         .map_err(display_error)?;
+    let polars_sorted = state
+        .polars
+        .is_sorted(&["value".into()], &[false], &[false])
+        .map_err(display_error)?;
     if arrow_field.name() != "value"
         || arrow_field.data_type() != &ArrowDataType::Float64
         || polars_column.name().as_str() != "value"
         || polars_column.dtype() != &PolarsDataType::Float64
         || state.polars.height() != state.record_batch.num_rows()
+        || !polars_sorted
         || !datafusion_registered
         || !state.datafusion_nan_fill_plan.contains("nanvl")
     {
         return Err("crate-backed schema identity mismatch".to_string());
     }
     Ok(format!(
-        "schema=value:float64;rows={};datafusion=registered+fill-nan-planned;polars=value:float64x{};polars-copy=explicit;copy=input->arrow:none",
+        "schema=value:float64;rows={};datafusion=registered+fill-nan-planned;polars=value:float64x{}+sorted;polars-copy=explicit;copy=input->arrow:none",
         state.record_batch.num_rows(),
         state.polars.height()
     ))
