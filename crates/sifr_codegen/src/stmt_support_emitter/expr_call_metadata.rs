@@ -22,9 +22,13 @@ pub(crate) fn canonical_plain_call_name_for_ir(func: &str) -> &str {
 
 pub(crate) fn plain_call_target_for_ir(func: &str) -> RustExpr {
     if func.contains("::") {
-        RustExpr::Path(func.split("::").map(str::to_string).collect())
+        let mut path = func.split("::").map(str::to_string).collect::<Vec<_>>();
+        if let Some(callable) = path.last_mut() {
+            *callable = crate::user_callable_rust_name(callable);
+        }
+        RustExpr::Path(path)
     } else {
-        RustExpr::Ident(func.to_string())
+        RustExpr::Ident(crate::user_callable_rust_name(func))
     }
 }
 
@@ -50,6 +54,18 @@ mod tests {
         assert!(matches!(
             plain_call_target_for_ir("compute"),
             RustExpr::Ident(name) if name == "compute"
+        ));
+    }
+
+    #[test]
+    fn user_callable_safety_collisions_are_raw_identifiers() {
+        assert!(matches!(
+            plain_call_target_for_ir("expect"),
+            RustExpr::Ident(name) if name == "r#expect"
+        ));
+        assert!(matches!(
+            plain_call_target_for_ir("helpers::unwrap"),
+            RustExpr::Path(path) if path == ["helpers", "r#unwrap"]
         ));
     }
 

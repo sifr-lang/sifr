@@ -124,6 +124,18 @@ fn dispatcher_result_lowers_large_module_int_const_as_sifr_int_helper() {
 }
 
 #[test]
+fn dispatcher_result_rejects_over_limit_module_int_const() {
+    let error = try_lower_simple_module_constant_item_result(
+        "limit",
+        &Type::Int,
+        &HirExpr::LargeIntLiteral("1".repeat(4097)),
+    )
+    .expect_err("over-limit exact integer literals must be diagnostics");
+
+    assert!(error.message.contains("4096-digit limit"));
+}
+
+#[test]
 fn lowers_simple_module_name_const_item() {
     let (item, rust_name) = try_lower_simple_module_const_item(
         "answer",

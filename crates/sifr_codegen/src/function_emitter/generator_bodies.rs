@@ -420,7 +420,7 @@ impl RustEmitter {
         }
 
         self.body_items.push(RustItem::Fn {
-            name: func.name.clone(),
+            name: crate::user_callable_rust_name(&func.name),
             visibility,
             type_params: self.lower_function_type_params(func),
             params,

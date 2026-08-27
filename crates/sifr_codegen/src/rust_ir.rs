@@ -32,6 +32,16 @@ impl CompilerFragment {
     }
 }
 
+/// Preserve source-level callable names that collide with generated-code
+/// safety sentinels. The raw-identifier spelling is provenance: compiler-owned
+/// calls keep the ordinary spelling and therefore remain rejectable.
+pub(crate) fn user_callable_rust_name(name: &str) -> String {
+    match name {
+        "unwrap" | "expect" => format!("r#{name}"),
+        _ => name.to_string(),
+    }
+}
+
 impl Deref for CompilerFragment {
     type Target = str;
 

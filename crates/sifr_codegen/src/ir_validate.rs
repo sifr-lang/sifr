@@ -15,6 +15,7 @@ pub(crate) enum IrValidationKind {
     ForbiddenCompilerFragment,
     InvalidGeneratedSource,
     ForbiddenGeneratedSource,
+    ForbiddenStructuredConstruct,
     InvalidIdentifier,
 }
 
@@ -127,7 +128,7 @@ fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
     }
 }
 
-fn parse_item_fragment(source: &str) -> syn::Result<syn::File> {
+pub(crate) fn parse_item_fragment(source: &str) -> syn::Result<syn::File> {
     syn::parse_file(source).or_else(|item_error| {
         let trimmed = source.trim_start();
         if !trimmed.starts_with("#[") && !trimmed.starts_with("///") && !trimmed.starts_with("//!")
@@ -315,7 +316,8 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
             }
         }
         RustExpr::Ident(name) => {
-            let mut characters = name.chars();
+            let identifier = name.strip_prefix("r#").unwrap_or(name);
+            let mut characters = identifier.chars();
             let valid = characters
                 .next()
                 .is_some_and(|first| first == '_' || first.is_alphabetic())
@@ -327,22 +329,45 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
                 });
             }
         }
-        RustExpr::MethodCall { receiver, args, .. } => {
+        RustExpr::MethodCall {
+            receiver,
+            method,
+            args,
+        } => {
+            if matches!(method.as_str(), "unwrap" | "expect") {
+                push_forbidden_structured_issue(issues, &format!(".{method}("));
+            }
             validate_expr(receiver, issues, in_function);
             for arg in args {
                 validate_expr(arg, issues, in_function);
             }
         }
         RustExpr::FnCall { func, args } => {
+            let forbidden_callee = match func.as_ref() {
+                RustExpr::Ident(name) => Some(name.as_str()),
+                RustExpr::Path(path) => path.last().map(String::as_str),
+                _ => None,
+            };
+            if forbidden_callee.is_some_and(|name| matches!(name, "unwrap" | "expect")) {
+                push_forbidden_structured_issue(
+                    issues,
+                    &format!("{}(", forbidden_callee.unwrap_or_default()),
+                );
+            }
             validate_expr(func, issues, in_function);
             for arg in args {
                 validate_expr(arg, issues, in_function);
             }
         }
-        RustExpr::MacroCall { args, .. }
-        | RustExpr::Tuple(args)
-        | RustExpr::Array(args)
-        | RustExpr::Vec(args) => {
+        RustExpr::MacroCall { name, args } => {
+            if matches!(name.as_str(), "panic" | "todo" | "unimplemented") {
+                push_forbidden_structured_issue(issues, &format!("{name}!"));
+            }
+            for arg in args {
+                validate_expr(arg, issues, in_function);
+            }
+        }
+        RustExpr::Tuple(args) | RustExpr::Array(args) | RustExpr::Vec(args) => {
             for arg in args {
                 validate_expr(arg, issues, in_function);
             }
@@ -356,7 +381,10 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
             validate_expr(future, issues, in_function);
             validate_expr(error, issues, in_function);
         }
-        RustExpr::FormatMacro { args, .. } => {
+        RustExpr::FormatMacro { name, args, .. } => {
+            if matches!(name.as_str(), "panic" | "todo" | "unimplemented") {
+                push_forbidden_structured_issue(issues, &format!("{name}!"));
+            }
             for arg in args {
                 validate_expr(arg, issues, in_function);
             }
@@ -436,6 +464,13 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
             validate_expr(end, issues, in_function);
         }
     }
+}
+
+fn push_forbidden_structured_issue(issues: &mut Vec<IrValidationIssue>, construct: &str) {
+    issues.push(IrValidationIssue {
+        kind: IrValidationKind::ForbiddenStructuredConstruct,
+        message: format!("forbidden compiler-owned structured Rust construct `{construct}`"),
+    });
 }
 
 fn validate_type(ty: &RustType, issues: &mut Vec<IrValidationIssue>) {
@@ -685,6 +720,40 @@ mod tests {
     }
 
     #[test]
+    fn rejects_forbidden_structured_calls_and_macros() {
+        let items = vec![RustItem::Fn {
+            name: "generated".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![
+                RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("value".to_string())),
+                    method: "unwrap".to_string(),
+                    args: Vec::new(),
+                }),
+                RustStmt::Expr(RustExpr::FormatMacro {
+                    name: "panic".to_string(),
+                    format_str: "failure".to_string(),
+                    args: Vec::new(),
+                }),
+            ],
+            is_async: false,
+        }];
+
+        let issues = validate_items(&items);
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::ForbiddenStructuredConstruct
+                && issue.message.contains(".unwrap(")
+        }));
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::ForbiddenStructuredConstruct
+                && issue.message.contains("panic!")
+        }));
+    }
+
+    #[test]
     fn final_source_validation_rejects_each_forbidden_construct() {
         let sources = [
             "fn generated(value: Option<i64>) { let _ = value.unwrap(); }",
@@ -705,6 +774,15 @@ mod tests {
                     .iter()
                     .any(|issue| issue.kind == IrValidationKind::ForbiddenGeneratedSource),
                 "forbidden source passed: {source}"
+            );
+        }
+        for source in [
+            "#[cfg_attr(all(), allow(dead_code))] fn generated() {}",
+            "#[expect(dead_code)] fn generated() {}",
+        ] {
+            assert!(
+                !validate_generated_source(source).is_empty(),
+                "lint suppression must be rejected: {source}"
             );
         }
 

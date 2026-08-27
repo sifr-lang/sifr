@@ -84,7 +84,14 @@ fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
     match item {
         RustItem::Use(_) | RustItem::UseAlias { .. } => {}
         RustItem::CompilerFragment(fragment) => {
-            merge_needs(needs, collect_import_needs_from_source(fragment.source()));
+            if let Ok(file) = crate::ir_validate::parse_item_fragment(fragment.source()) {
+                let mut fragment_needs = IrImportNeeds::default();
+                let mut collector = SynImportNeedsCollector {
+                    needs: &mut fragment_needs,
+                };
+                collector.visit_file(&file);
+                merge_needs(needs, fragment_needs);
+            }
         }
         RustItem::Struct { fields, .. } => {
             for (_, ty) in fields {

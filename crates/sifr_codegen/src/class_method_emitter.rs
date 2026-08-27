@@ -805,7 +805,7 @@ impl RustEmitter {
             .set(saved_current_sifr_int_result_return);
 
         RustItem::Fn {
-            name: method.name.clone(),
+            name: crate::user_callable_rust_name(&method.name),
             visibility,
             type_params: method
                 .type_params

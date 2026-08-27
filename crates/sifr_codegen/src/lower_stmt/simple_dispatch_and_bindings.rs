@@ -624,7 +624,7 @@ pub(super) fn try_lower_simple_nested_function_stmt(
             Some(crate::sifr_type_to_rust_type(&func.return_type))
         };
         return Some(vec![RustStmt::LocalFn {
-            name: func.name.clone(),
+            name: crate::user_callable_rust_name(&func.name),
             params: fn_params,
             ret,
             body: lowered_body,
@@ -648,7 +648,7 @@ pub(super) fn try_lower_simple_nested_function_stmt(
 
     Some(vec![RustStmt::Let {
         mutable: nested_binding_mutable,
-        name: func.name.clone(),
+        name: crate::user_callable_rust_name(&func.name),
         ty: None,
         value: crate::retained_callback_closure::closure_with_capture_clones(
             lowered_params,

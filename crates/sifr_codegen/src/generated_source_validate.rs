@@ -145,11 +145,29 @@ impl<'ast> Visit<'ast> for ForbiddenGeneratedRust {
     }
 
     fn visit_attribute(&mut self, node: &'ast syn::Attribute) {
-        if node.path().is_ident("allow") {
+        if node.path().is_ident("allow") || meta_tokens_contain_ident(&node.meta, "allow") {
             self.constructs.push("#[allow(...)]");
+        }
+        if node.path().is_ident("expect") || meta_tokens_contain_ident(&node.meta, "expect") {
+            self.constructs.push("#[expect(...)]");
         }
         visit::visit_attribute(self, node);
     }
+}
+
+fn meta_tokens_contain_ident(meta: &syn::Meta, expected: &str) -> bool {
+    let syn::Meta::List(list) = meta else {
+        return false;
+    };
+    token_stream_contains_ident(&list.tokens, expected)
+}
+
+fn token_stream_contains_ident(tokens: &TokenStream, expected: &str) -> bool {
+    tokens.clone().into_iter().any(|token| match token {
+        TokenTree::Ident(ident) => ident == expected,
+        TokenTree::Group(group) => token_stream_contains_ident(&group.stream(), expected),
+        TokenTree::Punct(_) | TokenTree::Literal(_) => false,
+    })
 }
 
 fn scan_macro_tokens(tokens: &TokenStream, constructs: &mut Vec<&'static str>) {
@@ -170,9 +188,9 @@ fn scan_macro_tokens(tokens: &TokenStream, constructs: &mut Vec<&'static str>) {
                 .stream()
                 .into_iter()
                 .next()
-                .is_some_and(|token| matches!(token, TokenTree::Ident(ident) if ident == "allow"))
+                .is_some_and(|token| matches!(token, TokenTree::Ident(ident) if ident == "allow" || ident == "expect"))
         {
-            constructs.push("#[allow(...)] macro token");
+            constructs.push("lint-suppression attribute macro token");
         }
         if let [TokenTree::Ident(ident), TokenTree::Punct(punct)] = window
             && punct.as_char() == '!'

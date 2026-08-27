@@ -7,6 +7,10 @@ use sifr_type_system::Type;
 
 const EXACT_INT_CHUNK_DIGITS: usize = 18;
 const EXACT_INT_CHUNK_BASE: i64 = 1_000_000_000_000_000_000;
+// Keep compiler-owned literals under the same resource contract as runtime
+// decimal parsing. Unlike the former generated panic path, reject over-limit
+// source through the structured codegen diagnostic.
+const EXACT_INT_LITERAL_DIGIT_LIMIT: usize = 4096;
 
 pub(super) fn resolve_alias_type(ty: &Type) -> &Type {
     match ty {
@@ -219,6 +223,11 @@ fn exact_sifr_int_literal_expr(decimal_text: &str) -> Result<RustExpr, CodegenEr
             "invalid exact integer literal reached code generation",
         ));
     }
+    if digits.len() > EXACT_INT_LITERAL_DIGIT_LIMIT {
+        return Err(CodegenError::new(format!(
+            "exact integer literal exceeds the {EXACT_INT_LITERAL_DIGIT_LIMIT}-digit limit"
+        )));
+    }
 
     let digits = digits.trim_start_matches('0');
     if digits.is_empty() {
@@ -260,6 +269,7 @@ fn exact_sifr_int_literal_expr(decimal_text: &str) -> Result<RustExpr, CodegenEr
 }
 
 /// Conservative dispatcher for simple module-constant item lowering.
+#[cfg(test)]
 pub fn try_lower_simple_module_constant_item(
     name: &str,
     ty: &Type,

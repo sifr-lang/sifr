@@ -14,7 +14,7 @@ impl RustEmitter {
             .methods
             .iter()
             .map(|method| RustItem::TraitMethodSig {
-                name: method.name.clone(),
+                name: crate::user_callable_rust_name(&method.name),
                 params: {
                     let mut params = Vec::with_capacity(method.params.len() + 1);
                     params.push(Self::rust_receiver_param(method));
@@ -297,7 +297,7 @@ impl RustEmitter {
         }
 
         RustItem::Fn {
-            name: method.name.clone(),
+            name: crate::user_callable_rust_name(&method.name),
             visibility,
             type_params: method
                 .type_params
