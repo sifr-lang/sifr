@@ -7,6 +7,7 @@
     "name",
     "description",
     "budgets",
+    "default_step_budget",
     "resource_policy",
     "selected_areas",
     "toolchain_steps",
@@ -45,6 +46,15 @@
     "step_budgets": {
       "type": "object",
       "additionalProperties": true
+    },
+    "default_step_budget": {
+      "type": "object",
+      "required": ["budget_ms", "enforcement"],
+      "additionalProperties": false,
+      "properties": {
+        "budget_ms": {"type": "integer"},
+        "enforcement": {"type": "string", "enum": ["blocking"]}
+      }
     },
     "resource_policy": {
       "type": "object",

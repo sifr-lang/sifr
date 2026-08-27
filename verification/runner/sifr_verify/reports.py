@@ -84,6 +84,7 @@ def resolve_profile(profile: str) -> tuple[str, dict[str, Any]]:
         "memory_policy": resource_policy["memory_policy"],
         "e2e": payload["e2e"],
         "step_budgets": payload.get("step_budgets", {}),
+        "default_step_budget": payload.get("default_step_budget", {}),
     }
     return str(payload["name"]), lane
 

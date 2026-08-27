@@ -6,10 +6,14 @@
     "warm_wall_time_minutes": 45,
     "cold_wall_time_minutes": 60
   },
+  "default_step_budget": {
+    "budget_ms": 2400000,
+    "enforcement": "blocking"
+  },
   "step_budgets": {
     "cargo_cache_setup": {
       "budget_ms": 300000,
-      "enforcement": "advisory"
+      "enforcement": "blocking"
     }
   },
   "resource_policy": {

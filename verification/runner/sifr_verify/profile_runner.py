@@ -16,7 +16,7 @@ from .cargo_setup import (
 from .errors import VerificationError
 from .paths import REPO_ROOT
 from .profile_area_steps import AreaResultError, run_selected_area
-from .profile_commands import CommandFailed, cargo_command, run_command, uv_area_command
+from .profile_commands import CommandFailed, cargo_command, command_deadline, run_command, uv_area_command
 from .profile_reporting import run_profile_with_report
 from .profiles import crate_test_mode, crate_test_suites_for_mode, load_profile, resolve_fixture_manifest
 from .step_budgets import (
@@ -24,6 +24,7 @@ from .step_budgets import (
     enforce_step_budget as enforce_prepared_step_budget,
     prepare_step_budget,
     record_step_success,
+    step_budgets_disabled,
 )
 
 sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
@@ -132,7 +133,9 @@ class ProfileRunner:
 
     def execute_step(self, name: str, callback: Callable[[], None]) -> int:
         budget = self.prepare_step_budget(name)
-        result = timed_step(name, callback)
+        deadline_ms = None if budget is None or step_budgets_disabled() else budget.budget_ms
+        with command_deadline(deadline_ms):
+            result = timed_step(name, callback)
         if result.status != 0:
             return result.status
         budget_status = enforce_prepared_step_budget(budget, result.elapsed_ms)
