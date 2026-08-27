@@ -389,7 +389,7 @@ driver/package architecture decomposed `sifr_driver` into the following stable i
 - `diagnostics.rs`: compile/public result types, panic boundaries, diagnostic serialization, and stderr rendering helpers
 - `stdlib/`: embedded stdlib sources, intrinsic mapping, cache lifecycle, and bootstrap compilation
 - `frontend/`: single-file parse/lower/type-check entrypoints and metadata extraction
-- `project/`: import-closure discovery, reachable module parsing, export collection, and deterministic compile ordering
+- `project/`: import-closure discovery and reachable module parsing for the canonical frontend project product
 - `build/`: rooted-entrypoint planning, generated-project materialization, Cargo manifest generation, and generated-artifact cache management for repeated `sifr run` builds
 - `test_runner/`: test root discovery, generated test harness assembly, reusable cached Cargo test workspaces, and cargo test execution orchestration
 

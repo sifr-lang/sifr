@@ -4,16 +4,14 @@ use crate::diagnostics::{
 };
 use crate::project::{
     DiscoveryDiagnosticStyle, ModuleResolver, ParsedProjectModule,
-    collect_project_hir_source_modules, discover_test_root_modules,
+    collect_project_hir_source_modules, compile_project_source_modules, discover_test_root_modules,
     parse_import_closure_source_modules,
 };
 use crate::stdlib::compile_stdlib;
 use sifr_codegen::generate_rust_test_project_with_metadata;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_frontend::{
-    FrontendDiagnosticStyle, FrontendSourceContext, SourceProvider, compile_module_hir_with_source,
-};
-use sifr_lowering::HirModule;
+use sifr_frontend::{FrontendDiagnosticStyle, SourceProvider};
+use sifr_lowering::{HirModule, LoweringOptions};
 use sifr_stdlib_manifest::StdlibFeature;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -88,44 +86,29 @@ pub(crate) fn build_test_runner_project(
                 .map(|module| (name.as_str(), module))
         })
         .collect();
-    let mut lowered_test_modules = BTreeMap::new();
-    for (module_name, test_file) in test_files_by_module {
-        let Some(parsed) = test_modules.get(module_name.as_str()) else {
-            return Err(vec![crate::diagnostics::diagnostic_with_code(
-                format!(
-                    "missing parsed test module '{}' from '{}'",
-                    module_name,
-                    test_file.display()
-                ),
-                DiagnosticCode::INTERNAL_COMPILER_PANIC,
-            )]);
-        };
-
-        let lowering_result = match compile_module_hir_with_source(
-            module_name,
-            &parsed.suite,
-            &project_externals,
-            FrontendDiagnosticStyle::Bare,
-            Some(FrontendSourceContext {
-                display_path: &parsed.display_path,
-                source: &parsed.source,
-            }),
-        ) {
-            Ok(result) => result,
-            Err(errors) => {
-                let diagnostics: Vec<RenderedDiagnostic> = errors
-                    .into_iter()
-                    .map(|mut error| {
-                        error.message = format!("[{}] {}", test_file.display(), error.message);
-                        error
-                    })
-                    .collect();
-                return Err(diagnostics);
-            }
-        };
-
-        lowered_test_modules.insert(module_name.clone(), lowering_result.module);
-    }
+    let test_modules = test_modules.into_iter().collect::<BTreeMap<_, _>>();
+    let test_compilation = compile_project_source_modules(
+        &test_modules,
+        project_externals,
+        FrontendDiagnosticStyle::Bare,
+        &LoweringOptions::default(),
+    )
+    .map_err(|errors| {
+        errors
+            .into_iter()
+            .map(|mut error| {
+                let display_path = error
+                    .spans
+                    .iter()
+                    .find(|span| span.is_primary)
+                    .and_then(|span| span.file.clone())
+                    .unwrap_or_else(|| "test project".to_string());
+                error.message = format!("[{display_path}] {}", error.message);
+                error
+            })
+            .collect::<Vec<_>>()
+    })?;
+    let lowered_test_modules = test_compilation.hir_modules;
     let test_module_refs = lowered_test_modules
         .iter()
         .map(|(name, module)| (name.as_str(), module))

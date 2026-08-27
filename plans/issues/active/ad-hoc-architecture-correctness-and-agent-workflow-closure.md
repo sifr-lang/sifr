@@ -49,8 +49,8 @@ The following review claims are explicitly excluded:
 | M4 | Architecture documentation accuracy and generated crate map | implementation staged; second-review defect deferred | [#3556](https://github.com/sifr-lang/sifr/pull/3556) | `0cb9720cb80e66bc2be3c73e78206106cd998bd1` |
 | M5 | Structural generated-code safety | implementation staged; final-review residual remediated | [#3557](https://github.com/sifr-lang/sifr/pull/3557) | `5644505a6badeb51b39e38df82b3f8972c545265` |
 | M6 | Structured codegen error propagation | implementation staged; integration deferred | [#3558](https://github.com/sifr-lang/sifr/pull/3558) | `ef46a3eac5f7e54b374f6c648609e49a3dc5f302` |
-| M7 | Canonical frontend project compilation product | in progress | | |
-| M8 | LSP hot paths and compiler-service dependency direction | pending | | |
+| M7 | Canonical frontend project compilation product | implementation staged; integration deferred | [#3559](https://github.com/sifr-lang/sifr/pull/3559) | `30c7ab5e1b5bffc4a9e16f65c061e07498951fae` |
+| M8 | LSP hot paths and compiler-service dependency direction | in progress | | |
 | M9 | Method-lowering authority and unsafe-code documentation | pending | | |
 | M10 | Collision-resistant cache identity and cache lifecycle | pending | | |
 | M11 | Real fuzz and semantic property targets | pending | | |
@@ -223,6 +223,19 @@ stable product containing semantic outputs and diagnostics. Remove driver-side
 `LoweringResult` reconstruction and prove CLI/analysis equivalence for one
 snapshot.
 
+Acceptance criteria:
+
+- `FrontendContext` owns dependency-safe project order and source-backed cycle
+  diagnostics. The driver has no separate compile-order implementation.
+- One deterministic frontend product contains full lowering results, HIR, flow
+  graphs, exports, diagnostics, and compile order.
+- Single-file, project, package-project, and test-project frontend flows use the
+  same product authority.
+- The driver does not reconstruct `LoweringResult` or collect semantic exports.
+- A focused test proves that product HIR and diagnostics equal analysis queries
+  from the same frontend context snapshot.
+- Project-order and source-backed cycle tests prove stable behavior.
+
 ## M8 LSP Hot Paths And Compiler-Service Dependency Direction
 
 Move cache-hit checks before expensive Python declaration recomputation, reuse
@@ -337,6 +350,23 @@ Deferred M6 review follow-ups:
 - Keep source-language `assert` lowering explicitly outside the
   compiler-owned forbidden Rust construct set. Its user-triggered assertion is
   language behavior, not a compiler recovery panic.
+
+Deferred M7 review follow-ups:
+
+- Validate diagnostic-registry `owner_module` and fixture metadata against real
+  first-party modules and emission sites. Add a negative self-test that seeds a
+  relocated owner. M7's final allowed review found this mechanism defect after
+  the stale `SIFR-IMPORT-0007` owner was remediated.
+- Restore validated related spans for project-cycle diagnostics and add a JSON
+  shape baseline. Preserve the concrete test-file prefix for span-less
+  test-project diagnostics.
+- Remove or reconnect the now-unused `compile_module_hir` and specialization
+  metadata extraction APIs. Include them in the M12 dead-code and API ratchet.
+- Normalize empty-input behavior between project loading and compilation.
+- Measure the compilation product's repeated HIR/flow-graph retention and suite
+  rematerialization before changing its required deterministic output shape.
+- Reconcile the separate active compatibility-removal plan's reference to the
+  deleted driver compile-order module during M13 record closure.
 
 ## M13 Phase Closure And Whole-Phase Review
 
@@ -521,6 +551,39 @@ tree and are keyed by candidate SHA.
   variants, then stopped at the same three M4 architecture delivery-taxonomy
   lines (current lines 945, 946, and 1430). The owning current/future authority
   defect is already assigned to M12; neither gate was rerun.
+- Integration remains deferred with the stacked chain under the user's
+  instruction to continue through the phase before restoring the distinct
+  human reviewer.
+
+### M7 Deferred Integration Handoff
+
+- Branch: `codex/architecture-audit-closure-m7`.
+- Stacked draft PR: [#3559](https://github.com/sifr-lang/sifr/pull/3559), based
+  on the M6 branch.
+- Initial candidate:
+  `7bfbf667fb7baed927e30435ad5f1604507f3ae0`.
+- Initial exact-SHA Opus review: `NOT SATISFIED`. The implementation met the
+  six M7 compiler criteria, but the `SIFR-IMPORT-0007` registry owner and its
+  generated documentation still named the deleted driver compile-order module.
+- Final M7 implementation candidate:
+  `30c7ab5e1b5bffc4a9e16f65c061e07498951fae`.
+- The one permitted remediation review returned `SATISFIED`. It verified the
+  relocated frontend owner, generated catalog consistency, all M7 acceptance
+  criteria, and a clean regeneration check. It also found that owner and
+  fixture registry metadata are unvalidated free-form strings. That mechanism
+  is recorded under the deferred M7 follow-ups; no third review was run.
+- Review evidence is published in PR #3559 and preserved outside Git under
+  both reviewed SHAs.
+- Targeted validation: 126 `sifr_frontend` tests; 565 passing and 76 ignored
+  `sifr_driver` tests; 32 `sifr_diagnostics` tests; workspace Clippy with
+  warnings denied; formatting; frontend, HIR, driver, documentation, and
+  file-size guardrails; generated diagnostic documentation; and whitespace
+  checks passed.
+- The single create-PR and merge gates both ran on the exact final candidate.
+  Each passed generated-demo freshness, dependency, ownership, sysroot,
+  stdlib, driver, and verification-runner guardrails plus all ten Rust interop
+  variants. Each then stopped at the already-recorded M4 architecture delivery
+  taxonomy on lines 945, 946, and 1430. Neither gate was rerun.
 - Integration remains deferred with the stacked chain under the user's
   instruction to continue through the phase before restoring the distinct
   human reviewer.

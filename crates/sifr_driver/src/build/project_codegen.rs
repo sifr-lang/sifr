@@ -3,7 +3,8 @@ use super::python_runtime::{PackagePythonRuntime, inject_python_runtime_bootstra
 use crate::diagnostics::{RenderedDiagnostic, render_codegen_error, run_codegen_with_boundary};
 use crate::frontend::FrontendCompiled;
 use crate::project::{
-    ProjectLowering, assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path,
+    ProjectCompilation, assemble_project_main_rs, ordered_non_main_module_names,
+    rust_module_file_path,
 };
 use sifr_codegen::{
     StdlibCode, generate_rust_multi_with_metadata, generate_rust_with_stdlib_for_module,
@@ -105,9 +106,9 @@ pub(super) fn generated_single_file_binary_project(
 
 pub(super) fn generated_project_binary_project(
     stdlib_code: &StdlibCode,
-    project_lowering: ProjectLowering,
+    project_lowering: ProjectCompilation,
 ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
-    let ProjectLowering {
+    let ProjectCompilation {
         hir_modules,
         external_defs,
         compile_order,

@@ -77,7 +77,10 @@ impl FrontendContext {
     }
 
     pub fn diagnostics_for_project(&mut self) -> QueryResult<ProjectDiagnostics> {
-        let module_ids: Vec<ModuleId> = self.modules.iter().map(|module| module.id).collect();
+        let module_ids = self
+            .project_compile_order
+            .clone()
+            .unwrap_or_else(|| self.modules.iter().map(|module| module.id).collect());
         let mut diagnostics = Vec::new();
         for module in module_ids {
             diagnostics.extend(self.diagnostics_for_module(module).into_value().diagnostics);
@@ -106,7 +109,10 @@ impl FrontendContext {
     }
 
     pub fn analysis_for_project(&mut self) -> QueryResult<ProjectAnalysisView> {
-        let module_ids: Vec<ModuleId> = self.modules.iter().map(|module| module.id).collect();
+        let module_ids = self
+            .project_compile_order
+            .clone()
+            .unwrap_or_else(|| self.modules.iter().map(|module| module.id).collect());
         let modules = module_ids
             .into_iter()
             .map(|module| self.analysis_for_module(module).into_value())

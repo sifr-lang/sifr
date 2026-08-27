@@ -6,16 +6,13 @@ use sifr_diagnostics::{
     SourceMap, SourceSpan,
 };
 use sifr_frontend::SourceProvider;
-use sifr_python_ast::{Stmt, Suite};
+use sifr_python_ast::Stmt;
+#[cfg(test)]
+use sifr_python_ast::Suite;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
-#[derive(Clone, Debug)]
-pub(crate) struct ParsedProjectModule {
-    pub(crate) suite: Suite,
-    pub(crate) source: String,
-    pub(crate) display_path: String,
-}
+pub(crate) use sifr_frontend::FrontendProjectModule as ParsedProjectModule;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum ModuleOrigin {

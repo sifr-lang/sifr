@@ -14,8 +14,8 @@ use crate::module_signatures::{ModuleSignature, module_signature};
 use crate::source_maps::AuxiliarySourceState;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
-    ExternalDefs, HirModule, LoweringOptions, LoweringResult, LoweringWarningDiagnostic,
-    RevealTypeDiagnostic, lower_module_with_externals_name_and_options,
+    ExternalDefs, HirModule, LoweringOptions, LoweringResult,
+    lower_module_with_externals_name_and_options,
 };
 use sifr_python_ast::{Stmt, Suite};
 use sifr_syntax::ParsedModule;
@@ -25,6 +25,12 @@ use std::path::Path;
 use std::sync::Arc;
 
 mod loaders;
+mod project_compilation;
+pub(crate) use project_compilation::local_module_dependency_names;
+pub use project_compilation::{
+    FrontendModuleDiagnostics, FrontendProjectCompilation, FrontendProjectModule,
+    ModuleDiagnostics, ProjectDiagnostics, compute_project_compile_order,
+};
 mod reuse;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -184,14 +190,6 @@ pub struct LoweredModuleView {
     pub hir: HirModule,
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct FrontendModuleDiagnostics {
-    pub reveal_types: Vec<RevealTypeDiagnostic>,
-    pub rendered_reveal_types: Vec<RenderedDiagnostic>,
-    pub warnings: Vec<LoweringWarningDiagnostic>,
-    pub rendered_warnings: Vec<RenderedDiagnostic>,
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FrontendDiagnosticStyle {
     Bare,
@@ -202,17 +200,6 @@ pub enum FrontendDiagnosticStyle {
 pub struct FrontendSourceContext<'a> {
     pub display_path: &'a str,
     pub source: &'a str,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct ModuleDiagnostics {
-    pub module: ModuleId,
-    pub diagnostics: Vec<RenderedDiagnostic>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct ProjectDiagnostics {
-    pub diagnostics: Vec<RenderedDiagnostic>,
 }
 
 pub(super) struct ModuleState {
@@ -249,6 +236,8 @@ pub struct FrontendContext {
     base_external_defs: ExternalDefs,
     external_defs: ExternalDefs,
     lowering_modules: BTreeSet<ModuleId>,
+    compilation_suites: BTreeMap<ModuleId, Arc<Suite>>,
+    project_compile_order: Option<Vec<ModuleId>>,
 }
 
 pub fn parse_source(source: &str, context: Option<&str>) -> Result<Suite, Vec<RenderedDiagnostic>> {
@@ -480,6 +469,8 @@ impl FrontendContext {
         self.modules[index].source_hash = new_hash;
         self.modules[index].document_version = document_version;
         self.modules[index].signature = new_signature.clone();
+        self.compilation_suites.remove(&module);
+        self.project_compile_order = None;
         if text_changed {
             self.modules[index].source_file_view = None;
             self.source_revision.0 += 1;
@@ -666,18 +657,22 @@ impl FrontendContext {
         if !self.lowering_modules.insert(module) {
             return CacheStatus::Miss;
         }
-        let parsed_status = self.ensure_parsed(module);
-        let index = self.index_for_module(module);
-        let parsed = match parsed_status {
-            Ok(_) => self.modules[index]
-                .parsed
-                .as_ref()
-                .map(|parsed| parsed.suite().to_vec())
-                .unwrap_or_default(),
-            Err(errors) => {
-                self.modules[index].diagnostics = Some(Arc::new(errors));
-                self.lowering_modules.remove(&module);
-                return CacheStatus::Miss;
+        let parsed = if let Some(suite) = self.compilation_suites.get(&module) {
+            suite.as_ref().clone()
+        } else {
+            let parsed_status = self.ensure_parsed(module);
+            let index = self.index_for_module(module);
+            match parsed_status {
+                Ok(_) => self.modules[index]
+                    .parsed
+                    .as_ref()
+                    .map(|parsed| parsed.suite().iter().cloned().collect())
+                    .unwrap_or_default(),
+                Err(errors) => {
+                    self.modules[index].diagnostics = Some(Arc::new(errors));
+                    self.lowering_modules.remove(&module);
+                    return CacheStatus::Miss;
+                }
             }
         };
         self.modules[index].signature = module_signature(&parsed);
@@ -686,7 +681,8 @@ impl FrontendContext {
             .iter()
             .map(|module| (module.module_name.clone(), module.id))
             .collect();
-        for dependency in local_import_dependencies(&parsed, &module_names) {
+        let current_module = self.modules[index].module_name.clone();
+        for dependency in local_import_dependencies(&current_module, &parsed, &module_names) {
             let _ = self.ensure_lowered(dependency);
         }
         let index = self.index_for_module(module);
@@ -812,13 +808,22 @@ impl FrontendContext {
             .collect();
         let mut edges = BTreeSet::new();
         for index in 0..self.modules.len() {
-            let module = &self.modules[index];
-            let parsed =
-                sifr_syntax::parse_module(module.source.as_str(), Some(&module.module_name));
+            let module_id = self.modules[index].id;
+            let module_name = self.modules[index].module_name.clone();
+            let module_source = self.modules[index].source.clone();
+            if let Some(suite) = self.compilation_suites.get(&module_id) {
+                self.modules[index].signature = module_signature(suite);
+                for import in local_import_dependencies(&module_name, suite, &module_names) {
+                    edges.insert((module_id, import));
+                }
+                continue;
+            }
+            let parsed = sifr_syntax::parse_module(module_source.as_str(), Some(&module_name));
             if let Ok(parsed) = parsed {
                 self.modules[index].signature = module_signature(parsed.suite());
-                for import in local_import_dependencies(parsed.suite(), &module_names) {
-                    edges.insert((self.modules[index].id, import));
+                for import in local_import_dependencies(&module_name, parsed.suite(), &module_names)
+                {
+                    edges.insert((module_id, import));
                 }
             }
         }

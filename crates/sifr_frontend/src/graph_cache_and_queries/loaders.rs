@@ -1,9 +1,10 @@
 use super::{
     AuxiliarySourceState, BTreeMap, BTreeSet, DiagnosticCode, ExternalDefs, FileId,
-    FrontendContext, FrontendInput, FrontendMode, FrontendReuseCaches, GraphRevision, ModuleId,
-    ProjectRoot, RenderedDiagnostic, SourcePath, SourceProvider, SourceRevision,
-    WorkspaceAuxiliarySource, WorkspaceCompilerOptions, WorkspacePackageConfigIdentity,
-    WorkspaceSessionTarget, WorkspaceSingleFileTarget, diagnostic_with_code, module_state,
+    FrontendContext, FrontendInput, FrontendMode, FrontendProjectModule, FrontendReuseCaches,
+    GraphRevision, ModuleId, ProjectRoot, RenderedDiagnostic, SourcePath, SourceProvider,
+    SourceRevision, SourceText, WorkspaceAuxiliarySource, WorkspaceCompilerOptions,
+    WorkspacePackageConfigIdentity, WorkspaceSessionTarget, WorkspaceSingleFileTarget,
+    diagnostic_with_code, module_state,
 };
 
 fn auxiliary_source_states(
@@ -84,6 +85,8 @@ impl FrontendContext {
             base_external_defs: external_defs.clone(),
             external_defs,
             lowering_modules: BTreeSet::new(),
+            compilation_suites: BTreeMap::new(),
+            project_compile_order: None,
         };
         context.rebuild_edges();
         Ok(context)
@@ -215,6 +218,92 @@ impl FrontendContext {
             base_external_defs: external_defs.clone(),
             external_defs,
             lowering_modules: BTreeSet::new(),
+            compilation_suites: BTreeMap::new(),
+            project_compile_order: None,
+        };
+        context.rebuild_edges();
+        Ok(context)
+    }
+
+    pub fn load_project_modules(
+        project_modules: &BTreeMap<String, FrontendProjectModule>,
+        external_defs: ExternalDefs,
+    ) -> Result<Self, Vec<RenderedDiagnostic>> {
+        if project_modules.is_empty() {
+            return Err(vec![diagnostic_with_code(
+                "project compilation requires at least one source module",
+                DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST,
+            )]);
+        }
+
+        let mut ordered_names = project_modules.keys().cloned().collect::<Vec<_>>();
+        ordered_names.sort();
+        if let Some(main_index) = ordered_names.iter().position(|name| name == "main") {
+            let main = ordered_names.remove(main_index);
+            ordered_names.insert(0, main);
+        }
+
+        let mut modules = Vec::with_capacity(ordered_names.len());
+        let mut compilation_suites = BTreeMap::new();
+        for (index, module_name) in ordered_names.into_iter().enumerate() {
+            let numeric_id = u32::try_from(index).map_err(|_| {
+                vec![diagnostic_with_code(
+                    "project has too many modules for frontend module identity space",
+                    DiagnosticCode::WORKSPACE_MALFORMED_MANIFEST,
+                )]
+            })?;
+            let Some(module) = project_modules.get(&module_name) else {
+                return Err(vec![diagnostic_with_code(
+                    format!("project module '{module_name}' disappeared during frontend loading"),
+                    DiagnosticCode::INTERNAL_COMPILER_PANIC,
+                )]);
+            };
+            let module_id = ModuleId(numeric_id);
+            compilation_suites.insert(module_id, std::sync::Arc::new(module.suite.clone()));
+            modules.push(module_state(
+                module_id,
+                FileId(numeric_id),
+                module_name,
+                SourcePath::new(module.display_path.clone()),
+                SourceText::new(module.source.clone()),
+                None,
+            ));
+        }
+
+        let module_by_id = modules
+            .iter()
+            .enumerate()
+            .map(|(index, module)| (module.id, index))
+            .collect();
+        let entrypoint = modules[0].id;
+        let entrypoint_path = modules[0].path.clone();
+        let cache_target = WorkspaceSessionTarget::SingleFile(WorkspaceSingleFileTarget {
+            path: entrypoint_path,
+            mode: FrontendMode::ProjectEntrypoint,
+        });
+        let compiler_options = WorkspaceCompilerOptions {
+            mode: FrontendMode::ProjectEntrypoint,
+        };
+        let mut context = Self {
+            modules,
+            module_by_id,
+            entrypoint,
+            edges: Vec::new(),
+            reverse_edges: BTreeMap::new(),
+            graph_revision: GraphRevision(0),
+            source_revision: SourceRevision(0),
+            auxiliary_sources: Vec::new(),
+            module_graph_cache: None,
+            source_map_cache: None,
+            reuse_caches: FrontendReuseCaches::new(),
+            cache_target,
+            compiler_options,
+            package_config_identity: WorkspacePackageConfigIdentity::default(),
+            base_external_defs: external_defs.clone(),
+            external_defs,
+            lowering_modules: BTreeSet::new(),
+            compilation_suites,
+            project_compile_order: None,
         };
         context.rebuild_edges();
         Ok(context)

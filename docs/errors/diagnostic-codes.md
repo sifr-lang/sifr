@@ -188,6 +188,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-BUILD-0901`](SIFR-BUILD-0901.mdx) | Error | Standalone install receipt is missing or outside the self-update install rules. |
 | [`SIFR-INTERNAL-0001`](SIFR-INTERNAL-0001.mdx) | Error | Unclassified compiler panic after a panic boundary. |
 | [`SIFR-INTERNAL-0002`](SIFR-INTERNAL-0002.mdx) | Note | Structured recovery-cap omission summary. |
+| [`SIFR-INTERNAL-0003`](SIFR-INTERNAL-0003.mdx) | Error | Structured code generation failure. |
 | [`SIFR-FMT-0001`](SIFR-FMT-0001.mdx) | Error | Source formatting drift detected by sifr fmt --check. |
 | [`SIFR-LINT-0001`](SIFR-LINT-0001.mdx) | Warning | Suppression references an unknown policy rule id. |
 | [`SIFR-LINT-0002`](SIFR-LINT-0002.mdx) | Warning | Suppression did not suppress any diagnostic. |

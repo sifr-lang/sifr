@@ -10,6 +10,7 @@ use sifr_type_system::Type;
 use std::collections::HashMap;
 
 /// Result of lowering, including the HIR module and any diagnostics.
+#[derive(Clone)]
 pub struct LoweringResult {
     pub module: HirModule,
     pub flow_graph: FlowGraph,

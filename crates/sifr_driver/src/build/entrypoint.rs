@@ -20,8 +20,8 @@ use super::sysroot_interop::attach_stdlib_rust_interop;
 use crate::diagnostics::{CompileResult, RenderedDiagnostic};
 use crate::frontend::{FrontendCompiled, parse_source};
 use crate::project::{
-    DiscoveryDiagnosticStyle, ModuleResolver, ProjectLowering, collect_project_hir_source_modules,
-    collect_project_hir_source_modules_with_options,
+    DiscoveryDiagnosticStyle, ModuleResolver, ProjectCompilation,
+    collect_project_hir_source_modules, collect_project_hir_source_modules_with_options,
     compile_single_frontend_module_with_source_and_options, emit_project_frontend_diagnostics,
     parse_import_closure_source_modules, parse_package_import_closure_source_project,
 };
@@ -88,7 +88,7 @@ pub struct PackageEntrypoint {
 pub(crate) struct RootedEntrypointPlan {
     shape: RootedEntrypointShape,
     stdlib: StdlibCompiled,
-    project_lowering: ProjectLowering,
+    project_lowering: ProjectCompilation,
     python_runtime: Option<PackagePythonRuntime>,
     python_bridges: Option<sifr_package::ResolvedPythonBridgeGraph>,
     rust_interop_context: Option<PackageRustInteropContext>,
@@ -358,7 +358,7 @@ impl RootedEntrypointPlan {
                         },
                         stdlib.defs.clone(),
                         FrontendDiagnosticStyle::Bare,
-                        lowering_options.clone(),
+                        &lowering_options,
                     )
                 })?;
                 (
