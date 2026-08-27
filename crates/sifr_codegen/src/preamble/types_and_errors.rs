@@ -532,11 +532,11 @@ pub fn build_failure_type_items() -> Vec<RustItem> {
                         fields: vec![
                             (
                                 "primary".to_string(),
-                                RustExpr::Verbatim("f(self.primary)".to_string()),
+                                RustExpr::compiler_fragment("f(self.primary)".to_string()),
                             ),
                             (
                                 "secondary".to_string(),
-                                RustExpr::Verbatim("self.secondary".to_string()),
+                                RustExpr::compiler_fragment("self.secondary".to_string()),
                             ),
                         ],
                     }))],
@@ -554,7 +554,7 @@ pub fn build_failure_type_items() -> Vec<RustItem> {
                         },
                     ],
                     ret: Some(RustType::Unit),
-                    body: vec![RustStmt::Verbatim(
+                    body: vec![RustStmt::compiler_fragment(
                         "self.secondary.push(SecondaryError::new(message))".to_string(),
                     )],
                     is_async: false,

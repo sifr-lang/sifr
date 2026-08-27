@@ -667,7 +667,7 @@ pub(super) fn append_recursive_capture_args_to_stmts(
 ) {
     for stmt in stmts {
         match stmt {
-            RustStmt::Verbatim(_) => {}
+            RustStmt::CompilerFragment(_) => {}
             RustStmt::Let { value, .. } | RustStmt::LetPattern { value, .. } => {
                 append_recursive_capture_args_to_expr(value, fn_name, capture_names);
             }
@@ -870,6 +870,9 @@ pub(super) fn append_recursive_capture_args_to_expr(
             append_recursive_capture_args_to_expr(start, fn_name, capture_names);
             append_recursive_capture_args_to_expr(end, fn_name, capture_names);
         }
-        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) | RustExpr::Verbatim(_) => {}
+        RustExpr::Literal(_)
+        | RustExpr::Ident(_)
+        | RustExpr::Path(_)
+        | RustExpr::CompilerFragment(_) => {}
     }
 }

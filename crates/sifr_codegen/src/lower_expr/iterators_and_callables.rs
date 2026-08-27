@@ -466,7 +466,7 @@ pub(super) fn try_lower_simple_method_call_expr(
 
 pub(super) fn try_lower_dict_get_key_expr(index: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::StringLiteral(value) = index {
-        return Some(RustExpr::Verbatim(format!("{value:?}")));
+        return Some(RustExpr::compiler_fragment(format!("{value:?}")));
     }
     Some(RustExpr::Ref {
         mutable: false,

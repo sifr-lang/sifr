@@ -483,7 +483,7 @@ impl RustEmitter {
                     type_params: Vec::new(),
                     params: Vec::new(),
                     ret: Some(RustType::Named(format!("{STRUCTURAL}::ShapeIdentity"))),
-                    body: vec![RustStmt::Verbatim(format!(
+                    body: vec![RustStmt::compiler_fragment(format!(
                         "{STRUCTURAL}::union(&[{shape_members}])"
                     ))],
                     is_async: false,
@@ -520,7 +520,7 @@ impl RustEmitter {
                     ret: Some(RustType::Named(format!(
                         "Result<Self, {STRUCTURAL}::StructuralContractError>"
                     ))),
-                    body: vec![RustStmt::Verbatim(construct_body)],
+                    body: vec![RustStmt::compiler_fragment(construct_body)],
                     is_async: false,
                 }],
             },
@@ -555,7 +555,7 @@ impl RustEmitter {
                         },
                     ],
                     ret: Some(RustType::Named("Result<(), V::Error>".to_string())),
-                    body: vec![RustStmt::Verbatim(project_body)],
+                    body: vec![RustStmt::compiler_fragment(project_body)],
                     is_async: false,
                 }],
             },

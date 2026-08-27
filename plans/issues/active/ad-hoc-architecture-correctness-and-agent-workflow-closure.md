@@ -165,6 +165,23 @@ Replace unrestricted verbatim escape hatches with typed, origin-bearing
 fragments or remove them; ensure validation and import/capability analysis cover
 every remaining fragment. Keep corpus scanning as defense in depth.
 
+Acceptance criteria:
+
+- Raw compiler-owned item, statement, and expression fragments are opaque values whose
+  constructors record the producing source callsite. External callers cannot
+  construct an untracked fragment or invoke the unchecked renderer directly.
+- Fragment syntax and the generated-code forbidden set (`unwrap`, `expect`,
+  panic/todo/unimplemented macros, unsafe Rust, and allow attributes) are
+  rejected structurally with origin-bearing evidence.
+- Import/runtime-capability collection parses every remaining compiler fragment
+  instead of treating it as an opaque leaf.
+- Complete generated Rust is parsed and structurally checked after renderer and
+  project postprocessing, and every `.rs` materialization path rejects invalid
+  or forbidden source before writing it.
+- Focused negative tests prove expression, statement, final-source, import, and
+  materialization rejection. Existing generated-code corpus scanning remains a
+  separate defense-in-depth gate.
+
 ## M6 Structured Codegen Error Propagation
 
 Replace normal codegen panic/error-discard paths with structured diagnostics and

@@ -240,7 +240,7 @@ impl RustEmitter {
                 render_ancestor_rust_type(self.current_module_name.as_deref(), ancestor)
             };
             lowered = crate::RustExpr::FnCall {
-                func: Box::new(crate::RustExpr::Verbatim(format!(
+                func: Box::new(crate::RustExpr::compiler_fragment(format!(
                     "::std::convert::Into::<{rendered_target}>::into"
                 ))),
                 args: vec![lowered],

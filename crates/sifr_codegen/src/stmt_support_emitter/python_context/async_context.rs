@@ -80,7 +80,7 @@ impl RustEmitter {
             })?,
             0,
         );
-        rewritten.push(RustStmt::Return(Some(RustExpr::Verbatim(
+        rewritten.push(RustStmt::Return(Some(RustExpr::compiler_fragment(
             "Ok(Ok(None))".to_string(),
         ))));
         let body = crate::render_stmts(&rewritten);
@@ -245,7 +245,7 @@ drop({scope});
             cleanup_error = names.cleanup_error,
             resume_parent_cancellation = resume_parent_cancellation,
         );
-        Ok(Some(RustStmt::Verbatim(rendered)))
+        Ok(Some(RustStmt::compiler_fragment(rendered)))
     }
 }
 
@@ -485,9 +485,11 @@ fn mapped_internal_error(active_error_type: &Type) -> String {
             "without_replay".to_string(),
         ])),
         args: vec![
-            RustExpr::Verbatim("\"runtime\"".to_string()),
-            RustExpr::Verbatim("\"SifrPythonAsyncContextError\"".to_string()),
-            RustExpr::Verbatim("\"async context cancellation handoff failed\"".to_string()),
+            RustExpr::compiler_fragment("\"runtime\"".to_string()),
+            RustExpr::compiler_fragment("\"SifrPythonAsyncContextError\"".to_string()),
+            RustExpr::compiler_fragment(
+                "\"async context cancellation handoff failed\"".to_string(),
+            ),
             RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
                     "String".to_string(),
@@ -495,7 +497,7 @@ fn mapped_internal_error(active_error_type: &Type) -> String {
                 ])),
                 args: Vec::new(),
             },
-            RustExpr::Verbatim("\"async context\"".to_string()),
+            RustExpr::compiler_fragment("\"async context\"".to_string()),
         ],
     };
     if matches!(

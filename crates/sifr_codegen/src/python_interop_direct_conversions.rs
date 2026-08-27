@@ -1,7 +1,7 @@
 use crate::python_interop_direct::{
     mapped_try, push_to, reference, runtime_call, value_place, vector_let,
 };
-use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
+use crate::{RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType};
 use sifr_ir::PythonInteropDeclaration;
 use sifr_type_system::Type;
 use std::collections::HashMap;
@@ -17,27 +17,33 @@ pub(crate) fn input_conversion(
             inner.resolve_alias(),
             Type::None | Type::Bool | Type::Int | Type::Float
         );
-        let inner_value = RustExpr::MethodCall {
-            receiver: Box::new(if borrowed_inner {
-                RustExpr::MethodCall {
-                    receiver: Box::new(receiver.clone()),
-                    method: "as_ref".to_string(),
-                    args: Vec::new(),
-                }
-            } else {
-                receiver.clone()
-            }),
-            method: "unwrap".to_string(),
-            args: Vec::new(),
-        };
-        return Some(RustExpr::If {
-            cond: Box::new(RustExpr::MethodCall {
+        let match_value = if borrowed_inner {
+            RustExpr::MethodCall {
                 receiver: Box::new(receiver),
-                method: "is_some".to_string(),
+                method: "as_ref".to_string(),
                 args: Vec::new(),
-            }),
-            then_expr: Box::new(input_conversion_value(inner_value, inner, opaque_classes)?),
-            else_expr: Some(Box::new(runtime_call("from_none", Vec::new()))),
+            }
+        } else {
+            receiver
+        };
+        let inner_value = RustExpr::Ident("__sifr_python_optional_value".to_string());
+        let present = input_conversion_value(inner_value, inner, opaque_classes)?;
+        return Some(RustExpr::Match {
+            expr: Box::new(match_value),
+            arms: vec![
+                RustMatchArm {
+                    pattern: "Some(__sifr_python_optional_value)".to_string(),
+                    bindings: vec!["__sifr_python_optional_value".to_string()],
+                    guard: None,
+                    body: vec![RustStmt::TailExpr(present)],
+                },
+                RustMatchArm {
+                    pattern: "None".to_string(),
+                    bindings: Vec::new(),
+                    guard: None,
+                    body: vec![RustStmt::TailExpr(runtime_call("from_none", Vec::new()))],
+                },
+            ],
         });
     }
     if matches!(ty.resolve_alias(), Type::Class { name: class_name, .. } if opaque_classes.contains_key(class_name))

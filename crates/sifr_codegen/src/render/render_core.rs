@@ -1,34 +1,37 @@
 use super::*;
+use crate::generated_source_validate::assert_generated_source_is_safe;
 use crate::{RustFile, RustItem, RustStmt};
 
-pub struct Renderer {
+pub(crate) struct Renderer {
     pub(crate) output: String,
     pub(crate) indent: usize,
 }
 
 impl Renderer {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             output: String::new(),
             indent: 0,
         }
     }
 
-    pub fn render_file(&mut self, file: &RustFile) -> String {
+    pub(crate) fn render_file(&mut self, file: &RustFile) -> String {
         self.output.clear();
         self.indent = 0;
         for (idx, item) in file.items.iter().enumerate() {
             self.render_item(item);
-            let keeps_tight_spacing = matches!(item, RustItem::Attr(_));
+            let keeps_tight_spacing = matches!(item, RustItem::CompilerFragment(_));
             if idx + 1 < file.items.len() && !self.output.ends_with("\n\n") && !keeps_tight_spacing
             {
                 let _ = self.output.write_char('\n');
             }
         }
-        self.output.clone()
+        let output = self.output.clone();
+        assert_generated_source_is_safe(&output, "structured Rust file render");
+        output
     }
 
-    pub fn render_item(&mut self, item: &RustItem) {
+    pub(crate) fn render_item(&mut self, item: &RustItem) {
         match item {
             RustItem::Use(path) => {
                 self.emit_line(&format!("use {};", Self::render_path_parts(path)));
@@ -329,13 +332,15 @@ impl Renderer {
                     Self::render_expr_string(value)
                 ));
             }
-            RustItem::Attr(attr) => self.emit_line(&Self::render_compiler_path_string(attr)),
+            RustItem::CompilerFragment(fragment) => {
+                self.emit_line(&Self::render_compiler_path_string(fragment));
+            }
         }
     }
 }
 
 impl Renderer {
-    pub fn render_stmt(&mut self, stmt: &RustStmt) {
+    pub(crate) fn render_stmt(&mut self, stmt: &RustStmt) {
         self.render_stmt_with_tail(stmt, false);
     }
 
@@ -363,7 +368,7 @@ impl Renderer {
 
     pub(crate) fn render_stmt_with_tail(&mut self, stmt: &RustStmt, tail: bool) {
         match stmt {
-            RustStmt::Verbatim(source) => {
+            RustStmt::CompilerFragment(source) => {
                 self.emit_line(&Self::render_compiler_path_string(source));
             }
             RustStmt::Let {

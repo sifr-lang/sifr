@@ -339,7 +339,7 @@ pub(super) fn append_submission(
             mutable: false,
             name: "__sifr_python_cancellation".to_string(),
             ty: None,
-            value: RustExpr::Verbatim(
+            value: RustExpr::compiler_fragment(
                 "__sifr_retained_cancellation_scope.as_ref().map(|scope| scope.child().clone()).or(__sifr_retained_parent_cancellation)"
                     .to_string(),
             ),

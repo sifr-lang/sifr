@@ -304,12 +304,14 @@ pub(crate) fn annotate_async_main_entrypoint(items: &mut Vec<RustItem>) -> bool 
                 let already_annotated = index > 0
                     && matches!(
                         &items[index - 1],
-                        RustItem::Attr(attr) if attr.contains("tokio::main")
+                        RustItem::CompilerFragment(attr) if attr.contains("tokio::main")
                     );
                 if !already_annotated {
                     items.insert(
                         index,
-                        RustItem::Attr("#[tokio::main(flavor = \"current_thread\")]".to_string()),
+                        RustItem::compiler_fragment(
+                            "#[tokio::main(flavor = \"current_thread\")]".to_string(),
+                        ),
                     );
                 }
                 return true;

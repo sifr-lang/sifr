@@ -23,7 +23,7 @@ pub(super) fn sifr_composite_to_bridge_expr(
     borrowed: bool,
 ) -> RustExpr {
     let value = render_expr(value);
-    let converted = RustExpr::Verbatim(sifr_value_to_bridge_expr(&value, ty, borrowed, 0));
+    let converted = RustExpr::compiler_fragment(sifr_value_to_bridge_expr(&value, ty, borrowed, 0));
     if borrowed && matches!(ty.resolve_alias(), Type::List(_) | Type::Dict(_, _)) {
         RustExpr::Ref {
             mutable: false,
@@ -36,7 +36,7 @@ pub(super) fn sifr_composite_to_bridge_expr(
 
 pub(super) fn bridge_composite_to_sifr_expr(value: &RustExpr, ty: &Type) -> RustExpr {
     let value = format!("({})", render_expr(value));
-    RustExpr::Verbatim(bridge_value_to_sifr_expr(&value, ty, 0))
+    RustExpr::compiler_fragment(bridge_value_to_sifr_expr(&value, ty, 0))
 }
 
 pub(super) fn hash_map_to_bridge_index_map_expr(

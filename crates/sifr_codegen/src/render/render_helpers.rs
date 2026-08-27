@@ -1,4 +1,5 @@
 use super::{Renderer, RustExpr, RustFile, RustItem, RustStmt, RustType};
+use crate::generated_source_validate::assert_generated_source_is_safe;
 
 impl Default for Renderer {
     fn default() -> Self {
@@ -18,19 +19,34 @@ pub fn render_stmts(stmts: &[RustStmt]) -> String {
     for stmt in stmts {
         renderer.render_stmt(stmt);
     }
-    renderer.output
+    let output = renderer.output;
+    assert_generated_source_is_safe(
+        &format!("async fn __sifr_rendered_statements() {{ {output} }}"),
+        "structured Rust statement render",
+    );
+    output
 }
 
 pub fn render_expr(expr: &RustExpr) -> String {
     let mut renderer = Renderer::new();
     renderer.render_expr(expr);
-    renderer.output
+    let output = renderer.output;
+    assert_generated_source_is_safe(
+        &format!("fn __sifr_rendered_expression() {{ let _ = {output}; }}"),
+        "structured Rust expression render",
+    );
+    output
 }
 
 pub fn render_type(ty: &RustType) -> String {
     let mut renderer = Renderer::new();
     renderer.render_type(ty);
-    renderer.output
+    let output = renderer.output;
+    assert_generated_source_is_safe(
+        &format!("type __SifrRenderedType = {output};"),
+        "structured Rust type render",
+    );
+    output
 }
 
 #[cfg(test)]

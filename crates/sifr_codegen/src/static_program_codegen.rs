@@ -61,6 +61,10 @@ pub fn emit_static_specialization_programs(
             );
         }
     }
+    crate::generated_source_validate::assert_generated_source_is_safe(
+        &out,
+        "static specialization programs",
+    );
     out
 }
 

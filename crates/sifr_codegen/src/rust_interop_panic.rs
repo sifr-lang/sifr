@@ -87,7 +87,7 @@ pub(crate) fn stored_rust_panic_error_value(
                     crate::render_type(&crate::sifr_type_to_rust_type(panic_type)),
                     "new".to_string(),
                 ])),
-                args: vec![RustExpr::Verbatim(
+                args: vec![RustExpr::compiler_fragment(
                     "\"Rust bridge panicked\".to_string()".to_string(),
                 )],
             }
@@ -186,7 +186,7 @@ fn rust_panic_result(error_type: &Type, panic_type: &Type) -> RustExpr {
                     crate::render_type(&crate::sifr_type_to_rust_type(panic_type)),
                     "new".to_string(),
                 ])),
-                args: vec![RustExpr::Verbatim(
+                args: vec![RustExpr::compiler_fragment(
                     "\"Rust bridge panicked\".to_string()".to_string(),
                 )],
             }

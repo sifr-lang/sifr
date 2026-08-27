@@ -63,7 +63,7 @@ fn callback_adapter_expr(
     let invocation = format!("{handler}({handler_args})");
     let body = callback_return_expr(&invocation, result);
 
-    RustExpr::Verbatim(render(&tuple_pattern, &body))
+    RustExpr::compiler_fragment(render(&tuple_pattern, &body))
 }
 
 pub(crate) fn call_scoped_callbacks(func: &HirFunction) -> bool {
@@ -152,7 +152,7 @@ fn callback_success_expr(value: &str, ty: &Type) -> String {
     }
     if ty.resolve_alias() == &Type::Int || composite_conversion_required(ty) {
         return render_expr(&sifr_composite_to_bridge_expr(
-            &RustExpr::Verbatim(value.to_string()),
+            &RustExpr::compiler_fragment(value.to_string()),
             ty,
             false,
         ));

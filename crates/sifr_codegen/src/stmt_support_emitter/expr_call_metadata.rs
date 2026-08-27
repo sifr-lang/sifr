@@ -34,7 +34,7 @@ pub(crate) fn generic_call_target_for_ir(func: &str, type_args: &[Type]) -> Rust
         .map(|ty| crate::render_type(&crate::sifr_type_to_rust_type(ty)))
         .collect::<Vec<_>>()
         .join(", ");
-    RustExpr::Verbatim(format!("{func}::<{type_args}>"))
+    RustExpr::compiler_fragment(format!("{func}::<{type_args}>"))
 }
 
 #[cfg(test)]

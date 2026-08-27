@@ -115,9 +115,10 @@ fn dispatcher_result_lowers_large_module_int_const_as_sifr_int_helper() {
 
     let rendered = crate::render_items(&[item]);
     assert!(rendered.contains("fn __const_limit() -> SifrInt"));
-    assert!(rendered.contains(
-            "SifrInt::parse_decimal(\"100000000000000000000\", ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS)"
-        ));
+    assert!(rendered.contains("SifrInt::from_i64(100)"));
+    assert!(rendered.contains("SifrInt::from_i64(1000000000000000000)"));
+    assert!(!rendered.contains("parse_decimal"));
+    assert!(!rendered.contains("panic!"));
     assert!(!rendered.contains(".unwrap("));
     assert!(!rendered.contains(".expect("));
 }

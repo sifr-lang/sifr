@@ -1,5 +1,57 @@
 //! Structured Rust IR used by code generation.
 
+use std::fmt;
+use std::ops::Deref;
+use std::panic::Location;
+
+/// Compiler-owned Rust syntax that the structured IR cannot represent yet.
+///
+/// Fields are private so fragments can only be created through the typed
+/// expression/statement constructors, which record their compiler callsite.
+#[derive(Debug, Clone)]
+pub struct CompilerFragment {
+    source: String,
+    origin: &'static Location<'static>,
+}
+
+impl CompilerFragment {
+    #[track_caller]
+    fn new(source: String) -> Self {
+        Self {
+            source,
+            origin: Location::caller(),
+        }
+    }
+
+    pub(crate) fn source(&self) -> &str {
+        &self.source
+    }
+
+    pub(crate) fn origin(&self) -> &'static Location<'static> {
+        self.origin
+    }
+}
+
+impl Deref for CompilerFragment {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.source()
+    }
+}
+
+impl fmt::Display for CompilerFragment {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.source.fmt(formatter)
+    }
+}
+
+impl PartialEq for CompilerFragment {
+    fn eq(&self, other: &Self) -> bool {
+        self.source == other.source
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct RustFile {
     pub items: Vec<RustItem>,
@@ -74,7 +126,14 @@ pub enum RustItem {
         ty: RustType,
         value: RustExpr,
     },
-    Attr(String),
+    CompilerFragment(CompilerFragment),
+}
+
+impl RustItem {
+    #[track_caller]
+    pub(crate) fn compiler_fragment(source: impl Into<String>) -> Self {
+        Self::CompilerFragment(CompilerFragment::new(source.into()))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -82,7 +141,7 @@ pub enum RustStmt {
     /// A validated compiler-owned Rust fragment used only where the structured
     /// IR cannot yet represent the generated control-flow form. Keeping this
     /// distinct from `Ident` prevents raw syntax from masquerading as a name.
-    Verbatim(String),
+    CompilerFragment(CompilerFragment),
     Let {
         mutable: bool,
         name: String,
@@ -164,6 +223,13 @@ pub enum RustStmt {
     Block(Vec<RustStmt>),
 }
 
+impl RustStmt {
+    #[track_caller]
+    pub(crate) fn compiler_fragment(source: impl Into<String>) -> Self {
+        Self::CompilerFragment(CompilerFragment::new(source.into()))
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct RustWithItem {
     pub binding: String,
@@ -178,7 +244,7 @@ pub enum RustExpr {
     Literal(RustLiteral),
     /// A syntax-validated compiler-owned Rust expression for forms that the
     /// structured IR does not yet model. Never use `Ident` for raw syntax.
-    Verbatim(String),
+    CompilerFragment(CompilerFragment),
     Ident(String),
     Path(Vec<String>),
     MethodCall {
@@ -278,6 +344,13 @@ pub enum RustExpr {
         start: Box<RustExpr>,
         end: Box<RustExpr>,
     },
+}
+
+impl RustExpr {
+    #[track_caller]
+    pub(crate) fn compiler_fragment(source: impl Into<String>) -> Self {
+        Self::CompilerFragment(CompilerFragment::new(source.into()))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -138,7 +138,7 @@ pub(super) fn try_lower_simple_async_with_stmt(
         } else {
             format!("let _ = {join_expr};")
         };
-        block.push(RustStmt::Verbatim(stmt));
+        block.push(RustStmt::compiler_fragment(stmt));
     }
 
     Some(vec![RustStmt::Block(block)])
