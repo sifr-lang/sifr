@@ -186,15 +186,6 @@ pub(crate) enum PreparedArtifactCache {
     Miss(PendingCachedArtifact),
 }
 
-impl PreparedArtifactCache {
-    pub(crate) fn workspace_root(&self) -> &Path {
-        match self {
-            Self::Hit(entry) => entry.workspace_root(),
-            Self::Miss(entry) => entry.workspace_root(),
-        }
-    }
-}
-
 pub(crate) fn prepare_cached_artifact(
     namespace: &str,
     scope: &Path,

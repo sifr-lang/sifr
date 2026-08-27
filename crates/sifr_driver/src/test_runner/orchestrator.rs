@@ -23,11 +23,13 @@ pub(crate) struct GeneratedTestRunnerProject {
     pub(crate) all_rust_code: String,
     pub(crate) all_stdlib_modules: HashSet<String>,
     pub(crate) all_required_features: HashSet<StdlibFeature>,
+    pub(crate) interop: sifr_codegen::InteropBuildPlan,
 }
 
 pub fn run_tests(
     test_dir: &Path,
     provider: &mut dyn SourceProvider,
+    lock_mode: sifr_package::CargoLockMode,
 ) -> Result<bool, Vec<RenderedDiagnostic>> {
     let test_files_by_module = discover_test_root_modules(test_dir, provider);
 
@@ -42,7 +44,7 @@ pub fn run_tests(
     ));
 
     let generated_project = build_test_runner_project(test_dir, &test_files_by_module, provider)?;
-    execute_test_runner_project(&generated_project).map(|outcome| outcome.success)
+    execute_test_runner_project(&generated_project, lock_mode).map(|outcome| outcome.success)
 }
 
 pub(crate) fn build_test_runner_project(
@@ -167,5 +169,6 @@ pub(crate) fn build_test_runner_project(
         all_rust_code,
         all_stdlib_modules: generated.used_stdlib_modules,
         all_required_features: generated.required_features,
+        interop: generated.interop,
     })
 }

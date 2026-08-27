@@ -325,6 +325,15 @@ pub(crate) enum Commands {
         /// Directory containing test files (default: current directory)
         #[arg(default_value = ".")]
         dir: PathBuf,
+        /// Require Cargo.lock to remain unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disallow network access while resolving Rust dependencies
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
     },
     /// Manage a standalone Sifr installation
     #[command(name = "self")]
@@ -619,7 +628,16 @@ fn run_cli(cli: Cli) -> i32 {
         Commands::Lsp { stdio, parent_pid } => cmd_lsp(stdio, parent_pid),
         Commands::Trace { file } => cmd_trace(&file, diagnostic_format),
         Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
-        Commands::Test { dir } => cmd_test(&dir, diagnostic_format),
+        Commands::Test {
+            dir,
+            locked,
+            offline,
+            frozen,
+        } => cmd_test(
+            &dir,
+            lock_mode_from_flags(locked, offline, frozen),
+            diagnostic_format,
+        ),
         Commands::SelfCommand(args) => cmd_self(&args, diagnostic_format),
     }
 }

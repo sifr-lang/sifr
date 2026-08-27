@@ -7,6 +7,7 @@ mod entrypoint_artifact;
 mod entrypoint_resolution;
 mod entrypoint_single_file;
 mod entrypoint_stages;
+mod generated_cargo_project;
 mod materialize;
 mod project_codegen;
 mod python_bridges;
@@ -96,6 +97,7 @@ pub use report::{
 pub(crate) use cargo_manifest::{
     generate_dependency_cargo_toml_with_interop, try_generate_sysroot_dependency_plan,
 };
+pub(crate) use cargo_resolution::{CargoResolutionPolicy, cargo_resolution_cache_key_fragment};
 pub(crate) use entrypoint::{
     RootedEntrypoint, build_cached_package_project_binary, build_cached_project_binary,
     build_cached_single_file_binary, build_rooted_entrypoint_binary_with_report,
@@ -103,9 +105,12 @@ pub(crate) use entrypoint::{
     compile_single_file_frontend, emit_project_entrypoint, resolve_package_project_entrypoint_plan,
     resolve_project_entrypoint_plan,
 };
+pub(crate) use generated_cargo_project::{
+    GeneratedCargoCommand, GeneratedCargoExecution, GeneratedCargoProject,
+    materialize_generated_cargo_project, run_generated_cargo_command,
+};
 pub(crate) use workspace::{
     ArtifactCacheReport, CachedArtifactEntry, PreparedArtifactCache, prepare_cached_artifact,
 };
 
-#[cfg(test)]
 pub(crate) use workspace::create_invocation_workspace;

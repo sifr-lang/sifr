@@ -21,6 +21,7 @@ pub struct TestProjectCodegenResult {
     pub project_union_prelude: String,
     pub used_stdlib_modules: HashSet<String>,
     pub required_features: HashSet<StdlibFeature>,
+    pub interop: crate::InteropBuildPlan,
 }
 
 /// Generate support modules and root-level test bodies under one project union policy.
@@ -162,5 +163,10 @@ pub fn generate_rust_test_project_with_metadata(
         project_union_prelude,
         used_stdlib_modules,
         required_features,
+        interop: crate::rust_interop_plan::interop_build_plan_for_named_modules(
+            all_modules
+                .iter()
+                .map(|(module_name, module)| (Some(*module_name), *module)),
+        ),
     }
 }
