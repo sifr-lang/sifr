@@ -260,6 +260,18 @@ def validate_crate_test_membership(profile: dict[str, Any]) -> None:
 
 
 def validate_step_budgets(profile: dict[str, Any]) -> None:
+    default_budget = profile.get("default_step_budget")
+    if not isinstance(default_budget, dict):
+        raise ProfileError(f"profile {profile.get('name')} must define default_step_budget")
+    if set(default_budget) != {"budget_ms", "enforcement"}:
+        raise ProfileError(
+            f"profile {profile.get('name')} default_step_budget must define budget_ms and enforcement"
+        )
+    default_ms = default_budget.get("budget_ms")
+    if isinstance(default_ms, bool) or not isinstance(default_ms, int) or default_ms <= 0:
+        raise ProfileError(f"profile {profile.get('name')} has invalid default step budget")
+    if default_budget.get("enforcement") != "blocking":
+        raise ProfileError(f"profile {profile.get('name')} default step budget must be blocking")
     raw_budgets = profile.get("step_budgets")
     if raw_budgets is None:
         return
@@ -306,8 +318,8 @@ def validate_step_budgets(profile: dict[str, Any]) -> None:
                     "cold budget must not be lower than warm budget"
                 )
         enforcement = budget.get("enforcement")
-        if enforcement not in {"advisory", "blocking"}:
-            raise ProfileError(f"profile {profile.get('name')} step budget {step_name} has invalid enforcement")
+        if enforcement != "blocking":
+            raise ProfileError(f"profile {profile.get('name')} step budget {step_name} must be blocking")
 
 
 def canonical_step_names(profile: dict[str, Any]) -> set[str]:
@@ -441,6 +453,7 @@ def build_profile_plan(profile_name: str) -> dict[str, Any]:
         "execution_sandbox": profile.get("execution_sandbox", {}),
         "budgets": profile["budgets"],
         "step_budgets": profile.get("step_budgets", {}),
+        "default_step_budget": profile["default_step_budget"],
         "selected_areas": selected_areas,
         "toolchain_steps": list(profile["toolchain_steps"]),
         "guardrail_steps": list(profile["guardrail_steps"]),
@@ -479,6 +492,7 @@ def compare_plans(local_path: str, ci_path: str) -> int:
         "reference_host",
         "execution_sandbox",
         "step_budgets",
+        "default_step_budget",
     ]
     mismatches = [key for key in keys if local.get(key) != ci.get(key)]
     if mismatches:

@@ -13,6 +13,11 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+COMMON_ROOT = REPO_ROOT / "verification" / "areas" / "common"
+sys.path.insert(0, str(COMMON_ROOT))
+
+from rust_source_ranges import inline_test_module_ranges  # noqa: E402
+
 DOC = REPO_ROOT / "internal_docs" / "typescript_go_architecture_transfer_guardrails.md"
 SOURCE_MAPS = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "source_maps.rs"
 DOCUMENT_STORE = REPO_ROOT / "crates" / "sifr_lsp" / "src" / "document_store.rs"
@@ -40,16 +45,24 @@ DIAGNOSTIC_CANONICALIZATION = (
 PERF_MANIFEST = REPO_ROOT / "verification" / "areas" / "performance" / "data" / "benchmark_manifest.json"
 SOURCE_DEP_GUARD = REPO_ROOT / "scripts" / "check_source_crate_dependency_direction.py"
 DIRECT_FS_PATTERN = re.compile(
-    r"(?:std::fs::|fs::)(?:read_to_string|read_dir)|\.is_file\(\)|\.is_dir\(\)"
+    r"(?:std::fs::|fs::)(?:read|read_to_string|read_dir)\b|\.is_file\(\)|\.is_dir\(\)"
 )
-DIRECT_FS_SCAN_ROOTS = [
-    REPO_ROOT / "crates" / "sifr" / "src",
-    REPO_ROOT / "crates" / "sifr_driver" / "src",
-    REPO_ROOT / "crates" / "sifr_frontend" / "src",
-    REPO_ROOT / "crates" / "sifr_format" / "src",
-    REPO_ROOT / "crates" / "sifr_lint" / "src",
-    REPO_ROOT / "crates" / "sifr_package" / "src",
-]
+COMPILER_TOOLING_CRATES = (
+    "sifr",
+    "sifr_analysis",
+    "sifr_codegen",
+    "sifr_diagnostics",
+    "sifr_driver",
+    "sifr_format",
+    "sifr_frontend",
+    "sifr_lint",
+    "sifr_lowering",
+    "sifr_lsp",
+    "sifr_package",
+    "sifr_syntax",
+    "sifr_type_system",
+)
+DIRECT_FS_SCAN_ROOTS = [REPO_ROOT / "crates" / crate / "src" for crate in COMPILER_TOOLING_CRATES]
 SOURCE_PROVIDER_BOUNDARY = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "source_provider.rs"
 
 REQUIRED_DOC_SNIPPETS = [
@@ -229,20 +242,38 @@ def is_production_source(path: Path) -> bool:
     return not (name.endswith("_tests.rs") or name == "tests.rs")
 
 
-def direct_fs_sites() -> list[tuple[str, int, str]]:
+def direct_fs_sites(roots: list[Path] | None = None) -> list[tuple[str, int, str]]:
     sites: list[tuple[str, int, str]] = []
-    for root in DIRECT_FS_SCAN_ROOTS:
+    for root in DIRECT_FS_SCAN_ROOTS if roots is None else roots:
         for path in sorted(root.rglob("*.rs")):
             if not is_production_source(path):
                 continue
-            for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-                if DIRECT_FS_PATTERN.search(line):
-                    sites.append((path.relative_to(REPO_ROOT).as_posix(), line_number, line.strip()))
+            text = path.read_text(encoding="utf-8")
+            test_ranges = inline_test_module_ranges(text)
+            for match in DIRECT_FS_PATTERN.finditer(text):
+                if any(start <= match.start() <= end for start, end in test_ranges):
+                    continue
+                line_start = text.rfind("\n", 0, match.start()) + 1
+                line_end = text.find("\n", match.end())
+                if line_end == -1:
+                    line_end = len(text)
+                line_number = text.count("\n", 0, match.start()) + 1
+                sites.append(
+                    (
+                        path.relative_to(REPO_ROOT).as_posix(),
+                        line_number,
+                        text[line_start:line_end].strip(),
+                    )
+                )
     return sites
 
 
-def validate_direct_fs_inventory(text: str, failures: list[str]) -> None:
-    for path, line_number, source_line in direct_fs_sites():
+def validate_direct_fs_inventory(
+    text: str,
+    failures: list[str],
+    sites: list[tuple[str, int, str]] | None = None,
+) -> None:
+    for path, line_number, source_line in direct_fs_sites() if sites is None else sites:
         require(
             path in text,
             f"transfer direct-read/probe inventory missing {path}:{line_number}: {source_line}",
@@ -599,7 +630,31 @@ def run_self_test() -> None:
     failures = []
     validate_direct_fs_inventory("WorkspaceSession only\n", failures)
     if not failures:
-        raise SystemExit("transfer guardrail self-test failed: incomplete inventory passed")
+        raise SystemExit(
+            "transfer guardrail self-test failed: incomplete inventory passed"
+        )
+    with tempfile.TemporaryDirectory(dir=REPO_ROOT / "target") as tmp:
+        seed = Path(tmp) / "lsp_fs_bypass.rs"
+        seed.write_text("let source = std::fs::read(path)?;\n", encoding="utf-8")
+        seeded_sites = direct_fs_sites([seed.parent])
+        failures = []
+        validate_direct_fs_inventory("WorkspaceSession only\n", failures, seeded_sites)
+    if not failures or not any("lsp_fs_bypass.rs" in failure for failure in failures):
+        raise SystemExit(
+            "transfer guardrail self-test failed: seeded direct read passed"
+        )
+    with tempfile.TemporaryDirectory(dir=REPO_ROOT / "target") as tmp:
+        seed = Path(tmp) / "inline_test_read.rs"
+        seed.write_text(
+            "#[cfg(test)]\nmod tests { fn fixture() { let _ = std::fs::read(path); } }\n",
+            encoding="utf-8",
+        )
+        if direct_fs_sites([seed.parent]):
+            raise SystemExit(
+                "transfer guardrail self-test failed: inline test read inventoried"
+            )
+    if REPO_ROOT / "crates" / "sifr_lsp" / "src" not in DIRECT_FS_SCAN_ROOTS:
+        raise SystemExit("transfer guardrail self-test failed: LSP scan root missing")
     print("TypeScript-Go transfer guardrail self-test: PASS")
 
 

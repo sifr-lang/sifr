@@ -4,15 +4,14 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
-import random
 import re
 import subprocess
-import sys
 import time
 from pathlib import Path
 from typing import Any
+
+from ..profile_commands import terminate_process_group
 
 TMP_PATTERNS = (
     re.compile(r"/private/var/folders/[^\s\"']+"),
@@ -26,6 +25,7 @@ INTEGER_LITERAL_PATTERN = re.compile(r"(?<![A-Za-z0-9_])\d+(?![A-Za-z0-9_])")
 FUNCTION_SIGNATURE_PATTERN = re.compile(r"^\s*def\s+\w+\s*\(")
 ARTIFACT_CACHE_LINE_PATTERN = re.compile(r"^\[sifr-artifact-cache\].*$")
 BASELINE_COMMANDS = {"check", "run", "build", "test"}
+DEFAULT_VARIANT_TIMEOUT_SECS = 120
 
 
 def parse_args() -> argparse.Namespace:
@@ -150,7 +150,7 @@ def run_variant(
     command_name: str,
     entry: Path,
     diagnostic_format: str | None,
-    timeout_secs: int | None = None,
+    timeout_secs: int = DEFAULT_VARIANT_TIMEOUT_SECS,
 ) -> tuple[int, str, str, float, list[str]]:
     args = ["cargo", "run", "--locked", "-q", "-p", "sifr", "--"]
     if diagnostic_format is not None:
@@ -158,24 +158,33 @@ def run_variant(
     args.extend([command_name, str(entry)])
 
     started = time.perf_counter()
-    try:
-        proc = subprocess.run(
-            args,
-            cwd=repo_root,
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=timeout_secs,
-        )
-        exit_code = proc.returncode
-        stdout = proc.stdout
-        stderr = proc.stderr
-    except subprocess.TimeoutExpired as timeout_error:
-        exit_code = 124
-        stdout = timeout_error.stdout or ""
-        stderr = (timeout_error.stderr or "") + f"\ncommand timed out after {timeout_secs} seconds"
+    exit_code, stdout, stderr = run_captured_command(
+        args=args,
+        cwd=repo_root,
+        timeout_secs=timeout_secs,
+    )
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     return exit_code, stdout, stderr, elapsed_ms, args
+
+
+def run_captured_command(
+    *, args: list[str], cwd: Path, timeout_secs: float
+) -> tuple[int, str, str]:
+    proc = subprocess.Popen(
+        args,
+        cwd=cwd,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
+    try:
+        stdout, stderr = proc.communicate(timeout=timeout_secs)
+        return proc.returncode, stdout, stderr
+    except subprocess.TimeoutExpired:
+        terminate_process_group(proc)
+        stdout, stderr = proc.communicate()
+        return 124, stdout, stderr + f"\ncommand timed out after {timeout_secs} seconds"
 
 
 def canonicalize_output(

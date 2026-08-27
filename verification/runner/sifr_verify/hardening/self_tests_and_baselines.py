@@ -3,7 +3,9 @@ from __future__ import annotations
 import argparse
 import re
 import subprocess
+import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +16,7 @@ from .core import (
     baseline_variant_label,
     canonicalize_output,
     load_text,
+    run_captured_command,
     run_variant,
     validate_unique_baseline_artifact_paths,
     write_text,
@@ -61,6 +64,27 @@ def run_self_tests() -> int:
             ],
         ),
     )
+    with tempfile.TemporaryDirectory(prefix="sifr-hardening-deadline-") as tmp:
+        deadline_root = Path(tmp)
+        marker = deadline_root / "child-survived"
+        child = (
+            "import pathlib,time; time.sleep(0.4); "
+            f"pathlib.Path({str(marker)!r}).write_text('survived')"
+        )
+        parent = (
+            "import subprocess,sys,time; "
+            f"subprocess.Popen([sys.executable, '-c', {child!r}]); time.sleep(5)"
+        )
+        exit_code, _, stderr = run_captured_command(
+            args=[sys.executable, "-c", parent],
+            cwd=deadline_root,
+            timeout_secs=0.1,
+        )
+        if exit_code != 124 or "timed out" not in stderr:
+            raise AssertionError("hardening command deadline did not report a timeout")
+        time.sleep(0.5)
+        if marker.exists():
+            raise AssertionError("hardening command deadline left a descendant running")
     assert_self_test_failure(
         "duplicate diagnostic formats",
         "lists diagnostic_format 'json' more than once",

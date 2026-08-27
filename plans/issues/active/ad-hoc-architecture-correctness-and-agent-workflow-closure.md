@@ -117,6 +117,23 @@ production compiler/tooling roots, and add self-tests proving each guardrail can
 fail. Classify legitimate CLI parsing separately from compiler semantic-source
 authority instead of banning syntax use mechanically.
 
+Acceptance criteria:
+
+- Every profile step resolves to a positive blocking budget. The runner applies
+  that budget as one absolute deadline across the step's subprocesses and
+  terminates the complete subprocess group on expiry.
+- Hardening variants use a finite default deadline when a suite does not define
+  a narrower deadline, and timeout cleanup includes descendant processes.
+- Direct-read inventory scans every production compiler and tooling crate,
+  including `sifr_analysis` and `sifr_lsp`, and recognizes byte reads as well as
+  text and directory reads.
+- The global split-brain guard rejects direct `sifr_syntax::parse_module` use
+  outside compiler-owned crates, with documented syntax-only classifications
+  for CLI Python-requirement discovery and lint token/AST rules. Inline test
+  modules are excluded by parsed module range, not by whole-file allowlists.
+- Deadline, direct-read inventory, and split-brain self-tests each seed a defect
+  and prove that the owning guard rejects it.
+
 ## M4 Architecture Documentation Accuracy And Generated Crate Map
 
 Correct immediately false API and topology claims, remove phantom crates and

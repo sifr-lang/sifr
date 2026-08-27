@@ -42,6 +42,8 @@ def prepare_step_budget(
     budgets = profile.get("step_budgets", {})
     raw_budget = budgets.get(name) if isinstance(budgets, dict) else None
     if not isinstance(raw_budget, dict):
+        raw_budget = profile.get("default_step_budget")
+    if not isinstance(raw_budget, dict):
         return None
     enforcement = str(raw_budget.get("enforcement", "advisory"))
     if "budget_ms" in raw_budget:
@@ -98,6 +100,14 @@ def prepare_step_budget(
     return context
 
 
+def step_budgets_disabled() -> bool:
+    return os.environ.get("SIFR_VERIFY_DISABLE_STEP_BUDGETS", "").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+
+
 def enforce_step_budget(context: StepBudgetContext | None, elapsed_ms: int) -> int:
     if context is None:
         return 0
@@ -108,12 +118,7 @@ def enforce_step_budget(context: StepBudgetContext | None, elapsed_ms: int) -> i
         f"name={context.name} elapsed_ms={elapsed_ms} budget_ms={context.budget_ms} "
         f"enforcement={context.enforcement} status={budget_status}"
     )
-    disabled = os.environ.get("SIFR_VERIFY_DISABLE_STEP_BUDGETS", "").lower() in {
-        "1",
-        "true",
-        "yes",
-    }
-    if exceeded and context.enforcement == "blocking" and not disabled:
+    if exceeded and context.enforcement == "blocking" and not step_budgets_disabled():
         print(
             f"sifr_verify: step budget exceeded for {context.name}: {elapsed_ms}ms > {context.budget_ms}ms",
             file=sys.stderr,
