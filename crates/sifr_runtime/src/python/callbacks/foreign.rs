@@ -1,3 +1,5 @@
+#![allow(unsafe_code)]
+
 use super::CallbackOwnerState;
 use super::execution::{
     CallbackExecutionError, collect_args, execution_error, python_error, result_object,
@@ -130,6 +132,12 @@ where
 struct ForeignTargetPtr(*const (dyn ForeignTarget<'static> + 'static));
 
 #[allow(clippy::transmute_ptr_to_ptr)]
+/// Erase a foreign-thread callback target lifetime while its owner retains it.
+///
+/// # Safety
+///
+/// Owner admission must close and every accepted invocation must drain before
+/// the boxed target is dropped.
 unsafe fn erase_target_lifetime(target: *const (dyn ForeignTarget<'_> + '_)) -> ForeignTargetPtr {
     // SAFETY: callers must keep the target alive until owner admission closes
     // and every accepted invocation has drained.

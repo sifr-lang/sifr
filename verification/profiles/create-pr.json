@@ -35,6 +35,18 @@
       "budget_ms": 360000,
       "enforcement": "blocking"
     },
+    "guardrail_method_dispatch_authority": {
+      "budget_ms": 360000,
+      "enforcement": "blocking"
+    },
+    "guardrail_unsafe_abi_contracts": {
+      "budget_ms": 360000,
+      "enforcement": "blocking"
+    },
+    "guardrail_codegen_invariant_contracts": {
+      "budget_ms": 360000,
+      "enforcement": "blocking"
+    },
     "guardrail_sysroot_resource_certification": {
       "budget_ms": 360000,
       "enforcement": "blocking"
@@ -756,6 +768,9 @@
     "demo-emitted-freshness",
     "source-crate-dependency-direction",
     "submodule-ownership",
+    "method-dispatch-authority",
+    "unsafe-abi-contracts",
+    "codegen-invariant-contracts",
     "sysroot-resource-certification",
     "stdlib-native-intrinsic-allowlist",
     "stdlib-native-adapter-reachability",

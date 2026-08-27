@@ -632,6 +632,7 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                 let mut lowered_chain: Option<crate::RustExpr> = None;
                 for (idx, op) in ops.iter().enumerate() {
                     let Some(rhs_expr) = comparators.get(idx) else {
+                        // INVARIANT: expression validation requires equal operator and RHS counts.
                         unreachable!("compare ops/comparators lengths checked equal");
                     };
                     let lowered_op = match op.as_str() {

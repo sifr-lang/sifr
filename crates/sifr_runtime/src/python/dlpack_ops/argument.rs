@@ -1,3 +1,5 @@
+#![allow(unsafe_code)]
+
 use super::abi::{DLTENSOR_NAME, DLTENSOR_VERSIONED_NAME, ManagedTensor};
 use super::{DlpackEntry, DlpackHandle, PythonError, closed_error, dlpack_error, dlpack_store};
 use crate::python::ObjectHandle;
@@ -85,6 +87,8 @@ fn argument_capsule(py: Python<'_>, entry: &mut DlpackEntry) -> Result<ObjectHan
     let tensor = entry._tensor.tensor;
     let pointer = std::ptr::NonNull::new(tensor.pointer())
         .ok_or_else(|| dlpack_error("DLPack argument pointer is null"))?;
+    // SAFETY: pointer names a live managed tensor owned by entry. The capsule
+    // destructor becomes its sole fallback owner immediately after creation.
     let capsule = unsafe {
         PyCapsule::new_with_pointer_and_destructor(
             py,
@@ -136,6 +140,8 @@ fn finalize(
     if name == tensor.used_capsule_name() {
         entry._tensor.released = true;
     } else {
+        // SAFETY: capsule is live and attached; the target name is a static
+        // DLPack C string and CPython stores the pointer without taking it.
         let rename = unsafe {
             ffi::PyCapsule_SetName(capsule.as_ptr(), tensor.used_capsule_name().as_ptr())
         };
@@ -178,24 +184,34 @@ fn relinquish_to_capsule(
 }
 
 fn capsule_name<'a>(capsule: &'a Bound<'_, PyCapsule>) -> Result<&'a CStr, PythonError> {
+    // SAFETY: capsule is live and bound to the attached interpreter.
     let name = unsafe { ffi::PyCapsule_GetName(capsule.as_ptr()) };
     if name.is_null() {
         return Err(dlpack_error("DLPack consumer capsule has no name"));
     }
+    // SAFETY: the non-null name is a NUL-terminated capsule-owned string whose
+    // lifetime is bounded by the borrowed capsule.
     Ok(unsafe { CStr::from_ptr(name) })
 }
 
+// SAFETY: CPython invokes this only for the capsule created above. Every raw
+// lookup is name-checked before the managed-tensor pointer is released once.
 unsafe extern "C" fn argument_capsule_destructor(capsule: *mut ffi::PyObject) {
+    // SAFETY: CPython supplies the live capsule being destroyed.
     let name = unsafe { ffi::PyCapsule_GetName(capsule) };
     if name.is_null() {
         return;
     }
+    // SAFETY: the checked non-null pointer is the capsule's NUL-terminated name.
     let name = unsafe { CStr::from_ptr(name) };
     if name != DLTENSOR_NAME && name != DLTENSOR_VERSIONED_NAME {
         return;
     }
+    // SAFETY: capsule is live and name is the exact accepted producer name.
     let pointer = unsafe { ffi::PyCapsule_GetPointer(capsule, name.as_ptr()) };
     if let Ok(tensor) = ManagedTensor::from_capsule_name(pointer, name) {
+        // SAFETY: the producer name proves the capsule still owns the deleter;
+        // the destructor is the single release path at this point.
         unsafe { tensor.release() };
     }
 }

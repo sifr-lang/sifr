@@ -84,6 +84,7 @@ impl RustEmitter {
                 let Some(zero_literal) =
                     Self::zero_literal_for_numeric_truthiness_type_for_ir(&option_inner_ty)
                 else {
+                    // INVARIANT: numeric Option classification guarantees a zero literal.
                     unreachable!("numeric Option truthiness guard must have a zero literal");
                 };
                 return Ok(Some(crate::RustExpr::MethodCall {

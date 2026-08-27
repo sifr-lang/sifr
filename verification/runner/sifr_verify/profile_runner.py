@@ -184,6 +184,12 @@ class ProfileRunner:
             self.run_script_with_self_test("scripts/check_source_crate_dependency_direction.py")
         elif guardrail == "submodule-ownership":
             self.run_script_with_self_test("scripts/check_submodule_ownership.py")
+        elif guardrail == "method-dispatch-authority":
+            self.run_script_with_self_test("scripts/check_method_dispatch_authority.py")
+        elif guardrail == "unsafe-abi-contracts":
+            self.run_script_with_self_test("scripts/check_unsafe_abi_contracts.py")
+        elif guardrail == "codegen-invariant-contracts":
+            self.run_script_with_self_test("scripts/check_codegen_invariant_contracts.py")
         elif guardrail == "sysroot-resource-certification":
             self.run_script_with_self_test("scripts/check_sysroot_stdlib_resource_certification_gate.py")
         elif guardrail == "stdlib-native-intrinsic-allowlist":

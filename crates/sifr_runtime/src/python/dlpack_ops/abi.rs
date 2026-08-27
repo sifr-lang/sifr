@@ -1,3 +1,5 @@
+#![allow(unsafe_code)]
+
 use super::{DEVICE_CPU, PythonDlpackTensorMetadata, dlpack_error, unsupported_dtype_error};
 use std::ffi::{CStr, c_void};
 
@@ -62,7 +64,7 @@ pub(super) enum ManagedTensor {
     Versioned(*mut DLManagedTensorVersioned),
 }
 
-// DLPack managed tensors are transferred only while attached to the one
+// SAFETY: DLPack managed tensors are transferred only while attached to the one
 // application-owned Python runtime. The raw pointer never leaves that owner.
 unsafe impl Send for ManagedTensor {}
 
@@ -88,14 +90,20 @@ impl ManagedTensor {
 
     pub(super) const fn tensor(self) -> *const DLTensor {
         match self {
+            // SAFETY: constructors reject null pointers and the capsule keeps
+            // the managed tensor alive until its single release path runs.
             Self::Legacy(pointer) => unsafe { &raw const (*pointer).dl_tensor },
+            // SAFETY: constructors reject null pointers and the capsule keeps
+            // the managed tensor alive until its single release path runs.
             Self::Versioned(pointer) => unsafe { &raw const (*pointer).dl_tensor },
         }
     }
 
     pub(super) const fn has_deleter(self) -> bool {
         match self {
+            // SAFETY: the validated managed-tensor pointer remains capsule-owned.
             Self::Legacy(pointer) => unsafe { (*pointer).deleter.is_some() },
+            // SAFETY: the validated managed-tensor pointer remains capsule-owned.
             Self::Versioned(pointer) => unsafe { (*pointer).deleter.is_some() },
         }
     }
@@ -125,6 +133,8 @@ impl ManagedTensor {
         let Self::Versioned(pointer) = self else {
             return Ok(());
         };
+        // SAFETY: the non-null pointer was obtained from a versioned DLPack
+        // capsule and remains owned by that capsule during validation.
         let version = unsafe { (*pointer).version };
         if version.major != 1 {
             return Err(dlpack_error(format!(
@@ -132,6 +142,7 @@ impl ManagedTensor {
                 version.major, version.minor
             )));
         }
+        // SAFETY: the same validated versioned payload remains live.
         let flags = unsafe { (*pointer).flags };
         if flags & DLPACK_FLAG_BITMASK_IS_COPIED != 0 {
             return Err(dlpack_error(
@@ -141,15 +152,29 @@ impl ManagedTensor {
         Ok(())
     }
 
+    /// Release the producer-owned managed tensor exactly once.
+    ///
+    /// # Safety
+    ///
+    /// The caller must still own the producer-named capsule responsibility and
+    /// must mark every competing Rust owner released before this call.
     pub(super) unsafe fn release(self) {
         match self {
             Self::Legacy(pointer) => {
+                // SAFETY: the caller guarantees exclusive release ownership and
+                // the live legacy payload stores its matching deleter.
                 if let Some(deleter) = unsafe { (*pointer).deleter } {
+                    // SAFETY: the deleter comes from this exact live payload and
+                    // is invoked once under the caller's ownership guarantee.
                     unsafe { deleter(pointer) };
                 }
             }
             Self::Versioned(pointer) => {
+                // SAFETY: the caller guarantees exclusive release ownership and
+                // the live versioned payload stores its matching deleter.
                 if let Some(deleter) = unsafe { (*pointer).deleter } {
+                    // SAFETY: the deleter comes from this exact live payload and
+                    // is invoked once under the caller's ownership guarantee.
                     unsafe { deleter(pointer) };
                 }
             }
@@ -161,6 +186,8 @@ pub(super) fn metadata_for_managed_tensor(
     tensor: ManagedTensor,
 ) -> Result<PythonDlpackTensorMetadata, super::PythonError> {
     tensor.validate_version_and_copy()?;
+    // SAFETY: validation established a live capsule-owned managed tensor; the
+    // borrowed metadata is consumed before ownership can be released.
     let dl_tensor = unsafe { &*tensor.tensor() };
     if dl_tensor.ndim < 0 {
         return Err(dlpack_error("DLPack dimensions must be non-negative"));
@@ -177,6 +204,7 @@ pub(super) fn metadata_for_managed_tensor(
     let shape = if dl_tensor.shape.is_null() {
         Vec::new()
     } else {
+        // SAFETY: shape is non-null and DLPack requires ndim readable entries.
         unsafe { slice_to_vec(dl_tensor.shape, len) }
     };
     if shape.iter().any(|dimension| *dimension < 0) {
@@ -187,6 +215,7 @@ pub(super) fn metadata_for_managed_tensor(
     let strides = if dl_tensor.strides.is_null() {
         Vec::new()
     } else {
+        // SAFETY: strides is non-null and DLPack requires ndim readable entries.
         unsafe { slice_to_vec(dl_tensor.strides, len) }
     };
     if strides.iter().any(|stride| *stride < 0) {
@@ -220,6 +249,8 @@ fn tensor_element_count(tensor: &DLTensor, len: usize) -> Result<u64, super::Pyt
     if tensor.shape.is_null() {
         return Ok(0);
     }
+    // SAFETY: shape is non-null and the validated ndim supplies the readable
+    // element count for the DLPack shape array.
     unsafe { std::slice::from_raw_parts(tensor.shape.cast_const(), len) }
         .iter()
         .try_fold(1_u64, |count, dimension| {
@@ -231,7 +262,13 @@ fn tensor_element_count(tensor: &DLTensor, len: usize) -> Result<u64, super::Pyt
         })
 }
 
+/// Copy a DLPack metadata vector from a validated managed tensor.
+///
+/// # Safety
+///
+/// `pointer` must be non-null, aligned, and readable for `len` i64 elements.
 unsafe fn slice_to_vec(pointer: *mut i64, len: usize) -> Vec<i64> {
+    // SAFETY: the caller provides the exact readable DLPack metadata extent.
     unsafe { std::slice::from_raw_parts(pointer.cast_const(), len) }.to_vec()
 }
 

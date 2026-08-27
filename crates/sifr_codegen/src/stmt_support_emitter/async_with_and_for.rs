@@ -21,6 +21,7 @@ impl RustEmitter {
                     has_context_manager_protocol,
                 } => (*has_context_manager_protocol, &item.context),
                 sifr_ir::HirWithItemKind::Python { .. } => {
+                    // INVARIANT: Python context items are routed before native lowering.
                     unreachable!("Python context items are delegated before native with lowering")
                 }
             };

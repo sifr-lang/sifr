@@ -553,6 +553,7 @@ impl Renderer {
                     let value = Self::render_expr_string(&item.value);
                     if item.has_cm {
                         let Some(class_name) = item.class_name.as_ref() else {
+                            // INVARIANT: Rust IR validation requires context-manager metadata.
                             panic!("with-item missing class_name for context manager rendering");
                         };
                         let ctx_name = format!("__ctx_{idx}");

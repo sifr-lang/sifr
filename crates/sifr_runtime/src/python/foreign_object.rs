@@ -213,7 +213,11 @@ impl Drop for ForeignObjectLease {
     }
 }
 
+#[allow(unsafe_code)]
 fn release_object(object: Py<PyAny>) {
+    // SAFETY: PyGILState_Check is a process-local CPython query. It does not
+    // dereference the Py object; the result only selects immediate or queued
+    // destruction.
     if unsafe { ffi::PyGILState_Check() } != 0 {
         drop(object);
         let _ignored = update_object_count(-1);

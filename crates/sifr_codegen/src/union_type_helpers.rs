@@ -18,6 +18,7 @@ impl RustEmitter {
         if identity.is_some_and(sifr_type_system::is_crate_root_rust_nominal_identity) {
             return None;
         }
+        // INVARIANT: project setup records every non-root nominal type before union emission.
         panic!("missing crate-root path for project union nominal identity '{key}'");
     }
 

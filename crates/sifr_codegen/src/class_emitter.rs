@@ -842,6 +842,7 @@ impl RustEmitter {
                 ..
             } = &item
             else {
+                // INVARIANT: opaque method lowering always produces a function item.
                 unreachable!("opaque Rust method must lower to a function item");
             };
             signatures.push(RustItem::TraitMethodSig {

@@ -12,6 +12,7 @@ use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
 impl RustEmitter {
     pub(crate) fn rust_receiver_param(method: &HirFunction) -> RustParam {
         let Some(receiver) = method.receiver else {
+            // INVARIANT: this helper is called only for validated instance methods.
             panic!("regular instance method is missing receiver convention");
         };
         match receiver {
@@ -48,6 +49,7 @@ impl RustEmitter {
             {
                 let mut args_iter = args.into_iter();
                 let Some(inner) = args_iter.next() else {
+                    // INVARIANT: this branch follows an exact-one-argument shape check.
                     unreachable!("Some(_) call must have exactly one argument");
                 };
                 if Self::is_box_new_call_expr(&inner) {
@@ -468,6 +470,7 @@ impl RustEmitter {
         let mut rewritten = rewritten.into_iter();
         match rewritten.next() {
             Some(statement) => statement,
+            // INVARIANT: the constructor rewrite maps one input statement to one output.
             None => unreachable!("constructor statement rewrite preserves one statement"),
         }
     }

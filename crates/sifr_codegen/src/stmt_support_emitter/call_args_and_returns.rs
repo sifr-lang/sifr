@@ -517,6 +517,7 @@ impl RustEmitter {
             && matches!(value, HirExpr::Index { .. })
         {
             let HirExpr::Index { object, index, .. } = value else {
+                // INVARIANT: the enclosing predicate matches only index expressions.
                 unreachable!();
             };
             if let Some(lowered) = self.lower_non_option_index_expr_for_ir(object, index)? {

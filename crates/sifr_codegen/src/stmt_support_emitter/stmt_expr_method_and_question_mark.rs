@@ -237,34 +237,6 @@ macro_rules! stmt_expr_method_call {
                     args: lowered_args,
                 }));
             }
-            if method == "append"
-                && lowered_args.len() == 1
-                && matches!(
-                    crate::resolve_alias_type_for_plain_call(&effective_object_ty),
-                    Type::List(_)
-                )
-            {
-                lowered_args[0] =
-                    Self::clone_owned_append_arg_expr_for_ir(&args[0], lowered_args[0].clone());
-                return Ok(Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_object),
-                    method: "push".to_string(),
-                    args: lowered_args,
-                }));
-            }
-            if method == "cloned"
-                && lowered_args.is_empty()
-                && matches!(
-                    crate::resolve_alias_type_for_plain_call(&effective_object_ty),
-                    Type::List(_)
-                )
-            {
-                return Ok(Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_object),
-                    method: "clone".to_string(),
-                    args: vec![],
-                }));
-            }
             if method == "cloned" && lowered_args.is_empty() {
                 let collected_vec = match &lowered_object {
                     crate::RustExpr::MethodCall { method, .. } => {

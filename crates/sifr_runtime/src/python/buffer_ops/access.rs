@@ -1,3 +1,5 @@
+#![allow(unsafe_code)]
+
 use super::raw::OwnedPyBuffer;
 use super::{BufferAccessError, BufferHandle, PythonBufferElement, PythonError, with_live_buffer};
 use std::ptr;
