@@ -190,7 +190,18 @@ tree and are keyed by candidate SHA.
   passed 28 variants with zero failures and one declared skip, but its first
   cold-cache run took 217,638 ms against a 120,000 ms blocking budget. The
   profile stopped before later required areas and toolchain suites.
-- Merge gate: not run because create-PR validation did not complete.
-- Exact next action: obtain adjudication to either permit one warm create-PR
-  rerun despite the phase's no-second-gate rule or explicitly authorize a gate
-  waiver. Do not start M2 before M1 is merged and recorded.
+- Merge gate: the one permitted run executed on the exact implementation SHA.
+  Every completed compiler and verification area passed until the externally
+  owned distribution-release suite rejected the expired single-maintainer
+  approval waiver. Distribution qualification passed 67 of 68 variants; the
+  sole failure was `schema-v2-preview-epoch-bootstrap`. The merge report
+  SHA-256 is `bda4726743a52eaf6e552467432b93231f38bb239e48d9a94fe26f1145097763`;
+  the distribution report SHA-256 is
+  `475a211ece2ef7d55b30d600ba09c15151549a1a930fd9fc3ab51ae6ad4d9096`.
+- External owner: `ad-hoc-distinct-release-reviewer-restoration.md`. Do not
+  extend the expired waiver or weaken its validation.
+- Exact next action: restore a genuinely distinct release reviewer, update the
+  PR base if repository governance changes, and reuse unchanged M1 evidence.
+  Validate only the affected distribution boundary unless the user explicitly
+  authorizes a second full gate. Do not start M2 before M1 is merged and
+  recorded.

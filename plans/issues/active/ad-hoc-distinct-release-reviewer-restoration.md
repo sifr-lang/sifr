@@ -32,6 +32,18 @@ The report SHA-256 is
 The evidence is in the
 [#3551 gate comment](https://github.com/sifr-lang/sifr/pull/3551#issuecomment-5432642050).
 
+The same external blocker independently stopped architecture-closure M1
+candidate `1c43fe34847925a269288b4073f5ca7ca7d6063e` in its one authorized merge
+gate on 2026-08-27. All completed compiler, interop, diagnostics, generated-code,
+performance, tooling, and distribution cases passed except
+`schema-v2-preview-epoch-bootstrap`; distribution qualification again passed
+67 of 68 variants before rejecting the expired waiver. The merge report
+SHA-256 is `bda4726743a52eaf6e552467432b93231f38bb239e48d9a94fe26f1145097763`.
+The distribution-area report SHA-256 is
+`475a211ece2ef7d55b30d600ba09c15151549a1a930fd9fc3ab51ae6ad4d9096`.
+The evidence is recorded in draft PR
+[#3553](https://github.com/sifr-lang/sifr/pull/3553).
+
 Do not extend the waiver or weaken its expiry check. A distinct human reviewer
 must accept repository access. The `stable-release` environment must then use
 that reviewer with self-review and admin bypass disabled. Latest-stable Item
