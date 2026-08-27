@@ -59,6 +59,8 @@ def run_self_test() -> int:
             "fn before() {\n    // INVARIANT: lowering proves this branch is impossible.\n"
             '    unreachable!("impossible");\n}\n'
             "#[cfg(test)]\nmod tests { fn ignored() { panic!(); } }\n"
+            "const BYTE_QUOTE: u8 = b'\"';\nconst QUOTE: char = '\"';\n"
+            "const APOSTROPHE: char = '\\'';\nconst SLASH: char = '\\\\';\n"
             "fn after() {\n    // INVARIANT: validation provides this metadata.\n"
             '    assert!(true);\n}\nconst TEXT: &str = "panic!()";\n',
             encoding="utf-8",
@@ -67,7 +69,10 @@ def run_self_test() -> int:
         if errors or count != 2:
             print(f"codegen invariant self-test baseline failed: {errors}, count={count}", file=sys.stderr)
             return 1
-        source.write_text("fn probe() { panic!(); }\n", encoding="utf-8")
+        source.write_text(
+            "const BYTE_QUOTE: u8 = b'\"';\nfn probe() { panic!(); }\n",
+            encoding="utf-8",
+        )
         errors, _ = validate(root)
         if not any("lacks local" in error for error in errors):
             print("codegen invariant self-test missed absent contract", file=sys.stderr)

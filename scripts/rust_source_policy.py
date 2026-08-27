@@ -23,6 +23,27 @@ def _blank(output: list[str], start: int, end: int) -> None:
             output[index] = " "
 
 
+def _char_literal_end(text: str, start: int) -> int | None:
+    quote = start + 1 if text.startswith("b'", start) else start
+    if quote >= len(text) or text[quote] != "'" or quote + 2 >= len(text):
+        return None
+    content = quote + 1
+    if text[content] != "\\":
+        return content + 2 if text[content + 1] == "'" else None
+    escape = content + 1
+    if escape >= len(text):
+        return None
+    if text[escape] == "u" and escape + 1 < len(text) and text[escape + 1] == "{":
+        brace = text.find("}", escape + 2)
+        end = brace + 2
+        return end if brace >= 0 and end <= len(text) and text[brace + 1] == "'" else None
+    if text[escape] == "x":
+        closing = escape + 3
+    else:
+        closing = escape + 1
+    return closing + 1 if closing < len(text) and text[closing] == "'" else None
+
+
 def mask_rust_non_code(text: str) -> str:
     """Mask comments and literals while preserving byte offsets and newlines."""
     output = list(text)
@@ -48,6 +69,11 @@ def mask_rust_non_code(text: str) -> str:
                     end += 1
             _blank(output, index, end)
             index = end
+            continue
+        char_end = _char_literal_end(text, index)
+        if char_end is not None:
+            _blank(output, index, char_end)
+            index = char_end
             continue
         raw = RAW_STRING_START.match(text, index)
         if raw:
@@ -102,6 +128,10 @@ def mask_rust_comments(text: str) -> str:
                     end += 1
             _blank(output, index, end)
             index = end
+            continue
+        char_end = _char_literal_end(text, index)
+        if char_end is not None:
+            index = char_end
             continue
         raw = RAW_STRING_START.match(text, index)
         if raw:
