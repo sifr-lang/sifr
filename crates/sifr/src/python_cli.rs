@@ -267,7 +267,15 @@ fn python_read_only_context(
     Ok(PythonReadOnlyContext {
         package_name: package.sifr_name.0.clone(),
         package_id,
-        graph_digest: sifr_package::digest_package_graph(&graph_context.graph).hex,
+        graph_digest: sifr_package::digest_package_graph(&graph_context.graph)
+            .map_err(|error| {
+                fail(
+                    format!("could not serialize the Python package graph identity: {error}"),
+                    diagnostic_format,
+                    EXIT_USAGE_OR_CONFIG,
+                )
+            })?
+            .hex,
         source_digest,
         graph: graph_context.graph,
         source_map: graph_context.source_map,

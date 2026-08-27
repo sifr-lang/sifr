@@ -19,17 +19,17 @@ pub struct PackageBuildCacheInputs {
     pub selectors: Vec<String>,
 }
 
-#[must_use]
-pub fn digest_package_build_cache_inputs(inputs: &PackageBuildCacheInputs) -> GraphDigest {
+pub fn digest_package_build_cache_inputs(
+    inputs: &PackageBuildCacheInputs,
+) -> Result<GraphDigest, serde_json::Error> {
     let canonical = CanonicalPackageBuildCacheInputs::from(inputs);
     digest_serializable(&canonical)
 }
 
-#[must_use]
 pub fn digest_python_environment_probe(
     request: &PythonEnvironmentProbeRequest,
     probe: &PythonEnvironmentProbe,
-) -> GraphDigest {
+) -> Result<GraphDigest, serde_json::Error> {
     let canonical = CanonicalPythonEnvironmentProbe { request, probe };
     digest_serializable(&canonical)
 }
@@ -37,11 +37,10 @@ pub fn digest_python_environment_probe(
 /// Stable identity for authoring artifacts that depend on the selected
 /// interpreter, ABI, and locked environment but not on the particular set of
 /// import roots currently reachable from one Sifr entrypoint.
-#[must_use]
 pub fn digest_python_authoring_environment_probe(
     request: &PythonEnvironmentProbeRequest,
     probe: &PythonEnvironmentProbe,
-) -> GraphDigest {
+) -> Result<GraphDigest, serde_json::Error> {
     let mut request = request.clone();
     request.required_imports.clear();
     request.declared_imports.clear();

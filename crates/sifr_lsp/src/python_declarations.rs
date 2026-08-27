@@ -408,7 +408,15 @@ fn resolve_package_python_environment_inner(
     let request = sifr_package::PythonEnvironmentProbeRequest::from(&resolved);
     let probe = sifr_package::probe_python_environment(&request)
         .map_err(|error| vec![sifr_driver::render_package_diagnostic(error)])?;
-    let digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
+    let digest = sifr_package::digest_python_environment_probe(&request, &probe)
+        .map_err(|error| {
+            vec![diagnostic_with_code(
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                format!("could not serialize Python environment identity: {error}"),
+                "retry the language-server request".to_string(),
+            )]
+        })?
+        .hex;
     let mut runtime = PackagePythonRuntime::from_probe(
         &request,
         &probe,
@@ -416,7 +424,14 @@ fn resolve_package_python_environment_inner(
         resolved.required_imports,
         resolved.trusted_imports,
         resolved.trusted_native_imports,
-    );
+    )
+    .map_err(|error| {
+        vec![diagnostic_with_code(
+            DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            format!("could not serialize Python authoring environment identity: {error}"),
+            "retry the language-server request".to_string(),
+        )]
+    })?;
     let mut diagnostics = Vec::new();
     let binding_path = package_root.join(sifr_package::PYTHON_BINDINGS_FILE);
     if binding_path.is_file() {

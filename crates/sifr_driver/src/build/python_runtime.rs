@@ -41,7 +41,6 @@ pub(super) struct EmbeddedPythonBridgeSource {
 }
 
 impl PackagePythonRuntime {
-    #[must_use]
     pub fn from_probe(
         request: &sifr_package::PythonEnvironmentProbeRequest,
         probe: &sifr_package::PythonEnvironmentProbe,
@@ -49,10 +48,10 @@ impl PackagePythonRuntime {
         required_import_roots: Vec<String>,
         trusted_import_roots: Vec<String>,
         trusted_native_roots: Vec<String>,
-    ) -> Self {
+    ) -> Result<Self, serde_json::Error> {
         let authoring_environment_digest =
-            sifr_package::digest_python_authoring_environment_probe(request, probe).hex;
-        Self {
+            sifr_package::digest_python_authoring_environment_probe(request, probe)?.hex;
+        Ok(Self {
             venv_root: request.venv_root.clone(),
             interpreter: request.interpreter.clone(),
             executable: probe.executable.clone(),
@@ -77,7 +76,7 @@ impl PackagePythonRuntime {
             dlpack_certification_identity: String::new(),
             binding_identity: String::new(),
             start_async_loop: false,
-        }
+        })
     }
 
     #[must_use]
@@ -504,7 +503,8 @@ mod tests {
             vec!["numpy".to_string()],
             vec!["numpy".to_string()],
             Vec::new(),
-        );
+        )
+        .expect("test Python runtime identity should serialize");
         let rendered = render_python_runtime_prelude(&metadata);
 
         assert!(rendered.contains("native_import_roots: vec![\"numpy\".to_string()]"));

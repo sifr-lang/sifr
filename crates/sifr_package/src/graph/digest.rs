@@ -14,12 +14,14 @@ pub struct GraphDigest {
     pub hex: String,
 }
 
-pub(in crate::graph) fn digest_serializable<T: Serialize>(value: &T) -> GraphDigest {
-    let bytes = serde_json::to_vec(value).unwrap_or_default();
-    GraphDigest {
+pub(in crate::graph) fn digest_serializable<T: Serialize>(
+    value: &T,
+) -> Result<GraphDigest, serde_json::Error> {
+    let bytes = serde_json::to_vec(value)?;
+    Ok(GraphDigest {
         algorithm: "fnv1a64",
         hex: format!("{:016x}", fnv1a64(&bytes)),
-    }
+    })
 }
 
 fn fnv1a64(bytes: &[u8]) -> u64 {
@@ -29,4 +31,34 @@ fn fnv1a64(bytes: &[u8]) -> u64 {
         hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
     }
     hash
+}
+
+#[cfg(test)]
+mod tests {
+    use super::digest_serializable;
+    use serde::Serialize;
+    use serde::ser::{Error as _, Serializer};
+
+    struct SerializationFailure;
+
+    impl Serialize for SerializationFailure {
+        fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            Err(S::Error::custom("intentional digest serialization failure"))
+        }
+    }
+
+    #[test]
+    fn serialization_failure_is_returned() {
+        let error = digest_serializable(&SerializationFailure)
+            .expect_err("serialization failure must not produce a digest");
+
+        assert!(
+            error
+                .to_string()
+                .contains("intentional digest serialization failure")
+        );
+    }
 }

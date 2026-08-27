@@ -2,8 +2,7 @@ use super::digest::{GraphDigest, digest_serializable};
 use crate::graph::derive::SifrPackageGraph;
 use serde::Serialize;
 
-#[must_use]
-pub fn digest_package_graph(graph: &SifrPackageGraph) -> GraphDigest {
+pub fn digest_package_graph(graph: &SifrPackageGraph) -> Result<GraphDigest, serde_json::Error> {
     let canonical = CanonicalGraph::from(graph);
     digest_serializable(&canonical)
 }

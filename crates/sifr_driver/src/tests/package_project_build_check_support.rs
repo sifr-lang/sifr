@@ -53,7 +53,9 @@ pub(super) fn local_python_runtime_with_roots(
     };
     let probe = sifr_package::probe_python_environment(&request)
         .expect("local CPython environment should probe");
-    let digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
+    let digest = sifr_package::digest_python_environment_probe(&request, &probe)
+        .expect("test Python environment identity should serialize")
+        .hex;
     crate::PackagePythonRuntime::from_probe(
         &request,
         &probe,
@@ -62,4 +64,5 @@ pub(super) fn local_python_runtime_with_roots(
         roots.iter().map(|root| (*root).to_string()).collect(),
         Vec::new(),
     )
+    .expect("test Python authoring identity should serialize")
 }

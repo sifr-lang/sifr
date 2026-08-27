@@ -226,14 +226,25 @@ impl<'a> RustInteropResolver<'a> {
             probes: std::mem::take(&mut self.probes),
         };
         generated.interop.rust.bridge_sources = bridge_source_digests(self.context, package);
-        let mut cargo_input = cargo_inputs(self.context, package);
+        let mut cargo_input = cargo_inputs(self.context, package).map_err(|error| {
+            vec![diagnostic_with_code(
+                format!("failed to serialize Rust interop Cargo identity: {error}"),
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            )]
+        })?;
         if let Some(trust) = &self.context.sysroot_trust {
             if trust.package_id != self.context.package_id {
                 if let Some(sysroot_package) = self.context.graph.packages.get(&trust.package_id) {
-                    cargo_input = combined_cargo_inputs(
-                        cargo_input,
-                        cargo_inputs(self.context, sysroot_package),
-                    );
+                    let sysroot_input =
+                        cargo_inputs(self.context, sysroot_package).map_err(|error| {
+                            vec![diagnostic_with_code(
+                                format!(
+                                    "failed to serialize sysroot Rust interop Cargo identity: {error}"
+                                ),
+                                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                            )]
+                        })?;
+                    cargo_input = combined_cargo_inputs(cargo_input, sysroot_input);
                 }
             }
         }

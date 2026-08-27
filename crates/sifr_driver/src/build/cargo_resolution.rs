@@ -6,6 +6,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_package::{CargoLockMode, cargo::lock_modes::cargo_lock_failure_reason};
 use sifr_stdlib_manifest::CargoVendorMode;
 use std::collections::BTreeSet;
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -57,19 +58,18 @@ pub(super) fn prepare_cargo_resolution(
             lock_mode: policy.lock_mode,
         });
     }
-    if policy.authoritative_locks.is_empty() {
-        return Err(vec![cargo_resolution_error(
-            "locked Rust interop Cargo resolution has no authoritative package or sysroot lockfile",
-        )]);
-    }
-    for authoritative in &policy.authoritative_locks {
-        if !authoritative.is_file() {
-            return Err(vec![cargo_resolution_error(format!(
-                "authoritative Cargo lockfile '{}' is missing",
-                authoritative.display()
-            ))]);
-        }
-    }
+    validate_constrained_resolution_policy(policy)?;
+    prepare_constrained_cargo_resolution(project_dir, policy, cargo_prefix_args, lock_path)
+}
+
+fn prepare_constrained_cargo_resolution(
+    project_dir: &Path,
+    policy: &CargoResolutionPolicy,
+    cargo_prefix_args: &[String],
+    lock_path: PathBuf,
+) -> Result<PreparedCargoResolution, Vec<RenderedDiagnostic>> {
+    debug_assert_ne!(policy.lock_mode, CargoLockMode::Normal);
+    debug_assert!(!policy.authoritative_locks.is_empty());
 
     if !lock_path.is_file() {
         let prepared_lock = prepared_lock_path(project_dir, policy, cargo_prefix_args)?;
@@ -114,6 +114,81 @@ pub(super) fn prepare_cargo_resolution(
         initial_digest: Some(initial_digest),
         lock_mode: policy.lock_mode,
     })
+}
+
+pub(super) fn cargo_resolution_cache_key_fragment(
+    policy: &CargoResolutionPolicy,
+) -> Result<String, Vec<RenderedDiagnostic>> {
+    let mut fragment = format!(
+        "lock_mode={}\nvendor_mode={}\n",
+        policy.lock_mode.as_str(),
+        policy.cargo_vendor_mode.as_str()
+    );
+    if policy.lock_mode != CargoLockMode::Normal {
+        validate_constrained_resolution_policy(policy)?;
+        for (index, authoritative) in policy.authoritative_locks.iter().enumerate() {
+            let digest = authoritative_lock_digest(authoritative)?;
+            let identity = normalized_policy_path(authoritative);
+            writeln!(
+                fragment,
+                "authority[{index}]={identity}\ndigest[{index}]={digest}"
+            )
+            .map_err(|error| {
+                vec![cargo_resolution_error(format!(
+                    "failed to format Cargo resolution cache identity: {error}"
+                ))]
+            })?;
+        }
+    }
+    for (index, vendor_dir) in policy.trusted_vendor_dirs.iter().enumerate() {
+        writeln!(
+            fragment,
+            "trusted_vendor[{index}]={}",
+            normalized_policy_path(vendor_dir)
+        )
+        .map_err(|error| {
+            vec![cargo_resolution_error(format!(
+                "failed to format Cargo resolution cache identity: {error}"
+            ))]
+        })?;
+    }
+    Ok(fragment)
+}
+
+fn validate_constrained_resolution_policy(
+    policy: &CargoResolutionPolicy,
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    if policy.authoritative_locks.is_empty() {
+        return Err(vec![cargo_resolution_error(
+            "locked Rust interop Cargo resolution has no authoritative package or sysroot lockfile",
+        )]);
+    }
+    for authoritative in &policy.authoritative_locks {
+        authoritative_lock_digest(authoritative)?;
+    }
+    Ok(())
+}
+
+fn authoritative_lock_digest(path: &Path) -> Result<String, Vec<RenderedDiagnostic>> {
+    if !path.is_file() {
+        return Err(vec![cargo_resolution_error(format!(
+            "authoritative Cargo lockfile '{}' is missing",
+            path.display()
+        ))]);
+    }
+    digest_file(path).ok_or_else(|| {
+        vec![cargo_resolution_error(format!(
+            "authoritative Cargo lockfile '{}' is unreadable",
+            path.display()
+        ))]
+    })
+}
+
+fn normalized_policy_path(path: &Path) -> String {
+    path.canonicalize()
+        .unwrap_or_else(|_| path.to_path_buf())
+        .display()
+        .to_string()
 }
 
 fn cache_prepared_lock(
@@ -332,10 +407,7 @@ fn prepared_lock_path(
         push_cache_bytes(&mut input, argument);
     }
     for lock in &policy.authoritative_locks {
-        push_cache_bytes(
-            &mut input,
-            &digest_file(lock).unwrap_or_else(|| "<missing>".to_string()),
-        );
+        push_cache_bytes(&mut input, &authoritative_lock_digest(lock)?);
     }
     for vendor_dir in &policy.trusted_vendor_dirs {
         push_cache_bytes(&mut input, &vendor_dir.display().to_string());
@@ -514,8 +586,9 @@ fn cargo_resolution_error(message: impl Into<String>) -> RenderedDiagnostic {
 mod tests {
     use super::{
         CargoResolutionPolicy, CargoVendorMode, PREPARED_LOCK_NONCE,
-        normalized_manifest_cache_input, registry_entries, registry_version_compatibility_family,
-        seed_lockfile_from_authorities, validate_authoritative_registry_entries,
+        cargo_resolution_cache_key_fragment, normalized_manifest_cache_input, registry_entries,
+        registry_version_compatibility_family, seed_lockfile_from_authorities,
+        validate_authoritative_registry_entries,
     };
     use sifr_package::CargoLockMode;
     use std::collections::BTreeSet;
@@ -532,6 +605,68 @@ mod tests {
             trusted_vendor_dirs: Vec::new(),
         };
         assert!(!package_owned.uses_sysroot_vendor());
+    }
+
+    #[test]
+    fn constrained_cache_identity_rejects_missing_authority_before_cache_lookup() {
+        let project = test_project("missing_authority_identity");
+        let policy = CargoResolutionPolicy {
+            lock_mode: CargoLockMode::Frozen,
+            cargo_vendor_mode: CargoVendorMode::SysrootOnly,
+            authoritative_locks: vec![project.0.join("missing.lock")],
+            trusted_vendor_dirs: Vec::new(),
+        };
+
+        let diagnostics = cargo_resolution_cache_key_fragment(&policy)
+            .expect_err("missing lock authority must reject a cache identity");
+
+        assert!(diagnostics[0].message.contains("is missing"));
+    }
+
+    #[test]
+    fn cache_identity_covers_lock_and_vendor_policy() {
+        let project = test_project("cache_policy_identity");
+        let authority = project.0.join("authority.lock");
+        write_registry_lock(&authority, "1.2.3", "first-checksum");
+        let base = CargoResolutionPolicy {
+            lock_mode: CargoLockMode::Locked,
+            cargo_vendor_mode: CargoVendorMode::SysrootOnly,
+            authoritative_locks: vec![authority.clone()],
+            trusted_vendor_dirs: vec![project.0.join("vendor-a")],
+        };
+        let first = cargo_resolution_cache_key_fragment(&base)
+            .expect("complete constrained policy should have an identity");
+
+        let mut changed_mode = base.clone();
+        changed_mode.lock_mode = CargoLockMode::Frozen;
+        assert_ne!(
+            first,
+            cargo_resolution_cache_key_fragment(&changed_mode)
+                .expect("changed lock mode should have an identity")
+        );
+
+        let mut changed_vendor_mode = base.clone();
+        changed_vendor_mode.cargo_vendor_mode = CargoVendorMode::PackageOwned;
+        assert_ne!(
+            first,
+            cargo_resolution_cache_key_fragment(&changed_vendor_mode)
+                .expect("changed vendor mode should have an identity")
+        );
+
+        let mut changed_vendor_root = base.clone();
+        changed_vendor_root.trusted_vendor_dirs = vec![project.0.join("vendor-b")];
+        assert_ne!(
+            first,
+            cargo_resolution_cache_key_fragment(&changed_vendor_root)
+                .expect("changed vendor root should have an identity")
+        );
+
+        write_registry_lock(&authority, "1.2.3", "second-checksum");
+        assert_ne!(
+            first,
+            cargo_resolution_cache_key_fragment(&base)
+                .expect("changed authority content should have an identity")
+        );
     }
 
     #[test]
