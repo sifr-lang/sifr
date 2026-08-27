@@ -1,5 +1,5 @@
 use super::support::parse_suite;
-use crate::project::ProjectLowering;
+use crate::project::ProjectCompilation;
 use crate::{collect_project_hir_modules, compile_stdlib};
 use sifr_ir::{AdapterFieldDefault, StaticProgramValue};
 use sifr_type_system::Type;
@@ -69,11 +69,11 @@ def nested_contract_field(
     return DefaultDescriptor("required", None, None)
 "#;
 
-fn compile(main: &str) -> ProjectLowering {
+fn compile(main: &str) -> ProjectCompilation {
     compile_with_contract(main, CONTRACT)
 }
 
-fn compile_with_contract(main: &str, contract: &str) -> ProjectLowering {
+fn compile_with_contract(main: &str, contract: &str) -> ProjectCompilation {
     let modules = HashMap::from([
         ("fixture.defaults".to_string(), parse_suite(contract)),
         ("main".to_string(), parse_suite(main)),
@@ -314,7 +314,7 @@ class Model(Contract):
         "fields.append(PlannedField(identity, declared_type, default_kind, default_value, default_factory, \"changed\"))",
     );
     let changed = compile_with_contract(source, &changed_contract);
-    let identities = |compiled: &ProjectLowering| {
+    let identities = |compiled: &ProjectCompilation| {
         let selection = compiled
             .external_defs
             .class_adapter_selections

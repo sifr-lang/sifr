@@ -223,6 +223,19 @@ stable product containing semantic outputs and diagnostics. Remove driver-side
 `LoweringResult` reconstruction and prove CLI/analysis equivalence for one
 snapshot.
 
+Acceptance criteria:
+
+- `FrontendContext` owns dependency-safe project order and source-backed cycle
+  diagnostics. The driver has no separate compile-order implementation.
+- One deterministic frontend product contains full lowering results, HIR, flow
+  graphs, exports, diagnostics, and compile order.
+- Single-file, project, package-project, and test-project frontend flows use the
+  same product authority.
+- The driver does not reconstruct `LoweringResult` or collect semantic exports.
+- A focused test proves that product HIR and diagnostics equal analysis queries
+  from the same frontend context snapshot.
+- Project-order and source-backed cycle tests prove stable behavior.
+
 ## M8 LSP Hot Paths And Compiler-Service Dependency Direction
 
 Move cache-hit checks before expensive Python declaration recomputation, reuse

@@ -54,35 +54,19 @@ pub(super) fn source_hash(source: &str) -> SourceHash {
 }
 
 pub(super) fn local_import_dependencies(
+    current_module: &str,
     stmts: &[Stmt],
     module_names: &BTreeMap<String, ModuleId>,
 ) -> Vec<ModuleId> {
-    let mut deps = Vec::new();
-    for stmt in stmts {
-        let Stmt::ImportFrom(import_from) = stmt else {
-            continue;
-        };
-        if import_from.level > 1 {
-            continue;
-        }
-        let Some(module) = &import_from.module else {
-            continue;
-        };
-        let module_name = module.to_string();
-        if module_name == "typing"
-            || module_name == "enum"
-            || module_name.starts_with("sifr.")
-            || module_name.starts_with("_sifr.")
-        {
-            continue;
-        }
-        if let Some(module_id) = module_names.get(&module_name) {
-            deps.push(*module_id);
-        }
-    }
-    deps.sort();
-    deps.dedup();
-    deps
+    let local_modules = module_names.keys().cloned().collect();
+    crate::graph_cache_and_queries::local_module_dependency_names(
+        current_module,
+        stmts,
+        &local_modules,
+    )
+    .into_iter()
+    .filter_map(|module_name| module_names.get(&module_name).copied())
+    .collect()
 }
 
 pub(super) fn symbols_from_hir(module: &HirModule) -> Vec<SymbolView> {

@@ -88,8 +88,7 @@ The public `CompileError` abstraction and the transitional `CompilerDiagnostic` 
 | `crates/sifr_driver/src/frontend/api.rs` | 1 | public driver frontend facade delegates parser/lowering/type-check diagnostics to `sifr_frontend` and codegen errors to the panic boundary | Keep semantics-bearing parse/lower/type-check diagnostic construction in `sifr_frontend`/`sifr_lowering`; driver remains a facade plus codegen boundary. |
 | `crates/sifr_frontend/src/lib.rs` | 1 | frontend HIR diagnostics preserve the HIR-provided active code; uncoded lowering diagnostics are surfaced as internal compiler diagnostics | Preserve module/source span and direct HIR diagnostic identity. |
 | `crates/sifr_driver/src/project/discovery.rs` | 6 | import discovery and reachable parse failures | Use `IMPORT-*` for source resolution and `PARSE-*` for reachable parse failures. Root-module errors use the span-less renderer. |
-| `crates/sifr_driver/src/project/compile_order.rs` | 1 | dependency-cycle diagnostics | Use `SIFR-IMPORT-0007` for both source-backed and span-less project cycles. |
-| `crates/sifr_driver/src/project/frontend.rs` | 1 | project frontend setup carries `SIFR-INTERNAL-0001` for invariant-only failures | Use `WORKSPACE-*` for recoverable project assembly failures. |
+| `crates/sifr_frontend/src/graph_cache_and_queries/project_compilation.rs` | 1 | dependency-cycle diagnostics | Use `SIFR-IMPORT-0007` for source-backed and span-less project cycles. |
 | `crates/sifr_driver/src/build/entrypoint.rs` | 3 | build planning/materialization failures | `BUILD-*` for tool/build actions; `WORKSPACE-*` for project graph inputs. |
 | `crates/sifr_driver/src/build/materialize.rs` | 1 | file materialization failure | `SIFR-BUILD-0002`. |
 | `crates/sifr_driver/src/build/workspace.rs` | 7 | temporary dir, cargo manifest, rustc/cargo execution, binary artifact failures | `SIFR-BUILD-0002..0006` by operation. |

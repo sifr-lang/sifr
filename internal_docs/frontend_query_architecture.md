@@ -15,6 +15,7 @@ status: active
 - parse, lower, type-check, module diagnostics, project diagnostics, module analysis, and project analysis queries
 - query metadata with cache hit/miss status plus graph/source revisions
 - dependency-first project lowering so imported module exports are available before importers are checked
+- one stable project compilation product with full lowering results, HIR, flow graphs, exports, diagnostics, and compile order
 - canonical HIR compile helpers used by the driver for CLI, project, and test-runner frontend flows
 
 `sifr_frontend` consumes `sifr_syntax` for parsing and `sifr_lowering` for lowering and semantic diagnostics. It does not invoke codegen, rustc, cargo, CLI policy, or build artifact creation.
@@ -96,7 +97,9 @@ resolution; they remain private preparation for future compiler API work.
 
 ## Driver Consumption
 
-frontend query architecture frontend query routing routes `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows through `sifr_frontend` without preserving duplicate semantics-bearing driver frontend paths. The driver remains responsible for stdlib bootstrap/cache plumbing, build planning, codegen invocation, Cargo/rustc execution, and renderer/CLI presentation.
+The frontend query route owns `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows. `FrontendContext` owns dependency-safe compile order and the project compilation product. The same lowered snapshot supplies the product and later analysis queries.
+
+The driver owns standard-library bootstrap, build plans, code generation, Cargo and Rust invocation, and CLI output. Driver adapters supply discovered source modules and compiler options to `FrontendContext`. They do not reconstruct semantic results or compute project order.
 
 The deleted driver migration shims were:
 

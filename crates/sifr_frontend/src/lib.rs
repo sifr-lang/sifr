@@ -44,6 +44,8 @@ mod hir_views;
 mod module_export_storage;
 mod module_signatures;
 mod package_issues;
+#[cfg(test)]
+mod project_compilation_tests;
 mod query_diagnostic_rendering;
 pub(crate) use query_diagnostic_rendering::{
     diagnostic_with_code, diagnostic_with_source_range, diagnostic_with_source_range_args_help,
