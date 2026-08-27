@@ -45,8 +45,8 @@ The following review claims are explicitly excluded:
 | --- | --- | --- | --- | --- |
 | M1 | Warm-cache lock correctness and serialization failures | implementation complete; merge deferred | [#3553](https://github.com/sifr-lang/sifr/pull/3553) | `1c43fe34847925a269288b4073f5ca7ca7d6063e` |
 | M2 | Canonical test/build materialization | implementation complete; merge deferred | [#3554](https://github.com/sifr-lang/sifr/pull/3554) | `16024325813dbee56e84a838e42679340f0f829a` |
-| M3 | Verification gate integrity | in progress | | |
-| M4 | Architecture documentation accuracy and generated crate map | pending | | |
+| M3 | Verification gate integrity | implementation staged; second-review defect deferred | [#3555](https://github.com/sifr-lang/sifr/pull/3555) | `07e3d7d0f5123a89a30a4fcf149e51ebff7d6c7e` |
+| M4 | Architecture documentation accuracy and generated crate map | in progress | | |
 | M5 | Structural generated-code safety | pending | | |
 | M6 | Structured codegen error propagation | pending | | |
 | M7 | Canonical frontend project compilation product | pending | | |
@@ -214,6 +214,13 @@ record an evidence-backed keep/refactor/remove decision for the flow graph.
 
 Deferred M3 review follow-ups:
 
+- Extend the compiler/tooling direct-read roots to `sifr_stdlib_manifest` and
+  `sifr_sysroot`, inventory their production manifest/source/digest probes, and
+  pin both roots in the negative self-test. This is the new mechanism defect
+  found by M3's final allowed review and must close as a later item.
+- Detect wildcard and aliased `sifr_syntax` imports that expose a bare or
+  alias-qualified `parse_module` call. No current production consumer uses
+  these forms; add a negative seed when closing the deferred M3 mechanism.
 - Route determinism-scale external commands and reproduction-command targets
   through the shared process-group deadline primitive, and propagate terminal
   interruption signals to detached gate subprocess groups.
@@ -289,3 +296,31 @@ tree and are keyed by candidate SHA.
   the user's instruction to maximize later phase implementation while the known
   distinct-human-reviewer dependency is unavailable. Do not rerun unchanged M2
   validation during final integration unless its stacked diff changes.
+
+### M3 Deferred Integration Handoff
+
+- Branch: `codex/architecture-audit-closure-m3`.
+- Stacked draft PR: [#3555](https://github.com/sifr-lang/sifr/pull/3555), based
+  on the M2 branch.
+- Initial candidate: `4e0ebb8ebb68a47b16451f4f0ea9a16a1e449407`.
+- Initial exact-SHA Opus review: `NOT SATISFIED`. It found that imported/bare
+  syntax parsing evaded the split-brain guard and that the deadline descendant
+  marker lacked a guaranteed parent. Both findings were remediated in one
+  batch.
+- Final M3 implementation candidate:
+  `07e3d7d0f5123a89a30a4fcf149e51ebff7d6c7e`.
+- The one permitted remediation review verified both original corrections, then
+  reported a new direct-read root mechanism: `sifr_stdlib_manifest` and
+  `sifr_sysroot` remain outside the inventory. Per the phase execution rule, the
+  defect and the related wildcard/alias parse-import seed are recorded under
+  M12 above; no third M3 review was run.
+- Review evidence is published in PR #3555 and preserved outside the Git tree
+  under both candidate SHAs.
+- Targeted validation: verification runner and hardening self-tests; positive
+  and seeded-negative split-brain and direct-read guards; performance
+  `frontend-syntax-guardrails` (4/4, including four focused frontend cache unit
+  tests); developer-tooling `typescript-go-transfer` (2/2); touched-file Ruff;
+  profile/area schema checks; HIR maintainability; the 3,266-file size
+  guardrail; and whitespace checks passed.
+- No `crates/**` compiler source changed, so create-PR and merge gates were not
+  applicable. Integration stays deferred with the stacked chain.
