@@ -7,6 +7,25 @@
   ],
   "checks": [
     {
+      "id": "architecture",
+      "suite": "architecture",
+      "command": [
+        "python3",
+        "verification/areas/documentation/check_architecture.py"
+      ],
+      "mutation_cases": [
+        "crate-map",
+        "profile-map",
+        "unknown-crate-path",
+        "unknown-bare-crate",
+        "missing-in-crate-path",
+        "broken-link",
+        "machine-path",
+        "machine-home-path"
+      ],
+      "status": "active"
+    },
+    {
       "id": "structure",
       "suite": "structure",
       "command": [

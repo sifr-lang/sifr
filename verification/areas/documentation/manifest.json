@@ -10,6 +10,19 @@
   "timeout_seconds": 300,
   "suites": [
     {
+      "name": "architecture",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "documentation-architecture",
+          "entry": "internal_docs/architecture.md",
+          "command": "documentation-architecture",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "structure",
       "kind": "adapter",
       "cases": [

@@ -15,6 +15,10 @@ AREA_ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "documentation-results.json"
 SUITE_COMMANDS = {
+    "architecture": [
+        sys.executable,
+        str(AREA_ROOT / "check_architecture.py"),
+    ],
     "structure": [
         sys.executable,
         str(AREA_ROOT / "check_structure.py"),

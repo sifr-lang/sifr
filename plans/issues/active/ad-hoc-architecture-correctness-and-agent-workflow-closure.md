@@ -46,8 +46,8 @@ The following review claims are explicitly excluded:
 | M1 | Warm-cache lock correctness and serialization failures | implementation complete; merge deferred | [#3553](https://github.com/sifr-lang/sifr/pull/3553) | `1c43fe34847925a269288b4073f5ca7ca7d6063e` |
 | M2 | Canonical test/build materialization | implementation complete; merge deferred | [#3554](https://github.com/sifr-lang/sifr/pull/3554) | `16024325813dbee56e84a838e42679340f0f829a` |
 | M3 | Verification gate integrity | implementation staged; second-review defect deferred | [#3555](https://github.com/sifr-lang/sifr/pull/3555) | `07e3d7d0f5123a89a30a4fcf149e51ebff7d6c7e` |
-| M4 | Architecture documentation accuracy and generated crate map | in progress | | |
-| M5 | Structural generated-code safety | pending | | |
+| M4 | Architecture documentation accuracy and generated crate map | implementation staged; second-review defect deferred | [#3556](https://github.com/sifr-lang/sifr/pull/3556) | `0cb9720cb80e66bc2be3c73e78206106cd998bd1` |
+| M5 | Structural generated-code safety | in progress | | |
 | M6 | Structured codegen error propagation | pending | | |
 | M7 | Canonical frontend project compilation product | pending | | |
 | M8 | LSP hot paths and compiler-service dependency direction | pending | | |
@@ -142,6 +142,22 @@ machine-local paths, separate current architecture from history/future design,
 generate the workspace crate map from Cargo metadata, and block documented
 crate/path/profile drift.
 
+Acceptance criteria:
+
+- `internal_docs/architecture.md` describes current implemented boundaries;
+  execution history points to `plans/`, and future design is labeled explicitly.
+- The dict-order and `random.shuffle` rows match the current stdlib/compiler API.
+  Obsolete parser-fixture, test-utility, cargo-fuzz, corpus, snapshot, and
+  benchmark commands are replaced by the authoritative verification commands.
+- No machine-local absolute path or nonexistent first-party crate remains in the
+  architecture document.
+- A deterministic generator renders the workspace crate/dependency map from
+  locked Cargo metadata and the validation-profile inventory from committed
+  profile JSON.
+- Documentation verification rejects generated-map drift, unknown first-party
+  crate references, broken relative Markdown links, machine-local paths, and
+  profile inventory drift; its self-test proves each rejection path.
+
 ## M5 Structural Generated-Code Safety
 
 Make forbidden generated Rust constructs fail on every codegen invocation.
@@ -227,6 +243,21 @@ Deferred M3 review follow-ups:
 - Decide whether production Rust binaries under compiler/tooling crates belong
   in the direct-filesystem inventory instead of preserving the current `bin`
   carve-out.
+
+Deferred M4 remediation-review follow-ups:
+
+- Reconcile the five legacy **Implementation responsibilities** blocks in
+  `internal_docs/architecture.md`: remove shipped assignments, move execution
+  history to `plans/`, and label genuinely unimplemented design as **Future**.
+  Add a structural check that prevents current/future authority from mixing
+  again. This is the new mechanism defect found by M4's final allowed review.
+- Extend architecture mutations to seed `/root`, Windows user paths, missing
+  generated-section markers, and qualified phantom crate references.
+- Move the architecture mutation-registry binding into create-PR/merge
+  execution (or run the structure suite there), and schedule the cheap
+  documentation guard before expensive selected areas.
+- Generalize the Cargo/disk workspace cross-check if first-party workspace
+  members are ever allowed outside the current `crates/<name>` topology.
 
 ## M13 Phase Closure And Whole-Phase Review
 
@@ -324,3 +355,27 @@ tree and are keyed by candidate SHA.
   guardrail; and whitespace checks passed.
 - No `crates/**` compiler source changed, so create-PR and merge gates were not
   applicable. Integration stays deferred with the stacked chain.
+
+### M4 Deferred Integration Handoff
+
+- Branch: `codex/architecture-audit-closure-m4`.
+- Stacked draft PR: [#3556](https://github.com/sifr-lang/sifr/pull/3556), based
+  on the M3 branch.
+- Initial candidate: `058780a5b505500fd04a80eca71aa467dfe037d8`.
+- Initial exact-SHA Opus review: `NOT SATISFIED`. It found dev-only dependency
+  edges in the generated map, incomplete phantom crate/path rejection, and a
+  stale PR-gate paragraph. All three were remediated in one batch.
+- Final M4 implementation candidate:
+  `0cb9720cb80e66bc2be3c73e78206106cd998bd1`.
+- The final allowed review verified the original fixes and reported a new
+  current-vs-future authority defect in five legacy implementation-responsibility
+  blocks. The defect and related hardening are recorded under M12 above; no
+  third M4 review was run.
+- Review evidence is preserved outside the Git tree under both candidate SHAs.
+- Targeted validation: architecture positive and mutation checks; all three
+  documentation suites; verification profile/runner self-tests; touched-file
+  Ruff and new-file formatting; JSON parsing; HIR maintainability; the
+  3,267-file size guardrail; and whitespace checks passed.
+- The architecture guard now runs in create-PR and merge profiles. No
+  `crates/**` compiler source changed, so the compiler create-PR and merge gates
+  were not applicable. Integration stays deferred with the stacked chain.
