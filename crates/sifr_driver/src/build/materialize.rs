@@ -1,25 +1,19 @@
-use super::cargo_invocation_trace::record_cargo_invocation;
 use super::cargo_manifest::{
-    generate_dependency_cargo_toml_with_interop, sysroot_cargo_config_args,
-    try_generate_sysroot_dependency_plan,
+    generate_dependency_cargo_toml_with_interop, try_generate_sysroot_dependency_plan,
 };
-use super::cargo_resolution::{
-    CargoResolutionPolicy, cargo_lock_mode_diagnostic, cargo_resolution_cache_key_fragment,
-    prepare_cargo_resolution,
+use super::cargo_resolution::{CargoResolutionPolicy, cargo_resolution_cache_key_fragment};
+use super::generated_cargo_project::{
+    GeneratedCargoCommand, GeneratedCargoProject, cargo_execution_error,
+    materialize_generated_cargo_project, run_generated_cargo_command,
 };
 use super::project_codegen::GeneratedBinaryProject;
 use super::report::BuildSysrootReport;
-use super::rust_interop_bridge_sources::generated_bridge_sources;
-use super::rust_interop_sqlx_offline::configure_hermetic_build_environment;
 use super::{CachedArtifactEntry, PreparedArtifactCache, prepare_cached_artifact};
 use crate::diagnostics::RenderedDiagnostic;
-use crate::project::{namespace_module_files, rust_module_file_path};
-use sifr_codegen::RustInteropTrustRequirementKind;
 use sifr_diagnostics::DiagnosticCode;
-use sifr_stdlib_manifest::{CargoVendorMode, SysrootCrate, SysrootDependencyPlan};
-use std::collections::{BTreeMap, BTreeSet};
+use sifr_stdlib_manifest::{CargoVendorMode, SysrootDependencyPlan};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::time::Duration;
 
 pub(super) struct MaterializedBinaryProject {
@@ -139,30 +133,44 @@ fn materialize_binary_project_at_path(
         .as_ref()
         .map(|runtime| runtime.interpreter().to_path_buf());
     let sysroot = sysroot_report(dependency_plan);
-    let validate_native_links = should_validate_native_link_evidence(&generated_project);
-    let trusted_native_links = trusted_native_links(&generated_project, dependency_plan);
+    let additional_trusted_native_links = generated_project
+        .python_runtime
+        .as_ref()
+        .map_or_else(BTreeSet::new, |runtime| {
+            runtime.trusted_native_link_names().into_iter().collect()
+        });
+    let interop = generated_project.interop.clone();
     let materialize_start = std::time::Instant::now();
-    materialize_binary_project_files(
+    materialize_generated_cargo_project(
         project_path,
-        project_name,
-        generated_project,
+        GeneratedCargoProject {
+            name: project_name.to_string(),
+            crate_root_file: PathBuf::from("main.rs"),
+            crate_root_source: generated_project.main_rs,
+            support_modules: generated_project.support_modules,
+            support_main_alias: None,
+            interop: generated_project.interop,
+        },
         dependency_plan,
     )?;
     let materialize_elapsed = materialize_start.elapsed();
 
     let cargo_start = std::time::Instant::now();
-    let cargo_prefix_args = sysroot_cargo_config_args(dependency_plan);
-    let prepared_resolution =
-        prepare_cargo_resolution(project_path, cargo_resolution, &cargo_prefix_args)?;
-    run_cargo_build(
+    let output = run_generated_cargo_command(
         project_path,
+        GeneratedCargoCommand::BuildRelease,
         python_interpreter.as_deref(),
-        validate_native_links,
-        &trusted_native_links,
+        &additional_trusted_native_links,
+        &interop,
         dependency_plan,
         cargo_resolution,
     )?;
-    prepared_resolution.assert_unchanged()?;
+    if !output.status.success() {
+        return Err(vec![cargo_execution_error(format!(
+            "cargo build failed:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        ))]);
+    }
     let cargo_elapsed = cargo_start.elapsed();
 
     Ok(MaterializedBinaryProject {
@@ -180,253 +188,8 @@ fn sysroot_report(dependency_plan: &SysrootDependencyPlan) -> BuildSysrootReport
     BuildSysrootReport::from_dependency_plan(dependency_plan)
 }
 
-fn materialize_binary_project_files(
-    project_path: &Path,
-    project_name: &str,
-    generated_project: GeneratedBinaryProject,
-    dependency_plan: &SysrootDependencyPlan,
-) -> Result<(), Vec<RenderedDiagnostic>> {
-    let src_dir = project_path.join("src");
-    std::fs::create_dir_all(&src_dir).map_err(|error| {
-        vec![build_error(format!(
-            "failed to create output directory: {error}"
-        ))]
-    })?;
-
-    let cargo_toml = generate_dependency_cargo_toml_with_interop(
-        project_name,
-        dependency_plan,
-        &generated_project.interop,
-    );
-
-    write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
-
-    let bridge_sources = generated_bridge_sources(
-        &generated_project
-            .interop
-            .rust
-            .bridge_contracts
-            .generated_types,
-    );
-    let main_rs = if bridge_sources.is_empty() {
-        generated_project.main_rs
-    } else {
-        format!("pub mod __sifr_bridge;\n{}", generated_project.main_rs)
-    };
-    write_project_file(&src_dir.join("main.rs"), main_rs, "main.rs")?;
-
-    for (path, source) in bridge_sources {
-        write_project_file(&src_dir.join(&path), source, &path.display().to_string())?;
-    }
-
-    let mut support_modules = generated_project.support_modules;
-    let support_module_names: Vec<String> = support_modules.keys().cloned().collect();
-    let mut namespace_contents: BTreeMap<PathBuf, String> = BTreeMap::new();
-    for namespace_file in namespace_module_files(&support_module_names) {
-        let mut contents = String::new();
-        for module_name in &namespace_file.declarations {
-            contents.push_str("pub mod ");
-            contents.push_str(module_name);
-            contents.push_str(";\n");
-        }
-        namespace_contents.insert(namespace_file.path, contents);
-    }
-
-    for (module_name, code) in std::mem::take(&mut support_modules) {
-        let namespace_path = namespace_module_file_path(&module_name);
-        if let Some(contents) = namespace_contents.get_mut(&namespace_path) {
-            if !contents.is_empty() && !contents.ends_with('\n') {
-                contents.push('\n');
-            }
-            contents.push_str(&code);
-            continue;
-        }
-        let file_name = rust_module_file_path(&module_name);
-        write_project_file(
-            &src_dir.join(&file_name),
-            code,
-            &file_name.display().to_string(),
-        )?;
-    }
-
-    for (namespace_path, contents) in namespace_contents {
-        write_project_file(
-            &src_dir.join(&namespace_path),
-            contents,
-            &namespace_path.display().to_string(),
-        )?;
-    }
-
-    Ok(())
-}
-
-fn run_cargo_build(
-    project_path: &Path,
-    python_interpreter: Option<&Path>,
-    validate_native_links: bool,
-    trusted_native_links: &BTreeSet<String>,
-    dependency_plan: &SysrootDependencyPlan,
-    cargo_resolution: &CargoResolutionPolicy,
-) -> Result<(), Vec<RenderedDiagnostic>> {
-    let mut command = Command::new("cargo");
-    command.args(sysroot_cargo_config_args(dependency_plan));
-    command
-        .args([
-            "build",
-            "--release",
-            "--quiet",
-            "--message-format=json-render-diagnostics",
-        ])
-        .current_dir(project_path);
-    if let Some(argument) = cargo_resolution.lock_mode.cargo_arg() {
-        command.arg(argument);
-    }
-    // Generated projects are materialized and cached with their own `target/`
-    // directory. Inheriting an outer CARGO_TARGET_DIR moves binaries away from
-    // the reported artifact paths and breaks cache completeness checks.
-    command.env_remove("CARGO_TARGET_DIR");
-    configure_hermetic_build_environment(&mut command);
-    if let Some(python_interpreter) = python_interpreter {
-        command.env("PYO3_PYTHON", python_interpreter);
-    }
-    record_cargo_invocation("final-build", cargo_resolution.lock_mode, &command);
-    let output = command.output().map_err(|error| {
-        vec![cargo_build_error(format!(
-            "failed to run cargo build: {error}"
-        ))]
-    })?;
-
-    if validate_native_links {
-        validate_native_link_evidence(&output.stdout, trusted_native_links)?;
-    }
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        if let Some(diagnostic) = cargo_lock_mode_diagnostic("cargo build", &stderr) {
-            return Err(vec![diagnostic]);
-        }
-        return Err(vec![cargo_build_error(format!(
-            "cargo build failed:\n{stderr}"
-        ))]);
-    }
-    Ok(())
-}
-
-fn trusted_native_links(
-    generated_project: &GeneratedBinaryProject,
-    dependency_plan: &SysrootDependencyPlan,
-) -> BTreeSet<String> {
-    let mut trusted = generated_project
-        .interop
-        .rust
-        .trust_requirements
-        .iter()
-        .filter(|requirement| {
-            requirement.trusted && requirement.kind == RustInteropTrustRequirementKind::NativeLinks
-        })
-        .map(|requirement| requirement.required_entry.clone())
-        .collect::<BTreeSet<_>>();
-    if let Some(python_runtime) = &generated_project.python_runtime {
-        trusted.extend(python_runtime.trusted_native_link_names());
-    }
-    trusted.extend(sysroot_trusted_native_links(dependency_plan));
-    trusted
-}
-
-fn sysroot_trusted_native_links(dependency_plan: &SysrootDependencyPlan) -> BTreeSet<String> {
-    let tls_selected = dependency_plan.crates.iter().any(|dependency| {
-        matches!(
-            dependency.krate,
-            SysrootCrate::SifrRuntime | SysrootCrate::SifrStdlib
-        ) && (dependency.features.contains("tls") || dependency.features.contains("http"))
-    });
-    if tls_selected {
-        return BTreeSet::from(["aws_lc_0_44_0_crypto".to_string()]);
-    }
-    BTreeSet::new()
-}
-
-fn should_validate_native_link_evidence(generated_project: &GeneratedBinaryProject) -> bool {
-    let rust = &generated_project.interop.rust;
-    !rust.declarations.is_empty()
-        || !rust.resolved_targets.is_empty()
-        || !rust.trust_requirements.is_empty()
-        || !rust.probe_plan.probes.is_empty()
-        || !rust.bridge_sources.is_empty()
-        || rust.cargo_inputs.is_some()
-}
-
-fn validate_native_link_evidence(
-    stdout: &[u8],
-    trusted_native_links: &BTreeSet<String>,
-) -> Result<(), Vec<RenderedDiagnostic>> {
-    for line in String::from_utf8_lossy(stdout).lines() {
-        let Ok(value) = serde_json::from_str::<serde_json::Value>(line) else {
-            continue;
-        };
-        if value.get("reason").and_then(serde_json::Value::as_str) != Some("build-script-executed")
-        {
-            continue;
-        }
-        let Some(linked_libs) = value
-            .get("linked_libs")
-            .and_then(serde_json::Value::as_array)
-        else {
-            continue;
-        };
-        for linked_lib in linked_libs {
-            let Some(linked_lib) = linked_lib.as_str() else {
-                continue;
-            };
-            let link_name = normalized_link_name(linked_lib);
-            if !trusted_native_links.contains(&link_name) {
-                return Err(vec![crate::diagnostics::diagnostic_with_code(
-                    format!(
-                        "untrusted native link evidence `{link_name}` emitted by Rust build script"
-                    ),
-                    DiagnosticCode::RUST_TRUST_MISSING,
-                )]);
-            }
-        }
-    }
-    Ok(())
-}
-
-fn normalized_link_name(linked_lib: &str) -> String {
-    linked_lib
-        .rsplit_once('=')
-        .map_or(linked_lib, |(_, name)| name)
-        .to_string()
-}
-
-fn namespace_module_file_path(module_name: &str) -> PathBuf {
-    let mut path = PathBuf::new();
-    for component in module_name.split('.') {
-        path.push(component);
-    }
-    path.push("mod.rs");
-    path
-}
-
-fn write_project_file(
-    path: &Path,
-    contents: impl AsRef<[u8]>,
-    label: &str,
-) -> Result<(), Vec<RenderedDiagnostic>> {
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|error| vec![build_error(format!("failed to create {label}: {error}"))])?;
-    }
-    std::fs::write(path, contents)
-        .map_err(|error| vec![build_error(format!("failed to write {label}: {error}"))])
-}
-
 fn build_error(message: String) -> RenderedDiagnostic {
     crate::diagnostics::diagnostic_with_code(message, DiagnosticCode::BUILD_MATERIALIZATION_FAILURE)
-}
-
-fn cargo_build_error(message: String) -> RenderedDiagnostic {
-    crate::diagnostics::diagnostic_with_code(message, DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE)
 }
 
 fn binary_project_cache_key(
@@ -464,9 +227,10 @@ fn binary_project_cache_key(
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        CargoResolutionPolicy, binary_project_cache_key, should_validate_native_link_evidence,
-        sysroot_trusted_native_links, trusted_native_links, validate_native_link_evidence,
+    use super::{CargoResolutionPolicy, binary_project_cache_key};
+    use crate::build::generated_cargo_project::{
+        should_validate_native_link_evidence, sysroot_trusted_native_links, trusted_native_links,
+        validate_native_link_evidence,
     };
     use crate::build::project_codegen::GeneratedBinaryProject;
     use crate::build::python_runtime::PackagePythonRuntime;
@@ -587,7 +351,7 @@ mod tests {
     #[test]
     fn native_link_evidence_policy_skips_non_rust_interop_projects() {
         let mut project = base_project();
-        assert!(!should_validate_native_link_evidence(&project));
+        assert!(!should_validate_native_link_evidence(&project.interop));
 
         project
             .interop
@@ -600,7 +364,7 @@ mod tests {
                 required_entry: "ssl".to_string(),
                 evidence: "links=ssl".to_string(),
             });
-        assert!(should_validate_native_link_evidence(&project));
+        assert!(should_validate_native_link_evidence(&project.interop));
     }
 
     #[test]
@@ -623,11 +387,17 @@ mod tests {
             });
 
         let stdout = br#"{"reason":"build-script-executed","linked_libs":["dylib=python3.14"]}"#;
-        validate_native_link_evidence(
-            stdout,
-            &trusted_native_links(&project, &test_dependency_plan("fingerprint-a")),
-        )
-        .expect("selected Python runtime link should be trusted");
+        let mut trusted =
+            trusted_native_links(&project.interop, &test_dependency_plan("fingerprint-a"));
+        trusted.extend(
+            project
+                .python_runtime
+                .as_ref()
+                .expect("Python runtime should be configured")
+                .trusted_native_link_names(),
+        );
+        validate_native_link_evidence(stdout, &trusted)
+            .expect("selected Python runtime link should be trusted");
     }
 
     #[test]

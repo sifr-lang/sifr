@@ -14,6 +14,25 @@ use std::sync::{Mutex, MutexGuard, OnceLock};
 
 static CWD_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
+#[test]
+fn test_command_preserves_frozen_cargo_resolution_mode() {
+    let cli = Cli::try_parse_from(["sifr", "test", "tests", "--frozen"])
+        .expect("test command should parse");
+    let Some(Commands::Test {
+        dir,
+        locked,
+        offline,
+        frozen,
+    }) = cli.command
+    else {
+        panic!("expected test command");
+    };
+    assert_eq!(dir, PathBuf::from("tests"));
+    assert!(!locked);
+    assert!(!offline);
+    assert!(frozen);
+}
+
 struct CurrentDirGuard {
     previous: PathBuf,
     _lock: MutexGuard<'static, ()>,

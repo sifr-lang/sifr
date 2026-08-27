@@ -1,15 +1,16 @@
-use super::artifacts::{
-    compose_test_runner_lib, test_support_module_file_path, try_generate_test_runner_cargo_plan,
-};
+use super::artifacts::{compose_test_runner_lib, try_generate_test_runner_cargo_plan};
 use super::orchestrator::GeneratedTestRunnerProject;
 use crate::build::{
-    ArtifactCacheReport, PreparedArtifactCache, prepare_cached_artifact, sysroot_cargo_config_args,
+    ArtifactCacheReport, CargoResolutionPolicy, GeneratedCargoCommand, GeneratedCargoProject,
+    PreparedArtifactCache, cargo_resolution_cache_key_fragment, create_invocation_workspace,
+    materialize_generated_cargo_project, prepare_cached_artifact, run_generated_cargo_command,
 };
 use crate::diagnostics::{RenderedDiagnostic, write_stderr, write_stderr_line};
-use crate::project::namespace_module_files;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_package::CargoLockMode;
 use sifr_stdlib_manifest::SysrootDependencyPlan;
-use std::path::Path;
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::{Path, PathBuf};
 
 pub(crate) struct TestRunnerExecutionOutcome {
     pub(crate) success: bool,
@@ -19,10 +20,12 @@ pub(crate) struct TestRunnerExecutionOutcome {
 
 pub(crate) fn execute_test_runner_project(
     generated_project: &GeneratedTestRunnerProject,
+    lock_mode: CargoLockMode,
 ) -> Result<TestRunnerExecutionOutcome, Vec<RenderedDiagnostic>> {
     let cargo_plan = try_generate_test_runner_cargo_plan(
         &generated_project.all_stdlib_modules,
         &generated_project.all_required_features,
+        &generated_project.interop,
     )
     .map_err(|error| {
         vec![crate::diagnostics::diagnostic_with_code(
@@ -34,121 +37,62 @@ pub(crate) fn execute_test_runner_project(
         &generated_project.support_module_names,
         &generated_project.all_rust_code,
     );
+    let cargo_resolution = CargoResolutionPolicy::for_test_scope(
+        &generated_project.cache_scope,
+        lock_mode,
+        &cargo_plan.dependency_plan,
+    );
     let cache_key = test_runner_cache_key(
         generated_project,
         &cargo_plan.cargo_toml,
         &test_lib,
         &cargo_plan.dependency_plan,
-    );
-    let required_paths = [
-        Path::new("Cargo.toml"),
-        Path::new("src/lib.rs"),
-        Path::new("target"),
-    ];
+        &cargo_resolution,
+    )?;
+    let required_paths = [Path::new("Cargo.toml"), Path::new("src/lib.rs")];
     let prepared = prepare_cached_artifact(
         "test_runner",
         &generated_project.cache_scope,
         &cache_key,
         &required_paths,
     )?;
-    let project_dir = prepared.workspace_root().to_path_buf();
-    if let PreparedArtifactCache::Miss(_) = &prepared {
-        let src_dir = project_dir.join("src");
-        std::fs::create_dir_all(&src_dir).map_err(|error| {
-            vec![crate::diagnostics::diagnostic_with_code(
-                format!("failed to create test directory: {error}"),
-                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-            )]
-        })?;
-
-        std::fs::write(project_dir.join("Cargo.toml"), &cargo_plan.cargo_toml).map_err(
-            |error| {
-                vec![crate::diagnostics::diagnostic_with_code(
-                    format!("failed to write Cargo.toml: {error}"),
-                    DiagnosticCode::BUILD_CARGO_MANIFEST_FAILURE,
-                )]
-            },
-        )?;
-
-        for module_name in &generated_project.support_module_names {
-            if let Some(code) = generated_project.support_rust_files.get(module_name) {
-                let module_path = test_support_module_file_path(module_name);
-                let output_path = src_dir.join(&module_path);
-                if let Some(parent) = output_path.parent() {
-                    std::fs::create_dir_all(parent).map_err(|error| {
-                        vec![crate::diagnostics::diagnostic_with_code(
-                            format!(
-                                "failed to create test support module directory '{}': {error}",
-                                parent.display()
-                            ),
-                            DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-                        )]
-                    })?;
-                }
-                std::fs::write(&output_path, code).map_err(|error| {
-                    vec![crate::diagnostics::diagnostic_with_code(
-                        format!(
-                            "failed to write test support module '{}': {error}",
-                            output_path.display()
-                        ),
-                        DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-                    )]
-                })?;
-            }
+    let cache_entry = match prepared {
+        PreparedArtifactCache::Hit(entry) => entry,
+        PreparedArtifactCache::Miss(pending) => {
+            materialize_generated_cargo_project(
+                pending.workspace_root(),
+                GeneratedCargoProject {
+                    name: "sifr_tests".to_string(),
+                    crate_root_file: PathBuf::from("lib.rs"),
+                    crate_root_source: test_lib,
+                    support_modules: generated_project
+                        .support_rust_files
+                        .iter()
+                        .map(|(name, source)| (name.clone(), source.clone()))
+                        .collect::<BTreeMap<_, _>>(),
+                    support_main_alias: Some(PathBuf::from("__sifr_support_main.rs")),
+                    interop: generated_project.interop.clone(),
+                },
+                &cargo_plan.dependency_plan,
+            )?;
+            pending.commit(&required_paths)?
         }
+    };
+    let cache_report = cache_entry.report().clone();
+    let invocation = TestInvocationWorkspace::create()?;
+    let project_dir = invocation.root().join("sifr_tests");
+    copy_cached_project(cache_entry.workspace_root(), &project_dir)?;
+    let output = run_generated_cargo_command(
+        &project_dir,
+        GeneratedCargoCommand::Test,
+        None,
+        &BTreeSet::new(),
+        &generated_project.interop,
+        &cargo_plan.dependency_plan,
+        &cargo_resolution,
+    )?;
 
-        for namespace_file in namespace_module_files(&generated_project.support_module_names) {
-            let output_path = src_dir.join(&namespace_file.path);
-            if let Some(parent) = output_path.parent() {
-                std::fs::create_dir_all(parent).map_err(|error| {
-                    vec![crate::diagnostics::diagnostic_with_code(
-                        format!(
-                            "failed to create test support namespace directory '{}': {error}",
-                            parent.display()
-                        ),
-                        DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-                    )]
-                })?;
-            }
-            let mut contents = String::new();
-            for declaration in namespace_file.declarations {
-                contents.push_str("pub mod ");
-                contents.push_str(&declaration);
-                contents.push_str(";\n");
-            }
-            std::fs::write(&output_path, contents).map_err(|error| {
-                vec![crate::diagnostics::diagnostic_with_code(
-                    format!(
-                        "failed to write test support namespace '{}': {error}",
-                        output_path.display()
-                    ),
-                    DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-                )]
-            })?;
-        }
-
-        std::fs::write(src_dir.join("lib.rs"), &test_lib).map_err(|error| {
-            vec![crate::diagnostics::diagnostic_with_code(
-                format!("failed to write lib.rs: {error}"),
-                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
-            )]
-        })?;
-    }
-
-    let mut command = std::process::Command::new("cargo");
-    command
-        .args(sysroot_cargo_config_args(&cargo_plan.dependency_plan))
-        .args(["test"])
-        .current_dir(&project_dir);
-    command.env_remove("CARGO_TARGET_DIR");
-    let output = command.output().map_err(|error| {
-        vec![crate::diagnostics::diagnostic_with_code(
-            format!("failed to run cargo test: {error}"),
-            DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
-        )]
-    })?;
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stdout = user_facing_cargo_stdout(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
     if !stdout.is_empty() {
         write_stderr(&stdout);
@@ -157,10 +101,6 @@ pub(crate) fn execute_test_runner_project(
         write_stderr(&stderr);
     }
 
-    let cache_report = match prepared {
-        PreparedArtifactCache::Hit(entry) => entry.report().clone(),
-        PreparedArtifactCache::Miss(entry) => entry.commit(&required_paths)?.report().clone(),
-    };
     write_stderr_line(&cache_report.status_line());
 
     Ok(TestRunnerExecutionOutcome {
@@ -169,12 +109,25 @@ pub(crate) fn execute_test_runner_project(
     })
 }
 
+fn user_facing_cargo_stdout(stdout: &[u8]) -> String {
+    let mut output = String::new();
+    for line in String::from_utf8_lossy(stdout).lines() {
+        if serde_json::from_str::<serde_json::Value>(line).is_ok() {
+            continue;
+        }
+        output.push_str(line);
+        output.push('\n');
+    }
+    output
+}
+
 fn test_runner_cache_key(
     generated_project: &GeneratedTestRunnerProject,
     cargo_toml: &str,
     test_lib: &str,
     dependency_plan: &SysrootDependencyPlan,
-) -> String {
+    cargo_resolution: &CargoResolutionPolicy,
+) -> Result<String, Vec<RenderedDiagnostic>> {
     let mut support_modules: Vec<(&str, &str)> = generated_project
         .support_rust_files
         .iter()
@@ -186,18 +139,122 @@ fn test_runner_cache_key(
         .map(|(name, code)| format!("{name}\n{code}"))
         .collect::<Vec<_>>()
         .join("\n===\n");
-    format!(
-        "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[sysroot-dependency-inputs]\n{}[sysroot-dependency-plan]\n{}",
+    let cargo_resolution = cargo_resolution_cache_key_fragment(cargo_resolution)?;
+    Ok(format!(
+        "[scope]\n{}\n[Cargo.toml]\n{cargo_toml}\n[src/lib.rs]\n{test_lib}\n[support]\n{support_modules}\n[sysroot-dependency-inputs]\n{}[sysroot-dependency-plan]\n{}\n[cargo-resolution]\n{cargo_resolution}",
         generated_project.cache_scope.display(),
         dependency_plan.dependency_input_fingerprint(),
         dependency_plan.cache_fingerprint
-    )
+    ))
+}
+
+struct TestInvocationWorkspace {
+    root: PathBuf,
+}
+
+impl TestInvocationWorkspace {
+    fn create() -> Result<Self, Vec<RenderedDiagnostic>> {
+        create_invocation_workspace("test_runner").map(|root| Self { root })
+    }
+
+    fn root(&self) -> &Path {
+        &self.root
+    }
+}
+
+impl Drop for TestInvocationWorkspace {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.root);
+    }
+}
+
+fn copy_cached_project(source: &Path, destination: &Path) -> Result<(), Vec<RenderedDiagnostic>> {
+    std::fs::create_dir_all(destination).map_err(|error| {
+        vec![materialization_error(format!(
+            "failed to create test execution directory '{}': {error}",
+            destination.display()
+        ))]
+    })?;
+    copy_project_file(source, destination, Path::new("Cargo.toml"))?;
+    copy_project_directory(&source.join("src"), &destination.join("src"))
+}
+
+fn copy_project_directory(
+    source: &Path,
+    destination: &Path,
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    std::fs::create_dir_all(destination).map_err(|error| {
+        vec![materialization_error(format!(
+            "failed to create test source directory '{}': {error}",
+            destination.display()
+        ))]
+    })?;
+    let entries = std::fs::read_dir(source).map_err(|error| {
+        vec![materialization_error(format!(
+            "failed to read cached test source directory '{}': {error}",
+            source.display()
+        ))]
+    })?;
+    for entry in entries {
+        let entry = entry.map_err(|error| {
+            vec![materialization_error(format!(
+                "failed to read cached test source entry: {error}"
+            ))]
+        })?;
+        let source_path = entry.path();
+        let destination_path = destination.join(entry.file_name());
+        let file_type = entry.file_type().map_err(|error| {
+            vec![materialization_error(format!(
+                "failed to inspect cached test source '{}': {error}",
+                source_path.display()
+            ))]
+        })?;
+        if file_type.is_dir() {
+            copy_project_directory(&source_path, &destination_path)?;
+        } else if file_type.is_file() {
+            std::fs::copy(&source_path, &destination_path).map_err(|error| {
+                vec![materialization_error(format!(
+                    "failed to copy cached test source '{}': {error}",
+                    source_path.display()
+                ))]
+            })?;
+        } else {
+            return Err(vec![materialization_error(format!(
+                "cached test source '{}' is not a regular file or directory",
+                source_path.display()
+            ))]);
+        }
+    }
+    Ok(())
+}
+
+fn copy_project_file(
+    source_root: &Path,
+    destination_root: &Path,
+    relative: &Path,
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    std::fs::copy(source_root.join(relative), destination_root.join(relative)).map_err(
+        |error| {
+            vec![materialization_error(format!(
+                "failed to copy cached test project file '{}': {error}",
+                relative.display()
+            ))]
+        },
+    )?;
+    Ok(())
+}
+
+fn materialization_error(message: String) -> RenderedDiagnostic {
+    crate::diagnostics::diagnostic_with_code(message, DiagnosticCode::BUILD_MATERIALIZATION_FAILURE)
 }
 
 #[cfg(test)]
 mod tests {
     use super::test_runner_cache_key;
+    use crate::build::CargoResolutionPolicy;
     use crate::test_runner::orchestrator::GeneratedTestRunnerProject;
+    use sifr_codegen::InteropBuildPlan;
+    use sifr_package::CargoLockMode;
     use sifr_stdlib_manifest::{
         CargoVendorMode, StdlibFeature, SysrootCrate, SysrootCrateDependency, SysrootDependencyPlan,
     };
@@ -213,6 +270,7 @@ mod tests {
             all_rust_code: "#[test]\nfn test_case() {}\n".to_string(),
             all_stdlib_modules: HashSet::from(["sifr.json".to_string()]),
             all_required_features: HashSet::from([StdlibFeature::SerdeJson]),
+            interop: InteropBuildPlan::default(),
         };
         let dependency_plan = SysrootDependencyPlan {
             stdlib_modules: BTreeSet::from(["sifr.json".to_string()]),
@@ -232,12 +290,19 @@ mod tests {
             cache_fingerprint: "fingerprint-a".to_string(),
         };
 
+        let cargo_resolution = CargoResolutionPolicy::for_test_scope(
+            PathBuf::from("/tmp/sifr-tests").as_path(),
+            CargoLockMode::Normal,
+            &dependency_plan,
+        );
         let cache_key = test_runner_cache_key(
             &generated_project,
             "[package]\nname = \"sifr_tests\"\n",
             "#[test]\nfn test_case() {}\n",
             &dependency_plan,
-        );
+            &cargo_resolution,
+        )
+        .expect("normal Cargo resolution should have a cache identity");
 
         assert!(cache_key.contains(
             "[sysroot-dependency-inputs]\n[stdlib]\nsifr.json\n[features]\nserde_json\n"

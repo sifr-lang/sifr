@@ -1,9 +1,11 @@
 use crate::{
-    build_test_runner_project, compose_test_runner_lib, discover_test_root_modules,
-    execute_test_runner_project, generate_test_runner_cargo_toml, run_tests,
+    build_test_runner_project, capture_cargo_invocations, compose_test_runner_lib,
+    discover_test_root_modules, execute_test_runner_project, generate_test_runner_cargo_toml,
+    run_tests,
 };
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::DiskSourceProvider;
+use sifr_package::CargoLockMode;
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::{Arc, Barrier};
@@ -42,8 +44,12 @@ def test_import_parity():
     )
     .expect("test module should be written");
 
-    let result = run_tests(&test_dir, &mut DiskSourceProvider::new())
-        .expect("test runner should compile and execute");
+    let result = run_tests(
+        &test_dir,
+        &mut DiskSourceProvider::new(),
+        CargoLockMode::Normal,
+    )
+    .expect("test runner should compile and execute");
     assert!(result, "sifr test run should succeed");
 
     let _ = std::fs::remove_dir_all(&test_dir);
@@ -81,8 +87,12 @@ def test_dotted_import():
     )
     .expect("test module should be written");
 
-    let result = run_tests(&test_dir, &mut DiskSourceProvider::new())
-        .expect("test runner should compile dotted support modules");
+    let result = run_tests(
+        &test_dir,
+        &mut DiskSourceProvider::new(),
+        CargoLockMode::Normal,
+    )
+    .expect("test runner should compile dotted support modules");
     assert!(result, "sifr test run should succeed");
 
     let _ = std::fs::remove_dir_all(&test_dir);
@@ -116,8 +126,12 @@ fn test_run_tests_support_module_named_main_imports_root_owned_unions() {
     )
     .expect("test module should be written");
 
-    let result = run_tests(&test_dir, &mut DiskSourceProvider::new())
-        .expect("test runner should compile unions and upcasts");
+    let result = run_tests(
+        &test_dir,
+        &mut DiskSourceProvider::new(),
+        CargoLockMode::Normal,
+    )
+    .expect("test runner should compile unions and upcasts");
     assert!(result, "sifr test run should succeed");
     let _ = std::fs::remove_dir_all(&test_dir);
 }
@@ -149,18 +163,72 @@ fn test_run_tests_reuses_cached_workspace_for_unchanged_project() {
     let generated_project =
         build_test_runner_project(&test_dir, &discovered, &mut DiskSourceProvider::new())
             .expect("generated project should build");
-    let first = execute_test_runner_project(&generated_project)
-        .expect("first test execution should succeed");
+    let (first, invocations) = capture_cargo_invocations(|| {
+        execute_test_runner_project(&generated_project, CargoLockMode::Normal)
+    });
+    let first = first.expect("first test execution should succeed");
     assert!(first.success);
     assert!(!first.cache_report.cache_hit());
+    assert!(
+        !first.cache_report.workspace_root().join("target").exists(),
+        "test execution must not write build output into the reusable source cache"
+    );
+    assert!(
+        invocations
+            .iter()
+            .any(|invocation| invocation.phase == "test-build"
+                && invocation.args.iter().any(|argument| argument == "test")),
+        "test execution must be present in the shared Cargo invocation trace: {invocations:?}"
+    );
+    assert!(
+        !first
+            .cache_report
+            .workspace_root()
+            .join("Cargo.lock")
+            .exists(),
+        "test execution must not write a lockfile into the reusable source cache"
+    );
 
-    let second = execute_test_runner_project(&generated_project)
+    let second = execute_test_runner_project(&generated_project, CargoLockMode::Normal)
         .expect("second test execution should succeed");
     assert!(second.success);
     assert!(second.cache_report.cache_hit());
     assert_eq!(
         first.cache_report.workspace_root(),
         second.cache_report.workspace_root()
+    );
+    assert!(!second.cache_report.workspace_root().join("target").exists());
+    assert!(
+        !second
+            .cache_report
+            .workspace_root()
+            .join("Cargo.lock")
+            .exists()
+    );
+
+    let (frozen, invocations) = capture_cargo_invocations(|| {
+        execute_test_runner_project(&generated_project, CargoLockMode::Frozen)
+    });
+    let frozen = frozen.expect("frozen test execution should use the shared lock authority");
+    assert!(frozen.success);
+    assert!(
+        invocations.iter().any(|invocation| {
+            invocation.phase == "test-build"
+                && invocation.lock_mode == CargoLockMode::Frozen
+                && invocation
+                    .args
+                    .iter()
+                    .any(|argument| argument == "--frozen")
+        }),
+        "frozen test execution must preserve the requested Cargo mode: {invocations:?}"
+    );
+    assert!(!frozen.cache_report.workspace_root().join("target").exists());
+    assert!(
+        !frozen
+            .cache_report
+            .workspace_root()
+            .join("Cargo.lock")
+            .exists()
     );
 
     let _ = std::fs::remove_dir_all(&test_dir);
@@ -192,8 +260,8 @@ fn test_run_tests_invalidates_cached_workspace_when_sources_change() {
     let first_project =
         build_test_runner_project(&test_dir, &first_discovered, &mut DiskSourceProvider::new())
             .expect("generated project should build");
-    let first =
-        execute_test_runner_project(&first_project).expect("first test execution should succeed");
+    let first = execute_test_runner_project(&first_project, CargoLockMode::Normal)
+        .expect("first test execution should succeed");
     assert!(first.success);
     let first_root = first.cache_report.workspace_root().to_path_buf();
     let first_key = first.cache_report.key().to_string();
@@ -212,8 +280,8 @@ fn test_run_tests_invalidates_cached_workspace_when_sources_change() {
         &mut DiskSourceProvider::new(),
     )
     .expect("updated generated project should build");
-    let second =
-        execute_test_runner_project(&second_project).expect("second test execution should succeed");
+    let second = execute_test_runner_project(&second_project, CargoLockMode::Normal)
+        .expect("second test execution should succeed");
     assert!(second.success);
     assert!(!second.cache_report.cache_hit());
     assert_ne!(first_root, second.cache_report.workspace_root());
@@ -258,14 +326,22 @@ fn test_run_tests_parallel_invocations_are_isolated() {
     let first_path = first_dir.clone();
     let first = std::thread::spawn(move || {
         first_barrier.wait();
-        run_tests(&first_path, &mut DiskSourceProvider::new())
+        run_tests(
+            &first_path,
+            &mut DiskSourceProvider::new(),
+            CargoLockMode::Normal,
+        )
     });
 
     let second_barrier = Arc::clone(&barrier);
     let second_path = second_dir.clone();
     let second = std::thread::spawn(move || {
         second_barrier.wait();
-        run_tests(&second_path, &mut DiskSourceProvider::new())
+        run_tests(
+            &second_path,
+            &mut DiskSourceProvider::new(),
+            CargoLockMode::Normal,
+        )
     });
 
     barrier.wait();
@@ -310,8 +386,12 @@ fn test_run_tests_ignores_unrelated_non_closure_parse_errors() {
     std::fs::write(test_dir.join("unrelated_bad.sifr"), "def unrelated(:\n")
         .expect("unrelated sibling should be written");
 
-    let result = run_tests(&test_dir, &mut DiskSourceProvider::new())
-        .expect("unrelated sibling parse errors should be ignored");
+    let result = run_tests(
+        &test_dir,
+        &mut DiskSourceProvider::new(),
+        CargoLockMode::Normal,
+    )
+    .expect("unrelated sibling parse errors should be ignored");
     assert!(result, "sifr test run should succeed");
 
     let _ = std::fs::remove_dir_all(&test_dir);
@@ -335,38 +415,44 @@ fn test_run_tests_reports_deterministic_parse_error_order() {
     std::fs::write(test_dir.join("test_a_bad.sifr"), "def a(:\n")
         .expect("test_a_bad should be written");
 
-    let first_diagnostics: Vec<(String, Vec<String>)> =
-        run_tests(&test_dir, &mut DiskSourceProvider::new())
-            .err()
-            .expect("parse errors should be reported")
-            .into_iter()
-            .map(|error| {
-                (
-                    error.message,
-                    error
-                        .children
-                        .into_iter()
-                        .map(|child| child.message)
-                        .collect(),
-                )
-            })
-            .collect();
-    let second_diagnostics: Vec<(String, Vec<String>)> =
-        run_tests(&test_dir, &mut DiskSourceProvider::new())
-            .err()
-            .expect("parse errors should be deterministic")
-            .into_iter()
-            .map(|error| {
-                (
-                    error.message,
-                    error
-                        .children
-                        .into_iter()
-                        .map(|child| child.message)
-                        .collect(),
-                )
-            })
-            .collect();
+    let first_diagnostics: Vec<(String, Vec<String>)> = run_tests(
+        &test_dir,
+        &mut DiskSourceProvider::new(),
+        CargoLockMode::Normal,
+    )
+    .err()
+    .expect("parse errors should be reported")
+    .into_iter()
+    .map(|error| {
+        (
+            error.message,
+            error
+                .children
+                .into_iter()
+                .map(|child| child.message)
+                .collect(),
+        )
+    })
+    .collect();
+    let second_diagnostics: Vec<(String, Vec<String>)> = run_tests(
+        &test_dir,
+        &mut DiskSourceProvider::new(),
+        CargoLockMode::Normal,
+    )
+    .err()
+    .expect("parse errors should be deterministic")
+    .into_iter()
+    .map(|error| {
+        (
+            error.message,
+            error
+                .children
+                .into_iter()
+                .map(|child| child.message)
+                .collect(),
+        )
+    })
+    .collect();
 
     assert_eq!(first_diagnostics, second_diagnostics);
     assert!(
@@ -405,8 +491,12 @@ fn test_run_tests_frontend_type_errors_use_single_path_prefix() {
     )
     .expect("bad test module should be written");
 
-    let errors = run_tests(&test_dir, &mut DiskSourceProvider::new())
-        .expect_err("type errors in test module should fail frontend");
+    let errors = run_tests(
+        &test_dir,
+        &mut DiskSourceProvider::new(),
+        CargoLockMode::Normal,
+    )
+    .expect_err("type errors in test module should fail frontend");
     let messages: Vec<String> = errors.iter().map(|error| error.message.clone()).collect();
     assert!(
         messages

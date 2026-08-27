@@ -17,7 +17,7 @@ type RegistryEntry = (String, String, String, String);
 type RegistryCompatibilityFamily = (String, String, String);
 
 #[derive(Clone, Debug)]
-pub(super) struct CargoResolutionPolicy {
+pub(crate) struct CargoResolutionPolicy {
     pub(super) lock_mode: CargoLockMode,
     pub(super) cargo_vendor_mode: CargoVendorMode,
     pub(super) authoritative_locks: Vec<PathBuf>,
@@ -37,6 +37,36 @@ impl CargoResolutionPolicy {
     pub(super) const fn uses_sysroot_vendor(&self) -> bool {
         matches!(self.cargo_vendor_mode, CargoVendorMode::SysrootOnly)
     }
+
+    pub(crate) fn for_test_scope(
+        test_scope: &Path,
+        lock_mode: CargoLockMode,
+        dependency_plan: &sifr_stdlib_manifest::SysrootDependencyPlan,
+    ) -> Self {
+        let mut authoritative_locks = Vec::new();
+        if lock_mode != CargoLockMode::Normal {
+            if let Some(lock) = nearest_ancestor_file(test_scope, "Cargo.lock") {
+                authoritative_locks.push(lock);
+            }
+            let sysroot_lock = dependency_plan.sysroot_root.join("Cargo.lock");
+            if !authoritative_locks.contains(&sysroot_lock) {
+                authoritative_locks.push(sysroot_lock);
+            }
+        }
+        Self {
+            lock_mode,
+            cargo_vendor_mode: dependency_plan.cargo_vendor_mode,
+            authoritative_locks,
+            trusted_vendor_dirs: vec![dependency_plan.vendor_dir.clone()],
+        }
+    }
+}
+
+fn nearest_ancestor_file(start: &Path, file_name: &str) -> Option<PathBuf> {
+    start
+        .ancestors()
+        .map(|ancestor| ancestor.join(file_name))
+        .find(|candidate| candidate.is_file())
 }
 
 pub(super) struct PreparedCargoResolution {
@@ -116,7 +146,7 @@ fn prepare_constrained_cargo_resolution(
     })
 }
 
-pub(super) fn cargo_resolution_cache_key_fragment(
+pub(crate) fn cargo_resolution_cache_key_fragment(
     policy: &CargoResolutionPolicy,
 ) -> Result<String, Vec<RenderedDiagnostic>> {
     let mut fragment = format!(

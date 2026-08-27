@@ -384,11 +384,15 @@ pub(super) fn emit_success_message(diagnostic_format: DiagnosticFormat, message:
     }
 }
 
-pub(super) fn cmd_test(dir: &Path, diagnostic_format: DiagnosticFormat) -> i32 {
+pub(super) fn cmd_test(
+    dir: &Path,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
     let mut provider = DiskSourceProvider::new();
     let run_result = match run_with_panic_boundary(
         "internal compiler panic during test command execution",
-        || run_tests(dir, &mut provider),
+        || run_tests(dir, &mut provider, lock_mode),
     ) {
         Ok(result) => result,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
