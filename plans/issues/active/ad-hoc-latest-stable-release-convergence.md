@@ -1,7 +1,7 @@
 # Ad Hoc Phase: Latest Stable Release Convergence
 
 Status: active on 2026-08-27. Items 0-30 are complete. Item 31 Kafka Python is
-next.
+blocked by the expired Phase 40 release-approval waiver.
 
 ## Objective
 
@@ -200,7 +200,7 @@ Only the first incomplete row may be active.
 | 28 | complete | Python Redis services | Redis advances before its fake/client/container companions; compiled live-service certification passes or records only the pre-approved structured Docker skip. |
 | 29 | complete | NumPy and Pandas | NumPy 2.5.2 and Pandas 3.0.5 are exact, and their new stable APIs and breaking behavior pass. |
 | 30 | complete | PyArrow 25 | The maintained Python 3.14 lane and affine Arrow transfer/certification pass. |
-| 31 | pending | Kafka Python 3 | Kafka bridge and compiled service-client evidence pass. |
+| 31 | blocked | Kafka Python 3 | Kafka bridge and compiled service-client evidence pass. |
 | 32 | pending | Packaging and Hatchling | Packaging is current, Hatchling is explicitly pinned, and builds/locks are reproducible. |
 | 33 | pending | VS Code extension toolchain | Node types, VS Code types/engine, TypeScript, package locks, VSIX qualification, and the three-repository pointer chain merge in order. |
 | 34 | pending | Mint exact pin | Documentation tooling uses a tested exact latest-stable Mint release and documentation checks pass. |
@@ -2445,15 +2445,30 @@ The phase closes only when:
 
 ## Current Handoff
 
-Current state: Items 0-30 are complete. Item 30 merged in PR #3549 as
-`aa2e528e3e814e266a57ece4d1cc760f2d47ab40`. Its exact-SHA Opus review returned
-`SATISFIED` with no blocker.
+Current state: Items 0-30 are complete. Item 31 implementation
+[PR #3551](https://github.com/sifr-lang/sifr/pull/3551) remains draft. Its exact
+candidate is `dbdbd42915dd45fe0255681c224266dd08f453ea`, based on
+`2808a84cda557623a278703d6ae59223b172879d`. Its one exact-SHA Opus review
+returned `SATISFIED` with no blocking finding.
 
-PyArrow 25.0.1 is installed in both maintained lock owners. The maintained
-Python 3.14 lane passed the affine transfer, runtime, and compiled new-feature
-checks. The single merge gate passed every lane and all 698 E2E fixtures.
-Neither gate was rerun.
+Kafka Python 3.0.11 is locked with its audited wheel hash. The old 2.x
+constraint and removed `api_version_auto_timeout_ms` setting are gone. The
+compiled offline callback passed the generated `DescribeClusterRequest` v2
+round trip. The compiled live path passed a real Redpanda produce, consume,
+foreign-thread callback, acknowledgement, and resource-cleanup round trip.
 
-resulting `origin/main`.
-Next action: merge this record-only update. Then start Item 31 Kafka Python
-from the resulting `origin/main`.
+The create-PR gate ran once. Every functional check passed. It exited 124 only
+because a cold runtime-platform check exceeded its warm-run time budget. The
+merge gate ran once. Every completed area passed, including all 30 Python
+interop variants. Distribution qualification then rejected the Phase 40
+single-maintainer approval waiver because it expired at
+`2026-08-27T00:00:00Z`. The gate stopped before later crate and E2E stages.
+Neither gate was rerun. The exact evidence is in the
+[#3551 gate comment](https://github.com/sifr-lang/sifr/pull/3551#issuecomment-5432642050).
+
+The blocker belongs to
+`plans/issues/active/ad-hoc-distinct-release-reviewer-restoration.md`. A
+distinct human release reviewer must accept repository access, and the
+protected `stable-release` environment must require that reviewer. Do not
+extend the expired waiver or add a fallback. Item 31 cannot consume a second
+merge gate under the current phase rules.
