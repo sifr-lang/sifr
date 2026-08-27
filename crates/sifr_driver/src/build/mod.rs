@@ -106,8 +106,8 @@ pub(crate) use entrypoint::{
     resolve_project_entrypoint_plan,
 };
 pub(crate) use generated_cargo_project::{
-    GeneratedCargoCommand, GeneratedCargoProject, materialize_generated_cargo_project,
-    run_generated_cargo_command,
+    GeneratedCargoCommand, GeneratedCargoExecution, GeneratedCargoProject,
+    materialize_generated_cargo_project, run_generated_cargo_command,
 };
 pub(crate) use workspace::{
     ArtifactCacheReport, CachedArtifactEntry, PreparedArtifactCache, prepare_cached_artifact,

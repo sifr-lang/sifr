@@ -188,6 +188,11 @@ fn test_run_tests_reuses_cached_workspace_for_unchanged_project() {
             .exists(),
         "test execution must not write a lockfile into the reusable source cache"
     );
+    let shared_target = first.cache_report.workspace_root().with_extension("target");
+    assert!(
+        shared_target.is_dir(),
+        "compiled test artifacts should persist outside the immutable source cache"
+    );
 
     let second = execute_test_runner_project(&generated_project, CargoLockMode::Normal)
         .expect("second test execution should succeed");
@@ -204,6 +209,14 @@ fn test_run_tests_reuses_cached_workspace_for_unchanged_project() {
             .workspace_root()
             .join("Cargo.lock")
             .exists()
+    );
+    assert_eq!(
+        shared_target,
+        second
+            .cache_report
+            .workspace_root()
+            .with_extension("target"),
+        "warm runs should reuse the cache-key-owned Cargo target directory"
     );
 
     let (frozen, invocations) = capture_cargo_invocations(|| {

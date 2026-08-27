@@ -31,6 +31,13 @@ pub(crate) enum GeneratedCargoCommand {
     Test,
 }
 
+#[derive(Clone, Copy)]
+pub(crate) struct GeneratedCargoExecution<'a> {
+    pub(crate) python_interpreter: Option<&'a Path>,
+    pub(crate) target_directory: Option<&'a Path>,
+    pub(crate) additional_trusted_native_links: &'a BTreeSet<String>,
+}
+
 impl GeneratedCargoCommand {
     fn phase(self) -> &'static str {
         match self {
@@ -123,8 +130,7 @@ fn declare_bridge_module(source: &str) -> String {
 pub(crate) fn run_generated_cargo_command(
     project_path: &Path,
     command_kind: GeneratedCargoCommand,
-    python_interpreter: Option<&Path>,
-    additional_trusted_native_links: &BTreeSet<String>,
+    execution: GeneratedCargoExecution<'_>,
     interop: &InteropBuildPlan,
     dependency_plan: &SysrootDependencyPlan,
     cargo_resolution: &CargoResolutionPolicy,
@@ -140,9 +146,13 @@ pub(crate) fn run_generated_cargo_command(
     if let Some(argument) = cargo_resolution.lock_mode.cargo_arg() {
         command.arg(argument);
     }
-    command.env_remove("CARGO_TARGET_DIR");
+    if let Some(target_directory) = execution.target_directory {
+        command.env("CARGO_TARGET_DIR", target_directory);
+    } else {
+        command.env_remove("CARGO_TARGET_DIR");
+    }
     configure_hermetic_build_environment(&mut command);
-    if let Some(python_interpreter) = python_interpreter {
+    if let Some(python_interpreter) = execution.python_interpreter {
         command.env("PYO3_PYTHON", python_interpreter);
     }
     record_cargo_invocation(command_kind.phase(), cargo_resolution.lock_mode, &command);
@@ -153,10 +163,9 @@ pub(crate) fn run_generated_cargo_command(
         ))]
     })?;
 
-    if should_validate_native_link_evidence(interop) || !additional_trusted_native_links.is_empty()
-    {
+    if should_validate_native_link_evidence(interop) {
         let mut trusted_native_links = trusted_native_links(interop, dependency_plan);
-        trusted_native_links.extend(additional_trusted_native_links.iter().cloned());
+        trusted_native_links.extend(execution.additional_trusted_native_links.iter().cloned());
         validate_native_link_evidence(&output.stdout, &trusted_native_links)?;
     }
     prepared_resolution.assert_unchanged()?;

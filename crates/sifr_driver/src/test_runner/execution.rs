@@ -1,9 +1,10 @@
 use super::artifacts::{compose_test_runner_lib, try_generate_test_runner_cargo_plan};
 use super::orchestrator::GeneratedTestRunnerProject;
 use crate::build::{
-    ArtifactCacheReport, CargoResolutionPolicy, GeneratedCargoCommand, GeneratedCargoProject,
-    PreparedArtifactCache, cargo_resolution_cache_key_fragment, create_invocation_workspace,
-    materialize_generated_cargo_project, prepare_cached_artifact, run_generated_cargo_command,
+    ArtifactCacheReport, CargoResolutionPolicy, GeneratedCargoCommand, GeneratedCargoExecution,
+    GeneratedCargoProject, PreparedArtifactCache, cargo_resolution_cache_key_fragment,
+    create_invocation_workspace, materialize_generated_cargo_project, prepare_cached_artifact,
+    run_generated_cargo_command,
 };
 use crate::diagnostics::{RenderedDiagnostic, write_stderr, write_stderr_line};
 use sifr_diagnostics::DiagnosticCode;
@@ -82,11 +83,15 @@ pub(crate) fn execute_test_runner_project(
     let invocation = TestInvocationWorkspace::create()?;
     let project_dir = invocation.root().join("sifr_tests");
     copy_cached_project(cache_entry.workspace_root(), &project_dir)?;
+    let target_directory = test_target_directory(cache_entry.workspace_root());
     let output = run_generated_cargo_command(
         &project_dir,
         GeneratedCargoCommand::Test,
-        None,
-        &BTreeSet::new(),
+        GeneratedCargoExecution {
+            python_interpreter: None,
+            target_directory: Some(&target_directory),
+            additional_trusted_native_links: &BTreeSet::new(),
+        },
         &generated_project.interop,
         &cargo_plan.dependency_plan,
         &cargo_resolution,
@@ -112,13 +117,22 @@ pub(crate) fn execute_test_runner_project(
 fn user_facing_cargo_stdout(stdout: &[u8]) -> String {
     let mut output = String::new();
     for line in String::from_utf8_lossy(stdout).lines() {
-        if serde_json::from_str::<serde_json::Value>(line).is_ok() {
+        let is_cargo_message = serde_json::from_str::<serde_json::Value>(line).is_ok_and(|value| {
+            value
+                .as_object()
+                .is_some_and(|object| object.contains_key("reason"))
+        });
+        if is_cargo_message {
             continue;
         }
         output.push_str(line);
         output.push('\n');
     }
     output
+}
+
+fn test_target_directory(cache_workspace: &Path) -> PathBuf {
+    cache_workspace.with_extension("target")
 }
 
 fn test_runner_cache_key(
@@ -250,7 +264,7 @@ fn materialization_error(message: String) -> RenderedDiagnostic {
 
 #[cfg(test)]
 mod tests {
-    use super::test_runner_cache_key;
+    use super::{test_runner_cache_key, user_facing_cargo_stdout};
     use crate::build::CargoResolutionPolicy;
     use crate::test_runner::orchestrator::GeneratedTestRunnerProject;
     use sifr_codegen::InteropBuildPlan;
@@ -260,6 +274,23 @@ mod tests {
     };
     use std::collections::{BTreeSet, HashMap, HashSet};
     use std::path::PathBuf;
+
+    #[test]
+    fn cargo_stdout_filter_preserves_user_json_values() {
+        let stdout = br#"{"reason":"compiler-artifact","fresh":true}
+42
+true
+null
+"done"
+{"payload":1}
+plain text
+"#;
+
+        assert_eq!(
+            user_facing_cargo_stdout(stdout),
+            "42\ntrue\nnull\n\"done\"\n{\"payload\":1}\nplain text\n"
+        );
+    }
 
     #[test]
     fn test_runner_cache_key_uses_sysroot_dependency_plan_inputs() {

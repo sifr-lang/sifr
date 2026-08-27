@@ -3,7 +3,7 @@ use super::cargo_manifest::{
 };
 use super::cargo_resolution::{CargoResolutionPolicy, cargo_resolution_cache_key_fragment};
 use super::generated_cargo_project::{
-    GeneratedCargoCommand, GeneratedCargoProject, cargo_execution_error,
+    GeneratedCargoCommand, GeneratedCargoExecution, GeneratedCargoProject, cargo_execution_error,
     materialize_generated_cargo_project, run_generated_cargo_command,
 };
 use super::project_codegen::GeneratedBinaryProject;
@@ -159,8 +159,11 @@ fn materialize_binary_project_at_path(
     let output = run_generated_cargo_command(
         project_path,
         GeneratedCargoCommand::BuildRelease,
-        python_interpreter.as_deref(),
-        &additional_trusted_native_links,
+        GeneratedCargoExecution {
+            python_interpreter: python_interpreter.as_deref(),
+            target_directory: None,
+            additional_trusted_native_links: &additional_trusted_native_links,
+        },
         &interop,
         dependency_plan,
         cargo_resolution,
