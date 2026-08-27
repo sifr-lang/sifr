@@ -1,0 +1,2 @@
+def layer_00_value() -> int:
+    return 0

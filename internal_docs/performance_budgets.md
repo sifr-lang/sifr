@@ -197,9 +197,10 @@ Frontend-query and local edit-loop benchmarks use stricter latency thresholds:
   `perf.lsp.*` budget ids. These cases execute `lsp_query_bench.py` through
   `sifr lsp --stdio` and are validated by the same manifest/budget gate. Cold
   start, workspace diagnostics, references, and rename run against
-  `verification/areas/performance/query_projects/lsp_workspace/`, a multi-file
-  workspace fixture, so workspace-shaped protocol costs are not measured only
-  on the single-file smoke fixture.
+  `verification/areas/performance/query_projects/lsp_workspace/`, a 25-module
+  workspace fixture. Manifest validation rejects a smaller fixture, so
+  workspace-shaped protocol costs are not measured only on the single-file
+  smoke fixture.
 
 Every `lsp-query` manifest case must declare one `project_root` and one
 `source_path`. The project root must contain `sifr.toml`. The source path must
@@ -225,9 +226,9 @@ JSON-RPC operations instead of in-process compiler queries:
   capped by the request-family editor SLO: median uses
   `min(slo_median, max(baseline_median * 3, baseline_median + 5ms))`; p95 uses
   `min(slo_p95, max(baseline_p95 * 4, baseline_p95 + 10ms))`.
-- LSP budget entries intentionally do not enforce cache-hit or cache-miss
-  thresholds until the LSP server exports real cache counters; protocol latency
-  remains enforced through median, p95, RSS, and timeout checks.
+- The LSP benchmark reads cache counters from `sifr/debugCacheStats` before and
+  after each warm scenario. Completion and hover budgets require a cache hit
+  and reject a measured miss after the open-document diagnostic pass.
 
 The frontend query architecture frontend-query budgets measure compiler-service operations below
 the protocol layer, such as warm diagnostics queries, source-map lookups, and

@@ -9,12 +9,9 @@
 
 mod build;
 mod diagnostics;
-mod export_policy;
 mod frontend;
-mod private_re_exports;
 mod project;
 mod python_binding;
-mod stdlib;
 mod test_runner;
 mod workspace;
 
@@ -49,7 +46,7 @@ pub use sifr_codegen::{
     InteropBuildPlan, LoweringStats, PythonInteropPlan, PythonInteropPlanDeclaration,
     PythonTargetProbe, PythonTargetProbeStatus, interop_build_plan_for_named_modules,
 };
-pub use stdlib::{
+pub use sifr_compiler_services::{
     ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus,
     external_defs as stdlib_external_defs, sysroot_probe as stdlib_tooling_sysroot_probe,
     sysroot_status as stdlib_tooling_sysroot_status, tooling_sources as stdlib_tooling_sources,
@@ -70,7 +67,7 @@ pub(crate) use project::{
     discover_test_root_modules, parse_import_closure_modules,
 };
 #[cfg(test)]
-pub(crate) use stdlib::compile_stdlib;
+pub(crate) use sifr_compiler_services::compile_stdlib;
 #[cfg(test)]
 pub(crate) use test_runner::{build_test_runner_project, execute_test_runner_project};
 #[cfg(test)]

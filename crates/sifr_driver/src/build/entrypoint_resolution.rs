@@ -1,7 +1,7 @@
 use super::cargo_resolution::CargoResolutionPolicy;
 use super::entrypoint::PackageEntrypoint;
 use super::report::BuildCompilationMode;
-use crate::stdlib::StdlibCompiled;
+use sifr_compiler_services::StdlibCompiled;
 use sifr_stdlib_manifest::CargoVendorMode;
 use std::path::{Path, PathBuf};
 

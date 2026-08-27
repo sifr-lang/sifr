@@ -1,5 +1,4 @@
 use super::python_bridges::embedded_bridge_sources;
-use super::python_runtime::{PackagePythonRuntime, inject_python_runtime_bootstrap};
 use crate::diagnostics::{RenderedDiagnostic, render_codegen_error, run_codegen_with_boundary};
 use crate::frontend::FrontendCompiled;
 use crate::project::{
@@ -9,6 +8,7 @@ use crate::project::{
 use sifr_codegen::{
     StdlibCode, generate_rust_multi_with_metadata, generate_rust_with_stdlib_for_module,
 };
+use sifr_compiler_services::{PackagePythonRuntime, inject_python_runtime_bootstrap};
 use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
 use std::collections::{BTreeMap, HashSet};

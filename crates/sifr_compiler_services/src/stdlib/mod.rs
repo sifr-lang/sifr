@@ -23,15 +23,13 @@ mod stateless_time_codegen_tests;
 mod tooling;
 mod types;
 
-pub(crate) use bootstrap::compile_stdlib;
+pub use bootstrap::compile_stdlib;
 pub use bootstrap::external_defs;
 pub use tooling::{
     ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus, sysroot_probe,
     sysroot_status, tooling_sources,
 };
-#[cfg(test)]
-pub(crate) use types::StdlibRustInteropModuleSource;
-pub(crate) use types::{StdlibCompiled, StdlibRustInterop};
+pub use types::{StdlibCompiled, StdlibRustInterop, StdlibRustInteropModuleSource};
 
 #[cfg(test)]
 pub(crate) use bootstrap::compile_stdlib_uncached;

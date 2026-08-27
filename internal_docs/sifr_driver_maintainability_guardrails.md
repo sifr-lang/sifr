@@ -8,7 +8,8 @@ The canonical driver layout is rooted under `crates/sifr_driver/src/`:
 
 - `lib.rs` stays a crate entrypoint and re-export surface only
 - `diagnostics.rs`
-- `stdlib/`
+- shared stdlib, sysroot, preview, and Python environment services live in
+  `crates/sifr_compiler_services/src/`
 - `frontend/`
 - `project/`
 - `build/`
@@ -35,7 +36,9 @@ Guardrail enforcement commands:
 Use these placement rules when changing the driver:
 
 - `diagnostics.rs`: compile errors, diagnostic shaping, panic-boundary conversion
-- `stdlib/`: embedded stdlib registry, intrinsic mapping, stdlib cache/bootstrap
+- `sifr_compiler_services`: embedded stdlib registry, intrinsic mapping, stdlib
+  cache/bootstrap, tooling sysroot views, read-only preview, and Python
+  environment services
 - `frontend/`: single-file parse/lower/check/compile entrypoints and frontend lowering helpers
 - `project/`: multi-module export collection, dependency ordering, discovery, project frontend analysis
 - `build/`: rooted entrypoint planning, project code generation assembly, workspace allocation, output materialization

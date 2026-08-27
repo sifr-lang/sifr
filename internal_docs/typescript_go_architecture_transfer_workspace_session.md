@@ -36,7 +36,7 @@ empty in workspace-session owner.
 `WorkspaceSession` also stores caller-provided base `ExternalDefs`. Callers that
 do not supply definitions keep an empty base, while `sifr_analysis::AnalysisHost`
 passes the compiler's embedded stdlib definitions from
-`sifr_driver::stdlib_external_defs()`. Every project and single-file reload
+`sifr_compiler_services::external_defs`. Every project and single-file reload
 clones those base definitions before rebuilding workspace exports, so editor
 analysis cannot lose `sifr.*` imports after opening, changing, or refreshing a
 document.

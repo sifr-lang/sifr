@@ -2,7 +2,7 @@ use crate::build::{compile_single_file_entrypoint_with_metadata, compile_single_
 use crate::diagnostics::{
     CompileResult, CompileResultFull, GeneratedSourceMapFile, RenderedDiagnostic,
 };
-use crate::stdlib::StdlibCompiled;
+use sifr_compiler_services::StdlibCompiled;
 use sifr_frontend::{
     FrontendSourceContext, SourceOrigin, reveal_type_diagnostics, warning_diagnostics,
 };

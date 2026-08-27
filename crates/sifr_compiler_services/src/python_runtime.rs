@@ -32,7 +32,7 @@ pub struct PackagePythonRuntime {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct EmbeddedPythonBridgeSource {
+pub struct EmbeddedPythonBridgeSource {
     pub module: String,
     pub source: String,
     pub filename: String,
@@ -109,7 +109,7 @@ impl PackagePythonRuntime {
     }
 
     #[must_use]
-    pub(super) fn arrow_certification_identity(&self) -> &str {
+    pub fn arrow_certification_identity(&self) -> &str {
         &self.arrow_certification_identity
     }
 
@@ -132,7 +132,7 @@ impl PackagePythonRuntime {
     }
 
     #[must_use]
-    pub(super) fn dlpack_certification_identity(&self) -> &str {
+    pub fn dlpack_certification_identity(&self) -> &str {
         &self.dlpack_certification_identity
     }
 
@@ -141,7 +141,7 @@ impl PackagePythonRuntime {
     }
 
     #[must_use]
-    pub(super) fn binding_identity(&self) -> &str {
+    pub fn binding_identity(&self) -> &str {
         &self.binding_identity
     }
 
@@ -155,7 +155,7 @@ impl PackagePythonRuntime {
     }
 
     #[must_use]
-    pub(super) fn lowering_options(&self) -> LoweringOptions {
+    pub fn lowering_options(&self) -> LoweringOptions {
         LoweringOptions {
             python_trust_policy: Some(PythonTrustPolicy {
                 required_import_roots: self.required_import_roots.clone(),
@@ -165,8 +165,8 @@ impl PackagePythonRuntime {
         }
     }
 
-    #[cfg(test)]
-    pub(super) fn for_tests(interpreter: &str, probe_digest: &str) -> Self {
+    #[cfg(any(test, feature = "test-support"))]
+    pub fn for_tests(interpreter: &str, probe_digest: &str) -> Self {
         Self {
             venv_root: PathBuf::from("/tmp/sifr-py"),
             interpreter: PathBuf::from(interpreter),
@@ -196,7 +196,7 @@ impl PackagePythonRuntime {
     }
 
     #[must_use]
-    pub(super) fn trusted_native_link_names(&self) -> Vec<String> {
+    pub fn trusted_native_link_names(&self) -> Vec<String> {
         let mut links = Vec::new();
         if let Some(libpython) = &self.libpython {
             if let Some(link_name) = native_link_name_from_libpython(libpython) {
@@ -216,16 +216,16 @@ impl PackagePythonRuntime {
         links
     }
 
-    #[cfg(test)]
-    pub(super) fn set_libpython_for_tests(&mut self, libpython: &str) {
+    #[cfg(any(test, feature = "test-support"))]
+    pub fn set_libpython_for_tests(&mut self, libpython: &str) {
         self.libpython = Some(libpython.to_string());
     }
 
-    pub(super) fn set_bridge_sources(&mut self, sources: Vec<EmbeddedPythonBridgeSource>) {
+    pub fn set_bridge_sources(&mut self, sources: Vec<EmbeddedPythonBridgeSource>) {
         self.bridge_sources = sources;
     }
 
-    pub(super) fn set_start_async_loop(&mut self, required: bool) {
+    pub fn set_start_async_loop(&mut self, required: bool) {
         self.start_async_loop = required;
     }
 }
@@ -252,7 +252,7 @@ fn native_link_name_from_libpython(libpython: &str) -> Option<String> {
     }
 }
 
-pub(super) fn render_python_runtime_prelude(metadata: &PackagePythonRuntime) -> String {
+pub fn render_python_runtime_prelude(metadata: &PackagePythonRuntime) -> String {
     format!(
         r#"fn __sifr_python_runtime_config() -> ::sifr_runtime::python::PythonRuntimeConfig {{
     ::sifr_runtime::python::PythonRuntimeConfig {{
@@ -343,7 +343,7 @@ const fn certified_arrow_kind(kind: sifr_package::ArrowCertifiedKind) -> &'stati
     }
 }
 
-pub(super) fn inject_python_runtime_bootstrap(
+pub fn inject_python_runtime_bootstrap(
     main_rs: &str,
     metadata: &PackagePythonRuntime,
 ) -> Result<String, String> {

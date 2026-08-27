@@ -39,8 +39,8 @@ impl AnalysisHost {
     pub fn open_project(root: &ProjectRoot) -> Result<Self, Vec<RenderedDiagnostic>> {
         let session = WorkspaceSession::open_project_with_external_defs_and_auxiliary_sources(
             root.clone(),
-            sifr_driver::stdlib_external_defs()?,
-            sifr_driver::stdlib_tooling_sources()?,
+            sifr_compiler_services::external_defs()?,
+            sifr_compiler_services::tooling_sources()?,
         )?;
         Self::new(session)
     }
@@ -48,8 +48,8 @@ impl AnalysisHost {
     pub fn open_single_file(input: FrontendInput) -> Result<Self, Vec<RenderedDiagnostic>> {
         let session = WorkspaceSession::open_single_file_with_external_defs_and_auxiliary_sources(
             input,
-            sifr_driver::stdlib_external_defs()?,
-            sifr_driver::stdlib_tooling_sources()?,
+            sifr_compiler_services::external_defs()?,
+            sifr_compiler_services::tooling_sources()?,
         )?;
         Self::new(session)
     }
@@ -571,13 +571,10 @@ impl AnalysisHost {
     ) -> QueryResult<GeneratedRustPreview> {
         self.module_for_file(file)?;
         let source = self.source_text(file)?;
-        let (rust, source_map_files) = match sifr_driver::compile_with_metadata(&source) {
-            sifr_driver::CompileResultFull::Success {
-                rust_source,
-                generated_source_map,
-                ..
-            } => (Some(rust_source), generated_source_map),
-            sifr_driver::CompileResultFull::Errors { errors } => {
+        let (rust, source_map_files) = match sifr_compiler_services::compile_source_preview(&source)
+        {
+            Ok(preview) => (Some(preview.rust_source), preview.generated_source_map),
+            Err(errors) => {
                 return Ok(self.result(
                     AnalysisQueryKind::GeneratedRustPreview,
                     GeneratedRustPreview {
@@ -691,10 +688,18 @@ impl AnalysisHost {
         Ok(())
     }
 
-    fn lint_diagnostics(&self, file: FileId) -> Result<Vec<RenderedDiagnostic>, AnalysisError> {
+    fn lint_diagnostics(&mut self, file: FileId) -> Result<Vec<RenderedDiagnostic>, AnalysisError> {
         let source = self.source_text(file)?;
-        let path = self.context()?.path_for_file(file);
-        Ok(sifr_lint::lint_source(&source, path, &sifr_lint::LintOptions::default()).diagnostics)
+        let path = self.context()?.path_for_file(file).map(ToOwned::to_owned);
+        let module = self.module_for_file(file)?;
+        let hir = self.context_mut()?.hir_module_view(module).into_value().hir;
+        Ok(sifr_lint::lint_source_with_hir(
+            &source,
+            path.as_deref(),
+            &sifr_lint::LintOptions::default(),
+            &hir,
+        )
+        .diagnostics)
     }
 
     fn locations_for_identifier_at(

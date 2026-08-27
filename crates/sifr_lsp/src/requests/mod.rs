@@ -48,6 +48,17 @@ pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspR
         "textDocument/formatting" => formatting::formatting(session, params),
         "textDocument/rangeFormatting" => formatting::range_formatting(session, params),
         "sifr/sysroot" => sysroot_status(&params),
+        "sifr/debugCacheStats" => {
+            let stats = session.python_declaration_cache_stats();
+            Ok(json!({
+                "pythonDeclarations": {
+                    "hits": stats.hits,
+                    "misses": stats.misses,
+                    "externalFingerprintRuns": stats.external_fingerprint_runs,
+                    "snapshotBuilds": stats.snapshot_builds,
+                }
+            }))
+        }
         "sifr/debugTrace" => Ok(Value::String(session.trace_snapshot().render_text())),
         _ => Err(LspError::method_not_found(format!(
             "unsupported Sifr LSP request: {method}"

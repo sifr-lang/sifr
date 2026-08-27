@@ -9,11 +9,11 @@ license = { workspace = true }
 [dependencies]
 ruff_text_size = { workspace = true }
 sifr_python_ast = { workspace = true }
+sifr_compiler_services = { workspace = true }
 sifr_diagnostics = { workspace = true }
 sifr_format = { workspace = true }
 sifr_frontend = { workspace = true }
 sifr_lint = { workspace = true }
-sifr_driver = { workspace = true }
 sifr_syntax = { workspace = true }
 
 [lib]

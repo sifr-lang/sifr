@@ -23,6 +23,7 @@ ALL_SIFR_CRATES = {
     "sifr",
     "sifr_analysis",
     "sifr_codegen",
+    "sifr_compiler_services",
     "sifr_diagnostics",
     "sifr_driver",
     "sifr_format",
@@ -184,6 +185,15 @@ RULES = (
         skip_test_sources=True,
     ),
     CrateRule(
+        crate="sifr_compiler_services",
+        forbidden_normal_dependencies=frozenset(
+            {"sifr", "sifr_analysis", "sifr_driver", "sifr_lsp"}
+        ),
+        forbidden_source_references=frozenset(
+            {"sifr", "sifr_analysis", "sifr_driver", "sifr_lsp"}
+        ),
+    ),
+    CrateRule(
         crate="sifr_lint",
         forbidden_normal_dependencies=frozenset({"sifr_lowering"}),
         forbidden_source_references=frozenset({"sifr_lowering"}),
@@ -191,8 +201,14 @@ RULES = (
     ),
     CrateRule(
         crate="sifr_analysis",
-        forbidden_normal_dependencies=frozenset({"sifr_lowering"}),
-        forbidden_source_references=frozenset({"sifr_lowering"}),
+        forbidden_normal_dependencies=frozenset({"sifr_driver", "sifr_lowering"}),
+        forbidden_source_references=frozenset({"sifr_driver", "sifr_lowering"}),
+        skip_test_sources=True,
+    ),
+    CrateRule(
+        crate="sifr_lsp",
+        forbidden_normal_dependencies=frozenset({"sifr_driver"}),
+        forbidden_source_references=frozenset({"sifr_driver"}),
         skip_test_sources=True,
     ),
 )
@@ -423,8 +439,10 @@ def seed_valid_repo(root: Path) -> None:
         "sifr_stdlib": ["sifr_runtime"],
         "sifr_stdlib_imports": ["sifr_stdlib_manifest"],
         "sifr_codegen": ["sifr_ir", "sifr_stdlib_manifest"],
+        "sifr_compiler_services": ["sifr_codegen", "sifr_frontend"],
         "sifr_lint": ["sifr_frontend", "sifr_ir"],
         "sifr_analysis": ["sifr_frontend", "sifr_lint"],
+        "sifr_lsp": ["sifr_analysis", "sifr_compiler_services"],
     }
     for crate in ALL_SIFR_CRATES | {"ruff_text_size"}:
         write_manifest(root / "crates" / crate, crate, allowed_deps.get(crate, []))
@@ -560,6 +578,32 @@ def run_self_test() -> int:
             root / "crates" / "sifr_analysis", "sifr_analysis", ["sifr_lowering"]
         ),
         "sifr_analysis: forbidden normal dependency",
+        failures,
+    )
+    assert_self_test_case(
+        "sifr_analysis driver dependency",
+        lambda root: write_manifest(
+            root / "crates" / "sifr_analysis", "sifr_analysis", ["sifr_driver"]
+        ),
+        "sifr_analysis: forbidden normal dependency",
+        failures,
+    )
+    assert_self_test_case(
+        "sifr_lsp driver source reference",
+        lambda root: (
+            root / "crates" / "sifr_lsp" / "src" / "lib.rs"
+        ).write_text("pub fn leak() { sifr_driver::compile(); }\n", encoding="utf-8"),
+        "sifr_lsp: crates/sifr_lsp/src/lib.rs references sifr_driver",
+        failures,
+    )
+    assert_self_test_case(
+        "compiler services upward dependency",
+        lambda root: write_manifest(
+            root / "crates" / "sifr_compiler_services",
+            "sifr_compiler_services",
+            ["sifr_driver"],
+        ),
+        "sifr_compiler_services: forbidden normal dependency",
         failures,
     )
     assert_self_test_case(

@@ -160,6 +160,11 @@ def validate_case(raw: dict[str, Any]) -> None:
             raise BenchmarkError(
                 f"LSP query benchmark {raw['id']} must define project_root"
             )
+        minimum_project_modules = raw.get("minimum_project_modules", 1)
+        if not isinstance(minimum_project_modules, int) or minimum_project_modules <= 0:
+            raise BenchmarkError(
+                f"LSP query benchmark {raw['id']} minimum_project_modules must be a positive integer"
+            )
     path = REPO_ROOT / raw["source_path"]
     if not path.exists():
         raise BenchmarkError(f"benchmark case {raw['id']} input path does not exist: {raw['source_path']}")
@@ -179,6 +184,13 @@ def validate_case(raw: dict[str, Any]) -> None:
             raise BenchmarkError(
                 f"LSP query benchmark {raw['id']} source_path must be "
                 f"project_root/src/main.sifr"
+            )
+        minimum_project_modules = raw.get("minimum_project_modules", 1)
+        module_count = len(list(project_root.joinpath("src").glob("*.sifr")))
+        if module_count < minimum_project_modules:
+            raise BenchmarkError(
+                f"LSP query benchmark {raw['id']} requires at least "
+                f"{minimum_project_modules} project modules, found {module_count}"
             )
 
 

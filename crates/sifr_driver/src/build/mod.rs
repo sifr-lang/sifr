@@ -11,12 +11,10 @@ mod generated_cargo_project;
 mod materialize;
 mod project_codegen;
 mod python_bridges;
-mod python_certification;
 mod python_check;
 mod python_interop;
 #[cfg(test)]
 mod python_interop_shared_target_tests;
-mod python_runtime;
 mod report;
 mod rust_interop;
 #[cfg(test)]
@@ -79,19 +77,16 @@ pub use cargo_manifest::{
 };
 pub use entrypoint::PackageEntrypoint;
 pub use entrypoint_artifact::CachedBinaryArtifact;
-pub use python_certification::{
-    validate_binding_distributions, validate_certification_distributions,
-    validate_protocol_certifications_for_plan,
-};
-pub use python_interop::{
-    PythonInteropPlanDiagnostic, PythonTargetInspection, PythonTargetParameter,
-    apply_python_target_inspection, inspect_python_target, probe_python_interop_plan,
-};
-pub use python_runtime::PackagePythonRuntime;
 pub use report::{
     BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport, BuildSysrootReport,
     PythonDeclarationCheck, PythonEnvironmentCheck, PythonInteropCheckReport, PythonTargetCheck,
     PythonTargetCheckStatus,
+};
+pub use sifr_compiler_services::{
+    PackagePythonRuntime, PythonInteropPlanDiagnostic, PythonTargetInspection,
+    PythonTargetParameter, apply_python_target_inspection, inspect_python_target,
+    probe_python_interop_plan, validate_binding_distributions,
+    validate_certification_distributions, validate_protocol_certifications_for_plan,
 };
 
 pub(crate) use cargo_manifest::{

@@ -733,7 +733,7 @@ def main():
 
 #[test]
 fn analysis_lint_diagnostics_match_lint_engine_for_policy_rules() {
-    let source = "# TODO: follow up\ndef main():\n    configure(True)\n";
+    let source = "# TODO: follow up\ndef configure(a: int, b: int, c: int, d: int, e: int, f: int) -> int:\n    return a\n\ndef main() -> int:\n    return configure(1, 2, 3, 4, 5, 6)\n";
     let mut host =
         AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
     let file = host.files()[0];
@@ -751,6 +751,10 @@ fn analysis_lint_diagnostics_match_lint_engine_for_policy_rules() {
         .map(|diagnostic| diagnostic.code)
         .collect::<Vec<_>>();
     assert_eq!(analysis_codes, engine_codes);
+    assert!(
+        analysis_codes.iter().any(|code| code == "SIFR-LINT-0007"),
+        "analysis must run the HIR-backed rule against its canonical HIR"
+    );
 }
 
 #[test]

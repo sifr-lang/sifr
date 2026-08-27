@@ -406,6 +406,8 @@ mod tests {
 
     #[path = "project_ownership_tests.rs"]
     mod project_ownership_tests;
+    #[path = "python_declaration_cache_tests.rs"]
+    mod python_declaration_cache_tests;
     #[path = "python_declaration_tests.rs"]
     mod python_declaration_tests;
     #[path = "python_package_ownership_tests.rs"]

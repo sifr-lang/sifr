@@ -6,8 +6,8 @@ use super::rust_interop::{
     PackageRustInteropContext, RustInteropModuleSource, apply_package_rust_interop_metadata,
 };
 use super::sysroot_interop::attach_stdlib_rust_interop;
-use crate::stdlib::{StdlibRustInterop, StdlibRustInteropModuleSource};
 use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot, RustInteropTrustRequirementKind};
+use sifr_compiler_services::{StdlibRustInterop, StdlibRustInteropModuleSource};
 use sifr_package::{
     CargoPackageId, PackageClassification, PackageSourceMap, PackageSourceRoot, RustInteropConfig,
     SifrEdition, SifrManifest, SifrPackageGraph, SifrPackageId, SifrPackageMetadata,

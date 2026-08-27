@@ -40,6 +40,15 @@ impl<'a> LintRunner<'a> {
     }
 
     pub fn run_source(&self, source: &str, file: Option<&Path>) -> LintRun {
+        self.run_source_with_hir(source, file, None)
+    }
+
+    pub fn run_source_with_hir(
+        &self,
+        source: &str,
+        file: Option<&Path>,
+        hir: Option<&sifr_ir::HirModule>,
+    ) -> LintRun {
         let mut phases = self.phase_plan(file);
         let mut diagnostics = Vec::new();
         let mut suppressions =
@@ -88,9 +97,10 @@ impl<'a> LintRunner<'a> {
         }
         if mark_phase(&mut phases, LintPhase::Hir) {
             if parsed.is_some() {
-                if let Some(lowered) = frontend_hir(source, file) {
+                let fallback_hir = hir.is_none().then(|| frontend_hir(source, file)).flatten();
+                if let Some(lowered) = hir.or(fallback_hir.as_ref()) {
                     diagnostics.extend(crate::rules::large_parameter_list::lint(
-                        &lowered,
+                        lowered,
                         source,
                         file,
                         self.options,

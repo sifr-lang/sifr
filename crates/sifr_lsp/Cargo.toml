@@ -8,8 +8,8 @@ license = { workspace = true }
 
 [dependencies]
 sifr_analysis = { workspace = true }
+sifr_compiler_services = { workspace = true }
 sifr_diagnostics = { workspace = true }
-sifr_driver = { workspace = true }
 sifr_package = { workspace = true }
 sifr_source = { workspace = true }
 ruff_text_size = { workspace = true }

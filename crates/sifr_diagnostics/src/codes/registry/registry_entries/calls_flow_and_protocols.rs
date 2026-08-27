@@ -591,7 +591,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         Severity::Error,
         "crates/sifr_driver/src/tests/stdlib_exports.rs",
         "embedded standard library bootstrap failed during {operation}",
-        "sifr_driver::stdlib::bootstrap",
+        "sifr_compiler_services::stdlib::bootstrap",
         [arg!("operation")],
         ["operation"]
     ),
@@ -602,7 +602,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         Severity::Error,
         "crates/sifr_driver/src/tests/project_build_check.rs",
         "standard-library cache failed during {operation}",
-        "sifr_driver::stdlib::cache",
+        "sifr_compiler_services::stdlib::cache",
         [arg!("operation")],
         ["operation"]
     ),

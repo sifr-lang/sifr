@@ -194,7 +194,13 @@ def run_document_diagnostics(client: LspClient, uri: str, source: str, state: di
     client.request("textDocument/diagnostic", {"textDocument": document})
 
 
-def run_cold_start(project_root: Path, iterations: int) -> list[float]:
+def cache_stats(client: LspClient) -> tuple[int, int]:
+    payload = client.request("sifr/debugCacheStats", {})
+    declarations = payload.get("pythonDeclarations", {})
+    return int(declarations.get("hits", 0)), int(declarations.get("misses", 0))
+
+
+def run_cold_start(project_root: Path, iterations: int) -> tuple[list[float], int, int]:
     samples: list[float] = []
     for _ in range(iterations):
         started = time.perf_counter()
@@ -205,7 +211,7 @@ def run_cold_start(project_root: Path, iterations: int) -> list[float]:
             client.request("shutdown", {})
         finally:
             client.close()
-    return samples
+    return samples, 0, 0
 
 
 def run_warm_scenario(
@@ -215,12 +221,13 @@ def run_warm_scenario(
     source: str,
     iterations: int,
     inner_repetitions: int,
-) -> list[float]:
+) -> tuple[list[float], int, int]:
     client = LspClient(timeout=90.0)
     samples: list[float] = []
     try:
         initialize(client, project_root)
         open_document(client, source_path, source)
+        initial_hits, initial_misses = cache_stats(client)
         uri = file_uri(source_path)
         diagnostic_state = {"version": 1}
         for _ in range(iterations):
@@ -231,19 +238,23 @@ def run_warm_scenario(
                 else:
                     WARM_SCENARIOS[scenario](client, uri)
             samples.append((time.perf_counter() - started) * 1000.0 / inner_repetitions)
+        final_hits, final_misses = cache_stats(client)
         client.request("shutdown", {})
     finally:
         client.close()
-    return samples
+    return samples, final_hits - initial_hits, final_misses - initial_misses
 
 
-def run_did_open_diagnostics(source: str, iterations: int, inner_repetitions: int) -> list[float]:
+def run_did_open_diagnostics(
+    source: str, iterations: int, inner_repetitions: int
+) -> tuple[list[float], int, int]:
     samples: list[float] = []
     with tempfile.TemporaryDirectory(prefix="sifr-lsp-did-open-bench-") as raw:
         root = Path(raw)
         client = LspClient(timeout=90.0)
         try:
             initialize(client, root)
+            initial_hits, initial_misses = cache_stats(client)
             for index in range(iterations):
                 started = time.perf_counter()
                 for repetition in range(inner_repetitions):
@@ -263,17 +274,26 @@ def run_did_open_diagnostics(source: str, iterations: int, inner_repetitions: in
                     )
                     client.wait_for_notification("textDocument/publishDiagnostics")
                 samples.append((time.perf_counter() - started) * 1000.0 / inner_repetitions)
+            final_hits, final_misses = cache_stats(client)
             client.request("shutdown", {})
         finally:
             client.close()
-    return samples
+    return samples, final_hits - initial_hits, final_misses - initial_misses
 
 
-def validate_benchmark_input(project_root: Path, source_path: Path) -> None:
+def validate_benchmark_input(
+    project_root: Path, source_path: Path, minimum_project_modules: int
+) -> None:
     if not project_root.joinpath("sifr.toml").is_file():
         raise ValueError("LSP benchmark project root requires sifr.toml")
     if source_path != project_root / "src" / "main.sifr":
         raise ValueError("LSP benchmark source must be project_root/src/main.sifr")
+    module_count = len(list(project_root.joinpath("src").glob("*.sifr")))
+    if module_count < minimum_project_modules:
+        raise ValueError(
+            "LSP benchmark project requires at least "
+            f"{minimum_project_modules} source modules, found {module_count}"
+        )
 
 
 def run_scenario(
@@ -283,7 +303,7 @@ def run_scenario(
     source: str,
     iterations: int,
     inner_repetitions: int,
-) -> list[float]:
+) -> tuple[list[float], int, int]:
     if scenario == "lsp.cold_start":
         return run_cold_start(project_root, iterations)
     if scenario == "lsp.did_open_diagnostics":
@@ -301,10 +321,10 @@ def run_scenario(
 
 
 def main() -> int:
-    if len(sys.argv) != 6:
+    if len(sys.argv) != 7:
         print(
             "usage: lsp_query_bench.py <scenario> <project-root> <source-path> "
-            "<iterations> <inner-repetitions>",
+            "<iterations> <inner-repetitions> <minimum-project-modules>",
             file=sys.stderr,
         )
         return 2
@@ -313,11 +333,14 @@ def main() -> int:
     source_path = Path(sys.argv[3]).resolve()
     iterations = int(sys.argv[4])
     inner_repetitions = int(sys.argv[5])
+    minimum_project_modules = int(sys.argv[6])
     if inner_repetitions <= 0:
         raise ValueError("inner-repetitions must be positive")
-    validate_benchmark_input(project_root, source_path)
+    if minimum_project_modules <= 0:
+        raise ValueError("minimum-project-modules must be positive")
+    validate_benchmark_input(project_root, source_path, minimum_project_modules)
     source = source_path.read_text(encoding="utf-8")
-    samples = run_scenario(
+    samples, cache_hits, cache_misses = run_scenario(
         scenario,
         project_root,
         source_path,
@@ -329,8 +352,8 @@ def main() -> int:
         json.dumps(
             {
                 "samples_ms": samples,
-                "cache_hits": 0,
-                "cache_misses": iterations,
+                "cache_hits": cache_hits,
+                "cache_misses": cache_misses,
                 "diagnostics_count": 0,
                 "timed_out": False,
             },
