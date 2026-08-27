@@ -44,8 +44,8 @@ The following review claims are explicitly excluded:
 | ID | Milestone | Status | PR | Candidate |
 | --- | --- | --- | --- | --- |
 | M1 | Warm-cache lock correctness and serialization failures | implementation complete; merge deferred | [#3553](https://github.com/sifr-lang/sifr/pull/3553) | `1c43fe34847925a269288b4073f5ca7ca7d6063e` |
-| M2 | Canonical test/build materialization | in progress | | |
-| M3 | Verification gate integrity | pending | | |
+| M2 | Canonical test/build materialization | implementation complete; merge deferred | [#3554](https://github.com/sifr-lang/sifr/pull/3554) | `16024325813dbee56e84a838e42679340f0f829a` |
+| M3 | Verification gate integrity | in progress | | |
 | M4 | Architecture documentation accuracy and generated crate map | pending | | |
 | M5 | Structural generated-code safety | pending | | |
 | M6 | Structured codegen error propagation | pending | | |
@@ -172,6 +172,13 @@ Deferred M1 review follow-ups:
 - Normalize the safe-but-unstable cache misses caused when a policy path changes
   from non-canonical to canonical after the path is created.
 
+Deferred M2 remediation-review follow-up:
+
+- Replace the fresh per-invocation test execution path with a stable
+  per-cache-key execution root, and reclaim its external Cargo target when the
+  owning source-cache key is invalidated. This preserves full warm reuse and
+  prevents fingerprint/target siblings from growing without bound.
+
 ## M11 Real Fuzz And Semantic Property Targets
 
 Add coverage-guided targets for parser, lowering, ownership, codegen validation,
@@ -230,3 +237,28 @@ tree and are keyed by candidate SHA.
   update stacked bases if repository governance changes, and reuse unchanged M1
   evidence. Validate only the affected distribution boundary unless the user
   explicitly authorizes a second full gate.
+
+### M2 Deferred Integration Handoff
+
+- Branch: `codex/architecture-audit-closure-m2`
+- Stacked draft PR: [#3554](https://github.com/sifr-lang/sifr/pull/3554), based
+  on the M1 branch.
+- Initial candidate: `ec77ce12fa05e4497d160a7b9dc8e39ade3a43dc`.
+- Initial exact-SHA Opus review: `BLOCKERS`. It found JSON-valued test output
+  suppression, discarded warm Cargo artifacts, and an unintended Python-only
+  native-link policy expansion. All three were remediated.
+- Final candidate: `16024325813dbee56e84a838e42679340f0f829a`.
+- One permitted remediation review: `SATISFIED`. The review also reported the
+  non-blocking stable-execution-root/cache-reclamation mechanism recorded for
+  M10 above; no third M2 review was run.
+- Targeted validation: 17 test-runner tests; frozen resolution, cache, and Cargo
+  trace coverage; JSON stdout preservation; warm external-target reuse; CLI
+  frozen-mode parsing; shared materializer and support-main integration tests;
+  workspace Clippy; formatting; and the HIR/file-size guardrail passed.
+- An optional cold all-codegen/all-driver run completed the 1,142 codegen tests
+  but was stopped during unrelated nested driver Cargo-probe contention after
+  more than 15 minutes. It is not claimed as passing evidence.
+- Compiler create-PR/merge gates and integration remain deferred with M1 under
+  the user's instruction to maximize later phase implementation while the known
+  distinct-human-reviewer dependency is unavailable. Do not rerun unchanged M2
+  validation during final integration unless its stacked diff changes.
