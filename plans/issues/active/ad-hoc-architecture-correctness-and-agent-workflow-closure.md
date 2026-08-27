@@ -43,8 +43,8 @@ The following review claims are explicitly excluded:
 
 | ID | Milestone | Status | PR | Candidate |
 | --- | --- | --- | --- | --- |
-| M1 | Warm-cache lock correctness and serialization failures | blocked: cold create-PR budget | [#3553](https://github.com/sifr-lang/sifr/pull/3553) | `1c43fe34847925a269288b4073f5ca7ca7d6063e` |
-| M2 | Canonical test/build materialization | pending | | |
+| M1 | Warm-cache lock correctness and serialization failures | implementation complete; merge deferred | [#3553](https://github.com/sifr-lang/sifr/pull/3553) | `1c43fe34847925a269288b4073f5ca7ca7d6063e` |
+| M2 | Canonical test/build materialization | in progress | | |
 | M3 | Verification gate integrity | pending | | |
 | M4 | Architecture documentation accuracy and generated crate map | pending | | |
 | M5 | Structural generated-code safety | pending | | |
@@ -86,6 +86,29 @@ Route `sifr test` through the normal generated-project materialization and Cargo
 resolution authority. Test execution must not mutate a reusable cache entry,
 and build/test dependency, sysroot, interop, native-link, tracing, and lock
 behavior must share one implementation contract.
+
+### Scope
+
+- Extract one generated Cargo-project materialization authority shared by
+  binary builds and `sifr test`.
+- Route test Cargo resolution through the same lock policy, sysroot Cargo
+  configuration, tracing, hermetic environment, and native-link validation used
+  by normal builds.
+- Keep reusable cache entries immutable. Execute `cargo test` from an
+  invocation-owned workspace or another explicitly non-cached execution root.
+- Remove the test runner's independent manifest/source/cache orchestration.
+
+### Acceptance Criteria
+
+- `sifr test` and normal builds use one implementation for generated manifest,
+  bridge sources, support modules, namespace modules, and Cargo resolution.
+- Locked, offline, and frozen test requests enforce the same authority and
+  unchanged-lock checks as builds.
+- Test execution cannot write target output or a lockfile into a reusable
+  generated-artifact cache entry.
+- Cargo invocation traces and native-link evidence include test builds.
+- Focused driver and CLI test-runner tests cover cache immutability, constrained
+  resolution, and parity with normal project materialization.
 
 ## M3 Verification Gate Integrity
 
@@ -175,7 +198,7 @@ whole-phase Opus review without repeating unchanged implementation validation.
 Evidence is added after each merge. Review files remain outside the reviewed Git
 tree and are keyed by candidate SHA.
 
-### M1 Blocked Handoff
+### M1 Deferred Integration Handoff
 
 - Branch: `codex/architecture-audit-closure-m1`
 - Draft PR: [#3553](https://github.com/sifr-lang/sifr/pull/3553)
@@ -200,8 +223,10 @@ tree and are keyed by candidate SHA.
   `475a211ece2ef7d55b30d600ba09c15151549a1a930fd9fc3ab51ae6ad4d9096`.
 - External owner: `ad-hoc-distinct-release-reviewer-restoration.md`. Do not
   extend the expired waiver or weaken its validation.
-- Exact next action: restore a genuinely distinct release reviewer, update the
-  PR base if repository governance changes, and reuse unchanged M1 evidence.
-  Validate only the affected distribution boundary unless the user explicitly
-  authorizes a second full gate. Do not start M2 before M1 is merged and
-  recorded.
+- User direction on 2026-08-27: defer the distinct-human-reviewer dependency and
+  maximize implementation through the final phase step. M2 and later items may
+  be staged as sequential stacked draft PRs without claiming M1 is merged.
+- Final integration action: restore a genuinely distinct release reviewer,
+  update stacked bases if repository governance changes, and reuse unchanged M1
+  evidence. Validate only the affected distribution boundary unless the user
+  explicitly authorizes a second full gate.
