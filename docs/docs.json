@@ -628,7 +628,8 @@
                 "group": "INTERNAL",
                 "pages": [
                   "errors/SIFR-INTERNAL-0001",
-                  "errors/SIFR-INTERNAL-0002"
+                  "errors/SIFR-INTERNAL-0002",
+                  "errors/SIFR-INTERNAL-0003"
                 ]
               }
             ]

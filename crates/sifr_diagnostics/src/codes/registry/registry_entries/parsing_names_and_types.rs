@@ -251,7 +251,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         Severity::Error,
         "verification/areas/project_workspace/fixtures/project/import_cycle_source_spans",
         "circular import detected: {cycle}",
-        "sifr_driver::project::compile_order",
+        "sifr_frontend::graph_cache_and_queries::project_compilation",
         [arg!("cycle"), json_arg!("cycle_edges")],
         ["cycle", "cycle_edges"]
     ),
