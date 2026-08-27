@@ -4,11 +4,10 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 
 /// Emits deterministic immutable bytes for every retained package specialization.
-#[must_use]
 pub fn emit_static_specialization_programs(
     outputs: &[StaticSpecializationOutput],
     structural_owners: &BTreeSet<String>,
-) -> String {
+) -> crate::CodegenOutcome<String> {
     let mut ordered = outputs.to_vec();
     ordered.sort_by(|left, right| {
         (&left.owner, &left.package_module, &left.function).cmp(&(
@@ -61,11 +60,11 @@ pub fn emit_static_specialization_programs(
             );
         }
     }
-    crate::generated_source_validate::assert_generated_source_is_safe(
+    crate::generated_source_validate::validate_generated_source_is_safe(
         &out,
         "static specialization programs",
-    );
-    out
+    )?;
+    Ok(out)
 }
 
 fn static_value_expression(value: &StaticProgramValue) -> String {
@@ -263,7 +262,8 @@ mod tests {
         let emitted = emit_static_specialization_programs(
             &[output(7)],
             &BTreeSet::from(["Record".to_string()]),
-        );
+        )
+        .expect("code generation should succeed");
         assert!(
             emitted.contains("static __SIFR_STATIC_PROGRAM_BYTES_RECORD_SCHEMA_PACKAGE_DERIVE")
         );
@@ -292,7 +292,8 @@ mod tests {
 
     #[test]
     fn ineligible_owner_keeps_static_bytes_without_typed_structural_impl() {
-        let emitted = emit_static_specialization_programs(&[output(7)], &BTreeSet::new());
+        let emitted = emit_static_specialization_programs(&[output(7)], &BTreeSet::new())
+            .expect("code generation should succeed");
         assert!(emitted.contains("__SIFR_STATIC_PROGRAM_BYTES_"));
         assert!(!emitted.contains("impl ::sifr_runtime::interop::structural::StaticProgramType"));
         assert!(!emitted.contains("sifr_runtime::"));
@@ -381,7 +382,8 @@ mod tests {
         assert!(cache_fragment.contains(&hex(&output.program_identity)));
 
         let emitted =
-            emit_static_specialization_programs(&[output], &BTreeSet::from(["Record".to_string()]));
+            emit_static_specialization_programs(&[output], &BTreeSet::from(["Record".to_string()]))
+                .expect("code generation should succeed");
         assert!(emitted.contains("impl ::sifr_runtime::interop::structural::MethodSlotTable<::sifr_runtime::interop::structural::NoContext> for Record"));
         assert!(emitted.contains("match index"));
         assert!(emitted.contains("Record::normalize(value)"));
@@ -404,7 +406,8 @@ mod tests {
         output.method_slot_context = Some(StaticMethodSlotContext::None);
 
         let emitted =
-            emit_static_specialization_programs(&[output], &BTreeSet::from(["Record".to_string()]));
+            emit_static_specialization_programs(&[output], &BTreeSet::from(["Record".to_string()]))
+                .expect("code generation should succeed");
 
         assert!(emitted.contains("let (receiver, value) ="), "{emitted}");
         assert!(emitted.contains("receiver.serialize(value)"), "{emitted}");

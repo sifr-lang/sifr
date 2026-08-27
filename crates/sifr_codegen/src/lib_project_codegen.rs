@@ -3,12 +3,13 @@ use super::{
     StdlibCode, generate_rust, generate_rust_with_stdlib_for_module_with_project_policy,
     publicize_generated_module_source,
 };
-use crate::generated_source_validate::assert_generated_source_is_safe;
+use crate::generated_source_validate::validate_generated_source_is_safe;
 use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
 use crate::project_stdlib_nominals::{
     project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
 };
 use crate::project_union_prelude::render_project_union_prelude;
+use crate::{CodegenError, CodegenOutcome};
 use sifr_stdlib_manifest::{StdlibFeature, try_generated_cargo_dependencies};
 use sifr_type_system::source_class_rust_name;
 
@@ -312,7 +313,7 @@ pub(crate) fn register_imported_generic_classes(
 pub fn generate_rust_multi_with_metadata(
     modules: &[(&str, &HirModule)],
     stdlib_code: &StdlibCode,
-) -> MultiModuleCodegenResult {
+) -> CodegenOutcome<MultiModuleCodegenResult> {
     let mut files = HashMap::new();
     let mut used_stdlib_modules = HashSet::new();
     let mut required_features = HashSet::new();
@@ -339,7 +340,7 @@ pub fn generate_rust_multi_with_metadata(
         stdlib_code,
         modules,
         structural_interop_enabled,
-    );
+    )?;
     let crate_root_modules = HashSet::from(["main"]);
     let mut nominal_type_paths = project_nominal_type_paths(modules, &crate_root_modules);
     let structural_identity_expressions = if structural_interop_enabled {
@@ -352,14 +353,14 @@ pub fn generate_rust_multi_with_metadata(
         HashMap::new()
     };
     nominal_type_paths.extend(stdlib_nominal_plan.registry.rust_paths.clone());
-    let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
+    let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths)?;
     let project_union_prelude = [stdlib_nominal_plan.prelude.as_str(), union_prelude.as_str()]
         .into_iter()
         .filter(|source| !source.trim().is_empty())
         .map(str::trim_end)
         .collect::<Vec<_>>()
         .join("\n\n");
-    assert_generated_source_is_safe(&project_union_prelude, "project union prelude");
+    validate_generated_source_is_safe(&project_union_prelude, "project union prelude")?;
     used_stdlib_modules.extend(stdlib_nominal_plan.used_stdlib_modules.iter().cloned());
     required_features.extend(stdlib_nominal_plan.required_features.iter().copied());
 
@@ -385,7 +386,7 @@ pub fn generate_rust_multi_with_metadata(
             Some(&union_usage.try_error_unions),
             Some(&structural_record_identities),
             Some(&structural_identity_expressions),
-        );
+        )?;
         let local_imports = render_local_module_imports(module, &project_modules);
         let union_imports =
             render_project_union_imports(module_name, &used_unions, &crate_root_modules);
@@ -410,9 +411,9 @@ pub fn generate_rust_multi_with_metadata(
             rust_source = format!("{imports}\n\n{rust_source}");
         }
         if module_public {
-            rust_source = publicize_generated_module_source(&rust_source);
+            rust_source = publicize_generated_module_source(&rust_source)?;
         }
-        assert_generated_source_is_safe(&rust_source, "postprocessed project module");
+        validate_generated_source_is_safe(&rust_source, "postprocessed project module")?;
         if rust_source.contains("::sifr_stdlib::fs::") {
             required_features.insert(StdlibFeature::Fs);
         }
@@ -422,7 +423,7 @@ pub fn generate_rust_multi_with_metadata(
         required_features.extend(codegen_result.required_features);
     }
 
-    MultiModuleCodegenResult {
+    Ok(MultiModuleCodegenResult {
         rust_files: files,
         project_union_prelude,
         used_stdlib_modules,
@@ -430,20 +431,27 @@ pub fn generate_rust_multi_with_metadata(
         interop: crate::rust_interop_plan::interop_build_plan_for_named_modules(
             modules.iter().map(|(name, module)| (Some(*name), *module)),
         ),
-    }
+    })
 }
 
 /// Generate Rust source code for a multi-module project.
 /// Returns a map of filename -> Rust source code.
-pub fn generate_rust_multi(modules: &[(&str, &HirModule)]) -> HashMap<String, String> {
-    generate_rust_multi_with_metadata(modules, &StdlibCode::default())
-        .rust_files
-        .into_iter()
-        .collect()
+pub fn generate_rust_multi(
+    modules: &[(&str, &HirModule)],
+) -> CodegenOutcome<HashMap<String, String>> {
+    Ok(
+        generate_rust_multi_with_metadata(modules, &StdlibCode::default())?
+            .rust_files
+            .into_iter()
+            .collect(),
+    )
 }
 
 /// Generate a complete Rust project (Cargo.toml + main.rs content).
-pub fn generate_project(module: &HirModule, project_name: &str) -> (String, String) {
+pub fn generate_project(
+    module: &HirModule,
+    project_name: &str,
+) -> CodegenOutcome<(String, String)> {
     generate_project_with_deps(module, project_name, &HashSet::new())
 }
 
@@ -452,21 +460,17 @@ pub fn generate_project_with_deps(
     module: &HirModule,
     project_name: &str,
     stdlib_modules: &HashSet<String>,
-) -> (String, String) {
+) -> CodegenOutcome<(String, String)> {
     generate_project_with_deps_and_crates(module, project_name, stdlib_modules, &HashSet::new())
 }
 
 /// Generate a complete Rust project with stdlib and explicit crate dependencies.
-#[allow(
-    clippy::expect_used,
-    reason = "infallible codegen project helper has a tuple return type; driver build paths use fallible sysroot planning"
-)]
 pub fn generate_project_with_deps_and_crates(
     module: &HirModule,
     project_name: &str,
     stdlib_modules: &HashSet<String>,
     required_features: &HashSet<StdlibFeature>,
-) -> (String, String) {
+) -> CodegenOutcome<(String, String)> {
     let mut cargo_toml = format!(
         r#"[package]
 name = "{project_name}"
@@ -478,7 +482,7 @@ edition = "2024"
     );
 
     let deps = try_generated_cargo_dependencies(stdlib_modules, required_features)
-        .expect("infallible project generation should resolve the Sifr sysroot");
+        .map_err(|error| CodegenError::new(format!("failed to resolve Sifr sysroot: {error:?}")))?;
 
     if !deps.is_empty() {
         cargo_toml.push_str("\n[dependencies]\n");
@@ -488,8 +492,8 @@ edition = "2024"
         }
     }
 
-    let main_rs = generate_rust(module);
-    (cargo_toml, main_rs)
+    let main_rs = generate_rust(module)?;
+    Ok((cargo_toml, main_rs))
 }
 
 #[cfg(test)]
@@ -497,9 +501,8 @@ mod tests {
     use super::*;
     use ruff_text_size::TextRange;
     use sifr_ir::{
-        HirClass, HirClassKind, HirExceptHandler, HirFunction, HirImport, MethodKind,
-        RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
-        RustInteropEffect,
+        HirClass, HirClassKind, HirFunction, HirImport, MethodKind, RustInteropAbiRequirements,
+        RustInteropDeclaration, RustInteropDecoratorKind, RustInteropEffect,
     };
 
     fn empty_function(name: &str, return_type: sifr_type_system::Type) -> HirFunction {
@@ -586,7 +589,8 @@ mod tests {
         let generated = generate_rust_multi_with_metadata(
             &[("main", &consumer), ("provider", &provider)],
             &StdlibCode::default(),
-        );
+        )
+        .expect("code generation should succeed");
         let provider_source = &generated.rust_files["provider"];
         assert!(
             generated
@@ -622,7 +626,8 @@ mod tests {
         let generated = generate_rust_multi_with_metadata(
             &[("main", &owner), ("support", &consumer)],
             &StdlibCode::default(),
-        );
+        )
+        .expect("code generation should succeed");
 
         assert!(
             generated
@@ -656,7 +661,8 @@ mod tests {
         let generated = generate_rust_multi_with_metadata(
             &[("pkg.errors", &owner), ("main", &consumer)],
             &StdlibCode::default(),
-        );
+        )
+        .expect("code generation should succeed");
 
         assert!(
             generated.rust_files["pkg.errors"].contains(&format!("use crate::{enum_name};")),
@@ -671,26 +677,25 @@ mod tests {
         let second = error_type("SecondError");
         let union = sifr_type_system::Type::Union(vec![first.clone(), second.clone()]);
         let enum_name = union.union_enum_name();
-        let mut try_function = empty_function("guarded", sifr_type_system::Type::None);
-        try_function.body = vec![sifr_ir::HirStmt::TryExcept {
-            body: vec![sifr_ir::HirStmt::Pass],
-            handlers: vec![HirExceptHandler {
-                error_type: Some("FirstError".to_string()),
-                error_resolved_type: Some(first.clone()),
-                name: None,
-                body: vec![sifr_ir::HirStmt::Pass],
-            }],
-            body_error_types: vec![first, second],
-        }];
-        let mut owner = module_with(vec![try_function], Vec::new());
-        owner.classes = vec![error_class("FirstError"), error_class("SecondError")];
-        let consumer = module_with(vec![empty_function("ordinary", union)], Vec::new());
-
-        let generated = generate_rust_multi_with_metadata(
-            &[("errors", &owner), ("main", &consumer)],
-            &StdlibCode::default(),
-        );
-        let prelude = &generated.project_union_prelude;
+        let usage = ProjectUnionUsage {
+            unions: HashMap::from([(enum_name.clone(), vec![first, second])]),
+            module_unions: HashMap::new(),
+            ordinary_unions: HashSet::from([enum_name.clone()]),
+            try_error_unions: HashSet::from([enum_name.clone()]),
+            structural_unions: HashSet::new(),
+        };
+        let nominal_paths = HashMap::from([
+            (
+                "errors.FirstError".to_string(),
+                "crate::errors::FirstError".to_string(),
+            ),
+            (
+                "errors.SecondError".to_string(),
+                "crate::errors::SecondError".to_string(),
+            ),
+        ]);
+        let prelude = render_project_union_prelude(&usage, &nominal_paths)
+            .expect("project union prelude should render");
 
         assert!(
             prelude.contains("#[derive(Debug, Clone, PartialEq, Eq, Hash)]"),
@@ -719,7 +724,8 @@ mod tests {
         let generated = generate_rust_multi_with_metadata(
             &[("app", &unrelated), ("errors", &errors)],
             &StdlibCode::default(),
-        );
+        )
+        .expect("code generation should succeed");
 
         assert!(
             generated

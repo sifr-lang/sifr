@@ -772,7 +772,7 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
         generic_functions: Default::default(),
         type_param_bounds: Default::default(),
     };
-    let generated_module = generate_rust(&module);
+    let generated_module = generate_rust(&module).expect("code generation should succeed");
     assert!(
         generated_module.contains(
             "__sifr_python_callback_failure_0: ::sifr_runtime::python::CallbackFailureSlot<HandlerError>"

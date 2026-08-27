@@ -7,7 +7,7 @@ use sifr_type_system::{ParamConvention, Type};
 pub(crate) fn generate_rust_from_source(source: &str) -> String {
     let parsed = parse_module(source).expect("parse failed");
     let lowering = lower_module(parsed.suite()).expect("lowering failed");
-    generate_rust(&lowering.module)
+    generate_rust(&lowering.module).expect("code generation should succeed")
 }
 
 pub(crate) fn generate_rust_from_source_with_stdlib_collections(source: &str) -> String {
@@ -19,7 +19,7 @@ pub(crate) fn generate_rust_from_source_with_stdlib_collections(source: &str) ->
         .or_default();
     let lowering =
         lower_module_with_externals(parsed.suite(), &externals).expect("lowering failed");
-    generate_rust(&lowering.module)
+    generate_rust(&lowering.module).expect("code generation should succeed")
 }
 
 #[test]
@@ -279,7 +279,7 @@ fn test_simple_function_codegen() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(rust_code.contains("fn main()"));
     assert!(rust_code.contains("println!"));
     assert!(rust_code.contains("Hello, World!"));
@@ -339,7 +339,7 @@ fn test_arithmetic_codegen() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(rust_code.contains("fn add(a: i64, b: i64) -> i64"));
     assert!(rust_code.contains("a + b"));
 }
@@ -390,7 +390,7 @@ fn test_no_unnecessary_mut() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(
         rust_code.contains("let x: i64"),
         "should emit `let x` without mut"
@@ -437,7 +437,7 @@ fn test_mut_on_reassigned_variable() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(
         rust_code.contains("let mut x: i64"),
         "should emit `let mut x` for reassigned var"
@@ -545,7 +545,7 @@ fn test_println_fstring_inlined() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(
         rust_code.contains("println!(\"Hello, {}!\", name)"),
         "should inline f-string into println!"
@@ -588,7 +588,7 @@ fn test_no_tostring_in_println() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(
         rust_code.contains("println!(\"hello\")"),
         "should inline string literal directly into println!"
@@ -674,7 +674,7 @@ fn test_structured_codegen_lowers_comprehension_local_initializers() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
 
     assert!(rust_code.contains("let values: Vec<i64> = {"));
     assert!(rust_code.contains("let lookup: HashMap<i64, i64> = {"));
@@ -738,7 +738,7 @@ fn test_reverse_range_for_loop_uses_rev_iterator_for_unary_negative_step() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
 
     assert!(rust_code.contains(".rev()"));
     assert!(!rust_code.contains("step_by(-(1 as i64) as usize)"));
@@ -778,7 +778,7 @@ fn test_hashmap_short_name() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(
         rust_code.contains("use ::std::collections::HashMap;"),
         "should have HashMap import"
@@ -847,7 +847,7 @@ fn test_dict_get_string_literal_key() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(
         rust_code.contains(".get(\"key\")"),
         "should emit .get(\"key\") for string literal key"

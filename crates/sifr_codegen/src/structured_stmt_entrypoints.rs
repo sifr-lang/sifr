@@ -1,4 +1,4 @@
-use crate::{HirStmt, RustEmitter, RustExpr, RustLiteral, RustStmt, is_simple_stmt_candidate};
+use crate::{HirStmt, RustEmitter, is_simple_stmt_candidate};
 
 impl RustEmitter {
     pub(crate) fn emit_stmt(&mut self, stmt: &HirStmt) {
@@ -18,21 +18,15 @@ impl RustEmitter {
             Ok(true) => {}
             Ok(false) => {
                 self.lowering_stats.stmt_lowering_errors += 1;
-                self.push_captured_stmt(&RustStmt::Expr(RustExpr::MacroCall {
-                    name: "compile_error".to_string(),
-                    args: vec![RustExpr::Literal(RustLiteral::Str(format!(
-                        "structured statement emission missing for production path: {stmt:?}"
-                    )))],
-                }));
+                self.record_codegen_error(crate::CodegenError::new(format!(
+                    "structured statement emission missing for production path: {stmt:?}"
+                )));
             }
             Err(err) => {
                 self.lowering_stats.stmt_lowering_errors += 1;
-                self.push_captured_stmt(&RustStmt::Expr(RustExpr::MacroCall {
-                    name: "compile_error".to_string(),
-                    args: vec![RustExpr::Literal(RustLiteral::Str(format!(
-                        "structured statement lowering failed for production path: {stmt:?}; error={err}"
-                    )))],
-                }));
+                self.record_codegen_error(err.in_context(format!(
+                    "structured statement lowering failed for production path: {stmt:?}"
+                )));
             }
         }
     }

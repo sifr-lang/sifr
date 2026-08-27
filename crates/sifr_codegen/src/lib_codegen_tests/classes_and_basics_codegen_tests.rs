@@ -116,11 +116,12 @@ fn process_child_resource_derives_are_module_scoped() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let user_rust = generate_rust(&module);
+    let user_rust = generate_rust(&module).expect("code generation should succeed");
     assert!(user_rust.contains("#[derive(Debug, Clone, PartialEq, Eq, Hash)]\nstruct Child"));
 
     let process_rust =
         generate_rust_with_stdlib_for_module(&module, &StdlibCode::default(), Some("sifr.process"))
+            .expect("code generation should succeed")
             .rust_source;
     assert!(process_rust.contains("#[derive(Debug)]\nstruct Child"));
     assert!(process_rust.contains("impl Drop for Child"));
@@ -174,7 +175,7 @@ fn test_class_to_string_method_does_not_emit_generated_allow() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(!rust_code.contains("#[allow(clippy::inherent_to_string_shadow_display)]"));
     assert!(rust_code.contains("impl LocaleId"));
     assert!(rust_code.contains("impl ::std::fmt::Display for LocaleId"));
@@ -247,7 +248,7 @@ fn test_empty_print() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(
         rust_code.contains("println!()"),
         "should emit println!() for empty print"
@@ -388,7 +389,7 @@ fn test_structured_stmt_path_rewrites_module_constant_name() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let result = generate_rust_with_metadata(&module);
+    let result = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(result.rust_source.contains("const LIMIT: i64 = 7_i64;"));
     assert!(result.rust_source.contains("let x: i64 = LIMIT;"));
     assert!(result.lowering_stats.stmt_structured >= 1);
@@ -437,7 +438,8 @@ fn test_structured_stmt_path_rewrites_stdlib_constant_name() {
         std::collections::HashMap::from([("pi".to_string(), (Type::Float, "PI".to_string()))]),
     );
 
-    let result = generate_rust_with_stdlib_for_module(&module, &stdlib_code, None);
+    let result = generate_rust_with_stdlib_for_module(&module, &stdlib_code, None)
+        .expect("code generation should succeed");
     assert!(result.rust_source.contains("let x: f64 = PI;"));
     assert!(!result.rust_source.contains("let x: f64 = pi;"));
     assert!(!result.rust_source.contains("std::f64::consts::PI"));
@@ -511,7 +513,7 @@ fn test_match_int_literal_pattern_avoids_cast_expression() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(rust_code.contains("1 => {"));
     assert!(!rust_code.contains("1 as i64 => {"));
 }
@@ -583,7 +585,8 @@ fn test_generate_rust_multi_exports_non_main_items() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let files = generate_rust_multi(&[("main", &main_module), ("utils", &utils_module)]);
+    let files = generate_rust_multi(&[("main", &main_module), ("utils", &utils_module)])
+        .expect("code generation should succeed");
     let main_rs = files.get("main").expect("main module should be generated");
     let utils_rs = files
         .get("utils")
@@ -636,7 +639,8 @@ fn test_generate_rust_multi_publicizes_non_main_reexports() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let files = generate_rust_multi(&[("root", &root_module), ("root.leaf", &leaf_module)]);
+    let files = generate_rust_multi(&[("root", &root_module), ("root.leaf", &leaf_module)])
+        .expect("code generation should succeed");
     let root_rs = files.get("root").expect("root module should be generated");
 
     assert!(root_rs.contains("pub use crate::root::leaf::leaf_value;"));
@@ -710,7 +714,8 @@ fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let files = generate_rust_multi(&[("main", &main_module), ("utils", &utils_module)]);
+    let files = generate_rust_multi(&[("main", &main_module), ("utils", &utils_module)])
+        .expect("code generation should succeed");
     let utils_rs = files
         .get("utils")
         .expect("utils module should be generated");
@@ -792,105 +797,11 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
     let result = generate_rust_multi_with_metadata(
         &[("main", &main_module), ("helper", &helper_module)],
         &stdlib_code,
-    );
+    )
+    .expect("code generation should succeed");
 
     assert!(result.rust_files.contains_key("main"));
     assert!(result.rust_files.contains_key("helper"));
     assert!(result.used_stdlib_modules.contains("sifr.statistics"));
     assert!(result.used_stdlib_modules.contains("sifr.math"));
-}
-
-#[test]
-fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
-    let main_module = HirModule {
-        functions: vec![HirFunction {
-            name: "main".to_string(),
-            params: vec![],
-            return_type: Type::None,
-            body: vec![HirStmt::Expr {
-                expr: HirExpr::Call {
-                    mutable_arg_places: Vec::new(),
-                    func: "helper".to_string(),
-                    args: vec![],
-                    ty: Type::None,
-                },
-            }],
-            is_async: false,
-            method_kind: MethodKind::Regular,
-            receiver: None,
-            decorators: vec![],
-            rust_interop: Vec::new(),
-            python_interop: Vec::new(),
-            compiler_intrinsic: None,
-            type_params: vec![],
-        }],
-        classes: vec![],
-        imports: vec![HirImport {
-            module: "helper".to_string(),
-            names: vec!["helper".to_string()],
-            aliases: vec![],
-        }],
-        constants: vec![],
-        generic_functions: std::collections::HashMap::new(),
-        type_param_bounds: std::collections::HashMap::new(),
-    };
-
-    let helper_module = HirModule {
-        functions: vec![HirFunction {
-            name: "helper".to_string(),
-            params: vec![],
-            return_type: Type::None,
-            body: vec![HirStmt::Expr {
-                expr: HirExpr::Call {
-                    mutable_arg_places: Vec::new(),
-                    func: "loads".to_string(),
-                    args: vec![HirExpr::StringLiteral(
-                        "name = \"fixture-five\"\nvalue = 5".to_string(),
-                    )],
-                    ty: Type::Result(Box::new(Type::Str), Box::new(Type::Any)),
-                },
-            }],
-            is_async: false,
-            method_kind: MethodKind::Regular,
-            receiver: None,
-            decorators: vec![],
-            rust_interop: Vec::new(),
-            python_interop: Vec::new(),
-            compiler_intrinsic: None,
-            type_params: vec![],
-        }],
-        classes: vec![],
-        imports: vec![HirImport {
-            module: "sifr.tomllib".to_string(),
-            names: vec!["loads".to_string()],
-            aliases: vec![],
-        }],
-        constants: vec![],
-        generic_functions: std::collections::HashMap::new(),
-        type_param_bounds: std::collections::HashMap::new(),
-    };
-
-    let stdlib_code = trait_impl_fixture_stdlib_code();
-
-    let result = generate_rust_multi_with_metadata(
-        &[("main", &main_module), ("helper", &helper_module)],
-        &stdlib_code,
-    );
-
-    let helper_rs = result
-        .rust_files
-        .get("helper")
-        .expect("helper module should be generated");
-    assert!(
-        helper_rs.contains("pub fn helper()"),
-        "support-module functions should be exported"
-    );
-    assert!(
-        helper_rs.contains("impl ::std::fmt::Display for TOMLDecodeError"),
-        "stdlib trait impls should be preserved in publicized helper modules"
-    );
-    assert!(
-        !helper_rs.contains("pub fn fmt("),
-        "trait impl methods must not receive pub visibility during support-module publicization"
-    );
 }

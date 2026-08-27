@@ -8,9 +8,9 @@ const PROJECT_UNION_MODULE: &str = "__sifr_project_unions";
 pub(crate) fn render_project_union_prelude(
     usage: &ProjectUnionUsage,
     nominal_type_paths: &HashMap<String, String>,
-) -> String {
+) -> crate::CodegenOutcome<String> {
     if usage.unions.is_empty() {
-        return String::new();
+        return Ok(String::new());
     }
     let mut emitter = crate::RustEmitter::new();
     emitter.union_enums.clone_from(&usage.unions);
@@ -70,7 +70,7 @@ pub(crate) fn render_project_union_prelude(
     let import_source = Renderer::new().render_file(&RustFile { items: imports });
     let enum_source = publicize_generated_module_source(&Renderer::new().render_file(&RustFile {
         items: emitter.enum_items,
-    }));
+    }))?;
     let mut prelude = format!("mod {PROJECT_UNION_MODULE} {{\n");
     for line in import_source.lines().chain(enum_source.lines()) {
         prelude.push_str("    ");
@@ -83,5 +83,5 @@ pub(crate) fn render_project_union_prelude(
     for name in names {
         let _ = writeln!(prelude, "pub use {PROJECT_UNION_MODULE}::{name};");
     }
-    prelude
+    Ok(prelude)
 }

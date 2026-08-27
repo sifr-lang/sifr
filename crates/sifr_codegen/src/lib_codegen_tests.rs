@@ -73,6 +73,8 @@ mod iterators_and_generators_codegen_tests;
 #[cfg(test)]
 mod multi_module_stdlib_feature_tests;
 #[cfg(test)]
+mod multi_module_visibility_codegen_tests;
+#[cfg(test)]
 mod nested_container_capture_codegen_tests;
 #[cfg(test)]
 mod nested_function_signature_scope_codegen_tests;

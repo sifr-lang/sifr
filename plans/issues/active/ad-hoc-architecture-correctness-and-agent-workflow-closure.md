@@ -48,8 +48,8 @@ The following review claims are explicitly excluded:
 | M3 | Verification gate integrity | implementation staged; second-review defect deferred | [#3555](https://github.com/sifr-lang/sifr/pull/3555) | `07e3d7d0f5123a89a30a4fcf149e51ebff7d6c7e` |
 | M4 | Architecture documentation accuracy and generated crate map | implementation staged; second-review defect deferred | [#3556](https://github.com/sifr-lang/sifr/pull/3556) | `0cb9720cb80e66bc2be3c73e78206106cd998bd1` |
 | M5 | Structural generated-code safety | implementation staged; final-review residual remediated | [#3557](https://github.com/sifr-lang/sifr/pull/3557) | `5644505a6badeb51b39e38df82b3f8972c545265` |
-| M6 | Structured codegen error propagation | in progress | | |
-| M7 | Canonical frontend project compilation product | pending | | |
+| M6 | Structured codegen error propagation | implementation staged; integration deferred | [#3558](https://github.com/sifr-lang/sifr/pull/3558) | `ef46a3eac5f7e54b374f6c648609e49a3dc5f302` |
+| M7 | Canonical frontend project compilation product | in progress | | |
 | M8 | LSP hot paths and compiler-service dependency direction | pending | | |
 | M9 | Method-lowering authority and unsafe-code documentation | pending | | |
 | M10 | Collision-resistant cache identity and cache lifecycle | pending | | |
@@ -188,6 +188,24 @@ Replace normal codegen panic/error-discard paths with structured diagnostics and
 Result-returning public entrypoints. Preserve unwind containment only as the
 last defensive boundary and add focused reproductions for each converted path.
 
+Acceptance criteria:
+
+- Public single-module, multi-module, test-project, and Cargo-project codegen
+  entrypoints return `Result` and preserve the first structured `CodegenError`.
+- Unsupported statement/expression lowering and invalid codegen input types do
+  not emit `compile_error!` recovery artifacts or panic; they stop codegen with
+  a contextual error.
+- Assembled-IR validation, generated-source validation, Rust reparse
+  postprocessing, and sysroot dependency planning return structured errors.
+- The driver renders structured codegen failures with a dedicated diagnostic
+  identity. Its unwind boundary remains only for unexpected invariant panics.
+- Focused tests cover each converted failure mechanism and distinguish a
+  structured codegen error from the final panic boundary.
+- Remaining `assert!`/`unreachable!` sites in production codegen are documented
+  or mechanically classifiable as programmer invariants; generated source still
+  forbids compiler-owned `unwrap`/`expect`, panic/todo/unimplemented macros,
+  unsafe Rust, and lint suppression.
+
 Deferred M5 review follow-ups:
 
 - Replace generated-source and assembled-IR assertions with structured codegen
@@ -298,6 +316,27 @@ Deferred M5 review and gate follow-ups:
 - Explicitly classify Rust interop probe crates as compiler diagnostic
   infrastructure outside the generated user-artifact `.rs` materialization
   gate, while retaining their owning probe validation.
+
+Deferred M6 review follow-ups:
+
+- Add direct focused reproductions for unsupported statement lowering,
+  assembled-IR validation, stdlib-preamble reparse, and sysroot planning. The
+  first-error accumulator is covered by the invalid-type reproduction, but
+  these individual boundaries currently rely on broader tests.
+- Remove or reconnect the dead ref-expression display lowering and structured
+  try/except helper; rename any retained helper whose name still claims it
+  panics. Close this with the M12 dead-code ratchet.
+- Mechanically classify or convert the remaining production-codegen panics in
+  union nominal-path lookup, class-method lowering, rendering, and output
+  helpers. Close this with M9's method-lowering and unsafe/invariant audit.
+- Record final-boundary generated-source validation as the canonical contract;
+  fragment renderers no longer repeat the same validation after M6 made the
+  public boundary fallible.
+- Stop discarding `syn::parse_file` failures in stdlib filtering and relocation.
+  Return a structured error from the owning canonical boundary.
+- Keep source-language `assert` lowering explicitly outside the
+  compiler-owned forbidden Rust construct set. Its user-triggered assertion is
+  language behavior, not a compiler recovery panic.
 
 ## M13 Phase Closure And Whole-Phase Review
 
@@ -459,3 +498,29 @@ tree and are keyed by candidate SHA.
   not rerun.
 - Review evidence is published in PR #3557 and preserved outside Git under both
   reviewed SHAs. Integration remains deferred with the stacked chain.
+
+### M6 Deferred Integration Handoff
+
+- Branch: `codex/architecture-audit-closure-m6`.
+- Stacked draft PR: [#3558](https://github.com/sifr-lang/sifr/pull/3558), based
+  on the M5 branch.
+- Exact implementation candidate:
+  `ef46a3eac5f7e54b374f6c648609e49a3dc5f302`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blocking findings.
+  It verified that all live sentinel/error-accumulator paths are checked before
+  rendering or materialization and that structured failures use
+  `SIFR-INTERNAL-0003` while the final unwind boundary retains
+  `SIFR-INTERNAL-0001`. Evidence is published in PR #3558 and preserved outside
+  Git under the candidate SHA. No remediation review was needed.
+- Targeted validation: all 1,151 `sifr_codegen` tests; 565 passing and 76
+  ignored `sifr_driver` tests; workspace Clippy with warnings denied;
+  formatting; HIR maintainability; and the 3,271-file size guardrail passed.
+- The single create-PR and merge gates both ran on the exact reviewed SHA. Each
+  passed generated-demo freshness, dependency/ownership/sysroot/stdlib/driver
+  guardrails, verification-runner foundations, and all ten Rust interop
+  variants, then stopped at the same three M4 architecture delivery-taxonomy
+  lines (current lines 945, 946, and 1430). The owning current/future authority
+  defect is already assigned to M12; neither gate was rerun.
+- Integration remains deferred with the stacked chain under the user's
+  instruction to continue through the phase before restoring the distinct
+  human reviewer.

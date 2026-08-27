@@ -54,7 +54,8 @@ fn concrete_generic_child_flattens_parent_fields_for_structural_bridge() {
     let main = module(vec![structural_function()], vec![child, nested]);
     let modules = [("models", &models), ("main", &main)];
 
-    let project = crate::generate_rust_multi_with_metadata(&modules, &crate::StdlibCode::default());
+    let project = crate::generate_rust_multi_with_metadata(&modules, &crate::StdlibCode::default())
+        .expect("code generation should succeed");
     let main_rust = project
         .rust_files
         .get("main")
@@ -136,7 +137,7 @@ fn plain_data_parent_flattens_into_structural_child_impls() {
     };
     let module = module(vec![structural_function()], vec![parent, child]);
 
-    let generated = crate::generate_rust(&module);
+    let generated = crate::generate_rust(&module).expect("code generation should succeed");
 
     assert!(
         generated.contains("StructuralConstruct for Child"),
@@ -184,7 +185,7 @@ fn recursive_boxed_data_parent_is_not_structurally_emitted_for_child() {
     };
     let module = module(vec![structural_function()], vec![parent, child]);
 
-    let generated = crate::generate_rust(&module);
+    let generated = crate::generate_rust(&module).expect("code generation should succeed");
 
     assert!(
         !generated.contains("StructuralType for RecursiveChild"),

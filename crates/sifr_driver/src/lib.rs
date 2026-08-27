@@ -60,7 +60,7 @@ pub use workspace::{SifrWorkspaceConfig, WorkspaceRoot, find_workspace_root};
 #[cfg(test)]
 pub(crate) use build::create_invocation_workspace;
 #[cfg(test)]
-pub(crate) use diagnostics::run_codegen_with_boundary;
+pub(crate) use diagnostics::{render_codegen_error, run_codegen_with_boundary};
 #[cfg(test)]
 pub(crate) use frontend::FrontendDiagnosticStyle;
 #[cfg(test)]

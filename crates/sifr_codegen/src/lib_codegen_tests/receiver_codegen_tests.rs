@@ -57,7 +57,7 @@ fn test_mut_on_mutating_method_call() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(rust_code.contains("let mut items"));
 }
 

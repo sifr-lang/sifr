@@ -3,19 +3,23 @@ use crate::ir_validate::{IrValidationIssue, IrValidationKind};
 use proc_macro2::{Delimiter, TokenStream, TokenTree};
 use syn::visit::{self, Visit};
 
-pub(crate) fn assert_generated_source_is_safe(source: &str, context: &str) {
-    let errors = match validate_generated_rust_source(source) {
-        Ok(()) => return,
-        Err(errors) => errors,
-    };
-    assert!(
-        errors.is_empty(),
-        "generated Rust validation failed ({context}): {}",
-        errors.join(" | ")
-    );
+pub(crate) fn validate_generated_source_is_safe(
+    source: &str,
+    context: &str,
+) -> Result<(), crate::CodegenError> {
+    validate_generated_rust_source(source).map_err(|errors| {
+        crate::CodegenError::new(format!(
+            "generated Rust validation failed ({context}): {}",
+            errors.join(" | ")
+        ))
+    })
 }
 
 /// Validate a complete generated Rust source file before materialization.
+///
+/// Compiler-owned `unwrap`/`expect`, panic/todo/unimplemented macros, unsafe
+/// Rust, and lint suppression are forbidden. `assert!` and `unreachable!` are
+/// permitted only for compiler programmer invariants.
 pub fn validate_generated_rust_source(source: &str) -> Result<(), Vec<String>> {
     let issues = validate_generated_source(source);
     if issues.is_empty() {

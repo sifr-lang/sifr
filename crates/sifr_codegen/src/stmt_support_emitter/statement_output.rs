@@ -6,10 +6,20 @@ impl RustEmitter {
             name, ty, value, ..
         } = stmt
         {
-            let Ok(Some(lowered_value)) = self.lower_stmt_expr_for_ir(value) else {
-                panic!(
-                    "structured generator-init expression emission missing for production path: {value:?}"
-                );
+            let lowered_value = match self.lower_stmt_expr_for_ir(value) {
+                Ok(Some(lowered_value)) => lowered_value,
+                Ok(None) => {
+                    self.record_codegen_error(crate::CodegenError::new(format!(
+                        "structured generator-init expression emission missing for production path: {value:?}"
+                    )));
+                    return;
+                }
+                Err(error) => {
+                    self.record_codegen_error(error.in_context(format!(
+                        "structured generator-init expression emission failed for production path: {value:?}"
+                    )));
+                    return;
+                }
             };
             self.push_captured_stmt(&crate::RustStmt::Let {
                 mutable: true,
@@ -20,11 +30,15 @@ impl RustEmitter {
             return;
         }
 
-        let Ok(true) = self.try_lower_structured_stmt(stmt) else {
-            panic!(
+        match self.try_lower_structured_stmt(stmt) {
+            Ok(true) => {}
+            Ok(false) => self.record_codegen_error(crate::CodegenError::new(format!(
                 "structured generator-init statement emission missing for production path: {stmt:?}"
-            );
-        };
+            ))),
+            Err(error) => self.record_codegen_error(error.in_context(format!(
+                "structured generator-init statement emission failed for production path: {stmt:?}"
+            ))),
+        }
     }
 
     pub(crate) fn emit_lowered_stmts(&mut self, lowered_stmts: &[RustStmt]) {

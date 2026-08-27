@@ -11,13 +11,14 @@ use sifr_type_system::{ParamConvention, Type};
 fn ordinary_class_codegen_skips_structural_impls() {
     let module = module(Vec::new(), vec![payload_class()]);
 
-    let generated = generate_rust(&module);
+    let generated = generate_rust(&module).expect("code generation should succeed");
 
     assert!(!generated.contains("StructuralType"));
     assert!(!generated.contains("StructuralConstruct"));
     assert!(!generated.contains("StructuralProject"));
 
-    let metadata = crate::generate_rust_with_metadata(&module);
+    let metadata =
+        crate::generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(
         !metadata
             .required_features
@@ -31,7 +32,7 @@ fn structural_construction_uses_checked_defaults_for_missing_fields() {
     payload.field_defaults = vec![(0, HirExpr::IntLiteral(7))];
     let module = module(vec![structural_function()], vec![payload]);
 
-    let generated = generate_rust(&module);
+    let generated = generate_rust(&module).expect("code generation should succeed");
 
     assert!(
         generated.contains("let mut __sifr_child_nodes: [Option<"),
@@ -67,7 +68,7 @@ fn structural_construction_checks_required_fields_before_default_factories() {
     payload.field_default_identities = vec![(1, "callable[main.description]".to_string())];
     let module = module(vec![structural_function()], vec![payload]);
 
-    let generated = generate_rust(&module);
+    let generated = generate_rust(&module).expect("code generation should succeed");
     let required_check = generated
         .find("if __sifr_child_nodes[2].is_none()")
         .unwrap_or_else(|| panic!("required-field precheck must be emitted: {generated}"));
@@ -100,7 +101,7 @@ fn ordinary_union_codegen_skips_structural_impls_without_demand() {
     let union = Type::Union(vec![Type::Int, Type::Str]);
     let module = module(vec![ordinary_function("choose", union)], Vec::new());
 
-    let generated = generate_rust(&module);
+    let generated = generate_rust(&module).expect("code generation should succeed");
 
     assert!(generated.contains("enum __SifrUnion"));
     assert!(!generated.contains("StructuralType"));
@@ -110,7 +111,8 @@ fn ordinary_union_codegen_skips_structural_impls_without_demand() {
     let project = crate::generate_rust_multi_with_metadata(
         &[("main", &module)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("code generation should succeed");
     let prelude = project.project_union_prelude;
     assert!(prelude.contains("enum __SifrUnion"));
     assert!(!prelude.contains("StructuralType"));
@@ -126,7 +128,7 @@ fn direct_ordinary_union_gets_structural_impls_when_demanded() {
         Vec::new(),
     );
 
-    let generated = generate_rust(&module);
+    let generated = generate_rust(&module).expect("code generation should succeed");
 
     assert!(generated.contains("StructuralKind::Union"), "{generated}");
     assert!(generated.contains("ActiveMember"), "{generated}");
@@ -136,7 +138,8 @@ fn direct_ordinary_union_gets_structural_impls_when_demanded() {
     let project = crate::generate_rust_multi_with_metadata(
         &[("main", &module)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("code generation should succeed");
     let prelude = project.project_union_prelude;
     assert!(prelude.contains("StructuralKind::Union"), "{prelude}");
     assert!(prelude.contains("ActiveMember"), "{prelude}");
@@ -164,7 +167,8 @@ fn project_union_resolves_structural_members_from_their_defining_module() {
     let project = crate::generate_rust_multi_with_metadata(
         &[("models", &models), ("main", &api)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("code generation should succeed");
     let prelude = project.project_union_prelude;
 
     assert!(prelude.contains("crate::models::Payload"), "{prelude}");
@@ -211,7 +215,8 @@ fn project_record_eligibility_resolves_nested_imported_members() {
     let project = crate::generate_rust_multi_with_metadata(
         &[("models", &models), ("records", &records), ("main", &api)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("code generation should succeed");
     let records_rust = project
         .rust_files
         .get("records")
@@ -241,7 +246,8 @@ fn project_root_record_keeps_qualified_structural_identity() {
     let project = crate::generate_rust_multi_with_metadata(
         &[("main", &module)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("code generation should succeed");
     let main_rust = project
         .rust_files
         .get("main")
@@ -279,6 +285,7 @@ fn named_single_file_record_keeps_unqualified_structural_identity() {
         &crate::StdlibCode::default(),
         Some("main"),
     )
+    .expect("code generation should succeed")
     .rust_source;
 
     assert!(generated.contains("Some(\"Payload\")"), "{generated}");
@@ -313,8 +320,9 @@ fn imported_stdlib_record_gets_one_late_canonical_structural_impl() {
         },
     );
 
-    let generated =
-        crate::generate_rust_with_stdlib_for_module(&module, &stdlib, Some("main")).rust_source;
+    let generated = crate::generate_rust_with_stdlib_for_module(&module, &stdlib, Some("main"))
+        .expect("code generation should succeed")
+        .rust_source;
     let target = "StructuralType for __SifrStdlib_sifr_x2ejson_x2eJsonValue";
 
     assert_eq!(generated.matches(target).count(), 1, "{generated}");
@@ -338,7 +346,8 @@ fn platform_integer_union_does_not_receive_structural_impls() {
     let project = crate::generate_rust_multi_with_metadata(
         &[("main", &module)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("code generation should succeed");
     let prelude = project.project_union_prelude;
 
     assert!(prelude.contains("enum __SifrUnion"));
@@ -352,7 +361,8 @@ fn project_structural_demand_enables_implicit_classes_across_modules() {
     let models = module(Vec::new(), vec![payload_class()]);
     let api = module(vec![structural_function()], Vec::new());
 
-    let generated = generate_rust_multi(&[("models", &models), ("api", &api)]);
+    let generated = generate_rust_multi(&[("models", &models), ("api", &api)])
+        .expect("code generation should succeed");
     let models_rust = generated.get("models").expect("models module is generated");
 
     assert!(models_rust.contains("StructuralType"));
@@ -364,7 +374,8 @@ fn project_structural_demand_enables_implicit_classes_across_modules() {
     let metadata = crate::generate_rust_multi_with_metadata(
         &[("models", &models), ("api", &api)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("code generation should succeed");
     assert!(
         metadata
             .required_features
@@ -379,7 +390,8 @@ fn test_project_root_record_keeps_qualified_structural_identity() {
         &[],
         &[("case", &case)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("code generation should succeed");
     let case_rust = generated
         .test_rust_files
         .get("case")
@@ -398,7 +410,8 @@ fn structural_impls_escape_rust_keyword_field_identifiers() {
     let models = module(Vec::new(), vec![keyword]);
     let api = module(vec![structural_function()], Vec::new());
 
-    let generated = generate_rust_multi(&[("models", &models), ("api", &api)]);
+    let generated = generate_rust_multi(&[("models", &models), ("api", &api)])
+        .expect("code generation should succeed");
     let models_rust = generated.get("models").expect("models module is generated");
 
     assert!(models_rust.contains("let (__sifr_field_0,) ="));
@@ -434,7 +447,7 @@ fn structural_demand_emits_checked_enum_and_ordinary_union_impls() {
     ];
     let module = module(vec![structural_function()], vec![enumeration, container]);
 
-    let generated = generate_rust(&module);
+    let generated = generate_rust(&module).expect("code generation should succeed");
 
     assert!(generated.contains("StructuralKind::Union"), "{generated}");
     assert!(generated.contains("ActiveMember"), "{generated}");
@@ -471,7 +484,7 @@ fn enum_with_unrepresentable_identity_metadata_gets_no_structural_impl() {
     }];
     let module = module(vec![structural_function()], vec![enumeration]);
 
-    let generated = generate_rust(&module);
+    let generated = generate_rust(&module).expect("code generation should succeed");
 
     assert!(
         !generated.contains("StructuralType for Status"),
@@ -522,7 +535,7 @@ fn plain_static_program_generic_emits_the_sealed_runtime_bound() {
         std::collections::HashMap::from([("T".to_string(), vec!["StaticProgram".to_string()])]),
     );
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
 
     assert!(
         rust_code.contains("T: ::sifr_runtime::interop::structural::StaticProgramType + Clone"),
@@ -553,7 +566,7 @@ fn plain_string_structural_generic_emits_projection_bounds() {
         std::collections::HashMap::from([("T".to_string(), vec!["StringStructural".to_string()])]),
     );
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
 
     assert!(
         rust_code.contains(
@@ -585,7 +598,7 @@ fn plain_structural_generic_emits_projection_bounds() {
         std::collections::HashMap::from([("T".to_string(), vec!["Structural".to_string()])]),
     );
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
 
     assert!(
         rust_code.contains(
@@ -618,7 +631,7 @@ fn attached_structural_generic_emits_projection_bounds() {
         std::collections::HashMap::from([("T".to_string(), vec!["Structural".to_string()])]),
     );
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
 
     assert!(
         rust_code.contains(
@@ -647,7 +660,7 @@ fn owned_structural_generic_does_not_require_clone() {
         std::collections::HashMap::from([("T".to_string(), vec!["Structural".to_string()])]),
     );
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
 
     assert!(
         rust_code.contains(
@@ -680,7 +693,7 @@ fn attached_static_program_generic_keeps_clone_and_static_bounds() {
         std::collections::HashMap::from([("T".to_string(), vec!["StaticProgram".to_string()])]),
     );
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
 
     assert!(
         rust_code.contains(
@@ -708,7 +721,7 @@ fn no_context_method_slots_generic_emits_the_slot_table_bound() {
         std::collections::HashMap::from([("T".to_string(), vec!["MethodSlots".to_string()])]),
     );
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
 
     assert!(
         rust_code.contains(
@@ -752,7 +765,7 @@ fn method_slots_context_uses_declared_type_parameter_order() {
         ]),
     );
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
 
     assert!(
         rust_code.contains(

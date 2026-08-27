@@ -55,7 +55,7 @@ fn test_stmt_path_handles_nested_function() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains("let inner = || {"));
     assert!(generated.rust_source.contains("inner()"));
 }
@@ -202,7 +202,7 @@ fn test_expr_path_handles_call_expression() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains("println!"));
     assert!(generated.rust_source.contains("marker"));
 }

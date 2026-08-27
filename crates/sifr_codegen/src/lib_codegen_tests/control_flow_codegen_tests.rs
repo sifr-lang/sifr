@@ -50,7 +50,7 @@ fn test_nested_break_without_inner_else_does_not_set_outer_broke_flag() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert_eq!(rust_code.matches("let _broke = false;").count(), 1);
     assert!(!rust_code.contains("let mut _broke = false;"));
     assert!(rust_code.contains("if !_broke {"));

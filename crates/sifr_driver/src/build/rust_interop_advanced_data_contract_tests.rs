@@ -420,7 +420,8 @@ fn generated_from_source(
     let module = sifr_lowering::lower_module(parsed.suite())
         .map(|result| result.module)
         .expect("source should lower");
-    let mut result = generate_rust_multi_with_metadata(&[("app", &module)], &StdlibCode::default());
+    let mut result = generate_rust_multi_with_metadata(&[("app", &module)], &StdlibCode::default())
+        .expect("code generation should succeed");
     result.interop.rust.bridge_contracts.signatures = vec![signature];
     let main_rs = result.rust_files.remove("app").unwrap_or_default();
     GeneratedBinaryProject {

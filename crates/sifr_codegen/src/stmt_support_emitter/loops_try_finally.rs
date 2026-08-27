@@ -186,7 +186,10 @@ impl RustEmitter {
         Ok(true)
     }
 
-    pub(crate) fn try_lower_structured_try_except_stmt(&mut self, stmt: &HirStmt) -> bool {
+    pub(crate) fn try_lower_structured_try_except_stmt(
+        &mut self,
+        stmt: &HirStmt,
+    ) -> Result<bool, crate::CodegenError> {
         self.try_lower_structured_try_except_stmt_with_following(stmt, None)
     }
 
@@ -194,16 +197,24 @@ impl RustEmitter {
         &mut self,
         stmt: &HirStmt,
         following_stmts: Option<&[HirStmt]>,
-    ) -> bool {
+    ) -> Result<bool, crate::CodegenError> {
+        if !matches!(stmt, HirStmt::TryExcept { .. }) {
+            return Ok(false);
+        }
         let lowered =
             match self.try_lower_try_except_hir_stmt_for_ir_with_following(stmt, following_stmts) {
                 Ok(Some(lowered)) => lowered,
-                Ok(None) | Err(_) => return false,
+                Ok(None) => {
+                    return Err(crate::CodegenError::new(format!(
+                        "structured try/except lowering missing for production path: {stmt:?}"
+                    )));
+                }
+                Err(error) => return Err(error),
             };
         for lowered_stmt in lowered {
             self.push_captured_stmt(&lowered_stmt);
         }
-        true
+        Ok(true)
     }
 
     pub(crate) fn try_lower_try_except_hir_stmt_for_ir(

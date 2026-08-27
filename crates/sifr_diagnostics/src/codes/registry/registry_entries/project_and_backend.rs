@@ -173,4 +173,15 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         ],
         ["cap_kind"]
     ),
+    active_entry!(
+        "SIFR-INTERNAL-0003",
+        "INTERNAL",
+        "Structured code generation failure.",
+        Severity::Error,
+        "crates/sifr_driver/src/tests/panic_boundary.rs::structured_codegen_failure_uses_internal_0003",
+        "code generation failed: {message}",
+        "sifr_driver::build::project_codegen",
+        [arg!("message")],
+        ["message"]
+    ),
 ];

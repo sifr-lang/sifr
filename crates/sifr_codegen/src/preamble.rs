@@ -7,6 +7,7 @@ pub use types_and_errors::*;
 mod task_context_runtime;
 mod type_validation;
 pub use task_context_runtime::*;
+pub(crate) use type_validation::validate_codegen_module_types;
 mod task_cancellation_runtime;
 pub use task_cancellation_runtime::*;
 mod task_runtime;

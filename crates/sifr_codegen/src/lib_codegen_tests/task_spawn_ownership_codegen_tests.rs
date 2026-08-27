@@ -12,7 +12,7 @@ fn test_thread_pool_executor_submit_reuses_blocking_task_substrate() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(
         result
@@ -48,7 +48,7 @@ fn test_scope_spawn_lowers_owned_coroutine_arguments() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(
         result
@@ -69,7 +69,7 @@ fn test_scope_spawn_lowers_owned_move_coroutine_arguments() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(
         result

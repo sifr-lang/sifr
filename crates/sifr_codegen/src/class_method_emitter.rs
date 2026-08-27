@@ -141,10 +141,10 @@ impl RustEmitter {
             Ok(None) => {}
             Err(err) => {
                 self.lowering_stats.expr_lowering_errors += 1;
-                panic!(
-                    "statement-only expression lowering failed for class method IR emission ({context}): {}; expr={expr:?}",
-                    err.message
-                );
+                self.record_codegen_error(err.in_context(format!(
+                    "statement-only expression lowering failed for class method IR emission ({context}); expr={expr:?}"
+                )));
+                return RustExpr::Literal(RustLiteral::Unit);
             }
         }
         match self.lower_stmt_expr_for_ir(expr) {
@@ -153,16 +153,17 @@ impl RustEmitter {
                 if let Some(lowered) = self.try_lower_registry_expr_strict(expr) {
                     return self.rewrite_stdlib_constant_idents_in_expr(lowered);
                 }
-                panic!(
+                self.record_codegen_error(crate::CodegenError::new(format!(
                     "structured expression lowering missing for class method IR emission ({context}): {expr:?}"
-                )
+                )));
+                RustExpr::Literal(RustLiteral::Unit)
             }
             Err(err) => {
                 self.lowering_stats.expr_lowering_errors += 1;
-                panic!(
-                    "structured expression lowering failed for class method IR emission ({context}): {}; expr={expr:?}",
-                    err.message
-                );
+                self.record_codegen_error(err.in_context(format!(
+                    "structured expression lowering failed for class method IR emission ({context}); expr={expr:?}"
+                )));
+                RustExpr::Literal(RustLiteral::Unit)
             }
         }
     }
@@ -783,10 +784,10 @@ impl RustEmitter {
             if self.lower_class_method_return_type(method, class).is_none() {
                 body.push(RustStmt::Return(None));
             } else {
-                panic!(
+                self.record_codegen_error(crate::CodegenError::new(format!(
                     "class method IR lowering produced empty body for non-unit return: {}::{}",
                     class.name, method.name
-                );
+                )));
             }
         }
 

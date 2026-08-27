@@ -587,7 +587,7 @@ impl RootedEntrypointPlan {
         let generated = match self.shape {
             RootedEntrypointShape::SingleFile => {
                 let codegen_result = self.into_single_file_codegen_result()?;
-                generated_single_file_binary_project(codegen_result)
+                generated_single_file_binary_project(codegen_result)?
             }
             RootedEntrypointShape::Project => {
                 generated_project_binary_project(&self.stdlib.code, self.project_lowering)?

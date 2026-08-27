@@ -440,3 +440,10 @@ pub(crate) fn run_codegen_with_boundary<T>(
         ))),
     }
 }
+
+pub(crate) fn render_codegen_error(error: &sifr_codegen::CodegenError) -> RenderedDiagnostic {
+    diagnostic_with_code(
+        format!("code generation failed: {error}"),
+        DiagnosticCode::INTERNAL_CODEGEN_FAILURE,
+    )
+}

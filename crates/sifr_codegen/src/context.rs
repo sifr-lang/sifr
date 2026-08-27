@@ -51,6 +51,15 @@ impl CodegenError {
             column,
         }
     }
+
+    #[must_use]
+    pub fn in_context(self, context: impl AsRef<str>) -> Self {
+        Self {
+            message: format!("{}: {}", context.as_ref(), self.message),
+            line: self.line,
+            column: self.column,
+        }
+    }
 }
 
 impl std::fmt::Display for CodegenError {
@@ -64,6 +73,8 @@ impl std::fmt::Display for CodegenError {
 }
 
 impl std::error::Error for CodegenError {}
+
+pub type CodegenOutcome<T> = Result<T, CodegenError>;
 
 #[cfg(test)]
 mod tests {

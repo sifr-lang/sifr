@@ -403,10 +403,10 @@ impl RustEmitter {
             {
                 lowered_body.push(RustStmt::Return(None));
             } else {
-                panic!(
+                self.record_codegen_error(crate::CodegenError::new(format!(
                     "function IR lowering produced empty body for non-unit return: {}",
                     func.name
-                );
+                )));
             }
         }
 

@@ -3,7 +3,7 @@ use super::{
     generate_rust_with_stdlib_for_module_with_project_policy, publicize_generated_module_source,
 };
 use crate::entrypoints::generate_rust_test_with_project_policy;
-use crate::generated_source_validate::assert_generated_source_is_safe;
+use crate::generated_source_validate::validate_generated_source_is_safe;
 use crate::lib_project_codegen::{
     project_nominal_type_paths, project_union_usage, register_imported_generic_classes,
     render_local_module_imports, render_project_union_imports,
@@ -30,7 +30,7 @@ pub fn generate_rust_test_project_with_metadata(
     support_modules: &[(&str, &HirModule)],
     test_modules: &[(&str, &HirModule)],
     stdlib_code: &StdlibCode,
-) -> TestProjectCodegenResult {
+) -> crate::CodegenOutcome<TestProjectCodegenResult> {
     let mut all_modules = Vec::with_capacity(support_modules.len() + test_modules.len());
     all_modules.extend_from_slice(support_modules);
     all_modules.extend_from_slice(test_modules);
@@ -56,7 +56,7 @@ pub fn generate_rust_test_project_with_metadata(
         stdlib_code,
         &all_modules,
         structural_interop_enabled,
-    );
+    )?;
     let crate_root_modules = test_modules
         .iter()
         .map(|(module_name, _)| *module_name)
@@ -72,14 +72,14 @@ pub fn generate_rust_test_project_with_metadata(
         HashMap::new()
     };
     nominal_type_paths.extend(stdlib_nominal_plan.registry.rust_paths.clone());
-    let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
+    let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths)?;
     let project_union_prelude = [stdlib_nominal_plan.prelude.as_str(), union_prelude.as_str()]
         .into_iter()
         .filter(|source| !source.trim().is_empty())
         .map(str::trim_end)
         .collect::<Vec<_>>()
         .join("\n\n");
-    assert_generated_source_is_safe(&project_union_prelude, "test project union prelude");
+    validate_generated_source_is_safe(&project_union_prelude, "test project union prelude")?;
     let project_modules = all_modules.iter().copied().collect::<HashMap<_, _>>();
     let all_union_names = union_usage.unions.keys().cloned().collect::<HashSet<_>>();
 
@@ -108,7 +108,7 @@ pub fn generate_rust_test_project_with_metadata(
             Some(&union_usage.try_error_unions),
             Some(&structural_record_identities),
             Some(&structural_identity_expressions),
-        );
+        )?;
         let imports = [
             render_local_module_imports(module, &project_modules),
             render_project_union_imports(module_name, &used_unions, &crate_root_modules),
@@ -134,8 +134,8 @@ pub fn generate_rust_test_project_with_metadata(
                 .map(|class| sifr_type_system::source_class_rust_name(&class.name))
                 .collect(),
         );
-        let source = publicize_generated_module_source(&source);
-        assert_generated_source_is_safe(&source, "postprocessed test support module");
+        let source = publicize_generated_module_source(&source)?;
+        validate_generated_source_is_safe(&source, "postprocessed test support module")?;
         support_rust_files.insert((*module_name).to_string(), source);
         used_stdlib_modules.extend(generated.used_stdlib_modules);
         required_features.extend(generated.required_features);
@@ -152,14 +152,14 @@ pub fn generate_rust_test_project_with_metadata(
             structural_interop_enabled,
             Some(&structural_record_identities),
             Some(&structural_identity_expressions),
-        );
-        assert_generated_source_is_safe(&generated.rust_source, "test project module");
+        )?;
+        validate_generated_source_is_safe(&generated.rust_source, "test project module")?;
         test_rust_files.insert((*module_name).to_string(), generated.rust_source);
         used_stdlib_modules.extend(generated.used_stdlib_modules);
         required_features.extend(generated.required_features);
     }
 
-    TestProjectCodegenResult {
+    Ok(TestProjectCodegenResult {
         support_rust_files,
         test_rust_files,
         project_union_prelude,
@@ -170,5 +170,5 @@ pub fn generate_rust_test_project_with_metadata(
                 .iter()
                 .map(|(module_name, module)| (Some(*module_name), *module)),
         ),
-    }
+    })
 }
