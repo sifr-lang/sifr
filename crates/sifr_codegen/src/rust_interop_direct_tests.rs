@@ -267,7 +267,9 @@ class Plain:
 ";
     let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
     let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
-    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+    let generated = generate_rust_with_metadata(&lowered.module)
+        .expect("code generation should succeed")
+        .rust_source;
 
     assert!(
         generated.contains("fn consume(self) -> Result<String, BridgeError>"),
@@ -295,7 +297,9 @@ class Resource:
 ";
     let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
     let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
-    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+    let generated = generate_rust_with_metadata(&lowered.module)
+        .expect("code generation should succeed")
+        .rust_source;
 
     assert!(
         generated.contains("fn ping(&self) -> Result<String, ResourceError>;"),
@@ -321,7 +325,9 @@ class Resource:
 ";
     let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
     let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
-    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+    let generated = generate_rust_with_metadata(&lowered.module)
+        .expect("code generation should succeed")
+        .rust_source;
 
     assert!(
         generated.contains("self.inner_ref().map_err"),
@@ -352,7 +358,9 @@ class Resource:
 ";
     let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
     let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
-    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+    let generated = generate_rust_with_metadata(&lowered.module)
+        .expect("code generation should succeed")
+        .rust_source;
 
     assert!(
         generated.contains("HandleStateError::Poisoned(__sifr_stored_panic)"),
@@ -379,7 +387,9 @@ class Resource:
 ";
     let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
     let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
-    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+    let generated = generate_rust_with_metadata(&lowered.module)
+        .expect("code generation should succeed")
+        .rust_source;
 
     assert!(
         generated
@@ -415,7 +425,9 @@ class Resource:
 ";
     let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
     let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
-    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+    let generated = generate_rust_with_metadata(&lowered.module)
+        .expect("code generation should succeed")
+        .rust_source;
 
     assert!(
         generated.contains(
@@ -476,7 +488,9 @@ fn emitted_direct_result_none_interop_does_not_append_ok_tail() {
         type_param_bounds: HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module).rust_source;
+    let generated = generate_rust_with_metadata(&module)
+        .expect("code generation should succeed")
+        .rust_source;
 
     assert!(generated.contains("::sifr_stdlib::zip::zip_close(path)"));
     assert!(!generated.contains("return Ok(());"), "{generated}");
@@ -520,7 +534,9 @@ fn emitted_python_object_class_does_not_claim_a_source_spellable_rust_name() {
         type_param_bounds: HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module).rust_source;
+    let generated = generate_rust_with_metadata(&module)
+        .expect("code generation should succeed")
+        .rust_source;
 
     assert!(!generated.contains("type __SifrPythonObject"));
     assert!(!generated.contains("type Object"));

@@ -99,12 +99,19 @@ impl RustEmitter {
                         self.lowering_stats.stmt_candidate_structured += 1;
                         lowered_body.extend(lowered);
                     } else {
-                        panic!("{missing_panic_message}: {stmt:?}");
+                        self.lowering_stats.stmt_lowering_errors += 1;
+                        self.record_codegen_error(crate::CodegenError::new(format!(
+                            "{missing_panic_message}: {stmt:?}"
+                        )));
+                        break;
                     }
                 }
-                Err(_) => {
+                Err(error) => {
                     self.lowering_stats.stmt_lowering_errors += 1;
-                    panic!("{failed_panic_message}: {stmt:?}");
+                    self.record_codegen_error(
+                        error.in_context(format!("{failed_panic_message}: {stmt:?}")),
+                    );
+                    break;
                 }
             }
         }

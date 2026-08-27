@@ -283,7 +283,7 @@ fn test_structured_stmt_path_string_contains_avoids_double_borrow_pattern_arg() 
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(!generated.rust_source.contains(".contains(&(s))"));
     assert!(generated.rust_source.contains(".contains("));
     assert!(!generated.rust_source.contains(".contains(&("));
@@ -330,7 +330,7 @@ fn test_list_builtin_uses_owned_collection_for_unknown_set_with_list_hint() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(
         generated
             .rust_source
@@ -390,7 +390,7 @@ fn test_set_builtin_with_generator_lowers_to_collect_not_plain_set_call() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(
         generated
             .rust_source
@@ -443,7 +443,7 @@ fn test_list_repeat_lowers_without_vec_mul_shape() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(!generated.rust_source.contains("vec![0 as i64] * n"));
     assert!(generated.rust_source.contains("std::iter::repeat(0_i64)"));
     assert!(!generated.rust_source.contains("__sifr_repeat_out.extend("));
@@ -503,7 +503,7 @@ fn test_compare_lowers_int_float_mixed_operands_with_cast() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains("as f64"));
 }
 
@@ -565,7 +565,7 @@ fn test_bool_typed_boolop_coerces_optional_operand_to_condition_bool() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains("is_some_and"));
 }
 
@@ -652,9 +652,28 @@ fn test_generate_project_emits_sifr_runtime_path_dependency_when_required() {
         "sifr_output",
         &HashSet::new(),
         &required_features,
-    );
+    )
+    .expect("code generation should succeed");
 
     assert!(cargo_toml.contains("sifr_runtime = { path = "));
+}
+
+#[test]
+fn invalid_codegen_type_returns_structured_error_without_recovery_rust() {
+    let mut module = empty_module();
+    module.constants.push((
+        "bad".to_string(),
+        Type::Callable(vec![Type::Int], Vec::new(), Box::new(Type::Int)),
+        HirExpr::NoneLiteral,
+    ));
+
+    let error = match generate_rust_with_metadata(&module) {
+        Ok(_) => panic!("invalid callable metadata must stop code generation"),
+        Err(error) => error,
+    };
+
+    assert!(error.message.contains("codegen input type validation"));
+    assert!(error.message.contains("1 parameters but 0 conventions"));
 }
 
 #[test]
@@ -667,7 +686,8 @@ fn test_async_main_entrypoint_gets_tokio_bootstrap_dependency() {
         )
         .expect("lowering failed")
         .module,
-    );
+    )
+    .expect("code generation should succeed");
 
     assert!(
         result
@@ -694,7 +714,7 @@ fn test_async_result_main_entrypoint_keeps_result_return() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(
         result
@@ -724,7 +744,8 @@ fn test_task_sleep_lowers_to_tokio_sleep_and_requires_tokio() {
         )
         .expect("lowering failed")
         .module,
-    );
+    )
+    .expect("code generation should succeed");
 
     assert!(result.rust_source.contains("tokio::time::sleep"));
     assert!(
@@ -751,7 +772,8 @@ fn test_task_sleep_requires_tokio_without_async_main() {
         )
         .expect("lowering failed")
         .module,
-    );
+    )
+    .expect("code generation should succeed");
 
     assert!(
         !result
@@ -777,7 +799,7 @@ fn test_task_scope_context_materializes_runtime_container() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("struct __SifrTaskScope"));
     assert!(result.rust_source.contains("impl __SifrTaskScope"));
@@ -810,7 +832,7 @@ fn test_scope_spawn_lowers_to_owned_task_handle_substrate() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("struct __SifrTask<T, E>"));
     assert!(result.rust_source.contains("fn __sifr_spawn_infallible<"));
@@ -845,7 +867,7 @@ fn test_spawn_blocking_lowers_to_distinct_blocking_task_substrate() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(
         result

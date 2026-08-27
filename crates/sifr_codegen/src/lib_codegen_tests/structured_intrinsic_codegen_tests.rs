@@ -45,7 +45,7 @@ fn structured_intrinsic_supports_nested_intrinsic_arguments() {
         arg_ranges: vec![Default::default(), Default::default()],
     });
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains("assert_eq!("));
     assert!(
         generated
@@ -74,7 +74,7 @@ fn structured_intrinsic_supports_typed_method_call_arguments() {
         arg_ranges: vec![Default::default()],
     });
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains(".to_lowercase()"));
     assert!(
         generated

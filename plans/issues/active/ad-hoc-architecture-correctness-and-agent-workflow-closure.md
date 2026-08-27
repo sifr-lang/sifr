@@ -188,6 +188,24 @@ Replace normal codegen panic/error-discard paths with structured diagnostics and
 Result-returning public entrypoints. Preserve unwind containment only as the
 last defensive boundary and add focused reproductions for each converted path.
 
+Acceptance criteria:
+
+- Public single-module, multi-module, test-project, and Cargo-project codegen
+  entrypoints return `Result` and preserve the first structured `CodegenError`.
+- Unsupported statement/expression lowering and invalid codegen input types do
+  not emit `compile_error!` recovery artifacts or panic; they stop codegen with
+  a contextual error.
+- Assembled-IR validation, generated-source validation, Rust reparse
+  postprocessing, and sysroot dependency planning return structured errors.
+- The driver renders structured codegen failures with a dedicated diagnostic
+  identity. Its unwind boundary remains only for unexpected invariant panics.
+- Focused tests cover each converted failure mechanism and distinguish a
+  structured codegen error from the final panic boundary.
+- Remaining `assert!`/`unreachable!` sites in production codegen are documented
+  or mechanically classifiable as programmer invariants; generated source still
+  forbids compiler-owned `unwrap`/`expect`, panic/todo/unimplemented macros,
+  unsafe Rust, and lint suppression.
+
 Deferred M5 review follow-ups:
 
 - Replace generated-source and assembled-IR assertions with structured codegen

@@ -12,7 +12,7 @@ fn test_task_timeout_context_manager_wraps_awaits() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("match ::tokio::time::timeout"));
     assert!(result.rust_source.contains("return Err(TimeoutError::new"));
@@ -36,7 +36,7 @@ fn test_try_except_with_async_body_lowers_to_async_try_closure() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("async ||"));
     assert!(result.rust_source.contains(")().await"));
@@ -55,7 +55,7 @@ fn test_task_timeout_try_carrier_includes_timeout_and_await_errors() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     let source = result.rust_source;
     assert!(source.contains("enum __SifrUnion_"));
@@ -75,7 +75,7 @@ fn test_try_finally_runs_cleanup_before_timeout_propagates() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     let cleanup_pos = result
         .rust_source
@@ -121,7 +121,8 @@ def main() -> Result[None, Error]:
         )
         .expect("lowering failed")
         .module,
-    );
+    )
+    .expect("code generation should succeed");
 
     assert!(!result.rust_source.contains("compile_error!"));
     assert!(result.rust_source.contains("let __sifr_try_finally_res"));
@@ -141,7 +142,7 @@ fn test_async_generated_errors_convert_to_error_return_type() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(
         result
@@ -173,7 +174,8 @@ fn test_sync_main_does_not_require_tokio() {
         )
         .expect("lowering failed")
         .module,
-    );
+    )
+    .expect("code generation should succeed");
 
     assert!(
         !result
@@ -196,7 +198,8 @@ fn test_generate_project_emits_tokio_dependency_when_required() {
         "sifr_output",
         &HashSet::new(),
         &required_features,
-    );
+    )
+    .expect("code generation should succeed");
 
     assert!(cargo_toml.contains(
         "tokio = { version = \"=1.53.1\", features = [\"io-util\", \"macros\", \"process\", \"rt\", \"signal\", \"sync\", \"time\"] }"
@@ -372,7 +375,7 @@ fn test_round_parenthesizes_cast_receiver() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(
         rust_code.contains("((3_i64) as f64).round() as i64"),
         "expected round receiver to be parenthesized; got: {rust_code}"
@@ -447,7 +450,7 @@ fn test_float_min_max_parenthesize_cast_receivers() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(
         rust_code.contains("((1_i64) as f64).min((2_i64) as f64)"),
         "expected min receiver to be parenthesized; got: {rust_code}"
@@ -522,7 +525,7 @@ fn test_variadic_min_max_lower_to_nested_calls() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(
         rust_code.matches("std::cmp::min").count() >= 2,
         "variadic min should lower to nested std::cmp::min calls: {rust_code}"

@@ -90,7 +90,7 @@ fn test_structured_expr_path_handles_plain_signature_call_expression() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains("helper();"));
     assert!(
         generated.lowering_stats.expr_structured > 0,
@@ -156,7 +156,7 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains("items.clear();"));
     assert!(
         generated.lowering_stats.expr_structured > 0,
@@ -231,7 +231,7 @@ fn test_structured_with_context_manager_target_is_mutable_when_body_mutates_it()
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(
         generated
             .rust_source
@@ -298,7 +298,7 @@ fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(
         generated.rust_source.contains("d2.extend("),
         "dict update should lower via registry to HashMap::extend"
@@ -344,7 +344,7 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains("x ="));
     assert!(generated.rust_source.contains("x = 7"));
     assert!(
@@ -382,7 +382,7 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains("let x: i64 ="));
     assert!(generated.rust_source.contains("let x: i64 = 7"));
     assert!(
@@ -417,7 +417,7 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains("fn value() -> i64"));
     assert!(generated.rust_source.contains("7"));
     assert!(
@@ -523,7 +523,7 @@ fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(
         generated
             .rust_source

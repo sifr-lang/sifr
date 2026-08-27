@@ -102,7 +102,7 @@ pub(crate) fn project_stdlib_nominal_plan(
     stdlib_code: &StdlibCode,
     modules: &[(&str, &HirModule)],
     structural_interop_enabled: bool,
-) -> ProjectStdlibNominalPlan {
+) -> crate::CodegenOutcome<ProjectStdlibNominalPlan> {
     let mut declarations = BTreeMap::<String, HashSet<String>>::new();
     let mut builtin_types = BTreeMap::<String, Type>::new();
     for members in unions.values() {
@@ -143,7 +143,7 @@ pub(crate) fn project_stdlib_nominal_plan(
         }
     }
     if declarations.is_empty() && builtin_types.is_empty() {
-        return ProjectStdlibNominalPlan::empty();
+        return Ok(ProjectStdlibNominalPlan::empty());
     }
 
     let mut imports = Vec::new();
@@ -210,7 +210,7 @@ pub(crate) fn project_stdlib_nominal_plan(
         stdlib_code,
         Some("main"),
         structural_interop_enabled,
-    );
+    )?;
     let probe_name_refs = probe_names.iter().map(String::as_str).collect();
     let shared_source = strip_rust_items_by_name(&generated.rust_source, &probe_name_refs);
     register_emitted_builtin_nominals(&shared_source, &mut registry);
@@ -239,8 +239,8 @@ pub(crate) fn project_stdlib_nominal_plan(
             registry.register_crate_root((*identity).to_string(), rust_name);
         }
     }
-    let crate_root_source = publicize_generated_module_source(&crate_root_source);
-    let mut shared_source = publicize_generated_module_source(&shared_source);
+    let crate_root_source = publicize_generated_module_source(&crate_root_source)?;
+    let mut shared_source = publicize_generated_module_source(&shared_source)?;
     if !python_error_rust_names.is_empty() {
         let mut names = python_error_rust_names.into_iter().collect::<Vec<_>>();
         names.sort();
@@ -284,12 +284,12 @@ pub(crate) fn project_stdlib_nominal_plan(
         prelude.push_str(";\n");
     }
 
-    ProjectStdlibNominalPlan {
+    Ok(ProjectStdlibNominalPlan {
         prelude,
         registry,
         used_stdlib_modules: generated.used_stdlib_modules,
         required_features: generated.required_features,
-    }
+    })
 }
 
 fn builtin_error_type(name: &str) -> Type {
@@ -575,7 +575,8 @@ mod tests {
             );
         }
 
-        let plan = project_stdlib_nominal_plan(&unions, &stdlib, &[], false);
+        let plan = project_stdlib_nominal_plan(&unions, &stdlib, &[], false)
+            .expect("code generation should succeed");
         let csv_path = plan
             .registry
             .rust_paths
@@ -617,7 +618,8 @@ mod tests {
             ],
         )]);
 
-        let plan = project_stdlib_nominal_plan(&unions, &StdlibCode::default(), &[], false);
+        let plan = project_stdlib_nominal_plan(&unions, &StdlibCode::default(), &[], false)
+            .expect("code generation should succeed");
 
         assert!(plan.prelude.contains("pub struct TimeoutError"));
         assert!(
@@ -664,7 +666,8 @@ mod tests {
             &StdlibCode::default(),
             &[("main", &module)],
             false,
-        );
+        )
+        .expect("code generation should succeed");
 
         assert!(plan.prelude.contains("impl From<ScopeFailure> for Error"));
         assert!(
@@ -677,7 +680,8 @@ mod tests {
         );
 
         let generated =
-            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default());
+            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default())
+                .expect("code generation should succeed");
         assert_eq!(
             generated
                 .project_union_prelude
@@ -758,7 +762,8 @@ mod tests {
         };
         let unions = HashMap::from([("DirectKind".to_string(), vec![direct_kind])]);
 
-        let plan = project_stdlib_nominal_plan(&unions, &StdlibCode::default(), &[], false);
+        let plan = project_stdlib_nominal_plan(&unions, &StdlibCode::default(), &[], false)
+            .expect("code generation should succeed");
 
         assert!(!plan.prelude.contains("FileNotFoundError"));
         assert!(!plan.registry.rust_paths.contains_key("FileNotFoundError"));
@@ -780,14 +785,41 @@ mod tests {
                 params: Vec::new(),
                 return_type: Type::None,
                 body: vec![HirStmt::TryExcept {
-                    body: vec![HirStmt::Pass],
+                    body: vec![HirStmt::Raise {
+                        value: HirExpr::ConstructorCall {
+                            class_name: "FileNotFoundError".to_string(),
+                            args: vec![HirExpr::StringLiteral("missing".to_string())],
+                            ty: Type::Class {
+                                identity: None,
+                                type_args: Vec::new(),
+                                name: "FileNotFoundError".to_string(),
+                                fields: vec![("message".to_string(), Type::Str)],
+                                methods: Vec::new(),
+                                parent_class: Some("OSError".to_string()),
+                            },
+                        },
+                    }],
                     handlers: vec![sifr_ir::HirExceptHandler {
                         error_type: Some("FileNotFoundError".to_string()),
-                        error_resolved_type: None,
+                        error_resolved_type: Some(Type::Class {
+                            identity: None,
+                            type_args: Vec::new(),
+                            name: "FileNotFoundError".to_string(),
+                            fields: vec![("message".to_string(), Type::Str)],
+                            methods: Vec::new(),
+                            parent_class: Some("OSError".to_string()),
+                        }),
                         name: None,
-                        body: vec![HirStmt::Pass],
+                        body: vec![HirStmt::Return { value: None }],
                     }],
-                    body_error_types: Vec::new(),
+                    body_error_types: vec![Type::Class {
+                        identity: None,
+                        type_args: Vec::new(),
+                        name: "FileNotFoundError".to_string(),
+                        fields: vec![("message".to_string(), Type::Str)],
+                        methods: Vec::new(),
+                        parent_class: Some("OSError".to_string()),
+                    }],
                 }],
                 is_async: false,
                 method_kind: MethodKind::Regular,
@@ -805,15 +837,16 @@ mod tests {
             type_param_bounds: HashMap::new(),
         };
 
-        let generated =
-            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default());
+        let plan = project_stdlib_nominal_plan(
+            &HashMap::new(),
+            &StdlibCode::default(),
+            &[("main", &module)],
+            false,
+        )
+        .expect("project nominal plan should render");
 
-        assert!(
-            !generated
-                .project_union_prelude
-                .contains("FileNotFoundError")
-        );
-        syn::parse_file(&generated.project_union_prelude)
+        assert!(!plan.prelude.contains("FileNotFoundError"));
+        syn::parse_file(&plan.prelude)
             .expect("project nominal prelude should not contain a dangling re-export");
     }
 

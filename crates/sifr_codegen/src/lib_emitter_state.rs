@@ -8,6 +8,8 @@ use super::{
 };
 use crate::stmt_support_emitter::performance_lowering_gate::stmt_needs_performance_lowering;
 pub struct RustEmitter {
+    /// First normal lowering failure. Public codegen boundaries return it before rendering.
+    pub(crate) codegen_error: Option<crate::CodegenError>,
     pub(crate) collection_needs: CollectionNeeds,
     pub(crate) runtime_needs: RuntimeNeeds,
     /// Track union enum types that need to be defined (name -> member types)
@@ -223,6 +225,7 @@ pub(crate) struct EmissionContext {
 impl RustEmitter {
     pub(crate) fn new() -> Self {
         Self {
+            codegen_error: None,
             collection_needs: CollectionNeeds::default(),
             runtime_needs: RuntimeNeeds::default(),
             union_enums: HashMap::new(),
@@ -313,6 +316,16 @@ impl RustEmitter {
         self.stmt_capture_stack.pop().unwrap_or_default()
     }
 
+    pub(crate) fn record_codegen_error(&mut self, error: crate::CodegenError) {
+        if self.codegen_error.is_none() {
+            self.codegen_error = Some(error);
+        }
+    }
+
+    pub(crate) fn take_codegen_error(&mut self) -> Option<crate::CodegenError> {
+        self.codegen_error.take()
+    }
+
     pub(crate) fn collect_recursive_nested_fn_captures(
         &self,
         func: &HirFunction,
@@ -366,7 +379,9 @@ impl RustEmitter {
         let saved_module_name = self.current_module_name.clone();
         self.current_module_name = module_name.map(str::to_string);
 
-        if self.reject_invalid_codegen_module_types(module) {
+        if let Err(error) = crate::preamble::validate_codegen_module_types(module) {
+            self.lowering_stats.item_lowering_errors += 1;
+            self.record_codegen_error(error.in_context("codegen input type validation"));
             self.current_module_name = saved_module_name;
             return;
         }
@@ -821,7 +836,7 @@ impl RustEmitter {
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);
         }
-        if self.try_lower_structured_try_except_stmt_with_following(stmt, following_stmts) {
+        if self.try_lower_structured_try_except_stmt_with_following(stmt, following_stmts)? {
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);

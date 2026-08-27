@@ -12,7 +12,7 @@ class PythonError(Error):
 fn generate(source: &str) -> String {
     let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
     let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
-    generate_rust(&lowered.module)
+    generate_rust(&lowered.module).expect("code generation should succeed")
 }
 
 #[test]

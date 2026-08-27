@@ -39,7 +39,7 @@ fn test_string_concat_flattened() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(rust_code.contains("\"abc\".to_string()"));
     assert!(!rust_code.contains("format!"));
 }

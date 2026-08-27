@@ -74,7 +74,7 @@ fn resolve_interop(
     rust_interop_context: Option<PackageRustInteropContext>,
     stdlib_interop: &StdlibRustInterop,
 ) -> ResolvedInterop {
-    let generated = generated_single_file_binary_project(codegen_result);
+    let generated = generated_single_file_binary_project(codegen_result)?;
     let (generated, rust_interop_context) =
         attach_stdlib_rust_interop(generated, rust_interop_context, stdlib_interop);
     resolve_package_rust_interop_metadata(generated, rust_interop_context)

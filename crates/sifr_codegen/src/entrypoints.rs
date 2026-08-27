@@ -1,18 +1,19 @@
 use super::{
     CodegenResult, HashSet, HirModule, Renderer, RustEmitter, RustFile, RustItem, StdlibCode,
 };
-use crate::generated_source_validate::assert_generated_source_is_safe;
+use crate::generated_source_validate::validate_generated_source_is_safe;
 use crate::ir_imports::collect_import_needs_from_items;
 use crate::ir_optimize::{remove_trivial_clones_in_items, remove_unneeded_mutability_in_items};
 use crate::ir_validate::validate_items;
+use crate::{CodegenError, CodegenOutcome};
 
 /// Generate Rust source code from a HIR module.
-pub fn generate_rust(module: &HirModule) -> String {
-    generate_rust_with_metadata(module).rust_source
+pub fn generate_rust(module: &HirModule) -> CodegenOutcome<String> {
+    Ok(generate_rust_with_metadata(module)?.rust_source)
 }
 
 /// Generate Rust source code for a test module (with #[test] attributes).
-pub fn generate_rust_test(module: &HirModule, module_name: &str) -> CodegenResult {
+pub fn generate_rust_test(module: &HirModule, module_name: &str) -> CodegenOutcome<CodegenResult> {
     generate_rust_test_with_project_policy(
         module,
         module_name,
@@ -37,7 +38,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
     structural_interop_enabled: bool,
     project_structural_record_identities: Option<&HashSet<String>>,
     project_structural_identity_expressions: Option<&super::HashMap<String, String>>,
-) -> CodegenResult {
+) -> CodegenOutcome<CodegenResult> {
     let mut emitter = RustEmitter::new();
     emitter.structural_interop_enabled = structural_interop_enabled;
     emitter.project_structural_record_identities = project_structural_record_identities.cloned();
@@ -75,6 +76,9 @@ pub(crate) fn generate_rust_test_with_project_policy(
 
     // Second pass: emit the actual code
     emitter.emit_named_module(module, false, true, Some(module_name));
+    if let Some(error) = emitter.take_codegen_error() {
+        return Err(error);
+    }
 
     let mut module_import_items: Vec<RustItem> = Vec::new();
     for import in &module.imports {
@@ -210,23 +214,24 @@ pub(crate) fn generate_rust_test_with_project_policy(
     remove_trivial_clones_in_items(&mut file_items);
     remove_unneeded_mutability_in_items(&mut file_items, &emitter.protected_mutable_place_roots);
     let file_issues = validate_items(&file_items);
-    assert!(
-        file_issues.is_empty(),
-        "codegen IR validation failed (test file): {}",
-        file_issues
-            .iter()
-            .map(|issue| issue.message.as_str())
-            .collect::<Vec<_>>()
-            .join(" | ")
-    );
+    if !file_issues.is_empty() {
+        return Err(CodegenError::new(format!(
+            "codegen IR validation failed (test file): {}",
+            file_issues
+                .iter()
+                .map(|issue| issue.message.as_str())
+                .collect::<Vec<_>>()
+                .join(" | ")
+        )));
+    }
     let rust_file = RustFile { items: file_items };
     let rust_source = Renderer::new().render_file(&rust_file);
-    assert_generated_source_is_safe(&rust_source, "test module");
+    validate_generated_source_is_safe(&rust_source, "test module")?;
     let uses_task_sleep = super::module_uses_task_sleep(module);
     let needs_python_runtime =
         super::python_interop_common::rust_source_uses_python_runtime(&rust_source);
 
-    CodegenResult {
+    Ok(CodegenResult {
         rust_source,
         static_programs: Vec::new(),
         static_program_structural_owners: std::collections::BTreeSet::new(),
@@ -258,10 +263,10 @@ pub(crate) fn generate_rust_test_with_project_policy(
         interop: crate::rust_interop_plan::interop_build_plan_for_module(module),
         constant_mappings: emitter.module_constants,
         lowering_stats: emitter.lowering_stats,
-    }
+    })
 }
 
 /// Generate Rust source code from a HIR module, returning metadata about stdlib usage.
-pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenResult {
+pub fn generate_rust_with_metadata(module: &HirModule) -> CodegenOutcome<CodegenResult> {
     super::generate_rust_with_stdlib(module, &StdlibCode::default())
 }

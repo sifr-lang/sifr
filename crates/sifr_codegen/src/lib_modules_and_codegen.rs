@@ -19,7 +19,7 @@ use super::{
 };
 use crate::StdlibCode;
 use crate::error_refs::collect_complete_referenced_builtin_error_classes;
-use crate::generated_source_validate::assert_generated_source_is_safe;
+use crate::generated_source_validate::validate_generated_source_is_safe;
 use crate::ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
 use crate::ir_optimize::{remove_trivial_clones_in_items, remove_unneeded_mutability_in_items};
 use crate::ir_validate::validate_items;
@@ -28,6 +28,7 @@ use crate::stdlib_filter::{
     filter_canonical_stdlib_ir_to_needed, seal_canonical_stdlib_names,
 };
 use crate::stdlib_import_signatures::register_imported_stdlib_signature;
+use crate::{CodegenError, CodegenOutcome};
 use sifr_ir::HirModule;
 use sifr_stdlib_manifest::StdlibFeature;
 use sifr_type_system::{ParamConvention, Type};
@@ -165,7 +166,10 @@ pub(super) fn module_class_fields(module: &HirModule) -> HashMap<String, Vec<(St
 }
 
 /// Generate Rust source code from a HIR module with compiled stdlib code.
-pub fn generate_rust_with_stdlib(module: &HirModule, stdlib_code: &StdlibCode) -> CodegenResult {
+pub fn generate_rust_with_stdlib(
+    module: &HirModule,
+    stdlib_code: &StdlibCode,
+) -> CodegenOutcome<CodegenResult> {
     generate_rust_with_stdlib_for_module(module, stdlib_code, None)
 }
 
@@ -174,7 +178,7 @@ pub fn generate_rust_with_stdlib_for_module(
     module: &HirModule,
     stdlib_code: &StdlibCode,
     module_name: Option<&str>,
-) -> CodegenResult {
+) -> CodegenOutcome<CodegenResult> {
     generate_rust_with_stdlib_for_module_with_structural_policy(
         module,
         stdlib_code,
@@ -188,7 +192,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
     stdlib_code: &StdlibCode,
     module_name: Option<&str>,
     structural_interop_enabled: bool,
-) -> CodegenResult {
+) -> CodegenOutcome<CodegenResult> {
     generate_rust_with_stdlib_for_module_with_project_policy(
         module,
         stdlib_code,
@@ -215,7 +219,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     project_try_error_carrier_enums: Option<&HashSet<String>>,
     project_structural_record_identities: Option<&HashSet<String>>,
     project_structural_identity_expressions: Option<&HashMap<String, String>>,
-) -> CodegenResult {
+) -> CodegenOutcome<CodegenResult> {
     let mut emitter = RustEmitter::new();
     emitter.structural_interop_enabled = structural_interop_enabled;
     emitter.project_structural_record_identities = project_structural_record_identities.cloned();
@@ -333,7 +337,13 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
 
     // Second pass: emit the actual code
     emitter.emit_named_module(module, false, false, module_name);
+    if let Some(error) = emitter.take_codegen_error() {
+        return Err(error);
+    }
     emitter.emit_imported_stdlib_structural_impls(module, stdlib_code);
+    if let Some(error) = emitter.take_codegen_error() {
+        return Err(error);
+    }
 
     // Build stdlib preamble first so we can check for error type references
     let mut stdlib_preamble = String::new();
@@ -739,23 +749,25 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     file_items.extend(import_items.clone());
     file_items.extend(assembled_body_items.clone());
     let file_issues = validate_items(&file_items);
-    assert!(
-        file_issues.is_empty(),
-        "codegen IR validation failed (assembled file): {}",
-        file_issues
-            .iter()
-            .map(|issue| issue.message.as_str())
-            .collect::<Vec<_>>()
-            .join(" | ")
-    );
+    if !file_issues.is_empty() {
+        return Err(CodegenError::new(format!(
+            "codegen IR validation failed (assembled file): {}",
+            file_issues
+                .iter()
+                .map(|issue| issue.message.as_str())
+                .collect::<Vec<_>>()
+                .join(" | ")
+        )));
+    }
     let rust_source = if stdlib_preamble.trim().is_empty() {
         let rust_file = RustFile { items: file_items };
         Renderer::new().render_file(&rust_file)
     } else {
-        assert!(
-            syn::parse_file(&stdlib_preamble).is_ok(),
-            "failed to parse stdlib preamble boundary as Rust source"
-        );
+        syn::parse_file(&stdlib_preamble).map_err(|error| {
+            CodegenError::new(format!(
+                "failed to parse stdlib preamble boundary as Rust source: {error}"
+            ))
+        })?;
         let mut source = String::new();
         if !import_items.is_empty() {
             let import_source = Renderer::new().render_file(&RustFile {
@@ -778,7 +790,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         source.push('\n');
         source
     };
-    assert_generated_source_is_safe(&rust_source, "assembled module");
+    validate_generated_source_is_safe(&rust_source, "assembled module")?;
 
     let needs_python_runtime =
         crate::python_interop_common::rust_source_uses_python_runtime(&rust_source);
@@ -792,7 +804,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         }
     }
 
-    CodegenResult {
+    Ok(CodegenResult {
         rust_source,
         static_programs: Vec::new(),
         static_program_structural_owners: std::collections::BTreeSet::new(),
@@ -845,5 +857,5 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         interop: crate::rust_interop_plan::interop_build_plan_for_module(module),
         constant_mappings: emitter.module_constants,
         lowering_stats: emitter.lowering_stats,
-    }
+    })
 }

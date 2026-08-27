@@ -332,7 +332,7 @@ fn standalone_typed_wrapper_emits_cancellation_carrier_preamble() {
         type_param_bounds: HashMap::new(),
     };
 
-    let rendered = generate_rust(&module);
+    let rendered = generate_rust(&module).expect("code generation should succeed");
     assert!(rendered.contains("fn __sifr_current_task_cancellation"));
     assert!(rendered.contains("submit_async_declaration"));
 }
@@ -661,7 +661,7 @@ fn async_python_error_converts_to_an_active_error_supertype() {
         type_param_bounds: HashMap::new(),
     };
 
-    let rendered = generate_rust(&module);
+    let rendered = generate_rust(&module).expect("code generation should succeed");
     assert_eq!(
         rendered.matches("impl From<PythonError> for Error").count(),
         1

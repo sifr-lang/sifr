@@ -271,6 +271,7 @@ impl DiagnosticCode {
     pub const INTERNAL_COMPILER_PANIC: Self = Self::new("SIFR-INTERNAL-0001", Severity::Error);
     pub const INTERNAL_RECOVERY_OMISSION_SUMMARY: Self =
         Self::new("SIFR-INTERNAL-0002", Severity::Note);
+    pub const INTERNAL_CODEGEN_FAILURE: Self = Self::new("SIFR-INTERNAL-0003", Severity::Error);
 
     #[cfg(test)]
     pub(crate) const TEST_INTERNAL_ERROR: Self = Self::new("SIFR-INTERNAL-9998", Severity::Error);
@@ -858,6 +859,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::SELF_UPDATE_UNMANAGED_RECEIPT,
     DiagnosticCode::INTERNAL_COMPILER_PANIC,
     DiagnosticCode::INTERNAL_RECOVERY_OMISSION_SUMMARY,
+    DiagnosticCode::INTERNAL_CODEGEN_FAILURE,
 ];
 
 mod access;

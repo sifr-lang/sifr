@@ -216,29 +216,22 @@ fn malformed_signature_emits_one_production_codegen_error() {
         type_param_bounds: HashMap::new(),
     };
 
-    let generated = crate::generate_rust_with_metadata(&module).rust_source;
-    assert_eq!(
-        generated.matches("compile_error!").count(),
-        1,
-        "{generated}"
+    let error = match crate::generate_rust_with_metadata(&module) {
+        Ok(_) => panic!("malformed signature must stop code generation"),
+        Err(error) => error,
+    };
+    assert!(
+        error
+            .message
+            .contains("unsupported callable type: 1 parameters but 0 conventions")
     );
-    assert!(generated.contains("unsupported callable type: 1 parameters but 0 conventions"));
 
     let mut emitter = crate::RustEmitter::new();
     emitter.emit_named_module(&module, true, false, Some("first"));
     emitter.emit_named_module(&module, true, false, Some("second"));
-    let error_item_names = emitter
-        .body_items
-        .iter()
-        .filter_map(|item| match item {
-            crate::RustItem::Fn { name, .. } if name.starts_with("__sifr_codegen_type_error_") => {
-                Some(name.as_str())
-            }
-            _ => None,
-        })
-        .collect::<Vec<_>>();
-    assert_eq!(
-        error_item_names,
-        ["__sifr_codegen_type_error_1", "__sifr_codegen_type_error_2"]
-    );
+    assert!(emitter.body_items.is_empty());
+    let error = emitter
+        .take_codegen_error()
+        .expect("the first malformed signature must be retained");
+    assert!(error.message.contains("codegen input type validation"));
 }

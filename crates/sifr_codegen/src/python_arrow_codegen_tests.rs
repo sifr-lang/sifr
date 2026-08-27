@@ -14,7 +14,7 @@ class PythonError(Error):
 fn generate(source: &str) -> String {
     let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
     let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
-    generate_rust(&lowered.module)
+    generate_rust(&lowered.module).expect("code generation should succeed")
 }
 
 #[test]
@@ -57,7 +57,7 @@ fn arrow_bridge_producer_uses_resolved_runtime_target() {
         },
     )
     .expect("bridge declaration should lower");
-    let rust = generate_rust(&lowered.module);
+    let rust = generate_rust(&lowered.module).expect("code generation should succeed");
 
     assert!(rust.contains("__sifr_bridge__"), "{rust}");
     assert!(rust.contains("p_abc123"), "{rust}");

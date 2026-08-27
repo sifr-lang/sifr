@@ -1,6 +1,6 @@
 use super::python_bridges::embedded_bridge_sources;
 use super::python_runtime::{PackagePythonRuntime, inject_python_runtime_bootstrap};
-use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary};
+use crate::diagnostics::{RenderedDiagnostic, render_codegen_error, run_codegen_with_boundary};
 use crate::frontend::FrontendCompiled;
 use crate::project::{
     ProjectLowering, assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path,
@@ -57,7 +57,8 @@ pub(super) fn codegen_single_file_frontend(
             )
         },
     )
-    .map_err(|error| vec![*error])?;
+    .map_err(|error| vec![*error])?
+    .map_err(|error| vec![render_codegen_error(&error)])?;
     generated.static_programs = static_programs;
     if generated
         .interop
@@ -73,11 +74,12 @@ pub(super) fn codegen_single_file_frontend(
 
 pub(super) fn generated_single_file_binary_project(
     mut codegen_result: sifr_codegen::CodegenResult,
-) -> GeneratedBinaryProject {
+) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
     let static_source = sifr_codegen::emit_static_specialization_programs(
         &codegen_result.static_programs,
         &codegen_result.static_program_structural_owners,
-    );
+    )
+    .map_err(|error| vec![render_codegen_error(&error)])?;
     if !static_source.is_empty() {
         codegen_result.rust_source = format!("{static_source}\n{}", codegen_result.rust_source);
     }
@@ -90,7 +92,7 @@ pub(super) fn generated_single_file_binary_project(
     if !slot_cache.is_empty() {
         push_cache_key_fragment(&mut cache_key_fragment, "slot-tables", &slot_cache);
     }
-    GeneratedBinaryProject {
+    Ok(GeneratedBinaryProject {
         main_rs: codegen_result.rust_source,
         support_modules: BTreeMap::new(),
         used_stdlib_modules: codegen_result.used_stdlib_modules,
@@ -98,7 +100,7 @@ pub(super) fn generated_single_file_binary_project(
         interop: codegen_result.interop,
         cache_key_fragment,
         python_runtime: None,
-    }
+    })
 }
 
 pub(super) fn generated_project_binary_project(
@@ -124,7 +126,8 @@ pub(super) fn generated_project_binary_project(
         "internal compiler panic during project code generation",
         || generate_rust_multi_with_metadata(&module_refs, stdlib_code),
     )
-    .map_err(|error| vec![*error])?;
+    .map_err(|error| vec![*error])?
+    .map_err(|error| vec![render_codegen_error(&error)])?;
     let structural_programs = codegen_result
         .interop
         .rust
@@ -143,7 +146,8 @@ pub(super) fn generated_project_binary_project(
             Default::default()
         };
         let static_source =
-            sifr_codegen::emit_static_specialization_programs(outputs, &structural_owners);
+            sifr_codegen::emit_static_specialization_programs(outputs, &structural_owners)
+                .map_err(|error| vec![render_codegen_error(&error)])?;
         if static_source.is_empty() {
             continue;
         }

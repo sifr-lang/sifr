@@ -855,8 +855,11 @@ impl RustEmitter {
         match self.try_lower_registry_expr_result(expr) {
             Ok(Some(lowered_expr)) => Some(lowered_expr),
             Ok(None) => self.try_lower_registry_expr_recursive(expr),
-            Err(_) => {
+            Err(error) => {
                 self.lowering_stats.expr_lowering_errors += 1;
+                self.record_codegen_error(
+                    error.in_context("intrinsic registry expression lowering"),
+                );
                 None
             }
         }

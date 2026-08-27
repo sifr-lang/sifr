@@ -404,7 +404,7 @@ def outer() -> Result[int, ProbeError]:
         ty: Type::Int,
     });
 
-    let generated = generate_rust(&module);
+    let generated = generate_rust(&module).expect("code generation should succeed");
 
     assert!(generated.contains("let (value,) = match __sifr_try_res"));
     syn::parse_file(&generated).expect("post-try HIR default Rust should parse");

@@ -51,7 +51,8 @@ fn test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_
         },
     );
 
-    let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code);
+    let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code)
+        .expect("code generation should succeed");
 
     assert!(
         result
@@ -110,7 +111,8 @@ fn test_generate_rust_multi_requires_runtime_for_absolute_private_stdlib_bridge_
         },
     );
 
-    let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code);
+    let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code)
+        .expect("code generation should succeed");
 
     assert!(
         result
@@ -182,7 +184,8 @@ fn public_stdlib_reexport_uses_transitive_private_signature_for_call_borrowing()
         )]),
     );
 
-    let generated = generate_rust_with_stdlib_for_module(&main_module, &stdlib_code, None);
+    let generated = generate_rust_with_stdlib_for_module(&main_module, &stdlib_code, None)
+        .expect("code generation should succeed");
 
     assert!(
         generated.rust_source.contains("remove_file(&path);"),

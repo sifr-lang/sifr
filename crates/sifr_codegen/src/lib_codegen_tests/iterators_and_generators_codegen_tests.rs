@@ -83,7 +83,7 @@ fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(rust_code.contains("fn iterate(xs: &Vec<i64>)"));
     assert!(rust_code.contains("let mut _broke: bool = false;"));
     assert!(rust_code.contains("_broke = true;"));
@@ -165,7 +165,7 @@ fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(rust_code.contains("fn r#gen()"));
     assert!(rust_code.contains("r#gen()"));
     assert!(rust_code.contains("if !__sifr_generator_initialized {"));
@@ -292,7 +292,9 @@ fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
     };
-    let rust_code = generate_rust_with_metadata(&module).rust_source;
+    let rust_code = generate_rust_with_metadata(&module)
+        .expect("code generation should succeed")
+        .rust_source;
 
     assert!(rust_code.contains("::sifr_stdlib::fs::open_file"));
     assert!(rust_code.contains("TextFileHandle::new("));
@@ -443,7 +445,9 @@ fn test_generate_rust_test_uses_explicit_test_mode_context() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust_test(&module, "main").rust_source;
+    let rust_code = generate_rust_test(&module, "main")
+        .expect("code generation should succeed")
+        .rust_source;
     assert!(!rust_code.contains("fn main("));
     assert!(rust_code.contains("#[test]\nfn test_sample()"));
     assert!(rust_code.contains("fn helper()"));
@@ -516,7 +520,7 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let result = generate_rust_test(&module, "main");
+    let result = generate_rust_test(&module, "main").expect("code generation should succeed");
     assert!(
         result
             .rust_source
@@ -575,7 +579,7 @@ fn test_generate_rust_test_emits_local_module_import_uses() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_test(&module, "main");
+    let generated = generate_rust_test(&module, "main").expect("code generation should succeed");
     assert!(
         generated
             .rust_source
@@ -765,7 +769,7 @@ fn test_checked_field_mutation_is_explicit_and_non_sticky() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let rust_code = generate_rust(&module);
+    let rust_code = generate_rust(&module).expect("code generation should succeed");
     assert!(
         rust_code.contains("self.items.push(x);")
             || rust_code.contains("(self.items).push(x);")
@@ -808,7 +812,7 @@ fn test_codegen_structured_lowering_applies_to_simple_stmt() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
 
     assert!(generated.rust_source.contains("1_i64"));
     assert!(generated.lowering_stats.stmt_structured > 0);
@@ -867,7 +871,7 @@ fn test_structured_aug_assign_uses_string_and_list_methods() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let generated = generate_rust_with_metadata(&module);
+    let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains("s.push_str("));
     assert!(generated.rust_source.contains("items.extend(vec![2_i64])"));
     assert!(!generated.rust_source.contains("s += "));

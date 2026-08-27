@@ -1,5 +1,4 @@
 use super::*;
-use crate::generated_source_validate::assert_generated_source_is_safe;
 use crate::{RustFile, RustItem, RustStmt};
 
 pub(crate) struct Renderer {
@@ -26,9 +25,7 @@ impl Renderer {
                 let _ = self.output.write_char('\n');
             }
         }
-        let output = self.output.clone();
-        assert_generated_source_is_safe(&output, "structured Rust file render");
-        output
+        self.output.clone()
     }
 
     pub(crate) fn render_item(&mut self, item: &RustItem) {

@@ -11,7 +11,7 @@ fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("struct __SifrTaskScope"));
     assert!(
@@ -59,7 +59,7 @@ fn test_task_gather_lowers_to_private_gather_helper() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("async fn __sifr_task_gather"));
     assert!(result.rust_source.contains("__sifr_task_gather(vec!["));
@@ -95,7 +95,7 @@ fn test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(
         result
@@ -144,7 +144,7 @@ fn test_task_gather_fallible_tasks_keeps_error_parameter_unwrapped() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("async fn __sifr_task_gather"));
     assert!(result.rust_source.contains("__SifrTaskResult<Vec<T>, E>"));
@@ -184,7 +184,7 @@ fn test_task_race_lowers_to_private_race_helper() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("async fn __sifr_task_race"));
     assert!(result.rust_source.contains("__sifr_task_race(vec!["));
@@ -223,7 +223,7 @@ fn test_task_race_fallible_tasks_keeps_error_parameter_unwrapped() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("async fn __sifr_task_race"));
     assert!(result.rust_source.contains("__SifrTaskResult<T, E>"));
@@ -257,7 +257,7 @@ fn test_task_select_lowers_to_private_select_helper() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("enum __SifrSelect2<A, B>"));
     assert!(result.rust_source.contains("async fn __sifr_task_select"));
@@ -318,7 +318,7 @@ fn test_task_select_fallible_tasks_preserves_distinct_error_parameters() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("__SifrTaskResult<A, EA>"));
     assert!(result.rust_source.contains("__SifrTaskResult<B, EB>"));
@@ -340,7 +340,7 @@ fn test_task_handle_join_lowers_to_task_result_observation() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("enum __SifrTaskResult<T, E>"));
     assert!(result.rust_source.contains("async fn join(self)"));
@@ -370,7 +370,7 @@ fn test_await_task_handle_desugars_to_join_observation() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("handle.join().await"));
     assert!(
@@ -393,7 +393,8 @@ fn test_task_handle_cancel_uses_cooperative_carrier_with_abort_fallback() {
         &lower_module(parse_module(source).expect("parse failed").suite())
             .expect("lowering failed")
             .module,
-    );
+    )
+    .expect("code generation should succeed");
 
     assert!(
         result
@@ -462,7 +463,8 @@ fn test_join_set_preserves_task_cancellation_carrier_until_terminal_drain() {
         &lower_module(parse_module(source).expect("parse failed").suite())
             .expect("lowering failed")
             .module,
-    );
+    )
+    .expect("code generation should succeed");
 
     assert!(
         result
@@ -500,7 +502,7 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
         )
         .expect("lowering failed")
         .module,
-    );
+    ).expect("code generation should succeed");
 
     assert!(result.rust_source.contains("enum __SifrTimeoutResult<E>"));
     assert!(result.rust_source.contains("async fn __sifr_timeout"));
@@ -543,7 +545,8 @@ fn test_failure_cancellation_error_annotation_lowers_to_private_evidence_type() 
         )
         .expect("lowering failed")
         .module,
-    );
+    )
+    .expect("code generation should succeed");
 
     assert!(result.rust_source.contains("struct __SifrFailure<E>"));
     assert!(result.rust_source.contains("struct CancellationError"));
@@ -564,7 +567,8 @@ fn test_failure_annotation_lowers_to_private_failure_type() {
         )
         .expect("lowering failed")
         .module,
-    );
+    )
+    .expect("code generation should succeed");
 
     assert!(result.rust_source.contains("struct __SifrFailure<E>"));
     assert!(result.rust_source.contains("primary: E"));

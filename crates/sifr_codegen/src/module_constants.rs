@@ -11,9 +11,10 @@ impl RustEmitter {
                 self.try_emit_lowered_module_constant_result(name, ty, value, module_public)
             {
                 self.lowering_stats.item_lowering_errors += 1;
-                panic!(
-                    "structured module constant emission missing for production path ({name}): {err}"
-                );
+                self.record_codegen_error(err.in_context(format!(
+                    "structured module constant emission missing for production path ({name})"
+                )));
+                break;
             }
         }
     }

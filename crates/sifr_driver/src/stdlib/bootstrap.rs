@@ -1,4 +1,4 @@
-use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary};
+use crate::diagnostics::{RenderedDiagnostic, render_codegen_error, run_codegen_with_boundary};
 use crate::export_policy::should_export_callable;
 use crate::stdlib::cache::{STDLIB_COMPILED_CACHE, get_or_init_stdlib_cache};
 use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
@@ -347,6 +347,11 @@ fn compile_stdlib_sources_with_sysroot(
             )
             .map_err(|e| {
                 let mut diagnostic = *e;
+                diagnostic.message = format!("[stdlib:{module_name}] {}", diagnostic.message);
+                vec![diagnostic]
+            })?
+            .map_err(|error| {
+                let mut diagnostic = render_codegen_error(&error);
                 diagnostic.message = format!("[stdlib:{module_name}] {}", diagnostic.message);
                 vec![diagnostic]
             })?;

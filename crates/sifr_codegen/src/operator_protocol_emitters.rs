@@ -510,7 +510,12 @@ impl RustEmitter {
                     let lowered_stmt = self.try_lower_operator_stmt_ir(stmt)?;
                     lowered.extend(lowered_stmt);
                 }
-                Err(_) => return None,
+                Err(error) => {
+                    self.record_codegen_error(
+                        error.in_context("operator protocol statement lowering failed"),
+                    );
+                    return None;
+                }
             }
         }
         Some(lowered)

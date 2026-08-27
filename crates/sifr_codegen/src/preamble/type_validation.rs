@@ -1,32 +1,4 @@
-use crate::{
-    HirExpr, HirFunction, HirModule, HirStmt, RustEmitter, RustExpr, RustItem, RustLiteral,
-    RustStmt, Type, Visibility,
-};
-
-impl RustEmitter {
-    pub(crate) fn reject_invalid_codegen_module_types(&mut self, module: &HirModule) -> bool {
-        let Err(error) = validate_codegen_module_types(module) else {
-            return false;
-        };
-        self.lowering_stats.item_lowering_errors += 1;
-        self.body_items.push(RustItem::Fn {
-            name: format!(
-                "__sifr_codegen_type_error_{}",
-                self.lowering_stats.item_lowering_errors
-            ),
-            visibility: Visibility::Private,
-            type_params: Vec::new(),
-            params: Vec::new(),
-            ret: None,
-            body: vec![RustStmt::Expr(RustExpr::MacroCall {
-                name: "compile_error".to_string(),
-                args: vec![RustExpr::Literal(RustLiteral::Str(error.to_string()))],
-            })],
-            is_async: false,
-        });
-        true
-    }
-}
+use crate::{HirExpr, HirFunction, HirModule, HirStmt, Type};
 
 pub(crate) fn validate_codegen_module_types(module: &HirModule) -> Result<(), crate::CodegenError> {
     for (_, ty, value) in &module.constants {

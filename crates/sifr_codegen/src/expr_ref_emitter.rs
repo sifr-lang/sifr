@@ -90,13 +90,17 @@ impl RustEmitter {
                 Ok(Some(lowered)) => return lowered,
                 Ok(None) => {}
                 Err(err) => {
-                    panic!(
-                        "structured expr-ref index lowering error for {context}: {expr:?}: {err:?}"
-                    );
+                    self.record_codegen_error(err.in_context(format!(
+                        "structured expr-ref index lowering error for {context}: {expr:?}"
+                    )));
+                    return crate::RustExpr::Literal(crate::RustLiteral::Unit);
                 }
             }
         }
-        panic!("structured expr-ref lowering missing for {context}: {expr:?}")
+        self.record_codegen_error(crate::CodegenError::new(format!(
+            "structured expr-ref lowering missing for {context}: {expr:?}"
+        )));
+        crate::RustExpr::Literal(crate::RustLiteral::Unit)
     }
 
     /// Emit an expression suitable for use inside format!/println! contexts.

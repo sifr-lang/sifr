@@ -74,7 +74,8 @@ def main():
         .iter()
         .map(|name| (name.as_str(), &compiled.hir_modules[name]))
         .collect::<Vec<_>>();
-    let generated = sifr_codegen::generate_rust_multi_with_metadata(&module_refs, &stdlib.code);
+    let generated = sifr_codegen::generate_rust_multi_with_metadata(&module_refs, &stdlib.code)
+        .expect("code generation should succeed");
     let provider = &generated.rust_files["fixture.contract"];
     let main = &generated.rust_files["main"];
 
