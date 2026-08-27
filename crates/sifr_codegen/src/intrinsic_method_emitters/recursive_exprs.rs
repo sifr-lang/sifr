@@ -246,7 +246,7 @@ impl RustEmitter {
                     ty,
                     crate::RustExpr::MethodCall {
                         receiver: Box::new(object_expr),
-                        method: method.clone(),
+                        method: crate::user_callable_rust_name(method),
                         args: arg_exprs,
                     },
                 ))

@@ -709,7 +709,7 @@ impl RustEmitter {
                 ..
             } => Some(RustExpr::MethodCall {
                 receiver: Box::new(self.lower_operator_expr_ir(object)?),
-                method: method.clone(),
+                method: crate::user_callable_rust_name(method),
                 args: args
                     .iter()
                     .map(|arg| self.lower_operator_expr_ir(arg))

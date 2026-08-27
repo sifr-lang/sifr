@@ -16,6 +16,8 @@ def main():
     wrapper = Wrapper(7)
     result: int = wrapper.unwrap()
     other: int = expect(result)
+    values: list[int] = []
+    values.append(wrapper.unwrap())
 "#,
     );
 
@@ -23,4 +25,8 @@ def main():
     assert!(rust_code.contains(".r#unwrap()"), "{rust_code}");
     assert!(rust_code.contains("fn r#expect("), "{rust_code}");
     assert!(rust_code.contains("r#expect(result)"), "{rust_code}");
+    assert!(
+        rust_code.contains("values.push(wrapper.r#unwrap())"),
+        "{rust_code}"
+    );
 }

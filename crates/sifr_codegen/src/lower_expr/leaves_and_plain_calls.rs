@@ -521,7 +521,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
                     crate::rust_type_base_name(parent_type)?,
-                    method.clone(),
+                    crate::user_callable_rust_name(method),
                 ])),
                 args: lowered_args,
             })
@@ -753,7 +753,7 @@ pub(super) fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option
         .collect::<Option<Vec<_>>>()?;
 
     Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Ident(func.to_string())),
+        func: Box::new(crate::stmt_support_emitter::plain_call_target_for_ir(func)),
         args: lowered_args,
     })
 }
