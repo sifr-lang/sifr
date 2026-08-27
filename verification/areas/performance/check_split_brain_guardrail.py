@@ -30,6 +30,10 @@ SYNTAX_ONLY_CONSUMERS = {
         "lint token and syntax-node rules; compiler semantic and HIR answers still "
         "route through sifr_frontend"
     ),
+    Path("crates/sifr_format/src/lib.rs"): (
+        "formatter round-trip validation; syntax reparsing verifies that formatted "
+        "text and range edits remain parseable"
+    ),
 }
 FORBIDDEN_PATTERNS = (
     "sifr_python_parser",
@@ -41,6 +45,11 @@ FORBIDDEN_PATTERNS = (
     "lower_module(",
     "lower_frontend_module",
 )
+SYNTAX_PARSE_IMPORT_PATTERN = re.compile(
+    r"\buse\s+sifr_syntax(?:::\{[^;]*\bparse_module\b[^;]*\}|::parse_module\b)",
+    re.DOTALL,
+)
+SYNTAX_PARSE_IMPORT_LABEL = "sifr_syntax parse_module import"
 
 
 def is_approved(path: Path) -> bool:
@@ -52,7 +61,10 @@ def is_approved(path: Path) -> bool:
 
 def is_classified_syntax_only(path: Path, pattern: str) -> bool:
     rel = path.relative_to(REPO_ROOT)
-    return pattern == "sifr_syntax::parse_module(" and rel in SYNTAX_ONLY_CONSUMERS
+    return pattern in {
+        "sifr_syntax::parse_module(",
+        SYNTAX_PARSE_IMPORT_LABEL,
+    } and rel in SYNTAX_ONLY_CONSUMERS
 
 
 def violations(paths: list[Path]) -> list[str]:
@@ -62,17 +74,23 @@ def violations(paths: list[Path]) -> list[str]:
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
         test_ranges = inline_test_module_ranges(text)
-        for pattern in FORBIDDEN_PATTERNS:
+        rules = [
+            (pattern, re.compile(re.escape(pattern))) for pattern in FORBIDDEN_PATTERNS
+        ]
+        rules.append((SYNTAX_PARSE_IMPORT_LABEL, SYNTAX_PARSE_IMPORT_PATTERN))
+        for pattern, regex in rules:
             if is_classified_syntax_only(path, pattern):
                 continue
-            for match in re.finditer(re.escape(pattern), text):
+            matched = False
+            for match in regex.finditer(text):
                 if any(start <= match.start() <= end for start, end in test_ranges):
                     continue
                 failures.append(
                     f"{path.relative_to(REPO_ROOT)} contains forbidden frontend pattern {pattern!r}"
                 )
+                matched = True
                 break
-            if failures and failures[-1].startswith(str(path.relative_to(REPO_ROOT))):
+            if matched:
                 break
     return failures
 
@@ -98,6 +116,16 @@ def run_self_test() -> None:
             "split-brain guardrail self-test failed: seeded syntax entrypoint passed"
         )
     seeded.write_text(
+        "use sifr_syntax::{SourceText, parse_module};\n"
+        "fn bypass() { let _ = parse_module(source, None); }\n",
+        encoding="utf-8",
+    )
+    if not violations([seeded]):
+        seeded.unlink()
+        raise SystemExit(
+            "split-brain guardrail self-test failed: seeded syntax import passed"
+        )
+    seeded.write_text(
         "#[cfg(test)]\nmod tests {\n"
         "    fn parses_fixture() { let _ = sifr_syntax::parse_module(source, None); }\n"
         "}\n",
@@ -115,9 +143,10 @@ def run_self_test() -> None:
             "split-brain guardrail self-test failed: classified CLI syntax use missing"
         )
     lint_path = REPO_ROOT / "crates" / "sifr_lint" / "src" / "engine.rs"
-    if violations([cli_path, lint_path]):
+    formatter_path = REPO_ROOT / "crates" / "sifr_format" / "src" / "lib.rs"
+    if violations([cli_path, lint_path, formatter_path]):
         raise SystemExit(
-            "split-brain guardrail self-test failed: classified syntax-only CLI use rejected"
+            "split-brain guardrail self-test failed: classified syntax-only consumer rejected"
         )
     print("split-brain guardrail self-test: PASS")
 

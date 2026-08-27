@@ -129,8 +129,9 @@ Acceptance criteria:
   text and directory reads.
 - The global split-brain guard rejects direct `sifr_syntax::parse_module` use
   outside compiler-owned crates, with documented syntax-only classifications
-  for CLI Python-requirement discovery and lint token/AST rules. Inline test
-  modules are excluded by parsed module range, not by whole-file allowlists.
+  for CLI Python-requirement discovery, lint token/AST rules, and formatter
+  round-trip validation. Inline test modules are excluded by parsed module
+  range, not by whole-file allowlists.
 - Deadline, direct-read inventory, and split-brain self-tests each seed a defect
   and prove that the owning guard rejects it.
 
@@ -210,6 +211,15 @@ Add ratchets for module/function complexity, public API/fan-out growth, and
 near-limit source concentration. Narrow broad dead-code/glob-export surfaces.
 Instrument nested-inference divergence, remove the proven narrowing no-op, and
 record an evidence-backed keep/refactor/remove decision for the flow graph.
+
+Deferred M3 review follow-ups:
+
+- Route determinism-scale external commands and reproduction-command targets
+  through the shared process-group deadline primitive, and propagate terminal
+  interruption signals to detached gate subprocess groups.
+- Decide whether production Rust binaries under compiler/tooling crates belong
+  in the direct-filesystem inventory instead of preserving the current `bin`
+  carve-out.
 
 ## M13 Phase Closure And Whole-Phase Review
 

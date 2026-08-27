@@ -107,6 +107,7 @@ def _forward_output(stream: Iterator[str]) -> None:
 
 def run_self_test() -> None:
     marker = REPO_ROOT / "target" / "verification" / "deadline-child-survived"
+    marker.parent.mkdir(parents=True, exist_ok=True)
     marker.unlink(missing_ok=True)
     child = (
         "import pathlib,time; time.sleep(0.4); "
