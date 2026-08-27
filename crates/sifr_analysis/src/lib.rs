@@ -46,16 +46,18 @@ pub use sifr_frontend::{
 };
 pub use sifr_syntax::TextPosition;
 
-pub use sifr_driver::{ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus};
+pub use sifr_compiler_services::{
+    ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus,
+};
 
 pub fn tooling_sysroot_status()
 -> Result<ToolingSysrootStatus, Vec<sifr_diagnostics::RenderedDiagnostic>> {
-    sifr_driver::stdlib_tooling_sysroot_status()
+    sifr_compiler_services::sysroot_status()
 }
 
 #[must_use]
 pub fn tooling_sysroot_probe() -> ToolingSysrootProbe {
-    sifr_driver::stdlib_tooling_sysroot_probe()
+    sifr_compiler_services::sysroot_probe()
 }
 
 pub fn format_options_for_path(

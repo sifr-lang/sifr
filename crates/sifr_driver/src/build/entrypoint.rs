@@ -11,7 +11,6 @@ use super::project_codegen::{
 };
 use super::python_bridges::apply_package_python_bridge_metadata;
 use super::python_bridges::package_bridge_lowering_options;
-use super::python_runtime::PackagePythonRuntime;
 use super::report::{BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport};
 use super::rust_interop::{PackageRustInteropContext, RustInteropModuleSource};
 use super::rust_interop_probe_policy::DirectProbePolicy;
@@ -25,8 +24,9 @@ use crate::project::{
     compile_single_frontend_module_with_source_and_options, emit_project_frontend_diagnostics,
     parse_import_closure_source_modules, parse_package_import_closure_source_project,
 };
-use crate::stdlib::{StdlibCompiled, compile_stdlib};
 use crate::workspace::find_workspace_root;
+use sifr_compiler_services::PackagePythonRuntime;
+use sifr_compiler_services::{StdlibCompiled, compile_stdlib};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::{FrontendDiagnosticStyle, FrontendSourceContext, SourceProvider};
 use sifr_lowering::LoweringOptions;

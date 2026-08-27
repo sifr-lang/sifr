@@ -1,6 +1,6 @@
 use super::project_codegen::GeneratedBinaryProject;
-use super::python_runtime::{EmbeddedPythonBridgeSource, PackagePythonRuntime};
 use sifr_codegen::{PythonBridgeImportPlan, PythonBridgeModulePlan, PythonBridgePackagePlan};
+use sifr_compiler_services::{EmbeddedPythonBridgeSource, PackagePythonRuntime};
 use sifr_lowering::{LoweringOptions, PythonBridgeTargetAuthority};
 use sifr_package::{
     ResolvedPythonBridgeGraph, ResolvedPythonBridgeImport, ResolvedPythonBridgeModule,

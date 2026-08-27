@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PythonInteropAnalysisPlan {
-    pub plan: sifr_driver::PythonInteropPlan,
+    pub plan: sifr_compiler_services::PythonInteropPlan,
     pub module_files: BTreeMap<String, FileId>,
 }
 
@@ -27,7 +27,7 @@ impl AnalysisHost {
                 .hir;
             lowered.push((name, module));
         }
-        let plan = sifr_driver::interop_build_plan_for_named_modules(
+        let plan = sifr_compiler_services::interop_build_plan_for_named_modules(
             lowered
                 .iter()
                 .map(|(name, module)| (Some(name.as_str()), module)),

@@ -269,6 +269,17 @@ pub fn lint_source(source: &str, file: Option<&Path>, options: &LintOptions) -> 
     LintRunner::new(options).run_source(source, file).result
 }
 
+pub fn lint_source_with_hir(
+    source: &str,
+    file: Option<&Path>,
+    options: &LintOptions,
+    hir: &sifr_ir::HirModule,
+) -> LintResult {
+    LintRunner::new(options)
+        .run_source_with_hir(source, file, Some(hir))
+        .result
+}
+
 pub(crate) fn lint_physical_line_rules(
     source: &str,
     file: Option<&Path>,

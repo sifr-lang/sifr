@@ -1035,10 +1035,13 @@
       },
       "benchmark_id": "lsp-query-005-completion",
       "budget_id": "perf.lsp.completion.local_scope",
-      "cache": {},
+      "cache": {
+        "min_hits": 1,
+        "max_misses": 0
+      },
       "group": "lsp-query",
       "policy": "lsp-query",
-      "rationale": "Warm completion request latency for local-scope editor completion.",
+      "rationale": "Warm completion latency and measured Python-declaration snapshot reuse after the open-document diagnostic pass.",
       "thresholds": {
         "median_ms": 5.12,
         "p95_ms": 10.127,
@@ -1055,10 +1058,13 @@
       },
       "benchmark_id": "lsp-query-006-hover",
       "budget_id": "perf.lsp.hover.symbol",
-      "cache": {},
+      "cache": {
+        "min_hits": 1,
+        "max_misses": 0
+      },
       "group": "lsp-query",
       "policy": "lsp-query",
-      "rationale": "Warm hover request latency for a resolved symbol.",
+      "rationale": "Warm hover latency and measured Python-declaration snapshot reuse after the open-document diagnostic pass.",
       "thresholds": {
         "median_ms": 5.088,
         "p95_ms": 10.092,

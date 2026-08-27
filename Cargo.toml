@@ -16,6 +16,7 @@ members = [
     "crates/sifr_frontend",
     "crates/sifr_format",
     "crates/sifr_lint",
+    "crates/sifr_compiler_services",
     "crates/sifr_analysis",
     "crates/sifr_lsp",
     "crates/sifr_package",
@@ -68,6 +69,7 @@ sifr_syntax = { path = "crates/sifr_syntax" }
 sifr_frontend = { path = "crates/sifr_frontend" }
 sifr_format = { path = "crates/sifr_format" }
 sifr_lint = { path = "crates/sifr_lint" }
+sifr_compiler_services = { path = "crates/sifr_compiler_services" }
 sifr_analysis = { path = "crates/sifr_analysis" }
 sifr_lsp = { path = "crates/sifr_lsp" }
 sifr_package = { path = "crates/sifr_package" }

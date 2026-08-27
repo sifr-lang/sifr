@@ -13,8 +13,8 @@ impl AnalysisHost {
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
         let mut session = WorkspaceSession::project_with_external_defs_and_auxiliary_sources(
             root.clone(),
-            sifr_driver::stdlib_external_defs()?,
-            sifr_driver::stdlib_tooling_sources()?,
+            sifr_compiler_services::external_defs()?,
+            sifr_compiler_services::tooling_sources()?,
         );
         for (path, uri, version, source) in overlays {
             session.upsert_overlay(path, uri, version, source, None);
@@ -33,8 +33,8 @@ impl AnalysisHost {
         let mut session = WorkspaceSession::single_file_with_external_defs_and_auxiliary_sources(
             path.clone(),
             mode,
-            sifr_driver::stdlib_external_defs()?,
-            sifr_driver::stdlib_tooling_sources()?,
+            sifr_compiler_services::external_defs()?,
+            sifr_compiler_services::tooling_sources()?,
         );
         session.upsert_overlay(path, uri, version, source, None);
         session.reload()?;

@@ -7006,8 +7006,8 @@ version = "0.0.0"
 dependencies = [
  "ruff_python_ast",
  "ruff_text_size",
+ "sifr_compiler_services",
  "sifr_diagnostics",
- "sifr_driver",
  "sifr_format",
  "sifr_frontend",
  "sifr_lint",
@@ -7034,6 +7034,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_compiler_services"
+version = "0.0.0"
+dependencies = [
+ "ruff_python_ast",
+ "ruff_text_size",
+ "serde",
+ "serde_json",
+ "sifr_codegen",
+ "sifr_diagnostics",
+ "sifr_frontend",
+ "sifr_ir",
+ "sifr_lowering",
+ "sifr_package",
+ "sifr_stdlib_manifest",
+ "sifr_syntax",
+ "sifr_sysroot",
+ "sifr_type_system",
+]
+
+[[package]]
 name = "sifr_diagnostics"
 version = "0.0.0"
 dependencies = [
@@ -7055,6 +7075,7 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "sifr_codegen",
+ "sifr_compiler_services",
  "sifr_diagnostics",
  "sifr_frontend",
  "sifr_ir",
@@ -7160,8 +7181,8 @@ dependencies = [
  "serde",
  "serde_json",
  "sifr_analysis",
+ "sifr_compiler_services",
  "sifr_diagnostics",
- "sifr_driver",
  "sifr_package",
  "sifr_source",
  "tempfile",

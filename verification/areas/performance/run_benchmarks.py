@@ -500,6 +500,7 @@ def run_lsp_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any]:
             str(REPO_ROOT / case.raw["source_path"]),
             str(iterations),
             str(case.raw.get("inner_repetitions", 1)),
+            str(case.raw.get("minimum_project_modules", 1)),
         ],
         run_subprocess,
     )

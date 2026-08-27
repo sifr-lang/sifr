@@ -243,6 +243,28 @@ existing HIR for lint rules, strengthen warm-workspace benchmarks, and extract
 lower-level environment services so analysis/LSP do not depend upward on build
 orchestration.
 
+Acceptance criteria:
+
+- Python declaration cache hits are decided from document and graph revisions
+  before package fingerprinting, environment probing, interop planning, or
+  workspace diagnostics run. Tests prove that repeated completion and hover
+  requests reuse the snapshot and do not repeat those operations.
+- Analysis passes its canonical HIR to HIR lint rules. The editor diagnostic
+  path does not build a second frontend context for the same source revision.
+- A lower-level `sifr_compiler_services` crate owns stdlib bootstrap, tooling
+  sysroot views, generated Rust preview, Python runtime selection, and Python
+  declaration validation. It does not own Cargo execution, CLI behavior, build
+  workspaces, or LSP protocol handling.
+- `sifr_analysis` and `sifr_lsp` do not depend on or reference `sifr_driver`.
+  The dependency-direction guard and its negative self-tests enforce this
+  boundary and prevent compiler services from depending upward.
+- LSP benchmarks report server cache counters instead of fixed values.
+  Completion and hover budgets enforce warm snapshot reuse. Workspace-shaped
+  cases require at least 25 source modules.
+- Focused service, analysis, lint, LSP, dependency, performance, documentation,
+  and file-size checks pass. The compiler validation gates pass once each on
+  the final reviewed candidate SHA.
+
 ## M9 Method-Lowering Authority And Unsafe-Code Documentation
 
 Classify method-name dispatch sites, centralize language method semantics under

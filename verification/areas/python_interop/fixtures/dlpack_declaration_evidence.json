@@ -8,7 +8,7 @@
       "owners": [
         "crates/sifr_lowering/src/lower/python_dlpack_contract_tests.rs",
         "crates/sifr_codegen/src/python_dlpack_codegen_tests.rs",
-        "crates/sifr_driver/src/build/python_interop.rs"
+        "crates/sifr_compiler_services/src/python_interop.rs"
       ],
       "covers": ["types", "decorators", "Self", "import-root", "bridge", "target-probe"]
     },

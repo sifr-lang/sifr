@@ -72,12 +72,17 @@ session. Current implementation reality:
   wrap `WorkspaceSession` and update unsaved editor buffers through
   `WorkspaceSession` overlays.
 - All LSP analysis hosts are compiler-backed with embedded Sifr stdlib
-  definitions from `sifr_driver::stdlib_external_defs()`. Standalone files,
+  definitions from `sifr_compiler_services::external_defs`. Standalone files,
   `sifr.toml` workspaces, and Cargo-backed Sifr package folders therefore
   resolve `sifr.*` imports the same way the CLI does before editor diagnostics,
   completion, navigation, or generated-Rust queries run. If stdlib bootstrap
   fails, host open reports that compiler failure instead of continuing with an
   empty semantic context.
+- Completion, hover, and diagnostic Python declaration data use one
+  revision-keyed package snapshot. A cache hit is checked before package-file
+  fingerprinting, Python environment probing, interop planning, or workspace
+  diagnostics. `sifr/debugCacheStats` exposes hit, miss, fingerprint, and
+  snapshot-build counters for local benchmark evidence.
 - LSP notifications update `DocumentStore` first, then feed the latest document
   text/version into the session-owned analysis workspace before diagnostics or
   semantic requests capture snapshots.

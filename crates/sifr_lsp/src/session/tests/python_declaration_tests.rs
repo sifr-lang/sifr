@@ -1,9 +1,7 @@
-use crate::request_queue::CancellationTarget;
 use crate::session::Session;
-use lsp_server::RequestId;
 use serde_json::json;
 
-const SOURCE: &str = "\
+pub(super) const SOURCE: &str = "\
 from sifr.python import PythonError
 
 @python(math.sqrt)
@@ -17,7 +15,18 @@ def main() -> Result[float, PythonError]:
 fn python_declaration_completion_hover_and_navigation_share_compiler_status() {
     let (mut session, _temp, uri) = open_fixture(SOURCE);
 
+    assert_eq!(session.python_declaration_cache_stats().misses, 0);
+
     let completion = request(&mut session, "textDocument/completion", &uri, 6, 15);
+    assert_eq!(
+        session.python_declaration_cache_stats(),
+        crate::python_declarations::PythonDeclarationCacheStats {
+            hits: 0,
+            misses: 1,
+            external_fingerprint_runs: 1,
+            snapshot_builds: 1,
+        }
+    );
     let item = completion
         .get("items")
         .and_then(serde_json::Value::as_array)
@@ -39,6 +48,14 @@ fn python_declaration_completion_hover_and_navigation_share_compiler_status() {
     );
 
     let hover = request(&mut session, "textDocument/hover", &uri, 6, 13);
+    assert_eq!(session.python_declaration_cache_stats().hits, 1);
+    assert_eq!(
+        session
+            .python_declaration_cache_stats()
+            .external_fingerprint_runs,
+        1
+    );
+    assert_eq!(session.python_declaration_cache_stats().snapshot_builds, 1);
     let hover = hover
         .pointer("/contents/value")
         .and_then(serde_json::Value::as_str)
@@ -68,6 +85,14 @@ fn python_declaration_completion_hover_and_navigation_share_compiler_status() {
     let _ = request(&mut session, "textDocument/completion", &uri, 6, 15);
     assert_eq!(session.python_declarations.probe_runs(), 1);
     assert_eq!(session.python_declarations.environment_probe_runs(), 1);
+    assert_eq!(session.python_declaration_cache_stats().hits, 2);
+    assert_eq!(
+        session
+            .python_declaration_cache_stats()
+            .external_fingerprint_runs,
+        1
+    );
+    assert_eq!(session.python_declaration_cache_stats().snapshot_builds, 1);
 
     let non_target_edit = SOURCE.replace("9.0", "16.0");
     session
@@ -76,6 +101,14 @@ fn python_declaration_completion_hover_and_navigation_share_compiler_status() {
     let _ = request(&mut session, "textDocument/completion", &uri, 6, 15);
     assert_eq!(session.python_declarations.probe_runs(), 1);
     assert_eq!(session.python_declarations.environment_probe_runs(), 1);
+    assert_eq!(session.python_declaration_cache_stats().misses, 2);
+    assert_eq!(
+        session
+            .python_declaration_cache_stats()
+            .external_fingerprint_runs,
+        2
+    );
+    assert_eq!(session.python_declaration_cache_stats().snapshot_builds, 2);
 }
 
 #[test]
@@ -512,7 +545,7 @@ fn lockfile_less_nontrivial_packages_defer_without_mutation() {
 }
 
 #[test]
-fn live_bridge_sources_without_inventory_are_validated_and_fingerprinted() {
+fn watched_live_bridge_sources_without_inventory_are_validated_and_fingerprinted() {
     let source = "def main() -> int:\n    return 1\n";
     let (mut session, temp, uri) = open_fixture(source);
     let initial =
@@ -525,9 +558,10 @@ fn live_bridge_sources_without_inventory_are_validated_and_fingerprinted() {
         "import numpy\n\ndef value():\n    return numpy.array([1])\n",
     )
     .expect("write live bridge source");
+    session.record_watcher_events(1);
 
     let diagnostics = crate::diagnostics::document_diagnostics(&mut session, &uri)
-        .expect("live bridge diagnostics without watcher invalidation");
+        .expect("live bridge diagnostics after watcher invalidation");
 
     assert!(diagnostics.iter().any(|diagnostic| {
         diagnostic.get("code").and_then(serde_json::Value::as_str) == Some("SIFR-PYTRUST-0005")
@@ -760,32 +794,7 @@ def main() -> Result[list[str], PythonError]:
     assert!(!verified_unsupported);
 }
 
-#[test]
-fn cancelled_python_declaration_request_stops_before_probe() {
-    let (mut session, _temp, uri) = open_fixture(SOURCE);
-    let id = RequestId::from(150);
-    session
-        .enqueue_request(
-            &id,
-            "textDocument/completion",
-            crate::scheduler::WorkLane::LatencySensitive,
-        )
-        .expect("enqueue request");
-    let scheduled = session.start_next_request().expect("start request");
-    session
-        .begin_request_execution(scheduled.id())
-        .expect("begin request");
-    assert_eq!(session.cancel_request(&id), CancellationTarget::InFlight);
-
-    let error = session
-        .python_declaration_snapshot(&uri)
-        .expect_err("cancelled request must stop");
-    assert!(error.message().contains("cancelled"));
-    assert_eq!(session.python_declarations.probe_runs(), 0);
-    session.finish_request(&id);
-}
-
-fn request(
+pub(super) fn request(
     session: &mut Session,
     method: &str,
     uri: &str,
@@ -803,7 +812,7 @@ fn request(
     .unwrap_or_else(|error| panic!("{method} failed: {error:?}"))
 }
 
-fn open_fixture(source: &str) -> (Session, tempfile::TempDir, String) {
+pub(super) fn open_fixture(source: &str) -> (Session, tempfile::TempDir, String) {
     open_fixture_named(source, "main.sifr")
 }
 

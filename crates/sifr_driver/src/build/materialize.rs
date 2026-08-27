@@ -236,11 +236,11 @@ mod tests {
         validate_native_link_evidence,
     };
     use crate::build::project_codegen::GeneratedBinaryProject;
-    use crate::build::python_runtime::PackagePythonRuntime;
     use sifr_codegen::{
         InteropBuildPlan, RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration,
         RustInteropTrustRequirement, RustInteropTrustRequirementKind,
     };
+    use sifr_compiler_services::PackagePythonRuntime;
     use sifr_ir::{
         RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
         RustInteropEffect, RustTargetPath,

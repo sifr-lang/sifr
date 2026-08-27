@@ -1,4 +1,4 @@
-use crate::diagnostics::{RenderedDiagnostic, render_codegen_error, run_codegen_with_boundary};
+use crate::diagnostics::{render_codegen_error, run_codegen_with_boundary};
 use crate::export_policy::should_export_callable;
 use crate::stdlib::cache::{STDLIB_COMPILED_CACHE, get_or_init_stdlib_cache};
 use crate::stdlib::interop::{build_stdlib_rust_interop, pending_private_interop_module};
@@ -6,6 +6,7 @@ use crate::stdlib::re_exports::{ReExportMaps, re_export_stdlib_imports};
 use crate::stdlib::types::StdlibCompiled;
 use sifr_codegen::{StdlibCode, StdlibRustSource};
 use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::RenderedDiagnostic;
 use sifr_lowering::{
     ExternalDefs, HirFunction, HirParam, canonicalize_user_export_type,
     canonicalize_user_export_type_in_place,
@@ -22,7 +23,7 @@ use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-pub(crate) fn compile_stdlib() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
+pub fn compile_stdlib() -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
     get_or_init_stdlib_cache(&STDLIB_COMPILED_CACHE, compile_stdlib_uncached)
 }
 

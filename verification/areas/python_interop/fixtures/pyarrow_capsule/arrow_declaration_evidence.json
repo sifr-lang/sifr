@@ -32,7 +32,7 @@
     },
     {
       "id": "certification-rejection",
-      "owners": ["crates/sifr_driver/src/build/python_interop.rs", "crates/sifr_package/src/python/arrow_certification.rs"],
+      "owners": ["crates/sifr_compiler_services/src/python_interop.rs", "crates/sifr_package/src/python/arrow_certification.rs"],
       "covers": ["missing exact target", "kind mismatch", "schema-mode mismatch", "environment mismatch", "fixture mutation", "distribution drift", "copy evidence"]
     }
   ],

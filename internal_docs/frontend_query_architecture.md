@@ -99,7 +99,11 @@ resolution; they remain private preparation for future compiler API work.
 
 The frontend query route owns `check`, `build`, `run`, `emit`, project compilation, and test-runner frontend flows. `FrontendContext` owns dependency-safe compile order and the project compilation product. The same lowered snapshot supplies the product and later analysis queries.
 
-The driver owns standard-library bootstrap, build plans, code generation, Cargo and Rust invocation, and CLI output. Driver adapters supply discovered source modules and compiler options to `FrontendContext`. They do not reconstruct semantic results or compute project order.
+`sifr_compiler_services` owns standard-library bootstrap and read-only generated
+Rust preview. The driver owns build plans, Cargo and Rust invocation, artifact
+materialization, and CLI output. Driver adapters supply discovered source
+modules and compiler options to `FrontendContext`. They do not reconstruct
+semantic results or compute project order.
 
 The deleted driver migration shims were:
 

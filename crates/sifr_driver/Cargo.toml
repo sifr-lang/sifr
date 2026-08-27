@@ -7,6 +7,7 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+sifr_compiler_services = { workspace = true }
 # Wired early for diagnostic registry migration; compiler emission migration uses this dependency.
 sifr_diagnostics = { workspace = true }
 sifr_python_ast = { workspace = true }
@@ -28,6 +29,7 @@ syn = { workspace = true }
 toml = { workspace = true }
 
 [dev-dependencies]
+sifr_compiler_services = { workspace = true, features = ["test-support"] }
 
 [lints]
 workspace = true

@@ -1,5 +1,5 @@
-use crate::diagnostics::RenderedDiagnostic;
 use crate::stdlib::StdlibCompiled;
+use sifr_diagnostics::RenderedDiagnostic;
 use std::sync::OnceLock;
 
 pub(super) static STDLIB_COMPILED_CACHE: OnceLock<Result<StdlibCompiled, Vec<RenderedDiagnostic>>> =

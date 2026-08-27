@@ -1,0 +1,4 @@
+from layer_10 import layer_10_value
+
+def layer_11_value() -> int:
+    return layer_10_value() + 1

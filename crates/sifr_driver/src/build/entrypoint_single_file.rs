@@ -1,7 +1,7 @@
 use super::super::frontend::FrontendCompiled;
 use super::super::project::ProjectCompilation;
-use super::super::stdlib::StdlibCompiled;
 use crate::diagnostics::RenderedDiagnostic;
+use sifr_compiler_services::StdlibCompiled;
 
 pub(super) fn into_frontend(
     stdlib: StdlibCompiled,

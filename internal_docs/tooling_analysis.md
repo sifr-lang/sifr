@@ -52,7 +52,9 @@ editor-query layer implementation:
 - Hover, definition/declaration/type-definition, references, prepare-rename, rename, document highlights, folding ranges, selection ranges, semantic tokens, and inlay hints are token-backed and snapshot-gated.
 - Diagnostics combine canonical frontend hard diagnostics with `sifr_lint` policy diagnostics.
 - Code actions offer explicit Sifr policy suppression edits for lint diagnostics.
-- Generated Rust preview calls the canonical `sifr_driver::compile_with_metadata` handoff and returns structured unavailability when compilation fails.
+- Generated Rust preview calls the read-only
+  `sifr_compiler_services::compile_source_preview` handoff and returns
+  structured unavailability when compilation fails.
 - Parity coverage lives in `verification/areas/developer_tooling/parity_manifest.json`, `verification/areas/developer_tooling/editor_query_snapshots/`, and `verification/areas/developer_tooling/completion_quality/`.
 
 TypeScript-Go architecture transfer process runtime implementation:
@@ -84,7 +86,9 @@ Missing implementation detail inside a placeholder view is not a blocker for for
 
 Allowed dependencies:
 
-- `sifr_analysis` may call `sifr_frontend`, `sifr_diagnostics`, `sifr_format`, `sifr_lint`, and approved read-only compiler/codegen views.
+- `sifr_analysis` may call `sifr_frontend`, `sifr_diagnostics`, `sifr_format`,
+  `sifr_lint`, and `sifr_compiler_services`. It must not depend on the build
+  orchestration crate `sifr_driver`.
 - `sifr_format` may call `sifr_syntax` and `sifr_diagnostics`.
 - `sifr_lint` may call `sifr_frontend`, `sifr_diagnostics`, and approved read-only syntax/HIR views.
 - `sifr_lsp` may call `sifr_analysis` and protocol conversion helpers only.
@@ -195,6 +199,10 @@ list policy, and duplicate import declaration policy. These rules use Sifr rule
 IDs, `sifr_diagnostics`, parser-aware suppressions for non-physical rules, and
 the stage-gated runner. The CLI also exposes `sifr lint --statistics` for
 deterministic per-rule diagnostic counts.
+
+Analysis diagnostics pass the frontend's canonical HIR view to HIR-backed lint
+rules. The editor path does not create a second frontend context for the same
+source revision.
 
 The safe-fix engine adds the first Sifr-owned safe fix engine and policy-only editor
 actions. `trailing-whitespace` now carries a machine-applicable safe suggestion,

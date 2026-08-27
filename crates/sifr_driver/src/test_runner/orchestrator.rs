@@ -7,8 +7,8 @@ use crate::project::{
     collect_project_hir_source_modules, compile_project_source_modules, discover_test_root_modules,
     parse_import_closure_source_modules,
 };
-use crate::stdlib::compile_stdlib;
 use sifr_codegen::generate_rust_test_project_with_metadata;
+use sifr_compiler_services::compile_stdlib;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::{FrontendDiagnosticStyle, SourceProvider};
 use sifr_lowering::{HirModule, LoweringOptions};

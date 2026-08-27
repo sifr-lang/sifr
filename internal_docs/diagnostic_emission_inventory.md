@@ -92,8 +92,8 @@ The public `CompileError` abstraction and the transitional `CompilerDiagnostic` 
 | `crates/sifr_driver/src/build/entrypoint.rs` | 3 | build planning/materialization failures | `BUILD-*` for tool/build actions; `WORKSPACE-*` for project graph inputs. |
 | `crates/sifr_driver/src/build/materialize.rs` | 1 | file materialization failure | `SIFR-BUILD-0002`. |
 | `crates/sifr_driver/src/build/workspace.rs` | 7 | temporary dir, cargo manifest, rustc/cargo execution, binary artifact failures | `SIFR-BUILD-0002..0006` by operation. |
-| `crates/sifr_driver/src/stdlib/bootstrap.rs` | 4 | embedded stdlib parse/typecheck/bootstrap failure | `SIFR-STDLIB-0001..0003` for embedded stdlib bootstrap defects; internal if invariant-only. |
-| `crates/sifr_driver/src/stdlib/cache.rs` | 1 | stdlib cache build reuse failure | `SIFR-STDLIB-0004` or `SIFR-BUILD-*` depending on failing operation. |
+| `crates/sifr_compiler_services/src/stdlib/bootstrap.rs` | 4 | embedded stdlib parse/typecheck/bootstrap failure | `SIFR-STDLIB-0001..0003` for embedded stdlib bootstrap defects; internal if invariant-only. |
+| `crates/sifr_compiler_services/src/stdlib/cache.rs` | 1 | stdlib cache build reuse failure | `SIFR-STDLIB-0004` or `SIFR-BUILD-*` depending on failing operation. |
 | `crates/sifr_driver/src/workspace/mod.rs` | 2 | manifest parse/source-root validation | Existing `SIFR-WORKSPACE-0001..0004` reviewed and kept if templates remain precise. |
 | `crates/sifr_driver/src/test_runner/execution.rs` | 8 | test-runner compile/run/build failures | `SIFR-BUILD-*` for generated Rust test harness build/run operations. |
 | `crates/sifr_driver/src/test_runner/orchestrator.rs` | 2 | test orchestration failure and frontend error forwarding | `BUILD-*` for orchestration; forwarded frontend diagnostics retain original identity. |

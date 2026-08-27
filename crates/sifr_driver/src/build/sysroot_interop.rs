@@ -1,7 +1,7 @@
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{PackageRustInteropContext, RustInteropModuleSource};
-use crate::stdlib::StdlibRustInterop;
 use sifr_codegen::{InteropBuildPlan, RustInteropResolvedRoot};
+use sifr_compiler_services::StdlibRustInterop;
 use sifr_package::{
     BackendCrateMetadata, CargoPackageId, PackageClassification, PackageSourceMap,
     PackageSourceRoot, RustInteropConfig, SifrEdition, SifrManifest, SifrPackageGraph,
@@ -278,9 +278,9 @@ mod tests {
     use super::*;
     use crate::build::project_codegen::GeneratedBinaryProject;
     use crate::build::rust_interop::apply_package_rust_interop_metadata;
-    use crate::stdlib::{StdlibRustInterop, StdlibRustInteropModuleSource};
     use ruff_text_size::{TextRange, TextSize};
     use sifr_codegen::{RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration};
+    use sifr_compiler_services::{StdlibRustInterop, StdlibRustInteropModuleSource};
     use sifr_ir::{
         RustInteropAbiRequirements, RustInteropArgument, RustInteropDeclaration,
         RustInteropDecoratorKind, RustInteropEffect, RustInteropValue, RustTargetPath,

@@ -293,17 +293,18 @@ manual drift.
 | Crate | Workspace path | Direct normal first-party dependencies |
 | --- | --- | --- |
 | `sifr` | `crates/sifr` | `sifr_diagnostics`, `sifr_driver`, `sifr_format`, `sifr_frontend`, `sifr_lint`, `sifr_lsp`, `sifr_package`, `sifr_syntax`, `sifr_sysroot` |
-| `sifr_analysis` | `crates/sifr_analysis` | `sifr_diagnostics`, `sifr_driver`, `sifr_format`, `sifr_frontend`, `sifr_lint`, `sifr_syntax` |
+| `sifr_analysis` | `crates/sifr_analysis` | `sifr_compiler_services`, `sifr_diagnostics`, `sifr_format`, `sifr_frontend`, `sifr_lint`, `sifr_syntax` |
 | `sifr_codegen` | `crates/sifr_codegen` | `sifr_diagnostics`, `sifr_ir`, `sifr_stdlib_manifest`, `sifr_structural_identity`, `sifr_type_system` |
+| `sifr_compiler_services` | `crates/sifr_compiler_services` | `sifr_codegen`, `sifr_diagnostics`, `sifr_frontend`, `sifr_ir`, `sifr_lowering`, `sifr_package`, `sifr_stdlib_manifest`, `sifr_syntax`, `sifr_sysroot`, `sifr_type_system` |
 | `sifr_diagnostics` | `crates/sifr_diagnostics` | `sifr_source` |
-| `sifr_driver` | `crates/sifr_driver` | `sifr_codegen`, `sifr_diagnostics`, `sifr_frontend`, `sifr_ir`, `sifr_lowering`, `sifr_package`, `sifr_stdlib_imports`, `sifr_stdlib_manifest`, `sifr_syntax`, `sifr_sysroot`, `sifr_type_system` |
+| `sifr_driver` | `crates/sifr_driver` | `sifr_codegen`, `sifr_compiler_services`, `sifr_diagnostics`, `sifr_frontend`, `sifr_ir`, `sifr_lowering`, `sifr_package`, `sifr_stdlib_imports`, `sifr_stdlib_manifest`, `sifr_syntax`, `sifr_sysroot`, `sifr_type_system` |
 | `sifr_format` | `crates/sifr_format` | `sifr_diagnostics`, `sifr_frontend`, `sifr_syntax` |
 | `sifr_frontend` | `crates/sifr_frontend` | `sifr_diagnostics`, `sifr_lowering`, `sifr_source`, `sifr_structural_identity`, `sifr_syntax`, `sifr_type_system` |
 | `sifr_ipc` | `crates/sifr_ipc` | — |
 | `sifr_ir` | `crates/sifr_ir` | `sifr_diagnostics`, `sifr_type_system` |
 | `sifr_lint` | `crates/sifr_lint` | `sifr_diagnostics`, `sifr_frontend`, `sifr_ir`, `sifr_syntax` |
 | `sifr_lowering` | `crates/sifr_lowering` | `sifr_diagnostics`, `sifr_ipc`, `sifr_ir`, `sifr_stdlib_imports`, `sifr_type_system` |
-| `sifr_lsp` | `crates/sifr_lsp` | `sifr_analysis`, `sifr_diagnostics`, `sifr_driver`, `sifr_package`, `sifr_source` |
+| `sifr_lsp` | `crates/sifr_lsp` | `sifr_analysis`, `sifr_compiler_services`, `sifr_diagnostics`, `sifr_package`, `sifr_source` |
 | `sifr_package` | `crates/sifr_package` | `sifr_diagnostics`, `sifr_frontend`, `sifr_syntax` |
 | `sifr_runtime` | `crates/sifr_runtime` | `sifr_structural_identity` |
 | `sifr_rust_interop_catalog` | `crates/sifr_rust_interop_catalog` | — |
@@ -322,7 +323,8 @@ The stable ownership layers are:
 - source and diagnostics: `sifr_source`, `sifr_diagnostics`;
 - syntax and semantic core: `sifr_syntax`, `sifr_type_system`, `sifr_ir`,
   `sifr_lowering`, `sifr_frontend`;
-- compilation and execution: `sifr_codegen`, `sifr_driver`, `sifr`;
+- shared compilation services: `sifr_codegen`, `sifr_compiler_services`;
+- build orchestration and execution: `sifr_driver`, `sifr`;
 - package, sysroot, and stdlib: `sifr_package`, `sifr_sysroot`,
   `sifr_stdlib_manifest`, `sifr_stdlib_imports`, `sifr_stdlib`,
   `sifr_runtime`;
@@ -356,6 +358,20 @@ Formatter validation is part of local validation. `verification/areas/developer_
 fails when a Sifr parser or AST extension lacks both Ruff fork formatter fixture
 coverage and Sifr wrapper corpus coverage. Formatter performance budgets cover a
 large-file check and a representative project check.
+
+## Compiler-Service Boundary
+
+`sifr_compiler_services` is below driver and editor orchestration. It owns the
+shared stdlib bootstrap, tooling sysroot views, generated Rust preview, package
+diagnostic conversion, Python runtime selection, Python certification checks,
+and declaration-target probes. `sifr_driver`, `sifr_analysis`, and `sifr_lsp`
+consume these services directly.
+
+The crate does not own Cargo execution, temporary build workspaces, artifact
+materialization, CLI behavior, or LSP protocol handling. Dependency guardrails
+reject `sifr_analysis` or `sifr_lsp` dependencies on `sifr_driver`. They also
+reject upward dependencies from `sifr_compiler_services` to those orchestration
+crates.
 
 ## Driver Build Model
 
@@ -1221,7 +1237,7 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 - **Canonical suggestion model:** suggestion payloads are structured logical suggestions with one or more text replacement edits plus applicability (`MachineApplicable`, `MaybeIncorrect`, `HasPlaceholders`, or `Unspecified`). Replacement text lives in suggestion edits, not duplicated help children.
 - **Span mapping:** semantic diagnostics preserve byte ranges as `SourceSpan` values before rendering. `sifr_source` owns source text, line maps, and UTF-8/UTF-16/UTF-32 position conversion primitives. Renderers derive display paths, byte offsets, 1-based UTF-8 character line/column positions, source snippets, and related spans at the source-map boundary without defining a separate line-map authority. Codegen/rustc diagnostics use `.sifr` source mapping where available; unmapped compiler failures use `SIFR-INTERNAL-*`.
 - **Producer/presentation boundary:** producers own canonical diagnostic identity, source spans, related spans, and structured context before a diagnostic reaches output formatting. `sifr_diagnostics` owns source-map rendering and the `human`, `json`, and `compact` presentation once producers have supplied canonical diagnostic data. Workspace and package discovery must attach resolver details as args/children on source-level import diagnostics instead of replacing source problems with workspace-discovery-specific codes.
-- **Package diagnostic conversion:** `sifr_driver::diagnostics::render_package_diagnostic` is the shared package-to-rendered conversion path. It preserves `PackageDiagnostic.help` and useful `PackageDiagnosticOrigin` fields as JSON args while leaving diagnostics spanless when no honest source/config byte range is available.
+- **Package diagnostic conversion:** `sifr_compiler_services::render_package_diagnostic` is the shared package-to-rendered conversion path. It preserves `PackageDiagnostic.help` and useful `PackageDiagnosticOrigin` fields as JSON args while leaving diagnostics spanless when no honest source/config byte range is available.
 - `**rustc` error translation:** when `rustc` emits an error on generated code, the driver translates it back to `.sifr` coordinates using the span map. If translation fails (e.g., error in compiler-generated boilerplate), the raw `rustc` error is shown with a note: "This error originated in the Rust compilation step."
 - **Generation vs rendering separation:** semantic compiler layers construct diagnostics; renderer layers convert them to `human`, `json`, and `compact` presentation formats. Output mode selection must not change diagnostic ownership or semantics.
 - **JSON renderer rules:** CLI `json` output preserves the existing `RenderedDiagnostic[]` transport and must preserve the shared diagnostic model fields without human-only lossy reformatting. The checked-in schema is generated from `sifr_diagnostics`.
