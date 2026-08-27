@@ -1,4 +1,5 @@
-use crate::{RustExpr, RustItem, RustParam, RustStmt, RustType};
+use crate::{CompilerFragment, RustExpr, RustItem, RustParam, RustStmt, RustType};
+use proc_macro2::{TokenStream, TokenTree};
 use syn::visit::{self, Visit};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -51,9 +52,47 @@ pub(crate) fn collect_import_needs_from_source(source: &str) -> IrImportNeeds {
     needs
 }
 
+fn collect_compiler_fragment(
+    fragment: &CompilerFragment,
+    statement: bool,
+    needs: &mut IrImportNeeds,
+) {
+    let wrapped = if statement {
+        format!("fn __sifr_fragment_imports() {{ {} }}", fragment.source())
+    } else {
+        format!(
+            "fn __sifr_fragment_imports() {{ let _ = {}; }}",
+            fragment.source()
+        )
+    };
+    merge_needs(needs, collect_import_needs_from_source(&wrapped));
+}
+
+fn merge_needs(target: &mut IrImportNeeds, source: IrImportNeeds) {
+    target.collections.needs_hashmap |= source.collections.needs_hashmap;
+    target.collections.needs_hashset |= source.collections.needs_hashset;
+    target.collections.needs_vecdeque |= source.collections.needs_vecdeque;
+    target.runtime.needs_mutex |= source.runtime.needs_mutex;
+    target.runtime.needs_sifr_int |= source.runtime.needs_sifr_int;
+    target.runtime.needs_sifr_runtime |= source.runtime.needs_sifr_runtime;
+    target.runtime.numeric.needs_bigint |= source.runtime.numeric.needs_bigint;
+    target.runtime.numeric.needs_decimal |= source.runtime.numeric.needs_decimal;
+    target.runtime.numeric.needs_bigdecimal |= source.runtime.numeric.needs_bigdecimal;
+}
+
 fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
     match item {
-        RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => {}
+        RustItem::Use(_) | RustItem::UseAlias { .. } => {}
+        RustItem::CompilerFragment(fragment) => {
+            if let Ok(file) = crate::ir_validate::parse_item_fragment(fragment.source()) {
+                let mut fragment_needs = IrImportNeeds::default();
+                let mut collector = SynImportNeedsCollector {
+                    needs: &mut fragment_needs,
+                };
+                collector.visit_file(&file);
+                merge_needs(needs, fragment_needs);
+            }
+        }
         RustItem::Struct { fields, .. } => {
             for (_, ty) in fields {
                 collect_type(ty, needs);
@@ -113,7 +152,9 @@ fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
 
 fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
     match stmt {
-        RustStmt::Verbatim(_) => {}
+        RustStmt::CompilerFragment(fragment) => {
+            collect_compiler_fragment(fragment, true, needs);
+        }
         RustStmt::Let { ty, value, .. } => {
             if let Some(ty) = ty {
                 collect_type(ty, needs);
@@ -237,7 +278,10 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
 
 fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
     match expr {
-        RustExpr::Literal(_) | RustExpr::Verbatim(_) => {}
+        RustExpr::Literal(_) => {}
+        RustExpr::CompilerFragment(fragment) => {
+            collect_compiler_fragment(fragment, false, needs);
+        }
         RustExpr::Ident(name) => mark_symbol(name, needs),
         RustExpr::Path(segments) => {
             if let Some(first) = segments.first() {
@@ -465,6 +509,32 @@ impl Visit<'_> for SynImportNeedsCollector<'_> {
         }
         visit::visit_path(self, path);
     }
+
+    fn visit_macro(&mut self, node: &syn::Macro) {
+        collect_macro_token_needs(&node.tokens, self.needs);
+        visit::visit_macro(self, node);
+    }
+}
+
+fn collect_macro_token_needs(tokens: &TokenStream, needs: &mut IrImportNeeds) {
+    let tokens = tokens.clone().into_iter().collect::<Vec<_>>();
+    for (index, token) in tokens.iter().enumerate() {
+        if let TokenTree::Group(group) = token {
+            collect_macro_token_needs(&group.stream(), needs);
+        }
+        let TokenTree::Ident(ident) = token else {
+            continue;
+        };
+        let qualified = index >= 2
+            && matches!(&tokens[index - 1], TokenTree::Punct(punct) if punct.as_char() == ':')
+            && matches!(&tokens[index - 2], TokenTree::Punct(punct) if punct.as_char() == ':');
+        if ident == "sifr_runtime" {
+            needs.runtime.needs_sifr_runtime = true;
+        }
+        if !qualified {
+            mark_symbol(&ident.to_string(), needs);
+        }
+    }
 }
 
 fn scan_named_text(text: &str, needs: &mut IrImportNeeds) {
@@ -659,5 +729,30 @@ mod tests {
 
         assert!(!needs.runtime.needs_sifr_int);
         assert!(needs.runtime.needs_sifr_runtime);
+    }
+
+    #[test]
+    fn collects_import_needs_from_compiler_fragments() {
+        let items = vec![
+            RustItem::compiler_fragment("wrapper!(HashSet::<i64>::new());"),
+            RustItem::Fn {
+                name: "fragment_imports".to_string(),
+                visibility: Visibility::Private,
+                type_params: vec![],
+                params: vec![],
+                ret: None,
+                body: vec![
+                    RustStmt::Expr(RustExpr::compiler_fragment("container!(HashMap::new())")),
+                    RustStmt::compiler_fragment("wrapper!(Mutex::new(1_i64));"),
+                ],
+                is_async: false,
+            },
+        ];
+
+        let needs = collect_import_needs_from_items(&items);
+
+        assert!(needs.collections.needs_hashmap);
+        assert!(needs.collections.needs_hashset);
+        assert!(needs.runtime.needs_mutex);
     }
 }

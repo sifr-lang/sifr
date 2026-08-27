@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use super::callback_frame::{append_submission, argument_frame};
 use crate::python_interop_callbacks::owner_outcome_with_evidence;
 use crate::python_interop_direct::{mapped_try, runtime_call, value_place};
-use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
+use crate::{RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType};
 
 pub(crate) fn async_python_function_body(
     func: &HirFunction,
@@ -184,19 +184,35 @@ pub(super) fn async_input_conversion(
             inner.resolve_alias(),
             Type::None | Type::Bool | Type::Int | Type::Float
         );
-        let inner_value = method(
-            if borrowed_inner {
-                method(receiver.clone(), "as_ref", Vec::new())
-            } else {
-                receiver.clone()
-            },
-            "unwrap",
-            Vec::new(),
-        );
-        return Some(RustExpr::If {
-            cond: Box::new(method(receiver, "is_some", Vec::new())),
-            then_expr: Box::new(async_input_value(inner_value, inner, opaque_classes)?),
-            else_expr: Some(Box::new(runtime_call("async_from_none", Vec::new()))),
+        let match_value = if borrowed_inner {
+            method(receiver, "as_ref", Vec::new())
+        } else {
+            receiver
+        };
+        let present = async_input_value(
+            RustExpr::Ident("__sifr_python_optional_value".to_string()),
+            inner,
+            opaque_classes,
+        )?;
+        return Some(RustExpr::Match {
+            expr: Box::new(match_value),
+            arms: vec![
+                RustMatchArm {
+                    pattern: "Some(__sifr_python_optional_value)".to_string(),
+                    bindings: vec!["__sifr_python_optional_value".to_string()],
+                    guard: None,
+                    body: vec![RustStmt::TailExpr(present)],
+                },
+                RustMatchArm {
+                    pattern: "None".to_string(),
+                    bindings: Vec::new(),
+                    guard: None,
+                    body: vec![RustStmt::TailExpr(runtime_call(
+                        "async_from_none",
+                        Vec::new(),
+                    ))],
+                },
+            ],
         });
     }
     if is_object(ty) {

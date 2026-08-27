@@ -19,6 +19,7 @@ use super::{
 };
 use crate::StdlibCode;
 use crate::error_refs::collect_complete_referenced_builtin_error_classes;
+use crate::generated_source_validate::assert_generated_source_is_safe;
 use crate::ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
 use crate::ir_optimize::{remove_trivial_clones_in_items, remove_unneeded_mutability_in_items};
 use crate::ir_validate::validate_items;
@@ -777,6 +778,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         source.push('\n');
         source
     };
+    assert_generated_source_is_safe(&rust_source, "assembled module");
 
     let needs_python_runtime =
         crate::python_interop_common::rust_source_uses_python_runtime(&rust_source);

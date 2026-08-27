@@ -80,7 +80,7 @@ pub(super) fn lowers_fixed_width_literal_for_target_type() {
             &Type::FixedInt(sifr_type_system::FixedIntType::U8),
             &HirExpr::IntLiteral(255),
         ),
-        Some(RustExpr::Verbatim("255u8".to_string()))
+        Some(RustExpr::compiler_fragment("255u8".to_string()))
     );
     assert_eq!(
         fixed_width_literal_expr_for_target(
@@ -91,14 +91,16 @@ pub(super) fn lowers_fixed_width_literal_for_target_type() {
                 ty: Type::Int,
             },
         ),
-        Some(RustExpr::Verbatim("-128i8".to_string()))
+        Some(RustExpr::compiler_fragment("-128i8".to_string()))
     );
     assert_eq!(
         fixed_width_literal_expr_for_target(
             &Type::FixedInt(sifr_type_system::FixedIntType::U64),
             &HirExpr::LargeIntLiteral("18446744073709551615".to_string()),
         ),
-        Some(RustExpr::Verbatim("18446744073709551615u64".to_string()))
+        Some(RustExpr::compiler_fragment(
+            "18446744073709551615u64".to_string()
+        ))
     );
 }
 

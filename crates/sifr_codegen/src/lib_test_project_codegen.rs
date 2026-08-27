@@ -3,6 +3,7 @@ use super::{
     generate_rust_with_stdlib_for_module_with_project_policy, publicize_generated_module_source,
 };
 use crate::entrypoints::generate_rust_test_with_project_policy;
+use crate::generated_source_validate::assert_generated_source_is_safe;
 use crate::lib_project_codegen::{
     project_nominal_type_paths, project_union_usage, register_imported_generic_classes,
     render_local_module_imports, render_project_union_imports,
@@ -78,6 +79,7 @@ pub fn generate_rust_test_project_with_metadata(
         .map(str::trim_end)
         .collect::<Vec<_>>()
         .join("\n\n");
+    assert_generated_source_is_safe(&project_union_prelude, "test project union prelude");
     let project_modules = all_modules.iter().copied().collect::<HashMap<_, _>>();
     let all_union_names = union_usage.unions.keys().cloned().collect::<HashSet<_>>();
 
@@ -132,10 +134,9 @@ pub fn generate_rust_test_project_with_metadata(
                 .map(|class| sifr_type_system::source_class_rust_name(&class.name))
                 .collect(),
         );
-        support_rust_files.insert(
-            (*module_name).to_string(),
-            publicize_generated_module_source(&source),
-        );
+        let source = publicize_generated_module_source(&source);
+        assert_generated_source_is_safe(&source, "postprocessed test support module");
+        support_rust_files.insert((*module_name).to_string(), source);
         used_stdlib_modules.extend(generated.used_stdlib_modules);
         required_features.extend(generated.required_features);
     }
@@ -152,6 +153,7 @@ pub fn generate_rust_test_project_with_metadata(
             Some(&structural_record_identities),
             Some(&structural_identity_expressions),
         );
+        assert_generated_source_is_safe(&generated.rust_source, "test project module");
         test_rust_files.insert((*module_name).to_string(), generated.rust_source);
         used_stdlib_modules.extend(generated.used_stdlib_modules);
         required_features.extend(generated.required_features);

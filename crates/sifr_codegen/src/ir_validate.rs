@@ -1,3 +1,6 @@
+#[cfg(test)]
+use crate::generated_source_validate::validate_generated_source;
+use crate::generated_source_validate::{forbidden_expr_issues, forbidden_file_issues};
 use crate::{RustExpr, RustItem, RustParam, RustStmt, RustType};
 use std::collections::HashSet;
 
@@ -6,8 +9,13 @@ pub(crate) enum IrValidationKind {
     DuplicateStructField,
     EmptyFunctionBody,
     ReturnOutsideFunction,
-    InvalidVerbatimStatement,
-    InvalidVerbatimExpression,
+    InvalidCompilerFragmentItem,
+    InvalidCompilerFragmentStatement,
+    InvalidCompilerFragmentExpression,
+    ForbiddenCompilerFragment,
+    InvalidGeneratedSource,
+    ForbiddenGeneratedSource,
+    ForbiddenStructuredConstruct,
     InvalidIdentifier,
 }
 
@@ -27,7 +35,24 @@ pub(crate) fn validate_items(items: &[RustItem]) -> Vec<IrValidationIssue> {
 
 fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
     match item {
-        RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => {}
+        RustItem::Use(_) | RustItem::UseAlias { .. } => {}
+        RustItem::CompilerFragment(fragment) => match parse_item_fragment(fragment.source()) {
+            Ok(file) => issues.extend(forbidden_file_issues(
+                &file,
+                Some(fragment),
+                IrValidationKind::ForbiddenCompilerFragment,
+            )),
+            Err(error) => issues.push(IrValidationIssue {
+                kind: IrValidationKind::InvalidCompilerFragmentItem,
+                message: format!(
+                    "compiler-owned Rust item fragment is invalid at {}:{}:{} ({error}): {}",
+                    fragment.origin().file(),
+                    fragment.origin().line(),
+                    fragment.origin().column(),
+                    fragment.source()
+                ),
+            }),
+        },
         RustItem::Struct { name, fields, .. } => {
             let mut seen = HashSet::new();
             for (field_name, field_ty) in fields {
@@ -103,17 +128,42 @@ fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
     }
 }
 
+pub(crate) fn parse_item_fragment(source: &str) -> syn::Result<syn::File> {
+    syn::parse_file(source).or_else(|item_error| {
+        let trimmed = source.trim_start();
+        if !trimmed.starts_with("#[") && !trimmed.starts_with("///") && !trimmed.starts_with("//!")
+        {
+            return Err(item_error);
+        }
+        syn::parse_file(&format!(
+            "{source}\nfn __sifr_fragment_attribute_target() {{}}"
+        ))
+    })
+}
+
 fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_function: bool) {
     match stmt {
-        RustStmt::Verbatim(source) => {
-            let wrapper = format!("async fn __sifr_validate_verbatim() {{ {source} }}");
-            if let Err(error) = syn::parse_file(&wrapper) {
-                issues.push(IrValidationIssue {
-                    kind: IrValidationKind::InvalidVerbatimStatement,
+        RustStmt::CompilerFragment(fragment) => {
+            let wrapper = format!(
+                "async fn __sifr_validate_compiler_fragment() {{ {} }}",
+                fragment.source()
+            );
+            match syn::parse_file(&wrapper) {
+                Ok(file) => issues.extend(forbidden_file_issues(
+                    &file,
+                    Some(fragment),
+                    IrValidationKind::ForbiddenCompilerFragment,
+                )),
+                Err(error) => issues.push(IrValidationIssue {
+                    kind: IrValidationKind::InvalidCompilerFragmentStatement,
                     message: format!(
-                        "compiler-owned verbatim Rust statement is invalid ({error}): {source}"
+                        "compiler-owned Rust statement fragment is invalid at {}:{}:{} ({error}): {}",
+                        fragment.origin().file(),
+                        fragment.origin().line(),
+                        fragment.origin().column(),
+                        fragment.source()
                     ),
-                });
+                }),
             }
         }
         RustStmt::Let { ty, value, .. } => {
@@ -247,16 +297,27 @@ fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_functi
 fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_function: bool) {
     match expr {
         RustExpr::Literal(_) | RustExpr::Path(_) => {}
-        RustExpr::Verbatim(source) => {
-            if let Err(error) = syn::parse_str::<syn::Expr>(source) {
-                issues.push(IrValidationIssue {
-                    kind: IrValidationKind::InvalidVerbatimExpression,
-                    message: format!("compiler-owned verbatim Rust expression is invalid: {error}"),
-                });
+        RustExpr::CompilerFragment(fragment) => {
+            match syn::parse_str::<syn::Expr>(fragment.source()) {
+                Ok(expr) => issues.extend(forbidden_expr_issues(
+                    &expr,
+                    fragment,
+                    IrValidationKind::ForbiddenCompilerFragment,
+                )),
+                Err(error) => issues.push(IrValidationIssue {
+                    kind: IrValidationKind::InvalidCompilerFragmentExpression,
+                    message: format!(
+                        "compiler-owned Rust expression fragment is invalid at {}:{}:{}: {error}",
+                        fragment.origin().file(),
+                        fragment.origin().line(),
+                        fragment.origin().column()
+                    ),
+                }),
             }
         }
         RustExpr::Ident(name) => {
-            let mut characters = name.chars();
+            let identifier = name.strip_prefix("r#").unwrap_or(name);
+            let mut characters = identifier.chars();
             let valid = characters
                 .next()
                 .is_some_and(|first| first == '_' || first.is_alphabetic())
@@ -268,22 +329,45 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
                 });
             }
         }
-        RustExpr::MethodCall { receiver, args, .. } => {
+        RustExpr::MethodCall {
+            receiver,
+            method,
+            args,
+        } => {
+            if matches!(method.as_str(), "unwrap" | "expect") {
+                push_forbidden_structured_issue(issues, &format!(".{method}("));
+            }
             validate_expr(receiver, issues, in_function);
             for arg in args {
                 validate_expr(arg, issues, in_function);
             }
         }
         RustExpr::FnCall { func, args } => {
+            let forbidden_callee = match func.as_ref() {
+                RustExpr::Ident(name) => Some(name.as_str()),
+                RustExpr::Path(path) => path.last().map(String::as_str),
+                _ => None,
+            };
+            if forbidden_callee.is_some_and(|name| matches!(name, "unwrap" | "expect")) {
+                push_forbidden_structured_issue(
+                    issues,
+                    &format!("{}(", forbidden_callee.unwrap_or_default()),
+                );
+            }
             validate_expr(func, issues, in_function);
             for arg in args {
                 validate_expr(arg, issues, in_function);
             }
         }
-        RustExpr::MacroCall { args, .. }
-        | RustExpr::Tuple(args)
-        | RustExpr::Array(args)
-        | RustExpr::Vec(args) => {
+        RustExpr::MacroCall { name, args } => {
+            if matches!(name.as_str(), "panic" | "todo" | "unimplemented") {
+                push_forbidden_structured_issue(issues, &format!("{name}!"));
+            }
+            for arg in args {
+                validate_expr(arg, issues, in_function);
+            }
+        }
+        RustExpr::Tuple(args) | RustExpr::Array(args) | RustExpr::Vec(args) => {
             for arg in args {
                 validate_expr(arg, issues, in_function);
             }
@@ -297,7 +381,10 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
             validate_expr(future, issues, in_function);
             validate_expr(error, issues, in_function);
         }
-        RustExpr::FormatMacro { args, .. } => {
+        RustExpr::FormatMacro { name, args, .. } => {
+            if matches!(name.as_str(), "panic" | "todo" | "unimplemented") {
+                push_forbidden_structured_issue(issues, &format!("{name}!"));
+            }
             for arg in args {
                 validate_expr(arg, issues, in_function);
             }
@@ -377,6 +464,13 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
             validate_expr(end, issues, in_function);
         }
     }
+}
+
+fn push_forbidden_structured_issue(issues: &mut Vec<IrValidationIssue>, construct: &str) {
+    issues.push(IrValidationIssue {
+        kind: IrValidationKind::ForbiddenStructuredConstruct,
+        message: format!("forbidden compiler-owned structured Rust construct `{construct}`"),
+    });
 }
 
 fn validate_type(ty: &RustType, issues: &mut Vec<IrValidationIssue>) {
@@ -549,12 +643,23 @@ mod tests {
     }
 
     #[test]
-    fn validates_explicit_verbatim_expression_nodes() {
+    fn validates_explicit_compiler_fragment_nodes() {
+        let valid_item = vec![RustItem::compiler_fragment(
+            "const FRAGMENT_VALUE: i64 = 1_i64;",
+        )];
+        assert!(validate_items(&valid_item).is_empty());
+
+        let invalid_item = vec![RustItem::compiler_fragment("fn unfinished(")];
+        assert!(validate_items(&invalid_item).iter().any(|issue| {
+            issue.kind == IrValidationKind::InvalidCompilerFragmentItem
+                && issue.message.contains(file!())
+        }));
+
         let valid = vec![RustItem::Const {
             name: "VALUE".to_string(),
             visibility: Visibility::Private,
             ty: RustType::I64,
-            value: RustExpr::Verbatim("std::cmp::max(1, 2)".to_string()),
+            value: RustExpr::compiler_fragment("std::cmp::max(1, 2)".to_string()),
         }];
         assert!(validate_items(&valid).is_empty());
 
@@ -562,12 +667,128 @@ mod tests {
             name: "BROKEN".to_string(),
             visibility: Visibility::Private,
             ty: RustType::I64,
-            value: RustExpr::Verbatim("std::cmp::max(".to_string()),
+            value: RustExpr::compiler_fragment("std::cmp::max(".to_string()),
         }];
         assert!(
             validate_items(&invalid)
                 .iter()
-                .any(|issue| issue.kind == IrValidationKind::InvalidVerbatimExpression)
+                .any(|issue| issue.kind == IrValidationKind::InvalidCompilerFragmentExpression)
+        );
+
+        let invalid_statement = vec![RustItem::Fn {
+            name: "broken".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![RustStmt::compiler_fragment("let value = ;")],
+            is_async: false,
+        }];
+        assert!(validate_items(&invalid_statement).iter().any(|issue| {
+            issue.kind == IrValidationKind::InvalidCompilerFragmentStatement
+                && issue.message.contains(file!())
+        }));
+    }
+
+    #[test]
+    fn rejects_forbidden_compiler_fragments_with_origin() {
+        let items = vec![
+            RustItem::compiler_fragment("#[allow(dead_code)] fn hidden() {}"),
+            RustItem::Fn {
+                name: "broken".to_string(),
+                visibility: Visibility::Private,
+                type_params: vec![],
+                params: vec![],
+                ret: None,
+                body: vec![RustStmt::Expr(RustExpr::compiler_fragment(
+                    "value.expect(\"user data\")",
+                ))],
+                is_async: false,
+            },
+        ];
+        let issues = validate_items(&items);
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::ForbiddenCompilerFragment
+                && issue.message.contains(".expect(")
+                && issue.message.contains(file!())
+        }));
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::ForbiddenCompilerFragment
+                && issue.message.contains("#[allow(...)]")
+                && issue.message.contains(file!())
+        }));
+    }
+
+    #[test]
+    fn rejects_forbidden_structured_calls_and_macros() {
+        let items = vec![RustItem::Fn {
+            name: "generated".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![
+                RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("value".to_string())),
+                    method: "unwrap".to_string(),
+                    args: Vec::new(),
+                }),
+                RustStmt::Expr(RustExpr::FormatMacro {
+                    name: "panic".to_string(),
+                    format_str: "failure".to_string(),
+                    args: Vec::new(),
+                }),
+            ],
+            is_async: false,
+        }];
+
+        let issues = validate_items(&items);
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::ForbiddenStructuredConstruct
+                && issue.message.contains(".unwrap(")
+        }));
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::ForbiddenStructuredConstruct
+                && issue.message.contains("panic!")
+        }));
+    }
+
+    #[test]
+    fn final_source_validation_rejects_each_forbidden_construct() {
+        let sources = [
+            "fn generated(value: Option<i64>) { let _ = value.unwrap(); }",
+            "fn generated(value: Option<i64>) { let _ = value.expect(\"value\"); }",
+            "fn generated() { panic!(\"panic\"); }",
+            "fn generated() { todo!(); }",
+            "fn generated() { unimplemented!(); }",
+            "fn generated() { unsafe {} }",
+            "#[allow(dead_code)] fn generated() {}",
+            "fn generated(value: Option<i64>) { wrapper!(value.unwrap()); }",
+            "fn generated() { wrapper!(unsafe {}); }",
+            "wrapper!(#[allow(dead_code)] fn generated() {});",
+        ];
+        for source in sources {
+            let issues = validate_generated_source(source);
+            assert!(
+                issues
+                    .iter()
+                    .any(|issue| issue.kind == IrValidationKind::ForbiddenGeneratedSource),
+                "forbidden source passed: {source}"
+            );
+        }
+        for source in [
+            "#[cfg_attr(all(), allow(dead_code))] fn generated() {}",
+            "#[expect(dead_code)] fn generated() {}",
+        ] {
+            assert!(
+                !validate_generated_source(source).is_empty(),
+                "lint suppression must be rejected: {source}"
+            );
+        }
+
+        assert!(
+            validate_generated_source("fn generated() { let text = \"value.unwrap()\"; }")
+                .is_empty()
         );
     }
 }

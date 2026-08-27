@@ -513,7 +513,7 @@ fn structural_type_impl(
                 type_params: Vec::new(),
                 params: Vec::new(),
                 ret: Some(RustType::Named(format!("{STRUCTURAL}::ShapeIdentity"))),
-                body: vec![RustStmt::Verbatim(identity)],
+                body: vec![RustStmt::compiler_fragment(identity)],
                 is_async: false,
             },
             RustItem::Fn {
@@ -522,7 +522,9 @@ fn structural_type_impl(
                 type_params: Vec::new(),
                 params: Vec::new(),
                 ret: Some(RustType::Named("Option<&'static str>".to_string())),
-                body: vec![RustStmt::Verbatim(format!("Some({nominal_identity})"))],
+                body: vec![RustStmt::compiler_fragment(format!(
+                    "Some({nominal_identity})"
+                ))],
                 is_async: false,
             },
         ],
@@ -683,7 +685,7 @@ fn structural_construct_impl(
             ret: Some(RustType::Named(format!(
                 "Result<Self, {STRUCTURAL}::StructuralContractError>"
             ))),
-            body: vec![RustStmt::Verbatim(body)],
+            body: vec![RustStmt::compiler_fragment(body)],
             is_async: false,
         }],
     }
@@ -761,7 +763,7 @@ fn structural_project_impl(
                 },
             ],
             ret: Some(RustType::Named("Result<(), V::Error>".to_string())),
-            body: vec![RustStmt::Verbatim(body)],
+            body: vec![RustStmt::compiler_fragment(body)],
             is_async: false,
         }],
     }
@@ -806,7 +808,7 @@ fn structural_enum_impls(
                     type_params: Vec::new(),
                     params: Vec::new(),
                     ret: Some(RustType::Named(format!("{STRUCTURAL}::ShapeIdentity"))),
-                    body: vec![RustStmt::Verbatim(shape.to_string())],
+                    body: vec![RustStmt::compiler_fragment(shape.to_string())],
                     is_async: false,
                 },
                 RustItem::Fn {
@@ -815,7 +817,9 @@ fn structural_enum_impls(
                     type_params: Vec::new(),
                     params: Vec::new(),
                     ret: Some(RustType::Named("Option<&'static str>".to_string())),
-                    body: vec![RustStmt::Verbatim(format!("Some({nominal_identity})"))],
+                    body: vec![RustStmt::compiler_fragment(format!(
+                        "Some({nominal_identity})"
+                    ))],
                     is_async: false,
                 },
             ],
@@ -851,7 +855,7 @@ fn structural_enum_impls(
                 ret: Some(RustType::Named(format!(
                     "Result<Self, {STRUCTURAL}::StructuralContractError>"
                 ))),
-                body: vec![RustStmt::Verbatim(construct_body)],
+                body: vec![RustStmt::compiler_fragment(construct_body)],
                 is_async: false,
             }],
         },
@@ -886,7 +890,7 @@ fn structural_enum_impls(
                     },
                 ],
                 ret: Some(RustType::Named("Result<(), V::Error>".to_string())),
-                body: vec![RustStmt::Verbatim(project_body)],
+                body: vec![RustStmt::compiler_fragment(project_body)],
                 is_async: false,
             }],
         },

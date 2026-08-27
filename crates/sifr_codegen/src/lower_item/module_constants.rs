@@ -1,9 +1,16 @@
 use crate::{
-    CodegenError, RustExpr, RustItem, RustLiteral, RustMatchArm, RustStmt, RustType, Visibility,
+    CodegenError, RustExpr, RustItem, RustLiteral, RustStmt, RustType, Visibility,
     try_lower_leaf_expr, try_lower_leaf_expr_result,
 };
 use sifr_ir::HirExpr;
 use sifr_type_system::Type;
+
+const EXACT_INT_CHUNK_DIGITS: usize = 18;
+const EXACT_INT_CHUNK_BASE: i64 = 1_000_000_000_000_000_000;
+// Keep compiler-owned literals under the same resource contract as runtime
+// decimal parsing. Unlike the former generated panic path, reject over-limit
+// source through the structured codegen diagnostic.
+const EXACT_INT_LITERAL_DIGIT_LIMIT: usize = 4096;
 
 pub(super) fn resolve_alias_type(ty: &Type) -> &Type {
     match ty {
@@ -88,7 +95,7 @@ pub(super) fn try_lower_simple_module_constant_item_result_impl(
     value: &HirExpr,
 ) -> Result<Option<(RustItem, String)>, CodegenError> {
     if let Some(decimal_text) = large_module_int_literal_decimal(ty, value) {
-        return Ok(Some(lower_large_module_int_const_item(name, &decimal_text)));
+        return lower_large_module_int_const_item(name, &decimal_text).map(Some);
     }
 
     if is_simple_module_primitive_const_type(ty) {
@@ -197,30 +204,79 @@ pub(super) fn large_module_int_literal_decimal(ty: &Type, value: &HirExpr) -> Op
     }
 }
 
-pub(super) fn sifr_int_parse_decimal_call(decimal_text: &str) -> RustExpr {
+fn sifr_int_from_i64(value: i64) -> RustExpr {
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![
             "SifrInt".to_string(),
-            "parse_decimal".to_string(),
+            "from_i64".to_string(),
         ])),
-        args: vec![
-            RustExpr::Verbatim(format!("\"{}\"", decimal_text.escape_default())),
-            RustExpr::Path(vec![
-                "sifr_runtime".to_string(),
-                "DEFAULT_MAX_INTEGER_DIGITS".to_string(),
-            ]),
-        ],
+        args: vec![RustExpr::Literal(RustLiteral::Int(value))],
     }
 }
 
+fn exact_sifr_int_literal_expr(decimal_text: &str) -> Result<RustExpr, CodegenError> {
+    let (negative, digits) = decimal_text
+        .strip_prefix('-')
+        .map_or((false, decimal_text), |digits| (true, digits));
+    if digits.is_empty() || !digits.bytes().all(|byte| byte.is_ascii_digit()) {
+        return Err(CodegenError::new(
+            "invalid exact integer literal reached code generation",
+        ));
+    }
+    if digits.len() > EXACT_INT_LITERAL_DIGIT_LIMIT {
+        return Err(CodegenError::new(format!(
+            "exact integer literal exceeds the {EXACT_INT_LITERAL_DIGIT_LIMIT}-digit limit"
+        )));
+    }
+
+    let digits = digits.trim_start_matches('0');
+    if digits.is_empty() {
+        return Ok(sifr_int_from_i64(0));
+    }
+
+    let first_len = match digits.len() % EXACT_INT_CHUNK_DIGITS {
+        0 => EXACT_INT_CHUNK_DIGITS,
+        remainder => remainder,
+    };
+    let parse_chunk = |chunk: &str| {
+        chunk.parse::<i64>().map_err(|_| {
+            CodegenError::new("invalid exact integer literal chunk reached code generation")
+        })
+    };
+    let mut expression = sifr_int_from_i64(parse_chunk(&digits[..first_len])?);
+    for chunk in digits.as_bytes()[first_len..].chunks(EXACT_INT_CHUNK_DIGITS) {
+        let chunk = std::str::from_utf8(chunk).map_err(|_| {
+            CodegenError::new("non-ASCII exact integer literal reached code generation")
+        })?;
+        let shifted = RustExpr::BinOp {
+            left: Box::new(expression),
+            op: "*".to_string(),
+            right: Box::new(sifr_int_from_i64(EXACT_INT_CHUNK_BASE)),
+        };
+        expression = RustExpr::BinOp {
+            left: Box::new(shifted),
+            op: "+".to_string(),
+            right: Box::new(sifr_int_from_i64(parse_chunk(chunk)?)),
+        };
+    }
+    if negative {
+        expression = RustExpr::UnaryOp {
+            op: "-".to_string(),
+            operand: Box::new(expression),
+        };
+    }
+    Ok(expression)
+}
+
 /// Conservative dispatcher for simple module-constant item lowering.
+#[cfg(test)]
 pub fn try_lower_simple_module_constant_item(
     name: &str,
     ty: &Type,
     value: &HirExpr,
 ) -> Option<(RustItem, String)> {
     if let Some(decimal_text) = large_module_int_literal_decimal(ty, value) {
-        return Some(lower_large_module_int_const_item(name, &decimal_text));
+        return lower_large_module_int_const_item(name, &decimal_text).ok();
     }
     try_lower_simple_module_const_item(name, ty, value)
         .or_else(|| try_lower_simple_module_string_const_item(name, ty, value))
@@ -231,42 +287,22 @@ pub fn try_lower_simple_module_constant_item(
 pub(super) fn lower_large_module_int_const_item(
     name: &str,
     decimal_text: &str,
-) -> (RustItem, String) {
+) -> Result<(RustItem, String), CodegenError> {
     let rust_name = format!("__const_{name}");
-    (
+    Ok((
         RustItem::Fn {
             name: rust_name.clone(),
             visibility: Visibility::Private,
             type_params: vec![],
             params: vec![],
             ret: Some(RustType::Named("SifrInt".to_string())),
-            body: vec![RustStmt::Match {
-                expr: sifr_int_parse_decimal_call(decimal_text),
-                arms: vec![
-                    RustMatchArm {
-                        pattern: "Ok(value)".to_string(),
-                        bindings: vec![],
-                        guard: None,
-                        body: vec![RustStmt::Return(Some(RustExpr::Ident("value".to_string())))],
-                    },
-                    RustMatchArm {
-                        pattern: "Err(err)".to_string(),
-                        bindings: vec![],
-                        guard: None,
-                        body: vec![RustStmt::Expr(RustExpr::FormatMacro {
-                            name: "panic".to_string(),
-                            format_str: format!(
-                                "compiler emitted invalid integer literal for module constant {name}: {{}}"
-                            ),
-                            args: vec![RustExpr::Ident("err".to_string())],
-                        })],
-                    },
-                ],
-            }],
+            body: vec![RustStmt::TailExpr(exact_sifr_int_literal_expr(
+                decimal_text,
+            )?)],
             is_async: false,
         },
         format!("{rust_name}()"),
-    )
+    ))
 }
 
 /// Conservatively lowers module-level primitive constants via IR.

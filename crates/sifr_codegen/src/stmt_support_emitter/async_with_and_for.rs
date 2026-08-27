@@ -251,7 +251,7 @@ impl RustEmitter {
             } else {
                 format!("let _ = {join_expr};")
             };
-            lowered_body.push(crate::RustStmt::Verbatim(stmt));
+            lowered_body.push(crate::RustStmt::compiler_fragment(stmt));
         }
         Ok(Some(RustStmt::Block(lowered_body)))
     }

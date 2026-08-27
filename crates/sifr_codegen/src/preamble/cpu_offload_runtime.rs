@@ -25,7 +25,7 @@ pub fn build_worker_panic_hook_items() -> Vec<RustItem> {
                 ty: RustType::Named("F".to_string()),
             }],
             ret: Some(RustType::Named("T".to_string())),
-            body: vec![RustStmt::Verbatim(
+            body: vec![RustStmt::compiler_fragment(
                 "let __sifr_panic_boundary = SilentPanicBoundary::enter();\n        return match __sifr_panic_boundary.catch_unwind(|| body(&__sifr_panic_boundary)) {\n            Ok(value) => value,\n            Err(payload) => std::panic::resume_unwind(payload),\n        }"
                     .to_string(),
             )],
@@ -60,7 +60,7 @@ pub fn build_cpu_offload_items() -> Vec<RustItem> {
             ret: Some(RustType::Named(
                 "__SifrBlockingTask<T, WorkerRuntimeError>".to_string(),
             )),
-            body: vec![RustStmt::Verbatim(
+            body: vec![RustStmt::compiler_fragment(
                 "let observed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));\n        let handle = tokio::task::spawn_blocking(move || {\n            let workers = std::thread::available_parallelism().map_or(1usize, std::num::NonZeroUsize::get);\n            let pool = rayon::ThreadPoolBuilder::new().num_threads(workers).build();\n            match pool {\n                Ok(pool) => pool.install(|| {\n                    __sifr_with_silent_worker_panic_hook(|_| {\n                        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)) {\n                            Ok(value) => __SifrTaskResult::Ok(value),\n                            Err(_) => __SifrTaskResult::Err(__SifrFailure::new(WorkerRuntimeError::new(\"cpu worker panicked\".to_string()))),\n                        }\n                    })\n                }),\n                Err(error) => __SifrTaskResult::Err(__SifrFailure::new(WorkerRuntimeError::new(format!(\"cpu worker pool could not start: {}\", error)))),\n            }\n        });\n        return __SifrBlockingTask { handle: Some(handle), observed, _error: std::marker::PhantomData }"
                     .to_string(),
             )],
@@ -96,7 +96,7 @@ pub fn build_cpu_offload_items() -> Vec<RustItem> {
                 ty: RustType::Named("F".to_string()),
             }],
             ret: Some(RustType::Named("__SifrBlockingTask<T, WorkerError>".to_string())),
-            body: vec![RustStmt::Verbatim(
+            body: vec![RustStmt::compiler_fragment(
                 "let observed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));\n        let handle = tokio::task::spawn_blocking(move || {\n            let workers = std::thread::available_parallelism().map_or(1usize, std::num::NonZeroUsize::get);\n            let pool = rayon::ThreadPoolBuilder::new().num_threads(workers).build();\n            match pool {\n                Ok(pool) => pool.install(|| {\n                    __sifr_with_silent_worker_panic_hook(|_| {\n                        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)) {\n                            Ok(Ok(value)) => __SifrTaskResult::Ok(value),\n                            Ok(Err(error)) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(format!(\"{}\", error)))),\n                            Err(_) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(\"cpu worker panicked\".to_string()))),\n                        }\n                    })\n                }),\n                Err(error) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(format!(\"cpu worker pool could not start: {}\", error)))),\n            }\n        });\n        return __SifrBlockingTask { handle: Some(handle), observed, _error: std::marker::PhantomData }"
                     .to_string(),
             )],

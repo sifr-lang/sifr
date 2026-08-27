@@ -236,7 +236,7 @@ mod tests {
                     mutable: true,
                     name: name.to_string(),
                     ty: None,
-                    value: RustExpr::Verbatim(format!("make_{name}()")),
+                    value: RustExpr::compiler_fragment(format!("make_{name}()")),
                 },
                 RustStmt::Expr(RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Ident(name.to_string())),

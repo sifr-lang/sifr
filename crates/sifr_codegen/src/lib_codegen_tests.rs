@@ -65,6 +65,8 @@ mod defaultdict_order_independent_codegen_tests;
 #[cfg(test)]
 mod empty_plain_dict_codegen_tests;
 #[cfg(test)]
+mod generated_safety_codegen_tests;
+#[cfg(test)]
 mod generic_inheritance_codegen_tests;
 #[cfg(test)]
 mod iterators_and_generators_codegen_tests;

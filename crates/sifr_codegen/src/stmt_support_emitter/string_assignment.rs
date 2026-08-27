@@ -273,7 +273,7 @@ impl RustEmitter {
         value: &HirExpr,
     ) -> Result<crate::RustExpr, crate::CodegenError> {
         if let HirExpr::StringLiteral(val) = value {
-            return Ok(crate::RustExpr::Verbatim(format!("{val:?}")));
+            return Ok(crate::RustExpr::compiler_fragment(format!("{val:?}")));
         }
 
         let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
@@ -301,7 +301,7 @@ impl RustEmitter {
             }
             return Ok((
                 "push_str".to_string(),
-                crate::RustExpr::Verbatim(format!("{val:?}")),
+                crate::RustExpr::compiler_fragment(format!("{val:?}")),
             ));
         }
 

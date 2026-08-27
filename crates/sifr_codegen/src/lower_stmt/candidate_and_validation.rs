@@ -104,7 +104,7 @@ pub(super) fn try_lower_simple_print_expr_stmt(expr: &HirExpr) -> Option<RustStm
         }
         [HirExpr::StringLiteral(value)] => Some(RustStmt::Expr(RustExpr::MacroCall {
             name: "println".to_string(),
-            args: vec![RustExpr::Verbatim(format!("{value:?}"))],
+            args: vec![RustExpr::compiler_fragment(format!("{value:?}"))],
         })),
         [HirExpr::FString { .. }] => None,
         [_arg] => None,

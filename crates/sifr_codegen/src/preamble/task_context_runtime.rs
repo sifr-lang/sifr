@@ -13,18 +13,18 @@ pub fn task_context_label_capture_stmt() -> RustStmt {
         mutable: false,
         name: "child_context_label".to_string(),
         ty: None,
-        value: RustExpr::Verbatim("self.context_label.clone()".to_string()),
+        value: RustExpr::compiler_fragment("self.context_label.clone()".to_string()),
     }
 }
 
 pub fn build_task_context_scope_extension_items(include_task_local: bool) -> Vec<RustItem> {
     let mut items = Vec::new();
     if include_task_local {
-        items.push(RustItem::Attr(
+        items.push(RustItem::compiler_fragment(
             "tokio::task_local! { static __SIFR_TASK_CONTEXT_LABEL: String; }".to_string(),
         ));
     }
-    items.push(RustItem::Attr(
+    items.push(RustItem::compiler_fragment(
         r#"impl __SifrTaskScope {
     fn new_task_group_with_context<C: std::fmt::Display>(context: C) -> Self {
         return Self {
@@ -57,7 +57,7 @@ pub fn build_task_current_context_items(include_task_local: bool) -> Vec<RustIte
     let context_type = sifr_type_system::stdlib_class_rust_name("sifr.task", "Context");
     let mut items = Vec::new();
     if include_task_local {
-        items.push(RustItem::Attr(
+        items.push(RustItem::compiler_fragment(
             "tokio::task_local! { static __SIFR_TASK_CONTEXT_LABEL: String; }".to_string(),
         ));
     }

@@ -172,7 +172,7 @@ impl RustEmitter {
                             Type::Str | Type::LiteralStr(_)
                         );
                         let key_arg = if let HirExpr::StringLiteral(value) = index {
-                            crate::RustExpr::Verbatim(format!("{value:?}"))
+                            crate::RustExpr::compiler_fragment(format!("{value:?}"))
                         } else if key_is_string_like {
                             crate::RustExpr::MethodCall {
                                 receiver: Box::new(crate::RustExpr::Paren(Box::new(

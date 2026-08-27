@@ -360,7 +360,7 @@ impl RustEmitter {
         let mut capacity_parts = Vec::with_capacity(parts.len());
         for part in parts {
             let len_expr = if let HirExpr::StringLiteral(value) = part {
-                crate::RustExpr::Verbatim(format!("{}usize", value.len()))
+                crate::RustExpr::compiler_fragment(format!("{}usize", value.len()))
             } else if let HirExpr::Name { name, .. } = part {
                 crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Ident(name.clone())),
@@ -368,13 +368,13 @@ impl RustEmitter {
                     args: vec![],
                 }
             } else {
-                crate::RustExpr::Verbatim("0usize".to_string())
+                crate::RustExpr::compiler_fragment("0usize".to_string())
             };
             capacity_parts.push(len_expr);
         }
         let mut iter = capacity_parts.into_iter();
         let Some(mut capacity) = iter.next() else {
-            return crate::RustExpr::Verbatim("0usize".to_string());
+            return crate::RustExpr::compiler_fragment("0usize".to_string());
         };
         for part in iter {
             capacity = crate::RustExpr::BinOp {

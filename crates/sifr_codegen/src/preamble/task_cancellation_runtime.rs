@@ -39,5 +39,5 @@ fn __sifr_current_task_cancellation(
         );
     }
 
-    vec![RustItem::Attr(source)]
+    vec![RustItem::compiler_fragment(source)]
 }

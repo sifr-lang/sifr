@@ -47,8 +47,8 @@ The following review claims are explicitly excluded:
 | M2 | Canonical test/build materialization | implementation complete; merge deferred | [#3554](https://github.com/sifr-lang/sifr/pull/3554) | `16024325813dbee56e84a838e42679340f0f829a` |
 | M3 | Verification gate integrity | implementation staged; second-review defect deferred | [#3555](https://github.com/sifr-lang/sifr/pull/3555) | `07e3d7d0f5123a89a30a4fcf149e51ebff7d6c7e` |
 | M4 | Architecture documentation accuracy and generated crate map | implementation staged; second-review defect deferred | [#3556](https://github.com/sifr-lang/sifr/pull/3556) | `0cb9720cb80e66bc2be3c73e78206106cd998bd1` |
-| M5 | Structural generated-code safety | in progress | | |
-| M6 | Structured codegen error propagation | pending | | |
+| M5 | Structural generated-code safety | implementation staged; final-review residual remediated | [#3557](https://github.com/sifr-lang/sifr/pull/3557) | `5644505a6badeb51b39e38df82b3f8972c545265` |
+| M6 | Structured codegen error propagation | in progress | | |
 | M7 | Canonical frontend project compilation product | pending | | |
 | M8 | LSP hot paths and compiler-service dependency direction | pending | | |
 | M9 | Method-lowering authority and unsafe-code documentation | pending | | |
@@ -165,11 +165,38 @@ Replace unrestricted verbatim escape hatches with typed, origin-bearing
 fragments or remove them; ensure validation and import/capability analysis cover
 every remaining fragment. Keep corpus scanning as defense in depth.
 
+Acceptance criteria:
+
+- Raw compiler-owned item, statement, and expression fragments are opaque values whose
+  constructors record the producing source callsite. External callers cannot
+  construct an untracked fragment or invoke the unchecked renderer directly.
+- Fragment syntax and the generated-code forbidden set (`unwrap`, `expect`,
+  panic/todo/unimplemented macros, unsafe Rust, and allow attributes) are
+  rejected structurally with origin-bearing evidence.
+- Import/runtime-capability collection parses every remaining compiler fragment
+  instead of treating it as an opaque leaf.
+- Complete generated Rust is parsed and structurally checked after renderer and
+  project postprocessing, and every `.rs` materialization path rejects invalid
+  or forbidden source before writing it.
+- Focused negative tests prove expression, statement, final-source, import, and
+  materialization rejection. Existing generated-code corpus scanning remains a
+  separate defense-in-depth gate.
+
 ## M6 Structured Codegen Error Propagation
 
 Replace normal codegen panic/error-discard paths with structured diagnostics and
 Result-returning public entrypoints. Preserve unwind containment only as the
 last defensive boundary and add focused reproductions for each converted path.
+
+Deferred M5 review follow-ups:
+
+- Replace generated-source and assembled-IR assertions with structured codegen
+  errors so a future provenance defect cannot turn user input into an internal
+  compiler panic. Keep the driver pre-write validator as defense in depth.
+- State the generated-source forbidden-set boundary explicitly: compiler-owned
+  `unwrap`/`expect`, panic/todo/unimplemented macros, unsafe Rust, and lint
+  suppression are forbidden; programmer-invariant `assert!` and
+  `unreachable!` remain permitted only under the project invariant rule.
 
 ## M7 Canonical Frontend Project Compilation Product
 
@@ -258,6 +285,19 @@ Deferred M4 remediation-review follow-ups:
   documentation guard before expensive selected areas.
 - Generalize the Cargo/disk workspace cross-check if first-party workspace
   members are ever allowed outside the current `crates/<name>` topology.
+
+Deferred M5 review and gate follow-ups:
+
+- Replace or structurally parse remaining raw `RustMatchArm::pattern` strings,
+  including import/capability analysis of pattern paths.
+- Measure the warm-codegen cost of per-render `syn` parsing and consolidate
+  validation if evidence shows material overhead; do not use cold-cache timing.
+- Reconcile the architecture document's three delivery-taxonomy lines at
+  current lines 945, 946, and 1430. The M5 merge gate proved that the M4
+  current/future authority defect reaches the coverage-matrix taxonomy check.
+- Explicitly classify Rust interop probe crates as compiler diagnostic
+  infrastructure outside the generated user-artifact `.rs` materialization
+  gate, while retaining their owning probe validation.
 
 ## M13 Phase Closure And Whole-Phase Review
 
@@ -379,3 +419,43 @@ tree and are keyed by candidate SHA.
 - The architecture guard now runs in create-PR and merge profiles. No
   `crates/**` compiler source changed, so the compiler create-PR and merge gates
   were not applicable. Integration stays deferred with the stacked chain.
+
+### M5 Deferred Integration Handoff
+
+- Branch: `codex/architecture-audit-closure-m5`.
+- Stacked draft PR: [#3557](https://github.com/sifr-lang/sifr/pull/3557), based
+  on the M4 branch.
+- Initial candidate: `b5060ba1984f4ba9b9bf8964c95f86f6826854c5`.
+- Initial exact-SHA Opus review: `NOT SATISFIED`. It found that the final
+  forbidden-call scan could treat legal user functions or methods named
+  `unwrap` or `expect` as compiler-owned and trigger an internal assertion.
+  The consolidated remediation added raw-identifier provenance for source
+  callables, structured call/macro rejection, nested lint-suppression checks,
+  structural item-fragment import parsing, and the exact-integer limit
+  diagnostic.
+- Reviewed remediation candidate:
+  `74fb63bcf00a3d46b7ec03878065ca9bb10a0426`. The final allowed review confirmed
+  the mechanism but found the same original defect at one recursive
+  argument-position lowering site. Per the no-third-review rule, that residual
+  site and the audited super/operator/plain/nested name flows were corrected
+  without another Opus round. The focused reproduction now emits and compiles
+  `values.push(wrapper.r#unwrap())` and `r#expect(...)`.
+- Final M5 implementation candidate:
+  `5644505a6badeb51b39e38df82b3f8972c545265`.
+- Targeted validation: all 1,149 `sifr_codegen` tests; driver generated-project
+  materialization tests; the raw-code guard; workspace Clippy; formatting; HIR
+  maintainability; the 3,269-file size guardrail; a direct `sifr emit`
+  reproduction; and the generated-code smoke corpus (corpus, panic scan,
+  intrinsic-panic lint, rustfmt, and determinism) passed.
+- The single create-PR gate ran on `6cf7fd5dc25b799c47d61ea49ff5a62816731204`
+  and stopped on the stale retained-runtime-root entry exposed when M5 removed
+  generated `DEFAULT_MAX_INTEGER_DIGITS` use. The obsolete entry was removed;
+  its owning allowlist guard then passed. The create-PR gate was not rerun.
+- The single merge gate ran on the exact final implementation SHA. It passed
+  the M5-related guardrails, runner foundations, and all ten Rust interop
+  variants, then stopped in coverage taxonomy on three M4 architecture lines
+  that describe future M9/M11 delivery work. That already-deferred
+  current/future authority mechanism is recorded under M12; the merge gate was
+  not rerun.
+- Review evidence is published in PR #3557 and preserved outside Git under both
+  reviewed SHAs. Integration remains deferred with the stacked chain.

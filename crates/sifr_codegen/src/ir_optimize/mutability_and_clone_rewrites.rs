@@ -102,7 +102,7 @@ pub(super) fn remove_nested_unneeded_mutability(
     protected_names: &HashSet<String>,
 ) -> usize {
     match stmt {
-        RustStmt::Verbatim(_) | RustStmt::LetDecl { .. } => 0,
+        RustStmt::CompilerFragment(_) | RustStmt::LetDecl { .. } => 0,
         RustStmt::Let { value, .. } | RustStmt::LetPattern { value, .. } => {
             remove_expr_unneeded_mutability(value, protected_names)
         }
@@ -293,7 +293,10 @@ pub(super) fn remove_expr_unneeded_mutability(
                 + remove_expr_unneeded_mutability(end, protected_names)
         }
         RustExpr::Closure { body, .. } => remove_expr_unneeded_mutability(body, protected_names),
-        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) | RustExpr::Verbatim(_) => 0,
+        RustExpr::Literal(_)
+        | RustExpr::Ident(_)
+        | RustExpr::Path(_)
+        | RustExpr::CompilerFragment(_) => 0,
     }
 }
 
@@ -322,10 +325,10 @@ pub(super) fn stmts_mutate_name(stmts: &[RustStmt], name: &str) -> bool {
 
 pub(super) fn stmt_mutates_name(stmt: &RustStmt, name: &str) -> bool {
     match stmt {
-        // Verbatim is an explicit IR boundary. If it names the local, retain
+        // A compiler fragment is an explicit IR boundary. If it names the local, retain
         // mutability conservatively because structured mutation analysis
         // cannot inspect the operation.
-        RustStmt::Verbatim(source) => source
+        RustStmt::CompilerFragment(source) => source
             .split(|character: char| !(character.is_ascii_alphanumeric() || character == '_'))
             .any(|token| token == name),
         RustStmt::Assign { target, value } => {
@@ -521,15 +524,16 @@ pub(super) fn expr_mutates_name(expr: &RustExpr, name: &str) -> bool {
         RustExpr::Range { start, end } => {
             expr_mutates_name(start, name) || expr_mutates_name(end, name)
         }
-        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) | RustExpr::Verbatim(_) => {
-            false
-        }
+        RustExpr::Literal(_)
+        | RustExpr::Ident(_)
+        | RustExpr::Path(_)
+        | RustExpr::CompilerFragment(_) => false,
     }
 }
 
 pub(super) fn optimize_item(item: &mut RustItem) -> usize {
     match item {
-        RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => 0,
+        RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::CompilerFragment(_) => 0,
         RustItem::Struct { .. } | RustItem::TupleStruct { .. } => 0,
         RustItem::Enum { variants, .. } => {
             let mut removed = 0usize;
@@ -576,7 +580,7 @@ pub(super) fn is_self_assignment(stmt: &RustStmt) -> bool {
 
 pub(super) fn optimize_stmt(stmt: &mut RustStmt) -> usize {
     match stmt {
-        RustStmt::Verbatim(_) | RustStmt::LetDecl { .. } => 0,
+        RustStmt::CompilerFragment(_) | RustStmt::LetDecl { .. } => 0,
         RustStmt::Let { value, .. } => optimize_expr(value),
         RustStmt::LetPattern { value, .. } => optimize_expr(value),
         RustStmt::LetElse {
@@ -682,7 +686,10 @@ pub(super) fn optimize_expr(expr: &mut RustExpr) -> usize {
             }
             removed
         }
-        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) | RustExpr::Verbatim(_) => 0,
+        RustExpr::Literal(_)
+        | RustExpr::Ident(_)
+        | RustExpr::Path(_)
+        | RustExpr::CompilerFragment(_) => 0,
         RustExpr::MethodCall {
             receiver,
             method,

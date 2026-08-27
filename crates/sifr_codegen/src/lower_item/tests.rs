@@ -115,11 +115,24 @@ fn dispatcher_result_lowers_large_module_int_const_as_sifr_int_helper() {
 
     let rendered = crate::render_items(&[item]);
     assert!(rendered.contains("fn __const_limit() -> SifrInt"));
-    assert!(rendered.contains(
-            "SifrInt::parse_decimal(\"100000000000000000000\", ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS)"
-        ));
+    assert!(rendered.contains("SifrInt::from_i64(100)"));
+    assert!(rendered.contains("SifrInt::from_i64(1000000000000000000)"));
+    assert!(!rendered.contains("parse_decimal"));
+    assert!(!rendered.contains("panic!"));
     assert!(!rendered.contains(".unwrap("));
     assert!(!rendered.contains(".expect("));
+}
+
+#[test]
+fn dispatcher_result_rejects_over_limit_module_int_const() {
+    let error = try_lower_simple_module_constant_item_result(
+        "limit",
+        &Type::Int,
+        &HirExpr::LargeIntLiteral("1".repeat(4097)),
+    )
+    .expect_err("over-limit exact integer literals must be diagnostics");
+
+    assert!(error.message.contains("4096-digit limit"));
 }
 
 #[test]

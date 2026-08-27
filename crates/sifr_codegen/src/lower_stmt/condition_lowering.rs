@@ -380,7 +380,7 @@ pub(super) fn try_lower_condition_index_operand_expr(
             let projection_method =
                 crate::helpers::option_projection_method_for_owned_type(value_ty.as_ref());
             let lowered_key = if let HirExpr::StringLiteral(value) = index {
-                RustExpr::Verbatim(format!("{value:?}"))
+                RustExpr::compiler_fragment(format!("{value:?}"))
             } else {
                 RustExpr::Ref {
                     mutable: false,

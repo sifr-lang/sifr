@@ -1,6 +1,7 @@
 use super::{
     CodegenResult, HashSet, HirModule, Renderer, RustEmitter, RustFile, RustItem, StdlibCode,
 };
+use crate::generated_source_validate::assert_generated_source_is_safe;
 use crate::ir_imports::collect_import_needs_from_items;
 use crate::ir_optimize::{remove_trivial_clones_in_items, remove_unneeded_mutability_in_items};
 use crate::ir_validate::validate_items;
@@ -220,6 +221,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
     );
     let rust_file = RustFile { items: file_items };
     let rust_source = Renderer::new().render_file(&rust_file);
+    assert_generated_source_is_safe(&rust_source, "test module");
     let uses_task_sleep = super::module_uses_task_sleep(module);
     let needs_python_runtime =
         super::python_interop_common::rust_source_uses_python_runtime(&rust_source);

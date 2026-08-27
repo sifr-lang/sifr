@@ -344,6 +344,20 @@ fn write_project_file(
     contents: impl AsRef<[u8]>,
     label: &str,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
+    let contents = contents.as_ref();
+    if path.extension().and_then(|extension| extension.to_str()) == Some("rs") {
+        let source = std::str::from_utf8(contents).map_err(|error| {
+            vec![materialization_error(format!(
+                "generated Rust source {label} is not UTF-8: {error}"
+            ))]
+        })?;
+        sifr_codegen::validate_generated_rust_source(source).map_err(|errors| {
+            vec![materialization_error(format!(
+                "generated Rust source {label} failed structural validation: {}",
+                errors.join(" | ")
+            ))]
+        })?;
+    }
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|error| {
             vec![materialization_error(format!(
@@ -368,9 +382,29 @@ pub(super) fn cargo_execution_error(message: String) -> RenderedDiagnostic {
 
 #[cfg(test)]
 mod tests {
-    use super::{materialize_support_modules, validate_native_link_evidence};
+    use super::{materialize_support_modules, validate_native_link_evidence, write_project_file};
     use std::collections::{BTreeMap, BTreeSet};
     use std::path::{Path, PathBuf};
+
+    #[test]
+    fn generated_rust_is_structurally_validated_before_write() {
+        let root = temp_dir("structural_validation");
+        let forbidden = root.join("forbidden.rs");
+        assert!(
+            write_project_file(
+                &forbidden,
+                "fn generated(value: Option<i64>) { value.unwrap(); }",
+                "forbidden.rs",
+            )
+            .is_err()
+        );
+        assert!(!forbidden.exists());
+
+        let invalid = root.join("invalid.rs");
+        assert!(write_project_file(&invalid, "fn generated(", "invalid.rs").is_err());
+        assert!(!invalid.exists());
+        let _ = std::fs::remove_dir_all(root);
+    }
 
     #[test]
     fn shared_support_materializer_combines_namespace_source_and_children() {

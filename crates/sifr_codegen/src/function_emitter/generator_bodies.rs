@@ -412,14 +412,15 @@ impl RustEmitter {
 
         for decorator in &func.decorators {
             self.body_items
-                .push(RustItem::Attr(format!("// @{decorator}")));
+                .push(RustItem::compiler_fragment(format!("// @{decorator}")));
         }
         if test_mode && func.name.starts_with("test_") {
-            self.body_items.push(RustItem::Attr("#[test]".to_string()));
+            self.body_items
+                .push(RustItem::compiler_fragment("#[test]".to_string()));
         }
 
         self.body_items.push(RustItem::Fn {
-            name: func.name.clone(),
+            name: crate::user_callable_rust_name(&func.name),
             visibility,
             type_params: self.lower_function_type_params(func),
             params,

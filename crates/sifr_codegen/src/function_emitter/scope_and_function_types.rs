@@ -605,7 +605,7 @@ impl RustEmitter {
                 }))
                 .collect::<Vec<_>>();
             RustStmt::LocalFn {
-                name: func.name.clone(),
+                name: crate::user_callable_rust_name(&func.name),
                 params,
                 ret: if nested_returns_sifr_int {
                     Some(RustType::Named("SifrInt".to_string()))
@@ -633,7 +633,7 @@ impl RustEmitter {
                 .collect::<Vec<_>>();
             RustStmt::Let {
                 mutable: nested_binding_mutable,
-                name: func.name.clone(),
+                name: crate::user_callable_rust_name(&func.name),
                 ty: None,
                 value: crate::retained_callback_closure::closure_with_capture_clones(
                     params,

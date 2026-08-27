@@ -1,10 +1,10 @@
 use super::*;
 impl Renderer {
-    pub fn render_expr(&mut self, expr: &RustExpr) {
+    pub(crate) fn render_expr(&mut self, expr: &RustExpr) {
         self.append(&Self::render_expr_string(expr));
     }
 
-    pub fn render_type(&mut self, ty: &RustType) {
+    pub(crate) fn render_type(&mut self, ty: &RustType) {
         self.append(&Self::render_type_string(ty));
     }
 
@@ -207,7 +207,7 @@ impl Renderer {
     pub(crate) fn render_expr_string(expr: &RustExpr) -> String {
         match expr {
             RustExpr::Literal(lit) => Self::render_literal(lit),
-            RustExpr::Verbatim(source) => Self::render_compiler_path_string(source),
+            RustExpr::CompilerFragment(source) => Self::render_compiler_path_string(source),
             RustExpr::Ident(name) => Self::render_identifier_or_compiler_path(name),
             RustExpr::Path(parts) => Self::render_path_parts(parts),
             RustExpr::MethodCall {

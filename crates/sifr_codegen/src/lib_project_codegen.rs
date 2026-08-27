@@ -3,6 +3,7 @@ use super::{
     StdlibCode, generate_rust, generate_rust_with_stdlib_for_module_with_project_policy,
     publicize_generated_module_source,
 };
+use crate::generated_source_validate::assert_generated_source_is_safe;
 use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
 use crate::project_stdlib_nominals::{
     project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
@@ -358,6 +359,7 @@ pub fn generate_rust_multi_with_metadata(
         .map(str::trim_end)
         .collect::<Vec<_>>()
         .join("\n\n");
+    assert_generated_source_is_safe(&project_union_prelude, "project union prelude");
     used_stdlib_modules.extend(stdlib_nominal_plan.used_stdlib_modules.iter().cloned());
     required_features.extend(stdlib_nominal_plan.required_features.iter().copied());
 
@@ -410,6 +412,7 @@ pub fn generate_rust_multi_with_metadata(
         if module_public {
             rust_source = publicize_generated_module_source(&rust_source);
         }
+        assert_generated_source_is_safe(&rust_source, "postprocessed project module");
         if rust_source.contains("::sifr_stdlib::fs::") {
             required_features.insert(StdlibFeature::Fs);
         }

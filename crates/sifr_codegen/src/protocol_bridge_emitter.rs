@@ -39,12 +39,12 @@ impl RustEmitter {
                 let delegated_call = RustExpr::FnCall {
                     func: Box::new(RustExpr::Path(vec![
                         source_class_rust_name(&class.name),
-                        method.name.clone(),
+                        crate::user_callable_rust_name(&method.name),
                     ])),
                     args: call_args,
                 };
                 impl_items.push(RustItem::Fn {
-                    name: method.name.clone(),
+                    name: crate::user_callable_rust_name(&method.name),
                     visibility: Visibility::Private,
                     type_params: Vec::new(),
                     params,

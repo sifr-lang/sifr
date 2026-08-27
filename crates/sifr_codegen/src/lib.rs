@@ -55,6 +55,7 @@ pub(crate) use helpers::{
     collect_referenced_vars_with_types, default_param_convention,
 };
 mod borrowed_string_compare;
+mod generated_source_validate;
 mod hir_analysis;
 mod hoisted_literals;
 mod intrinsic_method_emitters;
@@ -62,6 +63,7 @@ mod intrinsics;
 mod ir_imports;
 mod ir_optimize;
 mod ir_validate;
+pub use generated_source_validate::validate_generated_rust_source;
 mod lib_support;
 pub(crate) use lib_modules_and_codegen::{
     IsinstanceUnionMatch, ModuleFuncSignatures, NestedFnCapture,
