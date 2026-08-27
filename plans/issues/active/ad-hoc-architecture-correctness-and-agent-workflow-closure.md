@@ -43,7 +43,7 @@ The following review claims are explicitly excluded:
 
 | ID | Milestone | Status | PR | Candidate |
 | --- | --- | --- | --- | --- |
-| M1 | Warm-cache lock correctness and serialization failures | in progress | | |
+| M1 | Warm-cache lock correctness and serialization failures | blocked: cold create-PR budget | [#3553](https://github.com/sifr-lang/sifr/pull/3553) | `1c43fe34847925a269288b4073f5ca7ca7d6063e` |
 | M2 | Canonical test/build materialization | pending | | |
 | M3 | Verification gate integrity | pending | | |
 | M4 | Architecture documentation accuracy and generated crate map | pending | | |
@@ -141,6 +141,14 @@ Replace correctness-critical 64-bit FNV identities with a collision-resistant
 digest and full-key verification for persisted hits. Derive compiler identity
 from build/source revision and add bounded cache status/clean lifecycle commands.
 
+Deferred M1 review follow-ups:
+
+- Remove silent empty serialization fallback from Python certification cache
+  identities in `build/python_runtime.rs` and the corresponding omission in
+  `build/project_codegen.rs`.
+- Normalize the safe-but-unstable cache misses caused when a policy path changes
+  from non-canonical to canonical after the path is created.
+
 ## M11 Real Fuzz And Semantic Property Targets
 
 Add coverage-guided targets for parser, lowering, ownership, codegen validation,
@@ -167,3 +175,22 @@ whole-phase Opus review without repeating unchanged implementation validation.
 Evidence is added after each merge. Review files remain outside the reviewed Git
 tree and are keyed by candidate SHA.
 
+### M1 Blocked Handoff
+
+- Branch: `codex/architecture-audit-closure-m1`
+- Draft PR: [#3553](https://github.com/sifr-lang/sifr/pull/3553)
+- Implementation candidate: `1c43fe34847925a269288b4073f5ca7ca7d6063e`
+- Opus review: `SATISFIED`, no blocking findings; published in the PR and
+  preserved outside the Git tree under the candidate SHA.
+- Targeted validation: `cargo test -p sifr_package` (143 passed), driver
+  cache-identity tests (7 passed), binary-key tests (4 passed), Cargo-resolution
+  tests (9 passed), affected production checks, workspace Clippy, formatting,
+  and the 3,263-file size guardrail passed.
+- Create-PR gate: the one permitted run exited 124. Runtime-platform correctness
+  passed 28 variants with zero failures and one declared skip, but its first
+  cold-cache run took 217,638 ms against a 120,000 ms blocking budget. The
+  profile stopped before later required areas and toolchain suites.
+- Merge gate: not run because create-PR validation did not complete.
+- Exact next action: obtain adjudication to either permit one warm create-PR
+  rerun despite the phase's no-second-gate rule or explicitly authorize a gate
+  waiver. Do not start M2 before M1 is merged and recorded.
