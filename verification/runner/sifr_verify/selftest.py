@@ -472,15 +472,28 @@ def _rust_interop_profile_self_test() -> None:
 
 def _documentation_profile_self_test() -> None:
     profiles = load_all_profiles()
-    release = profiles["release"]
-    selected = [selection for selection in release["selected_areas"] if selection.get("area") == "documentation"]
-    expected_suites = ["architecture", "structure", "ga-release"]
-    if len(selected) != 1 or selected[0].get("suites") != expected_suites:
-        raise AssertionError(
-            "release profile must select documentation:architecture, structure, and ga-release exactly once"
-        )
-    if "area_documentation" not in canonical_step_names(release):
-        raise AssertionError("release profile omitted the executable documentation area")
+    expected_by_profile = {
+        "create-pr": ["architecture"],
+        "merge": ["architecture"],
+        "release": ["architecture", "structure", "ga-release"],
+    }
+    for profile_name, expected in expected_by_profile.items():
+        profile = profiles[profile_name]
+        selected = [
+            selection
+            for selection in profile["selected_areas"]
+            if selection.get("area") == "documentation"
+        ]
+        if len(selected) != 1 or selected[0].get("suites") != expected:
+            raise AssertionError(
+                f"{profile_name} profile must select documentation suites {expected} exactly once"
+            )
+        if "area_documentation" not in canonical_step_names(profile):
+            raise AssertionError(
+                f"{profile_name} profile omitted the executable documentation area"
+            )
+
+    expected_suites = expected_by_profile["release"]
 
     result_path = (
         Path(__file__).resolve().parents[3]

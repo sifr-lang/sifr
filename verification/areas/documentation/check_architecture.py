@@ -19,15 +19,24 @@ CRATE_BEGIN = "<!-- BEGIN GENERATED WORKSPACE CRATE MAP -->"
 CRATE_END = "<!-- END GENERATED WORKSPACE CRATE MAP -->"
 PROFILE_BEGIN = "<!-- BEGIN GENERATED VALIDATION PROFILE MAP -->"
 PROFILE_END = "<!-- END GENERATED VALIDATION PROFILE MAP -->"
-CRATE_REFERENCE = re.compile(r"`(crates/(sifr_[a-z0-9_]+))(?:/[^`]*)?`")
+INLINE_CODE = re.compile(r"`([^`\n]+)`")
 MARKDOWN_LINK = re.compile(r"\[[^]]*\]\(([^)]+)\)")
-MACHINE_PATH = re.compile(r"(?:/Users/[^\s`)]+|[A-Za-z]:\\Users\\[^\s`)]+)")
+MACHINE_PATH = re.compile(
+    r"(?:/(?:Users|home)/[^\s`)]+|/root/[^\s`)]+|[A-Za-z]:\\Users\\[^\s`)]+)"
+)
+NON_CRATE_SIFR_SYMBOLS = {
+    "sifr_type_to_rust_field_type",
+    "sifr_type_to_rust_type",
+}
 ARCHITECTURE_MUTATION_CASES = (
     "crate-map",
     "profile-map",
-    "unknown-crate",
+    "unknown-crate-path",
+    "unknown-bare-crate",
+    "missing-in-crate-path",
     "broken-link",
     "machine-path",
+    "machine-home-path",
 )
 
 
@@ -63,6 +72,20 @@ def workspace_crates(metadata: dict[str, Any]) -> list[dict[str, Any]]:
             continue
         candidates.append(package)
     names = {str(package["name"]) for package in candidates}
+    metadata_paths = {
+        Path(str(package["manifest_path"])).relative_to(REPO_ROOT).parent
+        for package in candidates
+    }
+    disk_paths = {
+        manifest.relative_to(REPO_ROOT).parent
+        for manifest in (REPO_ROOT / "crates").glob("*/Cargo.toml")
+    }
+    if metadata_paths != disk_paths:
+        missing = sorted(path.as_posix() for path in disk_paths - metadata_paths)
+        extra = sorted(path.as_posix() for path in metadata_paths - disk_paths)
+        raise SystemExit(
+            f"workspace crate inventory mismatch: missing={missing}, unexpected={extra}"
+        )
     rows: list[dict[str, Any]] = []
     for package in candidates:
         manifest = Path(str(package["manifest_path"])).relative_to(REPO_ROOT)
@@ -72,6 +95,7 @@ def workspace_crates(metadata: dict[str, Any]) -> list[dict[str, Any]]:
                 for dependency in package.get("dependencies", [])
                 if isinstance(dependency, dict)
                 and dependency.get("path") is not None
+                and dependency.get("kind") is None
                 and str(dependency.get("name")) in names
             }
         )
@@ -108,7 +132,7 @@ def validation_profiles() -> list[dict[str, Any]]:
 def render_crate_map(rows: list[dict[str, Any]]) -> str:
     lines = [
         CRATE_BEGIN,
-        "| Crate | Workspace path | Direct first-party dependencies |",
+        "| Crate | Workspace path | Direct normal first-party dependencies |",
         "| --- | --- | --- |",
     ]
     for row in rows:
@@ -160,16 +184,30 @@ def validation_failures(
     text: str, crates: list[dict[str, Any]], profiles: list[dict[str, Any]]
 ) -> list[str]:
     failures: list[str] = []
-    try:
-        if expected_document(text, crates, profiles) != text:
-            failures.append("generated-inventory-drift")
-    except ValueError as error:
-        failures.append(f"generated-inventory-markers: {error}")
+    for label, begin, end, rendered in (
+        ("crate-map", CRATE_BEGIN, CRATE_END, render_crate_map(crates)),
+        ("profile-map", PROFILE_BEGIN, PROFILE_END, render_profile_map(profiles)),
+    ):
+        try:
+            if replace_generated_section(text, begin, end, rendered) != text:
+                failures.append(f"{label}-drift")
+        except ValueError as error:
+            failures.append(f"{label}-markers: {error}")
     crate_paths = {str(row["path"]) for row in crates}
-    for path, _crate in CRATE_REFERENCE.findall(text):
-        root = "/".join(path.split("/")[:2])
-        if root not in crate_paths:
-            failures.append(f"unknown-first-party-crate: {root}")
+    crate_names = {str(row["name"]) for row in crates}
+    for code in INLINE_CODE.findall(text):
+        if code.startswith("crates/"):
+            root = "/".join(code.rstrip("/").split("/")[:2])
+            if root not in crate_paths:
+                failures.append(f"unknown-first-party-crate: {root}")
+            elif not (REPO_ROOT / code).exists():
+                failures.append(f"missing-first-party-path: {code}")
+        elif (
+            re.fullmatch(r"sifr_[a-z0-9_]+", code)
+            and code not in crate_names
+            and code not in NON_CRATE_SIFR_SYMBOLS
+        ):
+            failures.append(f"unknown-bare-first-party-crate: {code}")
     prose = re.sub(r"`[^`\n]*`", "", text)
     for target in MARKDOWN_LINK.findall(prose):
         target = target.split("#", 1)[0]
@@ -188,18 +226,25 @@ def run_self_test(crates: list[dict[str, Any]], profiles: list[dict[str, Any]]) 
     cases = {
         "crate-map": source.replace(CRATE_BEGIN, CRATE_BEGIN + "\ncorrupt", 1),
         "profile-map": source.replace(PROFILE_BEGIN, PROFILE_BEGIN + "\ncorrupt", 1),
-        "unknown-crate": source + "\n`crates/sifr_missing/src/lib.rs`\n",
+        "unknown-crate-path": source + "\n`crates/sifr_missing/src/lib.rs`\n",
+        "unknown-bare-crate": source + "\n`sifr_test_utils`\n",
+        "missing-in-crate-path": source
+        + "\n`crates/sifr_frontend/src/does_not_exist.rs`\n",
         "broken-link": source + "\n[missing](./missing-architecture-file.md)\n",
         "machine-path": source + "\n`/Users/example/work/sifr`\n",
+        "machine-home-path": source + "\n`/home/example/work/sifr`\n",
     }
     if tuple(cases) != ARCHITECTURE_MUTATION_CASES:
         raise SystemExit("architecture guard mutation registration drifted")
     expected = {
-        "crate-map": "generated-inventory-drift",
-        "profile-map": "generated-inventory-drift",
-        "unknown-crate": "unknown-first-party-crate",
+        "crate-map": "crate-map-drift",
+        "profile-map": "profile-map-drift",
+        "unknown-crate-path": "unknown-first-party-crate",
+        "unknown-bare-crate": "unknown-bare-first-party-crate",
+        "missing-in-crate-path": "missing-first-party-path",
         "broken-link": "broken-relative-link",
         "machine-path": "machine-local-path",
+        "machine-home-path": "machine-local-path",
     }
     for name, mutated in cases.items():
         failures = validation_failures(mutated, crates, profiles)

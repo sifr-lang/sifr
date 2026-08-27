@@ -703,6 +703,15 @@
       "resource_classes": [
         "external-corpus"
       ]
+    },
+    {
+      "area": "documentation",
+      "suites": [
+        "architecture"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
     }
   ],
   "toolchain_steps": [
