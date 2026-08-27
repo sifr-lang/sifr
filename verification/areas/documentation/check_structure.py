@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from check_architecture import ARCHITECTURE_MUTATION_CASES
 from check_ga_release_docs import MUTATION_CASES as GA_RELEASE_MUTATION_CASES
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -17,6 +18,7 @@ AREA_ROOT = Path(__file__).resolve().parent
 INVENTORY_PATH = AREA_ROOT / "docs_inventory.json"
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 EXPECTED_CHECKS = {
+    "architecture": ("architecture", "active", "check_architecture.py"),
     "structure": ("structure", "active", "check_structure.py"),
     "ga-release": ("ga-release", "active", "check_ga_release_docs.py"),
 }
@@ -27,6 +29,7 @@ STRUCTURE_MUTATION_CASES = (
     "missing-active-suite",
 )
 EXPECTED_MUTATION_CASES = {
+    "architecture": ARCHITECTURE_MUTATION_CASES,
     "structure": STRUCTURE_MUTATION_CASES,
     "ga-release": GA_RELEASE_MUTATION_CASES,
 }

@@ -142,6 +142,22 @@ machine-local paths, separate current architecture from history/future design,
 generate the workspace crate map from Cargo metadata, and block documented
 crate/path/profile drift.
 
+Acceptance criteria:
+
+- `internal_docs/architecture.md` describes current implemented boundaries;
+  execution history points to `plans/`, and future design is labeled explicitly.
+- The dict-order and `random.shuffle` rows match the current stdlib/compiler API.
+  Obsolete parser-fixture, test-utility, cargo-fuzz, corpus, snapshot, and
+  benchmark commands are replaced by the authoritative verification commands.
+- No machine-local absolute path or nonexistent first-party crate remains in the
+  architecture document.
+- A deterministic generator renders the workspace crate/dependency map from
+  locked Cargo metadata and the validation-profile inventory from committed
+  profile JSON.
+- Documentation verification rejects generated-map drift, unknown first-party
+  crate references, broken relative Markdown links, machine-local paths, and
+  profile inventory drift; its self-test proves each rejection path.
+
 ## M5 Structural Generated-Code Safety
 
 Make forbidden generated Rust constructs fail on every codegen invocation.

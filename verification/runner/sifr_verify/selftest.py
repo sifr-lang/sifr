@@ -474,9 +474,11 @@ def _documentation_profile_self_test() -> None:
     profiles = load_all_profiles()
     release = profiles["release"]
     selected = [selection for selection in release["selected_areas"] if selection.get("area") == "documentation"]
-    expected_suites = ["structure", "ga-release"]
+    expected_suites = ["architecture", "structure", "ga-release"]
     if len(selected) != 1 or selected[0].get("suites") != expected_suites:
-        raise AssertionError("release profile must select documentation:structure and ga-release exactly once")
+        raise AssertionError(
+            "release profile must select documentation:architecture, structure, and ga-release exactly once"
+        )
     if "area_documentation" not in canonical_step_names(release):
         raise AssertionError("release profile omitted the executable documentation area")
 
@@ -500,6 +502,12 @@ def _documentation_profile_self_test() -> None:
                     "bless": False,
                     "suites": [
                         {
+                            "name": "architecture",
+                            "blocking": True,
+                            "total_variants": 1,
+                            "total_failures": 0,
+                        },
+                        {
                             "name": "structure",
                             "blocking": True,
                             "total_variants": 1,
@@ -512,7 +520,7 @@ def _documentation_profile_self_test() -> None:
                             "total_failures": 0,
                         },
                     ],
-                    "summary": {"blocking_failures": 0, "total_variants": 2},
+                    "summary": {"blocking_failures": 0, "total_variants": 3},
                 }
             ),
             encoding="utf-8",

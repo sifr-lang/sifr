@@ -1,61 +1,29 @@
 # Sifr Compiler -- Architecture
 
-## Planning Source of Truth
+## Document Scope And Authority
 
-- Current sequencing for compiler execution lives in the project planning index, from the production compiler plan through the web-framework architecture.
-- Entry/exit criteria, future-work quality checks, and mandatory local validation commands live in staged planning files under `## Quality Rules`.
-- Iterator architecture execution has two completed stages:
-  - stage 1: `first-class-lazy-iterators-and-python-iterable-protocol record` and `first-class-lazy-iterators-and-python-iterable-protocol-execution record`
-  - stage 2 corrective continuation: `canonical-iteration-model-and-lazy-parity record` and `canonical-iteration-model-and-lazy-parity-execution record`
-  - stage-2 iterator behavior rules are merged and reviewed, including CPython `itertools` parity sweep/remediation passes.
-  - stage-2 rules lock enforces one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
-- RNG/crypto continuation is production-grade complete:
-  - planning docs: `stateful-rng-crypto-and-polish-parity-expansion record` and `stateful-rng-crypto-and-polish-parity-expansion-execution record`
-  - RNG behavior rules merged with external production-grade review artifacts and second-pass approval
-- Ownership-aware collection lowering continuation is in readiness review:
-  - planning docs: `ownership-aware-collection-lowering-and-clone-elision record` and `ownership-aware-collection-lowering-and-clone-elision-execution record`
-  - completed artifacts:
-    - lock/baseline artifact: `verification/areas/stdlib_parity/reports/collection_clone_codegen_traceability.md`
-    - iterator/comprehension ownership correction artifact: `verification/areas/stdlib_parity/reports/iterator_clone_codegen_traceability.md`
-    - indexing/slicing/star-unpack ownership correction artifact: `verification/areas/stdlib_parity/reports/index_slice_unpack_clone_traceability.md`
-    - generic hardening/regression lock artifact: `verification/areas/stdlib_parity/reports/generic_clone_hardening_traceability.md`
-  - active readiness stage: external review cycles after implementation completion
-  - locked planner rules for implementation passes:
-    - value category: `Place | Temporary`
-    - source access mode: `Preserve | Consume`
-    - yield mode: `Copy | Clone | Move | Borrow`
-    - conservative generic handling remains mandatory for `TypeVar`/`Any`/move unions
-  - canonical ownership-aware collection lowering rule:
-    - classify source expression as `ValueCategory::Place` or `ValueCategory::Temporary`
-    - derive source access rules as `SourceAccessMode::Preserve` or `SourceAccessMode::Consume`
-    - resolve element ownership as `Some(Copy | Move)` or `None` when ownership is conservative/unknown
-    - choose `YieldMode` from planner rules:
-      - `Preserve + Some(Copy)` -> `Copy` (`.iter().copied()` or equivalent copy-out)
-      - `Preserve + Some(Move)` -> `Clone` (`.iter().cloned()` where owned element materialization is required)
-      - `Preserve + None` -> `Borrow` (no forced copy/clone lowering)
-      - `Consume` (or iterator source) -> `Move` (consume source directly, no pre-clone shim)
-    - emit Rust lowering from this plan only; do not bypass planner with one-off clone heuristics
-  - residual boundary lock:
-    - this continuation removes unnecessary clone-heavy lowering patterns for targeted surfaces
-    - it does not claim full CPython parity for move-heavy runtime representations that depend on broader runtime/model changes
-  - traceability artifacts:
-    - `verification/areas/stdlib_parity/reports/collection_clone_codegen_traceability.md`
-    - `verification/areas/stdlib_parity/reports/iterator_clone_codegen_traceability.md`
-    - `verification/areas/stdlib_parity/reports/index_slice_unpack_clone_traceability.md`
-    - `verification/areas/stdlib_parity/reports/generic_clone_hardening_traceability.md`
-- Integer model amendment source of truth:
-  - `internal_docs/integer_model.md` defines the canonical semantic rules and replaces the historical machine-integer/separate user-facing `bigint` design before production.
-  - `integer-model-and-fixed-width-numeric-rules record` tracks the implementation work breakdown for that semantic rules.
-  - Target source semantics: `int` is an exact signed arbitrary-precision value-semantic scalar backed by inline-small `SifrInt`; explicit fixed-width `int8`/`int16`/`int32`/`int64` and `uint8`/`uint16`/`uint32`/`uint64` are for storage, dtypes, binary formats, and FFI.
-  - Ordinary fixed-width scalar arithmetic promotes to exact `int`; fixed-width array/tensor/dataframe arithmetic preserves dtype and exposes checked/wrapping/saturating/overflowing policies explicitly.
-- Historical references in this architecture document may mention legacy sequencing from earlier planning versions.
-- When numbered-record conflicts exist, follow the project planning index and the matching staged planning files.
-- Network/TLS/URL/HTTP substrate architecture is tracked in [`network_http_architecture.md`](./network_http_architecture.md). The public boundary is `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http`; CPython-shaped networking modules remain unsupported diagnostics or rejected surfaces.
-- Embedded CPython interop is production-grade complete as a separate lane from Rust-backed packages, raw C ABI interop, and CPython source-parity adaptation. The declaration-first continuation now includes synchronous declarations, opaque lifecycle, synchronous and asynchronous contexts, hermetic package-local bridges, one application-owned asyncio loop, typed coroutine declarations with terminally ordered native cancellation, consuming async close, typed current-thread, foreign-thread, and asyncio callbacks with retained-owner shutdown, the compiler-known affine non-send `python.Buffer[T]` contract with exclusive writable borrowing and exact-once release, five certified affine Arrow C Data Interface resources with structural capsule validation and owned transfer, and affine `python.DlpackTensor[T]`/`python.DlpackStream` resources with versioned one-shot acquisition, exact device/stream matching, no-copy enforcement, and exact-once deleter cleanup. Symbol-selective `sifr python bind` authors checked-in typed declarations from deterministic override/stub/inline/introspection precedence and rejects untyped boundaries; frozen `bind --check` and ordinary package operations validate environment, typing-source, and generated-source fingerprints. General `sifr python certify` authoring and read-only rechecks cover both Arrow and DLPack executable evidence. The analysis host exposes the compiler-owned Python interop plan to the language server, whose completion, hover, navigation, diagnostics, target status, protocol help, cancellation, and cache invalidation reuse compiler/driver queries and package-selected inputs. Editor attribution uses exact declaration file/symbol identity; diagnostics retain declaration spans and package-wide failures have one deterministic document owner. LSP environment status goes through the same Cargo package graph, root trust, final-application deferral, live environment digest, binding/certification, and protocol-certification decisions as package checking. Source edits retain cached raw inspections for unchanged targets, while watcher/external-input invalidation clears environment and target caches; cancellation is checked between target probes. The raw API exposes typed `from_value`, `to_value`, and `kwarg` conversion through the same declaration conversion authority, plus compiler-known checked `Object.get_attr`, `get_item`, `call`, and `call_method` operations on the canonical sealed object. Raw objects use ordinary automatic release, and raw coroutine execution submits to the same application-owned loop rather than creating a per-call loop. The raw Python handle is selected by its canonical stdlib declaration identity rather than the `Object` basename, and every declaration family validates the exact five-field `PythonError` runtime contract before code generation. Package metadata records Python environment selection, inferred and manual import roots, and root-owned Python trust; the package layer resolves one environment and validates canonical CPython probe JSON before runtime embedding consumes it. Ordinary package checking and `sifr python check` consume that same typed environment decision, while `sifr python doctor` reports deterministic manifest patches without mutating source, trust, locks, or environments; build and run remain strict at final application resolution. Runtime lifecycle, GIL/refcount ownership, blocking/offload, callbacks, resources, and zero-copy rules are documented in [`python_interop_architecture.md`](./python_interop_architecture.md), with verification under [`verification/areas/python_interop/`](../verification/areas/python_interop/).
-- Rust interop is designed as declaration-level Cargo integration, not a runtime `dlopen` layer or Rust ABI FFI surface. Rust-backed Sifr packages expose normal Sifr declarations annotated with `@rust(...)`, direct Cargo bindings are allowed only for checked bridge-compatible signatures, and package-local/shared bridge crates own adaptation. The source of truth is [`rust_interop_architecture.md`](./rust_interop_architecture.md). <!-- rust-interop-rejected -->
-- The sysroot and stdlib toolchain migration is tracked in [`sifr_sysroot_and_stdlib_architecture.md`](./sifr_sysroot_and_stdlib_architecture.md). The final stdlib boundary is checked Sifr source plus trusted sysroot Rust interop: public APIs live in `stdlib/sifr`, sysroot-private declaration source lives in `stdlib/_sifr`, stdlib behavior lives in `crates/sifr_stdlib`, and reusable runtime substrate lives in `crates/sifr_runtime`. The compiler may emit language scaffolding, Rust interop bridge glue, panic wrappers, exact-int conversions, entrypoint machinery, and runtime call glue; it must not implement stdlib behavior through intrinsic dispatch, pasted preambles, or handwritten Rust literals. Existing compiler-native stdlib glue survives only as exhaustive retained-by-design exceptions in `stdlib_retained_compiler_intrinsics.toml`.
+Status: current implemented architecture.
 
-- Python ecosystem integration uses declarations or hermetic typed bridges as the ordinary example path. Live service clients execute from built Sifr binaries, and the schema-2 capability ledger binds current-run compiled callback, async HTTP, buffer, Arrow, and DLPack evidence to exact source, marker, trust, certification, resource-zero, and report-digest provenance. The complete declaration-first phase is closed through PR #3000 after repeated satisfied Fable High whole-phase review and an authoritative merge gate covering Python interop 25/25, E2E 674/674, and 261 hardening variants with zero failures.
+This document describes durable compiler boundaries, language invariants, and
+implemented operational authority. The active execution sequence and completion
+history live under [`plans/`](../plans/); review and PR history are not
+architecture. A section that describes unimplemented work is labeled
+**Future**. When this document conflicts with code or an executable guard, the
+code and guard are authoritative and this document must be corrected.
+
+Focused architecture records live beside this document. In particular:
+
+- [`frontend_query_architecture.md`](./frontend_query_architecture.md) owns the
+  frontend query boundary.
+- [`python_interop_architecture.md`](./python_interop_architecture.md) and
+  [`rust_interop_architecture.md`](./rust_interop_architecture.md) own declared
+  interop contracts.
+- [`sifr_sysroot_and_stdlib_architecture.md`](./sifr_sysroot_and_stdlib_architecture.md)
+  owns the sysroot and stdlib boundary.
+- [`network_http_architecture.md`](./network_http_architecture.md) owns the
+  network/TLS/URL/HTTP substrate.
+- [`integer_model.md`](./integer_model.md) owns exact and fixed-width integer
+  semantics.
 
 ## Vision
 
@@ -86,7 +54,7 @@ This philosophy means that a Sifr programmer who handles all `Result` and `Optio
 
 ## CPython Reference
 
-Sifr uses the CPython source code (`/Users/yaseralnajjar/work/sifr/cpython`) as the **authoritative reference** for Python behavior. The goal is to match CPython's semantics for built-in functions, data structure methods, and standard library behavior -- but always through Sifr's safety lens.
+Sifr uses upstream CPython source and tests as the behavioral reference for Python APIs. The goal is to match CPython semantics for built-ins, data structure methods, and standard library behavior, always through Sifr's safety rules. CPython is an external reference; no machine-local checkout path is part of the repository contract.
 
 ### Reference Directory Mapping
 
@@ -211,7 +179,7 @@ import collections
 | `match`/`case` with soft keywords | `match`/`case` are hard keywords | Avoids parser ambiguity; `match` is already reserved as a Rust keyword |
 | `enum.Enum` class-based syntax | Dedicated `enum Color: RED, GREEN, BLUE` syntax, no class inheritance | Cleaner syntax; direct mapping to Rust enums; no metaclass machinery |
 | No enum associated data | Union types plus classes model data-carrying variants; enums are simple constants only | One obvious model: classes and unions for data, enums for constants |
-| Dict insertion order guaranteed (Python 3.7+) | Dict order is unspecified (`HashMap`); use `collections.OrderedDict` if order matters | `HashMap` is faster than ordered alternatives; `IndexMap` may be considered later |
+| Dict insertion order guaranteed (Python 3.7+) | Dict order is unspecified (`HashMap`); Sifr currently has no ordered-mapping type | An ordered mapping can be added only as an explicit future API |
 
 
 **Migration note:** code that relies heavily on exception propagation, import-time side effects, arbitrary-precision integers, or runtime reflection will require redesign when porting to Sifr. The compiler provides clear diagnostics for each divergence.
@@ -287,7 +255,7 @@ Several stdlib functions intentionally diverge from CPython names due to Rust ke
 | `sifr.itertools.count` | `itertools.count` | CPython-compatible lazy counter iterator |
 | `sifr.itertools.count_from` | — (bounded helper over `count`) | Sifr extension; finite convenience helper equivalent to `islice(count(start, step), n)` |
 | `sifr.os.remove_file` | `os.remove` | `remove` is used as a method name on collections; `remove_file` avoids ambiguity |
-| `sifr.random.shuffle` | `random.shuffle` | CPython-compatible name; returns a new shuffled list (Sifr is immutable-by-default) instead of mutating in place |
+| `sifr.random.shuffle` | `random.shuffle` | CPython-compatible mutating operation; accepts `mut list[T]` and returns `None` |
 | `sifr.operator.mod_val` | `operator.mod` | `mod` is a Rust keyword |
 | `sifr.re.Pattern.is_match` | `re.Pattern.match` | `match` is a Rust keyword (also a Sifr keyword from pattern-matching work) |
 | `sifr.itertools.take` | — (no CPython equivalent) | Sifr extension; returns first N elements from an `Iterable[T]`. Kept for ergonomics. |
@@ -316,80 +284,55 @@ flowchart LR
 
 ## Crate Structure (Rust Workspace)
 
-**Hybrid dependency approach:** Infrastructure crates, parser, AST crates, and
-the formatter are referenced from the Ruff fork submodule, currently based on
-Ruff 0.16.4. Parser and AST crates include Sifr-specific syntax extensions and
-are imported through Cargo aliases as `sifr_python_ast` and
-`sifr_python_parser`. The Ruff fork formatter is Sifr-aware for parameter
-conventions, Sifr type syntax, generics, match/case, ownership-aware
-collections, formatter pragmas, and Sifr-tagged docstring snippets. The root
-workspace pins Sifr's direct and generated-runtime support crates to the latest
-stable releases independently from the excluded Ruff fork, which keeps its own
-sub-workspace dependency pins. Sifr is latest-stable-only: the root
-`rust-toolchain.toml` and CI select Rust 1.98.0 exactly, while workspace
-manifests declare Rust 1.98 as the required compiler line.
+The following table is generated from locked Cargo metadata. Run
+`python3 verification/areas/documentation/check_architecture.py --write` after
+an intentional workspace or profile change. The documentation gate rejects
+manual drift.
 
-```
-sifr/
-  Cargo.toml                (workspace root)
-  crates/
-    sifr_source/            (canonical source text, line-map, file metadata, and UTF-8/UTF-16/UTF-32 position conversion primitives)
-    sifr_frontend/          (canonical parse/lower/type-check/diagnostics query facade shared by CLI and tooling)
-    sifr_diagnostics/       (canonical diagnostic codes, source-map spans, model, render schema, and sink)
-    sifr_ir/                (High-level IR data rules, public lowered views, CFG/flow graph data)
-    sifr_lowering/          (AST-to-IR lowering, name/type/ownership/async analysis, lowering diagnostics)
-    sifr_stdlib_manifest/   (compiler-host stdlib source inventory, private declaration inventory, feature planning, and sysroot validation)
-    sifr_stdlib_imports/    (legacy and bare stdlib import suggestion policy over manifest inventory)
-    sifr_ipc/               (shared IPC protocol/frame/schema/request-tracking crate)
-    sifr_type_system/       (type definitions, inference, checking, subtyping)
-    sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
-    sifr_driver/            (CLI/project orchestration, split into diagnostics.rs + stdlib/ frontend/ project/ build/ test_runner/)
-    sifr_format/            (Sifr-facing Ruff-backed formatter API, config conversion, diagnostics, and text edits)
-    sifr_analysis/          (editor query host; routes formatting through sifr_format)
-    sifr_lsp/               (LSP protocol shell; serves document/range formatting over sifr_analysis)
-    sifr/                   (CLI binary: sifr build, sifr check, sifr run, sifr fmt)
+<!-- BEGIN GENERATED WORKSPACE CRATE MAP -->
+| Crate | Workspace path | Direct first-party dependencies |
+| --- | --- | --- |
+| `sifr` | `crates/sifr` | `sifr_diagnostics`, `sifr_driver`, `sifr_format`, `sifr_frontend`, `sifr_lint`, `sifr_lsp`, `sifr_package`, `sifr_stdlib_manifest`, `sifr_syntax`, `sifr_sysroot` |
+| `sifr_analysis` | `crates/sifr_analysis` | `sifr_diagnostics`, `sifr_driver`, `sifr_format`, `sifr_frontend`, `sifr_lint`, `sifr_syntax` |
+| `sifr_codegen` | `crates/sifr_codegen` | `sifr_diagnostics`, `sifr_ir`, `sifr_lowering`, `sifr_stdlib_manifest`, `sifr_structural_identity`, `sifr_type_system` |
+| `sifr_diagnostics` | `crates/sifr_diagnostics` | `sifr_source` |
+| `sifr_driver` | `crates/sifr_driver` | `sifr_codegen`, `sifr_diagnostics`, `sifr_frontend`, `sifr_ir`, `sifr_lowering`, `sifr_package`, `sifr_stdlib_imports`, `sifr_stdlib_manifest`, `sifr_syntax`, `sifr_sysroot`, `sifr_type_system` |
+| `sifr_format` | `crates/sifr_format` | `sifr_diagnostics`, `sifr_frontend`, `sifr_syntax` |
+| `sifr_frontend` | `crates/sifr_frontend` | `sifr_diagnostics`, `sifr_lowering`, `sifr_source`, `sifr_structural_identity`, `sifr_syntax`, `sifr_type_system` |
+| `sifr_ipc` | `crates/sifr_ipc` | — |
+| `sifr_ir` | `crates/sifr_ir` | `sifr_diagnostics`, `sifr_type_system` |
+| `sifr_lint` | `crates/sifr_lint` | `sifr_diagnostics`, `sifr_frontend`, `sifr_ir`, `sifr_syntax` |
+| `sifr_lowering` | `crates/sifr_lowering` | `sifr_diagnostics`, `sifr_ipc`, `sifr_ir`, `sifr_stdlib_imports`, `sifr_type_system` |
+| `sifr_lsp` | `crates/sifr_lsp` | `sifr_analysis`, `sifr_diagnostics`, `sifr_driver`, `sifr_package`, `sifr_source` |
+| `sifr_package` | `crates/sifr_package` | `sifr_diagnostics`, `sifr_frontend`, `sifr_syntax` |
+| `sifr_runtime` | `crates/sifr_runtime` | `sifr_structural_identity` |
+| `sifr_rust_interop_catalog` | `crates/sifr_rust_interop_catalog` | — |
+| `sifr_source` | `crates/sifr_source` | — |
+| `sifr_stdlib` | `crates/sifr_stdlib` | `sifr_runtime` |
+| `sifr_stdlib_imports` | `crates/sifr_stdlib_imports` | `sifr_stdlib_manifest` |
+| `sifr_stdlib_manifest` | `crates/sifr_stdlib_manifest` | `sifr_sysroot` |
+| `sifr_structural_identity` | `crates/sifr_structural_identity` | — |
+| `sifr_syntax` | `crates/sifr_syntax` | `sifr_diagnostics`, `sifr_source` |
+| `sifr_sysroot` | `crates/sifr_sysroot` | — |
+| `sifr_type_system` | `crates/sifr_type_system` | `sifr_diagnostics` |
+<!-- END GENERATED WORKSPACE CRATE MAP -->
 
-  # Path dependencies from the Ruff fork submodule:
-  #   ruff_text_size          -- text span/range utilities
-  #   ruff_source_file        -- source file representation, line indexing
-  #   ruff_python_trivia      -- whitespace/comment handling
-  #   ruff_python_literal     -- literal parsing (string escapes, number formats)
-  #   ruff_python_formatter   -- Sifr-aware Ruff formatter rules and range formatting
+The stable ownership layers are:
 
-  third_party/
-    ruff/                    (sifr-lang/ruff submodule, branch sifr/0.16.4-maintenance)
-      crates/
-        ruff_python_ast/      (imported as Cargo dependency alias sifr_python_ast)
-        ruff_python_parser/   (imported as Cargo dependency alias sifr_python_parser)
-        ruff_python_formatter/ (Sifr-aware formatter wrapper consumed by sifr_format)
-```
+- source and diagnostics: `sifr_source`, `sifr_diagnostics`;
+- syntax and semantic core: `sifr_syntax`, `sifr_type_system`, `sifr_ir`,
+  `sifr_lowering`, `sifr_frontend`;
+- compilation and execution: `sifr_codegen`, `sifr_driver`, `sifr`;
+- package, sysroot, and stdlib: `sifr_package`, `sifr_sysroot`,
+  `sifr_stdlib_manifest`, `sifr_stdlib_imports`, `sifr_stdlib`,
+  `sifr_runtime`;
+- tooling: `sifr_format`, `sifr_lint`, `sifr_analysis`, `sifr_lsp`;
+- shared protocols and identities: `sifr_ipc`,
+  `sifr_structural_identity`, and `sifr_rust_interop_catalog`.
 
-New crates added as compiler and runtime needs grow:
-
-- core_stdlib/ext_collections: `sifr_std` (standard library wrappers, extended collections)
-- semantic diagnostic taxonomy: `sifr_diagnostics` (shared diagnostic model and schema, introduced before migrating existing emission paths)
-- `sifr_source`: bottom-of-graph source text, line maps, source-file metadata, and editor position conversion authority.
-- Architecture-transfer guardrails: `internal_docs/typescript_go_architecture_transfer_guardrails.md` records the direct-read inventory, current LSP single-file rebuild caveat, aggregate LSP budget caveat, and guardrail automation for behavior migration.
-- `sifr_frontend::SourceProvider`: typed semantic filesystem boundary. `internal_docs/typescript_go_architecture_transfer_source_provider.md` records how `DiskSourceProvider`, `OverlaySourceProvider`, and `TrackingSourceProvider` cover disk reads, unsaved editor buffers, read/probe/canonicalization dependency records, failed lookup records, package import ambiguity, and overlay lifecycle requirements.
-- `sifr_frontend::WorkspaceSession`: serialized compiler-service workspace state and inspectable `WorkspaceSnapshot` creation. `internal_docs/typescript_go_architecture_transfer_workspace_session.md` records the session/snapshot state.
-- `sifr_analysis::AnalysisSnapshot`: analysis-facing handle to a captured `WorkspaceSnapshot`. LSP request handling routes editor queries through snapshot methods while staying serialized. `internal_docs/typescript_go_architecture_transfer_analysis_snapshot.md` records query metadata snapshot ids, stale-result identity, and the conservative dirty-scope report slot.
-- `sifr_lsp::Session`: persistent analysis handles that wrap `WorkspaceSession`; `DocumentStore` keeps protocol document state. `internal_docs/typescript_go_architecture_transfer_lsp_persistent_session.md` records overlay-fed open/change/save handling and document-version stale-result checks.
-- LSP event compaction and dirty-scope reporting: `sifr_lsp` compacts batched editor edits and watcher notifications before updating analysis, while `sifr_frontend::WorkspaceSession` records dirty-scope reports with explicit reasons, merge priority, and conservative degradation. `internal_docs/typescript_go_architecture_transfer_event_compaction_dirty_scope.md` records the precise invalidation vocabulary.
-- Dependency-sensitive invalidation: `sifr_frontend::FrontendContext` records import/export/module signatures and reverse dependency edges so private body edits invalidate only the changed module when public/import signatures are unchanged, while public API or import graph changes invalidate reverse dependents. `internal_docs/typescript_go_architecture_transfer_module_signatures_dependency_invalidation.md` records the invalidation policy.
-- `sifr_lowering::flow_graph`: first-class data-flow nodes, edges, and effects for definitions, assignments, conditions, branches, loops, calls, mutations, moves, borrows, joins, unreachable statements, and exits. `LoweringResult` carries a snapshot-scoped `FlowGraph`, and `FlowFacts` exposes graph fingerprints and debug traces. `internal_docs/typescript_go_architecture_transfer_first_class_flow_graph.md` records graph-backed narrowing and ownership-effect behavior.
-- `sifr_frontend::cache_keys`: deterministic `CompilerFingerprint`, `CacheKeyFingerprint`, common workspace/package/query-policy context fingerprints, and typed cache-key identities for parse, source-map, HIR/lowering, diagnostics, lint, format, package graph, symbol bucket, and flow graph cache families. `internal_docs/typescript_go_architecture_transfer_fingerprints_cache_keys.md` records cache-key identity requirements.
-- Snapshot reuse: `sifr_frontend` adds ref-counted, cache-key identity-keyed reuse storage for parse trees, source-map file views, lowered HIR, module diagnostics, and module symbol indexes. `WorkspaceSnapshot` stores immutable snapshot payloads behind `Arc`, and `FrontendContext::can_replace_module_in_project` gates safe one-module replacement on unchanged import/export signatures. `internal_docs/typescript_go_architecture_transfer_snapshot_reuse.md` records reuse requirements.
-- `sifr_lsp::RequestQueue`: latency-sensitive, formatting, workspace, and background requests route through explicit priority lanes with bounded fairness, while diagnostic jobs preserve captured document versions. `internal_docs/typescript_go_architecture_transfer_lsp_scheduler.md` records scheduler behavior.
-- LSP latency budgets: protocol-level LSP performance coverage is split into per-request `perf.lsp.*` budget ids, leaving `perf.lsp.request_families` as aggregate smoke only. `internal_docs/typescript_go_architecture_transfer_lsp_latency_budgets.md` records the request-family budget taxonomy and frontend query architecture relationship.
-- LSP cancellation, progress, and watchdog: LSP cancellation state, delayed workspace-diagnostic progress, and parent-process watchdog behavior are explicit server behaviors. `internal_docs/typescript_go_architecture_transfer_lsp_cancellation_progress_watchdog.md` records cancellation/progress/watchdog semantics.
-- Bucketed symbol index: `sifr_analysis::SymbolIndex` exposes workspace/package/stdlib bucket readiness states, import-entry counts, and dirty-module refresh for editor symbol/import queries. Package and stdlib buckets are explicit unavailable states until frontend graph views carry those identities. `sifr_analysis::ApprovedWorkerLane` records compiler operations eligible for future parallel execution while `SingleOwnerCompilerPhase` keeps type identity, ownership mutation, package graph mutation, and codegen state serialized. `internal_docs/typescript_go_architecture_transfer_bucketed_indexes.md` records bucket and worker-lane behavior.
-- Project residency: `sifr_frontend::WorkspaceSession` snapshots include `WorkspaceResidencySnapshot` for project residency, config registry entries, deduped watch registrations, and verified non-authoritative `.sifrbuildinfo` metadata. Build info is retained only after current compiler, package/config, and source hashes match. `internal_docs/typescript_go_architecture_transfer_project_residency.md` records residency behavior.
-- Trace and status: `WorkspaceSnapshot` carries bounded `WorkspaceDebugSnapshot` trace/status output with normalized `WorkspaceTracePhase` events for source update, parse, lower, type check, ownership, flow, cache, invalidation, stale rejection, and LSP timing. LSP scheduler/cancellation/stale/timing events are exposed through `sifr/debugTrace`; `AnalysisHost::debug_snapshot` adds side-effect-free index readiness, and `sifr trace` prints representative CLI snapshots. `internal_docs/typescript_go_architecture_transfer_trace_status.md` records trace/status behavior.
-- Editor corpus and snapshot handles: marker-based multi-file editor corpus fixtures cover the analysis query families and stale-snapshot behavior, while internal-only `SnapshotHandleKind` handles for symbols, types, signatures, diagnostics, and source spans reject wrong-snapshot resolution. Runtime package fixtures also lock `SIFR-IMPORT-0005` ambiguity and fatal `SIFR-PACKAGE-*` non-duplication. `internal_docs/typescript_go_architecture_transfer_editor_corpus_snapshot_handles.md` records corpus/handle behavior.
-- ffi: FFI codegen extensions in `sifr_codegen`
-- frontend query architecture shared analysis/query architecture: `sifr_frontend` (canonical frontend API and query/database ownership)
-- developer-tooling work: `sifr_lsp` (language server), `sifr_format` (formatter), `sifr_lint` (linter)
-- ecosystem: `sifr_registry` (package registry client)
+Ruff-derived parser, AST, text, trivia, and formatter crates remain under
+[`third_party/ruff/`](../third_party/ruff/) and are not first-party workspace
+members. Sifr-facing crates own the public compiler and tooling contracts.
 
 ## Formatter Architecture
 
@@ -1000,7 +943,7 @@ or package behavior.
 
 **Feature-specific gates (added as features land):**
 
-- ergonomics+: CPython parity tests -- verify behavioral match with CPython (`/Users/yaseralnajjar/work/sifr/cpython`) for all built-in functions, data structure methods, and stdlib modules, with safe error handling (no panics, `Result`/`Option` where CPython raises exceptions)
+- CPython differential and stdlib-parity areas verify behavioral matches for built-ins, data structure methods, and stdlib modules, with safe error handling (`Result`/`Option` where CPython raises exceptions).
 - generics+: benchmark suite with regression thresholds (compile time, binary size)
 - core_stdlib+: stdlib wrapper tests (each module has integration tests against the underlying Rust crate)
 - ecosystem: fuzz testing for parser and type checker (cargo-fuzz or afl)
@@ -1352,105 +1295,36 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 - pattern-matching work (type-system architecture: Type System Completion): `match`/`case` syntax with exhaustiveness checking on union types, literal unions, optional types, class unions, and enum types
 - enum type-system work (type-system architecture: Type System Completion): simple enum types with exhaustive pattern matching; enum values implement `Eq`, `Hash`, `Clone`, `Debug`
 
-### Ecosystem Strategy
+### Ecosystem Strategy (Current And Future)
 
 Sifr's standard library follows a thin wrapper plus declared interop strategy:
 
 - **Thin wrappers (protocols-data_processing):** The stdlib provides Pythonic APIs over best-in-class Rust crates. The sifr compiler generates Cargo dependencies automatically. Users write Python-like code; the generated Rust uses `axum`, `polars`, `sqlx`, `tokio`, etc. directly.
 - **Rust interop:** For crates not yet wrapped by stdlib modules, package authors expose Rust-backed Sifr declarations through declaration-level Cargo integration and checked bridge-compatible signatures. This gives Sifr access to the Rust ecosystem without using Rust's private ABI or runtime `dlopen` as the Rust path. <!-- rust-interop-rejected -->
-- **Package ecosystem (ecosystem):** A package registry (`sifr.sh`) for sharing and reusing Sifr code, with incremental compilation for fast iteration.
+- **Future — hosted package registry:** no hosted Sifr registry exists today. A reviewed future design may add package publication and discovery; current package resolution is local/manifest-based.
 - **No reinventing:** Sifr never reimplements what Rust already has. Every stdlib module wraps a proven Rust crate.
 
 ---
 
 ## Type System Design
 
-### Core Types (Full)
+### Core Types
 
-```rust
-enum Type {
-    // Exact integer (value-semantic at source, not Rust Copy)
-    Int,
+The executable type inventory is
+[`crates/sifr_type_system/src/types/definitions.rs`](../crates/sifr_type_system/src/types/definitions.rs).
+Do not copy the Rust enum into this document. At a durable level, the inventory
+contains:
 
-    // Fixed-width integer primitives (Copy)
-    Int8,
-    Int16,
-    Int32,
-    Int64,
-    UInt8,
-    UInt16,
-    UInt32,
-    UInt64,
-    ISize,
-    USize,
+- exact `int`, explicit signed/unsigned fixed-width integers, `float`,
+  `bool`, `str`, `bytes`, and `None`;
+- literal, union, intersection, optional, callable, result, range, slice, and
+  collection types;
+- class, enum, protocol, iterator/generator, task, and interop resource types;
+- inference-only variables and the `Any`, `Unknown`, and `Never`
+  boundaries.
 
-    // Other primitives
-    Float,
-    Bool,
-    Str,
-    None,
-
-    // Compound (Move)
-    List(Box<Type>),
-    Dict(Box<Type>, Box<Type>),
-    Tuple(Vec<Type>),
-    Set(Box<Type>),
-
-    // Literal types -- specific values as types (type_system)
-    LiteralInt(SifrIntLiteral),
-    LiteralStr(String),
-    LiteralBool(bool),
-
-    // Union / Intersection (type_system)
-    Union(Vec<Type>),           // int | str -- flattened, deduplicated
-    Intersection(Vec<Type>),    // internal only, for narrowing engine
-
-    // Type alias (type_system)
-    Alias(String, Box<Type>),   // type HttpMethod = "GET" | "POST"
-
-    // Function
-    Function(FunctionType),
-
-    // Async/concurrency model (async/runtime architecture)
-    Coroutine(Box<Type>, Box<Type>),  // Coroutine[T, E] -- linear async computation, consumed by await or spawn
-    Task(Box<Type>, Box<Type>),       // Task[T, E] -- awaitable task handle, yields TaskResult[T, E]
-    TaskResult(Box<Type>, Box<Type>), // TaskResult[T, E] -- Ok(T), Err(Failure[E]), Cancelled(Failure[CancellationError])
-    BlockingTask(Box<Type>, Box<Type>), // BlockingTask[T, E] -- blocking offload handle
-    Awaitable(Box<Type>),             // structural awaitability protocol
-    AsyncFunction(FunctionType),       // async callable, not a subtype of sync Function
-    AsyncIterator(Box<Type>, Box<Type>), // AsyncIterator[T, E] -- anext() yields Result[Option[T], E]
-    AsyncGenerator(Box<Type>, Box<Type>), // AsyncGenerator[T, E] -- async def with yield
-
-    // Class instance (classes)
-    Instance(ClassId),
-
-    // Generics (generics)
-    TypeVar(TypeVarId),
-    GenericInstance(ClassId, Vec<Type>),
-
-    // Result / Option (error_handling)
-    Result(Box<Type>, Box<Type>),
-
-    // Enum (enum type-system work)
-    Enum(EnumId),
-
-    // Range (control_flow)
-    Range,
-
-    // Protocol iteration model (first-class lazy iterator work)
-    Iterable(Box<Type>),
-    Iterator(Box<Type>),
-
-    // Safe top type: must be narrowed before use (type_system)
-    Unknown,
-
-    // Escape hatch: opts out of type checking
-    Any,
-
-    // Bottom
-    Never,
-}
-```
+The type-system source and its tests are authoritative for additions and
+representation details.
 
 ### Literal Type Behavior (TypeScript-inspired)
 
@@ -1511,303 +1385,89 @@ Narrowing refines a variable's type within a control flow branch:
 
 ---
 
-## Test Suite Architecture
+## Test And Validation Architecture
 
-This compiler is built entirely by AI agents. The test suite is the rules that ensures correctness across all agents working on different parts of the compiler. It must be:
+The repository uses layered evidence, but no single `cargo test` invocation is
+the full suite. Cargo unit/integration tests, `insta` snapshots, Sifr E2E
+fixtures, and schema-versioned verification areas are composed by validation
+profiles.
 
-- **Deterministic:** same input always produces same output
-- **Self-documenting:** test files are readable specifications of language behavior
-- **Layered:** each compiler stage has its own test layer
-- **Easy to extend:** adding a new language feature means adding test files, not modifying test infrastructure
-- **Fast to run:** `cargo test` completes in seconds for the full suite
+### Validation Profiles
 
-### Testing Strategy Overview
+This table is generated from committed profile JSON. Area and suite selections
+are data, not shell-script policy.
 
-```mermaid
-flowchart TD
-    subgraph layer1 [Layer 1: Unit Tests]
-        LexerUnit["Lexer unit tests\n(token output)"]
-        ASTUnit["AST node tests\n(construction, size)"]
-        TypeUnit["Type system tests\n(subtyping, inference)"]
-    end
-    subgraph layer2 [Layer 2: Snapshot Tests]
-        ParseSnap["Parser snapshots\n(.sifr -> AST dump)"]
-        TypeSnap["Type checker snapshots\n(inline assertions)"]
-        CodegenSnap["Codegen snapshots\n(.sifr -> .rs output)"]
-    end
-    subgraph layer3 [Layer 3: End-to-End Tests]
-        E2EPass["Compile + run tests\n(expected stdout)"]
-        E2EFail["Compile-fail tests\n(expected errors)"]
-        E2EOwnership["Ownership tests\n(move/borrow errors)"]
-    end
-    subgraph layer4 [Layer 4: CPython Parity Tests]
-        CPythonParity["CPython parity tests\n(match behavior, safe errors)"]
-        SafetyTests["Safety tests\n(no panics, Result/Option)"]
-    end
-    subgraph layer5 [Layer 5: Corpus Tests]
-        Corpus["Corpus tests\n(no panics on large inputs)"]
-    end
-    subgraph layer6 [Layer 6: Fuzz + Property Tests - generics plus]
-        FuzzParser["Parser fuzz\n(cargo-fuzz)"]
-        FuzzChecker["Type checker fuzz\n(random ASTs)"]
-        PropTests["Property tests\n(algebraic invariants)"]
-    end
-    subgraph layer7 [Layer 7: Performance Tests - generics plus]
-        CompileBench["Compile-time benchmarks\n(criterion)"]
-        BinarySizeBench["Binary-size benchmarks"]
-    end
-    layer1 --> layer2 --> layer3 --> layer4 --> layer5 --> layer6 --> layer7
-```
+<!-- BEGIN GENERATED VALIDATION PROFILE MAP -->
+| Profile | Manifest | Selected area suites |
+| --- | --- | --- |
+| `create-pr` | `verification/profiles/create-pr.json` | `rust_interop:matrix+tiers+compatibility-matrix+stale-drafts+stable-candidate`<br>`coverage_matrix:readiness`<br>`diagnostics:rules`<br>`python_interop:self-test+scaffold+env+dependency-versions+minor-train-features+crypto-abi-features+redis-service-features+numeric-dataframe-features+readonly-check-doctor+binding-authoring+lsp-declaration-authoring+tier1+callbacks+callback-examples+dataframes+buffer-examples+arrow-examples+dlpack-examples+arrow-runtime+dlpack-runtime+buffer-runtime+async-declaration-examples+async-context-examples+cloud-boto3`<br>`runtime_platform:platform-golden+platform-support-matrix+platform-evidence`<br>`algorithmic_compatibility:profile-manifest`<br>`developer_tooling:static+lsp-smoke+typescript-go-transfer+diagnostic-rules`<br>`generated_code_quality:smoke`<br>`performance:smoke+frontend-syntax-guardrails`<br>`stdlib_parity:module-merge-check+audit-fixtures+complexity-resource+module-inventory`<br>`core_language:audit-fixtures`<br>`project_workspace:audit-fixtures`<br>`package_management:guardrails+offline-merge-smoke` |
+| `merge` | `verification/profiles/merge.json` | `rust_interop:matrix+tiers+compatibility-matrix+stale-drafts+stable-candidate`<br>`coverage_matrix:readiness`<br>`core_language:integer_dtype_rules+hir_analysis_behaviors+cfg_flow_behaviors+syntax_parser_lexer_matrix+audit-fixtures`<br>`cpython_differential:policy+hand_seeded_merge`<br>`python_interop:self-test+scaffold+env+dependency-versions+minor-train-features+crypto-abi-features+redis-service-features+numeric-dataframe-features+readonly-check-doctor+binding-authoring+lsp-declaration-authoring+tier1+tier2+tier3+tier4+callbacks+callback-examples+dataframes+dataframe-examples+buffer-examples+arrow-examples+dlpack-examples+arrow-runtime+dlpack-runtime+buffer-runtime+ml+libraries+async-declaration-examples+async-context-examples+cloud-boto3`<br>`diagnostics:rules+baselines`<br>`runtime_platform:platform-golden+platform-support-matrix+platform-evidence+sanitizer-smoke`<br>`algorithmic_compatibility:representative-subset`<br>`developer_tooling:static+formatter+analysis+lsp-smoke+typescript-go-transfer+diagnostic-rules`<br>`generated_code_quality:representative`<br>`performance:representative+frontend-syntax-guardrails`<br>`distribution_release:representative+qualification+incident-governance+epoch-bootstrap+protected-drill+stable-prepare+stable-publish-primitives+stable-publication`<br>`sysroot_release:host-installed-smoke+boundary-equivalence`<br>`project_workspace:frontend_mode_parity+project_graph_isolation+baselines+audit-fixtures`<br>`package_management:offline-merge-smoke+guardrails`<br>`stdlib_parity:module-merge-check+audit-fixtures+complexity-resource+module-inventory`<br>`regression:fixedbugs+crashes`<br>`fuzz_property:fuzz-smoke`<br>`ecosystem_compatibility:oss-curated` |
+| `nightly` | `verification/profiles/nightly.json` | `rust_interop:matrix+tiers+compatibility-matrix+stale-drafts+stable-candidate`<br>`coverage_matrix:readiness`<br>`core_language:integer_dtype_rules+hir_analysis_behaviors+cfg_flow_behaviors+syntax_parser_lexer_matrix+audit-fixtures`<br>`diagnostics:rules+baselines`<br>`cpython_differential:policy+hand_seeded_merge+generated_broader`<br>`python_interop:self-test+scaffold+env+dependency-versions+minor-train-features+crypto-abi-features+redis-service-features+numeric-dataframe-features+readonly-check-doctor+binding-authoring+lsp-declaration-authoring+tier1+tier2+tier3+tier4+callbacks+callback-examples+dataframes+dataframe-examples+buffer-examples+arrow-examples+dlpack-examples+arrow-runtime+dlpack-runtime+buffer-runtime+ml+libraries+async-declaration-examples+async-context-examples+cloud-boto3`<br>`runtime_platform:platform-golden+platform-support-matrix+platform-evidence+sanitizer-full`<br>`algorithmic_compatibility:leetcode-full+taxonomy-smoke`<br>`developer_tooling:full+typescript-go-transfer+diagnostic-rules`<br>`generated_code_quality:full`<br>`performance:full+frontend-syntax-guardrails`<br>`distribution_release:full+qualification+incident-governance+epoch-bootstrap+protected-drill+stable-prepare+stable-publish-primitives+stable-publication`<br>`sysroot_release:host-installed-smoke+host-installed-stdlib-heavy`<br>`project_workspace:frontend_mode_parity+project_graph_isolation+baselines+audit-fixtures`<br>`package_management:offline-integration+guardrails+offline-merge-smoke`<br>`stdlib_parity:module-merge-check+module-full-check+audit-fixtures+complexity-resource+module-inventory`<br>`regression:fixedbugs+crashes`<br>`fuzz_property:property+fuzz-smoke`<br>`ecosystem_compatibility:oss-curated+ecosystem-broader` |
+| `python-interop-live` | `verification/profiles/python-interop-live.json` | `python_interop:live-policy+live-examples` |
+| `release` | `verification/profiles/release.json` | `rust_interop:matrix+tiers+compatibility-matrix+stale-drafts+stable-candidate`<br>`coverage_matrix:readiness`<br>`core_language:integer_dtype_rules+hir_analysis_behaviors+cfg_flow_behaviors+syntax_parser_lexer_matrix+audit-fixtures`<br>`diagnostics:rules+baselines`<br>`cpython_differential:policy+hand_seeded_merge+generated_broader`<br>`python_interop:self-test+scaffold+env+dependency-versions+minor-train-features+crypto-abi-features+redis-service-features+numeric-dataframe-features+readonly-check-doctor+binding-authoring+lsp-declaration-authoring+tier1+tier2+tier3+tier4+callbacks+callback-examples+dataframes+dataframe-examples+buffer-examples+arrow-examples+dlpack-examples+arrow-runtime+dlpack-runtime+buffer-runtime+ml+libraries+async-declaration-examples+async-context-examples+cloud-boto3`<br>`runtime_platform:platform-golden+platform-support-matrix+platform-evidence+sanitizer-full`<br>`algorithmic_compatibility:leetcode-full+taxonomy-smoke`<br>`developer_tooling:full+typescript-go-transfer+diagnostic-rules`<br>`generated_code_quality:full`<br>`performance:full+frontend-syntax-guardrails`<br>`distribution_release:full+qualification+evidence-custody+incident-governance+epoch-bootstrap+protected-drill+stable-prepare+stable-publish-primitives+stable-publication`<br>`documentation:architecture+structure+ga-release`<br>`sysroot_release:host-installed-smoke+host-installed-stdlib-heavy`<br>`project_workspace:frontend_mode_parity+project_graph_isolation+baselines+audit-fixtures`<br>`package_management:offline-integration+guardrails+offline-merge-smoke`<br>`stdlib_parity:module-merge-check+module-full-check+audit-fixtures+complexity-resource+module-inventory`<br>`regression:fixedbugs+crashes`<br>`fuzz_property:property+fuzz-smoke`<br>`ecosystem_compatibility:oss-curated+ecosystem-broader` |
+<!-- END GENERATED VALIDATION PROFILE MAP -->
 
-### Layer 1: Unit Tests (per crate, `#[cfg(test)]`)
+`scripts/run_all_tests.sh` is the stable facade. The runner implementation is
+`verification/runner/sifr_verify/profile_runner.py`, and area ownership lives
+in `verification/areas/*/manifest.json`.
 
-Standard Rust unit tests inside each crate. These test individual functions and data structures.
+### Current Evidence Layers
 
-**Where:** `src/*.rs` in each crate, in `#[cfg(test)] mod tests { }` blocks.
+1. Rust unit and integration tests cover syntax, type operations, lowering,
+   frontend queries, codegen, driver behavior, packages, and tooling.
+2. `insta` snapshots lock diagnostic and generated-output shapes where exact
+   structure is the contract.
+3. E2E pass/fail fixtures under `crates/sifr/tests/e2e/` compile or reject Sifr
+   programs. Pass fixtures use Sifr assertions.
+4. Verification areas own CPython differential behavior, stdlib parity,
+   hardening, package and project behavior, generated-code quality,
+   distribution, tooling, performance, and ecosystem evidence.
+5. Parser/lexer coverage is declared by
+   `verification/areas/core_language/data/syntax_parser_lexer_matrix.json` and
+   exercised by `sifr_syntax` matrix tests. Ruff `.py` fixtures remain
+   dependency tests; there is no migration plan that renames them to `.sifr`.
 
-**Examples:**
+The current fuzz/property area is deterministic mutation smoke. Coverage-guided
+and sustained fuzzing is future M11 work and is not presented as an available
+`cargo fuzz` target.
 
-- Lexer: tokenize a string, assert token sequence
-- AST: construct nodes, verify `Debug` output, check memory layout sizes
-- Type system: `is_subtype(Int, Int) == true`, `is_subtype(Int, Str) == false`
-- HIR: name resolution resolves `x` to the correct `DefId`
-
-**Pattern (from ruff_python_ast):**
-
-```rust
-#[test]
-fn size() {
-    assert!(std::mem::size_of::<Stmt>() <= 120);
-    assert_eq!(std::mem::size_of::<Expr>(), 64);
-}
-```
-
-### Layer 2: Snapshot Tests (insta crate)
-
-Snapshot testing using the `insta` crate. The compiler produces output that is compared against stored `.snap` files. When behavior changes intentionally, run `cargo insta review` to accept new baselines.
-
-**Crate:** `insta` with `glob` feature.
-
-#### 2a. Parser Snapshots
-
-**Inspired by:** ruff_python_parser's fixture-driven snapshot tests.
-
-**Directory structure:**
-
-```
-third_party/ruff/crates/ruff_python_parser/
-  resources/
-    valid/          # .sifr files that must parse successfully
-    invalid/        # .sifr files that must produce parse errors
-  tests/
-    snapshots/      # auto-generated .snap files
-    fixtures.rs     # test harness
-```
-
-#### 2b. Type Checker Snapshots (Markdown Tests)
-
-**Inspired by:** ty's mdtest framework -- Markdown files with inline assertions.
-
-**Assertion syntax:**
-
-- `# revealed: <type>` -- assert inferred type (like ty)
-- `# error: [rule-code] "optional message"` -- assert diagnostic
-- `# error: <col> [rule-code]` -- assert diagnostic at specific column
-
-#### 2c. Codegen Snapshots
-
-**Inspired by:** TypeScript's `.js` baseline files. Compile `.sifr` to `.rs` and snapshot the output.
-
-### Layer 3: End-to-End Tests (Compile + Run)
-
-**Inspired by:** Mojo's Lit + FileCheck pattern, adapted for Rust.
-
-These tests compile `.sifr` files to binaries and run them. Runtime validation in pass fixtures is now assertion-first (`assert ...`), using no `# expect-stdout` directives.
-
-**Directory structure:**
-
-```
-tests/
-  e2e/
-    pass/           # must compile and produce expected output
-    fail/           # must fail to compile with expected errors
-    ownership/      # ownership-specific compile failures
-  e2e.rs            # test runner
-```
-
-**Test file format (pass tests, assertion-first):**
-
-```python
-def factorial(n: int) -> int:
-    if n <= 1:
-        return 1
-    return n * factorial(n - 1)
-
-def main():
-    assert factorial(5) == 120
-```
-
-**Test file format (fail tests):**
-
-```python
-def main():
-    x: int = "hello"  # expected to fail at compile-time
-```
-
-### Layer 4: CPython Parity and Safety Tests (ergonomics+)
-
-Verify that Sifr's built-in functions, data structure methods, and stdlib modules match CPython's behavior -- but with safe error handling.
-
-**Reference:** `/Users/yaseralnajjar/work/sifr/cpython` -- specifically `Lib/test/test_<module>.py` for expected behavior.
-
-### Layer 5: Corpus Tests (Robustness)
-
-Run the parser and type checker on a large body of Python source code to catch panics, infinite loops, and crashes. These tests don't check correctness -- only that the compiler doesn't blow up.
-
-### Layer 6: Fuzz and Property Tests (generics+)
-
-Discover edge cases and crashes that hand-written tests miss. Use `cargo-fuzz` or `afl` for parser/type checker fuzzing. Property tests verify algebraic invariants (union normalization idempotent, subtyping reflexive/transitive, narrowing preserves subtyping).
-
-### Layer 7: Performance Regression Tests (generics+)
-
-Prevent compile-time and binary-size regressions. Use `criterion` for statistical benchmarking. Regressions beyond threshold block PRs.
-
-### Parser Fixture Migration Plan
-
-The parser snapshot tests currently use `.py` fixtures inherited from ruff. These should be incrementally migrated to `.sifr` fixtures as the language diverges from Python. Start in error_handling when the first non-Python syntax is introduced. Complete by generics.
-
-### Test Infrastructure Crate: `sifr_test_utils`
-
-A shared crate providing test helpers for compile-failure expectations, compilation, execution, and markdown tests. Runtime expectations in pass fixtures use Sifr `assert` statements.
-
-### Test Commands
+### Authoritative Commands
 
 ```bash
-cargo test                                    # Run all tests (layers 1-3)
-./scripts/run_all_tests.sh --profile create-pr # Fast local-first profile
-./scripts/run_all_tests.sh --profile merge   # Authoritative merge gate
-./scripts/run_all_tests.sh --profile nightly # Broad nightly validation profile
-./scripts/run_all_tests.sh --profile release # Highest-confidence local qualification profile
-./scripts/run_all_tests.sh --profile python-interop-live # Explicit opt-in container-runtime Python interop profile
-uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite full     # Preview installer/artifact/release automation checks
-uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite incident-governance # Offline rollback/roll-forward generation, retention, and recovery
-uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite epoch-bootstrap # One-time opaque schema-v2 preview epoch bootstrap contracts
-uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite protected-drill # Credential-free GA/normal/rollback/first-GA orchestration under local adapters
-./verification/runner/e2e/check_report_determinism.sh --profile release # Stable e2e report signature across reruns
-uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke
-cargo test --manifest-path third_party/ruff/Cargo.toml -p ruff_python_parser # Parser snapshots
-cargo test -p sifr_type_system -- mdtest      # Type checker markdown tests
-cargo test -p sifr_codegen                    # Codegen snapshots
-cargo test --test e2e                         # End-to-end tests
-cargo insta review                            # Update snapshots after intentional changes
-cargo test -- corpus --ignored                # Run corpus tests (slower, layer 4)
-cargo fuzz run parser_fuzz -- -max_total_time=300  # Run fuzz tests (layer 5, generics+)
-cargo bench                                   # Run benchmarks (layer 6, generics+)
+# Unit tests without the slow E2E pass suite
+cargo test -p sifr -- --skip test_e2e_pass
+
+# Sifr E2E pass suite
+verification/runner/e2e/run_e2e_pass.sh
+
+# Focused verification area
+uv run --project verification --locked python -m sifr_verify areas run \
+  --area <area> --suite <suite>
+
+# Validation profiles
+scripts/run_all_tests.sh --profile create-pr
+scripts/run_all_tests.sh --profile merge
+scripts/run_all_tests.sh --profile nightly
+scripts/run_all_tests.sh --profile release
+scripts/run_all_tests.sh --profile python-interop-live
 ```
 
-Validation profile policy is defined in `verification/profiles/{create-pr,merge,nightly,release,python-interop-live}.json` and executed by `verification/runner/sifr_verify/profile_runner.py` through `uv run --project verification python -m sifr_verify profiles run --profile <profile>`. `scripts/run_all_tests.sh` is only the stable public facade over that runner. Verification areas are owned by schema-version-2 `verification/areas/*/manifest.json` files and executed through `uv run --project verification python -m sifr_verify areas run`. Stable-surface manifests declare owner, resource classes, pinned-corpus policy, skip policy, and baseline metadata policy. Representative `create-pr` and full-corpus `merge` e2e coverage are selected through profile data rather than hard-coded shell assumptions. The `python-interop-live` profile selects only the live Python interop area and explicitly opts into `container-runtime` and live-network policy for testcontainers-backed Python interop evidence. Offline profiles must not select those live suites. Its live examples build native Sifr binaries for Redis, Postgres, Kafka-compatible Redpanda, and LocalStack Pub/Sub-style SNS fanout, SNS-to-SQS delivery, and direct SQS delivery. Testcontainers owns container lifecycle and endpoint discovery only; the compiled binary's hermetic declaration bridge owns every service-client operation, and broker/cloud deliveries cross a foreign-thread typed Sifr callback. Docker absence is recorded as a structured service-execution skip only after every native binary builds. When a mostly offline area has a live subset, the area can keep top-level `network_mode: offline` while the live suite declares suite-level `network_mode: live` and its resource classes. Declarative validation-suite coverage lives in area-owned validation suite manifests under `verification/areas/{core_language,project_workspace}/data/validation_suites/`; profiles select the individual suite names, and the area adapter invokes the Rust-native `tests/validation_suites.rs` harness with that exact suite filter. Fixed bug locks and unresolved crash sentinels live under `verification/areas/regression/`.
+Add focused unit/snapshot coverage in the owning crate, add E2E coverage when
+user-visible compile/run behavior changes, and add or update an area-owned suite
+when the contract crosses crates or requires governance evidence. Run the
+smallest affected checks during implementation and the profile required by
+`AGENTS.md` before integration.
 
-Stable incident recovery is a pure extension of the governed release-index
-state machine. Canonical request and approved plan digests authorize exactly
-one rollback or incident roll-forward generation; all prior releases and
-snapshots remain immutable. Stable activation, normal publication, rollback,
-and incident roll-forward share one protected publication workflow, one
-`stable-release` environment boundary, and one `sifr-release-index` mutation
-lease. Read-only prepare and protected revalidation bind the exact evidence,
-plans, live index, retained snapshots, candidate artifacts where applicable,
-and proposed index before the sole mutable `channels.json` replacement.
-Generation reservation, exact resume, site reconciliation, public
-install/update/recovery smoke, Marketplace verification, and release/incident
-sign-off remain fail-closed. The one-time schema-epoch bootstrap is separately
-bound to the exact opaque pre-epoch asset identity and protected approval. The
-user-directed single-maintainer exception for that bootstrap and first GA is
-itself a canonical, expiring governance artifact. It permits only the named
-owner and those three operations, requires a real `stable-release` approval,
-is pinned by digest, prefers a distinct reviewer when one approved, and binds
-the selected approval policy plus initiator into retained evidence; normal and
-incident operations remain distinct-reviewer-only. The
-post-index bootstrap recovery path revalidates the failed mutation and site
-attempts, both protected approvals, the already-live generation-1 bytes, and
-the reproducible site inputs before retrying only site publication and public
-smoke; it cannot create a release, allocate a generation, or replace the
-index. The offline fixture core mirrors generation burning, exact resume, site
-reconciliation, range eligibility, downgrade consent, and incident sign-off
-evidence, as specified in
-`internal_docs/stable_incident_response.md`.
+## External Design References
 
-The readiness coverage matrix is the executable registry for shipped guarantees, compiler surfaces, owners, profile assignments, and Cargo package/target/feature classification. `coverage_matrix:readiness` is selected by create-pr, merge, nightly, and release. It runs strict mode, rejects temporary statuses such as `expected-missing`, `tests:none`, and `red-blocker`, validates local-first profile policy, checks profile assignments against `profile_assignment_matrix.json`, and runs negative self-tests for the readiness enforcement claims. CI may run broader profiles, but local-vs-CI plan equivalence is checked by comparing emitted profile plans with `sifr_verify profiles compare-plans`.
+External projects are design references, not local filesystem dependencies.
 
-`profile_runner.py` emits a per-profile runtime report under `target/validation_lane_reports/` (`<profile>.latest.json`, `<profile>.latest.log`, `<profile>.latest.time`). The report summarizes wall/CPU time, e2e compile-build-run timing, cache hits and rebuilt groups, group-skew tail behavior, cache footprints, default worker settings, and advisory resource signals such as swap activity or default-profile RSS regressions.
-
-Blocking representative and full performance measurements use a controlled-host
-boundary. Work-controlled measurements use retired instructions and
-process-tree RSS from the local macOS host. Latency-controlled measurements use
-elapsed time and generic RSS after a quiet-host admission. Non-macOS profiles
-retain latency mode because they do not expose the Darwin counter. Both modes reject
-competing build work, thermal pressure, and unstable samples. Darwin work mode
-reserves 60% of logical CPU capacity at admission. During the attempt, external
-CPU pressure is blocking when retired-instruction samples are unstable and is
-advisory when those work samples remain stable. This avoids requiring an idle
-desktop without weakening the work budget. The accepted report includes an
-invocation identity. Producer
-failure cannot use stale `*.budget.latest.json` evidence. This design separates
-host delay from additional compiler work without changing elapsed-time budgets.
-
-Approved trend-baseline refreshes use the same controlled producer but are a
-separate governance path from threshold-budget updates. A refresh is accepted
-only for a clean exact commit, the complete benchmark manifest, manifest sample
-counts, and the `compiler/performance` approval profile. The checked-in trend
-snapshot records environment metadata and an exact reference-capture receipt;
-raw host observations stay in content-addressed target evidence. This replaces
-expired freshness or metadata deferrals with measured evidence without
-weakening the blocking budget baseline.
-
-### Adding Tests for New Features (Agent Workflow)
-
-When an AI agent adds a new language feature, it must:
-
-1. **Parser:** Add `.sifr` fixture files in `resources/valid/` and `resources/invalid/`
-2. **Type checker:** Add markdown test cases in `resources/mdtest/`
-3. **Codegen:** Add `.sifr` fixture files in `resources/codegen/`
-4. **E2E:** Add pass/fail test files in `tests/e2e/`
-5. **Run `cargo insta review`** to accept new snapshots
-6. **Run `cargo test`** to verify everything passes
-
-This ensures every feature is tested at every layer of the compiler, and any agent can verify the full system by running `cargo test`.
-
----
-
-## Design Note: Mojo Comparison
-
-Mojo (`/Users/yaseralnajjar/work/sifr/modular/mojo`) was evaluated as a reference. Key findings:
-
-- **No Rust code to reuse.** Mojo's compiler is proprietary, built on MLIR/LLVM (C++). The open-source repo only contains the stdlib, docs, and design proposals.
-- **Ownership model alignment:** Both Mojo and Sifr use **borrow-by-default** for function arguments. Sifr uses `mut` for mutable borrows, `own` for ownership transfer, and `own mut` for owned mutable parameters (Mojo uses `mut`/`owned`). Assignment still moves for heap types (preventing aliasing). This gives Python-like ergonomics with Rust-like safety.
-- **Useful design references:** `proposals/value-ownership.md` and `proposals/lifetimes-and-provenance.md` document tradeoffs between move/borrow defaults, ASAP destruction, and lifecycle methods.
-- `**def` vs `fn` split:** Mojo uses `def` for dynamic and `fn` for strict. Sifr does not need this split since all code is strictly typed.
-
-## Key Files to Reference During Implementation
-
-### Ruff (parser, AST)
-
-- **Ruff parser:** `third_party/ruff/crates/ruff_python_parser/`
-- **Ruff AST:** `third_party/ruff/crates/ruff_python_ast/src/nodes.rs`
-
-### ty (type checker)
-
-- **ty type system:** `/Users/yaseralnajjar/work/sifr/ty/ruff/crates/ty_python_semantic/src/types.rs`
-
-### TypeScript (type system design, narrowing, control flow analysis)
-
-- **Checker architecture:** `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/checker.md`
-- **Type narrowing and widening:** `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/checker-widening-narrowing.md`
-- **Type relations (subtyping, assignability):** `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/checker-relations.md`
-- **Type inference:** `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/checker-inference.md`
-- **Binder (control flow graph):** `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/binder.md`
-- **Type definitions:** `/Users/yaseralnajjar/work/sifr/TypeScript-Compiler-Notes/codebase/src/compiler/types.md`
-- **TypeScript wiki:** `/Users/yaseralnajjar/work/sifr/TypeScript.wiki/`
-
-### Mojo (ownership model)
-
-- **Mojo ownership design:** `/Users/yaseralnajjar/work/sifr/modular/mojo/proposals/value-ownership.md`
-- **Mojo lifetimes design:** `/Users/yaseralnajjar/work/sifr/modular/mojo/proposals/lifetimes-and-provenance.md`
+- CPython behavior is compared through upstream source paths such as
+  `Objects/`, `Python/`, and `Lib/test/`, plus checked-in differential and
+  parity fixtures under `verification/areas/`.
+- The checked-in Ruff fork under `third_party/ruff/` supplies the parser, AST,
+  text, trivia, and formatter substrate.
+- TypeScript contributes design vocabulary for contextual typing, narrowing,
+  type relations, inference, and control-flow analysis.
+- Mojo informed borrow-by-default and ownership tradeoffs. Sifr's implemented
+  ownership contract remains the one specified in this repository.
