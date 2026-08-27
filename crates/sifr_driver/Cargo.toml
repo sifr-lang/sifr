@@ -30,6 +30,7 @@ toml = { workspace = true }
 
 [dev-dependencies]
 sifr_compiler_services = { workspace = true, features = ["test-support"] }
+tempfile = "3.27.0"
 
 [lints]
 workspace = true

@@ -1,10 +1,13 @@
-use super::rust_interop_digest::{digest_file, digest_path, fnv1a64_hex, push_cache_bytes};
+use super::rust_interop_digest::{
+    CacheIdentity, cache_identity, digest_file, digest_path, push_cache_bytes, sha256_hex,
+};
 use super::rust_interop_probe::PendingRustBridgeProbe;
 use super::rust_interop_probe_paths::normalize_cargo_target_dir;
 use super::rust_interop_sqlx_offline::sqlx_offline_metadata_digest;
 use super::workspace::artifact_cache_root;
 use std::collections::BTreeMap;
 use std::ffi::OsString;
+use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Mutex, OnceLock};
@@ -51,11 +54,47 @@ fn probe_cache_file_with_env(
     root.join(format!("{cache_key}.ok"))
 }
 
-pub(super) fn mark_probe_cache_hit(path: &Path) {
+#[derive(serde::Deserialize, serde::Serialize)]
+struct ProbeCacheMarker {
+    schema_version: u32,
+    identity: CacheIdentity,
+}
+
+pub(super) fn probe_cache_hit(path: &Path, identity: &CacheIdentity) -> bool {
+    read_probe_marker(path)
+        .is_some_and(|marker| marker.schema_version == 2 && marker.identity.matches(identity))
+}
+
+pub(super) fn mark_probe_cache_hit(path: &Path, identity: &CacheIdentity) {
     if let Some(parent) = path.parent() {
         let _ = fs::create_dir_all(parent);
     }
-    let _ = fs::write(path, b"ok\n");
+    let marker = ProbeCacheMarker {
+        schema_version: 2,
+        identity: identity.clone(),
+    };
+    if let Some(stored) = read_probe_marker(path) {
+        if stored.schema_version == 2 {
+            return;
+        }
+        let _ = fs::remove_file(path);
+    } else if path.is_file() {
+        let _ = fs::remove_file(path);
+    }
+    if let Ok(raw) = serde_json::to_vec(&marker)
+        && let Ok(mut file) = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(path)
+    {
+        let _ = file.write_all(&raw);
+    }
+}
+
+fn read_probe_marker(path: &Path) -> Option<ProbeCacheMarker> {
+    fs::read_to_string(path)
+        .ok()
+        .and_then(|raw| serde_json::from_str(&raw).ok())
 }
 
 pub(super) fn probe_cache_key(
@@ -64,10 +103,10 @@ pub(super) fn probe_cache_key(
     probe_manifest: &str,
     probe_source: &str,
     cache: &mut ProbeCacheKeyCache,
-) -> String {
+) -> CacheIdentity {
     let mut input = Vec::new();
     for value in [
-        "sifr-rust-bridge-probe-cache-v1",
+        "sifr-rust-bridge-probe-cache-v2",
         &toolchain_signature(),
         &probe.backend.cargo_package_id.0,
         &probe.backend.dependency_name,
@@ -78,11 +117,8 @@ pub(super) fn probe_cache_key(
         &probe.path.dotted(),
         probe_manifest,
         probe_source,
-        if probe.cargo_resolution.lock_mode == sifr_package::CargoLockMode::Normal {
-            "normal"
-        } else {
-            "lock-constrained"
-        },
+        probe.cargo_resolution.lock_mode.as_str(),
+        probe.cargo_resolution.cargo_vendor_mode.as_str(),
         &cached_digest_path(backend_root),
         &nearest_lock_digest(backend_root),
         &cached_digest_path(&probe.sysroot_runtime_crate),
@@ -96,11 +132,23 @@ pub(super) fn probe_cache_key(
     ] {
         push_cache_bytes(&mut input, value);
     }
+    for authority in &probe.cargo_resolution.authoritative_locks {
+        push_cache_bytes(&mut input, "authoritative-lock");
+        push_cache_bytes(&mut input, &authority.display().to_string());
+        push_cache_bytes(
+            &mut input,
+            &digest_file(authority).unwrap_or_else(|| "<missing>".to_string()),
+        );
+    }
+    for vendor_dir in &probe.cargo_resolution.trusted_vendor_dirs {
+        push_cache_bytes(&mut input, "trusted-vendor");
+        push_cache_bytes(&mut input, &vendor_dir.display().to_string());
+    }
     if let Some(metadata_digest) = cache.sqlx_metadata_digest(backend_root) {
         push_cache_bytes(&mut input, "sqlx-offline-metadata");
         push_cache_bytes(&mut input, &metadata_digest);
     }
-    fnv1a64_hex(&input)
+    cache_identity("rust-bridge-probe", input)
 }
 
 fn toolchain_signature() -> String {
@@ -117,7 +165,7 @@ fn toolchain_signature() -> String {
             ] {
                 push_cache_bytes(&mut input, &value);
             }
-            fnv1a64_hex(&input)
+            sha256_hex(&input)
         })
         .clone()
 }
@@ -186,9 +234,10 @@ fn nearest_ancestor_file(start: &Path, file_name: &str) -> Option<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::{
-        ProbeCacheKeyCache, RUST_BRIDGE_PROBE_CACHE_DIR, artifact_cache_root,
-        probe_cache_file_with_env, probe_cache_root,
+        ProbeCacheKeyCache, RUST_BRIDGE_PROBE_CACHE_DIR, artifact_cache_root, mark_probe_cache_hit,
+        probe_cache_file_with_env, probe_cache_hit, probe_cache_root,
     };
+    use crate::build::rust_interop_digest::cache_identity;
     use std::ffi::OsString;
     use std::path::{Path, PathBuf};
 
@@ -266,5 +315,18 @@ mod tests {
                 .join(RUST_BRIDGE_PROBE_CACHE_DIR)
                 .join("abc123.ok")
         );
+    }
+
+    #[test]
+    fn probe_marker_verifies_the_complete_identity() {
+        let root = tempfile::tempdir().expect("cache root should be created");
+        let marker = root.path().join("probe.ok");
+        let expected = cache_identity("probe", b"expected".to_vec());
+        let different = cache_identity("probe", b"different".to_vec());
+
+        mark_probe_cache_hit(&marker, &expected);
+
+        assert!(probe_cache_hit(&marker, &expected));
+        assert!(!probe_cache_hit(&marker, &different));
     }
 }

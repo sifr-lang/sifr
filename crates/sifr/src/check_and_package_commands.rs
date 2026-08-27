@@ -6,6 +6,7 @@ use super::cli_model_and_entrypoint::{
 use super::diagnostic_rendering_and_run::{
     current_session_package_id, execute_cargo_plan, render_diagnostics,
 };
+use super::formatter_cache::{try_formatter_cache_hit, write_formatter_cache_entry};
 use super::formatter_cli::FmtArgs;
 use super::package_graph_context::load_package_graph_context_for_entrypoint;
 use super::package_session_cli::package_session_for_cwd;
@@ -21,9 +22,7 @@ use sifr_driver::{
 use sifr_format::config::{EffectiveFormatConfig, FormatConfigOverrides, effective_format_config};
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
 use sifr_python_ast::{Expr, Stmt};
-use std::collections::hash_map::DefaultHasher;
 use std::fs;
-use std::hash::{Hash as _, Hasher as _};
 use std::io::{self, IsTerminal as _, Read as _, Write as _};
 use std::path::{Path, PathBuf};
 pub(super) fn cmd_check(
@@ -710,45 +709,6 @@ fn pattern_matches(path: &Path, patterns: &[String]) -> bool {
     })
 }
 
-fn try_formatter_cache_hit(
-    path: &Path,
-    options: sifr_format::FormatOptions,
-    config: &EffectiveFormatConfig,
-    provider: &mut impl SourceProvider,
-) -> Result<bool, Vec<RenderedDiagnostic>> {
-    if config.no_cache {
-        return Ok(false);
-    }
-    let source = read_formatter_source(path, provider)?;
-    let key = formatter_cache_key(path, &source, options);
-    Ok(config.cache_dir.join(key).is_file())
-}
-
-fn write_formatter_cache_entry(
-    path: &Path,
-    options: sifr_format::FormatOptions,
-    config: &EffectiveFormatConfig,
-    provider: &mut impl SourceProvider,
-) -> Result<(), Vec<RenderedDiagnostic>> {
-    if config.no_cache {
-        return Ok(());
-    }
-    let source = read_formatter_source(path, provider)?;
-    fs::create_dir_all(&config.cache_dir).map_err(|err| {
-        vec![formatter_cli_diagnostic(format!(
-            "could not create formatter cache {}: {err}",
-            config.cache_dir.display()
-        ))]
-    })?;
-    let key = formatter_cache_key(path, &source, options);
-    fs::write(config.cache_dir.join(key), b"ok").map_err(|err| {
-        vec![formatter_cli_diagnostic(format!(
-            "could not write formatter cache {}: {err}",
-            config.cache_dir.display()
-        ))]
-    })
-}
-
 fn read_formatter_source(
     path: &Path,
     provider: &mut impl SourceProvider,
@@ -762,16 +722,6 @@ fn read_formatter_source(
                 path.display()
             ))]
         })
-}
-
-fn formatter_cache_key(path: &Path, source: &str, options: sifr_format::FormatOptions) -> String {
-    let mut hasher = DefaultHasher::new();
-    path.to_string_lossy().hash(&mut hasher);
-    source.hash(&mut hasher);
-    options.final_newline.hash(&mut hasher);
-    options.line_length.hash(&mut hasher);
-    options.preview.hash(&mut hasher);
-    format!("{:016x}", hasher.finish())
 }
 
 fn parse_byte_range(raw: &str) -> Result<TextRange, Vec<RenderedDiagnostic>> {

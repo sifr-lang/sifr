@@ -1,5 +1,6 @@
 use crate::diagnostics::RenderedDiagnostic;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest as _, Sha256};
 use sifr_diagnostics::DiagnosticCode;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -43,7 +44,7 @@ pub(crate) fn create_invocation_workspace(
     )])
 }
 
-const ARTIFACT_CACHE_SCHEMA_VERSION: u32 = 1;
+const ARTIFACT_CACHE_SCHEMA_VERSION: u32 = 2;
 const ARTIFACT_CACHE_ROOT_DIR: &str = "sifr_generated_artifact_cache";
 const ARTIFACT_CACHE_METADATA_FILE: &str = "artifact_cache.json";
 
@@ -105,6 +106,7 @@ impl CachedArtifactEntry {
 pub(crate) struct PendingCachedArtifact {
     final_root: PathBuf,
     staging_root: PathBuf,
+    key_material: String,
     report: ArtifactCacheReport,
 }
 
@@ -134,6 +136,7 @@ impl PendingCachedArtifact {
             schema_version: ARTIFACT_CACHE_SCHEMA_VERSION,
             namespace: self.report.namespace.clone(),
             key: self.report.key.clone(),
+            key_material: self.key_material.clone(),
             toolchain_signature: toolchain_signature().to_string(),
         };
         write_cache_metadata(&self.staging_root, &metadata)?;
@@ -152,16 +155,34 @@ impl PendingCachedArtifact {
                     std::io::ErrorKind::AlreadyExists | std::io::ErrorKind::DirectoryNotEmpty
                 ) =>
             {
-                let _ = std::fs::remove_dir_all(&self.staging_root);
-                Ok(CachedArtifactEntry {
-                    workspace_root: self.final_root.clone(),
-                    report: ArtifactCacheReport {
-                        cache_hit: true,
-                        miss_reason: Some("concurrent_populate".to_string()),
+                let winner = load_cache_metadata(&self.final_root);
+                if winner.as_ref().is_some_and(|metadata| {
+                    metadata_matches(
+                        metadata,
+                        &self.report.namespace,
+                        &self.report.key,
+                        &self.key_material,
+                    )
+                }) && required_paths
+                    .iter()
+                    .all(|relative| self.final_root.join(relative).exists())
+                {
+                    let _ = std::fs::remove_dir_all(&self.staging_root);
+                    Ok(CachedArtifactEntry {
                         workspace_root: self.final_root.clone(),
-                        ..self.report.clone()
-                    },
-                })
+                        report: ArtifactCacheReport {
+                            cache_hit: true,
+                            miss_reason: Some("concurrent_populate".to_string()),
+                            workspace_root: self.final_root.clone(),
+                            ..self.report.clone()
+                        },
+                    })
+                } else {
+                    Err(vec![crate::diagnostics::diagnostic_with_code(
+                        "generated artifact cache concurrent winner did not match the full cache key",
+                        DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                    )])
+                }
             }
             Err(error) => Err(vec![crate::diagnostics::diagnostic_with_code(
                 format!(
@@ -193,11 +214,8 @@ pub(crate) fn prepare_cached_artifact(
     required_paths: &[&Path],
 ) -> Result<PreparedArtifactCache, Vec<RenderedDiagnostic>> {
     let scope_path = scope.canonicalize().unwrap_or_else(|_| scope.to_path_buf());
-    let cache_key = deterministic_hash(&format!(
-        "schema={ARTIFACT_CACHE_SCHEMA_VERSION}\0namespace={namespace}\0scope={}\0toolchain={}\0{key_material}",
-        scope_path.display(),
-        toolchain_signature()
-    ));
+    let full_key_material = artifact_key_material(namespace, &scope_path, key_material);
+    let cache_key = deterministic_hash(&full_key_material);
     let cache_root = artifact_cache_root().join(namespace);
     std::fs::create_dir_all(&cache_root).map_err(|error| {
         vec![crate::diagnostics::diagnostic_with_code(
@@ -214,10 +232,7 @@ pub(crate) fn prepare_cached_artifact(
     if final_root.is_dir() {
         match load_cache_metadata(&final_root) {
             Some(metadata)
-                if metadata.schema_version == ARTIFACT_CACHE_SCHEMA_VERSION
-                    && metadata.namespace == namespace
-                    && metadata.key == cache_key
-                    && metadata.toolchain_signature == toolchain_signature() =>
+                if metadata_matches(&metadata, namespace, &cache_key, &full_key_material) =>
             {
                 if required_paths
                     .iter()
@@ -236,8 +251,17 @@ pub(crate) fn prepare_cached_artifact(
                 }
                 miss_reason = Some("artifact_missing".to_string());
             }
+            Some(metadata) if metadata.schema_version == ARTIFACT_CACHE_SCHEMA_VERSION => {
+                return Err(vec![crate::diagnostics::diagnostic_with_code(
+                    format!(
+                        "generated artifact cache key collision at '{}'; stored full key does not match the requested key",
+                        final_root.display()
+                    ),
+                    DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                )]);
+            }
             Some(_) => {
-                miss_reason = Some("metadata_mismatch".to_string());
+                miss_reason = Some("schema_mismatch".to_string());
             }
             None => {
                 miss_reason = Some("metadata_missing".to_string());
@@ -250,6 +274,7 @@ pub(crate) fn prepare_cached_artifact(
     Ok(PreparedArtifactCache::Miss(PendingCachedArtifact {
         final_root,
         staging_root: staging_root.clone(),
+        key_material: full_key_material,
         report: ArtifactCacheReport {
             namespace: namespace.to_string(),
             key: cache_key,
@@ -269,7 +294,40 @@ struct ArtifactCacheMetadata {
     schema_version: u32,
     namespace: String,
     key: String,
+    key_material: String,
     toolchain_signature: String,
+}
+
+fn metadata_matches(
+    metadata: &ArtifactCacheMetadata,
+    namespace: &str,
+    key: &str,
+    key_material: &str,
+) -> bool {
+    metadata.schema_version == ARTIFACT_CACHE_SCHEMA_VERSION
+        && metadata.namespace == namespace
+        && metadata.key == key
+        && metadata.key_material == key_material
+        && metadata.toolchain_signature == toolchain_signature()
+}
+
+fn artifact_key_material(namespace: &str, scope: &Path, key_material: &str) -> String {
+    let mut material = String::new();
+    for (name, value) in [
+        ("schema", ARTIFACT_CACHE_SCHEMA_VERSION.to_string()),
+        ("namespace", namespace.to_string()),
+        ("scope", scope.display().to_string()),
+        ("toolchain", toolchain_signature().to_string()),
+        ("input", key_material.to_string()),
+    ] {
+        material.push_str(name);
+        material.push('=');
+        material.push_str(&value.len().to_string());
+        material.push(':');
+        material.push_str(&value);
+        material.push('\n');
+    }
+    material
 }
 
 fn load_cache_metadata(workspace_root: &Path) -> Option<ArtifactCacheMetadata> {
@@ -330,17 +388,22 @@ fn env_signature(name: &str) -> String {
 }
 
 fn deterministic_hash(value: &str) -> String {
-    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
-    for byte in value.bytes() {
-        hash ^= u64::from(byte);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let bytes = Sha256::digest(value.as_bytes());
+    let mut encoded = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        encoded.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        encoded.push(char::from(DIGITS[usize::from(byte & 0x0f)]));
     }
-    format!("{hash:016x}")
+    encoded
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{ArtifactCacheReport, PendingCachedArtifact};
+    use super::{
+        ARTIFACT_CACHE_SCHEMA_VERSION, ArtifactCacheMetadata, ArtifactCacheReport,
+        PendingCachedArtifact, toolchain_signature, write_cache_metadata,
+    };
     use std::path::Path;
 
     fn temp_dir(name: &str) -> std::path::PathBuf {
@@ -365,10 +428,22 @@ mod tests {
         std::fs::create_dir_all(&staging_root).expect("staging should be created");
         std::fs::create_dir_all(&final_root).expect("final should be created");
         std::fs::write(final_root.join("winner"), b"ok").expect("winner file should be written");
+        write_cache_metadata(
+            &final_root,
+            &ArtifactCacheMetadata {
+                schema_version: ARTIFACT_CACHE_SCHEMA_VERSION,
+                namespace: "test".to_string(),
+                key: "key".to_string(),
+                key_material: "material".to_string(),
+                toolchain_signature: toolchain_signature().to_string(),
+            },
+        )
+        .expect("winner metadata should be written");
 
         let pending = PendingCachedArtifact {
             final_root: final_root.clone(),
             staging_root: staging_root.clone(),
+            key_material: "material".to_string(),
             report: ArtifactCacheReport {
                 namespace: "test".to_string(),
                 key: "key".to_string(),
@@ -386,6 +461,45 @@ mod tests {
         assert_eq!(report.miss_reason.as_deref(), Some("concurrent_populate"));
         assert!(!root.join("stage").exists());
 
+        let _ = std::fs::remove_dir_all(Path::new(&root));
+    }
+
+    #[test]
+    fn pending_artifact_commit_rejects_concurrent_full_key_mismatch() {
+        let root = temp_dir("concurrent_mismatch");
+        let staging_root = root.join("stage");
+        let final_root = root.join("final");
+        std::fs::create_dir_all(&staging_root).expect("staging should be created");
+        std::fs::create_dir_all(&final_root).expect("final should be created");
+        write_cache_metadata(
+            &final_root,
+            &ArtifactCacheMetadata {
+                schema_version: ARTIFACT_CACHE_SCHEMA_VERSION,
+                namespace: "test".to_string(),
+                key: "key".to_string(),
+                key_material: "different-material".to_string(),
+                toolchain_signature: toolchain_signature().to_string(),
+            },
+        )
+        .expect("winner metadata should be written");
+        let pending = PendingCachedArtifact {
+            final_root,
+            staging_root: staging_root.clone(),
+            key_material: "material".to_string(),
+            report: ArtifactCacheReport {
+                namespace: "test".to_string(),
+                key: "key".to_string(),
+                workspace_root: staging_root,
+                cache_hit: false,
+                miss_reason: Some("not_found".to_string()),
+            },
+        };
+
+        let diagnostics = match pending.commit(&[]) {
+            Err(diagnostics) => diagnostics,
+            Ok(_) => panic!("mismatched concurrent winner must fail closed"),
+        };
+        assert!(diagnostics[0].message.contains("full cache key"));
         let _ = std::fs::remove_dir_all(Path::new(&root));
     }
 }

@@ -284,7 +284,7 @@ pub(crate) fn test_smoke_property_deterministic_hash_rules() {
         let hash_a = deterministic_hash(&sample);
         let hash_b = deterministic_hash(&sample);
         assert_eq!(hash_a, hash_b);
-        assert_eq!(hash_a.len(), 16);
+        assert_eq!(hash_a.len(), 64);
         assert!(hash_a.chars().all(|ch| ch.is_ascii_hexdigit()));
         unique.insert(hash_a);
     }

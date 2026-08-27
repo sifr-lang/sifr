@@ -1,4 +1,5 @@
 use serde::Serialize;
+use sha2::{Digest as _, Sha256};
 
 pub use super::digest_build_cache::{
     PackageBuildCacheInputs, digest_package_build_cache_inputs,
@@ -19,18 +20,19 @@ pub(in crate::graph) fn digest_serializable<T: Serialize>(
 ) -> Result<GraphDigest, serde_json::Error> {
     let bytes = serde_json::to_vec(value)?;
     Ok(GraphDigest {
-        algorithm: "fnv1a64",
-        hex: format!("{:016x}", fnv1a64(&bytes)),
+        algorithm: "sha256",
+        hex: lower_hex(&Sha256::digest(bytes)),
     })
 }
 
-fn fnv1a64(bytes: &[u8]) -> u64 {
-    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
+fn lower_hex(bytes: &[u8]) -> String {
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let mut encoded = String::with_capacity(bytes.len() * 2);
     for byte in bytes {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+        encoded.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        encoded.push(char::from(DIGITS[usize::from(byte & 0x0f)]));
     }
-    hash
+    encoded
 }
 
 #[cfg(test)]

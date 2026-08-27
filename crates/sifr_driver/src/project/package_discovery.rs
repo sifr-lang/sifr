@@ -4,6 +4,7 @@ use super::discovery::{
 };
 use crate::diagnostics::RenderedDiagnostic;
 use ruff_text_size::{Ranged as _, TextRange};
+use sha2::{Digest as _, Sha256};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_frontend::SourceProvider;
 use sifr_package::{
@@ -483,12 +484,14 @@ fn scoped_dependency_compile_name(
 }
 
 fn package_instance_hash(package_id: &SifrPackageId) -> String {
-    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
-    for byte in package_id.0.bytes() {
-        hash ^= u64::from(byte);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let digest = Sha256::digest(package_id.0.as_bytes());
+    let mut encoded = String::with_capacity(digest.len() * 2);
+    for byte in digest {
+        encoded.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        encoded.push(char::from(DIGITS[usize::from(byte & 0x0f)]));
     }
-    format!("{hash:016x}")
+    encoded
 }
 
 fn remap_own_package_compile_name(

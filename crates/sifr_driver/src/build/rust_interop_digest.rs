@@ -1,3 +1,4 @@
+use sha2::{Digest as _, Sha256};
 use std::fs;
 use std::path::Path;
 
@@ -11,11 +12,11 @@ pub(super) fn digest_path(path: &Path) -> String {
         digest_input.extend_from_slice(&file_bytes);
         digest_input.push(0);
     }
-    fnv1a64_hex(&digest_input)
+    sha256_hex(&digest_input)
 }
 
 pub(super) fn digest_file(path: &Path) -> Option<String> {
-    fs::read(path).ok().map(|bytes| fnv1a64_hex(&bytes))
+    fs::read(path).ok().map(|bytes| sha256_hex(&bytes))
 }
 
 pub(super) fn relative_path_string(root: &Path, path: &Path) -> String {
@@ -30,13 +31,37 @@ pub(super) fn normalized_path_string(path: &Path) -> String {
         .join("/")
 }
 
-pub(super) fn fnv1a64_hex(bytes: &[u8]) -> String {
-    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
-    for byte in bytes {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+pub(super) fn sha256_hex(bytes: &[u8]) -> String {
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let digest = Sha256::digest(bytes);
+    let mut encoded = String::with_capacity(digest.len() * 2);
+    for byte in digest {
+        encoded.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        encoded.push(char::from(DIGITS[usize::from(byte & 0x0f)]));
     }
-    format!("{hash:016x}")
+    encoded
+}
+
+pub(super) fn cache_identity(domain: &str, input: Vec<u8>) -> CacheIdentity {
+    let mut material = Vec::new();
+    push_cache_bytes(&mut material, domain);
+    material.extend(input);
+    CacheIdentity {
+        digest: sha256_hex(&material),
+        material,
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
+pub(super) struct CacheIdentity {
+    pub(super) digest: String,
+    pub(super) material: Vec<u8>,
+}
+
+impl CacheIdentity {
+    pub(super) fn matches(&self, other: &Self) -> bool {
+        self.digest == other.digest && self.material == other.material
+    }
 }
 
 fn collect_digest_entries(root: &Path, path: &Path, entries: &mut Vec<(String, Vec<u8>)>) {

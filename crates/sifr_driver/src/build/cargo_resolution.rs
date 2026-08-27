@@ -1,5 +1,6 @@
 use super::cargo_invocation_trace::record_cargo_invocation;
-use super::rust_interop_digest::{digest_file, fnv1a64_hex, push_cache_bytes};
+use super::cargo_resolution_cache::{cache_prepared_lock, prepared_lock_is_valid};
+use super::rust_interop_digest::{CacheIdentity, cache_identity, digest_file, push_cache_bytes};
 use super::workspace::artifact_cache_root;
 use crate::diagnostics::{RenderedDiagnostic, diagnostic_with_code};
 use sifr_diagnostics::DiagnosticCode;
@@ -9,10 +10,10 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::AtomicU64;
 
 const PREPARED_RESOLUTION_DIR: &str = "cargo_resolution";
-static PREPARED_LOCK_NONCE: AtomicU64 = AtomicU64::new(0);
+pub(super) static PREPARED_LOCK_NONCE: AtomicU64 = AtomicU64::new(0);
 type RegistryEntry = (String, String, String, String);
 type RegistryCompatibilityFamily = (String, String, String);
 
@@ -102,8 +103,8 @@ fn prepare_constrained_cargo_resolution(
     debug_assert!(!policy.authoritative_locks.is_empty());
 
     if !lock_path.is_file() {
-        let prepared_lock = prepared_lock_path(project_dir, policy, cargo_prefix_args)?;
-        if prepared_lock.is_file() {
+        let (prepared_lock, identity) = prepared_lock_path(project_dir, policy, cargo_prefix_args)?;
+        if prepared_lock_is_valid(&prepared_lock, &identity)? {
             std::fs::copy(&prepared_lock, &lock_path).map_err(|error| {
                 vec![cargo_resolution_error(format!(
                     "failed to restore prepared Cargo lockfile '{}': {error}",
@@ -117,15 +118,15 @@ fn prepare_constrained_cargo_resolution(
                 &policy.authoritative_locks,
                 &policy.trusted_vendor_dirs,
             )?;
-            if let Some(parent) = prepared_lock.parent() {
-                std::fs::create_dir_all(parent).map_err(|error| {
+            if let Some(cache_root) = prepared_lock.parent().and_then(Path::parent) {
+                std::fs::create_dir_all(cache_root).map_err(|error| {
                     vec![cargo_resolution_error(format!(
                         "failed to create prepared Cargo resolution cache '{}': {error}",
-                        parent.display()
+                        cache_root.display()
                     ))]
                 })?;
             }
-            cache_prepared_lock(&lock_path, &prepared_lock)?;
+            cache_prepared_lock(&lock_path, &prepared_lock, &identity)?;
         }
     }
     validate_authoritative_registry_entries(
@@ -219,33 +220,6 @@ fn normalized_policy_path(path: &Path) -> String {
         .unwrap_or_else(|_| path.to_path_buf())
         .display()
         .to_string()
-}
-
-fn cache_prepared_lock(
-    source_lock: &Path,
-    prepared_lock: &Path,
-) -> Result<(), Vec<RenderedDiagnostic>> {
-    if prepared_lock.is_file() {
-        return Ok(());
-    }
-    let nonce = PREPARED_LOCK_NONCE.fetch_add(1, Ordering::Relaxed);
-    let temporary = prepared_lock.with_extension(format!("tmp-{}-{nonce}", std::process::id()));
-    std::fs::copy(source_lock, &temporary).map_err(|error| {
-        vec![cargo_resolution_error(format!(
-            "failed to stage prepared Cargo lockfile '{}': {error}",
-            temporary.display()
-        ))]
-    })?;
-    if let Err(error) = std::fs::rename(&temporary, prepared_lock) {
-        let _ = std::fs::remove_file(&temporary);
-        if !prepared_lock.is_file() {
-            return Err(vec![cargo_resolution_error(format!(
-                "failed to publish prepared Cargo lockfile '{}': {error}",
-                prepared_lock.display()
-            ))]);
-        }
-    }
-    Ok(())
 }
 
 impl PreparedCargoResolution {
@@ -429,9 +403,11 @@ fn prepared_lock_path(
     project_dir: &Path,
     policy: &CargoResolutionPolicy,
     cargo_prefix_args: &[String],
-) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
+) -> Result<(PathBuf, CacheIdentity), Vec<RenderedDiagnostic>> {
     let mut input = Vec::new();
-    push_cache_bytes(&mut input, "sifr-cargo-resolution-v6");
+    push_cache_bytes(&mut input, "sifr-cargo-resolution-v7");
+    push_cache_bytes(&mut input, policy.lock_mode.as_str());
+    push_cache_bytes(&mut input, policy.cargo_vendor_mode.as_str());
     push_cache_bytes(&mut input, &normalized_manifest_cache_input(project_dir)?);
     for argument in cargo_prefix_args {
         push_cache_bytes(&mut input, argument);
@@ -440,12 +416,14 @@ fn prepared_lock_path(
         push_cache_bytes(&mut input, &authoritative_lock_digest(lock)?);
     }
     for vendor_dir in &policy.trusted_vendor_dirs {
-        push_cache_bytes(&mut input, &vendor_dir.display().to_string());
+        push_cache_bytes(&mut input, &normalized_policy_path(vendor_dir));
     }
-    Ok(artifact_cache_root()
+    let identity = cache_identity("cargo-resolution", input);
+    let path = artifact_cache_root()
         .join(PREPARED_RESOLUTION_DIR)
-        .join(fnv1a64_hex(&input))
-        .join("Cargo.lock"))
+        .join(&identity.digest)
+        .join("Cargo.lock");
+    Ok((path, identity))
 }
 
 fn normalized_manifest_cache_input(project_dir: &Path) -> Result<String, Vec<RenderedDiagnostic>> {
@@ -608,7 +586,7 @@ fn bounded_excerpt(stderr: &str) -> String {
         .join(" ")
 }
 
-fn cargo_resolution_error(message: impl Into<String>) -> RenderedDiagnostic {
+pub(super) fn cargo_resolution_error(message: impl Into<String>) -> RenderedDiagnostic {
     diagnostic_with_code(message.into(), DiagnosticCode::RUST_CARGO_METADATA)
 }
 
@@ -620,6 +598,8 @@ mod tests {
         registry_version_compatibility_family, seed_lockfile_from_authorities,
         validate_authoritative_registry_entries,
     };
+    use crate::build::cargo_resolution_cache::{cache_prepared_lock, prepared_lock_is_valid};
+    use crate::build::rust_interop_digest::cache_identity;
     use sifr_package::CargoLockMode;
     use std::collections::BTreeSet;
     use std::path::PathBuf;
@@ -710,6 +690,26 @@ mod tests {
             normalized_manifest_cache_input(&second.0)
                 .expect("second generated manifest should normalize")
         );
+    }
+
+    #[test]
+    fn prepared_lock_hit_verifies_complete_cache_identity() {
+        let project = test_project("prepared_full_identity");
+        let source_lock = project.0.join("source.lock");
+        let prepared_lock = project.0.join("cache").join("digest").join("Cargo.lock");
+        std::fs::create_dir_all(project.0.join("cache")).expect("cache root should be created");
+        write_registry_lock(&source_lock, "1.2.3", "checksum");
+        let expected = cache_identity("cargo-resolution", b"expected".to_vec());
+        let different = cache_identity("cargo-resolution", b"different".to_vec());
+
+        cache_prepared_lock(&source_lock, &prepared_lock, &expected)
+            .expect("prepared lock should be cached");
+
+        assert!(
+            prepared_lock_is_valid(&prepared_lock, &expected)
+                .expect("matching identity should be valid")
+        );
+        assert!(prepared_lock_is_valid(&prepared_lock, &different).is_err());
     }
 
     #[test]

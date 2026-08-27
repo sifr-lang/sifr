@@ -1,7 +1,9 @@
 mod api;
+mod cache_lifecycle;
 mod cargo_invocation_trace;
 mod cargo_manifest;
 mod cargo_resolution;
+mod cargo_resolution_cache;
 mod entrypoint;
 mod entrypoint_artifact;
 mod entrypoint_resolution;
@@ -68,6 +70,11 @@ pub use api::{
     build_package_project_report, build_project, build_project_report, build_single_file_report,
     check_package_project, check_package_python_interop, check_project, check_single_file,
     emit_project,
+};
+pub use cache_lifecycle::{
+    ArtifactCacheCleanPolicy, ArtifactCacheCleanReport, ArtifactCacheStatus,
+    DEFAULT_CACHE_SCAN_NODE_LIMIT, artifact_cache_status, artifact_cache_status_with_limit,
+    clean_artifact_cache,
 };
 #[doc(hidden)]
 pub use cargo_invocation_trace::{CargoInvocation, capture_cargo_invocations};

@@ -1,4 +1,5 @@
 use crate::errors::{LspError, LspResult};
+use crate::python_input_fingerprint::package_input_fingerprint;
 use crate::session::Session;
 use serde_json::Value;
 use sifr_analysis::FileId;
@@ -9,7 +10,6 @@ use sifr_compiler_services::{
 };
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, DiagnosticSpan, RenderedDiagnostic};
 use std::collections::{BTreeMap, HashMap};
-use std::hash::{DefaultHasher, Hash as _, Hasher as _};
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -59,7 +59,7 @@ pub(crate) struct PythonDeclarationCacheStats {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct EnvironmentCacheKey {
     package_root: PathBuf,
-    external_fingerprint: u64,
+    external_fingerprint: String,
     required_import_roots: Vec<String>,
 }
 
@@ -73,7 +73,7 @@ struct EnvironmentSnapshot {
 pub(crate) struct PythonDeclarationCache {
     entries: BTreeMap<PathBuf, CacheEntry>,
     environments: BTreeMap<EnvironmentCacheKey, EnvironmentSnapshot>,
-    target_inspections: BTreeMap<(PathBuf, u64, String), Result<PythonTargetInspection, String>>,
+    target_inspections: BTreeMap<(PathBuf, String, String), Result<PythonTargetInspection, String>>,
     stats: PythonDeclarationCacheStats,
     #[cfg(test)]
     probe_runs: usize,
@@ -173,7 +173,7 @@ impl Session {
             }
         }
         self.python_declarations.stats.misses += 1;
-        let external_fingerprint = package_root.as_deref().map_or(0, |root| {
+        let external_fingerprint = package_root.as_deref().map_or_else(String::new, |root| {
             self.python_declarations.stats.external_fingerprint_runs += 1;
             package_input_fingerprint(root, &mut provider)
         });
@@ -201,7 +201,7 @@ impl Session {
         let mut diagnostics = Vec::new();
         if let Some(root) = package_root.as_deref() {
             let environment =
-                self.package_python_environment(root, external_fingerprint, &plan, &mut provider);
+                self.package_python_environment(root, &external_fingerprint, &plan, &mut provider);
             diagnostics.extend(environment.diagnostics.into_iter().map(|diagnostic| {
                 ScopedDiagnostic {
                     file: None,
@@ -218,7 +218,7 @@ impl Session {
                     ));
                     diagnostics.extend(self.probe_python_targets(
                         root,
-                        external_fingerprint,
+                        &external_fingerprint,
                         &mut plan,
                         runtime.interpreter(),
                         &analysis_plan.module_files,
@@ -255,7 +255,7 @@ impl Session {
     fn package_python_environment(
         &mut self,
         package_root: &Path,
-        external_fingerprint: u64,
+        external_fingerprint: &str,
         plan: &PythonInteropPlan,
         provider: &mut impl SourceProvider,
     ) -> EnvironmentSnapshot {
@@ -264,7 +264,7 @@ impl Session {
         required_import_roots.dedup();
         let key = EnvironmentCacheKey {
             package_root: package_root.to_path_buf(),
-            external_fingerprint,
+            external_fingerprint: external_fingerprint.to_string(),
             required_import_roots: required_import_roots.clone(),
         };
         if let Some(snapshot) = self.python_declarations.environments.get(&key) {
@@ -285,7 +285,7 @@ impl Session {
     fn probe_python_targets(
         &mut self,
         package_root: &Path,
-        external_fingerprint: u64,
+        external_fingerprint: &str,
         plan: &mut PythonInteropPlan,
         interpreter: &Path,
         module_files: &BTreeMap<String, FileId>,
@@ -304,7 +304,7 @@ impl Session {
             self.check_active_request_cancelled()?;
             let key = (
                 package_root.to_path_buf(),
-                external_fingerprint,
+                external_fingerprint.to_string(),
                 target.clone(),
             );
             let inspection =
@@ -651,113 +651,6 @@ fn package_root_for(path: &Path, provider: &mut impl SourceProvider) -> Option<P
             return None;
         }
     }
-}
-
-fn package_input_fingerprint(root: &Path, provider: &mut impl SourceProvider) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    let mut paths = vec![
-        root.join("Cargo.toml"),
-        root.join("Cargo.lock"),
-        root.join("sifr.toml"),
-        root.join(sifr_package::PYTHON_BINDINGS_FILE),
-        root.join(sifr_package::PYTHON_CERTIFICATIONS_FILE),
-    ];
-    let interpreter = python_environment_selection(root, provider).map(|selection| {
-        paths.extend(selection.pyproject);
-        paths.extend(selection.lock);
-        selection.interpreter
-    });
-    for path in paths {
-        path.hash(&mut hasher);
-        match std::fs::read(&path) {
-            Ok(bytes) => bytes.hash(&mut hasher),
-            Err(error) => error.kind().hash(&mut hasher),
-        }
-    }
-    hash_python_bridge_inputs(root, &mut hasher);
-    hash_runnable_app_entries(root, &mut hasher, provider);
-    if let Some(interpreter) = interpreter {
-        interpreter.hash(&mut hasher);
-        match std::fs::metadata(&interpreter) {
-            Ok(metadata) => {
-                metadata.len().hash(&mut hasher);
-                metadata.modified().ok().hash(&mut hasher);
-            }
-            Err(error) => error.kind().hash(&mut hasher),
-        }
-    }
-    hasher.finish()
-}
-
-fn hash_runnable_app_entries(
-    root: &Path,
-    hasher: &mut DefaultHasher,
-    provider: &mut impl SourceProvider,
-) {
-    "runnable-app-entries".hash(hasher);
-    let result = sifr_package::PackageSession::discover(
-        sifr_package::PackageSessionOptions {
-            current_dir: root.to_path_buf(),
-            lock_mode: sifr_package::CargoLockMode::Frozen,
-        },
-        provider,
-    )
-    .and_then(|session| session.runnable_app_paths());
-    match result {
-        Ok(mut paths) => {
-            paths.sort();
-            paths.hash(hasher);
-        }
-        Err(error) => format!("{error:?}").hash(hasher),
-    }
-}
-
-fn hash_python_bridge_inputs(root: &Path, hasher: &mut DefaultHasher) {
-    let bridge_root = root.join(sifr_package::PYTHON_BRIDGE_ROOT);
-    bridge_root.hash(hasher);
-    let mut pending = vec![bridge_root];
-    while let Some(directory) = pending.pop() {
-        let entries = match std::fs::read_dir(&directory) {
-            Ok(entries) => entries,
-            Err(error) => {
-                error.kind().hash(hasher);
-                continue;
-            }
-        };
-        let mut entries = entries.filter_map(Result::ok).collect::<Vec<_>>();
-        entries.sort_by_key(std::fs::DirEntry::path);
-        for entry in entries {
-            let path = entry.path();
-            path.hash(hasher);
-            match entry.file_type() {
-                Ok(kind) if kind.is_dir() => pending.push(path),
-                Ok(kind) if kind.is_file() => match std::fs::read(&path) {
-                    Ok(bytes) => bytes.hash(hasher),
-                    Err(error) => error.kind().hash(hasher),
-                },
-                Ok(kind) => {
-                    kind.is_symlink().hash(hasher);
-                }
-                Err(error) => error.kind().hash(hasher),
-            }
-        }
-    }
-}
-
-fn python_environment_selection(
-    root: &Path,
-    provider: &mut impl SourceProvider,
-) -> Option<sifr_package::PythonEnvironmentSelection> {
-    let session = sifr_package::PackageSession::discover(
-        sifr_package::PackageSessionOptions {
-            current_dir: root.to_path_buf(),
-            lock_mode: sifr_package::CargoLockMode::Frozen,
-        },
-        provider,
-    )
-    .ok()?;
-    let manifest = session.manifest?;
-    sifr_package::select_root_python_environment(root, &manifest.python)
 }
 
 fn diagnostic_with_code(code: DiagnosticCode, message: String, help: String) -> RenderedDiagnostic {

@@ -5,6 +5,7 @@
 //! deterministic invalidation reports.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
+mod cache_fingerprint;
 mod cache_keys;
 mod callable_exports;
 mod canonical_types;

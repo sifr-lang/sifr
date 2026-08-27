@@ -1,9 +1,9 @@
 use super::cargo_invocation_trace::record_cargo_invocation;
 use super::cargo_resolution::{CargoResolutionPolicy, prepare_cargo_resolution};
-use super::rust_interop_digest::fnv1a64_hex;
+use super::rust_interop_digest::sha256_hex;
 use super::rust_interop_panic_probe::panic_mapper_probe;
 use super::rust_interop_probe_cache::{
-    ProbeCacheKeyCache, mark_probe_cache_hit, probe_cache_file, probe_cache_key,
+    ProbeCacheKeyCache, mark_probe_cache_hit, probe_cache_file, probe_cache_hit, probe_cache_key,
 };
 use super::rust_interop_probe_diagnostics::{
     classify_probe_failure, probe_cargo_resolution_failure, probe_resolution_diagnostics,
@@ -95,8 +95,8 @@ pub(super) fn execute_direct_cargo_probe(
     let invocation_cwd = env::current_dir()
         .map_err(|error| probe_io_failure(format!("failed to resolve Rust probe cwd: {error}")))?;
     let cache_key = probe_cache_key(probe, backend_root, &probe_manifest, &probe_source, cache);
-    let cache_file = probe_cache_file(&cache_key, &invocation_cwd);
-    if cache_file.is_file() {
+    let cache_file = probe_cache_file(&cache_key.digest, &invocation_cwd);
+    if probe_cache_hit(&cache_file, &cache_key) {
         return Ok(());
     }
     validate_probe_sqlx_offline_metadata(probe, backend_root)?;
@@ -104,7 +104,7 @@ pub(super) fn execute_direct_cargo_probe(
         "sifr_rust_probe_{}_{}_{}",
         std::process::id(),
         unique_probe_nonce(),
-        fnv1a64_hex(
+        sha256_hex(
             format!(
                 "{}:{}",
                 probe.backend.cargo_package_id.0,
@@ -168,7 +168,7 @@ pub(super) fn execute_direct_cargo_probe(
     let _ = fs::remove_dir_all(&probe_root);
     unchanged?;
     if output.status.success() {
-        mark_probe_cache_hit(&cache_file);
+        mark_probe_cache_hit(&cache_file, &cache_key);
         return Ok(());
     }
     let stderr = String::from_utf8_lossy(&output.stderr);

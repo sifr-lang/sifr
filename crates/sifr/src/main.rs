@@ -13,6 +13,7 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used, dead_code))]
 
 mod bridge_cli;
+mod cache_cli;
 mod cargo_diagnostics;
 mod cli_lock_modes;
 mod cli_model_and_entrypoint;
@@ -23,6 +24,7 @@ mod diagnostic_rendering_and_run;
 #[cfg(test)]
 mod diagnostic_test_sink;
 mod explain_cli;
+mod formatter_cache;
 mod formatter_cli;
 mod lint_cli;
 mod package_graph_context;

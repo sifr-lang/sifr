@@ -35,6 +35,8 @@ These flags apply across all subcommands.
 | `sifr check [PATH]` | Type-check without producing a binary — fast feedback loop. |
 | `sifr emit <FILE>` | Print the compiler's generated Rust without writing a binary. |
 | `sifr fmt [FILES]...` | Format `.sifr` source files. |
+| `sifr cache status` | Report the generated-artifact cache footprint. |
+| `sifr cache clean [POLICY]` | Remove generated artifacts by age, size, or full-cache policy. |
 | `sifr lint [FILES]...` | Run suppressible policy-rule diagnostics. |
 | `sifr test [DIR]` | Discover and run test functions. |
 | `sifr lsp --stdio` | Start the Language Server Protocol server over stdio. |

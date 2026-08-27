@@ -2,9 +2,10 @@ use super::{
     FrontendDiagnosticStyle, FrontendMode, ProjectRoot, SourceHash, SourcePath,
     WorkspaceCompilerOptions, WorkspacePackageConfigIdentity, WorkspaceSessionTarget,
 };
+use crate::cache_fingerprint::FingerprintBuilder;
 
-const CACHE_KEY_SCHEMA_VERSION: &str = "frontend-cache-key-v1";
-const SOURCE_HASH_SCHEMA_VERSION: &str = "source-text-fnv1a64-v1";
+const CACHE_KEY_SCHEMA_VERSION: &str = "frontend-cache-key-v2";
+const SOURCE_HASH_SCHEMA_VERSION: &str = "source-text-sha256-v2";
 const SOURCE_MAP_ALGORITHM_VERSION: &str = "source-map-line-index-v1";
 const PARSER_OPTIONS_VERSION: &str = "ruff-0.16.4-sifr-parser-v1";
 const LOWERING_OPTIONS_VERSION: &str = "sifr-hir-lowering-v1";
@@ -25,6 +26,7 @@ impl CompilerFingerprint {
         let mut builder = FingerprintBuilder::new("compiler");
         builder.field("cache_key_schema", CACHE_KEY_SCHEMA_VERSION);
         builder.field("frontend_crate_version", env!("CARGO_PKG_VERSION"));
+        builder.field("source_revision", env!("SIFR_FRONTEND_BUILD_REVISION"));
         builder.field("parser_options", PARSER_OPTIONS_VERSION);
         builder.field("lowering_options", LOWERING_OPTIONS_VERSION);
         builder.field("source_map_algorithm", SOURCE_MAP_ALGORITHM_VERSION);
@@ -523,53 +525,6 @@ impl CacheKeyBuilder {
 
     fn finish(self) -> CacheKeyFingerprint {
         CacheKeyFingerprint(self.inner.finish_hex())
-    }
-}
-
-struct FingerprintBuilder {
-    hash: u64,
-}
-
-impl FingerprintBuilder {
-    fn new(domain: &str) -> Self {
-        let mut builder = Self {
-            hash: 0xcbf2_9ce4_8422_2325_u64,
-        };
-        builder.field("domain", domain);
-        builder
-    }
-
-    fn field(&mut self, name: &str, value: impl AsRef<str>) {
-        let value = value.as_ref();
-        self.write(name.as_bytes());
-        self.write(&[0]);
-        self.write(value.len().to_string().as_bytes());
-        self.write(&[0]);
-        self.write(value.as_bytes());
-        self.write(&[0xff]);
-    }
-
-    fn path_field(&mut self, name: &str, path: &SourcePath) {
-        self.field(name, path.as_path().display().to_string());
-    }
-
-    fn optional_path_field(&mut self, name: &str, path: Option<&SourcePath>) {
-        if let Some(path) = path {
-            self.path_field(name, path);
-        } else {
-            self.field(name, "<none>");
-        }
-    }
-
-    fn finish_hex(self) -> String {
-        format!("{:016x}", self.hash)
-    }
-
-    fn write(&mut self, bytes: &[u8]) {
-        for byte in bytes {
-            self.hash ^= u64::from(*byte);
-            self.hash = self.hash.wrapping_mul(0x0000_0100_0000_01b3);
-        }
     }
 }
 
