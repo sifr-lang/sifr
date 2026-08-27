@@ -50,7 +50,7 @@ The following review claims are explicitly excluded:
 | M5 | Structural generated-code safety | implementation staged; final-review residual remediated | [#3557](https://github.com/sifr-lang/sifr/pull/3557) | `5644505a6badeb51b39e38df82b3f8972c545265` |
 | M6 | Structured codegen error propagation | implementation staged; integration deferred | [#3558](https://github.com/sifr-lang/sifr/pull/3558) | `ef46a3eac5f7e54b374f6c648609e49a3dc5f302` |
 | M7 | Canonical frontend project compilation product | implementation staged; integration deferred | [#3559](https://github.com/sifr-lang/sifr/pull/3559) | `30c7ab5e1b5bffc4a9e16f65c061e07498951fae` |
-| M8 | LSP hot paths and compiler-service dependency direction | in progress | | |
+| M8 | LSP hot paths and compiler-service dependency direction | implementation staged; integration deferred | [#3560](https://github.com/sifr-lang/sifr/pull/3560) | `da39eb709ddffef80d3dc6297cde959f88d85bc5` |
 | M9 | Method-lowering authority and unsafe-code documentation | pending | | |
 | M10 | Collision-resistant cache identity and cache lifecycle | pending | | |
 | M11 | Real fuzz and semantic property targets | pending | | |
@@ -390,6 +390,30 @@ Deferred M7 review follow-ups:
 - Reconcile the separate active compatibility-removal plan's reference to the
   deleted driver compile-order module during M13 record closure.
 
+Deferred M8 review follow-ups:
+
+- Pin and document the generated-preview specialization prefix and explain the
+  intentional differences from the driver `emit` path, including display
+  paths and Rust/stdlib interop resolution.
+- Replace copied compiler-service Python-interop wrapper tests with direct
+  service tests and add direct coverage for the real driver wrappers.
+- Remove unused driver stdlib/tooling re-exports and unused compiler-preview
+  fields under the M12 dead-code and public-API ratchets.
+- Register the LSP file watcher explicitly. Preserve the current cache-hit
+  order while making external package invalidation independent of optional
+  client watcher behavior.
+- Correct the stale `internal_docs/tooling_analysis.md` sentence that limits
+  LSP dependencies to analysis and protocol conversion helpers.
+- Preserve the analysis-to-lowering constraint in dependency-direction test
+  sources when the guard is refined.
+- Reuse the canonical analysis HIR in lint code-action paths, not only editor
+  diagnostics, so `safe_fix_all_action` and `safe_fix_actions` do not construct
+  another frontend context.
+- Replace the remaining cold-start hard-coded LSP cache counters with measured
+  deltas before a budget depends on them.
+- Split `python_declarations.rs` by responsibility before its next material
+  edit; it is 895 lines and has five lines of guardrail headroom.
+
 ## M13 Phase Closure And Whole-Phase Review
 
 Reconcile every milestone record, deferred finding, architecture/roadmap status,
@@ -606,6 +630,46 @@ tree and are keyed by candidate SHA.
   stdlib, driver, and verification-runner guardrails plus all ten Rust interop
   variants. Each then stopped at the already-recorded M4 architecture delivery
   taxonomy on lines 945, 946, and 1430. Neither gate was rerun.
+- Integration remains deferred with the stacked chain under the user's
+  instruction to continue through the phase before restoring the distinct
+  human reviewer.
+
+### M8 Deferred Integration Handoff
+
+- Branch: `codex/architecture-audit-closure-m8`.
+- Stacked draft PR: [#3560](https://github.com/sifr-lang/sifr/pull/3560), based
+  on the M7 branch.
+- Initial candidate:
+  `ddd6721b387d22c0279d222d4c1ba1ff9471141b`.
+- The initial exact-SHA Opus review returned `SATISFIED` with no blocking
+  findings. It verified the cache-hit ordering, HIR reuse, lower compiler
+  service boundary, dependency guards, real cache counters, warm budgets, and
+  workspace scale.
+- The single create-PR gate ran on the initial candidate and exposed one
+  M8-owned omission: `sifr_compiler_services` lacked Cargo coverage
+  classification. It also reached the already-recorded M4 architecture
+  delivery taxonomy on current lines 961, 962, and 1446. The gate was not
+  rerun.
+- Final M8 implementation candidate:
+  `da39eb709ddffef80d3dc6297cde959f88d85bc5`. It classifies the package,
+  library target, and test-support feature, and adds executed crate-test
+  membership to the create-PR, merge, nightly, and release profiles.
+- The one permitted remediation review returned `SATISFIED` with no blocking
+  findings. Review evidence is published in PR #3560 and preserved outside Git
+  under both reviewed SHAs.
+- Targeted validation: 82 compiler-service tests; 48 analysis tests; 22 lint
+  tests; 78 LSP tests; 32 diagnostic tests; workspace Clippy with warnings
+  denied; formatting; real completion and hover benchmarks with 40 hits and
+  zero misses each; architecture, dependency-direction and negative,
+  performance-manifest and self-test, HIR, driver-maintainability,
+  documentation, coverage classification, profile, and the 3,277-file size
+  guardrails passed.
+- The single merge gate ran on the exact final candidate. It confirmed strict
+  coverage classification, profile assignment, negative self-tests, generated
+  demo freshness, dependency/ownership/sysroot/stdlib/driver guardrails,
+  verification-runner foundations, and all ten Rust interop variants. It then
+  stopped only on the same three M4 architecture delivery-taxonomy lines at
+  current lines 961, 962, and 1446. The merge gate was not rerun.
 - Integration remains deferred with the stacked chain under the user's
   instruction to continue through the phase before restoring the distinct
   human reviewer.
