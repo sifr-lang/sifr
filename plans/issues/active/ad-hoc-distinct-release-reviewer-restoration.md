@@ -2,8 +2,8 @@
 
 ## Status
 
-Active non-blocking follow-up created from the user-directed Phase 40
-single-maintainer approval exception on 2026-07-29.
+Active blocking follow-up. The user-directed Phase 40 single-maintainer
+approval exception expired on 2026-08-27.
 
 The repository currently has one maintainer. Phase 40 bootstrap and first-GA
 publication may therefore use the canonical, expiring
@@ -15,6 +15,28 @@ owner, and retained evidence must bind the waiver digest.
 The waiver expires on 2026-08-27 and authorizes only `bootstrap-alpha`,
 `bootstrap-index`, and `ga-activation`. It cannot authorize `normal`,
 `rollback`, or `incident-roll-forward`.
+
+## Blocking Evidence
+
+On 2026-08-27, latest-stable Item 31 candidate
+`dbdbd42915dd45fe0255681c224266dd08f453ea` ran its one authorized merge gate.
+Kafka and every completed functional area passed. Distribution qualification
+passed 67 of 68 variants. The sole failure was
+`schema-v2-preview-epoch-bootstrap`, which rejected the expired waiver. The
+gate stopped before later crate and E2E stages.
+
+The merge-gate log SHA-256 is
+`b9e004ebc8b2ff494cdab8f8642a0e28759e88d4b0fbc8e652c1520a85fe1069`.
+The report SHA-256 is
+`cbdb39d9047da8206ebcba10e2c6856beaffaec314e4487413580b67a67181cd`.
+The evidence is in the
+[#3551 gate comment](https://github.com/sifr-lang/sifr/pull/3551#issuecomment-5432642050).
+
+Do not extend the waiver or weaken its expiry check. A distinct human reviewer
+must accept repository access. The `stable-release` environment must then use
+that reviewer with self-review and admin bypass disabled. Latest-stable Item
+31 remains draft and cannot consume a second merge gate under its current
+phase rules.
 
 ## Scope
 
