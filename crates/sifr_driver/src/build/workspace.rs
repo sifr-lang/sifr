@@ -167,7 +167,7 @@ impl PendingCachedArtifact {
                     .iter()
                     .all(|relative| self.final_root.join(relative).exists())
                 {
-                    let _ = std::fs::remove_dir_all(&self.staging_root);
+                    let _ = remove_cache_workspace(&self.staging_root);
                     Ok(CachedArtifactEntry {
                         workspace_root: self.final_root.clone(),
                         report: ArtifactCacheReport {
@@ -198,7 +198,7 @@ impl PendingCachedArtifact {
 
 impl Drop for PendingCachedArtifact {
     fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.staging_root);
+        let _ = remove_cache_workspace(&self.staging_root);
     }
 }
 
@@ -267,7 +267,15 @@ pub(crate) fn prepare_cached_artifact(
                 miss_reason = Some("metadata_missing".to_string());
             }
         }
-        let _ = std::fs::remove_dir_all(&final_root);
+        remove_cache_workspace(&final_root).map_err(|error| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                format!(
+                    "failed to invalidate generated artifact cache entry '{}': {error}",
+                    final_root.display()
+                ),
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            )]
+        })?;
     }
 
     let staging_root = create_invocation_workspace(&format!("{namespace}_cache_stage"))?;
@@ -287,6 +295,25 @@ pub(crate) fn prepare_cached_artifact(
 
 pub(super) fn artifact_cache_root() -> PathBuf {
     std::env::temp_dir().join(ARTIFACT_CACHE_ROOT_DIR)
+}
+
+fn remove_cache_workspace(workspace: &Path) -> std::io::Result<()> {
+    remove_cache_path_if_present(&workspace.with_extension("execution"))?;
+    remove_cache_path_if_present(&workspace.with_extension("target"))?;
+    remove_cache_path_if_present(workspace)
+}
+
+fn remove_cache_path_if_present(path: &Path) -> std::io::Result<()> {
+    let metadata = match std::fs::symlink_metadata(path) {
+        Ok(metadata) => metadata,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(error),
+    };
+    if metadata.is_dir() && !metadata.file_type().is_symlink() {
+        std::fs::remove_dir_all(path)
+    } else {
+        std::fs::remove_file(path)
+    }
 }
 
 #[derive(Deserialize, Serialize)]
@@ -402,7 +429,7 @@ fn deterministic_hash(value: &str) -> String {
 mod tests {
     use super::{
         ARTIFACT_CACHE_SCHEMA_VERSION, ArtifactCacheMetadata, ArtifactCacheReport,
-        PendingCachedArtifact, toolchain_signature, write_cache_metadata,
+        PendingCachedArtifact, remove_cache_workspace, toolchain_signature, write_cache_metadata,
     };
     use std::path::Path;
 
@@ -500,6 +527,27 @@ mod tests {
             Ok(_) => panic!("mismatched concurrent winner must fail closed"),
         };
         assert!(diagnostics[0].message.contains("full cache key"));
+        let _ = std::fs::remove_dir_all(Path::new(&root));
+    }
+
+    #[test]
+    fn invalidating_workspace_reclaims_external_target() {
+        let root = temp_dir("target_cleanup");
+        let workspace = root.join("cache-key");
+        let execution = workspace.with_extension("execution");
+        let target = workspace.with_extension("target");
+        std::fs::create_dir_all(&workspace).expect("workspace should be created");
+        std::fs::create_dir_all(&execution).expect("execution should be created");
+        std::fs::create_dir_all(&target).expect("target should be created");
+        std::fs::write(workspace.join("source"), b"source").expect("source should be written");
+        std::fs::write(execution.join("lock"), b"lock").expect("lock should be written");
+        std::fs::write(target.join("artifact"), b"artifact").expect("artifact should be written");
+
+        remove_cache_workspace(&workspace).expect("cache entry should be removed");
+
+        assert!(!workspace.exists());
+        assert!(!execution.exists());
+        assert!(!target.exists());
         let _ = std::fs::remove_dir_all(Path::new(&root));
     }
 }

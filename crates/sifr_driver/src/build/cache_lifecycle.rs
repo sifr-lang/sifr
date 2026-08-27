@@ -8,6 +8,7 @@ use std::time::{Duration, SystemTime};
 
 pub const DEFAULT_CACHE_SCAN_NODE_LIMIT: usize = 1_000_000;
 const SHARED_CACHE_DIRECTORIES: &[&str] = &["rust_bridge_probe_target"];
+const TEST_RUNNER_COMPANION_EXTENSIONS: &[&str] = &["execution", "target"];
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct ArtifactCacheStatus {
@@ -68,7 +69,7 @@ pub fn clean_artifact_cache(
 
 #[derive(Clone, Debug)]
 struct CacheEntry {
-    path: PathBuf,
+    paths: Vec<PathBuf>,
     bytes: u64,
     modified: SystemTime,
 }
@@ -181,7 +182,9 @@ fn clean_cache_at(
         .sum::<u64>();
     if !policy.dry_run {
         for index in &selected {
-            remove_path(&scan.entries[*index].path)?;
+            for path in &scan.entries[*index].paths {
+                remove_path(path)?;
+            }
         }
         remove_empty_directories(root)?;
     }
@@ -221,7 +224,7 @@ fn scan_cache(root: &Path, scan_node_limit: usize) -> io::Result<CacheScan> {
     if root_metadata.file_type().is_symlink() {
         return Ok(CacheScan {
             entries: vec![CacheEntry {
-                path: root.to_path_buf(),
+                paths: vec![root.to_path_buf()],
                 bytes: root_metadata.len(),
                 modified: root_metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH),
             }],
@@ -254,8 +257,8 @@ fn scan_cache(root: &Path, scan_node_limit: usize) -> io::Result<CacheScan> {
     let mut entries = Vec::new();
     let mut budget = scan_node_limit;
     let mut scanned_nodes = 0;
-    for path in candidates {
-        match measure_entry(&path, &mut budget, &mut scanned_nodes)? {
+    for paths in group_cache_candidates(candidates) {
+        match measure_entry(&paths, &mut budget, &mut scanned_nodes)? {
             Some(entry) => entries.push(entry),
             None => {
                 return Ok(CacheScan {
@@ -274,11 +277,11 @@ fn scan_cache(root: &Path, scan_node_limit: usize) -> io::Result<CacheScan> {
 }
 
 fn measure_entry(
-    path: &Path,
+    paths: &[PathBuf],
     budget: &mut usize,
     scanned_nodes: &mut usize,
 ) -> io::Result<Option<CacheEntry>> {
-    let mut pending = vec![path.to_path_buf()];
+    let mut pending = paths.to_vec();
     let mut bytes = 0_u64;
     let mut modified = SystemTime::UNIX_EPOCH;
     while let Some(current) = pending.pop() {
@@ -298,10 +301,44 @@ fn measure_entry(
         }
     }
     Ok(Some(CacheEntry {
-        path: path.to_path_buf(),
+        paths: paths.to_vec(),
         bytes,
         modified,
     }))
+}
+
+fn group_cache_candidates(candidates: Vec<PathBuf>) -> Vec<Vec<PathBuf>> {
+    let candidate_set = candidates.iter().cloned().collect::<BTreeSet<_>>();
+    let mut grouped = Vec::new();
+    for path in candidates {
+        let is_test_runner_entry = path
+            .parent()
+            .and_then(Path::file_name)
+            .and_then(|name| name.to_str())
+            == Some("test_runner");
+        if is_test_runner_entry
+            && path
+                .extension()
+                .and_then(|value| value.to_str())
+                .is_some_and(|extension| TEST_RUNNER_COMPANION_EXTENSIONS.contains(&extension))
+        {
+            let owner = path.with_extension("");
+            if candidate_set.contains(&owner) {
+                continue;
+            }
+        }
+        let mut paths = vec![path.clone()];
+        if is_test_runner_entry {
+            for extension in TEST_RUNNER_COMPANION_EXTENSIONS {
+                let companion = path.with_extension(extension);
+                if candidate_set.contains(&companion) {
+                    paths.push(companion);
+                }
+            }
+        }
+        grouped.push(paths);
+    }
+    grouped
 }
 
 fn sorted_children(path: &Path) -> io::Result<Vec<PathBuf>> {
@@ -391,6 +428,38 @@ mod tests {
         assert_eq!(report.removed_entries, 1);
         assert_eq!(report.remaining_entries, 1);
         assert!(entry.exists());
+    }
+
+    #[test]
+    fn test_runner_workspace_and_target_are_one_lifecycle_entry() {
+        let root = tempfile::tempdir().expect("cache root should be created");
+        let namespace = root.path().join("test_runner");
+        let workspace = namespace.join("cache-key");
+        let execution = workspace.with_extension("execution");
+        let target = workspace.with_extension("target");
+        fs::create_dir_all(&workspace).expect("workspace should be created");
+        fs::create_dir_all(&execution).expect("execution should be created");
+        fs::create_dir_all(&target).expect("target should be created");
+        fs::write(workspace.join("source"), vec![1_u8; 8]).expect("source should be written");
+        fs::write(execution.join("lock"), vec![3_u8; 4]).expect("lock should be written");
+        fs::write(target.join("artifact"), vec![2_u8; 16]).expect("artifact should be written");
+
+        let status = cache_status_at(root.path(), 100).expect("status should succeed");
+        assert_eq!(status.entries, 1);
+        assert_eq!(status.bytes, 28);
+
+        let report = clean_cache_at(
+            root.path(),
+            &ArtifactCacheCleanPolicy {
+                max_bytes: Some(0),
+                ..ArtifactCacheCleanPolicy::default()
+            },
+        )
+        .expect("cleanup should succeed");
+        assert_eq!(report.removed_entries, 1);
+        assert!(!workspace.exists());
+        assert!(!execution.exists());
+        assert!(!target.exists());
     }
 
     #[cfg(unix)]

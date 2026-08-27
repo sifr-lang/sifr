@@ -103,6 +103,7 @@
               "cli/check-emit",
               "cli/fmt-lint",
               "cli/test",
+              "cli/cache",
               "cli/lsp",
               "cli/packages-workspaces"
             ]

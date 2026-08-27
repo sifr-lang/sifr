@@ -80,9 +80,7 @@ pub(crate) fn execute_test_runner_project(
         }
     };
     let cache_report = cache_entry.report().clone();
-    let invocation = TestInvocationWorkspace::create()?;
-    let project_dir = invocation.root().join("sifr_tests");
-    copy_cached_project(cache_entry.workspace_root(), &project_dir)?;
+    let project_dir = prepare_test_execution_workspace(cache_entry.workspace_root())?;
     let target_directory = test_target_directory(cache_entry.workspace_root());
     let output = run_generated_cargo_command(
         &project_dir,
@@ -135,6 +133,10 @@ fn test_target_directory(cache_workspace: &Path) -> PathBuf {
     cache_workspace.with_extension("target")
 }
 
+fn test_execution_directory(cache_workspace: &Path) -> PathBuf {
+    cache_workspace.with_extension("execution")
+}
+
 fn test_runner_cache_key(
     generated_project: &GeneratedTestRunnerProject,
     cargo_toml: &str,
@@ -162,30 +164,93 @@ fn test_runner_cache_key(
     ))
 }
 
-struct TestInvocationWorkspace {
-    root: PathBuf,
+fn prepare_test_execution_workspace(source: &Path) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
+    let execution = test_execution_directory(source);
+    if execution_project_complete(&execution) {
+        return Ok(execution);
+    }
+    remove_execution_path_if_present(&execution)?;
+    let mut staging = TestExecutionWorkspaceStage::create()?;
+    copy_cached_project(source, staging.root())?;
+    match std::fs::rename(staging.root(), &execution) {
+        Ok(()) => staging.mark_published(),
+        Err(error)
+            if matches!(
+                error.kind(),
+                std::io::ErrorKind::AlreadyExists | std::io::ErrorKind::DirectoryNotEmpty
+            ) && execution_project_complete(&execution) => {}
+        Err(error) => {
+            return Err(vec![materialization_error(format!(
+                "failed to publish stable test execution workspace '{}': {error}",
+                execution.display()
+            ))]);
+        }
+    }
+    Ok(execution)
 }
 
-impl TestInvocationWorkspace {
+fn execution_project_complete(root: &Path) -> bool {
+    root.join("Cargo.toml").is_file() && root.join("src/lib.rs").is_file()
+}
+
+fn remove_execution_path_if_present(path: &Path) -> Result<(), Vec<RenderedDiagnostic>> {
+    let metadata = match std::fs::symlink_metadata(path) {
+        Ok(metadata) => metadata,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => {
+            return Err(vec![materialization_error(format!(
+                "failed to inspect stable test execution workspace '{}': {error}",
+                path.display()
+            ))]);
+        }
+    };
+    let result = if metadata.is_dir() && !metadata.file_type().is_symlink() {
+        std::fs::remove_dir_all(path)
+    } else {
+        std::fs::remove_file(path)
+    };
+    result.map_err(|error| {
+        vec![materialization_error(format!(
+            "failed to replace incomplete test execution workspace '{}': {error}",
+            path.display()
+        ))]
+    })
+}
+
+struct TestExecutionWorkspaceStage {
+    root: PathBuf,
+    published: bool,
+}
+
+impl TestExecutionWorkspaceStage {
     fn create() -> Result<Self, Vec<RenderedDiagnostic>> {
-        create_invocation_workspace("test_runner").map(|root| Self { root })
+        create_invocation_workspace("test_runner_execution_stage").map(|root| Self {
+            root,
+            published: false,
+        })
     }
 
     fn root(&self) -> &Path {
         &self.root
     }
+
+    fn mark_published(&mut self) {
+        self.published = true;
+    }
 }
 
-impl Drop for TestInvocationWorkspace {
+impl Drop for TestExecutionWorkspaceStage {
     fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.root);
+        if !self.published {
+            let _ = std::fs::remove_dir_all(&self.root);
+        }
     }
 }
 
 fn copy_cached_project(source: &Path, destination: &Path) -> Result<(), Vec<RenderedDiagnostic>> {
     std::fs::create_dir_all(destination).map_err(|error| {
         vec![materialization_error(format!(
-            "failed to create test execution directory '{}': {error}",
+            "failed to create test execution staging directory '{}': {error}",
             destination.display()
         ))]
     })?;

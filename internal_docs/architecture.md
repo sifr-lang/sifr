@@ -422,7 +422,10 @@ Generated artifact cache work moved `run`/`test` away from invocation-scoped tem
   typed key material. A hit must match both values and all required paths.
 - cache misses build inside an isolated staging directory and promote atomically into the stable cache path only after `cargo build --release` succeeds
 - cache hits execute the previously built binary directly without paying the generated-project rebuild cost again
-- `sifr test` uses the same cache discipline for generated test-runner Cargo projects: unchanged input reuses the prior workspace and its `target/` artifacts, while still running `cargo test` on every invocation
+- `sifr test` runs Cargo from a stable execution sibling for the content key.
+  It keeps the immutable generated sources separate and keeps the Cargo target
+  in another sibling directory. Invalidation and lifecycle cleanup treat all
+  three paths as one entry. The tests run on every command.
 - `sifr run` emits human build progress only for cache misses, omits the final
   `Binary:` footer because program output follows, and emits no build progress
   for cache hits or `--quiet`. `sifr test` keeps explicit cache reporting in

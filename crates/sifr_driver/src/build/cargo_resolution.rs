@@ -215,7 +215,7 @@ fn authoritative_lock_digest(path: &Path) -> Result<String, Vec<RenderedDiagnost
     })
 }
 
-fn normalized_policy_path(path: &Path) -> String {
+pub(super) fn normalized_policy_path(path: &Path) -> String {
     path.canonicalize()
         .unwrap_or_else(|_| path.to_path_buf())
         .display()

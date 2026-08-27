@@ -11,6 +11,7 @@ const COMPILER_SOURCE_ROOTS: &[&str] = &[
     "crates/sifr_lowering",
     "crates/sifr_syntax",
     "crates/sifr_frontend",
+    "crates/sifr_format",
 ];
 
 fn main() {

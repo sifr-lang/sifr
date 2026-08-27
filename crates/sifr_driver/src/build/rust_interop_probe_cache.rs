@@ -1,3 +1,4 @@
+use super::cargo_resolution::normalized_policy_path;
 use super::rust_interop_digest::{
     CacheIdentity, cache_identity, digest_file, digest_path, push_cache_bytes, sha256_hex,
 };
@@ -134,7 +135,7 @@ pub(super) fn probe_cache_key(
     }
     for authority in &probe.cargo_resolution.authoritative_locks {
         push_cache_bytes(&mut input, "authoritative-lock");
-        push_cache_bytes(&mut input, &authority.display().to_string());
+        push_cache_bytes(&mut input, &normalized_policy_path(authority));
         push_cache_bytes(
             &mut input,
             &digest_file(authority).unwrap_or_else(|| "<missing>".to_string()),
@@ -142,7 +143,7 @@ pub(super) fn probe_cache_key(
     }
     for vendor_dir in &probe.cargo_resolution.trusted_vendor_dirs {
         push_cache_bytes(&mut input, "trusted-vendor");
-        push_cache_bytes(&mut input, &vendor_dir.display().to_string());
+        push_cache_bytes(&mut input, &normalized_policy_path(vendor_dir));
     }
     if let Some(metadata_digest) = cache.sqlx_metadata_digest(backend_root) {
         push_cache_bytes(&mut input, "sqlx-offline-metadata");

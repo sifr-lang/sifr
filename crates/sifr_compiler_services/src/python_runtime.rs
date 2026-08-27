@@ -24,9 +24,7 @@ pub struct PackagePythonRuntime {
     libpython: Option<String>,
     bridge_sources: Vec<EmbeddedPythonBridgeSource>,
     arrow_certifications: Vec<sifr_package::ArrowCertification>,
-    arrow_certification_identity: String,
     dlpack_certifications: Vec<sifr_package::DlpackCertification>,
-    dlpack_certification_identity: String,
     binding_identity: String,
     start_async_loop: bool,
 }
@@ -71,9 +69,7 @@ impl PackagePythonRuntime {
             libpython: probe.libpython.clone(),
             bridge_sources: Vec::new(),
             arrow_certifications: Vec::new(),
-            arrow_certification_identity: String::new(),
             dlpack_certifications: Vec::new(),
-            dlpack_certification_identity: String::new(),
             binding_identity: String::new(),
             start_async_loop: false,
         })
@@ -103,14 +99,11 @@ impl PackagePythonRuntime {
         &mut self,
         certifications: Vec<sifr_package::ArrowCertification>,
     ) {
-        self.arrow_certification_identity =
-            serde_json::to_string(&certifications).unwrap_or_default();
         self.arrow_certifications = certifications;
     }
 
-    #[must_use]
-    pub fn arrow_certification_identity(&self) -> &str {
-        &self.arrow_certification_identity
+    pub fn arrow_certification_identity(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string(&self.arrow_certifications)
     }
 
     pub(super) fn arrow_certification(
@@ -126,14 +119,11 @@ impl PackagePythonRuntime {
         &mut self,
         certifications: Vec<sifr_package::DlpackCertification>,
     ) {
-        self.dlpack_certification_identity =
-            serde_json::to_string(&certifications).unwrap_or_default();
         self.dlpack_certifications = certifications;
     }
 
-    #[must_use]
-    pub fn dlpack_certification_identity(&self) -> &str {
-        &self.dlpack_certification_identity
+    pub fn dlpack_certification_identity(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string(&self.dlpack_certifications)
     }
 
     pub fn set_binding_identity(&mut self, identity: String) {
@@ -187,9 +177,7 @@ impl PackagePythonRuntime {
             libpython: None,
             bridge_sources: Vec::new(),
             arrow_certifications: Vec::new(),
-            arrow_certification_identity: String::new(),
             dlpack_certifications: Vec::new(),
-            dlpack_certification_identity: String::new(),
             binding_identity: String::new(),
             start_async_loop: false,
         }
