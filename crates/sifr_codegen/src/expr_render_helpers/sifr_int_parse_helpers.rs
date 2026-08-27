@@ -53,6 +53,7 @@ impl RustEmitter {
         let method = match op {
             "/" => "floor_div_known_nonzero",
             "%" => "floor_mod_known_nonzero",
+            // INVARIANT: the caller selects this rewrite only for floor division or modulo.
             _ => unreachable!("SifrInt floor rewrite only handles floor division and modulo"),
         };
         crate::RustExpr::MethodCall {

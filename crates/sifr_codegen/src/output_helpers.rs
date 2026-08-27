@@ -3,6 +3,7 @@ use crate::RustEmitter;
 impl RustEmitter {
     pub(crate) fn push_captured_stmt(&mut self, stmt: &crate::RustStmt) {
         let Some(captured) = self.stmt_capture_stack.last_mut() else {
+            // INVARIANT: direct emission is entered only while an IR capture is active.
             panic!(
                 "direct statement string emission is forbidden in IR-first codegen; push_captured_stmt requires active IR capture"
             );

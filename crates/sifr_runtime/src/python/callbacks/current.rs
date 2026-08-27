@@ -1,3 +1,5 @@
+#![allow(unsafe_code)]
+
 use super::execution::{
     CallbackExecutionError, collect_args, execution_error, python_error, result_object,
     validate_call_shape,
@@ -24,6 +26,12 @@ type CurrentTarget<'a> = dyn for<'py> Fn(
 struct CurrentTargetPtr(*const CurrentTarget<'static>);
 
 #[allow(clippy::transmute_ptr_to_ptr)]
+/// Erase a current-thread callback target lifetime while its owner retains it.
+///
+/// # Safety
+///
+/// The returned pointer must be removed from the thread-local registry before
+/// the owning target is dropped.
 unsafe fn erase_target_lifetime(target: *const CurrentTarget<'_>) -> CurrentTargetPtr {
     // SAFETY: callers must keep the target alive until this pointer is removed
     // from the thread-local registry and all admitted invocations have drained.

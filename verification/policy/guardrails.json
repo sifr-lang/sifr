@@ -30,6 +30,27 @@
       "report": "stdout"
     },
     {
+      "name": "method-dispatch-authority",
+      "entrypoint": "scripts/check_method_dispatch_authority.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    },
+    {
+      "name": "unsafe-abi-contracts",
+      "entrypoint": "scripts/check_unsafe_abi_contracts.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    },
+    {
+      "name": "codegen-invariant-contracts",
+      "entrypoint": "scripts/check_codegen_invariant_contracts.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    },
+    {
       "name": "driver-maintainability",
       "entrypoint": "scripts/check_sifr_driver_maintainability_guardrails.py",
       "args": [],

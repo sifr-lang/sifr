@@ -1,7 +1,11 @@
+#![allow(unsafe_code)]
+
 use super::{PythonError, arrow_error};
 use std::ffi::{c_char, c_void};
 use std::ptr::NonNull;
 
+// SAFETY: These signatures are fixed by the Arrow C Data and C Device ABIs.
+// Callers validate required callbacks and payload structure before invocation.
 type SchemaRelease = unsafe extern "C" fn(*mut ArrowSchema);
 type ArrayRelease = unsafe extern "C" fn(*mut ArrowArray);
 type StreamGetSchema = unsafe extern "C" fn(*mut ArrowArrayStream, *mut ArrowSchema) -> i32;
@@ -28,6 +32,8 @@ pub(super) struct ArrowSchema {
     pub(super) private_data: *mut c_void,
 }
 
+// SAFETY: values move only as owned capsule payloads on the application-owned
+// Python runtime. No Rust reference to a field crosses threads.
 unsafe impl Send for ArrowSchema {}
 
 #[repr(C)]
@@ -44,6 +50,8 @@ pub(super) struct ArrowArray {
     pub(super) private_data: *mut c_void,
 }
 
+// SAFETY: values move only as owned capsule payloads on the application-owned
+// Python runtime. No Rust reference to a field crosses threads.
 unsafe impl Send for ArrowArray {}
 
 #[repr(C)]
@@ -55,6 +63,8 @@ pub(super) struct ArrowArrayStream {
     pub(super) private_data: *mut c_void,
 }
 
+// SAFETY: the stream pointer is invoked only while attached to the owning
+// Python runtime, and the payload remains owned by its capsule.
 unsafe impl Send for ArrowArrayStream {}
 
 #[repr(C)]
@@ -66,6 +76,8 @@ pub(super) struct ArrowDeviceArray {
     pub(super) reserved: [i64; 3],
 }
 
+// SAFETY: values move only as owned capsule payloads on the application-owned
+// Python runtime. No Rust reference to a field crosses threads.
 unsafe impl Send for ArrowDeviceArray {}
 
 #[repr(C)]
@@ -78,6 +90,8 @@ pub(super) struct ArrowDeviceArrayStream {
     pub(super) private_data: *mut c_void,
 }
 
+// SAFETY: the stream pointer is invoked only while attached to the owning
+// Python runtime, and the payload remains owned by its capsule.
 unsafe impl Send for ArrowDeviceArrayStream {}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -351,6 +365,9 @@ fn checked_ref<'a, T>(
             "{context} {structure} payload is not correctly aligned"
         )));
     }
+    // SAFETY: the caller obtained pointer from a live, name-checked capsule;
+    // the alignment check above is satisfied and ABI validation never lets the
+    // returned reference outlive the owning capsule operation.
     Ok(unsafe { pointer.cast::<T>().as_ref() })
 }
 

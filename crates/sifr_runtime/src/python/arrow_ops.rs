@@ -532,6 +532,7 @@ fn extract_capsules(
     }
 }
 
+#[allow(unsafe_code)]
 fn validate_capsule(
     py: Python<'_>,
     object: &Bound<'_, PyAny>,
@@ -544,6 +545,7 @@ fn validate_capsule(
             expected_name.to_string_lossy()
         ))
     })?;
+    // SAFETY: capsule is a live PyCapsule bound to py for this whole function.
     let actual_name = unsafe { ffi::PyCapsule_GetName(capsule.as_ptr()) };
     if actual_name.is_null() {
         return Err(arrow_error(format!(
@@ -551,6 +553,7 @@ fn validate_capsule(
             expected_name.to_string_lossy()
         )));
     }
+    // SAFETY: PyCapsule_GetName returned a non-null capsule-owned C string.
     let actual_name = unsafe { CStr::from_ptr(actual_name) };
     if actual_name != expected_name {
         return Err(arrow_error(format!(
@@ -562,6 +565,7 @@ fn validate_capsule(
     let pointer = capsule
         .pointer_checked(Some(expected_name))
         .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", context))?;
+    // SAFETY: capsule remains live and bound to the attached interpreter.
     let destructor = unsafe { ffi::PyCapsule_GetDestructor(capsule.as_ptr()) };
     if destructor.is_none() {
         let _stale_error = PyErr::take(py);

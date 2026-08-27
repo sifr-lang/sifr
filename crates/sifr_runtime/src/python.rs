@@ -1,5 +1,3 @@
-#![allow(unsafe_code)]
-
 use pyo3::{ffi, prelude::*};
 use std::ffi::{CStr, CString};
 use std::fmt;
@@ -376,15 +374,20 @@ fn configure_interpreter(config: &PythonRuntimeConfig) -> Result<(), PythonRunti
     })
 }
 
+#[allow(unsafe_code)]
 fn initialize_cpython_with_config(config: &PythonRuntimeConfig) -> Result<(), PythonRuntimeError> {
+    // SAFETY: CPython permits this process-global initialization query before
+    // interpreter attachment and it does not dereference application memory.
     if unsafe { ffi::Py_IsInitialized() } != 0 {
         return Ok(());
     }
 
     let mut raw_config = MaybeUninit::<ffi::PyConfig>::uninit();
+    // SAFETY: CPython initializes every field of the pointed-to PyConfig.
     unsafe {
         ffi::PyConfig_InitPythonConfig(raw_config.as_mut_ptr());
     }
+    // SAFETY: PyConfig_InitPythonConfig completed immediately above.
     let mut raw_config = unsafe { raw_config.assume_init() };
     raw_config.install_signal_handlers = 0;
     raw_config.parse_argv = 0;
@@ -395,15 +398,21 @@ fn initialize_cpython_with_config(config: &PythonRuntimeConfig) -> Result<(), Py
 
     let configure_result = configure_raw_python_config(&mut raw_config, config);
     let initialize_result = configure_result.and_then(|()| {
+        // SAFETY: raw_config remains initialized and live for the call. Every
+        // pointer field was populated through the CPython configuration API.
         py_status_result(
             unsafe { ffi::Py_InitializeFromConfig(&raw const raw_config) },
             "initialize CPython",
         )
     });
+    // SAFETY: raw_config was initialized once and has not been cleared. This
+    // call releases only storage owned by the configuration object.
     unsafe {
         ffi::PyConfig_Clear(&raw mut raw_config);
     }
     initialize_result?;
+    // SAFETY: successful initialization leaves this thread holding the GIL;
+    // PyEval_SaveThread releases it and returns control to PyO3 attachment.
     unsafe {
         ffi::PyEval_SaveThread();
     }
@@ -476,6 +485,7 @@ fn set_optional_config_string(
     set_config_string(raw_config, target, value, context)
 }
 
+#[allow(unsafe_code)]
 fn set_config_string(
     raw_config: *mut ffi::PyConfig,
     target: *mut *mut libc::wchar_t,
@@ -485,12 +495,15 @@ fn set_config_string(
     let value = CString::new(value).map_err(|_| {
         PythonRuntimeError::PythonOperationFailed(format!("{context}: value contains NUL byte"))
     })?;
+    // SAFETY: raw_config and target point into the live PyConfig owned by the
+    // caller, and value is a NUL-terminated CString live for the whole call.
     py_status_result(
         unsafe { ffi::PyConfig_SetBytesString(raw_config, target, value.as_ptr()) },
         context,
     )
 }
 
+#[allow(unsafe_code)]
 fn set_config_argv(
     raw_config: &mut ffi::PyConfig,
     interpreter: &str,
@@ -501,17 +514,22 @@ fn set_config_argv(
         )
     })?;
     let mut argv = [interpreter.as_ptr()];
+    // SAFETY: raw_config is live, argc matches the one-element argv array, and
+    // the CString pointer remains valid until CPython copies it.
     py_status_result(
         unsafe { ffi::PyConfig_SetBytesArgv(raw_config, 1, argv.as_mut_ptr()) },
         "set Python argv",
     )
 }
 
+#[allow(unsafe_code)]
 fn append_module_search_path(
     raw_config: &mut ffi::PyConfig,
     path: &str,
 ) -> Result<(), PythonRuntimeError> {
     let wide = wide_string(path);
+    // SAFETY: module_search_paths belongs to the live PyConfig and wide is
+    // NUL-terminated and remains live until CPython copies it.
     py_status_result(
         unsafe {
             ffi::PyWideStringList_Append(&raw mut raw_config.module_search_paths, wide.as_ptr())
@@ -538,10 +556,13 @@ fn wide_string(value: &str) -> Vec<libc::wchar_t> {
         .collect()
 }
 
+#[allow(unsafe_code)]
 fn py_status_result(
     status: ffi::PyStatus,
     context: &'static str,
 ) -> Result<(), PythonRuntimeError> {
+    // SAFETY: PyStatus is a by-value CPython result and this query reads no
+    // caller-owned pointer.
     if unsafe { ffi::PyStatus_Exception(status) } == 0 {
         return Ok(());
     }
@@ -551,10 +572,13 @@ fn py_status_result(
     )))
 }
 
+#[allow(unsafe_code)]
 fn py_status_message(status: ffi::PyStatus) -> String {
     if status.err_msg.is_null() {
         return format!("status exit code {}", status.exitcode);
     }
+    // SAFETY: a non-null PyStatus.err_msg is a CPython-owned NUL-terminated
+    // string that remains valid while this status is inspected.
     unsafe { CStr::from_ptr(status.err_msg) }
         .to_string_lossy()
         .into_owned()

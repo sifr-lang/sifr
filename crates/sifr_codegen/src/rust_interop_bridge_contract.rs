@@ -754,6 +754,7 @@ pub(crate) fn bridge_type_contract(
             ty,
             "type is outside the initial Rust bridge-compatible contract",
         ),
+        // INVARIANT: bridge contract entrypoints resolve aliases before this match.
         Type::Alias { .. } => unreachable!("resolved aliases must not remain aliases"),
     }
 }

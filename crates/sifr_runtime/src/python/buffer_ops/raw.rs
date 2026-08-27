@@ -1,3 +1,5 @@
+#![allow(unsafe_code)]
+
 use super::PythonBufferElement;
 use pyo3::exceptions::PyBufferError;
 use pyo3::ffi;
@@ -470,6 +472,12 @@ impl PythonBufferElement {
     }
 }
 
+/// Access the fields of a pinned buffer without moving its allocation.
+///
+/// # Safety
+///
+/// Callers must keep the pinned allocation at the address registered with
+/// CPython for the entire acquired-view lifetime.
 unsafe fn raw_mut(raw: Pin<&mut RawBuffer>) -> &mut RawBuffer {
     // SAFETY: callers do not move the pinned value; they only mutate fields in
     // the stable allocation passed to CPython.

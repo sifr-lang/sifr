@@ -51,7 +51,7 @@ The following review claims are explicitly excluded:
 | M6 | Structured codegen error propagation | implementation staged; integration deferred | [#3558](https://github.com/sifr-lang/sifr/pull/3558) | `ef46a3eac5f7e54b374f6c648609e49a3dc5f302` |
 | M7 | Canonical frontend project compilation product | implementation staged; integration deferred | [#3559](https://github.com/sifr-lang/sifr/pull/3559) | `30c7ab5e1b5bffc4a9e16f65c061e07498951fae` |
 | M8 | LSP hot paths and compiler-service dependency direction | implementation staged; integration deferred | [#3560](https://github.com/sifr-lang/sifr/pull/3560) | `da39eb709ddffef80d3dc6297cde959f88d85bc5` |
-| M9 | Method-lowering authority and unsafe-code documentation | pending | | |
+| M9 | Method-lowering authority and unsafe-code documentation | implementation staged; integration deferred | [#3561](https://github.com/sifr-lang/sifr/pull/3561) | `f6d1f4edaab6a2bfa0952ab89fd1980bec284703` |
 | M10 | Collision-resistant cache identity and cache lifecycle | pending | | |
 | M11 | Real fuzz and semantic property targets | pending | | |
 | M12 | Maintainability ratchets and evidence-based flow decisions | pending | | |
@@ -414,6 +414,30 @@ Deferred M8 review follow-ups:
 - Split `python_declarations.rs` by responsibility before its next material
   edit; it is 895 lines and has five lines of guardrail headroom.
 
+Deferred M9 review follow-ups:
+
+- Decide whether frontend constant evaluation is a second source-semantics
+  authority. Extend the method-dispatch ratchet to it or document why its
+  compile-time behavior is outside codegen method authority.
+- Replace per-file method-dispatch counts with normalized site fingerprints.
+  Cover equivalent binding names instead of only `method` and `method_name`.
+- Reject item-level unsafe allowances that widen beyond one function. Review
+  the three large file-wide callback and DLPack allowances for tighter
+  function-level ownership.
+- Use the system temporary directory for guard self-tests, or create the
+  repository target directory explicitly, so a cold checkout cannot fail
+  before it reaches a policy verdict.
+- Mask literal and comment text before the local `INVARIANT:` lookback. Add
+  direct character-literal fixtures to each shared scanner consumer, or add a
+  dedicated shared scanner test. Document the conservative character-literal
+  and lifetime distinction beside the scanner helper.
+- Add a focused reproduction for the strict-registry decline path after the
+  removed statement-level list `append` and `cloned` fallback. The M9 gates
+  stopped at M11 taxonomy before the E2E and algorithmic suites.
+- Convert the union nominal-path and context-manager renderer invariants to
+  structured compiler errors if focused multi-module reproductions can reach
+  them from source input.
+
 ## M13 Phase Closure And Whole-Phase Review
 
 Reconcile every milestone record, deferred finding, architecture/roadmap status,
@@ -670,6 +694,39 @@ tree and are keyed by candidate SHA.
   verification-runner foundations, and all ten Rust interop variants. It then
   stopped only on the same three M4 architecture delivery-taxonomy lines at
   current lines 961, 962, and 1446. The merge gate was not rerun.
+- Integration remains deferred with the stacked chain under the user's
+  instruction to continue through the phase before restoring the distinct
+  human reviewer.
+
+### M9 Deferred Integration Handoff
+
+- Branch: `codex/architecture-audit-closure-m9`.
+- Stacked draft PR: [#3561](https://github.com/sifr-lang/sifr/pull/3561), based
+  on the M8 branch.
+- Initial candidate:
+  `a41ade982d463865a933f9b5200ff4f334869086`.
+- The initial exact-SHA Opus review returned `NOT SATISFIED`. It found that the
+  shared Rust source masker did not consume character or byte-character
+  literals, so a quote literal could hide a later production policy site.
+- Final M9 implementation candidate:
+  `f6d1f4edaab6a2bfa0952ab89fd1980bec284703`. The remediation consumes normal,
+  byte, escaped, hexadecimal, and Unicode character literals without consuming
+  lifetimes or loop labels. Its negative fixture proves that a panic after a
+  byte quote remains visible.
+- The one permitted remediation review returned `SATISFIED` with no blocking
+  findings. Review evidence is published in PR #3561 and preserved outside
+  Git under the final candidate SHA.
+- Targeted validation: all 1,151 `sifr_codegen` tests; all 82 `sifr_runtime`
+  library tests; workspace Clippy with warnings denied; formatting; verification
+  runner profile self-tests; method-dispatch, unsafe-ABI, codegen-invariant,
+  HIR-maintainability, and the 3,282-file size guardrails passed. All three new
+  guardrails also passed their negative self-tests.
+- The single create-PR and merge gates both ran on the exact final candidate.
+  Each passed every M9 guard and self-test, generated-demo freshness,
+  dependency, ownership, sysroot, stdlib, driver, and runner-foundation checks,
+  plus all ten Rust interop variants. Each then stopped only on the two M11
+  delivery-taxonomy lines at current `internal_docs/architecture.md` lines 965
+  and 1449. Neither gate was rerun.
 - Integration remains deferred with the stacked chain under the user's
   instruction to continue through the phase before restoring the distinct
   human reviewer.

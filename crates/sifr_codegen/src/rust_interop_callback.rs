@@ -10,8 +10,10 @@ use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 
 pub(crate) fn call_scoped_callback_adapter_expr(param: &HirParam) -> RustExpr {
     let Type::Callable(params, conventions, result) = param.ty.resolve_alias() else {
+        // INVARIANT: HIR marks only validated Callable parameters as callbacks.
         unreachable!("call-scoped callback adapter requires a Callable parameter");
     };
+    // INVARIANT: Callable construction keeps parameter types and conventions aligned.
     assert_eq!(
         params.len(),
         conventions.len(),
@@ -26,6 +28,7 @@ pub(crate) fn call_scoped_callback_adapter_expr(param: &HirParam) -> RustExpr {
 
 pub(crate) fn threadsafe_callback_adapter_expr(param: &HirParam, func: &HirFunction) -> RustExpr {
     let Type::Callable(params, conventions, result) = param.ty.resolve_alias() else {
+        // INVARIANT: HIR marks only validated Callable parameters as callbacks.
         unreachable!("thread-safe callback adapter requires a Callable parameter");
     };
     let policy = threadsafe_callback_policy_expr(func);
@@ -79,9 +82,11 @@ fn threadsafe_callback_policy_expr(func: &HirFunction) -> String {
         .iter()
         .find(|declaration| declaration.kind == RustInteropDecoratorKind::Callback)
     else {
+        // INVARIANT: thread-safe callback lowering requires callback decorator metadata.
         unreachable!("thread-safe callback adapter requires callback policy metadata");
     };
     let Ok(contract) = rust_threadsafe_callback_contract(declaration) else {
+        // INVARIANT: HIR lowering rejects invalid callback policy metadata.
         unreachable!("invalid callback policies are rejected during HIR lowering");
     };
     render_threadsafe_callback_policy(contract)

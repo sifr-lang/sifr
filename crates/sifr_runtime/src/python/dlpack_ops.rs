@@ -1,3 +1,5 @@
+#![allow(unsafe_code)]
+
 use super::object_ops::clone_handle;
 use super::{ObjectHandle, PythonError, PythonRuntimeError};
 use pyo3::ffi;
@@ -84,6 +86,8 @@ struct TrackedDlpackTensor {
 impl Drop for TrackedDlpackTensor {
     fn drop(&mut self) {
         if !self.released {
+            // SAFETY: this tracked entry owns the producer deleter until
+            // `released` is set. Drop is the sole remaining release path.
             unsafe { self.tensor.release() };
             self.released = true;
         }
@@ -293,6 +297,8 @@ fn consume_capsule(
         .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "__dlpack__"))?;
     let tensor = ManagedTensor::from_capsule_name(pointer.as_ptr(), actual_name)?;
     let metadata = metadata_for_managed_tensor(tensor)?;
+    // SAFETY: capsule is live and attached, and the replacement name is a
+    // static DLPack C string. Renaming transfers deleter ownership to Rust.
     let rename_result =
         unsafe { ffi::PyCapsule_SetName(capsule.as_ptr(), tensor.used_capsule_name().as_ptr()) };
     if rename_result != 0 {
@@ -379,10 +385,13 @@ fn capsule_name<'a>(
     capsule: &'a Bound<'_, PyCapsule>,
     context: &'static str,
 ) -> Result<&'a CStr, PythonError> {
+    // SAFETY: capsule is live and bound to the attached interpreter.
     let actual_name = unsafe { ffi::PyCapsule_GetName(capsule.as_ptr()) };
     if actual_name.is_null() {
         return Err(dlpack_error(format!("{context} capsule has no name")));
     }
+    // SAFETY: the checked non-null pointer is a NUL-terminated capsule-owned
+    // name whose lifetime is bounded by capsule.
     Ok(unsafe { CStr::from_ptr(actual_name) })
 }
 

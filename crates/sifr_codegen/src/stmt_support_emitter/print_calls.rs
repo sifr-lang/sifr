@@ -421,6 +421,7 @@ impl RustEmitter {
             {
                 let mut args_iter = args.into_iter();
                 let Some(inner) = args_iter.next() else {
+                    // INVARIANT: this branch follows an exact-one-argument shape check.
                     unreachable!("Some(_) call must have exactly one argument");
                 };
                 if Self::is_box_new_call_expr_for_ir(&inner) {

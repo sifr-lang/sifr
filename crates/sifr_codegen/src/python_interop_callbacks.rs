@@ -456,6 +456,7 @@ pub(crate) fn append_owner_failure_reconciliation(
 }
 
 pub(crate) fn callback_cleanup_expr(setup: &CallbackSetup, async_wrapper: bool) -> RustExpr {
+    // INVARIANT: only call-scoped callback setup reaches the cleanup expression builder.
     debug_assert_eq!(setup.lifetime, PythonCallbackLifetime::Call);
     let method = match setup.dispatch {
         PythonCallbackDispatch::Current => "close",

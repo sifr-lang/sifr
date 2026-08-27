@@ -958,10 +958,13 @@ or package behavior.
 - CPython differential and stdlib-parity areas verify behavioral matches for
   built-ins, data structure methods, and stdlib modules.
 
-Coverage-guided parser, lowering, and semantic fuzzing is future M11 work. The
-retained unsafe ABI sites and their local contracts are future M9 work. Current
-validation commands and profile composition are defined in the Test And
-Validation Architecture section below.
+Method-lowering ownership, unsafe Python ABI boundaries, and compiler panic
+invariants are defined in
+[`method_lowering_and_unsafe_contracts.md`](method_lowering_and_unsafe_contracts.md).
+The validation profiles ratchet all three contracts. Coverage-guided parser,
+lowering, and semantic fuzzing is future M11 work. Current validation commands
+and profile composition are defined in the Test And Validation Architecture
+section below.
 
 ### 6. Slice and Collection Semantics
 

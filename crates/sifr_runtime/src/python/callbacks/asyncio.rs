@@ -1,3 +1,5 @@
+#![allow(unsafe_code)]
+
 use super::asyncio_entry::AsyncioCallbackEntry;
 use super::execution::{
     CallbackExecutionError, collect_args, execution_error, python_error, result_object,
@@ -123,7 +125,14 @@ where
 struct AsyncioTargetPtr(*const (dyn AsyncioTarget<'static> + 'static));
 
 #[allow(clippy::transmute_ptr_to_ptr)]
+/// Erase the callback target lifetime while the owning callback retains it.
+///
+/// # Safety
+///
+/// The returned pointer must never outlive the boxed target in `AsyncioCallback`.
 unsafe fn erase_target_lifetime(target: *const (dyn AsyncioTarget<'_> + '_)) -> AsyncioTargetPtr {
+    // SAFETY: the caller stores the pointer together with the owning boxed
+    // target and closes all admitted invocations before dropping that owner.
     AsyncioTargetPtr(unsafe {
         std::mem::transmute::<
             *const (dyn AsyncioTarget<'_> + '_),
@@ -132,10 +141,21 @@ unsafe fn erase_target_lifetime(target: *const (dyn AsyncioTarget<'_> + '_)) -> 
     })
 }
 
+// SAFETY: access is synchronized by callback admission/ownership. The pointed
+// target is Send + Sync and remains live until all admitted work completes.
 unsafe impl Send for AsyncioTargetPtr {}
+// SAFETY: access is synchronized by callback admission/ownership. The pointed
+// target is Send + Sync and remains live until all admitted work completes.
 unsafe impl Sync for AsyncioTargetPtr {}
 
+/// Erase a prepared future lifetime while its callback target remains owned.
+///
+/// # Safety
+///
+/// The future must complete or be cancelled before the callback target drops.
 unsafe fn erase_future_lifetime(future: BoxCallbackFuture<'_>) -> BoxCallbackFuture<'static> {
+    // SAFETY: callback admission and close wait for every invocation future;
+    // the target and captured values therefore outlive the erased future.
     unsafe { std::mem::transmute::<BoxCallbackFuture<'_>, BoxCallbackFuture<'static>>(future) }
 }
 
@@ -349,6 +369,8 @@ where
         encode: Arc::new(encode),
     });
     let target_ptr: *const (dyn AsyncioTarget<'a> + 'a) = &*target;
+    // SAFETY: target is moved into the returned callback owner. Admission is
+    // closed and active invocations finish before that owner releases target.
     let target_ptr = Arc::new(unsafe { erase_target_lifetime(target_ptr) });
     let fifo = Arc::new(AsyncFifo::default());
     let admission = Arc::new(AsyncioAdmission::open());
@@ -388,8 +410,12 @@ where
                     .map_err(python_error)?;
                 let entry_sequence = invocation.entry_sequence();
                 let values = collect_args(args).map_err(python_error)?;
+                // SAFETY: target_ptr is kept alive by the callback-owned target;
+                // this admitted invocation completes before close can drop it.
                 let prepared = unsafe { (&*target_ptr.0).prepare(values) }.map_err(python_error)?;
                 let cancellation = CancellationCarrier::new();
+                // SAFETY: the registered invocation owns completion/cancellation
+                // and callback close waits for it before dropping target state.
                 let prepared = unsafe {
                     erase_future_lifetime(prepared.invoke(entry_sequence, cancellation.clone()))
                 };

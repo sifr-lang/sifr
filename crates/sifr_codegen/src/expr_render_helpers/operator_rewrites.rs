@@ -139,6 +139,7 @@ impl RustEmitter {
                 {
                     self.try_lower_structured_field_access_expr(inner, field, ty)?
                 } else {
+                    // INVARIANT: the preceding field-access predicates cover this match.
                     unreachable!("field access match is exhaustive")
                 }
             } else {

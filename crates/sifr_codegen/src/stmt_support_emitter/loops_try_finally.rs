@@ -40,6 +40,7 @@ impl RustEmitter {
         self.loop_else_stack.push(has_else);
         let lowered_body = self.try_lower_scoped_stmt_block_for_ir(body)?;
         let popped = self.loop_else_stack.pop();
+        // INVARIANT: this function pushed one loop-else frame before lowering the body.
         debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
         let Some(lowered_body) = lowered_body else {
             return Ok(false);
@@ -122,6 +123,7 @@ impl RustEmitter {
         let lowered_body = self.try_lower_scoped_stmt_block_for_ir(body);
         let lowered_body = lowered_body?;
         let popped = self.loop_else_stack.pop();
+        // INVARIANT: this function pushed one loop-else frame before lowering the body.
         debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
         let Some(lowered_iter) = lowered_iter else {
             return Ok(false);

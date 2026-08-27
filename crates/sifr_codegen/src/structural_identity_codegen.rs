@@ -373,6 +373,7 @@ fn compile_type(
             }
             if let Some(index) = stack.iter().position(|entry| entry == &nominal) {
                 let Ok(index) = u32::try_from(index) else {
+                    // INVARIANT: a compiler-owned recursion stack cannot reach u32::MAX.
                     unreachable!(
                         "a compiler-owned structural recursion stack cannot exceed u32::MAX"
                     );
@@ -424,6 +425,7 @@ fn compile_type(
             stack.pop();
             result
         }
+        // INVARIANT: callers filter unsupported structural types before compilation.
         other => unreachable!(
             "unsupported structural type reached compiler-owned identity generation: {other:?}"
         ),
