@@ -101,7 +101,7 @@ impl RustEmitter {
         };
         if crate::helpers::is_option_type(field_ty) {
             return Ok(Some(crate::RustStmt::IfLet {
-                pattern: "Some(__nested_obj)".to_string(),
+                pattern: "Some(__nested_obj)".into(),
                 expr: crate::RustExpr::MethodCall {
                     receiver: Box::new(outer_target),
                     method: "as_mut".to_string(),

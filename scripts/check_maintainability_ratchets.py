@@ -81,7 +81,7 @@ def rust_function_metrics(rel_path: Path, text: str) -> dict[str, dict[str, int]
         start_line = masked.count("\n", 0, match.start()) + 1
         end_line = masked.count("\n", 0, closing) + 1
         body = masked[opening : closing + 1]
-        key = f"{rel_path.as_posix()}::{name}#{occurrences[name]}@{start_line}"
+        key = f"{rel_path.as_posix()}::{name}#{occurrences[name]}"
         functions[key] = {
             "lines": end_line - start_line + 1,
             "decisions": len(RUST_DECISION.findall(body)),
@@ -96,6 +96,7 @@ def python_function_metrics(rel_path: Path, text: str) -> dict[str, dict[str, in
         return {}
     functions: dict[str, dict[str, int]] = {}
     parents: list[str] = []
+    occurrences: dict[str, int] = {}
 
     class Visitor(ast.NodeVisitor):
         def visit_ClassDef(self, node: ast.ClassDef) -> None:
@@ -111,7 +112,8 @@ def python_function_metrics(rel_path: Path, text: str) -> dict[str, dict[str, in
 
         def _visit_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
             qualified = ".".join([*parents, node.name])
-            key = f"{rel_path.as_posix()}::{qualified}@{node.lineno}"
+            occurrences[qualified] = occurrences.get(qualified, 0) + 1
+            key = f"{rel_path.as_posix()}::{qualified}#{occurrences[qualified]}"
             decisions = sum(
                 isinstance(
                     child,
@@ -325,6 +327,10 @@ def run_self_test() -> int:
         )
         source.write_text("pub fn stable() {}\n", encoding="utf-8")
         baseline = collect_metrics(root)
+
+        source.write_text("\npub fn stable() {}\n", encoding="utf-8")
+        if validate(collect_metrics(root), baseline):
+            raise AssertionError("line-only movement changed a maintainability identity")
 
         source.write_text("pub fn stable() {}\npub struct Added;\n", encoding="utf-8")
         if not any("public_items grew" in error for error in validate(collect_metrics(root), baseline)):

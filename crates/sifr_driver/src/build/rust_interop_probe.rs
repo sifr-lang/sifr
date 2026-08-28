@@ -70,6 +70,11 @@ pub(super) fn execute_direct_cargo_probe(
         }
         return Ok(());
     }
+    let _artifact_cache_lease =
+        super::artifact_cache_lock::acquire_shared(&super::workspace::artifact_cache_root())
+            .map_err(|error| {
+                probe_io_failure(format!("failed to acquire Rust probe cache lease: {error}"))
+            })?;
     let Some(backend_root) = probe.backend.cargo_manifest_path.parent() else {
         return Ok(());
     };

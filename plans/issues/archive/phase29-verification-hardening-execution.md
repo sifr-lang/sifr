@@ -120,11 +120,11 @@ status: done (2026-03-08, PR #922)
 
 Validation evidence:
 - Positive path: `cargo run -q -p sifr -- run demos/m29_3_fuzz_and_property_operationalization_demo/main.sifr` -> prints property/fuzz operationalization contract lines and exits `0`.
-- Positive path: `python3 scripts/run_verification_hardening.py --profile full --suite property --suite fuzz-smoke` -> `verification ok: variants=39, failures=0, blocking_failures=0`.
-- Positive path: `bash scripts/run_smoke_fuzz_property.sh` -> pass for legacy smoke tests plus phase-29 property/fuzz-smoke suite runner invocation.
-- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass with `property` and `fuzz-smoke` suites active in canonical hardening gate.
+- Positive path: the historical phase-29 full-profile command passed the then-current `property` and fuzz suite. The current suite names are `cargo-smoke`, `mutation-smoke`, and `sustained-fuzz`.
+- Positive path: `bash scripts/run_smoke_fuzz_property.sh` -> pass for legacy smoke tests plus the phase-29 property and fuzz suite runner invocation.
+- Positive path: `/Users/yaseralnajjar/work/sifr/codebase/scripts/run_all_tests.sh` -> pass with `property` and the current fuzz suites active in the canonical hardening gate.
 - Negative path: property entry `PROP-0001` enforces deterministic failing diagnostics for invalid import seed (`expect_exit_code=1`) and would fail on drift (`exit-code|stdout|stderr`).
-- Negative path: fuzz-smoke suite fails on panic signals or non-allowed exit codes and enforces minimum deduplicated case count (`min_unique_cases`).
+- Negative path: the current fuzz suites fail on panic signals or non-allowed exit codes and enforce the configured corpus and finding contracts.
 
 ## Part 4: milestone_29_4 Curated OSS Gate and Broader Ecosystem Lane
 status: done (2026-03-08, PR #923)
@@ -189,7 +189,7 @@ Validation evidence:
 - Reviewer pass 2 remediation: done (2026-03-08, PR #927)
   - added pinned-revision validation (`local-main@<sha>`) against latest commit touching `project_root`
   - refreshed OSS manifest pinned revisions to current project revision (`local-main@f6ababa5`)
-  - expanded fuzz-smoke seed corpus and deterministic mutation operator coverage
+  - expanded fuzz seed corpus and deterministic mutation operator coverage
 - Reviewer pass 3 request: `reviews/phase-29-production-grade-review-2.md` (requested via talk-to-claude external app)
 - Reviewer pass 3 status: done (2026-03-08, no additional remediation required)
   - reviewer assessment: production-ready; previous findings remain closed

@@ -456,13 +456,13 @@ impl RustEmitter {
                 expr: Box::new(RustExpr::Ident("__sifr_try_res".to_string())),
                 arms: vec![
                     crate::RustMatchArm {
-                        pattern: format!("Ok({value_name})"),
+                        pattern: format!("Ok({value_name})").into(),
                         bindings: vec![value_name.to_string()],
                         guard: None,
                         body: vec![RustStmt::TailExpr(RustExpr::Ident(value_name.to_string()))],
                     },
                     crate::RustMatchArm {
-                        pattern: "Err(__sifr_try_err)".to_string(),
+                        pattern: "Err(__sifr_try_err)".into(),
                         bindings: vec!["__sifr_try_err".to_string()],
                         guard: None,
                         body: handler_chain,
@@ -479,7 +479,8 @@ impl RustEmitter {
                     "Ok(__sifr_ret_val)".to_string()
                 } else {
                     "Ok(Some(__sifr_ret_val))".to_string()
-                },
+                }
+                .into(),
                 bindings: vec!["__sifr_ret_val".to_string()],
                 guard: None,
                 body: vec![RustStmt::Return(Some(RustExpr::Ident(
@@ -488,7 +489,7 @@ impl RustEmitter {
             }];
             if !direct_return_capture {
                 arms.push(crate::RustMatchArm {
-                    pattern: "Ok(None)".to_string(),
+                    pattern: "Ok(None)".into(),
                     bindings: vec![],
                     guard: None,
                     body: vec![],
@@ -504,7 +505,7 @@ impl RustEmitter {
                 return Ok(None);
             };
             arms.push(crate::RustMatchArm {
-                pattern: "Err(__sifr_try_err)".to_string(),
+                pattern: "Err(__sifr_try_err)".into(),
                 bindings: vec!["__sifr_try_err".to_string()],
                 guard: None,
                 body: handler_chain,
@@ -540,7 +541,7 @@ impl RustEmitter {
                 expr: RustExpr::Ident("__sifr_try_res".to_string()),
                 arms: vec![
                     crate::RustMatchArm {
-                        pattern: "Ok(())".to_string(),
+                        pattern: "Ok(())".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![RustStmt::Expr(RustExpr::FormatMacro {
@@ -550,7 +551,7 @@ impl RustEmitter {
                         })],
                     },
                     crate::RustMatchArm {
-                        pattern: "Err(__sifr_try_err)".to_string(),
+                        pattern: "Err(__sifr_try_err)".into(),
                         bindings: vec!["__sifr_try_err".to_string()],
                         guard: None,
                         body: handler_chain,
@@ -568,7 +569,7 @@ impl RustEmitter {
                 return Ok(None);
             };
             lowered.push(RustStmt::IfLet {
-                pattern: "Err(__sifr_try_err)".to_string(),
+                pattern: "Err(__sifr_try_err)".into(),
                 expr: RustExpr::Ident("__sifr_try_res".to_string()),
                 then_body: handler_chain,
                 else_body: None,
@@ -773,7 +774,8 @@ impl RustEmitter {
                     "Ok(__sifr_ret_val)".to_string()
                 } else {
                     "Ok(Some(__sifr_ret_val))".to_string()
-                },
+                }
+                .into(),
                 bindings: vec!["__sifr_ret_val".to_string()],
                 guard: None,
                 body: vec![RustStmt::Return(Some(RustExpr::Ident(
@@ -782,14 +784,14 @@ impl RustEmitter {
             }];
             if !direct_return_capture {
                 arms.push(crate::RustMatchArm {
-                    pattern: "Ok(None)".to_string(),
+                    pattern: "Ok(None)".into(),
                     bindings: vec![],
                     guard: None,
                     body: vec![],
                 });
             }
             arms.push(crate::RustMatchArm {
-                pattern: "Err(__sifr_finally_err)".to_string(),
+                pattern: "Err(__sifr_finally_err)".into(),
                 bindings: vec!["__sifr_finally_err".to_string()],
                 guard: None,
                 body: if can_return_error {
@@ -816,7 +818,7 @@ impl RustEmitter {
             });
         } else {
             lowered.push(RustStmt::IfLet {
-                pattern: "Err(__sifr_finally_err)".to_string(),
+                pattern: "Err(__sifr_finally_err)".into(),
                 expr: RustExpr::Ident("__sifr_try_finally_res".to_string()),
                 then_body: if can_return_error {
                     vec![RustStmt::Return(Some(RustExpr::FnCall {

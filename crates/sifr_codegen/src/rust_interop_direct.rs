@@ -181,7 +181,7 @@ fn opaque_self_receiver(declaration: &RustInteropDeclaration, error_type: &Type)
                 expr: Box::new(RustExpr::Ident("__sifr_handle_error".to_string())),
                 arms: vec![
                     RustMatchArm {
-                        pattern: "sifr_runtime::interop::HandleStateError::Closed".to_string(),
+                        pattern: "sifr_runtime::interop::HandleStateError::Closed".into(),
                         bindings: Vec::new(),
                         guard: None,
                         body: vec![RustStmt::TailExpr(closed)],
@@ -189,7 +189,8 @@ fn opaque_self_receiver(declaration: &RustInteropDeclaration, error_type: &Type)
                     RustMatchArm {
                         pattern: format!(
                             "sifr_runtime::interop::HandleStateError::Poisoned({panic_name})"
-                        ),
+                        )
+                        .into(),
                         bindings: vec![panic_name.to_string()],
                         guard: None,
                         body: vec![RustStmt::TailExpr(poisoned)],

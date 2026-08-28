@@ -614,7 +614,8 @@ fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
         .expect("generate_rust_with_stdlib should exist");
     let generate_block = &lib_src[start..];
 
-    assert!(generate_block.contains("let file_issues = validate_items(&file_items);"));
+    assert!(generate_block.contains("validate_assembled_file_items(&file_items)?;"));
+    assert!(lib_src.contains("let issues = validate_items(items);"));
     assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
     assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
     assert!(!generate_block.contains("assert_output_drained("));

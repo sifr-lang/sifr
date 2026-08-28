@@ -155,18 +155,42 @@ fn active_diagnostic_owners_and_fixtures_resolve_to_first_party_sources() {
         let fixture = entry
             .representative_fixture_path
             .expect("active fixture was checked");
-        let fixture_path = fixture.split("::").next().unwrap_or_default();
+        let fixture_parts = fixture.split("::").collect::<Vec<_>>();
+        let fixture_path = fixture_parts.first().copied().unwrap_or_default();
+        let fixture_source = repo_root.join(fixture_path);
         assert!(
-            repo_root.join(fixture_path).exists(),
+            fixture_source.exists(),
             "active diagnostic {} has missing fixture path {fixture_path}",
             entry.id
         );
+        if let Some(symbol) = fixture_parts.get(1..).and_then(|parts| parts.last()) {
+            let source = fs::read_to_string(&fixture_source).unwrap_or_else(|error| {
+                panic!(
+                    "active diagnostic {} fixture source {} is unreadable: {error}",
+                    entry.id, fixture_path
+                )
+            });
+            assert!(
+                source.contains(&format!("fn {symbol}"))
+                    || source.contains(&format!("mod {symbol}")),
+                "active diagnostic {} has relocated fixture symbol {fixture}",
+                entry.id
+            );
+        }
     }
 
     assert!(
         owner_source_path(&repo_root, "sifr_driver::relocated::owner").is_none(),
         "relocated owner negative seed must not resolve"
     );
+    let relocated_symbol = ["relo", "cated"].concat();
+    let relocated_fixture =
+        format!("crates/sifr_diagnostics/src/codes/registry_tests.rs::{relocated_symbol}");
+    let source = fs::read_to_string(
+        repo_root.join(relocated_fixture.split("::").next().unwrap_or_default()),
+    )
+    .expect("negative fixture source must be readable");
+    assert!(!source.contains(&format!("fn {relocated_symbol}(")));
 }
 
 fn owner_source_path(repo_root: &std::path::Path, owner: &str) -> Option<PathBuf> {

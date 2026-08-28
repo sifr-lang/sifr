@@ -195,7 +195,7 @@ pub use rust_interop_plan::{
 mod rust_ir;
 pub(crate) use rust_ir::{
     CompilerFragment, RustEnumVariant, RustExpr, RustFile, RustItem, RustLiteral, RustMatchArm,
-    RustParam, RustStmt, RustTrait, RustType, RustTypeParam, RustWithItem, Visibility,
+    RustParam, RustPattern, RustStmt, RustTrait, RustType, RustTypeParam, RustWithItem, Visibility,
     user_callable_rust_name,
 };
 mod stdlib_codegen_metadata;

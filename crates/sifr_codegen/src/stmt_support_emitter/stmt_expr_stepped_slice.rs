@@ -287,7 +287,7 @@ macro_rules! stmt_expr_stepped_slice {
                                     },
                                     body: vec![
                                         crate::RustStmt::IfLet {
-                                            pattern: "Some(_el)".to_string(),
+                                            pattern: "Some(_el)".into(),
                                             expr: crate::RustExpr::MethodCall {
                                                 receiver: Box::new(crate::RustExpr::Ident(
                                                     "_v".to_string(),
@@ -374,7 +374,7 @@ macro_rules! stmt_expr_stepped_slice {
                                                 )),
                                             },
                                             then_body: vec![crate::RustStmt::IfLet {
-                                                pattern: "Some(_el)".to_string(),
+                                                pattern: "Some(_el)".into(),
                                                 expr: crate::RustExpr::MethodCall {
                                                     receiver: Box::new(crate::RustExpr::Ident(
                                                         "_v".to_string(),
@@ -506,7 +506,7 @@ macro_rules! stmt_expr_stepped_slice {
                                 },
                                 body: vec![
                                     crate::RustStmt::IfLet {
-                                        pattern: "Some(_ch)".to_string(),
+                                        pattern: "Some(_ch)".into(),
                                         expr: crate::RustExpr::MethodCall {
                                             receiver: Box::new(crate::RustExpr::MethodCall {
                                                 receiver: Box::new(crate::RustExpr::Ident(
@@ -581,7 +581,7 @@ macro_rules! stmt_expr_stepped_slice {
                                             )),
                                         },
                                         then_body: vec![crate::RustStmt::IfLet {
-                                            pattern: "Some(_ch)".to_string(),
+                                            pattern: "Some(_ch)".into(),
                                             expr: crate::RustExpr::MethodCall {
                                                 receiver: Box::new(crate::RustExpr::MethodCall {
                                                     receiver: Box::new(crate::RustExpr::Ident(

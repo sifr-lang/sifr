@@ -1,80 +1,370 @@
 {
-  "schema_version": 1,
   "categories": {
-    "language-semantics": {
-      "crates/sifr_codegen/src/methods/authority.rs": 3
-    },
-    "typed-hir": {
-      "crates/sifr_lowering/src/lower/async_generator_methods.rs": 1,
-      "crates/sifr_lowering/src/lower/async_with.rs": 4,
-      "crates/sifr_lowering/src/lower/bytes_methods.rs": 1,
-      "crates/sifr_lowering/src/lower/classes/class_body_lowering.rs": 5,
-      "crates/sifr_lowering/src/lower/classes/class_type_collection.rs": 4,
-      "crates/sifr_lowering/src/lower/classes/parameter_conventions.rs": 2,
-      "crates/sifr_lowering/src/lower/decimal_methods.rs": 2,
-      "crates/sifr_lowering/src/lower/defaultdict_refinement.rs": 1,
-      "crates/sifr_lowering/src/lower/empty_collection_refinement.rs": 1,
-      "crates/sifr_lowering/src/lower/expression_operators.rs": 1,
-      "crates/sifr_lowering/src/lower/expressions/affine_resources.rs": 2,
-      "crates/sifr_lowering/src/lower/expressions/method_argument_ownership.rs": 4,
-      "crates/sifr_lowering/src/lower/expressions/method_calls.rs": 8,
-      "crates/sifr_lowering/src/lower/expressions/method_type_collections.rs": 11,
-      "crates/sifr_lowering/src/lower/expressions/method_type_objects.rs": 5,
-      "crates/sifr_lowering/src/lower/expressions/python_arrow_methods.rs": 1,
-      "crates/sifr_lowering/src/lower/expressions/python_buffer_methods.rs": 1,
-      "crates/sifr_lowering/src/lower/expressions/python_dlpack_methods.rs": 1,
-      "crates/sifr_lowering/src/lower/expressions/python_raw_object_methods.rs": 2,
-      "crates/sifr_lowering/src/lower/fixed_width_arithmetic_methods.rs": 2,
-      "crates/sifr_lowering/src/lower/method_call_args.rs": 9,
-      "crates/sifr_lowering/src/lower/method_receiver_analysis.rs": 1,
-      "crates/sifr_lowering/src/lower/method_receiver_places/indexed_storage.rs": 3,
-      "crates/sifr_lowering/src/lower/mutating_methods.rs": 13,
-      "crates/sifr_lowering/src/lower/nested_function_inference/compound_statement_inference.rs": 1,
-      "crates/sifr_lowering/src/lower/nested_function_inference/expression_inference.rs": 2,
-      "crates/sifr_lowering/src/lower/nonempty_method_narrowing.rs": 2,
-      "crates/sifr_lowering/src/lower/parallel_calls.rs": 1,
-      "crates/sifr_lowering/src/lower/python_interop/context/borrows.rs": 1,
-      "crates/sifr_lowering/src/lower/python_interop/context/declarations.rs": 2,
-      "crates/sifr_lowering/src/lower/statements/statement_dispatch.rs": 2,
-      "crates/sifr_lowering/src/lower/task_handle_calls.rs": 1,
-      "crates/sifr_lowering/src/lower/task_join_set_calls.rs": 1,
-      "crates/sifr_lowering/src/lower/task_scope_calls.rs": 1,
-      "crates/sifr_lowering/src/lower/task_scope_offload_calls.rs": 1,
-      "crates/sifr_lowering/src/lower/type_bounds.rs": 1
+    "compile-time-semantics": {
+      "crates/sifr_frontend/src/const_evaluator.rs": [
+        "eval_expr:match:len|append#1",
+        "eval_expr:match:len#1",
+        "eval_expr:compare:len#1",
+        "eval_expr:compare:append#1"
+      ]
     },
     "contextual-codegen": {
-      "crates/sifr_codegen/src/intrinsic_method_emitters/collection_methods.rs": 15,
-      "crates/sifr_codegen/src/intrinsic_method_emitters/defaultdict_iterable_mutations.rs": 3,
-      "crates/sifr_codegen/src/intrinsic_method_emitters/narrowing_helpers.rs": 1,
-      "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs": 1,
-      "crates/sifr_codegen/src/lower_expr/iterators_and_callables.rs": 6,
-      "crates/sifr_codegen/src/lower_stmt/condition_lowering.rs": 3,
-      "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs": 2,
-      "crates/sifr_codegen/src/lower_stmt/simple_dispatch_and_bindings.rs": 1,
-      "crates/sifr_codegen/src/stmt_support_emitter/await_and_async_comprehension.rs": 2,
-      "crates/sifr_codegen/src/stmt_support_emitter/call_args_and_returns.rs": 1,
-      "crates/sifr_codegen/src/stmt_support_emitter/condition_lowering.rs": 2,
-      "crates/sifr_codegen/src/stmt_support_emitter/iterator_lowering.rs": 3,
-      "crates/sifr_codegen/src/stmt_support_emitter/performance_lowering_gate.rs": 3,
-      "crates/sifr_codegen/src/stmt_support_emitter/expr_call_metadata.rs": 2,
-      "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_method_and_question_mark.rs": 7
+      "crates/sifr_codegen/src/class_method_emitter.rs": [
+        "lower_class_method_item:match:$method#1"
+      ],
+      "crates/sifr_codegen/src/expr_render_helpers/operator_rewrites.rs": [
+        "try_lower_structured_index_expr:match:get|len|count#1"
+      ],
+      "crates/sifr_codegen/src/generated_source_validate.rs": [
+        "visit_expr_method_call:match:$method#1"
+      ],
+      "crates/sifr_codegen/src/intrinsic_method_emitters/builtin_core_methods.rs": [
+        "try_lower_registry_collection_builtin_call_expr:match:extend#1",
+        "try_lower_registry_ordering_builtin_call_expr:match:sort|reverse#1",
+        "try_lower_registry_ordering_builtin_call_expr:match:sort|reverse#2"
+      ],
+      "crates/sifr_codegen/src/intrinsic_method_emitters/builtin_numeric.rs": [
+        "try_lower_registry_numeric_builtin_call_expr:match:abs|len|round#1"
+      ],
+      "crates/sifr_codegen/src/intrinsic_method_emitters/collection_methods.rs": [
+        "try_lower_registry_method_call_expr_unchecked:compare:append#1",
+        "try_lower_registry_method_call_expr_unchecked:compare:len#1",
+        "try_lower_registry_method_call_expr_unchecked:match:get|len#1",
+        "try_lower_registry_method_call_expr_unchecked:compare:len#2",
+        "try_lower_registry_method_call_expr_unchecked:match:append|appendleft|insert|add|setdefault#1",
+        "try_lower_registry_method_call_expr_unchecked:compare:insert#1",
+        "try_lower_registry_method_call_expr_unchecked:match:extend#1",
+        "try_lower_registry_method_call_expr_unchecked:compare:extend#1",
+        "try_lower_registry_set_method_call_expr:match:update|extend|union|intersection|difference|intersection_update|difference_update|contains|symmetric_difference|symmetric_difference_update|cloned#1",
+        "try_lower_defaultdict_index_method_call_expr:compare:extend#1",
+        "try_lower_defaultdict_index_method_call_expr:compare:extend#2",
+        "try_lower_defaultdict_index_method_call_expr:match:append|add|insert|remove|discard#1"
+      ],
+      "crates/sifr_codegen/src/intrinsic_method_emitters/defaultdict_iterable_mutations.rs": [
+        "try_lower_defaultdict_set_update_expr:compare:symmetric_difference_update#1",
+        "try_lower_defaultdict_set_update_expr:match:update|extend|intersection_update|difference_update|contains|symmetric_difference_update|symmetric_difference|cloned#1",
+        "try_lower_defaultdict_set_update_expr:compare:intersection_update#1"
+      ],
+      "crates/sifr_codegen/src/intrinsic_method_emitters/narrowing_helpers.rs": [
+        "is_narrowable_pop_call_for_codegen:match:pop|popleft#1"
+      ],
+      "crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs": [
+        "try_lower_registry_expr_recursive:match:append|get|cloned#1",
+        "try_lower_registry_expr_recursive:compare:append#1",
+        "try_lower_registry_expr_recursive:match:get|cloned#1",
+        "try_lower_registry_expr_recursive:match:get#1"
+      ],
+      "crates/sifr_codegen/src/lower_expr/collections_and_comprehensions.rs": [
+        "try_lower_simple_index_expr:match:get#1"
+      ],
+      "crates/sifr_codegen/src/lower_expr/iterators_and_callables.rs": [
+        "apply_simple_copy_clone_yield_mode:match:cloned#1",
+        "try_lower_simple_iter_source_expr:match:keys#1",
+        "try_lower_simple_iter_source_expr:match:keys#2",
+        "try_lower_simple_method_call_expr:compare:join#1"
+      ],
+      "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs": [
+        "try_lower_leaf_expr:match:contains|join#1",
+        "try_lower_leaf_expr:match:contains#1",
+        "try_lower_leaf_expr:match:join#1"
+      ],
+      "crates/sifr_codegen/src/lower_stmt/condition_lowering.rs": [
+        "zero_literal_for_type:match:len#1",
+        "zero_literal_for_type:compare:len#1",
+        "zero_literal_for_type:match:len#2",
+        "zero_literal_for_type:compare:len#2",
+        "try_lower_condition_operand_expr:match:len#1",
+        "try_lower_condition_operand_expr:compare:len#1",
+        "try_lower_condition_index_operand_expr:match:get#1"
+      ],
+      "crates/sifr_codegen/src/lower_stmt/condition_type_and_expr_helpers.rs": [
+        "try_lower_stmt_index_expr:match:get#1"
+      ],
+      "crates/sifr_codegen/src/lower_stmt/loop_lowering.rs": [
+        "normalize_for_iter_expr:match:cloned#1",
+        "normalize_for_iter_expr:compare:cloned#1",
+        "class_next_iter_expr:match:cloned#1",
+        "class_next_iter_expr:match:cloned#2",
+        "class_next_iter_expr:match:cloned#3",
+        "class_next_iter_expr:match:keys#1",
+        "class_next_iter_expr:match:keys#2"
+      ],
+      "crates/sifr_codegen/src/lower_stmt/simple_dispatch_and_bindings.rs": [
+        "should_omit_local_type_annotation:match:get#1",
+        "should_omit_local_type_annotation:compare:get#1"
+      ],
+      "crates/sifr_codegen/src/lower_stmt/subscript_assignment.rs": [
+        "try_lower_simple_delete_stmt:match:len|remove#1"
+      ],
+      "crates/sifr_codegen/src/operator_protocol_emitters.rs": [
+        "emit_operator_impls:match:add#1",
+        "lower_operator_for_iter_ir:match:cloned|keys#1"
+      ],
+      "crates/sifr_codegen/src/python_interop_async/conversions.rs": [
+        "async_output_value:match:remove|insert#1"
+      ],
+      "crates/sifr_codegen/src/python_interop_direct_conversions.rs": [
+        "output_value_expr_with:match:remove|insert#1"
+      ],
+      "crates/sifr_codegen/src/python_raw_api_codegen.rs": [
+        "try_lower_python_raw_object_method:match:$method#1"
+      ],
+      "crates/sifr_codegen/src/static_program_slots_codegen.rs": [
+        "slot_call_expression:match:$method#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/assert_and_augassign.rs": [
+        "try_lower_structured_aug_assign_stmt:match:extend#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/await_and_async_comprehension.rs": [
+        "lower_timeout_aware_await_future_for_ir:match:join#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/comprehension_exprs.rs": [
+        "try_lower_comprehension_expr_for_ir:match:insert#1",
+        "try_lower_comprehension_expr_for_ir:match:insert#2",
+        "try_lower_comprehension_expr_for_ir:match:insert#3"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/condition_lowering.rs": [
+        "try_lower_numeric_truthiness_condition_for_ir:match:len#1",
+        "try_lower_numeric_truthiness_condition_for_ir:compare:len#1",
+        "try_lower_numeric_truthiness_condition_for_ir:match:len#2",
+        "try_lower_numeric_truthiness_condition_for_ir:compare:len#2"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/expr_call_and_literal_helpers.rs": [
+        "<module>:match:join#1",
+        "<module>:match:insert#1",
+        "<module>:match:insert#2",
+        "<module>:match:insert#3"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/expr_call_metadata.rs": [
+        "is_narrowable_pop_call_for_ir:match:pop|popleft#1",
+        "should_omit_local_type_annotation:match:get#1",
+        "should_omit_local_type_annotation:compare:get#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/field_assignment.rs": [
+        "try_lower_structured_attribute_subscript_assign_stmt:match:insert#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/iterator_lowering.rs": [
+        "apply_copy_clone_yield_mode_for_ir:match:cloned#1",
+        "lower_iter_source_expr_for_ir_with_mode:match:keys#1",
+        "lower_iter_source_expr_for_ir_with_mode:match:keys#2",
+        "normalize_for_loop_iter_expr:compare:cloned#1",
+        "is_iterator_like_expr_for_ir:match:cloned#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/performance_lowering_gate.rs": [
+        "stmt_shape_needs_performance_lowering:match:len#1",
+        "expr_shape_needs_performance_lowering:match:len#1",
+        "expr_shape_needs_performance_lowering:compare:len#1",
+        "dict_indexed_list_method_can_borrow:compare:append#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/stmt_block.rs": [
+        "try_lower_stmt_block_for_ir_inner:match:extend#1",
+        "try_lower_stmt_block_for_ir_inner:match:insert#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_binop.rs": [
+        "<module>:match:extend|cloned#1",
+        "<module>:match:extend|cloned#2",
+        "<module>:match:extend|cloned#3",
+        "<module>:match:extend|cloned#4",
+        "<module>:match:extend|cloned#5",
+        "<module>:match:extend|cloned#6"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_method_and_question_mark.rs": [
+        "is_imported_project_call_for_ir:compare:len#1",
+        "is_imported_project_call_for_ir:compare:len#2",
+        "is_imported_project_call_for_ir:match:len#1",
+        "is_imported_project_call_for_ir:compare:append#1",
+        "is_imported_project_call_for_ir:compare:cloned#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_stepped_slice.rs": [
+        "<module>:match:len|get|count#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_unit_slice.rs": [
+        "<module>:match:len|count|cloned#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_wrappers_and_compare.rs": [
+        "<module>:match:get#1",
+        "<module>:match:get#2",
+        "<module>:match:contains#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/subscript_augassign_delete.rs": [
+        "lower_delete_stmt_for_ir:match:len|remove#1"
+      ],
+      "crates/sifr_codegen/src/structural_identity_codegen.rs": [
+        "compile_type:match:union#1",
+        "compile_type:match:union#2"
+      ],
+      "crates/sifr_frontend/src/structural_shape.rs": [
+        "canonical_node:match:union#1",
+        "node_const_value:match:union#1"
+      ],
+      "crates/sifr_frontend/src/typed_descriptors.rs": [
+        "collect_class:match:$method#1"
+      ],
+      "crates/sifr_frontend/src/workspace_trace.rs": [
+        "as_str:match:lower#1"
+      ]
+    },
+    "language-semantics": {
+      "crates/sifr_codegen/src/methods/authority.rs": [
+        "is_in_place_collection_method:match:append|extend|insert|clear|reverse|sort|pop|remove|add|update|intersection_update|difference_update|symmetric_difference_update|discard#1",
+        "lower_method_with_context:match:len|count|index|upper|lower|strip|startswith|endswith|split|replace|find|rfind|lstrip|rstrip|join|title|capitalize|swapcase|isdigit|isalpha|isalnum|isspace|isupper|islower|center|ljust|rjust|zfill|quantize|sqrt|round|abs|is_zero|is_finite|append|appendleft|pop|popleft|extend|insert|clear|copy|cloned|reverse|sort|contains|remove|hex|to_ints|checked_add|checked_sub|checked_mul|wrapping_add|wrapping_sub|wrapping_mul|saturating_add|saturating_sub|saturating_mul|overflowing_add|overflowing_sub|overflowing_mul|keys|values|items|update|get|setdefault|add|discard|issubset|issuperset|isdisjoint|union|intersection|difference|symmetric_difference#1"
+      ]
     },
     "rust-ir-consumer": {
-      "crates/sifr_codegen/src/expr_render_helpers/sifr_int_parse_helpers.rs": 4,
-      "crates/sifr_codegen/src/intrinsic_method_emitters/registry_helpers.rs": 3,
-      "crates/sifr_codegen/src/ir_optimize/mutability_and_clone_rewrites.rs": 3,
-      "crates/sifr_codegen/src/ir_optimize/string_key_loop_rewrite.rs": 2,
-      "crates/sifr_codegen/src/ir_validate.rs": 1,
-      "crates/sifr_codegen/src/lib_join_set_needs.rs": 1,
-      "crates/sifr_codegen/src/lib_runtime_needs.rs": 1,
-      "crates/sifr_codegen/src/lib_task_scope_offload_needs.rs": 3,
-      "crates/sifr_codegen/src/methods/dict.rs": 1,
-      "crates/sifr_codegen/src/methods/list.rs": 1,
-      "crates/sifr_codegen/src/methods/set.rs": 1,
-      "crates/sifr_codegen/src/methods/string.rs": 1,
-      "crates/sifr_codegen/src/render/render_core.rs": 2,
-      "crates/sifr_codegen/src/stmt_support_emitter/stmt_block_helpers.rs": 3,
-      "crates/sifr_codegen/src/string_char_cache_scan.rs": 1
+      "crates/sifr_codegen/src/intrinsic_method_emitters/registry_helpers.rs": [
+        "registry_iterable_to_owned_iter_expr_from_lowered:match:cloned#1",
+        "registry_iterable_to_owned_iter_expr_from_lowered:match:keys#1",
+        "registry_iterable_to_owned_iter_expr_from_lowered:match:keys#2",
+        "registry_iterable_to_vec_expr_with_hint:compare:keys#1"
+      ],
+      "crates/sifr_codegen/src/ir_optimize/string_key_loop_rewrite.rs": [
+        "expr_uses_name_only_as_set_key:match:contains|insert|remove|get#1"
+      ],
+      "crates/sifr_codegen/src/methods/dict.rs": [
+        "lower_update:match:extend#1",
+        "lower_get:match:get|cloned#1",
+        "lower_pop:match:remove#1"
+      ],
+      "crates/sifr_codegen/src/methods/list.rs": [
+        "lower_sort:match:sort|reverse#1",
+        "lower_pop:match:pop|len|remove#1"
+      ],
+      "crates/sifr_codegen/src/methods/string.rs": [
+        "lower_split:match:split#1",
+        "lower_replace:match:replace#1"
+      ],
+      "crates/sifr_codegen/src/stmt_support_emitter/stmt_block_helpers.rs": [
+        "collect_string_loop_target_use_expr:match:add|insert|remove|discard|contains#1"
+      ],
+      "crates/sifr_codegen/src/string_char_cache_scan.rs": [
+        "collect_string_cache_uses:match:len#1",
+        "collect_string_cache_uses:compare:len#1"
+      ]
+    },
+    "typed-hir": {
+      "crates/sifr_lowering/src/hir_snapshot_expr_projection.rs": [
+        "project_expr:match:values|keys|index#1"
+      ],
+      "crates/sifr_lowering/src/lower/async_generator_methods.rs": [
+        "resolve_async_generator_method_type:match:$method#1"
+      ],
+      "crates/sifr_lowering/src/lower/builtin_calls/bytes_len_range.rs": [
+        "lower_len_call:match:len#1",
+        "lower_len_call:compare:len#1"
+      ],
+      "crates/sifr_lowering/src/lower/bytes_methods.rs": [
+        "resolve_bytes_method_type:match:len|count|contains|find|startswith|endswith|hex|to_ints#1"
+      ],
+      "crates/sifr_lowering/src/lower/classes/parameter_conventions.rs": [
+        "fixed_trait_receiver_convention:match:$method#1"
+      ],
+      "crates/sifr_lowering/src/lower/decimal_methods.rs": [
+        "resolve_decimal_method_type:match:quantize|sqrt|round|abs|is_zero|is_finite#1",
+        "resolve_decimal_method_type:match:quantize|sqrt|round|abs|is_zero|is_finite#2",
+        "resolve_decimal_method_type:match:quantize|sqrt|round|abs|is_zero|is_finite#3"
+      ],
+      "crates/sifr_lowering/src/lower/defaultdict_refinement.rs": [
+        "refine_defaultdict_binding_expr:match:append|add#1"
+      ],
+      "crates/sifr_lowering/src/lower/empty_collection_refinement.rs": [
+        "refine_empty_list_binding_expr:match:append|insert|extend#1"
+      ],
+      "crates/sifr_lowering/src/lower/expression_sum_sorted.rs": [
+        "lower_sorted_call:match:reverse#1"
+      ],
+      "crates/sifr_lowering/src/lower/expressions/affine_resources.rs": [
+        "consume_affine_collection_method_arguments:match:append|appendleft|insert|pop#1",
+        "consume_affine_collection_method_arguments:match:append|appendleft|insert#1",
+        "consume_affine_collection_method_arguments:compare:pop#1"
+      ],
+      "crates/sifr_lowering/src/lower/expressions/call_builtins.rs": [
+        "lower_unshadowed_builtin_call:compare:len#1",
+        "lower_unshadowed_builtin_call:compare:abs#1",
+        "lower_unshadowed_builtin_call:compare:round#1"
+      ],
+      "crates/sifr_lowering/src/lower/expressions/call_shadowable_builtins.rs": [
+        "is_decode_handler_label:match:replace#1"
+      ],
+      "crates/sifr_lowering/src/lower/expressions/method_type_collections.rs": [
+        "resolve_list_method_type:compare:sort#1",
+        "resolve_list_method_type:match:append|extend|insert|clear|copy|reverse|sort|count|contains|len|pop|popleft|appendleft|remove|index#1",
+        "resolve_dict_method_type:compare:get#1",
+        "resolve_dict_method_type:match:len|keys|values|items|update|clear|copy|contains|get|pop|setdefault#1",
+        "resolve_set_method_type:match:len|add|remove|discard|contains|clear|copy|union|intersection|difference|symmetric_difference|update|intersection_update|difference_update|symmetric_difference_update|issubset|issuperset|isdisjoint|pop#1"
+      ],
+      "crates/sifr_lowering/src/lower/expressions/method_type_objects.rs": [
+        "resolve_str_method_type:match:len|upper|lower|strip|lstrip|rstrip|title|capitalize|swapcase|startswith|endswith|isdigit|isalpha|isalnum|isspace|isupper|islower|split|replace|join|count|center|ljust|rjust|zfill|find|rfind#1",
+        "resolve_tuple_method_type:match:len|count|index#1",
+        "resolve_enum_method_type:match:$method#1"
+      ],
+      "crates/sifr_lowering/src/lower/expressions/python_arrow_methods.rs": [
+        "resolve_python_arrow_method_type:match:$method#1"
+      ],
+      "crates/sifr_lowering/src/lower/expressions/python_buffer_methods.rs": [
+        "resolve_python_buffer_method_type:match:$method#1"
+      ],
+      "crates/sifr_lowering/src/lower/expressions/python_raw_object_methods.rs": [
+        "method_type:match:$method#1"
+      ],
+      "crates/sifr_lowering/src/lower/fixed_width_arithmetic_methods.rs": [
+        "resolve_fixed_width_method_type:match:checked_add|wrapping_add|saturating_add|overflowing_add|checked_sub|wrapping_sub|saturating_sub|overflowing_sub|checked_mul|wrapping_mul|saturating_mul|overflowing_mul#1",
+        "resolve_fixed_width_method_type:match:checked_add|checked_sub|checked_mul|overflowing_add|overflowing_sub|overflowing_mul#1"
+      ],
+      "crates/sifr_lowering/src/lower/method_call_args.rs": [
+        "resolved_method_arg_ranges:match:sort|reverse|get|pop|setdefault|update|split|replace|count#1",
+        "resolved_method_arg_ranges:compare:sort#1",
+        "resolved_method_arg_ranges:compare:reverse#1",
+        "resolved_method_arg_ranges:compare:update#1",
+        "resolved_method_arg_ranges:compare:split#1",
+        "resolved_method_arg_ranges:compare:replace#1",
+        "resolved_method_arg_ranges:compare:count#1",
+        "normalize_list_method_args:match:sort|reverse#1",
+        "normalize_dict_method_args:match:get|pop|setdefault|update#1",
+        "normalize_index_method_args:match:index#1",
+        "normalize_string_method_args:match:split|replace|count#1"
+      ],
+      "crates/sifr_lowering/src/lower/method_receiver_analysis.rs": [
+        "fixed_trait_name:match:$method#1"
+      ],
+      "crates/sifr_lowering/src/lower/method_receiver_places/indexed_storage.rs": [
+        "indexed_storage_borrow_follows_argument_evaluation:compare:extend#1"
+      ],
+      "crates/sifr_lowering/src/lower/mutating_methods.rs": [
+        "receiver_convention_for_non_class_method:match:join|add#1",
+        "receiver_convention_for_non_class_method:match:$method#1",
+        "receiver_convention_for_non_class_method:match:join#1",
+        "receiver_convention_for_non_class_method:match:add#1",
+        "is_collection_mutating_method:match:append|extend|insert|clear|reverse|sort|pop|popleft|appendleft|remove|update|setdefault|add|discard|intersection_update|difference_update|symmetric_difference_update#1",
+        "method_invalidates_collection_flow_facts:match:clear|pop|popleft|remove|discard|intersection_update|difference_update|symmetric_difference_update#1"
+      ],
+      "crates/sifr_lowering/src/lower/nested_function_inference/defaultdict_inference.rs": [
+        "refine_defaultdict_method_call:match:add|append#1"
+      ],
+      "crates/sifr_lowering/src/lower/nested_function_inference/expression_inference.rs": [
+        "infer_call_type:match:len|abs#1",
+        "infer_call_type:compare:len#1",
+        "infer_call_type:compare:abs#1",
+        "infer_attribute_call_type:match:append|copy|pop|sort|keys|values|items|get|setdefault#1",
+        "infer_attribute_call_type:match:copy|split|append|pop|sort#1"
+      ],
+      "crates/sifr_lowering/src/lower/nonempty_method_narrowing.rs": [
+        "is_narrowable_pop_call:match:pop|popleft#1"
+      ],
+      "crates/sifr_lowering/src/lower/parallel_calls.rs": [
+        "lower_parallel_pool_method_call:match:$method#1"
+      ],
+      "crates/sifr_lowering/src/lower/sequence_guard_detection.rs": [
+        "assign_is_single_step_increment:match:len#1",
+        "assign_is_single_step_increment:match:len#2",
+        "len_call_sequence_name:match:len#1"
+      ],
+      "crates/sifr_lowering/src/lower/task_join_set_calls.rs": [
+        "lower_join_set_method_call:match:add#1"
+      ],
+      "crates/sifr_lowering/src/lower/task_scope_offload_calls.rs": [
+        "lower_task_scope_offload_method_call:match:$method#1"
+      ]
     }
-  }
+  },
+  "schema_version": 2
 }

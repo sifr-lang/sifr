@@ -43,7 +43,7 @@ impl RustEmitter {
         let pushed_arg = Self::clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
         Some(crate::RustExpr::Block {
             stmts: vec![crate::RustStmt::IfLet {
-                pattern: "Some(__elem)".to_string(),
+                pattern: "Some(__elem)".into(),
                 expr: crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_object),
                     method: "get_mut".to_string(),

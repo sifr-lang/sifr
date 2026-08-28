@@ -90,6 +90,13 @@ Const evaluation is deterministic and fails closed. Default limits are 100,000 e
 static derivation and rejects runtime effects, unsupported expressions, missing `@const_eval`,
 budget exhaustion, and escaping loop control.
 
+The evaluator is an intentional compile-time source-semantics authority, not
+a codegen fallback. Its closed method subset is separately classified as
+`compile-time-semantics` by the normalized method-dispatch ratchet. A method
+implemented there must match the source behavior owned by runtime codegen;
+unsupported methods fail const evaluation instead of silently switching to a
+different interpretation.
+
 The closed evaluator supports `isinstance` checks for primitive const values.
 Supported names are `bool`, `int`, `float`, `str`, `bytes`, `tuple`, `list`, and `dict`.
 Iteration over a closed record yields its string keys in canonical order.

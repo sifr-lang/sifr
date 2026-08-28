@@ -151,7 +151,7 @@ macro_rules! stmt_expr_method_call {
                             let key_arg = Self::build_dict_lookup_key_arg_for_ir(lowered_index);
                             return Ok(Some(crate::RustExpr::Block {
                                 stmts: vec![crate::RustStmt::IfLet {
-                                    pattern: "Some(__elem)".to_string(),
+                                    pattern: "Some(__elem)".into(),
                                     expr: crate::RustExpr::MethodCall {
                                         receiver: Box::new(lowered_object),
                                         method: "get_mut".to_string(),
@@ -485,6 +485,33 @@ impl RustEmitter {
 mod tests {
     use super::*;
 
+    fn list_method_call(method: &str, args: Vec<HirExpr>, result_ty: Type) -> HirExpr {
+        let list_ty = Type::List(Box::new(Type::Int));
+        HirExpr::MethodCall {
+            object: Box::new(HirExpr::Name {
+                name: "items".to_string(),
+                binding_id: Some(sifr_ir::BindingId(1)),
+                ty: list_ty,
+            }),
+            method: method.to_string(),
+            args,
+            receiver_convention: Some(if method == "append" {
+                sifr_type_system::ReceiverConvention::MutableBorrow
+            } else {
+                sifr_type_system::ReceiverConvention::SharedBorrow
+            }),
+            receiver_target: (method == "append").then(|| {
+                sifr_ir::MutableReceiverTarget::Place(sifr_ir::Place {
+                    root: sifr_ir::BindingId(1),
+                    projections: Vec::new(),
+                })
+            }),
+            mutable_arg_places: vec![None; usize::from(method == "append")],
+            source: None,
+            ty: result_ty,
+        }
+    }
+
     #[test]
     fn generic_imported_project_calls_use_the_canonical_function_name() {
         let expression = HirExpr::GenericCall {
@@ -497,5 +524,30 @@ mod tests {
         let imported = std::collections::HashSet::from(["load".to_string()]);
 
         assert!(is_imported_project_call_for_ir(&expression, &imported));
+    }
+
+    #[test]
+    fn statement_list_methods_use_registry_authority_after_legacy_fallback_removal() {
+        let mut emitter = RustEmitter::new();
+        let append = list_method_call("append", vec![HirExpr::IntLiteral(1)], Type::None);
+        let cloned = list_method_call("cloned", Vec::new(), Type::List(Box::new(Type::Int)));
+
+        let lowered_append = emitter
+            .lower_stmt_expr_for_ir(&append)
+            .expect("append lowering must not error")
+            .expect("append must be accepted by registry authority");
+        let lowered_cloned = emitter
+            .lower_stmt_expr_for_ir(&cloned)
+            .expect("cloned lowering must not error")
+            .expect("cloned must be accepted by registry authority");
+
+        assert!(matches!(
+            lowered_append,
+            crate::RustExpr::MethodCall { method, .. } if method == "push"
+        ));
+        assert!(matches!(
+            lowered_cloned,
+            crate::RustExpr::MethodCall { method, .. } if method == "clone"
+        ));
     }
 }

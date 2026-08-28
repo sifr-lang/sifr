@@ -1,5 +1,3 @@
-#![allow(unsafe_code)]
-
 use super::CallbackOwnerState;
 use super::execution::{
     CallbackExecutionError, collect_args, execution_error, python_error, result_object,
@@ -131,7 +129,7 @@ where
 #[derive(Clone, Copy)]
 struct ForeignTargetPtr(*const (dyn ForeignTarget<'static> + 'static));
 
-#[allow(clippy::transmute_ptr_to_ptr)]
+#[allow(clippy::transmute_ptr_to_ptr, unsafe_code)]
 /// Erase a foreign-thread callback target lifetime while its owner retains it.
 ///
 /// # Safety
@@ -149,11 +147,12 @@ unsafe fn erase_target_lifetime(target: *const (dyn ForeignTarget<'_> + '_)) -> 
     })
 }
 
-// SAFETY: the pointer is only dereferenced after owner admission. Call-scoped
-// close rejects new entries and drains all accepted calls before its owning box
-// can be dropped.
+// SAFETY: the pointer is dereferenced only after owner admission; call-scoped
+// close drains accepted calls before its owning box can be dropped.
+#[allow(unsafe_code)]
 unsafe impl Send for ForeignTargetPtr {}
 // SAFETY: `ForeignTarget` is `Sync`, and its owner provides the lifetime proof.
+#[allow(unsafe_code)]
 unsafe impl Sync for ForeignTargetPtr {}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -272,6 +271,7 @@ where
     )
 }
 
+#[allow(unsafe_code)]
 pub fn foreign_callback_scoped_with_owner<'a, A, R, Decode, Handler, Encode>(
     owner: CallbackOwnerState,
     callback_id: u64,

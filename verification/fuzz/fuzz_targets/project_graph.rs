@@ -3,9 +3,16 @@
 use libfuzzer_sys::fuzz_target;
 use sifr_frontend::DiskSourceProvider;
 use sifr_package::{derive_package_graph, parse_metadata_json};
+use std::cell::RefCell;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static NEXT_FIXTURE_ID: AtomicU64 = AtomicU64::new(0);
+
+thread_local! {
+    static FIXTURE: RefCell<Option<Fixture>> = RefCell::new(create_fixture());
+}
 
 struct Fixture(PathBuf);
 
@@ -16,20 +23,23 @@ impl Drop for Fixture {
 }
 
 fuzz_target!(|data: &[u8]| {
-    static FIXTURE: OnceLock<Option<Fixture>> = OnceLock::new();
-    let Some(fixture) = FIXTURE.get_or_init(create_fixture) else {
-        return;
-    };
-    let json = metadata_json(&fixture.0, data);
-    if let Ok(metadata) = parse_metadata_json(&json) {
-        let _ = derive_package_graph(metadata, &mut DiskSourceProvider::new());
-    }
+    FIXTURE.with(|fixture| {
+        let fixture = fixture.borrow();
+        let Some(fixture) = fixture.as_ref() else {
+            return;
+        };
+        let json = metadata_json(&fixture.0, data);
+        if let Ok(metadata) = parse_metadata_json(&json) {
+            let _ = derive_package_graph(metadata, &mut DiskSourceProvider::new());
+        }
+    });
 });
 
 fn create_fixture() -> Option<Fixture> {
     let root = std::env::temp_dir().join(format!(
-        "sifr_project_graph_fuzz_{}",
-        std::process::id()
+        "sifr_project_graph_fuzz_{}_{}",
+        std::process::id(),
+        NEXT_FIXTURE_ID.fetch_add(1, Ordering::Relaxed)
     ));
     let fixture = Fixture(root);
     prepare_fixture(&fixture.0).ok()?;

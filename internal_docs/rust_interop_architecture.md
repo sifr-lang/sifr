@@ -934,6 +934,12 @@ The driver materializes generated glue from this plan. It must not scan emitted 
 
 Sifr does not implement a Rust resolver. Direct binding signatures are validated through a Sifr-generated `RustBridgeProbePlan` that asks Cargo/rustc to type-check item existence, visibility, arity, receiver mode, asyncness, and bridge-compatible types in an isolated probe module before final generated binary build.
 
+The isolated probe crate is compiler diagnostic infrastructure. It is not a
+generated user artifact and is therefore outside the final generated-user
+`.rs` materialization scan. Its owning probe validation remains mandatory:
+the driver validates the probe source, maps Cargo/rustc failures to Sifr
+diagnostics, and requires a clean probe before it materializes the user build.
+
 Probe code uses generated type assertions rather than semantic Rust item metadata:
 
 ```rust

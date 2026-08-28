@@ -12,7 +12,7 @@ pub(crate) fn sync_channel_runtime_needed(rust_code: &str) -> bool {
         || rust_code.contains("fn bounded_channel<")
 }
 
-pub(crate) fn replace_sync_channel_runtime_items(rust_code: &str) -> String {
+pub(crate) fn replace_sync_channel_runtime_items(rust_code: &str) -> crate::CodegenOutcome<String> {
     let strip_names = HashSet::from([
         "Channel",
         "ChannelSender",
@@ -20,12 +20,12 @@ pub(crate) fn replace_sync_channel_runtime_items(rust_code: &str) -> String {
         "channel",
         "bounded_channel",
     ]);
-    let mut replaced = strip_rust_items_by_name(rust_code, &strip_names);
+    let mut replaced = strip_rust_items_by_name(rust_code, &strip_names)?;
     if !replaced.trim().is_empty() {
         replaced.push('\n');
     }
     replaced.push_str(sync_channel_runtime_rust_code());
-    replaced
+    Ok(replaced)
 }
 
 pub(crate) fn sync_channel_runtime_rust_code() -> &'static str {

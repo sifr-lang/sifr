@@ -197,7 +197,7 @@ impl RustEmitter {
     ) -> crate::RustExpr {
         crate::RustExpr::Block {
             stmts: vec![crate::RustStmt::LetElse {
-                pattern: "Some(__sifr_unwrapped_option_value)".to_string(),
+                pattern: "Some(__sifr_unwrapped_option_value)".into(),
                 value: value_expr,
                 else_body: vec![crate::RustStmt::Expr(crate::RustExpr::MacroCall {
                     name: "unreachable".to_string(),
@@ -568,13 +568,13 @@ impl RustEmitter {
                             expr: RustExpr::Ident(next_ident),
                             arms: vec![
                                 crate::RustMatchArm {
-                                    pattern: format!("Some({var})"),
+                                    pattern: format!("Some({var})").into(),
                                     bindings: vec![var.clone()],
                                     guard: None,
                                     body: value_body,
                                 },
                                 crate::RustMatchArm {
-                                    pattern: "None".to_string(),
+                                    pattern: "None".into(),
                                     bindings: vec![],
                                     guard: None,
                                     body: vec![RustStmt::Break],
@@ -682,13 +682,13 @@ impl RustEmitter {
                             expr: RustExpr::Ident(next_ident),
                             arms: vec![
                                 crate::RustMatchArm {
-                                    pattern: format!("Some({var})"),
+                                    pattern: format!("Some({var})").into(),
                                     bindings: vec![var.clone()],
                                     guard: None,
                                     body: value_body,
                                 },
                                 crate::RustMatchArm {
-                                    pattern: "None".to_string(),
+                                    pattern: "None".into(),
                                     bindings: vec![],
                                     guard: None,
                                     body: vec![RustStmt::Break],
@@ -805,13 +805,13 @@ impl RustEmitter {
                             expr: RustExpr::Ident(next_ident),
                             arms: vec![
                                 crate::RustMatchArm {
-                                    pattern: format!("Some({var})"),
+                                    pattern: format!("Some({var})").into(),
                                     bindings: vec![var.clone()],
                                     guard: None,
                                     body: value_body,
                                 },
                                 crate::RustMatchArm {
-                                    pattern: "None".to_string(),
+                                    pattern: "None".into(),
                                     bindings: vec![],
                                     guard: None,
                                     body: vec![RustStmt::Break],

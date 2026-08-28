@@ -64,9 +64,7 @@ pub fn compile_source_preview(source: &str) -> Result<CompilerPreview, Vec<Rende
         &generated.static_program_structural_owners,
     )
     .map_err(|error| vec![render_codegen_error(&error)])?;
-    if !static_source.is_empty() {
-        generated.rust_source = format!("{static_source}\n{}", generated.rust_source);
-    }
+    prepend_static_specialization(&mut generated.rust_source, &static_source);
     let source_map = generated_source_map_files(&generated.rust_source);
     Ok(CompilerPreview {
         rust_source: generated.rust_source,
@@ -76,6 +74,12 @@ pub fn compile_source_preview(source: &str) -> Result<CompilerPreview, Vec<Rende
         interop: generated.interop,
         lowering_stats: generated.lowering_stats,
     })
+}
+
+fn prepend_static_specialization(rust_source: &mut String, static_source: &str) {
+    if !static_source.is_empty() {
+        *rust_source = format!("{static_source}\n{rust_source}");
+    }
 }
 
 fn generated_source_map_files(rust_source: &str) -> Vec<GeneratedSourceMapFile> {
@@ -101,4 +105,18 @@ fn generated_support_source(rust_source: &str) -> Option<String> {
     let end = tail.find("\n// --- end stdlib ---")?;
     let support = tail[..end].trim_end();
     (!support.is_empty()).then(|| format!("{support}\n"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::prepend_static_specialization;
+
+    #[test]
+    fn preview_static_specialization_is_a_pinned_source_prefix() {
+        let mut source = "fn main() {}\n".to_string();
+
+        prepend_static_specialization(&mut source, "static DATA: i64 = 1;");
+
+        assert_eq!(source, "static DATA: i64 = 1;\nfn main() {}\n");
+    }
 }

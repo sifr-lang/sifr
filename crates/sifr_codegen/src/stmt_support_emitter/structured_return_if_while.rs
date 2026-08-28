@@ -373,7 +373,7 @@ impl RustEmitter {
                 };
 
                 let mut arms = vec![crate::RustMatchArm {
-                    pattern: format!("{enum_name}::{variant_name}({then_binding})"),
+                    pattern: format!("{enum_name}::{variant_name}({then_binding})").into(),
                     bindings: vec![],
                     guard: None,
                     body: lowered_then_body,
@@ -393,14 +393,14 @@ impl RustEmitter {
                     if other_variants.len() == 1 {
                         let (other_variant, _) = &other_variants[0];
                         arms.push(crate::RustMatchArm {
-                            pattern: format!("{enum_name}::{other_variant}({else_binding})"),
+                            pattern: format!("{enum_name}::{other_variant}({else_binding})").into(),
                             bindings: vec![],
                             guard: None,
                             body: lowered_else_body,
                         });
                     } else {
                         arms.push(crate::RustMatchArm {
-                            pattern: "_".to_string(),
+                            pattern: "_".into(),
                             bindings: vec![],
                             guard: None,
                             body: lowered_else_body,
@@ -408,7 +408,7 @@ impl RustEmitter {
                     }
                 } else {
                     arms.push(crate::RustMatchArm {
-                        pattern: "_".to_string(),
+                        pattern: "_".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![],

@@ -8,6 +8,18 @@ through the `generated_code_quality` verification area at
 
 ## Quality Gates
 
+The fallible public codegen boundary performs the canonical final generated
+source validation after all IR assembly, stdlib insertion, and rendering.
+Fragment renderers validate only their local structured inputs; they do not
+repeat the whole-source contract. Probe crates remain governed by their probe
+validator as compiler diagnostic infrastructure.
+
+Sifr `assert` is source-language behavior. Its lowering may emit Rust
+`assert!` because a failed user assertion is the requested program result, not
+a compiler recovery panic. The forbidden-construct set applies to
+compiler-owned panic paths and generated runtime implementation paths; it does
+not classify source-language assertion lowering as an internal invariant.
+
 - `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite corpus`
   validates the corpus manifest, materializes each selected entry as an
   isolated Cargo crate under `target/sifr_generated_code_quality/<run-id>/`,

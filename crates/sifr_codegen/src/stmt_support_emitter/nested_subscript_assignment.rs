@@ -55,7 +55,7 @@ impl RustEmitter {
             && !option_value_adapted
         {
             RustStmt::IfLet {
-                pattern: "Some(__nested_assign_value)".to_string(),
+                pattern: "Some(__nested_assign_value)".into(),
                 expr: RustExpr::Ident("__nested_assign_value".to_string()),
                 then_body: vec![RustStmt::Assign {
                     target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
@@ -103,7 +103,7 @@ impl RustEmitter {
                 right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
             },
             then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__elem)".to_string(),
+                pattern: "Some(__elem)".into(),
                 expr: RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Ident("__row".to_string())),
                     method: "get_mut".to_string(),
@@ -126,7 +126,7 @@ impl RustEmitter {
                     value: lowered_inner_index,
                 },
                 RustStmt::IfLet {
-                    pattern: "Some(__ii_raw)".to_string(),
+                    pattern: "Some(__ii_raw)".into(),
                     expr: RustExpr::Ident("__ii_raw_opt".to_string()),
                     then_body: inner_then_body,
                     else_body: None,
@@ -159,7 +159,7 @@ impl RustEmitter {
                 right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
             },
             then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__row)".to_string(),
+                pattern: "Some(__row)".into(),
                 expr: RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Ident(object.to_string())),
                     method: "get_mut".to_string(),
@@ -183,7 +183,7 @@ impl RustEmitter {
                     value: lowered_outer_index,
                 },
                 RustStmt::IfLet {
-                    pattern: "Some(__oi_raw)".to_string(),
+                    pattern: "Some(__oi_raw)".into(),
                     expr: RustExpr::Ident("__oi_raw_opt".to_string()),
                     then_body: outer_then_body,
                     else_body: None,
@@ -274,7 +274,7 @@ impl RustEmitter {
         });
         let row_body = if inner_index_is_option {
             vec![RustStmt::IfLet {
-                pattern: "Some(__nested_assign_key)".to_string(),
+                pattern: "Some(__nested_assign_key)".into(),
                 expr: RustExpr::Ident("__nested_assign_key_opt".to_string()),
                 then_body: vec![insert_stmt],
                 else_body: None,
@@ -299,7 +299,7 @@ impl RustEmitter {
                 right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
             },
             then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__row)".to_string(),
+                pattern: "Some(__row)".into(),
                 expr: RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Ident(object.to_string())),
                     method: "get_mut".to_string(),
@@ -323,7 +323,7 @@ impl RustEmitter {
                     value: lowered_outer_index,
                 },
                 RustStmt::IfLet {
-                    pattern: "Some(__oi_raw)".to_string(),
+                    pattern: "Some(__oi_raw)".into(),
                     expr: RustExpr::Ident("__oi_raw_opt".to_string()),
                     then_body: outer_then_body,
                     else_body: None,
@@ -426,7 +426,7 @@ impl RustEmitter {
             && !option_value_adapted
         {
             RustStmt::IfLet {
-                pattern: "Some(__nested_assign_value)".to_string(),
+                pattern: "Some(__nested_assign_value)".into(),
                 expr: RustExpr::Ident("__nested_assign_value".to_string()),
                 then_body: vec![RustStmt::Assign {
                     target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
@@ -478,7 +478,7 @@ impl RustEmitter {
                 right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
             },
             then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__elem)".to_string(),
+                pattern: "Some(__elem)".into(),
                 expr: RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Ident("__row".to_string())),
                     method: "get_mut".to_string(),
@@ -501,7 +501,7 @@ impl RustEmitter {
                     value: lowered_inner_index,
                 },
                 RustStmt::IfLet {
-                    pattern: "Some(__ii_raw)".to_string(),
+                    pattern: "Some(__ii_raw)".into(),
                     expr: RustExpr::Ident("__ii_raw_opt".to_string()),
                     then_body: inner_then_body,
                     else_body: None,
@@ -531,7 +531,7 @@ impl RustEmitter {
                 right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
             },
             then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__row)".to_string(),
+                pattern: "Some(__row)".into(),
                 expr: RustExpr::MethodCall {
                     receiver: Box::new(field_receiver()),
                     method: "get_mut".to_string(),
@@ -555,7 +555,7 @@ impl RustEmitter {
                     value: lowered_outer_index,
                 },
                 RustStmt::IfLet {
-                    pattern: "Some(__oi_raw)".to_string(),
+                    pattern: "Some(__oi_raw)".into(),
                     expr: RustExpr::Ident("__oi_raw_opt".to_string()),
                     then_body: outer_then_body,
                     else_body: None,
@@ -654,7 +654,7 @@ impl RustEmitter {
         });
         let row_body = if inner_index_is_option {
             vec![RustStmt::IfLet {
-                pattern: "Some(__nested_assign_key)".to_string(),
+                pattern: "Some(__nested_assign_key)".into(),
                 expr: RustExpr::Ident("__nested_assign_key_opt".to_string()),
                 then_body: vec![insert_stmt],
                 else_body: None,
@@ -676,7 +676,7 @@ impl RustEmitter {
                 right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
             },
             then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__row)".to_string(),
+                pattern: "Some(__row)".into(),
                 expr: RustExpr::MethodCall {
                     receiver: Box::new(field_receiver()),
                     method: "get_mut".to_string(),
@@ -700,7 +700,7 @@ impl RustEmitter {
                     value: lowered_outer_index,
                 },
                 RustStmt::IfLet {
-                    pattern: "Some(__oi_raw)".to_string(),
+                    pattern: "Some(__oi_raw)".into(),
                     expr: RustExpr::Ident("__oi_raw_opt".to_string()),
                     then_body: outer_then_body,
                     else_body: None,

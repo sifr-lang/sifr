@@ -152,7 +152,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "INTERNAL",
         "Unclassified compiler panic after a panic boundary.",
         Severity::Error,
-        "crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001",
+        "crates/sifr_driver/src/tests/panic_boundary.rs::test_run_codegen_with_boundary_reports_string_panic_as_internal_compiler_panic",
         "internal compiler error",
         "sifr_driver::diagnostics",
         [],

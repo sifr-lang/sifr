@@ -89,6 +89,7 @@ bytes = { version = "1.12.1" }
 chrono = { version = "0.4.45" }
 encoding_rs = { version = "0.8.35" }
 flate2 = { version = "1.1.9" }
+fs4 = { version = "0.13.1" }
 globset = { version = "0.4.20" }
 h2 = { version = "0.4.19" }
 http-body = { version = "1.1.0" }

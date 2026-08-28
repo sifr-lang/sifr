@@ -202,16 +202,21 @@ def cache_stats(client: LspClient) -> tuple[int, int]:
 
 def run_cold_start(project_root: Path, iterations: int) -> tuple[list[float], int, int]:
     samples: list[float] = []
+    cache_hits = 0
+    cache_misses = 0
     for _ in range(iterations):
         started = time.perf_counter()
         client = LspClient(timeout=90.0)
         try:
             initialize(client, project_root)
             samples.append((time.perf_counter() - started) * 1000.0)
+            final_hits, final_misses = cache_stats(client)
+            cache_hits += final_hits
+            cache_misses += final_misses
             client.request("shutdown", {})
         finally:
             client.close()
-    return samples, 0, 0
+    return samples, cache_hits, cache_misses
 
 
 def run_warm_scenario(

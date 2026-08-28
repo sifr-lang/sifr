@@ -120,7 +120,7 @@ impl RustEmitter {
                         Self::clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
                     return Some(crate::RustExpr::Block {
                         stmts: vec![crate::RustStmt::IfLet {
-                            pattern: "Some(__elem)".to_string(),
+                            pattern: "Some(__elem)".into(),
                             expr: crate::RustExpr::MethodCall {
                                 receiver: Box::new(lowered_object),
                                 method: "get_mut".to_string(),
@@ -376,7 +376,7 @@ impl RustEmitter {
         }
         crate::RustExpr::Block {
             stmts: vec![crate::RustStmt::LetElse {
-                pattern: "Some(__sifr_nonempty_pop_value)".to_string(),
+                pattern: "Some(__sifr_nonempty_pop_value)".into(),
                 value: lowered_expr,
                 else_body: vec![crate::RustStmt::Expr(crate::RustExpr::MacroCall {
                     name: "unreachable".to_string(),

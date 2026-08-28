@@ -214,13 +214,13 @@ mod tests {
                     expr: RustExpr::Ident("acc".to_string()),
                     arms: vec![
                         RustMatchArm {
-                            pattern: "0".to_string(),
+                            pattern: "0".into(),
                             bindings: vec![],
                             guard: None,
                             body: vec![RustStmt::Return(None)],
                         },
                         RustMatchArm {
-                            pattern: "_".to_string(),
+                            pattern: "_".into(),
                             bindings: vec![],
                             guard: None,
                             body: vec![RustStmt::Expr(RustExpr::MacroCall {
@@ -503,7 +503,7 @@ mod tests {
                 ty: RustType::String_,
             },
             RustStmt::LetPattern {
-                pattern: "(a, b)".to_string(),
+                pattern: "(a, b)".into(),
                 value: RustExpr::Tuple(vec![
                     RustExpr::Literal(RustLiteral::Int(2)),
                     RustExpr::Literal(RustLiteral::Bool(true)),
@@ -552,7 +552,7 @@ mod tests {
                 value: RustExpr::Literal(RustLiteral::Int(7)),
             },
             RustStmt::LetPattern {
-                pattern: "(mut res, mod, gen)".to_string(),
+                pattern: "(mut res, mod, gen)".into(),
                 value: RustExpr::Tuple(vec![
                     RustExpr::Literal(RustLiteral::Int(1)),
                     RustExpr::Literal(RustLiteral::Int(2)),

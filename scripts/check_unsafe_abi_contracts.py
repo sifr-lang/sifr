@@ -9,7 +9,12 @@ import re
 import sys
 import tempfile
 
-from rust_source_policy import is_test_path, mask_rust_non_code, strip_cfg_test_modules
+from rust_source_policy import (
+    is_test_path,
+    mask_rust_literals,
+    mask_rust_non_code,
+    strip_cfg_test_modules,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -19,15 +24,17 @@ FILE_ALLOWLIST = {
     Path("crates/sifr_runtime/src/python/arrow_ops/abi.rs"),
     Path("crates/sifr_runtime/src/python/buffer_ops/access.rs"),
     Path("crates/sifr_runtime/src/python/buffer_ops/raw.rs"),
-    Path("crates/sifr_runtime/src/python/callbacks/asyncio.rs"),
     Path("crates/sifr_runtime/src/python/callbacks/current.rs"),
-    Path("crates/sifr_runtime/src/python/callbacks/foreign.rs"),
-    Path("crates/sifr_runtime/src/python/dlpack_ops.rs"),
     Path("crates/sifr_runtime/src/python/dlpack_ops/abi.rs"),
     Path("crates/sifr_runtime/src/python/dlpack_ops/argument.rs"),
 }
 UNSAFE_OPERATION = re.compile(r"\bunsafe\s*(?:\{|impl\b|fn\b|extern\b)")
 UNSAFE_TYPE_ALIAS = re.compile(r"(?ms)^\s*type\s+\w+\s*=\s*unsafe\s+extern\b.*?;")
+ITEM_UNSAFE_ALLOW = re.compile(r"(?m)^\s*#\[allow\(unsafe_code\)\]\s*$")
+NARROW_ITEM_AFTER_ALLOW = re.compile(
+    r"^\s*(?:(?:pub(?:\([^)]*\))?|async|const|extern\s+\"[^\"]+\"|unsafe)\s+)*fn\b"
+    r"|^\s*unsafe\s+impl\b"
+)
 
 
 def production_text(path: Path) -> str:
@@ -58,7 +65,7 @@ def validate(root: Path) -> list[str]:
             continue
         text = production_text(path)
         code = mask_rust_non_code(text)
-        lines = text.splitlines()
+        lines = mask_rust_literals(text).splitlines()
         type_alias_spans = [match.span() for match in UNSAFE_TYPE_ALIAS.finditer(code)]
         if "#![allow(unsafe_code)]" in text:
             seen_file_allows.add(relative)
@@ -66,6 +73,14 @@ def validate(root: Path) -> list[str]:
                 errors.append(f"unapproved file-level unsafe allowance: {relative.as_posix()}")
             if not text.startswith("#![allow(unsafe_code)]\n"):
                 errors.append(f"misplaced file-level unsafe allowance: {relative.as_posix()}")
+        for allow_match in ITEM_UNSAFE_ALLOW.finditer(code):
+            following = code[allow_match.end() :].lstrip()
+            if not NARROW_ITEM_AFTER_ALLOW.match(following):
+                line_number = code.count("\n", 0, allow_match.start()) + 1
+                errors.append(
+                    "unsafe item allowance must own one function or unsafe impl: "
+                    f"{relative.as_posix()}:{line_number}"
+                )
         for match in UNSAFE_OPERATION.finditer(code):
             if any(start <= match.start() < end for start, end in type_alias_spans):
                 continue
@@ -88,11 +103,12 @@ def validate(root: Path) -> list[str]:
 
 
 def run_self_test() -> int:
-    with tempfile.TemporaryDirectory(prefix="unsafe-abi-", dir=REPO_ROOT / "target") as tmp:
+    with tempfile.TemporaryDirectory(prefix="unsafe-abi-") as tmp:
         root = Path(tmp)
         module = root / PYTHON_MODULE
         module.parent.mkdir(parents=True)
         module.write_text(
+            "const QUOTE: char = '\"';\nconst BYTE_QUOTE: u8 = b'\"';\n"
             "#[allow(unsafe_code)]\nfn probe() {\n    // SAFETY: pointer is non-null.\n    unsafe {}\n}\n",
             encoding="utf-8",
         )
@@ -106,6 +122,22 @@ def run_self_test() -> int:
         module.write_text("#[allow(unsafe_code)]\nfn probe() { unsafe {} }\n", encoding="utf-8")
         if not any("lacks local" in error for error in validate(root)):
             print("unsafe ABI self-test missed absent contract", file=sys.stderr)
+            return 1
+        module.write_text(
+            '#[allow(unsafe_code)]\nmod widened { fn probe() { unsafe {} } }\n',
+            encoding="utf-8",
+        )
+        if not any("one function or unsafe impl" in error for error in validate(root)):
+            print("unsafe ABI self-test accepted a widened item allowance", file=sys.stderr)
+            return 1
+        module.write_text(
+            '#[allow(unsafe_code)]\nfn probe() {\n'
+            '    const FAKE: &str = "// SAFETY: not a contract";\n'
+            '    unsafe {}\n}\n',
+            encoding="utf-8",
+        )
+        if not any("lacks local" in error for error in validate(root)):
+            print("unsafe ABI self-test accepted a literal safety contract", file=sys.stderr)
             return 1
     print("unsafe ABI contract self-test: PASS")
     return 0

@@ -385,7 +385,7 @@ impl RustEmitter {
                         "{:?}"
                     };
                     RustMatchArm {
-                        pattern: format!("{enum_name}::{variant}(v)"),
+                        pattern: format!("{enum_name}::{variant}(v)").into(),
                         bindings: Vec::new(),
                         guard: None,
                         body: vec![RustStmt::Return(Some(RustExpr::MacroCall {

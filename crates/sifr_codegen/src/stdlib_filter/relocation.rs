@@ -7,10 +7,12 @@ pub(crate) fn strip_relocated_rust_items_by_name(
     rust_code: &str,
     names: &HashSet<&str>,
     local_conversion_sources: &HashSet<String>,
-) -> String {
-    let Ok(parsed) = syn::parse_file(rust_code) else {
-        return rust_code.to_string();
-    };
+) -> crate::CodegenOutcome<String> {
+    let parsed = syn::parse_file(rust_code).map_err(|error| {
+        crate::CodegenError::new(format!(
+            "failed to parse compiler-owned Rust during stdlib nominal relocation: {error}"
+        ))
+    })?;
     let kept_items = parsed
         .items
         .into_iter()
@@ -22,7 +24,7 @@ pub(crate) fn strip_relocated_rust_items_by_name(
                 || is_local_child_into_relocated_parent(item, local_conversion_sources, names)
         })
         .collect::<Vec<_>>();
-    super::render_items(&kept_items)
+    Ok(super::render_items(&kept_items))
 }
 
 fn is_local_child_into_relocated_parent(

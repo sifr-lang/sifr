@@ -743,7 +743,7 @@ pub(crate) fn build_async_generator_type_items() -> Vec<RustItem> {
                             else_body: None,
                         },
                         RustStmt::IfLet {
-                            pattern: "Some(__sifr_async_generator_factory)".to_string(),
+                            pattern: "Some(__sifr_async_generator_factory)".into(),
                             expr: RustExpr::MethodCall {
                                 receiver: Box::new(RustExpr::Field {
                                     expr: Box::new(RustExpr::Ident("self".to_string())),

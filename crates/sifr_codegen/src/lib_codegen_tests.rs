@@ -55,6 +55,8 @@ mod class_trait_contract_codegen_tests;
 #[cfg(test)]
 mod classes_and_basics_codegen_tests;
 #[cfg(test)]
+mod codegen_boundary_tests;
+#[cfg(test)]
 mod collections_and_stdlib_codegen_tests;
 #[cfg(test)]
 mod control_flow_codegen_tests;

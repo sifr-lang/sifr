@@ -178,7 +178,7 @@ fn top_level_break_and_continue_become_cleanup_outcomes() {
 fn let_else_control_flow_is_rewritten_for_context_cleanup() {
     let rewritten = rewrite_context_control_flow(
         vec![RustStmt::LetElse {
-            pattern: "Some(value)".to_string(),
+            pattern: "Some(value)".into(),
             value: RustExpr::Ident("maybe".to_string()),
             else_body: vec![RustStmt::Break],
         }],

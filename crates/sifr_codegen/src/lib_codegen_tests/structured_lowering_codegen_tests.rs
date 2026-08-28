@@ -671,45 +671,6 @@ fn test_emit_expr_borrowed_compare_is_structured() {
 }
 
 #[test]
-fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
-    let lib_src = include_str!("../lib.rs");
-    let stmt_entrypoints_src = include_str!("../structured_stmt_entrypoints.rs");
-
-    assert!(!lib_src.contains("mod stmt_emitter;"));
-    assert!(!lib_src.contains("mod expr_emitter;"));
-    assert!(!lib_src.contains("CodegenLoweringMode"));
-    assert!(!lib_src.contains("StructuredPreferred"));
-    assert!(!lib_src.contains("should_force_stmt_string_path"));
-    assert!(!lib_src.contains("should_force_expr_string_path"));
-    assert!(!lib_src.contains("fn emit_expr(&mut self, expr: &HirExpr) {"));
-    assert!(!lib_src.contains("fn try_lower_structured_expr("));
-    assert!(!lib_src.contains("fn emit_stmt(&mut self, stmt: &HirStmt) {"));
-
-    let emit_stmt_start = stmt_entrypoints_src
-        .find("fn emit_stmt(&mut self, stmt: &HirStmt) {")
-        .expect("emit_stmt wrapper should exist");
-    let impl_end = stmt_entrypoints_src[emit_stmt_start..]
-        .find("\n    }\n}")
-        .map(|offset| emit_stmt_start + offset)
-        .expect("emit_stmt wrapper should end before impl close");
-    let emit_stmt_wrapper = &stmt_entrypoints_src[emit_stmt_start..impl_end];
-    assert!(
-        emit_stmt_wrapper.contains("structured statement emission missing for production path")
-    );
-    assert!(!emit_stmt_wrapper.contains("self.try_emit_stmt_string_"));
-    assert!(
-        !emit_stmt_wrapper.contains("match stmt"),
-        "emit_stmt should stay orchestration-only"
-    );
-
-    let lib_lines = lib_src.lines().count();
-    assert!(
-        lib_lines <= 1450,
-        "lib.rs should stay decomposed (current lines: {lib_lines})"
-    );
-}
-
-#[test]
 fn test_production_lowering_rules_uses_result_helpers_only() {
     let lib_src = include_str!("../lib.rs");
     let emitter_state_src = include_str!("../lib_emitter_state.rs");

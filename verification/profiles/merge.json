@@ -483,6 +483,15 @@
   },
   "selected_areas": [
     {
+      "area": "documentation",
+      "suites": [
+        "architecture"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
       "area": "rust_interop",
       "suites": [
         "matrix",
@@ -717,15 +726,6 @@
       ],
       "resource_classes": [
         "external-corpus"
-      ]
-    },
-    {
-      "area": "documentation",
-      "suites": [
-        "architecture"
-      ],
-      "resource_classes": [
-        "default-local"
       ]
     }
   ],

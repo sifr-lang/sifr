@@ -379,14 +379,14 @@ pub(super) fn append_submission(
                     args: Vec::new(),
                 },
                 then_body: vec![RustStmt::IfLet {
-                    pattern: "Some(__sifr_provisional_callback)".to_string(),
+                    pattern: "Some(__sifr_provisional_callback)".into(),
                     expr: RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::Ident(provisional.clone())),
                         method: "as_ref".to_string(),
                         args: Vec::new(),
                     },
                     then_body: vec![RustStmt::IfLet {
-                        pattern: "Err(__sifr_provisional_cleanup_error)".to_string(),
+                        pattern: "Err(__sifr_provisional_cleanup_error)".into(),
                         expr: RustExpr::Await(Box::new(RustExpr::MethodCall {
                             receiver: Box::new(RustExpr::Ident(
                                 "__sifr_provisional_callback".to_string(),

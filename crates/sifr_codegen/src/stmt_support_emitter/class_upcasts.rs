@@ -158,7 +158,8 @@ impl RustEmitter {
                         "{}::{}({binding})",
                         source.union_enum_name(),
                         source_member.union_variant_name()
-                    ),
+                    )
+                    .into(),
                     bindings: Vec::new(),
                     guard: None,
                     body: vec![crate::RustStmt::TailExpr(wrapped)],

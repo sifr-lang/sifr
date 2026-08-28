@@ -82,7 +82,7 @@ pub(crate) fn unwrap_compiler_verified_nonempty_pop_result_for_ir(
     }
     RustExpr::Block {
         stmts: vec![RustStmt::LetElse {
-            pattern: "Some(__sifr_nonempty_pop_value)".to_string(),
+            pattern: "Some(__sifr_nonempty_pop_value)".into(),
             value: lowered_expr,
             else_body: vec![RustStmt::Expr(RustExpr::MacroCall {
                 name: "unreachable".to_string(),

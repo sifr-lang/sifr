@@ -236,7 +236,7 @@ def is_production_source(path: Path) -> bool:
     if path == SOURCE_PROVIDER_BOUNDARY:
         return False
     relative_parts = path.relative_to(REPO_ROOT).parts
-    if "tests" in relative_parts or "bin" in relative_parts:
+    if "tests" in relative_parts:
         return False
     name = path.name
     return not (name.endswith("_tests.rs") or name == "tests.rs")

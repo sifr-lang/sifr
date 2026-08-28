@@ -283,7 +283,7 @@ pub(super) fn lower_remove(object: &RustExpr, args: &[RustExpr]) -> Option<RustE
     }
     Some(RustExpr::Block {
         stmts: vec![RustStmt::IfLet {
-            pattern: "Some(__pos)".to_string(),
+            pattern: "Some(__pos)".into(),
             expr: RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(object.clone()),
@@ -380,7 +380,7 @@ pub(super) fn lower_index(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                 },
                 body: vec![
                     RustStmt::IfLet {
-                        pattern: "Some(__x)".to_string(),
+                        pattern: "Some(__x)".into(),
                         expr: RustExpr::MethodCall {
                             receiver: Box::new(object.clone()),
                             method: "get".to_string(),

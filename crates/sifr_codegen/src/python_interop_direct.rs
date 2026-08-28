@@ -692,7 +692,7 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
         });
         if !owner_retained_errors.is_empty() {
             body.push(RustStmt::IfLet {
-                pattern: "Some(__sifr_callback_owner_for_failure_value)".to_string(),
+                pattern: "Some(__sifr_callback_owner_for_failure_value)".into(),
                 expr: RustExpr::Ident("__sifr_callback_owner_for_failure".to_string()),
                 then_body: owner_retained_errors
                     .iter()

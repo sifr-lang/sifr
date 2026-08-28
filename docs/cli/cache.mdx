@@ -37,3 +37,7 @@ and cannot be combined with a size or age limit.
 Policy cleanup stops if the scan budget is exhausted. Use `--all` only when
 you intend to remove all generated artifacts. You can also raise
 `--scan-node-limit` and retry a size or age policy.
+
+Cleanup also stops when a compiler, cached binary, test workspace, or shared
+Rust interop probe is using the cache. It does not wait for that work or remove
+its files. Retry the same command after active Sifr processes finish.

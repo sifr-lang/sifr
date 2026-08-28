@@ -133,7 +133,7 @@ pub fn generate_rust_test_project_with_metadata(
                 .iter()
                 .map(|class| sifr_type_system::source_class_rust_name(&class.name))
                 .collect(),
-        );
+        )?;
         let source = publicize_generated_module_source(&source)?;
         validate_generated_source_is_safe(&source, "postprocessed test support module")?;
         support_rust_files.insert((*module_name).to_string(), source);

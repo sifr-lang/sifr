@@ -202,6 +202,22 @@ mod tests {
     }
 
     #[test]
+    fn invalid_cargo_metadata_reports_package_0001() {
+        let temp = TestWorkspace::new("invalid_cargo_metadata");
+        let package_root = temp.package("sifr-demo-json");
+        write_pure_package(&package_root, "sifr-demo-json", "demo_json");
+        let json =
+            metadata_json_with_sifr_metadata(&temp.root, &package_root, r#"{"sifr":"invalid"}"#);
+
+        let diagnostic = parse_metadata_json(&json).expect_err("invalid metadata must fail");
+
+        assert_eq!(
+            diagnostic.code,
+            DiagnosticCode::PACKAGE_MISSING_OR_INVALID_CARGO_METADATA
+        );
+    }
+
+    #[test]
     fn misplaced_compiler_metadata_reports_package_0003() {
         let temp = TestWorkspace::new("misplaced_metadata");
         let package_root = temp.package("sifr-demo-json");
@@ -218,6 +234,13 @@ mod tests {
             diagnostic.code,
             DiagnosticCode::PACKAGE_UNSUPPORTED_CARGO_SIFR_METADATA
         );
+    }
+
+    #[test]
+    fn invalid_cargo_metadata_json_reports_package_0103() {
+        let diagnostic = parse_metadata_json("{}").expect_err("incomplete metadata must fail");
+
+        assert_eq!(diagnostic.code, DiagnosticCode::PACKAGE_METADATA_PARSE);
     }
 
     #[test]

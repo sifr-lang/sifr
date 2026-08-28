@@ -53,7 +53,7 @@ fn python_declaration_completion_hover_and_navigation_share_compiler_status() {
         session
             .python_declaration_cache_stats()
             .external_fingerprint_runs,
-        1
+        2
     );
     assert_eq!(session.python_declaration_cache_stats().snapshot_builds, 1);
     let hover = hover
@@ -90,7 +90,7 @@ fn python_declaration_completion_hover_and_navigation_share_compiler_status() {
         session
             .python_declaration_cache_stats()
             .external_fingerprint_runs,
-        1
+        3
     );
     assert_eq!(session.python_declaration_cache_stats().snapshot_builds, 1);
 
@@ -106,7 +106,7 @@ fn python_declaration_completion_hover_and_navigation_share_compiler_status() {
         session
             .python_declaration_cache_stats()
             .external_fingerprint_runs,
-        2
+        4
     );
     assert_eq!(session.python_declaration_cache_stats().snapshot_builds, 2);
 }

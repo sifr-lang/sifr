@@ -766,7 +766,7 @@ impl Renderer {
                 .unwrap_or_default();
             self.emit_line(&format!(
                 "{}{} => {{",
-                Self::render_pattern_string(&arm.pattern),
+                Self::render_pattern_string(arm.pattern.source()),
                 guard
             ));
             self.indent();

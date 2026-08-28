@@ -406,7 +406,7 @@ pub(crate) fn build_task_scope_items() -> Vec<RustItem> {
                     )),
                     body: vec![
                         RustStmt::LetPattern {
-                            pattern: "(sender, receiver)".to_string(),
+                            pattern: "(sender, receiver)".into(),
                             value: RustExpr::FnCall {
                                 func: Box::new(RustExpr::Path(vec![
                                     "tokio".to_string(),
@@ -535,7 +535,7 @@ pub(crate) fn build_task_scope_items() -> Vec<RustItem> {
                     ret: Some(RustType::Named("__SifrTask<T, E>".to_string())),
                     body: vec![
                         RustStmt::LetPattern {
-                            pattern: "(sender, receiver)".to_string(),
+                            pattern: "(sender, receiver)".into(),
                             value: RustExpr::FnCall {
                                 func: Box::new(RustExpr::Path(vec![
                                     "tokio".to_string(),

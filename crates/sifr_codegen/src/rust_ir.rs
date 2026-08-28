@@ -443,10 +443,53 @@ pub(crate) enum RustParam {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct RustMatchArm {
-    pub pattern: String,
+    pub pattern: RustPattern,
     pub bindings: Vec<String>,
     pub guard: Option<RustExpr>,
     pub body: Vec<RustStmt>,
+}
+
+/// Compiler-owned match-pattern source with one validated construction type.
+///
+/// The final IR boundary parses this source as `syn::Pat`, and import analysis
+/// visits the same parsed pattern before generated source is rendered.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RustPattern {
+    source: String,
+}
+
+impl RustPattern {
+    pub(crate) fn source(&self) -> &str {
+        &self.source
+    }
+}
+
+impl std::ops::Deref for RustPattern {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.source()
+    }
+}
+
+impl PartialEq<&str> for RustPattern {
+    fn eq(&self, other: &&str) -> bool {
+        self.source() == *other
+    }
+}
+
+impl From<String> for RustPattern {
+    fn from(source: String) -> Self {
+        Self { source }
+    }
+}
+
+impl From<&str> for RustPattern {
+    fn from(source: &str) -> Self {
+        Self {
+            source: source.to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -589,7 +632,7 @@ mod tests {
             expr: Box::new(RustExpr::Ident("value".to_string())),
             arms: vec![
                 RustMatchArm {
-                    pattern: "0".to_string(),
+                    pattern: "0".into(),
                     bindings: vec![],
                     guard: None,
                     body: vec![RustStmt::Return(Some(RustExpr::Literal(RustLiteral::Str(
@@ -597,7 +640,7 @@ mod tests {
                     ))))],
                 },
                 RustMatchArm {
-                    pattern: "_".to_string(),
+                    pattern: "_".into(),
                     bindings: vec![],
                     guard: None,
                     body: vec![RustStmt::Return(Some(RustExpr::Literal(RustLiteral::Str(

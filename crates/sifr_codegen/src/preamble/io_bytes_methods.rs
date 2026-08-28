@@ -40,7 +40,7 @@ pub(crate) fn file_handle_read_bytes_method() -> RustItem {
                 },
                 arms: vec![
                     RustMatchArm {
-                        pattern: "Some(SifrFileHandle::BinaryRead(ref mut __r))".to_string(),
+                        pattern: "Some(SifrFileHandle::BinaryRead(ref mut __r))".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![
@@ -82,7 +82,7 @@ pub(crate) fn file_handle_read_bytes_method() -> RustItem {
                         ],
                     },
                     RustMatchArm {
-                        pattern: "_".to_string(),
+                        pattern: "_".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![RustStmt::Return(Some(RustExpr::FnCall {
@@ -159,7 +159,7 @@ pub(crate) fn file_handle_write_bytes_method() -> RustItem {
                 },
                 arms: vec![
                     RustMatchArm {
-                        pattern: "Some(SifrFileHandle::BinaryWrite(ref mut __w))".to_string(),
+                        pattern: "Some(SifrFileHandle::BinaryWrite(ref mut __w))".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![
@@ -189,7 +189,7 @@ pub(crate) fn file_handle_write_bytes_method() -> RustItem {
                         ],
                     },
                     RustMatchArm {
-                        pattern: "_".to_string(),
+                        pattern: "_".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![RustStmt::Return(Some(RustExpr::FnCall {
@@ -257,7 +257,7 @@ pub(crate) fn file_handle_readlines_method() -> RustItem {
                 },
                 arms: vec![
                     RustMatchArm {
-                        pattern: "Some(SifrFileHandle::TextRead(ref mut __r))".to_string(),
+                        pattern: "Some(SifrFileHandle::TextRead(ref mut __r))".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![
@@ -391,7 +391,7 @@ pub(crate) fn file_handle_readlines_method() -> RustItem {
                         ],
                     },
                     RustMatchArm {
-                        pattern: "_".to_string(),
+                        pattern: "_".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![RustStmt::Return(Some(RustExpr::FnCall {

@@ -114,6 +114,7 @@ fn clean_cache_at(
             "cache scan node limit must be positive",
         ));
     }
+    let _exclusive_lease = super::artifact_cache_lock::try_acquire_exclusive(root)?;
     if policy.remove_all {
         let status = cache_status_at(root, policy.scan_node_limit)?;
         if fs::symlink_metadata(root).is_ok() && !policy.dry_run {
@@ -437,6 +438,28 @@ mod tests {
         .expect("dry run should succeed");
         assert_eq!(report.removed_entries, 1);
         assert_eq!(report.remaining_entries, 1);
+        assert!(entry.exists());
+    }
+
+    #[test]
+    fn cleanup_refuses_to_remove_a_cache_with_an_active_user() {
+        let root = tempfile::tempdir().expect("cache root should be created");
+        let entry = root.path().join("project").join("entry");
+        fs::create_dir_all(&entry).expect("entry should be created");
+        fs::write(entry.join("artifact"), b"active").expect("artifact should be written");
+        let _lease = super::super::artifact_cache_lock::acquire_shared(root.path())
+            .expect("active user should acquire shared lease");
+
+        let error = clean_cache_at(
+            root.path(),
+            &ArtifactCacheCleanPolicy {
+                remove_all: true,
+                ..ArtifactCacheCleanPolicy::default()
+            },
+        )
+        .expect_err("cleanup must not race an active cache user");
+
+        assert_eq!(error.kind(), std::io::ErrorKind::WouldBlock);
         assert!(entry.exists());
     }
 

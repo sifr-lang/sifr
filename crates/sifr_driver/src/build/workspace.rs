@@ -91,6 +91,7 @@ impl ArtifactCacheReport {
 pub(crate) struct CachedArtifactEntry {
     workspace_root: PathBuf,
     report: ArtifactCacheReport,
+    _lease: super::artifact_cache_lock::ArtifactCacheLease,
 }
 
 impl CachedArtifactEntry {
@@ -108,6 +109,7 @@ pub(crate) struct PendingCachedArtifact {
     staging_root: PathBuf,
     key_material: String,
     report: ArtifactCacheReport,
+    lease: Option<super::artifact_cache_lock::ArtifactCacheLease>,
 }
 
 impl PendingCachedArtifact {
@@ -116,7 +118,7 @@ impl PendingCachedArtifact {
     }
 
     pub(crate) fn commit(
-        self,
+        mut self,
         required_paths: &[&Path],
     ) -> Result<CachedArtifactEntry, Vec<RenderedDiagnostic>> {
         for required_path in required_paths {
@@ -142,13 +144,17 @@ impl PendingCachedArtifact {
         write_cache_metadata(&self.staging_root, &metadata)?;
 
         match std::fs::rename(&self.staging_root, &self.final_root) {
-            Ok(()) => Ok(CachedArtifactEntry {
-                workspace_root: self.final_root.clone(),
-                report: ArtifactCacheReport {
+            Ok(()) => {
+                let lease = self.take_lease()?;
+                Ok(CachedArtifactEntry {
                     workspace_root: self.final_root.clone(),
-                    ..self.report.clone()
-                },
-            }),
+                    report: ArtifactCacheReport {
+                        workspace_root: self.final_root.clone(),
+                        ..self.report.clone()
+                    },
+                    _lease: lease,
+                })
+            }
             Err(error)
                 if matches!(
                     error.kind(),
@@ -168,6 +174,7 @@ impl PendingCachedArtifact {
                     .all(|relative| self.final_root.join(relative).exists())
                 {
                     let _ = remove_cache_workspace(&self.staging_root);
+                    let lease = self.take_lease()?;
                     Ok(CachedArtifactEntry {
                         workspace_root: self.final_root.clone(),
                         report: ArtifactCacheReport {
@@ -176,6 +183,7 @@ impl PendingCachedArtifact {
                             workspace_root: self.final_root.clone(),
                             ..self.report.clone()
                         },
+                        _lease: lease,
                     })
                 } else {
                     Err(vec![crate::diagnostics::diagnostic_with_code(
@@ -193,6 +201,17 @@ impl PendingCachedArtifact {
                 DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
             )]),
         }
+    }
+
+    fn take_lease(
+        &mut self,
+    ) -> Result<super::artifact_cache_lock::ArtifactCacheLease, Vec<RenderedDiagnostic>> {
+        self.lease.take().ok_or_else(|| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                "generated artifact cache lease was not available during commit",
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            )]
+        })
     }
 }
 
@@ -213,6 +232,13 @@ pub(crate) fn prepare_cached_artifact(
     key_material: &str,
     required_paths: &[&Path],
 ) -> Result<PreparedArtifactCache, Vec<RenderedDiagnostic>> {
+    let lease =
+        super::artifact_cache_lock::acquire_shared(&artifact_cache_root()).map_err(|error| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                format!("failed to acquire generated artifact cache lease: {error}"),
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            )]
+        })?;
     let scope_path = scope.canonicalize().unwrap_or_else(|_| scope.to_path_buf());
     let full_key_material = artifact_key_material(namespace, &scope_path, key_material);
     let cache_key = deterministic_hash(&full_key_material);
@@ -247,6 +273,7 @@ pub(crate) fn prepare_cached_artifact(
                             cache_hit: true,
                             miss_reason: None,
                         },
+                        _lease: lease,
                     }));
                 }
                 miss_reason = Some("artifact_missing".to_string());
@@ -290,6 +317,7 @@ pub(crate) fn prepare_cached_artifact(
             cache_hit: false,
             miss_reason,
         },
+        lease: Some(lease),
     }))
 }
 
@@ -478,6 +506,10 @@ mod tests {
                 cache_hit: false,
                 miss_reason: Some("not_found".to_string()),
             },
+            lease: Some(
+                crate::build::artifact_cache_lock::acquire_shared(&root.join("cache"))
+                    .expect("test cache lease should be acquired"),
+            ),
         };
 
         let entry = pending.commit(&[]).expect("commit should use winner dir");
@@ -520,6 +552,10 @@ mod tests {
                 cache_hit: false,
                 miss_reason: Some("not_found".to_string()),
             },
+            lease: Some(
+                crate::build::artifact_cache_lock::acquire_shared(&root.join("cache"))
+                    .expect("test cache lease should be acquired"),
+            ),
         };
 
         let diagnostics = match pending.commit(&[]) {

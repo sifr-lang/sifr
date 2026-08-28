@@ -598,6 +598,15 @@
   },
   "selected_areas": [
     {
+      "area": "documentation",
+      "suites": [
+        "architecture"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
       "area": "rust_interop",
       "suites": [
         "matrix",
@@ -747,15 +756,6 @@
       "suites": [
         "guardrails",
         "offline-merge-smoke"
-      ],
-      "resource_classes": [
-        "default-local"
-      ]
-    },
-    {
-      "area": "documentation",
-      "suites": [
-        "architecture"
       ],
       "resource_classes": [
         "default-local"

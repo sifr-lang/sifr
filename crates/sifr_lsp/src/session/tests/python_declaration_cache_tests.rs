@@ -23,6 +23,23 @@ fn debug_cache_stats_reports_python_declaration_work() {
 }
 
 #[test]
+fn external_package_changes_invalidate_without_watcher_notification() {
+    let (mut session, temp, uri) = open_fixture(SOURCE);
+    let _ = request(&mut session, "textDocument/completion", &uri, 6, 15);
+    assert_eq!(session.python_declarations.probe_runs(), 1);
+
+    let lock_path = temp.path().join("uv.lock");
+    let mut lock = std::fs::read_to_string(&lock_path).expect("read Python lock");
+    lock.push('\n');
+    std::fs::write(&lock_path, lock).expect("update Python lock");
+
+    let _ = request(&mut session, "textDocument/completion", &uri, 6, 15);
+    assert_eq!(session.python_declaration_cache_stats().hits, 0);
+    assert_eq!(session.python_declaration_cache_stats().misses, 2);
+    assert_eq!(session.python_declarations.probe_runs(), 2);
+}
+
+#[test]
 fn cancelled_python_declaration_request_stops_before_probe() {
     let (mut session, _temp, uri) = open_fixture(SOURCE);
     let id = RequestId::from(150);

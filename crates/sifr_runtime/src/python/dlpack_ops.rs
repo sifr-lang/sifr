@@ -1,5 +1,3 @@
-#![allow(unsafe_code)]
-
 use super::object_ops::clone_handle;
 use super::{ObjectHandle, PythonError, PythonRuntimeError};
 use pyo3::ffi;
@@ -84,6 +82,7 @@ struct TrackedDlpackTensor {
 }
 
 impl Drop for TrackedDlpackTensor {
+    #[allow(unsafe_code)]
     fn drop(&mut self) {
         if !self.released {
             // SAFETY: this tracked entry owns the producer deleter until
@@ -277,6 +276,7 @@ pub fn dlpack_strides(handle: DlpackHandle) -> Result<Vec<i64>, PythonError> {
     dlpack_metadata(handle).map(|(_, strides)| strides)
 }
 
+#[allow(unsafe_code)]
 fn consume_capsule(
     py: Python<'_>,
     owner: Py<PyAny>,
@@ -381,6 +381,7 @@ fn dlpack_metadata(handle: DlpackHandle) -> Result<(Vec<i64>, Vec<i64>), PythonE
         .ok_or_else(|| closed_error(handle.0))
 }
 
+#[allow(unsafe_code)]
 fn capsule_name<'a>(
     capsule: &'a Bound<'_, PyCapsule>,
     context: &'static str,
@@ -736,6 +737,7 @@ obj = DlpackExporter()
         .map_err(PythonError::runtime)?
     }
 
+    #[allow(unsafe_code)]
     fn capsule(
         py: Python<'_>,
         device_type: i32,
@@ -781,6 +783,7 @@ obj = DlpackExporter()
         Ok(capsule.into_any().unbind())
     }
 
+    #[allow(unsafe_code)]
     fn scalar_capsule(py: Python<'_>) -> Result<Py<PyAny>, PythonError> {
         let mut owned = Box::new(TestManagedTensor {
             managed: DLManagedTensor {
@@ -822,6 +825,7 @@ obj = DlpackExporter()
         DLDataType { code, bits, lanes }
     }
 
+    #[allow(unsafe_code)]
     unsafe extern "C" fn test_capsule_destructor(capsule: *mut ffi::PyObject) {
         let name = unsafe { ffi::PyCapsule_GetName(capsule) };
         if name.is_null() {
@@ -837,6 +841,7 @@ obj = DlpackExporter()
         }
     }
 
+    #[allow(unsafe_code)]
     unsafe extern "C" fn test_deleter(tensor: *mut DLManagedTensor) {
         TEST_DELETER_CALLS.fetch_add(1, Ordering::SeqCst);
         if !tensor.is_null() {

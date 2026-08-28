@@ -301,13 +301,13 @@ impl RustEmitter {
                     expr: crate::RustExpr::Ident("__sifr_async_next".to_string()),
                     arms: vec![
                         crate::RustMatchArm {
-                            pattern: format!("Some({target_pattern})"),
+                            pattern: format!("Some({target_pattern})").into(),
                             bindings: vec![target.to_string()],
                             guard: None,
                             body: lowered_body.clone(),
                         },
                         crate::RustMatchArm {
-                            pattern: "None".to_string(),
+                            pattern: "None".into(),
                             bindings: vec![],
                             guard: None,
                             body: vec![RustStmt::Break],
