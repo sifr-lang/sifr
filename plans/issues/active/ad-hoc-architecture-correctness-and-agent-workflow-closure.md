@@ -53,7 +53,7 @@ The following review claims are explicitly excluded:
 | M8 | LSP hot paths and compiler-service dependency direction | implementation staged; integration deferred | [#3560](https://github.com/sifr-lang/sifr/pull/3560) | `da39eb709ddffef80d3dc6297cde959f88d85bc5` |
 | M9 | Method-lowering authority and unsafe-code documentation | implementation staged; integration deferred | [#3561](https://github.com/sifr-lang/sifr/pull/3561) | `f6d1f4edaab6a2bfa0952ab89fd1980bec284703` |
 | M10 | Collision-resistant cache identity and cache lifecycle | implementation staged; second-review defect deferred | [#3562](https://github.com/sifr-lang/sifr/pull/3562) | `2e2ad86fb80ee916542738967935039c157fa18e` |
-| M11 | Real fuzz and semantic property targets | pending | | |
+| M11 | Real fuzz and semantic property targets | implementation staged; create-PR gate defect deferred | [#3563](https://github.com/sifr-lang/sifr/pull/3563) | `7664b902bf4697ca20bc39c683cdb617d26032e2` |
 | M12 | Maintainability ratchets and evidence-based flow decisions | pending | | |
 | M13 | Phase closure and whole-phase review | pending | | |
 
@@ -308,6 +308,34 @@ near-limit source concentration. Narrow broad dead-code/glob-export surfaces.
 Instrument nested-inference divergence, remove the proven narrowing no-op, and
 record an evidence-backed keep/refactor/remove decision for the flow graph.
 
+Deferred M11 review and gate follow-ups:
+
+- Replace the forbidden `SIFR-TYPE-0001` catch-all in the diagnostic fuzz
+  target with a specific active diagnostic identity. The one permitted
+  create-PR gate found this M11-owned hygiene defect after both allowed review
+  rounds had finished. The gate was not repeated, and the merge gate did not
+  run.
+- Add `SIFR-INTERNAL-0003` to the diagnostic catalog and baseline-coverage
+  registry, with executable coverage. This active code predates M11 and the
+  create-PR gate reported the existing gap.
+- Distinguish a missing fuzz tool, an offline dependency failure, an
+  instrumented-build failure, a target timeout, and a real fuzz finding in the
+  sustained result. Keep a bounded output tail for failed build preflights.
+- Reconcile the fuzz area `timeout_seconds` and resource-class declaration with
+  the cold-build preflight and the release budget.
+- Remove the unused fuzz-project `serde_json` dependency.
+- State or enforce the one-run contract for Rust semantic-property entries.
+  The current `cargo-test` adapter does not use `repeat_runs`.
+- Add a cross-process deterministic-codegen property before a release claim
+  depends on process-randomized ordering.
+- Hoist project-graph fixture creation out of the fuzz hot loop. Expand the
+  ownership and valid-codegen grammars beyond fixed literal and statement
+  templates.
+- Give sustained target variants globally unique release-evidence labels before
+  the suite enters release-evidence custody.
+- Update the remaining archived phase-29 suite names and the harness comment
+  that still use the old `fuzz-smoke` wording.
+
 Deferred M3 review follow-ups:
 
 - Extend the compiler/tooling direct-read roots to `sifr_stdlib_manifest` and
@@ -444,9 +472,6 @@ Deferred M10 review and gate follow-ups:
   stem. Count and remove each path once. Add a lifecycle test for both
   companions without the source entry. The final allowed M10 review found this
   new mechanism defect, so it is deferred without a third review.
-- Classify the `sifr_frontend` custom build-script target in the coverage
-  matrix. Both one-shot M10 gates reached this M10-owned omission and were not
-  repeated.
 - Normalize the Rust interop backend manifest path before it enters the probe
   cache key.
 - Add a same-key concurrent `sifr test` reproduction for the stable execution
@@ -788,3 +813,45 @@ tree and are keyed by candidate SHA.
 - Integration remains deferred with the stacked chain under the user's
   instruction to continue through the phase before restoring the distinct
   human reviewer.
+
+### M11 Deferred Integration Handoff
+
+- Branch: `codex/architecture-audit-closure-m11`.
+- Stacked draft PR: [#3563](https://github.com/sifr-lang/sifr/pull/3563), based
+  on the M10 branch.
+- Initial candidate:
+  `b62fe3afaf82315eccad495d3287a1fec5685b7d`. The initial exact-SHA Opus
+  review found that a cold sanitizer build could consume the first fuzz
+  target's time budget while the non-blocking CI job stayed green.
+- Final implementation candidate:
+  `7664b902bf4697ca20bc39c683cdb617d26032e2`. It adds a separate 1,200-second
+  runner build preflight and a blocking CI build step before timed target
+  execution. A cold offline build with a fresh target directory passed in 2
+  minutes 8 seconds. The one permitted remediation review returned
+  `SATISFIED` with no blocking findings.
+- Implementation: six libFuzzer targets cover parsing, lowering, ownership,
+  generated-Rust validation, diagnostic presentation, and project graphs.
+  Rust semantic properties cover union normalization, narrowing,
+  incremental/full diagnostics equivalence, and deterministic codegen. The
+  deterministic suite is now named `mutation-smoke`. Nightly and release
+  profiles select the non-blocking `sustained-fuzz` suite.
+- Targeted validation: all four semantic-property tests passed; the blocking
+  fuzz/property area passed 43 variants; all six fuzz targets built offline
+  and passed the 45-second nightly sustained lane; workspace and fuzz-project
+  Clippy passed with warnings denied; formatting, coverage readiness,
+  architecture, runner self-tests, profile plans, HIR maintainability, and the
+  3,292-file size guard passed.
+- Review evidence is published in PR #3563 and preserved outside Git under
+  both reviewed SHAs.
+- The one permitted create-PR gate ran on the exact final candidate. It passed
+  generated-demo freshness, all compiler guardrails and self-tests, runner
+  foundations, Rust interop, and coverage readiness. It then stopped in the
+  diagnostic rules suite. The new diagnostic fuzz target used the forbidden
+  `SIFR-TYPE-0001` catch-all. The same suite also reported the pre-existing
+  missing catalog and baseline-coverage rows for `SIFR-INTERNAL-0003`.
+- The create-PR gate was not repeated. The merge gate did not run after the
+  create-PR failure. Both review rounds are exhausted, so changing the
+  implementation would require new review authority. The M11-owned defect and
+  related follow-ups are recorded under M12 above.
+- Integration remains deferred with the stacked chain and the human reviewer
+  remains skipped under the user's current instruction.
