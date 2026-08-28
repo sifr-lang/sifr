@@ -82,6 +82,7 @@ class ProfileRunner:
         self.profile_name = str(self.profile["name"])
         self.forward_args = forward_args
         self.env = os.environ.copy()
+        self.env["SIFR_VALIDATION_PROFILE"] = self.profile_name
         configured_sifr_binary = self.env.get("SIFR_GCQ_BIN") or self.env.get("SIFR_RUNTIME_PLATFORM_BIN")
         sifr_binary = (
             Path(configured_sifr_binary)

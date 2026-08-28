@@ -31,10 +31,10 @@
       "support_status": "stable",
       "owner": "compiler/hardening",
       "status": "blocking",
-      "merge_suite": "fuzz_property:fuzz-smoke",
-      "nightly_release_suite": "fuzz_property:property,fuzz_property:fuzz-smoke",
+      "merge_suite": "fuzz_property:mutation-smoke",
+      "nightly_release_suite": "fuzz_property:property,fuzz_property:mutation-smoke,fuzz_property:sustained-fuzz",
       "regression_suite": "regression:crashes",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite fuzz-smoke"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite mutation-smoke"
     },
     {
       "surface_id": "compiler_crash_ice_rule",
@@ -257,15 +257,15 @@
       "reproduction_command": "bash verification/runner/e2e/check_report_determinism.sh --profile merge"
     },
     {
-      "surface_id": "fuzz_property_smoke",
+      "surface_id": "fuzz_property_hardening",
       "guarantee_id": "hardening-oracle-rule",
       "support_status": "stable",
       "owner": "compiler/hardening",
       "status": "blocking",
-      "merge_suite": "fuzz_property:property,fuzz_property:fuzz-smoke",
-      "nightly_release_suite": "fuzz_property:property,fuzz_property:fuzz-smoke",
+      "merge_suite": "fuzz_property:property,fuzz_property:mutation-smoke",
+      "nightly_release_suite": "fuzz_property:property,fuzz_property:mutation-smoke,fuzz_property:sustained-fuzz",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite property --suite fuzz-smoke"
+      "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite property --suite mutation-smoke"
     },
     {
       "surface_id": "cpython_hand_seeded_differential",

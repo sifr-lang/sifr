@@ -123,7 +123,7 @@ surface coverage are enforced by `diagnostics:rules`.
 Deterministic local fuzz/property evidence:
 
 ```bash
-uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite property --suite fuzz-smoke
+uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite property --suite mutation-smoke
 ```
 
 Runtime/platform sanitizer evidence:

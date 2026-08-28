@@ -15,7 +15,8 @@ from .oss_and_determinism import (
     run_determinism_scale_suite,
     run_oss_suite,
 )
-from .property_and_fuzz import run_fuzz_smoke_suite, run_property_suite
+from .coverage_fuzz import run_sustained_fuzz_suite
+from .property_and_fuzz import run_mutation_smoke_suite, run_property_suite
 from .self_tests_and_baselines import run_baseline_suite, run_self_tests
 
 
@@ -138,8 +139,13 @@ def main() -> int:
                 suite=suite,
                 repo_root=repo_root,
             )
-        if runner == "fuzz-smoke":
-            return run_fuzz_smoke_suite(
+        if runner == "mutation-smoke":
+            return run_mutation_smoke_suite(
+                suite=suite,
+                repo_root=repo_root,
+            )
+        if runner == "sustained-fuzz":
+            return run_sustained_fuzz_suite(
                 suite=suite,
                 repo_root=repo_root,
             )

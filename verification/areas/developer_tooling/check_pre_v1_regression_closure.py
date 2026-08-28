@@ -20,7 +20,7 @@ CONTRACT_PATH = AREA_ROOT / "pre_v1_regression_closure.json"
 CREATE_PR_FIXTURES = (
     REPO_ROOT / "verification" / "areas" / "core_language" / "data" / "create_pr_e2e_manifest.json"
 )
-FUZZ_MANIFEST = REPO_ROOT / "verification" / "areas" / "fuzz_property" / "fuzz_smoke_manifest.json"
+FUZZ_MANIFEST = REPO_ROOT / "verification" / "areas" / "fuzz_property" / "mutation_smoke_manifest.json"
 PERFORMANCE_MANIFEST = REPO_ROOT / "verification" / "areas" / "performance" / "data" / "benchmark_manifest.json"
 PERFORMANCE_TREND = REPO_ROOT / "verification" / "areas" / "performance" / "data" / "trend" / "current.json"
 ECOSYSTEM_MANIFEST = (

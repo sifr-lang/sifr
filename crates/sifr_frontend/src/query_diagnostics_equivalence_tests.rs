@@ -124,6 +124,29 @@ fn project_edit_queries_match_clean_contexts() {
     );
 }
 
+#[test]
+fn semantic_property_incremental_queries_match_full_recomputation() {
+    let variants = [
+        "def value() -> int:\n    return 1\n",
+        "def value() -> int:\n    return 2\n",
+        "def value() -> str:\n    return \"wrong\"\n",
+        "def value() -> int:\n    return 3\n",
+    ];
+    let main = ModuleId(0);
+    let mut context = single_file_context(variants[0]);
+
+    for (index, source) in variants.iter().enumerate() {
+        if index > 0 {
+            update_module(&mut context, main, source, index as i64 + 1);
+        }
+        assert_eq!(
+            diagnostics_for_module(&mut context, main),
+            clean_single_file_diagnostics(source),
+            "incremental diagnostics differ after edit {index}",
+        );
+    }
+}
+
 fn single_file_context(source: &str) -> FrontendContext {
     FrontendContext::load_single_file(FrontendInput {
         path: SourcePath::new("main.sifr"),

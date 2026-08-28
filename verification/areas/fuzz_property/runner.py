@@ -12,8 +12,9 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT / "verification" / "runner"))
 
+from sifr_verify.hardening.coverage_fuzz import run_sustained_fuzz_suite  # noqa: E402
 from sifr_verify.hardening.property_and_fuzz import (  # noqa: E402
-    run_fuzz_smoke_suite,
+    run_mutation_smoke_suite,
     run_property_suite,
 )
 
@@ -50,7 +51,12 @@ def main(argv: list[str] | None = None) -> int:
         emit_case_timings(str(suite_result["name"]), suite_result)
     total_variants = sum(int(result["total_variants"]) for result in suite_results)
     total_failures = sum(int(result["total_failures"]) for result in suite_results)
-    blocking_failures = total_failures
+    blocking_failures = sum(
+        int(result["total_failures"])
+        for result in suite_results
+        if bool(result.get("blocking"))
+    )
+    non_blocking_failures = total_failures - blocking_failures
     result_payload = {
         "schema_version": 1,
         "area": "fuzz_property",
@@ -61,7 +67,7 @@ def main(argv: list[str] | None = None) -> int:
             "total_variants": total_variants,
             "total_failures": total_failures,
             "blocking_failures": blocking_failures,
-            "non_blocking_failures": 0,
+            "non_blocking_failures": non_blocking_failures,
         },
     }
     result_path = REPO_ROOT / args.result_json
@@ -72,7 +78,7 @@ def main(argv: list[str] | None = None) -> int:
     if blocking_failures > 0:
         print(
             f"verification failed: variants={total_variants}, failures={total_failures}, "
-            f"blocking_failures={blocking_failures}, non_blocking_failures=0",
+            f"blocking_failures={blocking_failures}, non_blocking_failures={non_blocking_failures}",
             file=sys.stderr,
         )
         return 1
@@ -80,7 +86,7 @@ def main(argv: list[str] | None = None) -> int:
     summary_prefix = "fuzz/property verification ok"
     print(
         f"{summary_prefix}: variants={total_variants}, failures={total_failures}, "
-        f"blocking_failures={blocking_failures}, non_blocking_failures=0"
+        f"blocking_failures={blocking_failures}, non_blocking_failures={non_blocking_failures}"
     )
     return 0
 
@@ -107,13 +113,15 @@ def hardening_suite(area_suite: dict[str, Any]) -> dict[str, Any]:
     command = str(case.get("command"))
     if name == "property" and command != "property-index":
         raise SystemExit("property suite must use property-index command")
-    if name == "fuzz-smoke" and command != "fuzz-smoke-index":
-        raise SystemExit("fuzz-smoke suite must use fuzz-smoke-index command")
+    if name == "mutation-smoke" and command != "mutation-smoke-index":
+        raise SystemExit("mutation-smoke suite must use mutation-smoke-index command")
+    if name == "sustained-fuzz" and command != "sustained-fuzz-index":
+        raise SystemExit("sustained-fuzz suite must use sustained-fuzz-index command")
     return {
         "name": name,
         "runner": name,
         "owner": "compiler/hardening",
-        "blocking": True,
+        "blocking": name != "sustained-fuzz",
         "index": str(case.get("entry")),
     }
 
@@ -124,7 +132,9 @@ def run_suite(area_suite: dict[str, Any]) -> dict[str, Any]:
     suite = hardening_suite(area_suite)
     if suite["runner"] == "property":
         return run_property_suite(suite=suite, repo_root=REPO_ROOT)
-    return run_fuzz_smoke_suite(suite=suite, repo_root=REPO_ROOT)
+    if suite["runner"] == "mutation-smoke":
+        return run_mutation_smoke_suite(suite=suite, repo_root=REPO_ROOT)
+    return run_sustained_fuzz_suite(suite=suite, repo_root=REPO_ROOT)
 
 
 def run_cargo_smoke_suite(area_suite: dict[str, Any]) -> dict[str, Any]:

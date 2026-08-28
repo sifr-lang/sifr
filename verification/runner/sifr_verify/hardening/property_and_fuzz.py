@@ -21,7 +21,7 @@ from .core import (
 )
 from .fixedbugs_and_crashes import contains_internal_panic
 
-FUZZ_SMOKE_MANIFEST = Path("verification/areas/fuzz_property/fuzz_smoke_manifest.json")
+MUTATION_SMOKE_MANIFEST = Path("verification/areas/fuzz_property/mutation_smoke_manifest.json")
 REQUIRED_TARGET_IDS = {
     "parse_check_entrypoint",
     "hir_type_ownership_entrypoint",
@@ -94,17 +94,23 @@ def run_property_suite(
         repeat_runs = entry.get("repeat_runs", 2)
         assert_no_panic = bool(entry.get("assert_no_panic", True))
 
-        if command_name not in {"check", "run", "build", "test"}:
+        if command_name not in {"check", "run", "build", "test", "cargo-test"}:
             mismatches.append("command")
         if not isinstance(expected_exit, int):
             mismatches.append("expect_exit_code")
-        if not isinstance(repeat_runs, int) or repeat_runs < 2:
+        minimum_runs = 1 if command_name == "cargo-test" else 2
+        if not isinstance(repeat_runs, int) or repeat_runs < minimum_runs:
             mismatches.append("repeat_runs")
         entry_path = repo_root / str(entry_path_raw) if isinstance(entry_path_raw, str) else None
         if entry_path is None or not entry_path.is_file():
             mismatches.append("entry")
         if not isinstance(diagnostic_format, str) or not diagnostic_format:
             mismatches.append("diagnostic_format")
+        if command_name == "cargo-test":
+            if not isinstance(entry.get("cargo_package"), str) or not entry["cargo_package"]:
+                mismatches.append("cargo_package")
+            if not isinstance(entry.get("test_filter"), str) or not entry["test_filter"]:
+                mismatches.append("test_filter")
 
         if mismatches:
             result["total_variants"] += 1
@@ -121,6 +127,16 @@ def run_property_suite(
             continue
 
         assert entry_path is not None
+        if command_name == "cargo-test":
+            cargo_result = run_cargo_property(entry=entry, repo_root=repo_root)
+            case_result["variants"].append(cargo_result)
+            result["total_variants"] += 1
+            if cargo_result["status"] != "pass":
+                result["total_failures"] += 1
+                result["failed_cases"] += 1
+            result["cases"].append(case_result)
+            continue
+
         outputs: list[tuple[int, str, str]] = []
         for run_index in range(repeat_runs):
             exit_code, stdout, stderr, elapsed_ms, argv = run_variant(
@@ -193,6 +209,45 @@ def run_property_suite(
         result["cases"].append(case_result)
 
     return result
+
+
+def run_cargo_property(*, entry: dict[str, Any], repo_root: Path) -> dict[str, Any]:
+    argv = [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        str(entry["cargo_package"]),
+        str(entry["test_filter"]),
+        "--",
+        "--nocapture",
+    ]
+    started = time.perf_counter()
+    proc = subprocess.run(
+        argv,
+        cwd=repo_root,
+        env={**os.environ, "CARGO_NET_OFFLINE": "true"},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    elapsed_ms = (time.perf_counter() - started) * 1000.0
+    mismatches: list[str] = []
+    if proc.returncode != int(entry["expect_exit_code"]):
+        mismatches.append("unexpected-exit")
+    if bool(entry.get("assert_no_panic", True)) and contains_internal_panic(
+        proc.stdout + proc.stderr
+    ):
+        mismatches.append("panic-signal")
+    return {
+        "label": "cargo-test",
+        "status": "pass" if not mismatches else "fail",
+        "mismatches": mismatches,
+        "expected_exit_code": int(entry["expect_exit_code"]),
+        "actual_exit_code": proc.returncode,
+        "duration_ms": round(elapsed_ms, 3),
+        "argv": argv,
+    }
 
 
 def deterministic_mutations(seed_source: str, iterations: int, random_seed: int) -> list[str]:
@@ -283,7 +338,7 @@ def deterministic_mutations(seed_source: str, iterations: int, random_seed: int)
     return corpus
 
 
-def run_fuzz_smoke_suite(
+def run_mutation_smoke_suite(
     *,
     suite: dict[str, Any],
     repo_root: Path,
@@ -303,7 +358,7 @@ def run_fuzz_smoke_suite(
         "name": suite_name,
         "owner": suite.get("owner", "unknown"),
         "blocking": bool(suite.get("blocking", False)),
-        "runner": "fuzz-smoke",
+        "runner": "mutation-smoke",
         "index": str(index_path.relative_to(repo_root)),
         "cases": [],
         "failed_cases": 0,
@@ -316,7 +371,7 @@ def run_fuzz_smoke_suite(
     mismatches.extend(validate_fuzz_target_rules(payload, repo_root))
 
     case_result = {
-        "id": payload.get("id", "fuzz-smoke"),
+        "id": payload.get("id", "mutation-smoke"),
         "variants": [],
     }
 
@@ -335,7 +390,7 @@ def run_fuzz_smoke_suite(
         return result
 
     for target in payload["targets"]:
-        target_result = run_fuzz_target_smoke(target=target, repo_root=repo_root)
+        target_result = run_mutation_target_smoke(target=target, repo_root=repo_root)
         result["total_variants"] += int(target_result["total_variants"])
         result["total_failures"] += int(target_result["total_failures"])
         if int(target_result["total_failures"]) > 0:
@@ -344,7 +399,7 @@ def run_fuzz_smoke_suite(
     return result
 
 
-def run_fuzz_target_smoke(*, target: dict[str, Any], repo_root: Path) -> dict[str, Any]:
+def run_mutation_target_smoke(*, target: dict[str, Any], repo_root: Path) -> dict[str, Any]:
     coverage_mode = str(target["coverage_mode"])
     if str(target["input_grammar"]) == "sifr-source" and coverage_mode == "deterministic-smoke":
         return run_source_mutation_target(target=target, repo_root=repo_root)
@@ -642,7 +697,7 @@ def load_seed_sources(*, target: dict[str, Any], repo_root: Path) -> list[tuple[
 
 
 def load_known_targets(repo_root: Path) -> dict[str, dict[str, Any]]:
-    manifest_path = repo_root / FUZZ_SMOKE_MANIFEST
+    manifest_path = repo_root / MUTATION_SMOKE_MANIFEST
     if not manifest_path.is_file():
         raise SystemExit(f"fuzz target rules manifest missing: {manifest_path}")
     payload = json.loads(manifest_path.read_text(encoding="utf-8"))

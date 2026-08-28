@@ -711,10 +711,12 @@
       "area": "fuzz_property",
       "suites": [
         "property",
-        "fuzz-smoke"
+        "mutation-smoke",
+        "sustained-fuzz"
       ],
       "resource_classes": [
-        "default-local"
+        "default-local",
+        "long-running"
       ]
     },
     {

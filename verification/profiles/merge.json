@@ -704,7 +704,7 @@
     {
       "area": "fuzz_property",
       "suites": [
-        "fuzz-smoke"
+        "mutation-smoke"
       ],
       "resource_classes": [
         "default-local"

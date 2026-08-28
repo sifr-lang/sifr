@@ -12,7 +12,8 @@ This document defines the canonical suite taxonomy for compiler verification har
 | `fixedbugs` | Permanent issue-linked regressions for resolved compiler bugs. | yes | compiler/hardening | regression index, issue/root-cause metadata, run summary |
 | `crashes` | Visible sentinel corpus for unresolved crashes/invariant failures. | yes | compiler/hardening | sentinel index, issue linkage, promotion log |
 | `property` | Invariant tests for deterministic/high-value compiler behaviors. | yes | compiler/hardening | property manifest, deterministic run summary |
-| `fuzz-smoke` | Deterministic local fuzz smoke over curated corpora. | yes | compiler/hardening | seed corpus manifest, deterministic run summary |
+| `mutation-smoke` | Run deterministic source mutations over curated corpora. | yes | compiler/hardening | seed corpus manifest, deterministic run summary |
+| `sustained-fuzz` | Run coverage-guided compiler fuzz targets in nightly and release lanes. | no | compiler/hardening | target manifest, corpus, crash artifacts, run summary |
 | `oss-curated` | Small pinned curated real-world gate that blocks merges. | yes | compiler/verification | corpus manifest, per-project outcomes, run summary |
 | `ecosystem-broader` | Larger non-blocking compatibility suite for signal and signal queue generation. | no | compiler/verification | suite manifest, signal report |
 | `algorithmic_compatibility` | LeetCode/algorithm corpus compatibility with representative merge subset and full taxonomy deltas. | yes for representative/profile checks | algorithmic/compatibility | profile manifest, taxonomy/result baselines, per-fixture result artifacts |

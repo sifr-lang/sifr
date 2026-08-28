@@ -1,0 +1,60 @@
+[package]
+name = "sifr-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4.13"
+serde_json = "1.0.151"
+sifr_codegen = { path = "../../crates/sifr_codegen" }
+sifr_diagnostics = { path = "../../crates/sifr_diagnostics" }
+sifr_driver = { path = "../../crates/sifr_driver" }
+sifr_frontend = { path = "../../crates/sifr_frontend" }
+sifr_package = { path = "../../crates/sifr_package" }
+sifr_syntax = { path = "../../crates/sifr_syntax" }
+
+[[bin]]
+name = "parser"
+path = "fuzz_targets/parser.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "lowering"
+path = "fuzz_targets/lowering.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "ownership"
+path = "fuzz_targets/ownership.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "codegen_validation"
+path = "fuzz_targets/codegen_validation.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "diagnostics"
+path = "fuzz_targets/diagnostics.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "project_graph"
+path = "fuzz_targets/project_graph.rs"
+test = false
+doc = false
+bench = false

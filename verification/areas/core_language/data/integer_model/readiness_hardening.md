@@ -24,7 +24,7 @@ Integer-specific fuzz/property seeds are checked into `verification/areas/fuzz_p
 - `integer_external_boundaries_seed.sifr` covers JSON web/string integer profile handling and JSON digit-limit rejection.
 - `integer_fixed_width_helpers_seed.sifr` covers fixed-width checked/wrapping/saturating/overflowing helper surfaces.
 
-The seeds are registered in both the deterministic property manifest and the fuzz-smoke seed corpus so they run in the existing verification hardening framework.
+The seeds are registered in both the deterministic property manifest and the mutation-smoke seed corpus, so the verification hardening framework runs them.
 
 ## Panic-Shape Sweep
 

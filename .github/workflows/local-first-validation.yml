@@ -49,8 +49,8 @@ jobs:
       - name: Run local-first profile
         run: bash scripts/run_all_tests.sh --profile "${{ matrix.profile }}"
 
-  smoke-fuzz-property:
-    name: smoke-fuzz-property
+  mutation-smoke-property:
+    name: mutation-smoke-property
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -62,8 +62,48 @@ jobs:
         with:
           version-file: verification/pyproject.toml
           checksum: 68a509da24b06b4223a1c0175fb5eb5bc79342b76cbeff0cfe51ac3f5b17b6b2
-      - name: Run smoke fuzz/property checks
-        run: uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke
+      - name: Run mutation smoke and property checks
+        run: uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite mutation-smoke
+
+  sustained-fuzz:
+    name: sustained-fuzz-${{ matrix.profile }}
+    runs-on: ubuntu-24.04
+    if: github.event_name != 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [nightly, release]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0 # Rust 1.98.0
+        with:
+          toolchain: nightly
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version-file: verification/pyproject.toml
+          checksum: 68a509da24b06b4223a1c0175fb5eb5bc79342b76cbeff0cfe51ac3f5b17b6b2
+      - name: Install pinned cargo-fuzz
+        run: cargo install cargo-fuzz --version 0.13.2 --locked
+      - name: Fetch sustained fuzz dependencies
+        run: cargo +nightly fetch --manifest-path verification/fuzz/Cargo.toml --locked
+      - name: Build sustained fuzz targets
+        run: CARGO_NET_OFFLINE=true cargo +nightly fuzz build --fuzz-dir verification/fuzz
+      - name: Run sustained coverage-guided fuzzing
+        env:
+          SIFR_VALIDATION_PROFILE: ${{ matrix.profile }}
+        run: uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite sustained-fuzz
+      - name: Upload sustained fuzz evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sustained-fuzz-${{ matrix.profile }}
+          path: |
+            target/verification/areas/fuzz-property-results.json
+            target/verification/fuzz/artifacts/
+          if-no-files-found: warn
 
   deterministic-report-signature:
     name: deterministic-report-signature
