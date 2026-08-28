@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
 import time
 from pathlib import Path
 from typing import Any
 
 from .fixedbugs_and_crashes import contains_internal_panic
+from .core import run_captured_command
 
 OUTPUT_TAIL_BYTES = 16 * 1024
 
@@ -78,10 +78,7 @@ def run_sustained_fuzz_suite(
         return result
 
     assert isinstance(budget, int)
-    print(
-        f"  suite={suite_name} owner={suite.get('owner', 'unknown')} "
-        f"profile={profile} seconds_per_target={budget}"
-    )
+    print(f"  suite={suite_name} owner={suite.get('owner', 'unknown')} profile={profile} seconds_per_target={budget}")
     build_case = build_fuzz_project(repo_root=repo_root)
     result["cases"].append(build_case)
     result["total_variants"] += 1
@@ -114,33 +111,16 @@ def build_fuzz_project(*, repo_root: Path) -> dict[str, Any]:
         "verification/fuzz",
     ]
     started = time.perf_counter()
-    timed_out = False
-    output = ""
-    try:
-        proc = subprocess.run(
-            argv,
-            cwd=repo_root,
-            env={**os.environ, "CARGO_NET_OFFLINE": "true"},
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=1_200,
-        )
-        exit_code = proc.returncode
-        output = proc.stdout + proc.stderr
-    except FileNotFoundError as error:
-        exit_code = 127
-        output = str(error)
-    except subprocess.TimeoutExpired as error:
-        exit_code = 124
-        timed_out = True
-        output = (error.stdout or "") + (error.stderr or "")
-    elapsed_ms = (time.perf_counter() - started) * 1000.0
-    mismatches = (
-        []
-        if exit_code == 0
-        else [classify_build_failure(exit_code, output, timed_out)]
+    exit_code, stdout, stderr = run_captured_command(
+        args=argv,
+        cwd=repo_root,
+        env={**os.environ, "CARGO_NET_OFFLINE": "true"},
+        timeout_secs=1_200,
     )
+    timed_out = exit_code == 124
+    output = stdout + stderr
+    elapsed_ms = (time.perf_counter() - started) * 1000.0
+    mismatches = [] if exit_code == 0 else [classify_build_failure(exit_code, output, timed_out)]
     variant = {
         "label": "sustained-fuzz-instrumented-build",
         "status": "pass" if not mismatches else "fail",
@@ -184,35 +164,19 @@ def run_coverage_fuzz_target(
         "-print_final_stats=1",
     ]
     started = time.perf_counter()
-    timed_out = False
-    try:
-        proc = subprocess.run(
-            argv,
-            cwd=repo_root,
-            env={**os.environ, "CARGO_NET_OFFLINE": "true"},
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=seconds + 120,
-        )
-        exit_code = proc.returncode
-        output = proc.stdout + proc.stderr
-    except FileNotFoundError as error:
-        exit_code = 127
-        output = str(error)
-    except subprocess.TimeoutExpired as error:
-        exit_code = 124
-        timed_out = True
-        output = (error.stdout or "") + (error.stderr or "")
+    exit_code, stdout, stderr = run_captured_command(
+        args=argv,
+        cwd=repo_root,
+        env={**os.environ, "CARGO_NET_OFFLINE": "true"},
+        timeout_secs=seconds + 120,
+    )
+    timed_out = exit_code == 124
+    output = stdout + stderr
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     mismatches: list[str] = []
     artifacts_after = {path.name for path in artifact_dir.iterdir() if path.is_file()}
     new_artifacts = sorted(artifacts_after - artifacts_before)
-    finding = (
-        bool(new_artifacts)
-        or "ERROR: libFuzzer" in output
-        or "Test unit written to" in output
-    )
+    finding = bool(new_artifacts) or "ERROR: libFuzzer" in output or "Test unit written to" in output
     if timed_out:
         mismatches.append("target-timeout")
     elif finding:
