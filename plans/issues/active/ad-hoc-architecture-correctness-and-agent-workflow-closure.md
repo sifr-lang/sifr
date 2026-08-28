@@ -54,7 +54,8 @@ The following review claims are explicitly excluded:
 | M9 | Method-lowering authority and unsafe-code documentation | implementation staged; integration deferred | [#3561](https://github.com/sifr-lang/sifr/pull/3561) | `f6d1f4edaab6a2bfa0952ab89fd1980bec284703` |
 | M10 | Collision-resistant cache identity and cache lifecycle | implementation staged; second-review defect deferred | [#3562](https://github.com/sifr-lang/sifr/pull/3562) | `2e2ad86fb80ee916542738967935039c157fa18e` |
 | M11 | Real fuzz and semantic property targets | implementation staged; create-PR gate defect deferred | [#3563](https://github.com/sifr-lang/sifr/pull/3563) | `7664b902bf4697ca20bc39c683cdb617d26032e2` |
-| M12 | Maintainability ratchets and evidence-based flow decisions | pending | | |
+| M12 | Maintainability ratchets and evidence-based flow decisions | implementation staged; second-review defect deferred | [#3564](https://github.com/sifr-lang/sifr/pull/3564) | `17d7ac63eae4a9417a2d60415c06d7de7016ce6c` |
+| M12A | Process-group deadlines and terminal signal propagation | pending | | |
 | M13 | Phase closure and whole-phase review | pending | | |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -482,6 +483,25 @@ Deferred M10 review and gate follow-ups:
   ownership boundary can serve compiler, package, driver, LSP, CLI, build
   script, and test code without adding an upward dependency.
 
+## M12A Process-Group Deadlines And Terminal Signal Propagation
+
+Close the mechanism omission found by M12's second and final review without
+running a third M12 review.
+
+Scope and acceptance criteria:
+
+- Route determinism-scale external commands and reproduction-command targets
+  through the shared process-group deadline primitive.
+- Forward terminal `SIGINT` and `SIGTERM` from the gate entrypoint to every
+  live detached child process group before exit.
+- Extend the same primitive to the two coverage-fuzz call sites identified by
+  the review so the known duplicate mechanism does not remain open.
+- Add focused negative tests proving timeout cleanup and terminal-signal
+  forwarding reach descendants rather than only the immediate child.
+- Preserve existing output-tail, timeout, and failure-classification behavior.
+- Run one exact-SHA Opus review for M12A. Do not revisit or run a third review
+  for M12.
+
 ## M13 Phase Closure And Whole-Phase Review
 
 Reconcile every milestone record, deferred finding, architecture/roadmap status,
@@ -855,3 +875,34 @@ tree and are keyed by candidate SHA.
   related follow-ups are recorded under M12 above.
 - Integration remains deferred with the stacked chain and the human reviewer
   remains skipped under the user's current instruction.
+
+### M12 Deferred Integration Handoff
+
+- Branch: `codex/architecture-audit-closure-m12`.
+- Stacked draft PR: [#3564](https://github.com/sifr-lang/sifr/pull/3564), based
+  on the M11 branch.
+- Initial candidate:
+  `13e7e9159f8a63810c6ff43cd9786381cd55d90a`. The initial exact-SHA Opus
+  review returned `NOT SATISFIED` with seven blockers covering tooling docs,
+  structured stdlib parse failures, canonical-HIR lint fixes, LSP watcher and
+  external invalidation behavior, active cache coordination, structured match
+  patterns, and stale phase-29 names.
+- Final M12 candidate:
+  `17d7ac63eae4a9417a2d60415c06d7de7016ce6c`. It remediates all seven initial
+  blockers and the M3-M11 follow-ups implemented in its reviewed diff.
+- The second and final M12 review returned `NOT SATISFIED` because the already
+  recorded M3 process-group deadline and terminal-signal follow-up remained
+  open. Under the review limit, no third M12 review will run. The mechanism is
+  now the bounded M12A item above. Review evidence is preserved outside Git at
+  `.codex/review-evidence/architecture-closure/m12-17d7ac63eae4a9417a2d60415c06d7de7016ce6c-remediation.md`.
+- Validation on the final candidate: workspace and fuzz-project Clippy passed
+  with warnings denied; formatting and whitespace checks passed; codegen,
+  package, diagnostics, runtime, lint, analysis, and compiler-service library
+  suites passed; focused active-cache, same-key cross-process, watcher,
+  external-invalidation, and codegen-boundary tests passed. Method-dispatch,
+  unsafe-ABI, codegen-invariant, maintainability, HIR, architecture,
+  TypeScript-Go transfer, diagnostic-doc, fuzz-lock, and 900-line guards all
+  passed, including applicable self-tests.
+- The single create-PR and merge gates remain reserved for the final compiler
+  candidate after M12A. Integration and the human reviewer remain deferred
+  under the user's current instruction.
