@@ -64,6 +64,14 @@ def run_sustained_fuzz_suite(
         f"  suite={suite_name} owner={suite.get('owner', 'unknown')} "
         f"profile={profile} seconds_per_target={budget}"
     )
+    build_case = build_fuzz_project(repo_root=repo_root)
+    result["cases"].append(build_case)
+    result["total_variants"] += 1
+    if build_case["variants"][0]["status"] != "pass":
+        result["failed_cases"] += 1
+        result["total_failures"] += 1
+        return result
+
     for target in payload["targets"]:
         case = run_coverage_fuzz_target(
             target=target,
@@ -76,6 +84,46 @@ def run_sustained_fuzz_suite(
             result["failed_cases"] += 1
             result["total_failures"] += 1
     return result
+
+
+def build_fuzz_project(*, repo_root: Path) -> dict[str, Any]:
+    argv = [
+        "cargo",
+        "+nightly",
+        "fuzz",
+        "build",
+        "--fuzz-dir",
+        "verification/fuzz",
+    ]
+    started = time.perf_counter()
+    try:
+        proc = subprocess.run(
+            argv,
+            cwd=repo_root,
+            env={**os.environ, "CARGO_NET_OFFLINE": "true"},
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=1_200,
+        )
+        exit_code = proc.returncode
+    except (FileNotFoundError, subprocess.TimeoutExpired) as error:
+        exit_code = 124 if isinstance(error, subprocess.TimeoutExpired) else 127
+    elapsed_ms = (time.perf_counter() - started) * 1000.0
+    mismatches = [] if exit_code == 0 else ["fuzz-project-build-failed"]
+    return {
+        "id": "fuzz_project_build",
+        "variants": [
+            {
+                "label": "instrumented-build",
+                "status": "pass" if not mismatches else "fail",
+                "mismatches": mismatches,
+                "actual_exit_code": exit_code,
+                "duration_ms": round(elapsed_ms, 3),
+                "argv": argv,
+            }
+        ],
+    }
 
 
 def run_coverage_fuzz_target(

@@ -89,6 +89,8 @@ jobs:
         run: cargo install cargo-fuzz --version 0.13.2 --locked
       - name: Fetch sustained fuzz dependencies
         run: cargo +nightly fetch --manifest-path verification/fuzz/Cargo.toml --locked
+      - name: Build sustained fuzz targets
+        run: CARGO_NET_OFFLINE=true cargo +nightly fuzz build --fuzz-dir verification/fuzz
       - name: Run sustained coverage-guided fuzzing
         env:
           SIFR_VALIDATION_PROFILE: ${{ matrix.profile }}
