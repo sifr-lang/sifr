@@ -52,7 +52,7 @@ The following review claims are explicitly excluded:
 | M7 | Canonical frontend project compilation product | implementation staged; integration deferred | [#3559](https://github.com/sifr-lang/sifr/pull/3559) | `30c7ab5e1b5bffc4a9e16f65c061e07498951fae` |
 | M8 | LSP hot paths and compiler-service dependency direction | implementation staged; integration deferred | [#3560](https://github.com/sifr-lang/sifr/pull/3560) | `da39eb709ddffef80d3dc6297cde959f88d85bc5` |
 | M9 | Method-lowering authority and unsafe-code documentation | implementation staged; integration deferred | [#3561](https://github.com/sifr-lang/sifr/pull/3561) | `f6d1f4edaab6a2bfa0952ab89fd1980bec284703` |
-| M10 | Collision-resistant cache identity and cache lifecycle | pending | | |
+| M10 | Collision-resistant cache identity and cache lifecycle | implementation staged; second-review defect deferred | [#3562](https://github.com/sifr-lang/sifr/pull/3562) | `2e2ad86fb80ee916542738967935039c157fa18e` |
 | M11 | Real fuzz and semantic property targets | pending | | |
 | M12 | Maintainability ratchets and evidence-based flow decisions | pending | | |
 | M13 | Phase closure and whole-phase review | pending | | |
@@ -438,6 +438,25 @@ Deferred M9 review follow-ups:
   structured compiler errors if focused multi-module reproductions can reach
   them from source input.
 
+Deferred M10 review and gate follow-ups:
+
+- Group ownerless test-runner `.execution` and `.target` siblings by cache-key
+  stem. Count and remove each path once. Add a lifecycle test for both
+  companions without the source entry. The final allowed M10 review found this
+  new mechanism defect, so it is deferred without a third review.
+- Classify the `sifr_frontend` custom build-script target in the coverage
+  matrix. Both one-shot M10 gates reached this M10-owned omission and were not
+  repeated.
+- Normalize the Rust interop backend manifest path before it enters the probe
+  cache key.
+- Add a same-key concurrent `sifr test` reproduction for the stable execution
+  sibling. Keep the existing cross-key isolation test.
+- Coordinate `sifr cache clean` with active cache users before it removes a
+  workspace or shared probe target.
+- Consolidate the repeated SHA-256 lowercase encoding helper only if one
+  ownership boundary can serve compiler, package, driver, LSP, CLI, build
+  script, and test code without adding an upward dependency.
+
 ## M13 Phase Closure And Whole-Phase Review
 
 Reconcile every milestone record, deferred finding, architecture/roadmap status,
@@ -727,6 +746,45 @@ tree and are keyed by candidate SHA.
   plus all ten Rust interop variants. Each then stopped only on the two M11
   delivery-taxonomy lines at current `internal_docs/architecture.md` lines 965
   and 1449. Neither gate was rerun.
+- Integration remains deferred with the stacked chain under the user's
+  instruction to continue through the phase before restoring the distinct
+  human reviewer.
+
+### M10 Deferred Integration Handoff
+
+- Branch: `codex/architecture-audit-closure-m10`.
+- Stacked draft PR: [#3562](https://github.com/sifr-lang/sifr/pull/3562), based
+  on the M9 branch.
+- Initial candidate:
+  `ed6c7c2e6181e5607d7ff952dc5985c410d42e20`.
+- The initial exact-SHA Opus review returned `NOT SATISFIED`. It found the
+  retained empty certification-serialization fallback, the fresh test
+  execution root, and orphaned external Cargo targets.
+- Final M10 implementation candidate:
+  `2e2ad86fb80ee916542738967935039c157fa18e`. It makes certification identity
+  serialization fallible, always includes both certification fragments, uses
+  a stable per-key execution sibling, reclaims execution and target siblings,
+  normalizes policy paths, fingerprints formatter sources, and publishes the
+  cache CLI page in documentation navigation.
+- The one permitted remediation review verified all three original blockers.
+  It then found a new ownerless-companion grouping defect. Under the phase
+  review limit, that mechanism is recorded under M12 above and no third review
+  ran. Both reviews are published in PR #3562 and preserved outside Git under
+  their candidate SHAs.
+- Validation: the initial broad non-E2E-pass command passed for `sifr`, driver,
+  frontend, package, and LSP. After remediation, all 17 test-runner tests, all
+  82 compiler-service tests, all 78 LSP tests, and focused certification,
+  lifecycle, invalidation, and execution tests passed. Workspace Clippy with
+  warnings denied, formatting, documentation structure, frontend cache,
+  package-manager, TypeScript-Go transfer and negative self-test, HIR, driver,
+  and the 3,289-file size guards passed.
+- The single create-PR and merge gates both ran on the exact final candidate.
+  Each passed generated-demo freshness, dependency, ownership, method,
+  unsafe-ABI, codegen-invariant, sysroot, stdlib, driver, runner-foundation,
+  and all ten Rust interop variants. Each then stopped on the unclassified new
+  frontend build-script target and the two already-recorded M11 delivery-
+  taxonomy lines at `internal_docs/architecture.md` lines 975 and 1459.
+  Neither gate was repeated.
 - Integration remains deferred with the stacked chain under the user's
   instruction to continue through the phase before restoring the distinct
   human reviewer.
