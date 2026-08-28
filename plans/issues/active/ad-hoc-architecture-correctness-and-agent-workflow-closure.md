@@ -56,7 +56,7 @@ The following review claims are explicitly excluded:
 | M11 | Real fuzz and semantic property targets | implementation staged; create-PR gate defect deferred | [#3563](https://github.com/sifr-lang/sifr/pull/3563) | `7664b902bf4697ca20bc39c683cdb617d26032e2` |
 | M12 | Maintainability ratchets and evidence-based flow decisions | implementation staged; second-review defect closed by M12A | [#3564](https://github.com/sifr-lang/sifr/pull/3564) | `17d7ac63eae4a9417a2d60415c06d7de7016ce6c` |
 | M12A | Process-group deadlines and terminal signal propagation | merged into M12 branch | [#3565](https://github.com/sifr-lang/sifr/pull/3565) | `2b0820dabf890dc19850289273ade09d8b048cd5` |
-| M12B | Restore canonical list-method lowering on structured fallback paths | pending | | |
+| M12B | Restore canonical list-method lowering on structured fallback paths | merged into M12 branch | [#3566](https://github.com/sifr-lang/sifr/pull/3566) | `c4a23973f80d8eb796e4b9c984c89a248b58ac88` |
 | M12C | Terminal-signal escalation and remaining hardening command lifecycle | pending | | |
 | M12D | Documentation mutation-registry consistency | pending | | |
 | M13 | Phase closure and whole-phase review | pending | | |
@@ -996,3 +996,26 @@ tree and are keyed by candidate SHA.
   registration drift: the executable registry has 12 cases while the inventory
   retains 8. This pre-existing M4/M12 closure defect is M12D; it is not absorbed
   into the M12A handoff commit.
+
+### M12B Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12b`.
+- Stacked PR: [#3566](https://github.com/sifr-lang/sifr/pull/3566), merged into
+  the M12 branch as `054bbe1c5277c50fb0d609fc953be4349f942e16`.
+- Exact implementation candidate:
+  `c4a23973f80d8eb796e4b9c984c89a248b58ac88`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers. It
+  verified extraction equivalence for collection argument conversion,
+  TypeVar/non-copy ownership preservation, absence of double conversion, and
+  canonical authority dispatch without new user-method interception. No
+  remediation review was needed.
+- Validation: the focused strict-registry-decline reproduction passed; six
+  no-cache process fixtures from the failing determinism batch compiled and ran
+  6/6 across two generated groups; all 1,163 codegen tests and workspace Clippy
+  with warnings denied passed. Formatting, codegen invariant, maintainability,
+  HIR, method-dispatch, file-size, and whitespace guards passed.
+- Review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12b-c4a23973f80d8eb796e4b9c984c89a248b58ac88.md`.
+- M12B changes compiler files. Under the phase rule, it did not run a per-item
+  Sifr gate; the single create-PR and merge gates remain reserved for the final
+  implementation SHA after M12C and M12D.
