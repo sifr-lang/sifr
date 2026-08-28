@@ -54,8 +54,11 @@ The following review claims are explicitly excluded:
 | M9 | Method-lowering authority and unsafe-code documentation | implementation staged; integration deferred | [#3561](https://github.com/sifr-lang/sifr/pull/3561) | `f6d1f4edaab6a2bfa0952ab89fd1980bec284703` |
 | M10 | Collision-resistant cache identity and cache lifecycle | implementation staged; second-review defect deferred | [#3562](https://github.com/sifr-lang/sifr/pull/3562) | `2e2ad86fb80ee916542738967935039c157fa18e` |
 | M11 | Real fuzz and semantic property targets | implementation staged; create-PR gate defect deferred | [#3563](https://github.com/sifr-lang/sifr/pull/3563) | `7664b902bf4697ca20bc39c683cdb617d26032e2` |
-| M12 | Maintainability ratchets and evidence-based flow decisions | implementation staged; second-review defect deferred | [#3564](https://github.com/sifr-lang/sifr/pull/3564) | `17d7ac63eae4a9417a2d60415c06d7de7016ce6c` |
-| M12A | Process-group deadlines and terminal signal propagation | pending | | |
+| M12 | Maintainability ratchets and evidence-based flow decisions | implementation staged; second-review defect closed by M12A | [#3564](https://github.com/sifr-lang/sifr/pull/3564) | `17d7ac63eae4a9417a2d60415c06d7de7016ce6c` |
+| M12A | Process-group deadlines and terminal signal propagation | merged into M12 branch | [#3565](https://github.com/sifr-lang/sifr/pull/3565) | `2b0820dabf890dc19850289273ade09d8b048cd5` |
+| M12B | Restore canonical list-method lowering on structured fallback paths | pending | | |
+| M12C | Terminal-signal escalation and remaining hardening command lifecycle | pending | | |
+| M12D | Documentation mutation-registry consistency | pending | | |
 | M13 | Phase closure and whole-phase review | pending | | |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -502,6 +505,59 @@ Scope and acceptance criteria:
 - Run one exact-SHA Opus review for M12A. Do not revisit or run a third review
   for M12.
 
+## M12B Restore Canonical List-Method Lowering On Structured Fallback Paths
+
+Close the compiler regression exposed by M12A's real determinism-scale run and
+already anticipated by M9's deferred strict-registry-decline reproduction.
+
+Scope and acceptance criteria:
+
+- Route locally recovered list receiver types through the canonical method
+  authority after strict registry lowering declines.
+- Ensure Sifr `list.append(value)` emits Rust `Vec::push(value)` on normal,
+  exception-handler, and other structured statement paths. Do not restore an
+  independent name-only fallback.
+- Add a focused compiler reproduction for the strict-registry-decline path and
+  compile the affected process fixtures that previously emitted
+  `Vec::append(bool)`.
+- Preserve ownership-aware argument adaptation for non-copy list elements.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
+## M12C Terminal-Signal Escalation And Remaining Hardening Command Lifecycle
+
+Close the new mechanism gap reported by M12A's final allowed review and the
+remaining hardening command lifecycle omissions without running a third M12A
+review.
+
+Scope and acceptance criteria:
+
+- After forwarding terminal `SIGINT` or `SIGTERM`, ensure a descendant that
+  ignores the signal cannot outlive the verification runner. Use bounded
+  group-liveness escalation without re-entering an interrupted `Popen.wait`.
+- Extend the terminal-signal self-test with a descendant that ignores the
+  forwarded signal.
+- Give the remaining Cargo property command a finite, process-group-aware
+  lifecycle instead of a bare unbounded `subprocess.run`.
+- Preserve an explicit timeout bit through variant and determinism wrappers if
+  either path gains timeout-specific classification; do not infer a deadline
+  from native exit code 124.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
+## M12D Documentation Mutation-Registry Consistency
+
+Close the M4/M12 registry drift exposed by the record-only documentation check.
+
+Scope and acceptance criteria:
+
+- Make `docs_inventory.json` exactly match every executable architecture
+  mutation case, including generated-marker, qualified-crate, `/root`, and
+  Windows-path cases.
+- Keep the structure checker as the binding between executable mutation
+  registries and the committed inventory.
+- Prove the positive documentation structure check and its mutation self-tests
+  pass from a clean checkout state.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
 ## M13 Phase Closure And Whole-Phase Review
 
 Reconcile every milestone record, deferred finding, architecture/roadmap status,
@@ -904,5 +960,39 @@ tree and are keyed by candidate SHA.
   TypeScript-Go transfer, diagnostic-doc, fuzz-lock, and 900-line guards all
   passed, including applicable self-tests.
 - The single create-PR and merge gates remain reserved for the final compiler
-  candidate after M12A. Integration and the human reviewer remain deferred
+  candidate after the later implementation items. Integration and the human reviewer remain deferred
   under the user's current instruction.
+
+### M12A Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12a`.
+- Stacked PR: [#3565](https://github.com/sifr-lang/sifr/pull/3565), merged into
+  the M12 branch as `15b8c063957154d8e6e691f28ce1c63bfa372cd7`.
+- Initial candidate: `d858b12aac1763e850ccb10f6ba37d4f6e7b4995`.
+  Its exact-SHA Opus review returned `SATISFIED` with no blockers. Three
+  candidate-level suggestions were accepted for the single remediation batch:
+  the non-reentrant signal-registry lock, the prematurely reset signal guard,
+  and native exit-code 124 timeout ambiguity.
+- Final candidate: `2b0820dabf890dc19850289273ade09d8b048cd5`.
+  The one permitted remediation review returned `SATISFIED` with no blockers.
+  It reported a new terminal-forwarding escalation gap, recorded as M12C; no
+  third M12A review will run.
+- Validation: touched Python Ruff and compilation, whitespace, both runner
+  self-test layers, maintainability, file-size, HIR, driver, and method-dispatch
+  guardrails passed. Self-tests cover SIGTERM-ignoring deadline descendants,
+  terminal forwarding, signal delivery while the registry lock is held, and a
+  native exit code 124 that is not a timeout.
+- The real merge-profile determinism-scale suite reached nested E2E compilation
+  and failed both commands with exit code 1. Generated Rust contained
+  `actual.append(bool)` where the canonical Sifr list method must emit
+  `actual.push(bool)`. The source trace points to M9's removed direct fallback
+  after strict registry decline; this compiler defect is M12B. The unchanged
+  failing suite was not repeated.
+- Review evidence is outside Git under both exact candidate SHAs in
+  `.codex/review-evidence/architecture-closure/`.
+- M12A changed no compiler files, so it did not run or consume the reserved
+  Sifr create-PR or merge gate.
+- The record-only documentation check then reported architecture mutation-case
+  registration drift: the executable registry has 12 cases while the inventory
+  retains 8. This pre-existing M4/M12 closure defect is M12D; it is not absorbed
+  into the M12A handoff commit.
