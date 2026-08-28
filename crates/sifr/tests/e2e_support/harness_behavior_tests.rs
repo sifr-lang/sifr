@@ -292,7 +292,7 @@ pub(crate) fn test_smoke_property_deterministic_hash_rules() {
 }
 
 #[test]
-pub(crate) fn test_smoke_fuzz_valid_expectation_extractors_no_panic() {
+pub(crate) fn test_smoke_mutation_valid_expectation_extractors_no_panic() {
     let mut seed = 0xBADC_0FFE_EE11_2233u64;
     for _ in 0..512 {
         let mut sample = smoke_ascii(&mut seed, 120);

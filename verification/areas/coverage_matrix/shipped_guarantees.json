@@ -106,7 +106,7 @@
       "support_status": "stable",
       "public_doc_path": "verification/policy/fuzz_property.md",
       "owner": "compiler/hardening",
-      "merge_surface": "fuzz_property_smoke",
+      "merge_surface": "fuzz_property_hardening",
       "nightly_release_surface": "cpython_generated_differential",
       "regression_surface": "regression_fixedbugs",
       "unsupported_behavior_policy": "Generated oracle inputs must be excluded by catalogue rules, not filtered after execution."

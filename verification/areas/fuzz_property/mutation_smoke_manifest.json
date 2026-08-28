@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "FUZZ-SMOKE-LOCAL-0001",
+  "id": "MUTATION-SMOKE-LOCAL-0001",
   "target_rules_version": 1,
   "required_target_ids": [
     "parse_check_entrypoint",
@@ -47,7 +47,7 @@
         "--area",
         "fuzz_property",
         "--suite",
-        "fuzz-smoke"
+        "mutation-smoke"
       ],
       "minimization_command": [
         "python3",
@@ -95,7 +95,7 @@
         "--area",
         "fuzz_property",
         "--suite",
-        "fuzz-smoke"
+        "mutation-smoke"
       ],
       "minimization_command": [
         "python3",
@@ -246,5 +246,5 @@
     1
   ],
   "assert_no_panic": true,
-  "note": "Deterministic local smoke fuzz gate. Sustained long-run fuzzing is tracked separately and non-blocking."
+  "note": "Deterministic local mutation smoke gate. Coverage-guided sustained fuzzing is tracked separately and is non-blocking."
 }

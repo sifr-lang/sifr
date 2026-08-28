@@ -189,9 +189,9 @@
       "surface_id": "fuzz_property",
       "profiles": {
         "create-pr": [],
-        "merge": ["fuzz_property:fuzz-smoke"],
-        "nightly": ["fuzz_property:property", "fuzz_property:fuzz-smoke"],
-        "release": ["fuzz_property:property", "fuzz_property:fuzz-smoke"]
+        "merge": ["fuzz_property:mutation-smoke"],
+        "nightly": ["fuzz_property:property", "fuzz_property:mutation-smoke", "fuzz_property:sustained-fuzz"],
+        "release": ["fuzz_property:property", "fuzz_property:mutation-smoke", "fuzz_property:sustained-fuzz"]
       }
     },
     {

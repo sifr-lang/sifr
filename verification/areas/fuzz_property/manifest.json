@@ -2,7 +2,7 @@
   "schema_version": 2,
   "name": "fuzz_property",
   "owner": "compiler/hardening",
-  "description": "Deterministic property and smoke-fuzz verification.",
+  "description": "Semantic properties, deterministic mutation smoke, and coverage-guided fuzzing.",
   "parallel_safe": false,
   "resource_classes": [
     "default-local"
@@ -21,7 +21,7 @@
           "diagnostic_formats": []
         },
         {
-          "id": "smoke_fuzz",
+          "id": "smoke_mutation",
           "entry": "crates/sifr/tests/e2e.rs",
           "command": "cargo-e2e-test",
           "expect_exit_code": 0,
@@ -43,13 +43,26 @@
       ]
     },
     {
-      "name": "fuzz-smoke",
+      "name": "mutation-smoke",
       "kind": "adapter",
       "cases": [
         {
-          "id": "fuzz-smoke",
-          "entry": "verification/areas/fuzz_property/fuzz_smoke_manifest.json",
-          "command": "fuzz-smoke-index",
+          "id": "mutation-smoke",
+          "entry": "verification/areas/fuzz_property/mutation_smoke_manifest.json",
+          "command": "mutation-smoke-index",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "sustained-fuzz",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "sustained-fuzz",
+          "entry": "verification/areas/fuzz_property/sustained_fuzz_manifest.json",
+          "command": "sustained-fuzz-index",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

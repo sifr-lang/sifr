@@ -1,26 +1,16 @@
-# Sustained Fuzzing Lane (Non-blocking)
+# Sustained Coverage-Guided Fuzzing
 
-Purpose:
-- run broader/longer fuzz workloads outside local blocking flow
-- produce compatibility and crash signal
-- feed issue triage and regression corpus updates
+The `sustained-fuzz` suite runs six libFuzzer targets. It covers parsing, lowering, ownership,
+generated-Rust validation, diagnostic presentation, and package project graphs.
 
-Status:
-- non-blocking for merge decisions in the verification hardening workstream
-- outputs are informational and signal-queue-oriented
+Nightly gives each target 45 seconds. Release gives each target 120 seconds. The committed manifest
+owns these budgets. The suite runs outside merge and is non-blocking. A tool failure or compiler
+finding remains visible in its machine-readable area result.
 
-Operational note:
-- use the same seed corpus foundations as smoke gates, but larger iteration/time budgets
-- every actionable finding must follow the triage/minimization workflow in `verification/policy/fuzz_property.md`
-- target ids are the same ids enforced by `fuzz_smoke_manifest.json`:
-  - `parse_check_entrypoint`
-  - `hir_type_ownership_entrypoint`
-  - `codegen_entrypoint`
-  - `diagnostic_renderer_entrypoint`
-  - `package_project_manifest_entrypoint`
-- nightly default budget: 10 minutes per target on the reference host, with target id, seed/source hash, and reproduction command recorded for every crash or panic signal
-- release default budget: 30 minutes per target on the reference host, with minimized corpus rotation before promotion
-- corpus rotation policy: add minimized findings first, prune duplicate-equivalent seeds in the same PR, and record removed seed ids in the PR body
-- broad fuzz findings become merge-blocking only after minimization and promotion into `verification/areas/regression/fixtures/crashes/` or `verification/areas/regression/data/fixedbugs.json`
-- merge smoke dispatches each target id independently. `parse_check_entrypoint` and `hir_type_ownership_entrypoint` run deterministic source mutations, `codegen_entrypoint` runs valid source seeds through the generated-binary path, and `diagnostic_renderer_entrypoint` plus `package_project_manifest_entrypoint` execute their declared diagnostic-rules harness command.
-- merge fuzz-smoke intentionally executes one declared seed per harness-backed target. The broader no-argument `diagnostic_rendering_harness` fixture sweep remains owned by the merge-blocking developer-tooling diagnostic rules suite.
+The runner writes corpora to `target/verification/fuzz/corpus/<target>` and crash artifacts to
+`target/verification/fuzz/artifacts/<target>`. CI installs the pinned `cargo-fuzz` version and
+fetches the excluded fuzz-project lockfile before the offline run.
+
+Promote a finding only after it is stable and minimized. Put unresolved crashes in the crash
+corpus. Put fixed defects in the fixed-bug registry. Include the fuzz target, source or input hash,
+and exact reproduction command in the issue and pull request.

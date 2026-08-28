@@ -11,6 +11,8 @@ mod collection_capabilities;
 pub mod infer;
 pub mod literal;
 mod safe_optional;
+#[cfg(test)]
+mod semantic_property_tests;
 mod substitution;
 #[cfg(test)]
 mod type_capability_identity_tests;

@@ -13,7 +13,7 @@ OUTPUT_ROOT = REPO_ROOT / "target" / "verification" / "actual" / "fuzz_property"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--target", required=True, help="Hardening target id from fuzz_smoke_manifest.json.")
+    parser.add_argument("--target", required=True, help="Hardening target id from mutation_smoke_manifest.json.")
     parser.add_argument("failing_rendered_diagnostic_json", help="Path to the failing rendered diagnostic JSON.")
     parser.add_argument("--output", help="Optional output path for the minimized candidate.")
     return parser.parse_args()

@@ -122,6 +122,103 @@
         "property"
       ],
       "note": "Fixed-width helper overflow-policy behavior must remain deterministic and panic-free."
+    },
+    {
+      "id": "PROP-SEM-0001",
+      "entry": "crates/sifr_type_system/src/semantic_property_tests.rs",
+      "target_ids": [
+        "hir_type_ownership_entrypoint"
+      ],
+      "program_class": "valid-only",
+      "command": "cargo-test",
+      "cargo_package": "sifr_type_system",
+      "test_filter": "semantic_property_union_normalization_is_idempotent_and_permutation_invariant",
+      "diagnostic_format": "none",
+      "expect_exit_code": 0,
+      "repeat_runs": 1,
+      "assert_no_panic": true,
+      "reproduction_command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_type_system",
+        "semantic_property_union_normalization_is_idempotent_and_permutation_invariant"
+      ],
+      "note": "Union normalization must be idempotent, flat, and independent of member order."
+    },
+    {
+      "id": "PROP-SEM-0002",
+      "entry": "crates/sifr_type_system/src/semantic_property_tests.rs",
+      "target_ids": [
+        "hir_type_ownership_entrypoint"
+      ],
+      "program_class": "valid-only",
+      "command": "cargo-test",
+      "cargo_package": "sifr_type_system",
+      "test_filter": "semantic_property_narrowing_partitions_closed_unions",
+      "diagnostic_format": "none",
+      "expect_exit_code": 0,
+      "repeat_runs": 1,
+      "assert_no_panic": true,
+      "reproduction_command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_type_system",
+        "semantic_property_narrowing_partitions_closed_unions"
+      ],
+      "note": "True and false narrowing branches must partition a closed union."
+    },
+    {
+      "id": "PROP-SEM-0003",
+      "entry": "crates/sifr_frontend/src/query_diagnostics_equivalence_tests.rs",
+      "target_ids": [
+        "parse_check_entrypoint",
+        "hir_type_ownership_entrypoint"
+      ],
+      "program_class": "valid-only",
+      "command": "cargo-test",
+      "cargo_package": "sifr_frontend",
+      "test_filter": "semantic_property_incremental_queries_match_full_recomputation",
+      "diagnostic_format": "none",
+      "expect_exit_code": 0,
+      "repeat_runs": 1,
+      "assert_no_panic": true,
+      "reproduction_command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_frontend",
+        "semantic_property_incremental_queries_match_full_recomputation"
+      ],
+      "note": "Incremental diagnostics must match a clean full recomputation after every edit."
+    },
+    {
+      "id": "PROP-SEM-0004",
+      "entry": "crates/sifr_driver/src/tests/semantic_properties.rs",
+      "target_ids": [
+        "codegen_entrypoint"
+      ],
+      "program_class": "valid-only",
+      "command": "cargo-test",
+      "cargo_package": "sifr_driver",
+      "test_filter": "semantic_property_codegen_is_deterministic",
+      "diagnostic_format": "none",
+      "expect_exit_code": 0,
+      "repeat_runs": 1,
+      "assert_no_panic": true,
+      "reproduction_command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_driver",
+        "semantic_property_codegen_is_deterministic"
+      ],
+      "note": "Repeated code generation for the same valid source must produce identical Rust."
     }
   ]
 }

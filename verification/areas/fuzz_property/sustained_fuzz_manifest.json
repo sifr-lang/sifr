@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "id": "SUSTAINED-FUZZ-0001",
+  "cargo_manifest": "verification/fuzz/Cargo.toml",
+  "cargo_fuzz_version": "0.13.2",
+  "toolchain": "nightly",
+  "budgets_seconds": {
+    "nightly": 45,
+    "release": 120
+  },
+  "targets": [
+    {
+      "id": "parser_coverage",
+      "fuzz_target": "parser",
+      "finding_promotion": "Minimize the source and promote it to the crash or fixed-bug corpus."
+    },
+    {
+      "id": "lowering_coverage",
+      "fuzz_target": "lowering",
+      "finding_promotion": "Minimize the source and promote it to the crash or fixed-bug corpus."
+    },
+    {
+      "id": "ownership_coverage",
+      "fuzz_target": "ownership",
+      "finding_promotion": "Minimize the ownership program and add a focused compiler regression."
+    },
+    {
+      "id": "codegen_validation_coverage",
+      "fuzz_target": "codegen_validation",
+      "finding_promotion": "Minimize the valid program and add a wrong-code or generated-source regression."
+    },
+    {
+      "id": "diagnostic_rendering_coverage",
+      "fuzz_target": "diagnostics",
+      "finding_promotion": "Minimize the diagnostic envelope and add a renderer regression."
+    },
+    {
+      "id": "project_graph_coverage",
+      "fuzz_target": "project_graph",
+      "finding_promotion": "Minimize the metadata and project tree and add a package-graph regression."
+    }
+  ]
+}

@@ -12,7 +12,7 @@ Selection rule:
 - suite assignment is deterministic by stable hash of `suite_name`
 - the same suite set and shard parameters always select the same subset
 
-Sharding applies at suite granularity across baseline, corpus, property, fuzz-smoke, OSS, and determinism suites.
+Sharding applies at suite granularity across baseline, corpus, property, mutation-smoke, sustained-fuzz, OSS, and determinism suites.
 
 ## Determinism Checks
 
