@@ -90,16 +90,23 @@ def run_self_tests() -> int:
         marker = deadline_root / "child-survived"
         child = f"import pathlib,time; time.sleep(0.4); pathlib.Path({str(marker)!r}).write_text('survived')"
         parent = f"import subprocess,sys,time; subprocess.Popen([sys.executable, '-c', {child!r}]); time.sleep(5)"
-        exit_code, _, stderr = run_captured_command(
+        exit_code, _, stderr, timed_out = run_captured_command(
             args=[sys.executable, "-c", parent],
             cwd=deadline_root,
             timeout_secs=0.1,
         )
-        if exit_code != 124 or "timed out" not in stderr:
+        if exit_code != 124 or not timed_out or "timed out" not in stderr:
             raise AssertionError("hardening command deadline did not report a timeout")
         time.sleep(0.5)
         if marker.exists():
             raise AssertionError("hardening command deadline left a descendant running")
+        native_124, _, _, native_timed_out = run_captured_command(
+            args=[sys.executable, "-c", "raise SystemExit(124)"],
+            cwd=deadline_root,
+            timeout_secs=1,
+        )
+        if native_124 != 124 or native_timed_out:
+            raise AssertionError("native exit 124 was confused with a command deadline")
     _external_deadline_self_test(run_external_command)
     _reproduction_deadline_self_test(run_reproduction_command_target)
     assert_self_test_failure(

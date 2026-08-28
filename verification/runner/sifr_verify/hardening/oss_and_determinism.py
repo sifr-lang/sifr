@@ -325,7 +325,7 @@ def run_external_command(
     timeout_secs: int | None,
 ) -> tuple[int, str, str, float]:
     started = time.perf_counter()
-    exit_code, stdout, stderr = run_captured_command(
+    exit_code, stdout, stderr, _timed_out = run_captured_command(
         args=argv,
         cwd=repo_root,
         timeout_secs=timeout_secs or DEFAULT_VARIANT_TIMEOUT_SECS,

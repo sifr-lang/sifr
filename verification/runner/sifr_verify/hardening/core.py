@@ -161,7 +161,7 @@ def run_variant(
     args.extend([command_name, str(entry)])
 
     started = time.perf_counter()
-    exit_code, stdout, stderr = run_captured_command(
+    exit_code, stdout, stderr, _timed_out = run_captured_command(
         args=args,
         cwd=repo_root,
         timeout_secs=timeout_secs,
@@ -176,7 +176,7 @@ def run_captured_command(
     cwd: Path,
     timeout_secs: float,
     env: dict[str, str] | None = None,
-) -> tuple[int, str, str]:
+) -> tuple[int, str, str, bool]:
     try:
         proc = subprocess.Popen(
             args,
@@ -188,20 +188,16 @@ def run_captured_command(
             start_new_session=True,
         )
     except FileNotFoundError as error:
-        return 127, "", str(error)
+        return 127, "", str(error), False
     register_process_group(proc)
     try:
         try:
             stdout, stderr = proc.communicate(timeout=timeout_secs)
-            return proc.returncode, stdout, stderr
+            return proc.returncode, stdout, stderr, False
         except subprocess.TimeoutExpired:
             terminate_process_group(proc)
             stdout, stderr = proc.communicate()
-            return (
-                124,
-                stdout,
-                stderr + f"\ncommand timed out after {timeout_secs} seconds",
-            )
+            return 124, stdout, stderr + f"\ncommand timed out after {timeout_secs} seconds", True
     finally:
         unregister_process_group(proc)
 

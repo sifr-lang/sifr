@@ -19,7 +19,7 @@ from .paths import REPO_ROOT
 
 _COMMAND_DEADLINE_NS: contextvars.ContextVar[int | None] = contextvars.ContextVar("sifr_verify_command_deadline_ns", default=None)
 _ACTIVE_PROCESS_GROUPS: dict[int, subprocess.Popen[str]] = {}
-_ACTIVE_PROCESS_GROUPS_LOCK = threading.Lock()
+_ACTIVE_PROCESS_GROUPS_LOCK = threading.RLock()
 _TERMINAL_HANDLERS_INSTALLED = False
 _HANDLING_TERMINAL_SIGNAL = False
 
@@ -99,16 +99,13 @@ def _forward_terminal_signal(signum: int, _frame: object) -> None:
     if _HANDLING_TERMINAL_SIGNAL:
         raise SystemExit(128 + signum)
     _HANDLING_TERMINAL_SIGNAL = True
-    try:
-        with _ACTIVE_PROCESS_GROUPS_LOCK:
-            active = list(_ACTIVE_PROCESS_GROUPS.values())
-        for proc in active:
-            try:
-                os.killpg(proc.pid, signal.Signals(signum))
-            except ProcessLookupError:
-                pass
-    finally:
-        _HANDLING_TERMINAL_SIGNAL = False
+    with _ACTIVE_PROCESS_GROUPS_LOCK:
+        active = list(_ACTIVE_PROCESS_GROUPS.values())
+    for proc in active:
+        try:
+            os.killpg(proc.pid, signal.Signals(signum))
+        except (ProcessLookupError, PermissionError):
+            pass
     raise SystemExit(128 + signum)
 
 
@@ -181,7 +178,34 @@ def run_self_test() -> None:
     if marker.exists():
         marker.unlink()
         raise AssertionError("deadline left a descendant process running")
+    _terminal_signal_lock_self_test()
     _terminal_signal_self_test()
+
+
+def _terminal_signal_lock_self_test() -> None:
+    helper = "\n".join(
+        [
+            "import os, signal",
+            "from sifr_verify.profile_commands import _ACTIVE_PROCESS_GROUPS_LOCK, install_terminal_signal_handlers",
+            "install_terminal_signal_handlers()",
+            "with _ACTIVE_PROCESS_GROUPS_LOCK:",
+            "    os.kill(os.getpid(), signal.SIGTERM)",
+        ]
+    )
+    proc = subprocess.Popen(
+        [sys.executable, "-c", helper],
+        cwd=REPO_ROOT,
+        env=_self_test_environment(),
+        text=True,
+        start_new_session=True,
+    )
+    try:
+        returncode = proc.wait(timeout=3)
+    except subprocess.TimeoutExpired:
+        terminate_process_group(proc)
+        raise AssertionError("terminal signal deadlocked while the process-group registry was locked") from None
+    if returncode != 128 + signal.SIGTERM:
+        raise AssertionError(f"locked terminal signal returned {returncode}, expected {128 + signal.SIGTERM}")
 
 
 def _terminal_signal_self_test() -> None:
@@ -198,14 +222,10 @@ def _terminal_signal_self_test() -> None:
             f"pathlib.Path({str(ready)!r}).write_text('ready'); "
             f"run_command([sys.executable, '-c', {child!r}])"
         )
-        helper_env = os.environ.copy()
-        runner_root = str(REPO_ROOT / "verification" / "runner")
-        existing_pythonpath = helper_env.get("PYTHONPATH")
-        helper_env["PYTHONPATH"] = f"{runner_root}{os.pathsep}{existing_pythonpath}" if existing_pythonpath else runner_root
         proc = subprocess.Popen(
             [sys.executable, "-c", helper],
             cwd=REPO_ROOT,
-            env=helper_env,
+            env=_self_test_environment(),
             text=True,
             start_new_session=True,
         )
@@ -226,6 +246,14 @@ def _terminal_signal_self_test() -> None:
         time.sleep(0.8)
         if survived.exists():
             raise AssertionError("terminal signal left a descendant process running")
+
+
+def _self_test_environment() -> dict[str, str]:
+    helper_env = os.environ.copy()
+    runner_root = str(REPO_ROOT / "verification" / "runner")
+    existing_pythonpath = helper_env.get("PYTHONPATH")
+    helper_env["PYTHONPATH"] = f"{runner_root}{os.pathsep}{existing_pythonpath}" if existing_pythonpath else runner_root
+    return helper_env
 
 
 def uv_area_command(*args: str) -> list[str]:

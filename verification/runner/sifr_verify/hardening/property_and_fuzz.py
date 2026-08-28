@@ -598,7 +598,7 @@ def run_reproduction_command_target(*, target: dict[str, Any], repo_root: Path) 
     argv = list(target["reproduction_command"])
     timeout_seconds = int(target["timeout_seconds"])
     started = time.perf_counter()
-    exit_code, stdout, stderr = run_captured_command(
+    exit_code, stdout, stderr, timed_out = run_captured_command(
         args=argv,
         cwd=repo_root,
         env={**os.environ, "CARGO_NET_OFFLINE": "true"},
@@ -619,7 +619,7 @@ def run_reproduction_command_target(*, target: dict[str, Any], repo_root: Path) 
         stream="stderr",
     )
     mismatches: list[str] = []
-    if exit_code == 124:
+    if timed_out:
         mismatches.append("timeout")
     elif exit_code != int(target["expect_exit_code"]):
         mismatches.append("unexpected-exit")

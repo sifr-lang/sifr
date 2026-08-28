@@ -111,13 +111,12 @@ def build_fuzz_project(*, repo_root: Path) -> dict[str, Any]:
         "verification/fuzz",
     ]
     started = time.perf_counter()
-    exit_code, stdout, stderr = run_captured_command(
+    exit_code, stdout, stderr, timed_out = run_captured_command(
         args=argv,
         cwd=repo_root,
         env={**os.environ, "CARGO_NET_OFFLINE": "true"},
         timeout_secs=1_200,
     )
-    timed_out = exit_code == 124
     output = stdout + stderr
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     mismatches = [] if exit_code == 0 else [classify_build_failure(exit_code, output, timed_out)]
@@ -164,13 +163,12 @@ def run_coverage_fuzz_target(
         "-print_final_stats=1",
     ]
     started = time.perf_counter()
-    exit_code, stdout, stderr = run_captured_command(
+    exit_code, stdout, stderr, timed_out = run_captured_command(
         args=argv,
         cwd=repo_root,
         env={**os.environ, "CARGO_NET_OFFLINE": "true"},
         timeout_secs=seconds + 120,
     )
-    timed_out = exit_code == 124
     output = stdout + stderr
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     mismatches: list[str] = []
