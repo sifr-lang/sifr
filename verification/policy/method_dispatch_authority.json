@@ -31,14 +31,16 @@
         "try_lower_registry_method_call_expr_unchecked:compare:len#1",
         "try_lower_registry_method_call_expr_unchecked:match:get|len#1",
         "try_lower_registry_method_call_expr_unchecked:compare:len#2",
-        "try_lower_registry_method_call_expr_unchecked:match:append|appendleft|insert|add|setdefault#1",
-        "try_lower_registry_method_call_expr_unchecked:compare:insert#1",
         "try_lower_registry_method_call_expr_unchecked:match:extend#1",
         "try_lower_registry_method_call_expr_unchecked:compare:extend#1",
         "try_lower_registry_set_method_call_expr:match:update|extend|union|intersection|difference|intersection_update|difference_update|contains|symmetric_difference|symmetric_difference_update|cloned#1",
         "try_lower_defaultdict_index_method_call_expr:compare:extend#1",
         "try_lower_defaultdict_index_method_call_expr:compare:extend#2",
         "try_lower_defaultdict_index_method_call_expr:match:append|add|insert|remove|discard#1"
+      ],
+      "crates/sifr_codegen/src/intrinsic_method_emitters/collection_method_args.rs": [
+        "adapt_collection_method_args_for_ir:match:append|appendleft|insert|add|setdefault#1",
+        "adapt_collection_method_args_for_ir:compare:insert#1"
       ],
       "crates/sifr_codegen/src/intrinsic_method_emitters/defaultdict_iterable_mutations.rs": [
         "try_lower_defaultdict_set_update_expr:compare:symmetric_difference_update#1",
