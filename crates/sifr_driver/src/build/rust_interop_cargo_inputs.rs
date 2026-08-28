@@ -1,6 +1,6 @@
 use super::rust_interop::PackageRustInteropContext;
 use super::rust_interop_digest::{
-    digest_file, digest_path, fnv1a64_hex, normalized_path_string, push_cache_bytes,
+    digest_file, digest_path, normalized_path_string, push_cache_bytes, sha256_hex,
 };
 use super::sysroot_interop::SysrootRustInteropTrust;
 use sifr_codegen::{RustBridgeSourceDigest, RustInteropCargoInputs};
@@ -328,7 +328,7 @@ fn combined_digest(parts: &[&str]) -> String {
     for part in parts {
         push_cache_bytes(&mut bytes, part);
     }
-    fnv1a64_hex(&bytes)
+    sha256_hex(&bytes)
 }
 
 fn sysroot_metadata_digest(trust: &SysrootRustInteropTrust) -> String {
@@ -342,7 +342,7 @@ fn sysroot_metadata_digest(trust: &SysrootRustInteropTrust) -> String {
     if let Some(lock_digest) = digest_file(&trust.cargo_lock) {
         push_cache_bytes(&mut bytes, &lock_digest);
     }
-    fnv1a64_hex(&bytes)
+    sha256_hex(&bytes)
 }
 
 fn nearest_ancestor_file(start: &Path, file_name: &str) -> Option<PathBuf> {
@@ -448,7 +448,7 @@ fn trust_policy_digest(trust: &TrustPolicy) -> String {
             push_cache_bytes(&mut bytes, &value);
         }
     }
-    fnv1a64_hex(&bytes)
+    sha256_hex(&bytes)
 }
 
 fn tool_version(tool: &str) -> Option<String> {

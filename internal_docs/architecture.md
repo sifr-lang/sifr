@@ -418,13 +418,23 @@ Generated artifact cache work moved `run`/`test` away from invocation-scoped tem
   - rooted entrypoint scope
   - generated Cargo manifest and Rust sources
   - cargo/rustc toolchain signature plus relevant build env vars
+- Cache directory names use SHA-256. Each persisted entry also stores the full
+  typed key material. A hit must match both values and all required paths.
 - cache misses build inside an isolated staging directory and promote atomically into the stable cache path only after `cargo build --release` succeeds
 - cache hits execute the previously built binary directly without paying the generated-project rebuild cost again
-- `sifr test` uses the same cache discipline for generated test-runner Cargo projects: unchanged input reuses the prior workspace and its `target/` artifacts, while still running `cargo test` on every invocation
+- `sifr test` runs Cargo from a stable execution sibling for the content key.
+  It keeps the immutable generated sources separate and keeps the Cargo target
+  in another sibling directory. Invalidation and lifecycle cleanup treat all
+  three paths as one entry. The tests run on every command.
 - `sifr run` emits human build progress only for cache misses, omits the final
   `Binary:` footer because program output follows, and emits no build progress
   for cache hits or `--quiet`. `sifr test` keeps explicit cache reporting in
   validation logs so reuse and invalidation remain visible there.
+- `sifr cache status` reports entry count, size, age, and scan completion under
+  an explicit node limit. The default limit is one million nodes.
+  `sifr cache clean` requires `--all`, `--max-age-days`, or `--max-size-mib`.
+  Policy cleanup does not continue after a partial scan. Large caches can use
+  `--scan-node-limit` to select a larger bound.
 
 ---
 

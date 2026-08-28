@@ -1,4 +1,5 @@
 pub(crate) use super::bridge_cli::BridgeCommands;
+use super::cache_cli::{CacheArgs, cmd_cache};
 use super::check_and_package_commands::{cmd_check, cmd_emit, cmd_fmt, cmd_test};
 use super::cli_lock_modes::lock_mode_from_flags;
 use super::diagnostic_rendering_and_run::{
@@ -156,6 +157,8 @@ pub(crate) enum Commands {
         #[arg(long)]
         check: bool,
     },
+    /// Inspect or clean Sifr's generated-artifact cache
+    Cache(CacheArgs),
     /// Validate Rust bridge projections and interop probes for a package
     Bridge {
         #[command(subcommand)]
@@ -483,6 +486,7 @@ fn run_cli(cli: Cli) -> i32 {
             force,
         } => cmd_init(&path, lib, bin, name.as_deref(), force, diagnostic_format),
         Commands::Repair { check } => cmd_repair(check, diagnostic_format),
+        Commands::Cache(args) => cmd_cache(args, diagnostic_format),
         Commands::Bridge { command } => match command {
             BridgeCommands::Check {
                 workspace,

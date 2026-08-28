@@ -303,12 +303,15 @@ pub(crate) fn cache_group_path(root: &Path, group_id: &str) -> PathBuf {
 }
 
 pub(crate) fn deterministic_hash(value: &str) -> String {
-    let mut hash: u64 = 0xcbf29ce484222325;
-    for byte in value.as_bytes() {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x100000001b3);
+    use sha2::{Digest as _, Sha256};
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let digest = Sha256::digest(value.as_bytes());
+    let mut encoded = String::with_capacity(digest.len() * 2);
+    for byte in digest {
+        encoded.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        encoded.push(char::from(DIGITS[usize::from(byte & 0x0f)]));
     }
-    format!("{hash:016x}")
+    encoded
 }
 
 /// Collect all `# expect-stderr: <value>` lines.

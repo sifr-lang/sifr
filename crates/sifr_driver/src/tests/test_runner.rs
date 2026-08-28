@@ -189,6 +189,14 @@ fn test_run_tests_reuses_cached_workspace_for_unchanged_project() {
         "test execution must not write a lockfile into the reusable source cache"
     );
     let shared_target = first.cache_report.workspace_root().with_extension("target");
+    let shared_execution = first
+        .cache_report
+        .workspace_root()
+        .with_extension("execution");
+    assert!(
+        shared_execution.join("Cargo.lock").is_file(),
+        "Cargo should write its lockfile only in the stable execution workspace"
+    );
     assert!(
         shared_target.is_dir(),
         "compiled test artifacts should persist outside the immutable source cache"
@@ -217,6 +225,14 @@ fn test_run_tests_reuses_cached_workspace_for_unchanged_project() {
             .workspace_root()
             .with_extension("target"),
         "warm runs should reuse the cache-key-owned Cargo target directory"
+    );
+    assert_eq!(
+        shared_execution,
+        second
+            .cache_report
+            .workspace_root()
+            .with_extension("execution"),
+        "warm runs should reuse the cache-key-owned execution workspace"
     );
 
     let (frozen, invocations) = capture_cargo_invocations(|| {

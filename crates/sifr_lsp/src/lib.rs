@@ -19,6 +19,7 @@ mod errors;
 mod notifications;
 mod progress;
 mod python_declarations;
+mod python_input_fingerprint;
 mod request_queue;
 mod requests;
 mod scheduler;

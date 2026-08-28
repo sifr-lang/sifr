@@ -223,20 +223,22 @@ pub(super) fn apply_package_runtime_metadata(
             "python-runtime",
             metadata.probe_digest(),
         );
-        if !metadata.arrow_certification_identity().is_empty() {
-            push_cache_key_fragment(
-                &mut generated.cache_key_fragment,
-                "python-arrow-certifications",
-                metadata.arrow_certification_identity(),
-            );
-        }
-        if !metadata.dlpack_certification_identity().is_empty() {
-            push_cache_key_fragment(
-                &mut generated.cache_key_fragment,
-                "python-dlpack-certifications",
-                metadata.dlpack_certification_identity(),
-            );
-        }
+        let arrow_certification_identity = metadata
+            .arrow_certification_identity()
+            .map_err(|error| certification_identity_error(&error))?;
+        push_cache_key_fragment(
+            &mut generated.cache_key_fragment,
+            "python-arrow-certifications",
+            &arrow_certification_identity,
+        );
+        let dlpack_certification_identity = metadata
+            .dlpack_certification_identity()
+            .map_err(|error| certification_identity_error(&error))?;
+        push_cache_key_fragment(
+            &mut generated.cache_key_fragment,
+            "python-dlpack-certifications",
+            &dlpack_certification_identity,
+        );
         if !metadata.binding_identity().is_empty() {
             push_cache_key_fragment(
                 &mut generated.cache_key_fragment,
@@ -247,6 +249,13 @@ pub(super) fn apply_package_runtime_metadata(
         generated.python_runtime = Some(metadata);
     }
     Ok(generated)
+}
+
+fn certification_identity_error(error: &serde_json::Error) -> Vec<RenderedDiagnostic> {
+    vec![crate::diagnostics::diagnostic_with_code(
+        format!("failed to serialize Python certification cache identity: {error}"),
+        sifr_diagnostics::DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+    )]
 }
 
 pub(super) fn attach_package_runtime_metadata_for_check(
@@ -299,7 +308,9 @@ mod tests {
         );
         assert_eq!(
             generated.cache_key_fragment.as_deref(),
-            Some("[python-runtime]\ndigest-a\n")
+            Some(
+                "[python-runtime]\ndigest-a\n[python-arrow-certifications]\n[]\n[python-dlpack-certifications]\n[]\n"
+            )
         );
         assert!(
             generated

@@ -1,0 +1,39 @@
+---
+title: "sifr cache: Inspect and Clean Generated Artifacts"
+description: "Report or remove Sifr generated-artifact cache entries with explicit limits."
+---
+
+# `sifr cache`
+
+Sifr stores generated Cargo projects and native artifacts in an owned cache.
+Use `sifr cache status` to inspect this cache.
+
+```console
+sifr cache status
+sifr cache status --json
+```
+
+The report includes the cache path, entry count, byte count, oldest entry age,
+and scan status. The scan has a fixed node budget. A partial report sets
+`scan_complete` to `false`.
+
+The default limit is 1,000,000 filesystem nodes. Use
+`--scan-node-limit NODES` to set a larger explicit limit for a large cache.
+
+Use `sifr cache clean` with an explicit policy:
+
+```console
+sifr cache clean --max-age-days 30
+sifr cache clean --max-size-mib 4096
+sifr cache clean --max-age-days 30 --max-size-mib 4096 --dry-run
+sifr cache clean --all
+```
+
+`--max-age-days` removes old entries. `--max-size-mib` removes the oldest
+entries until the cache is within the limit. `--dry-run` reports the selected
+entries without removing them. `--all` removes the complete Sifr-owned cache
+and cannot be combined with a size or age limit.
+
+Policy cleanup stops if the scan budget is exhausted. Use `--all` only when
+you intend to remove all generated artifacts. You can also raise
+`--scan-node-limit` and retry a size or age policy.

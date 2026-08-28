@@ -11,18 +11,19 @@ reuse; cache-key identity owns reuse and reference-counted cache storage.
 `sifr_frontend::CompilerFingerprint` records the cache-key schema, frontend
 crate version, parser version, lowering policy, source-map algorithm, diagnostic
 policy, lint policy, format policy, package-graph policy, symbol-bucket policy,
-and flow-graph policy.
+and flow-graph policy. It also records a build-time SHA-256 revision of the
+compiler source inputs. `SIFR_SOURCE_REVISION` can supply a release revision.
 
-`CacheKeyFingerprint` values are deterministic process-independent FNV-1a
-fingerprints built from length-delimited fields. They are compiler cache
-identities, not security hashes.
+`CacheKeyFingerprint` values are deterministic SHA-256 digests. The input uses
+length-delimited fields. These digests identify compiler cache entries.
 
 `SourceHash::from_source_text` now uses the same deterministic fingerprint
 helper instead of `DefaultHasher`, so source identity is stable across
 processes and public cache-key constructors can be built without internal
 frontend access.
-Pre-cache-key identity `SourceHash` strings are intentionally not comparable to cache-key identity hashes; no
-snapshot cache reuse exists yet, so cache-key identity starts from this identity rules.
+
+Old `SourceHash` strings are not comparable to the SHA-256 source hashes.
+The cache-key schema version prevents reuse across this change.
 
 ## Common Inputs
 
