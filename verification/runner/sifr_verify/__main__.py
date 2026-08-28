@@ -8,13 +8,18 @@ import sys
 from . import areas, profiles, reports
 from .doctor import run_doctor
 from .errors import VerificationError
+from .profile_commands import install_terminal_signal_handlers
 from .selftest import run_all
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-test", action="store_true", help="Run runner foundation self-tests.")
-    parser.add_argument("--list-areas", action="store_true", help="List discovered verification areas as JSON.")
+    parser.add_argument(
+        "--list-areas",
+        action="store_true",
+        help="List discovered verification areas as JSON.",
+    )
     parser.add_argument("--profile", help="Execute a validation profile.")
     parser.add_argument("--case", help="Reserved case selector for failure reproduction.")
     parser.add_argument("command", nargs="?", help="Subcommand: profiles, reports, areas, or doctor.")
@@ -23,6 +28,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    install_terminal_signal_handlers()
     args = parse_args()
     try:
         if args.self_test:

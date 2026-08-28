@@ -23,7 +23,11 @@ from .core import (
 )
 from .coverage_fuzz import classify_build_failure, output_tail
 
+
 def run_self_tests() -> int:
+    from .oss_and_determinism import run_external_command
+    from .property_and_fuzz import run_reproduction_command_target
+
     expected_build_classes = {
         classify_build_failure(127, "cargo not found", False): "missing tool",
         classify_build_failure(101, "offline mode prevented a download", False): "offline dependency",
@@ -84,24 +88,27 @@ def run_self_tests() -> int:
     with tempfile.TemporaryDirectory(prefix="sifr-hardening-deadline-") as tmp:
         deadline_root = Path(tmp)
         marker = deadline_root / "child-survived"
-        child = (
-            "import pathlib,time; time.sleep(0.4); "
-            f"pathlib.Path({str(marker)!r}).write_text('survived')"
-        )
-        parent = (
-            "import subprocess,sys,time; "
-            f"subprocess.Popen([sys.executable, '-c', {child!r}]); time.sleep(5)"
-        )
-        exit_code, _, stderr = run_captured_command(
+        child = f"import pathlib,time; time.sleep(0.4); pathlib.Path({str(marker)!r}).write_text('survived')"
+        parent = f"import subprocess,sys,time; subprocess.Popen([sys.executable, '-c', {child!r}]); time.sleep(5)"
+        exit_code, _, stderr, timed_out = run_captured_command(
             args=[sys.executable, "-c", parent],
             cwd=deadline_root,
             timeout_secs=0.1,
         )
-        if exit_code != 124 or "timed out" not in stderr:
+        if exit_code != 124 or not timed_out or "timed out" not in stderr:
             raise AssertionError("hardening command deadline did not report a timeout")
         time.sleep(0.5)
         if marker.exists():
             raise AssertionError("hardening command deadline left a descendant running")
+        native_124, _, _, native_timed_out = run_captured_command(
+            args=[sys.executable, "-c", "raise SystemExit(124)"],
+            cwd=deadline_root,
+            timeout_secs=1,
+        )
+        if native_124 != 124 or native_timed_out:
+            raise AssertionError("native exit 124 was confused with a command deadline")
+    _external_deadline_self_test(run_external_command)
+    _reproduction_deadline_self_test(run_reproduction_command_target)
     assert_self_test_failure(
         "duplicate diagnostic formats",
         "lists diagnostic_format 'json' more than once",
@@ -194,6 +201,55 @@ def run_self_tests() -> int:
         assert history[0] != initial_revision
     print("verification hardening self-tests ok")
     return 0
+
+
+def _deadline_command(marker: Path) -> list[str]:
+    child = (
+        "import pathlib,signal,time; signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+        "time.sleep(1.2); "
+        f"pathlib.Path({str(marker)!r}).write_text('survived')"
+    )
+    parent = f"import subprocess,sys,time; subprocess.Popen([sys.executable, '-c', {child!r}]); time.sleep(5)"
+    return [sys.executable, "-c", parent]
+
+
+def _assert_descendant_stopped(marker: Path, label: str) -> None:
+    time.sleep(0.5)
+    if marker.exists():
+        raise AssertionError(f"{label} left a descendant process running")
+
+
+def _external_deadline_self_test(runner: Any) -> None:
+    with tempfile.TemporaryDirectory(prefix="sifr-external-deadline-") as tmp:
+        root = Path(tmp)
+        marker = root / "child-survived"
+        exit_code, _, stderr, _ = runner(
+            repo_root=root,
+            argv=_deadline_command(marker),
+            timeout_secs=1,
+        )
+        if exit_code != 124 or "timed out" not in stderr:
+            raise AssertionError("determinism external deadline did not report timeout")
+        _assert_descendant_stopped(marker, "determinism external deadline")
+
+
+def _reproduction_deadline_self_test(runner: Any) -> None:
+    with tempfile.TemporaryDirectory(prefix="sifr-reproduction-deadline-") as tmp:
+        root = Path(tmp)
+        marker = root / "child-survived"
+        result = runner(
+            repo_root=root,
+            target={
+                "id": "deadline-self-test",
+                "reproduction_command": _deadline_command(marker),
+                "timeout_seconds": 1,
+                "expect_exit_code": 0,
+            },
+        )
+        variant = result["case"]["variants"][0]
+        if variant["actual_exit_code"] != 124 or variant["mismatches"] != ["timeout"]:
+            raise AssertionError("reproduction deadline did not classify timeout")
+        _assert_descendant_stopped(marker, "reproduction deadline")
 
 
 def run_git(repo_root: Path, args: list[str]) -> subprocess.CompletedProcess[str] | None:
@@ -310,10 +366,7 @@ def baseline_case_result(
         else:
             missing_files = [path for path in (stdout_file, stderr_file, exit_file) if not path.is_file()]
             if missing_files:
-                mismatches.append(
-                    "missing-baseline:"
-                    + ",".join(str(path.relative_to(repo_root)) for path in missing_files)
-                )
+                mismatches.append("missing-baseline:" + ",".join(str(path.relative_to(repo_root)) for path in missing_files))
             else:
                 expected_stdout = load_text(stdout_file)
                 expected_stderr = load_text(stderr_file)
