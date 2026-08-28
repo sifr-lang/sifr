@@ -4,7 +4,6 @@ import hashlib
 import json
 import os
 import random
-import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -110,10 +109,7 @@ def run_property_suite(
         if not isinstance(diagnostic_format, str) or not diagnostic_format:
             mismatches.append("diagnostic_format")
         if command_name == "cargo-test":
-            if not isinstance(entry.get("cargo_package"), str) or not entry["cargo_package"]:
-                mismatches.append("cargo_package")
-            if not isinstance(entry.get("test_filter"), str) or not entry["test_filter"]:
-                mismatches.append("test_filter")
+            mismatches.extend(validate_cargo_property_metadata(entry))
 
         if mismatches:
             result["total_variants"] += 1
@@ -214,6 +210,17 @@ def run_property_suite(
     return result
 
 
+def validate_cargo_property_metadata(entry: dict[str, Any]) -> list[str]:
+    mismatches: list[str] = []
+    if not isinstance(entry.get("cargo_package"), str) or not entry["cargo_package"]:
+        mismatches.append("cargo_package")
+    if not isinstance(entry.get("test_filter"), str) or not entry["test_filter"]:
+        mismatches.append("test_filter")
+    if not isinstance(entry.get("timeout_seconds"), int) or entry["timeout_seconds"] < 1:
+        mismatches.append("timeout_seconds")
+    return mismatches
+
+
 def run_cargo_property(*, entry: dict[str, Any], repo_root: Path) -> dict[str, Any]:
     argv = [
         "cargo",
@@ -226,26 +233,26 @@ def run_cargo_property(*, entry: dict[str, Any], repo_root: Path) -> dict[str, A
         "--nocapture",
     ]
     started = time.perf_counter()
-    proc = subprocess.run(
-        argv,
+    exit_code, stdout, stderr, timed_out = run_captured_command(
+        args=argv,
         cwd=repo_root,
         env={**os.environ, "CARGO_NET_OFFLINE": "true"},
-        text=True,
-        capture_output=True,
-        check=False,
+        timeout_secs=int(entry["timeout_seconds"]),
     )
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     mismatches: list[str] = []
-    if proc.returncode != int(entry["expect_exit_code"]):
+    if timed_out:
+        mismatches.append("timeout")
+    elif exit_code != int(entry["expect_exit_code"]):
         mismatches.append("unexpected-exit")
-    if bool(entry.get("assert_no_panic", True)) and contains_internal_panic(proc.stdout + proc.stderr):
+    if bool(entry.get("assert_no_panic", True)) and contains_internal_panic(stdout + stderr):
         mismatches.append("panic-signal")
     return {
         "label": "cargo-test",
         "status": "pass" if not mismatches else "fail",
         "mismatches": mismatches,
         "expected_exit_code": int(entry["expect_exit_code"]),
-        "actual_exit_code": proc.returncode,
+        "actual_exit_code": exit_code,
         "duration_ms": round(elapsed_ms, 3),
         "argv": argv,
     }

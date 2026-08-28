@@ -25,6 +25,7 @@ from .coverage_fuzz import classify_build_failure, output_tail
 
 
 def run_self_tests() -> int:
+    from . import property_and_fuzz
     from .oss_and_determinism import run_external_command
     from .property_and_fuzz import run_reproduction_command_target
 
@@ -109,6 +110,7 @@ def run_self_tests() -> int:
             raise AssertionError("native exit 124 was confused with a command deadline")
     _external_deadline_self_test(run_external_command)
     _reproduction_deadline_self_test(run_reproduction_command_target)
+    _cargo_property_deadline_self_test(property_and_fuzz)
     assert_self_test_failure(
         "duplicate diagnostic formats",
         "lists diagnostic_format 'json' more than once",
@@ -211,6 +213,28 @@ def _deadline_command(marker: Path) -> list[str]:
     )
     parent = f"import subprocess,sys,time; subprocess.Popen([sys.executable, '-c', {child!r}]); time.sleep(5)"
     return [sys.executable, "-c", parent]
+
+
+def _cargo_property_deadline_self_test(property_module: Any) -> None:
+    original_runner = property_module.run_captured_command
+    entry = {
+        "cargo_package": "fake-package",
+        "test_filter": "fake-test",
+        "expect_exit_code": 124,
+        "timeout_seconds": 1,
+        "assert_no_panic": True,
+    }
+    try:
+        property_module.run_captured_command = lambda **_kwargs: (124, "", "", True)
+        timeout_result = property_module.run_cargo_property(entry=entry, repo_root=Path("/tmp"))
+        property_module.run_captured_command = lambda **_kwargs: (124, "", "", False)
+        native_result = property_module.run_cargo_property(entry=entry, repo_root=Path("/tmp"))
+    finally:
+        property_module.run_captured_command = original_runner
+    if timeout_result["mismatches"] != ["timeout"]:
+        raise AssertionError("cargo property timeout lost its explicit classification")
+    if native_result["mismatches"]:
+        raise AssertionError("cargo property native exit 124 was confused with a timeout")
 
 
 def _assert_descendant_stopped(marker: Path, label: str) -> None:

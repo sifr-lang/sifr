@@ -22,6 +22,7 @@ _ACTIVE_PROCESS_GROUPS: dict[int, subprocess.Popen[str]] = {}
 _ACTIVE_PROCESS_GROUPS_LOCK = threading.RLock()
 _TERMINAL_HANDLERS_INSTALLED = False
 _HANDLING_TERMINAL_SIGNAL = False
+_TERMINAL_SIGNAL_GRACE_SECONDS = 0.1
 
 
 class CommandFailed(Exception):
@@ -100,13 +101,35 @@ def _forward_terminal_signal(signum: int, _frame: object) -> None:
         raise SystemExit(128 + signum)
     _HANDLING_TERMINAL_SIGNAL = True
     with _ACTIVE_PROCESS_GROUPS_LOCK:
-        active = list(_ACTIVE_PROCESS_GROUPS.values())
-    for proc in active:
+        process_group_ids = tuple(_ACTIVE_PROCESS_GROUPS)
+    received_signal = signal.Signals(signum)
+    for process_group_id in process_group_ids:
         try:
-            os.killpg(proc.pid, signal.Signals(signum))
+            os.killpg(process_group_id, received_signal)
         except (ProcessLookupError, PermissionError):
             pass
+    if process_group_ids:
+        threading.Thread(
+            target=_escalate_forwarded_process_groups,
+            args=(process_group_ids,),
+            name="sifr-verify-signal-escalation",
+            daemon=False,
+        ).start()
     raise SystemExit(128 + signum)
+
+
+def _escalate_forwarded_process_groups(process_group_ids: tuple[int, ...]) -> None:
+    """Kill groups that remain live after a forwarded terminal signal."""
+    time.sleep(_TERMINAL_SIGNAL_GRACE_SECONDS)
+    for process_group_id in process_group_ids:
+        try:
+            os.killpg(process_group_id, 0)
+        except (ProcessLookupError, PermissionError):
+            continue
+        try:
+            os.killpg(process_group_id, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            pass
 
 
 def run_command(command: list[str], *, env: dict[str, str] | None = None) -> None:
@@ -213,13 +236,18 @@ def _terminal_signal_self_test() -> None:
         root = Path(tmp)
         ready = root / "ready"
         survived = root / "child-survived"
-        child = f"import pathlib,time; time.sleep(0.6); pathlib.Path({str(survived)!r}).write_text('survived')"
+        child = (
+            "import pathlib,signal,time; "
+            "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+            f"pathlib.Path({str(ready)!r}).write_text('ready'); "
+            "time.sleep(0.6); "
+            f"pathlib.Path({str(survived)!r}).write_text('survived')"
+        )
         helper = (
-            "import pathlib,sys; "
+            "import sys; "
             "from sifr_verify.profile_commands import "
             "install_terminal_signal_handlers,run_command; "
             "install_terminal_signal_handlers(); "
-            f"pathlib.Path({str(ready)!r}).write_text('ready'); "
             f"run_command([sys.executable, '-c', {child!r}])"
         )
         proc = subprocess.Popen(
