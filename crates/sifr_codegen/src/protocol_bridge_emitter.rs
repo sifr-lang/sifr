@@ -1,9 +1,6 @@
 use crate::{RustEmitter, RustExpr, RustItem, RustParam, RustStmt, Visibility};
 use sifr_ir::{HirClass, HirModule};
 use sifr_type_system::{Type, source_class_rust_name};
-use std::collections::{HashMap, HashSet};
-
-type OperatorBounds = HashMap<String, HashSet<String>>;
 
 impl RustEmitter {
     pub(crate) fn emit_protocol_impls(&mut self, class: &HirClass, module: &HirModule) {

@@ -55,7 +55,11 @@ pub(crate) use query_diagnostic_rendering::{
 mod warning_diagnostics;
 pub use warning_diagnostics::{reveal_type_diagnostics, warning_diagnostics};
 mod query_diagnostics;
-pub use query_diagnostics::*;
+pub(crate) use query_diagnostics::collect_module_exports;
+use query_diagnostics::{
+    empty_hir_module, hir_diagnostic_to_rendered, local_import_dependencies, module_state,
+    source_hash, symbols_from_hir,
+};
 #[cfg(test)]
 mod query_diagnostics_behavior_tests;
 #[cfg(test)]

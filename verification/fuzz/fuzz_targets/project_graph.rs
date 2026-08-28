@@ -5,6 +5,7 @@ use sifr_frontend::DiskSourceProvider;
 use sifr_package::{derive_package_graph, parse_metadata_json};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 struct Fixture(PathBuf);
 
@@ -15,23 +16,25 @@ impl Drop for Fixture {
 }
 
 fuzz_target!(|data: &[u8]| {
-    let discriminator = data
-        .iter()
-        .take(16)
-        .fold(0_u64, |value, byte| value.rotate_left(5) ^ u64::from(*byte));
-    let root = std::env::temp_dir().join(format!(
-        "sifr_project_graph_fuzz_{}_{discriminator:016x}",
-        std::process::id()
-    ));
-    let fixture = Fixture(root.clone());
-    if prepare_fixture(&fixture.0).is_err() {
+    static FIXTURE: OnceLock<Option<Fixture>> = OnceLock::new();
+    let Some(fixture) = FIXTURE.get_or_init(create_fixture) else {
         return;
-    }
+    };
     let json = metadata_json(&fixture.0, data);
     if let Ok(metadata) = parse_metadata_json(&json) {
         let _ = derive_package_graph(metadata, &mut DiskSourceProvider::new());
     }
 });
+
+fn create_fixture() -> Option<Fixture> {
+    let root = std::env::temp_dir().join(format!(
+        "sifr_project_graph_fuzz_{}",
+        std::process::id()
+    ));
+    let fixture = Fixture(root);
+    prepare_fixture(&fixture.0).ok()?;
+    Some(fixture)
+}
 
 fn prepare_fixture(root: &Path) -> std::io::Result<()> {
     fs::create_dir_all(root.join("src"))?;

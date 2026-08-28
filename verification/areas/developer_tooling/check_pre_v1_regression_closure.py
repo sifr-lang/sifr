@@ -50,7 +50,7 @@ EXPECTED_VARIANT_IDS = {
     "representative/trend-policy-self-test",
     "representative/benchmark-subset",
     "representative/budget-subset",
-    "fuzz-smoke/metadata",
+    "mutation-smoke/metadata",
     "OSS-CURATED-0001/source-checksum",
     "OSS-CURATED-0002/source-checksum",
     "OSS-CURATED-0003/source-checksum",

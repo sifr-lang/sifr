@@ -9,6 +9,24 @@ from typing import Any
 
 from .fixedbugs_and_crashes import contains_internal_panic
 
+OUTPUT_TAIL_BYTES = 16 * 1024
+
+
+def output_tail(output: str) -> str:
+    encoded = output.encode("utf-8", errors="replace")
+    return encoded[-OUTPUT_TAIL_BYTES:].decode("utf-8", errors="replace")
+
+
+def classify_build_failure(exit_code: int, output: str, timed_out: bool) -> str:
+    lowered = output.lower()
+    if timed_out:
+        return "instrumented-build-timeout"
+    if exit_code == 127 or "no such command: `fuzz`" in lowered:
+        return "missing-fuzz-tool"
+    if "offline mode" in lowered or "attempting to make an http request" in lowered:
+        return "offline-dependency-failure"
+    return "instrumented-build-failure"
+
 
 def run_sustained_fuzz_suite(
     *,
@@ -96,6 +114,8 @@ def build_fuzz_project(*, repo_root: Path) -> dict[str, Any]:
         "verification/fuzz",
     ]
     started = time.perf_counter()
+    timed_out = False
+    output = ""
     try:
         proc = subprocess.run(
             argv,
@@ -107,22 +127,33 @@ def build_fuzz_project(*, repo_root: Path) -> dict[str, Any]:
             timeout=1_200,
         )
         exit_code = proc.returncode
-    except (FileNotFoundError, subprocess.TimeoutExpired) as error:
-        exit_code = 124 if isinstance(error, subprocess.TimeoutExpired) else 127
+        output = proc.stdout + proc.stderr
+    except FileNotFoundError as error:
+        exit_code = 127
+        output = str(error)
+    except subprocess.TimeoutExpired as error:
+        exit_code = 124
+        timed_out = True
+        output = (error.stdout or "") + (error.stderr or "")
     elapsed_ms = (time.perf_counter() - started) * 1000.0
-    mismatches = [] if exit_code == 0 else ["fuzz-project-build-failed"]
+    mismatches = (
+        []
+        if exit_code == 0
+        else [classify_build_failure(exit_code, output, timed_out)]
+    )
+    variant = {
+        "label": "sustained-fuzz-instrumented-build",
+        "status": "pass" if not mismatches else "fail",
+        "mismatches": mismatches,
+        "actual_exit_code": exit_code,
+        "duration_ms": round(elapsed_ms, 3),
+        "argv": argv,
+    }
+    if mismatches:
+        variant["output_tail"] = output_tail(output)
     return {
         "id": "fuzz_project_build",
-        "variants": [
-            {
-                "label": "instrumented-build",
-                "status": "pass" if not mismatches else "fail",
-                "mismatches": mismatches,
-                "actual_exit_code": exit_code,
-                "duration_ms": round(elapsed_ms, 3),
-                "argv": argv,
-            }
-        ],
+        "variants": [variant],
     }
 
 
@@ -137,6 +168,7 @@ def run_coverage_fuzz_target(
     artifact_dir = repo_root / "target" / "verification" / "fuzz" / "artifacts" / target_name
     corpus_dir.mkdir(parents=True, exist_ok=True)
     artifact_dir.mkdir(parents=True, exist_ok=True)
+    artifacts_before = {path.name for path in artifact_dir.iterdir() if path.is_file()}
     argv = [
         "cargo",
         "+nightly",
@@ -152,6 +184,7 @@ def run_coverage_fuzz_target(
         "-print_final_stats=1",
     ]
     started = time.perf_counter()
+    timed_out = False
     try:
         proc = subprocess.run(
             argv,
@@ -164,28 +197,45 @@ def run_coverage_fuzz_target(
         )
         exit_code = proc.returncode
         output = proc.stdout + proc.stderr
-    except (FileNotFoundError, subprocess.TimeoutExpired) as error:
-        exit_code = 124 if isinstance(error, subprocess.TimeoutExpired) else 127
+    except FileNotFoundError as error:
+        exit_code = 127
         output = str(error)
+    except subprocess.TimeoutExpired as error:
+        exit_code = 124
+        timed_out = True
+        output = (error.stdout or "") + (error.stderr or "")
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     mismatches: list[str] = []
-    if exit_code != 0:
-        mismatches.append("coverage-fuzz-failed")
+    artifacts_after = {path.name for path in artifact_dir.iterdir() if path.is_file()}
+    new_artifacts = sorted(artifacts_after - artifacts_before)
+    finding = (
+        bool(new_artifacts)
+        or "ERROR: libFuzzer" in output
+        or "Test unit written to" in output
+    )
+    if timed_out:
+        mismatches.append("target-timeout")
+    elif finding:
+        mismatches.append("fuzz-finding")
+    elif exit_code != 0:
+        mismatches.append("target-execution-failure")
     if contains_internal_panic(output):
         mismatches.append("panic-signal")
+    variant = {
+        "label": f"sustained-fuzz-{target_name}",
+        "status": "pass" if not mismatches else "fail",
+        "mismatches": mismatches,
+        "actual_exit_code": exit_code,
+        "duration_ms": round(elapsed_ms, 3),
+        "argv": argv,
+        "new_artifacts": new_artifacts,
+    }
+    if mismatches:
+        variant["output_tail"] = output_tail(output)
     return {
         "id": str(target["id"]),
         "fuzz_target": target_name,
-        "variants": [
-            {
-                "label": "coverage-guided",
-                "status": "pass" if not mismatches else "fail",
-                "mismatches": mismatches,
-                "actual_exit_code": exit_code,
-                "duration_ms": round(elapsed_ms, 3),
-                "argv": argv,
-            }
-        ],
+        "variants": [variant],
     }
 
 
@@ -211,6 +261,7 @@ def validate_sustained_fuzz_rules(payload: dict[str, Any], repo_root: Path) -> l
         "project_graph",
     }
     observed: set[str] = set()
+    labels: set[str] = set()
     for target in targets:
         if not isinstance(target, dict):
             mismatches.append("target")
@@ -225,6 +276,10 @@ def validate_sustained_fuzz_rules(payload: dict[str, Any], repo_root: Path) -> l
             mismatches.append(f"target.duplicate:{fuzz_target}")
         else:
             observed.add(fuzz_target)
+            label = f"sustained-fuzz-{fuzz_target}"
+            if label in labels:
+                mismatches.append(f"target.label:{label}")
+            labels.add(label)
         if not isinstance(target.get("finding_promotion"), str) or not target["finding_promotion"]:
             mismatches.append(f"{target_id}.finding_promotion")
     if observed != expected:

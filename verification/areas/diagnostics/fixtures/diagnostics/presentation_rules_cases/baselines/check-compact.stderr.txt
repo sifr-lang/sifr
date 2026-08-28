@@ -1,3 +1,4 @@
-2 errors, 0 warnings, 0 notes
+3 errors, 0 warnings, 0 notes
 E SIFR-TYPE-0002 <WORKSPACE>/verification/areas/diagnostics/fixtures/diagnostics/presentation_rules_cases/main.sifr:2:5 carriage return normalized
 E SIFR-INTERNAL-0001 <unknown> spanless internal diagnostic
+E SIFR-INTERNAL-0003 <unknown> code generation failed: assembled Rust source was invalid

@@ -132,7 +132,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         Severity::Error,
         "crates/sifr_lowering/src/lower/rust_interop_structural_tests.rs::structural_method_slots_require_one_context",
         "invalid method-slot bridge bound: {reason}",
-        "sifr_lowering::rust_interop_structural",
+        "sifr_lowering::lower::rust_interop_structural",
         [arg!("reason")],
         ["reason"]
     ),

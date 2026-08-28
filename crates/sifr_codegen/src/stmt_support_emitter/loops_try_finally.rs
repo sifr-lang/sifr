@@ -188,13 +188,6 @@ impl RustEmitter {
         Ok(true)
     }
 
-    pub(crate) fn try_lower_structured_try_except_stmt(
-        &mut self,
-        stmt: &HirStmt,
-    ) -> Result<bool, crate::CodegenError> {
-        self.try_lower_structured_try_except_stmt_with_following(stmt, None)
-    }
-
     pub(crate) fn try_lower_structured_try_except_stmt_with_following(
         &mut self,
         stmt: &HirStmt,
@@ -217,13 +210,6 @@ impl RustEmitter {
             self.push_captured_stmt(&lowered_stmt);
         }
         Ok(true)
-    }
-
-    pub(crate) fn try_lower_try_except_hir_stmt_for_ir(
-        &mut self,
-        stmt: &HirStmt,
-    ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
-        self.try_lower_try_except_hir_stmt_for_ir_with_following(stmt, None)
     }
 
     pub(crate) fn try_lower_try_except_hir_stmt_for_ir_with_following(
@@ -594,19 +580,6 @@ impl RustEmitter {
             }
         }
         Ok(Some(lowered))
-    }
-
-    pub(crate) fn current_result_error_type_name_for_ir(&self) -> String {
-        self.try_closure_error_type
-            .last()
-            .cloned()
-            .or_else(|| {
-                let Type::Result(_, err_ty) = self.current_return_type.as_ref()? else {
-                    return None;
-                };
-                Some(crate::render_type(&crate::sifr_type_to_rust_type(err_ty)))
-            })
-            .unwrap_or_else(|| "Error".to_string())
     }
 
     pub(crate) fn timeout_error_for_ir(&self) -> RustExpr {

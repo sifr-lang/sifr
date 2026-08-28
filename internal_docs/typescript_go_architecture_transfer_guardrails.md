@@ -215,13 +215,21 @@ type hierarchy, code actions, formatting, and generated Rust preview
   service stage traces, bounded status counters, side-effect-free index
   readiness, `sifr/debugTrace`, and `sifr trace` CLI output for local
   debugging.
-- Editor corpus updated the handle preparation surface: `SnapshotHandleKind`
-  stays internal to `sifr_analysis`, marker fixtures live under
-  `verification/areas/developer_tooling/editor_query_corpus`, and runtime package fixtures
-  include `package_fatal_source_map_no_import_ambiguity` to prove fatal
-  package-map diagnostics do not duplicate source import ambiguity.
+- The editor corpus uses marker fixtures under
+  `verification/areas/developer_tooling/editor_query_corpus`. Runtime package
+  fixtures include `package_fatal_source_map_no_import_ambiguity`. This case
+  proves that fatal package-map diagnostics do not duplicate source import
+  ambiguity. The unused snapshot-handle preparation surface was removed.
 
 ### Future Rule Update Obligations
+
+The direct-read inventory includes the manifest and sysroot ownership roots:
+
+- `crates/sifr_stdlib_manifest/src/sources.rs`
+- `crates/sifr_sysroot/src/digest.rs`
+- `crates/sifr_sysroot/src/layout.rs`
+- `crates/sifr_sysroot/src/manifest.rs`
+- `crates/sifr_sysroot/src/resolve.rs`
 
 - The source-provider rule must either route every non-exempt inventory row through `SourceProvider`
   or update this inventory with a reviewed exception before acceptance.

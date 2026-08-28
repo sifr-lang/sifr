@@ -14,6 +14,10 @@
     "cargo_cache_setup": {
       "budget_ms": 300000,
       "enforcement": "blocking"
+    },
+    "area_fuzz_property": {
+      "budget_ms": 2400000,
+      "enforcement": "blocking"
     }
   },
   "resource_policy": {
@@ -736,6 +740,7 @@
   "guardrail_steps": [
     "hir-maintainability",
     "file-size",
+    "maintainability-ratchets",
     "demo-emitted-freshness",
     "source-crate-dependency-direction",
     "submodule-ownership",

@@ -817,14 +817,6 @@ impl RustEmitter {
         Some(self.rust_ir_type_with_generics(&func.return_type))
     }
 
-    pub(crate) fn lower_stmt_strict_for_function(
-        &mut self,
-        stmt: &HirStmt,
-        context: &str,
-    ) -> Vec<RustStmt> {
-        self.lower_stmt_strict_for_function_with_following(stmt, None, context)
-    }
-
     pub(crate) fn lower_stmt_strict_for_function_with_following(
         &mut self,
         stmt: &HirStmt,

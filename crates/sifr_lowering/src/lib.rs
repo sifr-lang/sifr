@@ -8,7 +8,14 @@
 
 pub mod cfg;
 pub mod flow_graph;
-mod hir_nodes;
+pub(crate) use sifr_ir::hir_nodes;
+pub use sifr_ir::{
+    BindingId, CompilerIntrinsicId, FieldIdentity, HirAsyncWithKind, HirClass, HirClassKind,
+    HirExceptHandler, HirExpr, HirFStringPart, HirFunction, HirImport, HirIteratorOp, HirMatchArm,
+    HirModule, HirParam, HirPattern, HirStmt, HirTupleTarget, HirTupleTargetBinding, HirWithItem,
+    HirWithItemKind, MethodCallSource, MethodKind, MutableArgumentTarget, MutableReceiverTarget,
+    Place, PlaceProjection, PythonRecordExpansion,
+};
 #[cfg(test)]
 mod hir_snapshot_expr_projection;
 #[cfg(test)]
@@ -18,7 +25,6 @@ mod lower;
 mod name_resolution_snapshot_tests;
 mod scope;
 
-pub use hir_nodes::*;
 pub use lower::{
     ExternalDefs, LoweringOptions, LoweringSourceOrigin, PythonBridgeTargetAuthority,
     PythonTrustPolicy, StructuralMethodExport, StructuralMethodExports,

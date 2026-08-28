@@ -120,14 +120,6 @@ impl RustEmitter {
         Self::box_recursive_value_for_ir(lowered_value)
     }
 
-    pub(crate) fn lower_class_stmt_strict(
-        &mut self,
-        stmt: &HirStmt,
-        context: &str,
-    ) -> Vec<RustStmt> {
-        self.lower_class_stmt_strict_with_following(stmt, None, context)
-    }
-
     pub(crate) fn lower_class_stmt_strict_with_following(
         &mut self,
         stmt: &HirStmt,

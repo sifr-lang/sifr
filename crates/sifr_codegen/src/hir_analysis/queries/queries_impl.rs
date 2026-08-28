@@ -1,14 +1,14 @@
 use crate::ModuleFuncSignatures;
 use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 #[cfg(test)]
+pub(crate) use sifr_ir::try_body_has_value_return;
+#[cfg(test)]
 pub(crate) use sifr_ir::{
     HirControlFlowEffect as ControlFlowEffect, reachable_top_level_stmt_indices,
     unreachable_top_level_stmt_indices,
 };
 use sifr_ir::{HirExpr, HirIteratorOp, HirPattern, HirStmt};
-pub(crate) use sifr_ir::{
-    block_control_flow_effect, body_contains_return, try_body_has_value_return,
-};
+pub(crate) use sifr_ir::{block_control_flow_effect, body_contains_return};
 use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -49,20 +49,6 @@ pub(crate) fn body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
             &mut on_stmt,
             &mut on_expr,
         ),
-        TraversalControl::Stop
-    )
-}
-
-pub(crate) fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
-    matches!(
-        traversal::walk_expr_until(expr, &mut |node| {
-            if let HirExpr::Call { func, .. } = node {
-                if func == func_name {
-                    return TraversalControl::Stop;
-                }
-            }
-            TraversalControl::Continue
-        }),
         TraversalControl::Stop
     )
 }
@@ -436,6 +422,7 @@ pub(crate) fn collect_referenced_vars_with_types(stmts: &[HirStmt]) -> Vec<(Stri
     refs.into_iter().collect()
 }
 
+#[cfg(test)]
 pub(crate) fn collect_typed_refs_in_expr(expr: &HirExpr, refs: &mut HashMap<String, Type>) {
     traversal::walk_expr(expr, &mut |node| {
         if let HirExpr::Name { name, ty, .. } = node {

@@ -16,6 +16,7 @@ use super::{
     try_lower_simple_tuple_unpack_stmt, try_lower_simple_while_stmt, try_lower_simple_with_stmt,
     try_lower_simple_yield_stmt,
 };
+#[cfg(test)]
 pub(crate) fn try_lower_simple_stmt_with_ctx(
     stmt: &HirStmt,
     in_loop_with_else: bool,

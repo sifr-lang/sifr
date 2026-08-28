@@ -756,8 +756,7 @@ fn affine_and_dynamic_generic_collection_capabilities_fail_during_lowering() {
             errors.iter().any(|error| {
                 matches!(
                     error.code,
-                    Some(DiagnosticCode::TYPE_MISMATCH)
-                        | Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+                    Some(DiagnosticCode::TYPE_MISMATCH | DiagnosticCode::TYPE_INVALID_ANNOTATION)
                 )
             }),
             "{source}: {errors:?}"

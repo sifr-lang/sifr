@@ -2,7 +2,7 @@ use super::{
     RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility, task_context_label_capture_stmt,
     task_context_label_field,
 };
-pub fn build_task_scope_items() -> Vec<RustItem> {
+pub(crate) fn build_task_scope_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
             name: "__SifrTask<T, E>".to_string(),

@@ -1,9 +1,11 @@
 //! Sifr Code Generation: translates typed HIR into Rust source code.
-#![allow(dead_code)]
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 mod lib_modules_and_codegen;
-pub use lib_modules_and_codegen::*;
+pub use lib_modules_and_codegen::{
+    CodegenResult, LoweringStats, MultiModuleCodegenResult, generate_rust, generate_rust_test,
+    generate_rust_with_metadata, generate_rust_with_stdlib, generate_rust_with_stdlib_for_module,
+};
 mod builtin_errors;
 pub(crate) use builtin_errors::BUILTIN_ERROR_CLASSES;
 mod lib_async_main_cancellation;
@@ -29,10 +31,16 @@ mod lib_project_codegen;
 mod lib_project_signatures;
 mod lib_test_project_codegen;
 mod rust_interop_error_mapping;
-pub use lib_project_codegen::*;
-pub use lib_test_project_codegen::*;
+pub use lib_project_codegen::{
+    generate_project, generate_project_with_deps, generate_project_with_deps_and_crates,
+    generate_rust_multi, generate_rust_multi_with_metadata,
+};
+pub use lib_test_project_codegen::{
+    TestProjectCodegenResult, generate_rust_test_project_with_metadata,
+};
 mod lib_emitter_state;
-pub use lib_emitter_state::*;
+pub(crate) use lib_emitter_state::RustEmitter;
+pub use lib_emitter_state::body_contains_yield;
 mod class_emitter;
 mod class_error_emitter;
 mod class_field_emitter;
@@ -42,10 +50,10 @@ mod class_method_receiver_analysis;
 mod class_trait_capabilities;
 mod context;
 mod structured_stmt_entrypoints;
-pub use context::*;
+pub use context::CodegenError;
+pub(crate) use context::{ClassScope, CodegenOutcome, ScopeContext};
 mod entrypoints;
 mod error_refs;
-mod expr_ref_emitter;
 mod expr_render_helpers;
 mod field_analysis_helpers;
 mod function_emitter;
@@ -68,7 +76,10 @@ mod ir_validate;
 pub use generated_source_validate::validate_generated_rust_source;
 mod lib_support;
 pub(crate) use lib_modules_and_codegen::{
-    IsinstanceUnionMatch, ModuleFuncSignatures, NestedFnCapture,
+    FuncSignature, IsinstanceUnionMatch, ModuleFuncSignatures, NestedFnCapture,
+    generate_rust_with_stdlib_for_module_with_project_policy,
+    generate_rust_with_stdlib_for_module_with_structural_policy, module_class_fields,
+    module_func_signatures,
 };
 pub(crate) use lib_support::{
     homogeneous_large_tuple_backing_array, resolve_alias_type_for_plain_call,
@@ -79,12 +90,18 @@ pub(crate) use sifr_type_system::{ParamConvention, Type};
 pub(crate) use std::cell::{Cell, RefCell};
 pub(crate) use std::collections::{HashMap, HashSet};
 mod lower_expr;
-pub use lower_expr::*;
+pub(crate) use lower_expr::{
+    fixed_width_literal_expr_for_target, is_leaf_expr_candidate, try_lower_leaf_expr,
+    try_lower_leaf_expr_result, try_lower_task_duration_expr, with_allowed_plain_calls,
+};
 mod lower_item;
-pub use lower_item::*;
+pub(crate) use lower_item::try_lower_simple_module_constant_item_result;
 mod lower_stmt;
-pub use lower_stmt::*;
-mod match_guard_helpers;
+pub(crate) use lower_stmt::{
+    build_dict_subscript_assign_stmt, build_list_subscript_assign_stmt,
+    build_normalized_list_index_i64_expr, is_simple_stmt_candidate, lower_tuple_unpack_targets,
+    try_lower_simple_stmt_with_scope_result_and_bindings, tuple_unpack_source_is_borrowed,
+};
 mod method_call_emitter;
 mod methods;
 mod module_body;
@@ -100,7 +117,19 @@ mod preamble;
 mod project_stdlib_nominals;
 mod project_union_prelude;
 mod protocol_bridge_emitter;
-pub use preamble::*;
+#[cfg(test)]
+pub(crate) use preamble::sifr_type_to_rust_field_type;
+pub(crate) use preamble::{
+    build_async_exit_cause_type_items, build_async_generator_type_items,
+    build_cancellation_error_type_items, build_cpu_offload_items, build_error_into_error_impl,
+    build_error_type_items, build_failure_type_items, build_file_handle_infra_items,
+    build_file_handle_struct_items, build_io_error_items, build_join_set_cpu_items,
+    build_join_set_items, build_task_cancellation_items, build_task_context_scope_extension_items,
+    build_task_current_context_items, build_task_scope_cpu_offload_items, build_task_scope_items,
+    build_task_scope_offload_items, build_task_scope_process_items, build_task_supervisor_items,
+    build_timeout_result_type_items, build_worker_panic_hook_items, replace_parallel_runtime_items,
+    rust_type_base_name, sifr_type_to_rust_type,
+};
 mod python_arrow_codegen;
 #[cfg(test)]
 mod python_arrow_codegen_tests;
@@ -135,7 +164,7 @@ pub use python_interop_plan::{
     PythonTargetProbe, PythonTargetProbeStatus,
 };
 mod render;
-pub use render::*;
+pub(crate) use render::{Renderer, render_expr, render_items, render_stmts, render_type};
 mod rust_interop_bridge_callback_contract;
 mod rust_interop_bridge_contract;
 mod rust_interop_bridge_contract_serialization;
@@ -164,7 +193,11 @@ pub use rust_interop_plan::{
     RustStructuralShapeIdentity, interop_build_plan_for_named_modules,
 };
 mod rust_ir;
-pub use rust_ir::*;
+pub(crate) use rust_ir::{
+    CompilerFragment, RustEnumVariant, RustExpr, RustFile, RustItem, RustLiteral, RustMatchArm,
+    RustParam, RustStmt, RustTrait, RustType, RustTypeParam, RustWithItem, Visibility,
+    user_callable_rust_name,
+};
 mod stdlib_codegen_metadata;
 mod stdlib_filter;
 pub use stdlib_codegen_metadata::StdlibCode;

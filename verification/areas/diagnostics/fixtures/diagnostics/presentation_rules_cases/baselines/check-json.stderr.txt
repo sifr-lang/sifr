@@ -106,5 +106,22 @@
     "children": [],
     "help": "report this compiler bug",
     "suggestions": []
+  },
+  {
+    "code": "SIFR-INTERNAL-0003",
+    "severity": "Error",
+    "message": "code generation failed: assembled Rust source was invalid",
+    "message_template": "code generation failed: {message}",
+    "args": {
+      "message": {
+        "kind": "string",
+        "value": "assembled Rust source was invalid"
+      }
+    },
+    "url": "https://docs.sifr.sh/errors/SIFR-INTERNAL-0003",
+    "spans": [],
+    "children": [],
+    "help": null,
+    "suggestions": []
   }
 ]

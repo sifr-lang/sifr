@@ -1138,7 +1138,6 @@ name = "sifr-fuzz"
 version = "0.0.0"
 dependencies = [
  "libfuzzer-sys",
- "serde_json",
  "sifr_codegen",
  "sifr_diagnostics",
  "sifr_driver",

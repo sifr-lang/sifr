@@ -19,7 +19,7 @@ fn semantic_property_codegen_is_deterministic() {
                 },
             ) => assert_eq!(first_source, second_source),
             (CompileResult::Errors { errors: first }, CompileResult::Errors { errors: second }) => {
-                assert_eq!(first, second)
+                assert_eq!(first, second);
             }
             _ => panic!("the same source changed compilation outcome"),
         }

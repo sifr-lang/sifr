@@ -1,9 +1,9 @@
 use super::{IsinstanceUnionMatch, ModuleFuncSignatures};
 use crate::RustExpr;
-use crate::hir_analysis::{queries, traversal};
+use crate::hir_analysis::queries;
 use sifr_ir::{HirExpr, HirStmt};
-use sifr_type_system::{OwnershipKind, ParamConvention, ReceiverConvention, Type};
-use std::collections::{HashMap, HashSet};
+use sifr_type_system::{OwnershipKind, ParamConvention, Type};
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ValueCategory {
@@ -179,12 +179,6 @@ pub(crate) fn option_projection_method_for_owned_type(ty: &Type) -> &'static str
     } else {
         "cloned"
     }
-}
-
-/// Check if a type can be auto-formatted with `{}` (implements Display).
-/// Used to determine if auto-generated Display impl is safe for a class field.
-pub(crate) fn is_auto_display_type(ty: &Type) -> bool {
-    ty.supports_display_formatting()
 }
 
 /// Returns the default parameter convention for a type.
@@ -536,92 +530,6 @@ pub(crate) fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
     None
 }
 
-/// Collect all parts of a chained string concatenation (`a + b + c`).
-/// Recursively flattens nested `BinOp::Add` on strings into a flat list of expressions.
-pub(crate) fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec<&'a HirExpr>) {
-    if let HirExpr::BinOp {
-        left,
-        op,
-        right,
-        ty,
-    } = expr
-    {
-        if op == "+" && *ty == Type::Str {
-            collect_string_concat_parts(left, parts);
-            collect_string_concat_parts(right, parts);
-            return;
-        }
-    }
-    parts.push(expr);
-}
-
-/// Check if an expression contains a mutating method call on a self field (e.g., self.items.append(...)).
-pub(crate) fn expr_contains_self_field_mutation(expr: &HirExpr) -> bool {
-    let mut found = false;
-    traversal::walk_expr(expr, &mut |candidate| {
-        if !found && is_self_field_mutating_method_call(candidate) {
-            found = true;
-        }
-    });
-    found
-}
-
-pub(crate) fn is_self_field_mutating_method_call(expr: &HirExpr) -> bool {
-    match expr {
-        HirExpr::MethodCall {
-            object,
-            receiver_convention,
-            ..
-        } => {
-            let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { .. })
-                && field_access_root_name(object) == Some("self");
-            is_self_field && *receiver_convention == Some(ReceiverConvention::MutableBorrow)
-        }
-        _ => false,
-    }
-}
-
-fn field_access_root_name(expr: &HirExpr) -> Option<&str> {
-    match expr {
-        HirExpr::Name { name, .. } => Some(name),
-        HirExpr::FieldAccess { object, .. } => field_access_root_name(object),
-        _ => None,
-    }
-}
-
-/// Check if a type contains a specific type variable name.
-pub(crate) fn type_contains_typevar(ty: &Type, tv_name: &str) -> bool {
-    match ty {
-        Type::TypeVar(name) => name == tv_name,
-        Type::List(inner) | Type::PythonBuffer(inner) | Type::PythonDlpackTensor(inner) => {
-            type_contains_typevar(inner, tv_name)
-        }
-        Type::Set(inner) => type_contains_typevar(inner, tv_name),
-        Type::Dict(key, val) => {
-            type_contains_typevar(key, tv_name) || type_contains_typevar(val, tv_name)
-        }
-        Type::Tuple(elems) => elems.iter().any(|e| type_contains_typevar(e, tv_name)),
-        Type::Union(members) => members.iter().any(|m| type_contains_typevar(m, tv_name)),
-        Type::Result(ok, err) => {
-            type_contains_typevar(ok, tv_name) || type_contains_typevar(err, tv_name)
-        }
-        Type::Class {
-            fields, methods, ..
-        } => {
-            fields
-                .iter()
-                .any(|(_, t)| type_contains_typevar(t, tv_name))
-                || methods.iter().any(|(_, ft)| {
-                    ft.params
-                        .iter()
-                        .any(|(_, t, _)| type_contains_typevar(t, tv_name))
-                        || type_contains_typevar(&ft.return_type, tv_name)
-                })
-        }
-        _ => false,
-    }
-}
-
 /// Check if a type references a specific class name (directly or via union/option).
 pub(crate) fn type_references_class(ty: &Type, class_name: &str) -> bool {
     match ty.resolve_alias() {
@@ -680,27 +588,20 @@ pub(crate) fn type_references_any_class(
     }
 }
 
-/// Check if a variable name is referenced anywhere in a list of statements.
-pub(crate) fn stmts_reference_var(stmts: &[HirStmt], var_name: &str) -> bool {
-    queries::stmts_reference_var(stmts, var_name)
-}
-
-/// Check if an expression references a variable name.
-pub(crate) fn expr_references_var(expr: &HirExpr, var_name: &str) -> bool {
-    queries::expr_references_var(expr, var_name)
-}
-
 /// Check if a function body contains any yield statements (making it a generator).
+#[cfg(test)]
 pub(crate) fn body_contains_return_stmt(stmts: &[HirStmt]) -> bool {
     queries::body_contains_return(stmts)
 }
 
 /// Check if a try body contains a return statement with a non-unit value.
 /// Used to determine if the try closure needs to return T instead of ().
+#[cfg(test)]
 pub(crate) fn try_body_has_value_return(stmts: &[HirStmt]) -> bool {
     queries::try_body_has_value_return(stmts)
 }
 
+#[cfg(test)]
 pub(crate) fn body_contains_yield_inner(stmts: &[HirStmt]) -> bool {
     queries::body_contains_yield(stmts)
 }
@@ -708,16 +609,6 @@ pub(crate) fn body_contains_yield_inner(stmts: &[HirStmt]) -> bool {
 /// Check if a type needs .`clone()` when accessed from &self (non-Copy types).
 pub(crate) fn needs_clone_for_type(ty: &Type) -> bool {
     ty.ownership() == sifr_type_system::OwnershipKind::Move
-}
-
-/// Collect the set of variable names that are mutated in a function body.
-/// A variable is mutated if it appears in:
-/// - `HirStmt::Assign` (reassignment)
-/// - `HirStmt::AugAssign` (augmented assignment like +=)
-/// - `HirStmt::Expr` containing a `MethodCall` on the variable with a mutating method
-/// - `HirStmt::Delete` on the variable
-pub(crate) fn collect_mutated_vars(stmts: &[HirStmt]) -> HashSet<String> {
-    queries::collect_mutated_vars(stmts, None)
 }
 
 pub(crate) fn collect_mutated_vars_with_sigs(
@@ -736,10 +627,6 @@ pub(crate) fn collect_referenced_vars_with_types(stmts: &[HirStmt]) -> Vec<(Stri
     queries::collect_referenced_vars_with_types(stmts)
 }
 
-pub(crate) fn collect_typed_refs_in_expr(expr: &HirExpr, refs: &mut HashMap<String, Type>) {
-    queries::collect_typed_refs_in_expr(expr, refs);
-}
-
 /// Collect all variable names defined (let-bound) in a list of statements.
 /// Does NOT recurse into nested functions.
 pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String> {
@@ -747,10 +634,7 @@ pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
 }
 
 /// Check if a function body contains calls to a specific function name.
+#[cfg(test)]
 pub(crate) fn body_calls_function(stmts: &[HirStmt], func_name: &str) -> bool {
     queries::body_calls_function(stmts, func_name)
-}
-
-pub(crate) fn expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
-    queries::expr_calls_function(expr, func_name)
 }

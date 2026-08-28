@@ -458,7 +458,7 @@ fn collect_expr(expr: &HirExpr, path: &str, facts: &mut NameFacts) {
         }
         HirExpr::WalrusExpr { value, .. } => collect_expr(value, path, facts),
         HirExpr::FieldAccess { object, .. } => {
-            collect_expr(object, &format!("{path}/object"), facts)
+            collect_expr(object, &format!("{path}/object"), facts);
         }
         HirExpr::ConstructorCall { args, .. } => {
             for (index, arg) in args.iter().enumerate() {

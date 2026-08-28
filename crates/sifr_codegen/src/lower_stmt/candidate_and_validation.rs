@@ -43,7 +43,7 @@ pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
 
 /// Lowers an expression statement when the expression is a leaf
 /// supported by `try_lower_leaf_expr`.
-pub fn try_lower_expr_stmt(expr: &HirExpr) -> Option<Vec<RustStmt>> {
+pub(super) fn try_lower_expr_stmt(expr: &HirExpr) -> Option<Vec<RustStmt>> {
     if let Some(lowered_print) = try_lower_simple_print_expr_stmt(expr) {
         return Some(vec![lowered_print]);
     }
@@ -113,7 +113,7 @@ pub(super) fn try_lower_simple_print_expr_stmt(expr: &HirExpr) -> Option<RustStm
 }
 
 #[derive(Clone, Copy, Default)]
-pub struct SimpleStmtLoweringCtx<'a> {
+pub(crate) struct SimpleStmtLoweringCtx<'a> {
     pub return_type: Option<&'a Type>,
     pub in_display_impl: bool,
     pub in_class_scope: bool,
@@ -131,7 +131,8 @@ pub(super) struct SimpleStmtBindings<'a> {
 
 /// Lowers statement variants that are context-light and safe to convert
 /// without touching complex emitter state.
-pub fn try_lower_simple_stmt(
+#[cfg(test)]
+pub(super) fn try_lower_simple_stmt(
     stmt: &HirStmt,
     in_loop_with_else: bool,
     mutated_vars: &HashSet<String>,
@@ -149,23 +150,6 @@ pub fn try_lower_simple_stmt(
         &HashMap::new(),
         &HashSet::new(),
         &scope_ctx,
-    )
-}
-
-pub(crate) fn try_lower_simple_stmt_with_scope(
-    stmt: &HirStmt,
-    mutated_vars: &HashSet<String>,
-    borrowed_params: &HashSet<String>,
-    scope_ctx: &ScopeContext,
-) -> Option<Vec<RustStmt>> {
-    try_lower_simple_stmt_with_scope_and_bindings(
-        stmt,
-        mutated_vars,
-        borrowed_params,
-        &HashSet::new(),
-        &HashMap::new(),
-        &HashSet::new(),
-        scope_ctx,
     )
 }
 
@@ -197,6 +181,7 @@ pub(crate) fn try_lower_simple_stmt_with_scope_and_bindings(
     )
 }
 
+#[cfg(test)]
 pub(crate) fn try_lower_simple_stmt_with_scope_result(
     stmt: &HirStmt,
     mutated_vars: &HashSet<String>,

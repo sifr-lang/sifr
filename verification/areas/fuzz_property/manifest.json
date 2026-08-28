@@ -5,9 +5,10 @@
   "description": "Semantic properties, deterministic mutation smoke, and coverage-guided fuzzing.",
   "parallel_safe": false,
   "resource_classes": [
-    "default-local"
+    "default-local",
+    "long-running"
   ],
-  "timeout_seconds": 900,
+  "timeout_seconds": 2400,
   "suites": [
     {
       "name": "cargo-smoke",

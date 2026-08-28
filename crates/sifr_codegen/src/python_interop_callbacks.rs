@@ -312,30 +312,6 @@ pub(crate) fn callback_owner_expr(setup: &CallbackSetup) -> RustExpr {
     }
 }
 
-pub(crate) fn callback_outcome_with_evidence(
-    outcome: RustExpr,
-    callbacks: &[CallbackSetup],
-) -> RustExpr {
-    runtime_call(
-        "attach_callback_failure_evidence",
-        vec![
-            outcome,
-            RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(RustExpr::Array(
-                    callbacks
-                        .iter()
-                        .map(|callback| RustExpr::Ref {
-                            mutable: false,
-                            expr: Box::new(callback_owner_expr(callback)),
-                        })
-                        .collect(),
-                )),
-            },
-        ],
-    )
-}
-
 pub(crate) fn callback_outcome_after_cleanup(
     outcome: RustExpr,
     callbacks: &[CallbackSetup],

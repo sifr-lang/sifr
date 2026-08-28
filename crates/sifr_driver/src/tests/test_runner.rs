@@ -390,6 +390,60 @@ fn test_run_tests_parallel_invocations_are_isolated() {
 }
 
 #[test]
+fn test_run_tests_parallel_same_key_reuses_stable_execution_workspace() {
+    let unique = format!(
+        "sifr_test_parallel_same_key_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    );
+    let test_dir = std::env::temp_dir().join(unique);
+    std::fs::create_dir_all(&test_dir).expect("test dir should be created");
+    std::fs::write(
+        test_dir.join("test_parallel.sifr"),
+        "def test_value():\n    assert 2 + 2 == 4\n",
+    )
+    .expect("test module should be written");
+    let barrier = Arc::new(Barrier::new(3));
+
+    let first_barrier = Arc::clone(&barrier);
+    let first_path = test_dir.clone();
+    let first = std::thread::spawn(move || {
+        first_barrier.wait();
+        run_tests(
+            &first_path,
+            &mut DiskSourceProvider::new(),
+            CargoLockMode::Normal,
+        )
+    });
+    let second_barrier = Arc::clone(&barrier);
+    let second_path = test_dir.clone();
+    let second = std::thread::spawn(move || {
+        second_barrier.wait();
+        run_tests(
+            &second_path,
+            &mut DiskSourceProvider::new(),
+            CargoLockMode::Normal,
+        )
+    });
+
+    barrier.wait();
+    for result in [
+        first.join().expect("first thread should join"),
+        second.join().expect("second thread should join"),
+    ] {
+        assert!(
+            matches!(result, Ok(true)),
+            "same-key parallel test run should pass: {result:?}"
+        );
+    }
+
+    let _ = std::fs::remove_dir_all(&test_dir);
+}
+
+#[test]
 fn test_run_tests_ignores_unrelated_non_closure_parse_errors() {
     let unique = format!(
         "sifr_test_import_closure_{}_{}",
@@ -449,8 +503,7 @@ fn test_run_tests_reports_deterministic_parse_error_order() {
         &mut DiskSourceProvider::new(),
         CargoLockMode::Normal,
     )
-    .err()
-    .expect("parse errors should be reported")
+    .expect_err("parse errors should be reported")
     .into_iter()
     .map(|error| {
         (
@@ -468,8 +521,7 @@ fn test_run_tests_reports_deterministic_parse_error_order() {
         &mut DiskSourceProvider::new(),
         CargoLockMode::Normal,
     )
-    .err()
-    .expect("parse errors should be deterministic")
+    .expect_err("parse errors should be deterministic")
     .into_iter()
     .map(|error| {
         (

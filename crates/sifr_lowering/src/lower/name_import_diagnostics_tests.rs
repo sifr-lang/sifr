@@ -20,11 +20,10 @@ fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
 }
 
 fn range_for(source: &str, needle: &str) -> TextRange {
-    let start = source.find(needle).expect("needle should exist") as u32;
-    TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
-    )
+    let start = u32::try_from(source.find(needle).expect("needle should exist"))
+        .expect("fixture offset must fit u32");
+    let needle_len = u32::try_from(needle.len()).expect("fixture length must fit u32");
+    TextRange::new(TextSize::new(start), TextSize::new(start + needle_len))
 }
 
 fn string_arg<'a>(error: &'a HirDiagnostic, name: &str) -> Option<&'a str> {

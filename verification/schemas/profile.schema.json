@@ -283,6 +283,7 @@
         "enum": [
           "hir-maintainability",
           "file-size",
+          "maintainability-ratchets",
           "demo-emitted-freshness",
           "source-crate-dependency-direction",
           "submodule-ownership",

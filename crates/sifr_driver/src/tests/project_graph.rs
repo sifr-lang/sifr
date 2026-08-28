@@ -733,11 +733,9 @@ def value_a() -> int:
     );
 
     let error_a = compute_module_compile_order(&parsed_modules_a)
-        .err()
-        .expect("cycle graph should fail compile ordering");
+        .expect_err("cycle graph should fail compile ordering");
     let error_b = compute_module_compile_order(&parsed_modules_b)
-        .err()
-        .expect("cycle graph should fail compile ordering");
+        .expect_err("cycle graph should fail compile ordering");
 
     let message_a = &error_a[0].message;
     let message_b = &error_b[0].message;

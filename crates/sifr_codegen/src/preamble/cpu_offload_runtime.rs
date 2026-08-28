@@ -1,6 +1,6 @@
 use super::{RustItem, RustParam, RustStmt, RustType, Visibility};
 
-pub fn build_worker_panic_hook_items() -> Vec<RustItem> {
+pub(crate) fn build_worker_panic_hook_items() -> Vec<RustItem> {
     vec![
         RustItem::Use(vec![
             "sifr_runtime".to_string(),
@@ -34,7 +34,7 @@ pub fn build_worker_panic_hook_items() -> Vec<RustItem> {
     ]
 }
 
-pub fn build_cpu_offload_items() -> Vec<RustItem> {
+pub(crate) fn build_cpu_offload_items() -> Vec<RustItem> {
     vec![
         RustItem::Fn {
             name: "__sifr_spawn_cpu_infallible".to_string(),

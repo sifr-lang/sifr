@@ -94,13 +94,15 @@ def run_property_suite(
         repeat_runs = entry.get("repeat_runs", 2)
         assert_no_panic = bool(entry.get("assert_no_panic", True))
 
-        if command_name not in {"check", "run", "build", "test", "cargo-test"}:
+        if command_name not in {"check", "run", "build", "emit", "test", "cargo-test"}:
             mismatches.append("command")
         if not isinstance(expected_exit, int):
             mismatches.append("expect_exit_code")
         minimum_runs = 1 if command_name == "cargo-test" else 2
         if not isinstance(repeat_runs, int) or repeat_runs < minimum_runs:
             mismatches.append("repeat_runs")
+        if command_name == "cargo-test" and repeat_runs != 1:
+            mismatches.append("cargo-test-repeat-contract")
         entry_path = repo_root / str(entry_path_raw) if isinstance(entry_path_raw, str) else None
         if entry_path is None or not entry_path.is_file():
             mismatches.append("entry")

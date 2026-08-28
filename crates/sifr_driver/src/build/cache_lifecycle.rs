@@ -316,16 +316,26 @@ fn group_cache_candidates(candidates: Vec<PathBuf>) -> Vec<Vec<PathBuf>> {
             .and_then(Path::file_name)
             .and_then(|name| name.to_str())
             == Some("test_runner");
-        if is_test_runner_entry
+        let is_companion = is_test_runner_entry
             && path
                 .extension()
                 .and_then(|value| value.to_str())
-                .is_some_and(|extension| TEST_RUNNER_COMPANION_EXTENSIONS.contains(&extension))
-        {
+                .is_some_and(|extension| TEST_RUNNER_COMPANION_EXTENSIONS.contains(&extension));
+        if is_companion {
             let owner = path.with_extension("");
             if candidate_set.contains(&owner) {
                 continue;
             }
+            let companions = TEST_RUNNER_COMPANION_EXTENSIONS
+                .iter()
+                .map(|extension| owner.with_extension(extension))
+                .filter(|companion| candidate_set.contains(companion))
+                .collect::<Vec<_>>();
+            if companions.first() != Some(&path) {
+                continue;
+            }
+            grouped.push(companions);
+            continue;
         }
         let mut paths = vec![path.clone()];
         if is_test_runner_entry {
@@ -458,6 +468,35 @@ mod tests {
         .expect("cleanup should succeed");
         assert_eq!(report.removed_entries, 1);
         assert!(!workspace.exists());
+        assert!(!execution.exists());
+        assert!(!target.exists());
+    }
+
+    #[test]
+    fn ownerless_test_runner_companions_are_one_lifecycle_entry() {
+        let root = tempfile::tempdir().expect("cache root should be created");
+        let namespace = root.path().join("test_runner");
+        let owner = namespace.join("cache-key");
+        let execution = owner.with_extension("execution");
+        let target = owner.with_extension("target");
+        fs::create_dir_all(&execution).expect("execution should be created");
+        fs::create_dir_all(&target).expect("target should be created");
+        fs::write(execution.join("lock"), vec![1_u8; 4]).expect("lock should be written");
+        fs::write(target.join("artifact"), vec![2_u8; 16]).expect("artifact should be written");
+
+        let status = cache_status_at(root.path(), 100).expect("status should succeed");
+        assert_eq!(status.entries, 1);
+        assert_eq!(status.bytes, 20);
+
+        let report = clean_cache_at(
+            root.path(),
+            &ArtifactCacheCleanPolicy {
+                remove_all: true,
+                ..ArtifactCacheCleanPolicy::default()
+            },
+        )
+        .expect("cleanup should succeed");
+        assert_eq!(report.removed_entries, 1);
         assert!(!execution.exists());
         assert!(!target.exists());
     }

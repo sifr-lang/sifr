@@ -23,7 +23,7 @@ pub use flow_graph::*;
 pub use hir_flow::*;
 pub use hir_nodes::*;
 pub use lowering_outcome::LoweringOutcome;
-pub use lowering_result::LoweringResult;
+pub use lowering_result::{LoweringResult, NestedInferenceDivergence};
 pub use python_interop::*;
 pub use rust_interop::*;
 pub use specialization_metadata::*;

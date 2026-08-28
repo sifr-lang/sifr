@@ -544,6 +544,13 @@ fn first_call_keyword_range(call: &ExprCall) -> TextRange {
         .map_or_else(|| call.func.range(), |keyword| keyword.range)
 }
 
+fn call_arity_range(call: &ExprCall) -> TextRange {
+    call.arguments
+        .args
+        .last()
+        .map_or_else(|| call.func.range(), Ranged::range)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -559,11 +566,4 @@ mod tests {
             ));
         }
     }
-}
-
-fn call_arity_range(call: &ExprCall) -> TextRange {
-    call.arguments
-        .args
-        .last()
-        .map_or_else(|| call.func.range(), Ranged::range)
 }

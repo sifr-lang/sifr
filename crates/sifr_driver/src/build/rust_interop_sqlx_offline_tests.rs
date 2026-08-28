@@ -4,6 +4,7 @@ use super::{
     sqlx_offline_metadata_digest, validate_sqlx_offline_metadata,
 };
 use sha2::{Digest as _, Sha256};
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -419,7 +420,7 @@ fn cargo_entrypoint_selection_follows_lib_path_then_main_fallback() {
 #[test]
 fn valid_checked_in_query_metadata_passes() {
     let fixture = SqlxFixture::new();
-    fixture.write_metadata_for(fixture.query(), fixture.query());
+    fixture.write_metadata_for(SqlxFixture::query(), SqlxFixture::query());
 
     assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
 }
@@ -431,7 +432,7 @@ fn missing_and_stale_query_metadata_fail_closed() {
         validate_sqlx_offline_metadata(&fixture.0).expect_err("missing SQLx metadata must fail");
     assert!(missing.contains("there is no cached data for this query"));
 
-    fixture.write_metadata_for(fixture.query(), "SELECT 12");
+    fixture.write_metadata_for(SqlxFixture::query(), "SELECT 12");
     let stale =
         validate_sqlx_offline_metadata(&fixture.0).expect_err("stale SQLx metadata must fail");
     assert!(stale.contains("saved SQLx query text does not match query identity"));
@@ -442,7 +443,7 @@ fn workspace_metadata_and_workspace_dependency_renames_are_resolved() {
     let fixture = SqlxFixture::new_workspace_member();
     fixture.write_manifest("[dependencies]\ndatabase = { workspace = true }\n");
     fixture.write_source("fn query() { let _ = database::query!(\"SELECT 13\"); }\n");
-    fixture.write_workspace_metadata_for(fixture.query(), fixture.query());
+    fixture.write_workspace_metadata_for(SqlxFixture::query(), SqlxFixture::query());
 
     assert_eq!(
         sqlx_dependency_crate_names(&fixture.0),
@@ -472,12 +473,12 @@ fn explicit_offline_directory_disengages_conservative_preflight() {
 fn complete_metadata_directory_participates_in_cache_identity() {
     let fixture = SqlxFixture::new();
     let bridge_fixture = SqlxFixture::new();
-    fixture.write_metadata_for(fixture.query(), fixture.query());
-    bridge_fixture.write_metadata_for(bridge_fixture.query(), bridge_fixture.query());
+    fixture.write_metadata_for(SqlxFixture::query(), SqlxFixture::query());
+    bridge_fixture.write_metadata_for(SqlxFixture::query(), SqlxFixture::query());
     let before =
         combined_sqlx_offline_metadata_digest([fixture.0.as_path(), bridge_fixture.0.as_path()])
             .expect("metadata digest should exist");
-    let path = bridge_fixture.metadata_path(bridge_fixture.query());
+    let path = bridge_fixture.metadata_path(SqlxFixture::query());
     let source = std::fs::read_to_string(&path).expect("metadata should be readable");
     std::fs::write(
         &path,
@@ -527,7 +528,7 @@ impl SqlxFixture {
         fixture
     }
 
-    const fn query(&self) -> &'static str {
+    const fn query() -> &'static str {
         "SELECT 13"
     }
 
@@ -552,11 +553,11 @@ impl SqlxFixture {
     }
 
     fn write_metadata_for(&self, query: &str, stored_query: &str) {
-        self.write_metadata_at(&self.0.join(".sqlx"), query, stored_query);
+        Self::write_metadata_at(&self.0.join(".sqlx"), query, stored_query);
     }
 
     fn write_workspace_metadata_for(&self, query: &str, stored_query: &str) {
-        self.write_metadata_at(
+        Self::write_metadata_at(
             &self
                 .0
                 .parent()
@@ -567,7 +568,7 @@ impl SqlxFixture {
         );
     }
 
-    fn write_metadata_at(&self, metadata_root: &Path, query: &str, stored_query: &str) {
+    fn write_metadata_at(metadata_root: &Path, query: &str, stored_query: &str) {
         let hash = hex(&Sha256::digest(query.as_bytes()));
         std::fs::create_dir_all(metadata_root).expect("metadata directory should be created");
         let body = serde_json::json!({
@@ -597,5 +598,8 @@ impl Drop for SqlxFixture {
 }
 
 fn hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+    bytes.iter().fold(String::new(), |mut output, byte| {
+        let _ = write!(output, "{byte:02x}");
+        output
+    })
 }

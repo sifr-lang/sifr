@@ -1,6 +1,7 @@
 use super::project_build_check::mktemp_dir;
 use crate::{PackageEntrypoint, build_cached_package_project, check_package_project};
 use sifr_diagnostics::DiagnosticCode;
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone)]
@@ -92,9 +93,10 @@ fn backend_rust_package(workspace: &Path, dir_name: &str, cargo_name: &str) -> T
 fn write_manifest_dependency_alias(package: &TestPackage, dependency_name: &str, import: &str) {
     let manifest = package.root.join("sifr.toml");
     let mut source = std::fs::read_to_string(&manifest).expect("manifest should be readable");
-    source.push_str(&format!(
+    let _ = write!(
+        source,
         "\n[dependencies]\n{dependency_name} = {{ package = \"{dependency_name}\", path = \"../{dependency_name}\", import = \"{import}\" }}\n"
-    ));
+    );
     std::fs::write(manifest, source).expect("manifest should be updated");
 }
 

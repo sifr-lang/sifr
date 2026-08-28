@@ -23,6 +23,10 @@
       "budget_ms": 360000,
       "enforcement": "blocking"
     },
+    "guardrail_maintainability_ratchets": {
+      "budget_ms": 360000,
+      "enforcement": "blocking"
+    },
     "guardrail_demo_emitted_freshness": {
       "budget_ms": 360000,
       "enforcement": "blocking"
@@ -765,6 +769,7 @@
   "guardrail_steps": [
     "hir-maintainability",
     "file-size",
+    "maintainability-ratchets",
     "demo-emitted-freshness",
     "source-crate-dependency-direction",
     "submodule-ownership",

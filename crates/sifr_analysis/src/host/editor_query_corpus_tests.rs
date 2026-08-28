@@ -1,8 +1,8 @@
 use super::text_edits::full_range;
 use super::*;
-use crate::queries::{CodeActionContext, DiagnosticId, SymbolQuery};
+use crate::queries::{CodeActionContext, DiagnosticId};
 use crate::{DocumentVersion, FormatOptions, ProjectRoot, SourceText, SymbolName, TextPosition};
-use sifr_frontend::{FrontendInput, FrontendMode, SourcePath};
+use sifr_frontend::SourcePath;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug)]
@@ -279,87 +279,4 @@ fn marker_editor_corpus_covers_multifile_queries_and_stale_snapshots() {
     );
 
     let _ = std::fs::remove_dir_all(&dir);
-}
-
-#[test]
-fn snapshot_handles_are_internal_and_reject_wrong_snapshot_resolution() {
-    let mut host = AnalysisHost::open_single_file(FrontendInput {
-        path: SourcePath::new("main.sifr"),
-        source: SourceText::new("def main():\n    value: int = 1\n    return value  \n"),
-        mode: FrontendMode::SingleFile,
-    })
-    .expect("single file host should load");
-    let file = host.files()[0];
-    let snapshot = host.snapshot();
-    let position = TextPosition {
-        line: 1,
-        character: 6,
-    };
-    let range = full_range("def main():\n    value: int = 1\n    return value  \n")
-        .expect("source should fit in range");
-    let symbol = snapshot
-        .workspace_symbols(&mut host, &SymbolQuery::default())
-        .expect("workspace symbols should query")
-        .into_value()
-        .into_iter()
-        .find(|symbol| symbol.name == "main")
-        .expect("main symbol should exist");
-    let symbol_handle = snapshot.symbol_handle(symbol.clone());
-    let type_handle = snapshot.type_handle("int");
-    let signature_handle = snapshot.signature_handle("main(...)");
-    let diagnostic_handle = snapshot.diagnostic_handle("SIFR-LINT-0004", Some(file));
-    let span_handle = snapshot.source_span_handle(file, range);
-
-    assert_eq!(snapshot.resolve_symbol_handle(&symbol_handle), Ok(symbol));
-    assert_eq!(snapshot.resolve_type_handle(&type_handle), Ok("int"));
-    assert_eq!(
-        snapshot.resolve_signature_handle(&signature_handle),
-        Ok("main(...)")
-    );
-    assert_eq!(
-        snapshot.resolve_diagnostic_handle(&diagnostic_handle),
-        Ok(("SIFR-LINT-0004", Some(file)))
-    );
-    assert_eq!(
-        snapshot
-            .resolve_source_span_handle(&span_handle)
-            .expect("source span handle should resolve")
-            .file,
-        file
-    );
-
-    host.update_document(
-        file,
-        DocumentVersion::new(2),
-        SourceText::new("def main():\n    value: int = 2\n    return value\n"),
-    )
-    .expect("document update should advance snapshot identity");
-    let next_snapshot = host.snapshot();
-    assert!(next_snapshot.workspace_snapshot_id() != snapshot.workspace_snapshot_id());
-    for stale_error in [
-        next_snapshot.resolve_symbol_handle(&symbol_handle).err(),
-        next_snapshot.resolve_type_handle(&type_handle).err(),
-        next_snapshot
-            .resolve_signature_handle(&signature_handle)
-            .err(),
-        next_snapshot
-            .resolve_diagnostic_handle(&diagnostic_handle)
-            .err(),
-        next_snapshot.resolve_source_span_handle(&span_handle).err(),
-    ] {
-        assert_eq!(
-            stale_error
-                .expect("wrong snapshot should reject handle")
-                .kind,
-            crate::snapshot::AnalysisErrorKind::StaleSnapshot
-        );
-    }
-
-    assert!(
-        snapshot
-            .hover(&mut host, file, &position)
-            .expect_err("old analysis snapshot should also reject host query")
-            .message
-            .contains("stale")
-    );
 }

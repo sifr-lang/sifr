@@ -680,7 +680,7 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
             &opaque_classes,
             Some(&opaque),
             &retained_errors,
-            &[handler_error.clone()],
+            std::slice::from_ref(&handler_error),
         )
         .expect("typed later owner method"),
     );

@@ -147,7 +147,6 @@ pub enum DeferredCodeAction {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct GeneratedRustPreview {
     pub file: FileId,
-    pub range: Option<TextRange>,
     pub rust: Option<String>,
     pub source_map_files: Vec<sifr_compiler_services::GeneratedSourceMapFile>,
     pub unavailable_reason: Option<String>,

@@ -238,22 +238,15 @@ fn test_module_body_flows_through_assembled_body_items() {
 }
 
 #[test]
-fn test_generator_init_emission_is_structured_only() {
+fn test_obsolete_generator_init_emitter_is_removed() {
     let stmt_entrypoints_src = include_str!("../structured_stmt_entrypoints.rs");
     let statement_output_src = include_str!("../stmt_support_emitter/statement_output.rs");
-    assert!(statement_output_src.contains("self.lower_stmt_expr_for_ir(value)"));
     assert!(
         stmt_entrypoints_src
             .contains("self.try_lower_structured_stmt_with_following(stmt, following_stmts)")
     );
-    assert!(
-        statement_output_src
-            .contains("structured generator-init expression emission missing for production path")
-    );
-    assert!(
-        statement_output_src
-            .contains("structured generator-init statement emission missing for production path")
-    );
+    assert!(!statement_output_src.contains("emit_generator_init_stmt"));
+    assert!(!statement_output_src.contains("structured generator-init"));
     assert!(!statement_output_src.contains("self.try_emit_expr_string_"));
     assert!(!statement_output_src.contains("self.try_emit_stmt_string_"));
     assert!(!statement_output_src.contains("self.emit_expr(value);"));

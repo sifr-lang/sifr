@@ -419,7 +419,7 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
 
     let generated = generate_rust_with_metadata(&module).expect("code generation should succeed");
     assert!(generated.rust_source.contains("fn value() -> i64"));
-    assert!(generated.rust_source.contains("7"));
+    assert!(generated.rust_source.contains('7'));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed return should be emitted through structured stmt path"
@@ -718,7 +718,7 @@ fn test_production_lowering_rules_uses_result_helpers_only() {
     let field_rewrites_src = include_str!("../expr_render_helpers/field_and_stdlib_rewrites.rs");
 
     assert!(emitter_state_src.contains("try_lower_simple_stmt_with_scope_result_and_bindings("));
-    assert!(lower_expr_src.contains("pub fn try_lower_leaf_expr_result("));
+    assert!(lower_expr_src.contains("pub(crate) fn try_lower_leaf_expr_result("));
     assert!(module_constants_src.contains("try_lower_simple_module_constant_item_result("));
     assert!(field_rewrites_src.contains("try_lower_registry_expr_result("));
 

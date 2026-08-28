@@ -642,8 +642,7 @@ def broken() -> int:
         &dir.join("build_out"),
         &mut sifr_frontend::DiskSourceProvider::new(),
     )
-    .err()
-    .expect("build_project should fail with same frontend error");
+    .expect_err("build_project should fail with same frontend error");
 
     let check_messages = render_compact_diagnostics(&check_errors);
     let build_messages = render_compact_diagnostics(&build_errors);

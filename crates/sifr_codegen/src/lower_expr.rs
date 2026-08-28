@@ -5,7 +5,7 @@ use sifr_ir::{HirExpr, HirFStringPart, HirParam};
 use sifr_type_system::{ParamConvention, Type};
 
 mod leaves_and_plain_calls;
-pub use leaves_and_plain_calls::*;
+pub(crate) use leaves_and_plain_calls::*;
 mod iterators_and_callables;
 use iterators_and_callables::{
     try_lower_dict_get_key_expr, try_lower_simple_constructor_call_expr,

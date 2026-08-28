@@ -114,7 +114,7 @@ pub(super) fn probe_cache_key(
         &probe.backend.cargo_package_name,
         &probe.backend.cargo_version,
         probe.backend.cargo_source.as_deref().unwrap_or("<path>"),
-        &probe.backend.cargo_manifest_path.display().to_string(),
+        &normalized_policy_path(&probe.backend.cargo_manifest_path),
         &probe.path.dotted(),
         probe_manifest,
         probe_source,

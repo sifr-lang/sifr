@@ -16,6 +16,13 @@
       "report": "stdout"
     },
     {
+      "name": "maintainability-ratchets",
+      "entrypoint": "scripts/check_maintainability_ratchets.py",
+      "args": [],
+      "timeout_seconds": 60,
+      "report": "stdout"
+    },
+    {
       "name": "demo-emitted-freshness",
       "entrypoint": "scripts/check_demo_emitted_freshness.py",
       "args": [],

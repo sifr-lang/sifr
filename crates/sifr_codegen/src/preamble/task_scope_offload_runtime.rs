@@ -1,7 +1,7 @@
 use super::{RustItem, RustParam, RustStmt, RustType, Visibility};
 use std::collections::HashMap;
 
-pub fn build_task_scope_offload_items() -> Vec<RustItem> {
+pub(crate) fn build_task_scope_offload_items() -> Vec<RustItem> {
     vec![RustItem::Impl {
         target: "__SifrTaskScope".to_string(),
         type_params: vec![],
@@ -65,7 +65,7 @@ pub fn build_task_scope_offload_items() -> Vec<RustItem> {
     }]
 }
 
-pub fn build_task_scope_process_items() -> Vec<RustItem> {
+pub(crate) fn build_task_scope_process_items() -> Vec<RustItem> {
     let command_type = sifr_type_system::stdlib_class_rust_name("sifr.process", "Command");
     let process_handle_type =
         sifr_type_system::stdlib_class_rust_name("sifr.process", "ProcessHandle");
@@ -95,7 +95,7 @@ pub fn build_task_scope_process_items() -> Vec<RustItem> {
     }]
 }
 
-pub fn build_task_scope_cpu_offload_items() -> Vec<RustItem> {
+pub(crate) fn build_task_scope_cpu_offload_items() -> Vec<RustItem> {
     vec![RustItem::Impl {
         target: "__SifrTaskScope".to_string(),
         type_params: vec![],

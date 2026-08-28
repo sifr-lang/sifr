@@ -137,6 +137,7 @@ def _profile_coverage_self_test(profiles: dict[str, dict[str, Any]]) -> None:
     required_guardrails = {
         "hir-maintainability",
         "file-size",
+        "maintainability-ratchets",
         "demo-emitted-freshness",
         "source-crate-dependency-direction",
         "submodule-ownership",

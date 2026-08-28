@@ -2,7 +2,6 @@
 
 use crate::{HirClass, HirExpr, HirFunction, HirMatchArm, HirModule, HirStmt};
 use sifr_ir::{FlowEdge, FlowEdgeKind, FlowEffect, FlowGraph, FlowNode, FlowNodeId, FlowNodeKind};
-use sifr_type_system::{NarrowingCondition, Type};
 
 mod effects;
 
@@ -38,31 +37,6 @@ pub fn build_module_flow_graph(module: &HirModule, lowering_effects: &[FlowEffec
     }
 
     builder.finish(&frontier)
-}
-
-pub fn narrowing_effects_for_condition(
-    condition: &NarrowingCondition,
-    is_true: bool,
-    current_type: &Type,
-) -> Vec<FlowEffect> {
-    match condition {
-        NarrowingCondition::And(conditions) if is_true => conditions
-            .iter()
-            .flat_map(|condition| narrowing_effects_for_condition(condition, true, current_type))
-            .collect(),
-        NarrowingCondition::Or(conditions) if !is_true => conditions
-            .iter()
-            .flat_map(|condition| narrowing_effects_for_condition(condition, false, current_type))
-            .collect(),
-        _ => condition.var_name().map_or_else(Vec::new, |binding| {
-            vec![FlowEffect::Narrow {
-                binding: binding.to_string(),
-                narrowed_type: sifr_type_system::narrow_type(current_type, condition, is_true),
-                condition: format!("{condition:?}"),
-                is_true,
-            }]
-        }),
-    }
 }
 
 struct FlowGraphBuilder {

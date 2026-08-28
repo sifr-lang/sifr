@@ -601,6 +601,18 @@
       "suggestion_rendering_fixture": null
     },
     {
+      "baseline_fixture_id": "presentation_rules_cases",
+      "code": "SIFR-INTERNAL-0003",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
       "baseline_fixture_id": "e2e_text_i18n_open_without_encoding",
       "code": "SIFR-IO-0801",
       "deferral": null,

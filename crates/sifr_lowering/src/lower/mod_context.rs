@@ -17,7 +17,8 @@ use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_ir::{BindingId, CompilerIntrinsicId, FlowEffect, LoweringResult, PythonCleanupPolicy};
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, Type};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::cell::RefCell;
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use workload_annotations::WorkloadKind;
 
 #[derive(Clone)]
@@ -243,6 +244,7 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) empty_dict_specializations: HashMap<String, Type>,
     pub(in crate::lower) const_integer_values: HashMap<String, num_bigint::BigInt>,
     pub(in crate::lower) flow_effects: Vec<FlowEffect>,
+    nested_inference_divergences: RefCell<BTreeSet<sifr_ir::NestedInferenceDivergence>>,
 }
 
 impl LowerCtx {
@@ -373,7 +375,27 @@ impl LowerCtx {
             empty_dict_specializations: HashMap::new(),
             const_integer_values: HashMap::new(),
             flow_effects: Vec::new(),
+            nested_inference_divergences: RefCell::new(BTreeSet::new()),
         }
+    }
+
+    pub(in crate::lower) fn record_nested_inference_divergence(
+        &self,
+        divergence: sifr_ir::NestedInferenceDivergence,
+    ) {
+        self.nested_inference_divergences
+            .borrow_mut()
+            .insert(divergence);
+    }
+
+    pub(in crate::lower) fn collected_nested_inference_divergences(
+        &self,
+    ) -> Vec<sifr_ir::NestedInferenceDivergence> {
+        self.nested_inference_divergences
+            .borrow()
+            .iter()
+            .cloned()
+            .collect()
     }
 
     pub(in crate::lower) fn visible_local_function_metadata(

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "decision": "keep-snapshot-artifact",
+  "semantic_authority": "sifr_lowering",
+  "production_consumers": [
+    "crates/sifr_ir/src/cfg.rs",
+    "crates/sifr_lowering/src/cfg.rs",
+    "crates/sifr_frontend/src/graph_cache_and_queries/project_compilation.rs",
+    "crates/sifr_frontend/src/cache_keys.rs"
+  ],
+  "declared_non_consumers": [
+    "sifr_analysis",
+    "sifr_lsp"
+  ],
+  "revisit_triggers": [
+    "measured-material-project-retention-cost",
+    "consumer-requires-mutable-or-queryable-graph"
+  ],
+  "documentation": "internal_docs/typescript_go_architecture_transfer_first_class_flow_graph.md"
+}

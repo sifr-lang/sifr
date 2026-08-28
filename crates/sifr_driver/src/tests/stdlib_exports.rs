@@ -2,6 +2,7 @@ use super::support::parse_suite;
 use crate::{collect_project_hir_modules, compile_stdlib};
 use sifr_lowering::{HirExpr, HirStmt};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::fmt::Write as _;
 
 #[test]
 fn compiled_stdlib_exports_match_public_reference() {
@@ -40,36 +41,39 @@ fn compiled_stdlib_exports_match_public_reference() {
         "---\ntitle: \"Compiled Standard Library Exports\"\nsidebarTitle: \"Public API\"\ndescription: \"The exact public symbols compiled for every sifr.* standard-library module.\"\n---\n\n# Compiled Standard Library Exports\n\nThis reference is generated from compiler metadata. Imported `_sifr.*` implementation names are excluded unless the compiler's explicit private re-export policy approves the canonical symbol. The three `sifr.heapq` max-heap helpers are retained separately for CPython-compatible max-heap semantics.\n",
     );
     for (module, (functions, classes, constants)) in modules {
-        rendered.push_str(&format!("\n## `{module}`\n"));
+        let _ = write!(rendered, "\n## `{module}`\n");
         if !functions.is_empty() {
-            rendered.push_str(&format!(
+            let _ = write!(
+                rendered,
                 "\nFunctions: {}.\n",
                 functions
                     .iter()
                     .map(|name| format!("`{name}`"))
                     .collect::<Vec<_>>()
                     .join(", ")
-            ));
+            );
         }
         if !classes.is_empty() {
-            rendered.push_str(&format!(
+            let _ = write!(
+                rendered,
                 "\nClasses: {}.\n",
                 classes
                     .iter()
                     .map(|name| format!("`{name}`"))
                     .collect::<Vec<_>>()
                     .join(", ")
-            ));
+            );
         }
         if !constants.is_empty() {
-            rendered.push_str(&format!(
+            let _ = write!(
+                rendered,
                 "\nConstants: {}.\n",
                 constants
                     .iter()
                     .map(|name| format!("`{name}`"))
                     .collect::<Vec<_>>()
                     .join(", ")
-            ));
+            );
         }
     }
 

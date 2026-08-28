@@ -564,11 +564,7 @@ impl AnalysisHost {
         Ok(self.result(AnalysisQueryKind::FormatRange, edits))
     }
 
-    pub fn generated_rust_preview(
-        &mut self,
-        file: FileId,
-        range: Option<TextRange>,
-    ) -> QueryResult<GeneratedRustPreview> {
+    pub fn generated_rust_preview(&mut self, file: FileId) -> QueryResult<GeneratedRustPreview> {
         self.module_for_file(file)?;
         let source = self.source_text(file)?;
         let (rust, source_map_files) = match sifr_compiler_services::compile_source_preview(&source)
@@ -579,7 +575,6 @@ impl AnalysisHost {
                     AnalysisQueryKind::GeneratedRustPreview,
                     GeneratedRustPreview {
                         file,
-                        range,
                         rust: None,
                         source_map_files: Vec::new(),
                         unavailable_reason: Some(format!(
@@ -594,7 +589,6 @@ impl AnalysisHost {
             AnalysisQueryKind::GeneratedRustPreview,
             GeneratedRustPreview {
                 file,
-                range,
                 rust,
                 source_map_files,
                 unavailable_reason: None,

@@ -448,7 +448,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     }
 
     // Compute broad feature needs first, then refine imports structurally from preamble IR.
-    let needs_file_handles = emitter.runtime_needs.file_handles() || stdlib_needs_file_handles;
+    let needs_file_handles = stdlib_needs_file_handles;
     let uses_task_scope_process = module_uses_task_scope_process(module);
     // Emit built-in error class struct definitions for referenced error types.
     let uses_task_scope = module_uses_task_scope(module);

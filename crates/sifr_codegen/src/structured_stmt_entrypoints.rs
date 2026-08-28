@@ -1,6 +1,7 @@
 use crate::{HirStmt, RustEmitter, is_simple_stmt_candidate};
 
 impl RustEmitter {
+    #[cfg(test)]
     pub(crate) fn emit_stmt(&mut self, stmt: &HirStmt) {
         self.emit_stmt_with_following(stmt, None);
     }

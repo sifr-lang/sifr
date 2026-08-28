@@ -9,7 +9,6 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4.13"
-serde_json = "1.0.151"
 sifr_codegen = { path = "../../crates/sifr_codegen" }
 sifr_diagnostics = { path = "../../crates/sifr_diagnostics" }
 sifr_driver = { path = "../../crates/sifr_driver" }

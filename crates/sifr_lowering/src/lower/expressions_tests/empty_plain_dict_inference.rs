@@ -1,6 +1,6 @@
 use super::{DiagnosticCode, HirStmt, Type, lower_source};
 
-fn local_binding<'a>(source: &'a str, name: &str) -> (Type, Type) {
+fn local_binding(source: &str, name: &str) -> (Type, Type) {
     let module = lower_source(source).expect("source should lower");
     let function = module
         .functions

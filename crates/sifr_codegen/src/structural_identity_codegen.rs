@@ -189,6 +189,7 @@ pub(crate) fn static_class_identities_for_project(
         .collect()
 }
 
+#[cfg(test)]
 pub(crate) fn static_class_identity(
     class: &HirClass,
     module: &HirModule,

@@ -1,6 +1,6 @@
 use super::{RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility};
 
-pub fn build_join_set_items() -> Vec<RustItem> {
+pub(crate) fn build_join_set_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
             name: "JoinItemId".to_string(),
@@ -342,7 +342,7 @@ pub fn build_join_set_items() -> Vec<RustItem> {
     ]
 }
 
-pub fn build_join_set_cpu_items() -> Vec<RustItem> {
+pub(crate) fn build_join_set_cpu_items() -> Vec<RustItem> {
     vec![
         RustItem::Impl {
             target: "__SifrJoinSet<T, WorkerError>".to_string(),

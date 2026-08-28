@@ -21,8 +21,25 @@ from .core import (
     validate_unique_baseline_artifact_paths,
     write_text,
 )
+from .coverage_fuzz import classify_build_failure, output_tail
 
 def run_self_tests() -> int:
+    expected_build_classes = {
+        classify_build_failure(127, "cargo not found", False): "missing tool",
+        classify_build_failure(101, "offline mode prevented a download", False): "offline dependency",
+        classify_build_failure(101, "rustc failed", False): "instrumented build",
+        classify_build_failure(124, "", True): "build timeout",
+    }
+    if set(expected_build_classes) != {
+        "missing-fuzz-tool",
+        "offline-dependency-failure",
+        "instrumented-build-failure",
+        "instrumented-build-timeout",
+    }:
+        raise AssertionError(f"fuzz build failure classes collapsed: {expected_build_classes}")
+    if output_tail("a" * 20_000).encode() != b"a" * (16 * 1024):
+        raise AssertionError("fuzz output tail is not bounded")
+
     repo_root = Path("/tmp/sifr-verification-hardening-self-test").resolve()
     validate_unique_baseline_artifact_paths(
         suite_name="self-test",

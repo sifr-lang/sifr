@@ -7,11 +7,10 @@ use super::{
     try_lower_simple_stmt_with_scope_result_and_bindings,
 };
 use crate::stmt_support_emitter::performance_lowering_gate::stmt_needs_performance_lowering;
-pub struct RustEmitter {
+pub(crate) struct RustEmitter {
     /// First normal lowering failure. Public codegen boundaries return it before rendering.
     pub(crate) codegen_error: Option<crate::CodegenError>,
     pub(crate) collection_needs: CollectionNeeds,
-    pub(crate) runtime_needs: RuntimeNeeds,
     /// Track union enum types that need to be defined (name -> member types)
     pub(crate) union_enums: HashMap<String, Vec<Type>>,
     /// Union enums used as exact try/except error carriers.
@@ -34,8 +33,6 @@ pub struct RustEmitter {
     pub(crate) current_return_type: Option<Type>,
     /// Active `async with task.timeout(...)` duration expressions for await lowering.
     pub(crate) active_timeout_durations: Vec<RustExpr>,
-    /// Set of variable names currently narrowed via `if let Some(...)` unwrap
-    pub(crate) option_unwrapped_vars: HashSet<String>,
     /// Function signatures: name -> (`param_types_with_conventions`, `return_type`)
     pub(crate) func_signatures: HashMap<String, (Vec<(Type, ParamConvention)>, Type)>,
     /// Stack tracking whether each active loop has an else clause.
@@ -124,8 +121,6 @@ pub struct RustEmitter {
     pub(crate) emission_ctx: EmissionContext,
     /// Whether we're inside a `Display::fmt` implementation (for __str__ methods)
     /// Return statements in this context become write!(f, "{}", val) + return Ok(())
-    /// Counter for generating unique try-block error enum names
-    pub(crate) try_enum_counter: usize,
     /// Depth of try-block closures that capture return statements.
     pub(crate) try_closure_depth: usize,
     /// Per-try closure return wrapping mode (true => wrap return payload in Some(...)).
@@ -187,33 +182,7 @@ pub struct RustEmitter {
 
 #[derive(Default)]
 pub(crate) struct CollectionNeeds {
-    pub(crate) needs_hashmap: bool,
-    pub(crate) needs_hashset: bool,
     pub(crate) needs_vecdeque: bool,
-}
-
-#[derive(Default)]
-pub(crate) struct RuntimeNeeds {
-    pub(crate) flags: HashSet<RuntimeNeed>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) enum RuntimeNeed {
-    FileHandles,
-}
-
-impl RuntimeNeeds {
-    pub(crate) fn require(&mut self, need: RuntimeNeed) {
-        self.flags.insert(need);
-    }
-
-    pub(crate) fn contains(&self, need: RuntimeNeed) -> bool {
-        self.flags.contains(&need)
-    }
-
-    pub(crate) fn file_handles(&self) -> bool {
-        self.contains(RuntimeNeed::FileHandles)
-    }
 }
 
 #[derive(Default)]
@@ -227,7 +196,6 @@ impl RustEmitter {
         Self {
             codegen_error: None,
             collection_needs: CollectionNeeds::default(),
-            runtime_needs: RuntimeNeeds::default(),
             union_enums: HashMap::new(),
             try_error_carrier_enums: HashSet::new(),
             ordinary_union_enums: HashSet::new(),
@@ -238,7 +206,6 @@ impl RustEmitter {
             body_items: Vec::new(),
             current_return_type: None,
             active_timeout_durations: Vec::new(),
-            option_unwrapped_vars: HashSet::new(),
             func_signatures: HashMap::new(),
             loop_else_stack: Vec::new(),
             mutated_vars: HashSet::new(),
@@ -276,7 +243,6 @@ impl RustEmitter {
             imported_project_functions: HashSet::new(),
             protected_mutable_place_roots: HashSet::new(),
             emission_ctx: EmissionContext::default(),
-            try_enum_counter: 0,
             try_closure_depth: 0,
             try_closure_option_wrap: Vec::new(),
             try_closure_error_type: Vec::new(),
@@ -365,10 +331,6 @@ impl RustEmitter {
         captures
     }
 
-    pub(crate) fn emit_module(&mut self, module: &HirModule, module_public: bool, test_mode: bool) {
-        self.emit_named_module(module, module_public, test_mode, None);
-    }
-
     pub(crate) fn emit_named_module(
         &mut self,
         module: &HirModule,
@@ -393,13 +355,6 @@ impl RustEmitter {
         self.emit_module_body(module, module_public, test_mode);
 
         self.current_module_name = saved_module_name;
-    }
-
-    pub(crate) fn try_lower_structured_stmt(
-        &mut self,
-        stmt: &HirStmt,
-    ) -> Result<bool, crate::CodegenError> {
-        self.try_lower_structured_stmt_with_following(stmt, None)
     }
 
     pub(crate) fn try_lower_structured_stmt_with_following(

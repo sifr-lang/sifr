@@ -4,7 +4,7 @@ use crate::{
 };
 use sifr_type_system::{OwnershipKind, class_rust_name, source_class_rust_name};
 
-pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
+pub(crate) fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     match ty {
         Type::Int | Type::LiteralInt(_) => RustType::I64,
         Type::FixedInt(fixed) => RustType::Named(fixed.rust_name().to_string()),
@@ -217,7 +217,8 @@ pub(crate) fn rust_type_base_name(ty: &Type) -> Option<String> {
     }
 }
 
-pub fn sifr_type_to_rust_field_type(ty: &Type) -> RustType {
+#[cfg(test)]
+pub(crate) fn sifr_type_to_rust_field_type(ty: &Type) -> RustType {
     match ty {
         Type::Callable(params, conventions, ret) => RustType::Boxed(Box::new(callable_trait_type(
             params,
@@ -338,7 +339,7 @@ pub(crate) fn task_error_type_to_rust_type(ty: &Type) -> RustType {
     }
 }
 
-pub fn build_error_type_items(
+pub(crate) fn build_error_type_items(
     name: &str,
     extra_fields: &[(String, RustType)],
     constructor_defaults: &[(String, RustExpr)],
@@ -434,7 +435,7 @@ pub fn build_error_type_items(
     ]
 }
 
-pub fn build_error_into_error_impl(source_name: &str) -> RustItem {
+pub(crate) fn build_error_into_error_impl(source_name: &str) -> RustItem {
     RustItem::Impl {
         target: "Error".to_string(),
         type_params: vec![],
@@ -460,7 +461,7 @@ pub fn build_error_into_error_impl(source_name: &str) -> RustItem {
     }
 }
 
-pub fn build_failure_type_items() -> Vec<RustItem> {
+pub(crate) fn build_failure_type_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
             name: "__SifrFailure<E>".to_string(),
@@ -564,7 +565,7 @@ pub fn build_failure_type_items() -> Vec<RustItem> {
     ]
 }
 
-pub fn build_timeout_result_type_items() -> Vec<RustItem> {
+pub(crate) fn build_timeout_result_type_items() -> Vec<RustItem> {
     vec![RustItem::Enum {
         name: "__SifrTimeoutResult<E>".to_string(),
         visibility: Visibility::Private,
@@ -587,7 +588,7 @@ pub fn build_timeout_result_type_items() -> Vec<RustItem> {
     }]
 }
 
-pub fn build_async_generator_type_items() -> Vec<RustItem> {
+pub(crate) fn build_async_generator_type_items() -> Vec<RustItem> {
     let type_params = vec![
         crate::RustTypeParam {
             name: "T".to_string(),
@@ -812,7 +813,7 @@ pub fn build_async_generator_type_items() -> Vec<RustItem> {
     ]
 }
 
-pub fn build_cancellation_error_type_items() -> Vec<RustItem> {
+pub(crate) fn build_cancellation_error_type_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
             name: "CancellationError".to_string(),
@@ -840,7 +841,7 @@ pub fn build_cancellation_error_type_items() -> Vec<RustItem> {
     ]
 }
 
-pub fn build_async_exit_cause_type_items() -> Vec<RustItem> {
+pub(crate) fn build_async_exit_cause_type_items() -> Vec<RustItem> {
     vec![RustItem::Enum {
         name: "AsyncExitCause".to_string(),
         visibility: Visibility::Private,

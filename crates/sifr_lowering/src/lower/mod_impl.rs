@@ -16,7 +16,6 @@ pub(in crate::lower) fn lower_module_impl(
     mut ctx: LowerCtx,
 ) -> Result<LoweringResult, Vec<HirDiagnostic>> {
     ctx.externals = externals.clone();
-    // Register built-in functions
     register_builtins(&mut ctx);
     integer_literal_diagnostics::validate_module_integer_literals(stmts, &mut ctx);
     super::declaration_metadata::collect(stmts, &mut ctx);
@@ -857,6 +856,7 @@ pub(in crate::lower) fn lower_module_impl(
         Ok(LoweringResult {
             module,
             flow_graph,
+            nested_inference_divergences: ctx.collected_nested_inference_divergences(),
             class_field_defaults: ctx.class_field_defaults.clone(),
             declaration_metadata: ctx.declaration_metadata.clone(),
             class_adapter_providers: ctx.class_adapter_providers.clone(),

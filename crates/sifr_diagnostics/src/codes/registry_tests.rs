@@ -135,6 +135,59 @@ fn active_diagnostic_docs_pages_exist_with_exact_casing() {
     }
 }
 
+#[test]
+fn active_diagnostic_owners_and_fixtures_resolve_to_first_party_sources() {
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("crate must live under workspace crates directory")
+        .to_path_buf();
+
+    for entry in active_registry_entries() {
+        let owner = entry.owner_module.expect("active owner was checked");
+        for owner_module in owner.split(" / ") {
+            assert!(
+                owner_source_path(&repo_root, owner_module).is_some(),
+                "active diagnostic {} has relocated or unknown owner module {owner_module}",
+                entry.id
+            );
+        }
+        let fixture = entry
+            .representative_fixture_path
+            .expect("active fixture was checked");
+        let fixture_path = fixture.split("::").next().unwrap_or_default();
+        assert!(
+            repo_root.join(fixture_path).exists(),
+            "active diagnostic {} has missing fixture path {fixture_path}",
+            entry.id
+        );
+    }
+
+    assert!(
+        owner_source_path(&repo_root, "sifr_driver::relocated::owner").is_none(),
+        "relocated owner negative seed must not resolve"
+    );
+}
+
+fn owner_source_path(repo_root: &std::path::Path, owner: &str) -> Option<PathBuf> {
+    let mut parts = owner.split("::");
+    let crate_name = parts.next()?;
+    if crate_name != "sifr" && !crate_name.starts_with("sifr_") {
+        return None;
+    }
+    let source_root = repo_root.join("crates").join(crate_name).join("src");
+    let module_parts = parts.collect::<Vec<_>>();
+    let candidates = if module_parts.is_empty() {
+        vec![source_root.join("lib.rs")]
+    } else {
+        let module_path = module_parts
+            .iter()
+            .fold(source_root, |path, part| path.join(part));
+        vec![module_path.with_extension("rs"), module_path.join("mod.rs")]
+    };
+    candidates.into_iter().find(|path| path.is_file())
+}
+
 fn registry_entry_for(id: &str) -> &'static super::DiagnosticRegistryEntry {
     super::registry_entry(id).unwrap_or_else(|| panic!("missing registry entry for {id}"))
 }

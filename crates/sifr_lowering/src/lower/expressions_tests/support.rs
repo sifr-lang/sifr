@@ -23,11 +23,10 @@ pub(crate) fn lower_source_with_stdlib_collections(
 }
 
 pub(crate) fn range_for(source: &str, needle: &str) -> TextRange {
-    let start = source.find(needle).expect("needle should exist") as u32;
-    TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
-    )
+    let start = u32::try_from(source.find(needle).expect("needle should exist"))
+        .expect("fixture offset must fit u32");
+    let needle_len = u32::try_from(needle.len()).expect("fixture length must fit u32");
+    TextRange::new(TextSize::new(start), TextSize::new(start + needle_len))
 }
 
 pub(crate) fn range_for_after(source: &str, after: &str, needle: &str) -> TextRange {
@@ -35,11 +34,9 @@ pub(crate) fn range_for_after(source: &str, after: &str, needle: &str) -> TextRa
     let relative_start = source[after_start..]
         .find(needle)
         .expect("needle should exist after anchor");
-    let start = (after_start + relative_start) as u32;
-    TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
-    )
+    let start = u32::try_from(after_start + relative_start).expect("fixture offset must fit u32");
+    let needle_len = u32::try_from(needle.len()).expect("fixture length must fit u32");
+    TextRange::new(TextSize::new(start), TextSize::new(start + needle_len))
 }
 
 pub(crate) fn range_for_after_anchor(source: &str, after: &str, needle: &str) -> TextRange {
@@ -47,11 +44,9 @@ pub(crate) fn range_for_after_anchor(source: &str, after: &str, needle: &str) ->
     let relative_start = source[search_start..]
         .find(needle)
         .expect("needle should exist after anchor");
-    let start = (search_start + relative_start) as u32;
-    TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
-    )
+    let start = u32::try_from(search_start + relative_start).expect("fixture offset must fit u32");
+    let needle_len = u32::try_from(needle.len()).expect("fixture length must fit u32");
+    TextRange::new(TextSize::new(start), TextSize::new(start + needle_len))
 }
 
 pub(crate) fn function_let_value<'a>(module: &'a HirModule, name: &str) -> &'a HirExpr {

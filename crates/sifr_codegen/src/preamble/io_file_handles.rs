@@ -4,7 +4,7 @@ use super::{
     file_handle_write_bytes_method,
 };
 use crate::RustTypeParam;
-pub fn build_io_error_items() -> Vec<RustItem> {
+pub(crate) fn build_io_error_items() -> Vec<RustItem> {
     let mut items = build_error_type_items(
         "IOError",
         &[("kind".to_string(), RustType::String_)],
@@ -130,7 +130,7 @@ fn io_error_kind_expr() -> RustExpr {
     }
 }
 
-pub fn build_file_handle_infra_items() -> Vec<RustItem> {
+pub(crate) fn build_file_handle_infra_items() -> Vec<RustItem> {
     vec![
         RustItem::Enum {
             name: "SifrFileHandle".to_string(),
@@ -249,7 +249,7 @@ pub fn build_file_handle_infra_items() -> Vec<RustItem> {
     ]
 }
 
-pub fn build_file_handle_struct_items() -> Vec<RustItem> {
+pub(crate) fn build_file_handle_struct_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
             name: "__SifrIoFileHandle".to_string(),

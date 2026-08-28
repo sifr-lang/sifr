@@ -1,6 +1,8 @@
+#[cfg(test)]
+use crate::try_lower_leaf_expr;
 use crate::{
     CodegenError, RustExpr, RustItem, RustLiteral, RustStmt, RustType, Visibility,
-    try_lower_leaf_expr, try_lower_leaf_expr_result,
+    try_lower_leaf_expr_result,
 };
 use sifr_ir::HirExpr;
 use sifr_type_system::Type;
@@ -43,7 +45,7 @@ pub(super) fn is_exact_module_int_type(ty: &Type) -> bool {
     matches!(resolve_alias_type(ty), Type::Int)
 }
 
-pub fn try_lower_simple_module_constant_item_result(
+pub(crate) fn try_lower_simple_module_constant_item_result(
     name: &str,
     ty: &Type,
     value: &HirExpr,
@@ -270,7 +272,7 @@ fn exact_sifr_int_literal_expr(decimal_text: &str) -> Result<RustExpr, CodegenEr
 
 /// Conservative dispatcher for simple module-constant item lowering.
 #[cfg(test)]
-pub fn try_lower_simple_module_constant_item(
+pub(crate) fn try_lower_simple_module_constant_item(
     name: &str,
     ty: &Type,
     value: &HirExpr,
@@ -307,7 +309,8 @@ pub(super) fn lower_large_module_int_const_item(
 
 /// Conservatively lowers module-level primitive constants via IR.
 /// Falls back for non-primitive or non-leaf/non-name values.
-pub fn try_lower_simple_module_const_item(
+#[cfg(test)]
+pub(crate) fn try_lower_simple_module_const_item(
     name: &str,
     ty: &Type,
     value: &HirExpr,
@@ -336,7 +339,8 @@ pub fn try_lower_simple_module_const_item(
 
 /// Conservatively lowers module-level string-literal constants via IR helper function.
 /// Falls back for non-literal/non-name string values.
-pub fn try_lower_simple_module_string_const_item(
+#[cfg(test)]
+pub(crate) fn try_lower_simple_module_string_const_item(
     name: &str,
     ty: &Type,
     value: &HirExpr,
@@ -371,7 +375,8 @@ pub fn try_lower_simple_module_string_const_item(
 }
 
 /// Conservatively lowers module-level `None` constants via IR helper function.
-pub fn try_lower_simple_module_none_const_item(
+#[cfg(test)]
+pub(crate) fn try_lower_simple_module_none_const_item(
     name: &str,
     ty: &Type,
     value: &HirExpr,
@@ -406,7 +411,8 @@ pub fn try_lower_simple_module_none_const_item(
 
 /// Conservatively lowers module-level non-primitive helper constants via IR function items.
 /// Falls back for primitive/string/none types or non-leaf/non-name values.
-pub fn try_lower_simple_module_helper_const_item(
+#[cfg(test)]
+pub(crate) fn try_lower_simple_module_helper_const_item(
     name: &str,
     ty: &Type,
     value: &HirExpr,

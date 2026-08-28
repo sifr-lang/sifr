@@ -140,24 +140,7 @@ pub(in crate::lower) fn apply_narrowing(
             if let Some(var_name) = condition.var_name() {
                 if let Some(info) = ctx.scope.lookup(var_name) {
                     let current_ty = info.effective_type().clone();
-                    let effects = crate::flow_graph::narrowing_effects_for_condition(
-                        condition,
-                        is_true,
-                        &current_ty,
-                    );
-                    let narrowed = effects
-                        .iter()
-                        .find_map(|effect| match effect {
-                            sifr_ir::FlowEffect::Narrow {
-                                binding,
-                                narrowed_type,
-                                ..
-                            } if binding == var_name => Some(narrowed_type.clone()),
-                            _ => None,
-                        })
-                        .unwrap_or_else(|| {
-                            sifr_type_system::narrow_type(&current_ty, condition, is_true)
-                        });
+                    let narrowed = sifr_type_system::narrow_type(&current_ty, condition, is_true);
                     ctx.narrow_var_with_flow(var_name, narrowed, format!("{condition:?}"), is_true);
                 }
             }
