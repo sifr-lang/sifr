@@ -38,7 +38,7 @@ def main() -> int:
         parser.error("--jobs must be positive")
 
     pairs: list[tuple[Path, Path]] = []
-    for emitted in sorted((REPO_ROOT / "demos").glob("*/emitted.rs")):
+    for emitted in sorted((REPO_ROOT / "demos").glob("**/emitted.rs")):
         source = emitted.with_name("main.sifr")
         if source.is_file():
             pairs.append((emitted, source))
