@@ -1566,8 +1566,10 @@ tree and are keyed by candidate SHA.
 
 ### M12K Controlled-Capture Blocker
 
-- Clean exact source commit:
-  `5242d9872053600fea18566cd2f5ed29301811f9`.
+- Clean exact source commits:
+  `5242d9872053600fea18566cd2f5ed29301811f9` for the first two attempts and
+  `9012a91559cd5323c115accddaaf94f843efa2d1` for the third attempt after the
+  M12K item branch was fast-forwarded to the current phase record.
 - The documented complete-manifest approved-reference command ran with
   `SIFR_VALIDATION_PROFILE=approved-reference`,
   `SIFR_THERMAL_POLICY=controlled-host`, controlled-host latency mode, and
@@ -1581,6 +1583,13 @@ tree and are keyed by candidate SHA.
   with nominal thermal state, AC power, acceptable normalized load, and no
   competing build. Endpoint security, WindowServer, GitKraken, osquery, and Git
   activity owned the pressure outside this worktree.
+- After the separately owned generated-code-quality workload completed, a
+  third authorized attempt again preserved every threshold and used the
+  600-second admission wait. It was rejected solely for external CPU pressure.
+  The post-attempt snapshot reported 141.1% external CPU against the unchanged
+  50% limit, with nominal thermal state, AC power, acceptable normalized load,
+  stable frequency proxy, and no competing build. Endpoint security and
+  WindowServer were the leading external consumers.
 - The governed producer did not write `trend/current.json`; the worktree stayed
   clean. No benchmark result, candidate SHA, PR, review, or gate pass is claimed
   for M12K.
@@ -1589,4 +1598,6 @@ tree and are keyed by candidate SHA.
   weaken the 50% pressure threshold, switch to work mode, or patch only the
   recorded manifest hash.
 - Admission evidence is outside Git at
-  `.codex/review-evidence/architecture-closure/m12k-controlled-capture-blocker-5242d9872053600fea18566cd2f5ed29301811f9.md`.
+  `.codex/review-evidence/architecture-closure/m12k-controlled-capture-blocker-5242d9872053600fea18566cd2f5ed29301811f9.md`
+  and
+  `.codex/review-evidence/architecture-closure/m12k-controlled-capture-blocker-9012a91559cd5323c115accddaaf94f843efa2d1.md`.
