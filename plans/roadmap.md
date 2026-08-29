@@ -92,6 +92,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | REVIEWER-RESTORE | Ad Hoc Distinct Release Reviewer Restoration | active, blocking | [ad-hoc-distinct-release-reviewer-restoration.md](./issues/active/ad-hoc-distinct-release-reviewer-restoration.md) | The Phase 40 single-maintainer protected-approval exception expired on 2026-08-27. Add a distinct release/distribution reviewer while preserving historical waiver-bound evidence. |
 | 41 | Native Pydantic-Sifr | implementation closed; installed structural release artifact tracked by #3233 | [phase record](./issues/archive/ad-hoc-native-pydantic-sifr-architecture.md), [architecture](../internal_docs/native_pydantic_sifr_architecture.md), [superseded phase note](./phases/41_typed_data_model_and_validation.md) | Native package/core, conformance, documentation, and demo are merged; the package-neutral installed-sysroot asset omission remains in issue #3233. |
 | PS-2 | Static Class Adapters and Pydantic Ergonomics | completed and audited (2026-08-21) | [phase record](./issues/archive/ad-hoc-static-class-adapters-and-pydantic-ergonomics.md), [architecture](../internal_docs/native_pydantic_sifr_architecture.md) | Package-neutral static class adapters and the complete selected Pydantic-Sifr declaration and model API are merged, source/installed certified, and independently reviewed. |
+| SQL | Schema-First SQL Platform | planned | [phase record](./issues/active/ad-hoc-schema-first-sql-platform.md), [architecture](../internal_docs/sql_architecture.md) | Complete checked SQL architecture with compiler components, structural records, named schema profiles, verified runtime execution, host tools, typed migrations, and qualified PostgreSQL, MySQL, and SQLite providers. |
 | 42 | Web Framework and Platform Expansion | planned | [42_web_framework_and_platform_expansion.md](./phases/42_web_framework_and_platform_expansion.md) | Web stack with typed extractors and platform expansion baseline |
 | 43 | Data Science and ML | planned | [43_data_science_ml.md](./phases/43_data_science_ml.md) | DataFrame, tensor, and ML inference workflows |
 
@@ -126,7 +127,8 @@ flowchart LR
     p39 --> p40["Phase 40\nStable GA Governance"]
     p40 --> p41["Phase 41\nNative Pydantic-Sifr"]
     p41 --> ps2["PS-2\nPydantic Ergonomics"]
-    ps2 --> p42["Phase 42\nWeb + Platform Expansion"]
+    ps2 --> sql["SQL\nSchema-First SQL Platform"]
+    sql --> p42["Phase 42\nWeb + Platform Expansion"]
     p42 --> p43["Phase 43\nData Science + ML"]
 ```
 
