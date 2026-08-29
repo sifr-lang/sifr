@@ -1,6 +1,6 @@
 # Ad Hoc Architecture Correctness And Agent Workflow Closure
 
-status: implementation follow-up in progress; closure blocked
+status: implementation complete; closure blocked
 
 ## Objective
 
@@ -61,7 +61,7 @@ The following review claims are explicitly excluded:
 | M12D | Documentation mutation-registry consistency | merged into M12 branch; integration deferred | [#3568](https://github.com/sifr-lang/sifr/pull/3568) | `e97e7332e6ef537738ebd6b6f9fad60384ba1f2f` |
 | M12E | Atomic repeated-terminal-signal escalation entry | merged into M12 branch; integration deferred | [#3569](https://github.com/sifr-lang/sifr/pull/3569) | `2a8adc32dfed16933dcb22b4d77f989d97c80734` |
 | M12F | Restore generated demo freshness after compiler corrections | merged into M12 branch; integration deferred | [#3570](https://github.com/sifr-lang/sifr/pull/3570) | `4f33183b7244456fc21b0b7b95b2aa85ed586bc6` |
-| M12G | Register consolidated lowering intrinsic transport ownership | pending | | |
+| M12G | Register consolidated lowering intrinsic transport ownership | merged into M12 branch; integration deferred | [#3572](https://github.com/sifr-lang/sifr/pull/3572) | `7dc83924abd25bd15e5adfdf1d1df77da79ee3c4` |
 | M13 | Phase closure and whole-phase review | whole-phase review satisfied; merged into M12 branch; closure blocked | [#3571](https://github.com/sifr-lang/sifr/pull/3571) | `5b4005c8cabc910f1c7c959e6518fe3079135fb4` |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -616,16 +616,16 @@ whole-phase Opus review without repeating unchanged implementation validation.
 
 ### Closure Reconciliation
 
-- All 18 reviewed implementation candidates from M1 through M12F are ancestors
-  of the M12 stack head. PRs #3565-#3570 are merged into M12; stacked PRs
+- All 19 reviewed implementation candidates from M1 through M12G are ancestors
+  of the M12 stack head. PRs #3565-#3572 are merged into M12; stacked PRs
   #3553-#3564 remain open drafts for deferred integration.
 - All in-scope second-review and original gate findings were assigned and
   closed by the later implementation items recorded here. In particular,
-  M12/M12A-M12F
+  M12/M12A-M12G
   close the M3-M11 deferred mechanisms, process lifecycle, structured fallback
   regression, documentation registry drift, repeated-signal race, and generated
-  demo freshness defect. The later user-authorized gate exposed one additional
-  allowlist ownership omission, assigned to M12G; no finding is unassigned.
+  demo freshness defect, and the later intrinsic-allowlist ownership omission;
+  no finding is unassigned.
 - Item-level targeted validation and exact-SHA Opus evidence are reused because
   M13 changes records only. `internal_docs/architecture.md` already contains
   the reviewed current architecture from M4/M12 and its positive/mutation
@@ -643,8 +643,8 @@ whole-phase Opus review without repeating unchanged implementation validation.
   exact-SHA gate sequence. Stacked integration also remains blocked on the
   separately owned distinct-human-reviewer restoration issue; the expired
   waiver is not extended or weakened.
-- Exact next actions: close M12G, authorize a new create-PR/merge gate sequence
-  for the resulting final stack SHA, restore the distinct human reviewer, then
+- Exact next actions: authorize a new create-PR/merge gate sequence for the
+  resulting final stack SHA, restore the distinct human reviewer, then
   integrate the stacked PR chain and archive this record. Until then the phase
   is not represented as gate-passing or closed.
 
@@ -1224,11 +1224,13 @@ tree and are keyed by candidate SHA.
 - Whole-phase review evidence is outside Git at
   `.codex/review-evidence/architecture-closure/m13-5b4005c8cabc910f1c7c959e6518fe3079135fb4-whole-phase.md`.
 - The implementation was complete at the reviewed M13 candidate, but the later
-  user-authorized gate exposed M12G. The phase remains active and
-  closure-blocked. No green compiler gate, merged main stack, archive, or full
-  closure is claimed. The exact next actions remain M12G, fresh exact-SHA gate
-  authority, distinct reviewer restoration, stacked integration, and archival
-  recorded in the closure reconciliation above.
+  user-authorized gate exposed M12G. M12G is now merged and its exact delta has
+  its own satisfied item review, so the single whole-phase review is not
+  repeated. The phase remains active and closure-blocked. No green compiler
+  gate, merged main stack, archive, or full closure is claimed. The exact next
+  actions remain fresh exact-SHA gate authority, distinct reviewer restoration,
+  stacked integration, and archival recorded in the closure reconciliation
+  above.
 
 ### User-Authorized Create-PR Gate Attempt
 
@@ -1245,3 +1247,24 @@ tree and are keyed by candidate SHA.
   `CompilerIntrinsicId` transport to the scanner. This in-scope policy defect
   is M12G; the consumed gate is not rerun.
 - No merge gate ran after the create-PR failure.
+
+### M12G Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12g`.
+- Stacked PR: [#3572](https://github.com/sifr-lang/sifr/pull/3572), merged into
+  the M12 branch as `a8c706bbccefe3cccfa4875f5a7fdd576ca470eb`.
+- Exact implementation candidate:
+  `7dc83924abd25bd15e5adfdf1d1df77da79ee3c4`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers or
+  remediation. It verified that the candidate registers only the consolidated
+  lowering facade under the existing typed intrinsic transport surface, adds
+  no new intrinsic authority, preserves the explicit HIR re-export, and does
+  not weaken the scanner.
+- Validation: the intrinsic allowlist guard and self-test, manifest schema and
+  self-test, full documentation area, file-size guardrail, and whitespace check
+  passed. The scanner's ten discovered lowering paths exactly equal the ten
+  owned manifest paths.
+- Review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12g-7dc83924abd25bd15e5adfdf1d1df77da79ee3c4.md`.
+- M12G changed only the retained-intrinsic manifest. It did not rerun the
+  consumed create-PR gate or run a merge gate on a different SHA.
