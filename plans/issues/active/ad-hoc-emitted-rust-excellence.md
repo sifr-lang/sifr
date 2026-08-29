@@ -181,6 +181,11 @@ It does not broaden the active item.
 - [ ] Static safety analysis covers impossible-state macros, termination calls,
   indexing, casts, allocation widths, arithmetic, and generated `allow` use.
 - [ ] Negative seeds prove each gate can fail for the owned defect class.
+- [ ] The audit-inventory self-test covers every validation branch, including
+  empty item/baseline containers and both required finding text fields.
+- [ ] Baseline provenance requires its named command, toolchain, and note keys.
+- [ ] Evidence rows use governed semantic anchors, not path existence alone;
+  glob and repository-boundary handling fails closed.
 
 ### Item 2: Exact integer and overflow architecture
 
@@ -279,17 +284,28 @@ It does not broaden the active item.
 
 | Item | State | PR | Merge SHA | Validation | Exact-SHA review | Result |
 |---:|---|---|---|---|---|---|
-| 0 | in progress | pending | pending | pending | pending | Contract and inventory implementation in progress. |
+| 0 | ready to merge under the two-review rule | [#3574](https://github.com/sifr-lang/sifr/pull/3574) | pending | Candidate `b75a3c471f7ec8b4cb798e112e123bfb13d78b83`: inventory, mutation self-test, Python/JSON syntax, file-size, HIR maintainability, docs-link, and diff hygiene checks passed. No compiler files changed, so Sifr gates were omitted. | [Initial and sole remediation review](https://github.com/sifr-lang/sifr/pull/3574#issuecomment-5462303681): both NOT SATISFIED. The original evidence blocker was fixed; the remediation review's new checker mechanism is assigned to Item 1 under the explicit review limit. | Contract and 32-row inventory are implemented; three missing mutation branches and related checker provenance hardening are owned by Item 1. |
 
 ## Deferred Findings
 
-None. New out-of-scope findings must name a concrete active owner before the
-current item can close.
+| Source | Finding | Owner | Required action |
+|---|---|---|---|
+| Item 0 remediation review | Empty `implementation_items`, empty `baseline`, and empty finding `mechanism` validation branches lack mutation cases. | Item 1 | Add one mutation per branch as part of the comprehensive gate self-test; do not run a third Item 0 review. |
+| Item 0 remediation review | `baseline_context` accepts arbitrary keys. | Item 1 | Require the command, toolchain version, and explanatory note keys. |
+| Item 0 remediation review | Evidence validation proves path existence but not that the cited location supports the mechanism. | Item 1 | Add governed semantic anchors or an equivalent fail-closed evidence contract. |
+| Item 0 remediation review | Glob metacharacters and symlink boundaries are not fully constrained. | Item 1 | Restrict accepted inventory path syntax and prove repository containment. |
+
+New out-of-scope findings must name a concrete active owner before the current
+item can close.
 
 ## Current Handoff
 
 - Active item: Item 0, contract and audit inventory lock.
 - Branch: `codex/emitted-rust-excellence-item-0`.
 - Base: `e9df29f7e4cada7b376b2d455790f9c80a5647a0` (`origin/main`).
-- Next action: finish the inventory and checker, then validate and obtain the
-  one exact-SHA Opus review.
+- Candidate: `b75a3c471f7ec8b4cb798e112e123bfb13d78b83`.
+- PR: [#3574](https://github.com/sifr-lang/sifr/pull/3574).
+- Review state: the original blocker is fixed; the sole remediation review's
+  new mechanism defects are assigned to Item 1 under the user's no-third-review
+  rule.
+- Next action: merge PR #3574, record Item 0 completion, and start Item 1.
