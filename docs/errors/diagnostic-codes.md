@@ -113,7 +113,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-INT-0001`](SIFR-INT-0001.mdx) | Error | Fixed-width integer literal or const expression is out of range. |
 | [`SIFR-INT-0003`](SIFR-INT-0003.mdx) | Error | Reserved integer width name used before support lands. |
 | [`SIFR-INT-0004`](SIFR-INT-0004.mdx) | Error | Compile-time integer evaluation budget exceeded. |
-| [`SIFR-INT-0005`](SIFR-INT-0005.mdx) | Error | Integer division, modulo, or exponentiation requires handling a typed failure. |
+| [`SIFR-INT-0005`](SIFR-INT-0005.mdx) | Error | Integer division, modulo, exponentiation, shift, or range step requires handling a typed failure. |
 | [`SIFR-INT-0006`](SIFR-INT-0006.mdx) | Error | Exact integer to float conversion requires handling precision loss. |
 | [`SIFR-INT-0007`](SIFR-INT-0007.mdx) | Error | Bool and integer comparison requires explicit conversion. |
 | [`SIFR-INT-0009`](SIFR-INT-0009.mdx) | Error | JSON or web-safe integer serialization boundary is missing or unsafe. |
