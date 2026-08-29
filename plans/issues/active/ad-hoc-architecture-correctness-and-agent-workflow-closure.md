@@ -1,6 +1,6 @@
 # Ad Hoc Architecture Correctness And Agent Workflow Closure
 
-status: implementation follow-up in progress; closure blocked
+status: implementation complete; closure blocked
 
 ## Objective
 
@@ -62,7 +62,7 @@ The following review claims are explicitly excluded:
 | M12E | Atomic repeated-terminal-signal escalation entry | merged into M12 branch; integration deferred | [#3569](https://github.com/sifr-lang/sifr/pull/3569) | `2a8adc32dfed16933dcb22b4d77f989d97c80734` |
 | M12F | Restore generated demo freshness after compiler corrections | merged into M12 branch; integration deferred | [#3570](https://github.com/sifr-lang/sifr/pull/3570) | `4f33183b7244456fc21b0b7b95b2aa85ed586bc6` |
 | M12G | Register consolidated lowering intrinsic transport ownership | merged into M12 branch; integration deferred | [#3572](https://github.com/sifr-lang/sifr/pull/3572) | `7dc83924abd25bd15e5adfdf1d1df77da79ee3c4` |
-| M12H | Remove delivery-plan taxonomy from retained flow-graph architecture | pending | | |
+| M12H | Remove delivery-plan taxonomy from retained flow-graph architecture | merged into M12 branch; integration deferred | [#3573](https://github.com/sifr-lang/sifr/pull/3573) | `5094e412fbeb253edcfdd41a39079ecea72f9b1d` |
 | M13 | Phase closure and whole-phase review | whole-phase review satisfied; merged into M12 branch; closure blocked | [#3571](https://github.com/sifr-lang/sifr/pull/3571) | `5b4005c8cabc910f1c7c959e6518fe3079135fb4` |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -632,16 +632,17 @@ whole-phase Opus review without repeating unchanged implementation validation.
 
 ### Closure Reconciliation
 
-- All 19 reviewed implementation candidates from M1 through M12G are ancestors
-  of the M12 stack head. PRs #3565-#3572 are merged into M12; stacked PRs
+- All 20 reviewed implementation candidates from M1 through M12H are ancestors
+  of the M12 stack head. PRs #3565-#3573 are merged into M12; stacked PRs
   #3553-#3564 remain open drafts for deferred integration.
 - All in-scope second-review and original gate findings were assigned and
   closed by the later implementation items recorded here. In particular,
-  M12/M12A-M12G
+  M12/M12A-M12H
   close the M3-M11 deferred mechanisms, process lifecycle, structured fallback
   regression, documentation registry drift, repeated-signal race, and generated
-  demo freshness defect, and the later intrinsic-allowlist ownership omission;
-  no finding is unassigned.
+  demo freshness defect, the later intrinsic-allowlist ownership omission, and
+  the durable flow-graph document's delivery-plan heading; no finding is
+  unassigned.
 - Item-level targeted validation and exact-SHA Opus evidence are reused because
   M13 changes records only. `internal_docs/architecture.md` already contains
   the reviewed current architecture from M4/M12 and its positive/mutation
@@ -659,8 +660,8 @@ whole-phase Opus review without repeating unchanged implementation validation.
   exact-SHA gate sequence. Stacked integration also remains blocked on the
   separately owned distinct-human-reviewer restoration issue; the expired
   waiver is not extended or weakened.
-- Exact next actions: close M12H, authorize a new create-PR/merge gate sequence
-  for the resulting final stack SHA, restore the distinct human reviewer, then
+- Exact next actions: run the authorized create-PR/merge gate sequence for the
+  resulting final stack SHA, restore the distinct human reviewer, then
   integrate the stacked PR chain and archive this record. Until then the phase
   is not represented as gate-passing or closed.
 
@@ -1244,9 +1245,10 @@ tree and are keyed by candidate SHA.
   its own satisfied item review, so the single whole-phase review is not
   repeated. The phase remains active and closure-blocked. No green compiler
   gate, merged main stack, archive, or full closure is claimed. The exact next
-  actions now include M12H, fresh exact-SHA gate authority, distinct reviewer
-  restoration, stacked integration, and archival recorded in the closure
-  reconciliation above.
+  actions now include the authorized fresh exact-SHA gate sequence, distinct
+  reviewer restoration, stacked integration, and archival recorded in the
+  closure reconciliation above. M12H is merged and its exact delta has its own
+  satisfied item review, so the single whole-phase review is not repeated.
 
 ### User-Authorized Create-PR Gate Attempt
 
@@ -1301,3 +1303,22 @@ tree and are keyed by candidate SHA.
 - No merge gate ran after the create-PR failure.
 - Gate evidence is outside Git at
   `.codex/review-evidence/architecture-closure/authorized-create-pr-fb53af520bfbe03a94ac1ac7015d1e7683804794.md`.
+
+### M12H Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12h`.
+- Stacked PR: [#3573](https://github.com/sifr-lang/sifr/pull/3573), merged into
+  the M12 branch as `31005847622790cf491d042991afede7f245b0a3`.
+- Exact implementation candidate:
+  `5094e412fbeb253edcfdd41a39079ecea72f9b1d`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers or
+  remediation. It verified the single heading-only correction, unchanged
+  retention architecture, unchanged guard and exclusions, and absence of a
+  stale external anchor.
+- Validation: the taxonomy guard and self-test, all four coverage-readiness
+  variants, all three documentation suites, the TypeScript-Go transfer guard
+  and self-test, file-size guardrail, and whitespace check passed.
+- Review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12h-5094e412fbeb253edcfdd41a39079ecea72f9b1d.md`.
+- M12H changed only a durable architecture heading. It did not rerun the
+  consumed create-PR gate or run a merge gate on a different SHA.
