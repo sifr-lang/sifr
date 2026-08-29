@@ -1,15 +1,17 @@
 // src/main.rs
-fn accumulate(values: &Vec<i64>) -> i64 {
-    let mut total: i64 = 0_i64;
+use ::sifr_runtime::SifrInt;
+
+fn accumulate(values: &Vec<SifrInt>) -> SifrInt {
+    let mut total: SifrInt = SifrInt::from_i64(0);
     let mut apply = || {
-    for value in values.iter().copied() {
+    for value in values.iter().cloned() {
         total += value;
     }
 };
     apply();
-    total
+    total.clone()
 }
 
 fn main() {
-    assert!((format!("{}", accumulate(&vec![3_i64, 1_i64, 4_i64, 1_i64, 5_i64])) == "14"));
+    assert!((format!("{}", accumulate(&vec![SifrInt::from_i64(3), SifrInt::from_i64(1), SifrInt::from_i64(4), SifrInt::from_i64(1), SifrInt::from_i64(5)])) == "14"));
 }

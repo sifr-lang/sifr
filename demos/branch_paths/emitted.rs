@@ -3,21 +3,24 @@ mod helper;
 
 use crate::helper::evaluate;
 
+use ::sifr_runtime::SifrInt;
+
 fn main() {
     println!("hir analysis consolidation regression matrix demo:");
-    println!("{}", evaluate(10_i64));
-    println!("{}", evaluate(0_i64));
+    println!("{}", evaluate(SifrInt::from_i64(10)));
+    println!("{}", evaluate(SifrInt::from_i64(0)));
 }
 
 // src/helper.rs
-pub fn evaluate(n: i64) -> i64 {
-    if n > (0_i64) {
-        if n > (10_i64) {
-            return n;
+pub use ::sifr_runtime::SifrInt;
+pub fn evaluate(n: SifrInt) -> SifrInt {
+    if &n > &SifrInt::from_i64(0) {
+        if &n > &SifrInt::from_i64(10) {
+            return n.clone();
         } else {
-            return n + (10_i64);
+            return &n + &SifrInt::from_i64(10);
         }
     } else {
-        return 45_i64;
+        return SifrInt::from_i64(45);
     }
 }

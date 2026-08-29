@@ -1,4 +1,6 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Timer {
     label: String,
@@ -28,21 +30,21 @@ impl ::std::fmt::Display for Timer {
     }
 }
 
-fn fibonacci(n: i64) -> Box<dyn Iterator<Item = i64>> {
+fn fibonacci(n: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     let mut __sifr_generator_initialized: bool = false;
-    let mut __sifr_generator_iter: ::std::vec::IntoIter<i64> = Vec::new().into_iter();
+    let mut __sifr_generator_iter: ::std::vec::IntoIter<SifrInt> = Vec::new().into_iter();
     Box::new(::std::iter::from_fn(move || {
     if !__sifr_generator_initialized {
-        let mut _yields: Vec<i64> = Vec::new();
-        let mut a: i64 = 0_i64;
-        let mut b: i64 = 1_i64;
-        let mut i: i64 = 0_i64;
-        while i < n {
-            _yields.push(a);
-            let temp: i64 = a + b;
-            a = b;
-            b = temp;
-            i += 1_i64;
+        let mut _yields: Vec<SifrInt> = Vec::new();
+        let mut a: SifrInt = SifrInt::from_i64(0);
+        let mut b: SifrInt = SifrInt::from_i64(1);
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &n {
+            _yields.push(a.clone());
+            let temp: SifrInt = &a + &b;
+            a = b.clone();
+            b = temp.clone();
+            i = &i + &SifrInt::from_i64(1);
         }
         __sifr_generator_iter = _yields.into_iter();
         __sifr_generator_initialized = true;
@@ -51,18 +53,18 @@ fn fibonacci(n: i64) -> Box<dyn Iterator<Item = i64>> {
 }))
 }
 
-fn evens(limit: i64) -> Box<dyn Iterator<Item = i64>> {
+fn evens(limit: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     let mut __sifr_generator_initialized: bool = false;
-    let mut __sifr_generator_iter: ::std::vec::IntoIter<i64> = Vec::new().into_iter();
+    let mut __sifr_generator_iter: ::std::vec::IntoIter<SifrInt> = Vec::new().into_iter();
     Box::new(::std::iter::from_fn(move || {
     if !__sifr_generator_initialized {
-        let mut _yields: Vec<i64> = Vec::new();
-        let mut i: i64 = 0_i64;
-        while i < limit {
-            if (i % (2_i64)) == (0_i64) {
-                _yields.push(i);
+        let mut _yields: Vec<SifrInt> = Vec::new();
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &limit {
+            if (&i.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)) {
+                _yields.push(i.clone());
             }
-            i += 1_i64;
+            i = &i + &SifrInt::from_i64(1);
         }
         __sifr_generator_iter = _yields.into_iter();
         __sifr_generator_initialized = true;
@@ -72,13 +74,13 @@ fn evens(limit: i64) -> Box<dyn Iterator<Item = i64>> {
 }
 
 fn main() {
-    let fibs: Vec<i64> = fibonacci(8_i64).collect::<Vec<_>>();
+    let fibs: Vec<SifrInt> = fibonacci(SifrInt::from_i64(8)).collect::<Vec<_>>();
     println!("{:?}", fibs);
-    let even_nums: Vec<i64> = evens(10_i64).collect::<Vec<_>>();
+    let even_nums: Vec<SifrInt> = evens(SifrInt::from_i64(10)).collect::<Vec<_>>();
     println!("{:?}", even_nums);
-    let nums: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64];
-    for x in nums.iter().copied() {
-        println!("{}", x * x);
+    let nums: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(4), SifrInt::from_i64(5)];
+    for x in nums.iter().cloned() {
+        println!("{}", &x * &x);
     }
     {
         let mut __ctx_0 = Timer::new("work".to_string());

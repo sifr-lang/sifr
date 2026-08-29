@@ -1,4 +1,6 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 // --- stdlib: sifr.string ---
 fn __const_ascii_lowercase() -> String {
     "abcdefghijklmnopqrstuvwxyz".to_string().to_string()
@@ -24,7 +26,7 @@ fn capwords(s: &String) -> String {
     let mut first: bool = true;
     for word in words.iter().cloned() {
         let __sifr_chars_word: Vec<char> = word.chars().collect::<Vec<char>>();
-        if ((__sifr_chars_word.len() as i64) > (0_i64)) {
+        if (&SifrInt::from(__sifr_chars_word.len()) > &SifrInt::from_i64(0)) {
             if !first {
                 result.push(' ');
             }
@@ -44,11 +46,14 @@ fn capwords(s: &String) -> String {
 
 // --- stdlib: sifr.test ---
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0_i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i += 1_i64;
+    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from(actual.len()) {
+        assert!(
+            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
+            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+        );
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 // --- end stdlib ---
@@ -67,7 +72,7 @@ fn collect_constants_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     actual.push(__const_ascii_lowercase() == "abcdefghijklmnopqrstuvwxyz");
     actual.push(__const_digits() == "0123456789");
-    actual.push((__const_whitespace().chars().count() as i64) == (6_i64));
+    actual.push(&SifrInt::from(__const_whitespace().chars().count()) == &SifrInt::from_i64(6));
     actual
 }
 

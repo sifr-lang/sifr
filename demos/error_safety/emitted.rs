@@ -124,6 +124,7 @@ mod __sifr_project_unions {
     }
 }
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0;
+use ::sifr_runtime::SifrInt;
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct AppError {
     message: String,
@@ -145,40 +146,40 @@ impl ::std::fmt::Display for AppError {
     }
 }
 impl ::std::error::Error for AppError {}
-fn validate_age(age: i64) -> Result<i64, ValueError> {
-    if age < (0_i64) {
+fn validate_age(age: SifrInt) -> Result<SifrInt, ValueError> {
+    if &age < &SifrInt::from_i64(0) {
         return Err(ValueError::new("age must be positive".to_string()));
     }
-    if age > (150_i64) {
+    if &age > &SifrInt::from_i64(150) {
         return Err(ValueError::new("too large".to_string()));
     }
-    Ok(age)
+    Ok(age.clone())
 }
-fn safe_divide(a: i64, b: i64) -> Result<i64, DivisionError> {
-    if b == (0_i64) {
+fn safe_divide(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
+    if &b == &SifrInt::from_i64(0) {
         return Err(DivisionError::new("division by zero".to_string()));
     }
-    Ok(a / b)
+    Ok(a.floor_div_known_nonzero(&b))
 }
-fn check_input(x: i64) -> Result<i64, AppError> {
-    if x < (0_i64) {
+fn check_input(x: SifrInt) -> Result<SifrInt, AppError> {
+    if &x < &SifrInt::from_i64(0) {
         return Err(AppError::new("invalid input".to_string()));
     }
-    Ok(x)
+    Ok(x.clone())
 }
-fn process_age(age: i64) -> Result<i64, ValueError> {
-    if age < (0_i64) {
+fn process_age(age: SifrInt) -> Result<SifrInt, ValueError> {
+    if &age < &SifrInt::from_i64(0) {
         return Err(ValueError::new("age must be positive".to_string()));
     }
-    if age > (150_i64) {
+    if &age > &SifrInt::from_i64(150) {
         return Err(ValueError::new("too large".to_string()));
     }
-    Ok(age)
+    Ok(age.clone())
 }
 fn main() {
     println!("=== Built-in Error Classes ===");
     let __sifr_try_res: Result<(), ValueError> = (|| {
-        let age: i64 = validate_age(-(5_i64))?;
+        let age: SifrInt = validate_age(-&SifrInt::from_i64(5))?;
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -186,7 +187,7 @@ fn main() {
         println!("caught ValueError: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), DivisionError> = (|| {
-        let result: i64 = safe_divide(10_i64, 0_i64)?;
+        let result: SifrInt = safe_divide(SifrInt::from_i64(10), SifrInt::from_i64(0))?;
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -194,8 +195,10 @@ fn main() {
         println!("caught DivisionError: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), ParseError> = (|| {
-        let n: i64 = ("not_a_number".to_string())
-            .parse::<i64>()
+        let n: SifrInt = SifrInt::parse_decimal(
+                &("not_a_number".to_string()),
+                ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS,
+            )
             .map_err(|e| ParseError {
                 message: e.to_string(),
             })?;
@@ -207,7 +210,7 @@ fn main() {
     }
     println!("=== Custom Error Classes ===");
     let __sifr_try_res: Result<(), AppError> = (|| {
-        let val: i64 = check_input(-(1_i64))?;
+        let val: SifrInt = check_input(-&SifrInt::from_i64(1))?;
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -216,7 +219,7 @@ fn main() {
     }
     println!("=== Exhaustiveness: Specific Except Arms ===");
     let __sifr_try_res: Result<(), ValueError> = (|| {
-        let a: i64 = validate_age(-(10_i64))?;
+        let a: SifrInt = validate_age(-&SifrInt::from_i64(10))?;
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -228,7 +231,7 @@ fn main() {
         (),
         __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0,
     > = (|| {
-        let b: i64 = (validate_age(200_i64))
+        let b: SifrInt = (validate_age(SifrInt::from_i64(200)))
             .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
                 __e,
             ))?;
@@ -252,7 +255,7 @@ fn main() {
     }
     println!("=== Error Propagation ===");
     let __sifr_try_res: Result<(), ValueError> = (|| {
-        let c: i64 = process_age(-(1_i64))?;
+        let c: SifrInt = process_age(-&SifrInt::from_i64(1))?;
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -261,8 +264,10 @@ fn main() {
     }
     println!("=== Multiple Try/Except ===");
     let __sifr_try_res: Result<(), ParseError> = (|| {
-        let parsed: i64 = ("42".to_string())
-            .parse::<i64>()
+        let parsed: SifrInt = SifrInt::parse_decimal(
+                &("42".to_string()),
+                ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS,
+            )
             .map_err(|e| ParseError {
                 message: e.to_string(),
             })?;
@@ -274,7 +279,7 @@ fn main() {
         println!("parse error: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), ValueError> = (|| {
-        let validated: i64 = validate_age(42_i64)?;
+        let validated: SifrInt = validate_age(SifrInt::from_i64(42))?;
         println!("validated: {}", validated);
         Ok(())
     })();
@@ -283,7 +288,7 @@ fn main() {
         println!("validation error: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), DivisionError> = (|| {
-        let divided: i64 = safe_divide(42_i64, 6_i64)?;
+        let divided: SifrInt = safe_divide(SifrInt::from_i64(42), SifrInt::from_i64(6))?;
         println!("result: {}", divided);
         Ok(())
     })();

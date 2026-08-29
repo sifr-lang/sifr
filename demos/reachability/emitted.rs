@@ -17,10 +17,11 @@ mod __sifr_project_nominals {
     impl ::std::error::Error for ValueError {}
 }
 pub use __sifr_project_nominals::ValueError;
-fn classify(flag: bool) -> i64 {
-    let __sifr_try_res: Result<i64, ValueError> = (|| {
+use ::sifr_runtime::SifrInt;
+fn classify(flag: bool) -> SifrInt {
+    let __sifr_try_res: Result<SifrInt, ValueError> = (|| {
         if flag {
-            return Ok(5_i64);
+            return Ok(SifrInt::from_i64(5));
         }
         return Err(ValueError::new("bad value".to_string()));
         unreachable!("sifr try/except return capture fell through");
@@ -31,7 +32,7 @@ fn classify(flag: bool) -> i64 {
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return 77_i64;
+            return SifrInt::from_i64(77);
         }
     }
 }

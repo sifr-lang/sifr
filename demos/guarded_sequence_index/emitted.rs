@@ -1,11 +1,15 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
+use ::sifr_runtime::SifrRange;
+
 fn collect_vowels(text: &String) -> String {
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     let mut result: String = "".to_string();
-    let mut i: i64 = 0_i64;
-    while (i < (__sifr_chars_text.len() as i64)) {
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while (&i < &SifrInt::from(__sifr_chars_text.len())) {
         let ch: String = {
-    let Some(__indexed_char) = __sifr_chars_text.get(i as usize).map(|c| c.to_string()) else {
+    let Some(__indexed_char) = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(i))).map(|c| c.to_string()) else {
         unreachable!("compiler-verified string index should be in range");
     };
     __indexed_char
@@ -13,30 +17,30 @@ fn collect_vowels(text: &String) -> String {
         if "aeiou".to_string().contains(&ch) {
             result.push_str((ch).as_str());
         }
-        i += 1_i64;
+        i = &i + &SifrInt::from_i64(1);
     }
     result
 }
 
-fn sum_all(values: &Vec<i64>) -> i64 {
-    let mut total: i64 = 0_i64;
-    for i in 0_i64..values.len() as i64 {
-        total += values[i as usize];
+fn sum_all(values: &Vec<SifrInt>) -> SifrInt {
+    let mut total: SifrInt = SifrInt::from_i64(0);
+    for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), SifrInt::from(values.len()), SifrInt::from_i64(1)) {
+        total = &total + &values[::sifr_runtime::to_usize_proven(&(i))].clone();
     }
-    total
+    total.clone()
 }
 
-fn head_or_zero(values: &Vec<i64>) -> i64 {
-    if (values.len() as i64) == (0_i64) {
-        return 0_i64;
+fn head_or_zero(values: &Vec<SifrInt>) -> SifrInt {
+    if &SifrInt::from(values.len()) == &SifrInt::from_i64(0) {
+        return SifrInt::from_i64(0);
     }
-    let first: i64 = values[(0_i64) as usize];
-    first
+    let first: SifrInt = values[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))].clone();
+    first.clone()
 }
 
 fn main() {
     assert!((collect_vowels(&"sequoia".to_string()) == "euoia"));
-    assert!((sum_all(&vec![4_i64, 5_i64, 6_i64]) == (15_i64)));
-    assert!((head_or_zero(&vec![]) == (0_i64)));
-    assert!((head_or_zero(&vec![9_i64, 1_i64]) == (9_i64)));
+    assert!((&sum_all(&vec![SifrInt::from_i64(4), SifrInt::from_i64(5), SifrInt::from_i64(6)]) == &SifrInt::from_i64(15)));
+    assert!((&head_or_zero(&vec![]) == &SifrInt::from_i64(0)));
+    assert!((&head_or_zero(&vec![SifrInt::from_i64(9), SifrInt::from_i64(1)]) == &SifrInt::from_i64(9)));
 }

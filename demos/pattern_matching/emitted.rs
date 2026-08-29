@@ -1,8 +1,9 @@
 // src/main.rs
 mod __sifr_project_unions {
+    use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr {
-        __SifrUnionVariant_4_x3aatom3_x3aint(i64),
+        __SifrUnionVariant_4_x3aatom3_x3aint(SifrInt),
         __SifrUnionVariant_4_x3aatom3_x3astr(String),
     }
     impl ::std::fmt::Display
@@ -24,6 +25,8 @@ mod __sifr_project_unions {
     }
 }
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr;
+use ::sifr_runtime::SifrInt;
+
 // --- stdlib: _sifr.encoding ---
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
@@ -288,15 +291,15 @@ fn chdir(path: &String) -> Result<(), IOError> {
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn stat_size(path: &String) -> Result<i64, IOError> {
+fn stat_size(path: &String) -> Result<SifrInt, IOError> {
     ::sifr_stdlib::fs::stat_size(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn disk_usage(path: &String) -> Vec<i64> {
+fn disk_usage(path: &String) -> Vec<SifrInt> {
     ::sifr_stdlib::fs::disk_usage(path)
         .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+        .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
 fn is_file(path: &String) -> bool {
@@ -623,7 +626,10 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             &errors,
         );
         let __sifr_field_init_2: bool = false;
-        let __sifr_field_init_3: Vec<u8> = vec![];
+        let __sifr_field_init_3: Vec<u8> = {
+            let __sifr_empty_bytes_literal: Vec<u8> = vec![];
+            __sifr_empty_bytes_literal
+        };
         Self {
             _encoding: __sifr_field_init_0,
             _errors: __sifr_field_init_1,
@@ -670,7 +676,10 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             )?;
             self._pending = next_pending;
             if r#final {
-                self._pending = vec![];
+                self._pending = {
+                    let __sifr_empty_bytes_literal: Vec<u8> = vec![];
+                    __sifr_empty_bytes_literal
+                };
                 self._exhausted = true;
             }
             return Ok(Ok(outcome));
@@ -1057,7 +1066,7 @@ fn _encoding_encode_outcome(
     }
 }
 fn encoding(label: &String) -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
-    __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label).clone())
+    __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label.clone()).clone())
 }
 fn utf8() -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
     __SifrStdlib_sifr_x2eencoding_x2eEncoding::new(__const_ENCODING_UTF8())
@@ -1404,12 +1413,12 @@ impl From<ParseError> for Error {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Point {
-    x: i64,
-    y: i64,
+    x: SifrInt,
+    y: SifrInt,
 }
 
 impl Point {
-    fn new(x: i64, y: i64) -> Self {
+    fn new(x: SifrInt, y: SifrInt) -> Self {
         Self { x, y }
     }
 }
@@ -1423,15 +1432,15 @@ impl ::std::fmt::Display for Point {
     }
 }
 
-fn describe_number(x: i64) -> String {
+fn describe_number(x: SifrInt) -> String {
     match x {
-        0 => {
+        SifrInt::Small(0) => {
             return "zero".to_string();
         },
-        1 => {
+        SifrInt::Small(1) => {
             return "one".to_string();
         },
-        2 => {
+        SifrInt::Small(2) => {
             return "two".to_string();
         },
         _ => {
@@ -1457,18 +1466,18 @@ fn classify_http(method: &String) -> String {
     }
 }
 
-fn classify_score(score: i64) -> String {
+fn classify_score(score: SifrInt) -> String {
     match score {
-        n if n >= (90_i64) => {
+        n if &n >= &SifrInt::from_i64(90) => {
             return "A".to_string();
         },
-        n if n >= (80_i64) => {
+        n if &n >= &SifrInt::from_i64(80) => {
             return "B".to_string();
         },
-        n if n >= (70_i64) => {
+        n if &n >= &SifrInt::from_i64(70) => {
             return "C".to_string();
         },
-        n if n >= (60_i64) => {
+        n if &n >= &SifrInt::from_i64(60) => {
             return "D".to_string();
         },
         _ => {
@@ -1477,7 +1486,7 @@ fn classify_score(score: i64) -> String {
     }
 }
 
-fn describe_optional(x: Option<i64>) -> String {
+fn describe_optional(x: Option<SifrInt>) -> String {
     match x {
         None => {
             return "nothing".to_string();
@@ -1500,7 +1509,7 @@ fn describe_union(x: &__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_
 }
 
 fn make_int_union() -> __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr {
-    __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(42_i64)
+    __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(SifrInt::from_i64(42))
 }
 
 fn make_str_union() -> __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr {
@@ -1509,34 +1518,34 @@ fn make_str_union() -> __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3
 
 fn classify_point(p: &Point) -> String {
     match p {
-        Point { x: 0, y: 0, .. } => {
+        Point { x: SifrInt::Small(0), y: SifrInt::Small(0), .. } => {
             return "origin".to_string();
         },
-        Point { x: px, y: 0, .. } => {
-            let px = *px;
+        Point { x: px, y: SifrInt::Small(0), .. } => {
+            let px = px.clone();
             return "on x-axis".to_string();
         },
-        Point { x: 0, y: py, .. } => {
-            let py = *py;
+        Point { x: SifrInt::Small(0), y: py, .. } => {
+            let py = py.clone();
             return "on y-axis".to_string();
         },
         Point { x: px, y: py, .. } => {
-            let px = *px;
-            let py = *py;
+            let px = px.clone();
+            let py = py.clone();
             return "general".to_string();
         },
     }
 }
 
-fn classify_pair(p: (i64, i64)) -> String {
+fn classify_pair(p: (SifrInt, SifrInt)) -> String {
     match p {
-        (0, 0) => {
+        (SifrInt::Small(0), SifrInt::Small(0)) => {
             return "origin".to_string();
         },
-        (x, 0) => {
+        (x, SifrInt::Small(0)) => {
             return "x-axis".to_string();
         },
-        (0, y) => {
+        (SifrInt::Small(0), y) => {
             return "y-axis".to_string();
         },
         (x, y) => {
@@ -1547,17 +1556,17 @@ fn classify_pair(p: (i64, i64)) -> String {
 
 fn classify_quadrant(p: &Point) -> String {
     match p {
-        Point { x: 0, y: 0, .. } => {
+        Point { x: SifrInt::Small(0), y: SifrInt::Small(0), .. } => {
             return "origin".to_string();
         },
-        Point { x: px, y: py, .. } if (*px > (0_i64)) && (*py > (0_i64)) => {
-            let px = *px;
-            let py = *py;
+        Point { x: px, y: py, .. } if (&px > &SifrInt::from_i64(0)) && (&py > &SifrInt::from_i64(0)) => {
+            let px = px.clone();
+            let py = py.clone();
             return "Q1".to_string();
         },
-        Point { x: px, y: py, .. } if (*px < (0_i64)) && (*py > (0_i64)) => {
-            let px = *px;
-            let py = *py;
+        Point { x: px, y: py, .. } if (&px < &SifrInt::from_i64(0)) && (&py > &SifrInt::from_i64(0)) => {
+            let px = px.clone();
+            let py = py.clone();
             return "Q2".to_string();
         },
         _ => {
@@ -1568,47 +1577,47 @@ fn classify_quadrant(p: &Point) -> String {
 
 fn main() {
     println!("=== Literal Patterns ===");
-    println!("{}", describe_number(0_i64));
-    println!("{}", describe_number(1_i64));
-    println!("{}", describe_number(42_i64));
+    println!("{}", describe_number(SifrInt::from_i64(0)));
+    println!("{}", describe_number(SifrInt::from_i64(1)));
+    println!("{}", describe_number(SifrInt::from_i64(42)));
     println!("=== OR Patterns ===");
     println!("{}", classify_http(&"GET".to_string()));
     println!("{}", classify_http(&"POST".to_string()));
     println!("{}", classify_http(&"DELETE".to_string()));
     println!("{}", classify_http(&"OPTIONS".to_string()));
     println!("=== Guard Patterns ===");
-    println!("{}", classify_score(95_i64));
-    println!("{}", classify_score(85_i64));
-    println!("{}", classify_score(55_i64));
+    println!("{}", classify_score(SifrInt::from_i64(95)));
+    println!("{}", classify_score(SifrInt::from_i64(85)));
+    println!("{}", classify_score(SifrInt::from_i64(55)));
     println!("=== Optional Matching ===");
     println!("{}", describe_optional(None));
-    println!("{}", describe_optional(Some(42_i64)));
+    println!("{}", describe_optional(Some(SifrInt::from_i64(42))));
     println!("=== Union Matching ===");
     let a: __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr = make_int_union();
     let b: __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr = make_str_union();
     println!("{}", describe_union(&a));
     println!("{}", describe_union(&b));
     println!("=== Class Destructuring ===");
-    let p1: Point = Point::new(0_i64, 0_i64);
-    let p2: Point = Point::new(3_i64, 0_i64);
-    let p3: Point = Point::new(0_i64, 4_i64);
-    let p4: Point = Point::new(3_i64, 4_i64);
+    let p1: Point = Point::new(SifrInt::from_i64(0), SifrInt::from_i64(0));
+    let p2: Point = Point::new(SifrInt::from_i64(3), SifrInt::from_i64(0));
+    let p3: Point = Point::new(SifrInt::from_i64(0), SifrInt::from_i64(4));
+    let p4: Point = Point::new(SifrInt::from_i64(3), SifrInt::from_i64(4));
     println!("{}", classify_point(&p1));
     println!("{}", classify_point(&p2));
     println!("{}", classify_point(&p3));
     println!("{}", classify_point(&p4));
     println!("=== Tuple Patterns ===");
-    let t1: (i64, i64) = (0_i64, 0_i64);
-    let t2: (i64, i64) = (3_i64, 0_i64);
-    let t3: (i64, i64) = (0_i64, 4_i64);
-    let t4: (i64, i64) = (3_i64, 4_i64);
-    println!("{}", classify_pair(t1));
-    println!("{}", classify_pair(t2));
-    println!("{}", classify_pair(t3));
-    println!("{}", classify_pair(t4));
+    let t1: (SifrInt, SifrInt) = (SifrInt::from_i64(0), SifrInt::from_i64(0));
+    let t2: (SifrInt, SifrInt) = (SifrInt::from_i64(3), SifrInt::from_i64(0));
+    let t3: (SifrInt, SifrInt) = (SifrInt::from_i64(0), SifrInt::from_i64(4));
+    let t4: (SifrInt, SifrInt) = (SifrInt::from_i64(3), SifrInt::from_i64(4));
+    println!("{}", classify_pair((t1).clone()));
+    println!("{}", classify_pair((t2).clone()));
+    println!("{}", classify_pair((t3).clone()));
+    println!("{}", classify_pair((t4).clone()));
     println!("=== Nested Patterns ===");
-    println!("{}", classify_quadrant(&Point::new(0_i64, 0_i64)));
-    println!("{}", classify_quadrant(&Point::new(3_i64, 4_i64)));
-    println!("{}", classify_quadrant(&Point::new(-(2_i64), 5_i64)));
-    println!("{}", classify_quadrant(&Point::new(-(1_i64), -(1_i64))));
+    println!("{}", classify_quadrant(&Point::new(SifrInt::from_i64(0), SifrInt::from_i64(0))));
+    println!("{}", classify_quadrant(&Point::new(SifrInt::from_i64(3), SifrInt::from_i64(4))));
+    println!("{}", classify_quadrant(&Point::new(-&SifrInt::from_i64(2), SifrInt::from_i64(5))));
+    println!("{}", classify_quadrant(&Point::new(-&SifrInt::from_i64(1), -&SifrInt::from_i64(1))));
 }

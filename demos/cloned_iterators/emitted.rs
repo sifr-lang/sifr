@@ -1,28 +1,24 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 fn main() {
-    let nums: Vec<i64> = vec![2_i64, 4_i64, 6_i64, 8_i64];
-    let doubled: Vec<i64> = Box::new(nums.iter().copied().map(|__sifr_map_item| (|x| x * (2_i64))(__sifr_map_item))).collect::<Vec<_>>();
-    let evens: Vec<i64> = Box::new(nums.iter().copied().filter(|__filter_item| {
-    let __filter_value = *__filter_item;
-    {
-    let x = __filter_value;
-    (x % (4_i64)) == (0_i64)
-}
-})).collect::<Vec<_>>();
-    let comp: Vec<i64> = {
+    let nums: Vec<SifrInt> = vec![SifrInt::from_i64(2), SifrInt::from_i64(4), SifrInt::from_i64(6), SifrInt::from_i64(8)];
+    let doubled: Vec<SifrInt> = Box::new(nums.iter().cloned().map(|__sifr_map_item| (|x| &x * &SifrInt::from_i64(2))(__sifr_map_item))).collect::<Vec<_>>();
+    let evens: Vec<SifrInt> = Box::new((nums).iter().cloned().filter(move |__filter_item| (|x| (&x.floor_mod_known_nonzero(&SifrInt::from_i64(4)) == &SifrInt::from_i64(0)))(__filter_item.clone()))).collect::<Vec<_>>();
+    let comp: Vec<SifrInt> = {
     let mut __sifr_list_comp = vec![];
-    for x in nums.iter().copied() {
-        __sifr_list_comp.push(x + (1_i64));
+    for x in nums.iter().cloned() {
+        __sifr_list_comp.push(&x + &SifrInt::from_i64(1));
     }
     __sifr_list_comp
 };
     println!("{:?}", doubled);
     println!("{:?}", evens);
     println!("{:?}", comp);
-    println!("{}", nums.len() as i64);
-    for n in nums.iter().copied() {
+    println!("{}", SifrInt::from(nums.len()));
+    for n in nums.iter().cloned() {
         println!("{}", n);
     }
-    println!("{:?}", Box::new(vec![9_i64, 10_i64, 11_i64].into_iter().map(|__sifr_map_item| (|x| x - (1_i64))(__sifr_map_item))).collect::<Vec<_>>());
+    println!("{:?}", Box::new(vec![SifrInt::from_i64(9), SifrInt::from_i64(10), SifrInt::from_i64(11)].into_iter().map(|__sifr_map_item| (|x| &x - &SifrInt::from_i64(1))(__sifr_map_item))).collect::<Vec<_>>());
     println!("clone_cloned_iterators_comprehension_demo: pass");
 }

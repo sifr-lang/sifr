@@ -1,17 +1,19 @@
 // src/main.rs
-fn gen_pairs(limit: i64) -> Box<dyn Iterator<Item = i64>> {
+use ::sifr_runtime::SifrInt;
+
+fn gen_pairs(limit: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     let mut __sifr_generator_initialized: bool = false;
-    let mut __sifr_generator_iter: ::std::vec::IntoIter<i64> = Vec::new().into_iter();
+    let mut __sifr_generator_iter: ::std::vec::IntoIter<SifrInt> = Vec::new().into_iter();
     Box::new(::std::iter::from_fn(move || {
     if !__sifr_generator_initialized {
-        let mut _yields: Vec<i64> = Vec::new();
-        let mut i: i64 = 0_i64;
-        while i < limit {
-            _yields.push(i);
-            i += 1_i64;
-            if i < limit {
-                _yields.push(i);
-                i += 1_i64;
+        let mut _yields: Vec<SifrInt> = Vec::new();
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &limit {
+            _yields.push(i.clone());
+            i = &i + &SifrInt::from_i64(1);
+            if &i < &limit {
+                _yields.push(i.clone());
+                i = &i + &SifrInt::from_i64(1);
             }
         }
         __sifr_generator_iter = _yields.into_iter();
@@ -21,16 +23,16 @@ fn gen_pairs(limit: i64) -> Box<dyn Iterator<Item = i64>> {
 }))
 }
 
-fn gen_even(xs: &Vec<i64>) -> Box<dyn Iterator<Item = i64>> {
+fn gen_even(xs: &Vec<SifrInt>) -> Box<dyn Iterator<Item = SifrInt>> {
     let xs = xs.clone();
     let mut __sifr_generator_initialized: bool = false;
-    let mut __sifr_generator_iter: ::std::vec::IntoIter<i64> = Vec::new().into_iter();
+    let mut __sifr_generator_iter: ::std::vec::IntoIter<SifrInt> = Vec::new().into_iter();
     Box::new(::std::iter::from_fn(move || {
     if !__sifr_generator_initialized {
-        let mut _yields: Vec<i64> = Vec::new();
-        for x in xs.iter().copied() {
-            if (x % (2_i64)) == (0_i64) {
-                _yields.push(x);
+        let mut _yields: Vec<SifrInt> = Vec::new();
+        for x in xs.iter().cloned() {
+            if (&x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)) {
+                _yields.push(x.clone());
             }
         }
         __sifr_generator_iter = _yields.into_iter();
@@ -41,9 +43,9 @@ fn gen_even(xs: &Vec<i64>) -> Box<dyn Iterator<Item = i64>> {
 }
 
 fn main() {
-    let xs: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64];
-    let squares: Box<dyn Iterator<Item = i64>> = Box::new(xs.iter().copied().filter_map(|x| if ((x % (2_i64)) == (0_i64)) { Some(x * x) } else { None }));
+    let xs: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(4), SifrInt::from_i64(5)];
+    let squares: Box<dyn Iterator<Item = SifrInt>> = Box::new(xs.iter().cloned().filter_map(|x| if (&x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)) { Some(&x * &x) } else { None }));
     println!("{:?}", squares.collect::<Vec<_>>());
-    println!("{:?}", gen_pairs(5_i64).collect::<Vec<_>>());
+    println!("{:?}", gen_pairs(SifrInt::from_i64(5)).collect::<Vec<_>>());
     println!("{:?}", gen_even(&xs).collect::<Vec<_>>());
 }

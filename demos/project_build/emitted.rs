@@ -9,8 +9,9 @@ fn main() {
 }
 
 // src/formatter.rs
+pub use ::sifr_runtime::SifrInt;
 pub fn render_value() -> String {
-    let value: i64 = 42_i64;
+    let value: SifrInt = SifrInt::from_i64(42);
     format!("{}", value)
 }
 

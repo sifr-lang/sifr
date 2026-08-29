@@ -39,14 +39,14 @@ fn main() {
     );
     println!(
         "{}", Decimal::from_str_exact(("2.5".to_string()).as_str()).unwrap_or_else(| __e
-        | unreachable!()).round_dp_with_strategy({ let __scale = 0_i64; (if __scale < 0 {
-        0 } else { __scale }) as u32 },
+        | unreachable!()).round_dp_with_strategy({ let __scale = 0; (if __scale < 0 { 0 }
+        else { __scale }) as u32 },
         ::rust_decimal::RoundingStrategy::MidpointNearestEven)
     );
     println!(
         "{}", Decimal::from_str_exact(("2.5".to_string()).as_str()).unwrap_or_else(| __e
-        | unreachable!()).round_dp_with_strategy({ let __scale = 0_i64; (if __scale < 0 {
-        0 } else { __scale }) as u32 },
+        | unreachable!()).round_dp_with_strategy({ let __scale = 0; (if __scale < 0 { 0 }
+        else { __scale }) as u32 },
         ::rust_decimal::RoundingStrategy::MidpointNearestEven)
     );
     let precise: BigDecimal = ("1.234567890123456789012345678901".to_string())
@@ -89,7 +89,7 @@ fn main() {
         .unwrap_or_else(|| ::bigdecimal::Context::default()
         .with_rounding_mode(::bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&
         (("2.5".to_string()).parse::< BigDecimal > ().unwrap_or_else(| __e |
-        unreachable!()).with_scale_round(0_i64, ::bigdecimal::RoundingMode::HalfEven)))
+        unreachable!()).with_scale_round(0, ::bigdecimal::RoundingMode::HalfEven)))
     );
     println!(
         "{}", ::bigdecimal::Context::default()
@@ -97,7 +97,7 @@ fn main() {
         .unwrap_or_else(|| ::bigdecimal::Context::default()
         .with_rounding_mode(::bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&
         (("2.5".to_string()).parse::< BigDecimal > ().unwrap_or_else(| __e |
-        unreachable!()).with_scale_round(0_i64, ::bigdecimal::RoundingMode::HalfEven)))
+        unreachable!()).with_scale_round(0, ::bigdecimal::RoundingMode::HalfEven)))
     );
     println!(
         "{:?}", < Decimal as ::rust_decimal::MathematicalOps >::sqrt(&

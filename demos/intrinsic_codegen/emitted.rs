@@ -1,5 +1,23 @@
 // src/main.rs
-// --- stdlib: _sifr.math ---
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ValueError {
+        pub message: String,
+    }
+    impl ValueError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ValueError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ValueError {}
+}
+pub use __sifr_project_nominals::ValueError;
+use ::sifr_runtime::SifrInt;
 const PI: f64 = 3.141592653589793_f64;
 const E: f64 = 2.718281828459045_f64;
 const TAU: f64 = 6.283185307179586_f64;
@@ -8,11 +26,11 @@ const NAN: f64 = f64::NAN;
 fn sqrt(x: f64) -> f64 {
     ::sifr_stdlib::math::sqrt(x)
 }
-fn floor(x: f64) -> i64 {
-    ::sifr_stdlib::math::floor(x).to_i64_saturating()
+fn floor(x: f64) -> SifrInt {
+    ::sifr_stdlib::math::floor(x).into_sifr_int()
 }
-fn ceil(x: f64) -> i64 {
-    ::sifr_stdlib::math::ceil(x).to_i64_saturating()
+fn ceil(x: f64) -> SifrInt {
+    ::sifr_stdlib::math::ceil(x).into_sifr_int()
 }
 fn log(x: f64) -> f64 {
     ::sifr_stdlib::math::log(x)
@@ -38,8 +56,8 @@ fn min_val(a: f64, b: f64) -> f64 {
 fn max_val(a: f64, b: f64) -> f64 {
     ::sifr_stdlib::math::max_val(a, b)
 }
-fn round_val(x: f64) -> i64 {
-    ::sifr_stdlib::math::round_val(x).to_i64_saturating()
+fn round_val(x: f64) -> SifrInt {
+    ::sifr_stdlib::math::round_val(x).into_sifr_int()
 }
 fn asin(x: f64) -> f64 {
     ::sifr_stdlib::math::asin(x)
@@ -83,8 +101,8 @@ fn isnan(x: f64) -> bool {
 fn isinf(x: f64) -> bool {
     ::sifr_stdlib::math::isinf(x)
 }
-fn trunc(x: f64) -> i64 {
-    ::sifr_stdlib::math::trunc(x).to_i64_saturating()
+fn trunc(x: f64) -> SifrInt {
+    ::sifr_stdlib::math::trunc(x).into_sifr_int()
 }
 fn copysign(x: f64, y: f64) -> f64 {
     ::sifr_stdlib::math::copysign(x, y)
@@ -140,9 +158,9 @@ fn asinh(x: f64) -> f64 {
 fn atanh(x: f64) -> f64 {
     ::sifr_stdlib::math::atanh(x)
 }
-fn isqrt(n: i64) -> i64 {
+fn isqrt(n: SifrInt) -> SifrInt {
     ::sifr_stdlib::math::isqrt(::sifr_runtime::interop::SifrIntBridge::from(n))
-        .to_i64_saturating()
+        .into_sifr_int()
 }
 fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
     ::sifr_stdlib::math::dist(p, q)
@@ -168,7 +186,7 @@ fn lgamma(x: f64) -> f64 {
 fn frexp(x: f64) -> Vec<f64> {
     ::sifr_stdlib::math::frexp(x)
 }
-fn ldexp(m: f64, e: i64) -> f64 {
+fn ldexp(m: f64, e: SifrInt) -> f64 {
     ::sifr_stdlib::math::ldexp(m, ::sifr_runtime::interop::SifrIntBridge::from(e))
 }
 fn modf(x: f64) -> Vec<f64> {
@@ -180,26 +198,38 @@ fn nextafter(x: f64, y: f64) -> f64 {
 fn ulp(x: f64) -> f64 {
     ::sifr_stdlib::math::ulp(x)
 }
-
-// --- stdlib: sifr.math ---
 fn pow(x: f64, y: f64) -> f64 {
     pow_val(x, y)
 }
-// --- end stdlib ---
-
 fn main() {
     let base: f64 = 9.0_f64;
     let root: f64 = sqrt(base);
-    let rounded_down: i64 = floor(3.9_f64);
-    let rounded_up: i64 = ceil(3.1_f64);
+    let rounded_down: SifrInt = floor(3.9_f64);
+    let rounded_up: SifrInt = ceil(3.1_f64);
     let powered: f64 = ((2.0_f64) as f64).powf((3.0_f64) as f64);
-    let rounded: i64 = (3.6_f64).round() as i64;
+    let mut rounded: SifrInt = SifrInt::from_i64(0);
+    let __sifr_try_res: Result<(), ValueError> = (|| {
+        let converted_rounded: SifrInt = SifrInt::from_f64_trunc(
+                (3.6_f64).round_ties_even(),
+            )
+            .ok_or_else(|| ValueError {
+                message: "cannot round non-finite float to int".to_string(),
+            })?;
+        rounded = converted_rounded;
+        Ok(())
+    })();
+    if let Err(__sifr_try_err) = __sifr_try_res {
+        let _e = __sifr_try_err.clone();
+        assert!(false);
+    }
     let angle: f64 = atan2(1.0_f64, 1.0_f64);
     let finite: bool = isfinite(powered);
     println!("root = {}", root);
     assert!((format!("{}", format!("root = {}", root)) == "root = 3"));
     println!("rounded_down = {}", rounded_down);
-    assert!((format!("{}", format!("rounded_down = {}", rounded_down)) == "rounded_down = 3"));
+    assert!(
+        (format!("{}", format!("rounded_down = {}", rounded_down)) == "rounded_down = 3")
+    );
     println!("rounded_up = {}", rounded_up);
     assert!((format!("{}", format!("rounded_up = {}", rounded_up)) == "rounded_up = 4"));
     println!("powered = {}", powered);
@@ -207,7 +237,10 @@ fn main() {
     println!("rounded = {}", rounded);
     assert!((format!("{}", format!("rounded = {}", rounded)) == "rounded = 4"));
     println!("angle_positive = {}", (angle > (0.0_f64)));
-    assert!((format!("{}", format!("angle_positive = {}", angle > (0.0_f64))) == "angle_positive = true"));
+    assert!(
+        (format!("{}", format!("angle_positive = {}", angle > (0.0_f64))) ==
+        "angle_positive = true")
+    );
     println!("finite = {}", finite);
     assert!((format!("{}", format!("finite = {}", finite)) == "finite = true"));
 }

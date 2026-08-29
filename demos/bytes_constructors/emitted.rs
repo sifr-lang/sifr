@@ -1,5 +1,6 @@
 // src/main.rs
 mod __sifr_project_nominals {
+    pub use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IOError {
         pub message: String,
@@ -74,15 +75,15 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct JSONDecodeError {
         pub message: String,
-        pub line: i64,
-        pub column: i64,
+        pub line: SifrInt,
+        pub column: SifrInt,
     }
     impl JSONDecodeError {
         pub fn new(message: String) -> Self {
             Self {
                 message,
-                line: 0,
-                column: 0,
+                line: SifrInt::from_i64(0),
+                column: SifrInt::from_i64(0),
             }
         }
     }
@@ -116,11 +117,14 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct JsonLimitError {
         pub message: String,
-        pub limit: i64,
+        pub limit: SifrInt,
     }
     impl JsonLimitError {
         pub fn new(message: String) -> Self {
-            Self { message, limit: 0 }
+            Self {
+                message,
+                limit: SifrInt::from_i64(0),
+            }
         }
     }
     impl ::std::fmt::Display for JsonLimitError {
@@ -132,15 +136,15 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TOMLDecodeError {
         pub message: String,
-        pub line: i64,
-        pub column: i64,
+        pub line: SifrInt,
+        pub column: SifrInt,
     }
     impl TOMLDecodeError {
         pub fn new(message: String) -> Self {
             Self {
                 message,
-                line: 0,
-                column: 0,
+                line: SifrInt::from_i64(0),
+                column: SifrInt::from_i64(0),
             }
         }
     }
@@ -210,6 +214,7 @@ pub use __sifr_project_nominals::ScopeFailure;
 pub use __sifr_project_nominals::TOMLDecodeError;
 pub use __sifr_project_nominals::TimeoutError;
 pub use __sifr_project_nominals::ValueError;
+use ::sifr_runtime::SifrInt;
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
@@ -236,17 +241,27 @@ fn main() {
     let mut size_ok: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
         let zeros: Vec<u8> = ({
-            let __size = 6_i64;
-            if __size < 0 {
+            let __size = SifrInt::from_i64(6);
+            if &__size < &0 {
                 return Err(ValueError {
                     message: "bytes(size) requires a non-negative size"
                         .to_string()
                         .to_string(),
                 });
             }
+            let __size = match __size.try_to_usize() {
+                Ok(__size) => __size,
+                Err(_) => {
+                    return Err(ValueError {
+                        message: "bytes(size) exceeds the addressable size"
+                            .to_string()
+                            .to_string(),
+                    });
+                }
+            };
             Ok::<Vec<u8>, ValueError>((0..__size).map(|_| 0_u8).collect::<Vec<u8>>())
         })?;
-        assert!((zeros.len() as i64) == (6_i64));
+        assert!(& SifrInt::from(zeros.len()) == & SifrInt::from_i64(6));
         size_ok = true;
         Ok(())
     })();
@@ -262,7 +277,10 @@ fn main() {
     let mut from_ints_ok: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
         let from_list: Vec<u8> = ({
-            let __vals = vec![83_i64, 105_i64, 102_i64, 114_i64];
+            let __vals = vec![
+                SifrInt::from_i64(83), SifrInt::from_i64(105), SifrInt::from_i64(102),
+                SifrInt::from_i64(114)
+            ];
             let mut __out = Vec::new();
             for __pair in __vals.iter().enumerate() {
                 if (*__pair.1 < 0) || (*__pair.1 > 255) {
@@ -272,15 +290,15 @@ fn main() {
                         ),
                     });
                 }
-                __out.push(*__pair.1 as u8);
+                __out.push(__pair.1.to_u8_proven_in_range());
             }
             Ok::<Vec<u8>, ValueError>(__out)
         })?;
         let first: Option<u8> = from_list
-            .get((0_i64) as usize)
+            .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0))))
             .map(|__byte| *__byte as u8);
         let last: Option<u8> = from_list
-            .get((3_i64) as usize)
+            .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(3))))
             .map(|__byte| *__byte as u8);
         if let Some(first) = first {
             let expected_first: u8 = 83u8;
@@ -351,7 +369,7 @@ fn main() {
                 &"strict".to_string(),
             )
             .map_err(|__message| ParseError { message: __message })?;
-        assert!(from_hex_text == "Sifr");
+        assert!((from_hex_text).as_str() == ("Sifr".to_string()).as_str());
         from_hex_ok = true;
         Ok(())
     })();
@@ -378,7 +396,7 @@ fn main() {
                 &"strict".to_string(),
             )
             .map_err(|__message| ParseError { message: __message })?;
-        assert!(decoded == "bytes_constructors-demo");
+        assert!((decoded).as_str() == ("bytes_constructors-demo".to_string()).as_str());
         encode_ok = true;
         Ok(())
     })();

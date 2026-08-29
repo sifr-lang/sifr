@@ -1,5 +1,7 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 fn main() {
     println!("guardrails guardrails demo:");
-    println!("{}", 20_i64);
+    println!("{}", SifrInt::from_i64(20));
 }

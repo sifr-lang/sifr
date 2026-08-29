@@ -9,6 +9,7 @@ fn main() {
 }
 
 // src/worker.rs
+pub use ::sifr_runtime::SifrInt;
 pub const PI: f64 = 3.141592653589793_f64;
 pub const E: f64 = 2.718281828459045_f64;
 pub const TAU: f64 = 6.283185307179586_f64;
@@ -17,11 +18,11 @@ pub const NAN: f64 = f64::NAN;
 pub fn sqrt(x: f64) -> f64 {
     ::sifr_stdlib::math::sqrt(x)
 }
-pub fn floor(x: f64) -> i64 {
-    ::sifr_stdlib::math::floor(x).to_i64_saturating()
+pub fn floor(x: f64) -> SifrInt {
+    ::sifr_stdlib::math::floor(x).into_sifr_int()
 }
-pub fn ceil(x: f64) -> i64 {
-    ::sifr_stdlib::math::ceil(x).to_i64_saturating()
+pub fn ceil(x: f64) -> SifrInt {
+    ::sifr_stdlib::math::ceil(x).into_sifr_int()
 }
 pub fn log(x: f64) -> f64 {
     ::sifr_stdlib::math::log(x)
@@ -47,8 +48,8 @@ pub fn min_val(a: f64, b: f64) -> f64 {
 pub fn max_val(a: f64, b: f64) -> f64 {
     ::sifr_stdlib::math::max_val(a, b)
 }
-pub fn round_val(x: f64) -> i64 {
-    ::sifr_stdlib::math::round_val(x).to_i64_saturating()
+pub fn round_val(x: f64) -> SifrInt {
+    ::sifr_stdlib::math::round_val(x).into_sifr_int()
 }
 pub fn asin(x: f64) -> f64 {
     ::sifr_stdlib::math::asin(x)
@@ -92,8 +93,8 @@ pub fn isnan(x: f64) -> bool {
 pub fn isinf(x: f64) -> bool {
     ::sifr_stdlib::math::isinf(x)
 }
-pub fn trunc(x: f64) -> i64 {
-    ::sifr_stdlib::math::trunc(x).to_i64_saturating()
+pub fn trunc(x: f64) -> SifrInt {
+    ::sifr_stdlib::math::trunc(x).into_sifr_int()
 }
 pub fn copysign(x: f64, y: f64) -> f64 {
     ::sifr_stdlib::math::copysign(x, y)
@@ -149,9 +150,9 @@ pub fn asinh(x: f64) -> f64 {
 pub fn atanh(x: f64) -> f64 {
     ::sifr_stdlib::math::atanh(x)
 }
-pub fn isqrt(n: i64) -> i64 {
+pub fn isqrt(n: SifrInt) -> SifrInt {
     ::sifr_stdlib::math::isqrt(::sifr_runtime::interop::SifrIntBridge::from(n))
-        .to_i64_saturating()
+        .into_sifr_int()
 }
 pub fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
     ::sifr_stdlib::math::dist(p, q)
@@ -177,7 +178,7 @@ pub fn lgamma(x: f64) -> f64 {
 pub fn frexp(x: f64) -> Vec<f64> {
     ::sifr_stdlib::math::frexp(x)
 }
-pub fn ldexp(m: f64, e: i64) -> f64 {
+pub fn ldexp(m: f64, e: SifrInt) -> f64 {
     ::sifr_stdlib::math::ldexp(m, ::sifr_runtime::interop::SifrIntBridge::from(e))
 }
 pub fn modf(x: f64) -> Vec<f64> {
@@ -189,6 +190,6 @@ pub fn nextafter(x: f64, y: f64) -> f64 {
 pub fn ulp(x: f64) -> f64 {
     ::sifr_stdlib::math::ulp(x)
 }
-pub fn call() -> i64 {
+pub fn call() -> SifrInt {
     floor(3.9_f64)
 }

@@ -1,66 +1,68 @@
 // src/main.rs
-fn parseDigit(ch: &String) -> i64 {
+use ::sifr_runtime::SifrInt;
+
+fn parseDigit(ch: &String) -> SifrInt {
     if (ch).as_str() == "0" {
-        return 0_i64;
+        return SifrInt::from_i64(0);
     }
     if (ch).as_str() == "1" {
-        return 1_i64;
+        return SifrInt::from_i64(1);
     }
     if (ch).as_str() == "2" {
-        return 2_i64;
+        return SifrInt::from_i64(2);
     }
     if (ch).as_str() == "3" {
-        return 3_i64;
+        return SifrInt::from_i64(3);
     }
     if (ch).as_str() == "4" {
-        return 4_i64;
+        return SifrInt::from_i64(4);
     }
     if (ch).as_str() == "5" {
-        return 5_i64;
+        return SifrInt::from_i64(5);
     }
     if (ch).as_str() == "6" {
-        return 6_i64;
+        return SifrInt::from_i64(6);
     }
     if (ch).as_str() == "7" {
-        return 7_i64;
+        return SifrInt::from_i64(7);
     }
     if (ch).as_str() == "8" {
-        return 8_i64;
+        return SifrInt::from_i64(8);
     }
     if (ch).as_str() == "9" {
-        return 9_i64;
+        return SifrInt::from_i64(9);
     }
-    -(1_i64)
+    -&SifrInt::from_i64(1)
 }
 
-fn parseNumber(s: &String) -> i64 {
+fn parseNumber(s: &String) -> SifrInt {
     let __sifr_chars_s: Vec<char> = s.chars().collect::<Vec<char>>();
-    let mut value: i64 = 0_i64;
-    let mut i: i64 = 0_i64;
-    while (i < (__sifr_chars_s.len() as i64)) {
+    let mut value: SifrInt = SifrInt::from_i64(0);
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while (&i < &SifrInt::from(__sifr_chars_s.len())) {
         let ch: String = {
-    let Some(__indexed_char) = __sifr_chars_s.get(i as usize).map(|c| c.to_string()) else {
+    let Some(__indexed_char) = __sifr_chars_s.get(::sifr_runtime::to_usize_proven(&(i))).map(|c| c.to_string()) else {
         unreachable!("compiler-verified string index should be in range");
     };
     __indexed_char
 };
-        let d: i64 = parseDigit(&ch);
-        if d < (0_i64) {
-            return -(1_i64);
+        let d: SifrInt = parseDigit(&ch);
+        if &d < &SifrInt::from_i64(0) {
+            return -&SifrInt::from_i64(1);
         }
-        value = (value * (10_i64)) + d;
-        i += 1_i64;
+        value = &(&value * &SifrInt::from_i64(10)) + &d;
+        i = &i + &SifrInt::from_i64(1);
     }
-    value
+    value.clone()
 }
 
 fn multiply(num1: &String, num2: &String) -> String {
-    let n1: i64 = parseNumber(num1);
-    let n2: i64 = parseNumber(num2);
-    if (n1 < (0_i64)) || (n2 < (0_i64)) {
+    let n1: SifrInt = parseNumber(num1);
+    let n2: SifrInt = parseNumber(num2);
+    if (&n1 < &SifrInt::from_i64(0)) || (&n2 < &SifrInt::from_i64(0)) {
         return "0".to_string();
     }
-    format!("{}", n1 * n2)
+    format!("{}", &n1 * &n2)
 }
 
 fn main() {

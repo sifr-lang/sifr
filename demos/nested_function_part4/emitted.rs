@@ -1,71 +1,73 @@
 // src/main.rs
-fn collect_value_groups(items: &Vec<i64>, limit: i64) -> Vec<Vec<i64>> {
-    let mut result: Vec<Vec<i64>> = vec![];
-    fn dfs(i: i64, cur: &mut Vec<i64>, total: i64, items: &Vec<i64>, limit: i64, result: &mut Vec<Vec<i64>>) {
-        if total == limit {
+use ::sifr_runtime::SifrInt;
+
+fn collect_value_groups(items: &Vec<SifrInt>, limit: SifrInt) -> Vec<Vec<SifrInt>> {
+    let mut result: Vec<Vec<SifrInt>> = vec![];
+    fn dfs(i: SifrInt, cur: &mut Vec<SifrInt>, total: SifrInt, items: &Vec<SifrInt>, limit: SifrInt, result: &mut Vec<Vec<SifrInt>>) {
+        if &total == &limit {
             result.push(cur.clone());
             return;
         }
-        if (i >= (items.len() as i64)) || (total > limit) {
+        if (&i >= &SifrInt::from(items.len())) || (&total > &limit) {
             return;
         }
         cur.push({
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &items;
-    let __sifr_index_i = i;
-    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
-    __sifr_index_list.get(__sifr_index_norm).copied()
+    let __sifr_index_i = i.clone();
+    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
+    __sifr_index_list.get(__sifr_index_norm).cloned()
 }) else {
         unreachable!("compiler-verified index should be in range");
     };
     __sifr_index_value
 });
-        dfs(i, cur, total + ({
+        dfs((i).clone(), cur, &total + ({
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &items;
-    let __sifr_index_i = i;
-    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
-    __sifr_index_list.get(__sifr_index_norm).copied()
+    let __sifr_index_i = i.clone();
+    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
+    __sifr_index_list.get(__sifr_index_norm).cloned()
 }) else {
         unreachable!("compiler-verified index should be in range");
     };
     __sifr_index_value
-}), items, limit, result);
+}), items, limit.clone(), result);
         cur.pop();
-        dfs(i + (1_i64), cur, total, items, limit, result);
+        dfs(&i + &SifrInt::from_i64(1), cur, (total).clone(), items, limit.clone(), result);
     }
-    dfs(0_i64, &mut vec![], 0_i64, items, limit, &mut result);
+    dfs(SifrInt::from_i64(0), &mut vec![], SifrInt::from_i64(0), items, limit.clone(), &mut result);
     result
 }
 
-fn collect_prefixes(nums: &Vec<i64>) -> Vec<Vec<i64>> {
-    let mut result: Vec<Vec<i64>> = vec![];
-    let mut subset: Vec<i64> = vec![];
-    fn dfs(i: i64, nums: &Vec<i64>, result: &mut Vec<Vec<i64>>, subset: &mut Vec<i64>) {
-        if (i >= (nums.len() as i64)) {
+fn collect_prefixes(nums: &Vec<SifrInt>) -> Vec<Vec<SifrInt>> {
+    let mut result: Vec<Vec<SifrInt>> = vec![];
+    let mut subset: Vec<SifrInt> = vec![];
+    fn dfs(i: SifrInt, nums: &Vec<SifrInt>, result: &mut Vec<Vec<SifrInt>>, subset: &mut Vec<SifrInt>) {
+        if (&i >= &SifrInt::from(nums.len())) {
             result.push(subset.clone());
             return;
         }
-        dfs(i + (1_i64), nums, result, subset);
+        dfs(&i + &SifrInt::from_i64(1), nums, result, subset);
         subset.push({
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &nums;
-    let __sifr_index_i = i;
-    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
-    __sifr_index_list.get(__sifr_index_norm).copied()
+    let __sifr_index_i = i.clone();
+    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
+    __sifr_index_list.get(__sifr_index_norm).cloned()
 }) else {
         unreachable!("compiler-verified index should be in range");
     };
     __sifr_index_value
 });
-        dfs(i + (1_i64), nums, result, subset);
+        dfs(&i + &SifrInt::from_i64(1), nums, result, subset);
         subset.pop();
     }
-    dfs(0_i64, nums, &mut result, &mut subset);
+    dfs(SifrInt::from_i64(0), nums, &mut result, &mut subset);
     result
 }
 
 fn main() {
-    assert!((format!("{:?}", collect_value_groups(&vec![1_i64, 2_i64, 4_i64], 4_i64)) == "[[1, 1, 1, 1], [1, 1, 2], [2, 2], [4]]"));
-    assert!((format!("{:?}", collect_prefixes(&vec![1_i64, 2_i64, 3_i64])) == "[[], [3], [2], [2, 3], [1], [1, 3], [1, 2], [1, 2, 3]]"));
+    assert!((format!("{:?}", collect_value_groups(&vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(4)], SifrInt::from_i64(4))) == "[[1, 1, 1, 1], [1, 1, 2], [2, 2], [4]]"));
+    assert!((format!("{:?}", collect_prefixes(&vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)])) == "[[], [3], [2], [2, 3], [1], [1, 3], [1, 2], [1, 2, 3]]"));
 }

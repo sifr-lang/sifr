@@ -17,27 +17,33 @@ mod __sifr_project_nominals {
     impl ::std::error::Error for ValueError {}
 }
 pub use __sifr_project_nominals::ValueError;
-fn evaluate(seed: i64) -> i64 {
-    let mut total: i64 = 0_i64;
-    for n in 0_i64..seed {
-        if n == (1_i64) {
+use ::sifr_runtime::SifrInt;
+use ::sifr_runtime::SifrRange;
+fn evaluate(seed: SifrInt) -> SifrInt {
+    let mut total: SifrInt = SifrInt::from_i64(0);
+    for n in SifrRange::new_known_nonzero(
+        SifrInt::from_i64(0),
+        seed.clone(),
+        SifrInt::from_i64(1),
+    ) {
+        if &n == &SifrInt::from_i64(1) {
             continue;
         }
-        if n == (6_i64) {
+        if &n == &SifrInt::from_i64(6) {
             break;
         }
-        if (n % (2_i64)) == (0_i64) {
-            total += n;
+        if (&n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)) {
+            total = &total + &n;
         } else {
-            total += 1_i64;
+            total = &total + &SifrInt::from_i64(1);
         }
     }
-    total
+    total.clone()
 }
-fn safe(seed: i64) -> i64 {
-    let __sifr_try_res: Result<i64, ValueError> = (|| {
-        let value: i64 = evaluate(seed);
-        if value > (3_i64) {
+fn safe(seed: SifrInt) -> SifrInt {
+    let __sifr_try_res: Result<SifrInt, ValueError> = (|| {
+        let value: SifrInt = evaluate((seed).clone());
+        if &value > &SifrInt::from_i64(3) {
             return Ok(value);
         }
         return Err(ValueError::new("too small".to_string()));
@@ -49,21 +55,21 @@ fn safe(seed: i64) -> i64 {
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return 42_i64;
+            return SifrInt::from_i64(42);
         }
     }
 }
-fn unreachable_tail() -> i64 {
-    9_i64
+fn unreachable_tail() -> SifrInt {
+    SifrInt::from_i64(9)
 }
 fn test_cfg_flow_matrix() {
-    assert!((safe(8_i64) == (8_i64)));
-    assert!((safe(3_i64) == (42_i64)));
-    assert!((unreachable_tail() == (9_i64)));
+    assert!((& safe(SifrInt::from_i64(8)) == & SifrInt::from_i64(8)));
+    assert!((& safe(SifrInt::from_i64(3)) == & SifrInt::from_i64(42)));
+    assert!((& unreachable_tail() == & SifrInt::from_i64(9)));
 }
 fn main() {
     println!("cfg flow activation regression matrix demo:");
-    println!("{}", safe(8_i64));
-    println!("{}", safe(3_i64));
+    println!("{}", safe(SifrInt::from_i64(8)));
+    println!("{}", safe(SifrInt::from_i64(3)));
     println!("{}", unreachable_tail());
 }

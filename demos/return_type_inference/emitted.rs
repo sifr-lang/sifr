@@ -1,6 +1,8 @@
 // src/main.rs
-fn double(x: i64) -> i64 {
-    x * (2_i64)
+use ::sifr_runtime::SifrInt;
+
+fn double(x: SifrInt) -> SifrInt {
+    &x * &SifrInt::from_i64(2)
 }
 
 fn greet(name: &String) -> String {
@@ -12,17 +14,17 @@ fn greet(name: &String) -> String {
 }
 }
 
-fn is_positive(x: i64) -> bool {
-    x > (0_i64)
+fn is_positive(x: SifrInt) -> bool {
+    &x > &SifrInt::from_i64(0)
 }
 
-fn log_value(x: i64) {
+fn log_value(x: SifrInt) {
     println!("{}", x);
 }
 
 fn main() {
-    println!("{}", double(21_i64));
+    println!("{}", double(SifrInt::from_i64(21)));
     println!("{}", greet(&"sifr".to_string()));
-    println!("{}", is_positive(5_i64));
-    log_value(99_i64);
+    println!("{}", is_positive(SifrInt::from_i64(5)));
+    log_value(SifrInt::from_i64(99));
 }

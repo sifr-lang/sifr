@@ -1,9 +1,13 @@
 // src/main.rs
-fn active_indices(flags: &Vec<bool>) -> Vec<i64> {
-    let mut out: Vec<i64> = vec![];
-    for index in 0_i64..flags.len() as i64 {
-        if flags[index as usize] {
-            out.push(index);
+use ::sifr_runtime::SifrInt;
+
+use ::sifr_runtime::SifrRange;
+
+fn active_indices(flags: &Vec<bool>) -> Vec<SifrInt> {
+    let mut out: Vec<SifrInt> = vec![];
+    for index in SifrRange::new_known_nonzero(SifrInt::from_i64(0), SifrInt::from(flags.len()), SifrInt::from_i64(1)) {
+        if flags[::sifr_runtime::to_usize_proven(&(index))] {
+            out.push(index.clone());
         }
     }
     out

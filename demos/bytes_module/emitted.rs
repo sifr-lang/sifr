@@ -1,5 +1,6 @@
 // src/main.rs
 mod __sifr_project_nominals {
+    pub use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IOError {
         pub message: String,
@@ -74,15 +75,15 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct JSONDecodeError {
         pub message: String,
-        pub line: i64,
-        pub column: i64,
+        pub line: SifrInt,
+        pub column: SifrInt,
     }
     impl JSONDecodeError {
         pub fn new(message: String) -> Self {
             Self {
                 message,
-                line: 0,
-                column: 0,
+                line: SifrInt::from_i64(0),
+                column: SifrInt::from_i64(0),
             }
         }
     }
@@ -116,11 +117,14 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct JsonLimitError {
         pub message: String,
-        pub limit: i64,
+        pub limit: SifrInt,
     }
     impl JsonLimitError {
         pub fn new(message: String) -> Self {
-            Self { message, limit: 0 }
+            Self {
+                message,
+                limit: SifrInt::from_i64(0),
+            }
         }
     }
     impl ::std::fmt::Display for JsonLimitError {
@@ -132,15 +136,15 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TOMLDecodeError {
         pub message: String,
-        pub line: i64,
-        pub column: i64,
+        pub line: SifrInt,
+        pub column: SifrInt,
     }
     impl TOMLDecodeError {
         pub fn new(message: String) -> Self {
             Self {
                 message,
-                line: 0,
-                column: 0,
+                line: SifrInt::from_i64(0),
+                column: SifrInt::from_i64(0),
             }
         }
     }
@@ -210,20 +214,27 @@ pub use __sifr_project_nominals::ScopeFailure;
 pub use __sifr_project_nominals::TOMLDecodeError;
 pub use __sifr_project_nominals::TimeoutError;
 pub use __sifr_project_nominals::ValueError;
+use ::sifr_runtime::SifrInt;
 fn assert_vector_eq(actual: &Vec<String>, expected: &Vec<String>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0_i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize].clone()) == expected.get(i as usize).cloned());
-        i += 1_i64;
+    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from(actual.len()) {
+        assert!(
+            Some(actual[::sifr_runtime::to_usize_proven(& (i))].clone()) == expected
+            .get(::sifr_runtime::to_usize_proven(& (i))).cloned()
+        );
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0_i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i += 1_i64;
+    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from(actual.len()) {
+        assert!(
+            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
+            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+        );
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
@@ -248,8 +259,8 @@ fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     };
     IOError { message: msg, kind }
 }
-fn render_opt_int(value: Option<i64>) -> String {
-    let Some(value) = value else {
+fn render_opt_int(value: Option<SifrInt>) -> String {
+    let Some(value) = value.clone() else {
         return "None".to_string();
     };
     format!("{}", value)
@@ -259,9 +270,11 @@ fn collect_primary_actual(payload: &Vec<u8>) -> Vec<String> {
     actual
         .push(
             format!(
-                "{}", { let __bytes_receiver = & payload; { let __needle = 115_i64; if
-                (__needle < 0) || (__needle > 255) { 0 } else { __bytes_receiver.iter()
-                .filter(| __x | ** __x == (__needle as u8)).count() as i64 } } }
+                "{}", { let __bytes_receiver = & payload; { let __needle =
+                SifrInt::from_i64(115); if (& __needle < & SifrInt::from_i64(0)) || (&
+                __needle > & SifrInt::from_i64(255)) { SifrInt::from_i64(0) } else {
+                SifrInt::from(__bytes_receiver.iter().filter(| __x | ** __x == __needle
+                .to_u8_proven_in_range()).count()) } } }
             ),
         );
     actual
@@ -269,23 +282,25 @@ fn collect_primary_actual(payload: &Vec<u8>) -> Vec<String> {
             render_opt_int({
                 let __bytes_receiver = &payload;
                 {
-                    let __needle = 45_i64;
-                    if (__needle < 0) || (__needle > 255) {
+                    let __needle = SifrInt::from_i64(45);
+                    if (&__needle < &SifrInt::from_i64(0))
+                        || (&__needle > &SifrInt::from_i64(255))
+                    {
                         None
                     } else {
                         {
-                            let __len = __bytes_receiver.len() as i64;
-                            let __start = 0;
+                            let __len = __bytes_receiver.len();
+                            let __start = 0_usize;
                             let __stop = __len;
                             let mut __i = __start;
                             let mut __result = None;
                             while (__i < __stop) && (__result == None) {
-                                if let Some(__x) = __bytes_receiver.get(__i as usize) {
-                                    if *__x == (__needle as u8) {
-                                        __result = Some(__i);
+                                if let Some(__x) = __bytes_receiver.get(__i) {
+                                    if *__x == __needle.to_u8_proven_in_range() {
+                                        __result = Some(SifrInt::from(__i));
                                     }
                                 }
-                                __i += 1;
+                                __i += 1_usize;
                             }
                             __result
                         }
@@ -295,18 +310,9 @@ fn collect_primary_actual(payload: &Vec<u8>) -> Vec<String> {
         );
     actual
         .push(
-            format!(
-                "{}", payload.starts_with(& vec![(98_i64) as u8, (121_i64) as u8,
-                (116_i64) as u8, (101_i64) as u8, (115_i64) as u8])
-            ),
+            format!("{}", payload.starts_with(& vec![98u8, 121u8, 116u8, 101u8, 115u8])),
         );
-    actual
-        .push(
-            format!(
-                "{}", payload.ends_with(& vec![(101_i64) as u8, (51_i64) as u8, (48_i64)
-                as u8])
-            ),
-        );
+    actual.push(format!("{}", payload.ends_with(& vec![101u8, 51u8, 48u8])));
     actual
 }
 fn bytes_to_hex_or_empty(payload: &Vec<u8>) -> String {
@@ -314,7 +320,7 @@ fn bytes_to_hex_or_empty(payload: &Vec<u8>) -> String {
         let hx: String = {
             let __bytes_receiver = &payload;
             let mut __hex = String::with_capacity(
-                __bytes_receiver.len().saturating_mul(2),
+                __bytes_receiver.len().saturating_mul(2_usize),
             );
             for __byte in __bytes_receiver.iter() {
                 __hex.push_str(&format!("{:02x}", * __byte));
@@ -434,7 +440,7 @@ fn collect_invalid_actual_ok() -> Vec<bool> {
             }
             Ok::<Vec<u8>, ParseError>(result)
         })?;
-        let _ = format!("{}", odd.len() as i64);
+        let _ = format!("{}", SifrInt::from(odd.len()));
         invalid_actual_ok.push(true);
         Ok(())
     })();
@@ -444,7 +450,7 @@ fn collect_invalid_actual_ok() -> Vec<bool> {
     }
     let __sifr_try_res: Result<(), ParseError> = (|| {
         let bad_utf8: String = ::sifr_runtime::encoding::decode_text(
-                &vec![(255_i64) as u8],
+                &vec![255u8],
                 &"utf-8".to_string(),
                 &"strict".to_string(),
             )
@@ -461,26 +467,28 @@ fn collect_invalid_actual_ok() -> Vec<bool> {
 }
 fn main() {
     let payload: Vec<u8> = vec![
-        (98_i64) as u8, (121_i64) as u8, (116_i64) as u8, (101_i64) as u8, (115_i64) as
-        u8, (45_i64) as u8, (98_i64) as u8, (121_i64) as u8, (116_i64) as u8, (101_i64)
-        as u8, (115_i64) as u8, (95_i64) as u8, (109_i64) as u8, (111_i64) as u8,
-        (100_i64) as u8, (117_i64) as u8, (108_i64) as u8, (101_i64) as u8
+        98u8, 121u8, 116u8, 101u8, 115u8, 45u8, 98u8, 121u8, 116u8, 101u8, 115u8, 95u8,
+        109u8, 111u8, 100u8, 117u8, 108u8, 101u8
     ];
     let expected: Vec<String> = vec![
         "2".to_string(), "5".to_string(), "true".to_string(), "false".to_string()
     ];
     let actual: Vec<String> = collect_primary_actual(&payload);
     assert_vector_eq(&actual, &expected);
-    let hex_text: String = bytes_to_hex_or_empty(&vec![(72_i64) as u8, (105_i64) as u8]);
+    let hex_text: String = bytes_to_hex_or_empty(&vec![72u8, 105u8]);
     let __sifr_chars_hex_text: Vec<char> = hex_text.chars().collect::<Vec<char>>();
-    assert!((format!("{}", (hex_text.chars().count() as i64) > (0_i64)) == "true"));
+    assert!(
+        (format!("{}", & SifrInt::from(hex_text.chars().count()) > &
+        SifrInt::from_i64(0)) == "true")
+    );
     assert!((format!("{}", hex_text) == "4869"));
     let roundtrip_text: String = bytes_from_hex_to_text_or_empty(&"48 69".to_string());
     let __sifr_chars_roundtrip_text: Vec<char> = roundtrip_text
         .chars()
         .collect::<Vec<char>>();
     assert!(
-        (format!("{}", (roundtrip_text.chars().count() as i64) > (0_i64)) == "true")
+        (format!("{}", & SifrInt::from(roundtrip_text.chars().count()) > &
+        SifrInt::from_i64(0)) == "true")
     );
     assert!((format!("{}", roundtrip_text) == "Hi"));
     let invalid_expected_ok: Vec<bool> = vec![false, false];

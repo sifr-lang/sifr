@@ -1,8 +1,10 @@
 // src/main.rs
-fn sum2(a: i64, b: i64) -> i64 {
-    a + b
+use ::sifr_runtime::SifrInt;
+
+fn sum2(a: SifrInt, b: SifrInt) -> SifrInt {
+    &a + &b
 }
 
 fn main() {
-    println!("{}", sum2(20_i64, 22_i64));
+    println!("{}", sum2(SifrInt::from_i64(20), SifrInt::from_i64(22)));
 }

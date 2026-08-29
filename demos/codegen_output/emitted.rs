@@ -1,4 +1,6 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Timer {
     label: String,
@@ -68,27 +70,21 @@ impl Describable for Item {
 }
 
 fn main() {
-    let nums: Vec<i64> = vec![5_i64, 3_i64, 1_i64, 4_i64, 2_i64];
-    let lo: Option<i64> = (nums).iter().copied().min();
-    let hi: Option<i64> = (nums).iter().copied().max();
-    if let Some(lo) = lo {
+    let nums: Vec<SifrInt> = vec![SifrInt::from_i64(5), SifrInt::from_i64(3), SifrInt::from_i64(1), SifrInt::from_i64(4), SifrInt::from_i64(2)];
+    let lo: Option<SifrInt> = (nums).iter().cloned().min();
+    let hi: Option<SifrInt> = (nums).iter().cloned().max();
+    if let Some(lo) = lo.clone() {
         println!("{}", lo);
     }
-    if let Some(hi) = hi {
+    if let Some(hi) = hi.clone() {
         println!("{}", hi);
     }
-    let evens: Vec<i64> = Box::new(nums.iter().copied().filter(|__filter_item| {
-    let __filter_value = *__filter_item;
-    {
-    let x = __filter_value;
-    (x % (2_i64)) == (0_i64)
-}
-})).collect::<Vec<_>>();
+    let evens: Vec<SifrInt> = Box::new((nums).iter().cloned().filter(move |__filter_item| (|x| (&x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)))(__filter_item.clone()))).collect::<Vec<_>>();
     println!("{:?}", evens);
-    let big: Vec<i64> = {
+    let big: Vec<SifrInt> = {
     let mut __sifr_list_comp = vec![];
-    for x in nums.iter().copied() {
-        if x > (2_i64) {
+    for x in nums.iter().cloned() {
+        if &x > &SifrInt::from_i64(2) {
             __sifr_list_comp.push(x);
         }
     }

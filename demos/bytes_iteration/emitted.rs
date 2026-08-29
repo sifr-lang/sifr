@@ -1,17 +1,19 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 fn main() {
-    let a: Vec<u8> = vec![(1_i64) as u8, (2_i64) as u8, (3_i64) as u8];
-    let b: Vec<u8> = vec![(1_i64) as u8, (2_i64) as u8];
+    let a: Vec<u8> = vec![1u8, 2u8, 3u8];
+    let b: Vec<u8> = vec![1u8, 2u8];
     let c: Vec<u8> = {
     let mut __v = (b).clone();
-    __v.extend((vec![(3_i64) as u8]).iter().cloned());
+    __v.extend((vec![3u8]).iter().cloned());
     __v
 };
     assert!(a == c);
-    assert!((a.len() as i64) == (3_i64));
-    let idx0: Option<u8> = a.get((0_i64) as usize).map(|__byte| *__byte as u8);
-    let idx1: Option<u8> = a.get((1_i64) as usize).map(|__byte| *__byte as u8);
-    let idx2: Option<u8> = a.get((2_i64) as usize).map(|__byte| *__byte as u8);
+    assert!(&SifrInt::from(a.len()) == &SifrInt::from_i64(3));
+    let idx0: Option<u8> = a.get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))).map(|__byte| *__byte as u8);
+    let idx1: Option<u8> = a.get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1)))).map(|__byte| *__byte as u8);
+    let idx2: Option<u8> = a.get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(2)))).map(|__byte| *__byte as u8);
     if let Some(idx0) = idx0 {
         let expected0: u8 = 1u8;
         assert!(idx0 == expected0);
@@ -30,10 +32,10 @@ fn main() {
     } else {
         assert!(false);
     }
-    let mut acc: i64 = 0_i64;
-    let items: Vec<i64> = a.iter().map(|__byte| *__byte as i64).collect::<Vec<i64>>();
-    for item in items.iter().copied() {
-        acc += item;
+    let mut acc: SifrInt = SifrInt::from_i64(0);
+    let items: Vec<SifrInt> = a.iter().map(|__byte| SifrInt::from(*__byte)).collect::<Vec<SifrInt>>();
+    for item in items.iter().cloned() {
+        acc = &acc + &item;
     }
-    assert!(acc == (6_i64));
+    assert!(&acc == &SifrInt::from_i64(6));
 }

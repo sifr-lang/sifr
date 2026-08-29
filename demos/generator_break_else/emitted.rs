@@ -1,20 +1,22 @@
 // src/main.rs
-fn r#gen(flag: bool) -> Box<dyn Iterator<Item = i64>> {
+use ::sifr_runtime::SifrInt;
+
+fn r#gen(flag: bool) -> Box<dyn Iterator<Item = SifrInt>> {
     let mut __sifr_generator_initialized: bool = false;
-    let mut __sifr_generator_iter: ::std::vec::IntoIter<i64> = Vec::new().into_iter();
+    let mut __sifr_generator_iter: ::std::vec::IntoIter<SifrInt> = Vec::new().into_iter();
     Box::new(::std::iter::from_fn(move || {
     if !__sifr_generator_initialized {
-        let mut _yields: Vec<i64> = Vec::new();
-        let mut i: i64 = 0_i64;
-        while i < (2_i64) {
-            if flag && (i == (0_i64)) {
+        let mut _yields: Vec<SifrInt> = Vec::new();
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from_i64(2) {
+            if flag && (&i == &SifrInt::from_i64(0)) {
                 break;
             }
-            _yields.push(i);
-            i += 1_i64;
+            _yields.push(i.clone());
+            i = &i + &SifrInt::from_i64(1);
         }
-        if !flag && (i == (2_i64)) {
-            _yields.push(99_i64);
+        if !flag && (&i == &SifrInt::from_i64(2)) {
+            _yields.push(SifrInt::from_i64(99));
         }
         __sifr_generator_iter = _yields.into_iter();
         __sifr_generator_initialized = true;

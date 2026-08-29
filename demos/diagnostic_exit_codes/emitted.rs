@@ -3,12 +3,15 @@ mod helper;
 
 use crate::helper::doubled;
 
+use ::sifr_runtime::SifrInt;
+
 fn main() {
     println!("diagnostic_exit_codes cross-mode diagnostic and exit behavior demo:");
-    println!("{}", doubled(21_i64));
+    println!("{}", doubled(SifrInt::from_i64(21)));
 }
 
 // src/helper.rs
-pub fn doubled(x: i64) -> i64 {
-    x * (2_i64)
+pub use ::sifr_runtime::SifrInt;
+pub fn doubled(x: SifrInt) -> SifrInt {
+    &x * &SifrInt::from_i64(2)
 }

@@ -1,6 +1,8 @@
 // src/main.rs
 use ::std::collections::HashMap;
 
+use ::sifr_runtime::SifrInt;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(i64)]
 enum Color {
@@ -19,8 +21,8 @@ impl Color {
     fn name(&self) -> String {
         format!("{:?}", self)
     }
-    fn value(&self) -> i64 {
-        *self as i64
+    fn value(&self) -> SifrInt {
+        SifrInt::from_i64(*self as i64)
     }
 }
 
@@ -42,8 +44,8 @@ impl HttpStatus {
     fn name(&self) -> String {
         format!("{:?}", self)
     }
-    fn value(&self) -> i64 {
-        *self as i64
+    fn value(&self) -> SifrInt {
+        SifrInt::from_i64(*self as i64)
     }
 }
 
@@ -66,8 +68,8 @@ impl Direction {
     fn name(&self) -> String {
         format!("{:?}", self)
     }
-    fn value(&self) -> i64 {
-        *self as i64
+    fn value(&self) -> SifrInt {
+        SifrInt::from_i64(*self as i64)
     }
     fn is_vertical(&self) -> bool {
         match self {
@@ -156,12 +158,12 @@ fn main() {
     println!("{}", d.opposite());
     println!("{}", Direction::EAST.opposite());
     println!("=== Enum as Dict Key ===");
-    let mut scores: HashMap<Color, i64> = HashMap::from([]);
-    scores.insert(Color::RED, 10_i64);
-    scores.insert(Color::GREEN, 20_i64);
-    scores.insert(Color::BLUE, 30_i64);
-    let v: Option<i64> = scores.get(&Color::GREEN).copied();
-    if let Some(v) = v {
+    let mut scores: HashMap<Color, SifrInt> = HashMap::from([]);
+    scores.insert(Color::RED, SifrInt::from_i64(10));
+    scores.insert(Color::GREEN, SifrInt::from_i64(20));
+    scores.insert(Color::BLUE, SifrInt::from_i64(30));
+    let v: Option<SifrInt> = scores.get(&Color::GREEN).cloned();
+    if let Some(v) = v.clone() {
         println!("{}", v);
     }
 }

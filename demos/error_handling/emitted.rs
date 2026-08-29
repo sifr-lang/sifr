@@ -16,6 +16,21 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ParseError {}
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct ValueError {
+        pub message: String,
+    }
+    impl ValueError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for ValueError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for ValueError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DivisionError {
         pub message: String,
     }
@@ -33,6 +48,8 @@ mod __sifr_project_nominals {
 }
 pub use __sifr_project_nominals::DivisionError;
 pub use __sifr_project_nominals::ParseError;
+pub use __sifr_project_nominals::ValueError;
+use ::sifr_runtime::SifrInt;
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct ValidationError {
     message: String,
@@ -54,26 +71,32 @@ impl ::std::fmt::Display for ValidationError {
     }
 }
 impl ::std::error::Error for ValidationError {}
-fn validate_range(x: i64, lo: i64, hi: i64) -> Result<i64, ValidationError> {
-    if x < lo {
+fn validate_range(
+    x: SifrInt,
+    lo: SifrInt,
+    hi: SifrInt,
+) -> Result<SifrInt, ValidationError> {
+    if &x < &lo {
         return Err(ValidationError::new(format!("value out of range: {}", x)));
     }
-    if x > hi {
+    if &x > &hi {
         return Err(ValidationError::new(format!("value out of range: {}", x)));
     }
-    Ok(x)
+    Ok(x.clone())
 }
-fn safe_divide(a: i64, b: i64) -> Result<i64, DivisionError> {
-    if b == (0_i64) {
+fn safe_divide(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
+    if &b == &SifrInt::from_i64(0) {
         return Err(DivisionError::new("division by zero".to_string()));
     }
-    Ok(a / b)
+    Ok(a.floor_div_known_nonzero(&b))
 }
 fn main() {
     println!("=== Result Type & Fallible Conversions ===");
     let __sifr_try_res: Result<(), ParseError> = (|| {
-        let n: i64 = ("42".to_string())
-            .parse::<i64>()
+        let n: SifrInt = SifrInt::parse_decimal(
+                &("42".to_string()),
+                ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS,
+            )
             .map_err(|e| ParseError {
                 message: e.to_string(),
             })?;
@@ -85,8 +108,10 @@ fn main() {
         println!("parse failed: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), ParseError> = (|| {
-        let n2: i64 = ("not_a_number".to_string())
-            .parse::<i64>()
+        let n2: SifrInt = SifrInt::parse_decimal(
+                &("not_a_number".to_string()),
+                ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS,
+            )
             .map_err(|e| ParseError {
                 message: e.to_string(),
             })?;
@@ -99,7 +124,11 @@ fn main() {
     }
     println!("=== Custom Error Types ===");
     let __sifr_try_res: Result<(), ValidationError> = (|| {
-        let v: i64 = validate_range(50_i64, 0_i64, 100_i64)?;
+        let v: SifrInt = validate_range(
+            SifrInt::from_i64(50),
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(100),
+        )?;
         println!("validated: {}", v);
         Ok(())
     })();
@@ -108,7 +137,11 @@ fn main() {
         println!("caught: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), ValidationError> = (|| {
-        let v2: i64 = validate_range(-(5_i64), 0_i64, 100_i64)?;
+        let v2: SifrInt = validate_range(
+            -&SifrInt::from_i64(5),
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(100),
+        )?;
         println!("validated: {}", v2);
         Ok(())
     })();
@@ -118,7 +151,11 @@ fn main() {
     }
     println!("=== Try/Except with Auto-Unwrap ===");
     let __sifr_try_res: Result<(), ValidationError> = (|| {
-        let a: i64 = validate_range(100_i64, 0_i64, 200_i64)?;
+        let a: SifrInt = validate_range(
+            SifrInt::from_i64(100),
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(200),
+        )?;
         println!("result: {}", a);
         Ok(())
     })();
@@ -127,7 +164,11 @@ fn main() {
         println!("error handled: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), ValidationError> = (|| {
-        let b: i64 = validate_range(999_i64, 0_i64, 200_i64)?;
+        let b: SifrInt = validate_range(
+            SifrInt::from_i64(999),
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(200),
+        )?;
         println!("result: {}", b);
         Ok(())
     })();
@@ -135,18 +176,28 @@ fn main() {
         let e = __sifr_try_err.clone();
         println!("error handled: {}", e.message.clone());
     }
-    println!("=== Infallible Conversions ===");
-    let x1: i64 = (3.7_f64) as i64;
-    println!("int(3.7) = {}", x1);
-    let x2: f64 = (5_i64) as f64;
+    println!("=== Explicit Conversions ===");
+    let __sifr_try_res: Result<(), ValueError> = (|| {
+        let x1: SifrInt = SifrInt::from_f64_trunc(3.7_f64)
+            .ok_or_else(|| ValueError {
+                message: "cannot convert non-finite float to int".to_string(),
+            })?;
+        println!("int(3.7) = {}", x1);
+        Ok(())
+    })();
+    if let Err(__sifr_try_err) = __sifr_try_res {
+        let e = __sifr_try_err.clone();
+        println!("conversion error: {}", e.message.clone());
+    }
+    let x2: f64 = SifrInt::from_i64(5).to_f64_proven_exact();
     println!("float(5) = {}", x2);
-    let x3: String = format!("{}", 42_i64);
+    let x3: String = format!("{}", SifrInt::from_i64(42));
     println!("str(42) = {}", x3);
-    let x4: bool = (1_i64) != 0;
+    let x4: bool = &SifrInt::from_i64(1) != &0;
     println!("bool(1) = {}", x4);
     println!("=== Raise in Result Functions ===");
     let __sifr_try_res: Result<(), DivisionError> = (|| {
-        let d1: i64 = safe_divide(10_i64, 3_i64)?;
+        let d1: SifrInt = safe_divide(SifrInt::from_i64(10), SifrInt::from_i64(3))?;
         println!("divide(10, 3) = {}", d1);
         Ok(())
     })();
@@ -155,7 +206,7 @@ fn main() {
         println!("divide error: {}", e.message.clone());
     }
     let __sifr_try_res: Result<(), DivisionError> = (|| {
-        let d2: i64 = safe_divide(10_i64, 0_i64)?;
+        let d2: SifrInt = safe_divide(SifrInt::from_i64(10), SifrInt::from_i64(0))?;
         println!("divide(10, 0) = {}", d2);
         Ok(())
     })();
@@ -166,7 +217,7 @@ fn main() {
     println!("=== Assert Statement ===");
     println!("all assertions passed");
     println!("=== Explicit Discard ===");
-    let _ = safe_divide(10_i64, 2_i64);
+    let _ = safe_divide(SifrInt::from_i64(10), SifrInt::from_i64(2));
     println!("result discarded safely");
     println!("demo complete!");
 }

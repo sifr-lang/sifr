@@ -1,15 +1,14 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 fn drain_queue(queue: &mut Vec<String>) -> Vec<String> {
     let mut order: Vec<String> = vec![];
     while !queue.is_empty() {
         order.push({
     let Some(__sifr_nonempty_pop_value) = ({
-    let __len = queue.len() as i64;
-    let __index = {
-    let __bound = 0_i64;
-    if __bound < 0 { (__len + __bound).max(0).min(__len) } else { __bound.min(__len) }
-};
-    if (__index < 0) || (__index >= __len) { None } else { Some(queue.remove(__index as usize)) }
+    let __len = queue.len();
+    let __index = SifrInt::from_i64(0).normalize_index_or_len(__len);
+    if __index >= __len { None } else { Some(queue.remove(__index)) }
 }) else {
         unreachable!("compiler-verified non-empty pop should return Some");
     };

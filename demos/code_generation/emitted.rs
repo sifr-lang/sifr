@@ -1,36 +1,38 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 fn main() {
-    let pair: (i64, i64) = (10_i64, 20_i64);
-    let a: i64 = (pair).0;
-    let b: i64 = (pair).1;
+    let pair: (SifrInt, SifrInt) = (SifrInt::from_i64(10), SifrInt::from_i64(20));
+    let a: SifrInt = (pair).0.clone();
+    let b: SifrInt = (pair).1.clone();
     println!("Tuple index: {}, {}", a, b);
     assert!((format!("{}", format!("Tuple index: {}, {}", a, b)) == "Tuple index: 10, 20"));
-    let x: i64 = 10_i64;
-    let y: i64 = 3_i64;
-    let result: f64 = (x as f64) / (y as f64);
-    println!("Division 10/3: {}", result);
-    assert!((format!("{}", format!("Division 10/3: {}", result)) == "Division 10/3: 3.3333333333333335"));
-    let val: Option<i64> = None;
+    let x: SifrInt = SifrInt::from_i64(10);
+    let y: SifrInt = SifrInt::from_i64(2);
+    let result: f64 = x.to_f64_proven_exact() / y.to_f64_proven_exact();
+    println!("Division 10/2: {}", result);
+    assert!((format!("{}", format!("Division 10/2: {}", result)) == "Division 10/2: 5"));
+    let val: Option<SifrInt> = None;
     if val.is_none() {
         println!("None value: None");
     } else {
-        if let Some(val) = val {
+        if let Some(val) = val.clone() {
             println!("None value: {}", val);
         }
     }
-    let nums: Vec<i64> = vec![1_i64, 2_i64, 3_i64];
-    let empty: Vec<i64> = vec![];
+    let nums: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)];
+    let empty: Vec<SifrInt> = vec![];
     println!("bool([1,2,3]): {}", !nums.is_empty());
     assert!((format!("{}", format!("bool([1,2,3]): {}", !nums.is_empty())) == "bool([1,2,3]): true"));
     println!("bool([]): {}", !empty.is_empty());
     assert!((format!("{}", format!("bool([]): {}", !empty.is_empty())) == "bool([]): false"));
-    let mut base: i64 = 2_i64;
-    base = (base).pow((3_i64) as u32);
-    println!("2**3 = {}", base);
-    assert!((format!("{}", format!("2**3 = {}", base)) == "2**3 = 8"));
-    let i: i64 = 10_i64;
+    let mut base: SifrInt = SifrInt::from_i64(2);
+    base = base.pow_known_valid(&SifrInt::from_i64(0));
+    println!("2**0 = {}", base);
+    assert!((format!("{}", format!("2**0 = {}", base)) == "2**0 = 1"));
+    let i: SifrInt = SifrInt::from_i64(10);
     let f: f64 = 3.5_f64;
-    let mixed: f64 = (i as f64) + f;
+    let mixed: f64 = i.to_f64_proven_exact() + f;
     println!("10 + 3.5 = {}", mixed);
     assert!((format!("{}", format!("10 + 3.5 = {}", mixed)) == "10 + 3.5 = 13.5"));
     let msg: String = "She said \"hello\"".to_string();
