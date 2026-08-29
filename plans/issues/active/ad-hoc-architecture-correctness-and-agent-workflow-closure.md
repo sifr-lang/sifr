@@ -1,6 +1,6 @@
 # Ad Hoc Architecture Correctness And Agent Workflow Closure
 
-status: implementation complete; closure blocked
+status: implementation follow-up in progress; closure blocked
 
 ## Objective
 
@@ -62,6 +62,7 @@ The following review claims are explicitly excluded:
 | M12E | Atomic repeated-terminal-signal escalation entry | merged into M12 branch; integration deferred | [#3569](https://github.com/sifr-lang/sifr/pull/3569) | `2a8adc32dfed16933dcb22b4d77f989d97c80734` |
 | M12F | Restore generated demo freshness after compiler corrections | merged into M12 branch; integration deferred | [#3570](https://github.com/sifr-lang/sifr/pull/3570) | `4f33183b7244456fc21b0b7b95b2aa85ed586bc6` |
 | M12G | Register consolidated lowering intrinsic transport ownership | merged into M12 branch; integration deferred | [#3572](https://github.com/sifr-lang/sifr/pull/3572) | `7dc83924abd25bd15e5adfdf1d1df77da79ee3c4` |
+| M12H | Remove delivery-plan taxonomy from retained flow-graph architecture | pending | | |
 | M13 | Phase closure and whole-phase review | whole-phase review satisfied; merged into M12 branch; closure blocked | [#3571](https://github.com/sifr-lang/sifr/pull/3571) | `5b4005c8cabc910f1c7c959e6518fe3079135fb4` |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -608,6 +609,21 @@ Scope and acceptance criteria:
   documentation checks pass.
 - Run one exact-SHA Opus review, with at most one remediation review.
 
+## M12H Remove Delivery-Plan Taxonomy From Retained Flow-Graph Architecture
+
+Close the durable-document taxonomy defect exposed by the next user-authorized
+fresh create-PR gate after M12G.
+
+Scope and acceptance criteria:
+
+- Remove the M12 delivery identifier from the retained flow-graph architecture
+  heading while preserving the actual retention decision and current-state
+  architecture.
+- Do not weaken, exclude, or special-case the verification taxonomy guard.
+- Prove the taxonomy guard and self-test, the full documentation area,
+  file-size guardrail, and whitespace check pass.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
 ## M13 Phase Closure And Whole-Phase Review
 
 Reconcile every milestone record, deferred finding, architecture/roadmap status,
@@ -643,8 +659,8 @@ whole-phase Opus review without repeating unchanged implementation validation.
   exact-SHA gate sequence. Stacked integration also remains blocked on the
   separately owned distinct-human-reviewer restoration issue; the expired
   waiver is not extended or weakened.
-- Exact next actions: authorize a new create-PR/merge gate sequence for the
-  resulting final stack SHA, restore the distinct human reviewer, then
+- Exact next actions: close M12H, authorize a new create-PR/merge gate sequence
+  for the resulting final stack SHA, restore the distinct human reviewer, then
   integrate the stacked PR chain and archive this record. Until then the phase
   is not represented as gate-passing or closed.
 
@@ -1228,9 +1244,9 @@ tree and are keyed by candidate SHA.
   its own satisfied item review, so the single whole-phase review is not
   repeated. The phase remains active and closure-blocked. No green compiler
   gate, merged main stack, archive, or full closure is claimed. The exact next
-  actions remain fresh exact-SHA gate authority, distinct reviewer restoration,
-  stacked integration, and archival recorded in the closure reconciliation
-  above.
+  actions now include M12H, fresh exact-SHA gate authority, distinct reviewer
+  restoration, stacked integration, and archival recorded in the closure
+  reconciliation above.
 
 ### User-Authorized Create-PR Gate Attempt
 
@@ -1268,3 +1284,20 @@ tree and are keyed by candidate SHA.
   `.codex/review-evidence/architecture-closure/m12g-7dc83924abd25bd15e5adfdf1d1df77da79ee3c4.md`.
 - M12G changed only the retained-intrinsic manifest. It did not rerun the
   consumed create-PR gate or run a merge gate on a different SHA.
+
+### Second User-Authorized Create-PR Gate Attempt
+
+- On 2026-08-29 the user explicitly authorized all remaining work, including a
+  fresh exact-SHA gate sequence after M12G.
+- Exact stack SHA: `fb53af520bfbe03a94ac1ac7015d1e7683804794`.
+- The create-PR gate ran once and exited 1. Cargo setup, HIR maintainability,
+  file-size, maintainability ratchets, generated-demo freshness, all compiler
+  architecture guards, verification-runner foundations, documentation
+  architecture, and all ten Rust interop variants passed.
+- Coverage taxonomy then reported one M12-owned durable-document defect:
+  `internal_docs/typescript_go_architecture_transfer_first_class_flow_graph.md:60`
+  contains the delivery-plan heading `## M12 Retention Decision`. The bounded
+  correction is M12H; the guard is not weakened or bypassed.
+- No merge gate ran after the create-PR failure.
+- Gate evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/authorized-create-pr-fb53af520bfbe03a94ac1ac7015d1e7683804794.md`.
