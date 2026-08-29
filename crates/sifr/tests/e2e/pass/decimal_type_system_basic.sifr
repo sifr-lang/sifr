@@ -1,9 +1,16 @@
+def add_exact(value: decimal, increment: int) -> Result[decimal, DecimalConversionError]:
+    return value + increment
+
+
 def main():
     d: decimal = Decimal("10.25")
     b: bigdecimal = BigDecimal("2.75")
 
-    d2: decimal = d + 2
     b2: bigdecimal = b + 5
 
-    assert d2 == Decimal("12.25")
+    try:
+        d2: decimal = add_exact(d, 2)
+        assert d2 == Decimal("12.25")
+    except DecimalConversionError:
+        assert False
     assert b2 == BigDecimal("7.75")

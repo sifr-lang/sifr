@@ -72,7 +72,7 @@ def value_or_zero() -> int:
     ));
 
     assert!(generated.contains("let (value,) = match __sifr_try_res"));
-    assert!(generated.contains("return 0_i64;"));
+    assert!(generated.contains("return SifrInt::from_i64(0);"));
     syn::parse_file(&generated).expect("handler return binding Rust should parse");
 }
 
@@ -163,7 +163,9 @@ def conditional(flag: bool) -> Result[int, ProbeError]:
 "#
     ));
 
-    assert!(generated.contains("let mut __sifr_successful_try_bindings: Option<(i64,)> = None"));
+    assert!(
+        generated.contains("let mut __sifr_successful_try_bindings: Option<(SifrInt,)> = None")
+    );
     assert!(generated.contains("let Some((value,)) = __sifr_successful_try_bindings else"));
     assert!(!generated.contains(".unwrap()"));
     assert!(!generated.contains(".expect("));
@@ -297,9 +299,9 @@ def outer() -> int:
 "#,
     );
 
-    assert!(generated.contains("let read_value = |candidate: i64|"));
-    assert!(generated.contains("read_value(42_i64)"));
-    assert!(generated.contains("read_value(5_i64)"));
+    assert!(generated.contains("let read_value = |candidate: SifrInt|"));
+    assert!(generated.contains("read_value(SifrInt::from_i64(42))"));
+    assert!(generated.contains("read_value(SifrInt::from_i64(5))"));
     syn::parse_file(&generated).expect("nested literal default Rust should parse");
 }
 
@@ -327,7 +329,7 @@ def run() -> Result[int, IOError]:
     );
 
     assert!(generated.contains("let inner = |succeed: bool|"));
-    assert!(generated.contains("Result<Result<i64, IOError>, IOError>"));
+    assert!(generated.contains("Result<Result<SifrInt, IOError>, IOError>"));
     assert!(generated.contains("Err(ValueError::new(\"inner\".to_string()))"));
     assert!(!generated.contains("Err(ValueError::new(\"inner\".to_string()).into())"));
     assert!(generated.contains("Err(__sifr_try_err) =>"));
@@ -359,7 +361,7 @@ async def run() -> Result[int, IOError]:
     );
 
     assert!(generated.contains("let inner = async move |succeed: bool|"));
-    assert!(generated.contains("Result<Result<i64, IOError>, IOError>"));
+    assert!(generated.contains("Result<Result<SifrInt, IOError>, IOError>"));
     assert!(generated.contains("Err(ValueError::new(\"inner async\".to_string()))"));
     assert!(!generated.contains("Err(ValueError::new(\"inner async\".to_string()).into())"));
     syn::parse_file(&generated).expect("nested async try-channel Rust should parse");
@@ -428,7 +430,7 @@ def outer() -> Result[int, ProbeError]:
     ));
 
     assert!(!generated.contains("Ok((value,))"));
-    assert!(!generated.contains("let value: i64;"));
+    assert!(!generated.contains("let value: SifrInt;"));
     syn::parse_file(&generated).expect("shadowing nested parameter Rust should parse");
 }
 
@@ -446,7 +448,7 @@ def replace_value() -> Result[int, ProbeError]:
 "#
     ));
 
-    assert!(generated.contains("let total: i64;"));
+    assert!(generated.contains("let total: SifrInt;"));
     assert!(!generated.contains("Ok((total,))"));
     assert!(!generated.contains("let (mut total,) = match __sifr_try_res"));
     syn::parse_file(&generated).expect("declaration-only try binding Rust should parse");
@@ -493,7 +495,7 @@ def replace_twice() -> Result[int, ProbeError]:
 "#
     ));
 
-    assert!(generated.contains("let mut value: i64;"));
+    assert!(generated.contains("let mut value: SifrInt;"));
     assert!(!generated.contains("Ok((value,))"));
     syn::parse_file(&generated).expect("mutable declaration-only try binding Rust should parse");
 }

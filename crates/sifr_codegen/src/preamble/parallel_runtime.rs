@@ -22,11 +22,11 @@ pub(crate) fn parallel_runtime_rust_code() -> &'static str {
     r#"
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct PoolConfig {
-    workers: i64,
+    workers: SifrInt,
 }
 
 impl PoolConfig {
-    fn new(workers: i64) -> Self {
+    fn new(workers: SifrInt) -> Self {
         return Self { workers };
     }
 }
@@ -79,16 +79,14 @@ impl std::fmt::Display for Pool {
     }
 }
 
-fn __sifr_parallel_worker_count(workers: i64) -> usize {
-    if workers < 1 {
+fn __sifr_parallel_worker_count(workers: SifrInt) -> usize {
+    if workers <= SifrInt::from_i64(0) {
         return 1usize;
     }
-    let requested = workers as u64;
-    let max = usize::MAX as u64;
-    if requested > max {
-        return usize::MAX;
+    match workers.try_to_usize() {
+        Ok(requested) => requested,
+        Err(_) => usize::MAX,
     }
-    return requested as usize;
 }
 
 fn __sifr_default_parallel_worker_count() -> usize {

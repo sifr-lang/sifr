@@ -392,7 +392,7 @@ impl Type {
 
     /// Returns the ownership kind for this type.
     ///
-    /// - Primitives (`Int`, `Float`, `Bool`) are `Copy`.
+    /// - Numeric primitives and ranges have value semantics and are logically `Copy`.
     /// - `Str` and compound types are `Move`.
     /// - `None` is `Copy` (it's a zero-sized type).
     /// - `Any` is `Move` (conservative).

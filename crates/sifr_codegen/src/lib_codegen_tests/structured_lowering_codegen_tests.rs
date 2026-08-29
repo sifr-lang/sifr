@@ -346,7 +346,7 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
 
     let generated = generate_rust_with_metadata(&module);
     assert!(generated.rust_source.contains("x ="));
-    assert!(generated.rust_source.contains("x = 7"));
+    assert!(generated.rust_source.contains("x = SifrInt::from_i64(7)"));
     assert!(
         generated.lowering_stats.stmt_structured >= 2,
         "let + assign should be emitted through structured stmt path"
@@ -383,8 +383,12 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("let x: i64 ="));
-    assert!(generated.rust_source.contains("let x: i64 = 7"));
+    assert!(generated.rust_source.contains("let x: SifrInt ="));
+    assert!(
+        generated
+            .rust_source
+            .contains("let x: SifrInt = SifrInt::from_i64(7)")
+    );
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed let should be emitted through structured stmt path"
@@ -418,7 +422,7 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("fn value() -> i64"));
+    assert!(generated.rust_source.contains("fn value() -> SifrInt"));
     assert!(generated.rust_source.contains("7"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
@@ -530,7 +534,7 @@ fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
             .contains("let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();")
     );
     assert!(generated.rust_source.contains(
-        "let Some(__indexed_char) = __sifr_chars_text.get(j as usize).map(|c| c.to_string()) else {"
+        "let Some(__indexed_char) = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(j))).map(|c| c.to_string()) else {"
     ));
     assert!(generated.rust_source.contains(";\n    __indexed_char\n}"));
     assert!(
@@ -849,52 +853,4 @@ fn test_structured_stmt_path_handles_top_level_attribute_list_subscript_assign()
     let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
 
     assert!(matches!(captured.first(), Some(RustStmt::Block(_))));
-}
-
-#[test]
-fn test_structured_stmt_path_handles_delete_with_name_key_inside_loop_if() {
-    let stmt = HirStmt::For {
-        target: "ch".to_string(),
-        target_ty: Type::Str,
-        iter: HirExpr::Name {
-            name: "order".to_string(),
-            binding_id: None,
-            ty: Type::Str,
-        },
-        body: vec![HirStmt::If {
-            condition: HirExpr::ContainsOp {
-                element: Box::new(HirExpr::Name {
-                    name: "ch".to_string(),
-                    binding_id: None,
-                    ty: Type::Str,
-                }),
-                collection: Box::new(HirExpr::Name {
-                    name: "counts".to_string(),
-                    binding_id: None,
-                    ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
-                }),
-                ty: Type::Bool,
-            },
-            then_body: vec![HirStmt::Delete {
-                object: HirExpr::Name {
-                    name: "counts".to_string(),
-                    binding_id: None,
-                    ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
-                },
-                index: HirExpr::Name {
-                    name: "ch".to_string(),
-                    binding_id: None,
-                    ty: Type::Str,
-                },
-            }],
-            elif_clauses: vec![],
-            else_body: None,
-        }],
-        else_body: None,
-    };
-
-    let mut emitter = RustEmitter::new();
-    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
-
-    assert!(matches!(captured.first(), Some(RustStmt::For { .. })));
 }

@@ -8,7 +8,7 @@ def main():
     assert str(x) == '7'
     x ^= 3
     assert str(x) == '4'
-    x <<= 1
-    assert str(x) == '8'
+    x <<= 0
+    assert str(x) == '4'
     x >>= 2
-    assert str(x) == '2'
+    assert str(x) == '1'

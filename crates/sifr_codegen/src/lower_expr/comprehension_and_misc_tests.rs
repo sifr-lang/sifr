@@ -463,7 +463,8 @@ pub(super) fn lowers_simple_index_on_any_with_leaf_index() {
         lowered,
         RustExpr::Index { expr, index }
             if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "data")
-                && matches!(index.as_ref(), RustExpr::Cast { .. })
+                && matches!(index.as_ref(), RustExpr::FnCall { func, .. }
+                    if matches!(func.as_ref(), RustExpr::Path(path) if path == &["SifrInt", "from_i64"]))
     ));
 }
 
@@ -496,7 +497,7 @@ pub(super) fn lowers_dict_index_to_optional_projection_for_optional_hir_type() {
     let lowered = try_lower_leaf_expr(&expr).expect("dict index lowered");
     assert!(matches!(
         lowered,
-        RustExpr::MethodCall { method, .. } if method == "copied"
+        RustExpr::MethodCall { method, .. } if method == "cloned"
     ));
 }
 
@@ -523,7 +524,7 @@ pub(super) fn lowers_dict_index_to_proven_some_block_for_non_optional_hir_type()
             value: RustExpr::MethodCall { method, .. },
             else_body,
         }) if pattern == "Some(__sifr_proven_dict_value)"
-            && method == "copied"
+            && method == "cloned"
             && matches!(
                 else_body.first(),
                 Some(RustStmt::Expr(RustExpr::FnCall { func, .. }))
@@ -559,8 +560,8 @@ pub(super) fn lowers_simple_slice_on_any_without_step() {
         lowered,
         RustExpr::Slice { expr, start, stop }
             if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "values")
-                && matches!(start.as_ref(), Some(s) if matches!(s.as_ref(), RustExpr::Cast { .. }))
-                && matches!(stop.as_ref(), Some(s) if matches!(s.as_ref(), RustExpr::Cast { .. }))
+                && matches!(start.as_ref(), Some(s) if matches!(s.as_ref(), RustExpr::FnCall { .. }))
+                && matches!(stop.as_ref(), Some(s) if matches!(s.as_ref(), RustExpr::FnCall { .. }))
     ));
 }
 

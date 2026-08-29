@@ -230,13 +230,13 @@ mod tests {
             &[],
         )
         .expect("tuple len lowers");
-        assert_eq!(render_expr(&tuple_len.expr), "3_i64");
+        assert_eq!(render_expr(&tuple_len.expr), "SifrInt::from_i64(3)");
 
         let tuple_count = lower_method(
             &Type::Tuple(vec![Type::Int, Type::Str, Type::Bool]),
             "count",
             "t",
-            &["1".to_string()],
+            &["SifrInt::from_i64(1)".to_string()],
         )
         .expect("tuple count lowers");
         assert!(render_expr(&tuple_count.expr).contains("__count"));
@@ -251,7 +251,10 @@ mod tests {
         assert!(render_expr(&tuple_index.expr).contains("__result"));
 
         let str_len = lower_method(&Type::Str, "len", "s", &[]).expect("str len lowers");
-        assert_eq!(render_expr(&str_len.expr), "s.chars().count() as i64");
+        assert_eq!(
+            render_expr(&str_len.expr),
+            "SifrInt::from(s.chars().count())"
+        );
 
         let option_len = lower_method(
             &Type::Union(vec![Type::List(Box::new(Type::Int)), Type::None]),
@@ -262,7 +265,7 @@ mod tests {
         .expect("option len lowers");
         assert_eq!(
             render_expr(&option_len.expr),
-            "opt.as_ref().map_or(0_usize, |v| v.len()) as i64"
+            "SifrInt::from(opt.as_ref().map_or(0_usize, |v| v.len()))"
         );
 
         let generic_len = lower_method(
@@ -272,7 +275,7 @@ mod tests {
             &[],
         )
         .expect("generic len lowers");
-        assert_eq!(render_expr(&generic_len.expr), "d.len() as i64");
+        assert_eq!(render_expr(&generic_len.expr), "SifrInt::from(d.len())");
 
         let upper = lower_method(&Type::Str, "upper", "s", &[]).expect("upper lowers");
         assert_eq!(render_expr(&upper.expr), "s.to_uppercase()");
@@ -312,13 +315,16 @@ mod tests {
 
         let find =
             lower_method(&Type::Str, "find", "s", &["needle".to_string()]).expect("find lowers");
-        assert_eq!(render_expr(&find.expr), "s.find(&needle).map(|i| i as i64)");
+        assert_eq!(
+            render_expr(&find.expr),
+            "s.find(&needle).map(|i| SifrInt::from(i))"
+        );
 
         let rfind =
             lower_method(&Type::Str, "rfind", "s", &["needle".to_string()]).expect("rfind lowers");
         assert_eq!(
             render_expr(&rfind.expr),
-            "s.rfind(&needle).map(|i| i as i64)"
+            "s.rfind(&needle).map(|i| SifrInt::from(i))"
         );
 
         let lstrip = lower_method(&Type::Str, "lstrip", "s", &[]).expect("lstrip lowers");
@@ -331,7 +337,7 @@ mod tests {
             lower_method(&Type::Str, "count", "s", &["needle".to_string()]).expect("count lowers");
         assert_eq!(
             render_expr(&count.expr),
-            "s.matches(&needle).count() as i64"
+            "SifrInt::from(s.matches(&needle).count())"
         );
 
         let join =
@@ -365,29 +371,54 @@ mod tests {
         let islower = lower_method(&Type::Str, "islower", "s", &[]).expect("islower lowers");
         assert!(render_expr(&islower.expr).contains("is_lowercase"));
 
-        let center =
-            lower_method(&Type::Str, "center", "s", &["5".to_string()]).expect("center lowers");
-        assert!(render_expr(&center.expr).contains("let _w = 5 as usize"));
+        let center = lower_method(
+            &Type::Str,
+            "center",
+            "s",
+            &["SifrInt::from_i64(5)".to_string()],
+        )
+        .expect("center lowers");
+        let center_rendered = render_expr(&center.expr);
+        assert!(
+            center_rendered
+                .contains("let _w = ::sifr_runtime::to_usize_proven(&SifrInt::from_i64(5))"),
+            "{center_rendered}"
+        );
 
-        let ljust =
-            lower_method(&Type::Str, "ljust", "s", &["5".to_string()]).expect("ljust lowers");
+        let ljust = lower_method(
+            &Type::Str,
+            "ljust",
+            "s",
+            &["SifrInt::from_i64(5)".to_string()],
+        )
+        .expect("ljust lowers");
         assert_eq!(
             render_expr(&ljust.expr),
-            "format!(\"{:<1$}\", s, 5 as usize)"
+            "format!(\"{:<1$}\", s, ::sifr_runtime::to_usize_proven(&SifrInt::from_i64(5)))"
         );
 
-        let rjust =
-            lower_method(&Type::Str, "rjust", "s", &["5".to_string()]).expect("rjust lowers");
+        let rjust = lower_method(
+            &Type::Str,
+            "rjust",
+            "s",
+            &["SifrInt::from_i64(5)".to_string()],
+        )
+        .expect("rjust lowers");
         assert_eq!(
             render_expr(&rjust.expr),
-            "format!(\"{:>1$}\", s, 5 as usize)"
+            "format!(\"{:>1$}\", s, ::sifr_runtime::to_usize_proven(&SifrInt::from_i64(5)))"
         );
 
-        let zfill =
-            lower_method(&Type::Str, "zfill", "s", &["5".to_string()]).expect("zfill lowers");
+        let zfill = lower_method(
+            &Type::Str,
+            "zfill",
+            "s",
+            &["SifrInt::from_i64(5)".to_string()],
+        )
+        .expect("zfill lowers");
         assert_eq!(
             render_expr(&zfill.expr),
-            "format!(\"{:0>1$}\", s, 5 as usize)"
+            "format!(\"{:0>1$}\", s, ::sifr_runtime::to_usize_proven(&SifrInt::from_i64(5)))"
         );
 
         let list_clear = lower_method(&Type::List(Box::new(Type::Int)), "clear", "xs", &[])
@@ -416,10 +447,13 @@ mod tests {
             &Type::List(Box::new(Type::Int)),
             "insert",
             "xs",
-            &["0".to_string(), "1".to_string()],
+            &["SifrInt::from_i64(0)".to_string(), "1".to_string()],
         )
         .expect("list insert lowers");
-        assert_eq!(render_expr(&list_insert.expr), "xs.insert(0 as usize, 1)");
+        assert_eq!(
+            render_expr(&list_insert.expr),
+            "xs.insert(::sifr_runtime::to_usize_proven(&SifrInt::from_i64(0)), 1)"
+        );
 
         let list_copy = lower_method(&Type::List(Box::new(Type::Int)), "copy", "xs", &[])
             .expect("list copy lowers");
@@ -442,7 +476,7 @@ mod tests {
         .expect("list count lowers");
         assert_eq!(
             render_expr(&list_count.expr),
-            "xs.iter().filter(|x| **x == 1).count() as i64"
+            "SifrInt::from(xs.iter().filter(|x| **x == 1).count())"
         );
 
         let list_contains = lower_method(
@@ -492,13 +526,15 @@ mod tests {
             &Type::List(Box::new(Type::Int)),
             "remove",
             "xs",
-            &["1".to_string()],
+            &["SifrInt::from_i64(1)".to_string()],
         )
         .expect("list remove lowers");
         let list_remove_rendered = render_expr(&list_remove.expr);
         assert!(
-            list_remove_rendered
-                .contains("if let Some(__pos) = xs.iter().position(|__x| *__x == 1)")
+            list_remove_rendered.contains(
+                "if let Some(__pos) = xs.iter().position(|__x| __x.eq(&SifrInt::from_i64(1)))"
+            ),
+            "{list_remove_rendered}"
         );
         assert!(list_remove_rendered.contains("xs.remove(__pos);"));
 
@@ -514,7 +550,7 @@ mod tests {
             list_index_rendered.contains("let __result = None;")
                 || list_index_rendered.contains("let mut __result = None;")
         );
-        assert!(list_index_rendered.contains("xs.get(__i as usize)"));
+        assert!(list_index_rendered.contains("xs.get(__i)"));
 
         let dict_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
         let dict_keys = lower_method(&dict_ty, "keys", "d", &[]).expect("dict keys lowers");
@@ -788,15 +824,18 @@ mod tests {
         let count = lower_method(&Type::Bytes, "count", "payload", &["needle".to_string()])
             .expect("bytes count lowers");
         let count_rendered = render_expr(&count.expr);
-        assert!(count_rendered.contains("__needle < 0"));
-        assert!(count_rendered.contains("__needle as u8"));
+        assert!(count_rendered.contains("__needle < SifrInt::from_i64(0)"));
+        assert!(count_rendered.contains("__needle.to_u8_proven_in_range()"));
         assert_eq!(count_rendered.matches("payload").count(), 1);
 
         let contains = lower_method(&Type::Bytes, "contains", "payload", &["needle".to_string()])
             .expect("bytes contains lowers");
         let contains_rendered = render_expr(&contains.expr);
-        assert!(contains_rendered.contains("__needle > 255"));
-        assert!(contains_rendered.contains("__bytes_receiver.contains(&(__needle as u8))"));
+        assert!(contains_rendered.contains("__needle > SifrInt::from_i64(255)"));
+        assert!(
+            contains_rendered
+                .contains("__bytes_receiver.contains(&__needle.to_u8_proven_in_range())")
+        );
         assert_eq!(contains_rendered.matches("payload").count(), 1);
 
         let find = lower_method(
@@ -807,7 +846,7 @@ mod tests {
         )
         .expect("bytes find lowers");
         let find_rendered = render_expr(&find.expr);
-        assert!(find_rendered.contains("__needle as u8"));
+        assert!(find_rendered.contains("__needle.to_u8_proven_in_range()"));
         assert!(find_rendered.contains("None"));
         assert_eq!(find_rendered.matches("payload").count(), 1);
 
@@ -831,13 +870,13 @@ mod tests {
         let hex_rendered = render_expr(&hex.expr);
         assert!(hex_rendered.contains("let __bytes_receiver = &payload;"));
         assert_eq!(hex_rendered.matches("payload").count(), 1);
-        assert!(hex_rendered.contains("__bytes_receiver.len().saturating_mul(2)"));
+        assert!(hex_rendered.contains("__bytes_receiver.len().saturating_mul(2_usize)"));
         assert!(hex_rendered.contains("format!(\"{:02x}\", *__byte)"));
 
         let to_ints =
             lower_method(&Type::Bytes, "to_ints", "payload", &[]).expect("bytes to_ints lowers");
         let to_ints_rendered = render_expr(&to_ints.expr);
-        assert!(to_ints_rendered.contains("collect::<Vec<i64>>()"));
-        assert!(to_ints_rendered.contains("as i64"));
+        assert!(to_ints_rendered.contains("collect::<Vec<SifrInt>>()"));
+        assert!(to_ints_rendered.contains("SifrInt::from(*__byte)"));
     }
 }

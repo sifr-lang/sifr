@@ -12,6 +12,7 @@ pub(super) fn composite_conversion_required(ty: &Type) -> bool {
         Type::Int => true,
         Type::List(inner) => composite_conversion_required(inner),
         Type::Dict(key, _) => key.resolve_alias() == &Type::Str,
+        Type::Tuple(items) => items.iter().any(composite_conversion_required),
         Type::Union(members) => optional_inner(members).is_some_and(composite_conversion_required),
         _ => false,
     }
@@ -62,11 +63,6 @@ pub(super) fn bridge_index_map_to_hash_map_expr(value: &RustExpr, item_type: &Ty
 fn sifr_value_to_bridge_expr(value: &str, ty: &Type, borrowed: bool, depth: usize) -> String {
     match ty.resolve_alias() {
         Type::Int => {
-            let value = if borrowed {
-                format!("*{value}")
-            } else {
-                value.to_string()
-            };
             format!("::sifr_runtime::interop::SifrIntBridge::from({value})")
         }
         Type::List(inner) => {
@@ -77,6 +73,26 @@ fn sifr_value_to_bridge_expr(value: &str, ty: &Type, borrowed: bool, depth: usiz
         }
         Type::Dict(key, item) if key.resolve_alias() == &Type::Str => {
             sifr_dict_to_bridge_expr(value, item, borrowed, depth)
+        }
+        Type::Tuple(items) => {
+            let values = items
+                .iter()
+                .enumerate()
+                .map(|(index, item)| {
+                    if borrowed && matches!(item.resolve_alias(), Type::Int) {
+                        return format!(
+                            "::sifr_runtime::interop::SifrIntBridge::from(&({value}).{index})"
+                        );
+                    }
+                    sifr_value_to_bridge_expr(
+                        &format!("({value}).{index}"),
+                        item,
+                        borrowed,
+                        depth + 1,
+                    )
+                })
+                .collect::<Vec<_>>();
+            tuple_expr(&values)
         }
         Type::Union(members) => optional_inner(members).map_or_else(
             || {
@@ -120,7 +136,7 @@ fn sifr_dict_to_bridge_expr(value: &str, item_type: &Type, borrowed: bool, depth
 
 fn bridge_value_to_sifr_expr(value: &str, ty: &Type, depth: usize) -> String {
     match ty.resolve_alias() {
-        Type::Int => format!("{value}.to_i64_saturating()"),
+        Type::Int => format!("{value}.into_sifr_int()"),
         Type::List(inner) => {
             let item = format!("__sifr_value_{depth}");
             let converted = bridge_value_to_sifr_expr(&item, inner, depth + 1);
@@ -128,6 +144,17 @@ fn bridge_value_to_sifr_expr(value: &str, ty: &Type, depth: usize) -> String {
         }
         Type::Dict(key, item) if key.resolve_alias() == &Type::Str => {
             bridge_dict_to_sifr_expr(value, item, depth)
+        }
+        Type::Tuple(items) => {
+            let tuple = format!("__sifr_bridge_tuple_{depth}");
+            let values = items
+                .iter()
+                .enumerate()
+                .map(|(index, item)| {
+                    bridge_value_to_sifr_expr(&format!("{tuple}.{index}"), item, depth + 1)
+                })
+                .collect::<Vec<_>>();
+            format!("{{ let {tuple} = {value}; {} }}", tuple_expr(&values))
         }
         Type::Union(members) => optional_inner(members).map_or_else(
             || value.to_string(),
@@ -138,6 +165,13 @@ fn bridge_value_to_sifr_expr(value: &str, ty: &Type, depth: usize) -> String {
             },
         ),
         _ => value.to_string(),
+    }
+}
+
+fn tuple_expr(values: &[String]) -> String {
+    match values {
+        [value] => format!("({value},)"),
+        _ => format!("({})", values.join(", ")),
     }
 }
 
@@ -214,8 +248,8 @@ mod tests {
         ));
 
         assert!(argument.contains("__sifr_bridge_item_1"));
-        assert!(argument.contains("SifrIntBridge::from(*__sifr_bridge_item_1)"));
-        assert!(returned.contains("__sifr_value_1.to_i64_saturating()"));
+        assert!(argument.contains("SifrIntBridge::from(__sifr_bridge_item_1)"));
+        assert!(returned.contains("__sifr_value_1.into_sifr_int()"));
     }
 
     #[test]
@@ -229,7 +263,7 @@ mod tests {
 
         assert_eq!(argument.matches("IndexMap<_, _>").count(), 2);
         assert_eq!(returned.matches("HashMap<_, _>").count(), 2);
-        assert!(returned.contains("to_i64_saturating()"));
+        assert!(returned.contains("into_sifr_int()"));
     }
 
     #[test]
@@ -254,9 +288,9 @@ mod tests {
 
         assert!(borrowed_dicts.starts_with("&values.iter()"));
         assert!(borrowed_dicts.contains("IndexMap<_, _>"));
-        assert!(borrowed_ints.contains("SifrIntBridge::from(*__sifr_bridge_item_1)"));
+        assert!(borrowed_ints.contains("SifrIntBridge::from(__sifr_bridge_item_1)"));
         assert!(returned_dicts.contains("HashMap<_, _>"));
-        assert!(returned_ints.contains("__sifr_value_1.to_i64_saturating()"));
+        assert!(returned_ints.contains("__sifr_value_1.into_sifr_int()"));
     }
 
     #[test]
@@ -276,8 +310,8 @@ mod tests {
 
         assert!(argument.starts_with("values.as_ref().map("));
         assert!(!argument.starts_with('&'));
-        assert!(argument.contains("SifrIntBridge::from(*__sifr_bridge_item_1)"));
-        assert!(returned.contains("__sifr_value_1.to_i64_saturating()"));
+        assert!(argument.contains("SifrIntBridge::from(__sifr_bridge_item_1)"));
+        assert!(returned.contains("__sifr_value_1.into_sifr_int()"));
     }
 
     #[test]

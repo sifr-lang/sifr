@@ -94,8 +94,11 @@ def collect_difflib_calendar_actual() -> list[bool]:
     actual: list[bool] = []
 
     matcher: SequenceMatcher = SequenceMatcher("abcd", "abed")
-    ratio: float = matcher.ratio()
-    actual.append(ratio > 0.4 and ratio < 1.0)
+    try:
+        ratio: float = matcher.ratio()
+        actual.append(ratio > 0.4 and ratio < 1.0)
+    except Error:
+        actual.append(False)
     blocks: list[tuple[int, int, int]] = matcher.get_matching_blocks()
     actual.append(str(blocks) == "[(0, 0, 2), (3, 3, 1), (4, 4, 0)]")
 

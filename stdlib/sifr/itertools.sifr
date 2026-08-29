@@ -75,7 +75,7 @@ def _combinations_impl[T](data: list[T], start: int, r: int) -> list[list[T]]:
         return [[]]
 
     result: list[list[T]] = []
-    i: int = start
+    i: int = start.clone()
     while i <= len(data) - r:
         current: T | None = data[i]
         if current is not None:
@@ -91,7 +91,7 @@ def _combinations_with_replacement_impl[T](data: list[T], start: int, r: int) ->
         return [[]]
 
     result: list[list[T]] = []
-    i: int = start
+    i: int = start.clone()
     while i < len(data):
         current: T | None = data[i]
         if current is not None:
@@ -137,9 +137,9 @@ def _zip_longest_impl[T](a: list[T], b: list[T], fill: T) -> list[list[T]]:
     result: list[list[T]] = []
     len_a: int = len(a)
     len_b: int = len(b)
-    max_len: int = len_a
+    max_len: int = len_a.clone()
     if len_b > max_len:
-        max_len = len_b
+        max_len = len_b.clone()
     i: int = 0
     while i < max_len:
         pair: list[T] = []
@@ -243,29 +243,29 @@ def islice(data: Iterable[T], start_or_stop: int, stop: int | None = None, step:
     data_owned: list[T] = _collect_iterable(data)
 
     actual_start: int = 0
-    actual_stop: int = start_or_stop
+    actual_stop: int = start_or_stop.clone()
     if stop is not None:
-        actual_start = start_or_stop
-        actual_stop = stop
+        actual_start = start_or_stop.clone()
+        actual_stop = stop.clone()
     if actual_start < 0:
         actual_start = 0
     if actual_stop < 0:
         actual_stop = 0
 
-    stride: int = step
+    stride: int = step.clone()
     if stride <= 0:
         stride = 1
-        actual_stop = actual_start
+        actual_stop = actual_start.clone()
 
     result: list[T] = []
-    index: int = actual_start
+    index: int = actual_start.clone()
     while index < actual_stop:
         if index < len(data_owned):
             value: T | None = data_owned[index]
             if value is not None:
                 result.append(value)
         else:
-            index = actual_stop
+            index = actual_stop.clone()
         index = index + stride
 
     return iter(result)
@@ -405,7 +405,7 @@ def zip_longest(a: Iterable[T], b: Iterable[T], fill: T) -> Iterator[list[T]]:
 
 def count_from(start: int, step: int, n: int) -> Iterator[int]:
     i: int = 0
-    current: int = start
+    current: int = start.clone()
     while i < n:
         yield current
         current = current + step
@@ -415,10 +415,11 @@ def count_from(start: int, step: int, n: int) -> Iterator[int]:
 def cycle(data: Iterable[T], n: int) -> Iterator[T]:
     materialized: list[T] = _collect_iterable(data)
     result: list[T] = []
-    if len(materialized) > 0:
+    size: int = len(materialized)
+    if size > 0:
         i: int = 0
         while i < n:
-            idx: int = i % len(materialized)
+            idx: int = i % size
             val: T | None = materialized[idx]
             if val is not None:
                 result.append(val)

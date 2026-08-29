@@ -48,6 +48,7 @@
   - `integer-model-and-fixed-width-numeric-rules record` tracks the implementation work breakdown for that semantic rules.
   - Target source semantics: `int` is an exact signed arbitrary-precision value-semantic scalar backed by inline-small `SifrInt`; explicit fixed-width `int8`/`int16`/`int32`/`int64` and `uint8`/`uint16`/`uint32`/`uint64` are for storage, dtypes, binary formats, and FFI.
   - Ordinary fixed-width scalar arithmetic promotes to exact `int`; fixed-width array/tensor/dataframe arithmetic preserves dtype and exposes checked/wrapping/saturating/overflowing policies explicitly.
+  - The compiler now uses `SifrInt` as the single emitted representation for source `int` values across storage, calls, aggregates, unions, Rust/Python bridges, and lazy `SifrRange` iteration. Exact floor/modulo, bounded power/shift, integer-to-float conversion, and true division lower through checked runtime operations with typed source errors when static proof is unavailable.
 - Historical references in this architecture document may mention legacy sequencing from earlier planning versions.
 - When numbered-record conflicts exist, follow the project planning index and the matching staged planning files.
 - Network/TLS/URL/HTTP substrate architecture is tracked in [`network_http_architecture.md`](./network_http_architecture.md). The public boundary is `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http`; CPython-shaped networking modules remain unsupported diagnostics or rejected surfaces.

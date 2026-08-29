@@ -14,7 +14,7 @@ T = TypeVar("T")
 def _sift_down[T: Comparable](mut data: list[T], mut pos: int, n: int) -> None:
     done: bool = False
     while not done:
-        smallest: int = pos
+        smallest: int = pos.clone()
         left: int = 2 * pos + 1
         right: int = 2 * pos + 2
         if left < n:
@@ -67,7 +67,7 @@ def _sift_up[T: Comparable](mut heap: list[T], mut pos: int) -> None:
 def _sift_down_max[T: Comparable](mut data: list[T], mut pos: int, n: int) -> None:
     done: bool = False
     while not done:
-        largest: int = pos
+        largest: int = pos.clone()
         left: int = 2 * pos + 1
         right: int = 2 * pos + 2
         if left < n:
@@ -223,7 +223,7 @@ def merge[T: Comparable](*iterables: list[T]) -> list[T]:
                 if pos is not None:
                     if pos < len(values):
                         if best_index < 0:
-                            best_index = i
+                            best_index = i.clone()
                         else:
                             best_values: list[T] | None = iterables[best_index]
                             if best_values is not None:
@@ -234,7 +234,7 @@ def merge[T: Comparable](*iterables: list[T]) -> list[T]:
                                         chosen: T | None = best_values[best_pos]
                                         if current is not None and chosen is not None:
                                             if current < chosen:
-                                                best_index = i
+                                                best_index = i.clone()
             i = i + 1
         if best_index < 0:
             done = True

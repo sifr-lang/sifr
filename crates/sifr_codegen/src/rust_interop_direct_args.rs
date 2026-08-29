@@ -2,7 +2,7 @@ use crate::RustExpr;
 use crate::rust_interop_callback::{
     call_scoped_callback_adapter_expr, call_scoped_callbacks, threadsafe_callback_adapter_expr,
 };
-use crate::rust_interop_direct::{i64_vec_to_bridge_int_vec_expr, sifr_int_bridge_path};
+use crate::rust_interop_direct::{sifr_int_bridge_path, sifr_int_vec_to_bridge_int_vec_expr};
 use crate::rust_interop_direct_collections::{
     argument_composite_conversion_required, sifr_composite_to_bridge_expr,
 };
@@ -28,7 +28,7 @@ pub(crate) fn direct_rust_arg_expr(
             args: vec![value],
         }
     } else if is_int_list(&param.ty) {
-        let bridged = i64_vec_to_bridge_int_vec_expr(value, param.convention.is_borrowed());
+        let bridged = sifr_int_vec_to_bridge_int_vec_expr(value, param.convention.is_borrowed());
         if param.convention.is_borrowed() {
             RustExpr::Ref {
                 mutable: false,
@@ -44,8 +44,17 @@ pub(crate) fn direct_rust_arg_expr(
             args: Vec::new(),
         }
     } else if is_optional_int(&param.ty) {
+        let receiver = if param.convention.is_borrowed() {
+            RustExpr::MethodCall {
+                receiver: Box::new(value),
+                method: "as_ref".to_string(),
+                args: Vec::new(),
+            }
+        } else {
+            value
+        };
         RustExpr::MethodCall {
-            receiver: Box::new(value),
+            receiver: Box::new(receiver),
             method: "map".to_string(),
             args: vec![sifr_int_bridge_path("from")],
         }

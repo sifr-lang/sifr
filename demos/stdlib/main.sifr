@@ -73,8 +73,11 @@ def main():
 
     # difflib -- sequence comparison
     words: list[str] = ["apple", "ape", "application"]
-    close: list[str] = get_close_matches("app", words, 2, 0.3)
-    assert_true(len(close) > 0)
+    try:
+        close: list[str] = get_close_matches("app", words, 2, 0.3)
+        assert_true(len(close) > 0)
+    except Error:
+        assert_true(False)
 
     # ipaddress -- IP validation
     assert_true(is_valid_ipv4("192.168.1.1"))

@@ -312,6 +312,12 @@ impl Renderer {
                 if let Some(literal) = Self::render_typed_numeric_literal(expr, ty) {
                     return literal;
                 }
+                if matches!(ty, RustType::Named(name) if name == "usize") {
+                    return format!(
+                        "::sifr_runtime::to_usize_proven(&({}))",
+                        Self::render_expr_string(expr)
+                    );
+                }
                 format!(
                     "{} as {}",
                     Self::wrap_expr(expr),
@@ -460,6 +466,7 @@ impl Renderer {
                 }
             }
             RustLiteral::Bool(v) => v.to_string(),
+            RustLiteral::StaticStr(v) => format!("\"{}\"", v.escape_default()),
             RustLiteral::Str(v) => format!("\"{}\".to_string()", v.escape_default()),
             RustLiteral::Char(v) => format!("'{}'", v.escape_default()),
             RustLiteral::Unit => "()".to_string(),

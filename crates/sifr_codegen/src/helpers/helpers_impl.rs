@@ -48,8 +48,7 @@ pub(crate) fn is_reusable_place_expr(expr: &HirExpr) -> bool {
                 )
         }
         HirExpr::TupleLiteral { elements, ty } => {
-            ty.resolve_alias().ownership() == OwnershipKind::Copy
-                && elements.iter().all(is_reusable_place_expr)
+            is_copy_type_for_codegen(ty) && elements.iter().all(is_reusable_place_expr)
         }
         _ => false,
     }
@@ -87,7 +86,11 @@ pub(crate) fn iteration_element_ownership(source_ty: &Type) -> Option<OwnershipK
             if is_conservative_element_type(&metadata.element_type) {
                 None
             } else {
-                Some(metadata.element_type.ownership())
+                Some(if is_copy_type_for_codegen(&metadata.element_type) {
+                    OwnershipKind::Copy
+                } else {
+                    OwnershipKind::Move
+                })
             }
         })
 }
@@ -100,7 +103,7 @@ pub(crate) fn infer_source_access_mode(
     if matches!(resolved, Type::Iterator(_)) {
         return SourceAccessMode::Consume;
     }
-    if resolved.ownership() == OwnershipKind::Copy {
+    if is_copy_type_for_codegen(resolved) {
         // Copy-typed sources (for example `range`) can be consumed directly
         // without mutating the original binding.
         return SourceAccessMode::Consume;
@@ -154,7 +157,11 @@ pub(crate) fn plan_iterator_ownership_with_element_hint(
             if matches!(resolved_hint, Type::Any | Type::Unknown | Type::TypeVar(_)) {
                 None
             } else {
-                Some(resolved_hint.ownership())
+                Some(if is_copy_type_for_codegen(resolved_hint) {
+                    OwnershipKind::Copy
+                } else {
+                    OwnershipKind::Move
+                })
             }
         }
         _ => None,
@@ -170,7 +177,22 @@ pub(crate) fn plan_iterator_ownership_with_element_hint(
 }
 
 pub(crate) fn is_copy_type_for_codegen(ty: &Type) -> bool {
-    crate::resolve_alias_type_for_plain_call(ty).ownership() == OwnershipKind::Copy
+    let resolved = crate::resolve_alias_type_for_plain_call(ty);
+    match resolved {
+        Type::Int | Type::LiteralInt(_) | Type::Range => false,
+        Type::Tuple(elements) | Type::Union(elements) | Type::Intersection(elements) => {
+            elements.iter().all(is_copy_type_for_codegen)
+        }
+        Type::Newtype { inner, .. } => is_copy_type_for_codegen(inner),
+        Type::Alias { body, .. } => is_copy_type_for_codegen(body),
+        _ => resolved.ownership() == OwnershipKind::Copy,
+    }
+}
+
+/// Returns whether Sifr gives a value implicit-copy semantics while the canonical Rust
+/// representation requires an explicit clone.
+pub(crate) fn is_logically_copy_rust_move_type(ty: &Type) -> bool {
+    ty.ownership() == OwnershipKind::Copy && !is_copy_type_for_codegen(ty)
 }
 
 pub(crate) fn option_projection_method_for_owned_type(ty: &Type) -> &'static str {
@@ -707,7 +729,7 @@ pub(crate) fn body_contains_yield_inner(stmts: &[HirStmt]) -> bool {
 
 /// Check if a type needs .`clone()` when accessed from &self (non-Copy types).
 pub(crate) fn needs_clone_for_type(ty: &Type) -> bool {
-    ty.ownership() == sifr_type_system::OwnershipKind::Move
+    !is_copy_type_for_codegen(ty)
 }
 
 /// Collect the set of variable names that are mutated in a function body.

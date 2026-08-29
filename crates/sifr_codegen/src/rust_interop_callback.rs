@@ -6,7 +6,7 @@ use sifr_ir::{
     HirFunction, HirParam, RustCallbackBackpressure, RustCallbackOverflow, RustCallbackShutdown,
     RustInteropDecoratorKind, RustThreadsafeCallbackContract, rust_threadsafe_callback_contract,
 };
-use sifr_type_system::{OwnershipKind, ParamConvention, Type};
+use sifr_type_system::{ParamConvention, Type};
 
 pub(crate) fn call_scoped_callback_adapter_expr(param: &HirParam) -> RustExpr {
     let Type::Callable(params, conventions, result) = param.ty.resolve_alias() else {
@@ -125,7 +125,7 @@ fn callback_handler_arg(name: &str, ty: &Type, convention: ParamConvention) -> S
     } else {
         name.to_string()
     };
-    if convention.is_shared_borrow() && ty.ownership() == OwnershipKind::Move {
+    if convention.is_shared_borrow() && !crate::helpers::is_copy_type_for_codegen(ty) {
         format!("&{converted}")
     } else {
         converted

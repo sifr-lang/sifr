@@ -19,7 +19,13 @@ def compute_stats(data: list[float]) -> Result[float, StatisticsError]:
     total: float = 0.0
     for value in data:
         total = total + value
-    return total / float(len(data))
+    try:
+        count_float: float = float(len(data))
+        return total / count_float
+    except FloatOverflowError as error:
+        raise StatisticsError(error.message)
+    except FloatPrecisionLossError as error:
+        raise StatisticsError(error.message)
 
 def collect_positive_actual() -> list[bool]:
     actual: list[bool] = []

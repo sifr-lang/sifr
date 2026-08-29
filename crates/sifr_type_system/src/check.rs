@@ -20,7 +20,10 @@ fn is_decimal_family_type(ty: &Type) -> bool {
 }
 
 fn is_integral_numeric_type(ty: &Type) -> bool {
-    matches!(ty, Type::Int | Type::LiteralInt(_))
+    matches!(
+        ty.resolve_alias(),
+        Type::Int | Type::LiteralInt(_) | Type::FixedInt(_)
+    )
 }
 
 fn is_exact_or_fixed_integer_type(ty: &Type) -> bool {
@@ -44,6 +47,10 @@ fn is_exact_to_float_integer_type(ty: &Type) -> bool {
         ty.resolve_alias(),
         Type::Int | Type::LiteralInt(_) | Type::FixedInt(_)
     )
+}
+
+fn is_scalar_numeric_type(ty: &Type) -> bool {
+    ty.is_numeric() || matches!(ty.resolve_alias(), Type::FixedInt(_))
 }
 
 fn is_bool_integer_mixed_comparison(left: &Type, right: &Type) -> bool {
@@ -109,7 +116,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             if is_exact_or_fixed_integer_type(left) && is_exact_or_fixed_integer_type(right) {
                 return Ok(Type::Int);
             }
-            if left.is_numeric() && right.is_numeric() {
+            if is_scalar_numeric_type(left) && is_scalar_numeric_type(right) {
                 return Ok(Type::Float);
             }
             // String concatenation
@@ -173,7 +180,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             if is_exact_or_fixed_integer_type(left) && is_exact_or_fixed_integer_type(right) {
                 return Ok(Type::Int);
             }
-            if left.is_numeric() && right.is_numeric() {
+            if is_scalar_numeric_type(left) && is_scalar_numeric_type(right) {
                 return Ok(Type::Float);
             }
             // String repetition with *
@@ -231,7 +238,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
                 return Ok(Type::BigDecimal);
             }
             // Division always returns float in Sifr (like Python 3)
-            if left.is_numeric() && right.is_numeric() {
+            if is_scalar_numeric_type(left) && is_scalar_numeric_type(right) {
                 return Ok(Type::Float);
             }
             Err((
@@ -262,10 +269,10 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
                 return Ok(Type::BigDecimal);
             }
             // Floor division and modulo
-            if left == &Type::Int && right == &Type::Int {
+            if is_exact_or_fixed_integer_type(left) && is_exact_or_fixed_integer_type(right) {
                 return Ok(Type::Int);
             }
-            if left.is_numeric() && right.is_numeric() {
+            if is_scalar_numeric_type(left) && is_scalar_numeric_type(right) {
                 return Ok(Type::Float);
             }
             Err((
@@ -286,10 +293,10 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
                 return Ok(Type::BigDecimal);
             }
             // Power: int ** int -> int, otherwise float
-            if left == &Type::Int && right == &Type::Int {
+            if is_exact_or_fixed_integer_type(left) && is_exact_or_fixed_integer_type(right) {
                 return Ok(Type::Int);
             }
-            if left.is_numeric() && right.is_numeric() {
+            if is_scalar_numeric_type(left) && is_scalar_numeric_type(right) {
                 return Ok(Type::Float);
             }
             Err((
@@ -304,7 +311,12 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
         "&" | "|" | "^" => {
             // Bitwise operators: int & int -> int, int | int -> int, int ^ int -> int
             // Also bool & bool -> bool, bool | bool -> bool, bool ^ bool -> bool
-            if left == &Type::Int && right == &Type::Int {
+            if matches!((left.resolve_alias(), right.resolve_alias()),
+                (Type::FixedInt(left_fixed), Type::FixedInt(right_fixed)) if left_fixed == right_fixed)
+            {
+                return Ok(left.clone());
+            }
+            if is_exact_or_fixed_integer_type(left) && is_exact_or_fixed_integer_type(right) {
                 return Ok(Type::Int);
             }
             if left == &Type::Bool && right == &Type::Bool {
@@ -321,7 +333,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
         }
         "<<" | ">>" => {
             // Shift operators: int << int -> int, int >> int -> int
-            if left == &Type::Int && right == &Type::Int {
+            if is_exact_or_fixed_integer_type(left) && is_exact_or_fixed_integer_type(right) {
                 return Ok(Type::Int);
             }
             Err((
@@ -431,7 +443,7 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> TypeCheckRe
                 ));
             }
             // Ordering comparison works on numeric types and strings
-            if left.is_numeric() && right.is_numeric() {
+            if is_scalar_numeric_type(left) && is_scalar_numeric_type(right) {
                 return Ok(Type::Bool);
             }
             if left == &Type::Str && right == &Type::Str {
@@ -480,6 +492,9 @@ fn equality_comparable(left: &Type, right: &Type) -> bool {
     if matches!(left, Type::Any | Type::Unknown) || matches!(right, Type::Any | Type::Unknown) {
         return true;
     }
+    if is_scalar_numeric_type(left) && is_scalar_numeric_type(right) {
+        return true;
+    }
 
     match (left, right) {
         (Type::List(left_elem), Type::List(right_elem))
@@ -506,7 +521,7 @@ fn equality_comparable(left: &Type, right: &Type) -> bool {
 pub fn type_check_unary_op(op: &str, operand: &Type) -> TypeCheckResult {
     match op {
         "-" | "+" => {
-            if operand.is_numeric() {
+            if is_scalar_numeric_type(operand) {
                 return Ok(operand.clone());
             }
             Err((
@@ -687,11 +702,11 @@ mod tests {
     }
 
     #[test]
-    fn test_uint64_and_usize_integer_add_wait_for_sifrint_promotion() {
+    fn test_uint64_and_usize_integer_add_promote_exactly() {
         for fixed in [crate::FixedIntType::U64, crate::FixedIntType::USize] {
             let ty = Type::FixedInt(fixed);
 
-            assert!(type_check_binary_op(&ty, "+", &ty).is_err());
+            assert_eq!(type_check_binary_op(&ty, "+", &ty).unwrap(), Type::Int);
         }
     }
 

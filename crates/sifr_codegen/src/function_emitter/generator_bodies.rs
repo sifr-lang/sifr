@@ -1,6 +1,6 @@
 use super::{
-    HirFunction, HirStmt, OwnershipKind, RustEmitter, RustExpr, RustItem, RustLiteral, RustParam,
-    RustStmt, RustType, Type, Visibility, body_contains_yield, collect_mutated_vars_with_sigs,
+    HirFunction, HirStmt, RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt,
+    RustType, Type, Visibility, body_contains_yield, collect_mutated_vars_with_sigs,
     collect_reassigned_vars,
     python_callback_bounds::{
         python_callback_bound_param_names, python_callback_static_param_names,
@@ -29,7 +29,7 @@ impl RustEmitter {
                 .iter()
                 .any(|(name, _)| name == &param.name)
                 || !param.convention.is_borrowed()
-                || param.ty.ownership() == OwnershipKind::Copy
+                || crate::helpers::is_copy_type_for_codegen(&param.ty)
             {
                 continue;
             }
@@ -72,7 +72,7 @@ impl RustEmitter {
                     .iter()
                     .any(|(name, _)| name == &param.name)
                     && param.convention.is_borrowed()
-                    && param.ty.ownership() != OwnershipKind::Copy
+                    && !crate::helpers::is_copy_type_for_codegen(&param.ty)
             })
             .map(|param| param.name.clone())
             .collect();
@@ -169,7 +169,7 @@ impl RustEmitter {
                 .iter()
                 .any(|(name, _)| name == &param.name)
                 || !param.convention.is_borrowed()
-                || param.ty.ownership() == OwnershipKind::Copy
+                || crate::helpers::is_copy_type_for_codegen(&param.ty)
             {
                 continue;
             }
@@ -189,7 +189,7 @@ impl RustEmitter {
                     .iter()
                     .any(|(name, _)| name == &param.name)
                     && param.convention.is_borrowed()
-                    && param.ty.ownership() != OwnershipKind::Copy
+                    && !crate::helpers::is_copy_type_for_codegen(&param.ty)
             })
             .map(|param| param.name.clone())
             .collect();

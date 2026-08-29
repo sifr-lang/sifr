@@ -13,14 +13,14 @@ def factorial(n: int) -> int:
     return result
 
 def gcd(a: int, b: int) -> int:
-    x: int = a
-    y: int = b
+    x: int = a.clone()
+    y: int = b.clone()
     if x < 0:
         x = 0 - x
     if y < 0:
         y = 0 - y
     while y != 0:
-        temp: int = y
+        temp: int = y.clone()
         y = x % y
         x = temp
     return x
@@ -31,10 +31,12 @@ def lcm(a: int, b: int) -> int:
     if b == 0:
         return 0
     g: int = gcd(a, b)
-    x: int = a
+    if g == 0:
+        return 0
+    x: int = a.clone()
     if x < 0:
         x = 0 - x
-    y: int = b
+    y: int = b.clone()
     if y < 0:
         y = 0 - y
     return (x // g) * y
@@ -48,14 +50,17 @@ def comb(n: int, k: int) -> int:
         return 1
     if k == n:
         return 1
-    r: int = k
+    r: int = k.clone()
     if r > n - k:
         r = n - k
     result: int = 1
     i: int = 0
     while i < r:
         result = result * (n - i)
-        result = result // (i + 1)
+        divisor: int = i + 1
+        if divisor == 0:
+            return 0
+        result = result // divisor
         i = i + 1
     return result
 

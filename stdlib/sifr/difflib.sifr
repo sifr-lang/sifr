@@ -1,10 +1,17 @@
 # sifr.difflib — Sequence comparison (pure Sifr)
 
-def get_close_matches(word: str, possibilities: list[str], n: int, cutoff: float) -> list[str]:
+def get_close_matches(
+    word: str, possibilities: list[str], n: int, cutoff: float
+) -> Result[list[str], FloatOverflowError | FloatPrecisionLossError]:
     result: list[str] = []
     scores: list[float] = []
     for candidate in possibilities:
-        score: float = _similarity(word, candidate)
+        try:
+            score: float = _similarity(word, candidate)
+        except FloatOverflowError as error:
+            raise FloatOverflowError(error.message)
+        except FloatPrecisionLossError as error:
+            raise FloatPrecisionLossError(error.message)
         if score >= cutoff:
             result.append(candidate)
             scores.append(score)
@@ -28,7 +35,7 @@ def get_close_matches(word: str, possibilities: list[str], n: int, cutoff: float
                 if s is not None:
                     if s > best_score:
                         best_score = s
-                        best_idx = i
+                        best_idx = i.clone()
             i = i + 1
         if best_idx >= 0:
             used.append(best_idx)
@@ -38,7 +45,7 @@ def get_close_matches(word: str, possibilities: list[str], n: int, cutoff: float
         count = count + 1
     return top
 
-def _similarity(a: str, b: str) -> float:
+def _similarity(a: str, b: str) -> Result[float, FloatOverflowError | FloatPrecisionLossError]:
     total: int = len(a) + len(b)
     if total == 0:
         return 1.0
@@ -47,7 +54,14 @@ def _similarity(a: str, b: str) -> float:
     for block in blocks:
         _, _, block_size = block
         matches = matches + block_size
-    return float(2 * matches) / float(total)
+    try:
+        numerator: float = float(2 * matches)
+        denominator: float = float(total)
+        return numerator / denominator
+    except FloatOverflowError as error:
+        raise FloatOverflowError(error.message)
+    except FloatPrecisionLossError as error:
+        raise FloatPrecisionLossError(error.message)
 
 def _longest_common_substring_range(
     a: str, b: str, a_start: int, a_end: int, b_start: int, b_end: int
@@ -55,9 +69,9 @@ def _longest_common_substring_range(
     best_i: int = 0
     best_j: int = 0
     best_len: int = 0
-    i: int = a_start
+    i: int = a_start.clone()
     while i < a_end:
-        j: int = b_start
+        j: int = b_start.clone()
         while j < b_end:
             k: int = 0
             while i + k < a_end and j + k < b_end:
@@ -71,8 +85,8 @@ def _longest_common_substring_range(
                 k = k + 1
             if k > best_len:
                 best_len = k
-                best_i = i
-                best_j = j
+                best_i = i.clone()
+                best_j = j.clone()
             j = j + 1
         i = i + 1
     return (best_i, best_j, best_len)
@@ -80,21 +94,27 @@ def _longest_common_substring_range(
 def _sort_blocks(blocks: list[tuple[int, int, int]]) -> list[tuple[int, int, int]]:
     sorted_blocks: list[tuple[int, int, int]] = []
     for block in blocks:
-        bl_a, bl_b, _ = block
+        bl_a, bl_b, _ = block.clone()
         found_insert_at: bool = False
         insert_at: int = 0
         i: int = 0
         for existing in sorted_blocks:
             if not found_insert_at:
                 ex_a, ex_b, _ = existing
-                if bl_a < ex_a or (bl_a == ex_a and bl_b < ex_b):
-                    insert_at = i
+                comes_before: bool = False
+                if bl_a < ex_a:
+                    comes_before = True
+                elif bl_a == ex_a:
+                    if bl_b < ex_b:
+                        comes_before = True
+                if comes_before:
+                    insert_at = i.clone()
                     found_insert_at = True
             i = i + 1
         if found_insert_at:
-            sorted_blocks.insert(insert_at, block)
+            sorted_blocks.insert(insert_at, block.clone())
         else:
-            sorted_blocks.append(block)
+            sorted_blocks.append(block.clone())
     return sorted_blocks
 
 def _matching_blocks(a: str, b: str) -> list[tuple[int, int, int]]:
@@ -123,8 +143,8 @@ def _matching_blocks(a: str, b: str) -> list[tuple[int, int, int]]:
                         if size == 0:
                             continue
                         unsorted_blocks.append((ai, bj, size))
-                        left_a_end: int = ai
-                        left_b_end: int = bj
+                        left_a_end: int = ai.clone()
+                        left_b_end: int = bj.clone()
                         if a_start_value < left_a_end and b_start_value < left_b_end:
                             pending_a_start.append(a_start_value)
                             pending_a_end.append(left_a_end)
@@ -145,22 +165,22 @@ def _matching_blocks(a: str, b: str) -> list[tuple[int, int, int]]:
     prev_b: int = 0
     prev_size: int = 0
     for block in sorted_blocks:
-        bl_a, bl_b, bl_size = block
+        bl_a, bl_b, bl_size = block.clone()
         if not have_previous:
-            prev_a = bl_a
-            prev_b = bl_b
-            prev_size = bl_size
+            prev_a = bl_a.clone()
+            prev_b = bl_b.clone()
+            prev_size = bl_size.clone()
             have_previous = True
             continue
         if prev_a + prev_size == bl_a and prev_b + prev_size == bl_b:
             prev_size = prev_size + bl_size
         else:
-            merged_blocks.append((prev_a, prev_b, prev_size))
-            prev_a = bl_a
-            prev_b = bl_b
-            prev_size = bl_size
+            merged_blocks.append((prev_a.clone(), prev_b.clone(), prev_size.clone()))
+            prev_a = bl_a.clone()
+            prev_b = bl_b.clone()
+            prev_size = bl_size.clone()
     if have_previous:
-        merged_blocks.append((prev_a, prev_b, prev_size))
+        merged_blocks.append((prev_a.clone(), prev_b.clone(), prev_size.clone()))
     merged_blocks.append((len(a), len(b), 0))
     return merged_blocks
 
@@ -182,7 +202,7 @@ class SequenceMatcher:
         self._a = a + ""
         self._b = b + ""
 
-    def ratio(self) -> float:
+    def ratio(self) -> Result[float, FloatOverflowError | FloatPrecisionLossError]:
         return _similarity(self._a, self._b)
 
     def get_matching_blocks(self) -> list[tuple[int, int, int]]:

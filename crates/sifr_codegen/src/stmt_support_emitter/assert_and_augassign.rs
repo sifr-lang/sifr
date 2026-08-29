@@ -1,6 +1,49 @@
 use super::{HirExpr, HirStmt, RustEmitter, RustStmt, Type};
 
 impl RustEmitter {
+    pub(crate) fn lower_exact_int_augassign_stmt_for_ir(
+        &self,
+        name: &str,
+        op: &str,
+        value: crate::RustExpr,
+    ) -> Option<crate::RustStmt> {
+        if !self.is_registered_sifr_int_local(name) {
+            return None;
+        }
+        let target = crate::RustExpr::Ident(name.to_string());
+        let operand = self.coerce_expr_to_sifr_int_comparison_operand(
+            self.rewrite_stdlib_constant_idents_in_expr(value),
+        );
+        let value = match op {
+            "+=" | "-=" | "*=" | "&=" | "|=" | "^=" => crate::RustExpr::BinOp {
+                left: Box::new(crate::RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(target.clone()),
+                }),
+                op: op.trim_end_matches('=').to_string(),
+                right: Box::new(operand),
+            },
+            "/=" | "//=" | "%=" => self.sifr_int_known_nonzero_floor_expr(
+                if op == "%=" { "%" } else { "/" },
+                target.clone(),
+                operand,
+            ),
+            "**=" | "<<=" | ">>=" => crate::RustExpr::MethodCall {
+                receiver: Box::new(target.clone()),
+                method: match op {
+                    "**=" => "pow_known_valid",
+                    "<<=" => "shl_known_valid",
+                    ">>=" => "shr_known_valid",
+                    _ => unreachable!(),
+                }
+                .to_string(),
+                args: vec![operand],
+            },
+            _ => return None,
+        };
+        Some(crate::RustStmt::Assign { target, value })
+    }
+
     pub(crate) fn try_lower_structured_assert_stmt(
         &mut self,
         stmt: &HirStmt,
@@ -35,6 +78,19 @@ impl RustEmitter {
             return Ok(false);
         };
         let value_ty = Self::resolve_alias_type_for_loop_iter(value.ty());
+
+        if self.is_registered_sifr_int_local(name) {
+            let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
+                return Ok(false);
+            };
+            let value_expr = self.rewrite_stdlib_constant_idents_in_expr(value_expr);
+            let Some(lowered) = self.lower_exact_int_augassign_stmt_for_ir(name, op, value_expr)
+            else {
+                return Ok(false);
+            };
+            self.emit_lowered_stmts(std::slice::from_ref(&lowered));
+            return Ok(true);
+        }
 
         if op == "+=" {
             match value_ty {

@@ -38,6 +38,30 @@ pub(super) fn option_binding_pattern(option_var: &str, bindings: SimpleStmtBindi
     }
 }
 
+pub(super) fn option_binding_value_expr(
+    option_var: &str,
+    bindings: SimpleStmtBindings<'_>,
+) -> RustExpr {
+    let base = RustExpr::Ident(option_var.to_string());
+    if bindings.borrowed_params.contains(option_var)
+        || bindings.mut_borrowed_params.contains(option_var)
+    {
+        RustExpr::MethodCall {
+            receiver: Box::new(base),
+            method: "as_ref".to_string(),
+            args: vec![],
+        }
+    } else if bindings
+        .local_binding_types
+        .get(option_var)
+        .is_some_and(crate::helpers::is_logically_copy_rust_move_type)
+    {
+        RustExpr::Clone(Box::new(base))
+    } else {
+        base
+    }
+}
+
 pub(super) fn lower_if_not_none_chain(
     option_vars: &[String],
     lowered_then_body: Vec<RustStmt>,
@@ -48,7 +72,7 @@ pub(super) fn lower_if_not_none_chain(
     for option_var in option_vars.iter().rev() {
         chain_then = vec![RustStmt::IfLet {
             pattern: option_binding_pattern(option_var, bindings),
-            expr: RustExpr::Ident(option_var.clone()),
+            expr: option_binding_value_expr(option_var, bindings),
             then_body: chain_then,
             else_body: None,
         }];

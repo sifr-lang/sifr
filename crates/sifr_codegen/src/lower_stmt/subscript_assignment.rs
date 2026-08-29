@@ -37,25 +37,14 @@ pub(super) fn build_list_get_mut_block_stmt(
             ty: None,
             value: build_normalized_list_index_i64_expr(receiver.clone(), "__idx_raw"),
         },
-        RustStmt::If {
-            cond: RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident("__idx_norm".to_string())),
-                op: ">=".to_string(),
-                right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+        RustStmt::IfLet {
+            pattern: "Some(__elem)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(receiver),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Ident("__idx_norm".to_string())],
             },
-            then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__elem)".to_string(),
-                expr: RustExpr::MethodCall {
-                    receiver: Box::new(receiver),
-                    method: "get_mut".to_string(),
-                    args: vec![RustExpr::Cast {
-                        expr: Box::new(RustExpr::Ident("__idx_norm".to_string())),
-                        ty: RustType::Named("usize".to_string()),
-                    }],
-                },
-                then_body: vec![then_body_stmt],
-                else_body: None,
-            }],
+            then_body: vec![then_body_stmt],
             else_body: None,
         },
     ])
@@ -65,26 +54,21 @@ pub(crate) fn build_normalized_list_index_i64_expr(
     receiver: RustExpr,
     raw_index_name: &str,
 ) -> RustExpr {
-    let raw_ident = || RustExpr::Ident(raw_index_name.to_string());
-    RustExpr::If {
-        cond: Box::new(RustExpr::BinOp {
-            left: Box::new(raw_ident()),
-            op: "<".to_string(),
-            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
-        }),
-        then_expr: Box::new(RustExpr::BinOp {
-            left: Box::new(RustExpr::Cast {
-                expr: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(receiver),
-                    method: "len".to_string(),
-                    args: vec![],
-                }),
-                ty: RustType::I64,
-            }),
-            op: "+".to_string(),
-            right: Box::new(raw_ident()),
-        }),
-        else_expr: Some(Box::new(raw_ident())),
+    build_normalized_index_expr(
+        raw_index_name,
+        RustExpr::MethodCall {
+            receiver: Box::new(receiver),
+            method: "len".to_string(),
+            args: vec![],
+        },
+    )
+}
+
+pub(crate) fn build_normalized_index_expr(raw_index_name: &str, len: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident(raw_index_name.to_string())),
+        method: "normalize_index_or_len".to_string(),
+        args: vec![len],
     }
 }
 
@@ -166,23 +150,12 @@ pub(super) fn try_lower_simple_delete_stmt(
             },
             RustStmt::If {
                 cond: RustExpr::BinOp {
-                    left: Box::new(RustExpr::BinOp {
-                        left: Box::new(RustExpr::Ident("__idx_norm".to_string())),
-                        op: ">=".to_string(),
-                        right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
-                    }),
-                    op: "&&".to_string(),
-                    right: Box::new(RustExpr::BinOp {
-                        left: Box::new(RustExpr::Cast {
-                            expr: Box::new(RustExpr::Ident("__idx_norm".to_string())),
-                            ty: RustType::Named("usize".to_string()),
-                        }),
-                        op: "<".to_string(),
-                        right: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(receiver.clone()),
-                            method: "len".to_string(),
-                            args: vec![],
-                        }),
+                    left: Box::new(RustExpr::Ident("__idx_norm".to_string())),
+                    op: "<".to_string(),
+                    right: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(receiver.clone()),
+                        method: "len".to_string(),
+                        args: vec![],
                     }),
                 },
                 then_body: vec![RustStmt::Let {
@@ -192,10 +165,7 @@ pub(super) fn try_lower_simple_delete_stmt(
                     value: RustExpr::MethodCall {
                         receiver: Box::new(receiver),
                         method: "remove".to_string(),
-                        args: vec![RustExpr::Cast {
-                            expr: Box::new(RustExpr::Ident("__idx_norm".to_string())),
-                            ty: RustType::Named("usize".to_string()),
-                        }],
+                        args: vec![RustExpr::Ident("__idx_norm".to_string())],
                     },
                 }],
                 else_body: None,
@@ -240,12 +210,19 @@ pub(super) fn try_lower_simple_nested_subscript_assign_stmt(
     let Type::List(target_elem_ty) = resolve_alias_type(inner_ty) else {
         return None;
     };
-    let lowered_outer_index = try_lower_leaf_or_name_expr(outer_index)?;
-    let lowered_inner_index = try_lower_leaf_or_name_expr(inner_index)?;
+    let lowered_outer_index = maybe_clone_subscript_assignment_name(
+        outer_index,
+        try_lower_leaf_or_name_expr(outer_index)?,
+    );
+    let lowered_inner_index = maybe_clone_subscript_assignment_name(
+        inner_index,
+        try_lower_leaf_or_name_expr(inner_index)?,
+    );
     let outer_index_is_option = is_option_like_type(outer_index.ty());
     let inner_index_is_option = is_option_like_type(inner_index.ty());
     let target_elem_is_option = is_option_like_type(target_elem_ty);
-    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    let lowered_value =
+        maybe_clone_subscript_assignment_name(value, try_lower_leaf_or_name_expr(value)?);
     let adapted_value = crate::helpers::flatten_option_value_for_target(
         target_elem_ty,
         value.ty(),
@@ -280,25 +257,14 @@ pub(super) fn try_lower_simple_nested_subscript_assign_stmt(
             "__ii_raw",
         ),
     }];
-    inner_then_body.push(RustStmt::If {
-        cond: RustExpr::BinOp {
-            left: Box::new(RustExpr::Ident("__ii_norm".to_string())),
-            op: ">=".to_string(),
-            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+    inner_then_body.push(RustStmt::IfLet {
+        pattern: "Some(__elem)".to_string(),
+        expr: RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__row".to_string())),
+            method: "get_mut".to_string(),
+            args: vec![RustExpr::Ident("__ii_norm".to_string())],
         },
-        then_body: vec![RustStmt::IfLet {
-            pattern: "Some(__elem)".to_string(),
-            expr: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__row".to_string())),
-                method: "get_mut".to_string(),
-                args: vec![RustExpr::Cast {
-                    expr: Box::new(RustExpr::Ident("__ii_norm".to_string())),
-                    ty: RustType::Named("usize".to_string()),
-                }],
-            },
-            then_body: vec![assign_elem_stmt],
-            else_body: None,
-        }],
+        then_body: vec![assign_elem_stmt],
         else_body: None,
     });
     let inner_body = if inner_index_is_option {
@@ -336,25 +302,14 @@ pub(super) fn try_lower_simple_nested_subscript_assign_stmt(
             "__oi_raw",
         ),
     }];
-    outer_then_body.push(RustStmt::If {
-        cond: RustExpr::BinOp {
-            left: Box::new(RustExpr::Ident("__oi_norm".to_string())),
-            op: ">=".to_string(),
-            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+    outer_then_body.push(RustStmt::IfLet {
+        pattern: "Some(__row)".to_string(),
+        expr: RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(object.to_string())),
+            method: "get_mut".to_string(),
+            args: vec![RustExpr::Ident("__oi_norm".to_string())],
         },
-        then_body: vec![RustStmt::IfLet {
-            pattern: "Some(__row)".to_string(),
-            expr: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(object.to_string())),
-                method: "get_mut".to_string(),
-                args: vec![RustExpr::Cast {
-                    expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
-                    ty: RustType::Named("usize".to_string()),
-                }],
-            },
-            then_body: inner_body,
-            else_body: None,
-        }],
+        then_body: inner_body,
         else_body: None,
     });
 
@@ -400,11 +355,11 @@ pub(super) fn try_lower_simple_attribute_subscript_assign_stmt(
                 expr: Box::new(RustExpr::Ident(object.to_string())),
                 field: field.to_string(),
             },
-            try_lower_leaf_or_name_expr(index)?,
+            maybe_clone_subscript_assignment_name(index, try_lower_leaf_or_name_expr(index)?),
             crate::helpers::flatten_option_value_for_target(
                 element_ty.as_ref(),
                 value.ty(),
-                try_lower_leaf_or_name_expr(value)?,
+                maybe_clone_subscript_assignment_name(value, try_lower_leaf_or_name_expr(value)?),
             ),
         )]),
         Type::Dict(_, value_ty) => Some(vec![build_dict_subscript_assign_stmt(
@@ -412,11 +367,14 @@ pub(super) fn try_lower_simple_attribute_subscript_assign_stmt(
                 expr: Box::new(RustExpr::Ident(object.to_string())),
                 field: field.to_string(),
             },
-            try_lower_attribute_dict_insert_key_expr(index, field_ty)?,
+            maybe_clone_subscript_assignment_name(
+                index,
+                try_lower_attribute_dict_insert_key_expr(index, field_ty)?,
+            ),
             crate::helpers::flatten_option_value_for_target(
                 value_ty.as_ref(),
                 value.ty(),
-                try_lower_leaf_or_name_expr(value)?,
+                maybe_clone_subscript_assignment_name(value, try_lower_leaf_or_name_expr(value)?),
             ),
         )]),
         _ => None,
@@ -437,12 +395,19 @@ pub(super) fn try_lower_simple_attribute_nested_subscript_assign_stmt(
     let Type::List(target_elem_ty) = resolve_alias_type(inner_ty) else {
         return None;
     };
-    let lowered_outer_index = try_lower_leaf_or_name_expr(outer_index)?;
-    let lowered_inner_index = try_lower_leaf_or_name_expr(inner_index)?;
+    let lowered_outer_index = maybe_clone_subscript_assignment_name(
+        outer_index,
+        try_lower_leaf_or_name_expr(outer_index)?,
+    );
+    let lowered_inner_index = maybe_clone_subscript_assignment_name(
+        inner_index,
+        try_lower_leaf_or_name_expr(inner_index)?,
+    );
     let outer_index_is_option = is_option_like_type(outer_index.ty());
     let inner_index_is_option = is_option_like_type(inner_index.ty());
     let target_elem_is_option = is_option_like_type(target_elem_ty);
-    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    let lowered_value =
+        maybe_clone_subscript_assignment_name(value, try_lower_leaf_or_name_expr(value)?);
     let adapted_value = crate::helpers::flatten_option_value_for_target(
         target_elem_ty,
         value.ty(),
@@ -481,25 +446,14 @@ pub(super) fn try_lower_simple_attribute_nested_subscript_assign_stmt(
             "__ii_raw",
         ),
     }];
-    inner_then_body.push(RustStmt::If {
-        cond: RustExpr::BinOp {
-            left: Box::new(RustExpr::Ident("__ii_norm".to_string())),
-            op: ">=".to_string(),
-            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+    inner_then_body.push(RustStmt::IfLet {
+        pattern: "Some(__elem)".to_string(),
+        expr: RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__row".to_string())),
+            method: "get_mut".to_string(),
+            args: vec![RustExpr::Ident("__ii_norm".to_string())],
         },
-        then_body: vec![RustStmt::IfLet {
-            pattern: "Some(__elem)".to_string(),
-            expr: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__row".to_string())),
-                method: "get_mut".to_string(),
-                args: vec![RustExpr::Cast {
-                    expr: Box::new(RustExpr::Ident("__ii_norm".to_string())),
-                    ty: RustType::Named("usize".to_string()),
-                }],
-            },
-            then_body: vec![assign_elem_stmt],
-            else_body: None,
-        }],
+        then_body: vec![assign_elem_stmt],
         else_body: None,
     });
     let inner_body = if inner_index_is_option {
@@ -534,25 +488,14 @@ pub(super) fn try_lower_simple_attribute_nested_subscript_assign_stmt(
         ty: None,
         value: build_normalized_list_index_i64_expr(receiver(), "__oi_raw"),
     }];
-    outer_then_body.push(RustStmt::If {
-        cond: RustExpr::BinOp {
-            left: Box::new(RustExpr::Ident("__oi_norm".to_string())),
-            op: ">=".to_string(),
-            right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+    outer_then_body.push(RustStmt::IfLet {
+        pattern: "Some(__row)".to_string(),
+        expr: RustExpr::MethodCall {
+            receiver: Box::new(receiver()),
+            method: "get_mut".to_string(),
+            args: vec![RustExpr::Ident("__oi_norm".to_string())],
         },
-        then_body: vec![RustStmt::IfLet {
-            pattern: "Some(__row)".to_string(),
-            expr: RustExpr::MethodCall {
-                receiver: Box::new(receiver()),
-                method: "get_mut".to_string(),
-                args: vec![RustExpr::Cast {
-                    expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
-                    ty: RustType::Named("usize".to_string()),
-                }],
-            },
-            then_body: inner_body,
-            else_body: None,
-        }],
+        then_body: inner_body,
         else_body: None,
     });
 
@@ -629,6 +572,19 @@ pub(super) fn try_lower_simple_subscript_augassign_stmt(
         )]);
     }
 
+    // Exact integers require the typed, proof-aware path below the leaf-only
+    // fast path. This path cannot safely choose infallible integer operations.
+    if matches!(
+        resolve_alias_type(object_ty),
+        Type::List(element_ty) | Type::Dict(_, element_ty)
+            if matches!(resolve_alias_type(element_ty.as_ref()), Type::Int | Type::LiteralInt(_))
+    ) || matches!(
+        object_ty,
+        Type::Alias { name, .. } if name == "__sifr_defaultdict_int"
+    ) {
+        return None;
+    }
+
     let lowered_body_stmt = build_subscript_augassign_elem_stmt(op, lowered_value);
 
     if matches!(
@@ -654,7 +610,13 @@ pub(super) fn try_lower_simple_subscript_augassign_stmt(
                         }],
                     }),
                     method: "or_insert".to_string(),
-                    args: vec![RustExpr::Literal(RustLiteral::Int(0))],
+                    args: vec![RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "SifrInt".to_string(),
+                            "from_i64".to_string(),
+                        ])),
+                        args: vec![RustExpr::Literal(RustLiteral::Int(0))],
+                    }],
                 },
             },
             lowered_body_stmt,

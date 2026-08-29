@@ -221,46 +221,25 @@ impl RustEmitter {
                                     mutable: false,
                                     name: index_name.clone(),
                                     ty: None,
-                                    value: lowered_index.clone(),
+                                    value: Self::clone_non_copy_name_expr_for_ir(
+                                        index,
+                                        lowered_index.clone(),
+                                    ),
                                 },
                                 crate::RustStmt::Let {
                                     mutable: false,
                                     name: normalized_name.clone(),
                                     ty: None,
-                                    value: crate::RustExpr::If {
-                                        cond: Box::new(crate::RustExpr::BinOp {
-                                            left: Box::new(crate::RustExpr::Ident(
-                                                index_name.clone(),
+                                    value: crate::build_normalized_index_expr(
+                                        &index_name,
+                                        crate::RustExpr::MethodCall {
+                                            receiver: Box::new(crate::RustExpr::Ident(
+                                                object_name.clone(),
                                             )),
-                                            op: "<".to_string(),
-                                            right: Box::new(crate::RustExpr::Literal(
-                                                crate::RustLiteral::Int(0),
-                                            )),
-                                        }),
-                                        then_expr: Box::new(crate::RustExpr::Cast {
-                                            expr: Box::new(crate::RustExpr::BinOp {
-                                                left: Box::new(crate::RustExpr::Cast {
-                                                    expr: Box::new(crate::RustExpr::MethodCall {
-                                                        receiver: Box::new(crate::RustExpr::Ident(
-                                                            object_name.clone(),
-                                                        )),
-                                                        method: "len".to_string(),
-                                                        args: vec![],
-                                                    }),
-                                                    ty: crate::RustType::I64,
-                                                }),
-                                                op: "+".to_string(),
-                                                right: Box::new(crate::RustExpr::Ident(
-                                                    index_name.clone(),
-                                                )),
-                                            }),
-                                            ty: crate::RustType::Named("usize".to_string()),
-                                        }),
-                                        else_expr: Some(Box::new(crate::RustExpr::Cast {
-                                            expr: Box::new(crate::RustExpr::Ident(index_name)),
-                                            ty: crate::RustType::Named("usize".to_string()),
-                                        })),
-                                    },
+                                            method: "len".to_string(),
+                                            args: vec![],
+                                        },
+                                    ),
                                 },
                             ],
                             expr: Some(Box::new(crate::RustExpr::MethodCall {
@@ -297,46 +276,25 @@ impl RustEmitter {
                                     mutable: false,
                                     name: index_name.clone(),
                                     ty: None,
-                                    value: lowered_index.clone(),
+                                    value: Self::clone_non_copy_name_expr_for_ir(
+                                        index,
+                                        lowered_index.clone(),
+                                    ),
                                 },
                                 crate::RustStmt::Let {
                                     mutable: false,
                                     name: normalized_name.clone(),
                                     ty: None,
-                                    value: crate::RustExpr::If {
-                                        cond: Box::new(crate::RustExpr::BinOp {
-                                            left: Box::new(crate::RustExpr::Ident(
-                                                index_name.clone(),
+                                    value: crate::build_normalized_index_expr(
+                                        &index_name,
+                                        crate::RustExpr::MethodCall {
+                                            receiver: Box::new(crate::RustExpr::Ident(
+                                                object_name.clone(),
                                             )),
-                                            op: "<".to_string(),
-                                            right: Box::new(crate::RustExpr::Literal(
-                                                crate::RustLiteral::Int(0),
-                                            )),
-                                        }),
-                                        then_expr: Box::new(crate::RustExpr::Cast {
-                                            expr: Box::new(crate::RustExpr::BinOp {
-                                                left: Box::new(crate::RustExpr::Cast {
-                                                    expr: Box::new(crate::RustExpr::MethodCall {
-                                                        receiver: Box::new(crate::RustExpr::Ident(
-                                                            object_name.clone(),
-                                                        )),
-                                                        method: "len".to_string(),
-                                                        args: vec![],
-                                                    }),
-                                                    ty: crate::RustType::I64,
-                                                }),
-                                                op: "+".to_string(),
-                                                right: Box::new(crate::RustExpr::Ident(
-                                                    index_name.clone(),
-                                                )),
-                                            }),
-                                            ty: crate::RustType::Named("usize".to_string()),
-                                        }),
-                                        else_expr: Some(Box::new(crate::RustExpr::Cast {
-                                            expr: Box::new(crate::RustExpr::Ident(index_name)),
-                                            ty: crate::RustType::Named("usize".to_string()),
-                                        })),
-                                    },
+                                            method: "len".to_string(),
+                                            args: vec![],
+                                        },
+                                    ),
                                 },
                             ],
                             expr: Some(Box::new(crate::RustExpr::MethodCall {
@@ -367,7 +325,7 @@ impl RustEmitter {
                             return Some(self.lower_string_index_option_with_cache(
                                 object,
                                 container_expr,
-                                lowered_index.clone(),
+                                Self::clone_non_copy_name_expr_for_ir(index, lowered_index.clone()),
                             ));
                         }
                         let object_name = "__sifr_index_str".to_string();
@@ -388,54 +346,29 @@ impl RustEmitter {
                                     mutable: false,
                                     name: index_name.clone(),
                                     ty: None,
-                                    value: lowered_index.clone(),
+                                    value: Self::clone_non_copy_name_expr_for_ir(
+                                        index,
+                                        lowered_index.clone(),
+                                    ),
                                 },
                                 crate::RustStmt::Let {
                                     mutable: false,
                                     name: normalized_name.clone(),
                                     ty: None,
-                                    value: crate::RustExpr::If {
-                                        cond: Box::new(crate::RustExpr::BinOp {
-                                            left: Box::new(crate::RustExpr::Ident(
-                                                index_name.clone(),
-                                            )),
-                                            op: "<".to_string(),
-                                            right: Box::new(crate::RustExpr::Literal(
-                                                crate::RustLiteral::Int(0),
-                                            )),
-                                        }),
-                                        then_expr: Box::new(crate::RustExpr::Cast {
-                                            expr: Box::new(crate::RustExpr::BinOp {
-                                                left: Box::new(crate::RustExpr::Cast {
-                                                    expr: Box::new(crate::RustExpr::MethodCall {
-                                                        receiver: Box::new(
-                                                            crate::RustExpr::MethodCall {
-                                                                receiver: Box::new(
-                                                                    crate::RustExpr::Ident(
-                                                                        object_name.clone(),
-                                                                    ),
-                                                                ),
-                                                                method: "chars".to_string(),
-                                                                args: vec![],
-                                                            },
-                                                        ),
-                                                        method: "count".to_string(),
-                                                        args: vec![],
-                                                    }),
-                                                    ty: crate::RustType::I64,
-                                                }),
-                                                op: "+".to_string(),
-                                                right: Box::new(crate::RustExpr::Ident(
-                                                    index_name.clone(),
+                                    value: crate::build_normalized_index_expr(
+                                        &index_name,
+                                        crate::RustExpr::MethodCall {
+                                            receiver: Box::new(crate::RustExpr::MethodCall {
+                                                receiver: Box::new(crate::RustExpr::Ident(
+                                                    object_name.clone(),
                                                 )),
+                                                method: "chars".to_string(),
+                                                args: vec![],
                                             }),
-                                            ty: crate::RustType::Named("usize".to_string()),
-                                        }),
-                                        else_expr: Some(Box::new(crate::RustExpr::Cast {
-                                            expr: Box::new(crate::RustExpr::Ident(index_name)),
-                                            ty: crate::RustType::Named("usize".to_string()),
-                                        })),
-                                    },
+                                            method: "count".to_string(),
+                                            args: vec![],
+                                        },
+                                    ),
                                 },
                             ],
                             expr: Some(Box::new(crate::RustExpr::MethodCall {

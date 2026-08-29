@@ -2,7 +2,7 @@ use super::{
     HirExpr, HirFStringPart, RustEmitter, Type, call_expr_parts,
     can_construct_error_from_message_for_ir, canonical_constructor_class_name,
     canonical_plain_call_name_for_ir, generic_call_target_for_ir,
-    is_result_int_division_error_type, unwrap_compiler_verified_nonempty_pop_result_for_ir,
+    unwrap_compiler_verified_nonempty_pop_result_for_ir,
 };
 
 fn is_imported_project_call_for_ir(
@@ -94,13 +94,16 @@ macro_rules! stmt_expr_method_call {
                             method: "collect::<std::collections::HashSet<_>>".to_string(),
                             args: vec![],
                         };
-                        return Ok(Some(crate::RustExpr::Cast {
-                            expr: Box::new(crate::RustExpr::MethodCall {
+                        return Ok(Some(crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec![
+                                "SifrInt".to_string(),
+                                "from".to_string(),
+                            ])),
+                            args: vec![crate::RustExpr::MethodCall {
                                 receiver: Box::new(char_set),
                                 method: "len".to_string(),
                                 args: vec![],
-                            }),
-                            ty: crate::RustType::I64,
+                            }],
                         }));
                     }
                 }
@@ -216,6 +219,19 @@ macro_rules! stmt_expr_method_call {
                 };
                 lowered_args.push(lowered_arg);
             }
+            if matches!(
+                crate::resolve_alias_type_for_plain_call(&effective_object_ty),
+                Type::Decimal | Type::BigDecimal
+            ) && matches!(method.as_str(), "quantize" | "round")
+                && args.len() == 1
+            {
+                let Some(scale) = crate::integer_literal_decimal(&args[0])
+                    .and_then(|value| value.parse::<i64>().ok())
+                else {
+                    return Ok(None);
+                };
+                lowered_args[0] = crate::RustExpr::Literal(crate::RustLiteral::Int(scale));
+            }
             let is_callable_field = match crate::resolve_alias_type_for_plain_call(
                 &effective_object_ty,
             ) {
@@ -327,9 +343,12 @@ macro_rules! stmt_expr_method_call {
                 Type::Int
             ) && matches!(method.as_str(), "len" | "count")
             {
-                return Ok(Some(crate::RustExpr::Cast {
-                    expr: Box::new(lowered_method),
-                    ty: crate::RustType::I64,
+                return Ok(Some(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec![
+                        "SifrInt".to_string(),
+                        "from".to_string(),
+                    ])),
+                    args: vec![lowered_method],
                 }));
             }
             return Ok(Some(lowered_method));

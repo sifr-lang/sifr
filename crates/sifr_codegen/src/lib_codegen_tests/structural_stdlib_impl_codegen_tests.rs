@@ -82,7 +82,7 @@ fn json_stdlib() -> crate::StdlibCode {
             source_path: "stdlib/sifr/json.sifr".to_string(),
             source_sha256: "fixture".to_string(),
             nominal_types: HashSet::from(["JsonValue".to_string()]),
-            rust: "struct JsonValue { value: i64 }".to_string(),
+            rust: "struct JsonValue { value: SifrInt }".to_string(),
         },
     );
     stdlib

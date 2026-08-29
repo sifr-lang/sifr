@@ -29,9 +29,12 @@ fn async_callable_parameter_emits_send_future_contract() {
     );
 
     assert!(rust_code.contains(
-        "Fn(i64) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = i64> + Send>> + Send + Sync"
+        "Fn(SifrInt) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = SifrInt> + Send>> + Send + Sync"
     ));
-    assert!(rust_code.contains("handler(4_i64).await"));
+    assert!(
+        rust_code.contains("handler(SifrInt::from_i64(4)).await"),
+        "{rust_code}"
+    );
     syn::parse_file(&rust_code).expect("AsyncCallable Rust should parse");
 }
 
@@ -87,14 +90,14 @@ fn async_callable_class_field_uses_a_boxed_future_adapter() {
         "class AsyncRunner:\n    handler: AsyncCallable[[int], int]\n\n    def __init__(self, handler: AsyncCallable[[int], int]):\n        self.handler = handler\n\n    async def run(self, value: int) -> int:\n        return await self.handler(value)\n\nasync def plus_one(value: int) -> int:\n    await task.sleep(0.0)\n    return value + 1\n\nasync def main() -> None:\n    runner = AsyncRunner(plus_one)\n    print(await runner.run(41))\n",
     );
 
-    assert!(rust_code.contains("Box<dyn Fn(i64) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = i64> + Send>> + Send + Sync>"));
+    assert!(rust_code.contains("Box<dyn Fn(SifrInt) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = SifrInt> + Send>> + Send + Sync>"));
     assert!(rust_code.contains(
-        "let __sifr_field_init_0: Box<dyn Fn(i64) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = i64> + Send>> + Send + Sync>"
+        "let __sifr_field_init_0: Box<dyn Fn(SifrInt) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = SifrInt> + Send>> + Send + Sync>"
     ));
     assert!(rust_code.contains("move |__sifr_async_arg_0|"));
     assert!(rust_code.contains("::std::sync::Arc::clone(&__sifr_async_callable)"));
     assert!(rust_code.contains("__sifr_async_callable(__sifr_async_arg_0).await"));
-    assert!(rust_code.contains("(self.handler)(value).await"));
+    assert!(rust_code.contains("(self.handler)(value.clone()).await"));
     syn::parse_file(&rust_code).expect("stored AsyncCallable Rust should parse");
 }
 
@@ -135,7 +138,7 @@ fn test_generate_rust_preserves_loop_else_recursion_and_try_except_returns() {
     print(recurse(4))
 "#,
     );
-    assert!(loop_else_recursion.contains("fn recurse(n: i64) -> i64"));
+    assert!(loop_else_recursion.contains("fn recurse(n: SifrInt) -> SifrInt"));
     assert!(
         loop_else_recursion.contains("if !_broke") || loop_else_recursion.contains("if !(_broke)")
     );
@@ -154,7 +157,7 @@ fn test_generate_rust_preserves_loop_else_recursion_and_try_except_returns() {
     assert!(
         try_except_return.contains("return Err(ValueError::new(\"non-positive\".to_string()));")
     );
-    assert!(try_except_return.contains("return 99_i64;"));
+    assert!(try_except_return.contains("return SifrInt::from_i64(99);"));
 
     let loop_guard_narrowing = generate_rust_from_source(
         r#"def summarize(values: list[int]) -> int:
@@ -167,8 +170,8 @@ fn test_generate_rust_preserves_loop_else_recursion_and_try_except_returns() {
     return total
 "#,
     );
-    assert!(loop_guard_narrowing.contains("fn summarize(values: &Vec<i64>) -> i64"));
-    assert!(loop_guard_narrowing.contains("if value > (10_i64)"));
+    assert!(loop_guard_narrowing.contains("fn summarize(values: &Vec<SifrInt>) -> SifrInt"));
+    assert!(loop_guard_narrowing.contains("if &value > &SifrInt::from_i64(10)"));
 }
 
 #[test]
@@ -185,8 +188,8 @@ fn test_generate_rust_elides_unreachable_returns_after_always_exit_paths() {
 "#,
     );
     assert!(always_exit_try.contains("return Err(ValueError::new(\"bad value\".to_string()));"));
-    assert!(always_exit_try.contains("return 77_i64;"));
-    assert!(!always_exit_try.contains("11_i64"));
+    assert!(always_exit_try.contains("return SifrInt::from_i64(77);"));
+    assert!(!always_exit_try.contains("SifrInt::from_i64(11)"));
 
     let unreachable_tail = generate_rust_from_source(
         r#"def inferred(flag: bool):
@@ -196,9 +199,9 @@ fn test_generate_rust_elides_unreachable_returns_after_always_exit_paths() {
     return 'never'
 "#,
     );
-    assert!(unreachable_tail.contains("fn inferred(flag: bool) -> i64"));
-    assert!(unreachable_tail.contains("2_i64\n}"));
-    assert!(!unreachable_tail.contains("return 2_i64"));
+    assert!(unreachable_tail.contains("fn inferred(flag: bool) -> SifrInt"));
+    assert!(unreachable_tail.contains("SifrInt::from_i64(2)\n}"));
+    assert!(!unreachable_tail.contains("return SifrInt::from_i64(2)"));
     assert!(!unreachable_tail.contains("never"));
 }
 
@@ -340,8 +343,8 @@ fn test_arithmetic_codegen() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("fn add(a: i64, b: i64) -> i64"));
-    assert!(rust_code.contains("a + b"));
+    assert!(rust_code.contains("fn add(a: SifrInt, b: SifrInt) -> SifrInt"));
+    assert!(rust_code.contains("&a + &b"));
 }
 
 // --- Codegen Quality Tests ---
@@ -392,7 +395,7 @@ fn test_no_unnecessary_mut() {
 
     let rust_code = generate_rust(&module);
     assert!(
-        rust_code.contains("let x: i64"),
+        rust_code.contains("let x: SifrInt"),
         "should emit `let x` without mut"
     );
     assert!(
@@ -439,7 +442,7 @@ fn test_mut_on_reassigned_variable() {
 
     let rust_code = generate_rust(&module);
     assert!(
-        rust_code.contains("let mut x: i64"),
+        rust_code.contains("let mut x: SifrInt"),
         "should emit `let mut x` for reassigned var"
     );
 }
@@ -476,8 +479,10 @@ fn test_generate_rust_recursive_generic_node_preserves_instantiated_type_argumen
 
     assert!(rust_code.contains("next: Option<Box<Node<T>>>"));
     assert!(rust_code.contains("fn new(value: T, next: Option<Box<Node<T>>>) -> Self"));
-    assert!(rust_code.contains("fn total(node: &Option<Node<i64>>) -> i64"));
-    assert!(rust_code.contains("let rest: Option<Node<i64>> = (node.next).as_deref().cloned();"));
+    assert!(rust_code.contains("fn total(node: &Option<Node<SifrInt>>) -> SifrInt"));
+    assert!(
+        rust_code.contains("let rest: Option<Node<SifrInt>> = (node.next).as_deref().cloned();")
+    );
 }
 
 #[test]
@@ -486,12 +491,12 @@ fn test_generate_rust_own_mut_param_emits_mut_binding_without_shadow() {
         "def replace_elements(own mut arr: list[int]) -> list[int]:\n    arr[0] = 8\n    return arr\n\ndef touch(mut arr: list[int]) -> int:\n    arr[0] = 7\n    return len(arr)\n",
     );
 
-    assert!(rust_code.contains("fn replace_elements(mut arr: Vec<i64>) -> Vec<i64>"));
+    assert!(rust_code.contains("fn replace_elements(mut arr: Vec<SifrInt>) -> Vec<SifrInt>"));
     assert!(
         !rust_code.contains("let mut arr = arr;"),
         "owned mutable params should lower directly to mutable Rust params"
     );
-    assert!(rust_code.contains("fn touch(arr: &mut Vec<i64>) -> i64"));
+    assert!(rust_code.contains("fn touch(arr: &mut Vec<SifrInt>) -> SifrInt"));
 }
 
 #[test]
@@ -676,9 +681,9 @@ fn test_structured_codegen_lowers_comprehension_local_initializers() {
 
     let rust_code = generate_rust(&module);
 
-    assert!(rust_code.contains("let values: Vec<i64> = {"));
-    assert!(rust_code.contains("let lookup: HashMap<i64, i64> = {"));
-    assert!(rust_code.contains("let unique: HashSet<i64> = {"));
+    assert!(rust_code.contains("let values: Vec<SifrInt> = {"));
+    assert!(rust_code.contains("let lookup: HashMap<SifrInt, SifrInt> = {"));
+    assert!(rust_code.contains("let unique: HashSet<SifrInt> = {"));
     assert!(rust_code.contains("__sifr_list_comp"));
     assert!(rust_code.contains("__sifr_dict_comp"));
     assert!(rust_code.contains("__sifr_set_comp"));
@@ -740,8 +745,8 @@ fn test_reverse_range_for_loop_uses_rev_iterator_for_unary_negative_step() {
 
     let rust_code = generate_rust(&module);
 
-    assert!(rust_code.contains(".rev()"));
-    assert!(!rust_code.contains("step_by(-(1 as i64) as usize)"));
+    assert!(rust_code.contains("SifrRange::new_known_nonzero"));
+    assert!(!rust_code.contains("step_by("));
 }
 
 #[test]
@@ -792,7 +797,7 @@ fn test_hashmap_short_name() {
         "should NOT use fully qualified HashMap::from"
     );
     assert!(
-        rust_code.contains("HashMap<String, i64>"),
+        rust_code.contains("HashMap<String, SifrInt>"),
         "type annotation should use short HashMap"
     );
 }

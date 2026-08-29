@@ -1,0 +1,40 @@
+def checked_decimal(value: int) -> Result[decimal, DecimalConversionError]:
+    try:
+        converted: decimal = Decimal(value)
+        return converted
+    except DecimalConversionError as error:
+        raise error
+
+
+def checked_add(value: decimal, increment: int) -> Result[decimal, DecimalConversionError]:
+    try:
+        result: decimal = value + increment
+        return result
+    except DecimalConversionError as error:
+        raise error
+
+
+def checked_mod(value: decimal, divisor: int) -> Result[decimal, DecimalConversionError]:
+    try:
+        result: decimal = value % divisor
+        return result
+    except DecimalConversionError as error:
+        raise error
+
+
+def main() -> None:
+    try:
+        small: decimal = checked_decimal(42)
+        summed: decimal = checked_add(small, 8)
+        remainder: decimal = checked_mod(summed, 7)
+        assert str(small) == "42"
+        assert str(summed) == "50"
+        assert str(remainder) == "1"
+    except DecimalConversionError as error:
+        assert False, str(error)
+
+    try:
+        too_large: decimal = checked_decimal(1000000000000000000000000000000)
+        assert False, str(too_large)
+    except DecimalConversionError as error:
+        assert "maximum" in str(error).lower()

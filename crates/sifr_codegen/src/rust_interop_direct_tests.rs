@@ -572,7 +572,7 @@ fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata()
 
     assert_eq!(
         render_expr(expr),
-        "::sifr_stdlib::python::py_from_none().map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| PythonError { message: __sifr_bridge_error.message.to_string(), kind: __sifr_bridge_error.kind.to_string(), exception_type: __sifr_bridge_error.exception_type.to_string(), traceback: __sifr_bridge_error.traceback.to_string(), context: __sifr_bridge_error.context.to_string(), __sifr_python_error: Some(__sifr_bridge_error) })"
+        "::sifr_stdlib::python::py_from_none().map(|__sifr_bridge_ok| { let __sifr_bridge_tuple_0 = (__sifr_bridge_ok); (__sifr_bridge_tuple_0.0.into_sifr_int(), __sifr_bridge_tuple_0.1.into_sifr_int()) }).map_err(|__sifr_bridge_error| PythonError { message: __sifr_bridge_error.message.to_string(), kind: __sifr_bridge_error.kind.to_string(), exception_type: __sifr_bridge_error.exception_type.to_string(), traceback: __sifr_bridge_error.traceback.to_string(), context: __sifr_bridge_error.context.to_string(), __sifr_python_error: Some(__sifr_bridge_error) })"
     );
 }
 
@@ -717,7 +717,7 @@ fn rust_interop_function_body_converts_python_int_dict_return() {
     let rendered = render_expr(expr);
 
     assert!(rendered.contains("py_copy_dict_str_int"));
-    assert!(rendered.contains("__sifr_bridge_value.to_i64_saturating()"));
+    assert!(rendered.contains("__sifr_bridge_value.into_sifr_int()"));
     assert!(rendered.contains("collect::<::std::collections::HashMap<_, _>>()"));
 }
 

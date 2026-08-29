@@ -9,7 +9,10 @@ fn nested_capture_call_result_refines_outer_list_codegen() {
         generated.contains("let mut called: Vec<String> = {"),
         "{generated}"
     );
-    assert!(generated.contains("called.push(vec![value.clone()].join(\"\"));"));
+    assert!(
+        generated.contains("called.push(vec![value.clone()].join(\"\"));"),
+        "{generated}"
+    );
     assert!(
         !generated.contains("let mut called: Vec<Box<dyn"),
         "{generated}"
@@ -37,7 +40,7 @@ fn nested_same_named_lists_keep_independent_codegen_types() {
         "def solve() -> list[int]:\n    values = []\n    def add() -> int:\n        values = []\n        values.append(\"inner\")\n        return len(values)\n    values.append(1)\n    assert add() == 1\n    return values\n",
     );
     assert!(
-        generated.contains("let mut values: Vec<i64> = vec![];"),
+        generated.contains("let mut values: Vec<SifrInt> = vec![];"),
         "{generated}"
     );
     assert!(

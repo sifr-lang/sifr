@@ -37,12 +37,12 @@ impl RustEmitter {
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
         for param in &func.params {
             if param.convention.is_shared_borrow()
-                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                && !crate::helpers::is_copy_type_for_codegen(&param.ty)
             {
                 self.borrowed_params.insert(param.name.clone());
             }
             if param.convention.is_mut_borrow()
-                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                && !crate::helpers::is_copy_type_for_codegen(&param.ty)
             {
                 self.mut_borrowed_params.insert(param.name.clone());
             }

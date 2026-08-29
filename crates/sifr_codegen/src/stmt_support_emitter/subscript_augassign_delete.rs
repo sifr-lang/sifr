@@ -21,6 +21,17 @@ impl RustEmitter {
         let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(None);
         };
+        let exact_integer = matches!(
+            object_ty,
+            Type::Alias { name, .. } if name == "__sifr_defaultdict_int"
+        ) || matches!(
+            Self::resolve_alias_type_for_loop_iter(object_ty),
+            Type::List(element_ty) | Type::Dict(_, element_ty)
+                if matches!(
+                    crate::resolve_alias_type_for_plain_call(element_ty.as_ref()),
+                    Type::Int | Type::LiteralInt(_)
+                )
+        );
         if op == "+="
             && matches!(
                 Self::resolve_alias_type_for_loop_iter(object_ty),
@@ -56,36 +67,30 @@ impl RustEmitter {
                         "__idx_raw",
                     ),
                 },
-                RustStmt::If {
-                    cond: crate::RustExpr::BinOp {
-                        left: Box::new(crate::RustExpr::Ident("__idx_norm".to_string())),
-                        op: ">=".to_string(),
-                        right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
+                RustStmt::IfLet {
+                    pattern: "Some(__elem)".to_string(),
+                    expr: crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident(object.to_string())),
+                        method: "get_mut".to_string(),
+                        args: vec![crate::RustExpr::Ident("__idx_norm".to_string())],
                     },
-                    then_body: vec![RustStmt::IfLet {
-                        pattern: "Some(__elem)".to_string(),
-                        expr: crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Ident(object.to_string())),
-                            method: "get_mut".to_string(),
-                            args: vec![crate::RustExpr::Cast {
-                                expr: Box::new(crate::RustExpr::Ident("__idx_norm".to_string())),
-                                ty: crate::RustType::Named("usize".to_string()),
-                            }],
-                        },
-                        then_body: vec![RustStmt::Expr(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Ident("__elem".to_string())),
-                            method: "push_str".to_string(),
-                            args: vec![push_arg],
-                        })],
-                        else_body: None,
-                    }],
+                    then_body: vec![RustStmt::Expr(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident("__elem".to_string())),
+                        method: "push_str".to_string(),
+                        args: vec![push_arg],
+                    })],
                     else_body: None,
                 },
             ])));
         }
         let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
+        let lowered_value = if exact_integer {
+            self.coerce_typed_expr_to_sifr_int_value(lowered_value, value.ty())
+        } else {
+            lowered_value
+        };
         let Some(lowered_body_stmt) =
-            Self::build_subscript_augassign_elem_stmt_for_ir(op, lowered_value)
+            Self::build_subscript_augassign_elem_stmt_for_ir(op, lowered_value, exact_integer)
         else {
             return Ok(None);
         };
@@ -94,7 +99,7 @@ impl RustEmitter {
             object_ty,
             Type::Alias { name: alias_name, .. } if alias_name == "__sifr_defaultdict_int"
         ) {
-            let lowered_index = Self::clone_non_copy_name_expr_for_ir(index, lowered_index);
+            let lowered_index = self.clone_field_storage_name_expr_for_ir(index, lowered_index);
             return Ok(Some(RustStmt::Block(vec![
                 RustStmt::Let {
                     mutable: false,
@@ -107,7 +112,13 @@ impl RustEmitter {
                             args: vec![lowered_index],
                         }),
                         method: "or_insert".to_string(),
-                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Int(0))],
+                        args: vec![crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec![
+                                "SifrInt".to_string(),
+                                "from_i64".to_string(),
+                            ])),
+                            args: vec![crate::RustExpr::Literal(crate::RustLiteral::Int(0))],
+                        }],
                     },
                 },
                 lowered_body_stmt,
@@ -136,10 +147,7 @@ impl RustEmitter {
                     expr: crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Ident(object.to_string())),
                         method: "get_mut".to_string(),
-                        args: vec![crate::RustExpr::Cast {
-                            expr: Box::new(crate::RustExpr::Ident("__idx_norm".to_string())),
-                            ty: crate::RustType::Named("usize".to_string()),
-                        }],
+                        args: vec![crate::RustExpr::Ident("__idx_norm".to_string())],
                     },
                     then_body: vec![lowered_body_stmt],
                     else_body: None,
@@ -227,25 +235,14 @@ impl RustEmitter {
                 },
                 RustStmt::If {
                     cond: crate::RustExpr::BinOp {
-                        left: Box::new(crate::RustExpr::BinOp {
-                            left: Box::new(crate::RustExpr::Ident("__idx_norm".to_string())),
-                            op: ">=".to_string(),
-                            right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                        }),
-                        op: "&&".to_string(),
-                        right: Box::new(crate::RustExpr::BinOp {
-                            left: Box::new(crate::RustExpr::Cast {
-                                expr: Box::new(crate::RustExpr::Ident("__idx_norm".to_string())),
-                                ty: crate::RustType::Named("usize".to_string()),
-                            }),
-                            op: "<".to_string(),
-                            right: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Ident(
-                                    "__delete_target".to_string(),
-                                )),
-                                method: "len".to_string(),
-                                args: vec![],
-                            }),
+                        left: Box::new(crate::RustExpr::Ident("__idx_norm".to_string())),
+                        op: "<".to_string(),
+                        right: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Ident(
+                                "__delete_target".to_string(),
+                            )),
+                            method: "len".to_string(),
+                            args: vec![],
                         }),
                     },
                     then_body: vec![RustStmt::Let {
@@ -257,10 +254,7 @@ impl RustEmitter {
                                 "__delete_target".to_string(),
                             )),
                             method: "remove".to_string(),
-                            args: vec![crate::RustExpr::Cast {
-                                expr: Box::new(crate::RustExpr::Ident("__idx_norm".to_string())),
-                                ty: crate::RustType::Named("usize".to_string()),
-                            }],
+                            args: vec![crate::RustExpr::Ident("__idx_norm".to_string())],
                         },
                     }],
                     else_body: None,
@@ -273,9 +267,7 @@ impl RustEmitter {
                 value: crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_object),
                     method: "remove".to_string(),
-                    args: vec![Self::build_dict_lookup_key_arg_for_ir(
-                        Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
-                    )],
+                    args: vec![self.build_dict_lookup_key_arg_for_hir(index, lowered_index)],
                 },
             })),
             _ => Ok(None),

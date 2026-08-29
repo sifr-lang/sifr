@@ -6,6 +6,8 @@ use sifr_type_system::{ParamConvention, Type};
 
 mod leaves_and_plain_calls;
 pub use leaves_and_plain_calls::*;
+mod plain_calls;
+use plain_calls::try_lower_simple_call_expr;
 mod iterators_and_callables;
 use iterators_and_callables::{
     try_lower_dict_get_key_expr, try_lower_simple_constructor_call_expr,
@@ -32,8 +34,26 @@ use scalar_operands::{
     try_lower_mixed_float_operand_expr, try_lower_promoted_integer_operand_expr,
     try_lower_simple_binop_operand_expr, try_lower_simple_range_operand_expr,
 };
+mod task_calls;
+pub(crate) use task_calls::try_lower_task_duration_expr;
+
+pub(crate) fn fixed_width_int_type(ty: &Type) -> bool {
+    collections_and_comprehensions::is_fixed_width_int_like_simple(ty)
+}
 
 pub(crate) fn typed_empty_list_expr(ty: &Type) -> Option<RustExpr> {
+    if matches!(ty.resolve_alias(), Type::Bytes) {
+        let binding = "__sifr_empty_bytes_literal".to_string();
+        return Some(RustExpr::Block {
+            stmts: vec![RustStmt::Let {
+                mutable: false,
+                name: binding.clone(),
+                ty: Some(RustType::Vec(Box::new(RustType::Named("u8".to_string())))),
+                value: RustExpr::Vec(Vec::new()),
+            }],
+            expr: Some(Box::new(RustExpr::Ident(binding))),
+        });
+    }
     let Type::List(element) = ty.resolve_alias() else {
         return None;
     };

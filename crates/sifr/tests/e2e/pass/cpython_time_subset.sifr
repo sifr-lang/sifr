@@ -67,7 +67,11 @@ def collect_parse_and_safety_actual() -> list[bool]:
     actual.append(out_of_range_safe)
 
     epoch_tm: struct_time = gmtime_struct(0.0)
-    actual.append(mktime(epoch_tm) == 0.0)
+    try:
+        epoch_stamp: float = mktime(epoch_tm)
+        actual.append(epoch_stamp == 0.0)
+    except Error:
+        actual.append(False)
     return actual
 
 

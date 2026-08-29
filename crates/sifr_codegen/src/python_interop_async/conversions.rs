@@ -297,10 +297,12 @@ pub(super) fn async_input_conversion_borrowed(
             Type::Float => "async_from_float",
             _ => return None,
         };
-        return Some(runtime_call(
-            function,
-            vec![RustExpr::Deref(Box::new(value_place(name)))],
-        ));
+        let value = if matches!(ty.resolve_alias(), Type::Int) {
+            RustExpr::Clone(Box::new(value_place(name)))
+        } else {
+            RustExpr::Deref(Box::new(value_place(name)))
+        };
+        return Some(runtime_call(function, vec![value]));
     }
     async_input_conversion(name, ty, opaque_classes)
 }

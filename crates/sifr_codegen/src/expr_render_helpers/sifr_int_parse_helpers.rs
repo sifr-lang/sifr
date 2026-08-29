@@ -16,10 +16,38 @@ impl RustEmitter {
 
     pub(crate) fn coerce_expr_to_sifr_int(&self, expr: crate::RustExpr) -> crate::RustExpr {
         match expr {
-            crate::RustExpr::Ident(name) if self.is_registered_sifr_int_local(&name) => {
-                crate::RustExpr::Ref {
+            crate::RustExpr::Ref {
+                mutable: false,
+                expr,
+            } => match *expr {
+                crate::RustExpr::Ident(name)
+                    if self.borrowed_params.contains(&name)
+                        || self.mut_borrowed_params.contains(&name) =>
+                {
+                    crate::RustExpr::Ident(name)
+                }
+                crate::RustExpr::Clone(inner)
+                    if matches!(inner.as_ref(), crate::RustExpr::Ident(name)
+                        if self.borrowed_params.contains(name)
+                            || self.mut_borrowed_params.contains(name)) =>
+                {
+                    *inner
+                }
+                other => crate::RustExpr::Ref {
                     mutable: false,
-                    expr: Box::new(crate::RustExpr::Ident(name)),
+                    expr: Box::new(other),
+                },
+            },
+            crate::RustExpr::Ident(name) if self.is_registered_sifr_int_local(&name) => {
+                let ident = crate::RustExpr::Ident(name.clone());
+                if self.borrowed_params.contains(&name) || self.mut_borrowed_params.contains(&name)
+                {
+                    ident
+                } else {
+                    crate::RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(ident),
+                    }
                 }
             }
             crate::RustExpr::Paren(inner) => {
@@ -40,7 +68,11 @@ impl RustEmitter {
                 expr,
                 ty: crate::RustType::I64,
             } => sifr_int_from_i64_expr(*expr),
-            other => sifr_int_from_i64_expr(other),
+            // Every source-level `int` expression is already lowered to `SifrInt`.
+            // Only convert expressions whose primitive representation is explicit in
+            // the IR; wrapping an unknown expression can otherwise produce invalid
+            // code such as `SifrInt::from(an_exact_integer())`.
+            other => other,
         }
     }
 
@@ -81,7 +113,7 @@ impl RustEmitter {
                 expr,
                 ty: crate::RustType::I64,
             } => sifr_int_from_i64_expr(*expr),
-            other => sifr_int_from_i64_expr(other),
+            other => other,
         }
     }
 
@@ -108,7 +140,25 @@ impl RustEmitter {
                 expr,
                 ty: crate::RustType::I64,
             } => sifr_int_from_i64_expr(*expr),
-            other => sifr_int_from_i64_expr(other),
+            other => other,
+        }
+    }
+
+    pub(crate) fn coerce_typed_expr_to_sifr_int_value(
+        &self,
+        expr: crate::RustExpr,
+        source_ty: &Type,
+    ) -> crate::RustExpr {
+        match crate::resolve_alias_type_for_plain_call(source_ty) {
+            Type::Int | Type::LiteralInt(_) => expr,
+            Type::FixedInt(_) => crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "SifrInt".to_string(),
+                    "from".to_string(),
+                ])),
+                args: vec![expr],
+            },
+            _ => self.coerce_expr_to_sifr_int_value(expr),
         }
     }
 
@@ -137,7 +187,10 @@ impl RustEmitter {
         expr: crate::RustExpr,
     ) -> crate::RustExpr {
         let coerced = self.coerce_expr_to_sifr_int(expr);
-        if matches!(coerced, crate::RustExpr::Ref { .. }) {
+        if matches!(coerced, crate::RustExpr::Ref { .. })
+            || matches!(&coerced, crate::RustExpr::Ident(name)
+                if self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name))
+        {
             return coerced;
         }
         crate::RustExpr::Ref {
@@ -148,6 +201,12 @@ impl RustEmitter {
 
     pub(crate) fn is_registered_sifr_int_local(&self, name: &str) -> bool {
         self.sifr_int_local_bindings.borrow().contains(name)
+            || self.local_binding_types.get(name).is_some_and(|ty| {
+                matches!(
+                    crate::resolve_alias_type_for_plain_call(ty),
+                    Type::Int | Type::LiteralInt(_)
+                )
+            })
     }
 
     pub(crate) fn is_forced_sifr_int_local(&self, name: &str) -> bool {
@@ -162,11 +221,19 @@ impl RustEmitter {
                     || matches!(
                         func.as_ref(),
                         crate::RustExpr::Path(path)
-                            if string_path_matches(path, &["SifrInt", "from_i64"])
-                                || string_path_matches(path, &["sifr_runtime", "SifrInt", "from_i64"])
+                            if is_sifr_int_constructor_path(path)
                     )
             }
             crate::RustExpr::Ident(name) => self.is_registered_sifr_int_local(name),
+            crate::RustExpr::Field { expr, field } => self
+                .rust_expr_class_name(expr)
+                .and_then(|class_name| self.class_field_types.get(&(class_name, field.clone())))
+                .is_some_and(|ty| {
+                    matches!(
+                        crate::resolve_alias_type_for_plain_call(ty),
+                        Type::Int | Type::LiteralInt(_)
+                    )
+                }),
             crate::RustExpr::BinOp { left, op, right } if is_sifr_int_arithmetic_op(op) => {
                 self.is_sifr_int_expr(left) || self.is_sifr_int_expr(right)
             }
@@ -365,14 +432,14 @@ pub(super) fn sifr_int_from_i64_expr(expr: crate::RustExpr) -> crate::RustExpr {
     crate::RustExpr::FnCall {
         func: Box::new(crate::RustExpr::Path(vec![
             "SifrInt".to_string(),
-            "from_i64".to_string(),
+            "from".to_string(),
         ])),
         args: vec![expr],
     }
 }
 
 pub(super) fn is_sifr_int_arithmetic_op(op: &str) -> bool {
-    matches!(op, "+" | "-" | "*")
+    matches!(op, "+" | "-" | "*" | "&" | "|" | "^")
 }
 
 pub(super) fn is_sifr_int_checked_floor_op(op: &str) -> bool {
@@ -430,14 +497,28 @@ pub(super) fn is_proven_nonzero_integer_expr(expr: &crate::RustExpr) -> bool {
                 && matches!(
                     func.as_ref(),
                     crate::RustExpr::Path(path)
-                        if string_path_matches(path, &["SifrInt", "from_i64"])
-                            || string_path_matches(path, &["sifr_runtime", "SifrInt", "from_i64"])
+                        if is_sifr_int_constructor_path(path)
                 ) =>
         {
             is_proven_nonzero_integer_expr(&args[0])
         }
         _ => false,
     }
+}
+
+fn is_sifr_int_constructor_path(path: &[String]) -> bool {
+    matches!(
+        path,
+        [ty, method]
+            if ty == "SifrInt"
+                && matches!(method.as_str(), "from" | "from_i64" | "from_decimal_literal")
+    ) || matches!(
+        path,
+        [runtime, ty, method]
+            if runtime == "sifr_runtime"
+                && ty == "SifrInt"
+                && matches!(method.as_str(), "from" | "from_i64" | "from_decimal_literal")
+    )
 }
 
 pub(super) fn rust_expr_identifier_path(expr: &crate::RustExpr) -> Option<String> {

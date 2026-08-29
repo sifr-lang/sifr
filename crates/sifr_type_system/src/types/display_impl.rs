@@ -14,8 +14,9 @@ mod tests {
     };
 
     #[test]
-    fn test_ownership_primitives_are_copy() {
+    fn test_exact_int_keeps_logical_value_semantics() {
         assert_eq!(Type::Int.ownership(), OwnershipKind::Copy);
+        assert_eq!(Type::LiteralInt(1).ownership(), OwnershipKind::Copy);
         assert_eq!(
             Type::FixedInt(FixedIntType::U8).ownership(),
             OwnershipKind::Copy
@@ -79,9 +80,8 @@ mod tests {
             assert!(fixed.supports_current_scalar_promotion_to_int());
         }
 
-        for fixed in [FixedIntType::U64, FixedIntType::USize] {
-            assert!(!fixed.supports_current_scalar_promotion_to_int());
-        }
+        assert!(FixedIntType::U64.supports_current_scalar_promotion_to_int());
+        assert!(FixedIntType::USize.supports_current_scalar_promotion_to_int());
     }
 
     #[test]

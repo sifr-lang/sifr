@@ -79,7 +79,7 @@ fn test_try_finally_runs_cleanup_before_timeout_propagates() {
 
     let cleanup_pos = result
         .rust_source
-        .find("let marker: i64 = 1_i64;")
+        .find("let marker: SifrInt = SifrInt::from_i64(1);")
         .expect("cleanup marker should be emitted");
     let rethrow_pos = result
         .rust_source
@@ -371,7 +371,7 @@ fn test_round_parenthesizes_cast_receiver() {
 
     let rust_code = generate_rust(&module);
     assert!(
-        rust_code.contains("((3_i64) as f64).round() as i64"),
+        rust_code.contains("SifrInt::from_f64_trunc((SifrInt::from_i64(3).to_f64_proven_exact()).round_ties_even())"),
         "expected round receiver to be parenthesized; got: {rust_code}"
     );
     assert!(
@@ -446,11 +446,11 @@ fn test_float_min_max_parenthesize_cast_receivers() {
 
     let rust_code = generate_rust(&module);
     assert!(
-        rust_code.contains("((1_i64) as f64).min((2_i64) as f64)"),
+        rust_code.contains("SifrInt::from_i64(1).to_f64_proven_exact().min(SifrInt::from_i64(2).to_f64_proven_exact())"),
         "expected min receiver to be parenthesized; got: {rust_code}"
     );
     assert!(
-        rust_code.contains("((1_i64) as f64).max((2_i64) as f64)"),
+        rust_code.contains("SifrInt::from_i64(1).to_f64_proven_exact().max(SifrInt::from_i64(2).to_f64_proven_exact())"),
         "expected max receiver to be parenthesized; got: {rust_code}"
     );
     assert!(

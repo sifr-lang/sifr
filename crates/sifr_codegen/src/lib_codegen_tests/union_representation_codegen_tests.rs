@@ -210,10 +210,7 @@ fn isinstance_narrows_union_items_inside_for_loops() {
     assert!(!rust_code.contains("if isinstance("), "{rust_code}");
     assert!(rust_code.contains("if let"), "{rust_code}");
     assert!(
-        rust_code.contains(&format!(
-            "{}(value).clone()",
-            Type::Str.union_variant_name()
-        )),
+        rust_code.contains(&format!("{}(value)", Type::Str.union_variant_name())),
         "{rust_code}"
     );
 }

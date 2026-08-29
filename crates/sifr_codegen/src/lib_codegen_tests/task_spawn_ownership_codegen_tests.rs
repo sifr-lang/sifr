@@ -53,7 +53,9 @@ fn test_scope_spawn_lowers_owned_coroutine_arguments() {
     assert!(
         result
             .rust_source
-            .contains("scope.__sifr_spawn_infallible(worker(value));")
+            .contains("scope.__sifr_spawn_infallible(worker(value.clone()));"),
+        "{}",
+        result.rust_source
     );
 }
 
@@ -71,9 +73,7 @@ fn test_scope_spawn_lowers_owned_move_coroutine_arguments() {
         .module,
     );
 
-    assert!(
-        result
-            .rust_source
-            .contains("scope.__sifr_spawn_infallible(worker(vec![1_i64, 2_i64]));")
-    );
+    assert!(result.rust_source.contains(
+        "scope.__sifr_spawn_infallible(worker(vec![SifrInt::from_i64(1), SifrInt::from_i64(2)]));"
+    ));
 }

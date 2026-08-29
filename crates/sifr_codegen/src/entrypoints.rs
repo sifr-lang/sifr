@@ -74,6 +74,8 @@ pub(crate) fn generate_rust_test_with_project_policy(
 
     // Second pass: emit the actual code
     emitter.emit_named_module(module, false, true, Some(module_name));
+    // Expression lowering can introduce canonical intermediate error unions.
+    emitter.generate_enum_definitions();
 
     let mut module_import_items: Vec<RustItem> = Vec::new();
     for import in &module.imports {
@@ -200,6 +202,13 @@ pub(crate) fn generate_rust_test_with_project_policy(
             String::new(),
             "sifr_runtime".to_string(),
             "SifrInt".to_string(),
+        ]));
+    }
+    if import_needs.runtime.needs_sifr_range {
+        import_items.push(RustItem::Use(vec![
+            String::new(),
+            "sifr_runtime".to_string(),
+            "SifrRange".to_string(),
         ]));
     }
 

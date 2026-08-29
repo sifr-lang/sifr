@@ -190,7 +190,7 @@ class IPv4Address:
         normalized_value: int = -1
         if is_valid_ipv4(addr):
             parsed: int = _ip_to_int_raw(addr)
-            normalized_value = parsed
+            normalized_value = parsed.clone()
             normalized_text = int_to_ip(parsed)
         self._value = normalized_value
         self._text = normalized_text

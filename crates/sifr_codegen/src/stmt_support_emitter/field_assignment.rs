@@ -1,6 +1,33 @@
 use super::{HirExpr, HirStmt, RustEmitter, RustExpr, RustStmt, Type};
 
 impl RustEmitter {
+    pub(crate) fn lower_field_assign_stmt_for_block(
+        &mut self,
+        object: &str,
+        field: &str,
+        field_ty: &Type,
+        value: &HirExpr,
+    ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
+            return Ok(None);
+        };
+        let value_expr = self.clone_field_storage_name_expr_for_ir(value, value_expr);
+        let value_expr = self.adapt_field_assign_value_for_recursive_storage(
+            object,
+            field,
+            field_ty,
+            value_expr,
+            value.ty(),
+        );
+        Ok(Some(RustStmt::Assign {
+            target: RustExpr::Field {
+                expr: Box::new(Self::object_name_expr_for_ir(object)),
+                field: field.to_string(),
+            },
+            value: value_expr,
+        }))
+    }
+
     pub(crate) fn try_lower_structured_field_assign_stmt(
         &mut self,
         stmt: &HirStmt,
@@ -54,6 +81,14 @@ impl RustEmitter {
         let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(false);
         };
+        let value_expr = if crate::helpers::is_logically_copy_rust_move_type(field_ty)
+            && matches!(value, HirExpr::Name { .. })
+            && Self::rust_expr_is_reusable_place_for_ir(&value_expr)
+        {
+            crate::RustExpr::Clone(Box::new(value_expr))
+        } else {
+            self.clone_field_storage_name_expr_for_ir(value, value_expr)
+        };
         let value_expr =
             crate::helpers::flatten_option_value_for_target(field_ty, value.ty(), value_expr);
         let value_expr = self.adapt_field_assign_value_for_recursive_storage(
@@ -83,6 +118,7 @@ impl RustEmitter {
         let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(None);
         };
+        let value_expr = self.clone_field_storage_name_expr_for_ir(value, value_expr);
         let value_expr = crate::helpers::flatten_option_value_for_target(
             nested_field_ty,
             value.ty(),
@@ -284,6 +320,7 @@ impl RustEmitter {
                 let Some(index_expr) = self.lower_stmt_expr_for_ir(index)? else {
                     return Ok(false);
                 };
+                let index_expr = Self::clone_non_copy_name_expr_for_ir(index, index_expr);
                 crate::build_list_subscript_assign_stmt(
                     receiver,
                     index_expr,

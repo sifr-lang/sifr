@@ -48,7 +48,7 @@ fn lowers_simple_for_without_else() {
 }
 
 #[test]
-fn lowers_simple_for_with_name_iter_using_copy_mode() {
+fn lowers_simple_for_with_name_iter_using_clone_mode() {
     let for_stmt = HirStmt::For {
         target: "i".to_string(),
         target_ty: Type::Int,
@@ -85,7 +85,7 @@ fn lowers_simple_for_with_name_iter_using_copy_mode() {
                     && method == "iter"
                     && args.is_empty()
             )
-            && method == "copied"
+            && method == "cloned"
             && args.is_empty()
     ));
 }
@@ -242,7 +242,7 @@ fn lowers_simple_for_with_else_and_name_iter() {
                 && method == "iter"
                 && args.is_empty()
         )
-            && method == "copied"
+            && method == "cloned"
             && args.is_empty()
     ));
     assert!(matches!(lowered[2], RustStmt::If { .. }));

@@ -5,7 +5,7 @@ use super::builtin_calls::{
     callable_builtin_element_type, lower_bytes_constructor_call, lower_chr_call,
     lower_dict_constructor_call, lower_isinstance_call, lower_len_call,
     lower_list_constructor_call, lower_ord_call, lower_range_call, lower_reveal_type_call,
-    lower_set_constructor_call, lower_tuple_constructor_call,
+    lower_set_constructor_call, lower_tuple_constructor_call, value_error_type,
 };
 use super::bytes_methods::{resolve_bytes_method_type, resolve_str_encode_method_type};
 use super::call_argument_ranges::{call_argument_ranges_by_param, type_param_argument_range};

@@ -163,23 +163,36 @@ impl RustEmitter {
                                 method: "get".to_string(),
                                 args: vec![key_arg],
                             }),
-                            method: "map_or".to_string(),
+                            method: "map_or_else".to_string(),
                             args: vec![
-                                RustExpr::Literal(crate::RustLiteral::Int(0)),
+                                RustExpr::Closure {
+                                    params: vec![],
+                                    body: Box::new(RustExpr::FnCall {
+                                        func: Box::new(RustExpr::Path(vec![
+                                            "SifrInt".to_string(),
+                                            "from_i64".to_string(),
+                                        ])),
+                                        args: vec![RustExpr::Literal(crate::RustLiteral::Int(0))],
+                                    }),
+                                    is_move: false,
+                                },
                                 RustExpr::Closure {
                                     params: vec![crate::RustParam::Named {
                                         name: "__sifr_bucket".to_string(),
                                         ty: crate::RustType::Named("_".to_string()),
                                     }],
-                                    body: Box::new(RustExpr::Cast {
-                                        expr: Box::new(RustExpr::MethodCall {
+                                    body: Box::new(RustExpr::FnCall {
+                                        func: Box::new(RustExpr::Path(vec![
+                                            "SifrInt".to_string(),
+                                            "from".to_string(),
+                                        ])),
+                                        args: vec![RustExpr::MethodCall {
                                             receiver: Box::new(RustExpr::Ident(
                                                 "__sifr_bucket".to_string(),
                                             )),
                                             method: "len".to_string(),
                                             args: vec![],
-                                        }),
-                                        ty: crate::RustType::I64,
+                                        }],
                                     }),
                                     is_move: false,
                                 },
@@ -221,6 +234,15 @@ impl RustEmitter {
                         .and_then(Option::as_ref),
                 )?,
             );
+        }
+
+        if matches!(object_ty, Type::Decimal | Type::BigDecimal)
+            && matches!(method, "quantize" | "round")
+            && args.len() == 1
+        {
+            let scale = crate::integer_literal_decimal(&args[0])
+                .and_then(|value| value.parse::<i64>().ok())?;
+            arg_exprs[0] = RustExpr::Literal(crate::RustLiteral::Int(scale));
         }
 
         let collection_element_target = match (object_ty, method) {
@@ -265,7 +287,7 @@ impl RustEmitter {
             let needs_clone = if let HirExpr::Name { name, ty, .. } = &args[1] {
                 (self.borrowed_params.contains(name.as_str())
                     || self.mut_borrowed_params.contains(name.as_str()))
-                    && ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                    && !crate::helpers::is_copy_type_for_codegen(ty)
             } else {
                 false
             };

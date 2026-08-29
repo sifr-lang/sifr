@@ -277,8 +277,7 @@ pub(super) fn test_fixed_width_const_expression_assignment_fits_and_folds() {
 #[test]
 pub(super) fn test_exact_int_division_by_unproven_divisor_requires_result_target() {
     let source = "\
-def main() -> None:
-    divisor: int = 3
+def main(divisor: int) -> None:
     value: int = 10 // divisor
 ";
     let errors =
@@ -297,14 +296,13 @@ def main() -> None:
 pub(super) fn test_exact_int_division_by_unproven_divisor_lowers_as_result() {
     let module = lower_source(
         "\
-def main() -> None:
-    divisor: int = 3
+def main(divisor: int) -> None:
     value: Result[int, DivisionError] = 10 // divisor
 ",
     )
     .expect("unproven exact-int divisor should lower as Result[int, DivisionError]");
 
-    let HirStmt::Let { value, .. } = &module.functions[0].body[1] else {
+    let HirStmt::Let { value, .. } = &module.functions[0].body[0] else {
         panic!("expected result let");
     };
     assert!(matches!(
@@ -318,17 +316,18 @@ def main() -> None:
 }
 
 #[test]
-pub(super) fn test_exact_int_true_division_has_int0006() {
+pub(super) fn test_exact_int_true_division_requires_result_target() {
     let source = "\
 def main(numerator: int, denominator: int) -> None:
     value: float = numerator / denominator
 ";
-    let errors = lower_source(source).expect_err("exact-int true division should fail closed");
+    let errors = lower_source(source).expect_err("exact-int true division should be fallible");
 
     assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING)
-            && error.message
-                == "exact integer to float conversion requires handling possible overflow or precision loss"
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message.contains(
+                "expected 'float', got 'Result[float, DivisionError | FloatOverflowError | FloatPrecisionLossError]'",
+            )
             && error.primary_range == Some(range_for(source, "numerator / denominator"))
     }));
 }
@@ -365,7 +364,10 @@ def main() -> None:
     let errors = lower_source(source).expect_err("precision-losing exact-int division should fail");
 
     assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING)
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error
+                .message
+                .contains("expected 'float', got 'Result[float,")
             && error.primary_range == Some(range_for(source, "numerator / denominator"))
     }));
 }
@@ -383,7 +385,10 @@ def main(flag: bool) -> None:
     let errors = lower_source(source).expect_err("branch-dependent int should fail closed");
 
     assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING)
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error
+                .message
+                .contains("expected 'float', got 'Result[float,")
             && error.primary_range == Some(range_for(source, "numerator / denominator"))
     }));
 }
@@ -400,7 +405,10 @@ def main(delta: int) -> None:
     let errors = lower_source(source).expect_err("augassigned int should fail closed");
 
     assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING)
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error
+                .message
+                .contains("expected 'float', got 'Result[float,")
             && error.primary_range == Some(range_for(source, "numerator / denominator"))
     }));
 }
@@ -418,7 +426,10 @@ def main(items: list[int]) -> None:
     let errors = lower_source(source).expect_err("loop-dependent int should fail closed");
 
     assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING)
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error
+                .message
+                .contains("expected 'float', got 'Result[float,")
             && error.primary_range == Some(range_for(source, "numerator / denominator"))
     }));
 }
@@ -449,8 +460,7 @@ def main() -> None:
 #[test]
 pub(super) fn test_exact_int_mod_augassign_by_unproven_divisor_has_int0005() {
     let source = "\
-def main() -> None:
-    divisor: int = 3
+def main(divisor: int) -> None:
     value: int = 10
     value %= divisor
 ";
@@ -516,20 +526,20 @@ def main() -> None:
 }
 
 #[test]
-pub(super) fn test_fixed_width_floor_division_requires_handling_even_with_literal_divisor() {
-    let source = "\
+pub(super) fn test_fixed_width_floor_division_by_nonzero_literal_promotes_exactly() {
+    let module = lower_source(
+        "\
 def main() -> None:
     left: uint8 = 10
     value: int = left // 2
-";
-    let errors = lower_source(source).expect_err("fixed-width floor division should fail closed");
+",
+    )
+    .expect("a fixed-width value divided by a proven nonzero literal is exact");
 
-    assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
-            && error.message
-                == "integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe"
-            && error.primary_range == Some(range_for(source, "left // 2"))
-    }));
+    assert!(matches!(
+        function_let_value(&module, "value"),
+        HirExpr::BinOp { ty: Type::Int, .. }
+    ));
 }
 
 #[test]
@@ -549,7 +559,7 @@ def main() -> None:
 }
 
 #[test]
-pub(super) fn test_exact_int_power_by_negative_literal_requires_handling() {
+pub(super) fn test_exact_int_power_by_negative_literal_requires_result_target() {
     let source = "\
 def main() -> None:
     value: int = 2 ** -1
@@ -557,30 +567,29 @@ def main() -> None:
     let errors = lower_source(source).expect_err("negative exact-int exponent should fail closed");
 
     assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
-            && error.message
-                == "integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe"
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message.contains("expected 'int', got 'Result[int,")
             && error.primary_range == Some(range_for(source, "2 ** -1"))
     }));
 }
 
 #[test]
-pub(super) fn test_exact_int_power_by_unproven_exponent_requires_handling() {
+pub(super) fn test_exact_int_power_by_unproven_exponent_requires_result_target() {
     let source = "\
-def main() -> None:
-    exponent: int = 3
+def main(exponent: int) -> None:
     value: int = 2 ** exponent
 ";
     let errors = lower_source(source).expect_err("unproven exact-int exponent should fail closed");
 
     assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message.contains("expected 'int', got 'Result[int,")
             && error.primary_range == Some(range_for(source, "2 ** exponent"))
     }));
 }
 
 #[test]
-pub(super) fn test_fixed_width_power_requires_handling_even_with_literal_exponent() {
+pub(super) fn test_fixed_width_power_requires_result_target() {
     let source = "\
 def main() -> None:
     base: uint8 = 2
@@ -589,7 +598,8 @@ def main() -> None:
     let errors = lower_source(source).expect_err("fixed-width exponentiation should fail closed");
 
     assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING)
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message.contains("expected 'int', got 'Result[int,")
             && error.primary_range == Some(range_for(source, "base ** 3"))
     }));
 }
@@ -611,15 +621,15 @@ def main() -> None:
 }
 
 #[test]
-pub(super) fn test_exact_int_power_by_nonnegative_literal_still_lowers() {
+pub(super) fn test_statically_bounded_exact_int_power_still_lowers() {
     let module = lower_source(
         "\
 def main() -> None:
     value: int = 2 ** 3
-    value **= 2
+    value **= 0
 ",
     )
-    .expect("non-negative exact-int literal exponents should still lower");
+    .expect("statically bounded exact-int exponentiation should still lower");
 
     assert!(matches!(
         function_let_value(&module, "value"),
@@ -630,7 +640,7 @@ def main() -> None:
         HirStmt::AugAssign {
             name,
             op,
-            value: HirExpr::IntLiteral(2),
+            value: HirExpr::IntLiteral(0),
         } if name == "value" && op == "**="
     ));
 }

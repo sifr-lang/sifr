@@ -16,7 +16,7 @@ def main():
 
     assert!(rust_code.contains("struct Marker<T>"));
     assert!(rust_code.contains("__sifr_type_marker: ::std::marker::PhantomData<fn() -> (T,)>"));
-    assert!(rust_code.contains("let marker: Marker<i64> = make();"));
+    assert!(rust_code.contains("let marker: Marker<SifrInt> = make();"));
 }
 
 #[test]
@@ -101,8 +101,8 @@ def read(box: Box[int]):
     assert!(rust_code.contains("Box::new(value)"), "{rust_code}");
     assert!(rust_code.contains("Box::label(self)"), "{rust_code}");
     assert!(rust_code.contains("Box { value:"), "{rust_code}");
-    assert!(!rust_code.contains("Box<i64>::"), "{rust_code}");
-    assert!(!rust_code.contains("Box<i64> { value:"), "{rust_code}");
+    assert!(!rust_code.contains("Box<SifrInt>::"), "{rust_code}");
+    assert!(!rust_code.contains("Box<SifrInt> { value:"), "{rust_code}");
 }
 
 #[test]
@@ -120,7 +120,10 @@ def main() -> None:
     );
 
     assert!(rust_code.contains("fn __pow__"), "{rust_code}");
-    assert!(rust_code.contains("power.__pow__(3_i64)"), "{rust_code}");
+    assert!(
+        rust_code.contains("power.__pow__(&SifrInt::from_i64(3))"),
+        "{rust_code}"
+    );
 }
 
 #[test]

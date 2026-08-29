@@ -191,7 +191,7 @@ pub(super) fn tuple_item_rust_type(
     match ty.resolve_alias() {
         Type::Bool => Some("bool".to_string()),
         Type::FixedInt(fixed) => Some(fixed.rust_name().to_string()),
-        Type::Int => Some("i64".to_string()),
+        Type::Int => Some("::sifr_runtime::interop::SifrIntBridge".to_string()),
         Type::Float => Some("f64".to_string()),
         Type::Str => Some("String".to_string()),
         Type::Bytes => Some("Vec<u8>".to_string()),

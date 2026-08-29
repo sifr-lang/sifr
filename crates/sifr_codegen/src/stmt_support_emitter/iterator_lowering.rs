@@ -40,9 +40,12 @@ impl RustEmitter {
                     ty: crate::RustType::Named("_".to_string()),
                 }],
                 body: Box::new(crate::RustExpr::Tuple(vec![
-                    crate::RustExpr::Cast {
-                        expr: Box::new(crate::RustExpr::Ident("i".to_string())),
-                        ty: crate::RustType::I64,
+                    crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "SifrInt".to_string(),
+                            "from".to_string(),
+                        ])),
+                        args: vec![crate::RustExpr::Ident("i".to_string())],
                     },
                     crate::RustExpr::Ident("v".to_string()),
                 ])),

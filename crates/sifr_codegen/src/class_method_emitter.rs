@@ -229,8 +229,7 @@ impl RustEmitter {
         }
 
         let rust_ty = self.rust_ir_type_with_generics(param_ty);
-        if param_ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed()
-        {
+        if !crate::helpers::is_copy_type_for_codegen(param_ty) && convention.is_borrowed() {
             RustType::Ref {
                 mutable: convention.is_mut_borrow(),
                 inner: Box::new(rust_ty),
@@ -355,6 +354,17 @@ impl RustEmitter {
                     let temp_ty =
                         field_ty.map(|ty| self.class_struct_field_rust_type(class, field, ty));
                     let lowered_value = self.lower_constructor_field_value(class, field, value);
+                    let lowered_value = if matches!(
+                        value,
+                        HirExpr::Name { name, .. }
+                            if following_stmts.is_some_and(|stmts| {
+                                crate::helpers::stmts_reference_var(stmts, name)
+                            })
+                    ) {
+                        Self::clone_non_copy_name_expr_for_ir(value, lowered_value)
+                    } else {
+                        lowered_value
+                    };
                     let lowered_value = field_ty.map_or(lowered_value.clone(), |ty| {
                         self.wrap_recursive_constructor_field_value(
                             class,
@@ -386,6 +396,7 @@ impl RustEmitter {
                     method,
                     inheritance_parent,
                     &field_inits,
+                    &method.body[stmt_index..],
                     uses_python_error_bridge,
                 );
                 body.push(RustStmt::Let {
@@ -424,6 +435,7 @@ impl RustEmitter {
                 method,
                 inheritance_parent,
                 &field_inits,
+                &[],
                 uses_python_error_bridge,
             );
             body.push(RustStmt::Return(Some(RustExpr::StructInit {
@@ -501,7 +513,8 @@ impl RustEmitter {
                 args,
             };
         }
-        self.lower_class_expr_strict(value, "class constructor field value lowering")
+        let lowered = self.lower_class_expr_strict(value, "class constructor field value lowering");
+        self.clone_field_storage_name_expr_for_ir(value, lowered)
     }
 
     fn constructor_instance_fields(
@@ -510,6 +523,7 @@ impl RustEmitter {
         method: &HirFunction,
         inheritance_parent: Option<&String>,
         field_inits: &[(String, RustExpr)],
+        remaining_stmts: &[HirStmt],
         uses_python_error_bridge: bool,
     ) -> Vec<(String, RustExpr)> {
         let mut fields = Vec::new();
@@ -529,18 +543,24 @@ impl RustEmitter {
             let value = if matches!(field_ty, Type::Callable(..) | Type::AsyncCallable(..)) {
                 Self::box_constructor_callable_value(field_ty, RustExpr::Ident(field_name.clone()))
             } else {
-                self.wrap_recursive_constructor_field_value(
+                let source = HirExpr::Name {
+                    name: field_name.clone(),
+                    binding_id: None,
+                    ty: field_ty.clone(),
+                };
+                let value = self.wrap_recursive_constructor_field_value(
                     class,
                     method,
                     field_name,
                     field_ty,
-                    &HirExpr::Name {
-                        name: field_name.clone(),
-                        binding_id: None,
-                        ty: field_ty.clone(),
-                    },
+                    &source,
                     RustExpr::Ident(field_name.clone()),
-                )
+                );
+                if crate::helpers::stmts_reference_var(remaining_stmts, field_name) {
+                    Self::clone_non_copy_name_expr_for_ir(&source, value)
+                } else {
+                    value
+                }
             };
             fields.push((field_name.clone(), value));
         }
@@ -681,12 +701,12 @@ impl RustEmitter {
             };
 
             if effective_convention.is_shared_borrow()
-                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                && !crate::helpers::is_copy_type_for_codegen(&param.ty)
             {
                 self.borrowed_params.insert(param.name.clone());
             }
             if effective_convention.is_mut_borrow()
-                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                && !crate::helpers::is_copy_type_for_codegen(&param.ty)
             {
                 self.mut_borrowed_params.insert(param.name.clone());
             }

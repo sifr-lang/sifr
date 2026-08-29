@@ -9,10 +9,10 @@ use super::{
     lower_reveal_type_call, lower_reversed_call, lower_set_constructor_call, lower_sorted_call,
     lower_sum_call, lower_tuple_constructor_call, lower_zip_call,
     normalize_min_max_numeric_sentinels, str, supports_hash_key_in_context,
-    validate_variadic_min_max_operands,
+    validate_variadic_min_max_operands, value_error_type,
 };
 use crate::lower::type_bounds::supports_print_formatting;
-use sifr_type_system::safe_optional_result;
+use sifr_type_system::{make_union, safe_optional_result};
 pub(super) enum CallLowering {
     Lowered(HirExpr),
     NoMatch,
@@ -266,7 +266,25 @@ pub(super) fn lower_unshadowed_builtin_call(
         }
         let base = lower_expr(&call.arguments.args[0], ctx)?;
         let exp = lower_expr(&call.arguments.args[1], ctx)?;
-        let result_ty = if base.ty() == &Type::Int && exp.ty() == &Type::Int {
+        if let Some(result_ty) =
+            super::super::expression_operators::bounded_integer_arithmetic_result_type(
+                &base, "**", &exp, ctx,
+            )
+        {
+            return Some(CallLowering::Lowered(HirExpr::BinOp {
+                left: Box::new(base),
+                op: "**".to_string(),
+                right: Box::new(exp),
+                ty: result_ty,
+            }));
+        }
+        let result_ty = if matches!(
+            base.ty().resolve_alias(),
+            Type::Int | Type::LiteralInt(_) | Type::FixedInt(_)
+        ) && matches!(
+            exp.ty().resolve_alias(),
+            Type::Int | Type::LiteralInt(_) | Type::FixedInt(_)
+        ) {
             Type::Int
         } else {
             Type::Float
@@ -367,11 +385,16 @@ pub(super) fn lower_unshadowed_builtin_call(
                 ty: Type::Float,
             }));
         }
+        let result_ty = if arg.ty() == &Type::Float {
+            Type::Result(Box::new(Type::Int), Box::new(value_error_type(ctx)))
+        } else {
+            Type::Int
+        };
         return Some(CallLowering::Lowered(HirExpr::Call {
             mutable_arg_places: Vec::new(),
             func: "round".to_string(),
             args: vec![arg],
-            ty: Type::Int,
+            ty: result_ty,
         }));
     }
 
@@ -466,6 +489,8 @@ pub(super) fn lower_unshadowed_builtin_call(
                         parent_class: None,
                     });
             Type::Result(Box::new(Type::Int), Box::new(parse_error_ty))
+        } else if arg_ty == Type::Float {
+            Type::Result(Box::new(Type::Int), Box::new(value_error_type(ctx)))
         } else if matches!(arg_ty, Type::Decimal | Type::BigDecimal) {
             Type::Result(
                 Box::new(Type::Int),
@@ -507,6 +532,14 @@ pub(super) fn lower_unshadowed_builtin_call(
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
         let arg_ty = arg.ty().clone();
+        let exact_integer_conversion = matches!(
+            arg_ty.resolve_alias(),
+            Type::Int | Type::LiteralInt(_) | Type::FixedInt(_)
+        );
+        let integer_conversion_is_proven = exact_integer_conversion
+            && super::super::expression_operators::exact_integer_expr_is_proven_float_representable(
+                &arg, ctx,
+            );
         let result_ty = if arg_ty == Type::Str {
             let parse_error_ty =
                 ctx.class_types
@@ -521,6 +554,24 @@ pub(super) fn lower_unshadowed_builtin_call(
                         parent_class: None,
                     });
             Type::Result(Box::new(Type::Float), Box::new(parse_error_ty))
+        } else if exact_integer_conversion && !integer_conversion_is_proven {
+            let error = |name: &str| {
+                ctx.class_types.get(name).cloned().unwrap_or(Type::Class {
+                    identity: None,
+                    type_args: Vec::new(),
+                    name: name.to_string(),
+                    fields: vec![("message".to_string(), Type::Str)],
+                    methods: vec![],
+                    parent_class: Some("OverflowError".to_string()),
+                })
+            };
+            Type::Result(
+                Box::new(Type::Float),
+                Box::new(make_union(vec![
+                    error("FloatOverflowError"),
+                    error("FloatPrecisionLossError"),
+                ])),
+            )
         } else if arg_ty == Type::Decimal {
             ctx.error_with_code_at(
                     DiagnosticCode::DECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,

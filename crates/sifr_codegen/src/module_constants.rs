@@ -57,6 +57,7 @@ impl RustEmitter {
                 "unsupported module constant lowering shape: name={name}, ty={ty:?}, value={value:?}"
             )));
         };
+        let lowered_value = self.rewrite_stdlib_constant_idents_in_expr(lowered_value);
         let rust_name = format!("__const_{name}");
         Ok((
             RustItem::Fn {

@@ -1,6 +1,6 @@
 //! Bytes intrinsic lowerers for registry lowering.
 
-use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
+use crate::{RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType};
 
 fn arg_expr(args: &[RustExpr], idx: usize) -> RustExpr {
     args[idx].clone()
@@ -246,6 +246,40 @@ pub(crate) fn lower_bytes_with_size(args: &[RustExpr]) -> Option<RustExpr> {
                 )))],
                 else_body: None,
             },
+            RustStmt::Let {
+                mutable: false,
+                name: "__size".to_string(),
+                ty: None,
+                value: RustExpr::Match {
+                    expr: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__size".to_string())),
+                        method: "try_to_usize".to_string(),
+                        args: vec![],
+                    }),
+                    arms: vec![
+                        RustMatchArm {
+                            pattern: "Ok(__size)".to_string(),
+                            bindings: vec![],
+                            guard: None,
+                            body: vec![RustStmt::TailExpr(RustExpr::Ident("__size".to_string()))],
+                        },
+                        RustMatchArm {
+                            pattern: "Err(_)".to_string(),
+                            bindings: vec![],
+                            guard: None,
+                            body: vec![RustStmt::Return(Some(err_value_expr(
+                                RustExpr::MethodCall {
+                                    receiver: Box::new(string_lit(
+                                        "bytes(size) exceeds the addressable size",
+                                    )),
+                                    method: "to_string".to_string(),
+                                    args: vec![],
+                                },
+                            )))],
+                        },
+                    ],
+                },
+            },
         ],
         expr: Some(Box::new(typed_ok_expr(
             RustExpr::MethodCall {
@@ -350,12 +384,13 @@ pub(crate) fn lower_bytes_from_ints(args: &[RustExpr]) -> Option<RustExpr> {
                     RustStmt::Expr(RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::Ident("__out".to_string())),
                         method: "push".to_string(),
-                        args: vec![RustExpr::Cast {
-                            expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Field {
+                        args: vec![RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Field {
                                 expr: Box::new(RustExpr::Ident("__pair".to_string())),
                                 field: "1".to_string(),
-                            }))),
-                            ty: RustType::Named("u8".to_string()),
+                            }),
+                            method: "to_u8_proven_in_range".to_string(),
+                            args: vec![],
                         }],
                     }),
                 ],

@@ -1,8 +1,8 @@
 use super::object_ops::*;
 use super::{
-    PythonRuntimeDiagnostics, initialize_runtime, list_items, record_field,
-    reset_runtime_state_for_tests, semantic_close, shutdown_diagnostics, test_config, test_guard,
-    tuple_items_exact,
+    PythonRuntimeDiagnostics, copy_dict_str_int, copy_list_int, from_int, initialize_runtime,
+    list_items, record_field, reset_runtime_state_for_tests, semantic_close, shutdown_diagnostics,
+    test_config, test_guard, to_int, tuple_items_exact,
 };
 
 #[test]
@@ -55,6 +55,25 @@ fn primitive_conversion_round_trips_and_rejects_fixed_width_overflow() {
             leaked_objects: 0,
         }
     );
+}
+
+#[test]
+fn python_integer_roundtrip_preserves_values_beyond_i64() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("exact-integer-conversion")).expect("init should succeed");
+    let exact = crate::SifrInt::parse_decimal(
+        "1234567890123456789012345678901234567890",
+        crate::DEFAULT_MAX_INTEGER_DIGITS,
+    )
+    .expect("test integer should parse");
+    let object = from_int(exact.clone()).expect("exact int should cross into Python");
+
+    assert_eq!(
+        to_int(&object).expect("exact int should cross back from Python"),
+        exact
+    );
+    close_object(object).expect("int object should close");
 }
 
 #[test]

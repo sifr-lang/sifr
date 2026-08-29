@@ -312,6 +312,7 @@ pub(in crate::lower) fn lower_aug_assign(
                 object_ty: obj_ty,
                 index_ty: index.ty(),
                 rhs_ty: value.ty(),
+                rhs_expr: &value,
                 op: op_str,
                 target_range: sub.range(),
                 rhs_range: aug.value.range(),

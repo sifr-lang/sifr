@@ -2,55 +2,57 @@
 
 use crate::{RustExpr, RustLiteral, RustStmt, RustType};
 
+fn exact_int_from_expr(expr: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "SifrInt".to_string(),
+            "from".to_string(),
+        ])),
+        args: vec![expr],
+    }
+}
+
+pub(super) fn exact_int_to_usize_expr(expr: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "sifr_runtime".to_string(),
+            "to_usize_proven".to_string(),
+        ])),
+        args: vec![RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(expr),
+        }],
+    }
+}
+
+fn exact_int_literal(value: i64) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "SifrInt".to_string(),
+            "from_i64".to_string(),
+        ])),
+        args: vec![RustExpr::Literal(RustLiteral::Int(value))],
+    }
+}
+
 pub(super) fn lower_tuple_len(elem_count: usize, args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
     let elem_count = i64::try_from(elem_count).ok()?;
-    Some(RustExpr::Cast {
-        expr: Box::new(RustExpr::Literal(RustLiteral::Int(elem_count))),
-        ty: RustType::I64,
-    })
+    Some(exact_int_literal(elem_count))
 }
 
-fn tuple_bound_expr(arg: Option<&RustExpr>, len: i64, default: i64) -> RustExpr {
-    let len_expr = RustExpr::Literal(RustLiteral::Int(len));
-    let default_expr = RustExpr::Literal(RustLiteral::Int(default));
+fn tuple_bound_expr(arg: Option<&RustExpr>, len: usize, default: usize) -> RustExpr {
+    let len_expr = RustExpr::Verbatim(format!("{len}usize"));
+    let default_expr = RustExpr::Verbatim(format!("{default}usize"));
     let Some(arg) = arg else {
         return default_expr;
     };
-    RustExpr::Block {
-        stmts: vec![RustStmt::Let {
-            mutable: false,
-            name: "__bound".to_string(),
-            ty: None,
-            value: arg.clone(),
-        }],
-        expr: Some(Box::new(RustExpr::If {
-            cond: Box::new(RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident("__bound".to_string())),
-                op: "<".to_string(),
-                right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
-            }),
-            then_expr: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Paren(Box::new(RustExpr::BinOp {
-                        left: Box::new(len_expr.clone()),
-                        op: "+".to_string(),
-                        right: Box::new(RustExpr::Ident("__bound".to_string())),
-                    }))),
-                    method: "max".to_string(),
-                    args: vec![RustExpr::Literal(RustLiteral::Int(0))],
-                }),
-                method: "min".to_string(),
-                args: vec![len_expr],
-            }),
-            else_expr: Some(Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__bound".to_string())),
-                method: "min".to_string(),
-                args: vec![RustExpr::Literal(RustLiteral::Int(len))],
-            })),
-        })),
+    RustExpr::MethodCall {
+        receiver: Box::new(arg.clone()),
+        method: "clamp_slice_bound".to_string(),
+        args: vec![len_expr],
     }
 }
 
@@ -94,10 +96,9 @@ pub(super) fn lower_tuple_count(
     }
     Some(RustExpr::Block {
         stmts,
-        expr: Some(Box::new(RustExpr::Cast {
-            expr: Box::new(RustExpr::Ident("__count".to_string())),
-            ty: RustType::I64,
-        })),
+        expr: Some(Box::new(exact_int_from_expr(RustExpr::Ident(
+            "__count".to_string(),
+        )))),
     })
 }
 
@@ -109,7 +110,7 @@ pub(super) fn lower_tuple_index(
     if args.is_empty() || args.len() > 3 {
         return None;
     }
-    let len = i64::try_from(elem_count).ok()?;
+    let len = elem_count;
     let mut stmts = vec![
         RustStmt::Let {
             mutable: false,
@@ -131,7 +132,7 @@ pub(super) fn lower_tuple_index(
         },
     ];
     for index in 0..elem_count {
-        let index_expr = RustExpr::Literal(RustLiteral::Int(i64::try_from(index).ok()?));
+        let index_expr = RustExpr::Verbatim(format!("{index}usize"));
         stmts.push(RustStmt::If {
             cond: RustExpr::BinOp {
                 left: Box::new(RustExpr::BinOp {
@@ -175,7 +176,7 @@ pub(super) fn lower_tuple_index(
                 target: RustExpr::Ident("__result".to_string()),
                 value: RustExpr::FnCall {
                     func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                    args: vec![index_expr],
+                    args: vec![exact_int_from_expr(index_expr)],
                 },
             }],
             else_body: None,
@@ -191,65 +192,56 @@ pub(super) fn lower_string_char_len(object: &RustExpr, args: &[RustExpr]) -> Opt
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::Cast {
-        expr: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(object.clone()),
-                method: "chars".to_string(),
-                args: vec![],
-            }),
-            method: "count".to_string(),
+    Some(exact_int_from_expr(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(object.clone()),
+            method: "chars".to_string(),
             args: vec![],
         }),
-        ty: RustType::I64,
-    })
+        method: "count".to_string(),
+        args: vec![],
+    }))
 }
 
 pub(super) fn lower_option_len(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::Cast {
-        expr: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(object.clone()),
-                method: "as_ref".to_string(),
-                args: vec![],
-            }),
-            method: "map_or".to_string(),
-            args: vec![
-                RustExpr::Cast {
-                    expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
-                    ty: RustType::Named("usize".to_string()),
-                },
-                RustExpr::Closure {
-                    params: vec![crate::RustParam::Named {
-                        name: "v".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("v".to_string())),
-                        method: "len".to_string(),
-                        args: vec![],
-                    }),
-                    is_move: false,
-                },
-            ],
+    Some(exact_int_from_expr(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(object.clone()),
+            method: "as_ref".to_string(),
+            args: vec![],
         }),
-        ty: RustType::I64,
-    })
+        method: "map_or".to_string(),
+        args: vec![
+            RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                ty: RustType::Named("usize".to_string()),
+            },
+            RustExpr::Closure {
+                params: vec![crate::RustParam::Named {
+                    name: "v".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                }],
+                body: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("v".to_string())),
+                    method: "len".to_string(),
+                    args: vec![],
+                }),
+                is_move: false,
+            },
+        ],
+    }))
 }
 
 pub(super) fn lower_len(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
-    Some(RustExpr::Cast {
-        expr: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(object.clone()),
-            method: "len".to_string(),
-            args: vec![],
-        }),
-        ty: RustType::I64,
-    })
+    Some(exact_int_from_expr(RustExpr::MethodCall {
+        receiver: Box::new(object.clone()),
+        method: "len".to_string(),
+        args: vec![],
+    }))
 }
