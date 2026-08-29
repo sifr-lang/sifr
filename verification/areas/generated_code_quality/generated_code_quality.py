@@ -20,11 +20,33 @@ from typing import Any, Iterable
 REPO_ROOT = Path(__file__).resolve().parents[3]
 GCQ_ROOT = REPO_ROOT / "verification" / "areas" / "generated_code_quality"
 MANIFEST = GCQ_ROOT / "data" / "corpus_manifest.json"
+QUALITY_DEBT = GCQ_ROOT / "data" / "generated_quality_debt.json"
 TARGET_ROOT = REPO_ROOT / "target" / "sifr_generated_code_quality"
 EVIDENCE_ROOT = TARGET_ROOT / "evidence"
 sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
 
 from sifr_binary import resolve_sifr_binary  # noqa: E402
+from inventory_gates import (  # noqa: E402
+    gate_freshness as run_freshness_gate,
+    gate_inventory as run_inventory_gate,
+)
+from quality_policy import (  # noqa: E402
+    PATTERN_POLICIES,
+    STRICT_CLIPPY_ARGS,
+    assert_negative_pattern,
+    compare_exact_debt,
+    compact_clippy_summary,
+    debt_selection_id,
+    load_debt,
+    merge_output_signatures,
+    merge_signature_summaries,
+    output_signature,
+    parse_clippy_diagnostics,
+    scan_files,
+    validate_debt_owners,
+    validate_clippy_lint_owners,
+    violation_summary,
+)
 
 # Inputs that change generated Rust or its compile environment. Manifest metadata
 # remains part of per-entry selection, not producer cache invalidation.
@@ -41,9 +63,9 @@ PRODUCER_FINGERPRINT_INPUTS = [
         for crate in PRODUCER_FINGERPRINT_CRATES
         for path in ("Cargo.toml", "src")
     ],
-    "verification/areas/generated_code_quality/generated_code_quality.py",
 ]
 PRODUCER_FINGERPRINT_EXTENSIONS = {".lock", ".py", ".rs", ".sifr", ".toml"}
+PRODUCER_CACHE_SCHEMA = b"generated-code-quality-materialization-v2\0"
 
 POSITIVE_GROUPS = {
     "concurrency-runtime-readiness",
@@ -81,162 +103,20 @@ CONCURRENCY_READINESS_DEMOS = {
     "demos/structured_shutdown_demo/main.sifr",
     "demos/sync_channel_demo/main.sifr",
 }
-FORBIDDEN_PATTERNS = [
-    (".unwrap(", re.compile(r"\.unwrap\s*\(")),
-    (".expect(", re.compile(r"\.expect\s*\(")),
-    ("panic!", re.compile(r"\bpanic\s*!")),
-    ("todo!", re.compile(r"\btodo\s*!")),
-    ("unimplemented!", re.compile(r"\bunimplemented\s*!")),
-    ("unsafe", re.compile(r"\bunsafe\b")),
-    ("#[allow(...)]", re.compile(r"#\s*\[\s*allow\s*\(")),
-]
 RUST_RAW_STRING_RE = re.compile(r"r(?P<hashes>#*)\"(?P<body>.*?)\"(?P=hashes)")
 RUST_NORMAL_STRING_RE = re.compile(r'"(?P<body>(?:\\.|[^"\\])*)"')
 GENERATED_SOURCE_CONTEXT_RE = re.compile(
     r"\b(format!|emit_line|RustExpr::Ident|RustType::Named|RustLiteral::Str|push_str)\b"
 )
-GENERATED_CLIPPY_ARGS = [
-    "-D",
-    "warnings",
-    "-A",
-    "dead_code",
-    "-A",
-    "non_camel_case_types",
-    "-A",
-    "non_snake_case",
-    "-A",
-    "unused_assignments",
-    "-A",
-    "unused_allocation",
-    "-A",
-    "unused_imports",
-    "-A",
-    "unused_mut",
-    "-A",
-    "unused_parens",
-    "-A",
-    "unused_variables",
-    "-A",
-    "unreachable_code",
-    "-A",
-    "unreachable_patterns",
-    "-A",
-    "clippy::format_in_format_args",
-    "-A",
-    "clippy::assign_op_pattern",
-    "-A",
-    "clippy::approx_constant",
-    "-A",
-    "clippy::assertions_on_constants",
-    "-A",
-    "clippy::identity_op",
-    "-A",
-    "clippy::inherent_to_string_shadow_display",
-    "-A",
-    "clippy::iter_cloned_collect",
-    "-A",
-    "clippy::manual_is_multiple_of",
-    "-A",
-    "clippy::manual_ok_err",
-    "-A",
-    "clippy::manual_range_contains",
-    "-A",
-    "clippy::manual_swap",
-    "-A",
-    "clippy::map_identity",
-    "-A",
-    "clippy::map_entry",
-    "-A",
-    "clippy::box_collection",
-    "-A",
-    "clippy::borrow_deref_ref",
-    "-A",
-    "clippy::cmp_owned",
-    "-A",
-    "clippy::comparison_to_empty",
-    "-A",
-    "clippy::clone_on_copy",
-    "-A",
-    "clippy::collapsible_if",
-    "-A",
-    "clippy::collapsible_str_replace",
-    "-A",
-    "clippy::double_parens",
-    "-A",
-    "clippy::eq_op",
-    "-A",
-    "clippy::explicit_counter_loop",
-    "-A",
-    "clippy::just_underscores_and_digits",
-    "-A",
-    "clippy::let_unit_value",
-    "-A",
-    "clippy::manual_clamp",
-    "-A",
-    "clippy::manual_div_ceil",
-    "-A",
-    "clippy::needless_borrow",
-    "-A",
-    "clippy::needless_borrows_for_generic_args",
-    "-A",
-    "clippy::needless_bool",
-    "-A",
-    "clippy::needless_range_loop",
-    "-A",
-    "clippy::needless_return",
-    "-A",
-    "clippy::never_loop",
-    "-A",
-    "clippy::neg_multiply",
-    "-A",
-    "clippy::op_ref",
-    "-A",
-    "clippy::print_literal",
-    "-A",
-    "clippy::ptr_arg",
-    "-A",
-    "clippy::partialeq_to_none",
-    "-A",
-    "clippy::nonminimal_bool",
-    "-A",
-    "clippy::question_mark",
-    "-A",
-    "clippy::redundant_closure",
-    "-A",
-    "clippy::redundant_closure_call",
-    "-A",
-    "clippy::redundant_guards",
-    "-A",
-    "clippy::same_item_push",
-    "-A",
-    "clippy::to_string_in_format_args",
-    "-A",
-    "clippy::too_many_arguments",
-    "-A",
-    "clippy::type_complexity",
-    "-A",
-    "clippy::upper_case_acronyms",
-    "-A",
-    "clippy::unnecessary_to_owned",
-    "-A",
-    "clippy::unnecessary_cast",
-    "-A",
-    "clippy::unnecessary_operation",
-    "-A",
-    "clippy::unused_unit",
-    "-A",
-    "clippy::vec_init_then_push",
-    "-A",
-    "clippy::useless_format",
-    "-A",
-    "clippy::useless_vec",
-    "-A",
-    "clippy::useless_conversion",
-    "-A",
-    "clippy::while_let_loop",
-]
-
-
+SOURCE_FORBIDDEN_POLICY_IDS = {
+    "allow-attribute",
+    "expect",
+    "panic",
+    "todo",
+    "unimplemented",
+    "unsafe",
+    "unwrap",
+}
 @dataclasses.dataclass(frozen=True)
 class Entry:
     id: str
@@ -256,11 +136,13 @@ def parse_args() -> argparse.Namespace:
         "mode",
         choices=(
             "corpus",
+            "inventory",
             "panic-scan",
             "rustfmt",
             "clippy",
             "determinism",
             "demos",
+            "freshness",
             "intrinsic-panic-lint",
         ),
     )
@@ -391,6 +273,10 @@ def explicit_entry_ids() -> list[str]:
     return ids
 
 
+def selection_id(entries: list[Entry]) -> str:
+    return debt_selection_id(entry.id for entry in entries)
+
+
 def run_id(mode: str) -> str:
     return f"{mode}-{int(time.time())}-{os.getpid()}"
 
@@ -424,6 +310,7 @@ def producer_fingerprint_files() -> list[Path]:
 @functools.cache
 def producer_fingerprint() -> str:
     digest = hashlib.sha256()
+    digest.update(PRODUCER_CACHE_SCHEMA)
     for path in producer_fingerprint_files():
         digest.update(path.relative_to(REPO_ROOT).as_posix().encode("utf-8"))
         digest.update(b"\0")
@@ -517,17 +404,6 @@ def rust_files(crate_root: Path) -> list[Path]:
     return sorted((crate_root / "src").rglob("*.rs"))
 
 
-def scan_files(paths: Iterable[Path]) -> list[str]:
-    violations: list[str] = []
-    for path in paths:
-        text = path.read_text(encoding="utf-8")
-        for line_number, line in enumerate(text.splitlines(), start=1):
-            for label, pattern in FORBIDDEN_PATTERNS:
-                if pattern.search(line):
-                    violations.append(f"{path}:{line_number}: forbidden generated construct {label}")
-    return violations
-
-
 def codegen_source_files() -> list[Path]:
     src_root = REPO_ROOT / "crates" / "sifr_codegen" / "src"
     return sorted(
@@ -559,18 +435,14 @@ def scan_codegen_source_emissions() -> list[str]:
             if not GENERATED_SOURCE_CONTEXT_RE.search(line):
                 continue
             for literal in rust_string_literals(line):
-                for label, pattern in FORBIDDEN_PATTERNS:
-                    if pattern.search(literal):
+                for policy in PATTERN_POLICIES:
+                    if policy.id not in SOURCE_FORBIDDEN_POLICY_IDS:
+                        continue
+                    if policy.pattern.search(literal):
                         violations.append(
-                            f"{path}:{line_number}: forbidden emitted source construct {label}"
+                            f"{path}:{line_number}: emitted source contains {policy.id}"
                         )
     return violations
-
-
-def assert_negative_scan(seed: Path) -> None:
-    violations = scan_files([seed])
-    if not violations:
-        raise RuntimeError(f"negative panic-scan seed was not rejected: {seed}")
 
 
 def assert_negative_rustfmt(seed: Path, run_root: Path) -> None:
@@ -594,14 +466,28 @@ def write_negative_clippy_crate(seed: Path, run_root: Path) -> Path:
     return crate_root
 
 
-def assert_negative_clippy(seed: Path, run_root: Path) -> None:
+def assert_negative_clippy(seed: Path, run_root: Path, expected_lint: str) -> None:
     crate_root = write_negative_clippy_crate(seed, run_root)
     result = run_command(
-        ["cargo", "clippy", "--manifest-path", str(crate_root / "Cargo.toml"), "--", "-D", "warnings"],
+        [
+            "cargo",
+            "clippy",
+            "--message-format=json",
+            "--manifest-path",
+            str(crate_root / "Cargo.toml"),
+            "--",
+            *STRICT_CLIPPY_ARGS,
+        ],
         check=False,
     )
     if result.returncode == 0:
         raise RuntimeError("negative clippy seed unexpectedly passed")
+    diagnostics = parse_clippy_diagnostics(result.stdout, crate_root)
+    if expected_lint not in diagnostics:
+        raise RuntimeError(
+            f"negative Clippy seed {seed.name} did not trigger {expected_lint}; "
+            f"got {diagnostics}"
+        )
 
 
 def assert_negative_determinism(a: Path, b: Path) -> None:
@@ -670,6 +556,14 @@ def timed_case(bucket: str, case_id: str, action: Any) -> Any:
         )
 
 
+def gate_inventory(_entries: list[Entry], _args: argparse.Namespace) -> None:
+    run_inventory_gate(timed_case, record_evidence, run_id)
+
+
+def gate_freshness(_entries: list[Entry], _args: argparse.Namespace) -> None:
+    run_freshness_gate(timed_case, record_evidence, run_id, run_command, sifr_binary)
+
+
 def gate_corpus(entries: list[Entry], args: argparse.Namespace) -> None:
     run = run_id("corpus")
     run_root = TARGET_ROOT / run
@@ -698,21 +592,50 @@ def gate_panic_scan(entries: list[Entry], args: argparse.Namespace) -> None:
     run_root = TARGET_ROOT / run
     records = []
     try:
-        timed_case(
-            "generated_code_quality",
-            "panic-scan/negative-forbidden-unwrap",
-            lambda: assert_negative_scan(GCQ_ROOT / "negative_seeds" / "forbidden_unwrap.rs"),
-        )
-        for entry in selected_positive_entries(entries, args.group):
+        negative_seeds = {
+            "unwrap": "forbidden_unwrap.rs",
+            "expect": "forbidden_expect.rs",
+            "panic": "forbidden_panic.rs",
+            "todo": "forbidden_todo.rs",
+            "unimplemented": "forbidden_unimplemented.rs",
+            "unsafe": "forbidden_unsafe.rs",
+            "unreachable": "forbidden_unreachable.rs",
+            "process-abort": "forbidden_abort.rs",
+            "process-exit": "forbidden_exit.rs",
+            "direct-index": "forbidden_index.rs",
+            "signed-to-usize": "forbidden_signed_to_usize.rs",
+            "allow-attribute": "forbidden_allow.rs",
+        }
+        for policy_id, filename in negative_seeds.items():
+            timed_case(
+                "generated_code_quality",
+                f"panic-scan/negative-{policy_id}",
+                lambda policy_id=policy_id, filename=filename: assert_negative_pattern(
+                    GCQ_ROOT / "negative_seeds" / filename,
+                    policy_id,
+                ),
+            )
+        debt = load_debt(QUALITY_DEBT)
+        validate_debt_owners(debt)
+        selected = selected_positive_entries(entries, args.group)
+        summaries = []
+        for entry in selected:
             def scan_entry() -> Path:
                 crate_root_inner = materialize_entry(entry, run_root)
-                violations = scan_files(rust_files(crate_root_inner))
-                if violations:
-                    raise RuntimeError("\n".join([f"{entry.id}: forbidden constructs found", *violations]))
+                actual = violation_summary(
+                    scan_files(rust_files(crate_root_inner), crate_root_inner)
+                )
+                summaries.append((entry.id, actual))
                 return crate_root_inner
 
             crate_root = timed_case("generated_code_quality", f"panic-scan/{entry.id}", scan_entry)
             records.append(record_for_entry(entry, crate_root, "passed"))
+        compare_exact_debt(
+            category="safety",
+            entry_id=selection_id(selected),
+            actual=merge_signature_summaries(summaries),
+            debt=debt,
+        )
         evidence = record_evidence("panic-scan", run, records)
         print(f"generated-code panic scan passed; evidence={evidence.relative_to(REPO_ROOT)}")
     except Exception:
@@ -733,15 +656,41 @@ def gate_rustfmt(entries: list[Entry], args: argparse.Namespace) -> None:
             "rustfmt/negative-format-violation",
             lambda: assert_negative_rustfmt(GCQ_ROOT / "negative_seeds" / "format_violation.rs", run_root),
         )
-        for entry in selected_positive_entries(entries, args.group):
+        debt = load_debt(QUALITY_DEBT)
+        validate_debt_owners(debt)
+        selected = selected_positive_entries(entries, args.group)
+        signatures = []
+        for entry in selected:
             def format_entry() -> Path:
                 crate_root_inner = materialize_entry(entry, run_root)
-                run_command(["cargo", "fmt", "--manifest-path", str(crate_root_inner / "Cargo.toml")])
-                run_command(["cargo", "fmt", "--manifest-path", str(crate_root_inner / "Cargo.toml"), "--", "--check"])
+                result = run_command(
+                    [
+                        "cargo",
+                        "fmt",
+                        "--manifest-path",
+                        str(crate_root_inner / "Cargo.toml"),
+                        "--",
+                        "--check",
+                    ],
+                    check=False,
+                )
+                actual = (
+                    None
+                    if result.returncode == 0
+                    else output_signature(result.stdout + result.stderr, crate_root_inner)
+                )
+                if actual is not None:
+                    signatures.append((entry.id, actual))
                 return crate_root_inner
 
             crate_root = timed_case("generated_code_quality", f"rustfmt/{entry.id}", format_entry)
             records.append(record_for_entry(entry, crate_root, "passed"))
+        compare_exact_debt(
+            category="rustfmt",
+            entry_id=selection_id(selected),
+            actual=merge_output_signatures(signatures),
+            debt=debt,
+        )
         evidence = record_evidence("rustfmt", run, records)
         print(f"generated-code rustfmt passed; evidence={evidence.relative_to(REPO_ROOT)}")
     except Exception:
@@ -757,29 +706,62 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
     run_root = TARGET_ROOT / run
     records = []
     try:
-        timed_case(
-            "generated_code_quality",
-            "clippy/negative-clippy-warning",
-            lambda: assert_negative_clippy(GCQ_ROOT / "negative_seeds" / "clippy_warning.rs", run_root),
-        )
-        for entry in selected_positive_entries(entries, args.group):
+        negative_seeds = {
+            "clippy::arithmetic_side_effects": "forbidden_arithmetic.rs",
+            "clippy::cast_sign_loss": "forbidden_allocation_width.rs",
+            "clippy::needless_return": "clippy_warning.rs",
+        }
+        for lint, filename in negative_seeds.items():
+            timed_case(
+                "generated_code_quality",
+                f"clippy/negative-{lint.removeprefix('clippy::')}",
+                lambda lint=lint, filename=filename: assert_negative_clippy(
+                    GCQ_ROOT / "negative_seeds" / filename,
+                    run_root,
+                    lint,
+                ),
+            )
+        debt = load_debt(QUALITY_DEBT)
+        validate_debt_owners(debt)
+        selected = selected_positive_entries(entries, args.group)
+        summaries = []
+        for entry in selected:
             def clippy_entry() -> Path:
                 crate_root_inner = materialize_entry(entry, run_root)
-                run_command(["cargo", "fmt", "--manifest-path", str(crate_root_inner / "Cargo.toml")])
-                run_command(
+                result = run_command(
                     [
                         "cargo",
                         "clippy",
+                        "--message-format=json",
                         "--manifest-path",
                         str(crate_root_inner / "Cargo.toml"),
                         "--",
-                        *GENERATED_CLIPPY_ARGS,
+                        *STRICT_CLIPPY_ARGS,
                     ],
+                    check=False,
                 )
+                actual = parse_clippy_diagnostics(result.stdout, crate_root_inner)
+                if result.returncode != 0 and not actual:
+                    raise RuntimeError(
+                        f"{entry.id}: clippy failed without classifiable diagnostics\n"
+                        f"{result.stderr}"
+                    )
+                summaries.append((entry.id, actual))
                 return crate_root_inner
 
             crate_root = timed_case("generated_code_quality", f"clippy/{entry.id}", clippy_entry)
             records.append(record_for_entry(entry, crate_root, "passed"))
+        merged = merge_signature_summaries(summaries)
+        full_selection = not args.group and not explicit_entry_ids() and not os.environ.get(
+            "SIFR_GCQ_MAX_ENTRIES"
+        )
+        validate_clippy_lint_owners(merged, debt, require_exact=full_selection)
+        compare_exact_debt(
+            category="clippy",
+            entry_id=selection_id(selected),
+            actual=compact_clippy_summary(merged),
+            debt=debt,
+        )
         evidence = record_evidence("clippy", run, records)
         print(f"generated-code clippy passed; evidence={evidence.relative_to(REPO_ROOT)}")
     except Exception:
@@ -869,6 +851,8 @@ def main() -> None:
     try:
         if args.mode == "corpus":
             gate_corpus(entries, args)
+        elif args.mode == "inventory":
+            gate_inventory(entries, args)
         elif args.mode == "panic-scan":
             gate_panic_scan(entries, args)
         elif args.mode == "rustfmt":
@@ -879,6 +863,8 @@ def main() -> None:
             gate_determinism(entries, args)
         elif args.mode == "demos":
             gate_demos(entries, args)
+        elif args.mode == "freshness":
+            gate_freshness(entries, args)
         elif args.mode == "intrinsic-panic-lint":
             gate_intrinsic_panic_lint(entries, args)
         else:

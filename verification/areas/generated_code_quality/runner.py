@@ -27,6 +27,7 @@ POSITIVE_ENTRY_GATES = {"corpus", "panic-scan", "rustfmt", "clippy", "determinis
 
 PROFILE_SUITES = {
     "smoke": [
+        ("inventory", None, None),
         ("corpus", None, SMOKE_ENTRY_IDS),
         ("panic-scan", None, SMOKE_ENTRY_IDS),
         ("intrinsic-panic-lint", None, None),
@@ -34,6 +35,7 @@ PROFILE_SUITES = {
         ("determinism", None, SMOKE_ENTRY_IDS),
     ],
     "representative": [
+        ("inventory", None, None),
         ("corpus", "12", None),
         ("panic-scan", "12", None),
         ("intrinsic-panic-lint", None, None),
@@ -41,8 +43,10 @@ PROFILE_SUITES = {
         ("clippy", "12", None),
         ("determinism", "12", None),
         ("demos", None, None),
+        ("freshness", None, None),
     ],
     "full": [
+        ("inventory", None, None),
         ("corpus", None, None),
         ("panic-scan", None, None),
         ("intrinsic-panic-lint", None, None),
@@ -50,16 +54,19 @@ PROFILE_SUITES = {
         ("clippy", None, None),
         ("determinism", None, None),
         ("demos", None, None),
+        ("freshness", None, None),
     ],
 }
 GATE_SUITES = {
     "corpus",
+    "inventory",
     "panic-scan",
     "intrinsic-panic-lint",
     "rustfmt",
     "clippy",
     "determinism",
     "demos",
+    "freshness",
 }
 
 

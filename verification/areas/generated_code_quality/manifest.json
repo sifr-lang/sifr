@@ -50,6 +50,19 @@
       ]
     },
     {
+      "name": "inventory",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "inventory",
+          "entry": "verification/areas/generated_code_quality/data/surface_inventory.json",
+          "command": "generated-code-quality-gate",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "corpus",
       "kind": "adapter",
       "cases": [
@@ -121,6 +134,19 @@
         {
           "id": "determinism",
           "entry": "verification/areas/generated_code_quality/data/corpus_manifest.json",
+          "command": "generated-code-quality-gate",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "freshness",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "freshness",
+          "entry": "verification/areas/generated_code_quality/data/generated_quality_debt.json",
           "command": "generated-code-quality-gate",
           "expect_exit_code": 0,
           "diagnostic_formats": []

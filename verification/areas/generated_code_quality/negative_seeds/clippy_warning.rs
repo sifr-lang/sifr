@@ -1,4 +1,7 @@
+fn answer() -> i64 {
+    return 1;
+}
+
 fn main() {
-    let value = 0 as i64;
-    println!("{value}");
+    println!("{}", answer());
 }

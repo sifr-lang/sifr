@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import argparse
 import copy
+import functools
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -19,7 +21,7 @@ ACTIONABLE_DISPOSITIONS = {"confirmed", "partially_confirmed"}
 SEVERITIES = {"blocking", "informational"}
 FINDING_ID_RE = re.compile(r"ERQ-[0-9]{3}\Z")
 SHA_RE = re.compile(r"[0-9a-f]{40}\Z")
-GLOB_CHARS = frozenset("*?[")
+REQUIRED_BASELINE_CONTEXT_KEYS = {"rustfmt_command", "rustfmt_version", "note"}
 
 
 def load_inventory(path: Path) -> dict[str, Any]:
@@ -72,6 +74,8 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
         for value in baseline_context.values()
     ):
         errors.append("baseline_context must contain non-empty text values")
+    elif set(baseline_context) != REQUIRED_BASELINE_CONTEXT_KEYS:
+        errors.append("baseline_context must contain the exact required keys")
 
     raw_findings = payload.get("findings")
     if not isinstance(raw_findings, list) or not raw_findings:
@@ -105,10 +109,21 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
             errors.append(f"{finding_label}.evidence must contain non-empty paths")
         else:
             for evidence_path in evidence:
-                if not evidence_exists(evidence_path):
+                if not evidence_exists(evidence_path, baseline_commit):
                     errors.append(
                         f"{finding_label}.evidence path does not exist: {evidence_path}"
                     )
+        anchor = raw_finding.get("semantic_anchor")
+        if isinstance(evidence, list):
+            errors.extend(
+                validate_semantic_anchor(
+                    finding_label,
+                    anchor,
+                    evidence,
+                    baseline if isinstance(baseline, dict) else {},
+                    baseline_commit if isinstance(baseline_commit, str) else "",
+                )
+            )
         sources = raw_finding.get("sources")
         if not isinstance(sources, list) or not sources or any(
             value not in {"internal", "external"} for value in sources
@@ -155,13 +170,153 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
     return errors
 
 
-def evidence_exists(value: str) -> bool:
+@functools.cache
+def baseline_paths(commit: str) -> tuple[str, ...]:
+    if SHA_RE.fullmatch(commit) is None:
+        return ()
+    result = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", commit],
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return tuple(result.stdout.splitlines()) if result.returncode == 0 else ()
+
+
+@functools.cache
+def evidence_exists(value: str, baseline_commit: str = "") -> bool:
     path = Path(value)
-    if path.is_absolute() or ".." in path.parts:
+    if path.is_absolute() or ".." in path.parts or "?" in value or "[" in value:
         return False
-    if any(char in value for char in GLOB_CHARS):
-        return any(REPO_ROOT.glob(value))
-    return (REPO_ROOT / path).exists()
+    matches = list(REPO_ROOT.glob(value)) if "*" in value else [REPO_ROOT / path]
+    repo = REPO_ROOT.resolve()
+    current_exists = bool(matches) and all(
+        match.exists() and match.resolve().is_relative_to(repo)
+        for match in matches
+    )
+    if current_exists:
+        return True
+    historical = baseline_paths(baseline_commit)
+    if "*" in value:
+        return any(Path(candidate).match(value) for candidate in historical)
+    return value in historical or any(candidate.startswith(f"{value}/") for candidate in historical)
+
+
+def evidence_covers(anchor_path: str, evidence_paths: list[str]) -> bool:
+    candidate = REPO_ROOT / anchor_path
+    for evidence in evidence_paths:
+        if "*" in evidence and candidate.match(evidence):
+            return True
+        evidence_path = REPO_ROOT / evidence
+        if evidence_path.is_dir() and candidate.is_relative_to(evidence_path):
+            return True
+        if evidence == anchor_path:
+            return True
+    return False
+
+
+@functools.cache
+def read_anchor_text(path: str, revision: str, baseline_commit: str) -> str:
+    if revision == "current":
+        return (REPO_ROOT / path).read_text(encoding="utf-8")
+    result = subprocess.run(
+        ["git", "show", f"{baseline_commit}:{path}"],
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise ValueError(f"cannot read baseline anchor {path}: {result.stderr.strip()}")
+    return result.stdout
+
+
+def validate_semantic_anchor(
+    finding_label: str,
+    anchor: object,
+    evidence_paths: list[str],
+    baseline: dict[str, Any],
+    baseline_commit: str,
+) -> list[str]:
+    prefix = f"{finding_label}.semantic_anchor"
+    if not isinstance(anchor, dict):
+        return [f"{prefix} must be an object"]
+    kind = anchor.get("kind")
+    if kind == "metric":
+        if set(anchor) != {"kind", "key"}:
+            return [f"{prefix} metric must contain exactly kind and key"]
+        key = anchor.get("key")
+        if not isinstance(key, str) or key not in baseline:
+            return [f"{prefix} metric must name an existing baseline key"]
+        return []
+    if kind == "text":
+        if set(anchor) != {"kind", "revision", "path", "contains"}:
+            return [f"{prefix} text must contain exactly kind, revision, path, and contains"]
+        revision = anchor.get("revision")
+        path = anchor.get("path")
+        contains = anchor.get("contains")
+        if revision not in {"baseline", "current"}:
+            return [f"{prefix}.revision must be baseline or current"]
+        if not isinstance(path, str) or not evidence_exists(path, baseline_commit):
+            return [f"{prefix}.path must be an exact repository path"]
+        if not evidence_covers(path, evidence_paths):
+            return [f"{prefix}.path must be covered by finding evidence"]
+        if not isinstance(contains, str) or not contains.strip():
+            return [f"{prefix}.contains must be non-empty text"]
+        try:
+            source = read_anchor_text(path, revision, baseline_commit)
+        except (OSError, UnicodeDecodeError, ValueError) as error:
+            return [f"{prefix}: {error}"]
+        if contains not in source:
+            return [f"{prefix} text is not present in {revision} {path}"]
+        return []
+    if kind == "search_count":
+        if set(anchor) != {"kind", "roots", "patterns", "contains", "expected_count"}:
+            return [f"{prefix} search_count has invalid fields"]
+        roots = anchor.get("roots")
+        patterns = anchor.get("patterns")
+        contains = anchor.get("contains")
+        expected_count = anchor.get("expected_count")
+        if (
+            not isinstance(roots, list)
+            or not roots
+            or any(not isinstance(root, str) or not root.strip() for root in roots)
+            or not isinstance(patterns, list)
+            or not patterns
+            or any(pattern not in {"**/*.rs", "**/*.sifr"} for pattern in patterns)
+            or not isinstance(contains, str)
+            or not contains.strip()
+            or not isinstance(expected_count, int)
+            or isinstance(expected_count, bool)
+            or expected_count < 0
+        ):
+            return [f"{prefix} search_count fields are invalid"]
+        files: set[Path] = set()
+        for root in roots:
+            root_path = (REPO_ROOT / root).resolve()
+            if (
+                Path(root).is_absolute()
+                or ".." in Path(root).parts
+                or not root_path.is_relative_to(REPO_ROOT.resolve())
+                or not root_path.is_dir()
+                or not evidence_covers(root, evidence_paths)
+            ):
+                return [f"{prefix} search root must be an evidence-covered repository directory"]
+            for pattern in patterns:
+                for path in root_path.glob(pattern):
+                    if path.is_file() and path.resolve().is_relative_to(REPO_ROOT.resolve()):
+                        files.add(path)
+        actual_count = sum(
+            contains in path.read_text(encoding="utf-8")
+            for path in files
+        )
+        if actual_count != expected_count:
+            return [
+                f"{prefix} search count mismatch expected={expected_count} actual={actual_count}"
+            ]
+        return []
+    return [f"{prefix}.kind must be metric, text, or search_count"]
 
 
 def expect_invalid(payload: dict[str, Any], expected: str) -> None:
@@ -200,6 +355,10 @@ def run_self_test(payload: dict[str, Any]) -> None:
     invalid_item_type["implementation_items"][0] = True
     expect_invalid(invalid_item_type, "implementation_items must contain integers only")
 
+    empty_items = copy.deepcopy(payload)
+    empty_items["implementation_items"] = []
+    expect_invalid(empty_items, "implementation_items must be a non-empty list")
+
     duplicate_item = copy.deepcopy(payload)
     duplicate_item["implementation_items"][1] = 1
     expect_invalid(duplicate_item, "implementation_items must be unique")
@@ -212,9 +371,17 @@ def run_self_test(payload: dict[str, Any]) -> None:
     invalid_baseline["baseline"]["demo_emitted_rs_files"] = -1
     expect_invalid(invalid_baseline, "baseline values must be non-negative integers")
 
+    empty_baseline = copy.deepcopy(payload)
+    empty_baseline["baseline"] = {}
+    expect_invalid(empty_baseline, "baseline must be a non-empty object")
+
     invalid_baseline_context = copy.deepcopy(payload)
     invalid_baseline_context["baseline_context"]["rustfmt_command"] = ""
     expect_invalid(invalid_baseline_context, "baseline_context must contain non-empty text values")
+
+    missing_baseline_context_key = copy.deepcopy(payload)
+    missing_baseline_context_key["baseline_context"].pop("rustfmt_version")
+    expect_invalid(missing_baseline_context_key, "baseline_context must contain the exact required keys")
 
     missing_findings = copy.deepcopy(payload)
     missing_findings["findings"] = []
@@ -232,6 +399,10 @@ def run_self_test(payload: dict[str, Any]) -> None:
     missing_title["findings"][0]["title"] = ""
     expect_invalid(missing_title, ".title must be non-empty text")
 
+    missing_mechanism = copy.deepcopy(payload)
+    missing_mechanism["findings"][0]["mechanism"] = ""
+    expect_invalid(missing_mechanism, ".mechanism must be non-empty text")
+
     invalid_evidence_shape = copy.deepcopy(payload)
     invalid_evidence_shape["findings"][0]["evidence"] = []
     expect_invalid(invalid_evidence_shape, ".evidence must contain non-empty paths")
@@ -239,6 +410,109 @@ def run_self_test(payload: dict[str, Any]) -> None:
     nonexistent_evidence = copy.deepcopy(payload)
     nonexistent_evidence["findings"][0]["evidence"] = ["missing/evidence.rs"]
     expect_invalid(nonexistent_evidence, ".evidence path does not exist")
+
+    ambiguous_glob = copy.deepcopy(payload)
+    ambiguous_glob["findings"][0]["evidence"] = ["demos/[abc]*/emitted.rs"]
+    expect_invalid(ambiguous_glob, ".evidence path does not exist")
+
+    missing_anchor = copy.deepcopy(payload)
+    missing_anchor["findings"][0].pop("semantic_anchor")
+    expect_invalid(missing_anchor, ".semantic_anchor must be an object")
+
+    metric_extra_field = copy.deepcopy(payload)
+    find_anchor_kind(metric_extra_field, "metric")["extra"] = True
+    expect_invalid(metric_extra_field, "metric must contain exactly kind and key")
+
+    invalid_metric_key = copy.deepcopy(payload)
+    find_anchor_kind(invalid_metric_key, "metric")["key"] = "missing-baseline-key"
+    expect_invalid(invalid_metric_key, "metric must name an existing baseline key")
+
+    text_extra_field = copy.deepcopy(payload)
+    find_anchor_kind(text_extra_field, "text")["extra"] = True
+    expect_invalid(
+        text_extra_field,
+        "text must contain exactly kind, revision, path, and contains",
+    )
+
+    invalid_text_revision = copy.deepcopy(payload)
+    find_anchor_kind(invalid_text_revision, "text")["revision"] = "unknown"
+    expect_invalid(invalid_text_revision, ".semantic_anchor.revision must be baseline or current")
+
+    stale_anchor = copy.deepcopy(payload)
+    stale_anchor["findings"][0]["semantic_anchor"] = {
+        "kind": "text",
+        "revision": "current",
+        "path": "verification/areas/generated_code_quality/runner.py",
+        "contains": "definitely-not-present-anchor-text",
+    }
+    expect_invalid(stale_anchor, ".semantic_anchor text is not present")
+
+    escaped_anchor = copy.deepcopy(payload)
+    escaped_anchor["findings"][0]["semantic_anchor"] = {
+        "kind": "text",
+        "revision": "current",
+        "path": "../outside",
+        "contains": "outside",
+    }
+    expect_invalid(escaped_anchor, ".semantic_anchor.path must be an exact repository path")
+
+    uncovered_anchor = copy.deepcopy(payload)
+    uncovered_anchor["findings"][0]["semantic_anchor"] = {
+        "kind": "text",
+        "revision": "current",
+        "path": "Cargo.toml",
+        "contains": "[workspace]",
+    }
+    expect_invalid(uncovered_anchor, ".semantic_anchor.path must be covered by finding evidence")
+
+    empty_text_anchor = copy.deepcopy(payload)
+    find_anchor_kind(empty_text_anchor, "text")["contains"] = ""
+    expect_invalid(empty_text_anchor, ".semantic_anchor.contains must be non-empty text")
+
+    unreadable_baseline_anchor = copy.deepcopy(payload)
+    unreadable_baseline_anchor["findings"][0]["evidence"] = [
+        "verification/areas/generated_code_quality/inventory_gates.py"
+    ]
+    unreadable_baseline_anchor["findings"][0]["semantic_anchor"] = {
+        "kind": "text",
+        "revision": "baseline",
+        "path": "verification/areas/generated_code_quality/inventory_gates.py",
+        "contains": "Repository-surface and checked-in emission gates",
+    }
+    expect_invalid(unreadable_baseline_anchor, "cannot read baseline anchor")
+
+    search_extra_field = copy.deepcopy(payload)
+    find_anchor_kind(search_extra_field, "search_count")["extra"] = True
+    expect_invalid(search_extra_field, ".semantic_anchor search_count has invalid fields")
+
+    invalid_search_fields = copy.deepcopy(payload)
+    invalid_search_fields["findings"][0]["semantic_anchor"] = {
+        "kind": "search_count",
+        "roots": ["verification/areas/generated_code_quality"],
+        "patterns": ["**/*.py"],
+        "contains": "generated",
+        "expected_count": 0,
+    }
+    expect_invalid(invalid_search_fields, ".semantic_anchor search_count fields are invalid")
+
+    uncovered_search_root = copy.deepcopy(payload)
+    find_anchor_kind(uncovered_search_root, "search_count")["roots"] = ["stdlib/sifr"]
+    expect_invalid(
+        uncovered_search_root,
+        ".semantic_anchor search root must be an evidence-covered repository directory",
+    )
+
+    stale_search_count = copy.deepcopy(payload)
+    search_anchor = find_anchor_kind(stale_search_count, "search_count")
+    search_anchor["expected_count"] += 1
+    expect_invalid(stale_search_count, ".semantic_anchor search count mismatch")
+
+    unknown_anchor_kind = copy.deepcopy(payload)
+    unknown_anchor_kind["findings"][0]["semantic_anchor"] = {"kind": "unknown"}
+    expect_invalid(
+        unknown_anchor_kind,
+        ".semantic_anchor.kind must be metric, text, or search_count",
+    )
 
     invalid_sources = copy.deepcopy(payload)
     invalid_sources["findings"][0]["sources"] = ["unknown"]
@@ -305,6 +579,19 @@ def find_disposition(payload: dict[str, Any], disposition: str) -> dict[str, Any
     ]
     if not matches:
         raise AssertionError(f"self-test fixture needs a {disposition} finding")
+    return matches[0]
+
+
+def find_anchor_kind(payload: dict[str, Any], kind: str) -> dict[str, Any]:
+    matches = [
+        finding["semantic_anchor"]
+        for finding in payload["findings"]
+        if isinstance(finding, dict)
+        and isinstance(finding.get("semantic_anchor"), dict)
+        and finding["semantic_anchor"].get("kind") == kind
+    ]
+    if not matches:
+        raise AssertionError(f"self-test fixture needs a {kind} semantic anchor")
     return matches[0]
 
 

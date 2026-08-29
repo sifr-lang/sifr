@@ -31,6 +31,7 @@
       "owner_item": 1,
       "mechanism": "The manifest pins selected entries and does not discover every emitted entrypoint and checked-in generated companion.",
       "evidence": ["verification/areas/generated_code_quality/data/corpus_manifest.json", "verification/areas/generated_code_quality/runner.py"],
+      "semantic_anchor": {"kind": "text", "revision": "baseline", "path": "verification/areas/generated_code_quality/runner.py", "contains": "PROFILE_SUITES"},
       "sources": ["internal", "external"]
     },
     {
@@ -41,6 +42,7 @@
       "owner_item": 1,
       "mechanism": "At the baseline, rustfmt --check rejects 226 of 265 demos/**/emitted.rs files.",
       "evidence": ["demos/**/emitted.rs"],
+      "semantic_anchor": {"kind": "metric", "key": "demo_emitted_rs_rustfmt_failures"},
       "sources": ["internal", "external"]
     },
     {
@@ -51,6 +53,7 @@
       "owner_item": 1,
       "mechanism": "GENERATED_CLIPPY_ARGS contains 68 -A flags, including ptr_arg, needless_return, map_identity, clone_on_copy, unreachable_code, and ordinary warning classes.",
       "evidence": ["verification/areas/generated_code_quality/generated_code_quality.py"],
+      "semantic_anchor": {"kind": "text", "revision": "baseline", "path": "verification/areas/generated_code_quality/generated_code_quality.py", "contains": "GENERATED_CLIPPY_ARGS"},
       "sources": ["internal", "external"]
     },
     {
@@ -61,6 +64,7 @@
       "owner_item": 1,
       "mechanism": "The token scan covers unwrap, expect, panic, todo, unimplemented, unsafe, and allow, but not unreachable, abort, exit, indexing, arithmetic overflow, allocation casts, or capacity overflow.",
       "evidence": ["verification/areas/generated_code_quality/generated_code_quality.py", "verification/areas/generated_code_quality/panic_inventory.md"],
+      "semantic_anchor": {"kind": "text", "revision": "baseline", "path": "verification/areas/generated_code_quality/generated_code_quality.py", "contains": "FORBIDDEN_PATTERNS"},
       "sources": ["internal", "external"]
     },
     {
@@ -71,6 +75,7 @@
       "owner_item": 1,
       "mechanism": "The quality path permits formatting generated projects before the check, so a producer that emits unformatted Rust can pass.",
       "evidence": ["verification/areas/generated_code_quality/generated_code_quality.py"],
+      "semantic_anchor": {"kind": "text", "revision": "baseline", "path": "verification/areas/generated_code_quality/generated_code_quality.py", "contains": "run_command([\"cargo\", \"fmt\", \"--manifest-path\", str(crate_root_inner / \"Cargo.toml\")])"},
       "sources": ["external"]
     },
     {
@@ -81,6 +86,7 @@
       "owner_item": 2,
       "mechanism": "General Type::Int lowering remains i64 while selected large constants and analyzed paths use SifrInt, producing representation-dependent semantics.",
       "evidence": ["crates/sifr_codegen/src/preamble/io_bytes_methods.rs", "crates/sifr_codegen/src/function_emitter/scope_and_function_types.rs", "crates/sifr_codegen/src/lower_item/module_constants.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/lower_item/module_constants.rs", "contains": "\"SifrInt\".to_string()"},
       "sources": ["internal", "external"]
     },
     {
@@ -91,6 +97,7 @@
       "owner_item": 2,
       "mechanism": "i64 arithmetic is emitted directly for paths outside selective SifrInt promotion, allowing debug panic and release wrapping to diverge.",
       "evidence": ["demos/integer_safety/emitted.rs", "crates/sifr_codegen/src/expr_render_helpers/operator_rewrites.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/expr_render_helpers/operator_rewrites.rs", "contains": "Ok(Some(crate::RustExpr::BinOp"},
       "sources": ["internal", "external"]
     },
     {
@@ -101,6 +108,7 @@
       "owner_item": null,
       "mechanism": "The external report generalized a benchmark helper or generated artifact to every canonical emitted crate; the repository's maintained emitter does not install one universal safe_math.rs body in every program.",
       "evidence": ["verification/areas/algorithmic_compatibility", "crates/sifr_codegen/src"],
+      "semantic_anchor": {"kind": "search_count", "roots": ["verification/areas/algorithmic_compatibility", "crates/sifr_codegen/src"], "patterns": ["**/*.rs", "**/*.sifr"], "contains": "safe_math", "expected_count": 20},
       "sources": ["external"],
       "rejection_reason": "The universal-count claim is not reproducible. Its underlying integer division and modulo semantics are already owned by Item 2."
     },
@@ -112,6 +120,7 @@
       "owner_item": 3,
       "mechanism": "Baseline demo emission contains 2,098 unreachable! macros, 5 process aborts, and 8 process exits rather than one checked error model.",
       "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src"],
+      "semantic_anchor": {"kind": "metric", "key": "demo_emitted_unreachable_macros"},
       "sources": ["internal", "external"]
     },
     {
@@ -122,6 +131,7 @@
       "owner_item": 3,
       "mechanism": "Division, decimal construction, dictionary proof discharge, and value-expression failures use unreachable, exit, abort, or fallback values instead of one typed checked path.",
       "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src/expr_render_helpers", "crates/sifr_codegen/src/intrinsic_method_emitters"],
+      "semantic_anchor": {"kind": "text", "revision": "baseline", "path": "demos/borrow_lowering/emitted.rs", "contains": "unreachable!(\"sifr union narrowing fell through exhaustive branch chain\")"},
       "sources": ["internal", "external"]
     },
     {
@@ -132,6 +142,7 @@
       "owner_item": 4,
       "mechanism": "Direct Rust indexing coexists with guarded access, including nested access and lowering-specific paths.",
       "evidence": ["crates/sifr_codegen/src/lower_expr", "crates/sifr_codegen/src/stmt_support_emitter", "demos/**/emitted.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/lower_expr/collections_and_comprehensions.rs", "contains": "RustExpr::Index"},
       "sources": ["internal", "external"]
     },
     {
@@ -142,6 +153,7 @@
       "owner_item": 4,
       "mechanism": "Some assignment lowering guards mutation with get_mut/if-let and omits the required IndexError branch.",
       "evidence": ["crates/sifr_codegen/src/lower_stmt/subscript_assignment.rs", "crates/sifr_codegen/src/stmt_support_emitter/nested_subscript_assignment.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/lower_stmt/subscript_assignment.rs", "contains": "method: \"get_mut\".to_string()"},
       "sources": ["internal", "external"]
     },
     {
@@ -152,6 +164,7 @@
       "owner_item": 4,
       "mechanism": "Generated unpack expressions derive tail indices from len before one shared checked cardinality plan.",
       "evidence": ["demos/slice_unpacking/emitted.rs", "crates/sifr_codegen/src/helpers/helpers_impl.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "baseline", "path": "demos/slice_unpacking/emitted.rs", "contains": "_star_tmp[_star_tmp.len() - 1]"},
       "sources": ["external"]
     },
     {
@@ -162,6 +175,7 @@
       "owner_item": null,
       "mechanism": "Current membership lowering uses contains-style operations; or_insert occurrences serve mutation/default construction paths and do not establish a corpus-wide read mutation.",
       "evidence": ["crates/sifr_codegen/src/intrinsic_method_emitters/collection_methods.rs", "crates/sifr_codegen/src/lower_expr"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/lower_expr/leaves_and_plain_calls.rs", "contains": "Type::Dict(_, _) => \"contains_key\""},
       "sources": ["external"],
       "rejection_reason": "The cited mechanism is not reproducible as a read-only membership lowering defect. Item 4 still proves this invariant with a regression."
     },
@@ -173,16 +187,29 @@
       "owner_item": 5,
       "mechanism": "Generator lowering buffers yielded values in Vec-backed output instead of preserving resumable execution.",
       "evidence": ["crates/sifr_codegen/src/function_emitter/generator_bodies.rs", "demos/generators/emitted.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/function_emitter/generator_bodies.rs", "contains": "name: \"_yields\".to_string()"},
       "sources": ["internal", "external"]
     },
     {
       "id": "ERQ-016",
-      "title": "Infinite iterator and slicing semantics are bounded or weakly validated",
+      "title": "Infinite count iteration is capped at a finite prefix",
       "disposition": "confirmed",
       "severity": "blocking",
       "owner_item": 5,
-      "mechanism": "count-style generation has a finite implementation cap and islice-style paths do not uniformly reject invalid negative or zero-step arguments with canonical timing.",
-      "evidence": ["crates/sifr_codegen/src", "demos/itertools/emitted.rs"],
+      "mechanism": "The count() implementation delegates to count_from(start, step, 10000), so an API that must be unbounded stops after a fixed finite prefix.",
+      "evidence": ["stdlib/sifr/itertools.sifr", "demos/itertools/emitted.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "stdlib/sifr/itertools.sifr", "contains": "return count_from(start, step, 10000)"},
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-033",
+      "title": "Invalid islice steps are adapted instead of rejected",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 5,
+      "mechanism": "The islice implementation rewrites a non-positive stride to one and truncates the stop boundary to the start instead of raising the canonical error.",
+      "evidence": ["stdlib/sifr/itertools.sifr", "crates/sifr/tests/e2e/pass/cpython_itertools.sifr", "demos/itertools/emitted.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "stdlib/sifr/itertools.sifr", "contains": "if stride <= 0:\n        stride = 1\n        actual_stop = actual_start"},
       "sources": ["internal", "external"]
     },
     {
@@ -193,6 +220,7 @@
       "owner_item": 6,
       "mechanism": "ljust, rjust, zfill, and center lower signed widths through unchecked usize conversion before allocation.",
       "evidence": ["crates/sifr_codegen/src/methods/string.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/methods/string.rs", "contains": "ty: RustType::Named(\"usize\".to_string())"},
       "sources": ["internal", "external"]
     },
     {
@@ -203,6 +231,7 @@
       "owner_item": 6,
       "mechanism": "Generated try/except and IO adapters reconstruct IOError with a generic category instead of preserving the source kind.",
       "evidence": ["crates/sifr_codegen/src/preamble/io_file_handles.rs", "crates/sifr_codegen/src/class_error_emitter.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/preamble/io_file_handles.rs", "contains": "Some(::std::io::ErrorKind::{kind})"},
       "sources": ["internal", "external"]
     },
     {
@@ -213,18 +242,19 @@
       "owner_item": 6,
       "mechanism": "The generated file-handle read_bytes adapter can consume the full remaining stream regardless of the requested size.",
       "evidence": ["crates/sifr_codegen/src/preamble/io_bytes_methods.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/preamble/io_bytes_methods.rs", "contains": "\"read_to_end\".to_string()"},
       "sources": ["internal", "external"]
     },
     {
       "id": "ERQ-020",
       "title": "Decimal precision silently falls back in a live user path",
-      "disposition": "rejected",
-      "severity": "informational",
-      "owner_item": null,
-      "mechanism": "The external report treated a defensive or stale emitted shape as a demonstrated live precision-loss path.",
-      "evidence": ["crates/sifr_codegen/src", "crates/sifr_runtime/src"],
-      "sources": ["external"],
-      "rejection_reason": "A live precision-loss reproduction was not established. Item 6 nevertheless makes silent precision fallback structurally impossible."
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 6,
+      "mechanism": "BigDecimal default-context lowering calls with_prec(28) and silently falls back to the unmodified default context when precision construction fails.",
+      "evidence": ["crates/sifr_codegen/src/methods/decimal.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/methods/decimal.rs", "contains": "method: \"unwrap_or_else\".to_string()"},
+      "sources": ["internal", "external"]
     },
     {
       "id": "ERQ-021",
@@ -234,6 +264,7 @@
       "owner_item": 7,
       "mechanism": "Baseline demos contain 11,243 &String and 2,875 &Vec occurrences where str and slices or owned values are generally the idiomatic boundary.",
       "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src/function_emitter"],
+      "semantic_anchor": {"kind": "metric", "key": "demo_emitted_string_references"},
       "sources": ["internal", "external"]
     },
     {
@@ -244,6 +275,7 @@
       "owner_item": 7,
       "mechanism": "Baseline demos contain 9,853 clone calls and 1,079 cloned calls, including clone-then-borrow, clone-on-copy, full-row/container copies, and deep recursive traversal copies.",
       "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src/ir_optimize/mutability_and_clone_rewrites.rs"],
+      "semantic_anchor": {"kind": "metric", "key": "demo_emitted_clone_calls"},
       "sources": ["internal", "external"]
     },
     {
@@ -254,6 +286,7 @@
       "owner_item": 8,
       "mechanism": "Generated output includes unreachable statements after terminators, needless returns, identity maps, redundant closures, constant branches, and repeated formatting scaffolds.",
       "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src/ir_optimize", "crates/sifr_codegen/src/render"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/render/render_helpers.rs", "contains": "RustLiteral::Bool(false)"},
       "sources": ["internal", "external"]
     },
     {
@@ -264,6 +297,7 @@
       "owner_item": 8,
       "mechanism": "Fifteen demo main.rs files coexist with canonical emitted.rs companions; at least two contain data-dependent unwrap or unrelated pasted output and are not governed by freshness checks.",
       "evidence": ["demos/**/main.rs", "demos/decorators/main.rs"],
+      "semantic_anchor": {"kind": "metric", "key": "demo_legacy_main_rs_files"},
       "sources": ["internal", "external"]
     },
     {
@@ -274,6 +308,7 @@
       "owner_item": null,
       "mechanism": "The external report contradicted the 265 checked-in demos/**/emitted.rs companions.",
       "evidence": ["demos/**/emitted.rs"],
+      "semantic_anchor": {"kind": "metric", "key": "demo_emitted_rs_files"},
       "sources": ["external"],
       "rejection_reason": "Golden-like output exists; the real defects are incomplete freshness, coverage, formatting, and semantic governance, owned by Items 1 and 8."
     },
@@ -285,6 +320,7 @@
       "owner_item": 9,
       "mechanism": "Baseline emission contains 937 Vec<char> mentions and uses chars().nth/count plus one-character String allocation in indexed and comparison-heavy paths.",
       "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src/string_char_cache.rs", "crates/sifr_codegen/src/methods/string.rs"],
+      "semantic_anchor": {"kind": "metric", "key": "demo_emitted_vec_char_mentions"},
       "sources": ["internal", "external"]
     },
     {
@@ -295,6 +331,7 @@
       "owner_item": 9,
       "mechanism": "Container/row cloning, vector front removal, clone-swapping sorts, and repeated length/index work can turn linear or n-log-n source shapes into quadratic allocation and time.",
       "evidence": ["plans/issues/archive/ad-hoc-leetcode-benchmark-slowness-root-cause-analysis.md", "demos/**/emitted.rs", "crates/sifr_codegen/src"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "plans/issues/archive/ad-hoc-leetcode-benchmark-slowness-root-cause-analysis.md", "contains": "generated Rust preserves the intended complexity"},
       "sources": ["internal", "external"]
     },
     {
@@ -305,6 +342,7 @@
       "owner_item": 9,
       "mechanism": "The exact token count is not reproducible in baseline emitted.rs, but front-removal semantics and equivalent vector-shift lowerings remain a verified complexity class.",
       "evidence": ["crates/sifr_codegen/src/methods/list.rs", "plans/issues/archive/ad-hoc-leetcode-benchmark-slowness-root-cause-analysis.md"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/methods/list.rs", "contains": "method: \"remove\".to_string()"},
       "sources": ["external"],
       "qualification": "Own the semantic complexity mechanism, not the report's literal token count."
     },
@@ -316,6 +354,7 @@
       "owner_item": 10,
       "mechanism": "Project/module assembly can concatenate overlapping demanded preambles or bridge bodies, inflating generated crates and producing duplicate dead APIs.",
       "evidence": ["crates/sifr_codegen/src/lib_project_codegen.rs", "crates/sifr_codegen/src/lib_runtime_needs.rs", "crates/sifr_codegen/src/lib_modules_and_codegen.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/lib_modules_and_codegen.rs", "contains": "let mut stdlib_preamble = String::new()"},
       "sources": ["internal", "external"]
     },
     {
@@ -326,6 +365,7 @@
       "owner_item": 11,
       "mechanism": "Local dependency and sysroot materialization can appear directly in generated manifests, making retained emitted projects host-specific.",
       "evidence": ["crates/sifr_driver/src/build/cargo_manifest.rs", "crates/sifr_driver/src/build/cargo_resolution.rs", "crates/sifr_driver/src/build/materialize.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_driver/src/build/cargo_manifest.rs", "contains": "path.display().to_string()"},
       "sources": ["internal", "external"]
     },
     {
@@ -336,6 +376,7 @@
       "owner_item": null,
       "mechanism": "The cited rm -rf concatenation is user-authored shell behavior rather than a compiler-introduced loss of argument boundaries.",
       "evidence": ["demos/subprocess", "crates/sifr_codegen/src"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "demos/subprocess/main.sifr", "contains": "run_command(\"echo runtime_subprocess\")"},
       "sources": ["external"],
       "rejection_reason": "No emitter-specific injection mechanism was demonstrated. Item 11 still proves that non-shell process APIs never acquire shell parsing during lowering."
     },
@@ -347,6 +388,7 @@
       "owner_item": 11,
       "mechanism": "Generated allocation widths, offsets, and capacity arithmetic use unchecked casts or arithmetic that can wrap, abort, or become target-width dependent.",
       "evidence": ["crates/sifr_codegen/src/methods/string.rs", "crates/sifr_codegen/src/preamble", "demos/**/emitted.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/methods/string.rs", "contains": "ty: RustType::Named(\"usize\".to_string())"},
       "sources": ["internal", "external"]
     }
   ]

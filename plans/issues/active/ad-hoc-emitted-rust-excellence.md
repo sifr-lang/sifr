@@ -145,7 +145,7 @@ It does not broaden the active item.
 | Item | Status | Name | Required outcome |
 |---:|---|---|---|
 | 0 | complete | Contract and audit inventory lock | The full quality contract, reconciled finding ledger, baseline, ownership, review limits, and closure rules are machine checked and merged. |
-| 1 | pending | Comprehensive corpus and non-vacuous gates | Every generated surface is discoverable; freshness, rustfmt, Clippy, panic/static analysis, determinism, and negative self-tests fail closed without broad quality suppressions. |
+| 1 | in progress | Comprehensive corpus and non-vacuous gates | Every generated surface is discoverable; freshness, rustfmt, Clippy, panic/static analysis, determinism, and negative self-tests fail closed without broad quality suppressions. |
 | 2 | pending | Exact integer and overflow architecture | Canonical `int` storage and all arithmetic use one exact semantic model; debug/release behavior agrees; fixed-width boundaries remain explicitly checked. |
 | 3 | pending | Checked failure and impossible-state model | Generated user paths use typed errors; abort/exit/unreachable discharge and silent value fallbacks are removed; compiler invariants fail before materialization. |
 | 4 | pending | Collection access and mutation architecture | Reads, writes, deletes, nested access, augassign, membership, and unpacking share checked place semantics with no panic or silent no-op path. |
@@ -176,18 +176,18 @@ It does not broaden the active item.
 
 ### Item 1: Comprehensive corpus and non-vacuous gates
 
-- [ ] Corpus discovery covers all generated entrypoint classes and cannot be
+- [x] Corpus discovery covers all generated entrypoint classes and cannot be
   reduced without a failing self-test.
-- [ ] Checked-in generated files are fresh or are removed as non-authoritative.
-- [ ] `rustfmt --check` runs before any formatter mutation.
-- [ ] Clippy warnings are denied without emitter-convenience blanket allows.
-- [ ] Static safety analysis covers impossible-state macros, termination calls,
+- [x] Checked-in generated files are fresh or are removed as non-authoritative.
+- [x] `rustfmt --check` runs before any formatter mutation.
+- [x] Clippy warnings are denied without emitter-convenience blanket allows.
+- [x] Static safety analysis covers impossible-state macros, termination calls,
   indexing, casts, allocation widths, arithmetic, and generated `allow` use.
-- [ ] Negative seeds prove each gate can fail for the owned defect class.
-- [ ] The audit-inventory self-test covers every validation branch, including
+- [x] Negative seeds prove each gate can fail for the owned defect class.
+- [x] The audit-inventory self-test covers every validation branch, including
   empty item/baseline containers and both required finding text fields.
-- [ ] Baseline provenance requires its named command, toolchain, and note keys.
-- [ ] Evidence rows use governed semantic anchors, not path existence alone;
+- [x] Baseline provenance requires its named command, toolchain, and note keys.
+- [x] Evidence rows use governed semantic anchors, not path existence alone;
   glob and repository-boundary handling fails closed.
 
 ### Item 2: Exact integer and overflow architecture
@@ -303,11 +303,17 @@ item can close.
 
 ## Current Handoff
 
-- Completed item: Item 0, merged in
-  [#3574](https://github.com/sifr-lang/sifr/pull/3574) at
-  `8d292f9395fee51ef8b348a413ea496a33c5ce38`.
-- Review state: the original blocker was fixed; the sole remediation review's
-  new mechanism defects are assigned to Item 1 under the user's no-third-review
-  rule.
-- Next action: start Item 1, comprehensive corpus and non-vacuous gates, from
-  current `origin/main` after this record-only update merges.
+- Active item: Item 1, comprehensive corpus and non-vacuous gates, based on
+  `d7a08f12a2ba638b98542c7745913f7e83be5ab9`.
+- Implementation state: all entrypoint and maintained-source families have an
+  exact path-set inventory; broad Clippy suppression and format-before-check
+  behavior are removed; safety, formatting, lint, freshness, and deterministic
+  output use fail-closed negative checks and exact owner-bound debt signatures.
+- Audit corrections: ERQ-016 now records the live finite `count()` cap, and
+  ERQ-033 separately records non-positive `islice` step adaptation; both are
+  owned by Item 5 and anchored to the stdlib implementation. ERQ-020 is
+  confirmed, not rejected: current decimal lowering contains the reported
+  `with_prec(28)` fallback, owned by Item 6.
+- Next action: validate Item 1, populate only exact existing producer debt,
+  regenerate or remove non-authoritative checked-in output, and obtain the
+  required exact-SHA Opus review.
