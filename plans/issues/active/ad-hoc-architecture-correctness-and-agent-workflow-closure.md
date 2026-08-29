@@ -58,7 +58,7 @@ The following review claims are explicitly excluded:
 | M12A | Process-group deadlines and terminal signal propagation | merged into M12 branch | [#3565](https://github.com/sifr-lang/sifr/pull/3565) | `2b0820dabf890dc19850289273ade09d8b048cd5` |
 | M12B | Restore canonical list-method lowering on structured fallback paths | merged into M12 branch | [#3566](https://github.com/sifr-lang/sifr/pull/3566) | `c4a23973f80d8eb796e4b9c984c89a248b58ac88` |
 | M12C | Terminal-signal escalation and remaining hardening command lifecycle | merged into M12 branch | [#3567](https://github.com/sifr-lang/sifr/pull/3567) | `9442b51faa8a15c1466919ad797d0cfcd9d0e8ef` |
-| M12D | Documentation mutation-registry consistency | pending | | |
+| M12D | Documentation mutation-registry consistency | merged into M12 branch | [#3568](https://github.com/sifr-lang/sifr/pull/3568) | `e97e7332e6ef537738ebd6b6f9fad60384ba1f2f` |
 | M12E | Atomic repeated-terminal-signal escalation entry | pending | | |
 | M13 | Phase closure and whole-phase review | pending | | |
 
@@ -1060,4 +1060,24 @@ tree and are keyed by candidate SHA.
 - Review evidence is outside Git under both exact candidate SHAs in
   `.codex/review-evidence/architecture-closure/`.
 - M12C changed no compiler files, so it did not run or consume the reserved
+  Sifr create-PR or merge gate.
+
+### M12D Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12d`.
+- Stacked PR: [#3568](https://github.com/sifr-lang/sifr/pull/3568), merged into
+  the M12 branch as `23551f57b74f1ac4fe0fcade553773d8761dd48d`.
+- Exact implementation candidate:
+  `e97e7332e6ef537738ebd6b6f9fad60384ba1f2f`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers or
+  remediation. It verified exact ordered equality between the committed
+  inventory and all 12 executable architecture mutation cases, plus the
+  reciprocal structure-checker binding.
+- The parent inventory reproducibly failed with `architecture mutation case
+  registration drifted`. On the clean candidate, JSON parsing, the structure
+  and GA mutation harnesses, all 12 architecture mutation cases, the positive
+  architecture check, file-size, and whitespace checks passed.
+- Review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12d-e97e7332e6ef537738ebd6b6f9fad60384ba1f2f.md`.
+- M12D changed no compiler files, so it did not run or consume the reserved
   Sifr create-PR or merge gate.
