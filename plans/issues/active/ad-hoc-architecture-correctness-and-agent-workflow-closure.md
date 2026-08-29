@@ -60,6 +60,7 @@ The following review claims are explicitly excluded:
 | M12C | Terminal-signal escalation and remaining hardening command lifecycle | merged into M12 branch | [#3567](https://github.com/sifr-lang/sifr/pull/3567) | `9442b51faa8a15c1466919ad797d0cfcd9d0e8ef` |
 | M12D | Documentation mutation-registry consistency | merged into M12 branch | [#3568](https://github.com/sifr-lang/sifr/pull/3568) | `e97e7332e6ef537738ebd6b6f9fad60384ba1f2f` |
 | M12E | Atomic repeated-terminal-signal escalation entry | merged into M12 branch | [#3569](https://github.com/sifr-lang/sifr/pull/3569) | `2a8adc32dfed16933dcb22b4d77f989d97c80734` |
+| M12F | Restore generated demo freshness after compiler corrections | pending | | |
 | M13 | Phase closure and whole-phase review | pending | | |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -574,6 +575,21 @@ Scope and acceptance criteria:
   process-group escalation.
 - Add a deterministic self-test for repeated-signal entry rather than relying
   on timing-sensitive external delivery.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
+## M12F Restore Generated Demo Freshness After Compiler Corrections
+
+Close the checked-in generated-companion drift exposed by the phase's single
+create-PR gate.
+
+Scope and acceptance criteria:
+
+- Regenerate `demos/decimal_verification/emitted.rs` with the exact compiler
+  built from the completed implementation stack.
+- Confirm the only changes are the two BigDecimal rounding expressions emitted
+  by the corrected canonical method-lowering path.
+- Prove the generated-demo freshness guard and the decimal verification demo
+  pass without rerunning the consumed create-PR gate.
 - Run one exact-SHA Opus review, with at most one remediation review.
 
 ## M13 Phase Closure And Whole-Phase Review
@@ -1101,3 +1117,19 @@ tree and are keyed by candidate SHA.
   `.codex/review-evidence/architecture-closure/m12e-2a8adc32dfed16933dcb22b4d77f989d97c80734.md`.
 - M12E changed no compiler files, so it did not run or consume the reserved
   Sifr create-PR or merge gate.
+
+### Final Create-PR Gate Attempt
+
+- Exact stack SHA: `7cb37df1571e0a785b41116cb208713d3bdcd782`.
+- Before the long gate, the worktree's private target was 25 GiB and unused;
+  the required local `cargo clean` removed 30.7 GiB.
+- The one permitted create-PR gate ran once and exited 1. Cargo setup, HIR
+  maintainability, file-size, and maintainability-ratchet steps passed. The
+  generated-demo freshness guard then reported only
+  `demos/decimal_verification/emitted.rs` as stale and stopped the lane.
+- The emitted diff is limited to two BigDecimal rounding expressions. This
+  in-scope generated companion defect is M12F. The create-PR gate will not be
+  rerun.
+- Machine evidence is retained under
+  `target/validation_lane_reports/create-pr.latest.json` and its referenced
+  log/time artifacts for this worktree.
