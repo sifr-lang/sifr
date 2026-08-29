@@ -60,7 +60,7 @@ The following review claims are explicitly excluded:
 | M12C | Terminal-signal escalation and remaining hardening command lifecycle | merged into M12 branch | [#3567](https://github.com/sifr-lang/sifr/pull/3567) | `9442b51faa8a15c1466919ad797d0cfcd9d0e8ef` |
 | M12D | Documentation mutation-registry consistency | merged into M12 branch | [#3568](https://github.com/sifr-lang/sifr/pull/3568) | `e97e7332e6ef537738ebd6b6f9fad60384ba1f2f` |
 | M12E | Atomic repeated-terminal-signal escalation entry | merged into M12 branch | [#3569](https://github.com/sifr-lang/sifr/pull/3569) | `2a8adc32dfed16933dcb22b4d77f989d97c80734` |
-| M12F | Restore generated demo freshness after compiler corrections | pending | | |
+| M12F | Restore generated demo freshness after compiler corrections | merged into M12 branch | [#3570](https://github.com/sifr-lang/sifr/pull/3570) | `4f33183b7244456fc21b0b7b95b2aa85ed586bc6` |
 | M13 | Phase closure and whole-phase review | pending | | |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -1133,3 +1133,25 @@ tree and are keyed by candidate SHA.
 - Machine evidence is retained under
   `target/validation_lane_reports/create-pr.latest.json` and its referenced
   log/time artifacts for this worktree.
+
+### M12F Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12f`.
+- Stacked PR: [#3570](https://github.com/sifr-lang/sifr/pull/3570), merged into
+  the M12 branch as `f914a1339191deeb59f945c816a7a086b4c9a0f7`.
+- Exact implementation candidate:
+  `4f33183b7244456fc21b0b7b95b2aa85ed586bc6`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers or
+  remediation. It independently re-ran byte-for-byte freshness across every
+  generated demo companion and the decimal verification runtime.
+- The diff is exactly two generated BigDecimal rounding expressions for the
+  two source `.round(6)` calls. Both now use canonical explicit `HalfEven`
+  lowering; no compiler source, other demo, suppression, shim, or hand-authored
+  workaround changed.
+- Validation: all generated demo companions were fresh, the decimal demo built
+  and printed its determinism-success marker, and whitespace and file-size
+  checks passed.
+- Review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12f-4f33183b7244456fc21b0b7b95b2aa85ed586bc6.md`.
+- M12F changed only a generated companion, so it did not rerun the consumed
+  create-PR gate or run a Sifr merge gate on a different SHA.
