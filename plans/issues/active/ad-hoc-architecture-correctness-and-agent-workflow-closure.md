@@ -64,6 +64,7 @@ The following review claims are explicitly excluded:
 | M12G | Register consolidated lowering intrinsic transport ownership | merged into M12 branch; integration deferred | [#3572](https://github.com/sifr-lang/sifr/pull/3572) | `7dc83924abd25bd15e5adfdf1d1df77da79ee3c4` |
 | M12H | Remove delivery-plan taxonomy from retained flow-graph architecture | merged into M12 branch; integration deferred | [#3573](https://github.com/sifr-lang/sifr/pull/3573) | `5094e412fbeb253edcfdd41a39079ecea72f9b1d` |
 | M12I | Restore authoritative Python-interop gate budget integrity | merged into M12 branch; integration deferred | [#3576](https://github.com/sifr-lang/sifr/pull/3576) | `e653b4ca92ba135bf01859dd35c6f43cab98fe77` |
+| M12J | Restore create-PR runtime-platform gate budget integrity | pending | | |
 | M13 | Phase closure and whole-phase review | whole-phase review satisfied; merged into M12 branch; closure blocked | [#3571](https://github.com/sifr-lang/sifr/pull/3571) | `5b4005c8cabc910f1c7c959e6518fe3079135fb4` |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -542,6 +543,26 @@ Deferred M12I review follow-ups:
   limit. The measured local run leaves about 18% headroom; this infrastructure
   observation does not justify an unmeasured policy change in M12I.
 
+## M12J Restore Create-PR Runtime-Platform Gate Budget Integrity
+
+Close the reproducible runtime-platform step-budget defect exposed by the next
+authorized create-PR gate after M12I.
+
+Scope and acceptance criteria:
+
+- Reuse the complete uncontended execution of the exact three create-PR
+  runtime-platform suites as performance evidence; do not rerun the unchanged
+  workload merely to repeat evidence.
+- Keep `platform-golden`, `platform-support-matrix`, and `platform-evidence`
+  selected and blocking.
+- Replace the impossible 120-second create-PR step budget with a finite
+  300-second blocking budget, giving bounded headroom over the measured
+  188.69-second workload.
+- Pin the exact policy in a deterministic profile self-test, then pass runner
+  and profile checks, the changed profile plan, maintainability, file-size, and
+  whitespace checks.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
 ## M12C Terminal-Signal Escalation And Remaining Hardening Command Lifecycle
 
 Close the new mechanism gap reported by M12A's final allowed review and the
@@ -680,8 +701,9 @@ whole-phase Opus review without repeating unchanged implementation validation.
   regression, documentation registry drift, repeated-signal race, and generated
   demo freshness defect, the later intrinsic-allowlist ownership omission, and
   the durable flow-graph document's delivery-plan heading, plus the
-  Python-interop step-budget and suite-identity defect; no blocking finding is
-  unassigned.
+  Python-interop step-budget and suite-identity defect. The next authorized
+  gate assigned the runtime-platform budget defect to pending M12J; no blocking
+  finding is unassigned.
 - Item-level targeted validation and exact-SHA Opus evidence are reused because
   M13 changes records only. `internal_docs/architecture.md` already contains
   the reviewed current architecture from M4/M12 and its positive/mutation
@@ -693,17 +715,17 @@ whole-phase Opus review without repeating unchanged implementation validation.
 - Authorized create-PR attempts exposed and assigned M12F-M12I. The first
   Python-interop timeout was host-contended; the next uncontended run proved
   that the required selection could not fit its blocking step budget. Every
-  assigned implementation defect is now merged, and no merge gate has run on
-  the corrected stack yet.
+  assigned implementation defect through M12I is merged. M12J remains pending,
+  and no merge gate has run on the corrected stack yet.
 - Full closure and archive are therefore blocked on a clean exact-SHA gate
   sequence already covered by the user's authorization for all remaining work.
   Stacked integration also remains blocked on the separately owned
   distinct-human-reviewer restoration issue; the expired waiver is not
   extended or weakened.
-- Exact next actions: run the authorized clean create-PR/merge gate sequence for
-  the resulting final stack SHA, restore the distinct human reviewer, then
-  integrate the stacked PR chain and archive this record. Until then the phase
-  is not represented as gate-passing or closed.
+- Exact next actions: close M12J, run the authorized clean create-PR/merge gate
+  sequence for the resulting final stack SHA, restore the distinct human
+  reviewer, then integrate the stacked PR chain and archive this record. Until
+  then the phase is not represented as gate-passing or closed.
 
 ## Evidence Ledger
 
@@ -1445,3 +1467,25 @@ tree and are keyed by candidate SHA.
 - M12I changed verification policy and runner files but no compiler files, so it
   did not run or consume a Sifr create-PR or merge gate. The authorized
   phase-wide exact-SHA gate sequence remains next.
+
+### Post-M12I Create-PR Gate Attempt
+
+- Exact stack SHA: `b179fab2455a9177e1f5aa0f67524095cd5b380a`.
+- The host was idle with 356 GiB free and a 7.9 GiB private target. The one
+  create-PR gate ran for 880.56 seconds with zero swaps and exited 124.
+- Every guard and area through Python interop passed. In particular, the
+  corrected cold Python-interop step bound the actual selected suites, passed
+  24/24 variants in 524.776 seconds, and passed its 2,700-second blocking
+  budget.
+- The next `area_runtime_platform` command hit its 120-second deadline at
+  120.038 seconds. A direct uncontended run of the unchanged three selected
+  suites then passed 28/28 variants with one declared skip in 188.69 seconds
+  and zero swaps. Its first valid golden case alone passed in 125.950 seconds,
+  proving the configured budget cannot contain the required selection.
+- This mechanism defect is assigned to M12J. No merge gate ran, and the failed
+  create-PR gate is not represented as passing.
+- Gate evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/final-create-pr-b179fab2455a9177e1f5aa0f67524095cd5b380a.md`.
+  The direct result/log SHA-256 digests are
+  `52a6f0a825c9018f22134dbc2a060b0e7dfb434089e4ceaaec67e1119b00ca04`
+  and `9f66461b6f288bd73006c9133c6709daa8ab449649596d77ed090ca1221b4942`.
