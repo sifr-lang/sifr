@@ -105,8 +105,8 @@ fn explicit_container_copy_conversions_preserve_nested_paths() {
     let dict = from_dict_str(&[("first", first.clone()), ("second", second.clone())])
         .expect("dict should be stored");
     let copied = copy_dict_str_int(&dict).expect("dict should copy");
-    assert_eq!(copied.get("first"), Some(&1));
-    assert_eq!(copied.get("second"), Some(&2));
+    assert_eq!(copied.get("first"), Some(&crate::SifrInt::from(1)));
+    assert_eq!(copied.get("second"), Some(&crate::SifrInt::from(2)));
 
     let record = from_record(&[("answer", second.clone())]).expect("record should be stored");
     let mut fields = copy_record_fields(&record, &["answer"]).expect("record should copy fields");
