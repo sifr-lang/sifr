@@ -16,12 +16,16 @@
       "mutation_cases": [
         "crate-map",
         "profile-map",
+        "missing-generated-markers",
         "unknown-crate-path",
         "unknown-bare-crate",
+        "unknown-qualified-crate",
         "missing-in-crate-path",
         "broken-link",
         "machine-path",
-        "machine-home-path"
+        "machine-home-path",
+        "machine-root-path",
+        "machine-windows-path"
       ],
       "status": "active"
     },
