@@ -65,6 +65,7 @@ The following review claims are explicitly excluded:
 | M12H | Remove delivery-plan taxonomy from retained flow-graph architecture | merged into M12 branch; integration deferred | [#3573](https://github.com/sifr-lang/sifr/pull/3573) | `5094e412fbeb253edcfdd41a39079ecea72f9b1d` |
 | M12I | Restore authoritative Python-interop gate budget integrity | merged into M12 branch; integration deferred | [#3576](https://github.com/sifr-lang/sifr/pull/3576) | `e653b4ca92ba135bf01859dd35c6f43cab98fe77` |
 | M12J | Restore create-PR runtime-platform gate budget integrity | merged into M12 branch; integration deferred | [#3577](https://github.com/sifr-lang/sifr/pull/3577) | `8f011fb61cb232b4d65763f49378e28066c421bd` |
+| M12K | Refresh the governed performance trend reference | pending | | |
 | M13 | Phase closure and whole-phase review | whole-phase review satisfied; merged into M12 branch; closure blocked | [#3571](https://github.com/sifr-lang/sifr/pull/3571) | `5b4005c8cabc910f1c7c959e6518fe3079135fb4` |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -538,6 +539,26 @@ Deferred M12J review follow-ups:
   create-PR limit, and make the profile-budget test helpers symmetric if later
   work extends their scope.
 
+## M12K Refresh The Governed Performance Trend Reference
+
+Close the stale approved-reference artifact exposed by the next authorized
+create-PR gate after M12J.
+
+Scope and acceptance criteria:
+
+- Do not patch only `manifest_sha256` or bind old measurements to the changed
+  benchmark manifest.
+- From a clean exact commit and idle host, run the documented complete-manifest
+  approved-reference capture with controlled-host admission, manifest sample
+  counts, latency mode, and `compiler/performance` approval.
+- Accept only the atomic successful output that binds the exact source commit,
+  current manifest hash, invocation/run ids, controlled-host policy, and raw
+  evidence digest. Do not retain partial output from a failed capture.
+- Pass trend policy and self-test, the pre-v1 regression-closure guard and
+  self-test, the relevant performance verification, file-size, and whitespace
+  checks.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
 Deferred M12I review follow-ups:
 
 - Consolidate the verification runner's two area-to-suite lookup helpers and add
@@ -711,7 +732,8 @@ whole-phase Opus review without repeating unchanged implementation validation.
   demo freshness defect, the later intrinsic-allowlist ownership omission, and
   the durable flow-graph document's delivery-plan heading, plus the
   Python-interop step-budget and suite-identity defect, plus the later
-  runtime-platform step-budget defect; no blocking finding is unassigned.
+  runtime-platform step-budget defect. The next gate assigned the stale
+  governed trend reference to pending M12K; no blocking finding is unassigned.
 - Item-level targeted validation and exact-SHA Opus evidence are reused because
   M13 changes records only. `internal_docs/architecture.md` already contains
   the reviewed current architecture from M4/M12 and its positive/mutation
@@ -723,17 +745,17 @@ whole-phase Opus review without repeating unchanged implementation validation.
 - Authorized create-PR attempts exposed and assigned M12F-M12I. The first
   Python-interop timeout was host-contended; the next uncontended run proved
   that the required selection could not fit its blocking step budget. Every
-  assigned implementation defect through M12J is merged, and no merge gate has
-  run on the corrected stack yet.
+  assigned implementation defect through M12J is merged. M12K remains pending,
+  and no merge gate has run on the corrected stack yet.
 - Full closure and archive are therefore blocked on a clean exact-SHA gate
   sequence already covered by the user's authorization for all remaining work.
   Stacked integration also remains blocked on the separately owned
   distinct-human-reviewer restoration issue; the expired waiver is not
   extended or weakened.
-- Exact next actions: run the authorized clean create-PR/merge gate sequence for
-  the resulting final stack SHA, restore the distinct human reviewer, then
-  integrate the stacked PR chain and archive this record. Until then the phase
-  is not represented as gate-passing or closed.
+- Exact next actions: close M12K, run the authorized clean create-PR/merge gate
+  sequence for the resulting final stack SHA, restore the distinct human
+  reviewer, then integrate the stacked PR chain and archive this record. Until
+  then the phase is not represented as gate-passing or closed.
 
 ## Evidence Ledger
 
@@ -1520,3 +1542,23 @@ tree and are keyed by candidate SHA.
 - M12J changed verification policy/test files but no compiler files, so it did
   not run or consume a Sifr create-PR or merge gate. The authorized phase-wide
   exact-SHA gate sequence remains next.
+
+### Post-M12J Create-PR Gate Attempt
+
+- Exact stack SHA: `7cd1124485ab00fcfef42b9c0bbe3054e5770ea3`.
+- The create-PR gate ran on an idle host for 691.21 seconds with zero swaps and
+  exited 1. Every guard and area through runtime platform passed, including
+  Python interop 24/24 in 283.314 seconds under its cold budget and runtime
+  platform 28/28 with one declared skip in 67.978 seconds under its corrected
+  300-second budget.
+- Developer tooling then reported only that
+  `verification/areas/performance/data/trend/current.json` has a stale
+  `manifest_sha256`. The committed trend artifact records
+  `d6994b8c7343310e33d980a84a1a843aedaf6326d11fde0dbfdc819006ed64a2`,
+  while the current benchmark manifest hashes to
+  `e3a44d95a5b3e177eb04ef7976ec193186c09af360d0aa943c88dbbf2d45ca74`.
+- The manifest changed after the approved reference was captured, including LSP
+  project roots and minimum-project-module requirements. M12K therefore runs a
+  governed fresh capture rather than relabeling old measurements.
+- No merge gate ran. Gate evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/final-create-pr-7cd1124485ab00fcfef42b9c0bbe3054e5770ea3.md`.
