@@ -651,17 +651,18 @@ whole-phase Opus review without repeating unchanged implementation validation.
   is replaced with the canonical frontend project-compilation owner. The
   roadmap status is changed from `active` to implementation-complete/blocked;
   this ad hoc phase does not change the roadmap's phase sequencing.
-- The one permitted final create-PR gate ran at
-  `7cb37df1571e0a785b41116cb208713d3bdcd782` and failed only on the stale
-  generated companion later closed by M12F. It was not rerun. Because the
-  implementation SHA changed and both compiler gates were required on one exact
-  SHA, no merge gate is run on a different candidate.
-- Full closure and archive are therefore blocked on new authority for a fresh
-  exact-SHA gate sequence. Stacked integration also remains blocked on the
-  separately owned distinct-human-reviewer restoration issue; the expired
-  waiver is not extended or weakened.
-- Exact next actions: run the authorized create-PR/merge gate sequence for the
-  resulting final stack SHA, restore the distinct human reviewer, then
+- Authorized create-PR attempts exposed and assigned M12F-M12H before reaching
+  one host-contended Python-interop timeout. Every assigned defect is now
+  merged. The exact failed Python case passed on the unchanged candidate after
+  the competing worktree stopped, so no implementation defect is assigned from
+  that attempt and no merge gate ran.
+- Full closure and archive are therefore blocked on a clean exact-SHA gate
+  sequence already covered by the user's authorization for all remaining work.
+  Stacked integration also remains blocked on the separately owned
+  distinct-human-reviewer restoration issue; the expired waiver is not
+  extended or weakened.
+- Exact next actions: run the authorized clean create-PR/merge gate sequence for
+  the resulting final stack SHA, restore the distinct human reviewer, then
   integrate the stacked PR chain and archive this record. Until then the phase
   is not represented as gate-passing or closed.
 
@@ -1322,3 +1323,29 @@ tree and are keyed by candidate SHA.
   `.codex/review-evidence/architecture-closure/m12h-5094e412fbeb253edcfdd41a39079ecea72f9b1d.md`.
 - M12H changed only a durable architecture heading. It did not rerun the
   consumed create-PR gate or run a merge gate on a different SHA.
+
+### Host-Contended Create-PR Gate Attempt
+
+- Exact stack SHA: `47b32ddf2ff54a15e9a55ed30d49ec108aec1fea`.
+- The create-PR gate passed every step through diagnostics, including all four
+  coverage-readiness variants and the corrected taxonomy case. The cold
+  Python-interop area then failed: `readonly-check-doctor` hit a 300-second
+  subprocess timeout, and the area hit its 1,200-second deadline.
+- Another worktree started `cargo test --locked -p sifr -- --skip
+  test_e2e_pass` after this gate began and overlapped the slow area for about
+  eleven minutes. Binding authoring still passed in 187.771 seconds and LSP
+  declaration authoring passed in 159.375 seconds, both abnormally slow.
+- After the competing process ended, the exact failed
+  `readonly_check_doctor.py` case passed on the unchanged candidate with
+  `deferred=1 resolved=3 parity=5 mutations=0`. It used 325.8 MiB maximum RSS,
+  reported no swaps, and completed in 791.14 seconds. The originally timed-out
+  Sifr check completed within its per-command limit.
+- The gate exited 124; it is not represented as passing, and no merge gate ran.
+  The first cold/cache-contended run is not used as host-sensitive performance
+  evidence. A clean warmed exact-SHA sequence remains authorized.
+- A CLI help probe accidentally began another profile invocation because the
+  top-level runner ignores `--help` after `--profile`. It was terminated after
+  roughly 40 seconds during initial guardrails and is not treated as gate or
+  validation evidence.
+- Gate and isolated-case evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/authorized-create-pr-47b32ddf2ff54a15e9a55ed30d49ec108aec1fea.md`.
