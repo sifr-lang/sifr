@@ -3259,7 +3259,7 @@ fn main() {
     let __scale = 3_i64;
     (if __scale < 0 { 0 } else { __scale }) as u32
 }, ::rust_decimal::RoundingStrategy::MidpointNearestEven));
-    let baseline_bd: String = format!("{}", ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&(("1.2345678901234567890123456789".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone() + ("0".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone())).round(6_i64));
+    let baseline_bd: String = format!("{}", ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&(::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&(("1.2345678901234567890123456789".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone() + ("0".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone())).with_scale_round(6_i64, ::bigdecimal::RoundingMode::HalfEven))));
     let mut i: i64 = 0_i64;
     while i < (20_i64) {
         let loop_tmp_d: Decimal = Decimal::from_str_exact(("1.2345".to_string()).as_str()).unwrap_or_else(|__e| unreachable!()) * Decimal::from_str_exact(("3.0".to_string()).as_str()).unwrap_or_else(|__e| unreachable!());
@@ -3267,7 +3267,7 @@ fn main() {
     let __scale = 3_i64;
     (if __scale < 0 { 0 } else { __scale }) as u32
 }, ::rust_decimal::RoundingStrategy::MidpointNearestEven)) == baseline_d));
-        assert!((format!("{}", ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&(("1.2345678901234567890123456789".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone() + ("0".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone())).round(6_i64)) == baseline_bd));
+        assert!((format!("{}", ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&(::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&(("1.2345678901234567890123456789".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone() + ("0".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone())).with_scale_round(6_i64, ::bigdecimal::RoundingMode::HalfEven)))) == baseline_bd));
         i += 1_i64;
     }
     println!("deterministic decimal and bigdecimal corpus checks passed");
