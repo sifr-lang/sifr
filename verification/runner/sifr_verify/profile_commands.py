@@ -100,6 +100,8 @@ def _forward_terminal_signal(signum: int, _frame: object) -> None:
     if _HANDLING_TERMINAL_SIGNAL:
         raise SystemExit(128 + signum)
     _HANDLING_TERMINAL_SIGNAL = True
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
     with _ACTIVE_PROCESS_GROUPS_LOCK:
         process_group_ids = tuple(_ACTIVE_PROCESS_GROUPS)
     received_signal = signal.Signals(signum)
@@ -202,7 +204,8 @@ def run_self_test() -> None:
         marker.unlink()
         raise AssertionError("deadline left a descendant process running")
     _terminal_signal_lock_self_test()
-    _terminal_signal_self_test()
+    _terminal_signal_self_test(signal.SIGTERM)
+    _terminal_signal_self_test(signal.SIGINT)
 
 
 def _terminal_signal_lock_self_test() -> None:
@@ -231,14 +234,14 @@ def _terminal_signal_lock_self_test() -> None:
         raise AssertionError(f"locked terminal signal returned {returncode}, expected {128 + signal.SIGTERM}")
 
 
-def _terminal_signal_self_test() -> None:
+def _terminal_signal_self_test(terminal_signal: signal.Signals) -> None:
     with tempfile.TemporaryDirectory(prefix="sifr-terminal-signal-") as tmp:
         root = Path(tmp)
         ready = root / "ready"
         survived = root / "child-survived"
         child = (
             "import pathlib,signal,time; "
-            "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+            f"signal.signal({int(terminal_signal)}, signal.SIG_IGN); "
             f"pathlib.Path({str(ready)!r}).write_text('ready'); "
             "time.sleep(0.6); "
             f"pathlib.Path({str(survived)!r}).write_text('survived')"
@@ -263,14 +266,15 @@ def _terminal_signal_self_test() -> None:
         if not ready.exists():
             terminate_process_group(proc)
             raise AssertionError("terminal-signal helper did not become ready")
-        os.kill(proc.pid, signal.SIGTERM)
+        os.kill(proc.pid, terminal_signal)
         try:
             returncode = proc.wait(timeout=3)
         except subprocess.TimeoutExpired:
             terminate_process_group(proc)
             raise AssertionError("terminal signal did not stop the runner") from None
-        if returncode != 128 + signal.SIGTERM:
-            raise AssertionError(f"terminal signal returned {returncode}, expected {128 + signal.SIGTERM}")
+        expected_returncode = 128 + terminal_signal
+        if returncode != expected_returncode:
+            raise AssertionError(f"terminal signal returned {returncode}, expected {expected_returncode}")
         time.sleep(0.8)
         if survived.exists():
             raise AssertionError("terminal signal left a descendant process running")
