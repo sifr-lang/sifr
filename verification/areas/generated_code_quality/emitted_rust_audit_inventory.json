@@ -1,0 +1,348 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "e9df29f7e4cada7b376b2d455790f9c80a5647a0",
+  "phase_file": "plans/issues/active/ad-hoc-emitted-rust-excellence.md",
+  "implementation_items": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  "baseline": {
+    "demo_emitted_rs_files": 265,
+    "demo_legacy_main_rs_files": 15,
+    "demo_emitted_rs_rustfmt_failures": 226,
+    "generated_clippy_allow_flags": 68,
+    "demo_emitted_unreachable_macros": 2098,
+    "demo_emitted_process_aborts": 5,
+    "demo_emitted_process_exits": 8,
+    "demo_emitted_string_references": 11243,
+    "demo_emitted_vec_references": 2875,
+    "demo_emitted_clone_calls": 9853,
+    "demo_emitted_cloned_calls": 1079,
+    "demo_emitted_vec_char_mentions": 937
+  },
+  "findings": [
+    {
+      "id": "ERQ-001",
+      "title": "The generated-code corpus is representative rather than exhaustive",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 1,
+      "mechanism": "The manifest pins selected entries and does not discover every emitted entrypoint and checked-in generated companion.",
+      "evidence": ["verification/areas/generated_code_quality/data/corpus_manifest.json", "verification/areas/generated_code_quality/runner.py"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-002",
+      "title": "Most checked-in demo emission is not rustfmt-clean",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 1,
+      "mechanism": "At the baseline, rustfmt --check rejects 226 of 265 demos/**/emitted.rs files.",
+      "evidence": ["demos/**/emitted.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-003",
+      "title": "The generated Clippy gate suppresses broad emitter debt",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 1,
+      "mechanism": "GENERATED_CLIPPY_ARGS contains 68 -A flags, including ptr_arg, needless_return, map_identity, clone_on_copy, unreachable_code, and ordinary warning classes.",
+      "evidence": ["verification/areas/generated_code_quality/generated_code_quality.py"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-004",
+      "title": "The panic scanner misses user-triggerable crash mechanisms",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 1,
+      "mechanism": "The token scan covers unwrap, expect, panic, todo, unimplemented, unsafe, and allow, but not unreachable, abort, exit, indexing, arithmetic overflow, allocation casts, or capacity overflow.",
+      "evidence": ["verification/areas/generated_code_quality/generated_code_quality.py", "verification/areas/generated_code_quality/panic_inventory.md"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-005",
+      "title": "Generated rustfmt validation can normalize before checking",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 1,
+      "mechanism": "The quality path permits formatting generated projects before the check, so a producer that emits unformatted Rust can pass.",
+      "evidence": ["verification/areas/generated_code_quality/generated_code_quality.py"],
+      "sources": ["external"]
+    },
+    {
+      "id": "ERQ-006",
+      "title": "Canonical int representation is split between i64 and SifrInt",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 2,
+      "mechanism": "General Type::Int lowering remains i64 while selected large constants and analyzed paths use SifrInt, producing representation-dependent semantics.",
+      "evidence": ["crates/sifr_codegen/src/preamble/io_bytes_methods.rs", "crates/sifr_codegen/src/function_emitter/scope_and_function_types.rs", "crates/sifr_codegen/src/lower_item/module_constants.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-007",
+      "title": "Ordinary integer arithmetic can depend on Rust overflow mode",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 2,
+      "mechanism": "i64 arithmetic is emitted directly for paths outside selective SifrInt promotion, allowing debug panic and release wrapping to diverge.",
+      "evidence": ["demos/integer_safety/emitted.rs", "crates/sifr_codegen/src/expr_render_helpers/operator_rewrites.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-008",
+      "title": "safe_math was reported as universal benchmark runtime code",
+      "disposition": "rejected",
+      "severity": "informational",
+      "owner_item": null,
+      "mechanism": "The external report generalized a benchmark helper or generated artifact to every canonical emitted crate; the repository's maintained emitter does not install one universal safe_math.rs body in every program.",
+      "evidence": ["verification/areas/algorithmic_compatibility", "crates/sifr_codegen/src"],
+      "sources": ["external"],
+      "rejection_reason": "The universal-count claim is not reproducible. Its underlying integer division and modulo semantics are already owned by Item 2."
+    },
+    {
+      "id": "ERQ-009",
+      "title": "Impossible states are discharged inside emitted user code",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 3,
+      "mechanism": "Baseline demo emission contains 2,098 unreachable! macros, 5 process aborts, and 8 process exits rather than one checked error model.",
+      "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-010",
+      "title": "Error-producing expressions use inconsistent fallback and termination paths",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 3,
+      "mechanism": "Division, decimal construction, dictionary proof discharge, and value-expression failures use unreachable, exit, abort, or fallback values instead of one typed checked path.",
+      "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src/expr_render_helpers", "crates/sifr_codegen/src/intrinsic_method_emitters"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-011",
+      "title": "Collection reads bypass checked lowering on some paths",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 4,
+      "mechanism": "Direct Rust indexing coexists with guarded access, including nested access and lowering-specific paths.",
+      "evidence": ["crates/sifr_codegen/src/lower_expr", "crates/sifr_codegen/src/stmt_support_emitter", "demos/**/emitted.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-012",
+      "title": "Out-of-range collection writes can silently do nothing",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 4,
+      "mechanism": "Some assignment lowering guards mutation with get_mut/if-let and omits the required IndexError branch.",
+      "evidence": ["crates/sifr_codegen/src/lower_stmt/subscript_assignment.rs", "crates/sifr_codegen/src/stmt_support_emitter/nested_subscript_assignment.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-013",
+      "title": "Star-unpack lowering can underflow or index before cardinality validation",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 4,
+      "mechanism": "Generated unpack expressions derive tail indices from len before one shared checked cardinality plan.",
+      "evidence": ["demos/slice_unpacking/emitted.rs", "crates/sifr_codegen/src/helpers/helpers_impl.rs"],
+      "sources": ["external"]
+    },
+    {
+      "id": "ERQ-014",
+      "title": "Read-only dictionary membership was reported to insert defaults",
+      "disposition": "rejected",
+      "severity": "informational",
+      "owner_item": null,
+      "mechanism": "Current membership lowering uses contains-style operations; or_insert occurrences serve mutation/default construction paths and do not establish a corpus-wide read mutation.",
+      "evidence": ["crates/sifr_codegen/src/intrinsic_method_emitters/collection_methods.rs", "crates/sifr_codegen/src/lower_expr"],
+      "sources": ["external"],
+      "rejection_reason": "The cited mechanism is not reproducible as a read-only membership lowering defect. Item 4 still proves this invariant with a regression."
+    },
+    {
+      "id": "ERQ-015",
+      "title": "Generators are materialized eagerly",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 5,
+      "mechanism": "Generator lowering buffers yielded values in Vec-backed output instead of preserving resumable execution.",
+      "evidence": ["crates/sifr_codegen/src/function_emitter/generator_bodies.rs", "demos/generators/emitted.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-016",
+      "title": "Infinite iterator and slicing semantics are bounded or weakly validated",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 5,
+      "mechanism": "count-style generation has a finite implementation cap and islice-style paths do not uniformly reject invalid negative or zero-step arguments with canonical timing.",
+      "evidence": ["crates/sifr_codegen/src", "demos/itertools/emitted.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-017",
+      "title": "Signed string widths can become enormous usize allocations",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 6,
+      "mechanism": "ljust, rjust, zfill, and center lower signed widths through unchecked usize conversion before allocation.",
+      "evidence": ["crates/sifr_codegen/src/methods/string.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-018",
+      "title": "IO error rewrapping loses the original error kind",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 6,
+      "mechanism": "Generated try/except and IO adapters reconstruct IOError with a generic category instead of preserving the source kind.",
+      "evidence": ["crates/sifr_codegen/src/preamble/io_file_handles.rs", "crates/sifr_codegen/src/class_error_emitter.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-019",
+      "title": "read_bytes size is not honored consistently",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 6,
+      "mechanism": "The generated file-handle read_bytes adapter can consume the full remaining stream regardless of the requested size.",
+      "evidence": ["crates/sifr_codegen/src/preamble/io_bytes_methods.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-020",
+      "title": "Decimal precision silently falls back in a live user path",
+      "disposition": "rejected",
+      "severity": "informational",
+      "owner_item": null,
+      "mechanism": "The external report treated a defensive or stale emitted shape as a demonstrated live precision-loss path.",
+      "evidence": ["crates/sifr_codegen/src", "crates/sifr_runtime/src"],
+      "sources": ["external"],
+      "rejection_reason": "A live precision-loss reproduction was not established. Item 6 nevertheless makes silent precision fallback structurally impossible."
+    },
+    {
+      "id": "ERQ-021",
+      "title": "Generated APIs overuse owned collection and string references",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 7,
+      "mechanism": "Baseline demos contain 11,243 &String and 2,875 &Vec occurrences where str and slices or owned values are generally the idiomatic boundary.",
+      "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src/function_emitter"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-022",
+      "title": "Clone insertion is excessive and sometimes compounds recursively",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 7,
+      "mechanism": "Baseline demos contain 9,853 clone calls and 1,079 cloned calls, including clone-then-borrow, clone-on-copy, full-row/container copies, and deep recursive traversal copies.",
+      "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src/ir_optimize/mutability_and_clone_rewrites.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-023",
+      "title": "Emission retains dead tails, identity transforms, and needless ceremony",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 8,
+      "mechanism": "Generated output includes unreachable statements after terminators, needless returns, identity maps, redundant closures, constant branches, and repeated formatting scaffolds.",
+      "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src/ir_optimize", "crates/sifr_codegen/src/render"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-024",
+      "title": "Legacy generated main.rs snapshots are stale or mislabeled",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 8,
+      "mechanism": "Fifteen demo main.rs files coexist with canonical emitted.rs companions; at least two contain data-dependent unwrap or unrelated pasted output and are not governed by freshness checks.",
+      "evidence": ["demos/**/main.rs", "demos/decorators/main.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-025",
+      "title": "The repository has no checked-in golden emitted Rust",
+      "disposition": "rejected",
+      "severity": "informational",
+      "owner_item": null,
+      "mechanism": "The external report contradicted the 265 checked-in demos/**/emitted.rs companions.",
+      "evidence": ["demos/**/emitted.rs"],
+      "sources": ["external"],
+      "rejection_reason": "Golden-like output exists; the real defects are incomplete freshness, coverage, formatting, and semantic governance, owned by Items 1 and 8."
+    },
+    {
+      "id": "ERQ-026",
+      "title": "Unicode string lowering repeatedly materializes and rescans characters",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 9,
+      "mechanism": "Baseline emission contains 937 Vec<char> mentions and uses chars().nth/count plus one-character String allocation in indexed and comparison-heavy paths.",
+      "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src/string_char_cache.rs", "crates/sifr_codegen/src/methods/string.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-027",
+      "title": "Collection lowering can worsen source algorithmic complexity",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 9,
+      "mechanism": "Container/row cloning, vector front removal, clone-swapping sorts, and repeated length/index work can turn linear or n-log-n source shapes into quadratic allocation and time.",
+      "evidence": ["plans/issues/archive/ad-hoc-leetcode-benchmark-slowness-root-cause-analysis.md", "demos/**/emitted.rs", "crates/sifr_codegen/src"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-028",
+      "title": "Every reported pop(0) site is a direct .remove(0) token",
+      "disposition": "partially_confirmed",
+      "severity": "blocking",
+      "owner_item": 9,
+      "mechanism": "The exact token count is not reproducible in baseline emitted.rs, but front-removal semantics and equivalent vector-shift lowerings remain a verified complexity class.",
+      "evidence": ["crates/sifr_codegen/src/methods/list.rs", "plans/issues/archive/ad-hoc-leetcode-benchmark-slowness-root-cause-analysis.md"],
+      "sources": ["external"],
+      "qualification": "Own the semantic complexity mechanism, not the report's literal token count."
+    },
+    {
+      "id": "ERQ-029",
+      "title": "Generated support and stdlib bridges can be emitted more than once",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 10,
+      "mechanism": "Project/module assembly can concatenate overlapping demanded preambles or bridge bodies, inflating generated crates and producing duplicate dead APIs.",
+      "evidence": ["crates/sifr_codegen/src/lib_project_codegen.rs", "crates/sifr_codegen/src/lib_runtime_needs.rs", "sifr_output/src/main.rs"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-030",
+      "title": "Generated Cargo projects can embed machine-specific absolute paths",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 11,
+      "mechanism": "Local dependency and sysroot materialization can appear directly in generated manifests, making retained emitted projects host-specific.",
+      "evidence": ["crates/sifr_driver/src/build/generated_cargo_project.rs", "demos/**/Cargo.toml", "sifr_output/Cargo.toml"],
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-031",
+      "title": "Compiler lowering introduces shell injection for string concatenation",
+      "disposition": "rejected",
+      "severity": "informational",
+      "owner_item": null,
+      "mechanism": "The cited rm -rf concatenation is user-authored shell behavior rather than a compiler-introduced loss of argument boundaries.",
+      "evidence": ["demos/subprocess", "crates/sifr_codegen/src"],
+      "sources": ["external"],
+      "rejection_reason": "No emitter-specific injection mechanism was demonstrated. Item 11 still proves that non-shell process APIs never acquire shell parsing during lowering."
+    },
+    {
+      "id": "ERQ-032",
+      "title": "Unchecked signed-to-usize and capacity calculations threaten portability and safety",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 11,
+      "mechanism": "Generated allocation widths, offsets, and capacity arithmetic use unchecked casts or arithmetic that can wrap, abort, or become target-width dependent.",
+      "evidence": ["crates/sifr_codegen/src/methods/string.rs", "crates/sifr_codegen/src/preamble", "demos/**/emitted.rs"],
+      "sources": ["internal", "external"]
+    }
+  ]
+}
