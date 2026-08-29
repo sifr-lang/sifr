@@ -144,7 +144,7 @@ It does not broaden the active item.
 
 | Item | Status | Name | Required outcome |
 |---:|---|---|---|
-| 0 | in progress | Contract and audit inventory lock | The full quality contract, reconciled finding ledger, baseline, ownership, review limits, and closure rules are machine checked and merged. |
+| 0 | complete | Contract and audit inventory lock | The full quality contract, reconciled finding ledger, baseline, ownership, review limits, and closure rules are machine checked and merged. |
 | 1 | pending | Comprehensive corpus and non-vacuous gates | Every generated surface is discoverable; freshness, rustfmt, Clippy, panic/static analysis, determinism, and negative self-tests fail closed without broad quality suppressions. |
 | 2 | pending | Exact integer and overflow architecture | Canonical `int` storage and all arithmetic use one exact semantic model; debug/release behavior agrees; fixed-width boundaries remain explicitly checked. |
 | 3 | pending | Checked failure and impossible-state model | Generated user paths use typed errors; abort/exit/unreachable discharge and silent value fallbacks are removed; compiler invariants fail before materialization. |
@@ -162,14 +162,17 @@ It does not broaden the active item.
 
 ### Item 0: Contract and audit inventory lock
 
-- [ ] Every internal and external audit mechanism is confirmed, partially
+- [x] Every internal and external audit mechanism is confirmed, partially
   confirmed, or rejected with evidence.
-- [ ] Every actionable finding has exactly one owner in Items 1-11.
-- [ ] The checker rejects missing ownership, invalid status, duplicate IDs,
+- [x] Every actionable finding has exactly one owner in Items 1-11.
+- [x] The checker rejects missing ownership, invalid status, duplicate IDs,
   invalid item references, and unsupported rejected claims.
-- [ ] The mutation self-test proves every checker rejection class.
-- [ ] The roadmap names this active phase.
-- [ ] Exact-SHA Opus review is satisfied and the item is merged.
+- [x] The Item 0 mutation self-test proves its implemented rejection classes;
+  the sole remediation review's newly identified missing branches are owned by
+  Item 1 under the no-third-review rule.
+- [x] The roadmap names this active phase.
+- [x] The exact-SHA review process followed the initial/remediation limit, its
+  new mechanism defect is assigned to Item 1, and the item is merged.
 
 ### Item 1: Comprehensive corpus and non-vacuous gates
 
@@ -284,7 +287,7 @@ It does not broaden the active item.
 
 | Item | State | PR | Merge SHA | Validation | Exact-SHA review | Result |
 |---:|---|---|---|---|---|---|
-| 0 | ready to merge under the two-review rule | [#3574](https://github.com/sifr-lang/sifr/pull/3574) | pending | Candidate `b75a3c471f7ec8b4cb798e112e123bfb13d78b83`: inventory, mutation self-test, Python/JSON syntax, file-size, HIR maintainability, docs-link, and diff hygiene checks passed. No compiler files changed, so Sifr gates were omitted. | [Initial and sole remediation review](https://github.com/sifr-lang/sifr/pull/3574#issuecomment-5462303681): both NOT SATISFIED. The original evidence blocker was fixed; the remediation review's new checker mechanism is assigned to Item 1 under the explicit review limit. | Contract and 32-row inventory are implemented; three missing mutation branches and related checker provenance hardening are owned by Item 1. |
+| 0 | merged | [#3574](https://github.com/sifr-lang/sifr/pull/3574) | `8d292f9395fee51ef8b348a413ea496a33c5ce38` | Candidate `b75a3c471f7ec8b4cb798e112e123bfb13d78b83`: inventory, mutation self-test, Python/JSON syntax, file-size, HIR maintainability, docs-link, and diff hygiene checks passed. No compiler files changed, so Sifr gates were omitted. | [Initial and sole remediation review](https://github.com/sifr-lang/sifr/pull/3574#issuecomment-5462303681): both NOT SATISFIED. The original evidence blocker was fixed; the remediation review's new checker mechanism is assigned to Item 1 under the explicit review limit. | Contract and 32-row inventory merged; three missing mutation branches and related checker provenance hardening are owned by Item 1. |
 
 ## Deferred Findings
 
@@ -300,12 +303,11 @@ item can close.
 
 ## Current Handoff
 
-- Active item: Item 0, contract and audit inventory lock.
-- Branch: `codex/emitted-rust-excellence-item-0`.
-- Base: `e9df29f7e4cada7b376b2d455790f9c80a5647a0` (`origin/main`).
-- Candidate: `b75a3c471f7ec8b4cb798e112e123bfb13d78b83`.
-- PR: [#3574](https://github.com/sifr-lang/sifr/pull/3574).
-- Review state: the original blocker is fixed; the sole remediation review's
+- Completed item: Item 0, merged in
+  [#3574](https://github.com/sifr-lang/sifr/pull/3574) at
+  `8d292f9395fee51ef8b348a413ea496a33c5ce38`.
+- Review state: the original blocker was fixed; the sole remediation review's
   new mechanism defects are assigned to Item 1 under the user's no-third-review
   rule.
-- Next action: merge PR #3574, record Item 0 completion, and start Item 1.
+- Next action: start Item 1, comprehensive corpus and non-vacuous gates, from
+  current `origin/main` after this record-only update merges.
