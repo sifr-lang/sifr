@@ -12,12 +12,14 @@ from pathlib import Path
 from typing import Any
 
 AREA_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = AREA_ROOT.parents[2]
 DEFAULT_INVENTORY = AREA_ROOT / "emitted_rust_audit_inventory.json"
 DISPOSITIONS = {"confirmed", "partially_confirmed", "rejected"}
 ACTIONABLE_DISPOSITIONS = {"confirmed", "partially_confirmed"}
 SEVERITIES = {"blocking", "informational"}
 FINDING_ID_RE = re.compile(r"ERQ-[0-9]{3}\Z")
 SHA_RE = re.compile(r"[0-9a-f]{40}\Z")
+GLOB_CHARS = frozenset("*?[")
 
 
 def load_inventory(path: Path) -> dict[str, Any]:
@@ -40,6 +42,8 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
     phase_file = payload.get("phase_file")
     if not isinstance(phase_file, str) or not phase_file.startswith("plans/issues/active/"):
         errors.append("phase_file must name an active issue record")
+    elif not (REPO_ROOT / phase_file).is_file():
+        errors.append("phase_file must exist")
 
     raw_items = payload.get("implementation_items")
     if not isinstance(raw_items, list) or not raw_items:
@@ -62,6 +66,12 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
         for value in baseline.values()
     ):
         errors.append("baseline values must be non-negative integers")
+    baseline_context = payload.get("baseline_context")
+    if not isinstance(baseline_context, dict) or not baseline_context or any(
+        not isinstance(value, str) or not value.strip()
+        for value in baseline_context.values()
+    ):
+        errors.append("baseline_context must contain non-empty text values")
 
     raw_findings = payload.get("findings")
     if not isinstance(raw_findings, list) or not raw_findings:
@@ -93,6 +103,12 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
             not isinstance(value, str) or not value.strip() for value in evidence
         ):
             errors.append(f"{finding_label}.evidence must contain non-empty paths")
+        else:
+            for evidence_path in evidence:
+                if not evidence_exists(evidence_path):
+                    errors.append(
+                        f"{finding_label}.evidence path does not exist: {evidence_path}"
+                    )
         sources = raw_finding.get("sources")
         if not isinstance(sources, list) or not sources or any(
             value not in {"internal", "external"} for value in sources
@@ -107,7 +123,11 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
             errors.append(f"{finding_label}.severity is invalid")
         owner_item = raw_finding.get("owner_item")
         if disposition in ACTIONABLE_DISPOSITIONS:
-            if owner_item not in items:
+            if (
+                not isinstance(owner_item, int)
+                or isinstance(owner_item, bool)
+                or owner_item not in items
+            ):
                 errors.append(f"{finding_label} must name one valid implementation owner")
             else:
                 covered_items.add(owner_item)
@@ -135,6 +155,15 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
     return errors
 
 
+def evidence_exists(value: str) -> bool:
+    path = Path(value)
+    if path.is_absolute() or ".." in path.parts:
+        return False
+    if any(char in value for char in GLOB_CHARS):
+        return any(REPO_ROOT.glob(value))
+    return (REPO_ROOT / path).exists()
+
+
 def expect_invalid(payload: dict[str, Any], expected: str) -> None:
     errors = validate_inventory(payload)
     if not any(expected in error for error in errors):
@@ -151,6 +180,70 @@ def run_self_test(payload: dict[str, Any]) -> None:
     duplicate["findings"][1]["id"] = duplicate["findings"][0]["id"]
     expect_invalid(duplicate, "duplicate finding id")
 
+    invalid_schema = copy.deepcopy(payload)
+    invalid_schema["schema_version"] = 2
+    expect_invalid(invalid_schema, "schema_version must equal 1")
+
+    invalid_sha = copy.deepcopy(payload)
+    invalid_sha["baseline_commit"] = "not-a-sha"
+    expect_invalid(invalid_sha, "baseline_commit must be a lowercase 40-character SHA")
+
+    invalid_phase = copy.deepcopy(payload)
+    invalid_phase["phase_file"] = "plans/issues/archive/closed.md"
+    expect_invalid(invalid_phase, "phase_file must name an active issue record")
+
+    missing_phase = copy.deepcopy(payload)
+    missing_phase["phase_file"] = "plans/issues/active/missing.md"
+    expect_invalid(missing_phase, "phase_file must exist")
+
+    invalid_item_type = copy.deepcopy(payload)
+    invalid_item_type["implementation_items"][0] = True
+    expect_invalid(invalid_item_type, "implementation_items must contain integers only")
+
+    duplicate_item = copy.deepcopy(payload)
+    duplicate_item["implementation_items"][1] = 1
+    expect_invalid(duplicate_item, "implementation_items must be unique")
+
+    invalid_item_range = copy.deepcopy(payload)
+    invalid_item_range["implementation_items"][-1] = 12
+    expect_invalid(invalid_item_range, "implementation_items must be exactly Items 1 through 11")
+
+    invalid_baseline = copy.deepcopy(payload)
+    invalid_baseline["baseline"]["demo_emitted_rs_files"] = -1
+    expect_invalid(invalid_baseline, "baseline values must be non-negative integers")
+
+    invalid_baseline_context = copy.deepcopy(payload)
+    invalid_baseline_context["baseline_context"]["rustfmt_command"] = ""
+    expect_invalid(invalid_baseline_context, "baseline_context must contain non-empty text values")
+
+    missing_findings = copy.deepcopy(payload)
+    missing_findings["findings"] = []
+    expect_invalid(missing_findings, "findings must be a non-empty list")
+
+    invalid_finding_shape = copy.deepcopy(payload)
+    invalid_finding_shape["findings"][0] = "not-an-object"
+    expect_invalid(invalid_finding_shape, "findings[0] must be an object")
+
+    invalid_id = copy.deepcopy(payload)
+    invalid_id["findings"][0]["id"] = "bad-id"
+    expect_invalid(invalid_id, "findings[0].id must match ERQ-NNN")
+
+    missing_title = copy.deepcopy(payload)
+    missing_title["findings"][0]["title"] = ""
+    expect_invalid(missing_title, ".title must be non-empty text")
+
+    invalid_evidence_shape = copy.deepcopy(payload)
+    invalid_evidence_shape["findings"][0]["evidence"] = []
+    expect_invalid(invalid_evidence_shape, ".evidence must contain non-empty paths")
+
+    nonexistent_evidence = copy.deepcopy(payload)
+    nonexistent_evidence["findings"][0]["evidence"] = ["missing/evidence.rs"]
+    expect_invalid(nonexistent_evidence, ".evidence path does not exist")
+
+    invalid_sources = copy.deepcopy(payload)
+    invalid_sources["findings"][0]["sources"] = ["unknown"]
+    expect_invalid(invalid_sources, ".sources must contain internal and/or external")
+
     missing_owner = copy.deepcopy(payload)
     missing_owner["findings"][0]["owner_item"] = None
     expect_invalid(missing_owner, "must name one valid implementation owner")
@@ -159,31 +252,39 @@ def run_self_test(payload: dict[str, Any]) -> None:
     invalid_owner["findings"][0]["owner_item"] = 12
     expect_invalid(invalid_owner, "must name one valid implementation owner")
 
+    boolean_owner = copy.deepcopy(payload)
+    boolean_owner["findings"][0]["owner_item"] = True
+    expect_invalid(boolean_owner, "must name one valid implementation owner")
+
     invalid_disposition = copy.deepcopy(payload)
     invalid_disposition["findings"][0]["disposition"] = "unknown"
     expect_invalid(invalid_disposition, "disposition is invalid")
 
+    invalid_severity = copy.deepcopy(payload)
+    invalid_severity["findings"][0]["severity"] = "unknown"
+    expect_invalid(invalid_severity, "severity is invalid")
+
+    actionable_informational = copy.deepcopy(payload)
+    actionable_informational["findings"][0]["severity"] = "informational"
+    expect_invalid(actionable_informational, "actionable findings must be blocking")
+
     unsupported_rejection = copy.deepcopy(payload)
-    rejected = next(
-        finding for finding in unsupported_rejection["findings"]
-        if finding["disposition"] == "rejected"
-    )
+    rejected = find_disposition(unsupported_rejection, "rejected")
     rejected.pop("rejection_reason")
     expect_invalid(unsupported_rejection, "rejected findings need a rejection_reason")
 
     rejected_with_owner = copy.deepcopy(payload)
-    rejected = next(
-        finding for finding in rejected_with_owner["findings"]
-        if finding["disposition"] == "rejected"
-    )
+    rejected = find_disposition(rejected_with_owner, "rejected")
     rejected["owner_item"] = 1
     expect_invalid(rejected_with_owner, "rejected findings cannot have an owner")
 
+    rejected_blocking = copy.deepcopy(payload)
+    rejected = find_disposition(rejected_blocking, "rejected")
+    rejected["severity"] = "blocking"
+    expect_invalid(rejected_blocking, "rejected findings must be informational")
+
     partial_without_qualification = copy.deepcopy(payload)
-    partial = next(
-        finding for finding in partial_without_qualification["findings"]
-        if finding["disposition"] == "partially_confirmed"
-    )
+    partial = find_disposition(partial_without_qualification, "partially_confirmed")
     partial.pop("qualification")
     expect_invalid(partial_without_qualification, "need qualification")
 
@@ -195,6 +296,16 @@ def run_self_test(payload: dict[str, Any]) -> None:
     expect_invalid(missing_item_coverage, "implementation items without an actionable finding: 10")
 
     print("emitted Rust audit inventory self-test: PASS")
+
+
+def find_disposition(payload: dict[str, Any], disposition: str) -> dict[str, Any]:
+    matches = [
+        finding for finding in payload["findings"]
+        if isinstance(finding, dict) and finding.get("disposition") == disposition
+    ]
+    if not matches:
+        raise AssertionError(f"self-test fixture needs a {disposition} finding")
+    return matches[0]
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

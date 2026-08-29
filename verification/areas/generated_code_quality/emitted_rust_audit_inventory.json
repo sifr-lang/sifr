@@ -17,6 +17,11 @@
     "demo_emitted_cloned_calls": 1079,
     "demo_emitted_vec_char_mentions": 937
   },
+  "baseline_context": {
+    "rustfmt_command": "for each sorted demos/**/emitted.rs: rustfmt --check <path>",
+    "rustfmt_version": "rustfmt 1.9.0-stable (88d9e12ae1 2026-08-18)",
+    "note": "The 226 count uses rustfmt's default standalone-file edition. Item 1 will replace this observational baseline with the generated Cargo project's canonical edition-2024 check."
+  },
   "findings": [
     {
       "id": "ERQ-001",
@@ -310,7 +315,7 @@
       "severity": "blocking",
       "owner_item": 10,
       "mechanism": "Project/module assembly can concatenate overlapping demanded preambles or bridge bodies, inflating generated crates and producing duplicate dead APIs.",
-      "evidence": ["crates/sifr_codegen/src/lib_project_codegen.rs", "crates/sifr_codegen/src/lib_runtime_needs.rs", "sifr_output/src/main.rs"],
+      "evidence": ["crates/sifr_codegen/src/lib_project_codegen.rs", "crates/sifr_codegen/src/lib_runtime_needs.rs", "crates/sifr_codegen/src/lib_modules_and_codegen.rs"],
       "sources": ["internal", "external"]
     },
     {
@@ -320,7 +325,7 @@
       "severity": "blocking",
       "owner_item": 11,
       "mechanism": "Local dependency and sysroot materialization can appear directly in generated manifests, making retained emitted projects host-specific.",
-      "evidence": ["crates/sifr_driver/src/build/generated_cargo_project.rs", "demos/**/Cargo.toml", "sifr_output/Cargo.toml"],
+      "evidence": ["crates/sifr_driver/src/build/cargo_manifest.rs", "crates/sifr_driver/src/build/cargo_resolution.rs", "crates/sifr_driver/src/build/materialize.rs"],
       "sources": ["internal", "external"]
     },
     {
