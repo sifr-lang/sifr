@@ -187,8 +187,12 @@ reason = "Generated Rust type conversion and error wrapper helpers are shared la
 preamble_files = ["type_validation.rs", "types_and_errors.rs"]
 direct_runtime_roots = [
   "sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS",
+  "sifr_runtime::IntegerArithmeticError",
+  "sifr_runtime::IntegerDivisionError",
+  "sifr_runtime::IntegerFloatConversionError",
   "sifr_runtime::SifrInt",
   "sifr_runtime::interop",
+  "sifr_runtime::to_usize_proven",
 ]
 
 [[surface]]
