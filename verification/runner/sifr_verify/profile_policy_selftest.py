@@ -92,14 +92,7 @@ def profile_schema_self_test() -> None:
             )
     _python_interop_budget_policy_self_test(profiles)
     create_pr_step_budgets = profiles["create-pr"].get("step_budgets", {})
-    rust_interop_budget = create_pr_step_budgets.get("area_rust_interop")
-    if rust_interop_budget != {
-        "budget_ms": 20_000,
-        "enforcement": "blocking",
-    }:
-        raise AssertionError(
-            f"create-pr Rust interop budget drifted: {rust_interop_budget}"
-        )
+    _create_pr_fixed_budget_policy_self_test(create_pr_step_budgets)
     required_blocking_steps = {
         "area_generated_code_quality",
         "area_rust_interop",
@@ -150,6 +143,20 @@ def _python_interop_budget_policy_self_test(
                 f"{profile_name} Python interop cache budget drifted: "
                 f"{python_interop_budget}"
             )
+
+
+def _create_pr_fixed_budget_policy_self_test(
+    step_budgets: dict[str, Any],
+) -> None:
+    expected_budgets = {
+        "area_rust_interop": 20_000,
+        "area_runtime_platform": 300_000,
+    }
+    for step_name, budget_ms in expected_budgets.items():
+        budget = step_budgets.get(step_name)
+        expected = {"budget_ms": budget_ms, "enforcement": "blocking"}
+        if budget != expected:
+            raise AssertionError(f"create-pr {step_name} budget drifted: {budget}")
 
 
 def _profile_coverage_self_test(profiles: dict[str, dict[str, Any]]) -> None:
