@@ -136,6 +136,7 @@
       "diagnostic_format": "none",
       "expect_exit_code": 0,
       "repeat_runs": 1,
+      "timeout_seconds": 600,
       "assert_no_panic": true,
       "reproduction_command": [
         "cargo",
@@ -160,6 +161,7 @@
       "diagnostic_format": "none",
       "expect_exit_code": 0,
       "repeat_runs": 1,
+      "timeout_seconds": 600,
       "assert_no_panic": true,
       "reproduction_command": [
         "cargo",
@@ -185,6 +187,7 @@
       "diagnostic_format": "none",
       "expect_exit_code": 0,
       "repeat_runs": 1,
+      "timeout_seconds": 600,
       "assert_no_panic": true,
       "reproduction_command": [
         "cargo",
@@ -209,6 +212,7 @@
       "diagnostic_format": "none",
       "expect_exit_code": 0,
       "repeat_runs": 1,
+      "timeout_seconds": 600,
       "assert_no_panic": true,
       "reproduction_command": [
         "cargo",
