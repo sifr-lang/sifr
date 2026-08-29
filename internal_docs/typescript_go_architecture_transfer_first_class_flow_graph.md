@@ -57,7 +57,7 @@ This work stops at HIR and frontend propagation. Analysis and LSP code do not
 read the graph or show its fingerprint. Editor APIs therefore do not expose the
 graph rules.
 
-## M12 Retention Decision
+## Retention Decision
 
 Decision: **keep the graph as a deterministic snapshot artifact**.
 
