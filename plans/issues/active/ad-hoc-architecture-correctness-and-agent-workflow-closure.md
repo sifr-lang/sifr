@@ -59,7 +59,7 @@ The following review claims are explicitly excluded:
 | M12B | Restore canonical list-method lowering on structured fallback paths | merged into M12 branch | [#3566](https://github.com/sifr-lang/sifr/pull/3566) | `c4a23973f80d8eb796e4b9c984c89a248b58ac88` |
 | M12C | Terminal-signal escalation and remaining hardening command lifecycle | merged into M12 branch | [#3567](https://github.com/sifr-lang/sifr/pull/3567) | `9442b51faa8a15c1466919ad797d0cfcd9d0e8ef` |
 | M12D | Documentation mutation-registry consistency | merged into M12 branch | [#3568](https://github.com/sifr-lang/sifr/pull/3568) | `e97e7332e6ef537738ebd6b6f9fad60384ba1f2f` |
-| M12E | Atomic repeated-terminal-signal escalation entry | pending | | |
+| M12E | Atomic repeated-terminal-signal escalation entry | merged into M12 branch | [#3569](https://github.com/sifr-lang/sifr/pull/3569) | `2a8adc32dfed16933dcb22b4d77f989d97c80734` |
 | M13 | Phase closure and whole-phase review | pending | | |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -1080,4 +1080,24 @@ tree and are keyed by candidate SHA.
 - Review evidence is outside Git at
   `.codex/review-evidence/architecture-closure/m12d-e97e7332e6ef537738ebd6b6f9fad60384ba1f2f.md`.
 - M12D changed no compiler files, so it did not run or consume the reserved
+  Sifr create-PR or merge gate.
+
+### M12E Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12e`.
+- Stacked PR: [#3569](https://github.com/sifr-lang/sifr/pull/3569), merged into
+  the M12 branch as `da98972128607699b9598f6c1fda89b19cce0d38`.
+- Exact implementation candidate:
+  `2a8adc32dfed16933dcb22b4d77f989d97c80734`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers or
+  remediation. It verified that repeated entry returns to the in-progress
+  first handler, preserving first-signal forwarding, worker startup, bounded
+  escalation, and the first signal's exit status.
+- Validation: touched Python Ruff and compilation, the full runner self-test,
+  maintainability, file-size, and whitespace checks passed. Opus also ran the
+  deterministic helper against both revisions: the parent exited 130 from the
+  nested SIGINT, while the candidate resumed the outer SIGTERM and exited 143.
+- Review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12e-2a8adc32dfed16933dcb22b4d77f989d97c80734.md`.
+- M12E changed no compiler files, so it did not run or consume the reserved
   Sifr create-PR or merge gate.
