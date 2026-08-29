@@ -78,7 +78,7 @@ Primary evidence files:
 - `crates/sifr_package/src/manifest/production.rs`
 - `crates/sifr_driver/src/workspace/mod.rs`
 - `crates/sifr_driver/src/project/discovery.rs`
-- `crates/sifr_driver/src/project/compile_order.rs`
+- `crates/sifr_frontend/src/graph_cache_and_queries/project_compilation.rs`
 - `crates/sifr_package/src/imports/source_map.rs`
 - `crates/sifr/tests/e2e_support/harness_model.rs`
 - `internal_docs/typescript_go_architecture_transfer_guardrails.md`

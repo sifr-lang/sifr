@@ -1,6 +1,6 @@
 # Ad Hoc Architecture Correctness And Agent Workflow Closure
 
-status: active
+status: implementation complete; closure blocked
 
 ## Objective
 
@@ -43,25 +43,25 @@ The following review claims are explicitly excluded:
 
 | ID | Milestone | Status | PR | Candidate |
 | --- | --- | --- | --- | --- |
-| M1 | Warm-cache lock correctness and serialization failures | implementation complete; merge deferred | [#3553](https://github.com/sifr-lang/sifr/pull/3553) | `1c43fe34847925a269288b4073f5ca7ca7d6063e` |
-| M2 | Canonical test/build materialization | implementation complete; merge deferred | [#3554](https://github.com/sifr-lang/sifr/pull/3554) | `16024325813dbee56e84a838e42679340f0f829a` |
-| M3 | Verification gate integrity | implementation staged; second-review defect deferred | [#3555](https://github.com/sifr-lang/sifr/pull/3555) | `07e3d7d0f5123a89a30a4fcf149e51ebff7d6c7e` |
-| M4 | Architecture documentation accuracy and generated crate map | implementation staged; second-review defect deferred | [#3556](https://github.com/sifr-lang/sifr/pull/3556) | `0cb9720cb80e66bc2be3c73e78206106cd998bd1` |
-| M5 | Structural generated-code safety | implementation staged; final-review residual remediated | [#3557](https://github.com/sifr-lang/sifr/pull/3557) | `5644505a6badeb51b39e38df82b3f8972c545265` |
-| M6 | Structured codegen error propagation | implementation staged; integration deferred | [#3558](https://github.com/sifr-lang/sifr/pull/3558) | `ef46a3eac5f7e54b374f6c648609e49a3dc5f302` |
-| M7 | Canonical frontend project compilation product | implementation staged; integration deferred | [#3559](https://github.com/sifr-lang/sifr/pull/3559) | `30c7ab5e1b5bffc4a9e16f65c061e07498951fae` |
-| M8 | LSP hot paths and compiler-service dependency direction | implementation staged; integration deferred | [#3560](https://github.com/sifr-lang/sifr/pull/3560) | `da39eb709ddffef80d3dc6297cde959f88d85bc5` |
-| M9 | Method-lowering authority and unsafe-code documentation | implementation staged; integration deferred | [#3561](https://github.com/sifr-lang/sifr/pull/3561) | `f6d1f4edaab6a2bfa0952ab89fd1980bec284703` |
-| M10 | Collision-resistant cache identity and cache lifecycle | implementation staged; second-review defect deferred | [#3562](https://github.com/sifr-lang/sifr/pull/3562) | `2e2ad86fb80ee916542738967935039c157fa18e` |
-| M11 | Real fuzz and semantic property targets | implementation staged; create-PR gate defect deferred | [#3563](https://github.com/sifr-lang/sifr/pull/3563) | `7664b902bf4697ca20bc39c683cdb617d26032e2` |
-| M12 | Maintainability ratchets and evidence-based flow decisions | implementation staged; second-review defect closed by M12A | [#3564](https://github.com/sifr-lang/sifr/pull/3564) | `17d7ac63eae4a9417a2d60415c06d7de7016ce6c` |
-| M12A | Process-group deadlines and terminal signal propagation | merged into M12 branch | [#3565](https://github.com/sifr-lang/sifr/pull/3565) | `2b0820dabf890dc19850289273ade09d8b048cd5` |
-| M12B | Restore canonical list-method lowering on structured fallback paths | merged into M12 branch | [#3566](https://github.com/sifr-lang/sifr/pull/3566) | `c4a23973f80d8eb796e4b9c984c89a248b58ac88` |
-| M12C | Terminal-signal escalation and remaining hardening command lifecycle | merged into M12 branch | [#3567](https://github.com/sifr-lang/sifr/pull/3567) | `9442b51faa8a15c1466919ad797d0cfcd9d0e8ef` |
-| M12D | Documentation mutation-registry consistency | merged into M12 branch | [#3568](https://github.com/sifr-lang/sifr/pull/3568) | `e97e7332e6ef537738ebd6b6f9fad60384ba1f2f` |
-| M12E | Atomic repeated-terminal-signal escalation entry | merged into M12 branch | [#3569](https://github.com/sifr-lang/sifr/pull/3569) | `2a8adc32dfed16933dcb22b4d77f989d97c80734` |
-| M12F | Restore generated demo freshness after compiler corrections | merged into M12 branch | [#3570](https://github.com/sifr-lang/sifr/pull/3570) | `4f33183b7244456fc21b0b7b95b2aa85ed586bc6` |
-| M13 | Phase closure and whole-phase review | pending | | |
+| M1 | Warm-cache lock correctness and serialization failures | implementation complete; gate/integration blocked | [#3553](https://github.com/sifr-lang/sifr/pull/3553) | `1c43fe34847925a269288b4073f5ca7ca7d6063e` |
+| M2 | Canonical test/build materialization | implementation complete; integration deferred | [#3554](https://github.com/sifr-lang/sifr/pull/3554) | `16024325813dbee56e84a838e42679340f0f829a` |
+| M3 | Verification gate integrity | implementation complete; integration deferred | [#3555](https://github.com/sifr-lang/sifr/pull/3555) | `07e3d7d0f5123a89a30a4fcf149e51ebff7d6c7e` |
+| M4 | Architecture documentation accuracy and generated crate map | implementation complete; integration deferred | [#3556](https://github.com/sifr-lang/sifr/pull/3556) | `0cb9720cb80e66bc2be3c73e78206106cd998bd1` |
+| M5 | Structural generated-code safety | implementation complete; integration deferred | [#3557](https://github.com/sifr-lang/sifr/pull/3557) | `5644505a6badeb51b39e38df82b3f8972c545265` |
+| M6 | Structured codegen error propagation | implementation complete; integration deferred | [#3558](https://github.com/sifr-lang/sifr/pull/3558) | `ef46a3eac5f7e54b374f6c648609e49a3dc5f302` |
+| M7 | Canonical frontend project compilation product | implementation complete; integration deferred | [#3559](https://github.com/sifr-lang/sifr/pull/3559) | `30c7ab5e1b5bffc4a9e16f65c061e07498951fae` |
+| M8 | LSP hot paths and compiler-service dependency direction | implementation complete; integration deferred | [#3560](https://github.com/sifr-lang/sifr/pull/3560) | `da39eb709ddffef80d3dc6297cde959f88d85bc5` |
+| M9 | Method-lowering authority and unsafe-code documentation | implementation complete; integration deferred | [#3561](https://github.com/sifr-lang/sifr/pull/3561) | `f6d1f4edaab6a2bfa0952ab89fd1980bec284703` |
+| M10 | Collision-resistant cache identity and cache lifecycle | implementation complete; integration deferred | [#3562](https://github.com/sifr-lang/sifr/pull/3562) | `2e2ad86fb80ee916542738967935039c157fa18e` |
+| M11 | Real fuzz and semantic property targets | implementation complete; integration deferred | [#3563](https://github.com/sifr-lang/sifr/pull/3563) | `7664b902bf4697ca20bc39c683cdb617d26032e2` |
+| M12 | Maintainability ratchets and evidence-based flow decisions | implementation complete; integration deferred | [#3564](https://github.com/sifr-lang/sifr/pull/3564) | `17d7ac63eae4a9417a2d60415c06d7de7016ce6c` |
+| M12A | Process-group deadlines and terminal signal propagation | merged into M12 branch; integration deferred | [#3565](https://github.com/sifr-lang/sifr/pull/3565) | `2b0820dabf890dc19850289273ade09d8b048cd5` |
+| M12B | Restore canonical list-method lowering on structured fallback paths | merged into M12 branch; integration deferred | [#3566](https://github.com/sifr-lang/sifr/pull/3566) | `c4a23973f80d8eb796e4b9c984c89a248b58ac88` |
+| M12C | Terminal-signal escalation and remaining hardening command lifecycle | merged into M12 branch; integration deferred | [#3567](https://github.com/sifr-lang/sifr/pull/3567) | `9442b51faa8a15c1466919ad797d0cfcd9d0e8ef` |
+| M12D | Documentation mutation-registry consistency | merged into M12 branch; integration deferred | [#3568](https://github.com/sifr-lang/sifr/pull/3568) | `e97e7332e6ef537738ebd6b6f9fad60384ba1f2f` |
+| M12E | Atomic repeated-terminal-signal escalation entry | merged into M12 branch; integration deferred | [#3569](https://github.com/sifr-lang/sifr/pull/3569) | `2a8adc32dfed16933dcb22b4d77f989d97c80734` |
+| M12F | Restore generated demo freshness after compiler corrections | merged into M12 branch; integration deferred | [#3570](https://github.com/sifr-lang/sifr/pull/3570) | `4f33183b7244456fc21b0b7b95b2aa85ed586bc6` |
+| M13 | Phase closure and whole-phase review | closure reconciliation; review pending | | |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
 
@@ -597,6 +597,38 @@ Scope and acceptance criteria:
 Reconcile every milestone record, deferred finding, architecture/roadmap status,
 and reused validation artifact. Run documentation checks and one exact-SHA
 whole-phase Opus review without repeating unchanged implementation validation.
+
+### Closure Reconciliation
+
+- All 18 reviewed implementation candidates from M1 through M12F are ancestors
+  of the M12 stack head. PRs #3565-#3570 are merged into M12; stacked PRs
+  #3553-#3564 remain open drafts for deferred integration.
+- All in-scope second-review and gate findings are assigned and closed by the
+  later implementation items recorded here. In particular, M12/M12A-M12F
+  close the M3-M11 deferred mechanisms, process lifecycle, structured fallback
+  regression, documentation registry drift, repeated-signal race, and generated
+  demo freshness defect. No implementation finding remains unassigned.
+- Item-level targeted validation and exact-SHA Opus evidence are reused because
+  M13 changes records only. `internal_docs/architecture.md` already contains
+  the reviewed current architecture from M4/M12 and its positive/mutation
+  checks pass; M13 makes no architecture change.
+- The compatibility-removal issue's deleted driver compile-order evidence path
+  is replaced with the canonical frontend project-compilation owner. The
+  roadmap status is changed from `active` to implementation-complete/blocked;
+  this ad hoc phase does not change the roadmap's phase sequencing.
+- The one permitted final create-PR gate ran at
+  `7cb37df1571e0a785b41116cb208713d3bdcd782` and failed only on the stale
+  generated companion later closed by M12F. It was not rerun. Because the
+  implementation SHA changed and both compiler gates were required on one exact
+  SHA, no merge gate is run on a different candidate.
+- Full closure and archive are therefore blocked on new authority for a fresh
+  exact-SHA gate sequence. Stacked integration also remains blocked on the
+  separately owned distinct-human-reviewer restoration issue; the expired
+  waiver is not extended or weakened.
+- Exact next actions: authorize a new create-PR/merge gate sequence for the
+  final stack SHA, restore the distinct human reviewer, then integrate the
+  stacked PR chain and archive this record. Until then the implementation is
+  complete but the phase is not represented as gate-passing or closed.
 
 ## Evidence Ledger
 
