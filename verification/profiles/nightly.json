@@ -18,6 +18,12 @@
     "area_fuzz_property": {
       "budget_ms": 2400000,
       "enforcement": "blocking"
+    },
+    "area_python_interop": {
+      "warm_budget_ms": 2400000,
+      "cold_budget_ms": 4500000,
+      "cache_classifier": "successful-input-receipt",
+      "enforcement": "blocking"
     }
   },
   "resource_policy": {

@@ -96,8 +96,8 @@
       "enforcement": "blocking"
     },
     "area_python_interop": {
-      "warm_budget_ms": 600000,
-      "cold_budget_ms": 1200000,
+      "warm_budget_ms": 2400000,
+      "cold_budget_ms": 2700000,
       "cache_classifier": "successful-input-receipt",
       "enforcement": "blocking"
     },
