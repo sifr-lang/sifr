@@ -118,6 +118,28 @@ Required surfaces:
 
 These annotations are declaration-site workload facts for synchronous functions, not scheduling commands and not async effects. Calling a known `@blocking_io` function from async code should produce a Sifr diagnostic that suggests an async API when one exists, or explicit offload when it does not. Calling a known `@cpu_heavy` function from async code should suggest `task.spawn_cpu` or accepted `sifr.parallel` APIs. The compiler must not silently rewrite either call into a task or thread.
 
+### Replay-Safe Callbacks
+
+`@retry_safe` classifies a function that the runtime can replay. It is not a
+scheduling command or a general effect system.
+
+The compiler validates each Sifr function that uses `@retry_safe`. The function
+can call only these operations:
+
+- compiler-proven pure operations
+- other validated `@retry_safe` functions
+- operations on the explicit replay capability parameter
+
+The function cannot use external I/O, process state, detached tasks, random
+state, clocks, or mutable global state. Each captured value must be owned and
+implement `Clone`.
+
+An external declaration needs separate certification before it can use
+`@retry_safe`. An unchecked annotation is a compile error.
+
+Database transaction replay uses the transaction as its replay capability. Each
+attempt receives a fresh transaction and cloned captures.
+
 Deferred surfaces:
 
 - `ProcessPoolExecutor`
@@ -174,12 +196,36 @@ Cancellation is cooperative:
 
 - cancellation is requested at task boundaries and observed at await/cancellation points
 - active cancellation runs `finally` blocks and async context cleanup before the task is considered complete
-- cleanup is awaited to completion; if cleanup loops forever or deadlocks, the parent scope can hang
-- v1 does not expose forceful task abort, cancellation suppression, shielding, or uncancel counters
+- cleanup awaits use the bounded cleanup budget defined below
+- Sifr does not expose forceful task abort, cancellation suppression, shielding, or uncancel counters
 - CPU loops that do not await cannot be interrupted until they reach a cooperative cancellation point
 - cleanup failures become structured secondary evidence instead of replacing the primary cancellation/failure cause
 
-The shutdown result is deterministic, but not guaranteed to make progress if user cleanup never completes. Cleanup hangs are programmer bugs; the v1 runtime does not paper over them with unsafe aborts.
+The shutdown result is deterministic. The cleanup budget prevents an unlimited
+wait during cancellation.
+
+### Bounded Cleanup After Cancellation
+
+The runtime gives cleanup code a bounded budget during cancellation unwinding.
+This rule applies to `finally`, `__aexit__`, and `AsyncClosable.aclose`.
+
+The runtime does not deliver the active cancellation again during this budget.
+A second cancellation request does not restart or extend the budget.
+
+Each resource owner defines a cleanup timeout. The runtime uses its default
+timeout when the resource does not define one.
+
+If cleanup finishes in time, the original cancellation remains primary. A
+cleanup error becomes `SecondaryError.CleanupFailed`.
+
+If the budget expires, the runtime drops the cleanup future. The resource owner
+must invalidate and discard the underlying resource without another awaited step.
+
+The resource owner must not return an unclean resource to a pool. Budget expiry
+adds `SecondaryError.CleanupFailed` to the original cancellation.
+
+The secondary error includes the resource type, cleanup operation, and timeout.
+This compiler rule does not add a public shielding API.
 
 ### Runtime Is An Implementation Detail
 
@@ -866,7 +912,7 @@ These decisions are part of the first async/concurrency model:
 17. Direct `@blocking_io` or `@cpu_heavy` sync calls from async code are errors in the sealed model; cheap unannotated sync helper calls remain allowed.
 18. `task.spawn_blocking` requires classified `@blocking_io`, `@cpu_heavy`, stdlib-known, or external-rules-known blocking/CPU-heavy work.
 19. Subprocess and signal APIs require a later model amendment.
-20. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; graceful shutdown uses structured scope cancellation and explicit channels.
+20. Public cancellation suppression, shielding, and counters are deferred. Runtime cleanup uses the required bounded cleanup budget.
 21. `async def` with `yield` creates `AsyncGenerator[T, E]`, not `Coroutine[AsyncGenerator[T, E], E]`.
 22. `AsyncGenerator[T, E]` is an `AsyncIterator[T, E]` and is not awaitable.
 23. Async iteration exhaustion is `Ok(None)` through `Result[Option[T], E]`; stream failure remains `Err(E)`.
