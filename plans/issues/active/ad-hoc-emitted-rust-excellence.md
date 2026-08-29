@@ -145,7 +145,7 @@ It does not broaden the active item.
 | Item | Status | Name | Required outcome |
 |---:|---|---|---|
 | 0 | complete | Contract and audit inventory lock | The full quality contract, reconciled finding ledger, baseline, ownership, review limits, and closure rules are machine checked and merged. |
-| 1 | in progress | Comprehensive corpus and non-vacuous gates | Every generated surface is discoverable; freshness, rustfmt, Clippy, panic/static analysis, determinism, and negative self-tests fail closed without broad quality suppressions. |
+| 1 | complete | Comprehensive corpus and non-vacuous gates | Every generated surface is discoverable; freshness, rustfmt, Clippy, panic/static analysis, determinism, and negative self-tests fail closed without broad quality suppressions. |
 | 2 | pending | Exact integer and overflow architecture | Canonical `int` storage and all arithmetic use one exact semantic model; debug/release behavior agrees; fixed-width boundaries remain explicitly checked. |
 | 3 | pending | Checked failure and impossible-state model | Generated user paths use typed errors; abort/exit/unreachable discharge and silent value fallbacks are removed; compiler invariants fail before materialization. |
 | 4 | pending | Collection access and mutation architecture | Reads, writes, deletes, nested access, augassign, membership, and unpacking share checked place semantics with no panic or silent no-op path. |
@@ -288,32 +288,30 @@ It does not broaden the active item.
 | Item | State | PR | Merge SHA | Validation | Exact-SHA review | Result |
 |---:|---|---|---|---|---|---|
 | 0 | merged | [#3574](https://github.com/sifr-lang/sifr/pull/3574) | `8d292f9395fee51ef8b348a413ea496a33c5ce38` | Candidate `b75a3c471f7ec8b4cb798e112e123bfb13d78b83`: inventory, mutation self-test, Python/JSON syntax, file-size, HIR maintainability, docs-link, and diff hygiene checks passed. No compiler files changed, so Sifr gates were omitted. | [Initial and sole remediation review](https://github.com/sifr-lang/sifr/pull/3574#issuecomment-5462303681): both NOT SATISFIED. The original evidence blocker was fixed; the remediation review's new checker mechanism is assigned to Item 1 under the explicit review limit. | Contract and 32-row inventory merged; three missing mutation branches and related checker provenance hardening are owned by Item 1. |
+| 1 | merged | [#3578](https://github.com/sifr-lang/sifr/pull/3578) | `b86eec0be7b7be2b5ddf012fea9cbcced286c342` | Candidate `b0fb5c2049b81fe28fc4b076c34ac624f8249e94`: full generated-code-quality profile passed 9 variants with 0 failures across 91 positive projects; exact safety, rustfmt, 38,957-diagnostic/105-lint Clippy, determinism, all 262 authoritative companions, recursive freshness, audit/debt/surface mutations, Python/JSON, file-size, HIR, driver, docs-link, and diff hygiene passed. No compiler files changed, so Sifr gates were omitted. | [Initial review](https://github.com/sifr-lang/sifr/pull/3578#issuecomment-5463056720) NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3578#issuecomment-5463053848) SATISFIED with all four blockers resolved and no new in-scope mechanism defect. | Exact surface digests, fail-closed quality protocols, strict source/lint policies, 18 negative seeds, and a 33-row governed audit inventory merged; all Item 0 deferred checker findings are resolved. |
 
 ## Deferred Findings
 
 | Source | Finding | Owner | Required action |
 |---|---|---|---|
-| Item 0 remediation review | Empty `implementation_items`, empty `baseline`, and empty finding `mechanism` validation branches lack mutation cases. | Item 1 | Add one mutation per branch as part of the comprehensive gate self-test; do not run a third Item 0 review. |
-| Item 0 remediation review | `baseline_context` accepts arbitrary keys. | Item 1 | Require the command, toolchain version, and explanatory note keys. |
-| Item 0 remediation review | Evidence validation proves path existence but not that the cited location supports the mechanism. | Item 1 | Add governed semantic anchors or an equivalent fail-closed evidence contract. |
-| Item 0 remediation review | Glob metacharacters and symlink boundaries are not fully constrained. | Item 1 | Restrict accepted inventory path syntax and prove repository containment. |
+| Item 1 remediation review | Three idealized, non-authoritative companions were removed while their sibling sources remain. | Item 8 | Decide whether the sources require authoritative emitted companions; regenerate from the Item 8 compiler when required, otherwise preserve their explicit non-authoritative status through closure. |
+| Item 1 remediation review | ERQ-025 still describes the fifteen legacy demo `main.rs` files removed by Item 1. | Item 8 | Close the already-discharged row when Item 8 reconciles stale snapshots and generated ceremony. |
+| Item 1 remediation review | The exact discovery inventory is broader than the 91-project executable quality corpus. | Item 12 | State and verify the intended qualification relationship, and ensure final full-corpus closure cannot leave an inventoried entrypoint class unexercised. |
+| Item 1 remediation review | Checked-in emitted companions receive freshness and safety scans but are not individually governed by rustfmt and Clippy. | Item 8 | Regenerate or remove the remaining producer debt and make authoritative checked-in output satisfy the canonical formatting/lint contract. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
 
-- Active item: Item 1, comprehensive corpus and non-vacuous gates, based on
-  `d7a08f12a2ba638b98542c7745913f7e83be5ab9`.
-- Implementation state: all entrypoint and maintained-source families have an
-  exact path-set inventory; broad Clippy suppression and format-before-check
-  behavior are removed; safety, formatting, lint, freshness, and deterministic
-  output use fail-closed negative checks and exact owner-bound debt signatures.
-- Audit corrections: ERQ-016 now records the live finite `count()` cap, and
-  ERQ-033 separately records non-positive `islice` step adaptation; both are
-  owned by Item 5 and anchored to the stdlib implementation. ERQ-020 is
-  confirmed, not rejected: current decimal lowering contains the reported
-  `with_prec(28)` fallback, owned by Item 6.
-- Next action: validate Item 1, populate only exact existing producer debt,
-  regenerate or remove non-authoritative checked-in output, and obtain the
-  required exact-SHA Opus review.
+- Active item: Item 2, exact integer and overflow architecture, based on Item 1
+  merge `b86eec0be7b7be2b5ddf012fea9cbcced286c342`.
+- Item 1 state: merged with exact surface discovery, fail-closed quality gates,
+  owner-bound debt, strict source/lint policy, recursive freshness, and 18
+  negative seeds. Its final exact-SHA Opus remediation review was SATISFIED.
+- Item 2 inherited audit: ERQ-007 and ERQ-008 own the mixed integer
+  representation and broad safe-math workaround; arithmetic Clippy debt is
+  owned by Item 2 and must be eliminated through one canonical exact model.
+- Next action: re-audit integer representation and arithmetic on current
+  `origin/main`, implement the complete Item 2 architecture without testing,
+  then run focused validation and the single exact candidate gate sequence.
