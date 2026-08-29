@@ -5,9 +5,6 @@ Status: accepted design
 This document defines the complete Sifr SQL architecture. It is the authority
 for compiler, package, runtime, tooling, migration, and editor behavior.
 
-The matching phase record is
-[`ad-hoc-schema-first-sql-platform.md`](../plans/issues/active/ad-hoc-schema-first-sql-platform.md).
-
 ## Purpose
 
 Sifr SQL uses native SQL for schemas and queries. Sifr provides static types,
