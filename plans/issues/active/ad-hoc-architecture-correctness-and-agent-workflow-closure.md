@@ -1,6 +1,6 @@
 # Ad Hoc Architecture Correctness And Agent Workflow Closure
 
-status: implementation complete; closure blocked
+status: implementation follow-up in progress; closure blocked
 
 ## Objective
 
@@ -63,6 +63,7 @@ The following review claims are explicitly excluded:
 | M12F | Restore generated demo freshness after compiler corrections | merged into M12 branch; integration deferred | [#3570](https://github.com/sifr-lang/sifr/pull/3570) | `4f33183b7244456fc21b0b7b95b2aa85ed586bc6` |
 | M12G | Register consolidated lowering intrinsic transport ownership | merged into M12 branch; integration deferred | [#3572](https://github.com/sifr-lang/sifr/pull/3572) | `7dc83924abd25bd15e5adfdf1d1df77da79ee3c4` |
 | M12H | Remove delivery-plan taxonomy from retained flow-graph architecture | merged into M12 branch; integration deferred | [#3573](https://github.com/sifr-lang/sifr/pull/3573) | `5094e412fbeb253edcfdd41a39079ecea72f9b1d` |
+| M12I | Restore authoritative Python-interop gate budget integrity | pending | | |
 | M13 | Phase closure and whole-phase review | whole-phase review satisfied; merged into M12 branch; closure blocked | [#3571](https://github.com/sifr-lang/sifr/pull/3571) | `5b4005c8cabc910f1c7c959e6518fe3079135fb4` |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -624,6 +625,29 @@ Scope and acceptance criteria:
   file-size guardrail, and whitespace check pass.
 - Run one exact-SHA Opus review, with at most one remediation review.
 
+## M12I Restore Authoritative Python-Interop Gate Budget Integrity
+
+Close the reproducible Python-interop step-budget defect exposed by the clean,
+uncontended create-PR gate after M12H.
+
+Scope and acceptance criteria:
+
+- Measure the complete required create-PR and merge Python-interop workloads on
+  the declared local host; do not use the first cold/cache-contended run as
+  performance evidence.
+- Keep all compiled-evidence suites required by the Python-interop capability
+  matrix in create-PR, merge, nightly, and release profiles. Do not make the
+  gate pass by dropping certification coverage or weakening blocking
+  enforcement.
+- Set explicit cache-aware Python-interop step budgets from the measured
+  workloads with bounded headroom for the authoritative delivery profiles.
+- Bind the cache fingerprint to the actual selected Python-interop suite list;
+  `area_python_interop` must not fingerprint an empty suite list.
+- Add deterministic self-tests for the suite binding and budget policy, then
+  pass runner/profile self-tests, all changed profile plans, file-size, and
+  whitespace checks.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
 ## M13 Phase Closure And Whole-Phase Review
 
 Reconcile every milestone record, deferred finding, architecture/roadmap status,
@@ -661,8 +685,8 @@ whole-phase Opus review without repeating unchanged implementation validation.
   Stacked integration also remains blocked on the separately owned
   distinct-human-reviewer restoration issue; the expired waiver is not
   extended or weakened.
-- Exact next actions: run the authorized clean create-PR/merge gate sequence for
-  the resulting final stack SHA, restore the distinct human reviewer, then
+- Exact next actions: close M12I, run the authorized clean create-PR/merge gate
+  sequence for the resulting final stack SHA, restore the distinct human reviewer, then
   integrate the stacked PR chain and archive this record. Until then the phase
   is not represented as gate-passing or closed.
 
@@ -1246,10 +1270,10 @@ tree and are keyed by candidate SHA.
   its own satisfied item review, so the single whole-phase review is not
   repeated. The phase remains active and closure-blocked. No green compiler
   gate, merged main stack, archive, or full closure is claimed. The exact next
-  actions now include the authorized fresh exact-SHA gate sequence, distinct
-  reviewer restoration, stacked integration, and archival recorded in the
-  closure reconciliation above. M12H is merged and its exact delta has its own
-  satisfied item review, so the single whole-phase review is not repeated.
+  actions now include M12I, the authorized fresh exact-SHA gate sequence,
+  distinct reviewer restoration, stacked integration, and archival recorded in
+  the closure reconciliation above. M12H is merged and its exact delta has its
+  own satisfied item review, so the single whole-phase review is not repeated.
 
 ### User-Authorized Create-PR Gate Attempt
 
@@ -1349,3 +1373,22 @@ tree and are keyed by candidate SHA.
   validation evidence.
 - Gate and isolated-case evidence is outside Git at
   `.codex/review-evidence/architecture-closure/authorized-create-pr-47b32ddf2ff54a15e9a55ed30d49ec108aec1fea.md`.
+
+### Uncontended Create-PR Budget Failure
+
+- Exact stack SHA: `1cdae7167cbedb4b65789223dc6db75781706fb3`.
+- The create-PR gate ran on an idle host and passed every step before Python
+  interop. The cold Python-interop area then exhausted its 1,200-second blocking
+  deadline after legitimate passing cases consumed about 1,181.5 seconds:
+  read-only check/doctor `496.239s`, binding authoring `27.454s`, LSP declaration
+  authoring `8.531s`, callback examples `250.912s`, and buffer examples
+  `398.353s`.
+- Required Arrow, DLPack, runtime, async, and cloud suites had not yet run. The
+  current budget therefore cannot cover the required profile selection even on
+  an uncontended host. The profile also fingerprints an empty suite list for
+  the `area_python_interop` step instead of its actual selection.
+- This mechanism defect is M12I. Required certification suites and blocking
+  enforcement remain in scope and must not be removed or weakened.
+- The gate exited 124; no merge gate ran.
+- Gate evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/final-create-pr-1cdae7167cbedb4b65789223dc6db75781706fb3.md`.
