@@ -61,7 +61,7 @@ The following review claims are explicitly excluded:
 | M12D | Documentation mutation-registry consistency | merged into M12 branch; integration deferred | [#3568](https://github.com/sifr-lang/sifr/pull/3568) | `e97e7332e6ef537738ebd6b6f9fad60384ba1f2f` |
 | M12E | Atomic repeated-terminal-signal escalation entry | merged into M12 branch; integration deferred | [#3569](https://github.com/sifr-lang/sifr/pull/3569) | `2a8adc32dfed16933dcb22b4d77f989d97c80734` |
 | M12F | Restore generated demo freshness after compiler corrections | merged into M12 branch; integration deferred | [#3570](https://github.com/sifr-lang/sifr/pull/3570) | `4f33183b7244456fc21b0b7b95b2aa85ed586bc6` |
-| M13 | Phase closure and whole-phase review | closure reconciliation; review pending | | |
+| M13 | Phase closure and whole-phase review | whole-phase review satisfied; merged into M12 branch; closure blocked | [#3571](https://github.com/sifr-lang/sifr/pull/3571) | `5b4005c8cabc910f1c7c959e6518fe3079135fb4` |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
 
@@ -641,7 +641,8 @@ tree and are keyed by candidate SHA.
 - Draft PR: [#3553](https://github.com/sifr-lang/sifr/pull/3553)
 - Implementation candidate: `1c43fe34847925a269288b4073f5ca7ca7d6063e`
 - Opus review: `SATISFIED`, no blocking findings; published in the PR and
-  preserved outside the Git tree under the candidate SHA.
+  preserved outside the Git tree at
+  `.codex/review-evidence/sifr/1c43fe34847925a269288b4073f5ca7ca7d6063e/m1-opus.md`.
 - Targeted validation: `cargo test -p sifr_package` (143 passed), driver
   cache-identity tests (7 passed), binary-key tests (4 passed), Cargo-resolution
   tests (9 passed), affected production checks, workspace Clippy, formatting,
@@ -1187,3 +1188,25 @@ tree and are keyed by candidate SHA.
   `.codex/review-evidence/architecture-closure/m12f-4f33183b7244456fc21b0b7b95b2aa85ed586bc6.md`.
 - M12F changed only a generated companion, so it did not rerun the consumed
   create-PR gate or run a Sifr merge gate on a different SHA.
+
+### M13 Closure Handoff
+
+- Branch: `codex/architecture-audit-closure-m13`.
+- Stacked PR: [#3571](https://github.com/sifr-lang/sifr/pull/3571), merged into
+  the M12 branch as `f0622695886a61e57617767e21f55da8580ef547`.
+- Exact record candidate: `5b4005c8cabc910f1c7c959e6518fe3079135fb4`.
+- The single whole-phase exact-SHA Opus review returned `SATISFIED` with no
+  blocking findings. It verified ancestry for all 18 reviewed implementation
+  candidates, spot-checked the deferred mechanisms in the current tree,
+  confirmed no unassigned in-scope finding, and approved the architecture,
+  roadmap, compatibility-record, gate, and blocker reconciliation.
+- M13 validation reused unchanged item evidence and ran the full documentation
+  area: architecture, structure, and GA-release suites passed 3/3. File-size
+  and whitespace checks also passed.
+- Whole-phase review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m13-5b4005c8cabc910f1c7c959e6518fe3079135fb4-whole-phase.md`.
+- Implementation is complete, but the phase remains active and closure-blocked.
+  No green compiler gate, merged main stack, archive, or full closure is
+  claimed. The exact next actions remain the fresh exact-SHA gate authority,
+  distinct reviewer restoration, stacked integration, and archival recorded
+  in the closure reconciliation above.
