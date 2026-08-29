@@ -758,7 +758,7 @@ All errors have `message: str` populated from Rust's `Display` (for built-ins) o
 | `ScopeFailure` | `Error` | `primary: ScopeFailureCause`, `secondary: list[SecondaryError]` | Scope-exit evidence for unobserved child task failure/cancellation |
 | `GeneratorCloseError` | `Error` | `message: str` | Explicit async generator close failed during cleanup |
 | `GeneratorBusyError` | `Error` | `message: str` | Reentrant async generator advancement protocol error |
-| `SecondaryError` | `Error` | `message: str`, `primary: str`, `secondary: Error` | Cleanup or sibling failure evidence attached to a primary cancellation/failure; never masks the primary result |
+| `SecondaryError` | -- | `CleanupFailed`, `CleanupTimedOut`, `SiblingFailed`, or `CancellationDuringCleanup` | Closed secondary evidence defined by the async model; never masks the primary result |
 
 **Exhaustiveness with Subclasses:**
 
@@ -1092,7 +1092,7 @@ Sifr must define which types can cross thread/task boundaries. async/runtime arc
 - **Async generator suspension is ownership-checked:** mutable borrows cannot remain live across `yield` or `await` inside an async generator. If an async generator object crosses a spawned-task boundary, all captured values and generated state-machine fields must satisfy the same sendability facts as any other task-boundary value.
 - **Async comprehensions are protocol sugar:** list, set, and dict async comprehensions consume `AsyncIterator[T, E]` through `anext()`; they do not create hidden tasks or detached work. Cancellation of a comprehension closes the active `AsyncClosable` iterator it started. Lazy async generator expressions are deferred in v1.
 - **`AsyncClosable` is parameterized:** `AsyncClosable[E]` with `aclose() -> Result[None, E]` allows streams, files, sockets, and database cursors to define their own cleanup error type. `AsyncGenerator` implements `AsyncClosable[GeneratorCloseError]`.
-- **Cancellation cleanup is bounded:** cancellation defers redelivery during one resource-owned cleanup budget. Expiry drops the cleanup future and invalidates the resource. It retains `SecondaryError.CleanupFailed` without replacing the primary outcome.
+- **Cancellation cleanup is bounded:** cancellation defers redelivery during one resource-owned cleanup budget. Expiry drops the cleanup future and invalidates the resource. It retains `SecondaryError.CleanupTimedOut` without replacing the primary outcome.
 - **Replay safety is compiler-validated:** `@retry_safe` callbacks can call only pure or replay-safe operations and explicit replay capabilities. External replay-safe declarations require certification.
 - **Async calls are async-only:** sync code cannot invoke an async function through the async-call path. The compiler rejects async calls from sync functions unless a future explicit runtime bridge is added. This prevents Python-style unawaited coroutine/task leaks.
 - **Typed Python async contexts are cancellation-safe:** `@python.context.aenter`/`.aexit` and `cleanup=async_context` run on the generated application's single owned asyncio loop. The compiler preserves original Python exception replay, permits suppression only for originating Python exceptions, masks exit until terminal cleanup, and then resumes timeout/cancellation with cleanup failures retained as secondary evidence.

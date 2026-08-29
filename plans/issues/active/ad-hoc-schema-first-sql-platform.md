@@ -147,13 +147,13 @@ same milestone must update both records and explain the resolved contract.
 
 ## Milestone acceptance contracts
 
-### Milestone 0: Architecture and coverage lock
+### Milestone 0: Architecture and dependency lock
 
 - [ ] The SQL architecture contains every locked delivery contract from this
   record and has no version-scoped deferral.
-- [ ] Structural records, fixed-width integers, canonical temporal types,
-  replay-safe callbacks, bounded cancellation cleanup, and diagnostic registries
-  have approved language contracts before SQL implementation begins.
+- [ ] Structural records, fixed-width integers, canonical temporal types, network
+  address value types, replay-safe callbacks, bounded cancellation cleanup, and
+  diagnostic registries have approved language contracts before SQL work begins.
 - [ ] A machine-readable ownership map assigns each architecture surface to one
   milestone and one repository owner.
 - [ ] A capability matrix lists required PostgreSQL, MySQL, and SQLite grammar,
@@ -236,8 +236,8 @@ same milestone must update both records and explain the resolved contract.
 - [ ] Fixed-width SQL integers map to exact Sifr widths. Generic integer binding
   uses checked narrowing.
 - [ ] Decimal, floating-point, temporal, text, binary, UUID, JSON, enum, array,
-  domain, composite, range, custom, unsigned, and SQLite affinity rules have
-  explicit provider contracts.
+  domain, composite, range, IP, network, MAC, custom, unsigned, and SQLite
+  affinity rules have explicit provider contracts.
 - [ ] Every supported value pair has an exact bind-compatibility rule. Width
   mismatch, nullability, arrays, custom codecs, and generic integers fail or
   convert according to that table.
@@ -308,6 +308,8 @@ same milestone must update both records and explain the resolved contract.
   public types have final lint behavior and machine-applicable fixes.
 - [ ] The compiler expands accepted private `SELECT *` forms to explicit emitted
   columns. Exported `SELECT *` is always an error.
+- [ ] Application `sifr build` emits query-signature artifacts for package API
+  compatibility checks.
 
 ### Milestone 9: PostgreSQL runtime
 
@@ -385,7 +387,8 @@ same milestone must update both records and explain the resolved contract.
 - [ ] Validation reports object differences and affected queries without silent
   file mutation.
 - [ ] `schema build` produces deterministic snapshots, fingerprints, runtime
-  manifests, generated modules, and dependency indexes.
+  manifests, generated modules, and schema dependency indexes. It does not emit
+  application query signatures.
 - [ ] Conflicting authorities, credentials in output, nondeterminism, and incomplete
   provider metadata fail closed.
 

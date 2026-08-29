@@ -222,7 +222,7 @@ If the budget expires, the runtime drops the cleanup future. The resource owner
 must invalidate and discard the underlying resource without another awaited step.
 
 The resource owner must not return an unclean resource to a pool. Budget expiry
-adds `SecondaryError.CleanupFailed` to the original cancellation.
+adds `SecondaryError.CleanupTimedOut` to the original cancellation.
 
 The secondary error includes the resource type, cleanup operation, and timeout.
 This compiler rule does not add a public shielding API.
@@ -364,7 +364,19 @@ enum ScopeFailureCause:
     UnobservedChildCancelled(cause: CancellationError, task_id: str)
 
 enum SecondaryError:
-    CleanupFailed(error: Error, location: str)
+    CleanupFailed(
+        error: Error,
+        location: str,
+        resource: str,
+        operation: str,
+        budget: Duration,
+    )
+    CleanupTimedOut(
+        location: str,
+        resource: str,
+        operation: str,
+        budget: Duration,
+    )
     SiblingFailed(error: Error, task_id: str)
     CancellationDuringCleanup(cause: CancellationError)
 ```

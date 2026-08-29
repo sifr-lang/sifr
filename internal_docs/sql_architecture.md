@@ -61,6 +61,7 @@ source = "db/schema.postgresql.sql"
 server-version = "18"
 search-path = ["app", "public"]
 extensions = ["citext"]
+pooling = "session"
 schema-evidence = "migration-head"
 schema-strictness = "compatible"
 
@@ -69,6 +70,7 @@ provider = "sifr-sql-postgresql"
 source = "db/analytics.postgresql.sql"
 server-version = "18"
 search-path = ["analytics", "public"]
+pooling = "transaction"
 schema-evidence = "introspection"
 schema-strictness = "exact"
 ```
@@ -401,6 +403,7 @@ dialect provider identity
 server family and version
 SQL modes and feature flags
 search path or namespace rules
+pooling mode and session contract
 enabled extensions
 schema source files
 normalized SchemaIR
@@ -1002,8 +1005,8 @@ Cancellation or timeout starts rollback under the bounded cleanup budget. The
 original cancellation remains primary.
 
 If rollback fails or the budget expires, the runtime invalidates and discards the
-connection without another awaited step. It adds `SecondaryError.CleanupFailed`
-to the cancellation evidence.
+connection without another awaited step. A failure adds `CleanupFailed` evidence.
+Budget expiry adds `CleanupTimedOut` evidence.
 
 Nested transactions use savepoints only when the provider declares exact support.
 The API rejects unsupported nesting at compile time when the receiver type proves
@@ -1038,6 +1041,18 @@ handle, not its connections.
 
 A request task can own one cloned pool handle. `Connection`, `Transaction`, and
 `RowStream` cannot cross a spawn boundary.
+
+### Connection acquisition
+
+A verified pool exposes an owned connection through an async context:
+
+```sifr
+async with verified.acquire() as connection:
+    _ = try await connection.warm(find_user)
+```
+
+Scope exit resets the profile session contract and returns the connection to the
+pool. Failed or timed-out cleanup invalidates and discards the connection.
 
 ### Execution methods
 
@@ -1101,9 +1116,8 @@ views only when their lifetime is statically tied to the source row buffer.
 ### Statement cache
 
 There is no public `PreparedQuery` type. Each connection maintains a bounded
-prepared-statement cache. Cache identity
-includes the normalized SQL, parameter database types, result database types,
-provider version, and schema fingerprint.
+prepared-statement cache. Cache identity includes the normalized SQL, parameter
+database types, result database types, provider version, and schema fingerprint.
 
 Schema contract failure invalidates affected entries before execution.
 
@@ -1133,6 +1147,9 @@ Profiles use these resource values:
 
 The runtime rejects an exceeded bound with a structured error. It does not allocate
 without a checked bound.
+
+`max-collected-rows` is a profile ceiling. It does not remove the explicit
+`max_rows` argument or the requirement for a statically proven query bound.
 
 ### Execution results
 
@@ -1402,8 +1419,11 @@ and migration heads. Two builds with equal records must produce equal query plan
 The compiler and each component declare compatible protocol ranges. A major-range
 mismatch is a `SIFR-COMPONENT-*` error and never selects a weaker protocol.
 
-`schema build` emits an exported-query signature artifact. It records query
-parameters, result types, cardinality, effects, and schema dependencies.
+Application `sifr build` owns the exported-query signature artifact. It records
+query parameters, result types, cardinality, effects, and schema dependencies.
+
+`sifr sql schema build` owns schema artifacts and the dependency index. It does
+not analyze application query bodies or emit query signatures.
 
 An exported inferred-row change is a breaking package API change. CI can compare
 signature artifacts before publication.
@@ -1533,7 +1553,8 @@ sifr sql schema build --profile app
 ```
 
 `build` compiles declarative schema sources and migrations into the canonical
-snapshot, fingerprint, runtime manifest, and generated Sifr schema module.
+snapshot, fingerprint, runtime manifest, generated Sifr schema module, and
+schema dependency index.
 
 Generated output is deterministic. The command fails when two inputs claim
 authority for the same object without an explicit merge rule.
@@ -1578,9 +1599,9 @@ def add_status[S: MigrationState](plan: MigrationPlan[S]):
     )
 
     after_data = after_add.sql_step(t"""
-            UPDATE orders
-            SET status = 'pending'
-            WHERE status IS NULL
+        UPDATE orders
+        SET status = 'pending'
+        WHERE status IS NULL
     """)
     after_assert = after_data.assert_sql(t"""
         SELECT NOT EXISTS(
@@ -1589,7 +1610,7 @@ def add_status[S: MigrationState](plan: MigrationPlan[S]):
     """)
     return after_assert.ddl(
         t"ALTER TABLE orders ALTER COLUMN status SET NOT NULL"
-)
+    )
 ```
 
 `MigrationPlan[S]` is affine. Each step consumes its plan and returns a plan with
@@ -1755,6 +1776,7 @@ provider = "sifr-sql-postgresql"
 source = "db/schema.postgresql.sql"
 server-version = "18"
 search-path = ["app", "public"]
+pooling = "session"
 schema-evidence = "migration-head"
 schema-strictness = "exact"
 ```
