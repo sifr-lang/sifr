@@ -72,6 +72,7 @@ mod core_and_calls;
 pub(in crate::lower) use core_and_calls::*;
 mod affine_resources;
 mod literals;
+mod slice_validation;
 pub(in crate::lower) use affine_resources::affine_value_references_name;
 use affine_resources::consume_affine_collection_method_arguments;
 mod generator_expression;

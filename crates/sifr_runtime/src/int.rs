@@ -612,11 +612,7 @@ fn exact_bigint_ratio_to_f64(
     denominator: &BigInt,
 ) -> Result<f64, IntegerDivisionError> {
     if numerator.is_zero() {
-        return Ok(if numerator.sign() == Sign::Minus {
-            -0.0
-        } else {
-            0.0
-        });
+        return Ok(0.0);
     }
     let negative = numerator.sign() != denominator.sign();
     let mut numerator = numerator.abs();

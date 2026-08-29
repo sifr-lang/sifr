@@ -357,9 +357,8 @@ pub(in crate::lower) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) ->
         }
         if !super::super::integer_failure_diagnostics::is_proven_nonzero_integer_expr(&lowered, ctx)
         {
-            ctx.error_with_code_at(
-                DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING,
-                "integer division, modulo, exponentiation, shift, or range step requires handling a typed integer failure unless the compiler can prove this operation is safe".to_string(),
+            super::super::integer_failure_diagnostics::emit_exact_int_requires_handling(
+                ctx,
                 raw.range(),
             );
             return None;

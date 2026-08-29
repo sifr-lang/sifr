@@ -338,11 +338,11 @@ pub(super) fn test_proven_safe_exact_int_true_division_lowers_as_float() {
         "\
 def main() -> None:
     numerator: int = 10
-    denominator: int = 3
+    denominator: int = 2
     value: float = numerator / denominator
 ",
     )
-    .expect("small exact-int constants should prove safe for true division");
+    .expect("an exactly representable constant quotient should lower as float");
 
     assert!(matches!(
         function_let_value(&module, "value"),
@@ -354,11 +354,28 @@ def main() -> None:
 }
 
 #[test]
+pub(super) fn test_small_precision_losing_exact_int_true_division_requires_result_target() {
+    let source = "\
+def main() -> None:
+    value: float = 1 / 3
+";
+    let errors = lower_source(source).expect_err("1 / 3 is not exactly representable as float");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error
+                .message
+                .contains("expected 'float', got 'Result[float,")
+            && error.primary_range == Some(range_for(source, "1 / 3"))
+    }));
+}
+
+#[test]
 pub(super) fn test_large_exact_int_true_division_still_requires_handling() {
     let source = "\
 def main() -> None:
     numerator: int = 9007199254740993
-    denominator: int = 3
+    denominator: int = 1
     value: float = numerator / denominator
 ";
     let errors = lower_source(source).expect_err("precision-losing exact-int division should fail");
@@ -642,6 +659,24 @@ def main() -> None:
             op,
             value: HirExpr::IntLiteral(0),
         } if name == "value" && op == "**="
+    ));
+}
+
+#[test]
+pub(super) fn test_module_constant_exact_int_power_uses_const_proof() {
+    let module = lower_source(
+        "\
+LIMIT: int = 2
+
+def main() -> None:
+    value: int = LIMIT ** 3
+",
+    )
+    .expect("module constants should participate in bounded integer proofs");
+
+    assert!(matches!(
+        function_let_value(&module, "value"),
+        HirExpr::BinOp { ty: Type::Int, .. }
     ));
 }
 

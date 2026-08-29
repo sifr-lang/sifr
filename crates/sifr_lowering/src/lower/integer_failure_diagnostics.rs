@@ -6,20 +6,7 @@ use crate::hir_nodes::HirExpr;
 
 use super::LowerCtx;
 
-const EXACT_INT_DIVISION_REQUIRES_HANDLING: &str = "integer division, modulo, exponentiation, shift, or range step requires handling a typed integer failure unless the compiler can prove this operation is safe";
-
-pub(in crate::lower) fn exact_int_division_requires_handling(
-    _left: &HirExpr,
-    op: &str,
-    _right: &HirExpr,
-    _ctx: &mut LowerCtx,
-    _range: TextRange,
-) -> bool {
-    if !is_integer_failure_op(op) {
-        return false;
-    }
-    false
-}
+const EXACT_INT_DIVISION_REQUIRES_HANDLING: &str = "integer division, modulo, exponentiation, shift, range step, or slice step requires handling a typed integer failure unless the compiler can prove this operation is safe";
 
 pub(in crate::lower) fn exact_int_augassign_requires_handling(
     target_ty: &Type,
@@ -29,14 +16,14 @@ pub(in crate::lower) fn exact_int_augassign_requires_handling(
     range: TextRange,
 ) -> bool {
     if base_op == "/" && is_exact_int_like(target_ty) && is_exact_int_like(value.ty()) {
-        emit_exact_int_division_requires_handling(ctx, range);
+        emit_exact_int_requires_handling(ctx, range);
         return true;
     }
     if !is_integer_failure_op(base_op) {
         return false;
     }
     if involves_fixed_width_integer(target_ty, value.ty()) {
-        emit_exact_int_division_requires_handling(ctx, range);
+        emit_exact_int_requires_handling(ctx, range);
         return true;
     }
     if (is_integer_exponentiation(base_op) || is_integer_shift(base_op))
@@ -44,7 +31,7 @@ pub(in crate::lower) fn exact_int_augassign_requires_handling(
         && is_exact_int_like(value.ty())
         && !super::expression_operators::statically_safe_bounded_integer_augassign(base_op, value)
     {
-        emit_exact_int_division_requires_handling(ctx, range);
+        emit_exact_int_requires_handling(ctx, range);
         return true;
     }
     if is_exact_int_like(target_ty)
@@ -52,13 +39,13 @@ pub(in crate::lower) fn exact_int_augassign_requires_handling(
         && is_exact_int_division_or_modulo(base_op)
         && !is_proven_nonzero_integer_expr(value, ctx)
     {
-        emit_exact_int_division_requires_handling(ctx, range);
+        emit_exact_int_requires_handling(ctx, range);
         return true;
     }
     false
 }
 
-fn emit_exact_int_division_requires_handling(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn emit_exact_int_requires_handling(ctx: &mut LowerCtx, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING,
         EXACT_INT_DIVISION_REQUIRES_HANDLING.to_string(),

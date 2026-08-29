@@ -62,7 +62,7 @@ pub(in crate::lower) fn bounded_integer_arithmetic_result_type(
     if !is_exact_or_fixed_int_like(left.ty()) || !is_exact_or_fixed_int_like(right.ty()) {
         return None;
     }
-    if statically_safe_bounded_integer_arithmetic(left, op, right) {
+    if statically_safe_bounded_integer_arithmetic(left, op, right, ctx) {
         return Some(Type::Int);
     }
     Some(Type::Result(
@@ -79,8 +79,13 @@ pub(in crate::lower) fn bounded_integer_arithmetic_result_type(
     ))
 }
 
-fn statically_safe_bounded_integer_arithmetic(left: &HirExpr, op: &str, right: &HirExpr) -> bool {
-    let Some(exponent) = literal_exact_integer_value(right) else {
+fn statically_safe_bounded_integer_arithmetic(
+    left: &HirExpr,
+    op: &str,
+    right: &HirExpr,
+    ctx: &LowerCtx,
+) -> bool {
+    let Some(exponent) = proven_exact_integer_value(right, ctx) else {
         return false;
     };
     if exponent.sign() == Sign::Minus {
@@ -91,7 +96,7 @@ fn statically_safe_bounded_integer_arithmetic(left: &HirExpr, op: &str, right: &
             .to_u64()
             .is_some_and(|shift| shift <= DEFAULT_MAX_INTEGER_OUTPUT_BITS);
     }
-    let Some(value) = literal_exact_integer_value(left) else {
+    let Some(value) = proven_exact_integer_value(left, ctx) else {
         return exponent == BigInt::ZERO;
     };
     if op == "**" {
@@ -195,10 +200,7 @@ pub(in crate::lower) fn exact_int_true_division_result_type(
     if !is_exact_or_fixed_int_like(left.ty()) || !is_exact_or_fixed_int_like(right.ty()) {
         return None;
     }
-    if is_proven_nonzero_integer_expr(right, ctx)
-        && exact_integer_expr_is_proven_float_representable(left, ctx)
-        && exact_integer_expr_is_proven_float_representable(right, ctx)
-    {
+    if exact_integer_ratio_is_proven_float_representable(left, right, ctx) {
         return Some(Type::Float);
     }
     Some(Type::Result(
@@ -209,6 +211,58 @@ pub(in crate::lower) fn exact_int_true_division_result_type(
             builtin_error_type(ctx, "FloatPrecisionLossError", "OverflowError", vec![]),
         ])),
     ))
+}
+
+fn exact_integer_ratio_is_proven_float_representable(
+    numerator: &HirExpr,
+    denominator: &HirExpr,
+    ctx: &LowerCtx,
+) -> bool {
+    let (Some(numerator), Some(denominator)) = (
+        proven_exact_integer_value(numerator, ctx),
+        proven_exact_integer_value(denominator, ctx),
+    ) else {
+        return false;
+    };
+    if denominator.is_zero() {
+        return false;
+    }
+    if numerator.is_zero() {
+        return true;
+    }
+
+    let mut numerator = numerator.abs();
+    let mut denominator = denominator.abs();
+    let divisor = bigint_gcd(numerator.clone(), denominator.clone());
+    numerator /= &divisor;
+    denominator /= divisor;
+
+    let one = BigInt::from(1_u8);
+    if (&denominator & (&denominator - &one)) != BigInt::ZERO {
+        return false;
+    }
+    let denominator_power = denominator.bits().saturating_sub(1);
+    let mut numerator_twos = 0_u64;
+    while (&numerator & &one) == BigInt::ZERO {
+        numerator >>= 1_usize;
+        numerator_twos += 1;
+    }
+    let significand_bits = numerator.bits();
+    if significand_bits > 53 {
+        return false;
+    }
+    let exponent = i128::from(numerator_twos) - i128::from(denominator_power);
+    let highest_exponent = exponent + i128::from(significand_bits) - 1;
+    highest_exponent <= 1023 && exponent >= -1074
+}
+
+fn bigint_gcd(mut left: BigInt, mut right: BigInt) -> BigInt {
+    while !right.is_zero() {
+        let remainder = left % &right;
+        left = right;
+        right = remainder;
+    }
+    left
 }
 
 pub(in crate::lower) fn is_exact_or_fixed_int_like(ty: &Type) -> bool {

@@ -6,7 +6,6 @@ use super::empty_collection_refinement::{
 };
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
-use super::integer_failure_diagnostics::exact_int_division_requires_handling;
 use super::integer_float_semantics::mixed_float_integer_arithmetic_result_type;
 use super::numeric_sentinels::{
     lower_sentinel_expr_for_name_domain, maybe_resolve_numeric_sentinel_name_from_type,
@@ -164,9 +163,6 @@ pub(in crate::lower) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Op
         );
     }
 
-    if exact_int_division_requires_handling(&left, op_str, &right, ctx, binop.range()) {
-        return None;
-    }
     if generic_addition_requires_addable_bound(&left, op_str, &right, ctx, binop.range()) {
         return None;
     }
