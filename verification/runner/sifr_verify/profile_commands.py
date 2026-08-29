@@ -98,7 +98,7 @@ def install_terminal_signal_handlers() -> None:
 def _forward_terminal_signal(signum: int, _frame: object) -> None:
     global _HANDLING_TERMINAL_SIGNAL
     if _HANDLING_TERMINAL_SIGNAL:
-        raise SystemExit(128 + signum)
+        return
     _HANDLING_TERMINAL_SIGNAL = True
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
@@ -203,9 +203,45 @@ def run_self_test() -> None:
     if marker.exists():
         marker.unlink()
         raise AssertionError("deadline left a descendant process running")
+    _terminal_signal_reentry_self_test()
     _terminal_signal_lock_self_test()
     _terminal_signal_self_test(signal.SIGTERM)
     _terminal_signal_self_test(signal.SIGINT)
+
+
+def _terminal_signal_reentry_self_test() -> None:
+    helper = "\n".join(
+        [
+            "import signal",
+            "import sifr_verify.profile_commands as commands",
+            "real_signal = commands.signal.signal",
+            "reentered = False",
+            "def reenter(signum, handler):",
+            "    global reentered",
+            "    if not reentered:",
+            "        reentered = True",
+            "        commands._forward_terminal_signal(signal.SIGINT, None)",
+            "    return real_signal(signum, handler)",
+            "commands.signal.signal = reenter",
+            "commands._forward_terminal_signal(signal.SIGTERM, None)",
+        ]
+    )
+    proc = subprocess.Popen(
+        [sys.executable, "-c", helper],
+        cwd=REPO_ROOT,
+        env=_self_test_environment(),
+        text=True,
+        start_new_session=True,
+    )
+    try:
+        returncode = proc.wait(timeout=3)
+    except subprocess.TimeoutExpired:
+        terminate_process_group(proc)
+        raise AssertionError("repeated terminal signal left the runner hanging") from None
+    if returncode != 128 + signal.SIGTERM:
+        raise AssertionError(
+            f"repeated terminal signal returned {returncode}, expected {128 + signal.SIGTERM}"
+        )
 
 
 def _terminal_signal_lock_self_test() -> None:
