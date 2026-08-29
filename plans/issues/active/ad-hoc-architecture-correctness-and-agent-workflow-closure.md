@@ -57,8 +57,9 @@ The following review claims are explicitly excluded:
 | M12 | Maintainability ratchets and evidence-based flow decisions | implementation staged; second-review defect closed by M12A | [#3564](https://github.com/sifr-lang/sifr/pull/3564) | `17d7ac63eae4a9417a2d60415c06d7de7016ce6c` |
 | M12A | Process-group deadlines and terminal signal propagation | merged into M12 branch | [#3565](https://github.com/sifr-lang/sifr/pull/3565) | `2b0820dabf890dc19850289273ade09d8b048cd5` |
 | M12B | Restore canonical list-method lowering on structured fallback paths | merged into M12 branch | [#3566](https://github.com/sifr-lang/sifr/pull/3566) | `c4a23973f80d8eb796e4b9c984c89a248b58ac88` |
-| M12C | Terminal-signal escalation and remaining hardening command lifecycle | pending | | |
+| M12C | Terminal-signal escalation and remaining hardening command lifecycle | merged into M12 branch | [#3567](https://github.com/sifr-lang/sifr/pull/3567) | `9442b51faa8a15c1466919ad797d0cfcd9d0e8ef` |
 | M12D | Documentation mutation-registry consistency | pending | | |
+| M12E | Atomic repeated-terminal-signal escalation entry | pending | | |
 | M13 | Phase closure and whole-phase review | pending | | |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -558,6 +559,23 @@ Scope and acceptance criteria:
   pass from a clean checkout state.
 - Run one exact-SHA Opus review, with at most one remediation review.
 
+## M12E Atomic Repeated-Terminal-Signal Escalation Entry
+
+Close the new mechanism gap reported by M12C's final allowed review without
+running a third M12C review.
+
+Scope and acceptance criteria:
+
+- Remove the bytecode-scale window between marking terminal-signal handling
+  active and disabling subsequent `SIGINT`/`SIGTERM` delivery.
+- Ensure a repeated terminal signal cannot take the re-entrant `SystemExit`
+  branch before the process-group escalation worker starts.
+- Preserve the first signal's `128 + signum` exit contract and bounded
+  process-group escalation.
+- Add a deterministic self-test for repeated-signal entry rather than relying
+  on timing-sensitive external delivery.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
 ## M13 Phase Closure And Whole-Phase Review
 
 Reconcile every milestone record, deferred finding, architecture/roadmap status,
@@ -1018,4 +1036,28 @@ tree and are keyed by candidate SHA.
   `.codex/review-evidence/architecture-closure/m12b-c4a23973f80d8eb796e4b9c984c89a248b58ac88.md`.
 - M12B changes compiler files. Under the phase rule, it did not run a per-item
   Sifr gate; the single create-PR and merge gates remain reserved for the final
-  implementation SHA after M12C and M12D.
+  implementation SHA after M12C, M12D, and M12E.
+
+### M12C Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12c`.
+- Stacked PR: [#3567](https://github.com/sifr-lang/sifr/pull/3567), merged into
+  the M12 branch as `c77485c27f489e63a5d6f8c178a02a57234ad23d`.
+- Initial candidate: `a99e1128c1dfccbefbc45a95bcf593db5cf84252`.
+  Its exact-SHA Opus review returned `SATISFIED` with no blockers. The accepted
+  remediation prevents a later terminal signal from interrupting the
+  non-daemon escalation worker's interpreter-shutdown join and adds SIGINT
+  coverage.
+- Final candidate: `9442b51faa8a15c1466919ad797d0cfcd9d0e8ef`.
+  The one permitted remediation review returned `SATISFIED` with no blockers.
+  It reported a new bytecode-scale repeated-signal entry race, recorded as
+  M12E; no third M12C review will run.
+- Validation: touched Python Ruff and compilation, both runner self-test
+  layers, the real 19-variant property suite, maintainability, file-size, HIR,
+  driver, whitespace, and manifest JSON checks passed. The self-tests cover
+  SIGTERM- and SIGINT-ignoring descendants and explicit native-124 versus
+  timeout classification.
+- Review evidence is outside Git under both exact candidate SHAs in
+  `.codex/review-evidence/architecture-closure/`.
+- M12C changed no compiler files, so it did not run or consume the reserved
+  Sifr create-PR or merge gate.
