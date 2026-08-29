@@ -4,7 +4,7 @@
   "closure_item": 12,
   "policy": "Exact signatures may only stay equal or be removed. Unknown or changed debt fails. The file must be empty at Item 12.",
   "safety": {
-    "owner_items": [3, 4, 8, 11],
+    "owner_items": [3, 4, 11],
     "entries": {
       "checked-demo-snapshots": {
         "direct-index": {"count": 276, "signature_sha256": "dceec6beb9dd12e65da2b7a4da6aa368fe1c83f536b0552313b232f830cd9354"},

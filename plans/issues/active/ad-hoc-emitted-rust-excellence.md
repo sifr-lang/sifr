@@ -309,8 +309,11 @@ item can close.
   exact path-set inventory; broad Clippy suppression and format-before-check
   behavior are removed; safety, formatting, lint, freshness, and deterministic
   output use fail-closed negative checks and exact owner-bound debt signatures.
-- Audit correction: ERQ-020 is confirmed, not rejected. Current decimal
-  lowering contains the reported `with_prec(28)` fallback, owned by Item 6.
+- Audit corrections: ERQ-016 now records the live finite `count()` cap, and
+  ERQ-033 separately records non-positive `islice` step adaptation; both are
+  owned by Item 5 and anchored to the stdlib implementation. ERQ-020 is
+  confirmed, not rejected: current decimal lowering contains the reported
+  `with_prec(28)` fallback, owned by Item 6.
 - Next action: validate Item 1, populate only exact existing producer debt,
   regenerate or remove non-authoritative checked-in output, and obtain the
   required exact-SHA Opus review.

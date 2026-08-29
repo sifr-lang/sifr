@@ -54,8 +54,9 @@ def path_set_digest(paths: list[str]) -> str:
 
 
 def discover_paths(repo_root: Path, root: str, pattern: str) -> list[str]:
+    resolved_repo = repo_root.resolve()
     root_path = (repo_root / root).resolve()
-    if not root_path.is_relative_to(repo_root.resolve()) or not root_path.is_dir():
+    if not root_path.is_relative_to(resolved_repo) or not root_path.is_dir():
         raise ValueError(f"discovery root must be a repository directory: {root}")
     pattern_path = Path(pattern)
     if (
@@ -67,10 +68,10 @@ def discover_paths(repo_root: Path, root: str, pattern: str) -> list[str]:
     paths = []
     for path in root_path.glob(pattern):
         resolved = path.resolve()
-        if not resolved.is_relative_to(repo_root.resolve()):
+        if not resolved.is_relative_to(resolved_repo):
             raise ValueError(f"discovery result escapes the repository: {path}")
         if path.is_file():
-            paths.append(path.relative_to(repo_root).as_posix())
+            paths.append(resolved.relative_to(resolved_repo).as_posix())
     paths.sort()
     return paths
 

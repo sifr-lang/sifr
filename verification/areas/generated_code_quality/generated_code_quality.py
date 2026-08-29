@@ -108,7 +108,15 @@ RUST_NORMAL_STRING_RE = re.compile(r'"(?P<body>(?:\\.|[^"\\])*)"')
 GENERATED_SOURCE_CONTEXT_RE = re.compile(
     r"\b(format!|emit_line|RustExpr::Ident|RustType::Named|RustLiteral::Str|push_str)\b"
 )
-SOURCE_FORBIDDEN_POLICY_IDS = {"allow-attribute"}
+SOURCE_FORBIDDEN_POLICY_IDS = {
+    "allow-attribute",
+    "expect",
+    "panic",
+    "todo",
+    "unimplemented",
+    "unsafe",
+    "unwrap",
+}
 @dataclasses.dataclass(frozen=True)
 class Entry:
     id: str

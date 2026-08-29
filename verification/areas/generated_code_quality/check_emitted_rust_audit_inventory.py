@@ -419,6 +419,25 @@ def run_self_test(payload: dict[str, Any]) -> None:
     missing_anchor["findings"][0].pop("semantic_anchor")
     expect_invalid(missing_anchor, ".semantic_anchor must be an object")
 
+    metric_extra_field = copy.deepcopy(payload)
+    find_anchor_kind(metric_extra_field, "metric")["extra"] = True
+    expect_invalid(metric_extra_field, "metric must contain exactly kind and key")
+
+    invalid_metric_key = copy.deepcopy(payload)
+    find_anchor_kind(invalid_metric_key, "metric")["key"] = "missing-baseline-key"
+    expect_invalid(invalid_metric_key, "metric must name an existing baseline key")
+
+    text_extra_field = copy.deepcopy(payload)
+    find_anchor_kind(text_extra_field, "text")["extra"] = True
+    expect_invalid(
+        text_extra_field,
+        "text must contain exactly kind, revision, path, and contains",
+    )
+
+    invalid_text_revision = copy.deepcopy(payload)
+    find_anchor_kind(invalid_text_revision, "text")["revision"] = "unknown"
+    expect_invalid(invalid_text_revision, ".semantic_anchor.revision must be baseline or current")
+
     stale_anchor = copy.deepcopy(payload)
     stale_anchor["findings"][0]["semantic_anchor"] = {
         "kind": "text",
@@ -437,15 +456,63 @@ def run_self_test(payload: dict[str, Any]) -> None:
     }
     expect_invalid(escaped_anchor, ".semantic_anchor.path must be an exact repository path")
 
-    stale_search_count = copy.deepcopy(payload)
-    stale_search_count["findings"][0]["semantic_anchor"] = {
+    uncovered_anchor = copy.deepcopy(payload)
+    uncovered_anchor["findings"][0]["semantic_anchor"] = {
+        "kind": "text",
+        "revision": "current",
+        "path": "Cargo.toml",
+        "contains": "[workspace]",
+    }
+    expect_invalid(uncovered_anchor, ".semantic_anchor.path must be covered by finding evidence")
+
+    empty_text_anchor = copy.deepcopy(payload)
+    find_anchor_kind(empty_text_anchor, "text")["contains"] = ""
+    expect_invalid(empty_text_anchor, ".semantic_anchor.contains must be non-empty text")
+
+    unreadable_baseline_anchor = copy.deepcopy(payload)
+    unreadable_baseline_anchor["findings"][0]["evidence"] = [
+        "verification/areas/generated_code_quality/inventory_gates.py"
+    ]
+    unreadable_baseline_anchor["findings"][0]["semantic_anchor"] = {
+        "kind": "text",
+        "revision": "baseline",
+        "path": "verification/areas/generated_code_quality/inventory_gates.py",
+        "contains": "Repository-surface and checked-in emission gates",
+    }
+    expect_invalid(unreadable_baseline_anchor, "cannot read baseline anchor")
+
+    search_extra_field = copy.deepcopy(payload)
+    find_anchor_kind(search_extra_field, "search_count")["extra"] = True
+    expect_invalid(search_extra_field, ".semantic_anchor search_count has invalid fields")
+
+    invalid_search_fields = copy.deepcopy(payload)
+    invalid_search_fields["findings"][0]["semantic_anchor"] = {
         "kind": "search_count",
         "roots": ["verification/areas/generated_code_quality"],
         "patterns": ["**/*.py"],
         "contains": "generated",
         "expected_count": 0,
     }
-    expect_invalid(stale_search_count, ".semantic_anchor search_count fields are invalid")
+    expect_invalid(invalid_search_fields, ".semantic_anchor search_count fields are invalid")
+
+    uncovered_search_root = copy.deepcopy(payload)
+    find_anchor_kind(uncovered_search_root, "search_count")["roots"] = ["stdlib/sifr"]
+    expect_invalid(
+        uncovered_search_root,
+        ".semantic_anchor search root must be an evidence-covered repository directory",
+    )
+
+    stale_search_count = copy.deepcopy(payload)
+    search_anchor = find_anchor_kind(stale_search_count, "search_count")
+    search_anchor["expected_count"] += 1
+    expect_invalid(stale_search_count, ".semantic_anchor search count mismatch")
+
+    unknown_anchor_kind = copy.deepcopy(payload)
+    unknown_anchor_kind["findings"][0]["semantic_anchor"] = {"kind": "unknown"}
+    expect_invalid(
+        unknown_anchor_kind,
+        ".semantic_anchor.kind must be metric, text, or search_count",
+    )
 
     invalid_sources = copy.deepcopy(payload)
     invalid_sources["findings"][0]["sources"] = ["unknown"]
@@ -512,6 +579,19 @@ def find_disposition(payload: dict[str, Any], disposition: str) -> dict[str, Any
     ]
     if not matches:
         raise AssertionError(f"self-test fixture needs a {disposition} finding")
+    return matches[0]
+
+
+def find_anchor_kind(payload: dict[str, Any], kind: str) -> dict[str, Any]:
+    matches = [
+        finding["semantic_anchor"]
+        for finding in payload["findings"]
+        if isinstance(finding, dict)
+        and isinstance(finding.get("semantic_anchor"), dict)
+        and finding["semantic_anchor"].get("kind") == kind
+    ]
+    if not matches:
+        raise AssertionError(f"self-test fixture needs a {kind} semantic anchor")
     return matches[0]
 
 

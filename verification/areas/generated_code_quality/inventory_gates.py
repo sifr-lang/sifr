@@ -35,6 +35,49 @@ QUALITY_DEBT = GCQ_ROOT / "data" / "generated_quality_debt.json"
 AUDIT_INVENTORY = GCQ_ROOT / "emitted_rust_audit_inventory.json"
 CORPUS_MANIFEST = GCQ_ROOT / "data" / "corpus_manifest.json"
 SMOKE_ENTRY_IDS = ("demo-001-codegen-output", "demo-002-codegen-structural-passes")
+FRESHNESS_SENTINEL = "all generated demo companions are fresh"
+
+
+def classify_freshness_result(returncode: int, stdout: str) -> list[str]:
+    lines = stdout.splitlines()
+    stale = sorted(
+        line.removeprefix("stale: ")
+        for line in lines
+        if line.startswith("stale: ")
+    )
+    if returncode == 0 and lines == [FRESHNESS_SENTINEL]:
+        return []
+    if returncode == 1 and stale and len(stale) == len(lines):
+        return stale
+    raise RuntimeError(
+        "demo emitted freshness command violated its output protocol "
+        f"(returncode={returncode}, stdout={stdout!r})"
+    )
+
+
+def run_freshness_protocol_self_test() -> None:
+    if classify_freshness_result(0, FRESHNESS_SENTINEL + "\n") != []:
+        raise AssertionError("freshness success sentinel was not accepted")
+    if classify_freshness_result(1, "stale: demos/example/emitted.rs\n") != [
+        "demos/example/emitted.rs"
+    ]:
+        raise AssertionError("freshness stale protocol was not accepted")
+    invalid_results = (
+        (1, ""),
+        (1, "compiler failed\n"),
+        (0, ""),
+        (0, "stale: demos/example/emitted.rs\n"),
+        (2, FRESHNESS_SENTINEL + "\n"),
+    )
+    for returncode, stdout in invalid_results:
+        try:
+            classify_freshness_result(returncode, stdout)
+        except RuntimeError:
+            continue
+        raise AssertionError(
+            "freshness protocol self-test accepted an invalid result "
+            f"(returncode={returncode}, stdout={stdout!r})"
+        )
 
 
 def allowed_debt_selections() -> set[str]:
@@ -103,6 +146,7 @@ def gate_freshness(
     def check_freshness() -> dict[str, Any] | None:
         debt = load_debt(QUALITY_DEBT)
         validate_debt_owners(debt)
+        run_freshness_protocol_self_test()
         result = run_command(
             [
                 sys.executable,
@@ -112,21 +156,17 @@ def gate_freshness(
             ],
             check=False,
         )
-        stale = sorted(
-            line.removeprefix("stale: ")
-            for line in result.stdout.splitlines()
-            if line.startswith("stale: ")
-        )
+        try:
+            stale = classify_freshness_result(result.returncode, result.stdout)
+        except RuntimeError as error:
+            raise RuntimeError(
+                f"{error}\nstdout={result.stdout}\nstderr={result.stderr}"
+            ) from error
         orphans = sorted(
             path.relative_to(REPO_ROOT).as_posix()
             for path in (REPO_ROOT / "demos").glob("**/emitted.rs")
             if not path.with_name("main.sifr").is_file()
         )
-        if result.returncode not in {0, 1}:
-            raise RuntimeError(
-                "demo emitted freshness command failed\n"
-                f"stdout={result.stdout}\nstderr={result.stderr}"
-            )
         actual = {"stale": stale, "orphans": orphans} if stale or orphans else None
         compare_exact_debt(
             category="freshness",

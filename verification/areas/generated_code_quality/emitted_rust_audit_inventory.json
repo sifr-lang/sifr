@@ -192,13 +192,24 @@
     },
     {
       "id": "ERQ-016",
-      "title": "Infinite iterator and slicing semantics are bounded or weakly validated",
+      "title": "Infinite count iteration is capped at a finite prefix",
       "disposition": "confirmed",
       "severity": "blocking",
       "owner_item": 5,
-      "mechanism": "islice-style paths explicitly adapt invalid zero and negative steps to empty iterators instead of raising the canonical error.",
-      "evidence": ["crates/sifr/tests/e2e/pass/cpython_itertools.sifr", "demos/itertools/emitted.rs"],
-      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr/tests/e2e/pass/cpython_itertools.sifr", "contains": "explicit adaptation for non-positive step => empty iterator"},
+      "mechanism": "The count() implementation delegates to count_from(start, step, 10000), so an API that must be unbounded stops after a fixed finite prefix.",
+      "evidence": ["stdlib/sifr/itertools.sifr", "demos/itertools/emitted.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "stdlib/sifr/itertools.sifr", "contains": "return count_from(start, step, 10000)"},
+      "sources": ["internal", "external"]
+    },
+    {
+      "id": "ERQ-033",
+      "title": "Invalid islice steps are adapted instead of rejected",
+      "disposition": "confirmed",
+      "severity": "blocking",
+      "owner_item": 5,
+      "mechanism": "The islice implementation rewrites a non-positive stride to one and truncates the stop boundary to the start instead of raising the canonical error.",
+      "evidence": ["stdlib/sifr/itertools.sifr", "crates/sifr/tests/e2e/pass/cpython_itertools.sifr", "demos/itertools/emitted.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "stdlib/sifr/itertools.sifr", "contains": "if stride <= 0:\n        stride = 1\n        actual_stop = actual_start"},
       "sources": ["internal", "external"]
     },
     {
