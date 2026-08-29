@@ -65,7 +65,7 @@ The following review claims are explicitly excluded:
 | M12H | Remove delivery-plan taxonomy from retained flow-graph architecture | merged into M12 branch; integration deferred | [#3573](https://github.com/sifr-lang/sifr/pull/3573) | `5094e412fbeb253edcfdd41a39079ecea72f9b1d` |
 | M12I | Restore authoritative Python-interop gate budget integrity | merged into M12 branch; integration deferred | [#3576](https://github.com/sifr-lang/sifr/pull/3576) | `e653b4ca92ba135bf01859dd35c6f43cab98fe77` |
 | M12J | Restore create-PR runtime-platform gate budget integrity | merged into M12 branch; integration deferred | [#3577](https://github.com/sifr-lang/sifr/pull/3577) | `8f011fb61cb232b4d65763f49378e28066c421bd` |
-| M12K | Refresh the governed performance trend reference | pending | | |
+| M12K | Refresh the governed performance trend reference | externally blocked on controlled-host admission | | |
 | M13 | Phase closure and whole-phase review | whole-phase review satisfied; merged into M12 branch; closure blocked | [#3571](https://github.com/sifr-lang/sifr/pull/3571) | `5b4005c8cabc910f1c7c959e6518fe3079135fb4` |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
@@ -752,10 +752,11 @@ whole-phase Opus review without repeating unchanged implementation validation.
   Stacked integration also remains blocked on the separately owned
   distinct-human-reviewer restoration issue; the expired waiver is not
   extended or weakened.
-- Exact next actions: close M12K, run the authorized clean create-PR/merge gate
-  sequence for the resulting final stack SHA, restore the distinct human
-  reviewer, then integrate the stacked PR chain and archive this record. Until
-  then the phase is not represented as gate-passing or closed.
+- Exact next actions: retry M12K only after the host satisfies the unchanged
+  latency-mode controlled-host policy, then close M12K and run the authorized
+  clean create-PR/merge gate sequence for the resulting final stack SHA.
+  Restore the distinct human reviewer before stacked integration and archival.
+  Until then the phase is not represented as gate-passing or closed.
 
 ## Evidence Ledger
 
@@ -1562,3 +1563,30 @@ tree and are keyed by candidate SHA.
   governed fresh capture rather than relabeling old measurements.
 - No merge gate ran. Gate evidence is outside Git at
   `.codex/review-evidence/architecture-closure/final-create-pr-7cd1124485ab00fcfef42b9c0bbe3054e5770ea3.md`.
+
+### M12K Controlled-Capture Blocker
+
+- Clean exact source commit:
+  `5242d9872053600fea18566cd2f5ed29301811f9`.
+- The documented complete-manifest approved-reference command ran with
+  `SIFR_VALIDATION_PROFILE=approved-reference`,
+  `SIFR_THERMAL_POLICY=controlled-host`, controlled-host latency mode, and
+  `compiler/performance` approval. It made no repository change.
+- The first admission attempt used the documented 180-second default and was
+  rejected for a competing build plus external CPU pressure. The competing
+  worktree then finished its generated-code-quality workload.
+- A second attempt preserved every admission threshold and only extended the
+  wait to 600 seconds. It was rejected solely for external CPU pressure. A
+  post-attempt snapshot remained at 310.3% external CPU against the 50% limit,
+  with nominal thermal state, AC power, acceptable normalized load, and no
+  competing build. Endpoint security, WindowServer, GitKraken, osquery, and Git
+  activity owned the pressure outside this worktree.
+- The governed producer did not write `trend/current.json`; the worktree stayed
+  clean. No benchmark result, candidate SHA, PR, review, or gate pass is claimed
+  for M12K.
+- The exact retry condition is an unchanged clean source commit with three
+  admitted quiet snapshots under the existing latency-mode policy. Do not
+  weaken the 50% pressure threshold, switch to work mode, or patch only the
+  recorded manifest hash.
+- Admission evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12k-controlled-capture-blocker-5242d9872053600fea18566cd2f5ed29301811f9.md`.
