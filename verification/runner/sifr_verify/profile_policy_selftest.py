@@ -90,17 +90,8 @@ def profile_schema_self_test() -> None:
             raise AssertionError(
                 f"{profile_name} has a noncanonical Cargo setup budget: {setup_budget}"
             )
+    _python_interop_budget_policy_self_test(profiles)
     create_pr_step_budgets = profiles["create-pr"].get("step_budgets", {})
-    python_interop_budget = create_pr_step_budgets.get("area_python_interop")
-    if python_interop_budget != {
-        "warm_budget_ms": 600_000,
-        "cold_budget_ms": 1_200_000,
-        "cache_classifier": "successful-input-receipt",
-        "enforcement": "blocking",
-    }:
-        raise AssertionError(
-            f"create-pr Python interop cache budget drifted: {python_interop_budget}"
-        )
     rust_interop_budget = create_pr_step_budgets.get("area_rust_interop")
     if rust_interop_budget != {
         "budget_ms": 20_000,
@@ -131,6 +122,34 @@ def profile_schema_self_test() -> None:
                 f"create-pr step budget is not blocking/positive: {step}={budget}"
             )
     _profile_coverage_self_test(profiles)
+
+
+def _python_interop_budget_policy_self_test(
+    profiles: dict[str, dict[str, Any]],
+) -> None:
+    expected_budgets = {
+        "create-pr": (2_400_000, 2_700_000),
+        "merge": (2_400_000, 4_500_000),
+        "nightly": (2_400_000, 4_500_000),
+        "release": (2_400_000, 4_500_000),
+    }
+    for profile_name, (warm_budget_ms, cold_budget_ms) in (
+        expected_budgets.items()
+    ):
+        python_interop_budget = profiles[profile_name].get("step_budgets", {}).get(
+            "area_python_interop"
+        )
+        expected_budget = {
+            "warm_budget_ms": warm_budget_ms,
+            "cold_budget_ms": cold_budget_ms,
+            "cache_classifier": "successful-input-receipt",
+            "enforcement": "blocking",
+        }
+        if python_interop_budget != expected_budget:
+            raise AssertionError(
+                f"{profile_name} Python interop cache budget drifted: "
+                f"{python_interop_budget}"
+            )
 
 
 def _profile_coverage_self_test(profiles: dict[str, dict[str, Any]]) -> None:
